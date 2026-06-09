@@ -2,7 +2,7 @@
 
 Milestone: `milestone_concurrency_runtime_6`
 
-Status: In progress. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers now encode/decode/read/write length-prefixed Postcard envelopes, track request IDs and bounded in-flight windows, validate bootstrap/established-frame connection state, and exercise Unix child-process stdin/stdout pipes for bootstrap, completion, cancellation, shutdown close, and malformed-frame evidence. Windows child-process fixtures, payload eligibility diagnostics, and generated worker integration remain M6 implementation work.
+Status: In progress. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers now encode/decode/read/write length-prefixed Postcard envelopes, track request IDs and bounded in-flight windows, validate bootstrap/established-frame connection state, validate host-independent payload eligibility with unsupported-payload evidence, and exercise Unix child-process stdin/stdout pipes for bootstrap, completion, cancellation, shutdown close, and malformed-frame evidence. Windows child-process fixtures, compiler diagnostics for payload eligibility/generated extraction, and generated worker integration remain M6 implementation work.
 
 ## Scope
 
@@ -31,8 +31,9 @@ This design does not ship a public process-worker pool. A future worker API rema
 | Internal length-prefixed Postcard frame codec | `cargo test -p sifr_stdlib ipc_frame -- --nocapture` | `sifr_stdlib::ipc_frame` encodes and decodes the M6 envelope families with a `u32` little-endian payload length prefix, the default 16 MiB maximum, typed malformed-frame errors for truncated prefixes/payloads, oversize frames, decode failures, and trailing bytes, and no data-dependent unwrap/expect path. Process-pipe transport and connection-state handling remain follow-up work. |
 | Internal stream read/write helpers | `cargo test -p sifr_stdlib ipc_transport -- --nocapture` | `sifr_stdlib::ipc_transport` writes and reads the length-prefixed Postcard envelope over `std::io::Write`/`Read` pipe-shaped byte streams, treats clean EOF before a prefix as close evidence, maps partial prefixes/payloads and oversize lengths to typed errors, and drops raw I/O error details so payload bytes and host paths are not rendered. Child-process fixtures and connection-state handling remain follow-up work. |
 | Internal request tracker and bounded in-flight window | `cargo test -p sifr_stdlib ipc_request_tracker -- --nocapture` | `sifr_stdlib::ipc_request_tracker` validates duplicate request IDs, unknown terminal/cancel IDs, bounded in-flight capacity, completion/failure capacity release, shutdown drain/cancel-in-flight transitions, and terminating-frame close evidence without rendering payload bytes. Child-process fixtures, full connection negotiation, and generated worker integration remain follow-up work. |
-| Internal connection state and bootstrap negotiation | `cargo test -p sifr_stdlib ipc_connection -- --nocapture` | `sifr_stdlib::ipc_connection` validates parent `Hello`, worker `Ready`/`Reject`, protocol overlap selection, exact schema identity/range checks, negotiated max-frame limits, established-frame phase gating, request-tracker integration, shutdown drain transition, protocol-error close, and terminating close without rendering payload bytes. Child-process fixtures, payload eligibility diagnostics, and generated worker integration remain follow-up work. |
-| Unix child-process pipe fixture transport | `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` | A fixture worker binary behind the internal `__test_fixture` feature validates real child-process stdin/stdout frame transport on Unix hosts for bootstrap, request completion, in-flight cancellation, shutdown/terminating close, and malformed-frame reporting. Windows fixtures, payload eligibility diagnostics, and generated worker integration remain follow-up work. |
+| Internal connection state and bootstrap negotiation | `cargo test -p sifr_stdlib ipc_connection -- --nocapture` | `sifr_stdlib::ipc_connection` validates parent `Hello`, worker `Ready`/`Reject`, protocol overlap selection, exact schema identity/range checks, negotiated max-frame limits, established-frame phase gating, request-tracker integration, shutdown drain transition, protocol-error close, and terminating close without rendering payload bytes. Process-pipe fixtures and payload eligibility validation are tracked separately; compiler diagnostics and generated worker integration remain follow-up work. |
+| Internal payload eligibility validator | `cargo test -p sifr_stdlib ipc_payload -- --nocapture` | `sifr_stdlib::ipc_payload` recursively validates the initially accepted `IpcSerializable` schema families and returns typed `UnsupportedPayload` evidence for unsupported process/task/resource-like shapes without rendering payload values. Compiler diagnostics, generated schema extraction, and runtime foreign-peer payload handling remain follow-up work. |
+| Unix child-process pipe fixture transport | `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` | A fixture worker binary behind the internal `__test_fixture` feature validates real child-process stdin/stdout frame transport on Unix hosts for bootstrap, request completion, in-flight cancellation, shutdown/terminating close, and malformed-frame reporting. Windows fixtures, compiler diagnostics for payload eligibility/generated extraction, and generated worker integration remain follow-up work. |
 | `ProcessPoolExecutor` and `Process` under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
 
 ## Transport Boundary
@@ -189,6 +190,7 @@ Initially accepted payload families:
 - Sifr integer and floating numeric values with the existing numeric boundary policy,
 - `str`,
 - `bytes`,
+- the `None` unit type used by generated option/result schemas,
 - `Option[T]` when `T: IpcSerializable`,
 - `Result[T, E]` when both sides are `IpcSerializable`,
 - fixed-shape tuples when every element is `IpcSerializable`,
@@ -206,7 +208,9 @@ Rejected payload families:
 - raw pointers, host handles, and foreign objects,
 - arbitrary pickle-like object graphs.
 
-Unsupported payloads are compile-time diagnostics where the compiler sees the concrete type. Runtime `UnsupportedPayload` is reserved for foreign peers, stale generated peers, or erased boundaries that cannot be proven statically.
+Unsupported payloads are compile-time diagnostics where the compiler sees the concrete type. Runtime `UnsupportedPayload` is reserved for foreign peers, stale generated peers, or erased boundaries that cannot be proven statically. The internal `ipc_payload` helper now validates the host-independent schema shape used by generated peers; compiler diagnostic wiring is still follow-up work.
+
+The canonical schema descriptor may render `unsupported(<type_name>)` only as rejected-type evidence so generated peers and tests can preserve diagnostics without panicking. Payload eligibility validation must reject any schema graph containing that sentinel before a payload is encoded or treated as wire-compatible.
 
 ## CPython-Shaped API Classification
 
