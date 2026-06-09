@@ -477,6 +477,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
+- M7 demo closure: pending PR.
 - M7: in progress.
 
 ## Validation Evidence
@@ -1512,6 +1513,35 @@ M7 internal architecture audit merge ledger:
 M7 internal architecture audit merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-architecture-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, architecture gate closed, remaining gates still open/partial/pending, and no M7 completion overclaim.
+
+M7 demo closure implementation:
+
+- Added `demos/parallel_map_demo/main.sifr` to demonstrate `sifr.parallel.map` and typed `WorkerRuntimeError` result observation.
+- Added `demos/process_shutdown_cleanup_demo/main.sifr` to demonstrate async process pipe ownership, async child wait, structured shutdown stream/value shape, and cleanup running under timeout cancellation.
+- Revalidated existing required/supporting demos: `demos/task_core_demo/main.sifr`, `demos/sync_channel_demo/main.sifr`, `demos/blocking_offload_demo/main.sifr`, `demos/structured_concurrency_demo/main.sifr`, and `demos/subprocess/main.sifr`.
+- Updated `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` so the required demo gate and demo-closure slice are `pending-pr` while generated dependency snapshots, panic-scan coverage, validation/inventory closure, and final external review remain open or pending.
+
+M7 demo closure targeted local validation:
+
+- `cargo run -q -p sifr -- run demos/parallel_map_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/process_shutdown_cleanup_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/task_core_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/sync_channel_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/blocking_offload_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/structured_concurrency_demo/main.sifr` -> PASS.
+- `cargo run -q -p sifr -- run demos/subprocess/main.sifr` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; `2271` files checked, `900` line limit.
+- `cargo fmt --check` -> PASS.
+- `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS.
+- `cargo test -p sifr -- --skip test_e2e_pass` -> PASS; CLI unit tests `95 passed`; e2e harness tests `36 passed`, `1 filtered out`; validation-contract test ignored as expected.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; `wall_time=417.71s`, `budget_ok=no` due warm wall-time advisory; `max_rss=518.6MiB`, `swaps=0`; platform golden `pass=6 skip=1`; e2e `125 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=50edc954137c87b4`; slowest step `e2e_pass_suite 279192ms`; report `target/validation_lane_reports/create-pr.latest.json`.
+- `cargo clippy --workspace -- -D warnings` -> FAIL on inherited non-demo code in `crates/sifr_codegen/src/intrinsics/registry/runtime.rs`, `crates/sifr_codegen/src/preamble/process_async_child_runtime.rs`, and `crates/sifr_codegen/src/preamble/process_async_runtime.rs`; this demo slice does not touch those files, and the M7 generated dependency/panic-scan quality slice retains final clippy cleanup before phase closeout.
+
+M7 demo closure review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-demo-closure-review-pass-1.md`: `PASS`; reviewer verified all seven required M7 demo topics, production API usage, no CPython-shaped compatibility surfaces, no signal-delivery overclaim, M7 still open/in progress, remaining generated-dependency/panic-scan/validation-inventory/final-review gates still open or pending, and traceability scaffold completion. Reviewer requested broader validation evidence before PR; the validation block above records the follow-up commands.
+- `reviews/ad-hoc-production-concurrency-runtime-m7-demo-closure-review-pass-2.md`: `PASS`; reviewer verified the pass-1 validation gap is resolved, the inherited clippy failure is honestly scoped outside the demo slice while retained for final M7 cleanup, `git diff --check` and file-size guardrail claims are accurate, demo closure remains pending PR, M7 remains open/in progress, and remaining non-demo M7 gates stay open or pending.
 
 M5 signal `strsignal` value-helper implementation:
 

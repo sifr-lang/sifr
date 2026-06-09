@@ -1,0 +1,12 @@
+from sifr.parallel import WorkerRuntimeError, map
+
+
+def score(value: int) -> int:
+    return value + value
+
+
+def main() -> None:
+    values: list[int] = [1, 2, 3, 4]
+    scores: Result[list[int], WorkerRuntimeError] = map(values, score)
+    assert str(scores) == "Ok([2, 4, 6, 8])"
+    return None

@@ -17,7 +17,7 @@ Status: Open. This M7 artifact is the closeout audit surface for docs, demos, va
 | Public docs for `sifr.resource` | closed | `docs/concurrency_runtime.md` documents `nullcontext(...)`, language cleanup under cancellation, and unsupported cleanup-stack/owned-closing helpers. |
 | Public docs for `sifr.ipc` | closed | `docs/concurrency_runtime.md` documents typed schema/frame substrate, payload eligibility diagnostics, version negotiation, process-pipe layering, unsupported CPython multiprocessing names, and `deferred-to-phase-X` worker APIs. |
 | Internal architecture docs | closed | `internal_docs/structured_runtime_work_model.md#m7-production-closure-audit` records the terminal M7 audit for task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability, task/request context, diagnostics/signal global-state policy, and the rejected CPython-shaped surface index; `internal_docs/architecture.md` links to that audit from the concurrency safety contract. |
-| Required demos | partial | Existing demos include `demos/task_core_demo/main.sifr`, `demos/sync_channel_demo/main.sifr`, `demos/blocking_offload_demo/main.sifr`, `demos/structured_concurrency_demo/main.sifr`, and `demos/subprocess/main.sifr`. M7 must add or validate all required demos: structured task group, producer/consumer channel pipeline, blocking offload, CPU parallel map, async subprocess pipeline, structured shutdown, and cleanup under cancellation. |
+| Required demos | pending PR | Demo closure covers the required M7 demo topics: structured task group in `demos/structured_concurrency_demo/main.sifr`, producer/consumer channel pipeline in `demos/sync_channel_demo/main.sifr`, blocking offload in `demos/blocking_offload_demo/main.sifr`, CPU parallel map in `demos/parallel_map_demo/main.sifr`, and async subprocess pipeline, structured shutdown shape, and cleanup under cancellation in `demos/process_shutdown_cleanup_demo/main.sifr`. Existing `demos/task_core_demo/main.sifr` and `demos/subprocess/main.sifr` were revalidated as supporting coverage. |
 | Generated Cargo dependency snapshots | open | Add generated-project dependency evidence for the accepted feature combinations that pull runtime dependencies such as Tokio, Rayon, tracing, metrics, process support, signal support, and IPC serialization. |
 | Panic scan and emitted-code quality coverage | open | Extend or document generated-code quality coverage for task/channel/process/runtime paths. The existing Phase 34 gate and `verification/generated_code_quality/manifest.json` are active but do not yet record M7-specific closeout coverage for all concurrency paths. |
 | Validation lane manifests | partial | `verification/validation_lanes/create_pr_e2e_manifest.json` and `merge_e2e_manifest.json` already include representative task, sync, offload, process, signal, resource, runtime diagnostic, and IPC fixtures. M7 must audit coverage against every required demo and closeout gate. |
@@ -40,10 +40,10 @@ Status: Open. This M7 artifact is the closeout audit surface for docs, demos, va
 
 | Slice | Required output | Status |
 | --- | --- | --- |
-| Traceability scaffold | Create this artifact and record the M7 audit plan in the execution ledger. | in progress |
+| Traceability scaffold | Create this artifact and record the M7 audit plan in the execution ledger. | complete |
 | Public documentation | Add docs for all accepted production APIs and intentional divergences. | complete |
 | Internal architecture audit | Update architecture docs and rejected-surface index. | complete |
-| Demo closure | Add or validate the seven required demos and record commands. | pending |
+| Demo closure | Add or validate the seven required demos and record commands. | pending PR |
 | Generated dependency and panic-scan evidence | Add generated Cargo dependency snapshots and generated-code quality coverage for concurrency paths. | pending |
 | Validation lane and inventory closure | Audit manifests, platform golden entries, waivers, host-limited rows, workload database, CPython evidence matrix, and inventory. | pending |
 | Final review and merge gate | Run external review rounds until satisfied, then run `scripts/run_all_tests.sh` and close the phase. | pending |
