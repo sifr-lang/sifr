@@ -1,0 +1,37 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_cancellation_cleanup_demo_" + str(getpid()) + ".txt"
+
+
+async def main() -> Result[None, Error]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = str(e.message)
+
+    # Timeout cancellation still runs the finally cleanup before the timeout
+    # evidence is observed by the caller.
+    try:
+        async with task.timeout(0.0):
+            try:
+                await task.sleep(10.0)
+            finally:
+                try:
+                    _written: None = write_text(path, "cleanup")
+                except IOError as e:
+                    _write_message: str = str(e.message)
+    except TimeoutError:
+        _timed_out: bool = True
+
+    assert exists(path)
+
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _remove_message: str = str(e.message)
+    return None
