@@ -182,6 +182,78 @@ fn unix_child_process_pipes_cancel_in_flight_request() {
 }
 
 #[test]
+fn unix_child_process_pipes_report_backpressure_full() {
+    let mut worker = WorkerProcess::spawn();
+    let mut connection = connect(&mut worker);
+    let first = IpcEnvelope::Run {
+        request_id: 13,
+        payload: b"hold".to_vec(),
+    };
+
+    connection
+        .apply_established_frame(&first)
+        .expect("parent reserves held run");
+    write_frame(&mut worker.stdin, &first, IPC_DEFAULT_MAX_FRAME_BYTES).expect("write held run");
+    let started = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
+        .expect("read started frame")
+        .expect("worker starts held run");
+    assert_eq!(started, IpcEnvelope::Started { request_id: 13 });
+    connection
+        .apply_established_frame(&started)
+        .expect("parent accepts started frame");
+
+    let second = IpcEnvelope::Run {
+        request_id: 14,
+        payload: b"second".to_vec(),
+    };
+    write_frame(&mut worker.stdin, &second, IPC_DEFAULT_MAX_FRAME_BYTES).expect("write second run");
+    let malformed = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
+        .expect("read backpressure frame")
+        .expect("worker emits backpressure frame");
+    assert_eq!(
+        malformed,
+        IpcConnectionState::protocol_error_frame(IpcMalformedKind::RequestId, "backpressure_full")
+    );
+    connection
+        .apply_established_frame(&malformed)
+        .expect("parent closes on backpressure protocol error");
+    assert_eq!(connection.phase(), sifr_stdlib::IpcConnectionPhase::Closed);
+
+    worker.finish();
+}
+
+#[test]
+fn unix_child_process_pipes_report_unsupported_payload() {
+    let mut worker = WorkerProcess::spawn();
+    let mut connection = connect(&mut worker);
+    let run = IpcEnvelope::Run {
+        request_id: 17,
+        payload: b"unsupported:sifr.process.Child".to_vec(),
+    };
+
+    connection
+        .apply_established_frame(&run)
+        .expect("parent reserves unsupported payload run");
+    write_frame(&mut worker.stdin, &run, IPC_DEFAULT_MAX_FRAME_BYTES)
+        .expect("write unsupported payload run");
+    let unsupported = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
+        .expect("read unsupported-payload frame")
+        .expect("worker emits unsupported-payload frame");
+    assert_eq!(
+        unsupported,
+        IpcEnvelope::UnsupportedPayload {
+            type_name: "sifr.process.Child".to_string(),
+        }
+    );
+    connection
+        .apply_established_frame(&unsupported)
+        .expect("parent closes on unsupported payload");
+    assert_eq!(connection.phase(), sifr_stdlib::IpcConnectionPhase::Closed);
+
+    worker.finish();
+}
+
+#[test]
 fn unix_child_process_pipes_report_malformed_frame() {
     let mut worker = WorkerProcess::spawn();
     let mut connection = connect(&mut worker);

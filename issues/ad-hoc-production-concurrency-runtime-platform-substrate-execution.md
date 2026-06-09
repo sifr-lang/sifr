@@ -466,6 +466,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC request tracker: https://github.com/sifr-lang/sifr/pull/2450
 - M6 typed IPC connection state: https://github.com/sifr-lang/sifr/pull/2452
 - M6 typed IPC payload eligibility: https://github.com/sifr-lang/sifr/pull/2454
+- M6 typed IPC Unix process-pipe fixture: https://github.com/sifr-lang/sifr/pull/2455
+- M6 typed IPC process-pipe backpressure and unsupported-payload evidence: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -1231,6 +1233,30 @@ M6 typed IPC Unix process-pipe fixture merge ledger:
 - Merged at: `2026-06-09T02:10:57Z`
 - Scope: internal test-gated Unix child-process pipe fixture worker, real stdin/stdout IPC frame transport, bootstrap/request completion/cancellation/shutdown/malformed evidence, M6 traceability, supported-host matrix, validation evidence, and two reviewer artifacts.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC process-pipe backpressure and unsupported-payload evidence implementation:
+
+- Extended the internal `__test_fixture` worker to run with `max_in_flight: 1` and report request-tracker backpressure over the real child stdin/stdout pipe as a redacted `MalformedFrame(RequestId, "backpressure_full")` protocol error.
+- Extended the same Unix process-pipe fixture to emit typed `UnsupportedPayload { type_name }` evidence for an unsupported-payload sentinel without echoing payload bytes.
+- Added Unix integration coverage for the backpressure and unsupported-payload cases while preserving the existing bootstrap, request completion, cancellation, shutdown close, and malformed-frame tests.
+- Updated M6 typed IPC traceability and the supported-host matrix to include Unix process-pipe evidence for bounded backpressure and unsupported payloads while keeping Windows fixtures, compiler diagnostics for payload eligibility/generated extraction, and generated worker integration as follow-up work.
+
+M6 typed IPC process-pipe backpressure and unsupported-payload evidence targeted local validation:
+
+- `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` -> PASS; 5 Unix child-process pipe tests covered request completion plus shutdown, in-flight cancellation plus shutdown, backpressure-full protocol-error reporting, unsupported-payload evidence, and malformed truncated-frame reporting over real child stdin/stdout pipes.
+- `cargo clippy -p sifr_stdlib --features __test_fixture --bin sifr-stdlib-ipc-pipe-fixture-worker -- -D warnings` -> PASS.
+- `cargo fmt --check` -> PASS.
+- `cargo build -p sifr_stdlib` -> PASS; verifies the fixture worker remains gated out of ordinary `sifr_stdlib` builds.
+- `cargo clippy -p sifr_stdlib -- -D warnings` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2258 files` and the `900` line limit before final create-pr validation.
+- Touched file line counts after final create-pr validation ledger update: `crates/sifr_stdlib/tests/fixtures/ipc_pipe_fixture_worker.rs` `183`, `crates/sifr_stdlib/tests/ipc_process_pipe_fixture.rs` `320`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `254`, `verification/platform/supported_host_matrix.md` `47`, and this ledger `2229`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`152.33s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests including the Unix process-pipe integration fixture, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=530c89bb7012eeb0`; slowest step `crate_tests` `51346ms`).
+- Post-ledger `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC process-pipe backpressure and unsupported-payload evidence review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-edge-evidence-review-pass-1.md`: `PASS`; reviewer verified the internal fixture-worker gate, real Unix child-process pipe backpressure evidence, redacted `MalformedFrame(RequestId, "backpressure_full")` reporting, unsupported-payload type-name-only evidence, parent/worker connection-state symmetry, honest Unix-only host-matrix/docs scope, validation evidence, and touched source/test file sizes. Non-blocking follow-ups remain for a future invalid UTF-8 unsupported sentinel fixture case and future symmetric parent-side pre-wire backpressure coverage.
 
 M5 signal `strsignal` value-helper implementation:
 
