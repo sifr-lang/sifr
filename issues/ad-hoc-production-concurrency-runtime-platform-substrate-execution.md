@@ -469,6 +469,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC Unix process-pipe fixture: https://github.com/sifr-lang/sifr/pull/2455
 - M6 typed IPC process-pipe backpressure and unsupported-payload evidence: https://github.com/sifr-lang/sifr/pull/2458
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
+- M6 typed IPC CPython-shaped multiprocessing diagnostics: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -1307,6 +1308,20 @@ M6 typed IPC payload diagnostics merge ledger:
 M6 typed IPC payload diagnostics merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged-at timestamp, pending M6 status, docs-only validation evidence, line-count tally, and diff containment.
+
+M6 typed IPC CPython-shaped multiprocessing diagnostics implementation:
+
+- Added focused `sifr.ipc` missing-member fixtures for the remaining CPython-shaped process-pool and multiprocessing names called out by the M6 design: `Queue`, `Pipe`, `Pool`, `fork`, `forkserver`, and `shared_memory`.
+- Updated the M6 typed IPC design evidence row to list the full focused fixture family alongside the existing `ProcessPoolExecutor` and `Process` fixtures, while preserving the boundary that these are diagnostics only and not public IPC worker APIs.
+
+M6 typed IPC CPython-shaped multiprocessing diagnostics targeted local validation:
+
+- Direct `cargo run -q -p sifr -- check ...` checks for `ipc_multiprocessing_queue_unsupported`, `ipc_multiprocessing_pipe_unsupported`, `ipc_multiprocessing_pool_unsupported`, `ipc_multiprocessing_fork_unsupported`, `ipc_multiprocessing_forkserver_unsupported`, and `ipc_multiprocessing_shared_memory_unsupported` -> expected `SIFR-NAME-0004` for each missing `sifr.ipc` member.
+- `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` -> PASS; fail harness reported `461 fail tests completed`.
+- `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`530.61s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=50edc954137c87b4`).
+- Reviewer pass 1: `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-cpython-shape-diagnostics-review-pass-1.md` -> PASS; reviewer verified fixture column markers, the full focused fixture family in the M6 design row, missing-member diagnostic scope, pending M6 status, validation evidence, and diff containment.
+- Touched file line counts: `crates/sifr/tests/e2e/fail/ipc_multiprocessing_queue_unsupported.sifr` `6`, `crates/sifr/tests/e2e/fail/ipc_multiprocessing_pipe_unsupported.sifr` `6`, `crates/sifr/tests/e2e/fail/ipc_multiprocessing_pool_unsupported.sifr` `6`, `crates/sifr/tests/e2e/fail/ipc_multiprocessing_fork_unsupported.sifr` `6`, `crates/sifr/tests/e2e/fail/ipc_multiprocessing_forkserver_unsupported.sifr` `6`, `crates/sifr/tests/e2e/fail/ipc_multiprocessing_shared_memory_unsupported.sifr` `6`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `255`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-cpython-shape-diagnostics-review-pass-1.md` `8`, and this ledger `2294`.
 
 M5 signal `strsignal` value-helper implementation:
 

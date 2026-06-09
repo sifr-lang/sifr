@@ -35,7 +35,7 @@ This design does not ship a public process-worker pool. A future worker API rema
 | Internal payload eligibility validator | `cargo test -p sifr_stdlib ipc_payload -- --nocapture` | `sifr_stdlib::ipc_payload` recursively validates the initially accepted `IpcSerializable` schema families and returns typed `UnsupportedPayload` evidence for unsupported process/task/resource-like shapes without rendering payload values. Generated schema extraction and runtime foreign-peer payload handling remain follow-up work. |
 | Compile-time payload eligibility diagnostics | `ipc_payload_require_serializable_basic`; `ipc_payload_process_resource_rejected`; `ipc_payload_sync_endpoint_rejected`; `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` | `sifr.ipc.require_serializable(...)` is a compiler-erased marker that accepts representative primitive/container/record payloads and emits `SIFR-OWN-0013` for concrete process-local resources and synchronization endpoints. This is diagnostic evidence only; generated schema extraction and public worker/connection APIs remain follow-up work. |
 | Unix child-process pipe fixture transport | `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` | A fixture worker binary behind the internal `__test_fixture` feature validates real child-process stdin/stdout frame transport on Unix hosts for bootstrap, request completion, in-flight cancellation, shutdown/terminating close, bounded backpressure, malformed-frame reporting, and unsupported-payload evidence. Windows fixtures, generated schema extraction, and generated worker integration remain follow-up work. |
-| `ProcessPoolExecutor` and `Process` under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
+| CPython-shaped process-pool and multiprocessing names under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported`; `ipc_multiprocessing_queue_unsupported`; `ipc_multiprocessing_pipe_unsupported`; `ipc_multiprocessing_pool_unsupported`; `ipc_multiprocessing_fork_unsupported`; `ipc_multiprocessing_forkserver_unsupported`; `ipc_multiprocessing_shared_memory_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
 
 ## Transport Boundary
 
@@ -224,7 +224,7 @@ M6 keeps CPython multiprocessing and process-pool families as evidence sources o
 - `fork` and `forkserver`: `rejected` unless a future host-limited ownership proof is recorded.
 - `shared_memory`: `rejected` until explicit ownership, unlink, drop, aliasing, and host cleanup rules are proven.
 
-The existing bare CPython import diagnostics and legacy `sifr.multiprocessing` diagnostic routing remain valid evidence. M6 may add focused fixtures for ProcessPoolExecutor and multiprocessing members that are not already covered.
+The existing bare CPython import diagnostics and legacy `sifr.multiprocessing` diagnostic routing remain valid evidence. Focused `sifr.ipc` missing-member fixtures now cover the CPython-shaped process-pool and multiprocessing members listed above.
 
 ## Observability And Redaction
 
