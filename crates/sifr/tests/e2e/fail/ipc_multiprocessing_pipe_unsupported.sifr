@@ -1,0 +1,6 @@
+# expect-error[col=22]: SIFR-NAME-0004
+from sifr.ipc import Pipe
+
+
+def main():
+    pass
