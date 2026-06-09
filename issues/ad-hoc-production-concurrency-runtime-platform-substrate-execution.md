@@ -1066,6 +1066,29 @@ M6 typed IPC stream read/write merge ledger:
 - Scope: internal `sifr_stdlib::ipc_transport` read/write helpers over `std::io::Read`/`Write` pipe-shaped byte streams, typed clean-EOF/truncated-prefix/truncated-payload/oversize/read/write error handling, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
+M6 typed IPC request tracker implementation:
+
+- Added internal `sifr_stdlib::ipc_request_tracker` for request-id lifecycle tracking and bounded in-flight request windows on top of the frame model.
+- The tracker reserves `Run` request IDs, rejects duplicates, rejects new runs after drain/close, enforces `max_in_flight`, validates `Started`, `Cancel`, `Completed`, and `Failed` request IDs, releases capacity on terminal frames, and clears state on `Terminating`.
+- `Shutdown(Drain)` stops new runs while preserving in-flight work; `Shutdown(CancelInFlight)` enters draining state and clears in-flight work for cancellation evidence.
+- Added unit coverage for duplicate IDs, unknown terminal/cancel IDs, full-window backpressure, capacity release, drain shutdown, cancel-in-flight shutdown, terminating close, shutdown-after-close terminal behavior, non-request frame pass-through, and redacted error text. This wave does not claim child-process fixture transport, full connection negotiation, payload eligibility enforcement, or generated worker integration.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark only host-independent request tracking/backpressure state as supported; `Typed IPC frames over process pipes` remains blocked on child-process fixture evidence.
+
+M6 typed IPC request tracker targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_stdlib ipc_request_tracker -- --nocapture` -> PASS; 12 request tracker tests covered in-flight reservation, `Run` dispatch through `apply_frame`, duplicate request IDs, full-window backpressure, capacity release on completed/failed frames, unknown terminal/cancel IDs, started/cancel non-terminal behavior, drain shutdown, cancel-in-flight shutdown, terminating close, shutdown-after-close terminal behavior, non-request frame pass-through, and redacted error text.
+- `cargo clippy -p sifr_stdlib -- -D warnings` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2253 files` and the `900` line limit.
+- Touched file line counts after formatting: `crates/sifr_stdlib/src/ipc_request_tracker.rs` `332`, `crates/sifr_stdlib/src/lib.rs` `440`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `246`, and this ledger `2060`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`552.38s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=530c89bb7012eeb0`).
+
+M6 typed IPC request tracker review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-request-tracker-review-pass-1.md`: `PASS`; reviewer verified request-id lifecycle dispatch, duplicate-before-capacity evidence ordering, unknown request-id handling, started/cancel non-terminal behavior, drain versus cancel-in-flight shutdown, terminating close, redacted error text, re-export wiring, and traceability/host-matrix honesty. Non-blocking hardening requested closed-state terminal behavior and additional dispatch-boundary tests.
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-request-tracker-review-pass-2.md`: `PASS`; reviewer verified `begin_shutdown(...)` now preserves `Closed`, `shutdown_after_terminating_keeps_tracker_closed`, `Run` dispatch through `apply_frame`, non-request frame pass-through coverage, reconciled validation evidence and line counts, and no new blockers.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
