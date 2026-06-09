@@ -468,7 +468,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC payload eligibility: https://github.com/sifr-lang/sifr/pull/2454
 - M6 typed IPC Unix process-pipe fixture: https://github.com/sifr-lang/sifr/pull/2455
 - M6 typed IPC process-pipe backpressure and unsupported-payload evidence: https://github.com/sifr-lang/sifr/pull/2458
-- M6 typed IPC payload diagnostics: pending PR.
+- M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6: pending.
 - M7: pending.
 
@@ -1294,7 +1294,19 @@ M6 typed IPC payload diagnostics targeted local validation:
 - Reviewer pass 1: `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-1.md` -> PASS; non-blocking enum/erasure clarity follow-ups addressed with an enum unit case and compiler-erased marker comment.
 - Post-review focused validation: `cargo fmt --check` and `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` -> PASS.
 - Reviewer pass 2: `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-2.md` -> PASS; verified the post-review enum/erasure clarifications and final docs scope.
-- Touched file line counts after formatting: `crates/sifr_lowering/src/lower/ipc_payload_calls.rs` `236`, `crates/sifr_lowering/src/lower/expressions/regular_calls.rs` `468`, `crates/sifr_lowering/src/lower/ownership_diagnostics.rs` `256`, `crates/sifr_lowering/src/lower/nested_function_inference/capture_collection.rs` `223`, `crates/sifr_lowering/src/lower/statements/statement_dispatch.rs` `751`, `crates/sifr_diagnostics/src/codes/registry.rs` `739`, `crates/sifr_diagnostics/src/codes/registry/registry_entries/calls_flow_and_protocols.rs` `571`, `docs/errors/SIFR-OWN-0013.md` `16`, `docs/errors/diagnostic-codes.md` `251`, `internal_docs/diagnostic_codes.md` `253`, `lib/sifr/ipc.sifr` `85`, `crates/sifr/tests/e2e/pass/ipc_payload_require_serializable_basic.sifr` `26`, `crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr` `8`, `crates/sifr/tests/e2e/fail/ipc_payload_sync_endpoint_rejected.sifr` `9`, `verification/validation_lanes/create_pr_e2e_manifest.json` `131`, `verification/validation_lanes/merge_e2e_manifest.json` `143`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `255`, `verification/platform/supported_host_matrix.md` `48`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-1.md` `16`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-2.md` `23`, and this ledger `2267`.
+- Touched file line counts after formatting: `crates/sifr_lowering/src/lower/ipc_payload_calls.rs` `236`, `crates/sifr_lowering/src/lower/expressions/regular_calls.rs` `468`, `crates/sifr_lowering/src/lower/ownership_diagnostics.rs` `256`, `crates/sifr_lowering/src/lower/nested_function_inference/capture_collection.rs` `223`, `crates/sifr_lowering/src/lower/statements/statement_dispatch.rs` `751`, `crates/sifr_diagnostics/src/codes/registry.rs` `739`, `crates/sifr_diagnostics/src/codes/registry/registry_entries/calls_flow_and_protocols.rs` `571`, `docs/errors/SIFR-OWN-0013.md` `16`, `docs/errors/diagnostic-codes.md` `251`, `internal_docs/diagnostic_codes.md` `253`, `lib/sifr/ipc.sifr` `85`, `crates/sifr/tests/e2e/pass/ipc_payload_require_serializable_basic.sifr` `26`, `crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr` `8`, `crates/sifr/tests/e2e/fail/ipc_payload_sync_endpoint_rejected.sifr` `9`, `verification/validation_lanes/create_pr_e2e_manifest.json` `131`, `verification/validation_lanes/merge_e2e_manifest.json` `143`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `255`, `verification/platform/supported_host_matrix.md` `48`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-1.md` `16`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-2.md` `23`, and this ledger `2279`.
+
+M6 typed IPC payload diagnostics merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2460
+- Merge commit: `c319b3a0600cc355eda9cb559cdfb7559d53f533`
+- Merged at: `2026-06-09T03:14:10Z`
+- Scope: compiler-erased `sifr.ipc.require_serializable(...)` marker, `SIFR-OWN-0013` registry/docs, recursive lowering-side IPC payload eligibility diagnostics, representative pass/fail e2e fixtures, validation manifest entries, M6 traceability, supported-host matrix, execution-ledger evidence, and two reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC payload diagnostics merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged-at timestamp, pending M6 status, docs-only validation evidence, line-count tally, and diff containment.
 
 M5 signal `strsignal` value-helper implementation:
 
