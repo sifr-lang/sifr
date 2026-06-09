@@ -465,7 +465,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC stream read/write: https://github.com/sifr-lang/sifr/pull/2447
 - M6 typed IPC request tracker: https://github.com/sifr-lang/sifr/pull/2450
 - M6 typed IPC connection state: https://github.com/sifr-lang/sifr/pull/2452
-- M6 typed IPC payload eligibility: pending PR.
+- M6 typed IPC payload eligibility: https://github.com/sifr-lang/sifr/pull/2454
 - M6: pending.
 - M7: pending.
 
@@ -1188,6 +1188,18 @@ M6 typed IPC payload eligibility review loop:
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-review-pass-1.md`: `PASS`; reviewer verified scope alignment, recursive payload validation, `Unsupported` sentinel honesty, redacted error text, panic-freedom, module wiring, documentation/host-matrix honesty, and local validation evidence. Non-blocking polish requested explicit `None` unit-type wording, direct recursive-container rejection coverage, and descriptor evidence wording.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-review-pass-2.md`: `PASS`; reviewer verified the post-pass-1 polish addressed every non-blocking item without changing the validator contract or overclaiming compiler diagnostics, generated schema extraction, child-process transport, public APIs, or wire-compatible `unsupported(...)` payloads.
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-review-pass-3.md`: `PASS`; reviewer verified the final rebase preserved both connection-state and payload-eligibility traceability, kept deferred compiler diagnostics, generated schema extraction, child-process fixture transport, and public worker/connection APIs honest, and matched final-base validation metrics exactly.
+
+M6 typed IPC payload eligibility merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2454
+- Merge commit: `ff71edd1f81fa7cb49a9c407434390d261e7a7ef`
+- Merged at: `2026-06-09T01:50:32Z`
+- Scope: internal `sifr_stdlib::ipc_payload` host-independent payload eligibility validator, explicit `IpcSchemaType::Unsupported` rejected-type evidence sentinel, recursive unsupported payload coverage, M6 traceability, supported-host matrix, final-base validation evidence, and three reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC payload eligibility merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-eligibility-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, GitHub merged-at timestamp, status-list replacement, docs-only validation evidence, and no M6 completion or deferred-surface overclaim.
 
 M5 signal `strsignal` value-helper implementation:
 
