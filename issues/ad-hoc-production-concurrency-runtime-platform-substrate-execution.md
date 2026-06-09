@@ -471,7 +471,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC payload diagnostics: https://github.com/sifr-lang/sifr/pull/2460
 - M6 typed IPC CPython-shaped multiprocessing diagnostics: https://github.com/sifr-lang/sifr/pull/2462
 - M6 typed IPC compiler-internal schema extraction: https://github.com/sifr-lang/sifr/pull/2464
-- M6 typed IPC generated worker-boundary compose proof: pending PR.
+- M6 typed IPC generated worker-boundary compose proof: https://github.com/sifr-lang/sifr/pull/2470
 - M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
@@ -1388,6 +1388,18 @@ M6 typed IPC generated worker-boundary compose proof targeted local validation:
 - Scope review: `reviews/ad-hoc-production-concurrency-runtime-m6-remaining-scope-review-pass-1.md` -> FAIL-on-closeout without this compose proof; reviewer confirmed generated worker-boundary composition is a true M6 blocker, but not a public process-worker API requirement.
 - Reviewer pass 1: `reviews/ad-hoc-production-concurrency-runtime-m6-generated-worker-boundary-review-pass-1.md` -> PASS; reviewer verified the real compose proof, existing fixture compatibility, no public API overclaim, fixture-only panic surface, and docs/status accuracy.
 - Touched file line counts after formatting: `crates/sifr_lowering/src/lower/ipc_schema_extraction.rs` `359`, `crates/sifr_stdlib/tests/fixtures/ipc_pipe_fixture_worker.rs` `201`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `257`, `verification/platform/supported_host_matrix.md` `50`, `reviews/ad-hoc-production-concurrency-runtime-m6-remaining-scope-review-pass-1.md` `46`, `reviews/ad-hoc-production-concurrency-runtime-m6-generated-worker-boundary-review-pass-1.md` `13`, and this ledger `2404`.
+
+M6 typed IPC generated worker-boundary compose proof merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2470
+- Merge commit: `912b50d250e97f4a3fac3d7526469149b1719f5e`
+- Merged at: `2026-06-09T04:32:18Z`
+- Scope: lowering-owned compose proof that compiler-extracted IPC schema identity drives Unix fixture-worker `Hello`/`Ready`, `Run`/`Completed`, and `Shutdown`/`Terminating`; fixture-worker test schema environment override with default compatibility preserved; M6 design/host-matrix evidence updates; rebased create-pr validation evidence; and two reviewer artifacts.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M6 typed IPC generated worker-boundary compose proof merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-generated-worker-boundary-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, M6 complete/M7 in-progress status preservation, and no overclaim of public generated worker/API support.
 
 M6 closeout classification implementation:
 
