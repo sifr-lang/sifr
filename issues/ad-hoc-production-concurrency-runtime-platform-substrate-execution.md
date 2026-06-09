@@ -473,7 +473,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC compiler-internal schema extraction: https://github.com/sifr-lang/sifr/pull/2464
 - M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
-- M7 traceability scaffold: pending PR.
+- M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
 - M7: in progress.
 
 ## Validation Evidence
@@ -1414,6 +1414,18 @@ M7 traceability scaffold targeted local validation:
 M7 traceability scaffold review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-traceability-review-pass-1.md`: `PASS`; reviewer verified the required M7 traceability artifact exists, M7 remains in progress rather than complete, open gates are tracked with correct state semantics, validation evidence is recorded, and the scaffold does not overclaim phase completion.
+
+M7 traceability scaffold merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2469
+- Merge commit: `9b72f3f151cf5e241f3050e9debbadb633a7461d`
+- Merged at: `2026-06-09T04:25:38Z`
+- Scope: required M7 traceability artifact creation, M7 in-progress ledger status, open closeout gate tracking, M0-M6 closure input summary, and Opus scaffold review artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M7 traceability scaffold merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-traceability-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, and M7 in-progress status without phase-completion overclaim.
 
 M5 signal `strsignal` value-helper implementation:
 
