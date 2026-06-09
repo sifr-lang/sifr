@@ -46,6 +46,9 @@ pub enum IpcSchemaType {
         name: String,
         variants: Vec<IpcSchemaVariant>,
     },
+    Unsupported {
+        type_name: String,
+    },
 }
 
 #[must_use]
@@ -155,6 +158,11 @@ fn push_type(output: &mut String, ty: &IpcSchemaType) {
                 }
             }
             output.push_str("})");
+        }
+        IpcSchemaType::Unsupported { type_name } => {
+            output.push_str("unsupported(");
+            push_escaped(output, type_name);
+            output.push(')');
         }
     }
 }
