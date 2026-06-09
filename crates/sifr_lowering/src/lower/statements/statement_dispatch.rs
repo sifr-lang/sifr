@@ -29,6 +29,8 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
 use sifr_type_system::{FunctionType, Type};
 
+type NestedCaptureSnapshot = Vec<(String, Option<Vec<(String, Type)>>)>;
+
 pub(super) fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
     match expr {
         Expr::List(list) if list.elts.is_empty() => Some("list"),
@@ -167,7 +169,7 @@ pub(in crate::lower) fn lower_stmts(
 fn push_nested_function_captures(
     captures: &std::collections::HashMap<String, Vec<(String, Type)>>,
     ctx: &mut LowerCtx,
-) -> Vec<(String, Option<Vec<(String, Type)>>)> {
+) -> NestedCaptureSnapshot {
     captures
         .iter()
         .map(|(name, function_captures)| {
@@ -180,10 +182,7 @@ fn push_nested_function_captures(
         .collect()
 }
 
-fn restore_nested_function_captures(
-    previous: Vec<(String, Option<Vec<(String, Type)>>)>,
-    ctx: &mut LowerCtx,
-) {
+fn restore_nested_function_captures(previous: NestedCaptureSnapshot, ctx: &mut LowerCtx) {
     for (name, captures) in previous {
         if let Some(captures) = captures {
             ctx.nested_function_captures.insert(name, captures);

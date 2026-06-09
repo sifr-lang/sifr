@@ -7,7 +7,7 @@ use super::{
     type_satisfies_bound, type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap,
     HirExpr, LowerCtx, OwnershipKind, ParamConvention, Ranged, Type,
 };
-use crate::lower::parallel_calls;
+use crate::lower::{ipc_payload_calls, parallel_calls};
 pub(super) fn lower_regular_call(
     func_name: String,
     call: &ExprCall,
@@ -202,6 +202,19 @@ pub(super) fn lower_regular_call(
     };
 
     let arg_ranges = call_argument_ranges_by_param(call, &ft);
+    ipc_payload_calls::validate_require_serializable_call(
+        &func_name,
+        &args,
+        &arg_ranges,
+        call,
+        ctx,
+    );
+    if func_name == "require_serializable" {
+        // This marker is checked entirely during lowering. Emit a concrete
+        // expression so statement-position calls do not generate an ambiguous
+        // Rust `None` literal before the generated schema extractor exists.
+        return Some(HirExpr::BoolLiteral(true));
+    }
 
     // Check argument types (skip for print)
     if func_name != "print" {

@@ -238,3 +238,19 @@ pub(in crate::lower) fn non_share_safe_shared_value(
         range,
     );
 }
+
+pub(in crate::lower) fn non_ipc_serializable_payload(
+    ctx: &mut LowerCtx,
+    value: &str,
+    ty: &str,
+    reason: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_NON_IPC_SERIALIZABLE_PAYLOAD,
+        format!(
+            "typed IPC payload cannot transfer `{value}` of type `{ty}` because {reason}; pass owned schema data instead of process-local resources"
+        ),
+        range,
+    );
+}

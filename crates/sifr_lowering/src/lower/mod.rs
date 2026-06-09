@@ -67,6 +67,7 @@ mod integer_failure_diagnostics;
 mod integer_literal_diagnostics;
 mod integer_literals;
 mod integer_nonzero_guards;
+mod ipc_payload_calls;
 mod len_aliases;
 mod match_diagnostics;
 mod match_lowering;

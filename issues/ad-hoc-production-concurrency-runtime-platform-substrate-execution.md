@@ -468,6 +468,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC payload eligibility: https://github.com/sifr-lang/sifr/pull/2454
 - M6 typed IPC Unix process-pipe fixture: https://github.com/sifr-lang/sifr/pull/2455
 - M6 typed IPC process-pipe backpressure and unsupported-payload evidence: https://github.com/sifr-lang/sifr/pull/2458
+- M6 typed IPC payload diagnostics: pending PR.
 - M6: pending.
 - M7: pending.
 
@@ -1269,6 +1270,31 @@ M6 typed IPC process-pipe backpressure and unsupported-payload evidence merge le
 M6 typed IPC process-pipe backpressure and unsupported-payload evidence merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-process-pipe-edge-evidence-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged-at timestamp, one-line pending-status replacement, docs-only validation evidence, diff containment, and no M6 completion or deferred-surface overclaim.
+
+M6 typed IPC payload diagnostics implementation:
+
+- Added `sifr.ipc.require_serializable(...)` as a compiler-erased marker for representative concrete IPC payload eligibility diagnostics. The marker is not a public connection or worker API and does not add runtime serialization behavior.
+- Added `SIFR-OWN-0013` for typed IPC payloads that try to cross process boundaries with process-local resources, synchronization endpoints/guards, task/runtime handles, callables, iterators, unknown types, or non-initial-schema container shapes.
+- Added recursive lowering-side eligibility checks that accept the initial primitive, `None`, option, list, `dict[str, T]`, tuple, record/class, enum, and `Result[T, E]` payload families while rejecting concrete resource-like values before generated schema extraction exists.
+- Added e2e fixtures for accepted marker usage plus rejected process-pipe and channel-endpoint payloads, and added the accepted fixture to both create-pr and merge e2e manifests.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark host-independent payload eligibility diagnostics as supported while keeping generated schema extraction, public connection/worker APIs, generated worker integration, and Windows process-pipe fixtures as follow-up work.
+
+M6 typed IPC payload diagnostics targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `python3 -m json.tool verification/validation_lanes/create_pr_e2e_manifest.json` and `python3 -m json.tool verification/validation_lanes/merge_e2e_manifest.json` -> PASS.
+- `cargo test -p sifr_diagnostics registry -- --nocapture` -> PASS; 3 registry tests verified the active diagnostic registry and generated docs page for `SIFR-OWN-0013`.
+- `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` -> PASS; 2 tests covered accepted initial payload families plus rejected process-local/callable payloads.
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/ipc_payload_require_serializable_basic.sifr` -> PASS.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr` -> expected `SIFR-OWN-0013` for `PipeReader`.
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/ipc_payload_sync_endpoint_rejected.sifr` -> expected `SIFR-OWN-0013` for `ChannelSender`.
+- `cargo clippy -p sifr_lowering -p sifr_diagnostics -- -D warnings` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`481.24s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=50edc954137c87b4`).
+- Conflict-resolved final branch validation after rebasing on PR #2458/#2459: `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`153.93s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=50edc954137c87b4`).
+- Reviewer pass 1: `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-1.md` -> PASS; non-blocking enum/erasure clarity follow-ups addressed with an enum unit case and compiler-erased marker comment.
+- Post-review focused validation: `cargo fmt --check` and `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` -> PASS.
+- Reviewer pass 2: `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-2.md` -> PASS; verified the post-review enum/erasure clarifications and final docs scope.
+- Touched file line counts after formatting: `crates/sifr_lowering/src/lower/ipc_payload_calls.rs` `236`, `crates/sifr_lowering/src/lower/expressions/regular_calls.rs` `468`, `crates/sifr_lowering/src/lower/ownership_diagnostics.rs` `256`, `crates/sifr_lowering/src/lower/nested_function_inference/capture_collection.rs` `223`, `crates/sifr_lowering/src/lower/statements/statement_dispatch.rs` `751`, `crates/sifr_diagnostics/src/codes/registry.rs` `739`, `crates/sifr_diagnostics/src/codes/registry/registry_entries/calls_flow_and_protocols.rs` `571`, `docs/errors/SIFR-OWN-0013.md` `16`, `docs/errors/diagnostic-codes.md` `251`, `internal_docs/diagnostic_codes.md` `253`, `lib/sifr/ipc.sifr` `85`, `crates/sifr/tests/e2e/pass/ipc_payload_require_serializable_basic.sifr` `26`, `crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr` `8`, `crates/sifr/tests/e2e/fail/ipc_payload_sync_endpoint_rejected.sifr` `9`, `verification/validation_lanes/create_pr_e2e_manifest.json` `131`, `verification/validation_lanes/merge_e2e_manifest.json` `143`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `255`, `verification/platform/supported_host_matrix.md` `48`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-1.md` `16`, `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-payload-diagnostics-review-pass-2.md` `23`, and this ledger `2267`.
 
 M5 signal `strsignal` value-helper implementation:
 
