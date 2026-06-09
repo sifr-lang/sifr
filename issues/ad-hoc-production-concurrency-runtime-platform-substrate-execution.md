@@ -1152,6 +1152,14 @@ M6 typed IPC connection-state review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-connection-state-review-pass-1.md`: `PASS`; reviewer verified bootstrap negotiation, parent/worker state gates, protocol overlap and schema identity checks, max-frame negotiation, established-frame phase handling, request-tracker routing, shutdown/terminating/protocol-error close behavior, redacted error text, honest traceability/host-matrix scope, and focused test/validation evidence. No blockers remain for this wave.
 
+M6 typed IPC connection-state merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2452
+- Merge commit: `9c4a1229342b3776554f148afb987b1e4e649ae7`
+- Merged at: `2026-06-09T01:16:16Z`
+- Scope: internal `sifr_stdlib::ipc_connection` parent/worker bootstrap negotiation, protocol/schema/max-frame negotiation, established-frame state gating, request-tracker integration, shutdown/terminating/protocol-error close behavior, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
