@@ -478,7 +478,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
 - M7 internal architecture audit: https://github.com/sifr-lang/sifr/pull/2476
 - M7 demo closure: https://github.com/sifr-lang/sifr/pull/2479
-- M7 generated dependency and panic-scan evidence: pending PR.
+- M7 generated dependency and panic-scan evidence: https://github.com/sifr-lang/sifr/pull/2482
 - M7: in progress.
 
 ## Validation Evidence
@@ -1574,6 +1574,19 @@ M7 generated dependency and panic-scan evidence validation:
 M7 generated dependency and panic-scan evidence review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-generated-evidence-review-pass-1.md`: `PASS`; reviewer verified the dependency snapshot schema and resolver equivalence, the M7 generated-code quality manifest group and harness enforcement, the generated parallel `try_map` bound fix, scoped `pending-pr` traceability, local validation evidence shape, and no overclaim of M7 or phase completion.
+
+M7 generated dependency and panic-scan evidence merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2482
+- Merge commit: `727f234511427e4dafa1644b39af4712a9a8c30b`
+- Merged at: `2026-06-09T05:37:13Z`
+- Scope: resolver-backed concurrency runtime dependency snapshots with an integration test, dedicated M7 generated-code quality manifest coverage for all seven required demos, generated parallel `try_map` bound cleanup required by the new clippy lane, M7 traceability for generated dependency and panic/emitted-code quality coverage, validation evidence, and Opus review artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M7 generated dependency and panic-scan evidence merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-generated-ledger-review-pass-1.md`: `PASS`; reviewer verified the ledger does not overclaim M7 or phase completion, only closes the generated dependency snapshot and panic/emitted-code quality coverage gates, keeps validation lane manifests partial and inventory closure plus final external review open, records the PR URL, merge commit, timestamp, scope, and docs-only `git diff --check` plus `python3 scripts/check_file_size_guardrails.py` PASS evidence accurately for phase closeout traceability.
+- `reviews/ad-hoc-production-concurrency-runtime-m7-generated-ledger-review-pass-2.md`: `PASS`; reviewer verified the final ledger references the populated pass-1 artifact, closes only the generated-evidence gates, keeps remaining M7 gates open or partial, and needs no further review rounds before commit.
 
 M5 signal `strsignal` value-helper implementation:
 
