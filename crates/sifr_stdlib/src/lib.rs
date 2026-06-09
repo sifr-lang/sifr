@@ -12,6 +12,7 @@ mod crypto_regex_uuid;
 mod features;
 mod i18n_core;
 mod io_json;
+mod ipc_connection;
 mod ipc_frame;
 mod ipc_request_tracker;
 mod ipc_schema;
@@ -35,6 +36,10 @@ pub use features::{
 };
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
+pub use ipc_connection::{
+    negotiate_protocol_version, schema_ranges_overlap, schemas_match_exact, IpcConnectionConfig,
+    IpcConnectionError, IpcConnectionPhase, IpcConnectionState, IpcHandshakeDecision,
+};
 pub use ipc_frame::{
     decode_frame, encode_frame, IpcEnvelope, IpcFrameError, IpcMalformedKind, IpcRejectReason,
     IpcShutdownMode, IpcTerminationReason, IpcWireFrameKind, IpcWireSchema, IpcWorkerState,

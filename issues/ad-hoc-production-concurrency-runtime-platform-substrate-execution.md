@@ -1131,6 +1131,27 @@ M6 typed IPC request tracker merge ledger:
 - Scope: internal `sifr_stdlib::ipc_request_tracker` request-id lifecycle state machine, bounded in-flight backpressure, typed duplicate/unknown/full/draining/closed errors, M6 traceability, supported-host matrix, validation evidence, and two reviewer artifacts.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
+M6 typed IPC connection-state implementation:
+
+- Added internal `sifr_stdlib::ipc_connection` for fixture-oriented bootstrap and established-frame state management on top of the frame codec and request tracker.
+- The helper builds parent `Hello` frames, accepts worker `Ready`/`Reject`, validates worker-side parent `Hello`, chooses the highest overlapping protocol version, enforces exact schema identity plus compatible-version range overlap, negotiates max-frame byte limits, and closes on bootstrap rejection/error evidence.
+- Established-frame handling rejects bootstrap frames after readiness, routes `Run`/`Started`/`Cancel`/`Completed`/`Failed` frames through the request tracker, transitions to draining on `Shutdown`, closes on `Terminating` and protocol-error frames, and exposes code-only malformed-frame construction without rendering payload bytes.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark only host-independent connection-state and bootstrap negotiation as supported. This wave does not claim child-process fixture transport, payload eligibility diagnostics, or generated worker integration.
+
+M6 typed IPC connection-state targeted local validation:
+
+- `cargo fmt --check` -> PASS after formatting.
+- `cargo test -p sifr_stdlib ipc_connection -- --nocapture` -> PASS; 14 connection-state tests covered protocol overlap selection, exact schema identity/range checks, parent hello emission, worker ready/reject decisions, parent ready acceptance, forged-ready schema rejection, pre-ready frame rejection, request-tracker integration, duplicate request propagation, shutdown drain transition, terminating close, and protocol-error frame redaction.
+- `cargo clippy -p sifr_stdlib -- -D warnings` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2254 files` and the `900` line limit.
+- Touched file line counts after formatting: `crates/sifr_stdlib/src/ipc_connection.rs` `705`, `crates/sifr_stdlib/src/lib.rs` `445`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `248`, `verification/platform/supported_host_matrix.md` `46`, and this ledger `2123`.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`674.35s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=530c89bb7012eeb0`).
+
+M6 typed IPC connection-state review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-connection-state-review-pass-1.md`: `PASS`; reviewer verified bootstrap negotiation, parent/worker state gates, protocol overlap and schema identity checks, max-frame negotiation, established-frame phase handling, request-tracker routing, shutdown/terminating/protocol-error close behavior, redacted error text, honest traceability/host-matrix scope, and focused test/validation evidence. No blockers remain for this wave.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
