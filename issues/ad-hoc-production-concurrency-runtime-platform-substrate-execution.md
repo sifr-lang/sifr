@@ -475,7 +475,7 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
 - M7 traceability scaffold: https://github.com/sifr-lang/sifr/pull/2469
-- M7 public documentation: pending PR.
+- M7 public documentation: https://github.com/sifr-lang/sifr/pull/2473
 - M7: in progress.
 
 ## Validation Evidence
@@ -1472,6 +1472,18 @@ M7 public documentation targeted local validation:
 M7 public documentation review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-public-docs-review-pass-1.md`: `PASS`; reviewer verified public docs coverage for all eight modules, intentional CPython divergence and public API boundaries, M7 in-progress status, non-public-doc gates left open, validation claims, and touched-file line counts.
+
+M7 public documentation merge ledger:
+
+- PR: https://github.com/sifr-lang/sifr/pull/2473
+- Merge commit: `9a17a5fd76a701761b91604bd45ac7e58ecdf7bc`
+- Merged at: `2026-06-09T04:41:12Z`
+- Scope: public `docs/concurrency_runtime.md` coverage for `sifr.task`, `sifr.sync`, `sifr.runtime`, `sifr.parallel`, `sifr.process`, `sifr.signal`, `sifr.resource`, and `sifr.ipc`; M7 traceability public-doc rows marked complete after merge; validation evidence; and Opus public-docs review artifact.
+- Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+
+M7 public documentation merge-ledger review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-public-docs-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp, docs-only scope, validation claim, public-doc gates closed, remaining M7 gates still open/partial/pending, and no M7 completion overclaim.
 
 M5 signal `strsignal` value-helper implementation:
 
