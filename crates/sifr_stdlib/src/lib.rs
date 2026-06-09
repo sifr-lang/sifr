@@ -14,6 +14,7 @@ mod i18n_core;
 mod io_json;
 mod ipc_frame;
 mod ipc_schema;
+mod ipc_transport;
 mod math_test;
 mod platform_misc;
 mod process;
@@ -42,6 +43,7 @@ pub use ipc_schema::{
     canonical_schema_descriptor, fnv1a_128, schema_hash_hex_v1, schema_hash_v1,
     IpcSchemaDescriptor, IpcSchemaField, IpcSchemaType, IpcSchemaVariant,
 };
+pub use ipc_transport::{read_frame, write_frame, IpcTransportError};
 use math_test::{intrinsic_math, intrinsic_test};
 use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_logging,

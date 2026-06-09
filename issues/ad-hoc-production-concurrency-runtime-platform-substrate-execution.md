@@ -1036,6 +1036,28 @@ M6 typed IPC frame codec merge ledger:
 - Scope: Ring 4 workspace Postcard dependency, `sifr_stdlib` Serde/Postcard dependency wiring, internal IPC envelope and length-prefixed Postcard encode/decode helpers, malformed-frame tests, M6 traceability, supported-host matrix, validation evidence, and reviewer artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
+M6 typed IPC stream read/write implementation:
+
+- Added internal `sifr_stdlib::ipc_transport` read/write helpers on top of the frame codec for `std::io::Read`/`Write` pipe-shaped byte streams.
+- `read_frame(...)` treats clean EOF before a length prefix as `Ok(None)` close evidence, reports partial prefixes and payloads as typed frame errors, rejects oversize frames before reading payload bytes, decodes valid frames through the existing Postcard codec, and drops raw I/O error details.
+- `write_frame(...)` encodes through the existing frame codec, writes the length-prefixed frame, flushes the stream, and maps writer failures to typed transport errors without rendering payload bytes.
+- Added unit coverage for stream round trips, clean EOF, truncated prefixes, oversize prefixes, truncated payloads, encode-limit failures, writer failures, and bootstrap frames. This wave does not claim child-process fixture transport, connection-state handling, payload eligibility enforcement, cancellation, close protocol, or runtime backpressure support.
+- Updated M6 typed IPC traceability and the supported-host matrix to mark only host-independent stream helpers as supported; `Typed IPC frames over process pipes` remains blocked on child-process fixture evidence.
+
+M6 typed IPC stream read/write targeted local validation:
+
+- `cargo fmt --check` -> PASS.
+- `cargo test -p sifr_stdlib ipc_transport -- --nocapture` -> PASS; 9 stream helper tests covered pipe-shaped stream round trip, clean EOF before prefix, truncated prefix, oversize prefix rejection before payload read, truncated payload, encode-limit failure, writer failure, bootstrap frame read/write, and length-prefix constant shape.
+- `cargo clippy -p sifr_stdlib -- -D warnings` -> PASS.
+- `git diff --check` -> PASS.
+- `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2252 files` and the `900` line limit.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`655.41s`, warm target `<=2m`). Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`124 passed`, `0 failed`, `cache_hits=0/37`, `report_signature=530c89bb7012eeb0`).
+- Touched file line counts after formatting: `crates/sifr_stdlib/src/ipc_transport.rs` `261`, `crates/sifr_stdlib/src/lib.rs` `438`, `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md` `245`, and this ledger `2029`.
+
+M6 typed IPC stream read/write review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m6-ipc-transport-review-pass-1.md`: `PASS`; reviewer verified clean EOF versus partial-prefix behavior, oversize-prefix rejection before payload allocation, truncated-payload handling, opaque read/write I/O error mapping, write/flush error mapping, no unwrap/expect/panic path, stream helper scope discipline, and traceability/host-matrix honesty. Non-blocking follow-ups remain for read-error, flush-error, interrupted-read, zero-length-frame, multi-frame-stream, copy-avoidance, `Display`/`Error`, and unreachable length-sentinel hardening.
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
