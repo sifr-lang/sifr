@@ -107,11 +107,12 @@ fn unsupported_schema_type(ty: &Type) -> IpcSchemaType {
 #[cfg(test)]
 mod tests {
     use super::extract_ipc_schema_type;
-    use sifr_stdlib::{canonical_schema_descriptor, IpcSchemaDescriptor, IpcSchemaType};
+    use sifr_stdlib::{
+        canonical_schema_descriptor, IpcSchemaDescriptor, IpcSchemaType, IpcWireSchema,
+    };
     use sifr_type_system::{FunctionType, Type};
 
-    #[test]
-    fn extracts_initial_payload_schema_families() {
+    fn generated_echo_descriptor() -> IpcSchemaDescriptor {
         let request = Type::Class {
             name: "EchoRequest".to_string(),
             fields: vec![
@@ -137,7 +138,7 @@ mod tests {
             parent_class: None,
         };
 
-        let descriptor = IpcSchemaDescriptor {
+        IpcSchemaDescriptor {
             protocol_schema_version: 1,
             module_path: "demo.ipc".to_string(),
             schema_name: "Echo".to_string(),
@@ -152,12 +153,181 @@ mod tests {
                 ],
             }),
             error: extract_ipc_schema_type(&Type::None),
-        };
+        }
+    }
+
+    #[test]
+    fn extracts_initial_payload_schema_families() {
+        let descriptor = generated_echo_descriptor();
 
         assert_eq!(
             canonical_schema_descriptor(&descriptor),
             "sifr-ipc-schema-v1\nprotocol_schema_version=1\nmodule=demo.ipc\nschema=Echo\ncompatible=1..1\nrequest=record(EchoRequest{message:str,tags:list(option(str)),metadata:dict(str,bytes),outcome:result(bool,str),coords:tuple(int,float)})\nresponse=enum(EchoStatus{Accepted,Rejected})\nerror=none"
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn generated_schema_drives_unix_fixture_worker_bootstrap_and_round_trip() {
+        use sifr_stdlib::{
+            read_frame, schema_hash_hex_v1, schema_hash_v1, validate_ipc_payload_type, write_frame,
+            IpcConnectionConfig, IpcConnectionState, IpcEnvelope, IpcShutdownMode,
+            IpcTerminationReason, IPC_DEFAULT_MAX_FRAME_BYTES,
+        };
+        use std::path::{Path, PathBuf};
+        use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
+
+        struct WorkerProcess {
+            child: Child,
+            stdin: ChildStdin,
+            stdout: ChildStdout,
+        }
+
+        impl WorkerProcess {
+            fn spawn(schema_name: &str, schema_hash: &str) -> Self {
+                let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+                let repo_root = manifest_dir
+                    .parent()
+                    .and_then(Path::parent)
+                    .expect("lowering crate lives under crates/sifr_lowering");
+                let stdlib_manifest = repo_root
+                    .join("crates")
+                    .join("sifr_stdlib")
+                    .join("Cargo.toml");
+                let target_dir = repo_root
+                    .join("target")
+                    .join("ipc_generated_worker_boundary_fixture");
+                let mut child =
+                    Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string()))
+                        .arg("run")
+                        .arg("--quiet")
+                        .arg("--manifest-path")
+                        .arg(stdlib_manifest)
+                        .arg("--target-dir")
+                        .arg(target_dir)
+                        .arg("--features")
+                        .arg("__test_fixture")
+                        .arg("--bin")
+                        .arg("sifr-stdlib-ipc-pipe-fixture-worker")
+                        .env("SIFR_IPC_FIXTURE_SCHEMA_NAME", schema_name)
+                        .env("SIFR_IPC_FIXTURE_SCHEMA_HASH", schema_hash)
+                        .stdin(Stdio::piped())
+                        .stdout(Stdio::piped())
+                        .stderr(Stdio::piped())
+                        .spawn()
+                        .expect("spawn IPC fixture worker");
+                let stdin = child.stdin.take().expect("worker stdin is piped");
+                let stdout = child.stdout.take().expect("worker stdout is piped");
+                Self {
+                    child,
+                    stdin,
+                    stdout,
+                }
+            }
+
+            fn finish(self) {
+                drop(self.stdin);
+                drop(self.stdout);
+                let output = self
+                    .child
+                    .wait_with_output()
+                    .expect("wait for IPC fixture worker");
+                assert!(
+                    output.status.success(),
+                    "worker failed: status={:?}, stderr={}",
+                    output.status,
+                    String::from_utf8_lossy(&output.stderr)
+                );
+            }
+        }
+
+        let descriptor = generated_echo_descriptor();
+        validate_ipc_payload_type(&descriptor.request).expect("request schema is eligible");
+        validate_ipc_payload_type(&descriptor.response).expect("response schema is eligible");
+        validate_ipc_payload_type(&descriptor.error).expect("error schema is eligible");
+        let schema_name = format!("{}.{}", descriptor.module_path, descriptor.schema_name);
+        let wire_schema = IpcWireSchema {
+            name: schema_name.clone(),
+            version: 1,
+            hash: schema_hash_v1(&descriptor).to_be_bytes(),
+            compatible_version_min: 1,
+            compatible_version_max: 1,
+        };
+        let mut worker = WorkerProcess::spawn(&schema_name, &schema_hash_hex_v1(&descriptor));
+        let mut connection = IpcConnectionState::new(IpcConnectionConfig::new(wire_schema.clone()))
+            .expect("generated schema config is valid");
+
+        let hello = connection
+            .begin_parent_handshake()
+            .expect("parent begins generated-schema handshake");
+        write_frame(&mut worker.stdin, &hello, IPC_DEFAULT_MAX_FRAME_BYTES)
+            .expect("write generated-schema hello");
+        let ready = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
+            .expect("read generated-schema ready")
+            .expect("worker emits ready");
+        assert_eq!(
+            ready,
+            IpcEnvelope::Ready {
+                protocol_version: 1,
+                schema: wire_schema,
+                max_frame_bytes: IPC_DEFAULT_MAX_FRAME_BYTES,
+            }
+        );
+        connection
+            .accept_worker_bootstrap(&ready)
+            .expect("parent accepts generated-schema ready");
+
+        let run = IpcEnvelope::Run {
+            request_id: 101,
+            payload: b"generated-schema".to_vec(),
+        };
+        connection
+            .apply_established_frame(&run)
+            .expect("parent reserves generated-schema request");
+        write_frame(&mut worker.stdin, &run, IPC_DEFAULT_MAX_FRAME_BYTES)
+            .expect("write generated-schema request");
+        let started = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
+            .expect("read started")
+            .expect("worker emits started");
+        assert_eq!(started, IpcEnvelope::Started { request_id: 101 });
+        connection
+            .apply_established_frame(&started)
+            .expect("parent accepts generated-schema started");
+        let completed = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
+            .expect("read completed")
+            .expect("worker emits completed");
+        assert_eq!(
+            completed,
+            IpcEnvelope::Completed {
+                request_id: 101,
+                payload: b"generated-schema".to_vec(),
+            }
+        );
+        connection
+            .apply_established_frame(&completed)
+            .expect("parent accepts generated-schema completion");
+
+        let shutdown = IpcEnvelope::Shutdown {
+            mode: IpcShutdownMode::Drain,
+        };
+        connection
+            .apply_established_frame(&shutdown)
+            .expect("parent enters draining state");
+        write_frame(&mut worker.stdin, &shutdown, IPC_DEFAULT_MAX_FRAME_BYTES)
+            .expect("write generated-schema shutdown");
+        let terminating = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
+            .expect("read terminating")
+            .expect("worker emits terminating");
+        assert_eq!(
+            terminating,
+            IpcEnvelope::Terminating {
+                reason: IpcTerminationReason::Shutdown,
+            }
+        );
+        connection
+            .apply_established_frame(&terminating)
+            .expect("parent accepts generated-schema terminating");
+        worker.finish();
     }
 
     #[test]
