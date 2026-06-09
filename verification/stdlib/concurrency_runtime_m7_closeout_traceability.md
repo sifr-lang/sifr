@@ -1,0 +1,65 @@
+# Concurrency Runtime M7 Closeout Traceability
+
+Milestone: `milestone_concurrency_runtime_7`
+
+Status: Open. This M7 artifact is the closeout audit surface for docs, demos, validation lanes, panic scans, generated dependency snapshots, inventory closure, and final external review. It does not mark the phase complete; it records the remaining gates that must close before `milestone_concurrency_runtime_7` can be checked off.
+
+## Closeout Gates
+
+| Gate | State | Evidence or required closure |
+| --- | --- | --- |
+| Public docs for `sifr.task` | open | Add public docs covering `TaskHandle`, `TaskGroup`, scoped spawn, timeout/deadline/cancel helpers, join/race/select, explicit task context, cancellation evidence, and unsupported event-loop compatibility boundaries. |
+| Public docs for `sifr.sync` | open | Add public docs covering channels, backpressure, close/drain, cancellation behavior, locks, semaphores, events, sendability/shareability, and unsupported queue/threading parity boundaries. |
+| Public docs for `sifr.runtime` | open | Add public docs covering blocking/CPU offload helpers, `JoinSet`, structured diagnostic events, workload annotations, and direct-call diagnostics. |
+| Public docs for `sifr.parallel` | open | Add public docs covering ordered `map`/`try_map`, private default/configured pools, typed worker errors, panic-to-error behavior, and async direct-call rejection. |
+| Public docs for `sifr.process` | open | Add public docs covering sync/async command execution, owned pipes, process handles, timeout/cancel/kill/terminate behavior, shell execution effects, text encoding, and task-boundary ownership diagnostics. |
+| Public docs for `sifr.signal` | open | Add public docs covering portable signal values, structured shutdown streams, Unix delivery evidence, non-Unix host-limited behavior, `strsignal`, and rejected global handler APIs. |
+| Public docs for `sifr.resource` | open | Add public docs covering `nullcontext(...)`, language cleanup under cancellation, and unsupported cleanup-stack/owned-closing helpers. |
+| Public docs for `sifr.ipc` | open | Add public docs covering typed schema/frame substrate, payload eligibility diagnostics, version negotiation, process-pipe layering, unsupported CPython multiprocessing names, and `deferred-to-phase-X` worker APIs. |
+| Internal architecture docs | partial | `internal_docs/structured_runtime_work_model.md`, `internal_docs/async_concurrency_model.md`, and `internal_docs/architecture.md` already contain substantial model material. M7 must audit and update task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability, task/request context, diagnostics/signal global-state policy, and the rejected CPython-shaped surface index. |
+| Required demos | partial | Existing demos include `demos/task_core_demo/main.sifr`, `demos/sync_channel_demo/main.sifr`, `demos/blocking_offload_demo/main.sifr`, `demos/structured_concurrency_demo/main.sifr`, and `demos/subprocess/main.sifr`. M7 must add or validate all required demos: structured task group, producer/consumer channel pipeline, blocking offload, CPU parallel map, async subprocess pipeline, structured shutdown, and cleanup under cancellation. |
+| Generated Cargo dependency snapshots | open | Add generated-project dependency evidence for the accepted feature combinations that pull runtime dependencies such as Tokio, Rayon, tracing, metrics, process support, signal support, and IPC serialization. |
+| Panic scan and emitted-code quality coverage | open | Extend or document generated-code quality coverage for task/channel/process/runtime paths. The existing Phase 34 gate and `verification/generated_code_quality/manifest.json` are active but do not yet record M7-specific closeout coverage for all concurrency paths. |
+| Validation lane manifests | partial | `verification/validation_lanes/create_pr_e2e_manifest.json` and `merge_e2e_manifest.json` already include representative task, sync, offload, process, signal, resource, runtime diagnostic, and IPC fixtures. M7 must audit coverage against every required demo and closeout gate. |
+| Inventory closure | open | `verification/stdlib/concurrency_runtime_substrate_inventory.md`, `concurrency_runtime_substrate_inventory.json`, `concurrency_runtime_cpython_evidence_matrix.md`, `concurrency_runtime_workload_database.md`, platform contract artifacts, supported-host matrix, and platform golden manifest must have no unclassified public surfaces, CPython families, waivers without revisit rules, or host-limited rows without a matrix entry. |
+| Final external review | open | Final phase completion requires a reviewer `PASS` on the closed inventory and implementation, or the documented five-working-day fallback procedure with no unresolved blocking questions. |
+
+## M0-M6 Closure Inputs
+
+| Milestone | Artifact | Closure state |
+| --- | --- | --- |
+| M0a | `concurrency_runtime_m0a_legacy_surface_traceability.md` | Closed by legacy-surface diagnostics and native surface boundary selection. |
+| M1 | `concurrency_runtime_m1_traceability.md` | Closed by structured task ownership, scoped spawn, timeout/cancellation, race/select, and task handle evidence. |
+| M2 | `concurrency_runtime_m2_sync_traceability.md` | Closed by channels, backpressure, close/drain, cancellation, locks, semaphores, events, and sendability/shareability diagnostics. |
+| M3 | `concurrency_runtime_m3_offload_traceability.md` | Closed by blocking/CPU offload, `JoinSet`, `sifr.parallel`, typed worker errors, and panic-boundary evidence. |
+| M4 | `concurrency_runtime_m4_process_traceability.md` | Closed by sync/async process supervision, owned pipes, text mode, shell effect, timeout, cancellation, kill/terminate, and scoped process ownership evidence. |
+| M5 | `concurrency_runtime_m5_shutdown_traceability.md` | Closed by signal values/streams, cleanup cancellation, `nullcontext`, task context propagation, diagnostics/tracing, and rejected global-state surfaces. |
+| M6 | `concurrency_runtime_m6_typed_ipc_design.md` | Closed by typed IPC schema/frame substrate, request tracking, connection negotiation, payload diagnostics, Unix process-pipe evidence, and `deferred-to-phase-X` worker boundaries. |
+
+## Required M7 PR Slices
+
+| Slice | Required output | Status |
+| --- | --- | --- |
+| Traceability scaffold | Create this artifact and record the M7 audit plan in the execution ledger. | in progress |
+| Public documentation | Add docs for all accepted production APIs and intentional divergences. | pending |
+| Internal architecture audit | Update architecture docs and rejected-surface index. | pending |
+| Demo closure | Add or validate the seven required demos and record commands. | pending |
+| Generated dependency and panic-scan evidence | Add generated Cargo dependency snapshots and generated-code quality coverage for concurrency paths. | pending |
+| Validation lane and inventory closure | Audit manifests, platform golden entries, waivers, host-limited rows, workload database, CPython evidence matrix, and inventory. | pending |
+| Final review and merge gate | Run external review rounds until satisfied, then run `scripts/run_all_tests.sh` and close the phase. | pending |
+
+## Validation Plan
+
+M7 final validation must include:
+
+- `cargo fmt --check`
+- `cargo clippy --workspace -- -D warnings`
+- `python3 scripts/check_hir_maintainability_guardrails.py`
+- `python3 scripts/check_file_size_guardrails.py`
+- `cargo test -p sifr_stdlib`
+- `cargo test -p sifr -- stdlib`
+- `scripts/run_e2e_pass.sh`
+- `scripts/run_all_tests.sh --profile create-pr`
+- `scripts/run_all_tests.sh`
+
+Intermediate M7 PRs may run narrower validation when they are docs-only, but each PR must record its exact local validation in the execution ledger and the final phase closeout must run the full merge gate.

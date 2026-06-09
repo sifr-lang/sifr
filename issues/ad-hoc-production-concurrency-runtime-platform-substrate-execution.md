@@ -473,7 +473,8 @@ Current M2 wave: synchronization, channels, and backpressure closure.
 - M6 typed IPC compiler-internal schema extraction: https://github.com/sifr-lang/sifr/pull/2464
 - M6 typed IPC closeout classification: https://github.com/sifr-lang/sifr/pull/2467
 - M6: complete.
-- M7: pending.
+- M7 traceability scaffold: pending PR.
+- M7: in progress.
 
 ## Validation Evidence
 
@@ -1398,6 +1399,21 @@ M6 typed IPC closeout classification merge ledger:
 M6 typed IPC closeout classification merge-ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m6-closeout-ledger-review-pass-1.md`: `PASS`; reviewer verified the PR URL, merge commit, merged timestamp with expected one-second GitHub/commit timestamp skew, docs-only scope, validation claim, and M6 complete/M7 pending status.
+
+M7 traceability scaffold implementation:
+
+- Created `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` as the required M7 milestone traceability artifact.
+- Recorded M7 closeout gates for public docs, internal architecture docs, demos, generated Cargo dependency snapshots, generated-code panic/emitted-quality coverage, validation lane manifests, inventory closure, and final external review.
+- Preserved M7 as in-progress rather than complete; this scaffold records the remaining closeout PR slices and does not satisfy the final phase gate.
+
+M7 traceability scaffold targeted local validation:
+
+- `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded (`222.51s`, warm target `<=2m`) after package-cache lock waits. Included guardrails, diagnostic contracts, frontend/syntax guardrails, developer tooling, performance budgets, verification hardening, generated-code quality, crate tests, platform golden (`pass=6`, `skip=1`), and create-pr e2e pass suite (`125 passed`, `0 failed`, `cache_hits=37/37`, `report_signature=50edc954137c87b4`; slowest step `crate_tests` `72699ms`).
+
+M7 traceability scaffold review loop:
+
+- `reviews/ad-hoc-production-concurrency-runtime-m7-traceability-review-pass-1.md`: `PASS`; reviewer verified the required M7 traceability artifact exists, M7 remains in progress rather than complete, open gates are tracked with correct state semantics, validation evidence is recorded, and the scaffold does not overclaim phase completion.
 
 M5 signal `strsignal` value-helper implementation:
 
