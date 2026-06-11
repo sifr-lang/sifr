@@ -19,6 +19,7 @@ mod ipc_request_tracker;
 mod ipc_schema;
 mod ipc_transport;
 mod math_test;
+mod net;
 mod platform_misc;
 mod process;
 mod runtime;
@@ -54,6 +55,7 @@ pub use ipc_schema::{
 };
 pub use ipc_transport::{read_frame, write_frame, IpcTransportError};
 use math_test::{intrinsic_math, intrinsic_test};
+use net::intrinsic_net;
 use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_logging,
     intrinsic_platform, intrinsic_toml,
@@ -128,6 +130,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.regex" => Some(intrinsic_regex()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.platform" => Some(intrinsic_platform()),
+        "_sifr.net" => Some(intrinsic_net()),
         "_sifr.process" => Some(intrinsic_process()),
         "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),

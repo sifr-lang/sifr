@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0 merged
+Status: in progress; M0 merged; M1 implemented locally with Opus pass 1 blockers remediated, pending rerun review/PR
 
 ## Scope Split
 
@@ -245,6 +245,35 @@ M0 validation:
 | `cargo clippy --workspace -- -D warnings` | PASS | Finished dev profile in 2m16s. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded, no test failure. |
 | `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; first run failed on one transient performance p95 outlier, targeted representative performance rerun and full merge-gate rerun passed. Advisories: warm wall-time budget exceeded and high group skew. |
+
+M1 validation:
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `cargo build -p sifr --bin sifr` | PASS | Rebuilt CLI after `sifr.net` stdlib/runtime/codegen changes. |
+| `cargo check -p sifr_runtime --features net` | PASS | Runtime crate builds with optional `net` feature enabled. |
+| `cargo test -p sifr_runtime --features net --lib net -- --nocapture` | PASS | Runtime crate builds and test harness completes; `sifr_runtime::net` currently has no unit tests, so behavior is covered by generated Sifr fixtures. |
+| `cargo test -p sifr_stdlib --test concurrency_runtime_dependency_snapshots -- --nocapture` | PASS | Verifies existing concurrency/Tokio dependency snapshot remains unchanged without `sifr.net`. |
+| `cargo test -p sifr_stdlib --test network_http_dependency_snapshots -- --nocapture` | PASS | Covers M0 Ring 5 dependency absence and the M1 `sifr.net` generated dependency snapshot with `sifr_runtime/net`, Tokio `net`, tracing, and no unused `bytes`/`socket2`/`tokio-util` emission. |
+| `cargo test -p sifr_stdlib --test text_i18n_dependency_snapshots -- --nocapture` | PASS | Verifies moved text/i18n dependency snapshot coverage remains intact after feature-registry edits. |
+| `target/debug/sifr check crates/sifr/tests/e2e/pass/network_http_m1_tcp_loopback_split.sifr` | PASS | Public `sifr.net` TCP loopback fixture type-checks. |
+| `target/debug/sifr run crates/sifr/tests/e2e/pass/network_http_m1_tcp_loopback_split.sifr` | PASS | Deterministic loopback connect/listen/accept/split/half-close fixture runs without external network dependency. |
+| `target/debug/sifr check crates/sifr/tests/e2e/pass/network_http_m1_tcp_errors.sifr` | PASS | Deterministic typed error fixture type-checks. |
+| `target/debug/sifr run crates/sifr/tests/e2e/pass/network_http_m1_tcp_errors.sifr` | PASS | Invalid timeout and invalid backlog return typed `NetError` results without external network dependency. |
+| `target/debug/sifr check crates/sifr/tests/e2e/pass/network_http_m1_tcp_cancel_accept.sifr` | PASS | Provider cancellation fixture type-checks. |
+| `target/debug/sifr run crates/sifr/tests/e2e/pass/network_http_m1_tcp_cancel_accept.sifr` | PASS | Cancels an in-flight listener `accept()` through a scoped task handle and observes `Cancelled` evidence. |
+| `SIFR_E2E_FIXTURE_MANIFEST=<tmp manifest> SIFR_E2E_DISABLE_CACHE=1 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` | PASS | Selected fixtures `network_http_m1_tcp_cancel_accept`, `network_http_m1_tcp_errors`, and `network_http_m1_tcp_loopback_split`; 3 pass tests completed. |
+| `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture` | PASS | Full fail corpus completed; validates `network_http_m1_udp_deferred.sifr` expected `SIFR-NAME-0004` and existing unsupported import diagnostics. Existing fail-harness internal CFG panic messages are caught by the negative harness and test exits successfully. |
+| `cargo fmt --check` | PASS | Clean after M1 edits. |
+| `python3 scripts/check_file_size_guardrails.py` | PASS | 2302 files, limit 900 lines. |
+| `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed. |
+| `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_e2e_pass.sh` | PASS | Merge-manifest e2e pass suite completed 138 pass tests, 0 failed. |
+
+M1 broad pass-suite note:
+
+- An exploratory `cargo test -p sifr --test e2e e2e_pass -- network_http_m1 --nocapture` invocation ran the full pass corpus rather than filtering only M1 fixtures. It completed 636 pass fixtures and exposed pre-existing non-network failures: IO context-manager generated mutability in `cpython_io_subset`/`stdlib_io_consolidated` and `open_*` fixtures, plus `bytes_conversion_errors` expecting `latin-1` encode/decode rejection. The M1-specific fixtures pass through the selected manifest above.
+- The clean `scripts/run_all_tests.sh --profile create-pr` rerun passed after clearing detached stale validation jobs from earlier interrupted runs. The only advisory was warm wall-time budget exceeded.
 
 Required baseline commands:
 

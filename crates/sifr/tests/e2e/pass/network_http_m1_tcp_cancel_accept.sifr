@@ -1,0 +1,19 @@
+from sifr.net import NetError, TcpListener, listen_tcp
+
+
+async def wait_for_accept(own mut listener: TcpListener) -> None:
+    accepted = await listener.accept()
+    assert "Ok" in str(accepted)
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        try:
+            listener: TcpListener = await listen_tcp("127.0.0.1:0", reuse_addr=True)
+            handle = scope.spawn(wait_for_accept(listener))
+            handle.cancel()
+            result = await handle
+            assert "Cancelled" in str(result)
+        except NetError as e:
+            assert e.message == ""
+    return None

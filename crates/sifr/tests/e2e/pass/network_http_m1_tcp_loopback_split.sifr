@@ -1,0 +1,70 @@
+from sifr.net import (
+    NetError,
+    SocketAddr,
+    TcpListener,
+    TcpReadHalf,
+    TcpStream,
+    TcpWriteHalf,
+    connect_tcp,
+    listen_tcp,
+    resolve_host,
+)
+
+
+async def dns_smoke() -> None:
+    resolved = await resolve_host("localhost:80", timeout=2.0)
+    assert "Ok" in str(resolved)
+
+
+async def main() -> None:
+    try:
+        await dns_smoke()
+        listener: TcpListener = await listen_tcp("127.0.0.1:0", reuse_addr=True)
+        addr: SocketAddr = listener.local_addr()
+        assert "127.0.0.1:" in addr.value
+
+        client: TcpStream = await connect_tcp(addr.value, timeout=2.0)
+        accepted: tuple[TcpStream, SocketAddr] = await listener.accept()
+        _listener_closed: None = listener.close()
+        server: TcpStream = accepted[0]
+
+        local: SocketAddr = client.local_addr()
+        remote: SocketAddr = client.remote_addr()
+        assert len(local.value) > 0
+        assert remote.value == addr.value
+
+        client_halves: tuple[TcpReadHalf, TcpWriteHalf] = client.split()
+        client_reader: TcpReadHalf = client_halves[0]
+        client_writer: TcpWriteHalf = client_halves[1]
+        server_halves: tuple[TcpReadHalf, TcpWriteHalf] = server.split()
+        server_reader: TcpReadHalf = server_halves[0]
+        server_writer: TcpWriteHalf = server_halves[1]
+
+        _client_write: None = await client_writer.write_all(b"ping")
+        _client_shutdown: None = await client_writer.shutdown_write()
+        try:
+            _late_write: None = await client_writer.write_all(b"late")
+            assert False
+        except NetError as e:
+            assert "shut" in e.message
+
+        request: bytes | None = await server_reader.read_chunk(16)
+        assert request == b"ping"
+        _server_write: None = await server_writer.write_all(b"pong")
+        _server_shutdown: None = await server_writer.shutdown_write()
+
+        response: bytes | None = await client_reader.read_chunk(16)
+        assert response == b"pong"
+        _client_writer_closed: None = client_writer.close()
+        _client_reader_closed: None = client_reader.close()
+        _server_writer_closed: None = server_writer.close()
+        _server_reader_closed: None = server_reader.close()
+
+        timeout_rejected: bool = False
+        try:
+            _invalid: TcpStream = await connect_tcp(addr.value, timeout=-1.0)
+        except NetError as e:
+            timeout_rejected = "finite" in e.message or "positive" in e.message
+        assert timeout_rejected
+    except NetError as e:
+        assert e.message == ""

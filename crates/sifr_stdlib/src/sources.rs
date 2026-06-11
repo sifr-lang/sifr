@@ -87,6 +87,10 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
         source: include_str!("../../../lib/sifr/process.sifr"),
     },
     StdlibSource {
+        module: "sifr.net",
+        source: include_str!("../../../lib/sifr/net.sifr"),
+    },
+    StdlibSource {
         module: "sifr.resource",
         source: include_str!("../../../lib/sifr/resource.sifr"),
     },

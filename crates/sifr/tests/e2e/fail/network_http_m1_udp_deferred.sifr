@@ -1,0 +1,6 @@
+# expect-error[col=22]: SIFR-NAME-0004
+from sifr.net import UdpSocket
+
+
+def main() -> None:
+    _socket: UdpSocket

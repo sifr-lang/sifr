@@ -14,6 +14,8 @@ mod cpu_offload_runtime;
 pub use cpu_offload_runtime::*;
 mod join_set_runtime;
 pub use join_set_runtime::*;
+mod net_runtime;
+pub(crate) use net_runtime::*;
 mod parallel_runtime;
 pub(crate) use parallel_runtime::*;
 mod process_async_child_runtime;
