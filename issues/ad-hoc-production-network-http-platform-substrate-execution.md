@@ -112,6 +112,32 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus implementation-readiness review pass 2:
   - `reviews/ad-hoc-production-network-http-platform-substrate-opus-review-pass-2.md`
   - Result: `PASS`; all pass-1 blockers and recommended edits were verified as remediated, no new blocking contradictions or decision-by-discovery holes remained, and the phase was judged implementation-ready for M0.
+- Reviewer TLS full-duplex disposition:
+  - Source: user-provided follow-up review after the serving-scale, TCP split, and TCP half-close fixes.
+  - Result: accepted; the phase now explicitly accepts owned `TlsStream.split()` into `TlsReadHalf` / `TlsWriteHalf`, defines TLS `close_notify()` as the write-side close operation instead of TCP-style `shutdown_write()`, requires write-after-close-notify typed errors, and adds M0 definition gates plus M2 implementation and loopback coverage for TLS full-duplex behavior.
+- Claude Fable TLS full-duplex review pass 1:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-1.md`
+  - Result: `CONDITIONAL PASS`; TLS full-duplex was substantively correct, but TLS stream contract ownership still said M2 could define the contract, and the TLS close/flush/split feasibility details needed M0 clarifications.
+  - Remediations: M0 now owns TLS stream and TLS full-duplex contract definition before M2 starts; M2 implements that contract. The TLS contract now records close-notify/TCP half-close disposition as an M0 decision, requires successful `close_notify()` to flush accepted plaintext and the close alert or return typed partial-progress evidence, records TLS version coverage in loopback fixtures, and documents the lock-backed/synchronized implementation expectation through accepted Tokio/tokio-rustls utilities rather than bespoke TLS session sharing.
+- Claude Fable TLS full-duplex review pass 2:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-2.md`
+  - Result: `PASS`; the pass-1 TLS contract ownership blocker and all four recommended M0-gate edits were verified as remediated, no new blocking contradictions or decision-by-discovery holes were introduced, and the phase was judged implementation-ready for M0.
+  - Follow-up polish: the phase now explicitly records deterministic `flush` behavior after successful `close_notify()` with no pending application data, and M2 DoD echoes the TLS-version fixture requirement.
+- Claude Fable TLS full-duplex review pass 3:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-3.md`
+  - Result: `PASS`; the post-pass-2 polish was verified as non-contradictory, the TLS M0 definition to M2 implementation ownership chain remained intact, and no new implementation-readiness blockers were found.
+  - Follow-up polish: M2 DoD now also echoes repeated `close_notify` and empty-flush-after-close-notify fixture coverage.
+- Claude Fable broad implementation-readiness review pass 4:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-4.md`
+  - Result: `CONDITIONAL PASS`; HTTP/2 abuse limits were incorrectly worded as M4-defined instead of M0-defined/M4-implemented, and the terminal-state list omitted text/i18n M2, M2.5, and M3 labels.
+  - Remediations: M0 now owns HTTP/2 abuse limits before M4 starts, the terminal-state vocabulary includes all text/i18n provider labels used by M0 DoD, process-runtime provider state is explicit, `UrlError` is named, stale `sifr.asyncio` baseline wording was removed, request-smuggling/header-normalization ownership is M0-defined, Phase 41 names this substrate dependency, and the shared platform contract status is updated to approved shared baseline.
+- Claude Fable broad implementation-readiness review pass 5:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-5.md`
+  - Result: `PASS`; pass-4 blockers were verified as fixed, all seven polish edits were checked against the repo, and no remaining implementation-readiness blockers were found.
+  - Follow-up polish: Phase 41 dependency wording now includes `sifr.url`, the shared platform contract status cites review passes 3a-3d, and the historical dependency checklist includes process runtime M4.
+- Claude Fable final follow-up verification pass 6:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-6.md`
+  - Result: `PASS`; the pass-5 follow-ups were verified as non-contradictory, the main substrate doc remained unchanged from the pass-5-verified state, and the phase remained implementation-ready for M0.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -141,7 +167,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Add M0 definition-of-done gate for dependency decision records across every Rust Ecosystem Decisions crate family.
 - [x] Ensure conditional crates such as `x509-parser` receive the same dependency audit as baseline crates.
 - [x] Add a text/i18n dependency matrix for binary/ASCII-safe substrate versus features blocked on text/i18n M1, M2, M2.5, or M3.
-- [x] Add a concurrency/runtime dependency matrix for features blocked on task/cancellation M1, sync/backpressure M2, offload M3, shutdown/diagnostics M5, and IPC/process-worker M6.
+- [x] Add a concurrency/runtime dependency matrix for features blocked on task/cancellation M1, sync/backpressure M2, offload M3, process runtime M4, shutdown/diagnostics M5, and IPC/process-worker M6.
 - [x] Require network/HTTP consumers to call `sifr.encoding`, `sifr.unicode`, `sifr.io`, or `sifr.i18n` rather than adding local encoding, Unicode, locale, or fallback-decoder behavior.
 - [x] Require network/HTTP consumers to call the concurrency/runtime provider substrate rather than adding local cancellation, timeout, shutdown, offload, executor, task-context, diagnostics, queue/channel, process/worker, or IPC substitutes.
 - [x] Make stream I/O buffer ownership/lifetime semantics an M0 gate before M1 implementation.
@@ -161,6 +187,15 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Add TCP write-side half-close as an M1 substrate requirement with M0 semantics for repeated shutdown, split-half behavior, cancellation, and partial-progress evidence.
 - [x] Resolve Claude Opus pass 1 blockers: M0 owns body-stream contract definition, `TcpStream.split()` is infallible, write-after-shutdown is typed, and unsplit `shutdown_write()` preserves the read side.
 - [x] Record Claude Opus pass 2 `PASS` confirming no remaining implementation-readiness blockers.
+- [x] Add explicit TLS full-duplex disposition with owned split halves and `close_notify` write-side close semantics.
+- [x] Resolve Claude Fable pass 1 blocker: M0 owns TLS stream/full-duplex contract definition and M2 implements it.
+- [x] Record Claude Fable pass 2 `PASS` confirming the TLS contract ownership fix and no remaining implementation-readiness blockers.
+- [x] Add Fable pass 2 polish for post-`close_notify` flush behavior and TLS-version fixture coverage in M2 DoD.
+- [x] Record Claude Fable pass 3 `PASS` confirming the final TLS polish did not introduce gaps.
+- [x] Resolve Claude Fable pass 4 blockers: M0 owns HTTP/2 abuse limits and terminal-state vocabulary includes all text/i18n provider labels used by M0.
+- [x] Apply Claude Fable pass 4 polish: explicit process-runtime state, named `UrlError`, current baseline wording, request-smuggling ownership, Phase 41 backlink, and platform-contract status refresh.
+- [x] Record Claude Fable pass 5 `PASS` confirming no remaining implementation-readiness blockers.
+- [x] Record Claude Fable pass 6 `PASS` confirming the pass-5 follow-up edits did not introduce gaps.
 
 ## Implementation PRs
 

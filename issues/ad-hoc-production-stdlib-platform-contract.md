@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Production Stdlib Platform Contract
 
-Status: draft
+Status: approved shared baseline; platform-contract review passes 3a-3d recorded `PASS`, provider phases have closed against this contract, and network/HTTP M0 must verify inventories against it.
 Phase placement: shared contract created before `milestone_text_i18n_0` closes and required before any split production-stdlib M1 implementation starts.
 Phase owner: text/i18n, concurrency/runtime, and network/HTTP phase owners jointly
 

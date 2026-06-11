@@ -212,7 +212,7 @@ The `blocked-on-concurrency-runtime-*` labels below are Network M0 dependency-cl
 | Sync network helpers that can block, including sync DNS/connect helpers | `blocked-on-concurrency-runtime-m3` | `sifr.runtime.spawn_blocking` and workload/effect diagnostics | Blocking helpers must use the provider offload substrate and stdlib workload database. This phase must not introduce a local thread pool or blocking executor. |
 | Graceful connection/server shutdown | `blocked-on-concurrency-runtime-m5` | structured shutdown and signal stream model | Servers must consume the provider shutdown/signal substrate. This phase must not introduce a local shutdown coordinator. |
 | Network observability and diagnostic routing | `blocked-on-concurrency-runtime-m5` | structured runtime diagnostics and task/request context model | Network lifecycle events must compose with the provider diagnostics/context model. This phase must not introduce a separate diagnostic routing system. |
-| Executor-backed serving, worker handoff, or process-backed network helpers | `blocked-on-concurrency-runtime-m3` or `blocked-on-concurrency-runtime-m6` as classified in M0 | offload and typed IPC/process-worker gates | Executor/process-backed features remain blocked or deferred until the provider offload and IPC gates are complete. No local worker pool is allowed. |
+| Executor-backed serving, worker handoff, or process-backed network helpers | `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m4`, or `blocked-on-concurrency-runtime-m6` as classified in M0 | offload, process runtime, and typed IPC/process-worker gates | Executor/process-backed features consume the closed provider offload/process/IPC gates or remain deferred. No local worker pool or process supervisor is allowed. |
 
 M0 must add these decisions to the inventory and assign every runtime-dependent surface one of:
 
@@ -220,6 +220,7 @@ M0 must add these decisions to the inventory and assign every runtime-dependent 
 - `blocked-on-concurrency-runtime-m1`
 - `blocked-on-concurrency-runtime-m2`
 - `blocked-on-concurrency-runtime-m3`
+- `blocked-on-concurrency-runtime-m4`
 - `blocked-on-concurrency-runtime-m5`
 - `blocked-on-concurrency-runtime-m6`
 - `deferred-to-http-client-phase`
@@ -262,9 +263,13 @@ Every proposed public, substrate, internal, and test-only surface must use the s
 - `rejected`
 - `unsupported-with-diagnostic`
 - `blocked-on-text-i18n-m1`
+- `blocked-on-text-i18n-m2`
+- `blocked-on-text-i18n-m2_5`
+- `blocked-on-text-i18n-m3`
 - `blocked-on-concurrency-runtime-m1`
 - `blocked-on-concurrency-runtime-m2`
 - `blocked-on-concurrency-runtime-m3`
+- `blocked-on-concurrency-runtime-m4`
 - `blocked-on-concurrency-runtime-m5`
 - `blocked-on-concurrency-runtime-m6`
 - `host-limited`
@@ -275,7 +280,7 @@ The inventory terminal state `open` is allowed during implementation only and is
 
 Current Sifr stdlib support is intentionally curated under `lib/sifr/*.sifr`. Relevant existing surfaces:
 
-- `sifr.asyncio` is a veneer over the canonical task model, but intentionally omits raw event loops, public selectors, subprocesses, process pools, and transport/protocol APIs.
+- The canonical async/task surface is `sifr.task`; legacy `sifr.asyncio` veneer surfaces are not present and must remain unsupported diagnostics, not adapter targets.
 - `sifr.io` has file handles and in-memory stream wrappers, but no socket streams.
 - `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib`, `sifr.socketserver`, and public web-server modules are not present as production surfaces and should remain absent in this phase.
 - `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http` protocol/runtime boundaries need to be created or confirmed during M0.
@@ -361,7 +366,7 @@ Dependency rings for this phase:
 | Ring 4 | URL parsing/building | `url` | update/use workspace `url = 2.5.8`; default `std` only; do not enable `serde` or `expose_internals` | M3 | Backing for `sifr.url` over valid Sifr text and bytes. Unicode/IDNA decisions still consume the text/i18n provider; crate behavior is wrapped into Sifr-owned typed errors and no crate type leaks. |
 | Ring 4 | percent encoding | `percent-encoding` | add `percent-encoding = 2.3.2` with default `std` only | M3 | Used for byte/ASCII-safe percent helpers and URL internals. Named encodings and error handlers still call the text/i18n provider after M1. |
 | Ring 4 | TLS core | `rustls` | add `rustls = 0.23.35` with default provider `aws_lc_rs`; no custom provider, `ring`, FIPS, compression, or zlib/brotli features in this phase | M2 | Owns TLS protocol machinery internally. Sifr exposes `TlsClientConfig`, `TlsServerConfig`, typed verification outcomes, and typed errors only. |
-| Ring 4 | async TLS streams | `tokio-rustls` | add `tokio-rustls = 0.26.4`; default `aws_lc_rs` provider; do not enable `ring`, `fips`, `early-data`, compression, or zlib/brotli features | M2 | Wraps accepted Rustls streams over Sifr/Tokio TCP internals. Early data and compression are out of scope. |
+| Ring 4 | async TLS streams | `tokio-rustls` | add `tokio-rustls = 0.26.4`; default `aws_lc_rs` provider; do not enable `ring`, `fips`, `early-data`, compression, or zlib/brotli features | M2 | Wraps accepted Rustls streams over Sifr/Tokio TCP internals. Early data and compression are out of scope. Owned TLS split halves are API-level independent read/write handles over one synchronized TLS session; implementation uses the accepted Tokio I/O utilities or tokio-rustls facilities rather than bespoke TLS session sharing. |
 | Ring 4 | platform certificate verification | `rustls-platform-verifier` | add `rustls-platform-verifier = 0.7.0` with default features disabled unless platform support proves a required feature; do not enable debug/cert logging features in production builds | M2 | Production client verification uses host platform roots. Deterministic tests use explicit in-memory roots from `rcgen` fixtures; `webpki-roots` is not a fallback. |
 | Ring 4 | PEM parsing | `rustls-pemfile` | add `rustls-pemfile = 2.2.0` with default `std` only | M2 | Parses user-supplied PEM cert/key material into Sifr-owned TLS config errors. No generic certificate display parser is accepted. |
 | Ring 4 | HTTP request/response types | `http` | add `http = 1.4.1` with default `std` only | M3, M4 | Backs method/status/header/request/response representations internally. Sifr owns validation, typed errors, and public type names. |
@@ -442,7 +447,7 @@ From-scratch protocol parsing, TLS verification, DNS resolution, URL parsing, HP
 The accepted public shape is Sifr-native and typed:
 
 - `async connect_tcp(address, *, timeout=None, local_addr=None) -> Result[TcpStream, NetError]`
-- `async listen_tcp(address, *, backlog=None, reuse_addr=false) -> Result[TcpListener, NetError]`
+- `async listen_tcp(address, *, backlog=None, reuse_addr=False) -> Result[TcpListener, NetError]`
 - `async TcpListener.accept() -> Result[(TcpStream, SocketAddr), NetError]`
 - `async TcpStream.read_chunk(max_bytes) -> Result[Option[bytes], NetError]`
 - `async TcpStream.write(data) -> Result[int, NetError]`
@@ -512,23 +517,65 @@ The accepted public shape is:
 - SNI and ALPN support
 - client certificate authentication with deterministic `rcgen` client/server fixtures
 - async TLS client and server streams over `TcpStream`
+- owned TLS full-duplex split halves for custom bidirectional protocols
 - typed certificate and TLS errors preserving underlying network evidence
 
 No CPython-shaped `SSLContext` or `SSLSocket` is exposed in this phase. References to those shapes are rejected or routed to unsupported diagnostics with `sifr.tls` replacement guidance.
 
-M2 must define TLS stream semantics for:
+Accepted TLS stream API shape:
+
+- `async TlsStream.read_chunk(max_bytes) -> Result[Option[bytes], TlsError]`
+- `async TlsStream.write(data) -> Result[int, TlsError]`
+- `async TlsStream.write_all(data) -> Result[None, TlsError]`
+- `async TlsStream.flush() -> Result[None, TlsError]`
+- `async TlsStream.close_notify() -> Result[None, TlsError]`
+- `TlsStream.split() -> (TlsReadHalf, TlsWriteHalf)`
+- `async TlsReadHalf.read_chunk(max_bytes) -> Result[Option[bytes], TlsError]`
+- `async TlsReadHalf.close() -> Result[None, TlsError]`
+- `async TlsWriteHalf.write(data) -> Result[int, TlsError]`
+- `async TlsWriteHalf.write_all(data) -> Result[None, TlsError]`
+- `async TlsWriteHalf.flush() -> Result[None, TlsError]`
+- `async TlsWriteHalf.close_notify() -> Result[None, TlsError]`
+- `async TlsWriteHalf.close() -> Result[None, TlsError]`
+- `async TlsStream.close() -> Result[None, TlsError]`
+
+The M0 TLS stream contract must define, and M2 must implement, TLS stream semantics for:
 
 - `write`
 - `write_all`
 - `flush`
 - `close`
 - TLS `close_notify`
+- owned full-duplex split into `TlsReadHalf` and `TlsWriteHalf`
 - cancellation during handshake
 - cancellation during flush
 - cancellation during TLS shutdown
 - partial-progress evidence when plaintext was accepted but encrypted bytes were not fully flushed
 
 TLS write semantics must account for Tokio Rustls buffering: plaintext accepted by a TLS stream is not guaranteed to have reached the underlying TCP stream until flush/shutdown completes.
+
+M0 must define the TLS full-duplex ownership contract before M2 TLS implementation starts:
+
+- an unsplit `TlsStream` is affine and supports sequential read/write/flush/`close_notify` operations;
+- concurrent read/write across tasks requires `split()` into owned `TlsReadHalf` and `TlsWriteHalf` values;
+- `split()` consumes a live `TlsStream` and is infallible; closed or moved streams cannot be split because the affine handle is no longer available;
+- split halves are affine resources with independent read/write APIs over one underlying TLS session and TCP stream state;
+- TLS peer close, TCP EOF/reset, verification failure, local close, `close_notify`, and shutdown outcomes must surface as typed `TlsError`/nested `NetError`/EOF evidence from the underlying TLS/TCP state rather than through a local channel, cancellation token, or diagnostics substitute;
+- split halves may cross task boundaries only when the compiler's sendability rules accept them;
+- borrowed split views are rejected unless a future phase proves a lifetime-safe design;
+- recombining TLS split halves is rejected for v1 unless M0 records a concrete production need and a panic-free ownership design.
+
+TLS does not expose TCP-style `shutdown_write()`. The TLS write-side close operation is `close_notify()` on `TlsStream` or `TlsWriteHalf`:
+
+- unsplit `TlsStream.close_notify()` does not consume the `TlsStream`; subsequent reads remain usable until peer `close_notify`, EOF, or typed failure;
+- `TlsWriteHalf.close_notify()` sends the TLS close alert while preserving local `TlsReadHalf` ownership;
+- M0 must record whether `close_notify()` also performs TCP write-side half-close or only sends and flushes the TLS close alert while leaving TCP write-side closure to `close()`;
+- successful `close_notify()` flushes previously accepted plaintext and the TLS close alert before reporting success, or returns typed partial-progress evidence instead of silently discarding accepted plaintext;
+- repeated `close_notify()` behavior is either idempotent success or a typed already-closed outcome, but must be deterministic;
+- after successful `close_notify()`, subsequent `write`, `write_all`, or `flush` that would write application data on the unsplit stream or split write half returns a stable typed write-after-close-notify error; silent no-op and panic are rejected;
+- `flush` after successful `close_notify()` with no pending application data is deterministic and either succeeds as an idempotent flush or returns the same typed already-closed outcome chosen by M0 for repeated `close_notify()`;
+- cancellation during `close_notify` or TLS shutdown preserves typed partial-progress evidence;
+- M2 full-duplex and `close_notify` loopback fixtures must record which TLS protocol versions are covered; TLS 1.2 peers that treat `close_notify` as full close and TLS 1.3 peers that allow post-`close_notify` reads both map to the typed EOF/failure evidence defined by M0.
 
 ### HTTP Substrate Shape
 
@@ -635,6 +682,7 @@ All fallible APIs must expose typed error results:
 - `TimeoutError`
 - `TlsError`
 - `CertificateError`
+- `UrlError`
 - `HttpError`
 - `ProtocolError`
 - `HeaderError`
@@ -678,8 +726,8 @@ Network/HTTP M0 must record concrete security and resource decisions for the sur
 | TLS verification defaults | Verification is on by default for clients. Disabling verification, custom trust anchors, certificate pinning, and mTLS identity mapping require explicit typed config and must be visible in diagnostics/observability without leaking secrets. Silent downgrade on verification failure is rejected. |
 | TLS generated-build requirements | M2 records `aws-lc-rs` build tooling needs, CMake/toolchain requirements, cross-compilation behavior, binary-size impact, supported-host matrix rows, and generated dependency snapshots proving non-TLS programs do not build crypto providers. |
 | Root store strategy | Production client verification uses platform roots through `rustls-platform-verifier`. Tests use explicit `rcgen` roots. No `webpki-roots`, local file, environment, or best-effort fallback root store is accepted in this phase. M2 records platform-verifier behavior per supported host; hosts that need extra setup, non-platform roots, or fallback behavior are `host-limited` until the generated-project story is proven. |
-| Request smuggling and header normalization | Header parsing must define canonical validation for names, obs-fold rejection, duplicate header policy, whitespace normalization, `Content-Length` disagreement handling, and `Content-Length` plus chunked conflict handling before M4 starts. |
-| HTTP/2 abuse | M4 must define SETTINGS limits, max concurrent streams, flow-control window defaults, max frame/body buffering, PING handling, RST_STREAM cancellation mapping, GOAWAY graceful shutdown mapping, and malformed-frame typed errors. |
+| Request smuggling and header normalization | M0 must define canonical validation for names, obs-fold rejection, duplicate header policy, whitespace normalization, `Content-Length` disagreement handling, and `Content-Length` plus chunked conflict handling before M4 starts; M3/M4 implement and validate the accepted header and HTTP transport behavior. |
+| HTTP/2 abuse | M0 must define SETTINGS limits, max concurrent streams, flow-control window defaults, max frame/body buffering, PING handling, RST_STREAM cancellation mapping, GOAWAY graceful shutdown mapping, and malformed-frame typed errors before M4 starts; M4 implements and validates them with loopback fixtures. |
 | Body and header size limits | Every parser/body reader has explicit configured limits. Unbounded buffering is rejected unless an API name explicitly collects and M0 records a size cap and typed `TooLargeError`. |
 | Timeouts and cancellation | Connect, accept, read, write, TLS handshake, TLS shutdown, HTTP request write, response read, and HTTP/2 stream cancellation map to the provider timeout/cancellation model and preserve partial-progress evidence. |
 | URL and authority security | Userinfo redaction, host/port validation, path normalization semantics, percent-decoding boundaries, and IDNA/Unicode blocking states are recorded before `sifr.url` becomes public. Before text/i18n M2, `sifr.url` must prevent accidental Unicode/IDNA behavior by rejecting non-ASCII host input before calling `url` or accepting only ASCII and already-punycode hosts. The `url` crate's IDNA behavior may become the approved backend only after explicit text/i18n provider owner sign-off that it matches the accepted Unicode/IDNA version and canonicalization rules. |
@@ -730,6 +778,7 @@ Scope:
 - Define the public Sifr byte-buffer type used by TCP, TLS, HTTP bodies, and diagnostics.
 - Define DNS/address-resolution semantics, including timeout, cancellation, address ordering, IPv4/IPv6 behavior, multi-address connect policy, and Happy Eyeballs acceptance or deferral.
 - Define TLS stream write/flush/shutdown semantics, including `close_notify`, cancellation, and partial-progress evidence.
+- Define TLS full-duplex ownership semantics, including owned split halves, task-boundary sendability, shared TLS/TCP close/error propagation, `close_notify` behavior on split and unsplit streams, and recombine rejection or acceptance.
 - Define the stable `sifr.http` substrate type table and internal-only HTTP components.
 - Define the HTTP body stream contract, including chunks, EOF, trailers, collect limits, cancellation, HTTP/2 reset mapping, and partial-progress evidence.
 - Define URL/IDNA guard behavior before text/i18n M2 so the `url` crate cannot accidentally publish Unicode-host semantics.
@@ -755,11 +804,11 @@ Definition of done:
 
 - Every proposed surface is classified with a shared platform terminal state and stability level from [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md).
 - Every text-dependent surface is classified as `production-substrate`, `blocked-on-text-i18n-m1`, `blocked-on-text-i18n-m2`, `blocked-on-text-i18n-m2_5`, `blocked-on-text-i18n-m3`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
-- Every runtime-dependent surface is classified as `production-substrate`, `blocked-on-concurrency-runtime-m1`, `blocked-on-concurrency-runtime-m2`, `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m5`, `blocked-on-concurrency-runtime-m6`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
+- Every runtime-dependent surface is classified as `production-substrate`, `blocked-on-concurrency-runtime-m1`, `blocked-on-concurrency-runtime-m2`, `blocked-on-concurrency-runtime-m3`, `blocked-on-concurrency-runtime-m4`, `blocked-on-concurrency-runtime-m5`, `blocked-on-concurrency-runtime-m6`, `deferred-to-http-client-phase`, `deferred-to-phase-41`, or `rejected`.
 - No module is accepted merely because CPython has it.
 - Dependency decision records are present and checked in for every crate family in the Rust Ecosystem Decisions table, covering accepted crate and feature flags, Sifr abstraction that hides the crate from public APIs, panic/unsafe audit for user-controlled data paths, typed error mapping into Sifr variants, license/MSRV/binary-size/platform impact, deterministic local test strategy, conformance evidence for protocol crates, and supply-chain/maintenance signal.
 - Security/resource rows are checked into the shared platform artifacts with concrete limits, redaction rules, typed errors, and deterministic fixtures for every network-owned concern.
-- Public byte-buffer, DNS, TLS stream, `sifr.http` type, HTTP body stream, and URL/IDNA guard contracts are checked in with concrete backlog entries.
+- Public byte-buffer, DNS, TLS stream, TLS full-duplex, `sifr.http` type, HTTP body stream, and URL/IDNA guard contracts are checked in with concrete backlog entries.
 - Stream I/O ownership, lifetime, full-duplex split, half-close, cancellation, and partial read/write semantics are decided before M1 starts.
 - Phase 41 serving-scale handoff is checked in: this phase provides single-runtime-worker-per-process production-correct serving substrate, and M0 has created or linked the multi-core serving follow-up issue with a stable identifier recorded in this phase doc.
 - M1-M5 implementation PRs have concrete backlog entries rather than prose-only scope.
@@ -830,6 +879,7 @@ Scope:
 - Add client certificate authentication with deterministic fixtures.
 - Add async TLS client streams.
 - Add async TLS server streams.
+- Add owned TLS full-duplex split into read/write halves.
 - Add TLS `flush`, `close`, and `close_notify` behavior according to the M0 TLS stream contract.
 - Add typed TLS and certificate errors.
 - Preserve nested network evidence inside TLS errors.
@@ -860,7 +910,8 @@ Definition of done:
 - Invalid certificate tests produce typed errors.
 - Safe verification is default.
 - TLS verification failures never panic and never silently downgrade verification.
-- TLS write, flush, shutdown, and cancellation tests cover `close_notify` and partial-progress evidence.
+- TLS write, flush, full-duplex split, shutdown, and cancellation tests cover concurrent read/write, `close_notify`, repeated `close_notify`, empty flush after `close_notify`, write-after-close-notify typed errors, and partial-progress evidence.
+- TLS full-duplex and `close_notify` loopback fixtures record the TLS protocol versions covered and validate the EOF/failure evidence required by the M0 TLS stream contract.
 - Generated build snapshots prove TLS dependencies are feature-gated and absent from non-TLS generated programs.
 - Platform-verifier host behavior is recorded in the shared supported-host matrix.
 

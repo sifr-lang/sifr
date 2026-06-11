@@ -8,6 +8,7 @@ Deliver the web framework with typed extractors, then land platform expansion tr
 ## Depends on
 - Phase 40
 - Phase 32
+- Ad Hoc Production Network and HTTP Platform Substrate for `sifr.net`/`sifr.tls`/`sifr.url`/`sifr.http` protocol substrate, with multi-core serving throughput still owned by the substrate phase's serving-scale follow-up.
 
 ## Milestones
 
