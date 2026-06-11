@@ -60,6 +60,111 @@
       ]
     },
     {
+      "program": "unsupported_cpython_network_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_network_imports.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "SIFR-IMPORT-0008",
+        "sifr.net"
+      ],
+      "depends_on": [
+        "milestone_network_http_0"
+      ],
+      "must_not_depend_on": [
+        "sifr.socket"
+      ],
+      "blocked_until": [],
+      "checks": [
+        "bare CPython network import diagnostic",
+        "Sifr-native network namespace suggestion"
+      ]
+    },
+    {
+      "program": "unsupported_cpython_tls_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_tls_imports.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "SIFR-IMPORT-0008",
+        "sifr.tls"
+      ],
+      "depends_on": [
+        "milestone_network_http_0"
+      ],
+      "must_not_depend_on": [
+        "sifr.ssl"
+      ],
+      "blocked_until": [],
+      "checks": [
+        "bare CPython TLS import diagnostic",
+        "Sifr-native TLS namespace suggestion"
+      ]
+    },
+    {
+      "program": "unsupported_cpython_url_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_url_imports.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "SIFR-IMPORT-0008",
+        "sifr.url"
+      ],
+      "depends_on": [
+        "milestone_network_http_0"
+      ],
+      "must_not_depend_on": [
+        "sifr.urllib"
+      ],
+      "blocked_until": [],
+      "checks": [
+        "bare CPython URL import diagnostic",
+        "Sifr-native URL namespace suggestion"
+      ]
+    },
+    {
+      "program": "unsupported_cpython_http_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_http_imports.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "SIFR-IMPORT-0008",
+        "sifr.http"
+      ],
+      "depends_on": [
+        "milestone_network_http_0"
+      ],
+      "must_not_depend_on": [
+        "sifr.http.client"
+      ],
+      "blocked_until": [],
+      "checks": [
+        "bare CPython HTTP import diagnostic",
+        "Sifr-native HTTP substrate namespace suggestion"
+      ]
+    },
+    {
+      "program": "unsupported_cpython_readiness_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_readiness_imports.sifr",
+      "expected_exit": 1,
+      "expected_stdout_contains": [],
+      "expected_diagnostic_contains": [
+        "SIFR-IMPORT-0008",
+        "sifr.net"
+      ],
+      "depends_on": [
+        "milestone_network_http_0"
+      ],
+      "must_not_depend_on": [
+        "sifr.selectors"
+      ],
+      "blocked_until": [],
+      "checks": [
+        "bare CPython readiness import diagnostic",
+        "Sifr-native async network namespace suggestion"
+      ]
+    },
+    {
       "program": "legacy_sifr_runtime_surfaces_removed.sifr",
       "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/legacy_sifr_runtime_surfaces_removed.sifr",
       "expected_exit": 1,

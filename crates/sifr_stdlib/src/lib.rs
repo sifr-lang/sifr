@@ -201,10 +201,18 @@ pub fn unsupported_legacy_stdlib_module(module_name: &str) -> Option<LegacyStdli
         "sifr.asyncio" => "sifr.asyncio",
         "sifr.concurrent" | "sifr.concurrent.futures" => "sifr.concurrent",
         "sifr.contextlib" => "sifr.contextlib",
+        "sifr.http.client" => "sifr.http.client",
+        "sifr.http.server" => "sifr.http.server",
         "sifr.multiprocessing" => "sifr.multiprocessing",
         "sifr.queue" => "sifr.queue",
+        "sifr.select" => "sifr.select",
+        "sifr.selectors" => "sifr.selectors",
+        "sifr.socket" => "sifr.socket",
+        "sifr.socketserver" => "sifr.socketserver",
+        "sifr.ssl" => "sifr.ssl",
         "sifr.subprocess" => "sifr.subprocess",
         "sifr.threading" => "sifr.threading",
+        "sifr.urllib" | "sifr.urllib.parse" | "sifr.urllib.request" => "sifr.urllib",
         "sifr.warnings" => "sifr.warnings",
         _ => return None,
     };
@@ -228,6 +236,16 @@ fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
             suggested_module: "sifr.resource",
             reason: "cleanup uses deterministic Sifr resource scopes, not contextlib adapters",
         }),
+        "sifr.http.client" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.http.client",
+            suggested_module: "sifr.http",
+            reason: "HTTP client policy belongs to a future Sifr-native client phase, not a CPython-shaped adapter",
+        }),
+        "sifr.http.server" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.http.server",
+            suggested_module: "sifr.http",
+            reason: "server framework behavior belongs to Phase 41 over the Sifr HTTP substrate",
+        }),
         "sifr.multiprocessing" => Some(LegacyStdlibModule {
             legacy_module: "sifr.multiprocessing",
             suggested_module: "sifr.ipc",
@@ -238,6 +256,31 @@ fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
             suggested_module: "sifr.sync",
             reason: "queue-like communication uses native bounded channels and synchronization",
         }),
+        "sifr.select" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.select",
+            suggested_module: "sifr.net",
+            reason: "manual selector readiness is internal; use async network streams",
+        }),
+        "sifr.selectors" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.selectors",
+            suggested_module: "sifr.net",
+            reason: "manual selector readiness is internal; use async network streams",
+        }),
+        "sifr.socket" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.socket",
+            suggested_module: "sifr.net",
+            reason: "descriptor-shaped sockets are replaced by typed async network streams",
+        }),
+        "sifr.socketserver" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.socketserver",
+            suggested_module: "sifr.http",
+            reason: "handler-subclass server adapters are rejected; server products build on the Sifr HTTP substrate",
+        }),
+        "sifr.ssl" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.ssl",
+            suggested_module: "sifr.tls",
+            reason: "TLS is exposed through typed Sifr TLS configuration and streams",
+        }),
         "sifr.subprocess" => Some(LegacyStdlibModule {
             legacy_module: "sifr.subprocess",
             suggested_module: "sifr.process",
@@ -247,6 +290,11 @@ fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
             legacy_module: "sifr.threading",
             suggested_module: "sifr.runtime",
             reason: "threads are an internal substrate for scoped offload, not a public module",
+        }),
+        "sifr.urllib" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.urllib",
+            suggested_module: "sifr.url",
+            reason: "URL parsing and building are exposed through typed Sifr URL primitives",
         }),
         "sifr.warnings" => Some(LegacyStdlibModule {
             legacy_module: "sifr.warnings",
@@ -274,6 +322,11 @@ fn cpython_stdlib_reserved_suggestion(module_name: &str) -> Option<&'static str>
         "codecs" | "encodings" => Some("sifr.encoding"),
         "unicodedata" => Some("sifr.unicode"),
         "locale" | "gettext" => Some("sifr.i18n"),
+        "socket" => Some("sifr.net"),
+        "ssl" => Some("sifr.tls"),
+        "select" | "selectors" => Some("sifr.net"),
+        "urllib" => Some("sifr.url"),
+        "http" | "socketserver" => Some("sifr.http"),
         _ => None,
     }
 }
@@ -394,6 +447,30 @@ mod tests {
     }
 
     #[test]
+    fn bare_stdlib_tail_matches_reserved_network_http_roots() {
+        let socket = is_bare_stdlib_tail("socket").expect("socket should be reserved");
+        let ssl = is_bare_stdlib_tail("ssl").expect("ssl should be reserved");
+        let select = is_bare_stdlib_tail("select").expect("select should be reserved");
+        let selectors = is_bare_stdlib_tail("selectors").expect("selectors should be reserved");
+        let urllib_parse = is_bare_stdlib_tail("urllib.parse").expect("urllib should be reserved");
+        let http_client = is_bare_stdlib_tail("http.client").expect("http should be reserved");
+        let socketserver =
+            is_bare_stdlib_tail("socketserver").expect("socketserver should be reserved");
+
+        assert_eq!(socket.suggested_module, "sifr.net");
+        assert_eq!(ssl.suggested_module, "sifr.tls");
+        assert_eq!(select.suggested_module, "sifr.net");
+        assert_eq!(selectors.suggested_module, "sifr.net");
+        assert_eq!(urllib_parse.bare_module, "urllib.parse");
+        assert_eq!(urllib_parse.matched_tail, "urllib");
+        assert_eq!(urllib_parse.suggested_module, "sifr.url");
+        assert_eq!(http_client.bare_module, "http.client");
+        assert_eq!(http_client.matched_tail, "http");
+        assert_eq!(http_client.suggested_module, "sifr.http");
+        assert_eq!(socketserver.suggested_module, "sifr.http");
+    }
+
+    #[test]
     fn legacy_concurrency_runtime_modules_are_not_embedded_public_sources() {
         let legacy_modules = [
             ("sifr.asyncio", "sifr.task"),
@@ -405,6 +482,34 @@ mod tests {
             ("sifr.multiprocessing", "sifr.ipc"),
             ("sifr.threading", "sifr.runtime"),
             ("sifr.warnings", "sifr.runtime"),
+        ];
+
+        for (legacy, suggested) in legacy_modules {
+            let matched =
+                unsupported_legacy_stdlib_module(legacy).expect("legacy module should be rejected");
+            assert_eq!(matched.suggested_module, suggested);
+            assert!(
+                !STDLIB_SOURCES
+                    .iter()
+                    .any(|source| source.module == matched.legacy_module),
+                "{legacy} must not be embedded as a public stdlib source"
+            );
+        }
+    }
+
+    #[test]
+    fn legacy_network_http_modules_are_not_embedded_public_sources() {
+        let legacy_modules = [
+            ("sifr.socket", "sifr.net"),
+            ("sifr.ssl", "sifr.tls"),
+            ("sifr.select", "sifr.net"),
+            ("sifr.selectors", "sifr.net"),
+            ("sifr.urllib", "sifr.url"),
+            ("sifr.urllib.parse", "sifr.url"),
+            ("sifr.urllib.request", "sifr.url"),
+            ("sifr.http.client", "sifr.http"),
+            ("sifr.http.server", "sifr.http"),
+            ("sifr.socketserver", "sifr.http"),
         ];
 
         for (legacy, suggested) in legacy_modules {

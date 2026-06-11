@@ -1,0 +1,6 @@
+# expect-error[col=1]: SIFR-IMPORT-0009
+from sifr.http.client import HTTPConnection
+
+
+def main():
+    pass

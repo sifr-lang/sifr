@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "status": "m0-planned",
+  "source": "milestone_network_http_0_dependency_decision_record",
+  "ring5_dev_test_demo_crates": [
+    "tokio-test",
+    "proptest",
+    "rcgen",
+    "tracing-subscriber"
+  ],
+  "production_snapshots": [
+    {
+      "id": "network-runtime-core",
+      "owner_milestones": [
+        "milestone_network_http_1"
+      ],
+      "required_features": [
+        "tokio/macros",
+        "tokio/rt",
+        "tokio/sync",
+        "tokio/time",
+        "tokio/net",
+        "tokio/io-util",
+        "bytes",
+        "tracing/std"
+      ],
+      "production_dependencies": [
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"rt\", \"sync\", \"time\"] }",
+        "bytes = \"1.11.1\"",
+        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+      ],
+      "must_not_include": [
+        "tokio-test",
+        "proptest",
+        "rcgen",
+        "tracing-subscriber"
+      ]
+    },
+    {
+      "id": "tls-runtime",
+      "owner_milestones": [
+        "milestone_network_http_2"
+      ],
+      "required_features": [
+        "rustls/aws_lc_rs",
+        "tokio-rustls/aws_lc_rs",
+        "rustls-platform-verifier",
+        "rustls-pemfile"
+      ],
+      "production_dependencies": [
+        "rustls = \"0.23.35\"",
+        "tokio-rustls = \"0.26.4\"",
+        "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
+        "rustls-pemfile = \"2.2.0\""
+      ],
+      "must_not_include": [
+        "rcgen",
+        "webpki-roots",
+        "x509-parser",
+        "tracing-subscriber"
+      ]
+    },
+    {
+      "id": "url-header-cookie",
+      "owner_milestones": [
+        "milestone_network_http_3"
+      ],
+      "required_features": [
+        "url/std",
+        "percent-encoding/std",
+        "http/std",
+        "cookie"
+      ],
+      "production_dependencies": [
+        "url = \"2.5.8\"",
+        "percent-encoding = \"2.3.2\"",
+        "http = \"1.4.1\"",
+        "cookie = { version = \"0.18.1\", default-features = false }"
+      ],
+      "must_not_include": [
+        "proptest",
+        "serde",
+        "x509-parser"
+      ]
+    },
+    {
+      "id": "http-transport",
+      "owner_milestones": [
+        "milestone_network_http_4"
+      ],
+      "required_features": [
+        "hyper/http1",
+        "hyper/http2",
+        "hyper/client",
+        "hyper/server",
+        "http-body",
+        "tower-service"
+      ],
+      "production_dependencies": [
+        "hyper = { version = \"1.10.1\", default-features = false, features = [\"client\", \"http1\", \"http2\", \"server\"] }",
+        "http-body = \"1.0.1\"",
+        "http-body-util = { version = \"0.1.3\", default-features = false }",
+        "h2 = \"0.4.14\"",
+        "tower-service = \"0.3.3\""
+      ],
+      "must_not_include": [
+        "tokio-test",
+        "proptest",
+        "tracing-subscriber",
+        "tower",
+        "tower-http",
+        "reqwest"
+      ]
+    }
+  ]
+}

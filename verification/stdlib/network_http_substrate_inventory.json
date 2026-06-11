@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "status": "m0-baseline",
+  "cpython_checkout": {
+    "path": "/Users/yaseralnajjar/work/sifr/cpython",
+    "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6"
+  },
+  "platform_contract": "verification/platform/platform_contract.json",
+  "production_surfaces": [
+    {
+      "surface": "sifr.net",
+      "owner_milestone": "milestone_network_http_1",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api",
+      "notes": "Async TCP, DNS/address resolution, stream ownership, split halves, half-close, close, limits, typed errors."
+    },
+    {
+      "surface": "sifr.tls",
+      "owner_milestone": "milestone_network_http_2",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api",
+      "notes": "Rustls-backed TLS configs and async streams with safe verification defaults, mTLS, SNI, ALPN, and typed errors."
+    },
+    {
+      "surface": "sifr.url",
+      "owner_milestone": "milestone_network_http_3",
+      "terminal_state": "production-public",
+      "stability": "stable-public-api",
+      "notes": "Typed URL/query/percent primitives; non-UTF-8 and Unicode/IDNA behavior blocked on text/i18n provider milestones."
+    },
+    {
+      "surface": "sifr.http protocol substrate",
+      "owner_milestone": "milestone_network_http_3/milestone_network_http_4",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate",
+      "notes": "Method, status, version, headers, request/response heads, body streams, typed HTTP errors, and transport substrate."
+    }
+  ],
+  "deferred_or_rejected_surfaces": [
+    {
+      "surface": "sifr.net.UdpSocket",
+      "terminal_state": "deferred-to-phase-X",
+      "replacement": "TCP/TLS/HTTP loopback substrate",
+      "rationale": "No named near-term production datagram consumer plus fixture-insufficiency rationale was recorded in M0.",
+      "revisit_rule": "A future issue must name the production consumer and prove TCP/TLS/HTTP fixtures are insufficient."
+    },
+    {
+      "surface": "sifr.socket",
+      "terminal_state": "unsupported-with-diagnostic",
+      "replacement": "sifr.net",
+      "rationale": "Descriptor-shaped CPython socket API conflicts with typed async stream ownership.",
+      "revisit_rule": "Only Sifr-native additions to sifr.net may revisit socket capabilities."
+    },
+    {
+      "surface": "sifr.ssl",
+      "terminal_state": "unsupported-with-diagnostic",
+      "replacement": "sifr.tls",
+      "rationale": "TLS is exposed through typed config and streams, not SSLContext/SSLSocket compatibility.",
+      "revisit_rule": "Only Sifr-native TLS requirements may revisit."
+    },
+    {
+      "surface": "sifr.select/sifr.selectors",
+      "terminal_state": "unsupported-with-diagnostic",
+      "replacement": "sifr.net async streams",
+      "rationale": "Manual selector readiness and raw event-loop policies are internal.",
+      "revisit_rule": "Requires a separate low-level readiness architecture issue."
+    },
+    {
+      "surface": "sifr.urllib.*",
+      "terminal_state": "unsupported-with-diagnostic",
+      "replacement": "sifr.url",
+      "rationale": "URL parsing/building is typed; opener/request policy belongs to the future HTTP client phase.",
+      "revisit_rule": "Future client APIs must be Sifr-native."
+    },
+    {
+      "surface": "sifr.http.client/sifr.http.server/socketserver",
+      "terminal_state": "unsupported-with-diagnostic",
+      "replacement": "sifr.http substrate plus Phase 41/future client",
+      "rationale": "CPython-shaped client/server products are not substrate and handler subclasses are rejected.",
+      "revisit_rule": "Phase 41 and the future HTTP client phase own public product APIs."
+    },
+    {
+      "surface": "HTTP/3/QUIC",
+      "terminal_state": "deferred-to-phase-X",
+      "replacement": "future transport phase",
+      "rationale": "QUIC runtime/security strategy is outside this substrate.",
+      "revisit_rule": "Open a transport issue after HTTP/2 substrate closes."
+    }
+  ],
+  "m0_decisions": [
+    {
+      "decision": "serving_scale",
+      "outcome": "single-runtime-worker per process for this phase; multi-core throughput follow-up owns scale strategy",
+      "evidence": "issues/ad-hoc-network-http-serving-scale-follow-up.md"
+    },
+    {
+      "decision": "udp",
+      "outcome": "deferred-to-phase-X",
+      "evidence": "No named production consumer and insufficiency rationale recorded."
+    },
+    {
+      "decision": "http_namespace",
+      "outcome": "sifr.http owns substrate types; sifr.http.core is rejected",
+      "evidence": "Avoids duplicate stable namespace layers for Phase 41 and HTTP client handoff."
+    },
+    {
+      "decision": "byte_buffer",
+      "outcome": "ByteBuffer placeholder resolves to Sifr built-in bytes; no import required for the type, helper namespace is sifr.bytes",
+      "evidence": "Existing built-in bytes value model is owned and immutable; network/TLS/HTTP signatures use bytes."
+    },
+    {
+      "decision": "http2_priority_extensions",
+      "outcome": "priority has no public API in v1; unknown extension frames are ignored only after frame accounting or map to ProtocolError::UnsupportedExtensionFrame",
+      "evidence": "HTTP/2 conformance inventory owns exact fixture selection."
+    },
+    {
+      "decision": "tls_close",
+      "outcome": "TlsStream.close and TlsWriteHalf.close consume their handle, attempt close_notify first, flush accepted plaintext/alert before success, preserve cancellation progress and nested NetError evidence on failure",
+      "evidence": "verification/stdlib/network_http_substrate_inventory.md TLS close row"
+    },
+    {
+      "decision": "so_reuseport",
+      "outcome": "deferred from public API until serving-scale follow-up closes",
+      "evidence": "issues/ad-hoc-network-http-serving-scale-follow-up.md"
+    }
+  ],
+  "http_type_table": [
+    {
+      "type": "Method",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "Status",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "Version",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "HeaderName",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "HeaderValue",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "HeaderMap",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "RequestHead",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "ResponseHead",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "BodyStream",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "BodyChunk",
+      "terminal_state": "production-substrate",
+      "stability": "compiler-known-intrinsic",
+      "final_type": "bytes"
+    },
+    {
+      "type": "Trailers",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    },
+    {
+      "type": "HttpError/ProtocolError/HeaderError/BodyError",
+      "terminal_state": "production-substrate",
+      "stability": "stable-production-substrate"
+    }
+  ],
+  "limits": {
+    "url_default_bytes": 8192,
+    "url_hard_bytes": 65536,
+    "header_name_default_bytes": 128,
+    "header_name_hard_bytes": 1024,
+    "header_value_default_bytes": 8192,
+    "header_value_hard_bytes": 65536,
+    "header_section_default_bytes": 65536,
+    "header_section_hard_bytes": 1048576,
+    "body_chunk_default_bytes": 65536,
+    "body_chunk_hard_bytes": 1048576,
+    "body_collect_default_bytes": 16777216,
+    "body_collect_hard_bytes": 134217728,
+    "http2_max_concurrent_streams_default": 100,
+    "http2_max_buffered_body_per_stream": 1048576
+  },
+  "text_i18n_dependencies": [
+    {
+      "surface": "HTTP body text helpers",
+      "state": "blocked-on-text-i18n-m1"
+    },
+    {
+      "surface": "URL non-UTF-8 encodings",
+      "state": "blocked-on-text-i18n-m1"
+    },
+    {
+      "surface": "Unicode/IDNA host canonicalization",
+      "state": "blocked-on-text-i18n-m2"
+    },
+    {
+      "surface": "locale-sensitive diagnostics",
+      "state": "blocked-on-text-i18n-m3"
+    }
+  ],
+  "concurrency_runtime_dependencies": [
+    {
+      "surface": "network/TLS/HTTP cancellation and deadline handling",
+      "state": "blocked-on-concurrency-runtime-m1"
+    },
+    {
+      "surface": "stream backpressure",
+      "state": "blocked-on-concurrency-runtime-m2"
+    },
+    {
+      "surface": "blocking helper offload",
+      "state": "blocked-on-concurrency-runtime-m3"
+    },
+    {
+      "surface": "graceful shutdown and diagnostics",
+      "state": "blocked-on-concurrency-runtime-m5"
+    },
+    {
+      "surface": "future process-worker serving scale",
+      "state": "blocked-on-concurrency-runtime-m6"
+    }
+  ],
+  "evidence_matrix": "verification/stdlib/network_http_cpython_evidence_matrix.md",
+  "workload_database": "verification/stdlib/network_http_workload_database.md",
+  "dependency_snapshots": "verification/stdlib/network_http_dependency_snapshots.json",
+  "dependency_audit": "verification/stdlib/network_http_dependency_audit.md",
+  "milestone_backlog": [
+    "verification/stdlib/network_http_m1_async_network_traceability.md",
+    "verification/stdlib/network_http_m2_tls_traceability.md",
+    "verification/stdlib/network_http_m3_url_header_cookie_traceability.md",
+    "verification/stdlib/network_http_m4_http_transport_traceability.md",
+    "verification/stdlib/network_http_m5_handoff_traceability.md"
+  ]
+}

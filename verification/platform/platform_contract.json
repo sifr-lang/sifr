@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "active",
+  "status": "approved-shared-baseline",
   "owner_phases": [
     "text-i18n",
     "concurrency-runtime",
@@ -93,6 +93,11 @@
     "http_parser_dos": "network-http",
     "tls_verification": "network-http",
     "http_flow_control": "network-http",
+    "http_request_smuggling": "network-http",
+    "url_authority_security": "network-http",
+    "cookie_header_scope": "network-http",
+    "network_tls_http_redaction": "network-http",
+    "network_body_size_limits": "network-http",
     "log_redaction": "shared"
   }
 }

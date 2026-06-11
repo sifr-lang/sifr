@@ -1,6 +1,6 @@
 # Production Stdlib Platform Contract
 
-Status: active for text/i18n M0; provider milestones remain blocked until their listed substrate milestones close.
+Status: approved shared baseline for split production-stdlib substrate phases.
 
 This contract is shared by the text/i18n, concurrency/runtime, and network/HTTP production-stdlib substrate phases. It is not a CPython compatibility layer. It defines native Sifr platform rules for state vocabulary, ownership, cancellation, backpressure, typed error nesting, observability, host support, security/resource ownership, and executable cross-phase golden fixtures.
 
@@ -31,7 +31,7 @@ Stable or semi-stable surfaces must also declare one stability level: `stable-pu
 | --- | --- |
 | Text values | Always valid Unicode scalar text; arbitrary bytes never become text without explicit decoding. |
 | Bytes, HTTP bodies, subprocess pipes, and IPC payloads | Owned by default. Borrowing across async/task/process boundaries requires compiler proof. |
-| TCP streams, TLS streams, HTTP body streams, subprocess pipes, and text streams | Linear resources with explicit close/shutdown/drop behavior; double-close and use-after-close are diagnostics or typed errors. |
+| TCP streams, TLS streams, HTTP body streams, subprocess pipes, and text streams | Linear resources with explicit close/shutdown/drop behavior; double-close and use-after-close are diagnostics or typed errors. TCP/TLS full-duplex use requires owned split halves unless a future phase proves a borrowed lifetime-safe design. |
 | Incremental codecs | Unique mutable state; no concurrent aliasing or hidden shared mutation. |
 | Executor futures and task handles | Must be observed, joined, cancelled, or explicitly consumed; unobserved failure is diagnosed. |
 | Task, thread, process, and IPC boundary captures | Must satisfy the owning phase's sendability/shareability or IPC-serializability rules before codegen. |
@@ -47,6 +47,8 @@ Concurrency/runtime rejects public event-loop policy mutation, raw thread/proces
 Cancellation is typed evidence, not an invisible drop path. Streaming decoders preserve linear state and report exhausted or partial-state errors explicitly. Bounded buffers have explicit capacity and typed full/closed outcomes. Producers cannot hide unbounded buffering inside adapters.
 
 Higher-level errors preserve lower-level evidence, for example `ProcessError::Pipe(PipeError::TextDecode(DecodeError))` and `HttpError::Text(DecodeError)`. Exception-only control flow is rejected.
+
+Network/HTTP cancellation, timeout, shutdown, backpressure, offload, and diagnostics consume the concurrency/runtime provider model. Network/HTTP must not introduce a parallel cancellation token, deadline coordinator, shutdown manager, queue/channel primitive, executor, process-worker model, or diagnostics bus.
 
 ## Observability
 
@@ -74,3 +76,5 @@ Redaction is required for URLs with credentials, headers, cookies, request/respo
 Executable platform fixtures live under `verification/platform/golden` and are declared in `verification/platform/golden/manifest.json`. `scripts/run_platform_golden.sh` skips entries whose `blocked_until` milestones are not listed in `SIFR_PLATFORM_CLOSED_MILESTONES`; unblocked entries must satisfy their exit code and output expectations.
 
 Text/i18n owns the binary file I/O prerequisite fixture, unsupported CPython import diagnostic fixture, and text-dependent blocked entries. Later phases must consume this substrate instead of adding local encoding, Unicode, locale, or fallback decoder behavior.
+
+Network/HTTP owns the unsupported CPython network import fixture, loopback-only transport fixtures, and HTTP body text fixtures that remain blocked until the required text/i18n and network milestones close.

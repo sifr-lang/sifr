@@ -1,0 +1,5 @@
+from selectors import DefaultSelector
+
+
+def main():
+    pass
