@@ -102,6 +102,16 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude implementation-readiness review pass 2:
   - `reviews/ad-hoc-production-network-http-platform-substrate-implementation-readiness-review-pass-2.md`
   - Result: `PASS`; Claude confirmed the post-pass-1 polish introduced no contradictions and found no remaining CPython fallback path, dependency-ring gap, unmade provider/ecosystem decision, M0 contract hole, milestone-ordering conflict, security/resource omission, or text/runtime provider substitution risk.
+- Reviewer serving-scale and stream-shape review:
+  - Source: user-provided review on the unowned multi-core serving story, missing TCP full-duplex API shape, and missing TCP half-close semantics.
+  - Result: `PASS after M0 contract fixes`; the phase now records a single-runtime-worker-per-process v1 serving boundary, requires M0 to create or link the multi-core serving follow-up, adds owned `TcpStream` split halves as the full-duplex model, and makes write-side TCP half-close an M1 substrate requirement.
+- Claude Opus implementation-readiness review pass 1:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-opus-review-pass-1.md`
+  - Result: `CONDITIONAL PASS`; body-stream contract ownership, `TcpStream.split()` failure shape, write-after-`shutdown_write`, and unsplit half-close handle disposition needed contract fixes.
+  - Remediations: M0 now owns body-stream contract definition while M4 implements it, `split()` is infallible and affine-consuming, write-after-shutdown returns a stable typed error, unsplit `shutdown_write()` preserves read usability, split-half close/error evidence must come from underlying socket state, the serving-scale follow-up needs a stable recorded identifier, URL/IDNA backend approval requires text/i18n owner sign-off, M3 namespace ownership is explicit, Phase 41 deferred capability scope is explicit, and Hyper-Util graceful shutdown has a Sifr-owned baseline.
+- Claude Opus implementation-readiness review pass 2:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-opus-review-pass-2.md`
+  - Result: `PASS`; all pass-1 blockers and recommended edits were verified as remediated, no new blocking contradictions or decision-by-discovery holes remained, and the phase was judged implementation-ready for M0.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -146,6 +156,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Remove Hyper's unstable `tracing` feature from accepted dependencies; Sifr emits wrapper-level `tracing` spans/events instead.
 - [x] Make Hyper-Util conditional/internal-only and prefer Hyper plus Sifr-owned adapters before adding it.
 - [x] Assign network metrics schema ownership and require direct/transitive `h2` lockfile coherence verification in M0.
+- [x] Add explicit v1 serving-scale boundary: this phase is single-runtime-worker per process, and M0 must create or link the follow-up that owns multi-core serving throughput.
+- [x] Add TCP full-duplex ownership contract using owned split read/write halves instead of shared mutable stream aliasing.
+- [x] Add TCP write-side half-close as an M1 substrate requirement with M0 semantics for repeated shutdown, split-half behavior, cancellation, and partial-progress evidence.
+- [x] Resolve Claude Opus pass 1 blockers: M0 owns body-stream contract definition, `TcpStream.split()` is infallible, write-after-shutdown is typed, and unsplit `shutdown_write()` preserves the read side.
+- [x] Record Claude Opus pass 2 `PASS` confirming no remaining implementation-readiness blockers.
 
 ## Implementation PRs
 
