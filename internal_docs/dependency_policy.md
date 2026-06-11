@@ -29,7 +29,7 @@ Generated runtime core dependencies may appear in generated Sifr projects only w
 Examples:
 
 - `tokio` for accepted async runtime, timers, process I/O, signal, sync, and blocking-pool substrate
-- `tokio-util` when a Sifr-owned cancellation scope or Tokio I/O helper requires it
+- `tokio-util` only when internal cancellation machinery or Tokio I/O helpers require it
 - `futures-util` only where generated-runtime async combinators would otherwise require substantial custom poll-level helper code
 - `tracing` for structured runtime events
 

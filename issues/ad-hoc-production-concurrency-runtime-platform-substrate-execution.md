@@ -1672,6 +1672,14 @@ Post-closure fable host-matrix remediation:
 - `reviews/ad-hoc-production-concurrency-runtime-fable-final-review-pass-2.md`: `PASS`; fable reviewer verified the pass-1 blocker was fully remediated, the inventory audit no longer contradicts closed M7 status, and the closure record is internally consistent after this docs-only correction.
 - Docs-only validation: `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS (`2274` files under the 900-line hand-maintained source limit).
 
+Post-closure cancellation-model provider record:
+
+- PR #2493: https://github.com/sifr-lang/sifr/pull/2493
+- Scope: clarified the completed provider cancellation model as abort-backed task-handle cancellation with typed observation, compiler-recognized `async with task.timeout(duration)` same-task timeout scopes, no public `cancel_scope` / `CancelScope` / cancellation-token surface, and conditional-only `tokio-util` dependency records.
+- `reviews/ad-hoc-production-concurrency-runtime-cancellation-fable-review-pass-2.md`: `FAIL`; fable reviewer verified the stale `cancel_scope` public-API records were fixed but found one remaining unconditional `tokio-util` dependency summary.
+- `reviews/ad-hoc-production-concurrency-runtime-cancellation-fable-review-pass-3.md`: `PASS`; fable reviewer verified the remaining blocker and wording notes were fixed, all changed files were staged, and no blocking findings remained.
+- Local validation: `git diff --cached --check` -> PASS; `python3 -m json.tool verification/stdlib/concurrency_runtime_substrate_inventory.json` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS (`2274` files under the 900-line hand-maintained source limit); `scripts/run_all_tests.sh --profile create-pr` -> PASS with wall-time advisory only (`125` e2e pass fixtures, `0` failed, `report_signature=50edc954137c87b4`).
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.

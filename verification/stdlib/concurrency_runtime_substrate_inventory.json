@@ -176,7 +176,7 @@
       "milestone": "milestone_concurrency_runtime_0a"
     },
     {
-      "acceptance": "TaskHandle/TaskGroup/cancel_scope/race/select/timeout behavior typed and no public Tokio leak",
+      "acceptance": "TaskHandle/TaskGroup/task.timeout scope/race/select/timeout behavior typed and no public Tokio leak",
       "artifact": "concurrency_runtime_m1_task_traceability.md",
       "fixtures": "task sendability, observed failure, unobserved drop, race/select loser evidence fixtures",
       "milestone": "milestone_concurrency_runtime_1"
@@ -237,11 +237,11 @@
       "terminal_state": "production-public"
     },
     {
-      "notes": "Stable task helpers with typed timeout/cancellation evidence and no public Tokio types.",
+      "notes": "Stable task helpers with typed timeout/cancellation evidence and no public Tokio types. The planned broader scope surface closed as compiler-recognized task.timeout same-task scopes.",
       "owner_milestone": "milestone_concurrency_runtime_1",
       "stability": "stable-public-api",
       "support_tier": "production-public",
-      "surface": "sifr.task.spawn_scoped/sleep/timeout/deadline/cancel_scope/join_all/race/select",
+      "surface": "sifr.task.spawn_scoped/sleep/timeout/deadline/task.timeout scope/join_all/race/select",
       "terminal_state": "production-public"
     },
     {
@@ -11070,10 +11070,10 @@
       "validation": "timeout/deadline evidence fixture"
     },
     {
-      "api": "sifr.task.cancel_scope",
+      "api": "async with task.timeout(duration)",
       "classification": "async-suspension cancellation",
       "owner": "M1",
-      "validation": "cancel-scope fixture"
+      "validation": "task.timeout scope fixture"
     },
     {
       "api": "sifr.sync.Channel.send/receive async forms",
