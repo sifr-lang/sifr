@@ -215,7 +215,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 
 ## Implementation PRs
 
-- M0: working branch `codex/check-network-phase-relevance`; PR pending review/validation.
+- M0: https://github.com/sifr-lang/sifr/pull/2494 pending merge-gate validation and review/merge.
 - M1: pending.
 - M2: pending.
 - M3: pending.
