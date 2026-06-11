@@ -91,6 +91,17 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Source: local review after the concurrency/runtime substrate cleanup and dependency-policy creation.
   - Result: phase doc tightened to remove the future CPython-shaped adapter path, classify Python-shaped network/web modules as rejected or unsupported diagnostics, replace the flat Rust ecosystem table with dependency-ring decisions, reject implementation-time crate-family discovery, align Tokio features with the concurrency/runtime provider boundary, and add a network-owned security/resource model.
   - Claude review attempt: `reviews/ad-hoc-production-network-http-platform-substrate-review-pass-1.md` was started but produced no content and was removed; no external review result was retained for this pass.
+- Reviewer dependency and contract tightening:
+  - Source: user-provided review notes on Hyper tracing, UDP gating, URL/IDNA, TLS build/platform contracts, DNS semantics, byte buffers, HTTP substrate types, body streams, Hyper-Util conditionality, and M5 formatting.
+  - Result: `PASS after contract fixes`; all required fixes were applied in the phase doc.
+  - Remediations: removed Hyper's unstable `tracing` feature, made Hyper-Util conditional/internal-only, made UDP M0-gated, added URL/IDNA guard, added TLS generated-build and platform-verifier host requirements, added TLS write/flush/shutdown contract, added public byte-buffer and DNS semantics gates, defined `sifr.http` substrate type/body stream contracts, clarified crate patch versions as M0 lockfile pins, fixed M5 inventory indentation, and clarified Content-Encoding compression versus HPACK.
+- Claude implementation-readiness review pass 1:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-implementation-readiness-review-pass-1.md`
+  - Result: `PASS`; Claude found no blocking implementation-readiness gaps.
+  - Non-blocking polish applied afterward: clarified conditional `server-graceful`, assigned metrics schema ownership to the runtime/networking phase owner, and added direct/transitive `h2` lockfile coherence requirements.
+- Claude implementation-readiness review pass 2:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-implementation-readiness-review-pass-2.md`
+  - Result: `PASS`; Claude confirmed the post-pass-1 polish introduced no contradictions and found no remaining CPython fallback path, dependency-ring gap, unmade provider/ecosystem decision, M0 contract hole, milestone-ordering conflict, security/resource omission, or text/runtime provider substitution risk.
 
 ## Planning Review Remediation Retained In This Phase
 
@@ -122,10 +133,14 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Add mTLS/client certificate authentication as an M0/M2 TLS classification item.
 - [x] Require HTTP/2 loopback coverage for SETTINGS negotiation, RST_STREAM cancellation, GOAWAY graceful shutdown, and HPACK correctness edge cases selected in the M0 conformance inventory.
 - [x] Make M3 the owner of canonical URL/header/cookie primitives and M4 the consumer to prevent duplicate HTTP representations.
-- [x] Resolve ecosystem and API decisions before M0: Tokio feature set, rustls `aws-lc-rs`, `rustls-platform-verifier`, `tokio::net::lookup_host`, owned-buffer stream I/O, constrained UDP, `socket2` option set, `sifr.http` path, internal Tower service shape, OTel deferral, mTLS inclusion, multipart deferral, internal-only upgrade hooks, and external CPython test handling.
+- [x] Resolve ecosystem and API decisions before M0: Tokio feature set, rustls `aws-lc-rs`, `rustls-platform-verifier`, `tokio::net::lookup_host`, owned-buffer stream I/O, M0-gated UDP, `socket2` option set, `sifr.http` path, `tower-service` handoff, conditional Hyper-Util, OTel deferral, mTLS inclusion, multipart deferral, internal-only upgrade hooks, and external CPython test handling.
 - [x] Pin the service handoff crate to `tower-service` only and add an M2 DoD gate for mTLS loopback success/rejection.
 - [x] Lock clean-language policy for networking: no backward-compatibility shim, migration path, bridge alias, fallback path, or CPython-shaped adapter track survives this phase.
 - [x] Add network-owned security/resource rows for TLS defaults, root stores, request smuggling, header normalization, HTTP/2 abuse, size limits, URL authority security, cookie-header scope, compression deferral, redaction, and external-network test policy.
+- [x] Add M0 contracts for public byte-buffer semantics, DNS/address resolution, TLS write/flush/shutdown, URL/IDNA guard behavior, `sifr.http` substrate types, and HTTP body streams.
+- [x] Remove Hyper's unstable `tracing` feature from accepted dependencies; Sifr emits wrapper-level `tracing` spans/events instead.
+- [x] Make Hyper-Util conditional/internal-only and prefer Hyper plus Sifr-owned adapters before adding it.
+- [x] Assign network metrics schema ownership and require direct/transitive `h2` lockfile coherence verification in M0.
 
 ## Implementation PRs
 
