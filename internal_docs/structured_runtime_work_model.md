@@ -154,7 +154,7 @@ Cancellation applies consistently across work kinds:
 - future IPC worker cancellation sends a typed cancel frame before process escalation when the protocol is still live
 - cleanup scopes run under cancellation and report cleanup failures without hiding the initiating failure
 
-Current task cancellation is mostly abort-based. The production phase must explicitly decide which abort-based behavior remains v1 semantics and whether a cooperative cancellation layer is introduced internally. Tokio or tokio-util token types must not leak publicly; a Sifr-owned cancellation scope handle, named `CancelScope` or another M0-recorded name, is a settled stable API. M0 records its concrete public type name and Rust implementation boundary.
+V1 task-handle cancellation keeps the existing abort-backed spawned-task behavior and surfaces typed cancellation evidence on observation. The accepted Sifr-owned same-task cooperative scope is the compiler-recognized `async with task.timeout(duration)` form, which lowers to internal delimited cancellation at await points and exits through `TimeoutError`; no public `CancelScope`, Tokio token, or tokio-util token type is exposed. Blocking and CPU offload keep limited cancellation/abandonment semantics with typed evidence rather than guaranteed thread interruption.
 
 M0 defines static handled-failure proof for `TaskHandle` observation. It distinguishes awaited-and-ignored, awaited-and-assigned-but-uninspected, exhaustively matched, propagated with `?`, converted into another error, and explicit intentional discard if accepted.
 

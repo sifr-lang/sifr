@@ -6,7 +6,7 @@ Status: M7 inventory audited; implementation milestones have recorded validation
 | --- | --- | --- | --- |
 | sifr.task.sleep | M1 | async-suspension | task sleep fixture |
 | sifr.task.timeout/deadline | M1 | async-suspension cancellation | timeout/deadline evidence fixture |
-| sifr.task.cancel_scope | M1 | async-suspension cancellation | cancel-scope fixture |
+| async with task.timeout(duration) | M1 | async-suspension cancellation | task.timeout scope fixture |
 | sifr.sync.Channel.send/receive async forms | M2 | async-suspension backpressure | channel backpressure and cancellation fixtures |
 | sifr.sync.Channel send/receive sync forms | M2 | @blocking_io-equivalent sync wait | blocking-in-async diagnostic fixture |
 | sifr.sync.Mutex/RwLock sync lock | M2 | @blocking_io-equivalent sync wait | lock direct async diagnostic fixture |
