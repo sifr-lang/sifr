@@ -335,7 +335,7 @@ The accepted v1 serving-scale contract is:
 - multi-process serving, host-limited `SO_REUSEPORT`, process workers, and future multi-thread runtime topology are separate serving-scale concerns;
 - Phase 41 may claim protocol/runtime production readiness after this phase, but must not claim multi-core serving throughput readiness until the serving-scale follow-up closes.
 
-M0 must create or link the named follow-up issue for multi-core serving strategy. The follow-up must decide between, or explicitly defer, host-limited `SO_REUSEPORT` multi-process serving, process-worker supervision, a future provider-owned Tokio `rt-multi-thread` topology, or another Sifr-native serving-scale model. Until that follow-up closes, this phase's public server handoff is single-runtime-worker per process.
+M0 has linked the named follow-up issue for multi-core serving strategy: [ad-hoc-network-http-serving-scale-follow-up.md](./ad-hoc-network-http-serving-scale-follow-up.md), stable identifier `ad-hoc-network-http-serving-scale-follow-up`. The follow-up must decide between, or explicitly defer, host-limited `SO_REUSEPORT` multi-process serving, process-worker supervision, a future provider-owned Tokio `rt-multi-thread` topology, or another Sifr-native serving-scale model. Until that follow-up closes, this phase's public server handoff is single-runtime-worker per process.
 
 ### Rust Ecosystem Decisions
 
@@ -359,7 +359,7 @@ Dependency rings for this phase:
 | --- | --- | --- | --- | --- | --- |
 | Ring 2 | async runtime, TCP/UDP, timers, async I/O, async sync, generated entrypoints | `tokio` | keep workspace `tokio = 1.52.3`; expand generated-runtime features only to `macros`, `rt`, `sync`, `time`, `net`, and `io-util`; do not enable `full`, `rt-multi-thread`, `process`, `signal`, `fs`, `parking_lot`, or `tokio_unstable` for this network feature | M1-M5 | Network APIs consume the concurrency/runtime provider for task lifetime, cancellation, deadlines, shutdown, diagnostics, process, and signal semantics. This phase adds network suspension points and socket I/O only; it does not choose a new runtime topology or expose Tokio handles. |
 | Ring 2 | Tokio cancellation/I/O helpers | `tokio-util` | add `tokio-util = 0.7.18` with `default-features = false`; enable `rt`, `io-util`, and `time` only if M1/M4 needs accepted helpers; do not enable `full`, `net`, `codec`, `compat`, or `join-map` | M1, M4 | Used only behind Sifr-owned stream/cancellation internals. Tokio Util token, codec, and compatibility types are never public. If Tokio plus Sifr wrappers suffice, M0 may keep this dependency conditional and unused. |
-| Ring 2 | owned byte buffers and HTTP body chunks | `bytes` | add `bytes = 1.11.1` with default features only for generated/runtime crates that implement network or HTTP bodies | M1, M4 | `bytes::Bytes` may be used internally to avoid copies and support backpressure. Public Sifr APIs expose `bytes` values as Sifr-owned byte buffers, never Rust crate types. This is the narrow production need that overrides the general no-direct-`bytes` default in the dependency policy. |
+| Ring 2 | owned byte buffers and HTTP body chunks | `bytes` | add `bytes = 1.11.1` with default features only for generated/runtime crates that implement network or HTTP bodies | M1, M4 | `bytes::Bytes` may be used internally to avoid copies and support backpressure. Public Sifr APIs expose Sifr-owned byte-buffer values, never Rust crate types. This is the narrow production need that overrides the general no-direct-`bytes` default in the dependency policy. |
 | Ring 2 | structured spans and events | `tracing` | add `tracing = 0.1.44` with `default-features = false`, feature `std`; do not enable `attributes` | M1-M5 | Emits DNS/connect/TLS/HTTP lifecycle spans and events behind Sifr observability hooks. Applications/tests choose subscribers; no subscriber, recorder, or tracing type leaks. |
 | Ring 3 | socket options not exposed by Tokio/std | `socket2` | add `socket2 = 0.6.4` only where M1 proves Tokio/std cannot expose required behavior; do not enable `all` | M1 | Limited to `SO_REUSEADDR`, host-limited `SO_REUSEPORT`, `TCP_NODELAY`, `SO_KEEPALIVE`, and `IPV6_V6ONLY`. Every host-limited option needs a supported-host matrix row and fixture. Other options are not public. |
 | Ring 3 | metrics facade | `metrics` | add `metrics = 0.24.6` only after M0/M5 records metric names, label/cardinality policy, emission points, redaction policy, and deterministic tests | M5 | Optional facade only. No exporter, global recorder setup, or metrics crate type appears in public APIs. If the concrete schema is not approved, metrics remain deferred while tracing events still ship. |
@@ -373,7 +373,7 @@ Dependency rings for this phase:
 | Ring 4 | HTTP streaming body trait | `http-body` | add `http-body = 1.0.1` | M4 | Internal body substrate only. Public Sifr body streams remain Sifr-owned and cancellation-aware. |
 | Ring 4 | HTTP body adapters | `http-body-util` | add `http-body-util = 0.1.3` with `default-features = false`; enable `channel` only if M4 proves it is needed for bounded body tests; never enable `full` | M4 | Used for narrow body adapters/fixtures, not as public body API. |
 | Ring 4 | HTTP/1.1 and HTTP/2 transport | `hyper` | add `hyper = 1.10.1` with `default-features = false`, features `http1`, `http2`, `client`, and `server`; do not enable `full`, unstable `tracing`, `ffi`, `capi`, or `nightly` | M4 | Accepted core HTTP transport stack with `h2`. Internal client/server transport exists for protocol validation and future handoff, not as `sifr.http.client` or `sifr.http.server`. Sifr emits wrapper-level `tracing` spans/events instead of enabling Hyper's unstable tracing feature. |
-| Ring 4 conditional | Tokio/Hyper adapter helpers | `hyper-util` | add `hyper-util = 0.1.20` with `default-features = false`, starting with `tokio` only, if M4 proves Hyper alone would require substantial custom runtime adapter code; add `http1`, `http2`, `server`, or `service` only when the selected adapter path proves each one necessary; default to a Sifr-owned graceful-shutdown loop over provider shutdown primitives and avoid `server-graceful` unless M4 proves it composes with provider-owned shutdown; do not enable `full`, `client-legacy`, `client-pool`, `client-proxy`, `client-proxy-system`, or `server-auto` by default | M4 | Conditional, internal-only adapter helper. Prefer Hyper directly plus small Sifr-owned adapters first. No Sifr public type, lifecycle policy, framework handoff contract, or shutdown semantics may depend on Hyper-Util's module shape. |
+| Ring 4 conditional | Tokio/Hyper adapter helpers | `hyper-util` | add `hyper-util = 0.1.20` with `default-features = false`, starting with `tokio` only, if M4 proves Hyper alone would require substantial custom runtime adapter code; add `http1`, `http2`, `server`, or `service` only when the selected adapter path proves each one necessary; default to a Sifr-owned graceful-shutdown loop over provider shutdown primitives and avoid `server-graceful` unless M4 proves it composes with provider-owned shutdown; do not enable `full`, `client-legacy`, `client-pool`, `client-proxy`, `client-proxy-system`, or `server-auto` by default | M4 | Conditional, internal-only adapter helper. Prefer Hyper directly plus small Sifr-owned adapters first. If enabled, M4 must include `hyper_util_necessity.md` showing the Hyper-only attempt, custom adapter code avoided, selected features, and proof that no public Sifr lifecycle, shutdown, or type contract depends on Hyper-Util. |
 | Ring 4 | HTTP/2 state machine and flow control | `h2` | add `h2 = 0.4.14` with default features only as required by Hyper or direct HTTP/2 fixtures | M4 | HTTP/2 SETTINGS, HPACK, flow control, RST_STREAM, PING, GOAWAY, and multiplexing are crate-backed. Sifr maps protocol errors into typed `HttpError`/`ProtocolError`. M0 verifies whether Hyper already provides the required `h2` dependency transitively; a direct `h2` dependency is used only for direct fixtures or APIs that need it, and the lockfile must contain a coherent version/feature set. |
 | Ring 4 | cookie header parsing | `cookie` | add `cookie = 0.18.1` with `default-features = false`; enable no signed/private/secure/jar-related features | M3 | Header-level parse/build only. Cookie persistence, signed/private jars, key management, and percent-decoded user text are not substrate features. |
 | Ring 4 | service abstraction for Phase 41 handoff | `tower-service` | add `tower-service = 0.3.3` only; do not add the full `tower` crate | M4, M5 | `Service` may be used internally to shape transport/framework handoff. Public Sifr APIs expose Sifr request/response and middleware concepts, not Tower traits. |
@@ -410,8 +410,8 @@ Dependency rings for this phase:
 | DNS | TCP connect and address resolution use `tokio::net::lookup_host` to respect host resolver configuration. Deterministic tests use loopback literals and host-matrix fixtures; custom record lookup is deferred. |
 | TLS roots | Production client verification uses `rustls-platform-verifier`. Deterministic tests use explicit in-memory `RootCertStore` values built from `rcgen` fixtures. `webpki-roots` is not a fallback. |
 | Rustls crypto provider | Use Rustls 0.23's default `aws_lc_rs` provider. Compression, early data, FIPS, custom provider, and `ring` provider choices are out of scope unless a future platform issue records a concrete blocker. |
-| Stream I/O ownership | Streams use owned-buffer reads: `read_chunk(max_bytes) -> Result[Option[bytes], NetError]`, where `None` means EOF. Writes provide `write(data) -> Result[int, NetError]` and `write_all(data) -> Result[None, NetError]`. Concurrent full-duplex use requires owned split halves. TCP write-side half-close is accepted as substrate and must be specified in M0. |
-| UDP | UDP remains M0-gated. M1 implements constrained `UdpSocket` only if M0 records a named near-term production consumer, such as telemetry datagrams, QUIC preparation, explicit DNS-like internal fixtures, or another named phase dependency. If accepted, the surface is limited to `bind`, `send_to`, `recv_from`, `connect`, `send`, `recv`, `local_addr`, and `close`; broadcast, multicast, raw sockets, packet options, and platform-specific socket constants are deferred or host-limited. |
+| Stream I/O ownership | Streams use owned-buffer reads: `read_chunk(max_bytes) -> Result[Option[ByteBuffer], NetError]`, where `None` means EOF and `ByteBuffer` is a placeholder name pending the M0 byte-buffer decision. Writes provide `write(data) -> Result[int, NetError]` and `write_all(data) -> Result[None, NetError]`. Concurrent full-duplex use requires owned split halves. TCP write-side half-close is accepted as substrate and must be specified in M0. |
+| UDP | UDP remains M0-gated. M1 implements constrained `UdpSocket` only if M0 records a named near-term production consumer, such as telemetry datagrams, QUIC preparation, explicit DNS-like internal fixtures, or another named phase dependency, and explains why TCP/TLS/HTTP loopback fixtures are insufficient for that consumer. If accepted, the surface is limited to `bind`, `send_to`, `recv_from`, `connect`, `send`, `recv`, `local_addr`, and `close`; broadcast, multicast, raw sockets, packet options, and platform-specific socket constants are deferred or host-limited. |
 | HTTP stack | `hyper` and `h2` are the accepted HTTP/1.1 and HTTP/2 protocol stack. `hyper-util` is conditional/internal-only for Tokio/Hyper adapters if M4 proves it is needed. Policy features such as pools, redirects, retries, auth, proxies, compression, cookies-as-storage, and test transports belong to the future HTTP client phase. |
 | Service substrate | Use `tower-service` only, not `tower`. The trait is internal and may be hidden behind generated adapters. Public Sifr APIs expose Sifr request/response and middleware concepts. |
 | Observability | Emit `tracing` spans/events and optional `metrics` counters/histograms after schema approval. The runtime/networking phase owner owns the metric schema proposal and reviewer sign-off in M0/M5. No global subscriber/recorder setup, exporter bridge, or OpenTelemetry dependency is accepted here. |
@@ -449,12 +449,12 @@ The accepted public shape is Sifr-native and typed:
 - `async connect_tcp(address, *, timeout=None, local_addr=None) -> Result[TcpStream, NetError]`
 - `async listen_tcp(address, *, backlog=None, reuse_addr=False) -> Result[TcpListener, NetError]`
 - `async TcpListener.accept() -> Result[(TcpStream, SocketAddr), NetError]`
-- `async TcpStream.read_chunk(max_bytes) -> Result[Option[bytes], NetError]`
+- `async TcpStream.read_chunk(max_bytes) -> Result[Option[ByteBuffer], NetError]`
 - `async TcpStream.write(data) -> Result[int, NetError]`
 - `async TcpStream.write_all(data) -> Result[None, NetError]`
 - `async TcpStream.shutdown_write() -> Result[None, NetError]`
 - `TcpStream.split() -> (TcpReadHalf, TcpWriteHalf)`
-- `async TcpReadHalf.read_chunk(max_bytes) -> Result[Option[bytes], NetError]`
+- `async TcpReadHalf.read_chunk(max_bytes) -> Result[Option[ByteBuffer], NetError]`
 - `async TcpReadHalf.close() -> Result[None, NetError]`
 - `async TcpWriteHalf.write(data) -> Result[int, NetError]`
 - `async TcpWriteHalf.write_all(data) -> Result[None, NetError]`
@@ -467,7 +467,7 @@ The API must expose local/remote address inspection, graceful shutdown, resource
 
 The accepted stream ownership model is owned-buffer I/O:
 
-- `read_chunk(max_bytes) -> Result[Option[bytes], NetError]`; `None` means EOF.
+- `read_chunk(max_bytes) -> Result[Option[ByteBuffer], NetError]`; `None` means EOF, and `ByteBuffer` is a placeholder name pending M0's public byte-buffer decision.
 - `write(data) -> Result[int, NetError]`; returns the number of bytes accepted by the underlying stream.
 - `write_all(data) -> Result[None, NetError]`; retries partial writes until completion or typed failure.
 
@@ -493,7 +493,7 @@ M0 must also define TCP half-close semantics before M1 starts:
 - after successful `shutdown_write()`, subsequent `write` or `write_all` on the unsplit stream or split write half returns a stable typed write-after-shutdown error; silent no-op and panic are rejected;
 - cancellation during shutdown preserves typed partial-progress evidence.
 
-M0 must define the public Sifr byte-buffer type used by `TcpStream.read_chunk`, `TlsStream.read_chunk`, HTTP body chunks, and header/body diagnostics. Rust `bytes::Bytes` is internal only. The public Sifr byte buffer must define ownership, immutability, slicing, cloning, equality, conversion, redaction, and display/debug rules before M1 starts.
+M0 resolves the `ByteBuffer` placeholder in this phase doc to Sifr's existing built-in `bytes` type. No import is required for the type; helper constructors and utilities live under `sifr.bytes`. Rust `bytes::Bytes` is internal only. The public Sifr byte buffer must define ownership, immutability, slicing, cloning, equality, conversion, redaction, and display/debug rules before M1 starts.
 
 M0 must also define DNS/address-resolution semantics:
 
@@ -524,13 +524,13 @@ No CPython-shaped `SSLContext` or `SSLSocket` is exposed in this phase. Referenc
 
 Accepted TLS stream API shape:
 
-- `async TlsStream.read_chunk(max_bytes) -> Result[Option[bytes], TlsError]`
+- `async TlsStream.read_chunk(max_bytes) -> Result[Option[ByteBuffer], TlsError]`
 - `async TlsStream.write(data) -> Result[int, TlsError]`
 - `async TlsStream.write_all(data) -> Result[None, TlsError]`
 - `async TlsStream.flush() -> Result[None, TlsError]`
 - `async TlsStream.close_notify() -> Result[None, TlsError]`
 - `TlsStream.split() -> (TlsReadHalf, TlsWriteHalf)`
-- `async TlsReadHalf.read_chunk(max_bytes) -> Result[Option[bytes], TlsError]`
+- `async TlsReadHalf.read_chunk(max_bytes) -> Result[Option[ByteBuffer], TlsError]`
 - `async TlsReadHalf.close() -> Result[None, TlsError]`
 - `async TlsWriteHalf.write(data) -> Result[int, TlsError]`
 - `async TlsWriteHalf.write_all(data) -> Result[None, TlsError]`
@@ -553,6 +553,8 @@ The M0 TLS stream contract must define, and M2 must implement, TLS stream semant
 - partial-progress evidence when plaintext was accepted but encrypted bytes were not fully flushed
 
 TLS write semantics must account for Tokio Rustls buffering: plaintext accepted by a TLS stream is not guaranteed to have reached the underlying TCP stream until flush/shutdown completes.
+
+M0 must define `TlsStream.close()` and `TlsWriteHalf.close()` disposition before M2 starts: whether close consumes the stream or write half and closes the underlying TCP stream directly, whether it first attempts `close_notify()`, how cancellation during close is reported, and how failure during close preserves typed `TlsError`/nested `NetError` evidence.
 
 M0 must define the TLS full-duplex ownership contract before M2 TLS implementation starts:
 
@@ -728,6 +730,7 @@ Network/HTTP M0 must record concrete security and resource decisions for the sur
 | Root store strategy | Production client verification uses platform roots through `rustls-platform-verifier`. Tests use explicit `rcgen` roots. No `webpki-roots`, local file, environment, or best-effort fallback root store is accepted in this phase. M2 records platform-verifier behavior per supported host; hosts that need extra setup, non-platform roots, or fallback behavior are `host-limited` until the generated-project story is proven. |
 | Request smuggling and header normalization | M0 must define canonical validation for names, obs-fold rejection, duplicate header policy, whitespace normalization, `Content-Length` disagreement handling, and `Content-Length` plus chunked conflict handling before M4 starts; M3/M4 implement and validate the accepted header and HTTP transport behavior. |
 | HTTP/2 abuse | M0 must define SETTINGS limits, max concurrent streams, flow-control window defaults, max frame/body buffering, PING handling, RST_STREAM cancellation mapping, GOAWAY graceful shutdown mapping, and malformed-frame typed errors before M4 starts; M4 implements and validates them with loopback fixtures. |
+| HTTP/2 priority and extension behavior | M0 must explicitly accept, ignore, reject, or defer HTTP/2 priority and extension-frame behavior before M4 starts. Unknown extension frames must map to typed protocol handling and must not panic or silently bypass resource limits. |
 | Body and header size limits | Every parser/body reader has explicit configured limits. Unbounded buffering is rejected unless an API name explicitly collects and M0 records a size cap and typed `TooLargeError`. |
 | Timeouts and cancellation | Connect, accept, read, write, TLS handshake, TLS shutdown, HTTP request write, response read, and HTTP/2 stream cancellation map to the provider timeout/cancellation model and preserve partial-progress evidence. |
 | URL and authority security | Userinfo redaction, host/port validation, path normalization semantics, percent-decoding boundaries, and IDNA/Unicode blocking states are recorded before `sifr.url` becomes public. Before text/i18n M2, `sifr.url` must prevent accidental Unicode/IDNA behavior by rejecting non-ASCII host input before calling `url` or accepting only ASCII and already-punycode hosts. The `url` crate's IDNA behavior may become the approved backend only after explicit text/i18n provider owner sign-off that it matches the accepted Unicode/IDNA version and canonicalization rules. |
@@ -765,6 +768,7 @@ Scope:
 - Apply the shared platform contract from [ad-hoc-production-stdlib-platform-contract.md](./ad-hoc-production-stdlib-platform-contract.md), including terminal states, stability levels, host matrix rows, security/resource ownership, and cross-phase golden fixtures.
 - Remove CPython stdlib parity as a completion goal.
 - Define typed network/TLS/URL/HTTP error model.
+- Define the placeholder-to-final mapping for public byte-buffer names used in this phase doc.
 - Define async/blocking workload classifications and diagnostics.
 - Define runtime dependency features and approved Rust crates.
 - Define the Rust ecosystem dependency stack and feature flags for network, DNS, TLS, URL, HTTP/1, HTTP/2, cookies, observability, and tests.
@@ -811,6 +815,7 @@ Definition of done:
 - Public byte-buffer, DNS, TLS stream, TLS full-duplex, `sifr.http` type, HTTP body stream, and URL/IDNA guard contracts are checked in with concrete backlog entries.
 - Stream I/O ownership, lifetime, full-duplex split, half-close, cancellation, and partial read/write semantics are decided before M1 starts.
 - Phase 41 serving-scale handoff is checked in: this phase provides single-runtime-worker-per-process production-correct serving substrate, and M0 has created or linked the multi-core serving follow-up issue with a stable identifier recorded in this phase doc.
+- Generated release dependency snapshots prove Ring 5 dev/test/demo crates, including `tokio-test`, `proptest`, `rcgen`, and `tracing-subscriber`, are absent from production feature combinations.
 - M1-M5 implementation PRs have concrete backlog entries rather than prose-only scope.
 
 ### milestone_network_http_1: Async Network Runtime
@@ -829,7 +834,7 @@ Scope:
   - local/remote address inspection
 - Add DNS/address resolution with typed errors, deterministic timeout behavior, and the M0 address ordering / IPv4 / IPv6 / multi-address connect policy.
 - Add cancellation, backpressure, and resource limits.
-- Add constrained UDP datagram support only if M0 records a named near-term production consumer:
+- Add constrained UDP datagram support only if M0 records a named near-term production consumer and explains why TCP/TLS/HTTP loopback fixtures are insufficient for that consumer:
   - bind/connect
   - send/send_to
   - recv/recv_from
@@ -862,7 +867,7 @@ Definition of done:
 - TCP loopback tests pass deterministically without external network dependency.
 - TCP full-duplex split loopback tests pass with concurrent read/write tasks, typed cancellation evidence, and no shared mutable stream aliasing.
 - TCP half-close loopback tests pass for request-end signaling while the read side remains usable.
-- If M0 accepts constrained UDP, UDP loopback tests pass for the accepted datagram surface; otherwise UDP remains `deferred-to-phase-X` or `rejected` with rationale and no partial public API.
+- If M0 accepts constrained UDP, the recorded production-consumer rationale is checked in and UDP loopback tests pass for the accepted datagram surface; otherwise UDP remains `deferred-to-phase-X` or `rejected` with rationale and no partial public API.
 - Timeout and cancellation behavior is deterministic, typed, and panic-free.
 - Blocking sync paths are rejected from async contexts.
 - No public API leaks Tokio, raw descriptors, selectors, or event-loop internals.
@@ -1010,6 +1015,7 @@ Definition of done:
 - Body streaming and HTTP/2 multiplexing work without unbounded buffering.
 - The M0 `sifr.http` substrate type table and body stream contract are implemented or explicitly deferred/rejected with rationale.
 - HTTP/2 protocol-level behaviors selected in the M0 conformance inventory, including SETTINGS negotiation, RST_STREAM stream cancellation, GOAWAY graceful shutdown, and HPACK correctness edge cases, have loopback test coverage.
+- If `hyper-util` is enabled, `hyper_util_necessity.md` is checked in and records the Hyper-only attempt, avoided custom adapter code, selected features, and proof that no public Sifr lifecycle, shutdown, or type contract depends on Hyper-Util.
 - HTTP transport stores and forwards binary bodies and typed protocol metadata without local text decoding fallbacks.
 - Server transport handoff documentation states that this phase is single-runtime-worker per process until the M0 serving-scale follow-up closes.
 - No `http.server`, `socketserver`, or handler-subclass public API is added.
@@ -1127,7 +1133,7 @@ M0 validates these decisions and records dependency audit evidence; it does not 
 3. HTTP transport uses `hyper` and `h2`; conditional `hyper-util` is internal-only and allowed only if M4 proves Hyper alone would require substantial custom runtime adapter code. No web framework or high-level client crate enters this substrate.
 4. Host-specific socket options are limited to the socket2 list above and recorded as portable or host-limited.
 5. External-network CPython tests are `external-signal`; useful localnet behavior is converted to loopback.
-6. UDP is M0-gated. M1 implements a constrained datagram API only if M0 records a named near-term production consumer; advanced datagram features are deferred or host-limited.
+6. UDP is M0-gated. M1 implements a constrained datagram API only if M0 records a named near-term production consumer and why TCP/TLS/HTTP loopback fixtures are insufficient for that consumer; advanced datagram features are deferred or host-limited.
 7. Stable HTTP substrate types live under `sifr.http`; public client/server products remain future phases.
 8. Serving scale v1 is single-runtime-worker per process. Multi-core serving throughput is not hidden inside this substrate phase; M0 must create or link the follow-up issue that owns multi-process serving, host-limited `SO_REUSEPORT`, process workers, or future provider-owned multi-thread runtime topology.
 9. TCP full-duplex is supported through owned split halves, not shared mutable stream aliasing. TCP write-side half-close is part of the M1 substrate.

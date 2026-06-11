@@ -138,6 +138,20 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Fable final follow-up verification pass 6:
   - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-6.md`
   - Result: `PASS`; the pass-5 follow-ups were verified as non-contradictory, the main substrate doc remained unchanged from the pass-5-verified state, and the phase remained implementation-ready for M0.
+- Final reviewer cleanup pass:
+  - Source: user-provided final review attached in Codex.
+  - Result: `PASS with small cleanup edits`; the phase was judged ready for M0 execution planning, with cleanup requested for byte-buffer placeholder naming, Hyper-Util proof artifacts, Ring 5 absence proof, TLS `close()` disposition, HTTP/2 priority/extension behavior, and the UDP production-consumer burden.
+  - Remediations: API examples now use `ByteBuffer` as an explicit M0 placeholder instead of lowercase `bytes`; `hyper_util_necessity.md` is required if Hyper-Util is enabled; M0 generated release snapshots must prove Ring 5 dev/test/demo crates are absent from production feature combinations; M0 must define `TlsStream.close()` / `TlsWriteHalf.close()` disposition; HTTP/2 priority and extension-frame behavior is an explicit M0 decision; and UDP acceptance now requires both a named production consumer and a reason TCP/TLS/HTTP loopback fixtures are insufficient.
+- Claude Fable final cleanup verification pass 7:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-7.md`
+  - Result: `PASS`; all six final reviewer cleanup edits were verified as coherent, the ledger matched the diff, and no new implementation-readiness blockers were found.
+- Claude Opus M0 implementation review pass 1:
+  - `reviews/ad-hoc-production-network-http-m0-opus-review-pass-1.md`
+  - Result: `FAIL`; M0 artifacts existed but several M0-owned decisions were still deferred to M1/M2/M4.
+  - Remediations: M0 now resolves `ByteBuffer` to built-in `bytes`; defines TLS `close()`/`close_notify` disposition; defines HTTP/2 limits, priority/extension handling, header normalization, request-smuggling rules, `sifr.http` type table including trailers, body stream contract, body/header size limits, URL authority rules, and redaction rules; records public `SO_REUSEPORT` deferral; adds `network_http_dependency_audit.md`; expands golden/e2e unsupported import coverage; and expands the Decision Index.
+- Claude Opus M0 implementation review pass 2:
+  - `reviews/ad-hoc-production-network-http-m0-opus-review-pass-2.md`
+  - Result: `PASS`; all pass-1 blocking findings B1-B11 and non-blocking follow-ups were verified as remediated. Reviewer stated the M0 PR is safe to open and merge, and M1 can safely start after validation evidence is recorded.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -196,10 +210,12 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Apply Claude Fable pass 4 polish: explicit process-runtime state, named `UrlError`, current baseline wording, request-smuggling ownership, Phase 41 backlink, and platform-contract status refresh.
 - [x] Record Claude Fable pass 5 `PASS` confirming no remaining implementation-readiness blockers.
 - [x] Record Claude Fable pass 6 `PASS` confirming the pass-5 follow-up edits did not introduce gaps.
+- [x] Apply final reviewer cleanup edits for byte-buffer placeholder naming, Hyper-Util proof, Ring 5 absence proof, TLS close disposition, HTTP/2 priority/extensions, and UDP acceptance burden.
+- [x] Record Claude Fable pass 7 `PASS` confirming the final reviewer cleanup edits did not introduce gaps.
 
 ## Implementation PRs
 
-- M0: pending.
+- M0: working branch `codex/check-network-phase-relevance`; PR pending review/validation.
 - M1: pending.
 - M2: pending.
 - M3: pending.
@@ -209,6 +225,20 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 ## Validation Evidence
 
 Record local validation for each milestone before opening its PR.
+
+M0 validation:
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `python3 -m json.tool` on network/platform JSON artifacts | PASS | Parsed `network_http_substrate_inventory.json`, `network_http_dependency_snapshots.json`, `platform_contract.json`, and platform golden manifest. |
+| `cargo fmt --check` | PASS | Clean after M0 remediation. |
+| `cargo test -p sifr_stdlib network_http -- --nocapture` | PASS | Covers reserved network/web import mappings and Ring 5 dependency snapshot absence check. |
+| `cargo test -p sifr --test e2e e2e_fail -- --nocapture` | PASS | 479 fail fixtures completed; existing CFG panic messages appear inside negative harness but test exits successfully. |
+| `SIFR_PLATFORM_CLOSED_MILESTONES=milestone_network_http_0 scripts/run_platform_golden.sh` | PASS | 11 pass, 1 expected skip. |
+| `python3 scripts/check_file_size_guardrails.py` | PASS | 2293 files, limit 900 lines. |
+| `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed. |
+| `cargo clippy --workspace -- -D warnings` | PASS | Finished dev profile in 2m16s. |
+| `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded, no test failure. |
 
 Required baseline commands:
 
@@ -229,17 +259,18 @@ scripts/run_all_tests.sh
 
 M0 must create and keep current:
 
-- [ ] `verification/stdlib/network_http_substrate_inventory.md`
-- [ ] `verification/stdlib/network_http_substrate_inventory.json`
-- [ ] `verification/stdlib/network_http_cpython_evidence_matrix.md`
-- [ ] one traceability document per milestone domain under `verification/stdlib/`
+- [x] `verification/stdlib/network_http_substrate_inventory.md`
+- [x] `verification/stdlib/network_http_substrate_inventory.json`
+- [x] `verification/stdlib/network_http_cpython_evidence_matrix.md`
+- [x] `verification/stdlib/network_http_dependency_audit.md`
+- [x] one traceability document per milestone domain under `verification/stdlib/`
 
 Opening the M0 implementation PR is blocked until the artifact locations and schemas are present in that PR.
 
 ## Review Ownership
 
 - Phase owner: runtime/networking implementation owner.
-- Designated compiler/runtime reviewer: assign in the M0 implementation PR before the first implementation milestone is marked complete.
+- Designated compiler/runtime reviewer for M0: Claude Opus via `.cursor/skills/talk-to-claude-opus`; human compiler/runtime reviewer request remains required on the GitHub PR before merge.
 - External/final review fallback: M5 may use the five-working-day fallback rule only after this ledger records the reviewer assignment, posted review artifact, attempted follow-ups, open questions, and conservative self-review.
 
 ## CPython Evidence Scan
@@ -270,7 +301,24 @@ Evidence-family states:
 
 ## Decision Index
 
-No implementation decisions recorded yet.
+M0 implementation decisions recorded:
+
+| Surface | Terminal state | Rationale | Revisit rule | Evidence |
+| --- | --- | --- | --- | --- |
+| `sifr.net.UdpSocket` | `deferred-to-phase-X` | No named near-term production consumer was recorded with a reason TCP/TLS/HTTP loopback fixtures are insufficient. | A future issue must name the production consumer and fixture gap before any public datagram API is added. | `verification/stdlib/network_http_substrate_inventory.md` |
+| `SO_REUSEPORT` public API | `deferred-to-serving-scale-follow-up` | Serving scale is explicitly outside this substrate phase; `reuse_addr` must not imply reuse-port. | `issues/ad-hoc-network-http-serving-scale-follow-up.md` must close before any public reuse-port listener option or constructor ships. | `verification/platform/supported_host_matrix.md` |
+| internal readiness primitives | `internal-only` | Manual selectors/raw readiness are implementation details behind async streams. | Requires separate low-level readiness architecture issue. | `verification/stdlib/network_http_substrate_inventory.md` |
+| internal HTTP transport harness | `test-only-harness` | Loopback client/server helpers validate substrate and are not product client/server APIs. | Phase 41 and the future HTTP client phase own product APIs. | `verification/stdlib/network_http_substrate_inventory.md` |
+| `sifr.socket`, `sifr.ssl`, `sifr.select`, `sifr.selectors`, `sifr.urllib.*`, `sifr.http.client`, `sifr.http.server`, `sifr.socketserver` | `unsupported-with-diagnostic` or `rejected` | CPython-shaped network/web APIs conflict with the Sifr-native substrate boundary. | Future APIs must be Sifr-native and owned by `sifr.net`, `sifr.tls`, `sifr.url`, `sifr.http`, Phase 41, or the future HTTP client phase. | `crates/sifr_stdlib/src/lib.rs`, M0 e2e fail fixtures |
+| multi-core serving throughput | `deferred-to-serving-scale-follow-up` | This phase provides production-correct serving substrate for one current-thread runtime worker per process. | `issues/ad-hoc-network-http-serving-scale-follow-up.md` owns the scale strategy. | `verification/platform/supported_host_matrix.md` |
+| HTTP/3 / QUIC | `deferred-to-phase-X` | QUIC transport strategy needs a separate runtime/security phase. | Open a transport phase after HTTP/2 substrate closes. | `verification/stdlib/network_http_substrate_inventory.md` |
+| WebSocket and CONNECT public APIs | `deferred-to-phase-X` | Upgrade products need separate backpressure and security decisions. | Future product phase must define Sifr-native APIs and fixtures. | `verification/stdlib/network_http_substrate_inventory.md` |
+| Multipart/form parsing | `deferred-to-phase-41` | Product-level body parsing and bomb limits belong to Phase 41 or the HTTP client phase. | Revisit with accepted framework/client requirements. | `verification/stdlib/network_http_substrate_inventory.md` |
+| Content-Encoding compression | `deferred-to-phase-X` | Compression and decompression bomb policy are outside substrate. | Future compression issue must own limits and hooks. | `verification/stdlib/network_http_substrate_inventory.md` |
+| `metrics` facade | `deferred-to-phase-X` | Optional metrics schema needs M5 approval before production dependency activation. | Add only after metric names, labels, redaction, and deterministic tests are approved. | `verification/stdlib/network_http_dependency_audit.md` |
+| `hickory-resolver` | `deferred-to-phase-X` | TCP connect/address resolution uses `tokio::net::lookup_host`; custom resolver policy is outside substrate. | Future resolver issue must define record APIs and host behavior. | `verification/stdlib/network_http_substrate_inventory.md` |
+| `x509-parser` | `deferred-to-phase-X` | Public certificate display parsing is outside M2; TLS errors carry typed verification evidence. | Future certificate-inspection issue must define text/i18n display behavior. | `verification/stdlib/network_http_dependency_audit.md` |
+| Ring 5 dev/test/demo dependencies | `test-only-harness` | `tokio-test`, `proptest`, `rcgen`, and `tracing-subscriber` must not appear in production dependency combinations. | M5 must re-prove resolver-backed all-feature snapshots after implementation. | `verification/stdlib/network_http_dependency_snapshots.json`, `crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs` |
 
 Every `deferred-to-phase-X`, `rejected`, `host-limited`, `internal-only`, or `unsupported-with-diagnostic` decision must include:
 

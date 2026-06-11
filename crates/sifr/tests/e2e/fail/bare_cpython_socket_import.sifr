@@ -1,0 +1,6 @@
+# expect-error[col=6]: SIFR-IMPORT-0008
+from socket import socket
+
+
+def main():
+    pass
