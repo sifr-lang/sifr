@@ -102,6 +102,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude implementation-readiness review pass 2:
   - `reviews/ad-hoc-production-network-http-platform-substrate-implementation-readiness-review-pass-2.md`
   - Result: `PASS`; Claude confirmed the post-pass-1 polish introduced no contradictions and found no remaining CPython fallback path, dependency-ring gap, unmade provider/ecosystem decision, M0 contract hole, milestone-ordering conflict, security/resource omission, or text/runtime provider substitution risk.
+- Implementation-readiness merge ledger:
+  - PR: https://github.com/sifr-lang/sifr/pull/2490
+  - Merge commit: `f30e31f9e`
+  - Scope: finalized network/HTTP implementation-readiness planning contracts, including UDP gating, URL/IDNA behavior, TLS build/platform semantics, DNS/address resolution, byte buffers, HTTP substrate/body stream types, Hyper/Hyper-Util boundaries, metrics ownership, direct/transitive `h2` lockfile coherence, and retained Claude implementation-readiness review artifacts.
+  - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` required before PR.
 
 ## Planning Review Remediation Retained In This Phase
 
