@@ -1665,6 +1665,13 @@ M7 final phase ledger review loop:
 
 - `reviews/ad-hoc-production-concurrency-runtime-m7-final-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2488's merge commit and timestamp, final implementation Opus `PASS` evidence, docs-only validation scope, M7 and roadmap completion status flips, closed final external review and merge-gate traceability rows, and no stale status contradiction. Final ledger is ready to PR/merge, and phase 36.4 is complete and audited once this ledger PR merges.
 
+Post-closure fable host-matrix remediation:
+
+- `reviews/ad-hoc-production-concurrency-runtime-fable-final-review-pass-1.md`: `FAIL`; fable reviewer verified the closure chain but found stale active supported-host matrix rows for `Blocking I/O offload` and `CPU parallelism` still marked `blocked-on-concurrency-runtime-m3` after M3 and M7 closure.
+- Remediation: flipped those M3-owned rows to `supported` using existing `spawn_blocking_basic`, `join_set_spawn_blocking`, `spawn_cpu_basic`, `join_set_spawn_cpu_join_all_ordered`, `parallel_map_basic`, `parallel_try_map_basic`, and `parallel_pool_map_basic` evidence; refreshed `concurrency_runtime_m7_inventory_closure.md` stale pending wording.
+- `reviews/ad-hoc-production-concurrency-runtime-fable-final-review-pass-2.md`: `PASS`; fable reviewer verified the pass-1 blocker was fully remediated, the inventory audit no longer contradicts closed M7 status, and the closure record is internally consistent after this docs-only correction.
+- Docs-only validation: `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS (`2274` files under the 900-line hand-maintained source limit).
+
 M5 signal `strsignal` value-helper implementation:
 
 - Added `sifr.signal.strsignal(signal)` as a pure Sifr value helper that returns the signal name without consulting process-global host signal state or claiming stream delivery.
