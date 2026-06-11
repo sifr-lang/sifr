@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: draft
+Status: in progress; M0 merged
 
 ## Scope Split
 
@@ -18,7 +18,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 
 ## Milestone Checklist
 
-- [ ] `milestone_network_http_0`: Product Boundary And Architecture
+- [x] `milestone_network_http_0`: Product Boundary And Architecture
 - [ ] `milestone_network_http_1`: Async Network Runtime
 - [ ] `milestone_network_http_2`: TLS Runtime
 - [ ] `milestone_network_http_3`: URL, Header, And Cookie Primitives
@@ -152,6 +152,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M0 implementation review pass 2:
   - `reviews/ad-hoc-production-network-http-m0-opus-review-pass-2.md`
   - Result: `PASS`; all pass-1 blocking findings B1-B11 and non-blocking follow-ups were verified as remediated. Reviewer stated the M0 PR is safe to open and merge, and M1 can safely start after validation evidence is recorded.
+- M0 implementation merge ledger:
+  - PR: https://github.com/sifr-lang/sifr/pull/2494
+  - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
+  - Scope: added the M0 substrate inventory, dependency audit and snapshots, CPython evidence matrix, workload database, platform golden fixtures, unsupported network/HTTP import diagnostics, negative e2e coverage, per-milestone traceability files, and the serving-scale follow-up issue.
+  - Merge-gate validation: `scripts/run_all_tests.sh` passed on rerun for head `30b098eedeec52af8d6234d5af990b86a611ec67`; first merge-gate run had one transient `check-project-004-project-graph` performance p95 outlier, targeted representative performance rerun passed, and the full merge-gate rerun passed with wall-time/batching advisories only.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -215,7 +220,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 
 ## Implementation PRs
 
-- M0: https://github.com/sifr-lang/sifr/pull/2494 pending merge-gate validation and review/merge.
+- M0: https://github.com/sifr-lang/sifr/pull/2494 merged at `c426d01e26257c5b72e3ecd50e6884c86292a14b`.
 - M1: pending.
 - M2: pending.
 - M3: pending.
@@ -239,6 +244,7 @@ M0 validation:
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed. |
 | `cargo clippy --workspace -- -D warnings` | PASS | Finished dev profile in 2m16s. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded, no test failure. |
+| `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; first run failed on one transient performance p95 outlier, targeted representative performance rerun and full merge-gate rerun passed. Advisories: warm wall-time budget exceeded and high group skew. |
 
 Required baseline commands:
 
