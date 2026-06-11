@@ -1,10 +1,13 @@
 # Concurrency Runtime M7 Inventory Closure Audit
 
-Status: M7 inventory closure pending-pr.
+Status: Closed. The M7 validation-lane and inventory closure audit was merged
+with PR #2485 and the final M7 closeout was completed by PR #2488 plus the
+post-merge phase-closure ledger.
 
-This audit closes the M7 validation-lane and inventory gate without marking the
-phase complete. Final external review and the full merge-gate validation remain
-separate M7 work.
+This audit closed the M7 validation-lane and inventory gate before final phase
+completion. Final external review and the full merge-gate validation are closed
+in `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` and
+the execution ledger.
 
 ## Validation Lane Audit
 
@@ -48,8 +51,8 @@ Platform golden coverage includes the concurrency-owned
 `legacy_sifr_runtime_surfaces_removed.sifr` diagnostic fixtures plus
 `subprocess_text_explicit_encoding.sifr` for the M4 text/process boundary. The
 shared supported-host matrix has 36 concurrency/runtime rows, including
-host-limited Unix subprocess, signal-delivery, and typed IPC process-pipe
-fixtures.
+M3-supported blocking/CPU offload rows and host-limited Unix subprocess,
+signal-delivery, and typed IPC process-pipe fixtures.
 
 No active concurrency/runtime-owned performance waiver or flake quarantine is
 recorded. The only current flake quarantine entry is the `determinism-scale`
@@ -58,5 +61,5 @@ and is not owned by this phase.
 
 ## Remaining M7 Gates
 
-This audit closes validation-lane and inventory closure only. Final external
-review and full final validation remain pending.
+None in this audit. Final external review and full final validation are closed
+in the M7 closeout traceability artifact and execution ledger.
