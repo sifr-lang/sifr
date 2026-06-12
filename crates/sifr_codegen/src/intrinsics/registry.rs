@@ -467,11 +467,11 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         ),
         "http_parse_cookie_header" => (
             url_http::lower_http_parse_cookie_header(args),
-            Some(StdlibFeature::Cookie),
+            Some(StdlibFeature::Http),
         ),
         "http_build_cookie_header" => (
             url_http::lower_http_build_cookie_header(args),
-            Some(StdlibFeature::Cookie),
+            Some(StdlibFeature::Http),
         ),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),
         "str_encode_utf8_result" => (
@@ -766,6 +766,10 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         name if name.starts_with("http_") => (
             url_http::lower_http_intrinsic(name, args),
             Some(StdlibFeature::Http),
+        ),
+        name if name.starts_with("http1_") || name.starts_with("http2_") => (
+            url_http::lower_http_intrinsic(name, args),
+            Some(StdlibFeature::Hyper),
         ),
         "signal_ctrl_c" => (
             signal::lower_signal_ctrl_c(args),

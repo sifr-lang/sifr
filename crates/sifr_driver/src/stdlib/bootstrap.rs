@@ -22,6 +22,7 @@ pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDi
 fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
+    seed_http_transport_harness_aliases(&mut stdlib_defs, &mut stdlib_code);
 
     for stdlib_source in STDLIB_SOURCES {
         let module_name = stdlib_source.module;
@@ -447,6 +448,284 @@ fn collect_public_constant_integer_value_exports<'a, T: Clone>(
         })
         .collect()
 }
+
+const HTTP_TRANSPORT_HARNESS_ALIASES: &[(&str, &str)] = &[
+    (
+        "transport_http1_client_roundtrip_tcp",
+        "http1_client_roundtrip_tcp",
+    ),
+    (
+        "transport_http2_client_roundtrip_tcp",
+        "http2_client_roundtrip_tcp",
+    ),
+    (
+        "transport_http1_client_roundtrip_tls",
+        "http1_client_roundtrip_tls",
+    ),
+    (
+        "transport_http2_client_roundtrip_tls",
+        "http2_client_roundtrip_tls",
+    ),
+    (
+        "transport_http1_server_respond_tcp",
+        "http1_server_respond_tcp",
+    ),
+    (
+        "transport_http2_server_respond_tcp",
+        "http2_server_respond_tcp",
+    ),
+    (
+        "transport_http1_server_respond_tls",
+        "http1_server_respond_tls",
+    ),
+    (
+        "transport_http2_server_respond_tls",
+        "http2_server_respond_tls",
+    ),
+];
+
+fn seed_http_transport_harness_aliases(
+    stdlib_defs: &mut ExternalDefs,
+    stdlib_code: &mut StdlibCode,
+) {
+    let Some(intrinsic_http) = sifr_stdlib::get_intrinsic_module("_sifr.http") else {
+        return;
+    };
+
+    let mut functions = HashMap::new();
+    let mut sig_map = HashMap::new();
+    for (alias, intrinsic_name) in HTTP_TRANSPORT_HARNESS_ALIASES {
+        let Some(function_type) = intrinsic_http.functions.get(*intrinsic_name) else {
+            continue;
+        };
+        let param_info = function_type
+            .params
+            .iter()
+            .map(|(_, ty, _)| (ty.clone(), ParamConvention::own()))
+            .collect();
+        sig_map.insert(
+            (*alias).to_string(),
+            (param_info, (*function_type.return_type).clone()),
+        );
+        functions.insert((*alias).to_string(), function_type.clone());
+    }
+
+    if functions.is_empty() {
+        return;
+    }
+
+    stdlib_defs
+        .functions
+        .insert("sifr.http_transport".to_string(), functions);
+    stdlib_code
+        .intrinsic_names
+        .insert("sifr.http_transport".to_string(), HashSet::new());
+    stdlib_code
+        .func_signatures
+        .insert("sifr.http_transport".to_string(), sig_map);
+    stdlib_code.module_rust_code.insert(
+        "sifr.http_transport".to_string(),
+        HTTP_TRANSPORT_HARNESS_RUST.to_string(),
+    );
+    stdlib_code.transitive_deps.insert(
+        "sifr.http_transport".to_string(),
+        HashSet::from(["sifr.http".to_string()]),
+    );
+}
+
+const HTTP_TRANSPORT_HARNESS_RUST: &str = r#"
+async fn transport_http1_client_roundtrip_tcp(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_request_tcp(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(HttpError::new)
+}
+
+async fn transport_http2_client_roundtrip_tcp(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_request_tcp(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(HttpError::new)
+}
+
+async fn transport_http1_client_roundtrip_tls(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_request_tls(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(HttpError::new)
+}
+
+async fn transport_http2_client_roundtrip_tls(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_request_tls(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(HttpError::new)
+}
+
+async fn transport_http1_server_respond_tcp(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_respond_tcp(
+        handle,
+        status,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|request| (request.method, request.target, request.version, request.headers, request.body))
+    .map_err(HttpError::new)
+}
+
+async fn transport_http2_server_respond_tcp(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_respond_tcp(
+        handle,
+        status,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|request| (request.method, request.target, request.version, request.headers, request.body))
+    .map_err(HttpError::new)
+}
+
+async fn transport_http1_server_respond_tls(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_respond_tls(
+        handle,
+        status,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|request| (request.method, request.target, request.version, request.headers, request.body))
+    .map_err(HttpError::new)
+}
+
+async fn transport_http2_server_respond_tls(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_respond_tls(
+        handle,
+        status,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|request| (request.method, request.target, request.version, request.headers, request.body))
+    .map_err(HttpError::new)
+}
+"#;
 
 #[cfg(test)]
 mod tests {

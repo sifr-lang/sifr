@@ -15,7 +15,7 @@ pub(crate) use discovery::{
 #[cfg(test)]
 pub(crate) use frontend::{collect_project_hir_modules, compile_frontend_modules};
 pub(crate) use frontend::{
-    collect_project_hir_source_modules, compile_single_frontend_module_with_source,
+    collect_project_hir_source_modules, compile_single_frontend_module_with_source_and_options,
     emit_project_frontend_diagnostics, ProjectLowering,
 };
 pub(crate) use package_discovery::parse_package_import_closure_source_modules;

@@ -217,6 +217,7 @@ pub fn unsupported_legacy_stdlib_module(module_name: &str) -> Option<LegacyStdli
         "sifr.contextlib" => "sifr.contextlib",
         "sifr.http.client" => "sifr.http.client",
         "sifr.http.server" => "sifr.http.server",
+        "sifr.http_transport" => "sifr.http_transport",
         "sifr.multiprocessing" => "sifr.multiprocessing",
         "sifr.queue" => "sifr.queue",
         "sifr.select" => "sifr.select",
@@ -259,6 +260,11 @@ fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
             legacy_module: "sifr.http.server",
             suggested_module: "sifr.http",
             reason: "server framework behavior belongs to Phase 41 over the Sifr HTTP substrate",
+        }),
+        "sifr.http_transport" => Some(LegacyStdlibModule {
+            legacy_module: "sifr.http_transport",
+            suggested_module: "sifr.http",
+            reason: "HTTP transport roundtrip helpers are an internal e2e harness, not a public API",
         }),
         "sifr.multiprocessing" => Some(LegacyStdlibModule {
             legacy_module: "sifr.multiprocessing",
@@ -523,6 +529,7 @@ mod tests {
             ("sifr.urllib.request", "sifr.url"),
             ("sifr.http.client", "sifr.http"),
             ("sifr.http.server", "sifr.http"),
+            ("sifr.http_transport", "sifr.http"),
             ("sifr.socketserver", "sifr.http"),
         ];
 

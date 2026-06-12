@@ -472,6 +472,27 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("http::") || rust_source.contains("use http") {
         crates.insert("http".to_string());
     }
+    if rust_source.contains("bytes::") || rust_source.contains("use bytes") {
+        crates.insert("bytes".to_string());
+    }
+    if rust_source.contains("h2::") || rust_source.contains("use h2") {
+        crates.insert("h2".to_string());
+    }
+    if rust_source.contains("http_body::") || rust_source.contains("use http_body") {
+        crates.insert("http-body".to_string());
+    }
+    if rust_source.contains("http_body_util::") || rust_source.contains("use http_body_util") {
+        crates.insert("http-body-util".to_string());
+    }
+    if rust_source.contains("hyper::") || rust_source.contains("use hyper") {
+        crates.insert("hyper".to_string());
+    }
+    if rust_source.contains("hyper_util::") || rust_source.contains("use hyper_util") {
+        crates.insert("hyper-util".to_string());
+    }
+    if rust_source.contains("tower_service::") || rust_source.contains("use tower_service") {
+        crates.insert("tower-service".to_string());
+    }
     if rust_source.contains("cookie::") || rust_source.contains("use cookie") {
         crates.insert("cookie".to_string());
     }

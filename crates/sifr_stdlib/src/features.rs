@@ -7,11 +7,17 @@ pub enum StdlibFeature {
     Base64,
     BigDecimal,
     Blake2,
+    Bytes,
     Chrono,
     Cookie,
     EncodingRs,
     Flate2,
+    H2,
     Http,
+    HttpBody,
+    HttpBodyUtil,
+    Hyper,
+    HyperUtil,
     IcuCollator,
     IcuDatetime,
     IcuDecimal,
@@ -38,6 +44,7 @@ pub enum StdlibFeature {
     Tokio,
     TokioRustls,
     Toml,
+    TowerService,
     Tracing,
     UnicodeNames,
     UnicodeNormalization,
@@ -54,11 +61,17 @@ impl StdlibFeature {
             Self::Base64 => "base64",
             Self::BigDecimal => "bigdecimal",
             Self::Blake2 => "blake2",
+            Self::Bytes => "bytes",
             Self::Chrono => "chrono",
             Self::Cookie => "cookie",
             Self::EncodingRs => "encoding_rs",
             Self::Flate2 => "flate2",
+            Self::H2 => "h2",
             Self::Http => "http",
+            Self::HttpBody => "http-body",
+            Self::HttpBodyUtil => "http-body-util",
+            Self::Hyper => "hyper",
+            Self::HyperUtil => "hyper-util",
             Self::IcuCollator => "icu_collator",
             Self::IcuDatetime => "icu_datetime",
             Self::IcuDecimal => "icu_decimal",
@@ -85,6 +98,7 @@ impl StdlibFeature {
             Self::Tokio => "tokio",
             Self::TokioRustls => "tokio-rustls",
             Self::Toml => "toml",
+            Self::TowerService => "tower-service",
             Self::Tracing => "tracing",
             Self::UnicodeNames => "unicode_names2",
             Self::UnicodeNormalization => "unicode-normalization",
@@ -120,14 +134,17 @@ const BLAKE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "blake2",
     spec: "blake2 = \"0.10.6\"",
 }];
+const BYTES_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "bytes",
+    spec: "bytes = \"1.11.1\"",
+}];
 const CHRONO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "chrono",
     spec: "chrono = \"0.4.44\"",
 }];
-const COOKIE_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
-    package: "cookie",
-    spec: "cookie = { version = \"0.18.1\", default-features = false }",
-}];
+// Cookie-header helpers are Sifr-owned string/header validation; no cookie jar
+// or signing dependency is emitted for the M3 substrate.
+const COOKIE_DEPS: &[GeneratedCargoDependency] = &[];
 const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "encoding_rs",
     spec: "encoding_rs = \"0.8.35\"",
@@ -136,9 +153,29 @@ const FLATE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "flate2",
     spec: "flate2 = \"1.1.9\"",
 }];
+const H2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "h2",
+    spec: "h2 = \"0.4.14\"",
+}];
 const HTTP_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "http",
     spec: "http = \"1.4.1\"",
+}];
+const HTTP_BODY_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "http-body",
+    spec: "http-body = \"1.0.1\"",
+}];
+const HTTP_BODY_UTIL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "http-body-util",
+    spec: "http-body-util = { version = \"0.1.3\", default-features = false }",
+}];
+const HYPER_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "hyper",
+    spec: "hyper = { version = \"1.10.1\", default-features = false, features = [\"client\", \"http1\", \"http2\", \"server\"] }",
+}];
+const HYPER_UTIL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "hyper-util",
+    spec: "hyper-util = { version = \"0.1.20\", default-features = false, features = [\"tokio\"] }",
 }];
 const ICU_COLLATOR_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "icu_collator",
@@ -257,6 +294,10 @@ const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "toml",
     spec: "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }",
 }];
+const TOWER_SERVICE_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "tower-service",
+    spec: "tower-service = \"0.3.3\"",
+}];
 const TRACING_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "tracing",
     spec: "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }",
@@ -300,6 +341,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: BLAKE2_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Bytes,
+        cargo_dependencies: BYTES_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Chrono,
         cargo_dependencies: CHRONO_DEPS,
     },
@@ -316,8 +361,28 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: FLATE2_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::H2,
+        cargo_dependencies: H2_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Http,
         cargo_dependencies: HTTP_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::HttpBody,
+        cargo_dependencies: HTTP_BODY_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::HttpBodyUtil,
+        cargo_dependencies: HTTP_BODY_UTIL_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Hyper,
+        cargo_dependencies: HYPER_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::HyperUtil,
+        cargo_dependencies: HYPER_UTIL_DEPS,
     },
     StdlibFeatureSpec {
         feature: StdlibFeature::IcuCollator,
@@ -424,6 +489,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: TOML_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::TowerService,
+        cargo_dependencies: TOWER_SERVICE_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Tracing,
         cargo_dependencies: TRACING_DEPS,
     },
@@ -459,11 +528,17 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "base64" => Some(StdlibFeature::Base64),
         "bigdecimal" => Some(StdlibFeature::BigDecimal),
         "blake2" => Some(StdlibFeature::Blake2),
+        "bytes" => Some(StdlibFeature::Bytes),
         "chrono" => Some(StdlibFeature::Chrono),
         "cookie" => Some(StdlibFeature::Cookie),
         "encoding_rs" | "encoding-rs" => Some(StdlibFeature::EncodingRs),
         "flate2" => Some(StdlibFeature::Flate2),
+        "h2" => Some(StdlibFeature::H2),
         "http" => Some(StdlibFeature::Http),
+        "http-body" | "http_body" => Some(StdlibFeature::HttpBody),
+        "http-body-util" | "http_body_util" => Some(StdlibFeature::HttpBodyUtil),
+        "hyper" => Some(StdlibFeature::Hyper),
+        "hyper-util" | "hyper_util" => Some(StdlibFeature::HyperUtil),
         "icu_collator" | "icu-collator" => Some(StdlibFeature::IcuCollator),
         "icu_datetime" | "icu-datetime" => Some(StdlibFeature::IcuDatetime),
         "icu_decimal" | "icu-decimal" => Some(StdlibFeature::IcuDecimal),
@@ -492,6 +567,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "tokio" => Some(StdlibFeature::Tokio),
         "tokio-rustls" | "tokio_rustls" => Some(StdlibFeature::TokioRustls),
         "toml" => Some(StdlibFeature::Toml),
+        "tower-service" | "tower_service" => Some(StdlibFeature::TowerService),
         "tracing" => Some(StdlibFeature::Tracing),
         "unicode_names2" => Some(StdlibFeature::UnicodeNames),
         "unicode-normalization" | "unicode_normalization" => {
@@ -555,7 +631,24 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::Tracing,
         ],
         "sifr.url" | "_sifr.url" => &[StdlibFeature::Url, StdlibFeature::PercentEncoding],
-        "sifr.http" | "_sifr.http" => &[StdlibFeature::Http, StdlibFeature::Cookie],
+        "sifr.http" | "_sifr.http" => &[StdlibFeature::Http],
+        "sifr.http_transport" => &[
+            StdlibFeature::SifrRuntime,
+            StdlibFeature::Tokio,
+            StdlibFeature::TokioRustls,
+            StdlibFeature::Rustls,
+            StdlibFeature::RustlsPemfile,
+            StdlibFeature::RustlsPlatformVerifier,
+            StdlibFeature::Tracing,
+            StdlibFeature::Bytes,
+            StdlibFeature::Http,
+            StdlibFeature::HttpBody,
+            StdlibFeature::HttpBodyUtil,
+            StdlibFeature::Hyper,
+            StdlibFeature::HyperUtil,
+            StdlibFeature::H2,
+            StdlibFeature::TowerService,
+        ],
         "sifr.parallel" => &[StdlibFeature::Rayon],
         "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
@@ -596,6 +689,7 @@ pub fn generated_cargo_dependencies(
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct RuntimeFeatures {
+    http: bool,
     i18n: bool,
     net: bool,
     tls: bool,
@@ -608,12 +702,28 @@ impl RuntimeFeatures {
         required_features: &HashSet<StdlibFeature>,
     ) -> Self {
         Self {
+            http: needs_sifr_runtime_http(stdlib_modules, required_features),
             i18n: needs_sifr_runtime_i18n(stdlib_modules, required_features),
             net: needs_sifr_runtime_net(stdlib_modules),
             tls: needs_sifr_runtime_tls(stdlib_modules, required_features),
             unicode: needs_sifr_runtime_unicode(stdlib_modules, required_features),
         }
     }
+}
+
+fn needs_sifr_runtime_http(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> bool {
+    stdlib_modules
+        .iter()
+        .any(|module| module.as_str() == "sifr.http_transport")
+        || required_features.contains(&StdlibFeature::Hyper)
+        || required_features.contains(&StdlibFeature::HyperUtil)
+        || required_features.contains(&StdlibFeature::H2)
+        || required_features.contains(&StdlibFeature::HttpBody)
+        || required_features.contains(&StdlibFeature::HttpBodyUtil)
+        || required_features.contains(&StdlibFeature::TowerService)
 }
 
 fn needs_sifr_runtime_net(stdlib_modules: &HashSet<String>) -> bool {
@@ -693,7 +803,7 @@ fn render_dependency_spec(
 }
 
 fn tokio_dependency_spec(runtime_features: RuntimeFeatures) -> String {
-    let features = if runtime_features.net || runtime_features.tls {
+    let features = if runtime_features.net || runtime_features.tls || runtime_features.http {
         "\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
     } else {
         "\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
@@ -711,11 +821,14 @@ fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
     if runtime_features.i18n {
         features.push("\"i18n\"");
     }
-    if runtime_features.net || runtime_features.tls {
+    if runtime_features.net || runtime_features.tls || runtime_features.http {
         features.push("\"net\"");
     }
-    if runtime_features.tls {
+    if runtime_features.tls || runtime_features.http {
         features.push("\"tls\"");
+    }
+    if runtime_features.http {
+        features.push("\"http\"");
     }
     if runtime_features.unicode {
         features.push("\"unicode\"");

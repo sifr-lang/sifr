@@ -1,0 +1,53 @@
+# sifr-e2e-allow-http-transport-harness
+from sifr.http_transport import (
+    transport_http2_client_roundtrip_tcp,
+    transport_http2_server_respond_tcp,
+)
+from sifr.net import SocketAddr, TcpListener, TcpStream, connect_tcp, listen_tcp
+
+
+async def server_once(own stream: TcpStream) -> Result[bool, Error]:
+    try:
+        request: tuple[str, str, str, list[tuple[str, str]], bytes] = await transport_http2_server_respond_tcp(
+            stream._handle,
+            202,
+            [("content-type", "application/octet-stream"), ("x-sifr-reply", "h2c")],
+            b"pong-h2c",
+            1024,
+            1024,
+        )
+        assert request[0] == "PUT"
+        assert request[1] == "http://localhost/m4/h2c"
+        assert request[2] == "HTTP/2"
+        assert request[4] == b"ping-h2c"
+        return True
+    except Error as e:
+        raise e
+
+
+async def main() -> Result[None, Error]:
+    try:
+        listener: TcpListener = await listen_tcp("127.0.0.1:0", reuse_addr=True)
+        addr: SocketAddr = listener.local_addr()
+        client: TcpStream = await connect_tcp(addr.value, timeout=2.0)
+        accepted: tuple[TcpStream, SocketAddr] = await listener.accept()
+        _closed: None = listener.close()
+
+        async with task.scope() as scope:
+            server = scope.spawn(server_once(accepted[0]))
+            response: tuple[int, str, list[tuple[str, str]], bytes] = await transport_http2_client_roundtrip_tcp(
+                client._handle,
+                "PUT",
+                "http://localhost/m4/h2c",
+                [("x-sifr-request", "h2c")],
+                b"ping-h2c",
+                1024,
+                1024,
+            )
+            assert response[0] == 202
+            assert response[1] == "HTTP/2"
+            assert response[3] == b"pong-h2c"
+            _server_joined = await server.join()
+    except Error as e:
+        raise e
+    return None

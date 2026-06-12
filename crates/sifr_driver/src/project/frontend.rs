@@ -7,11 +7,12 @@ use sifr_diagnostics::DiagnosticCode;
 #[cfg(test)]
 use sifr_frontend::compile_module_hir;
 use sifr_frontend::{
-    collect_module_exports, compile_module_hir_with_source, reveal_type_diagnostics,
-    warning_diagnostics, FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
+    collect_module_exports, compile_module_hir_with_source,
+    compile_module_hir_with_source_and_options, reveal_type_diagnostics, warning_diagnostics,
+    FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
 };
 use sifr_ir::FlowGraph;
-use sifr_lowering::{ExternalDefs, HirModule, LoweringResult};
+use sifr_lowering::{ExternalDefs, HirModule, LoweringOptions, LoweringResult};
 use sifr_python_ast::Stmt;
 use std::collections::HashMap;
 
@@ -85,19 +86,21 @@ pub(crate) fn compile_frontend_modules(
     })
 }
 
-pub(crate) fn compile_single_frontend_module_with_source(
+pub(crate) fn compile_single_frontend_module_with_source_and_options(
     module_name: &str,
     stmts: &[Stmt],
     source_context: FrontendSourceContext<'_>,
     mut external_defs: ExternalDefs,
     diagnostic_style: FrontendDiagnosticStyle,
+    lowering_options: LoweringOptions,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
-    let result = compile_module_hir_with_source(
+    let result = compile_module_hir_with_source_and_options(
         module_name,
         stmts,
         &external_defs,
         diagnostic_style,
         Some(source_context),
+        lowering_options,
     )?;
     let LoweringResult {
         module,
