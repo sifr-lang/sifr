@@ -198,6 +198,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Merge commit: `742ea9f33dcac821d5abb644156d97dd2d7876cc`
   - Scope: added public `sifr.tls`, private `_sifr.tls` intrinsics, optional `sifr_runtime/tls`, TLS codegen helpers, Rustls/Tokio-Rustls runtime integration, deterministic TLS loopback/split/close-notify/config-error fixtures, dependency snapshots, and M2 Opus review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `28d845c86b94cceb84bf3e29872498f18fdd7980`; report `target/validation_lane_reports/merge.latest.json`; advisory was high e2e group skew only.
+- M3 implementation merge ledger:
+  - PR: https://github.com/sifr-lang/sifr/pull/2497
+  - Merge commit: `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`
+  - Scope: added public `sifr.url` and `sifr.http` primitives, private `_sifr.url` and `_sifr.http` intrinsics, generated URL/query/percent and header/cookie runtime helpers, locked URL/header/cookie dependency emission, deterministic M3 e2e fixtures, dependency snapshots, and M3 Opus review artifacts.
+  - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `3dc98f4df5665cbe137934192e04593709b10f26`; report `target/validation_lane_reports/merge.latest.json`; all 14 lane steps passed, wall time 783.02s, hardening failures 0, advisory was high e2e group skew only.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
