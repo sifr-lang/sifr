@@ -198,8 +198,8 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Removed `sifr.http_transport` from the embedded stdlib source inventory and deleted the stale source file; the driver now seeds the module only as test-harness metadata plus Rust wrappers that call `sifr_runtime::http`.
   - Ordinary user imports still go through the default lowering path and fail with `SIFR-IMPORT-0009`; directive-marked e2e fixtures opt into `compile_with_metadata_allowing_http_transport_harness` on a per-compile basis.
 - Claude Opus M4 follow-up review pass 5:
-  - Result: `BLOCKED BY REVIEWER TOOL`; repeated `claude` CLI attempts exited `137` with empty stdout/stderr, including minimal `claude -p 'Reply with ok.'` probes. No reviewer findings were produced for the private-harness follow-up diff.
-  - Mitigation: keep PR #2498 draft until a reviewer pass can be produced; local validation for the follow-up diff is recorded below.
+  - `reviews/ad-hoc-production-network-http-m4-opus-review-pass-5g.md`
+  - Result: `PASS`; reviewer accepted the private-harness follow-up, verified `sifr.http_transport` is no longer embedded in `STDLIB_SOURCES`, ordinary imports reject with `SIFR-IMPORT-0009`, the owned-parameter fixture update is consistent, and PR #2498 can be updated after the create-pr validation rerun.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
