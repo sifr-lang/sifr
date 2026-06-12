@@ -445,6 +445,22 @@ M5 focused validation:
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed for the M5 closeout branch after an earlier transient `text_i18n_encoding_io` e2e failure was isolated and cold-rerun successfully; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded due to the cold e2e cache rebuild. |
 | `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for the M5 closeout branch; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; advisory: high e2e group skew only. |
 
+Post-closure Fable High gap review:
+
+| Review / remediation | Result | Notes |
+| --- | --- | --- |
+| `reviews/ad-hoc-production-network-http-fable-full-phase-review-pass-1.md` | FAIL | Fable found six closure blockers: net/TLS timeout overflow could panic, error-taxonomy evidence overstated variant/nested classes, dependency snapshot/audit drift, stdlib/runtime tests missing from the authoritative validation script, phase contract status still draft, and serving-scale handoff wording missing from public docs. |
+| `reviews/ad-hoc-production-network-http-fable-gap-fixes-opus-review-pass-1.md` | PASS | Opus verified all six Fable blockers were addressed and requested a non-blocking cleanup sweep for residual variant-style wording outside the rewritten taxonomy plus stronger snapshot structural checks. |
+| `reviews/ad-hoc-production-network-http-fable-gap-fixes-opus-review-pass-2.md` | PASS | Opus verified the cleanup sweep and hardened snapshot checks, with no blocking findings. |
+| `reviews/ad-hoc-production-network-http-fable-full-phase-review-pass-2.md` | PASS | Fable High verified all six pass-1 blockers were fixed at root cause. Remaining findings were merge mechanics and non-blocking wording under-claims, both remediated before the local gates were recorded. |
+| Error taxonomy amendment | accepted for remediation | The shipped API remains the flat public error classes in `lib/sifr/{net,tls,url,http}.sifr`: `NetError`, `TlsError`, `CertificateError`, `UrlError`, `HeaderError`, `ProtocolError`, `BodyError`, and `HttpError`. The unshipped variant/nested names from earlier planning (`DnsError`, `ConnectError`, `TimeoutError`, `CancelledError`, `TooLargeError`, `NetError::Dns`, `HttpError::Tls`, and similar paths) are not public API. Evidence remains deterministic in the owning public error class message. A future variant-rich taxonomy requires a new reviewed amendment and migration plan. |
+| Runtime timeout overflow fix | done | Shared runtime timeout validation now rejects overflow-sized finite floats before `Duration::from_secs_f64`, with runtime unit coverage and network e2e coverage for `timeout=1e20`. |
+| Dependency evidence remediation | done | `network_http_dependency_snapshots.json` is regenerated from actual generator output and `crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs` compares the JSON against `generated_cargo_dependencies()`, `required_features`, and `must_not_include` fields to prevent drift. |
+| Validation gate remediation | done | `scripts/run_all_tests.sh` now runs `cargo test -p sifr_stdlib`, `cargo test -p sifr_runtime`, and `cargo test -p sifr_runtime --features http` as part of crate tests. |
+| `scripts/run_all_tests.sh --profile create-pr` | PASS | Post-remediation create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded on a cold e2e cache. |
+| `scripts/run_all_tests.sh` | PASS | Post-remediation merge-gate validation passed; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; hardening failures 0; advisory: high e2e group skew only. |
+| [PR #2501](https://github.com/sifr-lang/sifr/pull/2501) | open | Carries the post-closure Fable High gap remediation, Opus review loop, Fable follow-up PASS, and local create-pr/merge-gate evidence. |
+
 Required baseline commands:
 
 ```bash

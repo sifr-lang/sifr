@@ -367,6 +367,15 @@ run_crate_tests() {
   echo "Running sifr_package tests"
   cargo test -p sifr_package
 
+  echo "Running sifr_stdlib tests"
+  cargo test -p sifr_stdlib
+
+  echo "Running sifr_runtime tests"
+  cargo test -p sifr_runtime
+
+  echo "Running sifr_runtime HTTP feature tests"
+  cargo test -p sifr_runtime --features http
+
   if [[ "${CRATE_TEST_MODE}" == "smoke" ]]; then
     echo "Running sifr CLI unit tests"
     cargo test -p sifr --bin sifr

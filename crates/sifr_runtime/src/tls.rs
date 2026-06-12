@@ -7,7 +7,6 @@ use std::sync::{
     atomic::{AtomicI64, Ordering},
     Arc, LazyLock, Mutex, MutexGuard,
 };
-use std::time::Duration;
 
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName};
 use rustls::server::WebPkiClientVerifier;
@@ -16,6 +15,8 @@ use rustls_platform_verifier::ConfigVerifierExt;
 use tokio::io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf};
 use tokio::net::TcpStream;
 use tokio_rustls::{TlsAcceptor, TlsConnector, TlsStream};
+
+use crate::timeouts::timeout_duration;
 
 const MAX_READ_BYTES: i64 = 1_048_576;
 
@@ -72,13 +73,6 @@ fn next_handle_infallible() -> i64 {
     }
 }
 
-fn timeout_duration(seconds: f64) -> Result<Duration, String> {
-    if !seconds.is_finite() || seconds <= 0.0 {
-        return Err("TLS timeout must be finite and positive".to_string());
-    }
-    Ok(Duration::from_secs_f64(seconds))
-}
-
 async fn with_optional_timeout<T, F>(
     operation: F,
     seconds: f64,
@@ -91,7 +85,7 @@ where
     if !has_timeout {
         return operation.await;
     }
-    match tokio::time::timeout(timeout_duration(seconds)?, operation).await {
+    match tokio::time::timeout(timeout_duration(seconds, "TLS")?, operation).await {
         Ok(result) => result,
         Err(_) => Err(format!("{name} timed out")),
     }

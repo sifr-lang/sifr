@@ -2,7 +2,6 @@
 
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
-use std::time::Duration;
 
 use bytes::Bytes;
 use http::header::CONNECTION;
@@ -13,7 +12,7 @@ use hyper::service::service_fn;
 use hyper_util::rt::{TokioExecutor, TokioIo};
 use tokio::sync::oneshot;
 
-const MAX_HTTP_TIMEOUT_SECONDS: f64 = 86_400.0;
+use crate::timeouts::timeout_duration;
 
 #[derive(Clone, Debug)]
 pub struct HttpRequestParts {
@@ -46,16 +45,6 @@ fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     }
 }
 
-fn timeout_duration(seconds: f64) -> Result<Duration, String> {
-    if !seconds.is_finite() || seconds <= 0.0 {
-        return Err("HTTP timeout must be finite and positive".to_string());
-    }
-    if seconds > MAX_HTTP_TIMEOUT_SECONDS {
-        return Err("HTTP timeout is too large".to_string());
-    }
-    Ok(Duration::from_secs_f64(seconds))
-}
-
 async fn with_optional_timeout<T, F>(
     operation: F,
     seconds: f64,
@@ -68,7 +57,7 @@ where
     if !has_timeout {
         return operation.await;
     }
-    match tokio::time::timeout(timeout_duration(seconds)?, operation).await {
+    match tokio::time::timeout(timeout_duration(seconds, "HTTP")?, operation).await {
         Ok(result) => result,
         Err(_) => Err(format!("{name} timed out")),
     }

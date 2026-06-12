@@ -32,6 +32,7 @@ Network, TLS, URL, and HTTP do not create duplicate provider models:
 - Shutdown consumes the signal/shutdown provider semantics.
 - Diagnostics and request context consume the runtime diagnostics provider semantics.
 - Process-worker serving scale remains deferred to `issues/ad-hoc-network-http-serving-scale-follow-up.md`.
+- The server transport handoff is single-runtime-worker per Sifr process until that serving-scale follow-up closes; multi-core throughput, `SO_REUSEPORT`, process-worker supervision, and future multi-thread runtime topology are not hidden inside this substrate.
 
 ## Handoff
 

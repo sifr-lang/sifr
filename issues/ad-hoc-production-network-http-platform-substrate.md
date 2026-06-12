@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Production Network and HTTP Platform Substrate
 
-Status: draft
+Status: completed, audited; post-closure Fable High gap remediation validated locally in [PR #2501](https://github.com/sifr-lang/sifr/pull/2501)
 Phase placement: third implementation phase in the split production-stdlib substrate sequence, after the text/Unicode/encoding/i18n runtime phase and the concurrency/process/runtime substrate phase, and before Phase 41 can claim protocol/runtime production readiness for networked programs. Multi-core serving throughput is explicitly owned by the serving-scale follow-up recorded in M0, not by this substrate phase.
 Phase owner: runtime/networking implementation with compiler import, effect, and codegen support
 
@@ -357,7 +357,7 @@ Dependency rings for this phase:
 
 | Ring | Capability | Crate decision | Version and feature plan | Milestone | Binding notes |
 | --- | --- | --- | --- | --- | --- |
-| Ring 2 | async runtime, TCP/UDP, timers, async I/O, async sync, generated entrypoints | `tokio` | keep workspace `tokio = 1.52.3`; expand generated-runtime features only to `macros`, `rt`, `sync`, `time`, `net`, and `io-util`; do not enable `full`, `rt-multi-thread`, `process`, `signal`, `fs`, `parking_lot`, or `tokio_unstable` for this network feature | M1-M5 | Network APIs consume the concurrency/runtime provider for task lifetime, cancellation, deadlines, shutdown, diagnostics, process, and signal semantics. This phase adds network suspension points and socket I/O only; it does not choose a new runtime topology or expose Tokio handles. |
+| Ring 2 | async runtime, TCP/UDP, timers, async I/O, async sync, generated entrypoints | `tokio` | keep workspace `tokio = 1.52.3`; generated network manifests inherit the provider baseline `macros`, `rt`, `sync`, `time`, `process`, and `signal` features and add only `net` and `io-util` for network I/O; do not enable `full`, `rt-multi-thread`, `fs`, `parking_lot`, or `tokio_unstable` for this network feature | M1-M5 | Network APIs consume the concurrency/runtime provider for task lifetime, cancellation, deadlines, shutdown, diagnostics, process, and signal semantics. This phase adds network suspension points and socket I/O only; it does not choose a new runtime topology, expose Tokio handles, or introduce new process/signal APIs. |
 | Ring 2 | Tokio cancellation/I/O helpers | `tokio-util` | add `tokio-util = 0.7.18` with `default-features = false`; enable `rt`, `io-util`, and `time` only if M1/M4 needs accepted helpers; do not enable `full`, `net`, `codec`, `compat`, or `join-map` | M1, M4 | Used only behind Sifr-owned stream/cancellation internals. Tokio Util token, codec, and compatibility types are never public. If Tokio plus Sifr wrappers suffice, M0 may keep this dependency conditional and unused. |
 | Ring 2 | owned byte buffers and HTTP body chunks | `bytes` | add `bytes = 1.11.1` with default features only for generated/runtime crates that implement network or HTTP bodies | M1, M4 | `bytes::Bytes` may be used internally to avoid copies and support backpressure. Public Sifr APIs expose Sifr-owned byte-buffer values, never Rust crate types. This is the narrow production need that overrides the general no-direct-`bytes` default in the dependency policy. |
 | Ring 2 | structured spans and events | `tracing` | add `tracing = 0.1.44` with `default-features = false`, feature `std`; do not enable `attributes` | M1-M5 | Emits DNS/connect/TLS/HTTP lifecycle spans and events behind Sifr observability hooks. Applications/tests choose subscribers; no subscriber, recorder, or tracing type leaks. |
@@ -369,7 +369,7 @@ Dependency rings for this phase:
 | Ring 4 | async TLS streams | `tokio-rustls` | add `tokio-rustls = 0.26.4`; default `aws_lc_rs` provider; do not enable `ring`, `fips`, `early-data`, compression, or zlib/brotli features | M2 | Wraps accepted Rustls streams over Sifr/Tokio TCP internals. Early data and compression are out of scope. Owned TLS split halves are API-level independent read/write handles over one synchronized TLS session; implementation uses the accepted Tokio I/O utilities or tokio-rustls facilities rather than bespoke TLS session sharing. |
 | Ring 4 | platform certificate verification | `rustls-platform-verifier` | add `rustls-platform-verifier = 0.7.0` with default features disabled unless platform support proves a required feature; do not enable debug/cert logging features in production builds | M2 | Production client verification uses host platform roots. Deterministic tests use explicit in-memory roots from `rcgen` fixtures; `webpki-roots` is not a fallback. |
 | Ring 4 | PEM parsing | `rustls-pemfile` | add `rustls-pemfile = 2.2.0` with default `std` only | M2 | Parses user-supplied PEM cert/key material into Sifr-owned TLS config errors. No generic certificate display parser is accepted. |
-| Ring 4 | HTTP request/response types | `http` | add `http = 1.4.1` with default `std` only | M3, M4 | Backs method/status/header/request/response representations internally. Sifr owns validation, typed errors, and public type names. |
+| Ring 4 | HTTP request/response types | `http` | generated spec `http = 1.4.1` with default `std` only; current lockfile resolves `http` 1.4.2 | M3, M4 | Backs method/status/header/request/response representations internally. Sifr owns validation, typed errors, and public type names. |
 | Ring 4 | HTTP streaming body trait | `http-body` | add `http-body = 1.0.1` | M4 | Internal body substrate only. Public Sifr body streams remain Sifr-owned and cancellation-aware. |
 | Ring 4 | HTTP body adapters | `http-body-util` | add `http-body-util = 0.1.3` with `default-features = false`; enable `channel` only if M4 proves it is needed for bounded body tests; never enable `full` | M4 | Used for narrow body adapters/fixtures, not as public body API. |
 | Ring 4 | HTTP/1.1 and HTTP/2 transport | `hyper` | add `hyper = 1.10.1` with `default-features = false`, features `http1`, `http2`, `client`, and `server`; do not enable `full`, unstable `tracing`, `ffi`, `capi`, or `nightly` | M4 | Accepted core HTTP transport stack with `h2`. Internal client/server transport exists for protocol validation and future handoff, not as `sifr.http.client` or `sifr.http.server`. Sifr emits wrapper-level `tracing` spans/events instead of enabling Hyper's unstable tracing feature. |
@@ -386,7 +386,7 @@ Dependency rings for this phase:
 
 | Dependency or feature | Decision | Reason |
 | --- | --- | --- |
-| `tokio/full`, Tokio `rt-multi-thread`, Tokio `process`, Tokio `signal`, Tokio `fs`, Tokio `parking_lot`, `tokio_unstable` | rejected for this network feature | The concurrency/runtime provider owns runtime topology, process, signal, and offload behavior. Network adds async socket/TLS/HTTP suspension points only. |
+| `tokio/full`, Tokio `rt-multi-thread`, Tokio `fs`, Tokio `parking_lot`, `tokio_unstable`; new network-owned process or signal semantics | rejected for this network feature | The concurrency/runtime provider owns runtime topology, process, signal, and offload behavior. Generated network manifests inherit provider `process`/`signal` features but do not use them to add network-owned process or signal APIs. Network adds async socket/TLS/HTTP suspension points only. |
 | `async-std`, `smol`, custom event-loop runtimes, direct `mio` | rejected | Sifr already uses Tokio and rejects public raw event-loop models. |
 | `hickory-resolver` | deferred | TCP connect/address resolution uses `tokio::net::lookup_host`. In-process DNS records/custom resolver config require a separate Sifr-native resolver issue. |
 | OpenSSL, `native-tls`, `openssl`, `ring` as selected provider, custom Rustls providers | rejected | TLS is Rustls with default `aws_lc_rs` provider and platform verification unless a future platform issue records a blocker. |
@@ -554,7 +554,7 @@ The M0 TLS stream contract must define, and M2 must implement, TLS stream semant
 
 TLS write semantics must account for Tokio Rustls buffering: plaintext accepted by a TLS stream is not guaranteed to have reached the underlying TCP stream until flush/shutdown completes.
 
-M0 must define `TlsStream.close()` and `TlsWriteHalf.close()` disposition before M2 starts: whether close consumes the stream or write half and closes the underlying TCP stream directly, whether it first attempts `close_notify()`, how cancellation during close is reported, and how failure during close preserves typed `TlsError`/nested `NetError` evidence.
+M0 must define `TlsStream.close()` and `TlsWriteHalf.close()` disposition before M2 starts: whether close consumes the stream or write half and closes the underlying TCP stream directly, whether it first attempts `close_notify()`, how cancellation during close is reported, and how failure during close preserves `TlsError` with deterministic lower transport evidence.
 
 M0 must define the TLS full-duplex ownership contract before M2 TLS implementation starts:
 
@@ -562,7 +562,7 @@ M0 must define the TLS full-duplex ownership contract before M2 TLS implementati
 - concurrent read/write across tasks requires `split()` into owned `TlsReadHalf` and `TlsWriteHalf` values;
 - `split()` consumes a live `TlsStream` and is infallible; closed or moved streams cannot be split because the affine handle is no longer available;
 - split halves are affine resources with independent read/write APIs over one underlying TLS session and TCP stream state;
-- TLS peer close, TCP EOF/reset, verification failure, local close, `close_notify`, and shutdown outcomes must surface as typed `TlsError`/nested `NetError`/EOF evidence from the underlying TLS/TCP state rather than through a local channel, cancellation token, or diagnostics substitute;
+- TLS peer close, TCP EOF/reset, verification failure, local close, `close_notify`, and shutdown outcomes must surface as `TlsError` with deterministic lower transport/EOF evidence from the underlying TLS/TCP state rather than through a local channel, cancellation token, or diagnostics substitute;
 - split halves may cross task boundaries only when the compiler's sendability rules accept them;
 - borrowed split views are rejected unless a future phase proves a lifetime-safe design;
 - recombining TLS split halves is rejected for v1 unless M0 records a concrete production need and a panic-free ownership design.
@@ -676,12 +676,9 @@ CPython `asyncio` tests may be classified as `mined-as-substrate-fixture` for sc
 
 ### Typed Errors Instead Of Exceptions
 
-All fallible APIs must expose typed error results:
+All fallible APIs must expose typed error results through the shipped public error classes:
 
 - `NetError`
-- `DnsError`
-- `ConnectError`
-- `TimeoutError`
 - `TlsError`
 - `CertificateError`
 - `UrlError`
@@ -689,15 +686,14 @@ All fallible APIs must expose typed error results:
 - `ProtocolError`
 - `HeaderError`
 - `BodyError`
-- `TooLargeError`
-- `CancelledError`
 
-`milestone_network_http_0` must add a shared error mapping document before M1 implementation:
+Post-closure Fable High amendment, 2026-06-12: the shipped API intentionally uses flat Sifr error classes carrying stable, user-readable evidence strings instead of a variant-based nested hierarchy. `DnsError`, `ConnectError`, `TimeoutError`, `TooLargeError`, and `CancelledError` remain unshipped names, not public classes. Lower-layer evidence is preserved in the owning public class message, for example network timeout/connect evidence in `NetError`, TLS transport/certificate evidence in `TlsError` or `CertificateError`, URL/size validation evidence in `UrlError`, and HTTP transport/protocol/body/header evidence in `HttpError`, `ProtocolError`, `BodyError`, or `HeaderError`. A future variant-rich taxonomy requires a new reviewed phase amendment and migration plan.
 
-- map CPython `OSError`/`errno`, TLS, URL, and HTTP error evidence into stable Sifr variants
-- define a concrete typed error hierarchy before M1 starts
+`milestone_network_http_0` must keep the shared error mapping evidence aligned with the shipped classes:
+
+- map CPython `OSError`/`errno`, TLS, URL, and HTTP error evidence into one of the shipped Sifr classes
 - add cross-module regression tests proving equivalent failures use the same Sifr error family
-- preserve nested evidence when higher layers fail because of lower layers, for example `HttpError::Tls(TlsError::Transport(NetError))`
+- preserve lower-layer evidence in deterministic messages when higher layers fail because of lower layers
 - reject exception-only control flow and legacy aliases
 
 ### Panic-Free Runtime Contract
@@ -731,7 +727,7 @@ Network/HTTP M0 must record concrete security and resource decisions for the sur
 | Request smuggling and header normalization | M0 must define canonical validation for names, obs-fold rejection, duplicate header policy, whitespace normalization, `Content-Length` disagreement handling, and `Content-Length` plus chunked conflict handling before M4 starts; M3/M4 implement and validate the accepted header and HTTP transport behavior. |
 | HTTP/2 abuse | M0 must define SETTINGS limits, max concurrent streams, flow-control window defaults, max frame/body buffering, PING handling, RST_STREAM cancellation mapping, GOAWAY graceful shutdown mapping, and malformed-frame typed errors before M4 starts; M4 implements and validates them with loopback fixtures. |
 | HTTP/2 priority and extension behavior | M0 must explicitly accept, ignore, reject, or defer HTTP/2 priority and extension-frame behavior before M4 starts. Unknown extension frames must map to typed protocol handling and must not panic or silently bypass resource limits. |
-| Body and header size limits | Every parser/body reader has explicit configured limits. Unbounded buffering is rejected unless an API name explicitly collects and M0 records a size cap and typed `TooLargeError`. |
+| Body and header size limits | Every parser/body reader has explicit configured limits. Unbounded buffering is rejected unless an API name explicitly collects and M0 records a size cap and maps over-limit input to the owning flat error class (`BodyError`, `HeaderError`, `UrlError`, or `HttpError`) with deterministic size evidence. |
 | Timeouts and cancellation | Connect, accept, read, write, TLS handshake, TLS shutdown, HTTP request write, response read, and HTTP/2 stream cancellation map to the provider timeout/cancellation model and preserve partial-progress evidence. |
 | URL and authority security | Userinfo redaction, host/port validation, path normalization semantics, percent-decoding boundaries, and IDNA/Unicode blocking states are recorded before `sifr.url` becomes public. Before text/i18n M2, `sifr.url` must prevent accidental Unicode/IDNA behavior by rejecting non-ASCII host input before calling `url` or accepting only ASCII and already-punycode hosts. The `url` crate's IDNA behavior may become the approved backend only after explicit text/i18n provider owner sign-off that it matches the accepted Unicode/IDNA version and canonicalization rules. |
 | Cookie security | This phase parses cookie headers only. Persistence, signing, private/encrypted cookies, SameSite policy, key management, and browser-like cookie rules are rejected here or deferred to product phases. |
@@ -887,7 +883,7 @@ Scope:
 - Add owned TLS full-duplex split into read/write halves.
 - Add TLS `flush`, `close`, and `close_notify` behavior according to the M0 TLS stream contract.
 - Add typed TLS and certificate errors.
-- Preserve nested network evidence inside TLS errors.
+- Preserve lower network evidence inside TLS error messages.
 - Record generated-build requirements for `aws-lc-rs`, including CMake/toolchain needs, cross-compilation behavior, binary-size impact, supported-host rows, and generated dependency snapshots proving non-TLS programs do not build crypto providers.
 - Record `rustls-platform-verifier` behavior per supported host and mark any host with unproven setup/fallback behavior as `host-limited`.
 - Reject CPython-shaped `SSLContext`, `SSLSocket`, and readiness retry errors as public surfaces.
