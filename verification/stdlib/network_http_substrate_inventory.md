@@ -1,6 +1,6 @@
 # Network HTTP Substrate Inventory
 
-Status: M0 baseline; no implementation milestone has closed.
+Status: M5 closeout candidate; M0-M4 implementation milestones are merged and terminal-state inventory is closed pending final M5 review.
 
 CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 

@@ -1,0 +1,45 @@
+from sifr.http import (
+    BodyError,
+    BodyStream,
+    HeaderMap,
+    RequestHead,
+    ResponseHead,
+    body_from_chunks,
+    headers_from_pairs,
+    parse_cookie_header,
+    request_head,
+    response_head,
+)
+
+
+def main() -> Result[None, Error]:
+    try:
+        headers: HeaderMap = headers_from_pairs([
+            ("content-type", "application/octet-stream"),
+            ("cookie", "session=demo; mode=substrate"),
+        ])
+        request: RequestHead = request_head("POST", "/demo/network-http", headers)
+        assert request.method.value == "POST"
+        assert request.path == "/demo/network-http"
+
+        cookies: list[tuple[str, str]] = parse_cookie_header("session=demo; mode=substrate")
+        assert len(cookies) == 2
+
+        body: BodyStream = body_from_chunks([b"ping", b"-http"])
+        collected: bytes = body.collect_with_limit(32)
+        assert collected == b"ping-http"
+
+        response_headers: HeaderMap = headers_from_pairs([("x-sifr-demo", "network-http")])
+        response: ResponseHead = response_head(201, response_headers, "HTTP/1.1")
+        assert response.status.code == 201
+
+        too_large: bool = False
+        try:
+            limited_body: BodyStream = body_from_chunks([b"abcd"])
+            _limited: bytes = limited_body.collect_with_limit(2)
+        except BodyError as e:
+            too_large = "exceeds" in e.message
+        assert too_large
+    except Error as e:
+        raise e
+    return None

@@ -8,13 +8,14 @@ Deliver the web framework with typed extractors, then land platform expansion tr
 ## Depends on
 - Phase 40
 - Phase 32
-- Ad Hoc Production Network and HTTP Platform Substrate for `sifr.net`/`sifr.tls`/`sifr.url`/`sifr.http` protocol substrate, with multi-core serving throughput still owned by the substrate phase's serving-scale follow-up.
+- Ad Hoc Production Network and HTTP Platform Substrate for `sifr.net`/`sifr.tls`/`sifr.url`/`sifr.http` protocol substrate, as summarized in [`../network_http_architecture.md`](../network_http_architecture.md). Multi-core serving throughput remains owned by the substrate phase's serving-scale follow-up.
 
 ## Milestones
 
 ### milestone_41_1: Web Framework Core
 - Scope:
   - Routing, middleware, lifecycle/shutdown, and base request/response pipeline.
+  - Build on the `sifr.http` protocol substrate and M4 transport handoff; do not expose `sifr.http_transport` or CPython-shaped `http.server`/`socketserver` APIs.
 - Definition of done:
   - Core web scaffolding is stable and test-covered.
 
@@ -22,6 +23,7 @@ Deliver the web framework with typed extractors, then land platform expansion tr
 - Scope:
   - `Json`/`Path`/`Query`/`Form` extractor behavior.
   - Validation and error mapping via Phase 40 model contract.
+  - Multipart/form parsing remains outside the network substrate and must be accepted here or in the HTTP client phase before use.
 - Definition of done:
   - Extractors enforce typed validation with consistent error responses.
 

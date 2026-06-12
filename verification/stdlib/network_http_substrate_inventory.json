@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "m0-baseline",
+  "status": "m5-closeout-candidate",
   "cpython_checkout": {
     "path": "/Users/yaseralnajjar/work/sifr/cpython",
     "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6"
