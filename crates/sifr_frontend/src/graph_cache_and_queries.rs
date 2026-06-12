@@ -13,8 +13,8 @@ use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{module_signature, ModuleSignature};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
-    lower_module_with_externals_and_name, ExternalDefs, HirModule, LoweringResult,
-    LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    lower_module_with_externals_name_and_options, ExternalDefs, HirModule, LoweringOptions,
+    LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 use sifr_python_ast::Stmt;
 use sifr_syntax::ParsedModule;
@@ -295,7 +295,30 @@ pub fn compile_module_hir_with_source(
     diagnostic_style: FrontendDiagnosticStyle,
     source_context: Option<FrontendSourceContext<'_>>,
 ) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
-    match lower_module_with_externals_and_name(module_name, stmts, external_defs) {
+    compile_module_hir_with_source_and_options(
+        module_name,
+        stmts,
+        external_defs,
+        diagnostic_style,
+        source_context,
+        LoweringOptions::default(),
+    )
+}
+
+pub fn compile_module_hir_with_source_and_options(
+    module_name: &str,
+    stmts: &[Stmt],
+    external_defs: &ExternalDefs,
+    diagnostic_style: FrontendDiagnosticStyle,
+    source_context: Option<FrontendSourceContext<'_>>,
+    lowering_options: LoweringOptions,
+) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    match lower_module_with_externals_name_and_options(
+        module_name,
+        stmts,
+        external_defs,
+        lowering_options,
+    ) {
         Ok(result) => Ok(result),
         Err(errors) => Err(errors
             .into_iter()

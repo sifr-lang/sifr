@@ -290,6 +290,11 @@ pub(crate) fn consume_stream_for_tls(handle: i64) -> Result<TcpStream, String> {
     Ok(stream)
 }
 
+#[cfg(feature = "http")]
+pub(crate) fn consume_stream_for_http(handle: i64) -> Result<TcpStream, String> {
+    consume_stream_for_tls(handle)
+}
+
 fn ensure_write_open(handle: i64) -> Result<(), String> {
     if lock(&WRITE_SHUTDOWN).contains(&handle) {
         return Err("TCP write side is already shut down".to_string());

@@ -7,7 +7,14 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+bytes = { workspace = true, optional = true }
 encoding_rs = { workspace = true }
+h2 = { workspace = true, optional = true }
+http = { workspace = true, optional = true }
+http-body = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
+hyper = { workspace = true, optional = true }
+hyper-util = { workspace = true, optional = true }
 icu_collator = { workspace = true, optional = true }
 icu_datetime = { workspace = true, optional = true }
 icu_decimal = { workspace = true, optional = true }
@@ -20,6 +27,7 @@ rustls-pemfile = { workspace = true, optional = true }
 rustls-platform-verifier = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
 tokio-rustls = { workspace = true, optional = true }
+tower-service = { workspace = true, optional = true }
 unicode-normalization = { workspace = true, optional = true }
 unicode-segmentation = { workspace = true, optional = true }
 unicode_names2 = { workspace = true, optional = true }
@@ -44,6 +52,17 @@ tls = [
     "dep:rustls-pemfile",
     "dep:rustls-platform-verifier",
     "dep:tokio-rustls",
+]
+http = [
+    "tls",
+    "dep:bytes",
+    "dep:h2",
+    "dep:http",
+    "dep:http-body",
+    "dep:http-body-util",
+    "dep:hyper",
+    "dep:hyper-util",
+    "dep:tower-service",
 ]
 
 [lints]

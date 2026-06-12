@@ -2,6 +2,8 @@
 #![cfg_attr(test, allow(clippy::expect_used))]
 
 pub mod encoding;
+#[cfg(feature = "http")]
+pub mod http;
 #[cfg(feature = "i18n")]
 pub mod i18n;
 mod int;

@@ -2,7 +2,10 @@
 from _sifr.http import (
     http_build_cookie_header,
     http_header_map_from_pairs,
+    http_validate_method,
     http_parse_cookie_header,
+    http_validate_status,
+    http_validate_version,
     http_validate_header_name,
     http_validate_header_value,
 )
@@ -10,6 +13,45 @@ from _sifr.http import (
 
 class HeaderError(Error):
     message: str
+
+
+class HttpError(Error):
+    message: str
+
+
+class ProtocolError(Error):
+    message: str
+
+
+class BodyError(Error):
+    message: str
+
+
+class Method:
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+
+    def to_string(self) -> str:
+        return self.value
+
+
+class Status:
+    code: int
+
+    def __init__(self, code: int):
+        self.code = code
+
+
+class Version:
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+
+    def to_string(self) -> str:
+        return self.value
 
 
 class HeaderName:
@@ -51,6 +93,79 @@ class HeaderMap:
         return len(self.entries)
 
 
+class BodyStream:
+    chunks: list[bytes]
+
+    def __init__(self, chunks: list[bytes]):
+        self.chunks = chunks
+
+    def collect_with_limit(self, max_bytes: int) -> Result[bytes, BodyError]:
+        if max_bytes <= 0:
+            raise BodyError("HTTP body limit must be positive")
+        total: int = 0
+        collected: bytes = b""
+        for chunk in self.chunks:
+            total = total + len(chunk)
+            if total > max_bytes:
+                raise BodyError("HTTP body exceeds configured limit")
+            collected = collected + chunk
+        return collected
+
+
+class RequestHead:
+    method: Method
+    path: str
+    headers: HeaderMap
+    version: Version
+
+    def __init__(self, method: Method, path: str, headers: HeaderMap, version: Version):
+        self.method = method
+        self.path = path
+        self.headers = headers
+        self.version = version
+
+
+class ResponseHead:
+    status: Status
+    headers: HeaderMap
+    version: Version
+
+    def __init__(self, status: Status, headers: HeaderMap, version: Version):
+        self.status = status
+        self.headers = headers
+        self.version = version
+
+
+class HttpRequest:
+    head: RequestHead
+    body: BodyStream
+
+    def __init__(self, head: RequestHead, body: BodyStream):
+        self.head = head
+        self.body = body
+
+
+class HttpResponse:
+    head: ResponseHead
+    body: BodyStream
+
+    def __init__(self, head: ResponseHead, body: BodyStream):
+        self.head = head
+        self.body = body
+
+
+def method(value: str) -> Result[Method, HttpError]:
+    return http_validate_method(value)
+
+
+def status(code: int) -> Result[Status, HttpError]:
+    return http_validate_status(code)
+
+
+def version(value: str) -> Result[Version, HttpError]:
+    return http_validate_version(value)
+
+
 def header_name(value: str) -> Result[HeaderName, HeaderError]:
     return http_validate_header_name(value)
 
@@ -69,3 +184,32 @@ def parse_cookie_header(value: str) -> Result[list[tuple[str, str]], HeaderError
 
 def build_cookie_header(pairs: list[tuple[str, str]]) -> Result[str, HeaderError]:
     return http_build_cookie_header(pairs)
+
+
+def body_from_bytes(own data: bytes) -> BodyStream:
+    return BodyStream([data])
+
+
+def body_from_chunks(chunks: list[bytes]) -> Result[BodyStream, BodyError]:
+    for chunk in chunks:
+        if len(chunk) > 65536:
+            raise BodyError("HTTP body chunk exceeds 65536 bytes")
+    return BodyStream(chunks)
+
+
+def request_head(method_value: str, path: str, headers: HeaderMap, version_value: str = "HTTP/1.1") -> Result[RequestHead, HttpError]:
+    try:
+        parsed_method: Method = method(method_value)
+        parsed_version: Version = version(version_value)
+        return RequestHead(parsed_method, path, headers, parsed_version)
+    except HttpError as e:
+        raise HttpError(e.message)
+
+
+def response_head(status_code: int, headers: HeaderMap, version_value: str = "HTTP/1.1") -> Result[ResponseHead, HttpError]:
+    try:
+        parsed_status: Status = status(status_code)
+        parsed_version: Version = version(version_value)
+        return ResponseHead(parsed_status, headers, parsed_version)
+    except HttpError as e:
+        raise HttpError(e.message)

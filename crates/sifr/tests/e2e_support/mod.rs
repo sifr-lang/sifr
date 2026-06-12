@@ -11,6 +11,8 @@ mod harness_model;
 pub(crate) use harness_model::*;
 mod fixture_dependency_paths;
 pub(crate) use fixture_dependency_paths::*;
+mod fixture_cargo_toml;
+pub(crate) use fixture_cargo_toml::*;
 mod fixture_compilation;
 pub(crate) use fixture_compilation::*;
 mod batch_execution;

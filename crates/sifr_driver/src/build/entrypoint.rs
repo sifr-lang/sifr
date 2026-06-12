@@ -8,7 +8,7 @@ use super::ArtifactCacheReport;
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
-    collect_project_hir_source_modules, compile_single_frontend_module_with_source,
+    collect_project_hir_source_modules, compile_single_frontend_module_with_source_and_options,
     emit_project_frontend_diagnostics, parse_import_closure_source_modules,
     parse_package_import_closure_source_modules, DiscoveryDiagnosticStyle, ModuleResolver,
     ProjectLowering,
@@ -19,6 +19,7 @@ use sifr_codegen::generate_rust_with_stdlib;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
 use sifr_ir::LoweringResult;
+use sifr_lowering::LoweringOptions;
 use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -33,6 +34,7 @@ pub(crate) enum RootedEntrypoint<'a> {
     SingleFile {
         source: &'a str,
         display_path: &'a str,
+        lowering_options: LoweringOptions,
     },
     Project {
         main_file: &'a Path,
@@ -82,6 +84,7 @@ pub(crate) fn compile_single_file_frontend(
     RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
         source,
         display_path: "main",
+        lowering_options: LoweringOptions::default(),
     })?
     .into_single_file_frontend()
 }
@@ -89,9 +92,17 @@ pub(crate) fn compile_single_file_frontend(
 pub(crate) fn compile_single_file_entrypoint_with_metadata(
     source: &str,
 ) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
+    compile_single_file_entrypoint_with_metadata_and_options(source, LoweringOptions::default())
+}
+
+pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
+    source: &str,
+    lowering_options: LoweringOptions,
+) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
     let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
         source,
         display_path: "main",
+        lowering_options,
     })?;
     plan.emit_frontend_diagnostics();
     plan.into_single_file_codegen_result()
@@ -105,6 +116,7 @@ pub(crate) fn check_single_file_entrypoint(
     match RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
         source,
         display_path: &display_path,
+        lowering_options: LoweringOptions::default(),
     }) {
         Ok(plan) => plan.frontend_diagnostics(),
         Err(errors) => errors,
@@ -176,6 +188,7 @@ pub(crate) fn build_cached_single_file_binary(
         &RootedEntrypoint::SingleFile {
             source,
             display_path: &display_path,
+            lowering_options: LoweringOptions::default(),
         },
         entrypoint_file.parent().unwrap_or(Path::new(".")),
         "run",
@@ -209,9 +222,10 @@ impl RootedEntrypointPlan {
             RootedEntrypoint::SingleFile {
                 source,
                 display_path,
+                lowering_options,
             } => {
                 let parsed_suite = parse_source(source)?;
-                let project_lowering = compile_single_frontend_module_with_source(
+                let project_lowering = compile_single_frontend_module_with_source_and_options(
                     "main",
                     &parsed_suite,
                     FrontendSourceContext {
@@ -220,6 +234,7 @@ impl RootedEntrypointPlan {
                     },
                     stdlib.defs.clone(),
                     FrontendDiagnosticStyle::Bare,
+                    *lowering_options,
                 )?;
                 (RootedEntrypointShape::SingleFile, project_lowering)
             }
@@ -397,6 +412,7 @@ mod tests {
         let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
             source: "def main():\n    print(\"ok\")\n",
             display_path: "main",
+            lowering_options: LoweringOptions::default(),
         })
         .expect("single-file entrypoint should compile");
 

@@ -5,6 +5,7 @@ use crate::build::{
     resolve_project_entrypoint_plan, CachedBinaryArtifact, PackageEntrypoint, RootedEntrypoint,
 };
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
+use sifr_lowering::LoweringOptions;
 use std::path::{Path, PathBuf};
 
 pub fn build_project(
@@ -41,6 +42,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<RenderedDia
         &RootedEntrypoint::SingleFile {
             source,
             display_path: "main",
+            lowering_options: LoweringOptions::default(),
         },
         output_dir,
     )

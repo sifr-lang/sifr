@@ -92,6 +92,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) declared_type_var_bounds: HashMap<String, Vec<String>>,
     /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
     pub(in crate::lower) allow_intrinsic_imports: bool,
+    /// Whether the internal HTTP transport harness may be imported by e2e fixtures.
+    pub(in crate::lower) allow_http_transport_harness_imports: bool,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
     pub(in crate::lower) borrowed_params: std::collections::HashSet<String>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
@@ -162,6 +164,7 @@ impl LowerCtx {
             type_param_bounds: HashMap::new(),
             declared_type_var_bounds: HashMap::new(),
             allow_intrinsic_imports: false,
+            allow_http_transport_harness_imports: false,
             borrowed_params: std::collections::HashSet::new(),
             class_declared_type_params: HashMap::new(),
             current_module_name: None,
@@ -190,6 +193,12 @@ impl LowerCtx {
 
     pub(in crate::lower) fn is_stdlib_lowering(&self) -> bool {
         self.allow_intrinsic_imports
+    }
+
+    #[must_use]
+    pub(in crate::lower) fn with_options(mut self, options: LoweringOptions) -> Self {
+        self.allow_http_transport_harness_imports = options.allow_http_transport_harness_imports;
+        self
     }
 
     pub(in crate::lower) fn error_with_code_at(
@@ -306,6 +315,11 @@ impl LowerCtx {
             binding: name.to_string(),
         });
     }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct LoweringOptions {
+    pub allow_http_transport_harness_imports: bool,
 }
 /// Substitute type variables in a type with concrete types.
 pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
@@ -479,5 +493,17 @@ pub fn lower_module_with_externals_and_name(
     externals: &ExternalDefs,
 ) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     let ctx = LowerCtx::new().with_current_module(module_name);
+    lower_module_impl(stmts, externals, ctx)
+}
+
+pub fn lower_module_with_externals_name_and_options(
+    module_name: &str,
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+    options: LoweringOptions,
+) -> Result<LoweringResult, Vec<HirDiagnostic>> {
+    let ctx = LowerCtx::new()
+        .with_current_module(module_name)
+        .with_options(options);
     lower_module_impl(stmts, externals, ctx)
 }

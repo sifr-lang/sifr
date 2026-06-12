@@ -449,10 +449,13 @@ pub fn generate_rust_with_stdlib_for_module(
     let stdlib_emits_http_runtime = stdlib_preamble.contains("fn __sifr_header_error");
     let needs_http_runtime = !stdlib_emits_http_runtime
         && (stdlib_preamble.contains("__sifr_http_")
-            || emitter
-                .intrinsic_functions
-                .iter()
-                .any(|function| function.starts_with("http_")));
+            || stdlib_preamble.contains("__sifr_http1_")
+            || stdlib_preamble.contains("__sifr_http2_")
+            || emitter.intrinsic_functions.iter().any(|function| {
+                function.starts_with("http_")
+                    || function.starts_with("http1_")
+                    || function.starts_with("http2_")
+            }));
 
     // Emit built-in error class struct definitions for referenced error types.
     let uses_task_scope = module_uses_task_scope(module);

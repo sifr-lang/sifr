@@ -171,6 +171,13 @@ fn take_stream(handle: i64) -> Result<RuntimeTlsStream, String> {
         .ok_or_else(|| format!("TLS stream handle is closed or unknown: {handle}"))
 }
 
+#[cfg(feature = "http")]
+pub(crate) fn consume_stream_for_http(handle: i64) -> Result<RuntimeTlsStream, String> {
+    let stream = take_stream(handle)?;
+    lock(&CLOSE_NOTIFIED).remove(&handle);
+    Ok(stream)
+}
+
 fn restore_stream(handle: i64, stream: RuntimeTlsStream) {
     lock(&STREAMS).insert(handle, stream);
 }

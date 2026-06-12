@@ -162,17 +162,12 @@ fn network_http_m3_url_module_emits_locked_parser_dependencies() {
 }
 
 #[test]
-fn network_http_m3_http_module_emits_locked_header_cookie_dependencies() {
+fn network_http_m3_http_module_emits_locked_header_dependencies_without_cookie_crate() {
     let deps =
         generated_cargo_dependencies(&HashSet::from(["sifr.http".to_string()]), &HashSet::new());
 
-    assert_eq!(
-        deps,
-        vec![
-            "http = \"1.4.1\"",
-            "cookie = { version = \"0.18.1\", default-features = false }",
-        ]
-    );
+    assert_eq!(deps, vec!["http = \"1.4.1\""]);
+    assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.starts_with("url = ")));
     assert!(!deps.iter().any(|dep| dep.contains("percent-encoding")));
     assert_eq!(
@@ -196,11 +191,11 @@ fn network_http_m3_combined_modules_emit_all_locked_m3_dependencies_without_ring
         deps,
         vec![
             "http = \"1.4.1\"",
-            "cookie = { version = \"0.18.1\", default-features = false }",
             "url = \"2.5.8\"",
             "percent-encoding = \"2.3.2\"",
         ]
     );
+    assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.contains("proptest")));
     assert!(!deps.iter().any(|dep| dep.contains("tracing-subscriber")));
 }
@@ -216,11 +211,11 @@ fn network_http_m3_url_and_http_modules_emit_locked_dependencies() {
         deps,
         vec![
             "http = \"1.4.1\"",
-            "cookie = { version = \"0.18.1\", default-features = false }",
             "url = \"2.5.8\"",
             "percent-encoding = \"2.3.2\"",
         ]
     );
+    assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.contains("proptest")));
     assert!(!deps.iter().any(|dep| dep.starts_with("serde = ")));
     assert!(!deps.iter().any(|dep| dep.contains("x509-parser")));
@@ -239,5 +234,62 @@ fn network_http_m3_url_and_http_modules_emit_locked_dependencies() {
     assert_eq!(
         sifr_stdlib::feature_for_codegen_requirement("cookie"),
         Some(StdlibFeature::Cookie)
+    );
+}
+
+#[test]
+fn network_http_m4_transport_intrinsics_emit_locked_hyper_runtime_dependencies() {
+    let deps = generated_cargo_dependencies(
+        &HashSet::from(["sifr.http".to_string()]),
+        &HashSet::from([
+            StdlibFeature::SifrRuntime,
+            StdlibFeature::Tokio,
+            StdlibFeature::TokioRustls,
+            StdlibFeature::Rustls,
+            StdlibFeature::RustlsPemfile,
+            StdlibFeature::RustlsPlatformVerifier,
+            StdlibFeature::Tracing,
+            StdlibFeature::Bytes,
+            StdlibFeature::Http,
+            StdlibFeature::HttpBody,
+            StdlibFeature::HttpBodyUtil,
+            StdlibFeature::Hyper,
+            StdlibFeature::HyperUtil,
+            StdlibFeature::H2,
+            StdlibFeature::TowerService,
+        ]),
+    )
+    .into_iter()
+    .map(|dependency| {
+        if dependency.starts_with("sifr_runtime = ") {
+            if dependency.contains("features = [\"net\", \"tls\", \"http\"]") {
+                return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\", \"http\"] }"
+                    .to_string();
+            }
+            return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
+        }
+        dependency
+    })
+    .collect::<Vec<_>>();
+
+    assert_eq!(
+        deps,
+        vec![
+            "http = \"1.4.1\"",
+            "bytes = \"1.11.1\"",
+            "h2 = \"0.4.14\"",
+            "http-body = \"1.0.1\"",
+            "http-body-util = { version = \"0.1.3\", default-features = false }",
+            "hyper = { version = \"1.10.1\", default-features = false, features = [\"client\", \"http1\", \"http2\", \"server\"] }",
+            "hyper-util = { version = \"0.1.20\", default-features = false, features = [\"tokio\"] }",
+            "rustls = \"=0.23.35\"",
+            "rustls-pemfile = \"2.2.0\"",
+            "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
+            "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\", \"http\"] }",
+            "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
+            "tokio-rustls = \"0.26.4\"",
+            "tower-service = \"0.3.3\"",
+            "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }",
+        ]
     );
 }

@@ -322,6 +322,10 @@ fn __sifr_header_error(message: String) -> HeaderError {
     HeaderError { message }
 }
 
+fn __sifr_http_error(message: String) -> HttpError {
+    HttpError { message }
+}
+
 fn __sifr_http_reject_too_large(label: &str, len: usize, max: usize) -> Result<(), HeaderError> {
     if len > max {
         return Err(__sifr_header_error(format!("{label} is too large")));
@@ -349,6 +353,31 @@ fn __sifr_http_validate_header_value(value: String) -> Result<HeaderValue, Heade
     http::HeaderValue::from_str(&trimmed)
         .map_err(|err| __sifr_header_error(format!("invalid header value: {err}")))?;
     Ok(HeaderValue { value: trimmed })
+}
+
+fn __sifr_http_validate_method(value: String) -> Result<Method, HttpError> {
+    let parsed = http::Method::from_bytes(value.as_bytes())
+        .map_err(|err| __sifr_http_error(format!("invalid HTTP method: {err}")))?;
+    Ok(Method {
+        value: parsed.to_string(),
+    })
+}
+
+fn __sifr_http_validate_status(code: i64) -> Result<Status, HttpError> {
+    let status = u16::try_from(code)
+        .ok()
+        .and_then(|code| http::StatusCode::from_u16(code).ok())
+        .ok_or_else(|| __sifr_http_error("invalid HTTP status".to_string()))?;
+    Ok(Status {
+        code: i64::from(status.as_u16()),
+    })
+}
+
+fn __sifr_http_validate_version(value: String) -> Result<Version, HttpError> {
+    match value.as_str() {
+        "HTTP/1.0" | "HTTP/1.1" | "HTTP/2" | "HTTP/3" => Ok(Version { value }),
+        _ => Err(__sifr_http_error("invalid HTTP version".to_string())),
+    }
 }
 
 fn __sifr_http_is_cookie_name_byte(byte: u8) -> bool {
@@ -458,6 +487,194 @@ fn __sifr_http_build_cookie_header(cookies: Vec<(String, String)>) -> Result<Str
     __sifr_http_reject_cookie_line_breaks(&header)?;
     __sifr_http_reject_too_large("header value", header.len(), __SIFR_HEADER_VALUE_MAX_BYTES)?;
     Ok(header)
+}
+
+async fn __sifr_http1_client_roundtrip_tcp(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_request_tcp(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(__sifr_http_error)
+}
+
+async fn __sifr_http2_client_roundtrip_tcp(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_request_tcp(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(__sifr_http_error)
+}
+
+async fn __sifr_http1_client_roundtrip_tls(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_request_tls(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(__sifr_http_error)
+}
+
+async fn __sifr_http2_client_roundtrip_tls(
+    handle: i64,
+    method: String,
+    path: String,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(i64, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_request_tls(
+        handle,
+        method,
+        path,
+        headers,
+        body,
+        max_request_bytes,
+        max_response_bytes,
+        0.0,
+        false,
+    )
+    .await
+    .map(|response| (response.status, response.version, response.headers, response.body))
+    .map_err(__sifr_http_error)
+}
+
+async fn __sifr_http1_server_respond_tcp(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_respond_tcp(handle, status, headers, body, max_request_bytes, max_response_bytes, 0.0, false)
+        .await
+        .map(|request| {
+            (
+                request.method,
+                request.target,
+                request.version,
+                request.headers,
+                request.body,
+            )
+        })
+        .map_err(__sifr_http_error)
+}
+
+async fn __sifr_http2_server_respond_tcp(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_respond_tcp(handle, status, headers, body, max_request_bytes, max_response_bytes, 0.0, false)
+        .await
+        .map(|request| {
+            (
+                request.method,
+                request.target,
+                request.version,
+                request.headers,
+                request.body,
+            )
+        })
+        .map_err(__sifr_http_error)
+}
+
+async fn __sifr_http1_server_respond_tls(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http1_respond_tls(handle, status, headers, body, max_request_bytes, max_response_bytes, 0.0, false)
+        .await
+        .map(|request| {
+            (
+                request.method,
+                request.target,
+                request.version,
+                request.headers,
+                request.body,
+            )
+        })
+        .map_err(__sifr_http_error)
+}
+
+async fn __sifr_http2_server_respond_tls(
+    handle: i64,
+    status: i64,
+    headers: Vec<(String, String)>,
+    body: Vec<u8>,
+    max_request_bytes: i64,
+    max_response_bytes: i64,
+) -> Result<(String, String, String, Vec<(String, String)>, Vec<u8>), HttpError> {
+    sifr_runtime::http::http2_respond_tls(handle, status, headers, body, max_request_bytes, max_response_bytes, 0.0, false)
+        .await
+        .map(|request| {
+            (
+                request.method,
+                request.target,
+                request.version,
+                request.headers,
+                request.body,
+            )
+        })
+        .map_err(__sifr_http_error)
 }
 "#;
 
