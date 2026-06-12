@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0 and M1 merged; M2 TLS Runtime PR is validated and ready to merge
+Status: in progress; M0, M1, and M2 merged; M3 URL, Header, And Cookie Primitives is next
 
 ## Scope Split
 
@@ -20,7 +20,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 
 - [x] `milestone_network_http_0`: Product Boundary And Architecture
 - [x] `milestone_network_http_1`: Async Network Runtime
-- [ ] `milestone_network_http_2`: TLS Runtime
+- [x] `milestone_network_http_2`: TLS Runtime
 - [ ] `milestone_network_http_3`: URL, Header, And Cookie Primitives
 - [ ] `milestone_network_http_4`: HTTP Core Transport
 - [ ] `milestone_network_http_5`: Integration, Documentation, And Production Handoff
@@ -179,6 +179,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Merge commit: `ce5a411f4284404a1a374f77c0176351771e7cb9`
   - Scope: added public `sifr.net`, private `_sifr.net` intrinsics, optional `sifr_runtime/net`, network codegen helpers, deterministic TCP loopback/split/half-close/cancellation fixtures, UDP deferral coverage, and M1 Opus review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `6c88bbd5f56035b488c4ad85a18061ab2b804fd2`; report `target/validation_lane_reports/merge.latest.json`; advisories were warm wall-time budget exceeded and high group skew only.
+- M2 implementation merge ledger:
+  - PR: https://github.com/sifr-lang/sifr/pull/2496
+  - Merge commit: `742ea9f33dcac821d5abb644156d97dd2d7876cc`
+  - Scope: added public `sifr.tls`, private `_sifr.tls` intrinsics, optional `sifr_runtime/tls`, TLS codegen helpers, Rustls/Tokio-Rustls runtime integration, deterministic TLS loopback/split/close-notify/config-error fixtures, dependency snapshots, and M2 Opus review artifacts.
+  - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `28d845c86b94cceb84bf3e29872498f18fdd7980`; report `target/validation_lane_reports/merge.latest.json`; advisory was high e2e group skew only.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -244,7 +249,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 
 - M0: https://github.com/sifr-lang/sifr/pull/2494 merged at `c426d01e26257c5b72e3ecd50e6884c86292a14b`.
 - M1: https://github.com/sifr-lang/sifr/pull/2495 merged at `ce5a411f4284404a1a374f77c0176351771e7cb9`.
-- M2: https://github.com/sifr-lang/sifr/pull/2496 validated and ready to merge at `d4e2feb1feef13c7fd037d14301531915ed75b2a`.
+- M2: https://github.com/sifr-lang/sifr/pull/2496 merged at `742ea9f33dcac821d5abb644156d97dd2d7876cc`.
 - M3: pending.
 - M4: pending.
 - M5: pending.
