@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -162,6 +163,17 @@ def check_legacy_code_docs(root: Path) -> None:
         )
 
 
+def cargo_debug_dir() -> Path:
+    target_dir = os.environ.get("CARGO_TARGET_DIR")
+    if target_dir:
+        path = Path(target_dir)
+        if not path.is_absolute():
+            path = REPO_ROOT / path
+    else:
+        path = REPO_ROOT / "target"
+    return path / "debug"
+
+
 @lru_cache(maxsize=1)
 def sifr_binary() -> Path:
     proc = subprocess.run(
@@ -177,7 +189,7 @@ def sifr_binary() -> Path:
             "failed to build sifr diagnostic-contract binary:\n"
             f"--- stdout ---\n{proc.stdout}\n--- stderr ---\n{proc.stderr}"
         )
-    binary = REPO_ROOT / "target" / "debug" / "sifr"
+    binary = cargo_debug_dir() / "sifr"
     require(binary.is_file(), f"sifr binary missing after build: {binary}")
     return binary
 
@@ -197,7 +209,7 @@ def diagnostic_contract_harness_binary() -> Path:
             "failed to build diagnostic contract harness:\n"
             f"--- stdout ---\n{proc.stdout}\n--- stderr ---\n{proc.stderr}"
         )
-    binary = REPO_ROOT / "target" / "debug" / "diagnostic_contract_harness"
+    binary = cargo_debug_dir() / "diagnostic_contract_harness"
     require(binary.is_file(), f"diagnostic contract harness missing after build: {binary}")
     return binary
 
