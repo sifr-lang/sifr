@@ -276,14 +276,13 @@ M1 validation:
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_e2e_pass.sh` | PASS | Merge-manifest e2e pass suite completed 138 pass tests, 0 failed. |
-| `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; all lane steps passed. Advisories: warm wall-time budget exceeded and high group skew. |
 | `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; all merge-lane steps passed. Advisories: warm wall-time budget exceeded and high group skew. |
 
 M1 broad pass-suite note:
 
 - An exploratory `cargo test -p sifr --test e2e e2e_pass -- network_http_m1 --nocapture` invocation ran the full pass corpus rather than filtering only M1 fixtures. It completed 636 pass fixtures and exposed pre-existing non-network failures: IO context-manager generated mutability in `cpython_io_subset`/`stdlib_io_consolidated` and `open_*` fixtures, plus `bytes_conversion_errors` expecting `latin-1` encode/decode rejection. The M1-specific fixtures pass through the selected manifest above.
 - The clean `scripts/run_all_tests.sh --profile create-pr` rerun passed after clearing detached stale validation jobs from earlier interrupted runs. The only advisory was warm wall-time budget exceeded.
-- The full `scripts/run_all_tests.sh` merge gate passed before PR merge. Advisory-only output reported warm wall-time budget exceeded and high group skew.
+- The full `scripts/run_all_tests.sh` merge gate passed before M1 PR prep. Advisory-only output reported warm wall-time budget exceeded and high group skew.
 
 Required baseline commands:
 
