@@ -1,6 +1,6 @@
 # Network HTTP M5 Traceability: Integration, Documentation, And Production Handoff
 
-Status: M5 closeout in progress.
+Status: M5 closeout complete; final phase closure review recorded.
 
 | Work item | M0 decision | Acceptance evidence |
 | --- | --- | --- |
@@ -12,4 +12,4 @@ Status: M5 closeout in progress.
 | Inventory closure | No `open` state; every deferred/rejected/host-limited entry has rationale and revisit rule. | `network_http_substrate_inventory.md`, `network_http_substrate_inventory.json`, `network_http_cpython_evidence_matrix.md`, and the execution ledger record terminal states, rationale, and revisit rules. |
 | Phase 41 handoff | Protocol/runtime ready; multi-core throughput deferred to serving-scale follow-up. | `docs/network_http.md`, `internal_docs/network_http_architecture.md`, and `internal_docs/phases/41_web_framework_and_platform_expansion.md` record the handoff and serving-scale deferral. |
 | HTTP client phase handoff | Transport substrate ready; policy features deferred. | `docs/network_http.md` and `internal_docs/network_http_architecture.md` record that pooling, retries, redirects, auth, cookies, proxies, and streaming policy belong to the future HTTP client phase. |
-| Final review | Reviewer loop reaches `PASS`. | Review artifacts in `reviews/` and execution ledger entry. |
+| Final review | Reviewer loop reaches `PASS`. | M5 review artifact `reviews/ad-hoc-production-network-http-m5-opus-review-pass-1.md`, final phase review artifact `reviews/ad-hoc-production-network-http-final-opus-review-pass-2.md`, and execution ledger entries. |
