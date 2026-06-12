@@ -1,6 +1,6 @@
 # Network HTTP M3 Traceability: URL, Header, And Cookie Primitives
 
-Status: implementation candidate ready for Opus review.
+Status: implementation candidate merge-validated.
 
 | Work item | M0 decision | Acceptance evidence |
 | --- | --- | --- |
@@ -29,6 +29,7 @@ Status: implementation candidate ready for Opus review.
 | `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after Opus pass-3 remediation. |
 | `scripts/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed; report `target/validation_lane_reports/merge.latest.json`; advisory: high e2e group skew only. |
 | `python3 scripts/check_file_size_guardrails.py` | PASS | File-size guardrail passed with 2319 files under the 900-line limit. |
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | HIR maintainability guardrails passed. |
 

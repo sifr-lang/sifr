@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0, M1, and M2 merged; M3 URL, Header, And Cookie Primitives implementation candidate is ready for Opus review
+Status: in progress; M0, M1, and M2 merged; M3 URL, Header, And Cookie Primitives PR is merge-validated
 
 ## Scope Split
 
@@ -353,6 +353,7 @@ M3 focused validation:
 | `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after Opus pass-3 remediation. |
 | `scripts/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed; report `target/validation_lane_reports/merge.latest.json`; advisory: high e2e group skew only. |
 | `python3 scripts/check_file_size_guardrails.py` | PASS | File-size guardrail passed with 2319 files under the 900-line limit. |
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | HIR maintainability guardrails passed. |
 
