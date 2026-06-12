@@ -342,6 +342,8 @@ pub(crate) fn generate_cargo_toml(
                 | "_sifr.i18n"
                 | "sifr.net"
                 | "_sifr.net"
+                | "sifr.tls"
+                | "_sifr.tls"
         )
     }) {
         deps.insert(sifr_runtime_dependency_spec_for_modules(stdlib_modules));
@@ -430,6 +432,21 @@ pub(crate) fn generate_cargo_toml(
             "tokio" => {
                 deps.insert(tokio_dependency_spec());
             }
+            "tokio-rustls" | "tokio_rustls" => {
+                deps.insert("tokio-rustls = \"0.26.4\"".to_string());
+            }
+            "rustls" => {
+                deps.insert("rustls = \"=0.23.35\"".to_string());
+            }
+            "rustls-pemfile" | "rustls_pemfile" => {
+                deps.insert("rustls-pemfile = \"2.2.0\"".to_string());
+            }
+            "rustls-platform-verifier" | "rustls_platform_verifier" => {
+                deps.insert(
+                    "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }"
+                        .to_string(),
+                );
+            }
             "metrics" => {
                 deps.insert("metrics = \"0.24.6\"".to_string());
             }
@@ -453,81 +470,6 @@ pub(crate) fn generate_cargo_toml(
     contents.push_str("\n[workspace]\n");
 
     contents
-}
-
-fn sifr_runtime_dependency_spec_for_modules(stdlib_modules: &BTreeSet<String>) -> String {
-    let mut features = Vec::new();
-    let has_module = |names: &[&str]| {
-        stdlib_modules
-            .iter()
-            .any(|module| names.contains(&module.as_str()))
-    };
-    if has_module(&["sifr.i18n", "_sifr.i18n"]) {
-        features.push("i18n");
-    }
-    if has_module(&["sifr.unicode", "_sifr.unicode"]) {
-        features.push("unicode");
-    }
-    if has_module(&["sifr.net", "_sifr.net"]) {
-        features.push("net");
-    }
-    sifr_runtime_dependency_spec_with_features(&features)
-}
-
-fn sifr_runtime_dependency_spec_with_features(features: &[&str]) -> String {
-    let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
-    let escaped_path = runtime_path
-        .to_string_lossy()
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"");
-    if features.is_empty() {
-        return format!("sifr_runtime = {{ path = \"{escaped_path}\" }}");
-    }
-    let rendered_features = features
-        .iter()
-        .map(|feature| format!("\"{feature}\""))
-        .collect::<Vec<_>>()
-        .join(", ");
-    format!("sifr_runtime = {{ path = \"{escaped_path}\", features = [{rendered_features}] }}")
-}
-
-pub(crate) fn tokio_dependency_spec() -> String {
-    "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
-        .to_string()
-}
-
-pub(crate) fn discover_sifr_runtime_path() -> Option<PathBuf> {
-    env::var_os("SIFR_RUNTIME_PATH")
-        .map(PathBuf::from)
-        .filter(|path| path.join("Cargo.toml").is_file())
-        .or_else(|| discover_sifr_runtime_path_from_current_dir())
-        .or_else(|| discover_sifr_runtime_path_from_current_exe())
-}
-
-pub(crate) fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
-    env::current_dir()
-        .ok()
-        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
-}
-
-pub(crate) fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
-    env::current_exe()
-        .ok()
-        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
-}
-
-pub(crate) fn discover_sifr_runtime_path_from_ancestors(start: &Path) -> Option<PathBuf> {
-    start.ancestors().find_map(|ancestor| {
-        let candidate = ancestor.join("crates").join("sifr_runtime");
-        candidate.join("Cargo.toml").is_file().then_some(candidate)
-    })
-}
-
-pub(crate) fn compile_time_sifr_runtime_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")))
-        .join("sifr_runtime")
 }
 
 pub(crate) fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, String> {

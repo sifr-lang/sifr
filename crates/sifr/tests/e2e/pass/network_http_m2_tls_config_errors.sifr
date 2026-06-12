@@ -1,0 +1,28 @@
+from sifr.tls import (
+    CertificateError,
+    TlsClientConfig,
+    TlsServerConfig,
+    client_config_with_roots,
+    server_config,
+)
+
+
+def main() -> None:
+    alpn: list[bytes] = [b"h2", b"http/1.1"]
+    bad_client: Result[TlsClientConfig, CertificateError] = client_config_with_roots(
+        b"not a certificate", alpn
+    )
+    assert "certificate" in str(bad_client)
+
+    rejected_client: bool = False
+    try:
+        _client: TlsClientConfig = client_config_with_roots(b"not a certificate", alpn)
+        assert False
+    except CertificateError as e:
+        rejected_client = "certificate" in e.message
+    assert rejected_client
+
+    bad_server: Result[TlsServerConfig, CertificateError] = server_config(
+        b"not a certificate", b"not a private key", alpn
+    )
+    assert "certificate" in str(bad_server)

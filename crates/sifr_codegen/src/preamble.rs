@@ -16,6 +16,8 @@ mod join_set_runtime;
 pub use join_set_runtime::*;
 mod net_runtime;
 pub(crate) use net_runtime::*;
+mod tls_runtime;
+pub(crate) use tls_runtime::*;
 mod parallel_runtime;
 pub(crate) use parallel_runtime::*;
 mod process_async_child_runtime;

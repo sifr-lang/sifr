@@ -8,6 +8,8 @@ mod int;
 pub mod json;
 #[cfg(feature = "net")]
 pub mod net;
+#[cfg(feature = "tls")]
+pub mod tls;
 #[cfg(feature = "unicode")]
 pub mod unicode;
 #[cfg(feature = "unicode")]
