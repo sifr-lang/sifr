@@ -36,7 +36,7 @@ The desired result is a repo where a new contributor can quickly answer:
 - No test coverage reduction.
 - No CI-only validation behavior.
 - No compatibility shims for moved script paths.
-- No duplicate old and new verification layouts.
+- No duplicate old and new verification layouts in the end state. Transitional coexistence during migration is allowed only when tracked by an explicit migration-status table.
 - No archive-in-place that leaves the active tree visually noisy.
 - No tracking of point-in-time validation logs.
 - No broad rewrite of compiler crates unless required by path or fixture ownership.
@@ -48,10 +48,31 @@ The desired result is a repo where a new contributor can quickly answer:
 - Machines consume schemas, manifests, fixtures, and baselines.
 - Generated reports live under `target/` and are not committed.
 - Each fixture has one owning verification area.
-- Lanes select verification areas; lanes do not own fixtures.
+- Profiles select verification areas; profiles do not own fixtures.
 - Public validation has one entrypoint.
 - Repo hygiene is enforced by guardrails, not convention.
 - Historical material is either deleted, moved to git history, or placed in a separate archive outside the active tree.
+
+## Reference Compiler Lessons
+
+This cleanup should learn from mature compiler and runtime repositories without copying their exact folder names. The useful lesson is the ownership invariant behind each layout.
+
+Reference observations:
+
+- TypeScript keeps compiler cases and baselines as first-class test assets under `tests/cases/` and `tests/baselines/reference/`, with harness code separated from the cases. Sifr should keep fixtures and baselines area-owned and reviewable, not hidden in scripts or markdown reports.
+- typescript-go uses a strong split between compiler implementation, repo tools, and `testdata/` compatibility baselines. Sifr should preserve the same conceptual split through `crates/`, `scripts/`, and `verification/areas/`, rather than creating a generic top-level `testdata/` tree.
+- Rust separates compiler implementation, standard library, test runner tooling, and behavior-mode test families such as UI, codegen, run-make, incremental, rustdoc, and debuginfo. Sifr should let areas own suites by execution mode when useful, instead of forcing every case into one flat pass/fail bucket.
+- Bun separates tests, integration fixtures, regression material, and benchmarks. Sifr should keep performance validation distinct from correctness verification and avoid mixing benchmark artifacts with regular create-PR gates.
+- CPython separates public docs, maintainer-facing internal docs, test runner implementation, resource-heavy tests, platform data, and tools. Sifr should keep `internal_docs/` as current maintainer knowledge and make profile resource policy explicit in the verification runner.
+
+Sifr-specific conclusions:
+
+- Keep `verification/` as the top-level validation contract rather than adding a generic `tests/` or `testdata/` tree.
+- Keep `plans/` separate from `internal_docs/`; mature repos do not make active execution plans look like compiler architecture.
+- Treat baselines as source-controlled contracts only when they are intentional expected outputs. Generated run logs still belong under `target/`.
+- Support area-local case directives or metadata when they make a single fixture self-describing, but the area manifest remains the ownership source of truth.
+- Resource classes, flake policy, retry policy, shard policy, and resume behavior belong in profiles and runner policy, not in one-off scripts.
+- Benchmarks and performance budgets should have their own area and profile policy so normal validation stays deterministic and appropriately fast.
 
 ## Target Top-Level Contract
 
@@ -98,7 +119,7 @@ plans/
   roadmap.md
 
   phases/
-    roadmap.md
+    index.md
     01_language_foundations.md
     02_type_system_power.md
     ...
@@ -122,9 +143,9 @@ internal_docs/
 Rules:
 
 - `plans/roadmap.md` is the high-level execution roadmap.
-- `plans/phases/roadmap.md` indexes phase status.
+- `plans/phases/index.md` indexes phase status.
 - Phase files stay flat under `plans/phases/` so phase numbers remain stable and easy to find.
-- Phase status lives in each phase header and in `plans/phases/roadmap.md`; phases do not need active/completed/archive directories.
+- Phase status lives in each phase header and in `plans/phases/index.md`; phases do not need active/completed/archive directories.
 - Active ad hoc issue plans live in `plans/issues/active/`.
 - Completed ad hoc issue plans move to `plans/issues/completed/`.
 - Superseded, abandoned, or purely historical issue plans move to `plans/issues/archive/`.
@@ -173,12 +194,13 @@ Rules:
 - No local-machine paths such as `/Users/yaseralnajjar/...`.
 - No embedded Obsidian state.
 - No tracked `.DS_Store` or local editor files.
-- Commands target the new `plans/issues/active/`, `plans/phases/`, and `plans/reviews/active/` layout.
+- Commands target the new `plans/issues/active/`, `plans/phases/`, and `plans/reviews/active/` layout only after the planning tree exists.
 - Review skills write to `plans/reviews/active/` by default.
 - Keep `.cursor/skills/talk-to-claude-opus/` as the single Claude/Fable review workflow.
 - Remove the other Claude review skill variants once their useful instructions are folded into `talk-to-claude-opus`.
-- Skill names should describe workflow intent, not a transient model brand, unless the model is itself the workflow contract.
+- Do not introduce additional model-branded review skill variants; `talk-to-claude-opus` remains the existing workflow contract.
 - Remove `.cursor/.rules/`.
+- Move useful `.cursor/plans/` content into `plans/`; delete embedded Obsidian/local state and obsolete workflow notes.
 
 Add a Cursor hygiene guardrail that checks:
 
@@ -195,14 +217,16 @@ Target verification shape:
 ```text
 verification/
   README.md
+  pyproject.toml          # uv-managed verification tooling project
+  uv.lock                 # tracked verification tooling lockfile
   policy/                 # runner/data policy, not human conventions
   schemas/
-    lane.schema.json
+    profile.schema.json
     area.schema.json
     suite.schema.json
     case.schema.json
     result.schema.json
-  lanes/
+  profiles/
     create-pr.json
     merge.json
     nightly.json
@@ -210,7 +234,7 @@ verification/
   runner/
     sifr_verify/
       __main__.py
-      lanes.py
+      profiles.py
       areas.py
       scheduler.py
       results.py
@@ -227,7 +251,6 @@ verification/
     project_workspace/
     regression/
     fuzz_property/
-    determinism/
     generated_code_quality/
     performance/
     developer_tooling/
@@ -242,35 +265,42 @@ verification/
 Rules:
 
 - `verification/README.md` is the single human entrypoint for validation architecture.
-- The verification runner is stdlib-only Python.
-- No `pyproject.toml`, `uv`, or external Python package dependency is required for local validation.
+- Python verification tooling is managed by `uv`.
+- The runner should keep dependencies small and explicit. If verification needs Python packages, they are declared in `verification/pyproject.toml`, locked in `verification/uv.lock`, and invoked through `uv run --project verification`.
+- No ad hoc `pip install`, unmanaged virtualenv, user-site package, or machine-local Python package assumption is allowed.
+- Schemas are a committed data contract, and the runner validates only an explicit supported subset: object shape, required keys, primitive scalar types, arrays of objects or strings, enums, and repo-relative path strings. No `$ref`, `allOf`, `anyOf`, `patternProperties`, or unreviewed schema feature expansion is allowed.
+- The runner must reject any committed schema that uses keywords outside the supported subset. Silent ignoring of unsupported schema features is forbidden.
 - The runner discovers areas by `verification/areas/*/manifest.json`.
-- The top-level verification concepts are only `runner`, `schemas`, `lanes`, `areas`, and `policy`.
+- The top-level verification concepts are only `runner`, `schemas`, `profiles`, `areas`, and `policy`.
 - `areas` answer what is verified and who owns it.
-- `lanes` answer when verification runs and with what resource budget.
+- `profiles` answer when verification runs and with what resource budget. The name deliberately matches the public `--profile` flag of `scripts/run_all_tests.sh`; the flag value resolves directly to `verification/profiles/<name>.json`.
 - `schemas` answer what shape committed verification data must have.
 - `runner` answers how verification is executed.
 - `policy` answers machine-facing operational rules for baselines, artifacts, flakes, retention, and schema governance.
 - Suites are area-local groupings, not a competing top-level taxonomy. A suite may live under `verification/areas/<area>/suites/` or inside the area manifest.
-- Cases are area-owned. A lane may select a subset of an area or suite, but it never owns fixtures directly.
+- Cases are area-owned. A profile may select a subset of an area or suite, but it never owns fixtures directly.
+- A case is the unit of verification: a manifest or suite entry plus the fixture files and expected outputs it references. A fixture is on-disk input material only; fixtures are never executed except as part of a case.
+- A golden fixture is not a separate top-level material kind. It is a case whose purpose is to protect a stable, cross-cutting expected behavior contract. Golden cases live inside their owning area as ordinary cases with `kind: "golden"` or an area-local `golden` suite.
 - Each area owns its fixtures, baselines, runner code, manifests, and area-local data.
 - Each area manifest declares owner, suites, fixtures, baselines, resources, parallel safety, expected outputs, timeout policy, and result contract.
-- Lane files select areas or area-local suites and define execution policy; they do not duplicate fixture lists.
+- Area-local fixture directives are allowed when they make compiler expectations readable next to the source file, but manifests remain the ownership and discovery source of truth.
+- An area `runner.py` implements only the schema-defined adapter interface: discover, execute, and report results for its cases. Scheduling, parallelism, retries, resource classes, and report generation belong exclusively to `sifr_verify`; area adapters may not implement their own framework.
+- Profile files select areas or area-local suites and define execution policy; they do not duplicate fixture lists.
 - Generated reports go to `target/verification_reports/`.
 - Markdown under `verification/` is limited to `README.md`, policy, and runbooks.
 - Gate inputs are JSON, schemas, baselines, or fixtures.
 - Parallelism is explicit per area.
 - Performance-sensitive or shared-state areas must declare `parallel_safe: false`.
-- Sequential/parallel equivalence is a runner self-check, not an ad hoc shell script.
-- Determinism evidence is generated and schema-validated.
+- Sequential/parallel equivalence is a runner self-check, not an ad hoc shell script or permanent verification area.
+- Runner determinism, report-signature checks, and profile equivalence live under `verification/runner/` self-tests and `verification/policy/` data.
 
 Area-local shape:
 
 ```text
 verification/areas/<area>/
-  manifest.json           # owner, suites, resources, lane selectors, result contract
+  manifest.json           # only mandatory area file
   README.md               # short area runbook only when needed
-  runner.py               # optional area adapter called by the stdlib-only runner
+  runner.py               # optional area adapter called by the verification runner
   suites/                 # optional suite manifests for large areas
   fixtures/               # first-party source inputs and minimized cases
   corpora/                # external corpora and submodules owned by this area
@@ -278,31 +308,50 @@ verification/areas/<area>/
   data/                   # machine-readable inventories consumed by this area
 ```
 
-Lane-local shape:
+Area subdirectories are created only on first use. Small areas should not carry empty ceremony.
+
+Golden fixture normalization:
+
+- The word `golden` is allowed because it is established testing vocabulary, but it must describe case intent, not folder ownership outside the area model.
+- A golden case still has one owning area, one manifest entry, declared expected output or baseline references, and normal profile selection.
+- Full expected stdout/stderr/diagnostic snapshots belong in `baselines/`; compact assertions such as expected exit code and required output substrings may live in the case manifest.
+- Current platform golden fixtures move from `verification/platform/golden/` into `verification/areas/runtime_platform/` as a `platform_contract` or `golden` suite.
+- `scripts/run_platform_golden.sh` is deleted after the `runtime_platform` area runner and selected profiles execute the same cases.
+
+Profile-local shape:
 
 ```text
-verification/lanes/<lane>.json
+verification/profiles/<profile>.json
 ```
 
-Lane files may define:
+Profile files may define:
 
 - selected areas or area-local suites
 - warm and cold time budgets
 - resource policy
+- resource classes such as network, large-memory, platform-specific, long-running, or external-corpus
 - shard policy
 - retry and flake policy
+- resume and failure-reproduction policy
 - parallelism limits
 - generated report requirements
 
-Lane files may not define:
+Profile files may not define:
 
 - fixture paths directly
 - expected diagnostic text
 - baselines
-- domain ownership
+- area ownership
 - one-off shell commands
 
+Naming convention:
+
+- Profile names are kebab-case because they are CLI-facing, such as `--profile create-pr`.
+- Area and suite names are snake_case because they are identifier-facing: directories, manifest keys, and Python modules.
+
 Permanent verification areas:
+
+Ownership follows the contract being asserted, not the feature being exercised. A fixture asserting CPython-observable behavior belongs to `stdlib_parity`; a fixture asserting compile-time Sifr semantics belongs to `core_language`; a minimized fixed bug belongs to `regression`; an external project compatibility signal belongs to `ecosystem_compatibility`.
 
 | Area | Owns |
 | --- | --- |
@@ -311,7 +360,6 @@ Permanent verification areas:
 | `project_workspace` | Multi-file project behavior, imports, module graph, workspace resolution, graph isolation, cache identity, and project-mode command semantics. |
 | `regression` | Fixed bugs, minimized crash reproducers, invariant failures, and promoted sentinel cases. |
 | `fuzz_property` | Deterministic property tests, fuzz smoke seeds, sustained fuzz corpus metadata, minimization conventions, and seed provenance. |
-| `determinism` | Deterministic report signatures, sequential/parallel equivalence, sharding behavior, flake/quarantine data, and runner determinism self-checks. |
 | `generated_code_quality` | Emitted Rust quality, rustfmt/clippy/panic scans, generated-code determinism, generated binary-size checks, and codegen quality corpora. |
 | `performance` | Benchmark manifests, budgets, waivers, baselines, performance fixtures, and budget-check runners. |
 | `developer_tooling` | Formatter, linter, LSP, editor assets, editor query snapshots, completion quality, and tooling split-brain checks. |
@@ -324,9 +372,13 @@ Permanent verification areas:
 
 There is no permanent `audits` area. Existing audit material must move into the owning area above or be deleted/archived according to the audit cleanup rules.
 
+`crates/sifr/tests/verification/` is repo-level verification material unless a fixture is truly private to a crate unit test. Repo-level fixtures currently under that path move into the owning `verification/areas/<area>/fixtures/`; Rust test harnesses may remain under `crates/sifr/tests/` but should reference area-owned fixtures. Crate-local unit-test fixtures may remain next to crate tests only when the crate test itself owns the data and no repo-level manifest references it.
+
 ## Scripts Cleanup
 
 `scripts/` becomes repo operations and developer ergonomics only. It must not own verification implementation.
+
+Boundary rule: a check that gates first-party source or repo hygiene and needs no compiled artifact is a guardrail in `scripts/`; a check that executes or inspects compiler behavior, generated output, diagnostics, or binaries is verification and belongs to an area.
 
 Keep in `scripts/`:
 
@@ -348,8 +400,7 @@ Move into `verification/areas/*`:
 - distribution validation cases -> `distribution_release`
 - stdlib namespace and corpus validation -> `stdlib_parity`
 - fuzz and property checks -> `fuzz_property`
-- determinism checks -> `determinism`
-- sequential/parallel equivalence checks -> `determinism`
+- report determinism and sequential/parallel equivalence checks -> `verification/runner/` self-tests and `verification/policy/` data
 
 Rules:
 
@@ -358,9 +409,10 @@ Rules:
 - No compatibility wrapper remains for an old script name after migration.
 - `AGENTS.md`, CI workflows, README, internal docs, and Cursor commands update atomically with script moves.
 - Shell is allowed only for tiny public facades or release scripts where POSIX shell is the artifact under test.
-- Verification scripts moved out of `scripts/` should be rewritten as stdlib-only Python area runners unless the checked artifact is itself POSIX shell.
+- Verification scripts moved out of `scripts/` should be rewritten as Python area runners managed by the verification `uv` project unless the checked artifact is itself POSIX shell.
 - Shell-to-Python rewrites must preserve command semantics, exit-code behavior, timeout behavior, output normalization, and generated report shape.
 - Rewrites must land with side-by-side equivalence evidence before the shell implementation is deleted.
+- `run_all_tests.sh` is a facade, not a second runner. During migration it may dispatch to both legacy and new implementations only when the migration-status table says which path is authoritative. In the end state it must be a thin profile dispatcher over `sifr_verify`.
 
 Script migration classification:
 
@@ -370,6 +422,45 @@ Script migration classification:
 - `verification-runner`: move to `verification/areas/<area>/` and rewrite in Python
 - `verification-case`: move to the owning area as a fixture, manifest row, or area-local helper
 - `obsolete-phase-tool`: delete after proving no active reference remains
+
+Initial script disposition:
+
+Stay in `scripts/` as public facades, repo guardrails, repo maintenance, code generators, or release tooling:
+
+- `scripts/run_all_tests.sh` -> keep as the only public validation facade; end state is a thin profile dispatcher over `sifr_verify`.
+- `scripts/check_file_size_guardrails.py`, `scripts/check_hir_maintainability_guardrails.py`, `scripts/check_sifr_driver_maintainability_guardrails.py`, `scripts/check_source_crate_dependency_direction.py` -> keep as source/repo guardrails.
+- `scripts/check_codegen_rawcode_gate.sh` -> keep as a source guardrail unless it grows generated-output inspection; if it does, move the generated-output portion to `generated_code_quality`.
+- `scripts/check_diagnostic_cancel_usage.py`, `scripts/check_diagnostic_transport_cleanup.py` -> keep as diagnostics source hygiene guardrails.
+- `scripts/check_integer_dtype_contract.py`, `scripts/check_package_manager_guardrails.py` -> keep as source/repo guardrails unless the inventory proves they execute compiler behavior; then move to `core_language` or `package_management`.
+- `scripts/clone_subrepos.sh` -> keep as repository maintenance.
+- `scripts/generate_unicode_tables.py` -> keep as a code generator.
+- `scripts/distribution/build_preview_artifacts.sh`, `scripts/distribution/create_new_version.sh`, `scripts/distribution/generate_dispatchers.sh`, `scripts/distribution/generate_version_installer.sh` -> keep as release tooling.
+
+Move into verification areas or runner-owned policy:
+
+- `scripts/run_e2e_pass.sh` -> `verification/areas/core_language/` as an area suite runner or delete after the `create-pr` profile owns the same cases.
+- `scripts/run_validation_contract_matrix.sh` -> split by contract ownership: `core_language`, `project_workspace`, and `diagnostics`; shared harness pieces belong in `verification/runner/`.
+- `scripts/run_phase23_graph_isolation_matrix.sh` -> `project_workspace`.
+- `scripts/run_phase24_hir_analysis_consolidation_matrix.sh`, `scripts/run_phase25_cfg_flow_activation_matrix.sh` -> `core_language`.
+- `scripts/run_frontend_mode_parity_matrix.sh` -> `developer_tooling` unless inventory proves it is a compiler project/workspace contract.
+- `scripts/run_platform_golden.sh` -> `runtime_platform`.
+- `scripts/run_smoke_fuzz_property.sh` -> `fuzz_property`.
+- `scripts/run_integer_model_closure_perf.py`, `scripts/ci_e2e_throughput.sh`, `scripts/check_codegen_binary_size.sh` -> `performance` with explicit budget/profile policy.
+- `scripts/check_codegen_binary_size.sh` may split generated-artifact assertions into `generated_code_quality` if inventory shows it is testing codegen quality rather than performance budget.
+- `scripts/check_diagnostic_baseline_hygiene.py`, `scripts/check_diagnostic_code_coverage.py`, `scripts/check_diagnostic_docs_sync.py`, `scripts/check_diagnostic_schema_sync.py` -> `diagnostics`.
+- `scripts/run_distribution_validation.sh`, `scripts/distribution/validate_self_update_metadata.sh` -> `distribution_release` if used as validation gates; keep only release-mutating operations in `scripts/distribution/`.
+- `scripts/run_stdlib_namespace_corpus_validation.py`, `scripts/check_phase30_complexity_resource_inventory.py` -> `stdlib_parity`.
+- `scripts/build_full_corpus_failure_taxonomy.py` -> `algorithmic_compatibility` or `ecosystem_compatibility`, depending on whether the taxonomy is for scored algorithm corpora or broader OSS signal.
+- `scripts/generate_concurrency_runtime_inventory.py` -> `stdlib_parity` as an area-local data generator if the output is verification inventory.
+- `scripts/run_verification_hardening.py` and `scripts/run_verification_hardening/` -> split across `regression`, `fuzz_property`, `ecosystem_compatibility`, and runner self-tests; do not keep a generic hardening runner after areas own the suites.
+- `scripts/check_e2e_report_determinism.sh`, `scripts/check_e2e_sequential_parallel_equivalence.sh` -> `verification/runner/` self-tests and `verification/policy/` evidence.
+- `scripts/validation_lane.py`, `scripts/validation_lane_report.py` -> replace with `verification/runner/sifr_verify/profiles.py` and profile report handling; delete old names after PR 7.
+
+Delete or replace after references are removed:
+
+- `scripts/__pycache__/` and `scripts/run_verification_hardening/__pycache__/` -> delete and guard against tracked Python bytecode.
+- `scripts/validate_phase15_backlog.py`, `scripts/phase_contract_gate_check.py` -> delete or replace with current `plans/` guardrails only if the inventory proves they still protect active planning data.
+- `scripts/archive_issues.sh`, `scripts/archive_reviews.sh`, `scripts/archive_reviews_and_issues.sh` -> update for `plans/issues/{active,completed,archive}` and `plans/reviews/{active,archive}` if still needed; otherwise delete in favor of direct `git mv` during planning PRs.
 
 ## Audits Cleanup
 
@@ -389,8 +480,8 @@ Initial disposition:
 | `audits/lexical_and_syntax/*.sifr` | Promote into `verification/areas/core_language/fixtures/syntax/` or delete duplicates once covered by syntax/parser suites. |
 | `audits/type_inference/*.sifr` | Promote into `verification/areas/core_language/fixtures/type_inference/` or delete duplicates once covered by type-system suites. |
 | `audits/type_system/*.sifr` | Promote into `verification/areas/core_language/fixtures/type_system/` or delete duplicates once covered by type-system suites. |
-| `audits/iteration_protocol/*.sifr` | Promote into `verification/areas/core_language/fixtures/iteration/` unless a case is specifically stdlib parity. |
-| `audits/object_model/*.sifr` | Promote into `verification/areas/core_language/fixtures/object_model/` unless a case is specifically stdlib parity. |
+| `audits/iteration_protocol/*.sifr` | Promote according to the asserted contract: compile-time iteration semantics to `core_language`, CPython-observable behavior to `stdlib_parity`, fixed bugs to `regression`. |
+| `audits/object_model/*.sifr` | Promote according to the asserted contract: compile-time object-model semantics to `core_language`, CPython-observable behavior to `stdlib_parity`, fixed bugs to `regression`. |
 | `audits/modules_and_imports/*.sifr` | Promote into `verification/areas/project_workspace/fixtures/imports/`. |
 | `audits/python_basics/*.sifr` | Split by ownership: syntax/type/control-flow cases to `core_language`; stdlib behavior to `stdlib_parity`; redundant smoke examples delete after coverage proof. |
 | `audits/stdlib/*.sifr` | Promote into `verification/areas/stdlib_parity/fixtures/`. |
@@ -424,7 +515,8 @@ Classify every existing file under `verification/` before moving it:
 - `area-fixture`: move under the owning area's fixtures or cases
 - `area-baseline`: move under the owning area's baselines
 - `area-manifest`: convert to the new area manifest schema
-- `lane-policy`: move under `verification/lanes/`
+- `golden-case`: convert to an area-owned case with `kind: "golden"` or an area-local `golden` suite
+- `profile-policy`: move under `verification/profiles/`
 - `global-policy`: move under `verification/policy/`
 - `schema`: move under `verification/schemas/`
 - `generated-report`: delete from active tree and regenerate under `target/`
@@ -434,7 +526,8 @@ Classify every existing file under `verification/` before moving it:
 Rules:
 
 - `verification/` should not contain loose domain files at the root after cleanup.
-- Domain material must live under one area, policy, schema, lane, or runner owner.
+- Verification material must live under one area, policy, schema, profile, or runner owner.
+- No `golden/` directory may remain outside an owning area.
 - Point-in-time markdown inventories must either become generated reports or compact policy docs.
 - JSON inventories are retained only when a gate consumes them or a current design doc references them as canonical data.
 - Any retained markdown in `verification/` must explain a stable policy or runbook, not record a past result.
@@ -481,7 +574,7 @@ Clean up docs in place instead of over-classifying them:
 - remove stale status sections once the current state is described elsewhere
 - rewrite procedural "how to implement" sections into state/contract descriptions, or move them to `plans/`
 - keep verification conventions in `internal_docs/verification/` when they describe human-facing conventions
-- move runner mechanics, schemas, lane data, baseline retention, and generated-artifact policy under `verification/`
+- move runner mechanics, schemas, profile data, baseline retention, and generated-artifact policy under `verification/`
 
 Rules:
 
@@ -492,7 +585,7 @@ Rules:
 - Absolute personal reference paths must become environment-variable based references, repo-relative references, or explicit external-reference notes.
 - Docs that describe planned work but not accepted design belong under `plans/`, not `internal_docs/`.
 - Verification convention docs may live in `internal_docs/verification/` when they describe human-facing conventions.
-- Verification docs that are part of runner mechanics, schema contracts, lane data, baseline retention, or generated-artifact policy belong under `verification/policy/`, `verification/schemas/`, or a verification area.
+- Verification docs that are part of runner mechanics, schema contracts, profile data, baseline retention, or generated-artifact policy belong under `verification/policy/`, `verification/schemas/`, or a verification area.
 
 ## Submodule Policy
 
@@ -511,18 +604,19 @@ Rules:
 - Every submodule has one owning top-level area.
 - Submodule moves update `.gitmodules`, scripts, CI, docs, and manifests in the same PR.
 - A corpus is either a submodule or restored by a clone script, not both.
-- Optional heavy corpora are excluded from default create-pr validation unless explicitly selected by lane policy.
+- Optional heavy corpora are excluded from default create-pr validation unless explicitly selected by profile policy.
 
 ## Cargo Lock Policy
 
-`Cargo.lock` is a load-bearing file for this binary-producing compiler workspace and should be tracked.
+`Cargo.lock` is a load-bearing file for this binary-producing compiler workspace and must begin being tracked.
 
 Cleanup must:
 
 - remove any ignore rule that conflicts with tracking `Cargo.lock`
-- keep `Cargo.lock` in the root tracked set
+- add `Cargo.lock` to the root tracked set
 - document why the compiler workspace tracks the lockfile
 - validate that CI and local builds use the same dependency graph
+- document that lockfile diffs are contributor-visible dependency changes and must be reviewed intentionally
 
 This policy should land as its own PR or isolated commit because it affects every contributor.
 
@@ -545,9 +639,9 @@ The personal-path guardrail must allow intentional example paths in tests when t
 
 ## Proposed PR Sequence
 
-### PR 1: Repository Surface Contract
+### PR 1: Repository Surface And Relevance Inventory
 
-Add the full tracked-entry disposition tables:
+Add the full tracked-entry disposition tables and relevance audit. No moves, rewrites, or deletions in this PR.
 
 - top-level entries
 - `scripts/` entries
@@ -558,23 +652,6 @@ Add the full tracked-entry disposition tables:
 - Cursor workflow files
 - plan, issue, phase, and review artifact locations
 
-No moves in this PR.
-
-Validation:
-
-- `git diff --check`
-- `python3 scripts/check_file_size_guardrails.py`
-
-### PR 1B: Relevance Audit
-
-Produce reviewable keep/move/rewrite/delete tables for stale or outdated material before any deletion-heavy PR:
-
-- `audits/`
-- `verification/`
-- `internal_docs/`
-- `scripts/`
-- `.cursor/`
-
 Each row must include:
 
 - current path
@@ -583,16 +660,18 @@ Each row must include:
 - whether a gate consumes it
 - whether a current doc references it
 - validation required after changing it
+- reference-compiler lesson when one applies
 
 Validation:
 
 - `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
 - no file moves
 - no deletions
 
 ### PR 2: Cargo Lock Policy
 
-Make `Cargo.lock` tracking explicit and fix ignore rules.
+Begin tracking `Cargo.lock` and fix ignore rules.
 
 Validation:
 
@@ -601,7 +680,16 @@ Validation:
 
 ### PR 3: Cursor Portability Cleanup
 
-Remove local-machine assumptions from `.cursor/` and update commands for the planned `plans/` layout.
+Remove local-machine assumptions from `.cursor/` without retargeting commands to paths that do not exist yet.
+
+Scope:
+
+- remove personal absolute paths
+- remove `.cursor/.rules/`
+- remove `.DS_Store`, Obsidian state, and local editor artifacts
+- consolidate Claude/Fable review workflow into `.cursor/skills/talk-to-claude-opus/`
+- remove the other Claude review skill variants after folding in useful instructions
+- disposition `.cursor/plans/` content as move-later inventory or delete-obsolete local state
 
 Validation:
 
@@ -623,7 +711,7 @@ Validation:
 
 ### PR 5: Planning Tree Normalization
 
-Move active, completed, and archived phase and issue docs into the new lifecycle directories.
+Move active, completed, and archived phase and issue docs into the new lifecycle directories. Retarget AGENTS and Cursor commands atomically with the new paths.
 
 Validation:
 
@@ -634,29 +722,36 @@ Validation:
 
 ### PR 6: Verification Runner Foundation
 
-Add the stdlib-only verification runner, schemas, area discovery, and result format.
+Add the `uv`-managed verification runner, schemas, area discovery, and result format.
 
 No existing runner migration yet.
+
+Also add the migration-status table used while old and new verification surfaces temporarily coexist. The table must track area, legacy path, new area path, current authoritative gate, equivalence evidence, and cutover status.
 
 Validation:
 
 - schema self-tests
 - runner discovery self-test
+- `uv` lockfile/check workflow
+- resource class selection self-test
+- resume/failure-reproduction self-test
 - `scripts/run_all_tests.sh --profile create-pr`
 
-### PR 7: Verification Lane Normalization
+### PR 7: Verification Profile Normalization
 
-Split lane configuration into `verification/lanes/*.json` and validate with schemas.
+Split profile configuration into `verification/profiles/*.json` and validate with schemas.
 
 Validation:
 
-- all lanes schema-valid
-- old lane manifest removed
+- all profiles schema-valid
+- old validation manifest removed
 - `scripts/run_all_tests.sh --profile create-pr`
 
 ### PR 8-N: Verification Area Corpus Migration
 
-Migrate one verification domain per PR into `verification/areas/<area>/`.
+Migrate one verification area per PR into `verification/areas/<area>/`.
+
+The migration order intentionally starts with smaller manifest-backed areas before `core_language`, because `core_language` has the largest fixture and snapshot blast radius.
 
 Candidate order:
 
@@ -665,29 +760,41 @@ Candidate order:
 3. `core_language`
 4. `regression`
 5. `fuzz_property`
-6. `determinism`
-7. `generated_code_quality`
-8. `performance`
-9. `developer_tooling`
-10. `runtime_platform`
-11. `distribution_release`
-12. `package_management`
-13. `stdlib_parity`
-14. `algorithmic_compatibility`
-15. `ecosystem_compatibility`
+6. `generated_code_quality`
+7. `performance`
+8. `developer_tooling`
+9. `runtime_platform`
+10. `distribution_release`
+11. `package_management`
+12. `stdlib_parity`
+13. `algorithmic_compatibility`
+14. `ecosystem_compatibility`
 
 Validation for each area migration:
 
 - area manifest schema-valid
 - moved fixtures are owned by exactly one area
-- shell verification helpers rewritten to stdlib-only Python unless shell is the artifact under test
+- crate-local `crates/sifr/tests/verification/` fixtures are moved or explicitly exempted according to the crate-fixture disposition rule
+- shell verification helpers rewritten to Python under the verification `uv` project unless shell is the artifact under test
 - old verification script names deleted, not wrapped
 - runner can execute the area
-- determinism check for affected area
+- compiler-output determinism check for affected area
 - sequential/parallel equivalence where applicable
+- snapshot stability verified after fixture moves, including declaration-order expectations
+- migration-status table updated
 - `scripts/run_all_tests.sh --profile create-pr`
 
-### PR N+1: Submodule Normalization
+### PR N+1: Verification Facade Cutover
+
+Rewrite `scripts/run_all_tests.sh` into a thin public facade over `sifr_verify`.
+
+Validation:
+
+- side-by-side equivalence evidence per profile: checks executed, exit-code behavior, timeout behavior, output normalization, and report shape
+- `scripts/run_all_tests.sh --profile create-pr`
+- `scripts/run_all_tests.sh --profile merge`
+
+### PR N+2: Submodule Normalization
 
 Resolve submodule ownership and move any submodule paths that belong under verification areas.
 
@@ -699,7 +806,7 @@ Validation:
 - affected area runner executes
 - `scripts/run_all_tests.sh --profile create-pr`
 
-### PR N+2: Scripts Verification Migration
+### PR N+3: Scripts Verification Migration
 
 Move remaining verification implementation out of `scripts/` and into verification areas.
 
@@ -712,7 +819,7 @@ Validation:
 - `scripts/run_all_tests.sh --profile create-pr`
 - `scripts/run_all_tests.sh --profile merge`
 
-### PR N+3: Audits Normalization
+### PR N+4: Audits Normalization
 
 Promote retained audit fixtures into verification manifests and remove historical report markdown from the active tree.
 
@@ -723,7 +830,7 @@ Validation:
 - audit area executes through the runner
 - `scripts/run_all_tests.sh --profile create-pr`
 
-### PR N+4: Internal Docs Relevance Cleanup
+### PR N+5: Internal Docs Relevance Cleanup
 
 Move, consolidate, or delete outdated internal docs according to the relevance audit.
 
@@ -735,7 +842,7 @@ Validation:
 - no active internal doc contains long validation transcript ledgers
 - `git diff --check`
 
-### PR N+5: Docs And Guardrails Closeout
+### PR N+6: Docs And Guardrails Closeout
 
 Update public docs, internal docs, AGENTS, Cursor commands, and CI docs to reflect the final structure.
 
@@ -761,10 +868,10 @@ Validation:
 - No active verification implementation remains in `scripts/`.
 - Every verification area has a schema-valid manifest.
 - Every retained fixture has exactly one owning area manifest.
-- Lane files reference areas instead of duplicating fixture ownership.
+- Profile files reference areas instead of duplicating fixture ownership.
 - No committed validation result logs exist outside explicit baselines.
 - Markdown under `verification/` is limited to README, policy, and runbooks.
-- CI and local validation use the same runner and lane files.
+- CI and local validation use the same runner and profile files.
 - Migration PRs prove determinism and sequential/parallel equivalence where applicable.
 - Final closeout passes local merge validation.
 
@@ -773,17 +880,23 @@ Validation:
 - Moving fixtures can reorder e2e discovery or invalidate snapshots.
 - Removing review transcripts can break historical issue references unless summaries replace them.
 - Moving submodules requires atomic `.gitmodules`, script, CI, docs, and manifest updates.
-- A Python runner can drift if it gains external dependencies; keep it stdlib-only.
+- A Python runner can drift if dependencies grow casually; require every dependency to be declared, locked, reviewed, and justified by verification value.
 - Parallel scheduling can hide resource contention unless every area declares resource policy.
 - Historical docs may contain the only explanation for a design decision; archive by value, not by age.
 
 ## Review Notes
 
-This plan was reviewed with the Fable high model before being written. The main findings incorporated here were:
+This plan was reviewed with the Fable high model. The main findings incorporated here were:
 
 - the top-level contract must include load-bearing entries such as `lib/`, `.github/`, `sifr.toml`, and `logo.webp`
 - corpus migration and submodule migration must be explicit PRs, not risks hidden inside script movement
 - the personal-path guardrail must distinguish workflow/code leaks from intentional test fixture paths
 - `Cargo.lock` tracking deserves its own policy step
-- the runner should commit to stdlib-only Python
+- Python verification tooling should be managed by `uv`, with dependencies declared and locked when needed
 - `internal_docs/verification/` should move to `verification/policy/` instead of remaining as a temporary half-state
+- `run_all_tests.sh` needs an explicit facade-cutover PR with profile-by-profile equivalence evidence
+- `crates/sifr/tests/verification/` must be dispositioned as area-owned repo verification or crate-local unit fixture data
+- schema validation must be an explicit supported subset, not an implied full JSON Schema implementation
+- runner determinism and sequential/parallel equivalence belong to runner self-tests and policy data, not a permanent verification area
+- the phase should borrow reference compiler invariants from TypeScript, typescript-go, Rust, Bun, and CPython: first-class baselines, mode-specific suites, resource-aware runners, distinct benchmark policy, and current-state internal docs
+- verification execution selectors should be called `profiles`, not `lanes`, because the public facade already uses `--profile` and `lane` has a separate compiler/SIMD meaning
