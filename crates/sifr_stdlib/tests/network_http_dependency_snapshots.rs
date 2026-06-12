@@ -5,6 +5,63 @@ use std::collections::HashSet;
 const SNAPSHOT_JSON: &str =
     include_str!("../../../verification/stdlib/network_http_dependency_snapshots.json");
 
+fn normalize_runtime_path(dependency: String) -> String {
+    if dependency.starts_with("sifr_runtime = ") {
+        if dependency.contains("features = [\"net\", \"tls\", \"http\"]") {
+            return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\", \"http\"] }"
+                .to_string();
+        }
+        if dependency.contains("features = [\"net\", \"tls\"]") {
+            return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\"] }"
+                .to_string();
+        }
+        if dependency.contains("features = [\"net\"]") {
+            return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\"] }"
+                .to_string();
+        }
+        return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
+    }
+    dependency
+}
+
+fn normalized_generated_dependencies(
+    modules: &[&str],
+    extra_features: &[StdlibFeature],
+) -> Vec<String> {
+    generated_cargo_dependencies(
+        &modules.iter().map(|module| (*module).to_string()).collect(),
+        &extra_features.iter().copied().collect(),
+    )
+    .into_iter()
+    .map(normalize_runtime_path)
+    .collect()
+}
+
+fn snapshot_field_strings(payload: &Value, snapshot_id: &str, field: &str) -> Vec<String> {
+    payload
+        .get("production_snapshots")
+        .and_then(Value::as_array)
+        .expect("production snapshots must be an array")
+        .iter()
+        .find(|snapshot| snapshot.get("id").and_then(Value::as_str) == Some(snapshot_id))
+        .unwrap_or_else(|| panic!("missing production snapshot {snapshot_id}"))
+        .get(field)
+        .and_then(Value::as_array)
+        .unwrap_or_else(|| panic!("{field} must be an array"))
+        .iter()
+        .map(|value| {
+            value
+                .as_str()
+                .unwrap_or_else(|| panic!("{field} entries must be strings"))
+                .to_string()
+        })
+        .collect()
+}
+
+fn snapshot_dependencies(payload: &Value, snapshot_id: &str) -> Vec<String> {
+    snapshot_field_strings(payload, snapshot_id, "production_dependencies")
+}
+
 #[test]
 fn network_http_m0_dependency_snapshots_exclude_ring5_from_production() {
     let payload: Value =
@@ -57,6 +114,125 @@ fn network_http_m0_dependency_snapshots_exclude_ring5_from_production() {
     sorted_ids.sort();
     sorted_ids.dedup();
     assert_eq!(ids.len(), sorted_ids.len(), "snapshot ids must be unique");
+}
+
+#[test]
+fn network_http_snapshot_json_matches_generated_dependency_output() {
+    let payload: Value =
+        serde_json::from_str(SNAPSHOT_JSON).expect("network HTTP dependency snapshot must parse");
+    assert_eq!(
+        payload.get("status").and_then(Value::as_str),
+        Some("closed-audited")
+    );
+
+    assert_eq!(
+        snapshot_dependencies(&payload, "network-runtime-core"),
+        normalized_generated_dependencies(&["sifr.net"], &[])
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "network-runtime-core", "required_features"),
+        vec![
+            "tokio/macros",
+            "tokio/rt",
+            "tokio/sync",
+            "tokio/time",
+            "tokio/net",
+            "tokio/io-util",
+            "tokio/process",
+            "tokio/signal",
+            "sifr_runtime/net",
+            "tracing/std",
+        ]
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "network-runtime-core", "must_not_include"),
+        vec!["tokio-test", "proptest", "rcgen", "tracing-subscriber"]
+    );
+
+    assert_eq!(
+        snapshot_dependencies(&payload, "tls-runtime"),
+        normalized_generated_dependencies(&["sifr.tls"], &[])
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "tls-runtime", "required_features"),
+        vec![
+            "rustls/aws_lc_rs",
+            "tokio-rustls/aws_lc_rs",
+            "rustls-platform-verifier",
+            "rustls-pemfile",
+            "sifr_runtime/net,tls",
+            "tokio/net",
+            "tracing/std",
+        ]
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "tls-runtime", "must_not_include"),
+        vec!["rcgen", "webpki-roots", "x509-parser", "tracing-subscriber"]
+    );
+
+    assert_eq!(
+        snapshot_dependencies(&payload, "url-header-cookie"),
+        normalized_generated_dependencies(&["sifr.url", "sifr.http"], &[])
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "url-header-cookie", "required_features"),
+        vec![
+            "url/std",
+            "percent-encoding/std",
+            "http/std",
+            "sifr-owned-cookie-header-validation",
+        ]
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "url-header-cookie", "must_not_include"),
+        vec!["proptest", "serde", "x509-parser"]
+    );
+
+    assert_eq!(
+        snapshot_dependencies(&payload, "http-transport"),
+        normalized_generated_dependencies(
+            &["sifr.http"],
+            &[
+                StdlibFeature::SifrRuntime,
+                StdlibFeature::Tokio,
+                StdlibFeature::TokioRustls,
+                StdlibFeature::Rustls,
+                StdlibFeature::RustlsPemfile,
+                StdlibFeature::RustlsPlatformVerifier,
+                StdlibFeature::Tracing,
+                StdlibFeature::Bytes,
+                StdlibFeature::Http,
+                StdlibFeature::HttpBody,
+                StdlibFeature::HttpBodyUtil,
+                StdlibFeature::Hyper,
+                StdlibFeature::HyperUtil,
+                StdlibFeature::H2,
+                StdlibFeature::TowerService,
+            ],
+        )
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "http-transport", "required_features"),
+        vec![
+            "hyper/http1",
+            "hyper/http2",
+            "hyper/client",
+            "hyper/server",
+            "http-body",
+            "tower-service",
+        ]
+    );
+    assert_eq!(
+        snapshot_field_strings(&payload, "http-transport", "must_not_include"),
+        vec![
+            "tokio-test",
+            "proptest",
+            "tracing-subscriber",
+            "tower",
+            "tower-http",
+            "reqwest",
+        ]
+    );
 }
 
 #[test]

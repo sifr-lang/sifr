@@ -45,10 +45,10 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | TCP half-close | `shutdown_write()` is accepted; it preserves the read side, returns deterministic repeated-shutdown evidence, and write-after-shutdown is a typed error. | Required for request-end signaling and protocol-correct loopback tests. |
 | DNS | `tokio::net::lookup_host` is accepted; custom resolver records and Happy Eyeballs are deferred. | Respects host resolver configuration without adding resolver product policy. |
 | UDP | Deferred because no named near-term production consumer was recorded that needs datagrams and cannot use TCP/TLS/HTTP loopback fixtures. | Avoids a partial public datagram API. |
-| TLS close | `TlsStream.close()` and `TlsWriteHalf.close()` consume their handle, first attempt `close_notify()` if it has not already completed, flush accepted plaintext and close alert before success, then release the underlying TCP resource. Cancellation returns `TlsError::Cancelled { during: "close", progress }`; failure preserves `TlsError::Shutdown` or nested `TlsError::Transport(NetError)` evidence. `TlsReadHalf.close()` consumes only the read half and stops local reads without sending TLS alerts. | Rustls buffering requires explicit flush/shutdown evidence; write-side close remains `close_notify()`, while `close()` is resource release. |
+| TLS close | `TlsStream.close()` and `TlsWriteHalf.close()` consume their handle, first attempt `close_notify()` if it has not already completed, flush accepted plaintext and close alert before success, then release the underlying TCP resource. Cancellation, shutdown, or lower transport failure returns `TlsError` with deterministic close/progress evidence. `TlsReadHalf.close()` consumes only the read half and stops local reads without sending TLS alerts. | Rustls buffering requires explicit flush/shutdown evidence; write-side close remains `close_notify()`, while `close()` is resource release. |
 | HTTP substrate namespace | Stable protocol primitives live under `sifr.http`; `sifr.http.core` is rejected as an extra stable namespace layer. | Phase 41 and HTTP client handoff should consume one canonical substrate. |
 | HTTP body stream | Body chunks are built-in `bytes`; EOF is `None`; trailers are accepted as explicit `Trailers(HeaderMap)`; default yielded chunk limit is 64 KiB; `collect_with_limit(max_bytes)` is accepted and unbounded `collect()` is rejected. | Prevents unbounded buffering and duplicated body types. |
-| HTTP/2 priority/extensions | Priority is ignored/deferred for public semantics in v1; accepted `h2` behavior may parse/forward internally but Sifr exposes no priority API. Unknown extension frames are ignored only after frame-size/accounting checks and otherwise map to `ProtocolError::UnsupportedExtensionFrame`; no panic or resource-limit bypass. | Keeps HTTP/2 behavior crate-backed and resource-bounded. |
+| HTTP/2 priority/extensions | Priority is ignored/deferred for public semantics in v1; accepted `h2` behavior may parse/forward internally but Sifr exposes no priority API. Unknown extension frames are ignored only after frame-size/accounting checks and otherwise map to `ProtocolError` with unsupported-extension-frame evidence; no panic or resource-limit bypass. | Keeps HTTP/2 behavior crate-backed and resource-bounded. |
 | `SO_REUSEPORT` | Deferred from public API entirely until `ad-hoc-network-http-serving-scale-follow-up` closes. `listen_tcp(..., reuse_addr=True)` never implies `SO_REUSEPORT`; no separate reuse-port constructor ships in M1. | Serving scale belongs to the follow-up, not the substrate. |
 | serving scale | Network/HTTP v1 is single-runtime-worker per process. Multi-core serving throughput is owned by `ad-hoc-network-http-serving-scale-follow-up`. | Prevents Phase 41 from overclaiming throughput readiness. |
 
@@ -66,7 +66,7 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | percent encoding | `percent-encoding` 2.3.2 | accepted | Named encodings call text/i18n when unblocked. |
 | TLS | `rustls`, `tokio-rustls`, `rustls-platform-verifier`, `rustls-pemfile` | accepted | Public config/errors hide crate types. |
 | HTTP | `http`, `http-body`, `http-body-util`, `hyper`, `h2`, `tower-service` | accepted/conditional | Public HTTP types are Sifr-owned; Tower/Hyper types do not leak. |
-| cookie header | `cookie` 0.18.1 without jar/signing features | accepted | Header-level parse/build only. |
+| cookie header | Sifr-owned parser; no external cookie crate | accepted | Header-level parse/build only. |
 | Ring 5 fixtures | `tokio-test`, `proptest`, `rcgen`, `tracing-subscriber` | test-only-harness | Must be absent from production dependency snapshots. |
 
 ## HTTP Type Table
@@ -76,7 +76,7 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | `Method` | production-substrate | stable-production-substrate | Backed by `http::Method`; validates registered token methods plus extension tokens; invalid bytes return `ProtocolError`. |
 | `Status` | production-substrate | stable-production-substrate | Backed by `http::StatusCode`; only 100-999 accepted, unknown numeric codes preserved without reason-phrase policy. |
 | `Version` | production-substrate | stable-production-substrate | Supports HTTP/1.0, HTTP/1.1, HTTP/2; HTTP/3 deferred. |
-| `HeaderName` | production-substrate | stable-production-substrate | Lowercase canonical HTTP token; ASCII only; invalid token returns `HeaderError::InvalidName`. |
+| `HeaderName` | production-substrate | stable-production-substrate | Lowercase canonical HTTP token; ASCII only; invalid token returns `HeaderError` with invalid-name evidence. |
 | `HeaderValue` | production-substrate | stable-production-substrate | Byte/ASCII-safe value; obs-fold rejected; arbitrary text decoding blocked on text/i18n M1. |
 | `HeaderMap` | production-substrate | stable-production-substrate | Preserves duplicate order; singleton semantic checks are owned by transport validation. |
 | `RequestHead` | production-substrate | stable-production-substrate | Method, URL/authority target metadata, version, headers; no body ownership. |
@@ -84,18 +84,18 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | `BodyStream` | production-substrate | stable-production-substrate | Async stream of built-in `bytes` chunks with typed EOF/cancellation/reset evidence. |
 | `BodyChunk` | production-substrate | compiler-known-intrinsic | Built-in `bytes` type; helper API under `sifr.bytes`. |
 | `Trailers` | production-substrate | stable-production-substrate | Accepted for HTTP/2 and HTTP/1.1 chunked bodies as `HeaderMap` after EOF; disabled by default for collected bodies unless explicitly requested. |
-| `HttpError`, `ProtocolError`, `HeaderError`, `BodyError` | production-substrate | stable-production-substrate | Typed errors with nested `NetError`, `TlsError`, and provider cancellation/timeout evidence. |
+| `HttpError`, `ProtocolError`, `HeaderError`, `BodyError` | production-substrate | stable-production-substrate | Flat typed error classes with deterministic lower-layer, cancellation, timeout, and size evidence messages. |
 
 ## Header And Request-Smuggling Rules
 
 | Rule | M0 decision |
 | --- | --- |
-| Header name syntax | ASCII `tchar` token only; uppercase is accepted at parse boundary and canonicalized to lowercase; non-token bytes return `HeaderError::InvalidName`. |
-| obs-fold | Always rejected with `HeaderError::ObsFold`; no line unfolding compatibility. |
+| Header name syntax | ASCII `tchar` token only; uppercase is accepted at parse boundary and canonicalized to lowercase; non-token bytes return `HeaderError` with invalid-name evidence. |
+| obs-fold | Always rejected with `HeaderError` carrying obs-fold evidence; no line unfolding compatibility. |
 | Whitespace | Trim optional whitespace around field values at parse boundary only; preserve interior bytes; reject control bytes except HTAB where HTTP allows it. |
 | Duplicate headers | Preserve insertion order. `Set-Cookie` always remains multi-valued. Singleton transport headers (`Content-Length`, `Host`, `Transfer-Encoding`) receive explicit validation in M4. |
-| `Content-Length` disagreement | Multiple identical values accepted as one value; conflicting values return `ProtocolError::ConflictingContentLength`. Body shorter/longer than accepted length returns `BodyError::LengthMismatch`. |
-| `Content-Length` plus `Transfer-Encoding: chunked` | Rejected for requests and responses with `ProtocolError::AmbiguousBodyLength`; no request-smuggling fallback. |
+| `Content-Length` disagreement | Multiple identical values accepted as one value; conflicting values return `ProtocolError` with conflicting-content-length evidence. Body shorter/longer than accepted length returns `BodyError` with length-mismatch evidence. |
+| `Content-Length` plus `Transfer-Encoding: chunked` | Rejected for requests and responses with `ProtocolError` carrying ambiguous-body-length evidence; no request-smuggling fallback. |
 | Header total limit | Default 64 KiB decoded header section; configurable lower or higher with hard maximum 1 MiB. |
 
 ## HTTP Body Stream Contract
@@ -104,13 +104,13 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | --- | --- |
 | Chunk type | Built-in `bytes`. |
 | EOF behavior | `None` from `read_chunk` means clean EOF. Trailers, when accepted, are retrieved through an explicit `trailers()` result after EOF. |
-| Trailers | Accepted as `Trailers(HeaderMap)` for protocol substrate; unsupported trailer usage returns `BodyError::TrailersUnsupported` when a caller disabled trailers. |
+| Trailers | Accepted as `Trailers(HeaderMap)` for protocol substrate; unsupported trailer usage returns `BodyError` with trailers-unsupported evidence when a caller disabled trailers. |
 | Max chunk size | Default 64 KiB per yielded chunk; hard maximum 1 MiB unless a future phase records a larger use case. |
 | Max collected body size | Default 16 MiB for `collect_with_limit`; caller must pass an explicit lower/higher limit and cannot exceed hard maximum 128 MiB without a future phase amendment. |
 | Collect helper | `collect_with_limit(max_bytes)` accepted; unbounded `collect()` rejected. |
-| Cancellation while reading | Returns `BodyError::Cancelled { direction: "read", bytes_observed }` and propagates provider cancellation evidence. |
-| Cancellation while writing | Returns `BodyError::Cancelled { direction: "write", bytes_accepted }`; peer may have received a prefix. |
-| HTTP/2 reset mapping | `RST_STREAM` maps to `ProtocolError::StreamReset { code, bytes_observed }` nested in `HttpError`. |
+| Cancellation while reading | Returns `BodyError` with read-cancellation and `bytes_observed` evidence and propagates provider cancellation evidence. |
+| Cancellation while writing | Returns `BodyError` with write-cancellation and `bytes_accepted` evidence; peer may have received a prefix. |
+| HTTP/2 reset mapping | `RST_STREAM` maps to `ProtocolError`/`HttpError` with stream-reset code and byte-observation evidence. |
 | Partial progress | Every cancellation, reset, timeout, and write failure carries byte-count evidence when the layer can know it. |
 
 ## HTTP/2 Limits And Protocol Mapping
@@ -121,24 +121,24 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | Initial flow-control window | Use `h2` default initial window unless configured; Sifr body buffering caps still apply. |
 | Max frame size | Accept peer frame size up to RFC maximum 16,777,215 bytes but enforce body/header buffering caps before allocation. |
 | Max buffered body per stream | 1 MiB buffered at a time by default; larger bodies must stream through backpressure. |
-| PING handling | Reply to valid PING through `h2`; more than 8 unanswered or rate-limit-exceeding PINGs map to `ProtocolError::PingFlood`. |
-| RST_STREAM | Maps to `ProtocolError::StreamReset { code, bytes_observed }` and cancels only the affected body stream. |
-| GOAWAY | Drains streams with IDs at or below the last accepted ID, rejects new streams, and returns `HttpError::ConnectionClosing` for new dispatch. |
-| Malformed frames | Map to `ProtocolError::MalformedFrame { kind }`; no panic and no fallback parser. |
+| PING handling | Reply to valid PING through `h2`; more than 8 unanswered or rate-limit-exceeding PINGs map to `ProtocolError` with ping-flood evidence. |
+| RST_STREAM | Maps to `ProtocolError` with stream-reset code and byte-observation evidence and cancels only the affected body stream. |
+| GOAWAY | Drains streams with IDs at or below the last accepted ID, rejects new streams, and returns `HttpError` with connection-closing evidence for new dispatch. |
+| Malformed frames | Map to `ProtocolError` with malformed-frame kind evidence; no panic and no fallback parser. |
 | HPACK | Uses `h2` HPACK with header-list size capped by the header total limit. |
 
 ## Size Limits
 
 | Input | Default limit | Hard limit | Error |
 | --- | --- | --- | --- |
-| URL string | 8 KiB | 64 KiB | `UrlError::TooLarge` |
-| Query string | 8 KiB | 64 KiB | `UrlError::TooLarge` |
-| Header name | 128 bytes | 1024 bytes | `HeaderError::TooLarge` |
-| Header value | 8 KiB | 64 KiB | `HeaderError::TooLarge` |
-| Header section total | 64 KiB | 1 MiB | `HeaderError::TooLarge` |
-| Body chunk yielded | 64 KiB | 1 MiB | `BodyError::TooLarge` |
-| Collected body | 16 MiB | 128 MiB | `TooLargeError` nested in `BodyError` |
-| TLS record/application write buffer | implementation default | bounded by stream write input length and body chunk hard limit | `TlsError::TooLarge` or `BodyError::TooLarge` |
+| URL string | 8 KiB | 64 KiB | `UrlError` with size-limit evidence |
+| Query string | 8 KiB | 64 KiB | `UrlError` with size-limit evidence |
+| Header name | 128 bytes | 1024 bytes | `HeaderError` with size-limit evidence |
+| Header value | 8 KiB | 64 KiB | `HeaderError` with size-limit evidence |
+| Header section total | 64 KiB | 1 MiB | `HeaderError` with size-limit evidence |
+| Body chunk yielded | 64 KiB | 1 MiB | `BodyError` with size-limit evidence |
+| Collected body | 16 MiB | 128 MiB | `BodyError` with size-limit evidence |
+| TLS record/application write buffer | implementation default | bounded by stream write input length and body chunk hard limit | `TlsError` or `BodyError` with size-limit evidence |
 
 ## URL Authority And Redaction Rules
 
@@ -146,9 +146,9 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | --- | --- |
 | Userinfo | Parsed and preserved only as typed URL component; never emitted in display/log output except as `***@`; password material always redacted. |
 | Host validation | ASCII domain labels, IPv4, IPv6 literals, and already-punycode `xn--` labels accepted. Empty host rejected for schemes requiring authority. Non-ASCII host blocked until text/i18n M2 sign-off. |
-| Port validation | Decimal 0-65535 only; empty or non-decimal port returns `UrlError::InvalidPort`; default-port normalization is display-only and does not mutate stored URL. |
+| Port validation | Decimal 0-65535 only; empty or non-decimal port returns `UrlError` with invalid-port evidence; default-port normalization is display-only and does not mutate stored URL. |
 | Path normalization | Dot-segment normalization helper is explicit; parsing does not silently normalize path semantics. Percent-encoded slash/backslash remains encoded unless caller explicitly decodes bytes. |
-| Percent-decoding | Percent helpers return bytes by default. Text conversion uses UTF-8 only where explicitly named; other encodings blocked on text/i18n M1. Invalid percent triplets return `UrlError::InvalidPercentEncoding`. |
+| Percent-decoding | Percent helpers return bytes by default. Text conversion uses UTF-8 only where explicitly named; other encodings blocked on text/i18n M1. Invalid percent triplets return `UrlError` with invalid-percent evidence. |
 | Sensitive query values | Keys matching `token`, `secret`, `password`, `key`, `signature`, `auth`, or user-configured sensitive keys are redacted in observability output. |
 | Header redaction | `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, and configured sensitive headers are redacted by default. |
 | Body redaction | Bodies are never logged by default. Size-limited previews require explicit opt-in and text previews remain blocked on text/i18n M1. |
@@ -181,15 +181,18 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 
 ## Error Taxonomy
 
-| Error | Owner | Required nesting |
+Post-closure Fable High amendment, 2026-06-12: the closed implementation exposes flat Sifr error classes with deterministic evidence messages. The unimplemented variant/nested names from earlier planning (`DnsError`, `ConnectError`, `TimeoutError`, `CancelledError`, `TooLargeError`, `NetError::Dns`, `HttpError::Tls`, and similar variant paths) are not shipped API.
+
+| Error class | Owner | Evidence carried |
 | --- | --- | --- |
-| `NetError` | M1 | wraps OS/socket timeout/cancel/connect/reset/closed evidence. |
-| `DnsError` | M1 | nests in `NetError::Dns`. |
-| `TimeoutError`, `CancelledError` | provider + M1-M4 | provider evidence preserved at network/TLS/HTTP layer. |
-| `TlsError`, `CertificateError` | M2 | `TlsError::Transport(NetError)` and certificate verification evidence. |
-| `UrlError` | M3 | validation, parse, blocked-provider, and size-limit evidence. |
-| `HeaderError`, `BodyError`, `ProtocolError`, `HttpError` | M3/M4 | `HttpError::Tls(TlsError)`, `HttpError::Transport(NetError)`, and body/protocol limit evidence. |
-| `TooLargeError` | M3/M4 | parser/body size-cap evidence. |
+| `NetError` | M1 | DNS, connect, timeout, reset, closed-handle, listener, stream, and socket-option evidence as stable messages. |
+| `TlsError` | M2 | TLS config, handshake, read/write/flush, close-notify, transport, timeout, and closed-handle evidence as stable messages. |
+| `CertificateError` | M2 | certificate/root/private-key parse and verification setup evidence as stable messages. |
+| `UrlError` | M3 | URL, authority, port, query, percent, provider-blocked, and size-limit evidence as stable messages. |
+| `HeaderError` | M3 | header name/value, header-list, and cookie-header validation evidence as stable messages. |
+| `ProtocolError` | M4 | HTTP method/status/version and protocol validation evidence as stable messages. |
+| `BodyError` | M4 | body chunk/collection size and body stream evidence as stable messages. |
+| `HttpError` | M4 | HTTP transport, TLS, protocol, body, timeout, and server/client lifecycle evidence as stable messages. |
 
 ## Implementation Backlog
 

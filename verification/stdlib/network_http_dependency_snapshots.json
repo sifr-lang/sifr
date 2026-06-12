@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "status": "m4-implemented",
-  "source": "milestone_network_http_0_dependency_decision_record",
+  "status": "closed-audited",
+  "source": "generated_cargo_dependencies output validated by crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs",
   "ring5_dev_test_demo_crates": [
     "tokio-test",
     "proptest",
@@ -21,12 +21,14 @@
         "tokio/time",
         "tokio/net",
         "tokio/io-util",
-        "bytes",
+        "tokio/process",
+        "tokio/signal",
+        "sifr_runtime/net",
         "tracing/std"
       ],
       "production_dependencies": [
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"rt\", \"sync\", \"time\"] }",
-        "bytes = \"1.11.1\"",
+        "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\"] }",
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
         "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
       ],
       "must_not_include": [
@@ -45,13 +47,19 @@
         "rustls/aws_lc_rs",
         "tokio-rustls/aws_lc_rs",
         "rustls-platform-verifier",
-        "rustls-pemfile"
+        "rustls-pemfile",
+        "sifr_runtime/net,tls",
+        "tokio/net",
+        "tracing/std"
       ],
       "production_dependencies": [
-        "rustls = \"=0.23.35\"",
+        "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\"] }",
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
         "tokio-rustls = \"0.26.4\"",
+        "rustls = \"=0.23.35\"",
+        "rustls-pemfile = \"2.2.0\"",
         "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
-        "rustls-pemfile = \"2.2.0\""
+        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
       ],
       "must_not_include": [
         "rcgen",
@@ -72,9 +80,9 @@
         "sifr-owned-cookie-header-validation"
       ],
       "production_dependencies": [
+        "http = \"1.4.1\"",
         "url = \"2.5.8\"",
-        "percent-encoding = \"2.3.2\"",
-        "http = \"1.4.1\""
+        "percent-encoding = \"2.3.2\""
       ],
       "must_not_include": [
         "proptest",
@@ -96,20 +104,21 @@
         "tower-service"
       ],
       "production_dependencies": [
+        "http = \"1.4.1\"",
         "bytes = \"1.11.1\"",
         "h2 = \"0.4.14\"",
-        "http = \"1.4.1\"",
-        "hyper = { version = \"1.10.1\", default-features = false, features = [\"client\", \"http1\", \"http2\", \"server\"] }",
-        "hyper-util = { version = \"0.1.20\", default-features = false, features = [\"tokio\"] }",
         "http-body = \"1.0.1\"",
         "http-body-util = { version = \"0.1.3\", default-features = false }",
+        "hyper = { version = \"1.10.1\", default-features = false, features = [\"client\", \"http1\", \"http2\", \"server\"] }",
+        "hyper-util = { version = \"0.1.20\", default-features = false, features = [\"tokio\"] }",
         "rustls = \"=0.23.35\"",
         "rustls-pemfile = \"2.2.0\"",
         "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
         "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\", \"http\"] }",
         "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
         "tokio-rustls = \"0.26.4\"",
-        "tower-service = \"0.3.3\""
+        "tower-service = \"0.3.3\"",
+        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
       ],
       "must_not_include": [
         "tokio-test",

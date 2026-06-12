@@ -110,12 +110,12 @@
     },
     {
       "decision": "http2_priority_extensions",
-      "outcome": "priority has no public API in v1; unknown extension frames are ignored only after frame accounting or map to ProtocolError::UnsupportedExtensionFrame",
+      "outcome": "priority has no public API in v1; unknown extension frames are ignored only after frame accounting or map to ProtocolError with unsupported-extension-frame evidence",
       "evidence": "HTTP/2 conformance inventory owns exact fixture selection."
     },
     {
       "decision": "tls_close",
-      "outcome": "TlsStream.close and TlsWriteHalf.close consume their handle, attempt close_notify first, flush accepted plaintext/alert before success, preserve cancellation progress and nested NetError evidence on failure",
+      "outcome": "TlsStream.close and TlsWriteHalf.close consume their handle, attempt close_notify first, flush accepted plaintext/alert before success, and preserve cancellation or lower-transport evidence on failure",
       "evidence": "verification/stdlib/network_http_substrate_inventory.md TLS close row"
     },
     {

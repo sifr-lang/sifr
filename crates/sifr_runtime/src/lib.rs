@@ -10,6 +10,8 @@ mod int;
 pub mod json;
 #[cfg(feature = "net")]
 pub mod net;
+#[cfg(any(feature = "net", feature = "tls", feature = "http", test))]
+mod timeouts;
 #[cfg(feature = "tls")]
 pub mod tls;
 #[cfg(feature = "unicode")]

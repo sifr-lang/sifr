@@ -42,6 +42,8 @@ The replacement boundary is explicit:
 
 Network operations consume the concurrency/runtime provider for task cancellation, deadlines, backpressure, blocking-work diagnostics, shutdown, and runtime diagnostics. The network substrate does not define its own cancellation token, shutdown coordinator, executor, queue, process worker, or diagnostics bus.
 
+The current server transport handoff is production-correct for one runtime worker per Sifr process. Multi-core serving throughput, `SO_REUSEPORT`, process-worker supervision, and any future multi-thread runtime topology are deferred to `issues/ad-hoc-network-http-serving-scale-follow-up.md`; Phase 41 must not claim those scale properties until that follow-up closes.
+
 Text-heavy behavior remains provider-gated:
 
 | Surface | State |

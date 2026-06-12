@@ -18,6 +18,14 @@ async def main() -> None:
     bad_lookup = await resolve_host("localhost:80", timeout=0.0)
     assert "network timeout must be finite and positive" in str(bad_lookup)
 
+    huge_timeout_connect: Result[TcpStream, NetError] = await connect_tcp(
+        "127.0.0.1:1", timeout=1e20
+    )
+    assert "network timeout is too large" in str(huge_timeout_connect)
+
+    huge_timeout_lookup = await resolve_host("localhost:80", timeout=1e20)
+    assert "network timeout is too large" in str(huge_timeout_lookup)
+
     bad_backlog: Result[TcpListener, NetError] = await listen_tcp(
         "127.0.0.1:0", backlog=0
     )
