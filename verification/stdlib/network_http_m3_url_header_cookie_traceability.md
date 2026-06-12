@@ -1,6 +1,6 @@
 # Network HTTP M3 Traceability: URL, Header, And Cookie Primitives
 
-Status: implementation candidate merge-validated.
+Status: merged in PR #2497 at `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`.
 
 | Work item | M0 decision | Acceptance evidence |
 | --- | --- | --- |

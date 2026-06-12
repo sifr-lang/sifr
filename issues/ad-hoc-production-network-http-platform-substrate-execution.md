@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0, M1, and M2 merged; M3 URL, Header, And Cookie Primitives PR is merge-validated
+Status: in progress; M0, M1, M2, and M3 merged; M4 HTTP Core Transport in progress
 
 ## Scope Split
 
@@ -21,7 +21,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] `milestone_network_http_0`: Product Boundary And Architecture
 - [x] `milestone_network_http_1`: Async Network Runtime
 - [x] `milestone_network_http_2`: TLS Runtime
-- [ ] `milestone_network_http_3`: URL, Header, And Cookie Primitives
+- [x] `milestone_network_http_3`: URL, Header, And Cookie Primitives
 - [ ] `milestone_network_http_4`: HTTP Core Transport
 - [ ] `milestone_network_http_5`: Integration, Documentation, And Production Handoff
 
@@ -180,6 +180,9 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-4.md`
   - Result: `FAIL`; reviewer found no code or contract blockers, but blocked on evidentiary drift because `target/validation_lane_reports/merge.latest.json` had been overwritten by an in-progress merge lane whose performance step had failed.
   - Remediation: allowed that lane to complete; the final `target/validation_lane_reports/merge.latest.json` now records a full merge-gate `PASS` with all 14 lane steps, wall time 783.02s, hardening failures 0, and high e2e group skew as the only advisory.
+- Claude Opus M3 final branch-tip review pass 5:
+  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-5.md`
+  - Result: `PASS`; reviewer verified the pass-4 evidentiary blocker was closed by the final full merge-gate report, found no new code or contract blockers, and stated PR #2497 was acceptable to merge.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -261,7 +264,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - M0: https://github.com/sifr-lang/sifr/pull/2494 merged at `c426d01e26257c5b72e3ecd50e6884c86292a14b`.
 - M1: https://github.com/sifr-lang/sifr/pull/2495 merged at `ce5a411f4284404a1a374f77c0176351771e7cb9`.
 - M2: https://github.com/sifr-lang/sifr/pull/2496 merged at `742ea9f33dcac821d5abb644156d97dd2d7876cc`.
-- M3: https://github.com/sifr-lang/sifr/pull/2497 ready for merge after local merge-gate validation.
+- M3: https://github.com/sifr-lang/sifr/pull/2497 merged at `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`.
 - M4: pending.
 - M5: pending.
 
