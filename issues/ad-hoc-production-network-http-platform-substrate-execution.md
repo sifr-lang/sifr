@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0 and M1 merged; M2 TLS Runtime implementation candidate is under review
+Status: in progress; M0 and M1 merged; M2 TLS Runtime PR is validated and ready to merge
 
 ## Scope Split
 
@@ -166,6 +166,9 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M2 implementation review pass 3:
   - `reviews/ad-hoc-production-network-http-m2-opus-review-pass-3.md`
   - Result: `PASS`; reviewer verified the fixture certificate time-bomb was fixed, the public close-notify fixture coverage was expanded, the runtime rejection tests were tightened, no new blockers were introduced, and the implementation is ready for PR opening after the required validation gates.
+- Claude Opus M2 final branch-tip review pass 4:
+  - `reviews/ad-hoc-production-network-http-m2-opus-review-pass-4.md`
+  - Result: `PASS`; reviewer verified the final branch tip after the validation-contract follow-up commit, found no blocking issues, accepted the full merge-gate evidence, and stated PR #2496 is acceptable to merge now.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -241,7 +244,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 
 - M0: https://github.com/sifr-lang/sifr/pull/2494 merged at `c426d01e26257c5b72e3ecd50e6884c86292a14b`.
 - M1: https://github.com/sifr-lang/sifr/pull/2495 merged at `ce5a411f4284404a1a374f77c0176351771e7cb9`.
-- M2: implementation candidate on branch `codex/network-http-m2-tls-runtime`; PR pending reviewer acceptance and create-pr validation.
+- M2: https://github.com/sifr-lang/sifr/pull/2496 validated and ready to merge at `d4e2feb1feef13c7fd037d14301531915ed75b2a`.
 - M3: pending.
 - M4: pending.
 - M5: pending.
@@ -313,15 +316,13 @@ M2 focused validation:
 | `python3 scripts/check_file_size_guardrails.py` | PASS | 2309 files checked; touched hand-maintained files remain under the 900-line cap. |
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed after TLS intrinsic/codegen additions. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Clean PTY run passed after clearing stale interrupted validation jobs; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for head `d4e2feb1feef13c7fd037d14301531915ed75b2a`; report `target/validation_lane_reports/merge.latest.json`; wall time 799.89s, hardening failures 0, advisory only: high e2e group skew. |
 
 M2 broad pass-suite note:
 
 - An accidental full `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` run launched after a temp-manifest wrapper mistake. It completed the M2 TLS fixture groups successfully, then failed in unrelated pre-existing pass fixtures: IO generated-build groups (`cpython_io_subset`, `stdlib_io_consolidated`, `open_*`) and `bytes_conversion_errors`. The targeted M2 manifest above is the authoritative M2 e2e signal for this candidate.
 - Earlier interrupted `create-pr` validation attempts left stale Cargo child processes holding the default target lock. After terminating those stale validation jobs, a clean PTY `scripts/run_all_tests.sh --profile create-pr` run passed.
-
-M2 remaining gates before PR:
-
-- `scripts/run_all_tests.sh` remains required before milestone closure and merge ledger update.
+- Full merge-gate validation initially exposed stale contract assumptions around the e2e Tokio `net` feature and validation helper paths under `CARGO_TARGET_DIR`; the follow-up commit corrected those validation contracts, and the final merge-gate rerun passed.
 
 Required baseline commands:
 
