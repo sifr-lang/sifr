@@ -176,6 +176,10 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M3 implementation review pass 3:
   - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-3.md`
   - Result: `PASS`; reviewer verified the IDNA bypass and path-normalization traceability blockers are fully remediated, found no new implementation blockers, and stated M3 is acceptable to open as a PR after the standard create-pr validation gates pass.
+- Claude Opus M3 final branch-tip review pass 4:
+  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-4.md`
+  - Result: `FAIL`; reviewer found no code or contract blockers, but blocked on evidentiary drift because `target/validation_lane_reports/merge.latest.json` had been overwritten by an in-progress merge lane whose performance step had failed.
+  - Remediation: allowed that lane to complete; the final `target/validation_lane_reports/merge.latest.json` now records a full merge-gate `PASS` with all 14 lane steps, wall time 783.02s, hardening failures 0, and high e2e group skew as the only advisory.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -353,7 +357,7 @@ M3 focused validation:
 | `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after Opus pass-3 remediation. |
 | `scripts/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
-| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed; report `target/validation_lane_reports/merge.latest.json`; advisory: high e2e group skew only. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed after the pass-4 evidentiary blocker; report `target/validation_lane_reports/merge.latest.json`; all 14 lane steps passed, wall time 783.02s, hardening failures 0, advisory: high e2e group skew only. |
 | `python3 scripts/check_file_size_guardrails.py` | PASS | File-size guardrail passed with 2319 files under the 900-line limit. |
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | HIR maintainability guardrails passed. |
 
