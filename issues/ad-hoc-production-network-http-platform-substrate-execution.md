@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0 merged; M1 PR open with Opus implementation review PASS and local merge-gate validation PASS, pending merge
+Status: in progress; M0 and M1 merged; M2 TLS Runtime is next
 
 ## Scope Split
 
@@ -19,7 +19,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 ## Milestone Checklist
 
 - [x] `milestone_network_http_0`: Product Boundary And Architecture
-- [ ] `milestone_network_http_1`: Async Network Runtime
+- [x] `milestone_network_http_1`: Async Network Runtime
 - [ ] `milestone_network_http_2`: TLS Runtime
 - [ ] `milestone_network_http_3`: URL, Header, And Cookie Primitives
 - [ ] `milestone_network_http_4`: HTTP Core Transport
@@ -164,6 +164,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
   - Scope: added the M0 substrate inventory, dependency audit and snapshots, CPython evidence matrix, workload database, platform golden fixtures, unsupported network/HTTP import diagnostics, negative e2e coverage, per-milestone traceability files, and the serving-scale follow-up issue.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed on rerun for head `30b098eedeec52af8d6234d5af990b86a611ec67`; first merge-gate run had one transient `check-project-004-project-graph` performance p95 outlier, targeted representative performance rerun passed, and the full merge-gate rerun passed with wall-time/batching advisories only.
+- M1 implementation merge ledger:
+  - PR: https://github.com/sifr-lang/sifr/pull/2495
+  - Merge commit: `ce5a411f4284404a1a374f77c0176351771e7cb9`
+  - Scope: added public `sifr.net`, private `_sifr.net` intrinsics, optional `sifr_runtime/net`, network codegen helpers, deterministic TCP loopback/split/half-close/cancellation fixtures, UDP deferral coverage, and M1 Opus review artifacts.
+  - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `6c88bbd5f56035b488c4ad85a18061ab2b804fd2`; report `target/validation_lane_reports/merge.latest.json`; advisories were warm wall-time budget exceeded and high group skew only.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -228,7 +233,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 ## Implementation PRs
 
 - M0: https://github.com/sifr-lang/sifr/pull/2494 merged at `c426d01e26257c5b72e3ecd50e6884c86292a14b`.
-- M1: https://github.com/sifr-lang/sifr/pull/2495 open draft pending merge.
+- M1: https://github.com/sifr-lang/sifr/pull/2495 merged at `ce5a411f4284404a1a374f77c0176351771e7cb9`.
 - M2: pending.
 - M3: pending.
 - M4: pending.
