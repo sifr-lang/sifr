@@ -1,6 +1,6 @@
 # Network HTTP M2 Traceability: TLS Runtime
 
-Status: implementation candidate under review.
+Status: implementation candidate validated and ready to merge in PR #2496.
 
 M2 implements the Sifr-native TLS substrate over the M1 TCP runtime. It keeps Rustls and Tokio-Rustls private, exposes `sifr.tls` as the public module, and leaves CPython-shaped `SSLContext` / `SSLSocket` APIs rejected by the M0 namespace and unsupported-import fixtures.
 
@@ -36,10 +36,12 @@ Focused validation completed for the M2 candidate:
 | `python3 scripts/check_file_size_guardrails.py` | PASS | 2309 files checked; touched hand-maintained files remain below the 900-line guardrail. |
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails remain clean after TLS intrinsic/codegen additions. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Clean PTY run passed after clearing stale interrupted validation jobs; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for PR #2496 head `d4e2feb1feef13c7fd037d14301531915ed75b2a`; report `target/validation_lane_reports/merge.latest.json`; advisory only: high e2e group skew. |
+| Claude Opus final branch-tip review pass 4 | PASS | `reviews/ad-hoc-production-network-http-m2-opus-review-pass-4.md` found no blockers and accepted PR #2496 for merge. |
 
 Exploratory full-pass note: an accidental full `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` run completed the M2 TLS fixture groups successfully but failed in unrelated pre-existing IO and `bytes_conversion_errors` pass fixtures. The targeted M2 manifest above is the authoritative M2 e2e signal for this candidate.
 
-Merge-gate validation with `scripts/run_all_tests.sh` remains required before M2 closure.
+Full merge-gate validation initially exposed stale validation-contract assumptions around e2e Tokio feature expectations and helper binary lookup under `CARGO_TARGET_DIR`. The final branch-tip follow-up corrected those validation contracts and the merge gate passed afterward.
 
 ## CPython Evidence
 
