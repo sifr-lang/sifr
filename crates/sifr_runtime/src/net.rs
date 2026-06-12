@@ -283,6 +283,13 @@ fn restore_stream(handle: i64, stream: TcpStream) {
     lock(&STREAMS).insert(handle, stream);
 }
 
+pub(crate) fn consume_stream_for_tls(handle: i64) -> Result<TcpStream, String> {
+    let stream = take_stream(handle)?;
+    lock(&STREAM_ADDRS).remove(&handle);
+    lock(&WRITE_SHUTDOWN).remove(&handle);
+    Ok(stream)
+}
+
 fn ensure_write_open(handle: i64) -> Result<(), String> {
     if lock(&WRITE_SHUTDOWN).contains(&handle) {
         return Err("TCP write side is already shut down".to_string());

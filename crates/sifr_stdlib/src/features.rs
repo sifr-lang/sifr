@@ -24,12 +24,16 @@ pub enum StdlibFeature {
     RandDistr,
     Rayon,
     Regex,
+    Rustls,
+    RustlsPemfile,
+    RustlsPlatformVerifier,
     RustDecimal,
     SerdeJson,
     Sha1,
     Sha2,
     SifrRuntime,
     Tokio,
+    TokioRustls,
     Toml,
     Tracing,
     UnicodeNames,
@@ -63,12 +67,16 @@ impl StdlibFeature {
             Self::RandDistr => "rand_distr",
             Self::Rayon => "rayon",
             Self::Regex => "regex",
+            Self::Rustls => "rustls",
+            Self::RustlsPemfile => "rustls-pemfile",
+            Self::RustlsPlatformVerifier => "rustls-platform-verifier",
             Self::RustDecimal => "rust_decimal",
             Self::SerdeJson => "serde_json",
             Self::Sha1 => "sha1",
             Self::Sha2 => "sha2",
             Self::SifrRuntime => "sifr_runtime",
             Self::Tokio => "tokio",
+            Self::TokioRustls => "tokio-rustls",
             Self::Toml => "toml",
             Self::Tracing => "tracing",
             Self::UnicodeNames => "unicode_names2",
@@ -179,6 +187,18 @@ const REGEX_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "regex",
     spec: "regex = \"1.12.3\"",
 }];
+const RUSTLS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "rustls",
+    spec: "rustls = \"=0.23.35\"",
+}];
+const RUSTLS_PEMFILE_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "rustls-pemfile",
+    spec: "rustls-pemfile = \"2.2.0\"",
+}];
+const RUSTLS_PLATFORM_VERIFIER_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "rustls-platform-verifier",
+    spec: "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
+}];
 const RUST_DECIMAL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "rust_decimal",
     spec: "rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }",
@@ -208,6 +228,10 @@ const SIFR_RUNTIME_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependenc
 const TOKIO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "tokio",
     spec: "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
+}];
+const TOKIO_RUSTLS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "tokio-rustls",
+    spec: "tokio-rustls = \"0.26.4\"",
 }];
 const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "toml",
@@ -320,6 +344,18 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: REGEX_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Rustls,
+        cargo_dependencies: RUSTLS_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::RustlsPemfile,
+        cargo_dependencies: RUSTLS_PEMFILE_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::RustlsPlatformVerifier,
+        cargo_dependencies: RUSTLS_PLATFORM_VERIFIER_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::RustDecimal,
         cargo_dependencies: RUST_DECIMAL_DEPS,
     },
@@ -342,6 +378,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
     StdlibFeatureSpec {
         feature: StdlibFeature::Tokio,
         cargo_dependencies: TOKIO_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::TokioRustls,
+        cargo_dependencies: TOKIO_RUSTLS_DEPS,
     },
     StdlibFeatureSpec {
         feature: StdlibFeature::Toml,
@@ -396,12 +436,18 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "rand_distr" => Some(StdlibFeature::RandDistr),
         "rayon" => Some(StdlibFeature::Rayon),
         "regex" => Some(StdlibFeature::Regex),
+        "rustls" => Some(StdlibFeature::Rustls),
+        "rustls-pemfile" | "rustls_pemfile" => Some(StdlibFeature::RustlsPemfile),
+        "rustls-platform-verifier" | "rustls_platform_verifier" => {
+            Some(StdlibFeature::RustlsPlatformVerifier)
+        }
         "rust_decimal" => Some(StdlibFeature::RustDecimal),
         "serde_json" => Some(StdlibFeature::SerdeJson),
         "sha1" => Some(StdlibFeature::Sha1),
         "sha2" => Some(StdlibFeature::Sha2),
         "sifr_runtime" | "sifr-runtime" => Some(StdlibFeature::SifrRuntime),
         "tokio" => Some(StdlibFeature::Tokio),
+        "tokio-rustls" | "tokio_rustls" => Some(StdlibFeature::TokioRustls),
         "toml" => Some(StdlibFeature::Toml),
         "tracing" => Some(StdlibFeature::Tracing),
         "unicode_names2" => Some(StdlibFeature::UnicodeNames),
@@ -455,6 +501,15 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::Tokio,
             StdlibFeature::Tracing,
         ],
+        "sifr.tls" | "_sifr.tls" => &[
+            StdlibFeature::SifrRuntime,
+            StdlibFeature::Tokio,
+            StdlibFeature::TokioRustls,
+            StdlibFeature::Rustls,
+            StdlibFeature::RustlsPemfile,
+            StdlibFeature::RustlsPlatformVerifier,
+            StdlibFeature::Tracing,
+        ],
         "sifr.parallel" => &[StdlibFeature::Rayon],
         "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
@@ -497,6 +552,7 @@ pub fn generated_cargo_dependencies(
 struct RuntimeFeatures {
     i18n: bool,
     net: bool,
+    tls: bool,
     unicode: bool,
 }
 
@@ -508,6 +564,7 @@ impl RuntimeFeatures {
         Self {
             i18n: needs_sifr_runtime_i18n(stdlib_modules, required_features),
             net: needs_sifr_runtime_net(stdlib_modules),
+            tls: needs_sifr_runtime_tls(stdlib_modules, required_features),
             unicode: needs_sifr_runtime_unicode(stdlib_modules, required_features),
         }
     }
@@ -517,6 +574,19 @@ fn needs_sifr_runtime_net(stdlib_modules: &HashSet<String>) -> bool {
     stdlib_modules
         .iter()
         .any(|module| matches!(module.as_str(), "sifr.net" | "_sifr.net"))
+}
+
+fn needs_sifr_runtime_tls(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> bool {
+    stdlib_modules
+        .iter()
+        .any(|module| matches!(module.as_str(), "sifr.tls" | "_sifr.tls"))
+        || required_features.contains(&StdlibFeature::Rustls)
+        || required_features.contains(&StdlibFeature::RustlsPemfile)
+        || required_features.contains(&StdlibFeature::RustlsPlatformVerifier)
+        || required_features.contains(&StdlibFeature::TokioRustls)
 }
 
 fn needs_sifr_runtime_i18n(
@@ -577,7 +647,7 @@ fn render_dependency_spec(
 }
 
 fn tokio_dependency_spec(runtime_features: RuntimeFeatures) -> String {
-    let features = if runtime_features.net {
+    let features = if runtime_features.net || runtime_features.tls {
         "\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
     } else {
         "\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
@@ -595,8 +665,11 @@ fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
     if runtime_features.i18n {
         features.push("\"i18n\"");
     }
-    if runtime_features.net {
+    if runtime_features.net || runtime_features.tls {
         features.push("\"net\"");
+    }
+    if runtime_features.tls {
+        features.push("\"tls\"");
     }
     if runtime_features.unicode {
         features.push("\"unicode\"");

@@ -1,0 +1,77 @@
+from sifr.net import SocketAddr, TcpListener, TcpStream, listen_tcp, connect_tcp
+from sifr.tls import (
+    TlsClientConfig,
+    TlsError,
+    TlsReadHalf,
+    TlsServerConfig,
+    TlsStream,
+    TlsWriteHalf,
+    client_config_from_ca_pem,
+    server_config_from_pem,
+)
+
+
+def cert_pem() -> bytes:
+    return b"-----BEGIN CERTIFICATE-----\nMIIBvzCCAWWgAwIBAgIUXg72etQ8f6Ntm5bSD9NioVQW2AIwCgYIKoZIzj0EAwIw\nFDESMBAGA1UEAwwJbG9jYWxob3N0MCAXDTI2MDYxMjAyMDYwMVoYDzIxMjYwNTE5\nMDIwNjAxWjAUMRIwEAYDVQQDDAlsb2NhbGhvc3QwWTATBgcqhkjOPQIBBggqhkjO\nPQMBBwNCAARpP8aZInRcXedS58LVHfaRvEpy7Q7q77PcXU81yOFyoFSHitSVtjiZ\nR8e8gsD/54jjAjYff7slVUuEub/M5Cp2o4GSMIGPMB0GA1UdDgQWBBRSFYkeBwSV\nwA+LGs+MsRmfi3XzDjAfBgNVHSMEGDAWgBRSFYkeBwSVwA+LGs+MsRmfi3XzDjAa\nBgNVHREEEzARgglsb2NhbGhvc3SHBH8AAAEwDAYDVR0TAQH/BAIwADAOBgNVHQ8B\nAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwCgYIKoZIzj0EAwIDSAAwRQIg\nNj8TX4MVR0Z3gMC4Q4zRwUscL0Aw0rUcKTn37XOxlLQCIQD9zsCdWzLGaviK3dLQ\no0acvf03F3cshDbwpd25T2269Q==\n-----END CERTIFICATE-----\n"
+
+
+def key_pem() -> bytes:
+    return b"-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIOh7ipDPAfBIzuGhz5Uj/Rz2TXKPblKyBkOQZFPqT3dhoAoGCCqGSM49\nAwEHoUQDQgAEaT/GmSJ0XF3nUufC1R32kbxKcu0O6u+z3F1PNcjhcqBUh4rUlbY4\nmUfHvILA/+eI4wI2H3+7JVVLhLm/zOQqdg==\n-----END EC PRIVATE KEY-----\n"
+
+
+async def server_once(own config: TlsServerConfig, own tcp: TcpStream) -> bool:
+    try:
+        stream: TlsStream = await config.accept(tcp, timeout=2.0)
+        request: bytes | None = await stream.read_chunk(64)
+        assert request == b"ping"
+        _server_write: None = await stream.write_all(b"pong")
+        _server_flush: None = await stream.flush()
+        _server_notify: None = await stream.close_notify()
+        _server_close: None = await stream.close()
+        return True
+    except TlsError as e:
+        assert e.message == ""
+    return False
+
+
+async def main() -> Result[None, Error]:
+    try:
+        alpn: list[bytes] = [b"sifr-test/1"]
+        server_config: TlsServerConfig = server_config_from_pem(cert_pem(), key_pem(), alpn)
+        client_config: TlsClientConfig = client_config_from_ca_pem(cert_pem(), alpn)
+        listener: TcpListener = await listen_tcp("127.0.0.1:0", reuse_addr=True)
+        addr: SocketAddr = listener.local_addr()
+        client_tcp: TcpStream = await connect_tcp(addr.value, timeout=2.0)
+        accepted: tuple[TcpStream, SocketAddr] = await listener.accept()
+        _listener_closed: None = listener.close()
+
+        async with task.scope() as scope:
+            server = scope.spawn(server_once(server_config, accepted[0]))
+            tls: TlsStream = await client_config.connect(client_tcp, "localhost", timeout=2.0)
+            negotiated: bytes | None = tls.alpn_protocol()
+            assert negotiated == b"sifr-test/1"
+            protocol: str | None = tls.protocol_version()
+            assert protocol is not None
+            halves: tuple[TlsReadHalf, TlsWriteHalf] = tls.split()
+            reader: TlsReadHalf = halves[0]
+            writer: TlsWriteHalf = halves[1]
+
+            _client_write: None = await writer.write_all(b"ping")
+            _client_flush: None = await writer.flush()
+            response: bytes | None = await reader.read_chunk(64)
+            assert response == b"pong"
+            _client_notify: None = await writer.close_notify()
+            _client_notify_again: None = await writer.close_notify()
+            _client_closed_flush: None = await writer.flush()
+
+            rejected_late_write: bool = False
+            try:
+                _late: int = await writer.write(b"late")
+            except TlsError as e:
+                rejected_late_write = "close" in e.message
+            assert rejected_late_write
+            _reader_closed: None = reader.close()
+            _server_joined = await server.join()
+    except Error as e:
+        raise e
+    return None

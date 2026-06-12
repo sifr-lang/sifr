@@ -28,6 +28,7 @@ mod sources;
 mod sys_fs;
 mod task;
 mod text_encoding;
+mod tls;
 mod unicode_core;
 
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
@@ -67,6 +68,7 @@ pub use sources::{StdlibSource, STDLIB_SOURCES};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
+use tls::intrinsic_tls;
 use unicode_core::intrinsic_unicode;
 
 /// Match data for a bare CPython-style stdlib module name that should be
@@ -131,6 +133,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.net" => Some(intrinsic_net()),
+        "_sifr.tls" => Some(intrinsic_tls()),
         "_sifr.process" => Some(intrinsic_process()),
         "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),

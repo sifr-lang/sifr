@@ -1,6 +1,6 @@
 # Network HTTP M1 Traceability: Async Network Runtime
 
-Status: implemented in current M1 branch; Opus implementation review PASS; PR #2495 open with local merge-gate validation PASS, pending merge.
+Status: merged via PR #2495 at `ce5a411f4284404a1a374f77c0176351771e7cb9`; Opus implementation review PASS; local merge-gate validation PASS.
 
 | Work item | M0 decision | Acceptance evidence |
 | --- | --- | --- |

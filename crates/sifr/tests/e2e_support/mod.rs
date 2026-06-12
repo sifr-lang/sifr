@@ -9,6 +9,8 @@ pub(crate) use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 mod harness_model;
 pub(crate) use harness_model::*;
+mod fixture_dependency_paths;
+pub(crate) use fixture_dependency_paths::*;
 mod fixture_compilation;
 pub(crate) use fixture_compilation::*;
 mod batch_execution;

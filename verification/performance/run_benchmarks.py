@@ -27,14 +27,35 @@ NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
 COMMAND_KINDS = {"command", "frontend-query", "lsp-query"}
 COMMAND_MODES = {"check", "build", "fmt-check"}
-FRONTEND_BENCH_BINARY = REPO_ROOT / "target" / "debug" / "frontend_query_bench"
-SIFR_BINARY = REPO_ROOT / "target" / "debug" / f"sifr{'.exe' if platform.system() == 'Windows' else ''}"
 _FRONTEND_BENCH_READY = False
 _SIFR_BINARY_READY = False
 
 
 class BenchmarkError(Exception):
     pass
+
+
+def cargo_debug_dir() -> Path:
+    target_dir = os.environ.get("CARGO_TARGET_DIR")
+    if target_dir:
+        path = Path(target_dir)
+        if not path.is_absolute():
+            path = REPO_ROOT / path
+    else:
+        path = REPO_ROOT / "target"
+    return path / "debug"
+
+
+def executable_name(name: str) -> str:
+    return f"{name}{'.exe' if platform.system() == 'Windows' else ''}"
+
+
+def frontend_bench_binary() -> Path:
+    return cargo_debug_dir() / executable_name("frontend_query_bench")
+
+
+def sifr_binary() -> Path:
+    return cargo_debug_dir() / executable_name("sifr")
 
 
 @dataclass(frozen=True)
@@ -326,7 +347,7 @@ def run_frontend_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any
     warmups = case.warmups if measured == case.measured else 1
     iterations = warmups + measured
     command = [
-        str(FRONTEND_BENCH_BINARY),
+        str(frontend_bench_binary()),
         str(case.raw["scenario"]),
         str(REPO_ROOT / case.raw["source_path"]),
         str(iterations),
@@ -408,7 +429,8 @@ def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
 
 def ensure_frontend_query_bench() -> None:
     global _FRONTEND_BENCH_READY
-    if _FRONTEND_BENCH_READY and FRONTEND_BENCH_BINARY.exists():
+    binary = frontend_bench_binary()
+    if _FRONTEND_BENCH_READY and binary.exists():
         return
     result = run_subprocess(
         ["cargo", "build", "-q", "-p", "sifr_frontend", "--bin", "frontend_query_bench"],
@@ -418,28 +440,29 @@ def ensure_frontend_query_bench() -> None:
         raise BenchmarkError("building frontend query benchmark helper timed out")
     if result["exit_code"] != 0:
         raise BenchmarkError(f"failed to build frontend query benchmark helper: {result['stderr_tail']}")
-    if not FRONTEND_BENCH_BINARY.exists():
-        raise BenchmarkError(f"frontend query benchmark helper was not built at {FRONTEND_BENCH_BINARY}")
+    if not binary.exists():
+        raise BenchmarkError(f"frontend query benchmark helper was not built at {binary}")
     _FRONTEND_BENCH_READY = True
 
 
 def ensure_sifr_binary() -> None:
     global _SIFR_BINARY_READY
-    if _SIFR_BINARY_READY and SIFR_BINARY.exists():
+    binary = sifr_binary()
+    if _SIFR_BINARY_READY and binary.exists():
         return
     result = run_subprocess(["cargo", "build", "-q", "-p", "sifr"], 180000)
     if result["timed_out"]:
         raise BenchmarkError("building sifr benchmark binary timed out")
     if result["exit_code"] != 0:
         raise BenchmarkError(f"failed to build sifr benchmark binary: {result['stderr_tail']}")
-    if not SIFR_BINARY.exists():
-        raise BenchmarkError(f"sifr benchmark binary was not built at {SIFR_BINARY}")
+    if not binary.exists():
+        raise BenchmarkError(f"sifr benchmark binary was not built at {binary}")
     _SIFR_BINARY_READY = True
 
 
 def command_for_case(case: BenchmarkCase, output_dir: Path) -> list[str]:
     source = str(REPO_ROOT / case.raw["source_path"])
-    command = [str(SIFR_BINARY)]
+    command = [str(sifr_binary())]
     command.extend(case.raw.get("global_args", []))
     if case.raw["mode"] == "fmt-check":
         command.extend(["fmt", "--check", "--no-cache", source])

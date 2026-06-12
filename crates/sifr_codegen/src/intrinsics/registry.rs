@@ -34,6 +34,7 @@ mod sys;
 mod task;
 mod test;
 mod time;
+mod tls;
 mod toml;
 mod unicode;
 mod uuid;
@@ -75,6 +76,7 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "process_shell_output_text" => &[StdlibFeature::EncodingRs],
         "runtime_emit_diagnostic" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         name if name.starts_with("net_") => &[StdlibFeature::SifrRuntime],
+        name if name.starts_with("tls_") => tls::TLS_REQUIRED_FEATURES,
         "unicode_data_version"
         | "unicode_normalize"
         | "unicode_is_normalized"
@@ -772,6 +774,10 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         ),
         "net_tcp_write_half_close" => (
             net::lower_net_tcp_write_half_close(args),
+            Some(StdlibFeature::Tokio),
+        ),
+        name if name.starts_with("tls_") => (
+            tls::lower_tls_intrinsic(name, args),
             Some(StdlibFeature::Tokio),
         ),
         "signal_ctrl_c" => (
