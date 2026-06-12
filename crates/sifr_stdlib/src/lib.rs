@@ -529,6 +529,7 @@ mod tests {
             ("sifr.urllib.request", "sifr.url"),
             ("sifr.http.client", "sifr.http"),
             ("sifr.http.server", "sifr.http"),
+            ("sifr.http_transport", "sifr.http"),
             ("sifr.socketserver", "sifr.http"),
         ];
 

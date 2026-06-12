@@ -194,6 +194,12 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M4 implementation review pass 4:
   - `reviews/ad-hoc-production-network-http-m4-opus-review-pass-4.md`
   - Result: `PASS`; reviewer verified the process-global harness gate was removed, ordinary user compilation still rejects `sifr.http_transport` with `SIFR-IMPORT-0009`, M4 HTTP runtime coverage and dependency snapshots satisfy the phase contract, and M4 is acceptable to open as a PR after the standard create-pr validation gate.
+- M4 private harness follow-up:
+  - Removed `sifr.http_transport` from the embedded stdlib source inventory and deleted the stale source file; the driver now seeds the module only as test-harness metadata plus Rust wrappers that call `sifr_runtime::http`.
+  - Ordinary user imports still go through the default lowering path and fail with `SIFR-IMPORT-0009`; directive-marked e2e fixtures opt into `compile_with_metadata_allowing_http_transport_harness` on a per-compile basis.
+- Claude Opus M4 follow-up review pass 5:
+  - Result: `BLOCKED BY REVIEWER TOOL`; repeated `claude` CLI attempts exited `137` with empty stdout/stderr, including minimal `claude -p 'Reply with ok.'` probes. No reviewer findings were produced for the private-harness follow-up diff.
+  - Mitigation: keep PR #2498 draft until a reviewer pass can be produced; local validation for the follow-up diff is recorded below.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -384,20 +390,25 @@ M4 focused validation:
 
 | Command | Result | Notes |
 | --- | --- | --- |
-| `cargo build -p sifr --bin sifr` | PASS | Rebuilt the CLI after adding HTTP transport runtime, stdlib source embedding, and intrinsic registry dispatch for `http1_*`/`http2_*` transport calls. |
+| `cargo build -p sifr --bin sifr` | PASS | Rebuilt the CLI after adding HTTP transport runtime, public `sifr.http` embedding, and intrinsic registry dispatch for `http1_*`/`http2_*` transport calls. |
+| `cargo check -p sifr_driver -p sifr_codegen` | PASS | Verifies the private harness metadata shim and codegen after removing eager `sifr.http_transport` source embedding. |
 | `cargo check -p sifr_runtime --features http` | PASS | Verifies optional runtime HTTP feature compilation with Hyper, H2, Hyper-Util Tokio adapter, HTTP body utilities, and M1/M2 stream consumption hooks. |
 | `cargo check -p sifr_stdlib -p sifr_codegen` | PASS | Verifies M4 stdlib feature/dependency wiring, HTTP intrinsic lowering, and generated HTTP preamble compilation. |
 | `cargo test -p sifr_runtime --features http http -- --nocapture` | PASS | Verifies runtime HTTP coverage for malformed HTTP/1 typed errors, independent request/response body limits, HTTP/2 SETTINGS/HPACK/GOAWAY loopback, and HTTP/2 RST_STREAM cancellation mapping. |
 | `cargo test -p sifr_stdlib --test network_http_dependency_snapshots -- --nocapture` | PASS | Verifies M0-M4 generated dependency snapshots, no Ring 5 production dependencies, M4 Hyper/H2/Hyper-Util/TLS runtime dependency emission, and `sifr.http` remaining lightweight. |
-| `cargo test -p sifr --test e2e network_http_dependency_contract_tests -- --nocapture` | PASS | Verifies e2e dependency generation and inference for URL/HTTP primitives and HTTP transport crates. |
+| `cargo test -p sifr --test e2e network_http_dependency_contract_tests -- --nocapture` | PASS | Verifies e2e dependency generation and inference for URL/HTTP primitives and the driver-seeded HTTP transport harness. |
+| `cargo test -p sifr_stdlib legacy_network_http_modules_are_not_embedded_public_sources -- --nocapture` | PASS | Verifies `sifr.http_transport` remains classified as a rejected legacy/test-only module and is not embedded in `STDLIB_SOURCES`. |
 | Directive-marked M4 e2e pass fixtures | PASS | The e2e compiler path enables the test-only HTTP transport harness via a per-call lowering option when fixtures contain `# sifr-e2e-allow-http-transport-harness`; ordinary CLI/user compilation does not enable it. |
-| `target/debug/sifr check crates/sifr/tests/e2e/fail/network_http_sifr_http_transport_internal.sifr` | PASS | Negative direct check exits with `SIFR-IMPORT-0009`, proving ordinary user imports of `sifr.http_transport` are rejected unless the explicit e2e harness gate is set. |
-| `SIFR_E2E_FIXTURE_MANIFEST=<M4 fixtures> SIFR_E2E_DISABLE_CACHE=1 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` | PASS | Selected cold M4 e2e manifest for `network_http_m4_http1_loopback`, `network_http_m4_http2_loopback`, and `network_http_m4_https_h2_loopback`; 3 passed, 0 failed, report signature `ee3f9b6be291eb44`. |
+| `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/network_http_sifr_http_transport_internal.sifr` | PASS | Negative direct check exits with `SIFR-IMPORT-0009`, proving ordinary user imports of `sifr.http_transport` are rejected unless the explicit e2e harness gate is set. |
+| `SIFR_E2E_FIXTURE_MANIFEST=<single M4 fixture> SIFR_E2E_DISABLE_CACHE=1 SIFR_E2E_RUST_JOBS=1 SIFR_E2E_CARGO_BUILD_JOBS=1 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` | PASS | Ran each cold M4 transport fixture individually after the private-harness follow-up: `network_http_m4_http1_loopback`, `network_http_m4_http2_loopback`, and `network_http_m4_https_h2_loopback`; all passed. |
 | `SIFR_E2E_FIXTURE_MANIFEST=<M4 pass fixtures> cargo test -p sifr --test e2e test_e2e -- --nocapture` | PASS | Runs selected M4 pass fixtures concurrently with the full fail and runtime-fail entrypoints in one test binary; proves the HTTP transport harness gate is per-compile and no longer process-env racy. |
+| `cargo fmt --check` | PASS | Rust formatting check after the private harness shim. |
 | `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after replacing the process-env harness gate with a per-compile lowering option. |
+| `python3 scripts/check_file_size_guardrails.py` | PASS | File-size guardrail passed; touched hand-maintained files remain below the 900-line cap. |
+| `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | HIR maintainability guardrails passed. |
 | `git diff --check` | PASS | No whitespace errors in the M4 diff. |
-| `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed after the race fix; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 125 pass fixtures with report signature `50edc954137c87b4`; advisory: warm wall-time budget exceeded. |
-| `scripts/run_e2e_pass.sh` | PASS | Merge-profile e2e pass suite completed 138 pass fixtures with 0 failures after the race fix; report signature `4ede7c71d86f381c`. |
+| `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed after the private-harness follow-up; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 125 pass fixtures with report signature `50edc954137c87b4`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed after the private-harness follow-up; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 138 pass fixtures with report signature `4ede7c71d86f381c`; advisory: high e2e group skew only. |
 
 Required baseline commands:
 

@@ -84,10 +84,10 @@ async def main() -> Result[None, Error]:
             try:
                 _small_response_limit: tuple[int, str, list[tuple[str, str]], bytes] = await transport_http1_client_roundtrip_tcp(
                     client2._handle,
-                    typed_head.method.value,
-                    typed_head.path,
+                    "POST",
+                    "/m4/http1",
                     [("x-sifr-request", "http1")],
-                    typed_bytes,
+                    b"ping-http1",
                     1024,
                     4,
                 )
