@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0 merged; M1 implemented locally with Opus pass 1 blockers remediated, pending rerun review/PR
+Status: in progress; M0 merged; M1 PR open with Opus implementation review PASS and local merge-gate validation PASS, pending merge
 
 ## Scope Split
 
@@ -152,6 +152,13 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M0 implementation review pass 2:
   - `reviews/ad-hoc-production-network-http-m0-opus-review-pass-2.md`
   - Result: `PASS`; all pass-1 blocking findings B1-B11 and non-blocking follow-ups were verified as remediated. Reviewer stated the M0 PR is safe to open and merge, and M1 can safely start after validation evidence is recorded.
+- Claude Opus M1 implementation review pass 1:
+  - `reviews/ad-hoc-production-network-http-m1-opus-review-pass-1.md`
+  - Result: `FAIL`; reviewer blocked on global `+ Send` validation, infallible affine `TcpStream.split()`, and cancellation fixture coverage.
+  - Remediations: reran create-pr validation after the global sendability change, made `TcpStream.split()` infallible end-to-end with public `TcpStream.close(own self)`, added in-flight `accept()` cancellation coverage, removed unused M1 dependency emission, and documented M1 runtime behavior.
+- Claude Opus M1 implementation review pass 2:
+  - `reviews/ad-hoc-production-network-http-m1-opus-review-pass-2.md`
+  - Result: `PASS`; reviewer accepted the M1 PR for opening after remediation, with the full merge gate required before closure.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -221,7 +228,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 ## Implementation PRs
 
 - M0: https://github.com/sifr-lang/sifr/pull/2494 merged at `c426d01e26257c5b72e3ecd50e6884c86292a14b`.
-- M1: pending.
+- M1: https://github.com/sifr-lang/sifr/pull/2495 open draft pending merge.
 - M2: pending.
 - M3: pending.
 - M4: pending.
@@ -269,11 +276,14 @@ M1 validation:
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_e2e_pass.sh` | PASS | Merge-manifest e2e pass suite completed 138 pass tests, 0 failed. |
+| `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; all lane steps passed. Advisories: warm wall-time budget exceeded and high group skew. |
+| `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; all merge-lane steps passed. Advisories: warm wall-time budget exceeded and high group skew. |
 
 M1 broad pass-suite note:
 
 - An exploratory `cargo test -p sifr --test e2e e2e_pass -- network_http_m1 --nocapture` invocation ran the full pass corpus rather than filtering only M1 fixtures. It completed 636 pass fixtures and exposed pre-existing non-network failures: IO context-manager generated mutability in `cpython_io_subset`/`stdlib_io_consolidated` and `open_*` fixtures, plus `bytes_conversion_errors` expecting `latin-1` encode/decode rejection. The M1-specific fixtures pass through the selected manifest above.
 - The clean `scripts/run_all_tests.sh --profile create-pr` rerun passed after clearing detached stale validation jobs from earlier interrupted runs. The only advisory was warm wall-time budget exceeded.
+- The full `scripts/run_all_tests.sh` merge gate passed before PR merge. Advisory-only output reported warm wall-time budget exceeded and high group skew.
 
 Required baseline commands:
 

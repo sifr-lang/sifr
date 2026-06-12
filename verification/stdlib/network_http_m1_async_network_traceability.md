@@ -1,6 +1,6 @@
 # Network HTTP M1 Traceability: Async Network Runtime
 
-Status: implemented in current M1 branch; Opus pass 1 blockers remediated locally; pending rerun review, PR, and merge.
+Status: implemented in current M1 branch; Opus implementation review PASS; PR #2495 open with local merge-gate validation PASS, pending merge.
 
 | Work item | M0 decision | Acceptance evidence |
 | --- | --- | --- |
@@ -34,9 +34,9 @@ Status: implemented in current M1 branch; Opus pass 1 blockers remediated locall
 | `cargo fmt --check` | PASS | Clean after M1 edits. |
 | `python3 scripts/check_file_size_guardrails.py` | PASS | 2302 files, limit 900 lines. |
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed. |
-| `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; all lane steps passed. Advisory: warm wall-time budget exceeded. |
 | `scripts/run_e2e_pass.sh` | PASS | Merge-manifest e2e pass suite completed 138 pass tests, 0 failed. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; all merge-lane steps passed. Advisories: warm wall-time budget exceeded and high group skew. |
 
 Broad pass-suite note: an exploratory full `cargo test -p sifr --test e2e e2e_pass -- network_http_m1 --nocapture` invocation runs the full pass corpus rather than selecting only M1 fixtures. It exposed pre-existing non-network failures in IO context-manager mutability and a bytes codec expectation; the M1-specific pass fixtures above passed through the selected manifest.
 
