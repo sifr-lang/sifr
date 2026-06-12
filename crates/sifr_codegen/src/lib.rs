@@ -4,6 +4,8 @@
 
 mod lib_modules_and_codegen;
 pub use lib_modules_and_codegen::*;
+mod builtin_errors;
+pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
 mod lib_runtime_needs;
 pub(crate) use lib_runtime_needs::{
     annotate_async_main_entrypoint, body_contains_await, module_uses_async_exit_cause_type,
@@ -52,7 +54,6 @@ mod ir_validate;
 mod lib_support;
 pub(crate) use lib_modules_and_codegen::{
     IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures, NestedFnCapture,
-    BUILTIN_ERROR_CLASSES,
 };
 pub(crate) use lib_support::{
     homogeneous_large_tuple_backing_array, resolve_alias_type_for_plain_call,

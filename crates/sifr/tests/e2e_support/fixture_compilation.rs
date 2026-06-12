@@ -1,11 +1,15 @@
 use super::*;
 const POSTCARD_DEP: &str =
     "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }";
+const COOKIE_DEP: &str = "cookie = { version = \"0.18.1\", default-features = false }";
+const HTTP_DEP: &str = "http = \"1.4.1\"";
+const PERCENT_ENCODING_DEP: &str = "percent-encoding = \"2.3.2\"";
 const SERDE_DEP: &str = "serde = { version = \"1.0.228\", features = [\"derive\"] }";
 const SERDE_JSON_DEP: &str =
     "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }";
 const TRACING_DEP: &str =
     "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }";
+const URL_DEP: &str = "url = \"2.5.8\"";
 pub(crate) fn failure_matches_expectation(
     failure: &CompiledFailure,
     expectation: &CompileFailureExpectation,
@@ -319,6 +323,14 @@ pub(crate) fn generate_cargo_toml(
                     "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string(),
                 );
             }
+            "sifr.url" | "_sifr.url" => {
+                deps.insert(URL_DEP.to_string());
+                deps.insert(PERCENT_ENCODING_DEP.to_string());
+            }
+            "sifr.http" | "_sifr.http" => {
+                deps.insert(HTTP_DEP.to_string());
+                deps.insert(COOKIE_DEP.to_string());
+            }
             "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
                 deps.insert("flate2 = \"1.1.9\"".to_string());
                 deps.insert("zip = \"8.6.0\"".to_string());
@@ -395,6 +407,18 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert(
                     "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string(),
                 );
+            }
+            "url" => {
+                deps.insert(URL_DEP.to_string());
+            }
+            "percent-encoding" | "percent_encoding" => {
+                deps.insert(PERCENT_ENCODING_DEP.to_string());
+            }
+            "http" => {
+                deps.insert(HTTP_DEP.to_string());
+            }
+            "cookie" => {
+                deps.insert(COOKIE_DEP.to_string());
             }
             "flate2" => {
                 deps.insert("flate2 = \"1.1.9\"".to_string());

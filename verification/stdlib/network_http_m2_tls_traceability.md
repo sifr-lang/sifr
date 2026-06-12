@@ -1,6 +1,6 @@
 # Network HTTP M2 Traceability: TLS Runtime
 
-Status: implementation candidate validated and ready to merge in PR #2496.
+Status: merged in PR #2496 at `742ea9f33dcac821d5abb644156d97dd2d7876cc`.
 
 M2 implements the Sifr-native TLS substrate over the M1 TCP runtime. It keeps Rustls and Tokio-Rustls private, exposes `sifr.tls` as the public module, and leaves CPython-shaped `SSLContext` / `SSLSocket` APIs rejected by the M0 namespace and unsupported-import fixtures.
 

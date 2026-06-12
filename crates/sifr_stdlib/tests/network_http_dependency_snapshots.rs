@@ -139,3 +139,105 @@ fn network_http_m2_tls_module_emits_locked_runtime_dependencies() {
         Some(StdlibFeature::RustlsPlatformVerifier)
     );
 }
+
+#[test]
+fn network_http_m3_url_module_emits_locked_parser_dependencies() {
+    let deps =
+        generated_cargo_dependencies(&HashSet::from(["sifr.url".to_string()]), &HashSet::new());
+
+    assert_eq!(
+        deps,
+        vec!["url = \"2.5.8\"", "percent-encoding = \"2.3.2\"",]
+    );
+    assert!(!deps.iter().any(|dep| dep.contains("cookie")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("http = ")));
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("url"),
+        Some(StdlibFeature::Url)
+    );
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("percent-encoding"),
+        Some(StdlibFeature::PercentEncoding)
+    );
+}
+
+#[test]
+fn network_http_m3_http_module_emits_locked_header_cookie_dependencies() {
+    let deps =
+        generated_cargo_dependencies(&HashSet::from(["sifr.http".to_string()]), &HashSet::new());
+
+    assert_eq!(
+        deps,
+        vec![
+            "http = \"1.4.1\"",
+            "cookie = { version = \"0.18.1\", default-features = false }",
+        ]
+    );
+    assert!(!deps.iter().any(|dep| dep.starts_with("url = ")));
+    assert!(!deps.iter().any(|dep| dep.contains("percent-encoding")));
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("http"),
+        Some(StdlibFeature::Http)
+    );
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("cookie"),
+        Some(StdlibFeature::Cookie)
+    );
+}
+
+#[test]
+fn network_http_m3_combined_modules_emit_all_locked_m3_dependencies_without_ring5() {
+    let deps = generated_cargo_dependencies(
+        &HashSet::from(["sifr.url".to_string(), "sifr.http".to_string()]),
+        &HashSet::new(),
+    );
+
+    assert_eq!(
+        deps,
+        vec![
+            "http = \"1.4.1\"",
+            "cookie = { version = \"0.18.1\", default-features = false }",
+            "url = \"2.5.8\"",
+            "percent-encoding = \"2.3.2\"",
+        ]
+    );
+    assert!(!deps.iter().any(|dep| dep.contains("proptest")));
+    assert!(!deps.iter().any(|dep| dep.contains("tracing-subscriber")));
+}
+
+#[test]
+fn network_http_m3_url_and_http_modules_emit_locked_dependencies() {
+    let deps = generated_cargo_dependencies(
+        &HashSet::from(["sifr.url".to_string(), "sifr.http".to_string()]),
+        &HashSet::new(),
+    );
+
+    assert_eq!(
+        deps,
+        vec![
+            "http = \"1.4.1\"",
+            "cookie = { version = \"0.18.1\", default-features = false }",
+            "url = \"2.5.8\"",
+            "percent-encoding = \"2.3.2\"",
+        ]
+    );
+    assert!(!deps.iter().any(|dep| dep.contains("proptest")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("serde = ")));
+    assert!(!deps.iter().any(|dep| dep.contains("x509-parser")));
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("url"),
+        Some(StdlibFeature::Url)
+    );
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("percent-encoding"),
+        Some(StdlibFeature::PercentEncoding)
+    );
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("http"),
+        Some(StdlibFeature::Http)
+    );
+    assert_eq!(
+        sifr_stdlib::feature_for_codegen_requirement("cookie"),
+        Some(StdlibFeature::Cookie)
+    );
+}

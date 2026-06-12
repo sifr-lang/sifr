@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "m0-planned",
+  "status": "m3-implemented",
   "source": "milestone_network_http_0_dependency_decision_record",
   "ring5_dev_test_demo_crates": [
     "tokio-test",

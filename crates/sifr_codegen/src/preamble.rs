@@ -18,6 +18,8 @@ mod net_runtime;
 pub(crate) use net_runtime::*;
 mod tls_runtime;
 pub(crate) use tls_runtime::*;
+mod url_http_runtime;
+pub(crate) use url_http_runtime::*;
 mod parallel_runtime;
 pub(crate) use parallel_runtime::*;
 mod process_async_child_runtime;
