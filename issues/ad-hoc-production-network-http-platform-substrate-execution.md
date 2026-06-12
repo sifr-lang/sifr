@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0, M1, M2, M3, and M4 merged; M5 Integration, Documentation, And Production Handoff in progress
+Status: completed, audited; M0, M1, M2, M3, M4, and M5 merged, with final local validation and full-phase reviewer closure recorded.
 
 ## Scope Split
 
@@ -23,7 +23,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] `milestone_network_http_2`: TLS Runtime
 - [x] `milestone_network_http_3`: URL, Header, And Cookie Primitives
 - [x] `milestone_network_http_4`: HTTP Core Transport
-- [ ] `milestone_network_http_5`: Integration, Documentation, And Production Handoff
+- [x] `milestone_network_http_5`: Integration, Documentation, And Production Handoff
 
 ## Planning Reviews
 
@@ -203,6 +203,9 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M5 closeout review pass 1:
   - `reviews/ad-hoc-production-network-http-m5-opus-review-pass-1.md`
   - Result: `PASS`; reviewer found no blocking findings, accepted the public/private HTTP transport boundary, confirmed the GCQ and validation manifest scoping, confirmed the broad generated-code demos stall is pre-existing and non-blocking for this M5 PR, and stated M5 is acceptable to proceed after the standard create-pr and merge gates pass.
+- Claude Opus final full-phase closure review pass 2:
+  - `reviews/ad-hoc-production-network-http-final-opus-review-pass-2.md`
+  - Result: `PASS`; reviewer found no blocking findings, verified the public/private HTTP transport boundary, CPython-shaped surface rejection, Ring 5 dependency isolation, M5 validation gates, and closed inventory state, and stated the phase may be marked `completed, audited` after the closure diff is committed and standard local validation passes.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -228,6 +231,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Merge commit: `e442dd321087c2f5b7bae0b29c804f4e09ca8b81`
   - Scope: added Hyper/H2-backed HTTP/1.1 and HTTP/2 runtime transport over M1 TCP and M2 TLS handles, public `sifr.http` body/head primitives, private driver-seeded `sifr.http_transport` e2e harness, deterministic HTTP/1/h2c/HTTPS-H2 loopback fixtures, dependency snapshots, transport traceability, and M4 Opus review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `8ea0280766eaedb08a2af335eb9dc95e1aff9b3b` before the final review-ledger commit; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 138 pass fixtures with report signature `4ede7c71d86f381c`; advisory was high e2e group skew only. The final review-ledger commit reran `scripts/run_all_tests.sh --profile create-pr` successfully with report signature `50edc954137c87b4`.
+- M5 implementation merge ledger:
+  - PR: https://github.com/sifr-lang/sifr/pull/2499
+  - Merge commit: `23c0e36b48e6f672b5509d83115d6c482e9ae287`
+  - Scope: added public Network/HTTP substrate docs, internal architecture handoff docs, TCP/TLS/HTTP substrate demos, generated-code quality coverage for network demos, validation-lane network fixture membership, M5 traceability closure, and the M5 Opus review artifact.
+  - Merge-gate validation: `scripts/run_all_tests.sh --profile create-pr` passed with 132 pass fixtures and report signature `5edef8cd4b961ef8`; `scripts/run_all_tests.sh` passed with 145 pass fixtures and report signature `ed0733e95709bedc`. The only final merge-gate advisory was high e2e group skew.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -296,7 +304,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - M2: https://github.com/sifr-lang/sifr/pull/2496 merged at `742ea9f33dcac821d5abb644156d97dd2d7876cc`.
 - M3: https://github.com/sifr-lang/sifr/pull/2497 merged at `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`.
 - M4: https://github.com/sifr-lang/sifr/pull/2498 merged at `e442dd321087c2f5b7bae0b29c804f4e09ca8b81`.
-- M5: pending.
+- M5: https://github.com/sifr-lang/sifr/pull/2499 merged at `23c0e36b48e6f672b5509d83115d6c482e9ae287`.
 
 ## Validation Evidence
 
@@ -434,8 +442,8 @@ M5 focused validation:
 | `SIFR_GCQ_MAX_ENTRIES=1 python3 verification/generated_code_quality/generated_code_quality.py corpus --group demos-required` | PASS | Validates generated-code quality manifest schema/order after adding network demo entries. |
 | `rg -n '<generated-code forbidden panic/unwrap/unsafe patterns>' target/m5_demo_builds/*/sifr_output/src` | PASS | Direct generated Rust scan for the new network demos found no `.unwrap`, `.expect`, `panic!`, `todo!`, `unimplemented!`, `unsafe`, or `#[allow(...)]`. |
 | `python3 verification/generated_code_quality/generated_code_quality.py demos --group demos-required` | STOPPED | Broad demos mode stalled on pre-existing `demo-003-cargo-manifest` before reaching the new network demo entries; targeted new-demo build/run and direct generated Rust scan above are the authoritative focused M5 signal. |
-| `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed for the M5 closeout branch after clearing a generated e2e cache corruption from an earlier attempt; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded. |
-| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for the M5 closeout branch; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; advisories: warm wall-time budget exceeded, warm-cache hit rate below advisory target, and high group skew. |
+| `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed for the M5 closeout branch after an earlier transient `text_i18n_encoding_io` e2e failure was isolated and cold-rerun successfully; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded due to the cold e2e cache rebuild. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for the M5 closeout branch; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; advisory: high e2e group skew only. |
 
 Required baseline commands:
 
@@ -468,7 +476,7 @@ Opening the M0 implementation PR is blocked until the artifact locations and sch
 
 - Phase owner: runtime/networking implementation owner.
 - Designated compiler/runtime reviewer for M0: Claude Opus via `.cursor/skills/talk-to-claude-opus`; human compiler/runtime reviewer request remains required on the GitHub PR before merge.
-- External/final review fallback: M5 may use the five-working-day fallback rule only after this ledger records the reviewer assignment, posted review artifact, attempted follow-ups, open questions, and conservative self-review.
+- External/final review fallback: unused; M5 and phase closure used the designated Opus reviewer loop instead.
 
 ## CPython Evidence Scan
 
@@ -515,7 +523,7 @@ M0 implementation decisions recorded:
 | `metrics` facade | `deferred-to-phase-X` | Optional metrics schema needs M5 approval before production dependency activation. | Add only after metric names, labels, redaction, and deterministic tests are approved. | `verification/stdlib/network_http_dependency_audit.md` |
 | `hickory-resolver` | `deferred-to-phase-X` | TCP connect/address resolution uses `tokio::net::lookup_host`; custom resolver policy is outside substrate. | Future resolver issue must define record APIs and host behavior. | `verification/stdlib/network_http_substrate_inventory.md` |
 | `x509-parser` | `deferred-to-phase-X` | Public certificate display parsing is outside M2; TLS errors carry typed verification evidence. | Future certificate-inspection issue must define text/i18n display behavior. | `verification/stdlib/network_http_dependency_audit.md` |
-| Ring 5 dev/test/demo dependencies | `test-only-harness` | `tokio-test`, `proptest`, `rcgen`, and `tracing-subscriber` must not appear in production dependency combinations. | M5 must re-prove resolver-backed all-feature snapshots after implementation. | `verification/stdlib/network_http_dependency_snapshots.json`, `crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs` |
+| Ring 5 dev/test/demo dependencies | `test-only-harness` | `tokio-test`, `proptest`, `rcgen`, and `tracing-subscriber` must not appear in production dependency combinations. | M5 re-proved resolver-backed generated dependency snapshots after implementation; future production dependency changes must rerun the same snapshot tests. | `verification/stdlib/network_http_dependency_snapshots.json`, `crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs` |
 
 Every `deferred-to-phase-X`, `rejected`, `host-limited`, `internal-only`, or `unsupported-with-diagnostic` decision must include:
 
