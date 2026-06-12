@@ -257,7 +257,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - M0: https://github.com/sifr-lang/sifr/pull/2494 merged at `c426d01e26257c5b72e3ecd50e6884c86292a14b`.
 - M1: https://github.com/sifr-lang/sifr/pull/2495 merged at `ce5a411f4284404a1a374f77c0176351771e7cb9`.
 - M2: https://github.com/sifr-lang/sifr/pull/2496 merged at `742ea9f33dcac821d5abb644156d97dd2d7876cc`.
-- M3: https://github.com/sifr-lang/sifr/pull/2497 draft.
+- M3: https://github.com/sifr-lang/sifr/pull/2497 ready for merge after local merge-gate validation.
 - M4: pending.
 - M5: pending.
 
