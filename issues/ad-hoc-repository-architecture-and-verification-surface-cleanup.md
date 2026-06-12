@@ -1,6 +1,6 @@
 # Ad Hoc Repository Architecture And Verification Surface Cleanup
 
-status: draft
+status: implementation-ready
 
 ## Objective
 
@@ -81,6 +81,8 @@ The top-level tree should contain only intentional, load-bearing entries:
 ```text
 .github/
 .cursor/
+.gitignore
+.gitmodules
 crates/
 demos/
 docs/
@@ -108,6 +110,8 @@ Every tracked top-level entry must be classified in the first implementation PR 
 - `archive-external`: valuable process history, not active tree material
 - `delete`: obsolete or generated
 - `generate`: produced by a script and should not be committed unless it is a baseline
+
+Implementation rule: every tracked file or directory move must use `git mv`, followed by the intended content/reference edits, validation, and an explicit commit for that PR slice. Do not move tracked files with plain filesystem commands and leave Git to infer renames later.
 
 ## Planning, Issues, And Reviews Structure
 
@@ -277,6 +281,8 @@ Rules:
 - `schemas` answer what shape committed verification data must have.
 - `runner` answers how verification is executed.
 - `policy` answers machine-facing operational rules for baselines, artifacts, flakes, retention, and schema governance.
+- `toolchain` steps are runner-executed cargo/rustfmt/clippy/test steps selected by profiles through schema-defined names. Toolchain step names are an enum in `profile.schema.json`, not a separate registry. They cover workspace build and Rust test gates without making raw shell commands part of profile data.
+- `guardrail` steps are runner-executed entries selected by profiles through a committed registry at `verification/policy/guardrails.json`. The registry maps stable guardrail names to `scripts/` entrypoints, arguments, timeout policy, and expected report shape.
 - Suites are area-local groupings, not a competing top-level taxonomy. A suite may live under `verification/areas/<area>/suites/` or inside the area manifest.
 - Cases are area-owned. A profile may select a subset of an area or suite, but it never owns fixtures directly.
 - A case is the unit of verification: a manifest or suite entry plus the fixture files and expected outputs it references. A fixture is on-disk input material only; fixtures are never executed except as part of a case.
@@ -327,6 +333,8 @@ verification/profiles/<profile>.json
 Profile files may define:
 
 - selected areas or area-local suites
+- selected toolchain step sets
+- selected guardrail step sets
 - warm and cold time budgets
 - resource policy
 - resource classes such as network, large-memory, platform-specific, long-running, or external-corpus
@@ -342,12 +350,20 @@ Profile files may not define:
 - expected diagnostic text
 - baselines
 - area ownership
-- one-off shell commands
+- raw shell commands or one-off command strings
 
 Naming convention:
 
 - Profile names are kebab-case because they are CLI-facing, such as `--profile create-pr`.
 - Area and suite names are snake_case because they are identifier-facing: directories, manifest keys, and Python modules.
+
+Canonical runner invocation:
+
+```bash
+uv run --project verification python -m sifr_verify --profile create-pr
+```
+
+`verification/pyproject.toml` owns package discovery for `verification/runner/sifr_verify/`, pins `requires-python`, and declares any needed verification dependencies. `verification/README.md` documents the minimum supported `uv` version. `scripts/run_all_tests.sh` fail-fasts with an actionable message when `uv` is missing or below that minimum. CI may install the pinned `uv` version before invoking the same local validation facade; the test behavior itself must remain identical between local and CI execution.
 
 Permanent verification areas:
 
@@ -380,6 +396,8 @@ There is no permanent `audits` area. Existing audit material must move into the 
 
 Boundary rule: a check that gates first-party source or repo hygiene and needs no compiled artifact is a guardrail in `scripts/`; a check that executes or inspects compiler behavior, generated output, diagnostics, or binaries is verification and belongs to an area.
 
+Guardrails remain implemented in `scripts/`, but the end-state validation runner invokes them through `verification/policy/guardrails.json` so `scripts/run_all_tests.sh` can stay a thin dispatcher while profiles avoid raw shell commands.
+
 Keep in `scripts/`:
 
 - `run_all_tests.sh` as the only public validation facade
@@ -391,8 +409,8 @@ Keep in `scripts/`:
 Move into `verification/areas/*`:
 
 - e2e pass runner -> `core_language`
-- validation contract matrices -> owning area, usually `core_language`, `project_workspace`, or `diagnostics`
-- hardening runner -> `regression`, `fuzz_property`, and `ecosystem_compatibility` as appropriate
+- validation contract matrices -> owning areas listed in the discovered verification disposition table: `core_language` and `project_workspace`
+- hardening runner -> split into `regression`, `fuzz_property`, `ecosystem_compatibility`, and runner self-tests
 - platform golden checks -> `runtime_platform`
 - generated-code quality checks -> `generated_code_quality`
 - performance budget checks -> `performance`
@@ -431,7 +449,8 @@ Stay in `scripts/` as public facades, repo guardrails, repo maintenance, code ge
 - `scripts/check_file_size_guardrails.py`, `scripts/check_hir_maintainability_guardrails.py`, `scripts/check_sifr_driver_maintainability_guardrails.py`, `scripts/check_source_crate_dependency_direction.py` -> keep as source/repo guardrails.
 - `scripts/check_codegen_rawcode_gate.sh` -> keep as a source guardrail unless it grows generated-output inspection; if it does, move the generated-output portion to `generated_code_quality`.
 - `scripts/check_diagnostic_cancel_usage.py`, `scripts/check_diagnostic_transport_cleanup.py` -> keep as diagnostics source hygiene guardrails.
-- `scripts/check_integer_dtype_contract.py`, `scripts/check_package_manager_guardrails.py` -> keep as source/repo guardrails unless the inventory proves they execute compiler behavior; then move to `core_language` or `package_management`.
+- `scripts/check_integer_dtype_contract.py` -> move to `core_language`; it validates the active integer dtype contract sentinel under verification data.
+- `scripts/check_package_manager_guardrails.py` -> move to `package_management`; it validates package-manager source boundaries and package-management verification matrices together.
 - `scripts/clone_subrepos.sh` -> keep as repository maintenance.
 - `scripts/generate_unicode_tables.py` -> keep as a code generator.
 - `scripts/distribution/build_preview_artifacts.sh`, `scripts/distribution/create_new_version.sh`, `scripts/distribution/generate_dispatchers.sh`, `scripts/distribution/generate_version_installer.sh` -> keep as release tooling.
@@ -442,24 +461,25 @@ Move into verification areas or runner-owned policy:
 - `scripts/run_validation_contract_matrix.sh` -> split by contract ownership: `core_language`, `project_workspace`, and `diagnostics`; shared harness pieces belong in `verification/runner/`.
 - `scripts/run_phase23_graph_isolation_matrix.sh` -> `project_workspace`.
 - `scripts/run_phase24_hir_analysis_consolidation_matrix.sh`, `scripts/run_phase25_cfg_flow_activation_matrix.sh` -> `core_language`.
-- `scripts/run_frontend_mode_parity_matrix.sh` -> `developer_tooling` unless inventory proves it is a compiler project/workspace contract.
+- `scripts/run_frontend_mode_parity_matrix.sh` -> `project_workspace`; it is a wrapper over the validation contract matrix for project/compiler frontend mode parity.
 - `scripts/run_platform_golden.sh` -> `runtime_platform`.
 - `scripts/run_smoke_fuzz_property.sh` -> `fuzz_property`.
-- `scripts/run_integer_model_closure_perf.py`, `scripts/ci_e2e_throughput.sh`, `scripts/check_codegen_binary_size.sh` -> `performance` with explicit budget/profile policy.
-- `scripts/check_codegen_binary_size.sh` may split generated-artifact assertions into `generated_code_quality` if inventory shows it is testing codegen quality rather than performance budget.
+- `scripts/run_integer_model_closure_perf.py`, `scripts/ci_e2e_throughput.sh` -> `performance` with explicit budget/profile policy.
+- `scripts/check_codegen_binary_size.sh` -> `performance`; binary size is treated as an explicit performance budget.
 - `scripts/check_diagnostic_baseline_hygiene.py`, `scripts/check_diagnostic_code_coverage.py`, `scripts/check_diagnostic_docs_sync.py`, `scripts/check_diagnostic_schema_sync.py` -> `diagnostics`.
 - `scripts/run_distribution_validation.sh`, `scripts/distribution/validate_self_update_metadata.sh` -> `distribution_release` if used as validation gates; keep only release-mutating operations in `scripts/distribution/`.
 - `scripts/run_stdlib_namespace_corpus_validation.py`, `scripts/check_phase30_complexity_resource_inventory.py` -> `stdlib_parity`.
-- `scripts/build_full_corpus_failure_taxonomy.py` -> `algorithmic_compatibility` or `ecosystem_compatibility`, depending on whether the taxonomy is for scored algorithm corpora or broader OSS signal.
+- `scripts/build_full_corpus_failure_taxonomy.py` -> `algorithmic_compatibility`; it builds failure taxonomy artifacts for full algorithmic corpus result JSON.
 - `scripts/generate_concurrency_runtime_inventory.py` -> `stdlib_parity` as an area-local data generator if the output is verification inventory.
 - `scripts/run_verification_hardening.py` and `scripts/run_verification_hardening/` -> split across `regression`, `fuzz_property`, `ecosystem_compatibility`, and runner self-tests; do not keep a generic hardening runner after areas own the suites.
 - `scripts/check_e2e_report_determinism.sh`, `scripts/check_e2e_sequential_parallel_equivalence.sh` -> `verification/runner/` self-tests and `verification/policy/` evidence.
-- `scripts/validation_lane.py`, `scripts/validation_lane_report.py` -> replace with `verification/runner/sifr_verify/profiles.py` and profile report handling; delete old names after PR 7.
+- `scripts/validation_lane.py`, `scripts/validation_lane_report.py` -> replace with `verification/runner/sifr_verify/profiles.py` and profile report handling; delete old names in PR 7.
 
 Delete or replace after references are removed:
 
 - `scripts/__pycache__/` and `scripts/run_verification_hardening/__pycache__/` -> delete and guard against tracked Python bytecode.
-- `scripts/validate_phase15_backlog.py`, `scripts/phase_contract_gate_check.py` -> delete or replace with current `plans/` guardrails only if the inventory proves they still protect active planning data.
+- `scripts/validate_phase15_backlog.py` -> delete; it protects a historical phase-15 backlog path and should not survive the planning-tree move.
+- `scripts/phase_contract_gate_check.py` -> replace with a current `plans/phases/index.md` consistency guardrail if still useful; delete the phase-numbered path assumptions.
 - `scripts/archive_issues.sh`, `scripts/archive_reviews.sh`, `scripts/archive_reviews_and_issues.sh` -> update for `plans/issues/{active,completed,archive}` and `plans/reviews/{active,archive}` if still needed; otherwise delete in favor of direct `git mv` during planning PRs.
 
 ## Audits Cleanup
@@ -472,7 +492,7 @@ Initial disposition:
 | --- | --- |
 | `audits/.DS_Store` | Delete. |
 | `audits/run_audit.sh`, `audits/run_audit_fast.sh`, `audits/run_borrowing_audit.sh` | Delete after equivalent verification area manifests and runners exist. Do not keep wrappers. |
-| `audits/lint_panic_patterns.sh` | Delete or replace with an owned guardrail/verification check under `generated_code_quality` or `scripts/` depending on whether it scans generated output or source. |
+| `audits/lint_panic_patterns.sh` | Replace under `generated_code_quality`; it enforces user-facing generated-code panic policy for `sifr_codegen` and should be owned with the other generated-code quality gates. |
 | `audits/STDLIB_PARITY_MASTER_REPORT.md` | Archive or delete after any current state is reflected in `stdlib_parity` manifests/data. It must not remain an active report. |
 | `audits/*/REPORT.md`, `audits/*/POST_HARDENING_REPORT.md` | Archive or delete. Keep only concise current state in area manifests, area README files, or `plans/` if the history matters. |
 | `audits/stdlib/cpython_parity_fixture_format.md` | Keep as a convention, but move to the owning location: `internal_docs/verification/` if it is a human convention, or `verification/areas/stdlib_parity/README.md` if it is area-specific runner guidance. |
@@ -552,9 +572,15 @@ Shape `internal_docs/` around a small set of durable topics:
 - `sifr_workspace_design.md`
 - `structured_runtime_work_model.md`
 - `dependency_policy.md`
+- `diagnostic_codes.md`
 - `generated_code_quality.md`
+- `hir_maintainability_guardrails.md`
 - `performance_budgets.md`
+- `sifr_driver_maintainability_guardrails.md`
 - `lsp_server.md`
+- `tooling_analysis.md`
+- `tooling_reuse_strategy.md`
+- `tooling_verification.md`
 - `editor_integrations.md`
 - `vscode_extension.md`
 - `distribution_pipeline.md`
@@ -637,6 +663,130 @@ Add repo-hygiene guardrails for:
 
 The personal-path guardrail must allow intentional example paths in tests when they are explicitly part of fixture data.
 
+## Discovered Current-State Disposition
+
+This phase is implementation-ready only if the current surfaces have an explicit destination before the first move PR. The following inventory is the source of truth for the cleanup PRs.
+
+Tracked top-level entries discovered:
+
+| Current entry | Tracked state | Final disposition |
+| --- | ---: | --- |
+| `.cursor/` | 19 files | Keep as portable workflow assets after deleting `.cursor/.rules/` and extra Claude skill variants. |
+| `.github/` | 2 files | Keep; retarget validation vocabulary from lane to profile. |
+| `.gitignore` | 1 file | Keep; edit for `Cargo.lock`, bytecode/cache/editor-state hygiene, and generated-artifact exclusions. |
+| `.gitmodules` | 1 file | Keep; update atomically with submodule moves. |
+| `AGENTS.md`, `CLAUDE.md`, `README.md` | 3 files | Keep; update planning, verification, and profile paths atomically with moves. |
+| `Cargo.toml`, `sifr.toml`, `LICENSE.md`, `logo.webp` | 4 files | Keep. |
+| `Cargo.lock` | ignored/untracked now | Track in the dedicated Cargo lock PR. |
+| `crates/`, `demos/`, `docs/`, `lib/`, `third_party/`, `editor_integrations/` | active trees | Keep; only update references and submodule metadata required by moves. |
+| `internal_docs/` | 96 files | Keep only current architecture, design state, and conventions; move phases/roadmap/planning and runner policy out. |
+| `issues/` | active root issue plus archive | Move under `plans/issues/{active,completed,archive}`. |
+| `reviews/` | active root review artifacts plus archive | Move retained artifacts under `plans/reviews/{active,archive}`; delete logs and transcripts without planning value. |
+| `audits/` | audit fixtures, reports, scripts, and LeetCode submodule | Remove as a top-level system; promote fixtures/corpora into verification areas or delete/archive reports. |
+| `scripts/` | 54 tracked files | Keep only public facade, repo guardrails, release tooling, generators, and maintenance utilities. Move verification implementation into areas. |
+| `verification/` | 303 tracked files | Rebuild into `runner`, `schemas`, `profiles`, `areas`, and `policy`. |
+
+Ignored local/generated top-level material discovered and not to be tracked:
+
+| Current entry | Final disposition |
+| --- | --- |
+| `.DS_Store`, `.claude/`, `.claude.log`, `.obsidian/`, `.sifr_cache/`, `sifr_output/`, `target/`, `tmp/`, `tmp_*` | Delete locally when encountered; keep ignored. |
+| `scripts/__pycache__/`, `verification/**/__pycache__/`, `*.pyc` | Delete locally when encountered; guard against tracking. |
+
+Cursor exact disposition:
+
+| Current path | Final disposition |
+| --- | --- |
+| `.cursor/.rules/architecture-overview.mdc` | Delete; no `.cursor/.rules/` tree remains. |
+| `.cursor/commands/*.md` | Keep and retarget from `issues/`, `reviews/`, and `internal_docs/phases/` to `plans/...` after the planning tree exists. |
+| `.cursor/references/*.md` | Keep only portable templates/references; remove local path assumptions. |
+| `.cursor/skills/project-workflow/`, `.cursor/skills/phase-closure-loop/`, `.cursor/skills/sifr-demo-authoring/` | Keep after replacing personal paths and old planning paths. |
+| `.cursor/skills/talk-to-claude-opus/` | Keep as the single Claude/Fable review workflow; make output default to `plans/reviews/active/`. |
+| `.cursor/skills/talk-to-claude-default/`, `.cursor/skills/talk-to-claude-gui-review/` | Delete after folding any useful wording into `talk-to-claude-opus`. |
+| `.cursor/plans/.obsidian/` and other local state | Delete; no embedded Obsidian or local planning state is tracked. |
+
+Verification exact disposition by current path:
+
+| Current path | Final owner |
+| --- | --- |
+| `verification/validation_lanes/manifest.json` | Convert to `verification/profiles/{create-pr,merge,nightly,release}.json`; field names become profile-oriented. |
+| `verification/validation_lanes/create_pr_e2e_manifest.json`, `verification/validation_lanes/merge_e2e_manifest.json` | Convert to area-owned suite/case selections, primarily `core_language`, with profiles selecting suites instead of owning fixture lists. |
+| `verification/suites/manifest.json` | Dissolve into area manifests and profiles; no top-level suite taxonomy remains. |
+| `verification/validation_contracts/manifest.json` | Split suites by contract owner: `frontend_mode_parity` and `phase23_graph_isolation` to `project_workspace`; `integer_dtype_contract`, `phase24_hir_analysis`, and `phase25_cfg_flow` to `core_language`. |
+| `verification/validation_contracts/integer_dtype_contract.md` | Move to `verification/areas/core_language/data/integer_dtype_contract.md`; the runner validates sentinel text there. |
+| `verification/crashes/index.json` | Move to `verification/areas/regression/data/crashes.json`. |
+| `verification/fixedbugs/index.json` | Move to `verification/areas/regression/data/fixedbugs.json`. |
+| `verification/determinism/manifest.json` | Split into runner determinism self-tests and `verification/policy/`; do not create a `determinism` area. |
+| `verification/flake/quarantine.json` | Move to `verification/policy/flake_quarantine.json`. |
+| `verification/fuzz_property/*` | Move to `verification/areas/fuzz_property/`; `sustained_lane.md` becomes profile/policy language using profile vocabulary. |
+| `verification/generated_code_quality/*` | Move to `verification/areas/generated_code_quality/`; shell helpers become Python area runner helpers unless shell behavior itself is under test. |
+| `verification/perf/sifr_int_loop.sifr` | Move to `verification/areas/performance/fixtures/sifr_int_loop.sifr`. |
+| `verification/performance/*` | Move to `verification/areas/performance/`. |
+| `verification/platform/*` | Move to `verification/areas/runtime_platform/`; platform golden material becomes `kind: "golden"` cases or a `platform_contract` suite. |
+| `verification/distribution/*` | Move validation cases and schemas to `verification/areas/distribution_release/`; keep only release-mutating tools under `scripts/distribution/`. |
+| `verification/oss/*` | Move to `verification/areas/ecosystem_compatibility/`; curated and broader manifests become profile-selected suites. |
+| `verification/package_management/*` | Move to `verification/areas/package_management/`; demo repository submodules remain area-owned corpora/fixtures. |
+| `verification/tooling/*` | Move to `verification/areas/developer_tooling/`. |
+| `verification/sifr-large-lsp-verification/`, `verification/sifr_large_lsp_verification.md` | Move submodule and its current README/manifest wrapper to `verification/areas/developer_tooling/corpora/sifr-large-lsp-verification/`. |
+| `verification/stdlib/*` | Move to `verification/areas/stdlib_parity/`; consumed JSON inventories remain data, while traceability markdown becomes generated reports, compact runbooks, or deleted history. |
+| `verification/integer_model_*.md` | Move current integer-model contract material into `core_language` data or `internal_docs/integer_model.md`; delete point-in-time implementation inventories after current state is represented. |
+
+Crate-local verification fixture disposition:
+
+| Current path | Final owner |
+| --- | --- |
+| `crates/sifr/tests/verification/crashes/` | `verification/areas/regression/fixtures/crashes/`. |
+| `crates/sifr/tests/verification/diagnostics/` | `verification/areas/diagnostics/fixtures/` plus diagnostic baselines where expected output is contractual. |
+| `crates/sifr/tests/verification/package/` | `verification/areas/package_management/fixtures/`. |
+| `crates/sifr/tests/verification/project/` | `verification/areas/project_workspace/fixtures/`. |
+| Current crate-private exemptions | None. Every current `crates/sifr/tests/verification/` fixture moves to an owning verification area. |
+
+Audits exact disposition by current directory:
+
+| Current audit material | Count/shape | Final owner |
+| --- | ---: | --- |
+| `audits/borrowing/` | 50 `.sifr` plus report | `core_language/fixtures/ownership/`; delete report. |
+| `audits/lexical_and_syntax/` | 7 `.sifr` plus reports | `core_language/fixtures/syntax/`; delete reports. |
+| `audits/type_inference/` | 30 `.sifr` plus reports | `core_language/fixtures/type_inference/`; delete reports. |
+| `audits/type_system/` | 41 `.sifr` plus reports | `core_language/fixtures/type_system/`; delete reports. |
+| `audits/modules_and_imports/` | 5 `.sifr` plus reports | `project_workspace/fixtures/imports/`; delete reports. |
+| `audits/iteration_protocol/` | 5 `.sifr` plus reports | Split by contract into `core_language`, `stdlib_parity`, or `regression`; delete reports after manifest coverage. |
+| `audits/object_model/` | 6 `.sifr` plus reports | Split by contract into `core_language`, `stdlib_parity`, or `regression`; delete reports after manifest coverage. |
+| `audits/python_basics/` | 45 `.sifr` plus reports | Split by contract into `core_language`, `stdlib_parity`, or `regression`; delete duplicates after manifest coverage. |
+| `audits/stdlib/` | 10 `.sifr`, CPython convention doc, reports | Fixtures to `stdlib_parity`; CPython convention to `verification/areas/stdlib_parity/README.md`; reports delete/archive. |
+| `audits/leetcode/` | submodule corpus | `verification/areas/algorithmic_compatibility/corpora/leetcode/` with `.gitmodules` updated. |
+| `audits/STDLIB_PARITY_MASTER_REPORT.md`, `audits/*/REPORT.md`, `audits/*/POST_HARDENING_REPORT.md` | historical markdown | Delete from active tree after current state is represented by manifests/data/docs. |
+
+Internal docs exact disposition:
+
+| Current path/group | Final disposition |
+| --- | --- |
+| `internal_docs/roadmap.md` | Move to `plans/roadmap.md` and update links. |
+| `internal_docs/phases/*.md` | Move flat into `plans/phases/`; create `plans/phases/index.md`. Preserve existing filenames; the duplicate phase-27 numbering is shown as two indexed phase-27 entries rather than renamed during this cleanup. |
+| `internal_docs/verification/artifact_schema_and_retention.md` | Move to `verification/policy/artifact_schema_and_retention.md`. |
+| `internal_docs/verification/baseline_governance.md` | Move to `verification/policy/baseline_governance.md`. |
+| `internal_docs/verification/deterministic_sharding_and_flake_policy.md` | Move to `verification/policy/deterministic_sharding_and_flake_policy.md`. |
+| `internal_docs/verification/fuzz_property_policy.md` | Move to `verification/policy/fuzz_property.md` and update lane wording to profile wording. |
+| `internal_docs/verification/oss_gate_policy.md` | Move to `verification/policy/ecosystem_compatibility.md`. |
+| `internal_docs/verification/regression_corpus_policy.md` | Move to `verification/policy/regression_corpus.md`. |
+| `internal_docs/verification/suite_taxonomy.md` | Delete after the new area/profile README and schemas replace it. |
+| `internal_docs/validation_lane_policy.md` | Move to `verification/policy/profile_policy.md` with lane vocabulary removed. |
+| `internal_docs/compiler_pipeline.html` | Stop linking as the canonical compiler overview; either regenerate from source into `target/` or move public visualizer material to `docs/`. `README.md` currently links to this file and must be updated in the same PR. |
+| `internal_docs/typescript_go_architecture_transfer_m*.md` | Consolidate current accepted state into the existing current-state docs (`frontend_query_architecture.md`, `lsp_server.md`, `tooling_analysis.md`, `tooling_verification.md`, `editor_integrations.md`, `vscode_extension.md`) and delete milestone transfer notes from active `internal_docs/`. |
+| `internal_docs/diagnostic_emission_inventory.md` | Keep in `internal_docs/` as current diagnostic emission state after removing validation ledgers and stale milestone prose. |
+| `internal_docs/tooling_verification.md` | Keep as current human-facing tooling verification convention if rewritten without validation ledgers; runner-consumed checks move to `verification/areas/developer_tooling/`. |
+
+Stale reference cleanup discovered:
+
+| Reference family | Required update |
+| --- | --- |
+| `validation_lane`, `validation_lanes`, and user-facing `lane` validation wording in `.github/`, `scripts/`, `README.md`, `AGENTS.md`, `internal_docs/`, and `verification/` | Replace with `profile` vocabulary except where `lane` refers to compiler/LSP worker lanes. |
+| `internal_docs/phases/` references in `AGENTS.md`, `README.md`, Cursor commands, scripts, and phase gate checks | Retarget to `plans/phases/`. |
+| Root `issues/` references in roadmap, Cursor commands, archive scripts, and active docs | Retarget to `plans/issues/{active,completed,archive}`. |
+| Root `reviews/` references and `.claude.log` paths | Retarget retained summaries to `plans/reviews/`; delete log/transcript references that are not retained artifacts. |
+| `/Users/yaseralnajjar/...` references in `.cursor/skills/*` and `verification/distribution/common.sh` | Replace with environment variables or repo-relative paths; fail guardrail on future personal paths. |
+| `verification/validation_lanes/*` references in scripts and inventories | Replace with `verification/profiles/*` and area-owned suite references. |
+
 ## Proposed PR Sequence
 
 ### PR 1: Repository Surface And Relevance Inventory
@@ -685,6 +835,7 @@ Remove local-machine assumptions from `.cursor/` without retargeting commands to
 Scope:
 
 - remove personal absolute paths
+- replace the external `talk-to-claude` absolute path with `TALK_TO_CLAUDE_PROJECT` and a fail-fast message when unset
 - remove `.cursor/.rules/`
 - remove `.DS_Store`, Obsidian state, and local editor artifacts
 - consolidate Claude/Fable review workflow into `.cursor/skills/talk-to-claude-opus/`
@@ -700,6 +851,8 @@ Validation:
 ### PR 4: Review Tree Normalization
 
 Move intentionally retained review artifacts under `plans/reviews/active/` or `plans/reviews/archive/`. Delete review artifacts that have no ongoing planning value and replace direct transcript ledgers in active docs with concise summaries.
+
+This PR creates `plans/reviews/{active,archive}/` and retargets `.cursor/skills/talk-to-claude-opus/` to write new review artifacts to `plans/reviews/active/` before deleting the root `reviews/` tree.
 
 Validation:
 
@@ -726,7 +879,9 @@ Add the `uv`-managed verification runner, schemas, area discovery, and result fo
 
 No existing runner migration yet.
 
-Also add the migration-status table used while old and new verification surfaces temporarily coexist. The table must track area, legacy path, new area path, current authoritative gate, equivalence evidence, and cutover status.
+Also add the migration-status table used while old and new verification surfaces temporarily coexist. The table lives in this issue plan after it moves to `plans/issues/active/`. It must track area, legacy path, new area path, current authoritative gate, equivalence evidence, and cutover status.
+
+This PR also pins `requires-python`, documents the minimum supported `uv` version, adds the `uv` availability/version fail-fast to the facade, updates CI to install the pinned `uv` version before running the same facade, and defines the profile schema entries for selected areas, toolchain step sets, and guardrail step sets.
 
 Validation:
 
@@ -741,6 +896,14 @@ Validation:
 
 Split profile configuration into `verification/profiles/*.json` and validate with schemas.
 
+Scope:
+
+- convert `verification/validation_lanes/manifest.json` into `verification/profiles/*.json`
+- rewrite facade profile resolution so `scripts/run_all_tests.sh` obtains shell exports from `uv run --project verification python -m sifr_verify profiles shell --profile <profile>`
+- move report summarization from `scripts/validation_lane_report.py` into `sifr_verify` profile report handling
+- delete `scripts/validation_lane.py`, `scripts/validation_lane_report.py`, and `verification/validation_lanes/manifest.json`
+- keep the rest of the facade orchestration body as legacy bash until the facade cutover PR
+
 Validation:
 
 - all profiles schema-valid
@@ -753,7 +916,7 @@ Migrate one verification area per PR into `verification/areas/<area>/`.
 
 The migration order intentionally starts with smaller manifest-backed areas before `core_language`, because `core_language` has the largest fixture and snapshot blast radius.
 
-Candidate order:
+Migration order:
 
 1. `diagnostics`
 2. `project_workspace`
@@ -775,6 +938,7 @@ Validation for each area migration:
 - area manifest schema-valid
 - moved fixtures are owned by exactly one area
 - crate-local `crates/sifr/tests/verification/` fixtures are moved or explicitly exempted according to the crate-fixture disposition rule
+- legacy facade dispatch is updated atomically with moved paths
 - shell verification helpers rewritten to Python under the verification `uv` project unless shell is the artifact under test
 - old verification script names deleted, not wrapped
 - runner can execute the area
@@ -806,11 +970,9 @@ Validation:
 - affected area runner executes
 - `scripts/run_all_tests.sh --profile create-pr`
 
-### PR N+3: Scripts Verification Migration
+### PR N+3: Scripts Verification Sweep
 
-Move remaining verification implementation out of `scripts/` and into verification areas.
-
-Delete old entrypoints. Do not add compatibility wrappers.
+Prove no verification implementation remains in `scripts/` after the area migrations and add the guardrail that keeps it that way. Delete any missed old entrypoints. Do not add compatibility wrappers.
 
 Validation:
 
@@ -900,3 +1062,9 @@ This plan was reviewed with the Fable high model. The main findings incorporated
 - runner determinism and sequential/parallel equivalence belong to runner self-tests and policy data, not a permanent verification area
 - the phase should borrow reference compiler invariants from TypeScript, typescript-go, Rust, Bun, and CPython: first-class baselines, mode-specific suites, resource-aware runners, distinct benchmark policy, and current-state internal docs
 - verification execution selectors should be called `profiles`, not `lanes`, because the public facade already uses `--profile` and `lane` has a separate compiler/SIMD meaning
+- the top-level contract must include `.gitignore` and `.gitmodules`
+- profile normalization must rewrite facade profile resolution before deleting the legacy validation-lane manifest
+- the verification runner needs schema-level `toolchain` and `guardrail` step kinds so cargo tests, fmt/clippy, and repo guardrails stay in validation without raw shell in profiles
+- `uv` needs explicit bootstrap, minimum-version, Python-version, and CI installation policy
+- review-tree normalization must retarget `talk-to-claude-opus` before deleting the root `reviews/` tree
+- final Fable review pass 4 returned `PASS` after these blockers were incorporated
