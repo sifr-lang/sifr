@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0, M1, M2, and M3 merged; M4 HTTP Core Transport in progress
+Status: in progress; M0, M1, M2, M3, and M4 merged; M5 Integration, Documentation, And Production Handoff in progress
 
 ## Scope Split
 
@@ -22,7 +22,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] `milestone_network_http_1`: Async Network Runtime
 - [x] `milestone_network_http_2`: TLS Runtime
 - [x] `milestone_network_http_3`: URL, Header, And Cookie Primitives
-- [ ] `milestone_network_http_4`: HTTP Core Transport
+- [x] `milestone_network_http_4`: HTTP Core Transport
 - [ ] `milestone_network_http_5`: Integration, Documentation, And Production Handoff
 
 ## Planning Reviews
@@ -200,6 +200,9 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M4 follow-up review pass 5:
   - `reviews/ad-hoc-production-network-http-m4-opus-review-pass-5g.md`
   - Result: `PASS`; reviewer accepted the private-harness follow-up, verified `sifr.http_transport` is no longer embedded in `STDLIB_SOURCES`, ordinary imports reject with `SIFR-IMPORT-0009`, the owned-parameter fixture update is consistent, and PR #2498 can be updated after the create-pr validation rerun.
+- Claude Opus M5 closeout review pass 1:
+  - `reviews/ad-hoc-production-network-http-m5-opus-review-pass-1.md`
+  - Result: `PASS`; reviewer found no blocking findings, accepted the public/private HTTP transport boundary, confirmed the GCQ and validation manifest scoping, confirmed the broad generated-code demos stall is pre-existing and non-blocking for this M5 PR, and stated M5 is acceptable to proceed after the standard create-pr and merge gates pass.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -220,6 +223,11 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
   - Merge commit: `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`
   - Scope: added public `sifr.url` and `sifr.http` primitives, private `_sifr.url` and `_sifr.http` intrinsics, generated URL/query/percent and header/cookie runtime helpers, locked URL/header/cookie dependency emission, deterministic M3 e2e fixtures, dependency snapshots, and M3 Opus review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `3dc98f4df5665cbe137934192e04593709b10f26`; report `target/validation_lane_reports/merge.latest.json`; all 14 lane steps passed, wall time 783.02s, hardening failures 0, advisory was high e2e group skew only.
+- M4 implementation merge ledger:
+  - PR: https://github.com/sifr-lang/sifr/pull/2498
+  - Merge commit: `e442dd321087c2f5b7bae0b29c804f4e09ca8b81`
+  - Scope: added Hyper/H2-backed HTTP/1.1 and HTTP/2 runtime transport over M1 TCP and M2 TLS handles, public `sifr.http` body/head primitives, private driver-seeded `sifr.http_transport` e2e harness, deterministic HTTP/1/h2c/HTTPS-H2 loopback fixtures, dependency snapshots, transport traceability, and M4 Opus review artifacts.
+  - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `8ea0280766eaedb08a2af335eb9dc95e1aff9b3b` before the final review-ledger commit; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 138 pass fixtures with report signature `4ede7c71d86f381c`; advisory was high e2e group skew only. The final review-ledger commit reran `scripts/run_all_tests.sh --profile create-pr` successfully with report signature `50edc954137c87b4`.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
@@ -287,7 +295,7 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - M1: https://github.com/sifr-lang/sifr/pull/2495 merged at `ce5a411f4284404a1a374f77c0176351771e7cb9`.
 - M2: https://github.com/sifr-lang/sifr/pull/2496 merged at `742ea9f33dcac821d5abb644156d97dd2d7876cc`.
 - M3: https://github.com/sifr-lang/sifr/pull/2497 merged at `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`.
-- M4: pending.
+- M4: https://github.com/sifr-lang/sifr/pull/2498 merged at `e442dd321087c2f5b7bae0b29c804f4e09ca8b81`.
 - M5: pending.
 
 ## Validation Evidence
@@ -409,6 +417,25 @@ M4 focused validation:
 | `git diff --check` | PASS | No whitespace errors in the M4 diff. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed after the private-harness follow-up; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 125 pass fixtures with report signature `50edc954137c87b4`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed after the private-harness follow-up; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 138 pass fixtures with report signature `4ede7c71d86f381c`; advisory: high e2e group skew only. |
+
+M5 focused validation:
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `cargo run -q -p sifr -- check demos/network_http_substrate/main.sifr` | PASS | Public HTTP substrate demo type-checks without importing the private HTTP transport harness. |
+| `cargo run -q -p sifr -- check demos/network_tcp_echo/main.sifr` | PASS | Public TCP loopback demo type-checks after using `own mut` for the affine stream split parameter. |
+| `cargo run -q -p sifr -- check demos/network_tls_loopback/main.sifr` | PASS | Public TLS loopback demo type-checks with deterministic fixture certificate/key material. |
+| `cargo run -q -p sifr -- build demos/network_http_substrate/main.sifr -o target/m5_demo_builds/http_substrate` | PASS | Generated native project compiled successfully. |
+| `cargo run -q -p sifr -- build demos/network_tcp_echo/main.sifr -o target/m5_demo_builds/tcp_echo` | PASS | Generated native project compiled successfully. |
+| `cargo run -q -p sifr -- build demos/network_tls_loopback/main.sifr -o target/m5_demo_builds/tls_loopback` | PASS | Generated native project compiled successfully. |
+| `cargo run -q -p sifr -- run demos/network_http_substrate/main.sifr && cargo run -q -p sifr -- run demos/network_tcp_echo/main.sifr && cargo run -q -p sifr -- run demos/network_tls_loopback/main.sifr` | PASS | All three public demos execute deterministically on loopback/local protocol primitives. |
+| `cargo test -p sifr_stdlib --test network_http_dependency_snapshots -- --nocapture` | PASS | 8 tests validate M0-M4 generated dependency output and Ring 5 absence from production dependency combinations. |
+| `SIFR_E2E_FIXTURE_MANIFEST=<M1-M4 network fixture manifest> SIFR_E2E_DISABLE_CACHE=1 SIFR_E2E_RUST_JOBS=1 SIFR_E2E_CARGO_BUILD_JOBS=1 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` | PASS | 7 network/TLS/URL/HTTP pass fixtures completed with report signature `920e9b4d72b56ae4`. |
+| `SIFR_GCQ_MAX_ENTRIES=1 python3 verification/generated_code_quality/generated_code_quality.py corpus --group demos-required` | PASS | Validates generated-code quality manifest schema/order after adding network demo entries. |
+| `rg -n '<generated-code forbidden panic/unwrap/unsafe patterns>' target/m5_demo_builds/*/sifr_output/src` | PASS | Direct generated Rust scan for the new network demos found no `.unwrap`, `.expect`, `panic!`, `todo!`, `unimplemented!`, `unsafe`, or `#[allow(...)]`. |
+| `python3 verification/generated_code_quality/generated_code_quality.py demos --group demos-required` | STOPPED | Broad demos mode stalled on pre-existing `demo-003-cargo-manifest` before reaching the new network demo entries; targeted new-demo build/run and direct generated Rust scan above are the authoritative focused M5 signal. |
+| `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed for the M5 closeout branch after clearing a generated e2e cache corruption from an earlier attempt; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded. |
+| `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for the M5 closeout branch; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; advisories: warm wall-time budget exceeded, warm-cache hit rate below advisory target, and high group skew. |
 
 Required baseline commands:
 

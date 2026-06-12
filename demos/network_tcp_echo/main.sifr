@@ -1,0 +1,42 @@
+from sifr.net import SocketAddr, TcpListener, TcpReadHalf, TcpStream, TcpWriteHalf, connect_tcp, listen_tcp
+
+
+async def echo_once(own mut stream: TcpStream) -> Result[bool, Error]:
+    try:
+        halves: tuple[TcpReadHalf, TcpWriteHalf] = stream.split()
+        reader: TcpReadHalf = halves[0]
+        writer: TcpWriteHalf = halves[1]
+        request: bytes | None = await reader.read_chunk(16)
+        assert request == b"ping"
+        _write: None = await writer.write_all(b"pong")
+        _shutdown: None = await writer.shutdown_write()
+        _reader_closed: None = reader.close()
+        _writer_closed: None = writer.close()
+        return True
+    except Error as e:
+        raise e
+
+
+async def main() -> Result[None, Error]:
+    try:
+        listener: TcpListener = await listen_tcp("127.0.0.1:0", reuse_addr=True)
+        addr: SocketAddr = listener.local_addr()
+        client: TcpStream = await connect_tcp(addr.value, timeout=2.0)
+        accepted: tuple[TcpStream, SocketAddr] = await listener.accept()
+        _listener_closed: None = listener.close()
+
+        async with task.scope() as scope:
+            server = scope.spawn(echo_once(accepted[0]))
+            halves: tuple[TcpReadHalf, TcpWriteHalf] = client.split()
+            reader: TcpReadHalf = halves[0]
+            writer: TcpWriteHalf = halves[1]
+            _write: None = await writer.write_all(b"ping")
+            _shutdown: None = await writer.shutdown_write()
+            response: bytes | None = await reader.read_chunk(16)
+            assert response == b"pong"
+            _reader_closed: None = reader.close()
+            _writer_closed: None = writer.close()
+            _server_done = await server.join()
+    except Error as e:
+        raise e
+    return None

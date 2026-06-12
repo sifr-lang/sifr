@@ -50,6 +50,7 @@
   - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
+- Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
 
 ## Vision
 
