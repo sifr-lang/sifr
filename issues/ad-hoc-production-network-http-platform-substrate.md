@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Production Network and HTTP Platform Substrate
 
-Status: completed, audited; post-closure Fable High gap remediation validated locally
+Status: completed, audited; post-closure Fable High gap remediation validated locally in [PR #2501](https://github.com/sifr-lang/sifr/pull/2501)
 Phase placement: third implementation phase in the split production-stdlib substrate sequence, after the text/Unicode/encoding/i18n runtime phase and the concurrency/process/runtime substrate phase, and before Phase 41 can claim protocol/runtime production readiness for networked programs. Multi-core serving throughput is explicitly owned by the serving-scale follow-up recorded in M0, not by this substrate phase.
 Phase owner: runtime/networking implementation with compiler import, effect, and codegen support
 

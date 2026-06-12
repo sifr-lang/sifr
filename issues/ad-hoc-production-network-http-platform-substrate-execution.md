@@ -459,6 +459,7 @@ Post-closure Fable High gap review:
 | Validation gate remediation | done | `scripts/run_all_tests.sh` now runs `cargo test -p sifr_stdlib`, `cargo test -p sifr_runtime`, and `cargo test -p sifr_runtime --features http` as part of crate tests. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Post-remediation create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded on a cold e2e cache. |
 | `scripts/run_all_tests.sh` | PASS | Post-remediation merge-gate validation passed; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; hardening failures 0; advisory: high e2e group skew only. |
+| [PR #2501](https://github.com/sifr-lang/sifr/pull/2501) | open | Carries the post-closure Fable High gap remediation, Opus review loop, Fable follow-up PASS, and local create-pr/merge-gate evidence. |
 
 Required baseline commands:
 
