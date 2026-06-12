@@ -6,6 +6,8 @@ pub mod encoding;
 pub mod i18n;
 mod int;
 pub mod json;
+#[cfg(feature = "net")]
+pub mod net;
 #[cfg(feature = "unicode")]
 pub mod unicode;
 #[cfg(feature = "unicode")]

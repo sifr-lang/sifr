@@ -1,0 +1,239 @@
+# sifr.net — Async TCP networking substrate
+from _sifr.net import (
+    net_connect_tcp,
+    net_listener_accept,
+    net_listener_close,
+    net_listener_local_addr,
+    net_listen_tcp,
+    net_lookup_host,
+    net_tcp_read_half_close,
+    net_tcp_read_half_read_chunk,
+    net_tcp_stream_close,
+    net_tcp_stream_local_addr,
+    net_tcp_stream_peer_addr,
+    net_tcp_stream_read_chunk,
+    net_tcp_stream_shutdown_write,
+    net_tcp_stream_split,
+    net_tcp_stream_write,
+    net_tcp_stream_write_all,
+    net_tcp_write_half_close,
+    net_tcp_write_half_shutdown_write,
+    net_tcp_write_half_write,
+    net_tcp_write_half_write_all,
+)
+
+
+class NetError(Error):
+    message: str
+
+
+class SocketAddr:
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+
+
+class TcpStream:
+    _handle: int
+    _closed: bool
+
+    def __init__(self, handle: int):
+        self._handle = handle
+        self._closed = False
+
+    def read_chunk(self, max_bytes: int) -> Awaitable[Result[bytes | None, NetError]]:
+        return net_tcp_stream_read_chunk(self._handle, max_bytes)
+
+    def write(self, data: bytes) -> Awaitable[Result[int, NetError]]:
+        return net_tcp_stream_write(self._handle, data)
+
+    def write_all(self, data: bytes) -> Awaitable[Result[None, NetError]]:
+        return net_tcp_stream_write_all(self._handle, data)
+
+    def shutdown_write(self) -> Awaitable[Result[None, NetError]]:
+        return net_tcp_stream_shutdown_write(self._handle)
+
+    def close(own self) -> Awaitable[Result[None, NetError]]:
+        self._closed = True
+        return net_tcp_stream_close(self._handle)
+
+    def split(own self) -> tuple[TcpReadHalf, TcpWriteHalf]:
+        self._closed = True
+        return net_tcp_stream_split(self._handle)
+
+    def local_addr(self) -> Result[SocketAddr, NetError]:
+        try:
+            value: str = net_tcp_stream_local_addr(self._handle)
+            return SocketAddr(value)
+        except NetError as e:
+            raise e
+
+    def remote_addr(self) -> Result[SocketAddr, NetError]:
+        try:
+            value: str = net_tcp_stream_peer_addr(self._handle)
+            return SocketAddr(value)
+        except NetError as e:
+            raise e
+
+
+class TcpReadHalf:
+    _handle: int
+    _closed: bool
+
+    def __init__(self, handle: int):
+        self._handle = handle
+        self._closed = False
+
+    def read_chunk(self, max_bytes: int) -> Awaitable[Result[bytes | None, NetError]]:
+        return net_tcp_read_half_read_chunk(self._handle, max_bytes)
+
+    def close(self) -> Result[None, NetError]:
+        if self._closed:
+            raise NetError("TCP read half is already closed")
+        self._closed = True
+        return net_tcp_read_half_close(self._handle)
+
+
+class TcpWriteHalf:
+    _handle: int
+    _closed: bool
+
+    def __init__(self, handle: int):
+        self._handle = handle
+        self._closed = False
+
+    def write(self, data: bytes) -> Awaitable[Result[int, NetError]]:
+        return net_tcp_write_half_write(self._handle, data)
+
+    def write_all(self, data: bytes) -> Awaitable[Result[None, NetError]]:
+        return net_tcp_write_half_write_all(self._handle, data)
+
+    def shutdown_write(self) -> Awaitable[Result[None, NetError]]:
+        return net_tcp_write_half_shutdown_write(self._handle)
+
+    def close(self) -> Result[None, NetError]:
+        if self._closed:
+            raise NetError("TCP write half is already closed")
+        self._closed = True
+        return net_tcp_write_half_close(self._handle)
+
+
+class TcpListener:
+    _handle: int
+    _closed: bool
+
+    def __init__(self, handle: int):
+        self._handle = handle
+        self._closed = False
+
+    def accept(self) -> Awaitable[Result[tuple[TcpStream, SocketAddr], NetError]]:
+        return _accept_tcp_listener(self._handle)
+
+    def local_addr(self) -> Result[SocketAddr, NetError]:
+        try:
+            value: str = net_listener_local_addr(self._handle)
+            return SocketAddr(value)
+        except NetError as e:
+            raise e
+
+    def close(self) -> Result[None, NetError]:
+        if self._closed:
+            raise NetError("TCP listener is already closed")
+        self._closed = True
+        return net_listener_close(self._handle)
+
+
+def connect_tcp(
+    address: str,
+    timeout: float | None = None,
+    local_addr: str | None = None,
+) -> Awaitable[Result[TcpStream, NetError]]:
+    if timeout is None:
+        if local_addr is None:
+            return _connect_tcp(address, 0.0, False, "", False)
+        return _connect_tcp(address, 0.0, False, local_addr, True)
+    if local_addr is None:
+        return _connect_tcp(address, timeout, True, "", False)
+    return _connect_tcp(address, timeout, True, local_addr, True)
+
+
+def listen_tcp(
+    address: str,
+    backlog: int | None = None,
+    reuse_addr: bool = False,
+) -> Awaitable[Result[TcpListener, NetError]]:
+    if backlog is None:
+        return _listen_tcp(address, 0, False, reuse_addr)
+    return _listen_tcp(address, backlog, True, reuse_addr)
+
+
+def resolve_host(
+    address: str,
+    timeout: float | None = None,
+) -> Awaitable[Result[list[SocketAddr], NetError]]:
+    if timeout is None:
+        return _resolve_host(address, 0.0, False)
+    return _resolve_host(address, timeout, True)
+
+
+def _connect_tcp(
+    address: str,
+    timeout_seconds: float,
+    has_timeout: bool,
+    local_addr: str,
+    has_local_addr: bool,
+) -> Awaitable[Result[TcpStream, NetError]]:
+    return _wrap_connect_tcp(address, timeout_seconds, has_timeout, local_addr, has_local_addr)
+
+
+def _listen_tcp(
+    address: str,
+    backlog: int,
+    has_backlog: bool,
+    reuse_addr: bool,
+) -> Awaitable[Result[TcpListener, NetError]]:
+    return _wrap_listen_tcp(address, backlog, has_backlog, reuse_addr)
+
+
+def _accept_tcp_listener(handle: int) -> Awaitable[Result[tuple[TcpStream, SocketAddr], NetError]]:
+    return _wrap_accept_tcp(handle)
+
+
+def _resolve_host(
+    address: str,
+    timeout_seconds: float,
+    has_timeout: bool,
+) -> Awaitable[Result[list[SocketAddr], NetError]]:
+    return _wrap_resolve_host(address, timeout_seconds, has_timeout)
+
+
+def _wrap_connect_tcp(
+    address: str,
+    timeout_seconds: float,
+    has_timeout: bool,
+    local_addr: str,
+    has_local_addr: bool,
+) -> Awaitable[Result[TcpStream, NetError]]:
+    return net_connect_tcp(address, timeout_seconds, has_timeout, local_addr, has_local_addr)
+
+
+def _wrap_listen_tcp(
+    address: str,
+    backlog: int,
+    has_backlog: bool,
+    reuse_addr: bool,
+) -> Awaitable[Result[TcpListener, NetError]]:
+    return net_listen_tcp(address, backlog, has_backlog, reuse_addr)
+
+
+def _wrap_accept_tcp(handle: int) -> Awaitable[Result[tuple[TcpStream, SocketAddr], NetError]]:
+    return net_listener_accept(handle)
+
+
+def _wrap_resolve_host(
+    address: str,
+    timeout_seconds: float,
+    has_timeout: bool,
+) -> Awaitable[Result[list[SocketAddr], NetError]]:
+    return net_lookup_host(address, timeout_seconds, has_timeout)

@@ -412,7 +412,7 @@ impl Type {
             }
             Self::Coroutine(ok, err) => {
                 format!(
-                    "std::pin::Pin<Box<dyn std::future::Future<Output = Result<{}, {}>>>>",
+                    "std::pin::Pin<Box<dyn std::future::Future<Output = Result<{}, {}>> + Send>>",
                     ok.rust_type(),
                     err.rust_type()
                 )
@@ -437,7 +437,7 @@ impl Type {
                 format!("__SifrJoinSet<{}, {}>", ok.rust_type(), err.rust_type())
             }
             Self::Awaitable(result) => format!(
-                "std::pin::Pin<Box<dyn std::future::Future<Output = {}>>>",
+                "std::pin::Pin<Box<dyn std::future::Future<Output = {}> + Send>>",
                 result.rust_type()
             ),
             Self::AsyncIterator(item, err) => {

@@ -6,7 +6,6 @@ const SERDE_JSON_DEP: &str =
     "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }";
 const TRACING_DEP: &str =
     "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }";
-
 pub(crate) fn failure_matches_expectation(
     failure: &CompiledFailure,
     expectation: &CompileFailureExpectation,
@@ -341,6 +340,8 @@ pub(crate) fn generate_cargo_toml(
                 | "_sifr.unicode"
                 | "sifr.i18n"
                 | "_sifr.i18n"
+                | "sifr.net"
+                | "_sifr.net"
         )
     }) {
         deps.insert(sifr_runtime_dependency_spec_for_modules(stdlib_modules));
@@ -423,7 +424,7 @@ pub(crate) fn generate_cargo_toml(
                     .iter()
                     .any(|dependency| dependency.starts_with("sifr_runtime = "))
                 {
-                    deps.insert(sifr_runtime_dependency_spec());
+                    deps.insert(sifr_runtime_dependency_spec_with_features(&[]));
                 }
             }
             "tokio" => {
@@ -454,23 +455,21 @@ pub(crate) fn generate_cargo_toml(
     contents
 }
 
-pub(crate) fn sifr_runtime_dependency_spec() -> String {
-    sifr_runtime_dependency_spec_with_features(&[])
-}
-
 fn sifr_runtime_dependency_spec_for_modules(stdlib_modules: &BTreeSet<String>) -> String {
     let mut features = Vec::new();
-    if stdlib_modules
-        .iter()
-        .any(|module| matches!(module.as_str(), "sifr.i18n" | "_sifr.i18n"))
-    {
+    let has_module = |names: &[&str]| {
+        stdlib_modules
+            .iter()
+            .any(|module| names.contains(&module.as_str()))
+    };
+    if has_module(&["sifr.i18n", "_sifr.i18n"]) {
         features.push("i18n");
     }
-    if stdlib_modules
-        .iter()
-        .any(|module| matches!(module.as_str(), "sifr.unicode" | "_sifr.unicode"))
-    {
+    if has_module(&["sifr.unicode", "_sifr.unicode"]) {
         features.push("unicode");
+    }
+    if has_module(&["sifr.net", "_sifr.net"]) {
+        features.push("net");
     }
     sifr_runtime_dependency_spec_with_features(&features)
 }

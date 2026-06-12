@@ -1,0 +1,24 @@
+from sifr.net import (
+    NetError,
+    SocketAddr,
+    TcpListener,
+    TcpStream,
+    connect_tcp,
+    listen_tcp,
+    resolve_host,
+)
+
+
+async def main() -> None:
+    bad_connect: Result[TcpStream, NetError] = await connect_tcp(
+        "127.0.0.1:1", timeout=0.0
+    )
+    assert "network timeout must be finite and positive" in str(bad_connect)
+
+    bad_lookup = await resolve_host("localhost:80", timeout=0.0)
+    assert "network timeout must be finite and positive" in str(bad_lookup)
+
+    bad_backlog: Result[TcpListener, NetError] = await listen_tcp(
+        "127.0.0.1:0", backlog=0
+    )
+    assert "TCP listener backlog must be positive" in str(bad_backlog)

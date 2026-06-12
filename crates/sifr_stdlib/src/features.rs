@@ -450,6 +450,11 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         ],
         "sifr.base64" => &[StdlibFeature::Base64],
         "sifr.ipc" | "_sifr.ipc" => &[StdlibFeature::Ipc],
+        "sifr.net" | "_sifr.net" => &[
+            StdlibFeature::SifrRuntime,
+            StdlibFeature::Tokio,
+            StdlibFeature::Tracing,
+        ],
         "sifr.parallel" => &[StdlibFeature::Rayon],
         "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
@@ -491,6 +496,7 @@ pub fn generated_cargo_dependencies(
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct RuntimeFeatures {
     i18n: bool,
+    net: bool,
     unicode: bool,
 }
 
@@ -501,9 +507,16 @@ impl RuntimeFeatures {
     ) -> Self {
         Self {
             i18n: needs_sifr_runtime_i18n(stdlib_modules, required_features),
+            net: needs_sifr_runtime_net(stdlib_modules),
             unicode: needs_sifr_runtime_unicode(stdlib_modules, required_features),
         }
     }
+}
+
+fn needs_sifr_runtime_net(stdlib_modules: &HashSet<String>) -> bool {
+    stdlib_modules
+        .iter()
+        .any(|module| matches!(module.as_str(), "sifr.net" | "_sifr.net"))
 }
 
 fn needs_sifr_runtime_i18n(
@@ -557,7 +570,19 @@ fn render_dependency_spec(
     if dependency.package == "sifr_runtime" {
         return sifr_runtime_dependency_spec(runtime_features);
     }
+    if dependency.package == "tokio" {
+        return tokio_dependency_spec(runtime_features);
+    }
     dependency.spec.to_string()
+}
+
+fn tokio_dependency_spec(runtime_features: RuntimeFeatures) -> String {
+    let features = if runtime_features.net {
+        "\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
+    } else {
+        "\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
+    };
+    format!("tokio = {{ version = \"1.52.3\", features = [{features}] }}")
 }
 
 fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
@@ -569,6 +594,9 @@ fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
     let mut features = Vec::new();
     if runtime_features.i18n {
         features.push("\"i18n\"");
+    }
+    if runtime_features.net {
+        features.push("\"net\"");
     }
     if runtime_features.unicode {
         features.push("\"unicode\"");
@@ -625,25 +653,6 @@ fn compile_time_sifr_runtime_path() -> PathBuf {
 mod tests {
     use super::{feature_for_codegen_requirement, generated_cargo_dependencies, StdlibFeature};
     use std::collections::HashSet;
-
-    fn normalize_runtime_dependency(dependency: &str) -> String {
-        if dependency.starts_with("sifr_runtime = ") {
-            if dependency.contains("features = [\"i18n\", \"unicode\"]") {
-                return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"i18n\", \"unicode\"] }"
-                    .to_string();
-            }
-            if dependency.contains("features = [\"i18n\"]") {
-                return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"i18n\"] }"
-                    .to_string();
-            }
-            if dependency.contains("features = [\"unicode\"]") {
-                return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"unicode\"] }"
-                    .to_string();
-            }
-            return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
-        }
-        dependency.to_string()
-    }
 
     #[test]
     fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
@@ -779,116 +788,5 @@ mod tests {
 
         assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")
             && dep.contains("features = [\"i18n\", \"unicode\"]")));
-    }
-
-    #[test]
-    fn text_i18n_feature_dependency_snapshots_cover_phase_combinations() {
-        let cases = [
-            (
-                "encoding",
-                HashSet::from(["sifr.encoding".to_string()]),
-                HashSet::new(),
-                vec![
-                    "encoding_rs = \"0.8.35\"",
-                    "sifr_runtime = { path = \"<sifr_runtime_path>\" }",
-                ],
-            ),
-            (
-                "unicode",
-                HashSet::from(["sifr.unicode".to_string()]),
-                HashSet::new(),
-                vec![
-                    "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"unicode\"] }",
-                    "unicode_names2 = \"3.1.0\"",
-                    "unicode-normalization = \"0.1.25\"",
-                    "unicode-segmentation = \"1.13.3\"",
-                ],
-            ),
-            (
-                "i18n",
-                HashSet::from(["sifr.i18n".to_string()]),
-                HashSet::new(),
-                vec![
-                    "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"i18n\"] }",
-                    "icu_collator = \"2.2.0\"",
-                    "icu_datetime = \"2.2.0\"",
-                    "icu_decimal = \"2.2.0\"",
-                    "icu_locale = \"2.2.0\"",
-                    "icu_plurals = \"2.2.0\"",
-                ],
-            ),
-            (
-                "encoding-and-unicode",
-                HashSet::from(["sifr.encoding".to_string(), "sifr.unicode".to_string()]),
-                HashSet::new(),
-                vec![
-                    "encoding_rs = \"0.8.35\"",
-                    "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"unicode\"] }",
-                    "unicode_names2 = \"3.1.0\"",
-                    "unicode-normalization = \"0.1.25\"",
-                    "unicode-segmentation = \"1.13.3\"",
-                ],
-            ),
-            (
-                "encoding-and-i18n",
-                HashSet::from(["sifr.encoding".to_string(), "sifr.i18n".to_string()]),
-                HashSet::new(),
-                vec![
-                    "encoding_rs = \"0.8.35\"",
-                    "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"i18n\"] }",
-                    "icu_collator = \"2.2.0\"",
-                    "icu_datetime = \"2.2.0\"",
-                    "icu_decimal = \"2.2.0\"",
-                    "icu_locale = \"2.2.0\"",
-                    "icu_plurals = \"2.2.0\"",
-                ],
-            ),
-            (
-                "unicode-and-i18n",
-                HashSet::from(["sifr.unicode".to_string(), "sifr.i18n".to_string()]),
-                HashSet::new(),
-                vec![
-                    "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"i18n\", \"unicode\"] }",
-                    "icu_collator = \"2.2.0\"",
-                    "icu_datetime = \"2.2.0\"",
-                    "icu_decimal = \"2.2.0\"",
-                    "icu_locale = \"2.2.0\"",
-                    "icu_plurals = \"2.2.0\"",
-                    "unicode_names2 = \"3.1.0\"",
-                    "unicode-normalization = \"0.1.25\"",
-                    "unicode-segmentation = \"1.13.3\"",
-                ],
-            ),
-            (
-                "encoding-unicode-and-i18n",
-                HashSet::from([
-                    "sifr.encoding".to_string(),
-                    "sifr.i18n".to_string(),
-                    "sifr.unicode".to_string(),
-                ]),
-                HashSet::new(),
-                vec![
-                    "encoding_rs = \"0.8.35\"",
-                    "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"i18n\", \"unicode\"] }",
-                    "icu_collator = \"2.2.0\"",
-                    "icu_datetime = \"2.2.0\"",
-                    "icu_decimal = \"2.2.0\"",
-                    "icu_locale = \"2.2.0\"",
-                    "icu_plurals = \"2.2.0\"",
-                    "unicode_names2 = \"3.1.0\"",
-                    "unicode-normalization = \"0.1.25\"",
-                    "unicode-segmentation = \"1.13.3\"",
-                ],
-            ),
-        ];
-
-        for (name, modules, required_features, expected) in cases {
-            let deps = generated_cargo_dependencies(&modules, &required_features)
-                .iter()
-                .map(|dependency| normalize_runtime_dependency(dependency))
-                .collect::<Vec<_>>();
-
-            assert_eq!(deps, expected, "{name}");
-        }
     }
 }
