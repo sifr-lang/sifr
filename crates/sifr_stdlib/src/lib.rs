@@ -10,6 +10,9 @@ use std::collections::HashMap;
 mod collections_bytes_time;
 mod crypto_regex_uuid;
 mod features;
+#[cfg(test)]
+mod features_tests;
+mod http;
 mod i18n_core;
 mod io_json;
 mod ipc_connection;
@@ -30,6 +33,7 @@ mod task;
 mod text_encoding;
 mod tls;
 mod unicode_core;
+mod url;
 
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
 use crypto_regex_uuid::{intrinsic_crypto, intrinsic_regex, intrinsic_uuid};
@@ -37,6 +41,7 @@ pub use features::{
     feature_for_codegen_requirement, features_for_stdlib_module, generated_cargo_dependencies,
     GeneratedCargoDependency, StdlibFeature, StdlibFeatureSpec, STDLIB_FEATURE_SPECS,
 };
+use http::intrinsic_http;
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
 pub use ipc_connection::{
@@ -70,6 +75,7 @@ use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
 use tls::intrinsic_tls;
 use unicode_core::intrinsic_unicode;
+use url::intrinsic_url;
 
 /// Match data for a bare CPython-style stdlib module name that should be
 /// imported through Sifr's `sifr.*` namespace instead.
@@ -134,6 +140,8 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.net" => Some(intrinsic_net()),
         "_sifr.tls" => Some(intrinsic_tls()),
+        "_sifr.url" => Some(intrinsic_url()),
+        "_sifr.http" => Some(intrinsic_http()),
         "_sifr.process" => Some(intrinsic_process()),
         "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),

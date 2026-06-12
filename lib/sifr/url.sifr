@@ -1,0 +1,156 @@
+# sifr.url - URL, query, and percent primitives
+from _sifr.url import (
+    url_build,
+    url_normalize_path,
+    url_parse,
+    url_percent_decode,
+    url_percent_decode_bytes,
+    url_percent_encode,
+    url_percent_encode_bytes,
+    url_query_build,
+    url_query_parse,
+)
+
+
+class UrlError(Error):
+    message: str
+
+
+class Url:
+    scheme: str
+    username: str
+    password: str | None
+    host: str
+    port: int | None
+    path: str
+    query: str | None
+    fragment: str | None
+    serialized: str
+
+    def __init__(
+        self,
+        scheme: str,
+        username: str,
+        password: str | None,
+        host: str,
+        port: int | None,
+        path: str,
+        query: str | None,
+        fragment: str | None,
+        serialized: str,
+    ):
+        self.scheme = scheme
+        self.username = username
+        self.password = password
+        self.host = host
+        self.port = port
+        self.path = path
+        self.query = query
+        self.fragment = fragment
+        self.serialized = serialized
+
+    def to_string(self) -> str:
+        return self.serialized
+
+    def get_scheme(self) -> str:
+        return self.scheme
+
+    def get_username(self) -> str:
+        return self.username
+
+    def get_password(self) -> str | None:
+        return self.password
+
+    def get_host(self) -> str:
+        return self.host
+
+    def get_port(self) -> int | None:
+        return self.port
+
+    def get_path(self) -> str:
+        return self.path
+
+    def get_query(self) -> str | None:
+        return self.query
+
+    def get_fragment(self) -> str | None:
+        return self.fragment
+
+    def is_absolute(self) -> bool:
+        return self.scheme != "" and self.host != ""
+
+
+class UrlQuery:
+    pairs: list[tuple[str, str]]
+
+    def __init__(self, pairs: list[tuple[str, str]]):
+        self.pairs = pairs
+
+    def items(self) -> list[tuple[str, str]]:
+        return self.pairs
+
+    def get(self, name: str) -> str | None:
+        for pair in self.pairs:
+            if pair[0] == name:
+                return pair[1]
+        return None
+
+
+def parse(value: str) -> Result[Url, UrlError]:
+    return url_parse(value)
+
+
+def parse_url(value: str) -> Result[Url, UrlError]:
+    return parse(value)
+
+
+def build(
+    scheme: str,
+    host: str,
+    path: str = "/",
+    query: str | None = None,
+    port: int | None = None,
+) -> Result[Url, UrlError]:
+    return url_build(scheme, host, path, query, port)
+
+
+def build_url(
+    scheme: str,
+    host: str,
+    path: str = "/",
+    query: str | None = None,
+    port: int | None = None,
+) -> Result[Url, UrlError]:
+    return build(scheme, host, path, query, port)
+
+
+def percent_encode(value: str) -> str:
+    return url_percent_encode(value)
+
+
+def percent_decode(value: str) -> Result[str, UrlError]:
+    return url_percent_decode(value)
+
+
+def percent_encode_bytes(value: bytes) -> str:
+    return url_percent_encode_bytes(value)
+
+
+def percent_decode_bytes(value: str) -> Result[bytes, UrlError]:
+    return url_percent_decode_bytes(value)
+
+
+def normalize_path(path: str) -> Result[str, UrlError]:
+    return url_normalize_path(path)
+
+
+def parse_query(query: str) -> Result[UrlQuery, UrlError]:
+    try:
+        pairs: list[tuple[str, str]] = url_query_parse(query)
+        return UrlQuery(pairs)
+    except UrlError as e:
+        raise e
+
+
+def build_query(pairs: list[tuple[str, str]]) -> Result[str, UrlError]:
+    return url_query_build(pairs)

@@ -17,3 +17,4 @@ mod batch_execution;
 pub(crate) use batch_execution::*;
 mod e2e_entrypoints;
 mod harness_contract_tests;
+mod network_http_dependency_contract_tests;

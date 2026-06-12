@@ -2,7 +2,7 @@
 
 Phase contract: [ad-hoc-production-network-http-platform-substrate.md](./ad-hoc-production-network-http-platform-substrate.md)
 
-Status: in progress; M0, M1, and M2 merged; M3 URL, Header, And Cookie Primitives is next
+Status: in progress; M0, M1, and M2 merged; M3 URL, Header, And Cookie Primitives implementation candidate is ready for Opus review
 
 ## Scope Split
 
@@ -169,6 +169,13 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Claude Opus M2 final branch-tip review pass 4:
   - `reviews/ad-hoc-production-network-http-m2-opus-review-pass-4.md`
   - Result: `PASS`; reviewer verified the final branch tip after the validation-contract follow-up commit, found no blocking issues, accepted the full merge-gate evidence, and stated PR #2496 is acceptable to merge now.
+- Claude Opus M3 implementation review pass 2:
+  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-2.md`
+  - Result: `FAIL`; reviewer blocked on percent-encoded non-ASCII URL host bytes bypassing the IDNA guard and stale path-normalization traceability language.
+  - Remediations: URL authority guard now rejects non-ASCII percent-decoded host bytes before `url` crate parsing; fixtures cover `%C3%A9.example` rejection, `%61.example` acceptance, IPv4 parsing, IPv6 building, and `%2F` path preservation; M3 traceability now records WHATWG dot-segment behavior instead of claiming raw path preservation; generated helpers enforce inventory hard caps for URL/query/header primitives; header canonicalization and embedded `=` cookie values are fixture-covered.
+- Claude Opus M3 implementation review pass 3:
+  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-3.md`
+  - Result: `PASS`; reviewer verified the IDNA bypass and path-normalization traceability blockers are fully remediated, found no new implementation blockers, and stated M3 is acceptable to open as a PR after the standard create-pr validation gates pass.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
   - Merge commit: `c426d01e26257c5b72e3ecd50e6884c86292a14b`
@@ -328,6 +335,26 @@ M2 broad pass-suite note:
 - An accidental full `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` run launched after a temp-manifest wrapper mistake. It completed the M2 TLS fixture groups successfully, then failed in unrelated pre-existing pass fixtures: IO generated-build groups (`cpython_io_subset`, `stdlib_io_consolidated`, `open_*`) and `bytes_conversion_errors`. The targeted M2 manifest above is the authoritative M2 e2e signal for this candidate.
 - Earlier interrupted `create-pr` validation attempts left stale Cargo child processes holding the default target lock. After terminating those stale validation jobs, a clean PTY `scripts/run_all_tests.sh --profile create-pr` run passed.
 - Full merge-gate validation initially exposed stale contract assumptions around the e2e Tokio `net` feature and validation helper paths under `CARGO_TARGET_DIR`; the follow-up commit corrected those validation contracts, and the final merge-gate rerun passed.
+
+M3 focused validation:
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `cargo check -p sifr_stdlib -p sifr_codegen` | PASS | Verifies M3 stdlib intrinsic signatures, generated dependency features, and URL/HTTP lowerer compilation. |
+| `cargo build -p sifr --bin sifr` | PASS | Rebuilt the CLI after adding public `sifr.url`, public `sifr.http`, generated helper preambles, and dependency feature wiring. |
+| `target/debug/sifr check crates/sifr/tests/e2e/pass/network_http_m3_url_query_percent.sifr` | PASS | Public URL/query/percent fixture type-checks. |
+| `target/debug/sifr check crates/sifr/tests/e2e/pass/network_http_m3_header_cookie.sifr` | PASS | Public header/cookie fixture type-checks. |
+| `target/debug/sifr run crates/sifr/tests/e2e/pass/network_http_m3_url_query_percent.sifr` | PASS | Fresh generated build after reviewer remediation; covers URL parse/build, IPv4 parsing, IPv6 building, already-punycode host, percent-encoded ASCII host acceptance, literal and percent-encoded non-ASCII host blocked states, `%2F` path preservation, invalid port, percent helpers, path normalization, and query parse/build. |
+| `target/debug/sifr run crates/sifr/tests/e2e/pass/network_http_m3_header_cookie.sifr` | PASS | Fresh generated build after reviewer remediation; covers header name/value validation, lowercase canonicalization, OWS trim, duplicate order preservation, obs-fold rejection, cookie header parse/build, and embedded `=` cookie values. |
+| `cargo test -p sifr network_http_dependency_contract_tests -- --nocapture` | PASS | Verifies locked URL/header/cookie dependency specs and generated-Rust dependency inference for `url`, `percent-encoding`, `http`, and `cookie`. |
+| `SIFR_E2E_FIXTURE_MANIFEST=<M3 fixtures> SIFR_E2E_CACHE_DIR=target/sifr_e2e_cache/m3-focused SIFR_E2E_DISABLE_CACHE=0 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` | PASS | Selected batch e2e run for `network_http_m3_header_cookie` and `network_http_m3_url_query_percent`; 2 passed, 0 failed, cache hits 0/2 after the IPv6 fixture change. |
+| `cargo test -p sifr_stdlib --test network_http_dependency_snapshots -- --nocapture` | PASS | Verifies M0-M3 generated dependency snapshots, exact URL/header/cookie crate specs, and Ring 5 absence from M3 production dependencies. |
+| `cargo fmt --check` | PASS | Rust formatting check. |
+| `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after Opus pass-3 remediation. |
+| `scripts/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
+| `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
+| `python3 scripts/check_file_size_guardrails.py` | PASS | File-size guardrail passed with 2319 files under the 900-line limit. |
+| `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | HIR maintainability guardrails passed. |
 
 Required baseline commands:
 

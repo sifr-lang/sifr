@@ -8,8 +8,10 @@ pub enum StdlibFeature {
     BigDecimal,
     Blake2,
     Chrono,
+    Cookie,
     EncodingRs,
     Flate2,
+    Http,
     IcuCollator,
     IcuDatetime,
     IcuDecimal,
@@ -20,6 +22,7 @@ pub enum StdlibFeature {
     Metrics,
     NumBigint,
     NumTraits,
+    PercentEncoding,
     Rand,
     RandDistr,
     Rayon,
@@ -39,6 +42,7 @@ pub enum StdlibFeature {
     UnicodeNames,
     UnicodeNormalization,
     UnicodeSegmentation,
+    Url,
     Uuid,
     Zip,
 }
@@ -51,8 +55,10 @@ impl StdlibFeature {
             Self::BigDecimal => "bigdecimal",
             Self::Blake2 => "blake2",
             Self::Chrono => "chrono",
+            Self::Cookie => "cookie",
             Self::EncodingRs => "encoding_rs",
             Self::Flate2 => "flate2",
+            Self::Http => "http",
             Self::IcuCollator => "icu_collator",
             Self::IcuDatetime => "icu_datetime",
             Self::IcuDecimal => "icu_decimal",
@@ -63,6 +69,7 @@ impl StdlibFeature {
             Self::Metrics => "metrics",
             Self::NumBigint => "num-bigint",
             Self::NumTraits => "num-traits",
+            Self::PercentEncoding => "percent-encoding",
             Self::Rand => "rand",
             Self::RandDistr => "rand_distr",
             Self::Rayon => "rayon",
@@ -82,6 +89,7 @@ impl StdlibFeature {
             Self::UnicodeNames => "unicode_names2",
             Self::UnicodeNormalization => "unicode-normalization",
             Self::UnicodeSegmentation => "unicode-segmentation",
+            Self::Url => "url",
             Self::Uuid => "uuid",
             Self::Zip => "zip",
         }
@@ -116,6 +124,10 @@ const CHRONO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "chrono",
     spec: "chrono = \"0.4.44\"",
 }];
+const COOKIE_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "cookie",
+    spec: "cookie = { version = \"0.18.1\", default-features = false }",
+}];
 const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "encoding_rs",
     spec: "encoding_rs = \"0.8.35\"",
@@ -123,6 +135,10 @@ const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency
 const FLATE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "flate2",
     spec: "flate2 = \"1.1.9\"",
+}];
+const HTTP_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "http",
+    spec: "http = \"1.4.1\"",
 }];
 const ICU_COLLATOR_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "icu_collator",
@@ -170,6 +186,10 @@ const NUM_BIGINT_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency 
 const NUM_TRAITS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "num-traits",
     spec: "num-traits = \"0.2.19\"",
+}];
+const PERCENT_ENCODING_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "percent-encoding",
+    spec: "percent-encoding = \"2.3.2\"",
 }];
 const RAND_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "rand",
@@ -253,6 +273,10 @@ const UNICODE_SEGMENTATION_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoD
     package: "unicode-segmentation",
     spec: "unicode-segmentation = \"1.13.3\"",
 }];
+const URL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
+    package: "url",
+    spec: "url = \"2.5.8\"",
+}];
 const UUID_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "uuid",
     spec: "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }",
@@ -280,12 +304,20 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: CHRONO_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Cookie,
+        cargo_dependencies: COOKIE_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::EncodingRs,
         cargo_dependencies: ENCODING_RS_DEPS,
     },
     StdlibFeatureSpec {
         feature: StdlibFeature::Flate2,
         cargo_dependencies: FLATE2_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::Http,
+        cargo_dependencies: HTTP_DEPS,
     },
     StdlibFeatureSpec {
         feature: StdlibFeature::IcuCollator,
@@ -326,6 +358,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
     StdlibFeatureSpec {
         feature: StdlibFeature::NumTraits,
         cargo_dependencies: NUM_TRAITS_DEPS,
+    },
+    StdlibFeatureSpec {
+        feature: StdlibFeature::PercentEncoding,
+        cargo_dependencies: PERCENT_ENCODING_DEPS,
     },
     StdlibFeatureSpec {
         feature: StdlibFeature::Rand,
@@ -404,6 +440,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: UNICODE_SEGMENTATION_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Url,
+        cargo_dependencies: URL_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Uuid,
         cargo_dependencies: UUID_DEPS,
     },
@@ -420,8 +460,10 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "bigdecimal" => Some(StdlibFeature::BigDecimal),
         "blake2" => Some(StdlibFeature::Blake2),
         "chrono" => Some(StdlibFeature::Chrono),
+        "cookie" => Some(StdlibFeature::Cookie),
         "encoding_rs" | "encoding-rs" => Some(StdlibFeature::EncodingRs),
         "flate2" => Some(StdlibFeature::Flate2),
+        "http" => Some(StdlibFeature::Http),
         "icu_collator" | "icu-collator" => Some(StdlibFeature::IcuCollator),
         "icu_datetime" | "icu-datetime" => Some(StdlibFeature::IcuDatetime),
         "icu_decimal" | "icu-decimal" => Some(StdlibFeature::IcuDecimal),
@@ -432,6 +474,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "metrics" => Some(StdlibFeature::Metrics),
         "num-bigint" => Some(StdlibFeature::NumBigint),
         "num-traits" => Some(StdlibFeature::NumTraits),
+        "percent-encoding" | "percent_encoding" => Some(StdlibFeature::PercentEncoding),
         "rand" => Some(StdlibFeature::Rand),
         "rand_distr" => Some(StdlibFeature::RandDistr),
         "rayon" => Some(StdlibFeature::Rayon),
@@ -455,6 +498,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
             Some(StdlibFeature::UnicodeNormalization)
         }
         "unicode-segmentation" | "unicode_segmentation" => Some(StdlibFeature::UnicodeSegmentation),
+        "url" => Some(StdlibFeature::Url),
         "uuid" => Some(StdlibFeature::Uuid),
         "zip" => Some(StdlibFeature::Zip),
         _ => None,
@@ -510,6 +554,8 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::RustlsPlatformVerifier,
             StdlibFeature::Tracing,
         ],
+        "sifr.url" | "_sifr.url" => &[StdlibFeature::Url, StdlibFeature::PercentEncoding],
+        "sifr.http" | "_sifr.http" => &[StdlibFeature::Http, StdlibFeature::Cookie],
         "sifr.parallel" => &[StdlibFeature::Rayon],
         "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
@@ -719,147 +765,5 @@ fn compile_time_sifr_runtime_path() -> PathBuf {
     match manifest_dir.parent() {
         Some(parent) => parent.join("sifr_runtime"),
         None => manifest_dir.join("../sifr_runtime"),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{feature_for_codegen_requirement, generated_cargo_dependencies, StdlibFeature};
-    use std::collections::HashSet;
-
-    #[test]
-    fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
-        let stdlib_modules = HashSet::from([
-            "sifr.json".to_string(),
-            "_sifr.json".to_string(),
-            "sifr.random".to_string(),
-        ]);
-        let required_features = HashSet::from([StdlibFeature::SerdeJson, StdlibFeature::Rand]);
-
-        let deps = generated_cargo_dependencies(&stdlib_modules, &required_features);
-
-        assert_eq!(
-            deps,
-            vec![
-                "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }",
-                "serde = { version = \"1.0.228\", features = [\"derive\"] }",
-                "rand = \"0.10.1\"",
-                "rand_distr = \"0.6.0\"",
-            ]
-        );
-    }
-
-    #[test]
-    fn unknown_modules_and_empty_features_do_not_emit_dependencies() {
-        let stdlib_modules = HashSet::from(["sifr.io".to_string()]);
-        let required_features = HashSet::new();
-
-        assert!(generated_cargo_dependencies(&stdlib_modules, &required_features).is_empty());
-    }
-
-    #[test]
-    fn runtime_and_tokio_features_render_owned_dependency_specs() {
-        let deps = generated_cargo_dependencies(
-            &HashSet::new(),
-            &HashSet::from([StdlibFeature::SifrRuntime, StdlibFeature::Tokio]),
-        );
-
-        assert!(deps
-            .iter()
-            .any(|dep| dep.starts_with("sifr_runtime = ") && !dep.contains("features")));
-        assert!(deps.iter().any(|dep| dep.starts_with("tokio = ")));
-    }
-
-    #[test]
-    fn ipc_feature_renders_locked_postcard_specs_without_json() {
-        let deps = generated_cargo_dependencies(
-            &HashSet::from(["sifr.ipc".to_string(), "_sifr.ipc".to_string()]),
-            &HashSet::from([StdlibFeature::Ipc]),
-        );
-
-        assert_eq!(
-            deps,
-            vec![
-                "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
-                "serde = { version = \"1.0.228\", features = [\"derive\"] }",
-            ]
-        );
-        assert!(!deps.iter().any(|dep| dep.starts_with("serde_json = ")));
-        assert_eq!(
-            feature_for_codegen_requirement("ipc"),
-            Some(StdlibFeature::Ipc)
-        );
-        assert_eq!(
-            feature_for_codegen_requirement("postcard"),
-            Some(StdlibFeature::Ipc)
-        );
-    }
-
-    #[test]
-    fn unicode_module_emits_runtime_and_unicode_dependencies() {
-        let deps = generated_cargo_dependencies(
-            &HashSet::from(["sifr.unicode".to_string()]),
-            &HashSet::new(),
-        );
-
-        assert!(deps
-            .iter()
-            .any(|dep| dep.starts_with("sifr_runtime = ")
-                && dep.contains("features = [\"unicode\"]")));
-        assert!(deps.contains(&"unicode_names2 = \"3.1.0\"".to_string()));
-        assert!(deps.contains(&"unicode-normalization = \"0.1.25\"".to_string()));
-        assert!(deps.contains(&"unicode-segmentation = \"1.13.3\"".to_string()));
-    }
-
-    #[test]
-    fn unicode_intrinsic_features_enable_runtime_unicode_feature() {
-        let deps = generated_cargo_dependencies(
-            &HashSet::new(),
-            &HashSet::from([
-                StdlibFeature::SifrRuntime,
-                StdlibFeature::UnicodeNames,
-                StdlibFeature::UnicodeNormalization,
-                StdlibFeature::UnicodeSegmentation,
-            ]),
-        );
-
-        assert!(deps
-            .iter()
-            .any(|dep| dep.starts_with("sifr_runtime = ")
-                && dep.contains("features = [\"unicode\"]")));
-    }
-
-    #[test]
-    fn i18n_module_emits_runtime_and_icu_dependencies() {
-        let deps = generated_cargo_dependencies(
-            &HashSet::from(["sifr.i18n".to_string()]),
-            &HashSet::new(),
-        );
-
-        assert!(
-            deps.iter()
-                .any(|dep| dep.starts_with("sifr_runtime = ")
-                    && dep.contains("features = [\"i18n\"]"))
-        );
-        assert!(deps.contains(&"icu_collator = \"2.2.0\"".to_string()));
-        assert!(deps.contains(&"icu_datetime = \"2.2.0\"".to_string()));
-        assert!(deps.contains(&"icu_decimal = \"2.2.0\"".to_string()));
-        assert!(deps.contains(&"icu_locale = \"2.2.0\"".to_string()));
-        assert!(deps.contains(&"icu_plurals = \"2.2.0\"".to_string()));
-    }
-
-    #[test]
-    fn runtime_dependency_can_enable_unicode_and_i18n_together() {
-        let deps = generated_cargo_dependencies(
-            &HashSet::new(),
-            &HashSet::from([
-                StdlibFeature::SifrRuntime,
-                StdlibFeature::IcuLocale,
-                StdlibFeature::UnicodeNormalization,
-            ]),
-        );
-
-        assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")
-            && dep.contains("features = [\"i18n\", \"unicode\"]")));
     }
 }

@@ -463,6 +463,18 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("postcard::") || rust_source.contains("use postcard") {
         crates.insert("postcard".to_string());
     }
+    if rust_source.contains("url::") || rust_source.contains("use url") {
+        crates.insert("url".to_string());
+    }
+    if rust_source.contains("percent_encoding::") || rust_source.contains("use percent_encoding") {
+        crates.insert("percent-encoding".to_string());
+    }
+    if rust_source.contains("http::") || rust_source.contains("use http") {
+        crates.insert("http".to_string());
+    }
+    if rust_source.contains("cookie::") || rust_source.contains("use cookie") {
+        crates.insert("cookie".to_string());
+    }
 
     (modules, crates)
 }

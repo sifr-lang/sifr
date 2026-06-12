@@ -28,6 +28,7 @@ mod process_child_lifecycle;
 mod process_pipes;
 mod random;
 mod re;
+mod requirements;
 mod runtime;
 mod signal;
 mod sys;
@@ -37,91 +38,19 @@ mod time;
 mod tls;
 mod toml;
 mod unicode;
+mod url_http;
 mod uuid;
 mod zipfile;
 
 use crate::RustExpr;
 use sifr_stdlib::StdlibFeature;
 
+pub(crate) use requirements::additional_required_features;
+
 pub(crate) struct LoweredIntrinsic {
     pub(crate) expr: RustExpr,
     pub(crate) required_feature: Option<StdlibFeature>,
     pub(crate) additional_required_features: &'static [StdlibFeature],
-}
-
-pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeature] {
-    match name {
-        // random_gauss uses rand_distr::Normal in addition to rand::rng.
-        "random_gauss" => &[StdlibFeature::RandDistr],
-        "json_loads"
-        | "json_validate_integer_digit_limits"
-        | "json_dumps_value_exact"
-        | "json_dumps_value_web"
-        | "json_dumps_value_string_ints" => &[StdlibFeature::SifrRuntime],
-        "encoding_is_supported"
-        | "encoding_canonical_label"
-        | "encoding_decode_text"
-        | "encoding_decode_recoveries"
-        | "encoding_decode_outcome"
-        | "encoding_decode_incremental_outcome"
-        | "encoding_decode_incremental_pending"
-        | "encoding_encode_bytes"
-        | "encoding_encode_recoveries"
-        | "encoding_encode_outcome"
-        | "str_encode_utf8_result"
-        | "str_encode_utf8_result_with_encoding"
-        | "decode_utf8"
-        | "decode_utf8_with_encoding"
-        | "process_output_text"
-        | "process_shell_output_text" => &[StdlibFeature::EncodingRs],
-        "runtime_emit_diagnostic" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
-        name if name.starts_with("net_") => &[StdlibFeature::SifrRuntime],
-        name if name.starts_with("tls_") => tls::TLS_REQUIRED_FEATURES,
-        "unicode_data_version"
-        | "unicode_normalize"
-        | "unicode_is_normalized"
-        | "unicode_name"
-        | "unicode_lookup"
-        | "unicode_category"
-        | "unicode_bidirectional"
-        | "unicode_combining"
-        | "unicode_east_asian_width"
-        | "unicode_mirrored"
-        | "unicode_decomposition"
-        | "unicode_decimal"
-        | "unicode_digit"
-        | "unicode_numeric_value"
-        | "unicode_case_fold"
-        | "unicode_graphemes"
-        | "unicode_grapheme_indices"
-        | "unicode_words"
-        | "unicode_word_boundaries" => &[
-            StdlibFeature::UnicodeNames,
-            StdlibFeature::UnicodeNormalization,
-            StdlibFeature::UnicodeSegmentation,
-        ],
-        "i18n_locale_canonicalize"
-        | "i18n_locale_maximize"
-        | "i18n_locale_minimize"
-        | "i18n_host_locale"
-        | "i18n_format_number"
-        | "i18n_format_datetime"
-        | "i18n_plural_category"
-        | "i18n_collate"
-        | "i18n_mo_validate"
-        | "i18n_mo_load_file"
-        | "i18n_mo_lookup"
-        | "i18n_mo_lookup_context"
-        | "i18n_mo_lookup_plural"
-        | "i18n_mo_lookup_context_plural" => &[
-            StdlibFeature::IcuCollator,
-            StdlibFeature::IcuDatetime,
-            StdlibFeature::IcuDecimal,
-            StdlibFeature::IcuLocale,
-            StdlibFeature::IcuPlurals,
-        ],
-        _ => &[],
-    }
 }
 
 pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
@@ -494,6 +423,56 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             i18n::lower_i18n_mo_lookup_context_plural(args),
             Some(StdlibFeature::SifrRuntime),
         ),
+        "url_parse" => (url_http::lower_url_parse(args), Some(StdlibFeature::Url)),
+        "url_build" => (url_http::lower_url_build(args), Some(StdlibFeature::Url)),
+        "url_percent_encode" => (
+            url_http::lower_url_percent_encode(args),
+            Some(StdlibFeature::PercentEncoding),
+        ),
+        "url_percent_decode" => (
+            url_http::lower_url_percent_decode(args),
+            Some(StdlibFeature::PercentEncoding),
+        ),
+        "url_percent_encode_bytes" => (
+            url_http::lower_url_percent_encode_bytes(args),
+            Some(StdlibFeature::PercentEncoding),
+        ),
+        "url_percent_decode_bytes" => (
+            url_http::lower_url_percent_decode_bytes(args),
+            Some(StdlibFeature::PercentEncoding),
+        ),
+        "url_normalize_path" => (
+            url_http::lower_url_normalize_path(args),
+            Some(StdlibFeature::Url),
+        ),
+        "url_query_parse" => (
+            url_http::lower_url_query_parse(args),
+            Some(StdlibFeature::Url),
+        ),
+        "url_query_build" => (
+            url_http::lower_url_query_build(args),
+            Some(StdlibFeature::Url),
+        ),
+        "http_validate_header_name" => (
+            url_http::lower_http_validate_header_name(args),
+            Some(StdlibFeature::Http),
+        ),
+        "http_validate_header_value" => (
+            url_http::lower_http_validate_header_value(args),
+            Some(StdlibFeature::Http),
+        ),
+        "http_header_map_from_pairs" => (
+            url_http::lower_http_header_map_from_pairs(args),
+            Some(StdlibFeature::Http),
+        ),
+        "http_parse_cookie_header" => (
+            url_http::lower_http_parse_cookie_header(args),
+            Some(StdlibFeature::Cookie),
+        ),
+        "http_build_cookie_header" => (
+            url_http::lower_http_build_cookie_header(args),
+            Some(StdlibFeature::Cookie),
+        ),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),
         "str_encode_utf8_result" => (
             encoding::lower_str_encode_result(args),
@@ -779,6 +758,14 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         name if name.starts_with("tls_") => (
             tls::lower_tls_intrinsic(name, args),
             Some(StdlibFeature::Tokio),
+        ),
+        name if name.starts_with("url_") => (
+            url_http::lower_url_intrinsic(name, args),
+            Some(StdlibFeature::Url),
+        ),
+        name if name.starts_with("http_") => (
+            url_http::lower_http_intrinsic(name, args),
+            Some(StdlibFeature::Http),
         ),
         "signal_ctrl_c" => (
             signal::lower_signal_ctrl_c(args),
