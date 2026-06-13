@@ -212,7 +212,7 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR N+4 Audits Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2545> |
 | PR N+5 Internal Docs Relevance Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2547> |
 | PR N+6 Docs And Guardrails Closeout | Merged | <https://github.com/sifr-lang/sifr/pull/2549> |
-| PR N+7 Final Verification Residue Cleanup | In Review | TBD |
+| PR N+7 Final Verification Residue Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2551> |
 
 ## Verification Migration Status
 
@@ -1416,7 +1416,7 @@ Close blockers found by the final whole-phase review.
 
 Status:
 
-- Implemented for review.
+- Completed in PR #2551.
 - Moved determinism-scale suite/index data from top-level
   `verification/suites/` and `verification/determinism/` into
   `verification/runner/sifr_verify/hardening/data/`.
