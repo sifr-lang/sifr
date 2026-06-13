@@ -19,7 +19,7 @@ Phase 35 is not active yet, so INT-8 records a local ratified threshold here rat
 
 ## Fuzz And Property Coverage
 
-Integer-specific fuzz/property seeds are checked into `verification/fuzz_property/seeds/`:
+Integer-specific fuzz/property seeds are checked into `verification/areas/fuzz_property/seeds/`:
 
 - `integer_external_boundaries_seed.sifr` covers JSON web/string integer profile handling and JSON digit-limit rejection.
 - `integer_fixed_width_helpers_seed.sifr` covers fixed-width checked/wrapping/saturating/overflowing helper surfaces.

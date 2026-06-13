@@ -5,11 +5,11 @@ This policy defines phase-29 fuzz/property operating rules.
 ## Local Deterministic Smoke Gates (Blocking)
 
 Canonical manifests:
-- `verification/fuzz_property/property_manifest.json`
-- `verification/fuzz_property/fuzz_smoke_manifest.json`
+- `verification/areas/fuzz_property/property_manifest.json`
+- `verification/areas/fuzz_property/fuzz_smoke_manifest.json`
 
 Canonical runner:
-- `python3 scripts/run_verification_hardening.py --suite property --suite fuzz-smoke --profile merge`
+- `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite fuzz-smoke`
 
 Contracts:
 - deterministic seeds and deterministic mutation stream
@@ -20,7 +20,7 @@ Contracts:
 
 ## Seed Corpus Rules
 
-- Seed files are version-controlled under `verification/fuzz_property/seeds/`.
+- Seed files are version-controlled under `verification/areas/fuzz_property/seeds/`.
 - Seed updates require reviewable diffs and manifest updates.
 - Duplicate equivalent seeds should be removed; dedup decisions are captured in PR notes.
 - Seed corpus must cover control flow, import paths, callable signatures, and string/numeric literal shapes.
@@ -37,5 +37,5 @@ For every fuzz-found issue:
 ## Sustained Fuzzing Lane (Non-blocking)
 
 Long-running fuzzing is separate from local blocking smoke gates:
-- definition: `verification/fuzz_property/sustained_lane.md`
+- definition: `verification/areas/fuzz_property/sustained_lane.md`
 - status is signal-only and backlog-generating, not merge-blocking.

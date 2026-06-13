@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "FUZZ-SMOKE-LOCAL-0001",
+  "seed_files": [
+    "verification/areas/fuzz_property/seeds/invalid_import_seed.sifr",
+    "verification/areas/fuzz_property/seeds/valid_control_flow_seed.sifr",
+    "verification/areas/fuzz_property/seeds/type_mismatch_seed.sifr",
+    "verification/areas/fuzz_property/seeds/function_signature_seed.sifr",
+    "verification/areas/fuzz_property/seeds/import_callable_seed.sifr",
+    "verification/areas/fuzz_property/seeds/string_numeric_literals_seed.sifr",
+    "verification/areas/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
+    "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr"
+  ],
+  "iterations": 32,
+  "random_seed": 1349393279,
+  "min_unique_cases": 20,
+  "command": "check",
+  "diagnostic_format": "json",
+  "allow_exit_codes": [
+    0,
+    1
+  ],
+  "assert_no_panic": true,
+  "note": "Deterministic local smoke fuzz gate. Sustained long-run fuzzing is tracked separately and non-blocking."
+}

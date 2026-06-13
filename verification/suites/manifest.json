@@ -2,20 +2,6 @@
   "schema_version": 1,
   "suites": [
     {
-      "name": "property",
-      "runner": "property",
-      "owner": "compiler/hardening",
-      "blocking": true,
-      "index": "verification/fuzz_property/property_manifest.json"
-    },
-    {
-      "name": "fuzz-smoke",
-      "runner": "fuzz-smoke",
-      "owner": "compiler/hardening",
-      "blocking": true,
-      "index": "verification/fuzz_property/fuzz_smoke_manifest.json"
-    },
-    {
       "name": "oss-curated",
       "runner": "oss-curated",
       "owner": "compiler/verification",

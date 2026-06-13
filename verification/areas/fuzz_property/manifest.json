@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "name": "fuzz_property",
+  "owner": "compiler/hardening",
+  "description": "Deterministic property and smoke-fuzz verification.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 900,
+  "suites": [
+    {
+      "name": "cargo-smoke",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "smoke_property",
+          "entry": "crates/sifr/tests/e2e.rs",
+          "command": "cargo-e2e-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "smoke_fuzz",
+          "entry": "crates/sifr/tests/e2e.rs",
+          "command": "cargo-e2e-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "property",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "property",
+          "entry": "verification/areas/fuzz_property/property_manifest.json",
+          "command": "property-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "fuzz-smoke",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "fuzz-smoke",
+          "entry": "verification/areas/fuzz_property/fuzz_smoke_manifest.json",
+          "command": "fuzz-smoke-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

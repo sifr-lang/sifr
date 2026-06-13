@@ -1296,7 +1296,7 @@ cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification lane
 ./scripts/run_distribution_validation.sh     # Preview installer/artifact/release automation checks
 ./scripts/check_e2e_report_determinism.sh --profile release # Stable e2e report signature across reruns
-./scripts/run_smoke_fuzz_property.sh         # Opt-in nightly smoke property/fuzz validation
+uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # Parser snapshots
 cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
 cargo test -p sifr_codegen                    # Codegen snapshots

@@ -112,7 +112,7 @@
       ]
     },
     {
-      "area": "regression",
+      "area": "fuzz_property",
       "suites": [
         "property"
       ],
@@ -121,7 +121,7 @@
       ]
     },
     {
-      "area": "regression",
+      "area": "fuzz_property",
       "suites": [
         "fuzz-smoke"
       ],
