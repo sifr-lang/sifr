@@ -4,6 +4,14 @@ Sifr is a programming language and compiler, not a single Rust application. Depe
 
 The default rule is dependency-minimal and ecosystem-first: use mature Rust crates where they are the right production substrate, but keep crate types behind Sifr APIs and do not add adjacent crates for convenience. If a dependency cannot satisfy Sifr's ownership, typed-error, cancellation, panic, host, and testing contracts, defer the Sifr surface instead of adding a bespoke replacement or fallback path.
 
+## Workspace Lockfile
+
+Sifr tracks the root `Cargo.lock`. This repository builds a compiler, CLI, runtime crates, release tools, and verification harnesses as one Rust workspace, so the lockfile is part of the build and validation contract rather than an application-local convenience.
+
+Local validation and CI both start from the committed lockfile. The main validation lane runs the same `scripts/run_all_tests.sh` facade locally and in CI, keeping contributor machines and GitHub Actions on the same dependency graph unless a PR intentionally changes it.
+
+Any `Cargo.lock` diff is a contributor-visible dependency change. Review it with the same care as a manifest edit: confirm why the graph changed, whether transitive updates are expected, and whether generated runtime, release, or verification behavior can be affected.
+
 ## Rings
 
 ### Ring 1: Compiler And Tooling Only

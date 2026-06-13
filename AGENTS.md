@@ -73,6 +73,7 @@ See `internal_docs/architecture.md` for full architectural detail.
 - **No monolithic files**: All crates should be decomposed into small, focused files — monolithic files are banned. HIR lowering has automated guardrails enforced by `check_hir_maintainability_guardrails.py`.
 - **Snapshot testing**: Uses `insta` for e2e and unit test snapshots. E2E fixtures are discovered lexicographically, expectations follow declaration order.
 - **No panics in user paths**: No data-dependent `.unwrap()` or `.expect()` in generated runtime code. `assert!` is only for programmer invariants.
+- **Cargo lockfile**: `Cargo.lock` is tracked for this compiler workspace. Treat lockfile diffs as intentional dependency graph changes and validate with the local facade before PRs.
 
 ## Workspace structure
 
