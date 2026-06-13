@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 from .areas import discover_areas
-from .profiles import failure_reproduction_command, selected_resource_classes
+from .profiles import failure_reproduction_command, load_all_profiles, selected_resource_classes
 from .results import build_result
 from .schemas import load_schema, validate_all_committed_schemas, validate_data, validate_schema_contract
 
@@ -14,6 +14,7 @@ from .schemas import load_schema, validate_all_committed_schemas, validate_data,
 def run_all() -> list[str]:
     checks = [
         ("schema self-tests", _schema_self_test),
+        ("profile schema self-test", _profile_schema_self_test),
         ("runner discovery self-test", _discovery_self_test),
         ("resource class selection self-test", _resource_class_self_test),
         ("resume/failure-reproduction self-test", _failure_reproduction_self_test),
@@ -62,6 +63,13 @@ def _schema_self_test() -> None:
             raise
     else:
         raise AssertionError("invalid area manifest data was accepted")
+
+
+def _profile_schema_self_test() -> None:
+    profiles = load_all_profiles()
+    expected = {"create-pr", "merge", "nightly", "release"}
+    if set(profiles) != expected:
+        raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
 
 
 def _discovery_self_test() -> None:

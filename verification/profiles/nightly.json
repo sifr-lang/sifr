@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "name": "nightly",
+  "description": "Broad nightly breadth with the full pass corpus and the full hardening manifest.",
+  "budgets": {
+    "warm_wall_time_minutes": 30,
+    "cold_wall_time_minutes": 45
+  },
+  "resource_policy": {
+    "classes": [
+      "default-local",
+      "external-corpus",
+      "long-running"
+    ],
+    "max_parallel": 6
+  },
+  "selected_areas": [
+    {
+      "area": "core_language",
+      "suites": [
+        "e2e-pass"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "diagnostics",
+      "suites": [
+        "contracts"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "runtime_platform",
+      "suites": [
+        "platform-golden"
+      ],
+      "resource_classes": [
+        "platform-specific"
+      ]
+    },
+    {
+      "area": "developer_tooling",
+      "suites": [
+        "full"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "generated_code_quality",
+      "suites": [
+        "full"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "performance",
+      "suites": [
+        "full"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "distribution_release",
+      "suites": [
+        "full"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "regression",
+      "suites": [
+        "diagnostics"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "regression",
+      "suites": [
+        "project"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "regression",
+      "suites": [
+        "fixedbugs"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "regression",
+      "suites": [
+        "crashes"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "regression",
+      "suites": [
+        "property"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "regression",
+      "suites": [
+        "fuzz-smoke"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "ecosystem_compatibility",
+      "suites": [
+        "oss-curated"
+      ],
+      "resource_classes": [
+        "external-corpus"
+      ]
+    },
+    {
+      "area": "ecosystem_compatibility",
+      "suites": [
+        "ecosystem-broader"
+      ],
+      "resource_classes": [
+        "external-corpus"
+      ]
+    },
+    {
+      "area": "regression",
+      "suites": [
+        "determinism-scale"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    }
+  ],
+  "toolchain_steps": [
+    "cargo-test-sifr-full"
+  ],
+  "guardrail_steps": [
+    "hir-maintainability",
+    "file-size",
+    "cursor-hygiene",
+    "source-crate-dependency-direction",
+    "driver-maintainability",
+    "package-manager"
+  ],
+  "retry_policy": {
+    "max_attempts": 1,
+    "retry_flaky_only": false
+  },
+  "shard_policy": {
+    "strategy": "deterministic",
+    "shards": 1
+  },
+  "resume_policy": {
+    "enabled": true,
+    "failure_reproduction": "profile-and-case"
+  },
+  "report": {
+    "format": "json-v1",
+    "output_dir": "target/validation_lane_reports"
+  },
+  "legacy_facade": {
+    "matrix_suites": [
+      "frontend_mode_parity",
+      "phase23_graph_isolation",
+      "integer_dtype_contract",
+      "phase24_hir_analysis",
+      "phase25_cfg_flow"
+    ],
+    "tooling_suites": [
+      "full"
+    ],
+    "distribution": "full",
+    "generated_code_quality": "full",
+    "performance_budget": "full",
+    "crate_tests": "full",
+    "e2e": {
+      "fixture_manifest": "",
+      "sifr_jobs": 6,
+      "rust_jobs": 4,
+      "run_jobs": 4,
+      "cargo_build_jobs": 1,
+      "max_group_fixtures": 16,
+      "disable_cache": false
+    },
+    "hardening_suites": [
+      "diagnostics",
+      "project",
+      "fixedbugs",
+      "crashes",
+      "property",
+      "fuzz-smoke",
+      "oss-curated",
+      "ecosystem-broader",
+      "determinism-scale"
+    ],
+    "extra_checks": [],
+    "thermal_policy": "opt-in-broad",
+    "memory_policy": "opt-in-broad"
+  }
+}

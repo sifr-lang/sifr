@@ -1307,7 +1307,7 @@ cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, mi
 cargo bench                                   # Run benchmarks (layer 6, milestone_generics+)
 ```
 
-Validation-lane policy is defined in `verification/validation_lanes/manifest.json`. Representative `create-pr` and `merge` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in `verification/validation_contracts/manifest.json` and is executed through `scripts/run_validation_contract_matrix.sh` plus the Rust-native `tests/validation_contracts.rs` harness.
+Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release}.json` and resolved for the legacy bash facade by `verification/runner/sifr_verify/profiles.py`. Representative `create-pr` and `merge` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in `verification/validation_contracts/manifest.json` and is executed through `scripts/run_validation_contract_matrix.sh` plus the Rust-native `tests/validation_contracts.rs` harness.
 
 `scripts/run_all_tests.sh` also emits a per-lane runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-lane RSS regressions.
 

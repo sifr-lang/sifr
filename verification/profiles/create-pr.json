@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "name": "create-pr",
+  "description": "Fast local developer confidence with bounded contract coverage and representative e2e only.",
+  "budgets": {
+    "warm_wall_time_minutes": 2,
+    "cold_wall_time_minutes": 5
+  },
+  "resource_policy": {
+    "classes": [
+      "default-local"
+    ],
+    "max_parallel": 2
+  },
+  "selected_areas": [
+    {
+      "area": "core_language",
+      "suites": [
+        "e2e-pass"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "diagnostics",
+      "suites": [
+        "contracts"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "runtime_platform",
+      "suites": [
+        "platform-golden"
+      ],
+      "resource_classes": [
+        "platform-specific"
+      ]
+    },
+    {
+      "area": "developer_tooling",
+      "suites": [
+        "static"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "developer_tooling",
+      "suites": [
+        "lsp-smoke"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "generated_code_quality",
+      "suites": [
+        "smoke"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "performance",
+      "suites": [
+        "smoke"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    }
+  ],
+  "toolchain_steps": [
+    "cargo-test-sifr-smoke"
+  ],
+  "guardrail_steps": [
+    "hir-maintainability",
+    "file-size",
+    "cursor-hygiene",
+    "source-crate-dependency-direction",
+    "driver-maintainability",
+    "package-manager"
+  ],
+  "retry_policy": {
+    "max_attempts": 1,
+    "retry_flaky_only": false
+  },
+  "shard_policy": {
+    "strategy": "deterministic",
+    "shards": 1
+  },
+  "resume_policy": {
+    "enabled": true,
+    "failure_reproduction": "profile-and-case"
+  },
+  "report": {
+    "format": "json-v1",
+    "output_dir": "target/validation_lane_reports"
+  },
+  "legacy_facade": {
+    "matrix_suites": [],
+    "tooling_suites": [
+      "static",
+      "lsp-smoke"
+    ],
+    "distribution": "none",
+    "generated_code_quality": "smoke",
+    "performance_budget": "smoke",
+    "crate_tests": "smoke",
+    "e2e": {
+      "fixture_manifest": "verification/validation_lanes/create_pr_e2e_manifest.json",
+      "sifr_jobs": 2,
+      "rust_jobs": 2,
+      "run_jobs": 2,
+      "cargo_build_jobs": 1,
+      "max_group_fixtures": 8,
+      "disable_cache": false
+    },
+    "hardening_suites": [],
+    "extra_checks": [],
+    "thermal_policy": "bounded-local-defaults",
+    "memory_policy": "avoid-swap-defaults"
+  }
+}

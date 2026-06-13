@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-PROFILE="$(python3 "${SCRIPT_DIR}/validation_lane.py" profile --profile "${PROFILE}")"
+PROFILE="$(uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify profiles profile --profile "${PROFILE}")"
 if [[ "${PROFILE}" == "create-pr" ]]; then
   echo "sequential-vs-parallel equivalence is not part of the create-pr lane; use merge, nightly, or release" >&2
   exit 2

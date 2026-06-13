@@ -108,7 +108,7 @@ if [[ -z "${SIFR_LANE_REPORT_CAPTURED:-}" ]]; then
   cp "${LOG_FILE}" "${LATEST_LOG_FILE}"
   cp "${TIME_FILE}" "${LATEST_TIME_FILE}"
 
-  python3 "${SCRIPT_DIR}/validation_lane_report.py" summarize \
+  uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify reports summarize \
     --profile "${PROFILE}" \
     --log "${LATEST_LOG_FILE}" \
     --time-file "${LATEST_TIME_FILE}" \
@@ -119,7 +119,7 @@ fi
 
 cd "${SCRIPT_DIR}/.."
 
-LANE_EXPORTS="$(python3 "${SCRIPT_DIR}/validation_lane.py" shell --profile "${PROFILE}")"
+LANE_EXPORTS="$(uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify profiles shell --profile "${PROFILE}")"
 eval "${LANE_EXPORTS}"
 
 PROFILE="${RESOLVED_PROFILE}"
