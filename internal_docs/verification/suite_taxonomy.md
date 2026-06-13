@@ -44,8 +44,8 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Project fixtures are multi-file and use import/module behavior representative of real project use.
 
 ### Fixedbugs
-- Fixture root: `crates/sifr/tests/verification/fixedbugs/<case_id>/`.
-- Index source of truth: `verification/fixedbugs/index.json`.
+- Fixture root: fixed bug locks usually point at the canonical e2e/demo fixture that reproduces the resolved bug.
+- Index source of truth: `verification/areas/regression/data/fixedbugs.json`.
 - Required metadata:
   - issue or finding id
   - root-cause category
@@ -53,8 +53,8 @@ This document defines the canonical suite taxonomy for compiler verification har
   - concise context note (when needed)
 
 ### Crashes
-- Sentinel root: `crates/sifr/tests/verification/crashes/<case_id>/`.
-- Index source of truth: `verification/crashes/index.json`.
+- Sentinel root: `verification/areas/regression/fixtures/crashes/<case_id>.sifr`.
+- Index source of truth: `verification/areas/regression/data/crashes.json`.
 - Required metadata:
   - issue id
   - crash or sentinel classification

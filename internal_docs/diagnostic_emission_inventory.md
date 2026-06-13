@@ -262,7 +262,7 @@ Checked-in verification baselines under `crates/sifr/tests/verification` are a s
 | `project/workspace_ambiguous_import` | `SIFR-WORKSPACE-0102` in compact/json output | keep `SIFR-WORKSPACE-0102`; add related candidate paths |
 | `project/workspace_malformed_manifest` | `SIFR-WORKSPACE-0001` in compact/json output | keep `SIFR-WORKSPACE-0001`; add manifest span/path metadata where available |
 | `project/multi_module_run`, `project/workspace_dotted_helper_run` | no diagnostic marker; pass baselines exercise project mode stability | no diagnostic migration, but rerun with renderer tests |
-| `crashes/CR-0001_cfg_invariant_minimized`, `crashes/CR-0002_parser_invariant_minimized` | crash minimization inputs, no checked renderer baseline | panic-boundary/internal diagnostic validation, likely `SIFR-INTERNAL-0001` if surfaced through user path |
+| `regression/crashes/CR-0001_cfg_invariant_minimized`, `regression/crashes/CR-0002_parser_invariant_minimized` | crash minimization inputs, no checked renderer baseline | panic-boundary/internal diagnostic validation, likely `SIFR-INTERNAL-0001` if surfaced through user path |
 
 ## Non-Error Emission Paths
 
