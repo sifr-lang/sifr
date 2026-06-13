@@ -131,7 +131,6 @@ plans/
 
   issues/
     active/
-    completed/
     archive/
 
   reviews/
@@ -151,8 +150,7 @@ Rules:
 - Phase files stay flat under `plans/phases/` so phase numbers remain stable and easy to find.
 - Phase status lives in each phase header and in `plans/phases/index.md`; phases do not need active/completed/archive directories.
 - Active ad hoc issue plans live in `plans/issues/active/`.
-- Completed ad hoc issue plans move to `plans/issues/completed/`.
-- Superseded, abandoned, or purely historical issue plans move to `plans/issues/archive/`.
+- Completed, superseded, abandoned, or purely historical issue plans move to `plans/issues/archive/`. Record `status: completed | superseded | abandoned` in each archived doc header.
 - Active review artifacts live in `plans/reviews/active/`.
 - Completed or historical review artifacts move to `plans/reviews/archive/`.
 - Review archives are allowed under `plans/reviews/archive/`; they should not sit at the repository root.
@@ -539,7 +537,7 @@ Delete or replace after references are removed:
 - `scripts/__pycache__/` and `scripts/run_verification_hardening/__pycache__/` -> deleted and guarded by `scripts/check_scripts_verification_boundary.py` in PR #2543.
 - `scripts/validate_phase15_backlog.py` -> deleted in PR #2543; it protected a historical phase-15 backlog path and did not survive the planning-tree move.
 - `scripts/phase_contract_gate_check.py` -> deleted in PR #2543; no current `plans/phases/index.md` consistency guardrail was retained.
-- `scripts/archive_issues.sh`, `scripts/archive_reviews.sh`, `scripts/archive_reviews_and_issues.sh` -> update for `plans/issues/{active,completed,archive}` and `plans/reviews/{active,archive}` if still needed; otherwise delete in favor of direct `git mv` during planning PRs.
+- `scripts/archive_issues.sh`, `scripts/archive_reviews.sh`, `scripts/archive_reviews_and_issues.sh` -> update for `plans/issues/{active,archive}` and `plans/reviews/{active,archive}` if still needed; otherwise delete in favor of direct `git mv` during planning PRs.
 
 ## Audits Cleanup
 
@@ -750,7 +748,7 @@ Tracked top-level entries discovered:
 | `Cargo.lock` | ignored/untracked now | Track in the dedicated Cargo lock PR. |
 | `crates/`, `demos/`, `docs/`, `lib/`, `third_party/`, `editor_integrations/` | active trees | Keep; only update references and submodule metadata required by moves. |
 | `internal_docs/` | 96 files | Keep only current architecture, design state, and conventions; move phases/roadmap/planning and runner policy out. |
-| `plans/issues/` | active root issue plus archive | Move under `plans/issues/{active,completed,archive}`. |
+| `plans/issues/` | active root issue plus archive | Move under `plans/issues/{active,archive}`. |
 | `reviews/` | active root review artifacts plus archive | Move retained artifacts under `plans/reviews/{active,archive}`; delete logs and transcripts without planning value. |
 | `audits/` | audit fixtures, reports, scripts, and LeetCode submodule | Remove as a top-level system; promote fixtures/corpora into verification areas or delete/archive reports. |
 | `scripts/` | 54 tracked files | Keep only public facade, repo guardrails, release tooling, generators, and maintenance utilities. Move verification implementation into areas. |
@@ -852,7 +850,7 @@ Stale reference cleanup discovered:
 | --- | --- |
 | `validation_lane`, `validation_lanes`, and user-facing `lane` validation wording in `.github/`, `scripts/`, `README.md`, `AGENTS.md`, `internal_docs/`, and `verification/` | Replace with `profile` vocabulary except where `lane` refers to compiler/LSP worker lanes. |
 | `plans/phases/` references in `AGENTS.md`, `README.md`, Cursor commands, scripts, and phase gate checks | Retarget to `plans/phases/`. |
-| Root `plans/issues/` references in roadmap, Cursor commands, archive scripts, and active docs | Retarget to `plans/issues/{active,completed,archive}`. |
+| Root `plans/issues/` references in roadmap, Cursor commands, archive scripts, and active docs | Retarget to `plans/issues/{active,archive}`. |
 | Root `reviews/` references and `.claude.log` paths | Retarget retained summaries to `plans/reviews/`; delete log/transcript references that are not retained artifacts. |
 | `/Users/yaseralnajjar/...` references in `.cursor/skills/*` and `verification/distribution/common.sh` | Replace with environment variables or repo-relative paths; fail guardrail on future personal paths. |
 | `verification/validation_lanes/*` references in scripts and inventories | Replace with `verification/profiles/*` and area-owned suite references. |
@@ -884,7 +882,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `docs/` | keep | Public documentation surface. | No | Yes | link/reference checks | CPython separates public docs from internal docs. |
 | `editor_integrations/` | keep | Editor integration ownership surface and submodule parent. | Yes | Yes | tooling checks and submodule status | TypeScript keeps editor tooling contracts explicit. |
 | `internal_docs/` | keep | Current architecture and durable conventions only after moving planning/policy out. | No | Yes | link/reference checks | CPython keeps internal docs current, not process history. |
-| `plans/issues/` | move | Active and archived issue plans move to `plans/issues/{active,completed,archive}`. | No | Yes | roadmap/Cursor/AGENTS reference checks | Mature repos separate plans from architecture. |
+| `plans/issues/` | move | Active and archived issue plans move to `plans/issues/{active,archive}`. | No | Yes | roadmap/Cursor/AGENTS reference checks | Mature repos separate plans from architecture. |
 | `reviews/` | move | Retained summaries move to `plans/reviews/`; logs and low-value transcripts delete. | No | Yes | no top-level reviews guardrail | Review process history should not obscure product surface. |
 | `audits/` | move | Top-level audit system is dissolved into verification areas or deleted history. | Yes | Yes | area manifest ownership and runner execution | TypeScript keeps fixtures area-owned, not audit-owned. |
 | `scripts/` | keep | Public facade, guardrails, generators, release and maintenance tools only. | Yes | Yes | create-pr/merge validation and stale script guardrails | Rust separates test runner/tooling from compiler implementation. |
@@ -1028,7 +1026,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `plans/roadmap.md` | move | Move to `plans/roadmap.md`. | No | Yes | roadmap link checks | Execution plans should not live in architecture docs. |
 | `plans/phases/*.md` | move | Move flat to `plans/phases/` and add `plans/phases/index.md`. | No | Yes | phase index/link checks | Stable phase files belong to planning. |
 | `plans/issues/active/ad-hoc-repository-architecture-and-verification-surface-cleanup.md` | move | Active phase plan moves to `plans/issues/active/`. | No | Yes | AGENTS/Cursor/roadmap references | Active plans live under plans. |
-| `plans/issues/active/ad-hoc-serious-build-output-and-phase-timings.md` | move | Completed or active status determines `plans/issues/completed/` or `active/`. | No | Yes | issue index checks | Issue lifecycle should be explicit. |
+| `plans/issues/active/ad-hoc-serious-build-output-and-phase-timings.md` | move | Active status keeps the plan in `plans/issues/active/`; completed plans move to `plans/issues/archive/`. | No | Yes | issue index checks | Issue lifecycle should be explicit. |
 | `issues/archive/` | move | Move to `plans/issues/archive/`. | No | Yes | archive link checks | Historical plans should not sit at root. |
 | `reviews/*.md` | move | Retain active summaries under `plans/reviews/active/`; archive historical value under `archive/`. | No | Yes | review path reference checks | Review artifacts belong with plans. |
 | `reviews/*.claude.log`, `reviews/**/*.stderr.log` | delete | Point-in-time process logs are not active repo material. | No | Yes | no log references | Logs are generated artifacts. |
@@ -1133,7 +1131,7 @@ Validation:
 
 ### PR 5: Planning Tree Normalization
 
-Move active, completed, and archived phase and issue docs into the new lifecycle directories. Retarget AGENTS and Cursor commands atomically with the new paths.
+Move active and archived phase and issue docs into the new lifecycle directories. Retarget AGENTS and Cursor commands atomically with the new paths.
 
 Validation:
 
