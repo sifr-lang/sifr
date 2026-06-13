@@ -146,4 +146,4 @@ python3 verification/areas/developer_tooling/check_formatter_ast_coverage.py --s
 
 The guardrail fails when a Sifr parser or AST extension lacks both a Ruff fork
 formatter fixture and a Sifr wrapper corpus fixture. Performance budgets for
-large-file and project formatter checks are part of the local validation lane.
+large-file and project formatter checks are part of the local validation profile.

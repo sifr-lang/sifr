@@ -2,7 +2,7 @@
 
 Status: M0 baseline. CPython is evidence for edge cases and rejection decisions, not a parity backlog.
 
-CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
+CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 
 | Family | CPython sources scanned | CPython tests scanned | State | Sifr use |
 | --- | --- | --- | --- | --- |

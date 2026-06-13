@@ -269,7 +269,7 @@ On `wasm32` or any 32-bit target, compiler-owned `usize` conversions use the tar
 `array` is a future dtype-bearing surface in this design context; references to `array[int32]` describe the required contract for the data-science phase even when the runtime container is not implemented yet.
 The reviewable and test-owned contract artifact for this deferred dtype surface
 is `verification/areas/core_language/data/integer_dtype_contract.md`; the quick
-validation lane runs its sentinel check so future runtime work cannot remove the
+validation profile runs its sentinel check so future runtime work cannot remove the
 no-silent-wrap and no-implicit-widen requirements by accident.
 
 Data science and AI surfaces treat fixed-width integers as dtype choices:

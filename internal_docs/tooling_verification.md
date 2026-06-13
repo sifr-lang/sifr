@@ -167,7 +167,7 @@ python3 verification/areas/performance/check_budgets.py
 markers in the Ruff fork, requires concrete Ruff formatter fixtures and Sifr
 wrapper corpus fixtures for each covered extension, runs corpus idempotence and
 config matrix checks, and fails unresolved `pending:*` coverage rows. The quick
-validation lane runs the formatter contract, formatter manifests, AST coverage
+validation profile runs the formatter contract, formatter manifests, AST coverage
 guardrail, editor asset guardrail, and formatter performance budget subset.
 
 Each script must pass on positive fixtures and fail on seeded negative fixtures.
@@ -200,7 +200,7 @@ metadata, and implemented `sifr lint` option coverage. `check_linter_diagnostic_
 fails if analysis or LSP code-action handlers gate policy actions by
 `SIFR-LINT-` string prefixes instead of typed `Hard`/`Policy` diagnostic data.
 
-The create-pr validation lane runs the linter reuse contract, rule/suppression
+The create-pr validation profile runs the linter reuse contract, rule/suppression
 contract, diagnostic-class guardrail, LSP smoke/stress checks, editor asset
 guardrail, VS Code extension contract/package checks, and phase closeout checks.
 

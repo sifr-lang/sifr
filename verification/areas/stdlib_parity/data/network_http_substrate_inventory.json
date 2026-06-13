@@ -2,7 +2,7 @@
   "schema_version": 1,
   "status": "closed",
   "cpython_checkout": {
-    "path": "/Users/yaseralnajjar/work/sifr/cpython",
+    "path": "../cpython",
     "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6"
   },
   "platform_contract": "verification/areas/runtime_platform/platform_contract.json",

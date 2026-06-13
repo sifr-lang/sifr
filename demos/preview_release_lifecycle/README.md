@@ -69,4 +69,5 @@ The generated release checklist records:
 - `MIT license retention required: not applicable`,
 - `Pinned uv source URL/reference required: not applicable`.
 
-The automated lifecycle checks are in `verification/distribution/create_new_version_*.sh`.
+The automated lifecycle checks are in
+`verification/areas/distribution_release/cases/create_new_version_*.sh`.

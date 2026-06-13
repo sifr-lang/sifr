@@ -79,4 +79,4 @@ Dependency-sensitive query recomputation lowers local imports before the importi
 
 ## Verification
 
-`verification/areas/performance/check_frontend_cache_contract.py` runs focused Rust tests proving deterministic cached diagnostics and source-update invalidation. `cargo test -p sifr_frontend` also covers project import-edge identity and dependency-export diagnostics through the canonical frontend. The create-pr validation lane invokes the cache contract script before the broader compiler tests.
+`verification/areas/performance/check_frontend_cache_contract.py` runs focused Rust tests proving deterministic cached diagnostics and source-update invalidation. `cargo test -p sifr_frontend` also covers project import-edge identity and dependency-export diagnostics through the canonical frontend. The create-pr validation profile invokes the cache contract script before the broader compiler tests.

@@ -1,10 +1,11 @@
 {
   "schema": 1,
-  "ruff_fork_pin": "b54922fd7394c36cdc390fd21aaee99206ebc361",
-  "rule_family_source": "/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_linter/src/rules",
+  "ruff_fork_pin": "8b95ca3d888910aa39632cd9873c05de5121ab67",
+  "rule_family_source": "third_party/ruff/crates/ruff_linter/src/rules",
   "rule_families": [
     {"name": "airflow", "directory": "airflow", "disposition": "reject", "rationale": "Airflow framework rules do not apply to Sifr.", "sifr_requirement_note": "No Sifr lint feature may expose Airflow policy."},
     {"name": "eradicate", "directory": "eradicate", "disposition": "sifr-native", "rationale": "Commented-out-code detection can be a Sifr comment policy.", "sifr_requirement_note": "Use Sifr token/comment APIs only after parser-aware suppression."},
+    {"name": "fastapi", "directory": "fastapi", "disposition": "reject", "rationale": "FastAPI framework rules do not apply to Sifr.", "sifr_requirement_note": "No FastAPI policy."},
     {"name": "flake8_2020", "directory": "flake8_2020", "disposition": "reject", "rationale": "Python sys.version rules do not apply.", "sifr_requirement_note": "No Python-version policy."},
     {"name": "flake8_annotations", "directory": "flake8_annotations", "disposition": "future-phase", "rationale": "Annotation style policy requires a Sifr type-style phase.", "sifr_requirement_note": "Compiler typing remains hard diagnostics."},
     {"name": "flake8_async", "directory": "flake8_async", "disposition": "future-phase", "rationale": "Async policy must wait for Sifr async semantics.", "sifr_requirement_note": "No Python async pattern reuse."},
@@ -41,7 +42,6 @@
     {"name": "flake8_slots", "directory": "flake8_slots", "disposition": "reject", "rationale": "Python __slots__ rules do not apply.", "sifr_requirement_note": "No Python object model policy."},
     {"name": "flake8_tidy_imports", "directory": "flake8_tidy_imports", "disposition": "future-phase", "rationale": "Import restrictions require Sifr import semantics.", "sifr_requirement_note": "No Python import policy."},
     {"name": "flake8_todos", "directory": "flake8_todos", "disposition": "sifr-native", "rationale": "TODO comment policy can be Sifr-native.", "sifr_requirement_note": "Use Sifr-owned tag configuration."},
-    {"name": "flake8_trio", "directory": "flake8_trio", "disposition": "future-phase", "rationale": "Trio-specific async rules do not apply.", "sifr_requirement_note": "Sifr async policy belongs later."},
     {"name": "flake8_type_checking", "directory": "flake8_type_checking", "disposition": "reject", "rationale": "Python runtime/type-checking import rules do not apply.", "sifr_requirement_note": "No Python import policy."},
     {"name": "flake8_unused_arguments", "directory": "flake8_unused_arguments", "disposition": "sifr-native", "rationale": "Unused-argument policy may be policy-only in Sifr.", "sifr_requirement_note": "Must not duplicate hard compiler diagnostics."},
     {"name": "flake8_use_pathlib", "directory": "flake8_use_pathlib", "disposition": "future-phase", "rationale": "Requires Sifr filesystem/path API policy.", "sifr_requirement_note": "No Python pathlib policy."},
@@ -53,6 +53,7 @@
     {"name": "pep8_naming", "directory": "pep8_naming", "disposition": "future-phase", "rationale": "Naming conventions need a Sifr naming phase.", "sifr_requirement_note": "Python naming exceptions rejected."},
     {"name": "perflint", "directory": "perflint", "disposition": "sifr-native", "rationale": "Performance policy may be Sifr-native.", "sifr_requirement_note": "Base on Sifr HIR/codegen semantics."},
     {"name": "pycodestyle", "directory": "pycodestyle", "disposition": "formatter-owned", "rationale": "Formatting-style rules are formatter-owned.", "sifr_requirement_note": "Only non-format text policies may become Sifr-native through separate rows."},
+    {"name": "pydoclint", "directory": "pydoclint", "disposition": "reject", "rationale": "Python docstring argument/return policy does not apply to Sifr.", "sifr_requirement_note": "No Python docstring contract policy."},
     {"name": "pydocstyle", "directory": "pydocstyle", "disposition": "future-phase", "rationale": "Requires Sifr documentation-comment conventions.", "sifr_requirement_note": "No Python docstring policy."},
     {"name": "pyflakes", "directory": "pyflakes", "disposition": "sifr-native", "rationale": "Only policy checks such as unused imports/variables may be Sifr-native.", "sifr_requirement_note": "Undefined names remain hard compiler diagnostics."},
     {"name": "pygrep_hooks", "directory": "pygrep_hooks", "disposition": "sifr-native", "rationale": "Text/comment/file pattern checks may be Sifr-native.", "sifr_requirement_note": "Use Sifr-owned rule IDs."},
@@ -63,10 +64,10 @@
     {"name": "tryceratops", "directory": "tryceratops", "disposition": "reject", "rationale": "Python exception rules do not apply.", "sifr_requirement_note": "No exception policy."}
   ],
   "config_sources": [
-    "/Users/yaseralnajjar/work/sifr/ruff/docs/linter.md",
-    "/Users/yaseralnajjar/work/sifr/ruff/docs/configuration.md",
-    "/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_workspace/src/options.rs",
-    "/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_workspace/src/configuration.rs"
+    "third_party/ruff/docs/linter.md",
+    "third_party/ruff/docs/configuration.md",
+    "third_party/ruff/crates/ruff_workspace/src/options.rs",
+    "third_party/ruff/crates/ruff_workspace/src/configuration.rs"
   ],
   "config_surfaces": [
     {"key": "select", "kind": "config", "disposition": "adapt", "rationale": "Rule selection is language-neutral.", "sifr_requirement_note": "Use Sifr rule IDs/categories."},

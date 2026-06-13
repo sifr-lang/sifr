@@ -1,6 +1,6 @@
 # Text/I18n Reference Matrix
 
-CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
+CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 
 | Reference | Extracted signal | Sifr disposition |
 | --- | --- | --- |

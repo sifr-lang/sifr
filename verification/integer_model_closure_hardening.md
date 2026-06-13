@@ -28,7 +28,7 @@ The seeds are registered in both the deterministic property manifest and the fuz
 
 ## Panic-Shape Sweep
 
-Generated-code panic-shape coverage remains owned by the existing create-pr, merge, and release validation lanes:
+Generated-code panic-shape coverage remains owned by the existing create-pr, merge, and release validation profiles:
 
 - `scripts/run_all_tests.sh --profile create-pr` runs unit and representative e2e coverage, including integer result paths and driver panic-boundary tests.
 - `scripts/run_all_tests.sh` runs the authoritative PR profile with selected hardening suites.

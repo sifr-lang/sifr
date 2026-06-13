@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import subprocess
 from pathlib import Path
 
 
@@ -73,6 +74,7 @@ STALE_REFERENCE_PATTERNS = {
     "scripts/phase_contract_gate_check.py": "",
     "scripts/validate_phase15_backlog.py": "",
     "scripts.run_verification_hardening": "sifr_verify.hardening",
+    "verification/validation_lanes/": "verification/areas/core_language/data/",
 }
 
 REFERENCE_PATHS = [
@@ -88,6 +90,27 @@ REFERENCE_PATHS = [
     "verification/integer_model_closure_hardening.md",
     "verification/runner",
 ]
+
+PERSONAL_PATH_REFERENCE_PATHS = [
+    ".github",
+    ".cursor",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    "demos",
+    "docs",
+    "scripts",
+    "verification/areas/developer_tooling/linter_manifests",
+    "verification/areas/stdlib_parity/data",
+    "verification/areas/stdlib_parity/reports",
+    "verification/areas/stdlib_parity/tools",
+    "verification/profiles",
+    "verification/runner",
+]
+
+PERSONAL_PATH_PATTERNS = {
+    "/Users/yaseralnajjar/": "use a repo-relative path or an environment variable",
+}
 
 
 def scripts_files(root: Path) -> set[str]:
@@ -152,9 +175,45 @@ def validate_references(root: Path) -> list[str]:
     return failures
 
 
+def iter_tracked_reference_files(root: Path, raw_paths: list[str]) -> list[Path]:
+    completed = subprocess.run(
+        ["git", "-C", str(root), "ls-files", "--", *raw_paths],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return [
+        root / line
+        for line in completed.stdout.splitlines()
+        if line
+        and line != "scripts/check_scripts_verification_boundary.py"
+        and (root / line).is_file()
+    ]
+
+
+def validate_personal_paths(root: Path) -> list[str]:
+    failures: list[str] = []
+    for path in iter_tracked_reference_files(root, PERSONAL_PATH_REFERENCE_PATHS):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        failures.extend(validate_personal_path_text(path.relative_to(root), text))
+    return failures
+
+
+def validate_personal_path_text(display: Path, text: str) -> list[str]:
+    failures: list[str] = []
+    for stale, replacement in PERSONAL_PATH_PATTERNS.items():
+        if stale in text:
+            failures.append(f"{display} references personal path `{stale}`; {replacement}")
+    return failures
+
+
 def validate(root: Path) -> list[str]:
     failures = validate_scripts_tree(root)
     failures.extend(validate_references(root))
+    failures.extend(validate_personal_paths(root))
     return failures
 
 
@@ -173,6 +232,19 @@ def run_self_test() -> None:
     stale_found = any(stale in text for stale in STALE_REFERENCE_PATTERNS)
     if not stale_found:
         raise SystemExit("scripts boundary self-test failed: stale reference pattern not detected")
+
+    personal_path_failures = validate_personal_path_text(
+        Path("example.md"),
+        "CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython`",
+    )
+    if not any("references personal path" in failure for failure in personal_path_failures):
+        raise SystemExit("scripts boundary self-test failed: personal path pattern not detected")
+    personal_path_clean = validate_personal_path_text(
+        Path("example.md"),
+        "CPython checkout: `../cpython`",
+    )
+    if personal_path_clean:
+        raise SystemExit("scripts boundary self-test failed: relative path flagged as personal")
 
     pycache = validate_script_file_set(
         ALLOWED_SCRIPT_FILES

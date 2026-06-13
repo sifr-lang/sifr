@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "ruff_check_sources": [
-    "/Users/yaseralnajjar/work/sifr/ruff/docs/linter.md",
-    "/Users/yaseralnajjar/work/sifr/ruff/docs/configuration.md",
-    "/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_workspace/src/options.rs"
+    "third_party/ruff/docs/linter.md",
+    "third_party/ruff/docs/configuration.md",
+    "third_party/ruff/crates/ruff_workspace/src/options.rs"
   ],
   "sifr_cli_sources": [
     "crates/sifr/src/cli_model_and_entrypoint.rs",

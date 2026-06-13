@@ -115,7 +115,7 @@
     "performance_budget": "smoke",
     "crate_tests": "smoke",
     "e2e": {
-      "fixture_manifest": "verification/validation_lanes/create_pr_e2e_manifest.json",
+      "fixture_manifest": "verification/areas/core_language/data/create_pr_e2e_manifest.json",
       "sifr_jobs": 2,
       "rust_jobs": 2,
       "run_jobs": 2,

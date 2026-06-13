@@ -6,12 +6,12 @@ Wave: `wave_psp_a1`
 
 ## Inputs Reviewed
 
-- `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_builtin.py`
-- `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_list.py`
-- `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_dict.py`
-- `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_tuple.py`
-- `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_str.py`
-- `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_range.py`
+- `../cpython/Lib/test/test_builtin.py`
+- `../cpython/Lib/test/test_list.py`
+- `../cpython/Lib/test/test_dict.py`
+- `../cpython/Lib/test/test_tuple.py`
+- `../cpython/Lib/test/test_str.py`
+- `../cpython/Lib/test/test_range.py`
 
 ## Adopt / Adapt / Waive
 

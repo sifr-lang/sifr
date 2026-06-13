@@ -65,4 +65,5 @@ sh "${tmp_dir}/install/versions/0.1.0-beta.1"
 
 The installer exits non-zero with a checksum mismatch before replacing `${tmp_dir}/bin/sifr`.
 
-The automated version of this walkthrough is `verification/distribution/artifact_sha256_validated.sh`.
+The automated version of this walkthrough is
+`verification/areas/distribution_release/cases/artifact_sha256_validated.sh`.

@@ -20,7 +20,7 @@ Usage: verification/runner/e2e/run_e2e_pass.sh [options]
 Profiles:
   create-pr Fast local signal; bounded parallel workers; cache enabled.
   merge     Authoritative merge gate; representative corpus; cache enabled.
-  nightly Broad pass-corpus lane; cache enabled.
+  nightly Broad pass-corpus profile; cache enabled.
   release Highest-confidence local gate; cache enabled.
 
 Options:
@@ -50,7 +50,7 @@ set_profile_defaults() {
       RUN_JOBS="2"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
-      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/create_pr_e2e_manifest.json"
+      FIXTURE_MANIFEST_DEFAULT="verification/areas/core_language/data/create_pr_e2e_manifest.json"
       ;;
     merge)
       SIFR_JOBS="4"
@@ -58,7 +58,7 @@ set_profile_defaults() {
       RUN_JOBS="3"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
-      FIXTURE_MANIFEST_DEFAULT="verification/validation_lanes/merge_e2e_manifest.json"
+      FIXTURE_MANIFEST_DEFAULT="verification/areas/core_language/data/merge_e2e_manifest.json"
       ;;
     nightly|release)
       SIFR_JOBS="6"

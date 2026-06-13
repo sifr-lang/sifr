@@ -192,7 +192,7 @@
     "performance_budget": "representative",
     "crate_tests": "full",
     "e2e": {
-      "fixture_manifest": "verification/validation_lanes/merge_e2e_manifest.json",
+      "fixture_manifest": "verification/areas/core_language/data/merge_e2e_manifest.json",
       "sifr_jobs": 4,
       "rust_jobs": 3,
       "run_jobs": 3,

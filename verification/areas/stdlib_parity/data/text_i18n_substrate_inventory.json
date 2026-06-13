@@ -3,7 +3,7 @@
   "status": "phase-complete",
   "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
   "cpython_checkout": {
-    "path": "/Users/yaseralnajjar/work/sifr/cpython",
+    "path": "../cpython",
     "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6"
   },
   "production_surfaces": [
@@ -335,8 +335,8 @@
     "generated_code_quality": [
       "verification/areas/generated_code_quality/data/corpus_manifest.json"
     ],
-    "validation_lane_manifests": [
-      "verification/validation_lanes/create_pr_e2e_manifest.json"
+    "e2e_fixture_manifests": [
+      "verification/areas/core_language/data/create_pr_e2e_manifest.json"
     ],
     "traceability": [
       "verification/areas/stdlib_parity/reports/text_i18n_m5_traceability.md"
