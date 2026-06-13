@@ -114,7 +114,7 @@ def check_run_all_wiring(root: Path) -> None:
 
 def check_required_fixtures(root: Path) -> None:
     for fixture in PARSER_FIXTURES:
-        path = root / "crates/sifr/tests/verification/diagnostics" / fixture / "main.sifr"
+        path = root / "verification/areas/diagnostics/fixtures/diagnostics" / fixture / "main.sifr"
         require(path.is_file(), f"required parser fixture missing: {fixture}")
     for fixture in PROJECT_FIXTURES | CYCLE_FIXTURES:
         path = root / "crates/sifr/tests/verification/project" / fixture / "main.sifr"
@@ -335,7 +335,7 @@ def assert_text_format(
 
 
 def check_parser_runtime_contract(root: Path) -> None:
-    base = root / "crates/sifr/tests/verification/diagnostics"
+    base = root / "verification/areas/diagnostics/fixtures/diagnostics"
     for fixture, code in PARSER_FIXTURES.items():
         entry = base / fixture / "main.sifr"
         json_result = run_sifr(["--diagnostic-format", "json", "check", str(entry)])
@@ -493,7 +493,7 @@ def seed_minimal_repo(root: Path) -> None:
     write(root / "docs/errors/diagnostic-codes.md", "\n".join(index_lines))
     for fixture in PARSER_FIXTURES:
         write(
-            root / f"crates/sifr/tests/verification/diagnostics/{fixture}/main.sifr",
+            root / f"verification/areas/diagnostics/fixtures/diagnostics/{fixture}/main.sifr",
             "def main():\n    pass\n",
         )
     for fixture in PROJECT_FIXTURES | CYCLE_FIXTURES:
@@ -558,7 +558,7 @@ def run_self_tests() -> None:
         "missing parser fixture",
         "required parser fixture missing",
         lambda root: shutil.rmtree(
-            root / "crates/sifr/tests/verification/diagnostics/parser_bad_indent"
+            root / "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent"
         ),
     )
     expect_self_test_failure(

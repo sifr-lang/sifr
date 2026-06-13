@@ -13,7 +13,7 @@
     "url": "https://sifr.sh/docs/errors/SIFR-DECIMAL-0001",
     "spans": [
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/decimal_invalid_literal/main.sifr",
         "byte_start": 144,
         "byte_end": 154,
         "line": 3,

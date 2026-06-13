@@ -64,7 +64,36 @@
           "cases": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "object",
+              "required": [
+                "id",
+                "entry",
+                "command",
+                "expect_exit_code",
+                "diagnostic_formats"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "entry": {
+                  "type": "string",
+                  "format": "repo-relative-path"
+                },
+                "command": {
+                  "type": "string"
+                },
+                "expect_exit_code": {
+                  "type": "integer"
+                },
+                "diagnostic_formats": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
             }
           }
         }

@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[4]
 
 
 def main() -> int:

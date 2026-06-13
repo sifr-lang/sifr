@@ -1,5 +1,5 @@
 error[SIFR-FLOW-0007]: invalid assignment target: attribute assignment target must be a simple name
-  --> crates/sifr/tests/verification/diagnostics/multiline_span_rendering/main.sifr:3:5
+  --> verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/main.sifr:3:5
      |
    3 |     (
      |     ^

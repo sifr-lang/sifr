@@ -13,7 +13,7 @@
     "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
     "spans": [
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/diagnostics/presentation_contract_cases/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_contract_cases/main.sifr",
         "byte_start": 4,
         "byte_end": 9,
         "line": 2,
@@ -31,7 +31,7 @@
         ]
       },
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/diagnostics/presentation_contract_cases/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_contract_cases/main.sifr",
         "byte_start": 20,
         "byte_end": 27,
         "line": 3,
@@ -67,7 +67,7 @@
         "edits": [
           {
             "span": {
-              "file": "<WORKSPACE>/crates/sifr/tests/verification/diagnostics/presentation_contract_cases/main.sifr",
+              "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_contract_cases/main.sifr",
               "byte_start": 4,
               "byte_end": 9,
               "line": 2,

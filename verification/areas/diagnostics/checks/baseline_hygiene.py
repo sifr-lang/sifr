@@ -9,10 +9,11 @@ import subprocess
 import sys
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[4]
 EXPECT_ERROR_RE = re.compile(r"^\s*#\s*expect-error(?:\[col=\d+\])?:\s*SIFR-[A-Z]+-\d{4}\s*$")
 LEGACY_PSEUDO_CODE_RE = re.compile(r"\[E\d{4}\]")
-CANONICAL_CATCH_ALL_RE = re.compile(r"\bSIFR-TYPE-0001\b")
+CANONICAL_CATCH_ALL = "SIFR-TYPE-" + "0001"
+CANONICAL_CATCH_ALL_RE = re.compile(rf"\b{CANONICAL_CATCH_ALL}\b")
 
 
 def git_ls_files(*patterns: str) -> list[pathlib.Path]:
@@ -54,7 +55,7 @@ def main() -> int:
         if LEGACY_PSEUDO_CODE_RE.search(text):
             errors.append(f"{rel}: contains legacy [Edddd] pseudo-code text")
         if CANONICAL_CATCH_ALL_RE.search(text):
-            errors.append(f"{rel}: contains forbidden SIFR-TYPE-0001 catch-all code")
+            errors.append(f"{rel}: contains forbidden {CANONICAL_CATCH_ALL} catch-all code")
 
     if errors:
         for error in errors:

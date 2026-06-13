@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 
-from .areas import discover_areas
+from . import areas, profiles, reports
 from .errors import VerificationError
-from . import profiles, reports
 from .selftest import run_all
 
 
@@ -34,18 +32,10 @@ def main() -> int:
             return profiles.run_command(args.command_args)
         if args.command == "reports":
             return reports.main(args.command_args)
+        if args.command == "areas":
+            return areas.run_command(args.command_args)
         if args.list_areas:
-            areas = [
-                {
-                    "name": area.name,
-                    "owner": area.owner,
-                    "manifest": str(area.manifest_path),
-                    "parallel_safe": area.parallel_safe,
-                    "resource_classes": list(area.resource_classes),
-                }
-                for area in discover_areas()
-            ]
-            print(json.dumps({"schema_version": 1, "areas": areas}, indent=2, sort_keys=True))
+            areas.print_list()
             return 0
         if args.profile:
             print(

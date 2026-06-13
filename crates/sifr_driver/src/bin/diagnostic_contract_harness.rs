@@ -142,7 +142,7 @@ fn repo_root() -> Result<PathBuf, String> {
 }
 
 fn check_parser_runtime_contract(root: &Path) -> Result<(), String> {
-    let base = root.join("crates/sifr/tests/verification/diagnostics");
+    let base = root.join("verification/areas/diagnostics/fixtures/diagnostics");
     for (fixture, code) in PARSER_FIXTURES {
         let entry = base.join(fixture).join("main.sifr");
         let source = std::fs::read_to_string(&entry)

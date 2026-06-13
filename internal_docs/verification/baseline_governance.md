@@ -5,15 +5,18 @@ This document defines canonical baseline governance for compiler-facing verifica
 ## Canonical Bless and Verify Workflow
 
 - Verify baselines:
+  - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines`
   - `python3 scripts/run_verification_hardening.py --profile merge`
 - Bless baselines:
+  - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless`
   - `python3 scripts/run_verification_hardening.py --profile merge --bless`
 
 Only explicit `--bless` updates checked-in baseline files.
 
 ## Baseline-Backed Artifacts in Scope
 
-- Diagnostics renderer output (`human`, `json`, `compact`)
+- Diagnostics renderer output (`human`, `json`, `compact`) owned by
+  `verification/areas/diagnostics/manifest.json`
 - Exit-code behavior
 - Selected multi-file project behavior
 - Machine-readable suite result summaries

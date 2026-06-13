@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "name": "diagnostics",
+  "owner": "compiler/diagnostics",
+  "description": "Diagnostic code registry, renderer, docs/schema sync, and presentation baseline contracts.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 300,
+  "suites": [
+    {
+      "name": "contracts",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "schema_sync",
+          "entry": "verification/areas/diagnostics/checks/schema_sync.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "docs_sync",
+          "entry": "verification/areas/diagnostics/checks/docs_sync.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "code_coverage",
+          "entry": "verification/areas/diagnostics/checks/code_coverage.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "baseline_hygiene",
+          "entry": "verification/areas/diagnostics/checks/baseline_hygiene.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "baselines",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "decimal_invalid_literal",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/decimal_invalid_literal/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "multiline_span_rendering",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        }
+      ]
+    }
+  ]
+}

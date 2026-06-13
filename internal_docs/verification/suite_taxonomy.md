@@ -18,7 +18,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 ## Fixture and Baseline Conventions
 
 ### Diagnostics
-- Fixture root: `crates/sifr/tests/verification/diagnostics/<case_id>/main.sifr`.
+- Fixture root: `verification/areas/diagnostics/fixtures/diagnostics/<case_id>/main.sifr`.
 - Required baseline files:
   - `baselines/check-human.stdout.txt`
   - `baselines/check-human.stderr.txt`
@@ -76,8 +76,11 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 ## Manifest Source of Truth
 
-- Canonical manifest: `verification/suites/manifest.json`.
-- Suite runners must not hardcode fixture lists outside this manifest.
+- Canonical legacy manifest for unmigrated hardening suites:
+  `verification/suites/manifest.json`.
+- Migrated diagnostics suite ownership lives in
+  `verification/areas/diagnostics/manifest.json`.
+- Suite runners must not hardcode fixture lists outside their owning manifest.
 - Manifest updates are review artifacts and follow normal PR review.
 - Corpus lifecycle and promotion rules: `internal_docs/verification/regression_corpus_policy.md`.
 - Deterministic sharding + flake policy: `internal_docs/verification/deterministic_sharding_and_flake_policy.md`.

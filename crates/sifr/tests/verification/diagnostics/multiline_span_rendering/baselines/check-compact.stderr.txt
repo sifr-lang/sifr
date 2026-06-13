@@ -1,2 +1,0 @@
-1 error, 0 warnings, 0 notes
-E SIFR-FLOW-0007 crates/sifr/tests/verification/diagnostics/multiline_span_rendering/main.sifr:3:5 invalid assignment target: attribute assignment target must be a simple name
