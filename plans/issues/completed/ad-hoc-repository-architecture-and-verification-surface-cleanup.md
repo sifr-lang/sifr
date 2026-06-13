@@ -1,6 +1,6 @@
 # Ad Hoc Repository Architecture And Verification Surface Cleanup
 
-status: implementation-ready
+status: completed
 
 ## Objective
 
@@ -210,6 +210,8 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR N+2 Submodule Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2541> |
 | PR N+3 Scripts Verification Sweep | Merged | <https://github.com/sifr-lang/sifr/pull/2543> |
 | PR N+4 Audits Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2545> |
+| PR N+5 Internal Docs Relevance Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2547> |
+| PR N+6 Docs And Guardrails Closeout | Merged | <https://github.com/sifr-lang/sifr/pull/2549> |
 
 ## Verification Migration Status
 
@@ -221,10 +223,10 @@ authoritative public facade and now delegates directly to
 | Area | Legacy path | New area path | Current authoritative gate | Equivalence evidence | Cutover status |
 | --- | --- | --- | --- | --- | --- |
 | Runner foundation | `scripts/run_all_tests.sh` | `verification/runner/sifr_verify/`, `verification/schemas/`, `verification/policy/`, `verification/pyproject.toml`, `verification/uv.lock` | Thin bash facade over `uv run --project verification --locked python -m sifr_verify profiles run --profile <profile>` | `uv lock --project verification --check`; `uv run --project verification --locked python -m sifr_verify --self-test`; `scripts/run_all_tests.sh --profile create-pr`; `scripts/run_all_tests.sh` | Foundation and facade cutover merged; profile execution and lane reports now owned by `profile_runner.py` in PR #2539 |
-| Profiles | Deleted `verification/validation_lanes/manifest.json`; retained `verification/validation_lanes/*_e2e_manifest.json` until `core_language` migration | `verification/profiles/{create-pr,merge,nightly,release}.json` | `uv run --project verification --locked python -m sifr_verify profiles run --profile <profile>`; `profiles shell` remains an inspection helper | `uv run --project verification --locked python -m sifr_verify profiles check`; create-pr profile execution through the thin facade; merge profile execution through the thin facade | Merged in PR 7; execution facade cut over in PR #2539; fixture manifests not migrated |
+| Profiles | Deleted `verification/validation_lanes/manifest.json`; moved former `verification/validation_lanes/*_e2e_manifest.json` to `verification/areas/core_language/data/` | `verification/profiles/{create-pr,merge,nightly,release}.json` | `uv run --project verification --locked python -m sifr_verify profiles run --profile <profile>`; `profiles shell` remains an inspection helper | `uv run --project verification --locked python -m sifr_verify profiles check`; create-pr profile execution through the thin facade; merge profile execution through the thin facade | Merged in PR 7; execution facade cut over in PR #2539; e2e fixture manifest ownership closed in PR #2549 |
 | `diagnostics` | Deleted diagnostics row from `verification/suites/manifest.json`; moved diagnostic sync/coverage/hygiene scripts and `crates/sifr/tests/verification/diagnostics/` fixtures | `verification/areas/diagnostics/` | `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts`; merge/nightly/release hardening dispatches diagnostics baselines through `--suite baselines` | `uv run --project verification --locked python -m sifr_verify areas check`; diagnostics contracts and baselines area execution; legacy facade `scripts/run_all_tests.sh --profile create-pr` | Merged in PR 8; diagnostics source cut over, presentation synthetic baselines validated by diagnostics contract checker |
 | `project_workspace` | Deleted project row from `verification/suites/manifest.json`; moved `crates/sifr/tests/verification/project/` fixtures; deleted project/workspace contract shell wrappers | `verification/areas/project_workspace/` | `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite baselines`; `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite frontend_mode_parity --suite phase23_graph_isolation`; merge/nightly/release hardening dispatches project baselines through this area | Area schema validation, project area baseline execution, exact project workspace contract suite execution, legacy hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS after exact-suite filter review | Baselines merged in PR 9; exact contract suite migration merged in PR 10 |
-| `core_language` | Moved `scripts/run_e2e_pass.sh` to `verification/runner/e2e/run_e2e_pass.sh`; retained `verification/validation_lanes/*_e2e_manifest.json` until fixture ownership changes; core contract rows and `verification/validation_contracts/` already moved | `verification/areas/core_language/`; runner-owned e2e execution under `verification/runner/e2e/` | `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite integer_dtype_contract --suite phase24_hir_analysis --suite phase25_cfg_flow`; profile execution still calls the runner-owned e2e pass script for fixture pass suites | Exact core language contract suite execution; profile/facade contract dispatch through `sifr_verify areas run`; Opus PASS after exact-suite filter review; e2e script path swept in PR #2543 | Contract matrix source cut over in PR 10; e2e pass runner moved out of `scripts/` in PR #2543; fixture manifests still pending |
+| `core_language` | Moved `scripts/run_e2e_pass.sh` to `verification/runner/e2e/run_e2e_pass.sh`; moved create-pr/merge e2e fixture manifests to `verification/areas/core_language/data/`; core contract rows and `verification/validation_contracts/` already moved | `verification/areas/core_language/`; runner-owned e2e execution under `verification/runner/e2e/` | `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite integer_dtype_contract --suite phase24_hir_analysis --suite phase25_cfg_flow`; profile execution calls the runner-owned e2e pass script with area-owned fixture manifests | Exact core language contract suite execution; profile/facade contract dispatch through `sifr_verify areas run`; Opus PASS after exact-suite filter review; e2e script path swept in PR #2543; fixture manifests swept in PR #2549 | Contract matrix source cut over in PR 10; e2e pass runner moved out of `scripts/` in PR #2543; fixture manifest ownership closed in PR #2549 |
 | `regression` | Deleted `verification/fixedbugs/index.json`, `verification/crashes/index.json`, and crate-local crash reproducers; moved shared hardening implementation out of `scripts/` | `verification/areas/regression/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area regression --suite fixedbugs --suite crashes`; merge/nightly/release hardening dispatches these suites through the regression area | Area schema validation, fixedbugs/crashes area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 11; hardening implementation swept in PR #2543 |
 | `fuzz_property` | Deleted `verification/fuzz_property/` and `scripts/run_smoke_fuzz_property.sh`; moved shared hardening implementation out of `scripts/` | `verification/areas/fuzz_property/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke`; nightly/release hardening dispatches property/fuzz-smoke through the fuzz/property area | Area schema validation, cargo smoke/property/fuzz-smoke area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 12; hardening implementation swept in PR #2543 |
 | `generated_code_quality` | Deleted `verification/generated_code_quality/` and shell wrappers | `verification/areas/generated_code_quality/` | `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite smoke`; `--suite representative`; `--suite full`; generated-code profile dispatch in `scripts/run_all_tests.sh` uses the area runner | Area schema validation, generated-code quality area smoke/representative execution, legacy facade dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 13 |
@@ -777,7 +779,7 @@ Verification exact disposition by current path:
 | Current path | Final owner |
 | --- | --- |
 | `verification/validation_lanes/manifest.json` | Convert to `verification/profiles/{create-pr,merge,nightly,release}.json`; field names become profile-oriented. |
-| `verification/validation_lanes/create_pr_e2e_manifest.json`, `verification/validation_lanes/merge_e2e_manifest.json` | Convert to area-owned suite/case selections, primarily `core_language`, with profiles selecting suites instead of owning fixture lists. |
+| `verification/validation_lanes/create_pr_e2e_manifest.json`, `verification/validation_lanes/merge_e2e_manifest.json` | Moved to `verification/areas/core_language/data/` in PR #2549; profiles reference the area-owned manifests. |
 | `verification/suites/manifest.json` | Dissolve into area manifests and profiles; no top-level suite taxonomy remains. |
 | `verification/validation_contracts/manifest.json` | Split suites by contract owner: `frontend_mode_parity` and `phase23_graph_isolation` to `project_workspace`; `integer_dtype_contract`, `phase24_hir_analysis`, and `phase25_cfg_flow` to `core_language`. |
 | `verification/validation_contracts/integer_dtype_contract.md` | Move to `verification/areas/core_language/data/integer_dtype_contract.md`; the runner validates sentinel text there. |
@@ -1357,6 +1359,50 @@ Update public docs, internal docs, AGENTS, Cursor commands, and CI docs to refle
 
 Add all hygiene guardrails.
 
+Status:
+
+- Completed in PR #2549.
+- The create-pr and merge e2e fixture manifests now live under
+  `verification/areas/core_language/data/`, with profiles and runner defaults
+  retargeted to the area-owned paths.
+- Active docs, inventories, demos, and policy references were normalized away
+  from retired validation-lane and old verification path wording.
+- The script verification-boundary guardrail now rejects stale
+  `verification/validation_lanes/` references and personal absolute paths in
+  active verification references, including stdlib-parity generated artifacts.
+- CPython evidence paths in stdlib-parity artifacts now use repo-relative
+  `../cpython` rather than local `/Users/...` paths.
+- Telemetry reports intentionally retain `target/validation_lane_reports/` for
+  compatibility with existing runner output.
+
+Review:
+
+- Opus round 1 found stale generated inventory/report wording and remaining
+  validation-lane prose; both blockers were fixed before PR open.
+- Opus round 2 reported no blockers and was satisfied.
+
+Validation evidence:
+
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_submodule_ownership.py && python3 scripts/check_submodule_ownership.py --self-test`
+- `python3 scripts/check_audits_normalization.py && python3 scripts/check_audits_normalization.py --self-test`
+- `python3 scripts/check_scripts_verification_boundary.py && python3 scripts/check_scripts_verification_boundary.py --self-test`
+- `uv run --project verification --locked python -m sifr_verify profiles check`
+- `uv run --project verification --locked python -m sifr_verify areas check`
+- `python3 verification/areas/developer_tooling/check_linter_reuse_contract.py && python3 verification/areas/developer_tooling/check_linter_reuse_contract.py --self-test`
+- `python3 verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py`
+- `python3 -m json.tool` on touched JSON artifacts
+- `scripts/run_all_tests.sh --profile create-pr`: passed with no test
+  failures; e2e used
+  `verification/areas/core_language/data/create_pr_e2e_manifest.json`;
+  132/132 pass tests completed; warm rerun exceeded the advisory two-minute
+  warm budget (`budget_ok=no`, 150.11s).
+- `scripts/run_all_tests.sh --profile merge`: passed with no test failures;
+  e2e used `verification/areas/core_language/data/merge_e2e_manifest.json`;
+  145/145 pass tests completed; `budget_ok=yes` (664.28s); advisory only:
+  group skew.
+
 Validation:
 
 - guardrails pass
@@ -1364,6 +1410,8 @@ Validation:
 - `scripts/run_all_tests.sh --profile merge`
 
 ## Acceptance Criteria
+
+Status: complete after PR #2549 and final status PR.
 
 - Fresh clone top-level tree matches the top-level contract.
 - No top-level tracked `reviews/` tree exists.
