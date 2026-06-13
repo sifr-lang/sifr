@@ -120,6 +120,10 @@ run_core_guardrails() {
   echo "Running file-size guardrails"
   python3 "${SCRIPT_DIR}/check_file_size_guardrails.py"
 
+  echo "Running Cursor hygiene guardrails"
+  python3 "${SCRIPT_DIR}/check_cursor_hygiene.py"
+  python3 "${SCRIPT_DIR}/check_cursor_hygiene.py" --self-test
+
   echo "Running source crate dependency-direction guardrail"
   python3 "${SCRIPT_DIR}/check_source_crate_dependency_direction.py"
   python3 "${SCRIPT_DIR}/check_source_crate_dependency_direction.py" --self-test

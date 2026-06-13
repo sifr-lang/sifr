@@ -49,8 +49,8 @@ Edit ticket fields (Status):
 
 5. Review the PR and check the following (do not use start review functionality):
 * Solving the problem it's intended to solve.
-* Would not make a problem given @.cursor/.rules/architecture-overview.mdc
-* Following @.cursor/.rules/code-style.mdc
+* Would not make a problem given the current architecture in @internal_docs/architecture.md
+* Following @AGENTS.md and established local code style.
 * Other considerations...
 
 6. Reply to already existing PR comments (if it adds value or if you have a different opinion):

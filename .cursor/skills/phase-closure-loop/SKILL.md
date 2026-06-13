@@ -62,7 +62,7 @@ When phase is fully closed, run:
 
 ## Reviewer Trigger
 
-Use the [talk-to-claude-default](.cursor/skills/talk-to-claude-default/SKILL.md) skill for all external review passes.
+Use the [talk-to-claude-opus](.cursor/skills/talk-to-claude-opus/SKILL.md) skill for all external review passes.
 
 Adjust prompt scope for the active stage: `wave`, `milestone closure`, `phase closure`, `pass 1`, `pass 2`.
 
@@ -71,8 +71,9 @@ If the target review file already exists, create a new filename with the same pr
 ## Telegram Status Command
 
 ```bash
-direnv exec /Users/yaseralnajjar/work/send-to-telegram uv run --project /Users/yaseralnajjar/work/send-to-telegram \
-  python /Users/yaseralnajjar/work/send-to-telegram/send_to_telegram.py "$(cat <<'MESSAGE'
+: "${SEND_TO_TELEGRAM_PROJECT:?Set SEND_TO_TELEGRAM_PROJECT to the send-to-telegram checkout path}"
+direnv exec "${SEND_TO_TELEGRAM_PROJECT}" uv run --project "${SEND_TO_TELEGRAM_PROJECT}" \
+  python "${SEND_TO_TELEGRAM_PROJECT}/send_to_telegram.py" "$(cat <<'MESSAGE'
 Status for phase ${PHASE_NAME}:
 <short status summary>
 MESSAGE
