@@ -4,7 +4,7 @@ INT-8 closes the integer-model phase with concrete local evidence instead of a C
 
 ## Performance Gate
 
-- Fixture: `verification/perf/sifr_int_loop.sifr`
+- Fixture: `verification/areas/performance/fixtures/sifr_int_loop.sifr`
 - Runner: `scripts/run_integer_model_closure_perf.py`
 - Command: `python3 scripts/run_integer_model_closure_perf.py`
 

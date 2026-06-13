@@ -1318,6 +1318,6 @@
     "lsp_query_p95_ms": "smoke fixed broad; otherwise min(slo_p95, max(baseline_p95 * 4, baseline_p95 + 10ms))",
     "lsp_query_cache": "not enforced until LSP exports stable per-request cache counters"
   },
-  "description": "Phase 35 performance budgets derived from verification/performance/baselines.json.",
+  "description": "Phase 35 performance budgets derived from verification/areas/performance/data/baselines.json.",
   "version": 1
 }

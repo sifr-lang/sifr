@@ -34,7 +34,7 @@ Phase 36 uses parser-validated syntax assets. TextMate and/or Tree-sitter assets
 m36.6 provides `editor_integrations/syntaxes/sifr.tmLanguage.json` as the
 baseline TextMate grammar and `editor_integrations/syntaxes/sifr-token-scope-map.json`
 as the reviewed mapping from `sifr_syntax` token kinds to syntax scopes. The
-mapping is validated against `verification/performance/sifr_syntax_token_fixtures/`.
+mapping is validated against `verification/areas/performance/sifr_syntax_token_fixtures/`.
 
 ## Required Targets
 

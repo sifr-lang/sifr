@@ -258,7 +258,7 @@ def run_self_test() -> None:
         "target/generated.rs",
         "third_party/vendor/tool.py",
         "crates/example/src/snapshots/output.rs",
-        "verification/performance/baselines/result.py",
+        "verification/areas/performance/baselines/result.py",
         "Cargo.lock",
         "crates/example/src/emitted.rs",
         "crates/example/src/idiomatic.rs",

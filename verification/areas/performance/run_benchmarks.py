@@ -19,9 +19,10 @@ from pathlib import Path
 from typing import Any
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-PERF_ROOT = REPO_ROOT / "verification" / "performance"
-DEFAULT_MANIFEST = PERF_ROOT / "manifest.json"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
+PERF_DATA = PERF_ROOT / "data"
+DEFAULT_MANIFEST = PERF_DATA / "benchmark_manifest.json"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "target" / "performance"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
@@ -137,7 +138,7 @@ def main() -> int:
             baseline_output = (
                 (REPO_ROOT / args.baseline_output).resolve()
                 if args.baseline_output
-                else PERF_ROOT / "baselines.json"
+                else PERF_DATA / "baselines.json"
             )
             write_json(baseline_output, baseline)
             print(f"performance baseline captured: {baseline_output.relative_to(REPO_ROOT)}")

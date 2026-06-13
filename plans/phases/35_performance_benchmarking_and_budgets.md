@@ -443,22 +443,22 @@ Consistency guarantees:
 
 ## Verification Infrastructure
 
-Phase 35 creates and owns `verification/performance/`.
+Phase 35 creates and owns `verification/areas/performance/`.
 
 Required files:
 
-- `verification/performance/manifest.json` - version-controlled source of truth for benchmark cases, groups, commands, expected mode, and evidence category.
-- `verification/performance/baselines.json` - checked-in baseline measurements and metadata produced by the approved baseline workflow.
-- `verification/performance/budgets.json` - budget thresholds derived from baselines.
-- `verification/performance/waivers.json` - active waiver registry with owner, issue link, rationale, affected benchmark ids, override, and expiry.
-- `verification/performance/run_benchmarks.py` - local benchmark runner that emits machine-readable results under `target/performance/`.
-- `verification/performance/check_budgets.py` - compares benchmark results to budgets and validates waivers.
-- `verification/performance/lsp_query_budget_ids.md` - reserved Phase 36 LSP-query budget ids and naming rules so Phase 36 adds protocol benchmarks without inventing incompatible budget identifiers.
-- `verification/performance/check_frontend_cache_contract.py` - focused contract checks for cache invalidation, stale-result rejection, deterministic graph revision behavior, and query ordering.
-- `verification/performance/check_split_brain_guardrail.py` - rejects new parser/lowering/type-check/semantic diagnostic entrypoints outside approved syntax/frontend/HIR boundaries.
-- `verification/performance/check_ruff_fork_update_contract.py` - rejects Sifr Ruff fork dependency-pin/version/hash updates without reviewed `sifr_syntax` fixture revalidation evidence and recorded migration rationale.
-- `verification/performance/sifr_syntax_token_fixtures/` - checked-in representative token/trivia fixtures produced through `sifr_syntax` and consumed by Phase 36 syntax-asset drift checks.
-- `verification/performance/negative_seeds/` - seed inputs or result fixtures proving budget and waiver gates fail when expected.
+- `verification/areas/performance/data/benchmark_manifest.json` - version-controlled source of truth for benchmark cases, groups, commands, expected mode, and evidence category.
+- `verification/areas/performance/data/baselines.json` - checked-in baseline measurements and metadata produced by the approved baseline workflow.
+- `verification/areas/performance/data/budgets.json` - budget thresholds derived from baselines.
+- `verification/areas/performance/data/waivers.json` - active waiver registry with owner, issue link, rationale, affected benchmark ids, override, and expiry.
+- `verification/areas/performance/run_benchmarks.py` - local benchmark runner that emits machine-readable results under `target/performance/`.
+- `verification/areas/performance/check_budgets.py` - compares benchmark results to budgets and validates waivers.
+- `verification/areas/performance/lsp_query_budget_ids.md` - reserved Phase 36 LSP-query budget ids and naming rules so Phase 36 adds protocol benchmarks without inventing incompatible budget identifiers.
+- `verification/areas/performance/check_frontend_cache_contract.py` - focused contract checks for cache invalidation, stale-result rejection, deterministic graph revision behavior, and query ordering.
+- `verification/areas/performance/check_split_brain_guardrail.py` - rejects new parser/lowering/type-check/semantic diagnostic entrypoints outside approved syntax/frontend/HIR boundaries.
+- `verification/areas/performance/check_ruff_fork_update_contract.py` - rejects Sifr Ruff fork dependency-pin/version/hash updates without reviewed `sifr_syntax` fixture revalidation evidence and recorded migration rationale.
+- `verification/areas/performance/sifr_syntax_token_fixtures/` - checked-in representative token/trivia fixtures produced through `sifr_syntax` and consumed by Phase 36 syntax-asset drift checks.
+- `verification/areas/performance/negative_seeds/` - seed inputs or result fixtures proving budget and waiver gates fail when expected.
 
 Negative seeds include JSON fixtures consumed by `check_budgets.py` that inject known-regression benchmark results and malformed waiver/budget states to verify gate failure behavior.
 
@@ -466,7 +466,7 @@ Benchmark harnesses may use Rust `criterion` where statistical microbenchmarks a
 
 ## Benchmark Corpus Contract
 
-`verification/performance/manifest.json` must include these groups:
+`verification/areas/performance/data/benchmark_manifest.json` must include these groups:
 
 1. `check-single-file`: representative single-file `cargo run -q -p sifr -- check <file>` fixtures.
 2. `check-project`: project-mode fixtures with imports, workspace discovery, local modules, and stdlib imports.
@@ -476,7 +476,7 @@ Benchmark harnesses may use Rust `criterion` where statistical microbenchmarks a
 6. `interactive-tooling-foundation`: in-process frontend workloads needed by future LSP/editor use, including cold context load, warm diagnostics query, unchanged-file update, changed-file invalidation, and source-map position lookup.
 7. `phase27-non-regression`: compact fixtures proving diagnostics, renderer, exit-code, recovery-limit, and panic-free contracts remain green while the benchmark/query infrastructure runs.
 
-Phase 36 extends this taxonomy with protocol-level `lsp-query` cases once `sifr lsp` exists. Phase 35 must reserve compatible budget ids for LSP cold-start, completion, hover, definition, semantic-token, and document-sync latency in `verification/performance/lsp_query_budget_ids.md` so Phase 36 does not retrofit performance policy after the server is built.
+Phase 36 extends this taxonomy with protocol-level `lsp-query` cases once `sifr lsp` exists. Phase 35 must reserve compatible budget ids for LSP cold-start, completion, hover, definition, semantic-token, and document-sync latency in `verification/areas/performance/lsp_query_budget_ids.md` so Phase 36 does not retrofit performance policy after the server is built.
 
 Minimum corpus thresholds at phase exit:
 
@@ -500,7 +500,7 @@ Baseline measurements:
 - use at least twenty measured iterations for in-process query/cache scenarios
 - discard explicit warmup samples that were run only to prepare caches or stabilize the process; warm measured samples remain part of the reported dataset
 - report median, p95, median absolute deviation, coefficient of variation, peak RSS where available, cache hit/miss counts, and timeout status
-- fail baseline capture if coefficient of variation exceeds the configured stability limit for a case; the default limit is `0.10` unless `verification/performance/budgets.json` records a stricter case-specific value with rationale
+- fail baseline capture if coefficient of variation exceeds the configured stability limit for a case; the default limit is `0.10` unless `verification/areas/performance/data/budgets.json` records a stricter case-specific value with rationale
 
 Budget derivation:
 
@@ -508,13 +508,13 @@ Budget derivation:
 - default p95 budget: `max(baseline_p95 * 1.15, baseline_p95 + 50ms)`
 - default peak RSS budget: `max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)`
 - local edit-loop unchanged-file queries must have a stricter no-regression policy derived from baseline and must prove cache hit behavior
-- any benchmark-specific threshold that differs from defaults must be recorded in `verification/performance/budgets.json` with rationale
+- any benchmark-specific threshold that differs from defaults must be recorded in `verification/areas/performance/data/budgets.json` with rationale
 
 Budget enforcement must compare against checked-in baselines and budgets, not against moving CI history. CI may publish trend artifacts, but trend history is advisory only unless a reviewed phase update makes it authoritative.
 
 ## Waiver Policy
 
-Waivers are explicit, time-bounded, owner-assigned, and issue-linked entries in `verification/performance/waivers.json`.
+Waivers are explicit, time-bounded, owner-assigned, and issue-linked entries in `verification/areas/performance/data/waivers.json`.
 
 Each waiver must include:
 
@@ -529,7 +529,7 @@ Each waiver must include:
 - `rationale`
 - `removal_criteria`
 
-`verification/performance/check_budgets.py` must reject:
+`verification/areas/performance/check_budgets.py` must reject:
 
 - expired waivers
 - waivers without linked issues
@@ -539,7 +539,7 @@ Each waiver must include:
 
 Waivers may permit a measured performance regression to pass temporarily. They may not permit stale analysis results, split-brain semantics, data-dependent panics, diagnostic schema drift, renderer divergence, or exit-code contract regressions.
 
-LSP-query budget waivers follow the same policy as CLI benchmark waivers. Phase 36 adds `lsp-query` budget ids to `verification/performance/budgets.json`, and `check_budgets.py` must enforce them under the same owner, issue, expiry, override, and correctness-non-waiver rules.
+LSP-query budget waivers follow the same policy as CLI benchmark waivers. Phase 36 adds `lsp-query` budget ids to `verification/areas/performance/data/budgets.json`, and `check_budgets.py` must enforce them under the same owner, issue, expiry, override, and correctness-non-waiver rules.
 
 ## Milestone Sequencing
 
@@ -585,10 +585,10 @@ flowchart TD
 
 ### milestone_35_1: Baseline Benchmark Suite
 - Scope:
-  - Add `verification/performance/manifest.json`.
-  - Add `verification/performance/run_benchmarks.py`.
+  - Add `verification/areas/performance/data/benchmark_manifest.json`.
+  - Add `verification/areas/performance/run_benchmarks.py`.
   - Define benchmark suites for `check`, `build`, and incremental local loops using the corpus groups and measurement protocol in this file.
-  - Capture initial `verification/performance/baselines.json` from the canonical benchmark runner.
+  - Capture initial `verification/areas/performance/data/baselines.json` from the canonical benchmark runner.
   - Reuse representative Phase 34 generated-code-quality fixtures where possible.
   - Include `interactive-tooling-foundation` cases and reserve protocol-level `lsp-query` budget ids for Phase 36.
 - Definition of done:
@@ -599,9 +599,9 @@ flowchart TD
 
 ### milestone_35_2: Budget and Threshold Policy
 - Scope:
-  - Add `verification/performance/budgets.json`.
-  - Add `verification/performance/waivers.json`.
-  - Add `verification/performance/check_budgets.py`.
+  - Add `verification/areas/performance/data/budgets.json`.
+  - Add `verification/areas/performance/data/waivers.json`.
+  - Add `verification/areas/performance/check_budgets.py`.
   - Encode default median, p95, peak RSS, edit-loop cache-hit, and timeout budget rules from this file.
   - Document the policy in `internal_docs/performance_budgets.md`.
 - Definition of done:
@@ -627,7 +627,7 @@ flowchart TD
 - Scope:
   - Make compiler CLI modes consume the `sifr_frontend` analysis/query ownership model for `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows.
   - Remove temporary duplicate frontend semantics from `sifr_driver`.
-  - Add `verification/performance/check_frontend_cache_contract.py` and Rust tests proving no split-brain frontend path remains.
+  - Add `verification/areas/performance/check_frontend_cache_contract.py` and Rust tests proving no split-brain frontend path remains.
   - Add a reviewed split-brain guardrail. Prefer a code-level constraint when practical; otherwise use a focused script-level guardrail that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_frontend` and approved `sifr_lowering` internals.
   - Document final architecture in `internal_docs/frontend_query_architecture.md` and `internal_docs/frontend_cache_invalidation.md`.
   - Document final syntax wrapper architecture in `internal_docs/syntax_architecture.md`.
@@ -650,7 +650,7 @@ flowchart TD
 ### Milestone quality checks
 - Local validation gates pass for each milestone before merge:
   - `scripts/run_all_tests.sh --profile create-pr`
-  - milestone-specific `verification/performance/*.py` checks added by the milestone
+  - milestone-specific `verification/areas/performance/*.py` checks added by the milestone
 - The authoritative pre-PR gate passes before phase-closing PRs:
   - `scripts/run_all_tests.sh --profile merge`
 - No benchmark, budget, waiver, or cache contract uses CI-only behavior.
@@ -691,13 +691,13 @@ Performance budget checks must run in `scripts/run_all_tests.sh --profile merge`
 - `crates/sifr_frontend/` exists and owns the canonical frontend query API.
 - `crates/sifr_syntax/` exists and owns the Sifr-facing Ruff fork syntax wrapper.
 - CLI frontend flows consume `sifr_frontend` without duplicate semantics-bearing paths.
-- `verification/performance/manifest.json` is checked in and meets corpus thresholds.
-- `verification/performance/baselines.json` and `verification/performance/budgets.json` are checked in and reproducible locally.
-- `verification/performance/waivers.json` is either empty or contains only active, owner-assigned, issue-linked, time-bounded waivers.
-- `verification/performance/run_benchmarks.py` passes on the required corpus.
-- `verification/performance/check_budgets.py` passes and fails on seeded regressions.
-- `verification/performance/check_frontend_cache_contract.py` passes and fails on seeded stale-result or invalidation violations.
-- `verification/performance/check_split_brain_guardrail.py` passes and fails on seeded split-brain entrypoints.
+- `verification/areas/performance/data/benchmark_manifest.json` is checked in and meets corpus thresholds.
+- `verification/areas/performance/data/baselines.json` and `verification/areas/performance/data/budgets.json` are checked in and reproducible locally.
+- `verification/areas/performance/data/waivers.json` is either empty or contains only active, owner-assigned, issue-linked, time-bounded waivers.
+- `verification/areas/performance/run_benchmarks.py` passes on the required corpus.
+- `verification/areas/performance/check_budgets.py` passes and fails on seeded regressions.
+- `verification/areas/performance/check_frontend_cache_contract.py` passes and fails on seeded stale-result or invalidation violations.
+- `verification/areas/performance/check_split_brain_guardrail.py` passes and fails on seeded split-brain entrypoints.
 - `scripts/run_all_tests.sh --profile create-pr` passes.
 - `scripts/run_all_tests.sh --profile merge` passes.
 - Phase 27 non-regression contract remains green.

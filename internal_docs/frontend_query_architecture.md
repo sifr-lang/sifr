@@ -104,7 +104,7 @@ The deleted driver migration shims were:
 - `crates/sifr_driver/src/frontend/parser_diagnostics.rs`
 - `crates/sifr_driver/src/project/exports.rs`
 
-`verification/performance/check_split_brain_guardrail.py` now has no driver/CLI migration allowlist. New parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_lowering` internals fail the local validation lane.
+`verification/areas/performance/check_split_brain_guardrail.py` now has no driver/CLI migration allowlist. New parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_syntax`, `sifr_frontend`, and approved `sifr_lowering` internals fail the local validation lane.
 
 ## Extension Boundary
 

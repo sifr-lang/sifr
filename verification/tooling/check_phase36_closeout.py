@@ -12,12 +12,13 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUN_ALL = REPO_ROOT / "scripts" / "run_all_tests.sh"
-PHASE_DOC = REPO_ROOT / "internal_docs" / "phases" / "36_developer_tooling_and_ecosystem_hooks.md"
-ISSUE_DOC = REPO_ROOT / "issues" / "archive" / "phase36-developer-tooling-execution.md"
+PHASE_DOC = REPO_ROOT / "plans" / "phases" / "36_developer_tooling_and_ecosystem_hooks.md"
+ISSUE_DOC = REPO_ROOT / "plans" / "issues" / "archive" / "phase36-developer-tooling-execution.md"
 TOOLING_VERIFICATION_DOC = REPO_ROOT / "internal_docs" / "tooling_verification.md"
 REUSE_DOC = REPO_ROOT / "internal_docs" / "tooling_reuse_strategy.md"
 TOOLING_ROOT = REPO_ROOT / "verification" / "tooling"
-PERF_ROOT = REPO_ROOT / "verification" / "performance"
+PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
+PERF_DATA = PERF_ROOT / "data"
 
 REQUIRED_TOOLING_CHECKS = [
     "check_tooling_contract_lock.py",
@@ -75,9 +76,14 @@ def validate_run_all_wiring(run_all_text: str) -> list[str]:
         if script_name != "check_phase36_closeout.py" and f"{script_name}\" --self-test" not in run_all_text:
             failures.append(f"{script_name} self-test is not wired into scripts/run_all_tests.sh")
     for script_name in REQUIRED_PERFORMANCE_CHECKS:
-        if f"verification/performance/{script_name}" not in run_all_text and f"../verification/performance/{script_name}" not in run_all_text:
+        area_wired = "--area performance" in run_all_text
+        old_path_wired = (
+            f"verification/areas/performance/{script_name}" in run_all_text
+            or f"../verification/areas/performance/{script_name}" in run_all_text
+        )
+        if not area_wired and not old_path_wired:
             failures.append(f"{script_name} is not wired into scripts/run_all_tests.sh")
-        if f"{script_name}\" --self-test" not in run_all_text:
+        if not area_wired and f"{script_name}\" --self-test" not in run_all_text:
             failures.append(f"{script_name} self-test is not wired into scripts/run_all_tests.sh")
     return failures
 
@@ -122,9 +128,9 @@ def validate_tracking_docs() -> list[str]:
 
 def validate_lsp_performance_policy() -> list[str]:
     failures: list[str] = []
-    manifest = load_json(PERF_ROOT / "manifest.json")
-    budgets = load_json(PERF_ROOT / "budgets.json")
-    waivers = load_json(PERF_ROOT / "waivers.json")
+    manifest = load_json(PERF_DATA / "benchmark_manifest.json")
+    budgets = load_json(PERF_DATA / "budgets.json")
+    waivers = load_json(PERF_DATA / "waivers.json")
     matrix = load_json(TOOLING_ROOT / "lsp_protocol_matrix.json")
     budget_doc = (PERF_ROOT / "lsp_query_budget_ids.md").read_text(encoding="utf-8")
 
@@ -173,7 +179,7 @@ def run_self_test() -> None:
     if not any("check_completion_quality.py" in failure for failure in failures):
         raise SystemExit("phase36 closeout self-test failed: missing completion quality wiring passed")
 
-    manifest = load_json(PERF_ROOT / "manifest.json")
+    manifest = load_json(PERF_DATA / "benchmark_manifest.json")
     bad_manifest = copy.deepcopy(manifest)
     bad_manifest["cases"] = [
         case
