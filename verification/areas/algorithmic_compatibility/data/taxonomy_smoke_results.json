@@ -1,0 +1,29 @@
+{
+  "summary": {
+    "case_count": 2,
+    "status_counts": {
+      "PASS": 1,
+      "CHECK_ERROR": 1,
+      "RUN_ERROR": 0,
+      "NO_ORACLE": 0
+    }
+  },
+  "results": [
+    {
+      "fixture_slug": "0001_two_sum",
+      "status": "PASS",
+      "stages": []
+    },
+    {
+      "fixture_slug": "0347_top_k_frequent_elements",
+      "status": "CHECK_ERROR",
+      "failure_stage": "check",
+      "stages": [
+        {
+          "stage": "check",
+          "stderr": "error: undefined function: 'Counter'\n"
+        }
+      ]
+    }
+  ]
+}

@@ -6,8 +6,8 @@
 	path = editor_integrations
 	url = https://github.com/sifr-lang/editor-integrations.git
 	branch = main
-[submodule "audits/leetcode"]
-	path = audits/leetcode
+[submodule "verification/areas/algorithmic_compatibility/corpora/leetcode"]
+	path = verification/areas/algorithmic_compatibility/corpora/leetcode
 	url = https://github.com/sifr-lang/leetcode.git
 	branch = main
 [submodule "verification/areas/package_management/corpora/demo_repositories/sifr-demo-json"]

@@ -261,7 +261,7 @@ Phase 27 non-regression contract remains green: panic-free user paths, no emitte
 Follow-up audit scope:
 
 - Every non-negative `demos/**/main.sifr` entry was checked one by one with emitted generated Rust build, forbidden construct scan, official `cargo fmt`, `cargo fmt --check`, and the generated-code clippy profile.
-- Every `audits/leetcode/src/*.sifr` fixture was checked one by one with the same emitted-code quality sequence.
+- Every `verification/areas/algorithmic_compatibility/corpora/leetcode/src/*.sifr` fixture was checked one by one with the same emitted-code quality sequence.
 - Review rounds completed with generated-code audit findings resolved.
 
 Demo audit evidence:

@@ -76,7 +76,7 @@ materialize_local_workspace_roots() {
 
   # This local audit corpus is intentionally not required for the size demo,
   # but the repository sifr.toml names the directory as a workspace source root.
-  mkdir -p "$worktree/audits/leetcode/src"
+  mkdir -p "$worktree/verification/areas/algorithmic_compatibility/corpora/leetcode/src"
 }
 
 materialize_local_workspace_roots "$BASE_WT"

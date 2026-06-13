@@ -51,8 +51,5 @@ demos/**/*.exe
 # Local Sifr compiler cache
 .sifr_cache/
 
-# External sub-repositories restored by scripts/clone_subrepos.sh
-/audits/leetcode/
-
 # Optional local reference checkout; uv production dependencies are pinned by Cargo.
 /third_party/uv/
