@@ -11,14 +11,16 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-RUN_ALL = REPO_ROOT / "scripts" / "run_all_tests.sh"
+PROFILE_RUNNER = REPO_ROOT / "verification" / "runner" / "sifr_verify" / "profile_runner.py"
 PHASE_DOC = REPO_ROOT / "plans" / "phases" / "36_developer_tooling_and_ecosystem_hooks.md"
 ISSUE_DOC = REPO_ROOT / "plans" / "issues" / "archive" / "phase36-developer-tooling-execution.md"
 TOOLING_VERIFICATION_DOC = REPO_ROOT / "internal_docs" / "tooling_verification.md"
 REUSE_DOC = REPO_ROOT / "internal_docs" / "tooling_reuse_strategy.md"
 TOOLING_ROOT = REPO_ROOT / "verification" / "areas" / "developer_tooling"
+TOOLING_RUNNER = TOOLING_ROOT / "runner.py"
 PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
 PERF_DATA = PERF_ROOT / "data"
+PERF_MANIFEST = PERF_ROOT / "manifest.json"
 
 REQUIRED_TOOLING_CHECKS = [
     "check_tooling_contract_lock.py",
@@ -68,34 +70,37 @@ class CloseoutError(Exception):
     pass
 
 
-def validate_run_all_wiring(run_all_text: str) -> list[str]:
+def validate_profile_runner_wiring(runner_text: str) -> list[str]:
     failures: list[str] = []
-    tooling_area_wired = "--area developer_tooling" in run_all_text
     for suite_name in [
         "typescript-go-m1",
         "diagnostic-contracts",
     ]:
-        if suite_name not in run_all_text:
-            failures.append(f"developer_tooling suite {suite_name} is not wired into scripts/run_all_tests.sh")
-    if "DEVELOPER_TOOLING_ARGS" not in run_all_text:
-        failures.append("developer_tooling profile suite dispatch is not wired into scripts/run_all_tests.sh")
-    if not tooling_area_wired:
-        failures.append("developer_tooling area is not wired into scripts/run_all_tests.sh")
-        for script_name in REQUIRED_TOOLING_CHECKS:
-            if script_name not in run_all_text:
-                failures.append(f"{script_name} is not wired into scripts/run_all_tests.sh")
-            if script_name != "check_phase36_closeout.py" and f"{script_name}\" --self-test" not in run_all_text:
-                failures.append(f"{script_name} self-test is not wired into scripts/run_all_tests.sh")
+        if suite_name not in runner_text:
+            failures.append(f"developer_tooling suite {suite_name} is not wired into profile_runner.py")
+    if "tooling_suites" not in runner_text:
+        failures.append("developer_tooling profile suite dispatch is not wired into profile_runner.py")
+    if '"developer_tooling"' not in runner_text:
+        failures.append("developer_tooling area is not wired into profile_runner.py")
+    if '"performance"' not in runner_text or "performance_budget_mode" not in runner_text:
+        failures.append("performance profile suite dispatch is not wired into profile_runner.py")
+    return failures
+
+
+def validate_area_suite_wiring(tooling_runner_text: str, perf_manifest_text: str) -> list[str]:
+    failures: list[str] = []
+    for script_name in REQUIRED_TOOLING_CHECKS:
+        if script_name not in tooling_runner_text:
+            failures.append(f"{script_name} is not wired into developer_tooling area runner")
+        elif f'"{script_name}"), "--self-test"' not in tooling_runner_text:
+            failures.append(f"{script_name} self-test is not wired into developer_tooling area runner")
     for script_name in REQUIRED_PERFORMANCE_CHECKS:
-        area_wired = "--area performance" in run_all_text
-        old_path_wired = (
-            f"verification/areas/performance/{script_name}" in run_all_text
-            or f"../verification/areas/performance/{script_name}" in run_all_text
-        )
-        if not area_wired and not old_path_wired:
-            failures.append(f"{script_name} is not wired into scripts/run_all_tests.sh")
-        if not area_wired and f"{script_name}\" --self-test" not in run_all_text:
-            failures.append(f"{script_name} self-test is not wired into scripts/run_all_tests.sh")
+        if script_name not in perf_manifest_text:
+            failures.append(f"{script_name} is not wired into performance area manifest")
+    if "benchmark-self-test" not in perf_manifest_text:
+        failures.append("run_benchmarks.py self-test is not wired into performance area manifest")
+    if "budget-self-test" not in perf_manifest_text:
+        failures.append("check_budgets.py self-test is not wired into performance area manifest")
     return failures
 
 
@@ -177,18 +182,30 @@ def validate() -> list[str]:
     failures = validate_required_files()
     if failures:
         return failures
-    failures.extend(validate_run_all_wiring(RUN_ALL.read_text(encoding="utf-8")))
+    failures.extend(validate_profile_runner_wiring(PROFILE_RUNNER.read_text(encoding="utf-8")))
+    failures.extend(
+        validate_area_suite_wiring(
+            TOOLING_RUNNER.read_text(encoding="utf-8"),
+            PERF_MANIFEST.read_text(encoding="utf-8"),
+        )
+    )
     failures.extend(validate_tracking_docs())
     failures.extend(validate_lsp_performance_policy())
     return failures
 
 
 def run_self_test() -> None:
-    run_all_text = RUN_ALL.read_text(encoding="utf-8")
-    bad_text = run_all_text.replace("--area developer_tooling", "--area missing_developer_tooling")
-    failures = validate_run_all_wiring(bad_text)
+    runner_text = PROFILE_RUNNER.read_text(encoding="utf-8")
+    bad_text = runner_text.replace('"developer_tooling"', '"missing_developer_tooling"')
+    failures = validate_profile_runner_wiring(bad_text)
     if not any("developer_tooling area" in failure for failure in failures):
         raise SystemExit("phase36 closeout self-test failed: missing developer_tooling area wiring passed")
+
+    tooling_runner_text = TOOLING_RUNNER.read_text(encoding="utf-8")
+    bad_tooling_runner_text = tooling_runner_text.replace("check_completion_quality.py", "missing_completion_quality.py")
+    failures = validate_area_suite_wiring(bad_tooling_runner_text, PERF_MANIFEST.read_text(encoding="utf-8"))
+    if not any("check_completion_quality.py" in failure for failure in failures):
+        raise SystemExit("phase36 closeout self-test failed: missing area runner wiring passed")
 
     manifest = load_json(PERF_DATA / "benchmark_manifest.json")
     bad_manifest = copy.deepcopy(manifest)

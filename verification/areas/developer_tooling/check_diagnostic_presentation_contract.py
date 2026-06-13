@@ -61,10 +61,10 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def check_run_all_wiring(root: Path) -> None:
-    text = read_text(root, "scripts/run_all_tests.sh")
-    require("--area developer_tooling" in text, "run_all_tests.sh missing developer_tooling area route")
-    require("--suite diagnostic-contracts" in text, "run_all_tests.sh missing diagnostic contracts suite route")
+def check_profile_runner_wiring(root: Path) -> None:
+    text = read_text(root, "verification/runner/sifr_verify/profile_runner.py")
+    require('"developer_tooling"' in text, "profile_runner.py missing developer_tooling area route")
+    require('"diagnostic-contracts"' in text, "profile_runner.py missing diagnostic contracts suite route")
 
 
 def check_schema_lock(root: Path) -> None:
@@ -249,7 +249,7 @@ def check_command_format_routing(root: Path) -> None:
 
 
 def run_checks(root: Path) -> None:
-    check_run_all_wiring(root)
+    check_profile_runner_wiring(root)
     check_schema_lock(root)
     check_fixture_baselines(root)
     check_manifest_cases(root)
@@ -267,9 +267,8 @@ def write(path: Path, text: str) -> None:
 
 def seed_minimal_repo(root: Path) -> None:
     write(
-        root / "scripts/run_all_tests.sh",
-        "uv run --project verification --locked python -m sifr_verify areas run "
-        "--area developer_tooling --suite diagnostic-contracts\n",
+        root / "verification/runner/sifr_verify/profile_runner.py",
+        'run_command(uv_area_command("--area", "developer_tooling", "--suite", "diagnostic-contracts"))\n',
     )
     write(
         root / "verification/areas/developer_tooling/diagnostic_presentation_schema_lock.json",
@@ -455,8 +454,8 @@ def run_self_tests() -> None:
         "missing run-all wiring",
         "missing diagnostic contracts suite route",
         lambda root: write(
-            root / "scripts/run_all_tests.sh",
-            "uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling\n",
+            root / "verification/runner/sifr_verify/profile_runner.py",
+            'run_command(uv_area_command("--area", "developer_tooling"))\n',
         ),
     )
     print("diagnostic presentation contract self-test: PASS")
