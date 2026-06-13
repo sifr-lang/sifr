@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "name": "generated_code_quality",
+  "owner": "compiler/codegen",
+  "description": "Generated Rust corpus, panic, formatting, lint, determinism, and demo quality gates.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "long-running"
+  ],
+  "timeout_seconds": 1800,
+  "suites": [
+    {
+      "name": "smoke",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "smoke",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-mode",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "representative",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "representative",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-mode",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "full",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "full",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-mode",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "corpus",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "corpus",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "panic-scan",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "panic-scan",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "rustfmt",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "rustfmt",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "clippy",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "clippy",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "determinism",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "determinism",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "demos",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "demos",
+          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

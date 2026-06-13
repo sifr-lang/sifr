@@ -488,7 +488,7 @@ Minimum corpus thresholds at phase exit:
 - at least 5 `interactive-tooling-foundation` cases
 - at least 3 negative budget/waiver seeds
 
-The corpus must reuse representative Phase 34 generated-code-quality entries where possible (for example, entries from `verification/generated_code_quality/manifest.json`) so quality and performance gates do not drift onto unrelated fixture sets. Every benchmark case has a stable id, source path or project root, command or query scenario, warmup count, measured count, timeout, budget id, and evidence category.
+The corpus must reuse representative Phase 34 generated-code-quality entries where possible (for example, entries from `verification/areas/generated_code_quality/data/corpus_manifest.json`) so quality and performance gates do not drift onto unrelated fixture sets. Every benchmark case has a stable id, source path or project root, command or query scenario, warmup count, measured count, timeout, budget id, and evidence category.
 
 ## Measurement Protocol
 

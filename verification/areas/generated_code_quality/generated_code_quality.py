@@ -17,9 +17,9 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-GCQ_ROOT = REPO_ROOT / "verification" / "generated_code_quality"
-MANIFEST = GCQ_ROOT / "manifest.json"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+GCQ_ROOT = REPO_ROOT / "verification" / "areas" / "generated_code_quality"
+MANIFEST = GCQ_ROOT / "data" / "corpus_manifest.json"
 TARGET_ROOT = REPO_ROOT / "target" / "sifr_generated_code_quality"
 EVIDENCE_ROOT = TARGET_ROOT / "evidence"
 # Inputs that change generated Rust or its compile environment. Manifest metadata
@@ -45,7 +45,7 @@ PRODUCER_FINGERPRINT_INPUTS = [
     "crates/sifr_stdlib/src",
     "crates/sifr_syntax/Cargo.toml",
     "crates/sifr_syntax/src",
-    "verification/generated_code_quality/generated_code_quality.py",
+    "verification/areas/generated_code_quality/generated_code_quality.py",
 ]
 PRODUCER_FINGERPRINT_EXTENSIONS = {".lock", ".py", ".rs", ".sifr", ".toml"}
 
