@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       # Advisory until legacy workspace lint debt is burned down in follow-up phases.
       - name: Rustfmt check (advisory)
@@ -36,6 +38,8 @@ jobs:
         profile: [create-pr, merge, release]
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v5
         with:
@@ -48,6 +52,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - name: Run smoke fuzz/property checks
         run: bash scripts/run_smoke_fuzz_property.sh
@@ -58,6 +64,8 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - name: Verify deterministic report signature
         run: bash scripts/check_e2e_report_determinism.sh --profile merge

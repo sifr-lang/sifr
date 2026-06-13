@@ -219,6 +219,10 @@ class ProfileRunner:
         run_python("scripts/check_source_crate_dependency_direction.py")
         run_python("scripts/check_source_crate_dependency_direction.py", "--self-test")
 
+        print("Running submodule ownership guardrail")
+        run_python("scripts/check_submodule_ownership.py")
+        run_python("scripts/check_submodule_ownership.py", "--self-test")
+
         print("Running TypeScript-Go architecture transfer M1 guardrails")
         run_command(uv_area_command("--area", "developer_tooling", "--suite", "typescript-go-m1"))
 

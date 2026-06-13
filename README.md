@@ -153,10 +153,16 @@ reviewable dependency changes.
 
 ### Restore optional sub-repositories
 
-Some large audit corpora live in separate Git submodules and are restored to
-their expected paths when needed. The LeetCode audit corpus lives at
-[`sifr-lang/leetcode`](https://github.com/sifr-lang/leetcode) and is restored to
-`verification/areas/algorithmic_compatibility/corpora/leetcode`.
+External corpora, editor integration repositories, and package-management demo
+repositories live in Git submodules and are restored to their expected owner
+paths when needed. `scripts/clone_subrepos.sh` initializes all configured
+submodules from `.gitmodules`, including:
+
+- `third_party/ruff`
+- `editor_integrations`
+- `verification/areas/algorithmic_compatibility/corpora/leetcode`
+- `verification/areas/developer_tooling/corpora/sifr-large-lsp-verification`
+- `verification/areas/package_management/corpora/demo_repositories/*`
 
 ```bash
 scripts/clone_subrepos.sh
@@ -166,15 +172,15 @@ The script is safe to run repeatedly. It initializes missing submodules and
 fast-forwards existing clean checkouts when `--remote` is selected.
 
 LeetCode fixtures live under
-`verification/areas/algorithmic_compatibility/corpora/leetcode/src`. Historical
-generated LeetCode reports, verification outputs, and old audit notes were
-removed from the lean LeetCode sub-repository and remain recoverable from its
-git history.
+`verification/areas/algorithmic_compatibility/corpora/leetcode/src`. The large
+LSP corpus and package demo repositories remain area-owned verification inputs,
+not top-level demos or process history.
 
 ### Restore maintenance submodules
 
 Sifr keeps a fork of Ruff at `third_party/ruff` for parser and AST maintenance.
-The submodule tracks the `sifr/0.15.12-maintenance` branch.
+The submodule tracks the `sifr/0.15.12-maintenance` branch. To restore only the
+Ruff fork without touching verification corpora or editor integrations:
 
 ```bash
 git submodule update --init --recursive third_party/ruff
