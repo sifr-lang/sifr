@@ -4,7 +4,7 @@
     {
       "id": "OSS-CURATED-0001",
       "project_root": "verification/areas/ecosystem_compatibility/projects/curated_cli_math",
-      "pinned_revision": "local-main@5f8f145",
+      "pinned_revision": "local-main@f6ababa5",
       "owner": "compiler/verification",
       "rationale": "Representative small module-based CLI app with local imports and deterministic runtime output.",
       "expected_result_classification": "pass",
@@ -26,7 +26,7 @@
     {
       "id": "OSS-CURATED-0002",
       "project_root": "verification/areas/ecosystem_compatibility/projects/curated_data_flow",
-      "pinned_revision": "local-main@5f8f145",
+      "pinned_revision": "local-main@f6ababa5",
       "owner": "compiler/verification",
       "rationale": "Representative multi-module data flow app exercising control flow and helper modules.",
       "expected_result_classification": "pass",
