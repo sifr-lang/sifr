@@ -45,7 +45,6 @@ Validation so far:
 - `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py --self-test` -> PASS
-- `python3 scripts/check_diagnostic_cancel_usage.py` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
 - Claude reviewer pass 1 -> SATISFIED with residual cleanup
