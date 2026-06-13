@@ -153,16 +153,16 @@ Add clear, actionable diagnostic messages:
 
 ### 3. Update Borrowing Audit Tests
 
-Update the 50 tests in `audits/borrowing/` to reflect borrow-by-default semantics:
+Update the 50 tests in `verification/areas/core_language/fixtures/audits/ownership/` to reflect borrow-by-default semantics:
 
 - Tests 08, 23 (function move): change to borrow-by-default behavior (pass succeeds, variable still usable)
 - Tests 09, 24, 31 (use-after-move via function): update to use `own` keyword, verify they still fail correctly
 - Tests 16 (move-in-loop): update to use `own` keyword
 - Tests 01-07, 11-15, 17-22, 25-30, 32-50: verify unchanged behavior
 
-Update `audits/borrowing/POST_HARDENING_REPORT.md` to document the new ownership model.
+Record the new ownership model in the phase summary or current architecture docs instead of restoring the deleted audit report.
 
-**Key files:** `audits/borrowing/*.sifr`, `audits/borrowing/POST_HARDENING_REPORT.md`
+**Key files:** `verification/areas/core_language/fixtures/audits/ownership/*.sifr`, `internal_docs/architecture.md`
 
 ### 4. New E2E Tests
 
@@ -228,13 +228,13 @@ This milestone completes the foundation for fearless concurrency in `milestone_a
 ### Definition of Done (milestone_borrow_hardening)
 
 - Exclusivity errors caught by `sifr check` with clear error messages
-- All 50 borrowing audit tests updated and passing/failing correctly
+- All 50 core-language ownership audit fixtures updated and passing/failing correctly
 - New E2E pass/fail tests for borrowed_parameters, mut_param, own_param, exclusivity
 - Parser snapshot tests cover `mut`/`own` soft keyword edge cases
 - Multi-module convention tests verify `FunctionType`/`Callable` convention propagation across imports
 - Stdlib works correctly with borrow-by-default
 - Architecture documentation updated (Borrow and Lifetime Strategy, Ownership Model)
-- `audits/borrowing/POST_HARDENING_REPORT.md` reflects new model
+- current ownership architecture docs reflect the new model
 
 ---
 

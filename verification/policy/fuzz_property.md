@@ -5,6 +5,7 @@ This policy defines phase-29 fuzz/property operating rules.
 ## Local Deterministic Smoke Gates (Blocking)
 
 Canonical manifests:
+- `verification/areas/fuzz_property/manifest.json`
 - `verification/areas/fuzz_property/property_manifest.json`
 - `verification/areas/fuzz_property/fuzz_smoke_manifest.json`
 
@@ -15,7 +16,7 @@ Contracts:
 - deterministic seeds and deterministic mutation stream
 - reproducible local results (same inputs -> same outcome)
 - no internal compiler panic signals in stderr/stdout
-- machine-readable result artifacts emitted through `target/verification/hardening-results.json`
+- machine-readable result artifacts emitted through `target/verification/areas/fuzz-property-results.json`
 - mutation operators include import lines, string/numeric literals, and function signature shapes in addition to line-level edits
 
 ## Seed Corpus Rules
@@ -31,10 +32,10 @@ For every fuzz-found issue:
 1. Reproduce with the exact seed/mutated source and random seed metadata.
 2. Minimize to smallest stable reproducer.
 3. Classify root cause and open/link issue.
-4. Add sentinel to `crashes` if unresolved.
-5. Promote to `fixedbugs` after fix lands.
+4. Add sentinel coverage under `verification/areas/regression/fixtures/crashes/` if unresolved.
+5. Promote through `verification/areas/regression/data/fixedbugs.json` after fix lands.
 
-## Sustained Fuzzing Lane (Non-blocking)
+## Sustained Fuzzing Signal (Non-blocking)
 
 Long-running fuzzing is separate from local blocking smoke gates:
 - definition: `verification/areas/fuzz_property/sustained_lane.md`

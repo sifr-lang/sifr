@@ -23,7 +23,7 @@ Phase 30 uses CPython as the behavioral reference model, but parity must always 
 - Only one target module may be in active parity work at any given time.
 - A module must complete the full implementation and review cycle before the next module begins.
 - `CPython-derived parity tests` means transformed into the canonical Sifr parity fixture format and safety-adapted assertions, not mechanically copied from CPython `unittest` sources.
-- The canonical baseline parity fixture format is documented in `audits/stdlib/cpython_parity_fixture_format.md` and must be reused unless a module-specific extension is explicitly justified.
+- The canonical baseline parity fixture format is documented in `verification/areas/stdlib_parity/docs/cpython_parity_fixture_format.md` and must be reused unless a module-specific extension is explicitly justified.
 - The per-module execution cycle is:
   1. define the parity scope and module to-do list from CPython references
   2. port or expand CPython-derived parity tests for the module using the canonical Sifr parity fixture format
@@ -125,7 +125,7 @@ In particular:
   - `verification/areas/stdlib_parity/reports/phase30_parity_matrix.md`
   - `verification/areas/stdlib_parity/data/phase30_complexity_resource_inventory.json`
 - `milestone_30_4` parity test corpus structure and maintainability:
-  - `audits/stdlib/cpython_parity_fixture_format.md`
+  - `verification/areas/stdlib_parity/docs/cpython_parity_fixture_format.md`
   - `crates/sifr/tests/e2e/pass/`
   - `plans/issues/archive/phase30-reliability-parity-and-performance-budgets-execution.md`
 

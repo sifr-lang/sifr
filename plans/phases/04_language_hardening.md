@@ -337,7 +337,7 @@ Support `def f[T](x: T) -> T` and `class C[T]` syntax. The AST already parses `t
 - In `collect_class_type`: check `class_def.type_params`; register type params for the class scope
 - `resolve_annotation_expr` already handles `Type::TypeVar` lookup -- no change needed
 
-**Fixes:** `audits/type_system/21_generic_functions_syntax.sifr`, `audits/type_system/22_generic_class_syntax.sifr`
+**Fixes:** `verification/areas/core_language/fixtures/audits/type_system/21_generic_functions_syntax.sifr`, `verification/areas/core_language/fixtures/audits/type_system/22_generic_class_syntax.sifr`
 
 ### 2. Protocol Method Dispatch
 
@@ -346,7 +346,7 @@ Enable method calls on Protocol-typed function parameters. Currently Protocol ty
 - In the method call resolution path in `lower.rs`: when the receiver type is `Type::Protocol(name)`, look up the protocol's method signatures and resolve the call
 - Codegen should emit correct trait method calls on `Box<dyn Protocol>` automatically once HIR is correct
 
-**Fixes:** `audits/type_system/23_interface_as_param.sifr`, `audits/type_system/34_protocol_param_dispatch.sifr`
+**Fixes:** `verification/areas/core_language/fixtures/audits/type_system/23_interface_as_param.sifr`, `verification/areas/core_language/fixtures/audits/type_system/34_protocol_param_dispatch.sifr`
 
 ### 3. Multi-Generator Comprehensions
 
@@ -356,7 +356,7 @@ Support `[x for row in matrix for x in row]` (multiple `for` clauses in a single
 - Remove the `generators.len() != 1` guard in `lower.rs`; process generators in order, nesting scopes for each
 - Update codegen to emit nested `for` loops for multi-generator comprehensions
 
-**Fixes:** `audits/python_basics/15_list_comprehension.sifr`
+**Fixes:** `verification/areas/core_language/fixtures/audits/python_basics/15_list_comprehension.sifr`
 
 ### 4. Stdlib Fixes
 
@@ -369,13 +369,13 @@ All stdlib signature changes primarily live in `crates/sifr_stdlib` (and codegen
 - **JSON**: Widen `json_dumps` parameter type from `str` to accept any serializable type
 - **Random**: Widen `random_choice` to accept generic `list[T]` instead of `list[int]`
 
-**Fixes:** `audits/stdlib/01_math.sifr`, `audits/stdlib/02_json.sifr`, `audits/stdlib/06_io.sifr`, `audits/stdlib/08_env.sifr`, `audits/stdlib/09_random.sifr`, `audits/stdlib/10_hash_encoding.sifr`
+**Fixes:** `verification/areas/stdlib_parity/fixtures/audits/stdlib/01_math.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/02_json.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/06_io.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/08_env.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/09_random.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/10_hash_encoding.sifr`
 
 ### 5. Set[T] Type (Stretch Goal)
 
 Add `Set[T]` to the type system and collections stdlib, similar to how `list` and `dict` are handled. Includes constructor, `contains`, `add`, `remove` methods, and `len()` support.
 
-**Fixes:** `audits/stdlib/05_collections.sifr`
+**Fixes:** `verification/areas/stdlib_parity/fixtures/audits/stdlib/05_collections.sifr`
 
 **Key files:** `crates/sifr_lowering/src/lower/`, `crates/sifr_ir`, `crates/sifr_stdlib`, `crates/sifr_codegen/src/lib.rs`, `crates/sifr_type_system/src/types.rs`
 
@@ -437,8 +437,8 @@ This milestone is the prerequisite for fearless concurrency:
 - Conditional move tracking works correctly across branches
 - `print(set)` works
 - All existing E2E tests pass (no regressions)
-- `audits/borrowing/` shows 0 "Fail (Rust compile)" results
-- Borrowing audit: 38 pass, 12 correct Sifr rejections, 0 Rust failures
+- `verification/areas/core_language/fixtures/audits/ownership/` shows 0 "Fail (Rust compile)" results
+- Core-language ownership audit fixtures: 38 pass, 12 correct Sifr rejections, 0 Rust failures
 
 ---
 

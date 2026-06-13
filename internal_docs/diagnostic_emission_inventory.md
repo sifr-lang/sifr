@@ -252,7 +252,7 @@ zipfile_write_non_string_content.sifr
 
 ## Verification Baseline Surface
 
-Checked-in verification baselines under `crates/sifr/tests/verification` are a separate migration surface from fail fixtures. They should be regenerated in the milestone that changes the corresponding renderer/harness behavior.
+Checked-in verification baselines are area-owned under `verification/areas/diagnostics/fixtures/` and `verification/areas/project_workspace/fixtures/`. They should be regenerated in the milestone that changes the corresponding renderer/harness behavior.
 
 | Verification case | Current baseline markers | Target / owner |
 | --- | --- | --- |

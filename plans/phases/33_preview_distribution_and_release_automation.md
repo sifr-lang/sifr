@@ -235,18 +235,18 @@ flowchart TD
 
 **Positive validation:**
 
-- `verification/distribution/install_default_beta_dispatcher.sh`
-- `verification/distribution/install_alpha_dispatcher.sh`
-- `verification/distribution/install_version_pin_dispatcher.sh`
-- `verification/distribution/install_stable_channel_gated.sh`
+- `verification/areas/distribution_release/cases/install_default_beta_dispatcher.sh`
+- `verification/areas/distribution_release/cases/install_alpha_dispatcher.sh`
+- `verification/areas/distribution_release/cases/install_version_pin_dispatcher.sh`
+- `verification/areas/distribution_release/cases/install_stable_channel_gated.sh`
 
 **Negative validation:**
 
-- `verification/distribution/install_invalid_channel_rejected.sh`
-- `verification/distribution/install_conflicting_channel_and_version_rejected.sh`
-- `verification/distribution/install_stable_version_pin_rejected.sh`
-- `verification/distribution/install_missing_generated_installer_rejected.sh`
-- `verification/distribution/install_dispatcher_malformed_config_rejected.sh`
+- `verification/areas/distribution_release/cases/install_invalid_channel_rejected.sh`
+- `verification/areas/distribution_release/cases/install_conflicting_channel_and_version_rejected.sh`
+- `verification/areas/distribution_release/cases/install_stable_version_pin_rejected.sh`
+- `verification/areas/distribution_release/cases/install_missing_generated_installer_rejected.sh`
+- `verification/areas/distribution_release/cases/install_dispatcher_malformed_config_rejected.sh`
 
 **Demo:** none yet; dispatcher validation uses mocked generated installers until real artifacts exist.
 
@@ -274,17 +274,17 @@ flowchart TD
 
 **Positive validation:**
 
-- `verification/distribution/artifact_generated_installer_all_preview_targets.sh`
-- `verification/distribution/artifact_sha256_validated.sh`
-- `verification/distribution/install_matching_target_artifact.sh`
-- `verification/distribution/channel_dispatcher_points_to_generated_installer.sh`
+- `verification/areas/distribution_release/cases/artifact_generated_installer_all_preview_targets.sh`
+- `verification/areas/distribution_release/cases/artifact_sha256_validated.sh`
+- `verification/areas/distribution_release/cases/install_matching_target_artifact.sh`
+- `verification/areas/distribution_release/cases/channel_dispatcher_points_to_generated_installer.sh`
 
 **Negative validation:**
 
-- `verification/distribution/artifact_missing_target_rejected.sh`
-- `verification/distribution/artifact_checksum_mismatch_rejected.sh`
-- `verification/distribution/artifact_target_mismatch_rejected.sh`
-- `verification/distribution/stable_entrypoints_unchanged_by_preview_release.sh`
+- `verification/areas/distribution_release/cases/artifact_missing_target_rejected.sh`
+- `verification/areas/distribution_release/cases/artifact_checksum_mismatch_rejected.sh`
+- `verification/areas/distribution_release/cases/artifact_target_mismatch_rejected.sh`
+- `verification/areas/distribution_release/cases/stable_entrypoints_unchanged_by_preview_release.sh`
 
 **Demo:** `demos/preview_distribution_demo/README.md` records a local mocked-installer walkthrough and the commands used to verify checksum handling.
 
@@ -313,18 +313,18 @@ flowchart TD
 
 **Positive validation:**
 
-- `verification/distribution/create_new_version_alpha_dry_run.sh`
-- `verification/distribution/create_new_version_beta_dry_run.sh`
-- `verification/distribution/create_new_version_real_run_plan_reuse.sh`
-- `verification/distribution/create_new_version_release_checklist.sh`
-- `verification/distribution/create_new_version_attribution_checklist.sh`
+- `verification/areas/distribution_release/cases/create_new_version_alpha_dry_run.sh`
+- `verification/areas/distribution_release/cases/create_new_version_beta_dry_run.sh`
+- `verification/areas/distribution_release/cases/create_new_version_real_run_plan_reuse.sh`
+- `verification/areas/distribution_release/cases/create_new_version_release_checklist.sh`
+- `verification/areas/distribution_release/cases/create_new_version_attribution_checklist.sh`
 
 **Negative validation:**
 
-- `verification/distribution/create_new_version_stable_rejected.sh`
-- `verification/distribution/create_new_version_bad_semver_rejected.sh`
-- `verification/distribution/create_new_version_missing_artifact_rejected.sh`
-- `verification/distribution/create_new_version_site_dispatcher_drift_rejected.sh`
+- `verification/areas/distribution_release/cases/create_new_version_stable_rejected.sh`
+- `verification/areas/distribution_release/cases/create_new_version_bad_semver_rejected.sh`
+- `verification/areas/distribution_release/cases/create_new_version_missing_artifact_rejected.sh`
+- `verification/areas/distribution_release/cases/create_new_version_site_dispatcher_drift_rejected.sh`
 
 **Demo:** `demos/preview_release_lifecycle/README.md` captures a dry-run transcript and a mocked real-run transcript showing release planning, artifact verification, generated installer publication, dispatcher publication, stable gating, and attribution evidence when applicable.
 

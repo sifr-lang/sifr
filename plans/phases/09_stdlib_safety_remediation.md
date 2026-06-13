@@ -128,7 +128,7 @@ status: completed (PR #162)
 - Add a CI lint that scans intrinsic codegen blocks for all panic-inducing patterns (`.unwrap()`, `.expect(`, `panic!(`, `unreachable!(`, raw indexing on user data) and fails if any are found on user-facing operations (file I/O, parsing, collection access, subscript assignment)
 - Run the full stdlib safety audit script against all 37 modules and produce an updated safety score — every module must score 7/10 or higher (up from the current state where 12 modules score below 5/10). Modules with documented divergences (e.g., math domain errors if option (b) is chosen in `milestone_collection_safety`) are scored against the documented behavior, not the CPython behavior — a deliberate, documented design choice does not count as a safety violation.
 - E2E test: a program that calls every fallible stdlib function with invalid input must compile and run without panicking, handling all errors via `try`/`except`
-- Update `audits/STDLIB_PARITY_MASTER_REPORT.md` with post-remediation safety scores
+- Update stdlib-parity reports under `verification/areas/stdlib_parity/reports/` with post-remediation safety scores
 
 ### Definition of Done (milestone_zero_panic_gate)
 
