@@ -18,8 +18,9 @@ mod workspace;
 
 pub use build::{
     build, build_cached_package_project, build_cached_project, build_cached_single_file,
-    build_project, check_package_project, check_project, check_single_file, emit_project,
-    CachedBinaryArtifact, PackageEntrypoint,
+    build_project, build_project_report, build_single_file_report, check_package_project,
+    check_project, check_single_file, emit_project, BuildCompilationMode, BuildReport,
+    BuildStageReport, CachedBinaryArtifact, PackageEntrypoint,
 };
 pub use diagnostics::{
     apply_diagnostic_recovery_limits, diagnostic_label_for_code, diagnostic_label_for_code_str,

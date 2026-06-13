@@ -63,7 +63,7 @@ without treating probes as source content reads.
 | Package source layout | `crates/sifr_package/src/source/layout.rs:30` | Pure-marker validation reads generated package source files. | Reviewed provider-backed package tooling read or non-semantic generated-output exception. |
 | Package session discovery and targets | `crates/sifr_package/src/ops/session_discovery.rs:6`, `crates/sifr_package/src/ops/session_discovery.rs:13`, `crates/sifr_package/src/ops/session_discovery.rs:25`, `crates/sifr_package/src/ops/session_targets.rs:17`, `crates/sifr_package/src/ops/session_targets.rs:34`, `crates/sifr_package/src/ops/session_targets.rs:42` | Package CLI/session discovery probes manifests and source roots. | Provider-tracked package session reads and probes where they affect compilation. |
 | CLI lint command reads | `crates/sifr/src/lint_cli.rs:308`, `crates/sifr/src/lint_cli.rs:496`, `crates/sifr/src/lint_cli.rs:499` | CLI lint command reads individual files for linting and probes path exclusion/start-dir shape. | Provider-backed for semantic source reads; CLI target filtering remains a documented command-surface probe until M2 classifies it. |
-| CLI check/package command reads | `crates/sifr/src/check_and_package_commands.rs:409`, `crates/sifr/src/check_and_package_commands.rs:415`, `crates/sifr/src/check_and_package_commands.rs:427`, `crates/sifr/src/check_and_package_commands.rs:551`, `crates/sifr/src/check_and_package_commands.rs:554`, `crates/sifr/src/check_and_package_commands.rs:579`, `crates/sifr/src/check_and_package_commands.rs:583`, `crates/sifr/src/check_and_package_commands.rs:590`, `crates/sifr/src/check_and_package_commands.rs:601` | CLI package/check command surfaces probe targets and cache paths and read package sources for command output. | Provider-backed for semantic source reads; command-output/cache probes remain documented exceptions where non-semantic. |
+| CLI check/package command reads | `crates/sifr/src/check_and_package_commands.rs:409`, `crates/sifr/src/check_and_package_commands.rs:415`, `crates/sifr/src/check_and_package_commands.rs:427`, `crates/sifr/src/check_and_package_commands.rs:551`, `crates/sifr/src/check_and_package_commands.rs:554`, `crates/sifr/src/check_and_package_commands.rs:587`, `crates/sifr/src/check_and_package_commands.rs:583`, `crates/sifr/src/check_and_package_commands.rs:590`, `crates/sifr/src/check_and_package_commands.rs:601` | CLI package/check command surfaces probe targets and cache paths and read package sources for command output. | Provider-backed for semantic source reads; command-output/cache probes remain documented exceptions where non-semantic. |
 | CLI entrypoint probing | `crates/sifr/src/cli_model_and_entrypoint.rs:634`, `crates/sifr/src/cli_model_and_entrypoint.rs:690`, `crates/sifr/src/cli_model_and_entrypoint.rs:716`, `crates/sifr/src/cli_model_and_entrypoint.rs:721` | CLI mode resolution reads manifests/source files and probes sibling modules. | Provider-backed for semantic source reads; CLI mode-selection probes remain tracked lookup dependencies. |
 | CLI self-update receipt state | `crates/sifr/src/self_update_receipt.rs:66`, `crates/sifr/src/self_update_receipt.rs:85`, `crates/sifr/src/self_update_receipt.rs:96`, `crates/sifr/src/self_update_receipt.rs:105`, `crates/sifr/src/self_update_receipt.rs:160` | Self-update reads and probes the standalone installer receipt to decide whether the current executable is managed by the official installer. | Non-semantic install-state command surface; not compiler source identity. Keep inventoried unless a later install-state provider boundary is introduced. |
 | CLI self-update runner fixture reads | `crates/sifr/src/self_update_runner.rs:492`, `crates/sifr/src/self_update_runner.rs:524`, `crates/sifr/src/self_update_runner.rs:594` | Self-update runner tests read fixture files written by fake installer scripts to assert delegated environment, manifest, and lock behavior. | Non-semantic test-fixture reads; not compiler source identity. Keep inventoried unless runner tests move to a dedicated fixture helper boundary. |
@@ -75,9 +75,9 @@ Permitted M1 exceptions:
   generated artifact checks are outside the M2 semantic source-provider scope.
 - Codegen intrinsics that emit `std::fs::*` for user programs are not compiler
   service reads.
-- Build artifact cache metadata in `crates/sifr_driver/src/build/workspace.rs:224`,
-  `crates/sifr_driver/src/build/workspace.rs:287`, and
-  `crates/sifr_driver/src/build/workspace.rs:301` is M15
+- Build artifact cache metadata in `crates/sifr_driver/src/build/workspace.rs:223`,
+  `crates/sifr_driver/src/build/workspace.rs:286`, and
+  `crates/sifr_driver/src/build/workspace.rs:300` is M15
   `.sifrbuildinfo`/build-metadata territory, not M2 source-provider correctness.
 - Package projection writes and repair probes in
   `crates/sifr_package/src/projection.rs:100`,
@@ -105,7 +105,7 @@ pre-session callers:
 - Package pure-marker validation and offline source-availability probes.
 
 Remaining CLI command-output and cache probes, including
-`crates/sifr/src/check_and_package_commands.rs:579`, stay documented
+`crates/sifr/src/check_and_package_commands.rs:587`, stay documented
 non-semantic command-surface exceptions until a later package-aware snapshot or
 build-metadata milestone promotes a specific path into compiler-service
 identity.

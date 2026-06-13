@@ -8,23 +8,34 @@ use sifr_stdlib::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::Duration;
 
-pub(super) fn materialize_binary_project(
+pub(super) struct MaterializedBinaryProject {
+    pub(super) binary_path: PathBuf,
+    pub(super) materialize_elapsed: Duration,
+    pub(super) cargo_elapsed: Duration,
+}
+
+pub(super) fn materialize_binary_project_with_report(
     output_dir: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
-) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let project_path = output_dir.join(project_name);
-    materialize_binary_project_at_path(&project_path, project_name, generated_project)?;
-    Ok(cached_binary_path(output_dir, project_name))
+    materialize_binary_project_at_path(&project_path, project_name, generated_project).map(
+        |mut report| {
+            report.binary_path = cached_binary_path(output_dir, project_name);
+            report
+        },
+    )
 }
 
-pub(super) fn materialize_cached_binary_project(
+pub(super) fn materialize_cached_binary_project_with_report(
     cache_namespace: &str,
     cache_scope: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
-) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
+) -> Result<(CachedArtifactEntry, Option<MaterializedBinaryProject>), Vec<RenderedDiagnostic>> {
     let cache_key = binary_project_cache_key(project_name, &generated_project);
     let required_paths = [
         Path::new(project_name).join("target"),
@@ -34,11 +45,14 @@ pub(super) fn materialize_cached_binary_project(
     let prepared =
         prepare_cached_artifact(cache_namespace, cache_scope, &cache_key, &required_refs)?;
     match prepared {
-        PreparedArtifactCache::Hit(entry) => Ok(entry),
+        PreparedArtifactCache::Hit(entry) => Ok((entry, None)),
         PreparedArtifactCache::Miss(pending) => {
             let project_root = pending.workspace_root().join(project_name);
-            materialize_binary_project_at_path(&project_root, project_name, generated_project)?;
-            pending.commit(&required_refs)
+            let report =
+                materialize_binary_project_at_path(&project_root, project_name, generated_project)?;
+            pending
+                .commit(&required_refs)
+                .map(|entry| (entry, Some(report)))
         }
     }
 }
@@ -60,6 +74,29 @@ fn binary_relative_path(project_name: &str) -> PathBuf {
 }
 
 fn materialize_binary_project_at_path(
+    project_path: &Path,
+    project_name: &str,
+    generated_project: GeneratedBinaryProject,
+) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
+    let materialize_start = std::time::Instant::now();
+    materialize_binary_project_files(project_path, project_name, generated_project)?;
+    let materialize_elapsed = materialize_start.elapsed();
+
+    let cargo_start = std::time::Instant::now();
+    run_cargo_build(project_path)?;
+    let cargo_elapsed = cargo_start.elapsed();
+
+    Ok(MaterializedBinaryProject {
+        binary_path: cached_binary_path(
+            project_path.parent().unwrap_or(Path::new(".")),
+            project_name,
+        ),
+        materialize_elapsed,
+        cargo_elapsed,
+    })
+}
+
+fn materialize_binary_project_files(
     project_path: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
@@ -123,8 +160,12 @@ fn materialize_binary_project_at_path(
         )?;
     }
 
+    Ok(())
+}
+
+fn run_cargo_build(project_path: &Path) -> Result<(), Vec<RenderedDiagnostic>> {
     let output = Command::new("cargo")
-        .args(["build", "--release"])
+        .args(["build", "--release", "--quiet"])
         .current_dir(project_path)
         .output()
         .map_err(|error| {

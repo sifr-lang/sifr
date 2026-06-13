@@ -1,11 +1,12 @@
+use super::build_output::{render_build_success, BuildOutputOptions};
 use super::check_and_package_commands::{
-    bounded_excerpt, build_run_artifact, cmd_check, compile_entrypoint, load_package_graph_context,
-    package_compiler_context, paths_equal, redacted_args,
+    bounded_excerpt, build_run_artifact, cmd_check, compile_entrypoint_report,
+    load_package_graph_context, package_compiler_context, paths_equal, redacted_args,
 };
 use super::cli_model_and_entrypoint::{
     diagnostic_exit_code, diagnostic_with_code, package_diagnostic, run_with_panic_boundary,
     DiagnosticFormat, PackageGraphContext, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
-    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, SIFR_BUILD_VERSION,
 };
 use super::workspace_run_selection::resolve_run_session;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
@@ -67,28 +68,64 @@ pub(crate) fn render_diagnostics(errors: &[RenderedDiagnostic], format: Diagnost
     diagnostic_exit_code(errors)
 }
 
-pub(super) fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+pub(super) fn cmd_build(
+    file: &Path,
+    output: &Path,
+    quiet: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
     let result = match run_with_panic_boundary(
         "internal compiler panic during build command execution",
-        || compile_entrypoint(file, output),
+        || compile_entrypoint_report(file, output),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
     };
 
     match result {
-        Ok(binary_path) => {
-            let _ = writeln!(
-                io::stderr(),
-                "compiled successfully: {}",
-                binary_path.display()
-            );
+        Ok(report) => {
+            let diagnostic_exit = emit_report_frontend_diagnostics(&report, diagnostic_format);
+            if diagnostic_exit != EXIT_SUCCESS {
+                return diagnostic_exit;
+            }
+            emit_build_report(&report, quiet, true, diagnostic_format);
             EXIT_SUCCESS
         }
         Err(errors) => render_diagnostics(&errors, diagnostic_format),
     }
 }
 
+fn emit_report_frontend_diagnostics(
+    report: &sifr_driver::BuildReport,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    if report.frontend_diagnostics().is_empty() {
+        return EXIT_SUCCESS;
+    }
+    render_diagnostics(report.frontend_diagnostics(), diagnostic_format)
+}
+
+fn emit_build_report(
+    report: &sifr_driver::BuildReport,
+    quiet: bool,
+    include_binary: bool,
+    diagnostic_format: DiagnosticFormat,
+) {
+    if diagnostic_format != DiagnosticFormat::Human {
+        return;
+    }
+    let rendered = render_build_success(
+        report,
+        &BuildOutputOptions {
+            version: SIFR_BUILD_VERSION,
+            quiet,
+            include_binary,
+        },
+    );
+    let _ = write!(io::stderr(), "{rendered}");
+}
+
+#[cfg(test)]
 pub(super) fn cmd_run(
     target: Option<&str>,
     bin: Option<&str>,
@@ -98,6 +135,31 @@ pub(super) fn cmd_run(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
+    let options = RunCommandOptions {
+        target,
+        bin,
+        script,
+        packages,
+        app_args,
+        lock_mode,
+        quiet: false,
+        diagnostic_format,
+    };
+    cmd_run_with_options(&options)
+}
+
+pub(super) struct RunCommandOptions<'a> {
+    pub(super) target: Option<&'a str>,
+    pub(super) bin: Option<&'a str>,
+    pub(super) script: Option<&'a str>,
+    pub(super) packages: &'a [String],
+    pub(super) app_args: &'a [String],
+    pub(super) lock_mode: sifr_package::CargoLockMode,
+    pub(super) quiet: bool,
+    pub(super) diagnostic_format: DiagnosticFormat,
+}
+
+pub(super) fn cmd_run_with_options(options: &RunCommandOptions<'_>) -> i32 {
     let current_dir = match std::env::current_dir() {
         Ok(current_dir) => current_dir,
         Err(error) => {
@@ -105,34 +167,40 @@ pub(super) fn cmd_run(
                 format!("could not read current directory: {error}"),
                 DiagnosticCode::PACKAGE_CARGO_COMMAND_FAILED,
             );
-            render_diagnostics(&[diagnostic], diagnostic_format);
+            render_diagnostics(&[diagnostic], options.diagnostic_format);
             return EXIT_USAGE_OR_CONFIG;
         }
     };
     let session =
         match sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
             current_dir,
-            lock_mode,
+            lock_mode: options.lock_mode,
         }) {
             Ok(session) => session,
             Err(error) => {
-                render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+                render_diagnostics(&[package_diagnostic(error)], options.diagnostic_format);
                 return EXIT_USAGE_OR_CONFIG;
             }
         };
-    let session = match resolve_run_session(session, target, packages, lock_mode, diagnostic_format)
-    {
+    let session = match resolve_run_session(
+        session,
+        options.target,
+        options.packages,
+        options.lock_mode,
+        options.diagnostic_format,
+    ) {
         Ok(session) => session,
         Err(exit_code) => return exit_code,
     };
     cmd_run_with_session(&RunSessionRequest {
         session: &session,
-        target,
-        bin,
-        script,
-        app_args,
-        lock_mode,
-        diagnostic_format,
+        target: options.target,
+        bin: options.bin,
+        script: options.script,
+        app_args: options.app_args,
+        lock_mode: options.lock_mode,
+        quiet: options.quiet,
+        diagnostic_format: options.diagnostic_format,
         script_depth: 0,
     })
 }
@@ -144,6 +212,7 @@ struct RunSessionRequest<'a> {
     script: Option<&'a str>,
     app_args: &'a [String],
     lock_mode: sifr_package::CargoLockMode,
+    quiet: bool,
     diagnostic_format: DiagnosticFormat,
     script_depth: u8,
 }
@@ -169,6 +238,7 @@ fn cmd_run_with_session(request: &RunSessionRequest<'_>) -> i32 {
             &origin,
             Some(session),
             request.lock_mode,
+            request.quiet,
             request.diagnostic_format,
         );
     }
@@ -183,10 +253,16 @@ fn cmd_run_with_session(request: &RunSessionRequest<'_>) -> i32 {
                 session,
                 request.lock_mode,
                 request.app_args,
+                request.quiet,
                 request.diagnostic_format,
             );
         }
-        return cmd_run_file(&path, request.app_args, request.diagnostic_format);
+        return cmd_run_file(
+            &path,
+            request.app_args,
+            request.quiet,
+            request.diagnostic_format,
+        );
     }
     if let Some(cargo) = plan.cargo {
         return execute_cargo_plan(&cargo, request.lock_mode, request.diagnostic_format);
@@ -198,6 +274,7 @@ pub(super) fn cmd_script(
     origin: &sifr_package::ScriptOrigin,
     run_session: Option<&sifr_package::PackageSession>,
     lock_mode: sifr_package::CargoLockMode,
+    quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
     match origin.command.as_str() {
@@ -210,19 +287,22 @@ pub(super) fn cmd_script(
                     script: None,
                     app_args: &[],
                     lock_mode,
+                    quiet,
                     diagnostic_format,
                     script_depth: 1,
                 })
             } else {
-                cmd_run(
-                    origin.args.first().map(String::as_str),
-                    None,
-                    None,
-                    &[],
-                    &[],
+                let options = RunCommandOptions {
+                    target: origin.args.first().map(String::as_str),
+                    bin: None,
+                    script: None,
+                    packages: &[],
+                    app_args: &[],
                     lock_mode,
+                    quiet,
                     diagnostic_format,
-                )
+                };
+                cmd_run_with_options(&options)
             }
         }
         "check" => cmd_check(
@@ -277,6 +357,7 @@ pub(super) fn cmd_script(
 pub(super) fn cmd_run_file(
     file: &Path,
     app_args: &[String],
+    quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
     let result = match run_with_panic_boundary(
@@ -289,7 +370,14 @@ pub(super) fn cmd_run_file(
 
     match result {
         Ok(artifact) => {
-            let _ = writeln!(io::stderr(), "{}", artifact.cache_status_line());
+            let diagnostic_exit =
+                emit_report_frontend_diagnostics(artifact.build_report(), diagnostic_format);
+            if diagnostic_exit != EXIT_SUCCESS {
+                return diagnostic_exit;
+            }
+            if !quiet && !artifact.build_report().cache_hit() {
+                emit_build_report(artifact.build_report(), false, false, diagnostic_format);
+            }
             let output = std::process::Command::new(artifact.binary_path())
                 .args(app_args)
                 .output()
@@ -316,11 +404,12 @@ pub(super) fn cmd_run_package_file(
     session: &sifr_package::PackageSession,
     lock_mode: sifr_package::CargoLockMode,
     app_args: &[String],
+    quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
     let context = match package_compiler_context(session, lock_mode, diagnostic_format) {
         Ok(Some(context)) => context,
-        Ok(None) => return cmd_run_file(file, app_args, diagnostic_format),
+        Ok(None) => return cmd_run_file(file, app_args, quiet, diagnostic_format),
         Err(exit_code) => return exit_code,
     };
     let entrypoint = PackageEntrypoint {
@@ -338,13 +427,25 @@ pub(super) fn cmd_run_package_file(
     };
 
     match result {
-        Ok(artifact) => run_binary_artifact(&artifact, app_args),
+        Ok(artifact) => run_binary_artifact(&artifact, app_args, quiet, diagnostic_format),
         Err(errors) => render_diagnostics(&errors, diagnostic_format),
     }
 }
 
-pub(super) fn run_binary_artifact(artifact: &CachedBinaryArtifact, app_args: &[String]) -> i32 {
-    let _ = writeln!(io::stderr(), "{}", artifact.cache_status_line());
+pub(super) fn run_binary_artifact(
+    artifact: &CachedBinaryArtifact,
+    app_args: &[String],
+    quiet: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let diagnostic_exit =
+        emit_report_frontend_diagnostics(artifact.build_report(), diagnostic_format);
+    if diagnostic_exit != EXIT_SUCCESS {
+        return diagnostic_exit;
+    }
+    if !quiet && !artifact.build_report().cache_hit() {
+        emit_build_report(artifact.build_report(), false, false, diagnostic_format);
+    }
     let output = std::process::Command::new(artifact.binary_path())
         .args(app_args)
         .output()

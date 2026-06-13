@@ -60,6 +60,32 @@ the immutable installer URL from Sifr's trusted install base, and delegates
 checksum validation and artifact replacement to the generated installer.
 Stable-channel self-update remains gated until Phase 39.
 
+## Build And Run Output
+
+Successful `sifr build` in the default human diagnostic format writes a
+phase-aware summary to stderr. The summary reports the input, mode, release
+native target, measured build stages, total elapsed time, binary path, and a
+best-effort binary size when the final artifact can be read. Human progress
+output is intentionally not a stable scripting API.
+
+`sifr build --quiet` keeps human success output terse:
+
+```text
+Finished release build in <duration>
+Binary: <path>
+```
+
+`sifr run` shares the same build pipeline but prints build progress only when
+the generated binary cache misses. It omits the `Binary:` footer because program
+stdout follows. Cache hits and `sifr run --quiet` do not print build progress.
+
+Build progress and success banners are emitted only in the default human
+diagnostic format and only on stderr. In `--diagnostic-format json` and
+`--diagnostic-format compact`, successful builds emit no human progress text on
+stdout or stderr; scripts should consume those machine-oriented diagnostic
+formats instead of grepping human words such as `Finished`, `Binary`, or phase
+labels.
+
 ## Diagnostic Output Formats
 
 Compiler-facing commands accept `--diagnostic-format human|json|compact`.

@@ -114,13 +114,15 @@ fn phase37_demo_subrepos_cover_required_org_repos() {
 }
 
 fn fixture_matrix() -> Value {
-    let path = repo_root().join("verification/areas/package_management/data/phase37_e2e_fixture_matrix.json");
+    let path = repo_root()
+        .join("verification/areas/package_management/data/phase37_e2e_fixture_matrix.json");
     let source = std::fs::read_to_string(path).expect("read fixture matrix");
     serde_json::from_str(&source).expect("parse fixture matrix")
 }
 
 fn demo_repository_manifest() -> Value {
-    let path = repo_root().join("verification/areas/package_management/data/phase37_demo_repositories.json");
+    let path = repo_root()
+        .join("verification/areas/package_management/data/phase37_demo_repositories.json");
     let source = std::fs::read_to_string(path).expect("read demo repository manifest");
     serde_json::from_str(&source).expect("parse demo repository manifest")
 }
