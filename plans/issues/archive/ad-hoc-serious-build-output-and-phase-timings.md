@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Serious Build Output and Phase Timings
 
-Status: implementation complete; PR open and locally merge-gate validated; pending merge
+Status: completed (2026-06-14; implementation PR #2555, closure PR #2556)
 Owner: unassigned
 Context: CLI polish phase for `sifr build` output, timing visibility, and compiler progress reporting
 
