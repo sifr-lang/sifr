@@ -190,7 +190,8 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR 3 Cursor Portability Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2508> |
 | PR 4 Review Tree Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2509> |
 | PR 5 Planning Tree Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2510> |
-| PR 6 Verification Runner Foundation | In progress | This branch |
+| PR 6 Verification Runner Foundation | Merged | <https://github.com/sifr-lang/sifr/pull/2511> |
+| PR 7 Verification Profile Normalization | In progress | This branch |
 
 ## Verification Migration Status
 
@@ -200,8 +201,8 @@ authoritative public facade until the facade cutover PR.
 
 | Area | Legacy path | New area path | Current authoritative gate | Equivalence evidence | Cutover status |
 | --- | --- | --- | --- | --- | --- |
-| Runner foundation | `scripts/run_all_tests.sh`, `scripts/validation_lane.py`, `scripts/validation_lane_report.py` | `verification/runner/sifr_verify/`, `verification/schemas/`, `verification/policy/`, `verification/pyproject.toml`, `verification/uv.lock` | Legacy facade plus new runner foundation self-tests | `uv lock --project verification --check`; `uv run --project verification --locked python -m sifr_verify --self-test`; `scripts/run_all_tests.sh --profile create-pr` | Foundation introduced; no legacy runner behavior migrated |
-| Profiles | `verification/validation_lanes/manifest.json`, `verification/validation_lanes/*_e2e_manifest.json` | `verification/profiles/*.json` | Legacy lane manifest | Pending PR 7 profile schema validation and shell-export equivalence | Not started |
+| Runner foundation | `scripts/run_all_tests.sh`, `scripts/validation_lane.py`, `scripts/validation_lane_report.py` | `verification/runner/sifr_verify/`, `verification/schemas/`, `verification/policy/`, `verification/pyproject.toml`, `verification/uv.lock` | Existing bash facade plus `sifr_verify` self-tests/profile helpers | `uv lock --project verification --check`; `uv run --project verification --locked python -m sifr_verify --self-test`; `scripts/run_all_tests.sh --profile create-pr` | Foundation merged; profile helpers now own shell/report policy |
+| Profiles | Deleted `verification/validation_lanes/manifest.json`; retained `verification/validation_lanes/*_e2e_manifest.json` until `core_language` migration | `verification/profiles/{create-pr,merge,nightly,release}.json` | `uv run --project verification --locked python -m sifr_verify profiles shell --profile <profile>` feeding the legacy bash facade | `uv run --project verification --locked python -m sifr_verify profiles check`; old-vs-new shell export diff for all four profiles, ignoring intentional `LANE_MANIFEST_DIR`; report summarization payload equivalence | In progress in PR 7; profile source cut over, fixture manifests not migrated |
 | `diagnostics` | `verification/suites/manifest.json`, diagnostic guardrail scripts, `crates/sifr/tests/verification/diagnostics/` | `verification/areas/diagnostics/` | Legacy facade and hardening scripts | Pending area migration PR | Not started |
 | `project_workspace` | `verification/suites/manifest.json`, project contract matrix, `crates/sifr/tests/verification/project/` | `verification/areas/project_workspace/` | Legacy facade and contract matrix | Pending area migration PR | Not started |
 | `core_language` | `scripts/run_e2e_pass.sh`, `verification/validation_lanes/*_e2e_manifest.json`, core contract rows | `verification/areas/core_language/` | Legacy e2e runner and contract matrix | Pending area migration PR | Not started |
@@ -509,7 +510,7 @@ Move into verification areas or runner-owned policy:
 - `scripts/generate_concurrency_runtime_inventory.py` -> `stdlib_parity` as an area-local data generator if the output is verification inventory.
 - `scripts/run_verification_hardening.py` and `scripts/run_verification_hardening/` -> split across `regression`, `fuzz_property`, `ecosystem_compatibility`, and runner self-tests; do not keep a generic hardening runner after areas own the suites.
 - `scripts/check_e2e_report_determinism.sh`, `scripts/check_e2e_sequential_parallel_equivalence.sh` -> `verification/runner/` self-tests and `verification/policy/` evidence.
-- `scripts/validation_lane.py`, `scripts/validation_lane_report.py` -> replace with `verification/runner/sifr_verify/profiles.py` and profile report handling; delete old names in PR 7.
+- `scripts/validation_lane.py`, `scripts/validation_lane_report.py` -> replaced with `verification/runner/sifr_verify/profiles.py` and profile report handling; deleted in PR 7.
 
 Delete or replace after references are removed:
 

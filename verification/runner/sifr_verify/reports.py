@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Summarize validation-lane runtime, cache, and resource metrics."""
+"""Summarize validation profile runtime, cache, and resource metrics."""
 
 from __future__ import annotations
 
@@ -10,8 +9,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_MANIFEST = REPO_ROOT / "verification" / "validation_lanes" / "manifest.json"
+from .paths import REPO_ROOT
+from .profiles import legacy_facade, load_profile
+
 ARTIFACT_CACHE_ROOT = Path(tempfile.gettempdir()) / "sifr_generated_artifact_cache"
 BSD_TIME_COMBINED_RE = re.compile(r"^\s*([0-9.]+)\s+real\s+([0-9.]+)\s+user\s+([0-9.]+)\s+sys$")
 TIME_REAL_RE = re.compile(r"^\s*([0-9.]+)\s+real$")
@@ -47,7 +47,7 @@ GROUP_SKEW_ABSOLUTE_DELTA = 8
 DEFAULT_LANE_RSS_ADVISORY_BYTES = 6 * 1024 * 1024 * 1024
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -56,16 +56,11 @@ def parse_args() -> argparse.Namespace:
     summarize.add_argument("--log", required=True)
     summarize.add_argument("--time-file", required=True)
     summarize.add_argument(
-        "--manifest",
-        default=str(DEFAULT_MANIFEST),
-        help="Validation-lane manifest JSON.",
-    )
-    summarize.add_argument(
         "--json-out",
         default="",
         help="Optional output path for machine-readable JSON summary.",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -75,21 +70,18 @@ def load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
-def resolve_profile(profile: str, manifest_path: Path) -> tuple[str, dict[str, Any]]:
-    payload = load_json(manifest_path)
-    lanes = payload.get("lanes", [])
-    if not isinstance(lanes, list):
-        raise SystemExit(f"invalid lane manifest: {manifest_path}")
-    lane_map = {
-        lane.get("name"): lane
-        for lane in lanes
-        if isinstance(lane, dict) and isinstance(lane.get("name"), str)
+def resolve_profile(profile: str) -> tuple[str, dict[str, Any]]:
+    payload = load_profile(profile)
+    legacy = legacy_facade(payload)
+    budgets = payload["budgets"]
+    lane = {
+        "name": payload["name"],
+        "description": payload.get("description", ""),
+        "warm_wall_time_target_minutes": budgets["warm_wall_time_minutes"],
+        "cold_wall_time_target_minutes": budgets["cold_wall_time_minutes"],
+        **legacy,
     }
-    lane = lane_map.get(profile)
-    if not isinstance(lane, dict):
-        supported = sorted(lane_map.keys())
-        raise SystemExit(f"unsupported profile '{profile}' (supported: {', '.join(supported)})")
-    return profile, lane
+    return str(payload["name"]), lane
 
 
 def parse_time_file(path: Path) -> dict[str, int | float]:
@@ -289,8 +281,7 @@ def parse_log(path: Path) -> dict[str, Any]:
 
 
 def summarize(args: argparse.Namespace) -> int:
-    manifest_path = Path(args.manifest).resolve()
-    profile, lane = resolve_profile(args.profile, manifest_path)
+    profile, lane = resolve_profile(args.profile)
     log_path = Path(args.log).resolve()
     time_path = Path(args.time_file).resolve()
 
@@ -464,8 +455,8 @@ def summarize(args: argparse.Namespace) -> int:
     return 0
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     if args.command == "summarize":
         return summarize(args)
     raise SystemExit(f"unsupported command: {args.command}")

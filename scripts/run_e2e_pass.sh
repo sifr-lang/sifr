@@ -38,7 +38,7 @@ EOF
 }
 
 resolve_profile() {
-  python3 "${SCRIPT_DIR}/validation_lane.py" profile --profile "$1"
+  uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify profiles profile --profile "$1"
 }
 
 set_profile_defaults() {

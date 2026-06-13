@@ -14,7 +14,8 @@
     "retry_policy",
     "shard_policy",
     "resume_policy",
-    "report"
+    "report",
+    "legacy_facade"
   ],
   "additionalProperties": false,
   "properties": {
@@ -171,6 +172,107 @@
         "output_dir": {
           "type": "string",
           "format": "repo-relative-path"
+        }
+      }
+    },
+    "legacy_facade": {
+      "type": "object",
+      "required": [
+        "matrix_suites",
+        "tooling_suites",
+        "distribution",
+        "generated_code_quality",
+        "performance_budget",
+        "crate_tests",
+        "thermal_policy",
+        "memory_policy",
+        "e2e",
+        "hardening_suites",
+        "extra_checks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "matrix_suites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tooling_suites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "distribution": {
+          "type": "string",
+          "enum": ["none", "representative", "full"]
+        },
+        "generated_code_quality": {
+          "type": "string",
+          "enum": ["none", "smoke", "representative", "full"]
+        },
+        "performance_budget": {
+          "type": "string",
+          "enum": ["none", "smoke", "representative", "full"]
+        },
+        "crate_tests": {
+          "type": "string",
+          "enum": ["smoke", "full"]
+        },
+        "thermal_policy": {
+          "type": "string"
+        },
+        "memory_policy": {
+          "type": "string"
+        },
+        "e2e": {
+          "type": "object",
+          "required": [
+            "fixture_manifest",
+            "sifr_jobs",
+            "rust_jobs",
+            "run_jobs",
+            "cargo_build_jobs",
+            "max_group_fixtures",
+            "disable_cache"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "fixture_manifest": {
+              "type": "string"
+            },
+            "sifr_jobs": {
+              "type": "integer"
+            },
+            "rust_jobs": {
+              "type": "integer"
+            },
+            "run_jobs": {
+              "type": "integer"
+            },
+            "cargo_build_jobs": {
+              "type": "integer"
+            },
+            "max_group_fixtures": {
+              "type": "integer"
+            },
+            "disable_cache": {
+              "type": "boolean"
+            }
+          }
+        },
+        "hardening_suites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extra_checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

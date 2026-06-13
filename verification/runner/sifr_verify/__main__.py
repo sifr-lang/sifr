@@ -8,6 +8,7 @@ import sys
 
 from .areas import discover_areas
 from .errors import VerificationError
+from . import profiles, reports
 from .selftest import run_all
 
 
@@ -17,6 +18,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--list-areas", action="store_true", help="List discovered verification areas as JSON.")
     parser.add_argument("--profile", help="Reserved profile selector for the facade cutover.")
     parser.add_argument("--case", help="Reserved case selector for failure reproduction.")
+    parser.add_argument("command", nargs="?", help="Subcommand: profiles or reports.")
+    parser.add_argument("command_args", nargs=argparse.REMAINDER)
     return parser.parse_args()
 
 
@@ -27,6 +30,10 @@ def main() -> int:
             for name in run_all():
                 print(f"verification runner self-test: {name}: pass")
             return 0
+        if args.command == "profiles":
+            return profiles.run_command(args.command_args)
+        if args.command == "reports":
+            return reports.main(args.command_args)
         if args.list_areas:
             areas = [
                 {

@@ -9,7 +9,10 @@ Sifr local validation uses four lanes:
 - `nightly`: broad hardening, full generated-code quality, and full e2e pass corpus.
 - `release`: highest-confidence release qualification lane.
 
-The lane manifest is `verification/validation_lanes/manifest.json`. `scripts/validation_lane.py` is the shell-facing resolver for lane metadata.
+Profile policy lives in `verification/profiles/{create-pr,merge,nightly,release}.json`.
+`uv run --project verification --locked python -m sifr_verify profiles shell --profile <profile>`
+is the shell-facing resolver for profile metadata while the bash facade remains
+the public validation entrypoint.
 
 ## Create-PR Lane
 
@@ -49,4 +52,4 @@ Use the broader lane or targeted family command when touching these surfaces:
 
 ## Timing Evidence
 
-`scripts/run_all_tests.sh` emits `[sifr-lane-step]` records for every top-level bucket. Slow sub-tools emit `[sifr-case-timing]` records. `scripts/validation_lane_report.py` writes `target/validation_lane_reports/<profile>.latest.json` with wall time, step timings, slowest cases, e2e cache/group stats, generated artifact cache hits, and advisories.
+`scripts/run_all_tests.sh` emits `[sifr-lane-step]` records for every top-level bucket. Slow sub-tools emit `[sifr-case-timing]` records. `uv run --project verification --locked python -m sifr_verify reports summarize` writes `target/validation_lane_reports/<profile>.latest.json` with wall time, step timings, slowest cases, e2e cache/group stats, generated artifact cache hits, and advisories.
