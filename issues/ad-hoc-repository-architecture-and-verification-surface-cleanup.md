@@ -181,6 +181,15 @@ Disallowed active-tree material:
 
 Long review transcripts may be retained under `plans/reviews/archive/` when they have ongoing planning value. Otherwise they should be deleted from the active tree and left to git history.
 
+## Implementation Progress
+
+| Milestone | Status | PR |
+| --- | --- | --- |
+| PR 1 Repository Surface And Relevance Inventory | Merged | <https://github.com/sifr-lang/sifr/pull/2506> |
+| PR 2 Cargo Lock Policy | Merged | <https://github.com/sifr-lang/sifr/pull/2507> |
+| PR 3 Cursor Portability Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2508> |
+| PR 4 Review Tree Normalization | In progress | This branch |
+
 ## Cursor Cleanup
 
 Target `.cursor/` shape:

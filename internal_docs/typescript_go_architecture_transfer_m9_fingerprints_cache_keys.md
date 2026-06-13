@@ -96,4 +96,3 @@ M9 focused validation so far:
   `target/validation_lane_reports/create-pr.latest.json`, wall time 338.91s,
   advisories: warm wall-time budget exceeded; group skew is high
 - Claude reviewer pass 7 -> SATISFIED
-  (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-7.md`)

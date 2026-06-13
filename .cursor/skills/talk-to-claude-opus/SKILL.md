@@ -5,9 +5,9 @@ description: Talk to Claude asynchronously about a specific task by asking it to
 
 ## Start Claude Conversation
 
-Choose a target file under `./reviews`, then run Claude CLI in the background and redirect its output there.
+Choose a target file under `./plans/reviews/active`, then run Claude CLI in the background and redirect its output there.
 
-Use an absolute path derived from `./reviews` so the output location is exact.
+Use an absolute path derived from `./plans/reviews/active` so the output location is exact.
 
 If you need the wait helper, set `TALK_TO_CLAUDE_PROJECT` to the local
 `talk-to-claude` checkout. Do not hard-code a personal absolute path.
@@ -16,8 +16,8 @@ Authoritative launch command:
 
 ```bash
 PWD_NOW="$(pwd)"
-mkdir -p "${PWD_NOW}/reviews"
-TARGET_FILE="${PWD_NOW}/reviews/<conversation-file-name>.md"
+mkdir -p "${PWD_NOW}/plans/reviews/active"
+TARGET_FILE="${PWD_NOW}/plans/reviews/active/<conversation-file-name>.md"
 LOG_FILE="${TARGET_FILE%.md}.claude.log"
 
 nohup claude --dangerously-skip-permissions --setting-sources project --model claude-opus-4-7 --effort xhigh -p "$(cat <<PROMPT
@@ -48,7 +48,7 @@ Use the wait command below to block until Claude writes the target file:
 PWD_NOW="$(pwd)"
 : "${TALK_TO_CLAUDE_PROJECT:?Set TALK_TO_CLAUDE_PROJECT to the talk-to-claude checkout path}"
 uv run --project "${TALK_TO_CLAUDE_PROJECT}" \
-  python "${TALK_TO_CLAUDE_PROJECT}/wait_for_review.py" "${PWD_NOW}/reviews/<conversation-file-name>.md" \
+  python "${TALK_TO_CLAUDE_PROJECT}/wait_for_review.py" "${PWD_NOW}/plans/reviews/active/<conversation-file-name>.md" \
   --timeout-seconds 2400 \
   --poll-seconds 10
 ```
@@ -62,7 +62,7 @@ If Claude does not produce the file, inspect the per-conversation log:
 
 ```bash
 PWD_NOW="$(pwd)"
-sed -n '1,200p' "${PWD_NOW}/reviews/<conversation-file-name>.claude.log"
+sed -n '1,200p' "${PWD_NOW}/plans/reviews/active/<conversation-file-name>.claude.log"
 ```
 
 ## After Claude Responds

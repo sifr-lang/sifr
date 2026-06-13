@@ -2,7 +2,7 @@
 
 status: complete
 
-> 2026-03-11 update: milestones `31_1` through `31_5` are implemented in the workspace with a canonical 50-problem seed corpus, a deterministic runner, a generated failure taxonomy, a ranked remediation backlog, a first remediation wave, and stable scorecard/handoff artifacts. External review sign-off is recorded in `reviews/phase-31-review-pass-3.md` and `reviews/phase-31-review-pass-4.md`.
+> 2026-03-11 update: milestones `31_1` through `31_5` are implemented in the workspace with a canonical 50-problem seed corpus, a deterministic runner, a generated failure taxonomy, a ranked remediation backlog, a first remediation wave, and stable scorecard/handoff artifacts. External review sign-off is complete.
 
 > 2026-04-27 update: the LeetCode sub-repository was cleaned to keep only the
 > source corpus and root helper scripts. Historical Phase 31 generated artifacts,
@@ -206,9 +206,7 @@ Latest closure-track plan (`2026-04-05`):
   - historical artifact `full_corpus_current_results_20260405_live_rerun1.json` (removed from the lean LeetCode subrepo; recoverable from git history)
   - historical artifact `full_corpus_failure_taxonomy_20260405_live_rerun1.json` (removed from the lean LeetCode subrepo; recoverable from git history)
   - historical artifact `codegen_runtime_build_gap_breakdown_20260405_v3.csv` (removed from the lean LeetCode subrepo; recoverable from git history)
-- External review sign-off for this breakdown/phase basis:
-  - `reviews/codegen-runtime-build-gap-root-cause-review-pass3.md` (`READY`)
-  - `reviews/codegen-runtime-build-gap-root-cause-review-pass4.md` (`READY`)
+- External review sign-off for this breakdown/phase basis reached `READY`.
 
 Latest execution note (`2026-03-11`):
 - `m31_c_stdlib_module_parity` slice 1 is locally validated and tracked in `issues/phase31-m31c-stdlib-module-parity-execution.md`.

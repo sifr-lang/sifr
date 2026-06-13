@@ -68,10 +68,7 @@ Result:
 - LeetCode: 363 entries currently reach generated Rust and pass the emitted-code
   quality gates. The 48 remaining failures stop before emitted-code quality due
   to frontend/type/lowering compatibility gaps.
-- Review rounds are recorded in
-  `reviews/phase34-demo-leetcode-emitted-audit-review-1.md`,
-  `reviews/phase34-demo-leetcode-emitted-audit-review-2.md`, and
-  `reviews/phase34-demo-leetcode-emitted-audit-review-3.md`.
+- Review rounds completed with generated-code audit findings resolved.
 
 ## Post-Closure Audit Wave 2 (2026-05-14)
 
@@ -99,10 +96,7 @@ Evidence:
   `target/full_emitted_quality/leetcode-wave2-postpatch-1778766274/report.jsonl`.
 - Reduced-allowlist generated clippy gate:
   `target/sifr_generated_code_quality/evidence/clippy-1778769689-83126.json`.
-- Review rounds:
-  `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-1.md`,
-  `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-2.md`, and
-  `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-3.md`.
+- Review rounds completed with wave 2 generated-code audit findings resolved.
 
 Result:
 
@@ -172,13 +166,9 @@ Evidence:
   `target/full_emitted_quality/demos-neetcode-final-1778787559/report.jsonl`.
 - Final LeetCode full scan:
   `target/full_emitted_quality/leetcode-neetcode-final-1778788537/report.jsonl`.
-- Claude review artifacts:
-  `reviews/phase34-neetcode-group-01-arrays-hashing-review.md`,
-  `reviews/phase34-neetcode-group-02-two-pointers-review.md`,
-  `reviews/phase34-neetcode-groups-03-through-18-review.md`, and
-  `reviews/phase34-neetcode-trees-map-fix-review.md`.
-- Final closing review:
-  `reviews/phase34-neetcode-final-review.md`.
+- Claude review rounds covered Arrays & Hashing, Two Pointers, Groups 3 through
+  18, and the Trees map fix.
+- Final closing review marked the NeetCode emitted-quality work complete.
 
 Result:
 

@@ -263,7 +263,7 @@ Follow-up audit scope:
 
 - Every non-negative `demos/**/main.sifr` entry was checked one by one with emitted generated Rust build, forbidden construct scan, official `cargo fmt`, `cargo fmt --check`, and the generated-code clippy profile.
 - Every `audits/leetcode/src/*.sifr` fixture was checked one by one with the same emitted-code quality sequence.
-- Review rounds are recorded in `reviews/phase34-demo-leetcode-emitted-audit-review-1.md`, `reviews/phase34-demo-leetcode-emitted-audit-review-2.md`, and `reviews/phase34-demo-leetcode-emitted-audit-review-3.md`.
+- Review rounds completed with generated-code audit findings resolved.
 
 Demo audit evidence:
 
@@ -305,7 +305,7 @@ Wave 2 evidence:
 - Demos failed-subset recheck after bytes constructor typing: `target/full_emitted_quality/demos-wave2-failed-subset-after-bytes-1778769453/report.jsonl`.
 - LeetCode post-patch sweep: `target/full_emitted_quality/leetcode-wave2-postpatch-1778766274/report.jsonl`.
 - Reduced-allowlist clippy gate: `target/sifr_generated_code_quality/evidence/clippy-1778769689-83126.json`.
-- Review rounds: `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-1.md`, `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-2.md`, `reviews/phase34-demo-leetcode-emitted-audit-wave2-review-3.md`.
+- Review rounds completed with wave 2 generated-code audit findings resolved.
 
 Wave 2 result:
 
@@ -362,16 +362,11 @@ Compiler improvement:
 
 Wave 4 evidence:
 
-- Arrays & Hashing review:
-  `reviews/phase34-neetcode-group-01-arrays-hashing-review.md`.
-- Two Pointers review:
-  `reviews/phase34-neetcode-group-02-two-pointers-review.md`.
-- Groups 3 through 18 review:
-  `reviews/phase34-neetcode-groups-03-through-18-review.md`.
-- Trees fix review:
-  `reviews/phase34-neetcode-trees-map-fix-review.md`.
-- Final closing review:
-  `reviews/phase34-neetcode-final-review.md`.
+- Arrays & Hashing review completed.
+- Two Pointers review completed.
+- Groups 3 through 18 review completed.
+- Trees fix review completed.
+- Final closing review completed.
 - Trees post-fix group rerun:
   `target/neetcode_group_quality/trees-post-map-1778787311/report.jsonl`.
 - Final demos full scan:
@@ -417,8 +412,7 @@ Repair evidence:
 - Full positive-demo run summary:
   `target/demo_positive_run_check/summary-1778803647.json` recorded 272 passed,
   0 failed.
-- Reviewer handoff:
-  `reviews/phase34-positive-demo-failures-fix-review-1.md`.
+- Reviewer handoff completed for the positive-demo failure fix.
 - Required generated-code demo gate:
   `target/sifr_generated_code_quality/evidence/corpus-1778804298-40476.json`.
 - Local validation:
@@ -458,8 +452,7 @@ Follow-up evidence:
   and narrowed optional constants.
 - Targeted demo checks and runs pass for `demos/code_generation/main.sifr` and
   `demos/optional_arithmetic/main.sifr`.
-- Reviewer handoff:
-  `reviews/phase34-integer-model-division-followup-review-2.md`.
+- Reviewer handoff completed for integer-model division follow-up.
 - Generated-code quality evidence:
   `target/sifr_generated_code_quality/evidence/corpus-1778843374-68801.json`,
   `target/sifr_generated_code_quality/evidence/panic-scan-1778843687-2237.json`,
