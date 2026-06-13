@@ -45,8 +45,8 @@ Status values:
 | archive traversal rejection | adapted | milestone_37_6 | `archive_traversal_reports_0402` |
 | package dry-run delegation | adapted | milestone_37_6 | `package_dry_run_includes_cargo_package_and_publish_dry_run_commands` |
 | publish/vendor command delegation | adapted | milestone_37_6 | `publish_and_vendor_plans_delegate_to_cargo_with_redaction_ready_commands` |
-| Phase 37 fixture category coverage | ported | milestone_37_7 | `verification/package_management/phase37_e2e_fixture_matrix.json`; `scripts/check_package_manager_guardrails.py` |
-| organization demo repository subrepos | ported | milestone_37_7 follow-up | `verification/package_management/phase37_demo_repositories.json`; `verification/package_management/demo_repositories/`; `phase37_demo_subrepos_cover_required_org_repos` |
+| Phase 37 fixture category coverage | ported | milestone_37_7 | `verification/areas/package_management/data/phase37_e2e_fixture_matrix.json`; `verification/areas/package_management/tools/check_package_manager_guardrails.py` |
+| organization demo repository subrepos | ported | milestone_37_7 follow-up | `verification/areas/package_management/data/phase37_demo_repositories.json`; `verification/areas/package_management/corpora/demo_repositories/`; `phase37_demo_subrepos_cover_required_org_repos` |
 
 ## Explicit Non-Port Decisions
 
@@ -60,6 +60,6 @@ Status values:
 
 ## Closeout Evidence
 
-The Phase 37 closeout matrix is `verification/package_management/phase37_e2e_fixture_matrix.json`. It maps pure Sifr packages, Rust-backed packages, workspaces, path/Git/registry sources, multiple-version graphs, aliases, and publishing to concrete Sifr tests or explicit non-port decisions.
+The Phase 37 closeout matrix is `verification/areas/package_management/data/phase37_e2e_fixture_matrix.json`. It maps pure Sifr packages, Rust-backed packages, workspaces, path/Git/registry sources, multiple-version graphs, aliases, and publishing to concrete Sifr tests or explicit non-port decisions.
 
-The organization demo repositories are `sifr-lang/sifr-demo-*` git submodules under `verification/package_management/demo_repositories/` and are indexed by `verification/package_management/phase37_demo_repositories.json`. They preserve the required package shapes locally while exercising the same subrepo workflow used by the rest of Sifr.
+The organization demo repositories are `sifr-lang/sifr-demo-*` git submodules under `verification/areas/package_management/corpora/demo_repositories/` and are indexed by `verification/areas/package_management/data/phase37_demo_repositories.json`. They preserve the required package shapes locally while exercising the same subrepo workflow used by the rest of Sifr.

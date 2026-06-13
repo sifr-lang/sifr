@@ -82,7 +82,7 @@ M9 focused validation so far:
 - `cargo fmt --check`
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
-- `python3 scripts/check_package_manager_guardrails.py`
+- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
 - `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py`
 - `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test`
 - `cargo test -p sifr_frontend cache_key -- --nocapture`

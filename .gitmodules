@@ -10,24 +10,24 @@
 	path = audits/leetcode
 	url = https://github.com/sifr-lang/leetcode.git
 	branch = main
-[submodule "verification/package_management/demo_repositories/sifr-demo-json"]
-	path = verification/package_management/demo_repositories/sifr-demo-json
+[submodule "verification/areas/package_management/corpora/demo_repositories/sifr-demo-json"]
+	path = verification/areas/package_management/corpora/demo_repositories/sifr-demo-json
 	url = https://github.com/sifr-lang/sifr-demo-json.git
 	branch = main
-[submodule "verification/package_management/demo_repositories/sifr-demo-http"]
-	path = verification/package_management/demo_repositories/sifr-demo-http
+[submodule "verification/areas/package_management/corpora/demo_repositories/sifr-demo-http"]
+	path = verification/areas/package_management/corpora/demo_repositories/sifr-demo-http
 	url = https://github.com/sifr-lang/sifr-demo-http.git
 	branch = main
-[submodule "verification/package_management/demo_repositories/sifr-demo-test-support"]
-	path = verification/package_management/demo_repositories/sifr-demo-test-support
+[submodule "verification/areas/package_management/corpora/demo_repositories/sifr-demo-test-support"]
+	path = verification/areas/package_management/corpora/demo_repositories/sifr-demo-test-support
 	url = https://github.com/sifr-lang/sifr-demo-test-support.git
 	branch = main
-[submodule "verification/package_management/demo_repositories/sifr-demo-app"]
-	path = verification/package_management/demo_repositories/sifr-demo-app
+[submodule "verification/areas/package_management/corpora/demo_repositories/sifr-demo-app"]
+	path = verification/areas/package_management/corpora/demo_repositories/sifr-demo-app
 	url = https://github.com/sifr-lang/sifr-demo-app.git
 	branch = main
-[submodule "verification/package_management/demo_repositories/sifr-demo-workspace"]
-	path = verification/package_management/demo_repositories/sifr-demo-workspace
+[submodule "verification/areas/package_management/corpora/demo_repositories/sifr-demo-workspace"]
+	path = verification/areas/package_management/corpora/demo_repositories/sifr-demo-workspace
 	url = https://github.com/sifr-lang/sifr-demo-workspace.git
 	branch = main
 [submodule "verification/areas/developer_tooling/corpora/sifr-large-lsp-verification"]

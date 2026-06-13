@@ -68,7 +68,7 @@ M5 focused validation so far:
 - `cargo fmt --check`
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
-- `python3 scripts/check_package_manager_guardrails.py`
+- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
   `target/validation_lane_reports/create-pr.latest.json`, wall time 227.66s

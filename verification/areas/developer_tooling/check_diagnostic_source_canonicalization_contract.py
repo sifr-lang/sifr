@@ -116,12 +116,12 @@ def check_required_fixtures(root: Path) -> None:
         path = root / "verification/areas/project_workspace/fixtures/project" / fixture / "main.sifr"
         require(path.is_file(), f"required project fixture missing: {fixture}")
     for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:
-        path = root / "crates/sifr/tests/verification/package" / fixture
+        path = root / "verification/areas/package_management/fixtures/package" / fixture
         require((path / "Cargo.toml").is_file(), f"package fixture missing Cargo.toml: {fixture}")
         require((path / "sifr.toml").is_file(), f"package fixture missing sifr.toml: {fixture}")
     help_path = (
         root
-        / "crates/sifr/tests/verification/package/package_diagnostic_help_preserved/sifr.toml"
+        / "verification/areas/package_management/fixtures/package/package_diagnostic_help_preserved/sifr.toml"
     )
     require(help_path.is_file(), "package help-preservation fixture missing")
 
@@ -379,7 +379,7 @@ def check_cycle_runtime_contract(root: Path) -> None:
 
 
 def check_package_runtime_contract(root: Path) -> None:
-    base = root / "crates/sifr/tests/verification/package"
+    base = root / "verification/areas/package_management/fixtures/package"
     required_args = {
         "package_missing_import_canonical": {
             "resolution_scope",
@@ -439,7 +439,7 @@ def check_package_runtime_contract(root: Path) -> None:
 
 def check_package_help_contract(root: Path) -> None:
     help_fixture = (
-        root / "crates/sifr/tests/verification/package/package_diagnostic_help_preserved"
+        root / "verification/areas/package_management/fixtures/package/package_diagnostic_help_preserved"
     )
     help_result = run_sifr(
         ["--diagnostic-format", "json", "package", "--list", "--allow-dirty", "--no-verify"],
@@ -498,11 +498,11 @@ def seed_minimal_repo(root: Path) -> None:
             "def main():\n    pass\n",
         )
     for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:
-        write(root / f"crates/sifr/tests/verification/package/{fixture}/Cargo.toml", "[package]\n")
-        write(root / f"crates/sifr/tests/verification/package/{fixture}/sifr.toml", "[package]\n")
+        write(root / f"verification/areas/package_management/fixtures/package/{fixture}/Cargo.toml", "[package]\n")
+        write(root / f"verification/areas/package_management/fixtures/package/{fixture}/sifr.toml", "[package]\n")
     write(
         root
-        / "crates/sifr/tests/verification/package/package_diagnostic_help_preserved/sifr.toml",
+        / "verification/areas/package_management/fixtures/package/package_diagnostic_help_preserved/sifr.toml",
         "[package]\n",
     )
 
