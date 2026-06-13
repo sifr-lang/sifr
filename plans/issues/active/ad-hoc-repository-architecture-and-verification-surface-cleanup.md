@@ -189,7 +189,33 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR 2 Cargo Lock Policy | Merged | <https://github.com/sifr-lang/sifr/pull/2507> |
 | PR 3 Cursor Portability Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2508> |
 | PR 4 Review Tree Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2509> |
-| PR 5 Planning Tree Normalization | In progress | This branch |
+| PR 5 Planning Tree Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2510> |
+| PR 6 Verification Runner Foundation | In progress | This branch |
+
+## Verification Migration Status
+
+This table is the required source of truth while legacy validation surfaces and
+the new `sifr_verify` runner coexist. `scripts/run_all_tests.sh` remains the
+authoritative public facade until the facade cutover PR.
+
+| Area | Legacy path | New area path | Current authoritative gate | Equivalence evidence | Cutover status |
+| --- | --- | --- | --- | --- | --- |
+| Runner foundation | `scripts/run_all_tests.sh`, `scripts/validation_lane.py`, `scripts/validation_lane_report.py` | `verification/runner/sifr_verify/`, `verification/schemas/`, `verification/policy/`, `verification/pyproject.toml`, `verification/uv.lock` | Legacy facade plus new runner foundation self-tests | `uv lock --project verification --check`; `uv run --project verification --locked python -m sifr_verify --self-test`; `scripts/run_all_tests.sh --profile create-pr` | Foundation introduced; no legacy runner behavior migrated |
+| Profiles | `verification/validation_lanes/manifest.json`, `verification/validation_lanes/*_e2e_manifest.json` | `verification/profiles/*.json` | Legacy lane manifest | Pending PR 7 profile schema validation and shell-export equivalence | Not started |
+| `diagnostics` | `verification/suites/manifest.json`, diagnostic guardrail scripts, `crates/sifr/tests/verification/diagnostics/` | `verification/areas/diagnostics/` | Legacy facade and hardening scripts | Pending area migration PR | Not started |
+| `project_workspace` | `verification/suites/manifest.json`, project contract matrix, `crates/sifr/tests/verification/project/` | `verification/areas/project_workspace/` | Legacy facade and contract matrix | Pending area migration PR | Not started |
+| `core_language` | `scripts/run_e2e_pass.sh`, `verification/validation_lanes/*_e2e_manifest.json`, core contract rows | `verification/areas/core_language/` | Legacy e2e runner and contract matrix | Pending area migration PR | Not started |
+| `regression` | `verification/fixedbugs/index.json`, `verification/crashes/index.json` | `verification/areas/regression/` | Legacy hardening runner | Pending area migration PR | Not started |
+| `fuzz_property` | `verification/fuzz_property/`, `scripts/run_smoke_fuzz_property.sh` | `verification/areas/fuzz_property/` | Legacy smoke/property scripts | Pending area migration PR | Not started |
+| `generated_code_quality` | `verification/generated_code_quality/` | `verification/areas/generated_code_quality/` | Legacy generated-code shell helpers | Pending area migration PR | Not started |
+| `performance` | `verification/performance/`, `verification/perf/`, performance scripts | `verification/areas/performance/` | Legacy performance budget scripts | Pending area migration PR | Not started |
+| `developer_tooling` | `verification/tooling/`, LSP corpus submodule | `verification/areas/developer_tooling/` | Legacy tooling scripts | Pending area migration PR | Not started |
+| `runtime_platform` | `verification/platform/`, `scripts/run_platform_golden.sh` | `verification/areas/runtime_platform/` | Legacy platform golden runner | Pending area migration PR | Not started |
+| `distribution_release` | `verification/distribution/`, `scripts/run_distribution_validation.sh` | `verification/areas/distribution_release/` | Legacy distribution validation script | Pending area migration PR | Not started |
+| `package_management` | `verification/package_management/` | `verification/areas/package_management/` | Legacy package guardrails and facade | Pending area migration PR | Not started |
+| `stdlib_parity` | `verification/stdlib/`, stdlib corpus scripts | `verification/areas/stdlib_parity/` | Legacy stdlib scripts and facade | Pending area migration PR | Not started |
+| `algorithmic_compatibility` | LeetCode audit/subrepo material and corpus taxonomy scripts | `verification/areas/algorithmic_compatibility/` | Legacy audit/corpus tooling | Pending area migration PR | Not started |
+| `ecosystem_compatibility` | `verification/oss/` | `verification/areas/ecosystem_compatibility/` | Legacy hardening runner | Pending area migration PR | Not started |
 
 ## Cursor Cleanup
 

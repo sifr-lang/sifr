@@ -1,0 +1,74 @@
+{
+  "$schema": "https://sifr-lang.local/verification/area.schema.json",
+  "title": "Sifr verification area manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "name",
+    "owner",
+    "description",
+    "parallel_safe",
+    "resource_classes",
+    "timeout_seconds",
+    "suites"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [1]
+    },
+    "name": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "parallel_safe": {
+      "type": "boolean"
+    },
+    "resource_classes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "default-local",
+          "network",
+          "large-memory",
+          "platform-specific",
+          "long-running",
+          "external-corpus"
+        ]
+      }
+    },
+    "timeout_seconds": {
+      "type": "integer"
+    },
+    "suites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "cases"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["manifest", "golden", "adapter"]
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

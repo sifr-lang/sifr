@@ -1,0 +1,44 @@
+{
+  "$schema": "https://sifr-lang.local/verification/suite.schema.json",
+  "title": "Sifr verification area suite",
+  "type": "object",
+  "required": ["schema_version", "name", "description", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [1]
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "fixture", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["compile", "run", "check", "golden", "policy"]
+          },
+          "fixture": {
+            "type": "string",
+            "format": "repo-relative-path"
+          },
+          "expected": {
+            "type": "string",
+            "enum": ["pass", "fail"]
+          }
+        }
+      }
+    }
+  }
+}

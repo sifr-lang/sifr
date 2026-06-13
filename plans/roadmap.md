@@ -21,7 +21,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 ## Global Rules (from Phase 15 onward)
 - Sequential execution only (one phase at a time).
 - Local-first validation is authoritative; CI mirrors local commands/gates exactly.
-- Local testing runs in parallel lanes (`create-pr`, `merge`, `release`) with deterministic output.
+- Local testing runs in parallel profiles (`create-pr`, `merge`, `release`) with deterministic output.
 - Every bug fix includes a regression test before phase closure.
 - `check` remains hard-separated from codegen/runtime.
 - Parse/lower/type-check/semantic-diagnostic logic must flow through one canonical frontend API; tool-specific semantic reimplementation is forbidden.

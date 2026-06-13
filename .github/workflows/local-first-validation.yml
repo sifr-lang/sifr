@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  SIFR_MIN_UV_VERSION: "0.9.28"
+
 jobs:
   lint-and-format:
     name: lint-and-format
@@ -34,6 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.SIFR_MIN_UV_VERSION }}
       - name: Run local-first profile
         run: bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"
 
