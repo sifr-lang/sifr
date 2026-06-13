@@ -8,9 +8,9 @@ Milestone: `milestone_concurrency_runtime_0`
 | Human inventory | verification/stdlib/concurrency_runtime_substrate_inventory.md |
 | Evidence matrix | verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md |
 | Workload database | verification/stdlib/concurrency_runtime_workload_database.md |
-| Shared platform contract | verification/platform/platform_contract.md and .json |
-| Supported host matrix | verification/platform/supported_host_matrix.md |
-| Golden manifest entries | verification/platform/golden/manifest.json |
+| Shared platform contract | verification/areas/runtime_platform/platform_contract.md and .json |
+| Supported host matrix | verification/areas/runtime_platform/supported_host_matrix.md |
+| Golden manifest entries | verification/areas/runtime_platform/golden/manifest.json |
 | Bare CPython import fixtures | crates/sifr/tests/e2e/fail/bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixture family |
 
 ## M0 Closure Gate

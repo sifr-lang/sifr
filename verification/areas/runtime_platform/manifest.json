@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "name": "runtime_platform",
+  "owner": "runtime/platform",
+  "description": "Runtime platform contracts and executable platform golden fixtures.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "platform-specific"
+  ],
+  "timeout_seconds": 900,
+  "suites": [
+    {
+      "name": "platform-golden",
+      "kind": "golden",
+      "cases": [
+        {
+          "id": "platform-golden",
+          "entry": "verification/areas/runtime_platform/golden/manifest.json",
+          "command": "platform-golden-manifest",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "platform-contract",
+      "kind": "manifest",
+      "cases": [
+        {
+          "id": "platform-contract",
+          "entry": "verification/areas/runtime_platform/platform_contract.json",
+          "command": "platform-contract-validate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

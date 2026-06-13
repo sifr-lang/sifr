@@ -73,7 +73,7 @@ Redaction is required for URLs with credentials, headers, cookies, request/respo
 
 ## Golden Fixtures
 
-Executable platform fixtures live under `verification/platform/golden` and are declared in `verification/platform/golden/manifest.json`. `scripts/run_platform_golden.sh` skips entries whose `blocked_until` milestones are not listed in `SIFR_PLATFORM_CLOSED_MILESTONES`; unblocked entries must satisfy their exit code and output expectations.
+Executable platform fixtures live under `verification/areas/runtime_platform/golden` and are declared in `verification/areas/runtime_platform/golden/manifest.json`. `uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-golden` skips entries whose `blocked_until` milestones are not listed in `SIFR_PLATFORM_CLOSED_MILESTONES`; unblocked entries must satisfy their exit code and output expectations.
 
 Text/i18n owns the binary file I/O prerequisite fixture, unsupported CPython import diagnostic fixture, and text-dependent blocked entries. Later phases must consume this substrate instead of adding local encoding, Unicode, locale, or fallback decoder behavior.
 

@@ -4,7 +4,7 @@
   "entries": [
     {
       "program": "binary_file_io_contract.sifr",
-      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/binary_file_io_contract.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/areas/runtime_platform/golden/binary_file_io_contract.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: binary-file-io pass"
@@ -23,7 +23,7 @@
     },
     {
       "program": "unsupported_cpython_imports.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/unsupported_cpython_imports.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -42,7 +42,7 @@
     },
     {
       "program": "unsupported_cpython_concurrency_imports.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_concurrency_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/unsupported_cpython_concurrency_imports.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -61,7 +61,7 @@
     },
     {
       "program": "unsupported_cpython_network_imports.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_network_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/unsupported_cpython_network_imports.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -82,7 +82,7 @@
     },
     {
       "program": "unsupported_cpython_tls_imports.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_tls_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/unsupported_cpython_tls_imports.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -103,7 +103,7 @@
     },
     {
       "program": "unsupported_cpython_url_imports.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_url_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/unsupported_cpython_url_imports.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -124,7 +124,7 @@
     },
     {
       "program": "unsupported_cpython_http_imports.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_http_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/unsupported_cpython_http_imports.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -145,7 +145,7 @@
     },
     {
       "program": "unsupported_cpython_readiness_imports.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/unsupported_cpython_readiness_imports.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/unsupported_cpython_readiness_imports.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -166,7 +166,7 @@
     },
     {
       "program": "legacy_sifr_runtime_surfaces_removed.sifr",
-      "command": "cargo run -q -p sifr -- check --isolated verification/platform/golden/legacy_sifr_runtime_surfaces_removed.sifr",
+      "command": "cargo run -q -p sifr -- check --isolated verification/areas/runtime_platform/golden/legacy_sifr_runtime_surfaces_removed.sifr",
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
@@ -193,7 +193,7 @@
     },
     {
       "program": "http_body_text_after_text_i18n.sifr",
-      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/http_body_text_after_text_i18n.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/areas/runtime_platform/golden/http_body_text_after_text_i18n.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: pass"
@@ -214,7 +214,7 @@
     },
     {
       "program": "subprocess_text_explicit_encoding.sifr",
-      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/subprocess_text_explicit_encoding.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/areas/runtime_platform/golden/subprocess_text_explicit_encoding.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: pass"
@@ -232,7 +232,7 @@
     },
     {
       "program": "locale_host_limited_formatting.sifr",
-      "command": "cargo run -q -p sifr -- run --isolated verification/platform/golden/locale_host_limited_formatting.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/areas/runtime_platform/golden/locale_host_limited_formatting.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: pass"
