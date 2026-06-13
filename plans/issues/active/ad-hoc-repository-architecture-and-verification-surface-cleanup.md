@@ -227,7 +227,7 @@ authoritative public facade until the facade cutover PR.
 | `distribution_release` | Deleted `verification/distribution/`, `scripts/run_distribution_validation.sh`, and `scripts/distribution/validate_self_update_metadata.sh`; moved distribution validation cases, schema, and metadata validator under the distribution release area | `verification/areas/distribution_release/` | `uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite representative`; `--suite full`; profile facade dispatches distribution validation through this area | Area schema validation; representative and full distribution area execution; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 17 |
 | `package_management` | Deleted `verification/package_management/`, `crates/sifr/tests/verification/package/`, and `scripts/check_package_manager_guardrails.py`; moved package data, demo repository corpora, package fixtures, and guardrail tool under the package management area | `verification/areas/package_management/` | `uv run --project verification --locked python -m sifr_verify areas run --area package_management --suite guardrails`; profile facade dispatches package-manager guardrails through this area | Area schema validation, package guardrail area execution, diagnostic contract consumer coverage, `cargo test -p sifr_package`, `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 18 |
 | `stdlib_parity` | Deleted `verification/stdlib/`, `scripts/run_stdlib_namespace_corpus_validation.py`, `scripts/check_phase30_complexity_resource_inventory.py`, and `scripts/generate_concurrency_runtime_inventory.py`; moved stdlib parity data, reports, corpus validation, inventory guardrails, and generator tooling under the stdlib parity area | `verification/areas/stdlib_parity/` | `uv run --project verification --locked python -m sifr_verify areas run --area stdlib_parity --suite complexity-resource`; `--suite namespace-demos-check`; `--suite namespace-leetcode-check`; profile facade dispatches the fast stdlib inventory guardrail through this area | Area schema validation; stdlib complexity-resource, namespace demos check, and namespace LeetCode check area execution; `cargo test -p sifr_stdlib` snapshot consumers; generator idempotence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 19 |
-| `algorithmic_compatibility` | Moved LeetCode submodule corpus and full-corpus taxonomy script | `verification/areas/algorithmic_compatibility/` | `uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite taxonomy-smoke`; `--suite leetcode-check` | In progress in PR #2535 | Implementation in progress |
+| `algorithmic_compatibility` | Moved LeetCode submodule corpus and full-corpus taxonomy script | `verification/areas/algorithmic_compatibility/` | `uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite taxonomy-smoke`; `--suite leetcode-check` | Area schema validation, taxonomy smoke, LeetCode corpus check, stdlib namespace LeetCode check, `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR #2535 |
 | `ecosystem_compatibility` | `verification/oss/` | `verification/areas/ecosystem_compatibility/` | Legacy hardening runner | Pending area migration PR | Not started |
 
 ## Cursor Cleanup
@@ -554,7 +554,7 @@ Initial disposition:
 | `audits/modules_and_imports/*.sifr` | Promote into `verification/areas/project_workspace/fixtures/imports/`. |
 | `audits/python_basics/*.sifr` | Split by ownership: syntax/type/control-flow cases to `core_language`; stdlib behavior to `stdlib_parity`; redundant smoke examples delete after coverage proof. |
 | `audits/stdlib/*.sifr` | Promote into `verification/areas/stdlib_parity/fixtures/`. |
-| `audits/leetcode/` | Move to `verification/areas/algorithmic_compatibility/corpora/leetcode/` and make it either a submodule or clone-restored corpus, not both. |
+| `audits/leetcode/` | Moved to `verification/areas/algorithmic_compatibility/corpora/leetcode/` as the single submodule-owned corpus. |
 
 Migration rules:
 
@@ -803,7 +803,7 @@ Audits exact disposition by current directory:
 | `audits/object_model/` | 6 `.sifr` plus reports | Split by contract into `core_language`, `stdlib_parity`, or `regression`; delete reports after manifest coverage. |
 | `audits/python_basics/` | 45 `.sifr` plus reports | Split by contract into `core_language`, `stdlib_parity`, or `regression`; delete duplicates after manifest coverage. |
 | `audits/stdlib/` | 10 `.sifr`, CPython convention doc, reports | Fixtures to `stdlib_parity`; CPython convention to `verification/areas/stdlib_parity/README.md`; reports delete/archive. |
-| `audits/leetcode/` | submodule corpus | `verification/areas/algorithmic_compatibility/corpora/leetcode/` with `.gitmodules` updated. |
+| `audits/leetcode/` | submodule corpus | Moved to `verification/areas/algorithmic_compatibility/corpora/leetcode/` with `.gitmodules` updated in PR #2535. |
 | `audits/STDLIB_PARITY_MASTER_REPORT.md`, `audits/*/REPORT.md`, `audits/*/POST_HARDENING_REPORT.md` | historical markdown | Delete from active tree after current state is represented by manifests/data/docs. |
 
 Internal docs exact disposition:
@@ -926,7 +926,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `scripts/run_distribution_validation.sh` | move | Move executable validation cases to `distribution_release`. | Yes | Yes | distribution_release runner equivalence | Release validation cases are fixtures. |
 | `scripts/run_stdlib_namespace_corpus_validation.py` | move | Move to `stdlib_parity`. | Yes | Yes | stdlib_parity runner equivalence | CPython-observable behavior belongs to stdlib parity. |
 | `scripts/check_phase30_complexity_resource_inventory.py` | move | Move to `stdlib_parity`; stale phase number removed. | Yes | Yes | stdlib_parity inventory validation | Resource parity data belongs to the area. |
-| `scripts/build_full_corpus_failure_taxonomy.py` | move | Move to `algorithmic_compatibility` as taxonomy builder. | No | Yes | taxonomy generation check | External corpus results are area artifacts. |
+| `scripts/build_full_corpus_failure_taxonomy.py` | moved | Moved to `algorithmic_compatibility` as taxonomy builder in PR #2535. | No | Yes | taxonomy generation check | External corpus results are area artifacts. |
 | `scripts/generate_concurrency_runtime_inventory.py` | move | Move to `stdlib_parity` if the output remains verification inventory. | No | Yes | inventory generation diff check | Verification inventories belong with area data. |
 | `scripts/run_verification_hardening.py` | move | Split across regression, fuzz_property, ecosystem_compatibility, and runner self-tests. | Yes | Yes | per-area equivalence and runner self-tests | Generic hardening runners hide ownership. |
 | `scripts/run_verification_hardening/` | move | Split module implementation with the same owners as the facade above. | Yes | Yes | per-area equivalence | Harness code should live under runner or areas. |
@@ -986,7 +986,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `audits/object_model/` | move | Split fixtures by asserted contract across core_language, stdlib_parity, or regression. | Yes | Yes | manifest ownership and runner execution | Avoid generic audit buckets. |
 | `audits/python_basics/` | move | Split syntax/type/control-flow to core_language, stdlib behavior to stdlib_parity, fixed bugs to regression. | Yes | Yes | coverage map and duplicate pruning | CPython-observable behavior belongs to parity suites. |
 | `audits/stdlib/` | move | Promote fixtures to stdlib_parity and move fixture format guidance into its runbook. | Yes | Yes | stdlib_parity runner execution | Area runbooks should live with fixtures. |
-| `audits/leetcode` | move | Move submodule to `algorithmic_compatibility/corpora/leetcode/`. | Yes | Yes | `.gitmodules` and corpus runner | External corpora need one ownership model. |
+| `audits/leetcode` | moved | Moved submodule to `algorithmic_compatibility/corpora/leetcode/` in PR #2535. | Yes | Yes | `.gitmodules` and corpus runner | External corpora need one ownership model. |
 | `audits/lint_panic_patterns.sh` | move | Replace under `generated_code_quality`. | Yes | Yes | generated-code-quality panic scan equivalence | Generated runtime panic policy belongs to codegen quality. |
 | `audits/run_audit.sh` | delete | Delete after area runners own equivalent fixtures. | Yes | Yes | no stale references and area equivalence | Public wrappers should not duplicate runner ownership. |
 | `audits/run_audit_fast.sh` | delete | Delete after area runners own equivalent fixtures. | Yes | Yes | no stale references and area equivalence | Compatibility wrappers are forbidden. |
@@ -1031,7 +1031,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `third_party/ruff` | keep | Parser fork remains under external compiler dependency owner. | Yes | Yes | submodule status and parser tests | External compiler dependencies stay separate. |
 | `editor_integrations` | keep | Editor integration repository remains under editor surface. | Yes | Yes | submodule status and tooling checks | Editor integrations are separate product surfaces. |
 | `editor_integrations/vscode` | keep | VS Code extension submodule remains under editor integrations. | Yes | Yes | submodule status and extension checks | Editor-specific assets stay under editor owner. |
-| `audits/leetcode` | move | Move to algorithmic compatibility corpus owner. | Yes | Yes | `.gitmodules`, clone script, area runner | External corpora need one owning area. |
+| `audits/leetcode` | moved | Moved to algorithmic compatibility corpus owner in PR #2535. | Yes | Yes | `.gitmodules`, clone script, area runner | External corpora need one owning area. |
 | `verification/sifr-large-lsp-verification` | move | Move to developer tooling corpus owner. | Yes | Yes | `.gitmodules`, submodule status, tooling runner | Large LSP corpora belong to tooling validation. |
 | `verification/package_management/demo_repositories/*` | move | Remain submodules but under package_management area-owned corpora/fixtures. | Yes | Yes | `.gitmodules`, package runner | Demo repos are package verification inputs. |
 
