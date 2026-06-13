@@ -23,7 +23,7 @@ Required:
 
 Options:
   --base-ref <ref>           Base commit/ref to release (default: HEAD)
-  --site-repo <path>         Site repo path (default: /Users/yaseralnajjar/work/sifr/sifr-blog-website)
+  --site-repo <path>         Site repo path (default: SIFR_SITE_REPO)
   --artifact-dir <dir>       Existing artifact directory for real-run validation/publication
   --binary <path>            Existing binary packaged for all targets in local validation
   --work-dir <dir>           Work/evidence directory (default: target/preview-release/<version>)
@@ -36,7 +36,7 @@ CHANNEL=""
 VERSION=""
 MODE=""
 BASE_REF="HEAD"
-SITE_REPO="/Users/yaseralnajjar/work/sifr/sifr-blog-website"
+SITE_REPO="${SIFR_SITE_REPO:-}"
 ARTIFACT_DIR=""
 BINARY=""
 WORK_DIR=""
@@ -133,6 +133,7 @@ validate_inputs() {
   [[ "${CHANNEL}" == "alpha" || "${CHANNEL}" == "beta" ]] || fail "--channel must be alpha or beta"
   [[ -n "${VERSION}" ]] || fail "--version is required"
   [[ -n "${MODE}" ]] || fail "choose --dry-run or --real-run"
+  [[ -n "${SITE_REPO}" ]] || fail "--site-repo is required when SIFR_SITE_REPO is not set"
   [[ "${MUTATION_MODE}" == "local" || "${MUTATION_MODE}" == "github" ]] || fail "--mutation-mode must be local or github"
   [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "stable-looking versions are disabled until Phase 39: ${VERSION}"
   version_channel="$(preview_channel_for_version "${VERSION}")" || fail "version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}"
@@ -272,7 +273,7 @@ $(for target in "${TARGETS[@]}"; do echo "- [x] sifr-${VERSION}-${target}.tar.gz
 
 ## Validation Evidence
 
-- [x] scripts/run_distribution_validation.sh
+- [x] uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full
 - [x] Generated installer validates checksum before install
 - [x] Stable-looking versions rejected before mutation
 EOF

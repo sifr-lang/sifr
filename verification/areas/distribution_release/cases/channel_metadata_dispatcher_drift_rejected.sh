@@ -17,5 +17,5 @@ sed -i.bak 's/"beta": "0.1.0-beta.7"/"beta": "0.1.0-beta.6"/' \
 
 require_failure_contains \
   "metadata beta version drift" \
-  "${REPO_ROOT}/scripts/distribution/validate_self_update_metadata.sh" \
+  "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
     --install-root "${install_root}"
