@@ -88,7 +88,7 @@ def check_schema_lock(root: Path) -> None:
 def baseline_path(root: Path, fixture: str, name: str) -> Path:
     return (
         root
-        / "crates/sifr/tests/verification/diagnostics"
+        / "verification/areas/diagnostics/fixtures/diagnostics"
         / fixture
         / "baselines"
         / name
@@ -96,7 +96,7 @@ def baseline_path(root: Path, fixture: str, name: str) -> Path:
 
 
 def check_fixture_baselines(root: Path) -> None:
-    base = root / "crates/sifr/tests/verification/diagnostics"
+    base = root / "verification/areas/diagnostics/fixtures/diagnostics"
     for fixture in DIAGNOSTIC_FIXTURES:
         fixture_dir = base / fixture
         require(fixture_dir.is_dir(), f"required diagnostic fixture missing: {fixture}")
@@ -110,20 +110,20 @@ def check_fixture_baselines(root: Path) -> None:
 
 
 def check_manifest_cases(root: Path) -> None:
-    manifest = read_json(root, "verification/suites/manifest.json")
-    diagnostics = next(
+    manifest = read_json(root, "verification/areas/diagnostics/manifest.json")
+    baseline_suite = next(
         (
             suite
             for suite in manifest.get("suites", [])
-            if isinstance(suite, dict) and suite.get("name") == "diagnostics"
+            if isinstance(suite, dict) and suite.get("name") == "baselines"
         ),
         None,
     )
-    require(diagnostics is not None, "verification manifest missing diagnostics suite")
-    cases = {case.get("id"): case for case in diagnostics.get("cases", [])}
+    require(baseline_suite is not None, "diagnostics area manifest missing baselines suite")
+    cases = {case.get("id"): case for case in baseline_suite.get("cases", [])}
     for fixture in ("decimal_invalid_literal", "multiline_span_rendering"):
         case = cases.get(fixture)
-        require(case is not None, f"diagnostics suite missing case: {fixture}")
+        require(case is not None, f"diagnostics baselines suite missing case: {fixture}")
         require(
             case.get("diagnostic_formats") == ["human", "json", "compact"],
             f"diagnostics case has wrong format lock: {fixture}",
@@ -186,14 +186,14 @@ def check_json_baselines(root: Path) -> None:
     for fixture in ("decimal_invalid_literal", "multiline_span_rendering"):
         payload = read_json(
             root,
-            f"crates/sifr/tests/verification/diagnostics/{fixture}/baselines/check-json.stderr.txt",
+            f"verification/areas/diagnostics/fixtures/diagnostics/{fixture}/baselines/check-json.stderr.txt",
         )
         first = payload[0]
         for field in REQUIRED_FIELDS:
             require(field in first, f"json baseline missing RenderedDiagnostic field: {field}")
     multiline = read_json(
         root,
-        "crates/sifr/tests/verification/diagnostics/multiline_span_rendering/baselines/check-json.stderr.txt",
+        "verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/baselines/check-json.stderr.txt",
     )
     require(
         len(multiline[0]["spans"][0]["lines"]) > 1,
@@ -201,7 +201,7 @@ def check_json_baselines(root: Path) -> None:
     )
     presentation = read_json(
         root,
-        "crates/sifr/tests/verification/diagnostics/presentation_contract_cases/baselines/check-json.stderr.txt",
+        "verification/areas/diagnostics/fixtures/diagnostics/presentation_contract_cases/baselines/check-json.stderr.txt",
     )
     require(
         "\r" in presentation[0]["spans"][0]["lines"][0]["text"],
@@ -294,7 +294,7 @@ def seed_minimal_repo(root: Path) -> None:
     )
     manifest_cases = []
     for fixture in DIAGNOSTIC_FIXTURES:
-        fixture_dir = root / "crates/sifr/tests/verification/diagnostics" / fixture
+        fixture_dir = root / "verification/areas/diagnostics/fixtures/diagnostics" / fixture
         write(fixture_dir / "main.sifr", "def subject():\n    pass\n")
         write(fixture_dir / "baselines/check-human.stdout.txt", "\n")
         write(fixture_dir / "baselines/check-human.exit-code.txt", "1\n")
@@ -304,17 +304,17 @@ def seed_minimal_repo(root: Path) -> None:
         write(fixture_dir / "baselines/check-json.exit-code.txt", "1\n")
     write(
         root
-        / "crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/baselines/check-human.stderr.txt",
+        / "verification/areas/diagnostics/fixtures/diagnostics/decimal_invalid_literal/baselines/check-human.stderr.txt",
         'error[SIFR-DECIMAL-0001]: msg\n  --> file.sifr:3:30\n   3 | Decimal("12.34.56")\n     | ^^^^^^^^^^\n  = docs: https://sifr.sh/docs/errors/SIFR-DECIMAL-0001\n',
     )
     write(
         root
-        / "crates/sifr/tests/verification/diagnostics/multiline_span_rendering/baselines/check-human.stderr.txt",
+        / "verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/baselines/check-human.stderr.txt",
         "error[SIFR-FLOW-0007]: msg\n  --> file.sifr:3:5\n   4 | line\n   6 | line\n   | ^^^^\n",
     )
     write(
         root
-        / "crates/sifr/tests/verification/diagnostics/presentation_contract_cases/baselines/check-human.stderr.txt",
+        / "verification/areas/diagnostics/fixtures/diagnostics/presentation_contract_cases/baselines/check-human.stderr.txt",
         "error[SIFR-TYPE-0002]: msg\n  ::: file.sifr:3:5\n  = related span\n  = location: <unavailable>\n  = note: child note rendered\n  = help: child help rendered\n  = suggestion: replace value\n",
     )
     for fixture, code in (
@@ -323,38 +323,39 @@ def seed_minimal_repo(root: Path) -> None:
         ("presentation_contract_cases", "SIFR-TYPE-0002"),
     ):
         write(
-            root / f"crates/sifr/tests/verification/diagnostics/{fixture}/baselines/check-compact.stderr.txt",
+            root / f"verification/areas/diagnostics/fixtures/diagnostics/{fixture}/baselines/check-compact.stderr.txt",
             f"1 error, 0 warnings, 0 notes\nE {code} file.sifr:1:1 msg\n",
         )
     write(
         root
-        / "crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/baselines/check-json.stderr.txt",
+        / "verification/areas/diagnostics/fixtures/diagnostics/decimal_invalid_literal/baselines/check-json.stderr.txt",
         json.dumps([diagnostic_json("SIFR-DECIMAL-0001", ["line"])]),
     )
     write(
         root
-        / "crates/sifr/tests/verification/diagnostics/multiline_span_rendering/baselines/check-json.stderr.txt",
+        / "verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/baselines/check-json.stderr.txt",
         json.dumps([diagnostic_json("SIFR-FLOW-0007", ["line1", "line2"])]),
     )
     presentation_json = diagnostic_json("SIFR-TYPE-0002", ["line\r"])
     presentation_json["suggestions"] = [{"message": "replace value"}]
     write(
         root
-        / "crates/sifr/tests/verification/diagnostics/presentation_contract_cases/baselines/check-json.stderr.txt",
+        / "verification/areas/diagnostics/fixtures/diagnostics/presentation_contract_cases/baselines/check-json.stderr.txt",
         json.dumps([presentation_json]),
     )
     for fixture in ("decimal_invalid_literal", "multiline_span_rendering"):
         manifest_cases.append(
             {
                 "id": fixture,
-                "entry": f"crates/sifr/tests/verification/diagnostics/{fixture}/main.sifr",
+                "entry": f"verification/areas/diagnostics/fixtures/diagnostics/{fixture}/main.sifr",
                 "command": "check",
+                "expect_exit_code": 1,
                 "diagnostic_formats": ["human", "json", "compact"],
             }
         )
     write(
-        root / "verification/suites/manifest.json",
-        json.dumps({"suites": [{"name": "diagnostics", "cases": manifest_cases}]}),
+        root / "verification/areas/diagnostics/manifest.json",
+        json.dumps({"suites": [{"name": "baselines", "cases": manifest_cases}]}),
     )
     write(
         root / "crates/sifr_diagnostics/src/render/presentation.rs",
@@ -435,7 +436,7 @@ def run_self_tests() -> None:
         "missing fixture",
         "required diagnostic fixture missing",
         lambda root: shutil.rmtree(
-            root / "crates/sifr/tests/verification/diagnostics/multiline_span_rendering"
+            root / "verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering"
         ),
     )
     expect_self_test_failure(
@@ -443,7 +444,7 @@ def run_self_tests() -> None:
         "required baseline missing",
         lambda root: (
             root
-            / "crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/baselines/check-human.stderr.txt"
+            / "verification/areas/diagnostics/fixtures/diagnostics/decimal_invalid_literal/baselines/check-human.stderr.txt"
         ).unlink(),
     )
     expect_self_test_failure(

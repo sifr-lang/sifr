@@ -25,7 +25,8 @@
     {
       "area": "diagnostics",
       "suites": [
-        "contracts"
+        "contracts",
+        "baselines"
       ],
       "resource_classes": [
         "default-local"

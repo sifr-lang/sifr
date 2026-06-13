@@ -8,6 +8,7 @@ Python verification tooling is managed by `uv` through this directory:
 ```bash
 uv run --project verification python -m sifr_verify --self-test
 uv run --project verification python -m sifr_verify profiles check
+uv run --project verification python -m sifr_verify areas check
 uv lock --project verification --check
 ```
 
@@ -29,8 +30,9 @@ before profile execution is cut over to `sifr_verify`.
 - `runner/sifr_verify/` contains runner code and self-tests.
 - `schemas/` contains the supported committed data contracts.
 - `profiles/` contains profile JSON files selected by `scripts/run_all_tests.sh --profile`.
-- `areas/` will contain area-owned manifests, fixtures, baselines, and adapters
-  as each area migrates.
+- `areas/` contains area-owned manifests, fixtures, baselines, and adapters.
+  `diagnostics` is migrated and can be run with
+  `uv run --project verification python -m sifr_verify areas run --area diagnostics`.
 - `policy/` contains machine-facing runner policy such as guardrail mappings.
 
 Schemas intentionally support only a small subset: object shape, required keys,

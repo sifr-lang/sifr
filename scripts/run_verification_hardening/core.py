@@ -137,7 +137,6 @@ def should_run_suite(profile: str, suite_name: str) -> bool:
         return False
     if profile == "merge":
         return suite_name in {
-            "diagnostics",
             "project",
             "fixedbugs",
             "crashes",

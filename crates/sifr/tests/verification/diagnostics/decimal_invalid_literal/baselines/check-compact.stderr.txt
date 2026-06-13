@@ -1,2 +1,0 @@
-1 error, 0 warnings, 0 notes
-E SIFR-DECIMAL-0001 crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr:3:30 Decimal() received invalid exact literal '12.34.56'

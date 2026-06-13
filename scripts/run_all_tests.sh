@@ -183,17 +183,9 @@ run_core_guardrails() {
 }
 
 run_diagnostic_contracts() {
-  echo "Running diagnostic schema sync check"
-  python3 "${SCRIPT_DIR}/check_diagnostic_schema_sync.py"
-
-  echo "Running diagnostic docs sync check"
-  python3 "${SCRIPT_DIR}/check_diagnostic_docs_sync.py"
-
-  echo "Running diagnostic code coverage check"
-  python3 "${SCRIPT_DIR}/check_diagnostic_code_coverage.py"
-
-  echo "Running diagnostic baseline hygiene check"
-  python3 "${SCRIPT_DIR}/check_diagnostic_baseline_hygiene.py"
+  echo "Running diagnostics area contract checks"
+  uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify areas run --area diagnostics --suite contracts
 
   echo "Running diagnostic cancel usage check"
   python3 "${SCRIPT_DIR}/check_diagnostic_cancel_usage.py"
@@ -488,13 +480,24 @@ run_hardening_suites() {
   if [[ "${RUN_HARDENING}" == "1" ]]; then
     echo "Running phase 29 verification hardening suites"
     HARDENING_ARGS=(--profile "${PROFILE}")
+    DIAGNOSTICS_HARDENING=0
     IFS=',' read -r -a HARDENING_SUITE_ARRAY <<< "${HARDENING_SUITES}"
     for suite in "${HARDENING_SUITE_ARRAY[@]}"; do
       if [[ -n "${suite}" ]]; then
-        HARDENING_ARGS+=(--suite "${suite}")
+        if [[ "${suite}" == "diagnostics" ]]; then
+          DIAGNOSTICS_HARDENING=1
+        else
+          HARDENING_ARGS+=(--suite "${suite}")
+        fi
       fi
     done
-    python3 "${SCRIPT_DIR}/run_verification_hardening.py" "${HARDENING_ARGS[@]}"
+    if [[ "${DIAGNOSTICS_HARDENING}" == "1" ]]; then
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run --area diagnostics --suite baselines --hardening-summary
+    fi
+    if [[ "${#HARDENING_ARGS[@]}" -gt 2 ]]; then
+      python3 "${SCRIPT_DIR}/run_verification_hardening.py" "${HARDENING_ARGS[@]}"
+    fi
   fi
 }
 

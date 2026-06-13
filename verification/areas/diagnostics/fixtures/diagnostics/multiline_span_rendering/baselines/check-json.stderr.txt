@@ -13,7 +13,7 @@
     "url": "https://sifr.sh/docs/errors/SIFR-FLOW-0007",
     "spans": [
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/diagnostics/multiline_span_rendering/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/main.sifr",
         "byte_start": 126,
         "byte_end": 161,
         "line": 3,

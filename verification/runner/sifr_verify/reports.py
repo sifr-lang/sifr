@@ -259,12 +259,17 @@ def parse_log(path: Path) -> dict[str, Any]:
                 entry["misses"] += 1
             continue
         if match := HARDENING_OK_RE.match(line):
-            hardening_summary = {
+            entry = {
                 "variants": int(match.group(1)),
                 "failures": int(match.group(2)),
                 "blocking_failures": int(match.group(3)),
                 "non_blocking_failures": int(match.group(4)),
             }
+            if hardening_summary is None:
+                hardening_summary = entry
+            else:
+                for key, value in entry.items():
+                    hardening_summary[key] += value
             continue
         if match := CACHE_DIR_RE.match(line):
             cache_dir = match.group(1).strip()

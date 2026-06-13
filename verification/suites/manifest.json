@@ -2,36 +2,6 @@
   "schema_version": 1,
   "suites": [
     {
-      "name": "diagnostics",
-      "runner": "baseline",
-      "owner": "compiler/diagnostics",
-      "blocking": true,
-      "cases": [
-        {
-          "id": "decimal_invalid_literal",
-          "entry": "crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr",
-          "command": "check",
-          "expect_exit_code": 1,
-          "diagnostic_formats": [
-            "human",
-            "json",
-            "compact"
-          ]
-        },
-        {
-          "id": "multiline_span_rendering",
-          "entry": "crates/sifr/tests/verification/diagnostics/multiline_span_rendering/main.sifr",
-          "command": "check",
-          "expect_exit_code": 1,
-          "diagnostic_formats": [
-            "human",
-            "json",
-            "compact"
-          ]
-        }
-      ]
-    },
-    {
       "name": "project",
       "runner": "baseline",
       "owner": "compiler/frontend",

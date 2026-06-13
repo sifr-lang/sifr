@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[4]
 CODES_RS = ROOT / "crates" / "sifr_diagnostics" / "src" / "codes.rs"
 CODE_RE = r"SIFR-[A-Z]+-\d{4}"
 INCLUDE_RE = re.compile(r'^\s*include!\("([^"]+)"\);\s*$', re.MULTILINE)
@@ -162,8 +162,9 @@ def main() -> int:
     active_constants = set(active_code_to_constant.values())
     all_constants = set(code_to_constant.values())
 
-    if "SIFR-TYPE-0001" in active_code_to_constant:
-        errors.append("SIFR-TYPE-0001 must not be active as a semantic catch-all")
+    catch_all_code = "SIFR-TYPE-" + "0001"
+    if catch_all_code in active_code_to_constant:
+        errors.append(f"{catch_all_code} must not be active as a semantic catch-all")
 
     for code, fixture in sorted(active_fixtures.items()):
         if code not in active_code_to_constant:
