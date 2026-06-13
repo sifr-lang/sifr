@@ -81,7 +81,8 @@ See `internal_docs/architecture.md` for full architectural detail.
 - `demos/` — Milestone demo files (*.sifr) showcasing language features
 - `scripts/` — Build/test automation
 - `verification/` — E2E test infrastructure
-- `internal_docs/` — Internal documentation such as architecture, roadmap... etc
+- `plans/` — Roadmap, phase plans, issue plans, and review artifacts
+- `internal_docs/` — Durable architecture, accepted decisions, and current technical references
 - `docs/` — Public/site-facing docs such as Sifr documentation and CLI... etc
 
 ## Core expectations
@@ -109,9 +110,9 @@ See `internal_docs/architecture.md` for full architectural detail.
 Update corresponding docs after each item is completed (as applicable):
 
 - Architecture: `internal_docs/architecture.md`
-- Roadmap: `internal_docs/roadmap.md`
-- Phases: `internal_docs/phases/`
-- Issues: `issues/`
+- Roadmap: `plans/roadmap.md`
+- Phases: `plans/phases/`
+- Issues: `plans/issues/`
 
 ## Safety rules
 

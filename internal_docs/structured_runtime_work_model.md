@@ -224,7 +224,7 @@ These names are not compatibility adapters and are not fallback paths. Existing 
 
 Public Sifr APIs must not expose Tokio, Futures, Rayon, Crossbeam, Rustix, tracing, metrics, serde, postcard, thiserror, or other Rust implementation crate types.
 
-General dependency-ring rules live in [dependency_policy.md](./dependency_policy.md). The accepted Rust implementation crate set for the concurrency/runtime substrate is locked in [ad-hoc-production-concurrency-runtime-platform-substrate.md](../issues/ad-hoc-production-concurrency-runtime-platform-substrate.md#rust-ecosystem-decisions). This model document does not reopen dependency choices; implementation uses that phase table and changes it only through an explicit issue/phase amendment before implementation work starts.
+General dependency-ring rules live in [dependency_policy.md](./dependency_policy.md). The accepted Rust implementation crate set for the concurrency/runtime substrate is locked in [ad-hoc-production-concurrency-runtime-platform-substrate.md](../plans/issues/archive/ad-hoc-production-concurrency-runtime-platform-substrate.md#rust-ecosystem-decisions). This model document does not reopen dependency choices; implementation uses that phase table and changes it only through an explicit issue/phase amendment before implementation work starts.
 
 ## M7 Production Closure Audit
 

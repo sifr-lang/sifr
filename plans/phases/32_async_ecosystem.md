@@ -2,7 +2,7 @@
 
 status: completed
 
-Corrective follow-up completed on 2026-05-12: the async effect and offload diagnostic seal is tracked in [Ad Hoc Async Effect And Offload Diagnostics](../../issues/ad-hoc-async-effect-and-offload-diagnostics.md). That ad hoc phase tightens the completed model by rejecting fake async functions, fake awaits, direct annotated blocking/CPU-heavy calls in async code, and unclassified blocking offload targets.
+Corrective follow-up completed on 2026-05-12: the async effect and offload diagnostic seal is tracked in [Ad Hoc Async Effect And Offload Diagnostics](../issues/archive/ad-hoc-async-effect-and-offload-diagnostics.md). That ad hoc phase tightens the completed model by rejecting fake async functions, fake awaits, direct annotated blocking/CPU-heavy calls in async code, and unclassified blocking offload targets.
 
 ## Objective
 
@@ -225,7 +225,7 @@ status: completed
 **Definition of done:**
 
 - Architecture and phase docs reference the same semantic contract.
-- There are no conflicting Phase 32 exit criteria in `internal_docs/phases/32_async_ecosystem.md`.
+- There are no conflicting Phase 32 exit criteria in `plans/phases/32_async_ecosystem.md`.
 - All public modules/types for v1 are named and scoped.
 - `Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `AsyncIterator`, `AsyncGenerator`, cancellation, timeout, scope, lock, channel, async generator, and async comprehension semantics are specified enough for implementation PRs.
 - Deferred surfaces are explicit and cannot be inferred from older notes.

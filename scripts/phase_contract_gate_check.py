@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate entry/exit phase gate status from roadmap.md."""
+"""Validate entry/exit phase gate status from plans/roadmap.md."""
 
 from __future__ import annotations
 
@@ -32,10 +32,10 @@ def parse_phase_statuses(roadmap_path: Path) -> dict[int, str]:
 
 
 def require_phase_file_exists(phase: int) -> None:
-    matches = list(Path("internal_docs/phases").glob(f"{phase:02d}_*.md"))
+    matches = list(Path("plans/phases").glob(f"{phase:02d}_*.md"))
     if not matches:
         raise SystemExit(
-            f"gate-check failed: no phase file found for phase {phase} in internal_docs/phases"
+            f"gate-check failed: no phase file found for phase {phase} in plans/phases"
         )
 
 
@@ -58,7 +58,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--roadmap",
-        default="internal_docs/roadmap.md",
+        default="plans/roadmap.md",
         help="Path to roadmap file.",
     )
     args = parser.parse_args()

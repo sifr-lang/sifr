@@ -10,8 +10,8 @@ Use this skill when closing an ad-hoc phase using the enforced review-driven loo
 ## Inputs
 
 - `PHASE_NAME`: human-readable phase slug (for prompts and status text)
-- `PHASE_DOC`: phase doc path under `issues/`
-- `PHASE_EXEC_DOC`: execution ledger path under `issues/`
+- `PHASE_DOC`: phase doc path under `plans/issues/`
+- `PHASE_EXEC_DOC`: execution ledger path under `plans/issues/`
 - `REVIEW_PREFIX`: review file prefix, for example:
   - `phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision`
 
@@ -21,7 +21,7 @@ Use this skill when closing an ad-hoc phase using the enforced review-driven loo
 - Before each PR, confirm demo/fixture behavior and run `$(pwd)/scripts/run_all_tests.sh`.
 - For each review pass, apply only valid findings, validate again, then PR+merge.
 - Do not self-review when external reviewer app is required.
-- Keep docs in sync (`issues/`, `internal_docs/architecture.md`, `internal_docs/roadmap.md`) as closure progresses.
+- Keep docs in sync (`plans/issues/`, `internal_docs/architecture.md`, `plans/roadmap.md`) as closure progresses.
 
 ## Wave Loop (for each wave/part)
 
@@ -62,7 +62,7 @@ When phase is fully closed, run:
 
 ## Reviewer Trigger
 
-Use the [talk-to-claude-opus](.cursor/skills/talk-to-claude-opus/SKILL.md) skill for all external review passes.
+Use the [talk-to-claude-opus](../talk-to-claude-opus/SKILL.md) skill for all external review passes.
 
 Adjust prompt scope for the active stage: `wave`, `milestone closure`, `phase closure`, `pass 1`, `pass 2`.
 

@@ -188,7 +188,8 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR 1 Repository Surface And Relevance Inventory | Merged | <https://github.com/sifr-lang/sifr/pull/2506> |
 | PR 2 Cargo Lock Policy | Merged | <https://github.com/sifr-lang/sifr/pull/2507> |
 | PR 3 Cursor Portability Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2508> |
-| PR 4 Review Tree Normalization | In progress | This branch |
+| PR 4 Review Tree Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2509> |
+| PR 5 Planning Tree Normalization | In progress | This branch |
 
 ## Cursor Cleanup
 
@@ -689,7 +690,7 @@ Tracked top-level entries discovered:
 | `Cargo.lock` | ignored/untracked now | Track in the dedicated Cargo lock PR. |
 | `crates/`, `demos/`, `docs/`, `lib/`, `third_party/`, `editor_integrations/` | active trees | Keep; only update references and submodule metadata required by moves. |
 | `internal_docs/` | 96 files | Keep only current architecture, design state, and conventions; move phases/roadmap/planning and runner policy out. |
-| `issues/` | active root issue plus archive | Move under `plans/issues/{active,completed,archive}`. |
+| `plans/issues/` | active root issue plus archive | Move under `plans/issues/{active,completed,archive}`. |
 | `reviews/` | active root review artifacts plus archive | Move retained artifacts under `plans/reviews/{active,archive}`; delete logs and transcripts without planning value. |
 | `audits/` | audit fixtures, reports, scripts, and LeetCode submodule | Remove as a top-level system; promote fixtures/corpora into verification areas or delete/archive reports. |
 | `scripts/` | 54 tracked files | Keep only public facade, repo guardrails, release tooling, generators, and maintenance utilities. Move verification implementation into areas. |
@@ -707,7 +708,7 @@ Cursor exact disposition:
 | Current path | Final disposition |
 | --- | --- |
 | `.cursor/.rules/architecture-overview.mdc` | Delete; no `.cursor/.rules/` tree remains. |
-| `.cursor/commands/*.md` | Keep and retarget from `issues/`, `reviews/`, and `internal_docs/phases/` to `plans/...` after the planning tree exists. |
+| `.cursor/commands/*.md` | Keep and retarget from `plans/issues/`, `reviews/`, and `plans/phases/` to `plans/...` after the planning tree exists. |
 | `.cursor/references/*.md` | Keep only portable templates/references; remove local path assumptions. |
 | `.cursor/skills/project-workflow/`, `.cursor/skills/phase-closure-loop/`, `.cursor/skills/sifr-demo-authoring/` | Keep after replacing personal paths and old planning paths. |
 | `.cursor/skills/talk-to-claude-opus/` | Keep as the single Claude/Fable review workflow; make output default to `plans/reviews/active/`. |
@@ -770,8 +771,8 @@ Internal docs exact disposition:
 
 | Current path/group | Final disposition |
 | --- | --- |
-| `internal_docs/roadmap.md` | Move to `plans/roadmap.md` and update links. |
-| `internal_docs/phases/*.md` | Move flat into `plans/phases/`; create `plans/phases/index.md`. Preserve existing filenames; the duplicate phase-27 numbering is shown as two indexed phase-27 entries rather than renamed during this cleanup. |
+| `plans/roadmap.md` | Move to `plans/roadmap.md` and update links. |
+| `plans/phases/*.md` | Move flat into `plans/phases/`; create `plans/phases/index.md`. Preserve existing filenames; the duplicate phase-27 numbering is shown as two indexed phase-27 entries rather than renamed during this cleanup. |
 | `internal_docs/verification/artifact_schema_and_retention.md` | Move to `verification/policy/artifact_schema_and_retention.md`. |
 | `internal_docs/verification/baseline_governance.md` | Move to `verification/policy/baseline_governance.md`. |
 | `internal_docs/verification/deterministic_sharding_and_flake_policy.md` | Move to `verification/policy/deterministic_sharding_and_flake_policy.md`. |
@@ -790,8 +791,8 @@ Stale reference cleanup discovered:
 | Reference family | Required update |
 | --- | --- |
 | `validation_lane`, `validation_lanes`, and user-facing `lane` validation wording in `.github/`, `scripts/`, `README.md`, `AGENTS.md`, `internal_docs/`, and `verification/` | Replace with `profile` vocabulary except where `lane` refers to compiler/LSP worker lanes. |
-| `internal_docs/phases/` references in `AGENTS.md`, `README.md`, Cursor commands, scripts, and phase gate checks | Retarget to `plans/phases/`. |
-| Root `issues/` references in roadmap, Cursor commands, archive scripts, and active docs | Retarget to `plans/issues/{active,completed,archive}`. |
+| `plans/phases/` references in `AGENTS.md`, `README.md`, Cursor commands, scripts, and phase gate checks | Retarget to `plans/phases/`. |
+| Root `plans/issues/` references in roadmap, Cursor commands, archive scripts, and active docs | Retarget to `plans/issues/{active,completed,archive}`. |
 | Root `reviews/` references and `.claude.log` paths | Retarget retained summaries to `plans/reviews/`; delete log/transcript references that are not retained artifacts. |
 | `/Users/yaseralnajjar/...` references in `.cursor/skills/*` and `verification/distribution/common.sh` | Replace with environment variables or repo-relative paths; fail guardrail on future personal paths. |
 | `verification/validation_lanes/*` references in scripts and inventories | Replace with `verification/profiles/*` and area-owned suite references. |
@@ -823,7 +824,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `docs/` | keep | Public documentation surface. | No | Yes | link/reference checks | CPython separates public docs from internal docs. |
 | `editor_integrations/` | keep | Editor integration ownership surface and submodule parent. | Yes | Yes | tooling checks and submodule status | TypeScript keeps editor tooling contracts explicit. |
 | `internal_docs/` | keep | Current architecture and durable conventions only after moving planning/policy out. | No | Yes | link/reference checks | CPython keeps internal docs current, not process history. |
-| `issues/` | move | Active and archived issue plans move to `plans/issues/{active,completed,archive}`. | No | Yes | roadmap/Cursor/AGENTS reference checks | Mature repos separate plans from architecture. |
+| `plans/issues/` | move | Active and archived issue plans move to `plans/issues/{active,completed,archive}`. | No | Yes | roadmap/Cursor/AGENTS reference checks | Mature repos separate plans from architecture. |
 | `reviews/` | move | Retained summaries move to `plans/reviews/`; logs and low-value transcripts delete. | No | Yes | no top-level reviews guardrail | Review process history should not obscure product surface. |
 | `audits/` | move | Top-level audit system is dissolved into verification areas or deleted history. | Yes | Yes | area manifest ownership and runner execution | TypeScript keeps fixtures area-owned, not audit-owned. |
 | `scripts/` | keep | Public facade, guardrails, generators, release and maintenance tools only. | Yes | Yes | create-pr/merge validation and stale script guardrails | Rust separates test runner/tooling from compiler implementation. |
@@ -964,10 +965,10 @@ The audit scope is tracked repository material plus currently discovered generat
 | `internal_docs/diagnostic_codes.md` | keep | Durable diagnostic code contract. | Yes | Yes | diagnostics docs/schema checks | Diagnostics need source-of-truth docs. |
 | `internal_docs/diagnostic_emission_inventory.md` | keep | Keep after removing validation ledgers and stale milestone prose. | Yes | Yes | diagnostics reference checks | Inventories are retained only when current. |
 | `internal_docs/tooling_verification.md` | keep | Keep as human-facing tooling verification convention after ledger cleanup. | Yes | Yes | developer_tooling reference checks | Human conventions can stay outside runner data. |
-| `internal_docs/roadmap.md` | move | Move to `plans/roadmap.md`. | No | Yes | roadmap link checks | Execution plans should not live in architecture docs. |
-| `internal_docs/phases/*.md` | move | Move flat to `plans/phases/` and add `plans/phases/index.md`. | No | Yes | phase index/link checks | Stable phase files belong to planning. |
-| `issues/ad-hoc-repository-architecture-and-verification-surface-cleanup.md` | move | Active phase plan moves to `plans/issues/active/`. | No | Yes | AGENTS/Cursor/roadmap references | Active plans live under plans. |
-| `issues/ad-hoc-serious-build-output-and-phase-timings.md` | move | Completed or active status determines `plans/issues/completed/` or `active/`. | No | Yes | issue index checks | Issue lifecycle should be explicit. |
+| `plans/roadmap.md` | move | Move to `plans/roadmap.md`. | No | Yes | roadmap link checks | Execution plans should not live in architecture docs. |
+| `plans/phases/*.md` | move | Move flat to `plans/phases/` and add `plans/phases/index.md`. | No | Yes | phase index/link checks | Stable phase files belong to planning. |
+| `plans/issues/active/ad-hoc-repository-architecture-and-verification-surface-cleanup.md` | move | Active phase plan moves to `plans/issues/active/`. | No | Yes | AGENTS/Cursor/roadmap references | Active plans live under plans. |
+| `plans/issues/active/ad-hoc-serious-build-output-and-phase-timings.md` | move | Completed or active status determines `plans/issues/completed/` or `active/`. | No | Yes | issue index checks | Issue lifecycle should be explicit. |
 | `issues/archive/` | move | Move to `plans/issues/archive/`. | No | Yes | archive link checks | Historical plans should not sit at root. |
 | `reviews/*.md` | move | Retain active summaries under `plans/reviews/active/`; archive historical value under `archive/`. | No | Yes | review path reference checks | Review artifacts belong with plans. |
 | `reviews/*.claude.log`, `reviews/**/*.stderr.log` | delete | Point-in-time process logs are not active repo material. | No | Yes | no log references | Logs are generated artifacts. |

@@ -16,7 +16,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
 ## Depends on
 - Phase 38
 - Phase 34 generated-code quality gates pass before stable artifacts are eligible for GA promotion.
-- Ad Hoc Sifr Self Update (`../../issues/ad-hoc-sifr-self-update.md`) preview substrate, if it has landed before Phase 39 starts. If that ad hoc phase has not landed, Phase 39 must first implement the same receipt-checked, version-metadata-only, immutable-installer-delegating self-update substrate before enabling stable self-update.
+- Ad Hoc Sifr Self Update (`../issues/archive/ad-hoc-sifr-self-update.md`) preview substrate, if it has landed before Phase 39 starts. If that ad hoc phase has not landed, Phase 39 must first implement the same receipt-checked, version-metadata-only, immutable-installer-delegating self-update substrate before enabling stable self-update.
 
 ## Milestones
 

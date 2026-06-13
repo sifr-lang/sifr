@@ -148,8 +148,8 @@ m36.2 lint foundation:
 
 Ad hoc production-grade linter phase:
 
-- phase contract: `issues/ad-hoc-production-grade-sifr-linter.md`
-- execution tracker: `issues/ad-hoc-production-grade-sifr-linter-execution.md`
+- phase contract: `plans/issues/archive/ad-hoc-production-grade-sifr-linter.md`
+- execution tracker: `plans/issues/archive/ad-hoc-production-grade-sifr-linter-execution.md`
 - Ruff rule-family/config audit manifest: `verification/tooling/linter_manifests/ruff_rule_config_audit.json`
 - lint CLI parity manifest: `verification/tooling/linter_manifests/lint_cli_parity.json`
 - rule metadata manifest: `verification/tooling/linter_manifests/lint_rule_metadata.json`

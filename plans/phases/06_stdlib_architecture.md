@@ -10,7 +10,7 @@ status: completed
 
 **Goal:** Rewire how stdlib works internally. Introduce the three-tier hybrid architecture: Rust intrinsics (`_sifr.*`) at the bottom, Sifr stdlib modules (`sifr.*`) as `.sifr` files in the middle, and user code on top. No new user-facing features, but establishes the architecture everything else builds on.
 
-**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+**Full plan:** historical local Cursor plan `hybrid_stdlib_architecture_67d3c0a1.md` (removed)
 
 ### Three-Tier Model
 
@@ -21,10 +21,10 @@ status: completed
 ### Compiler Changes
 
 1. Rename current `sifr.*` registry to `_sifr.*` in the compiler-host stdlib contract (`sifr_stdlib`) -- mechanical rename of intrinsic module/member metadata and public stdlib module checks
-2. Rename `emit_stdlib_call` to `emit_intrinsic_call` in [sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs)
+2. Rename `emit_stdlib_call` to `emit_intrinsic_call` in [sifr_codegen/src/lib.rs](../../crates/sifr_codegen/src/lib.rs)
 3. Split current 55 functions into initial intrinsic primitives across `_sifr.fs`, `_sifr.sys`, `_sifr.io`, `_sifr.time`, `_sifr.math`, `_sifr.crypto`, `_sifr.regex`, `_sifr.json`
 4. Add `lib/sifr/` directory with `.sifr` files embedded via `include_str!`
-5. Update driver ([sifr_driver/src/lib.rs](crates/sifr_driver/src/lib.rs)) to discover and compile embedded stdlib `.sifr` modules before user modules (two-phase compilation)
+5. Update driver ([sifr_driver/src/lib.rs](../../crates/sifr_driver/src/lib.rs)) to discover and compile embedded stdlib `.sifr` modules before user modules (two-phase compilation)
 6. Update lowering import resolution to resolve stdlib `.sifr` files first, falling back to `_sifr.*` intrinsics
 7. Update codegen to handle stdlib modules as regular Rust `mod`/`use` (not inline emit)
 8. Block user imports of `_sifr.*` in lowering import resolution -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics). Trust boundary: the compiler distinguishes stdlib from user code by checking whether the source originated from the embedded `lib/sifr/` module set (via `sifr_stdlib` source inventory), not by filename convention.
@@ -59,7 +59,7 @@ status: completed
 
 **Goal:** Port all 13 existing stdlib modules from Rust codegen to `.sifr` files. Each module becomes a thin wrapper importing from `_sifr.*` intrinsics. At the end, `emit_stdlib_call` is deleted.
 
-**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+**Full plan:** historical local Cursor plan `hybrid_stdlib_architecture_67d3c0a1.md` (removed)
 
 ### Modules to Migrate (in dependency order)
 
@@ -101,7 +101,7 @@ status: completed
 
 **Goal:** Add ~14 new modules. These are the most commonly needed modules that Python developers reach for daily. Ordered by dependency and implementation complexity (pure Sifr first, then intrinsic-backed).
 
-**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+**Full plan:** historical local Cursor plan `hybrid_stdlib_architecture_67d3c0a1.md` (removed)
 
 ### Pure Sifr Modules (no new intrinsics needed)
 
@@ -141,7 +141,7 @@ status: completed
 
 **Goal:** Three parts: (A) close gaps in existing modules by adding missing functions, (B) add remaining Tier 1+2 modules, (C) run the comprehensive parity audit.
 
-**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+**Full plan:** historical local Cursor plan `hybrid_stdlib_architecture_67d3c0a1.md` (removed)
 
 ### Part A -- Expand Existing Modules
 
@@ -174,7 +174,7 @@ status: completed
 
 ### Part C -- Parity Audit
 
-- Run the comprehensive stdlib parity audit from [.cursor/plans/stdlib_parity_audit_2c354444.md](.cursor/plans/stdlib_parity_audit_2c354444.md) (~200 test files across 30 directories)
+- Run the comprehensive stdlib parity audit from historical local Cursor plan `stdlib_parity_audit_2c354444.md` (removed) (~200 test files across 30 directories)
 - Produce `audits/STDLIB_PARITY_MASTER_REPORT.md` with coverage percentages per module
 - Target: 60%+ coverage across the top 20 CPython modules
 - **Reference:** CPython stdlib source is available at `/Users/yaseralnajjar/work/sifr/cpython` for comparing implementations and verifying API surfaces
@@ -198,7 +198,7 @@ status: completed
 
 **Goal:** Polish the stdlib to align API names with the architecture plan, fill test coverage gaps, and clean up stale code. This milestone addresses reviewer findings that don't require new language features or compiler-level changes.
 
-**Full plan:** [issues/milestone_stdlib_polish.md](../../issues/milestone_stdlib_polish.md)
+**Full plan:** [plans/issues/archive/milestone_stdlib_polish.md](../issues/archive/milestone_stdlib_polish.md)
 
 **Context:** The Stdlib Architecture Phase delivered 37 modules with full compilation pipeline support. However, a reviewer audit identified: (1) function names that don't match the plan, (2) missing E2E tests for 3 modules, (3) thin negative/fail test coverage, and (4) a stale comment in lower.rs. The safety contract (Result/Option) and class-based APIs are deferred to future milestones.
 
@@ -276,7 +276,7 @@ status: completed
 
 **Goal:** Prove the stdlib class pipeline end-to-end by implementing `collections.Counter` as the first class defined in a stdlib `.sifr` file. This unblocks 12+ modules that need class-based APIs to reach CPython parity.
 
-**Full plan:** [issues/milestone_stdlib_classes.md](../../issues/milestone_stdlib_classes.md)
+**Full plan:** [plans/issues/archive/milestone_stdlib_classes.md](../issues/archive/milestone_stdlib_classes.md)
 
 **Context:** The CPython parity audit identified class-based APIs as the single biggest blocker — 12+ modules (argparse, csv, logging, pathlib, graphlib, uuid, collections, datetime, re, tempfile, difflib) need classes. The compiler already supports user-defined classes (constructors, methods, `&self`/`&mut self` inference, inheritance, protocols, `isinstance`), and the driver already exports classes via `ExternalDefs.classes`. However, **no stdlib `.sifr` module has ever defined a class** — the pipeline is wired but unproven.
 

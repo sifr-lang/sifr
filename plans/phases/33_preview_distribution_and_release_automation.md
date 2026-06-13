@@ -2,7 +2,7 @@
 
 status: completed
 
-Completed on 2026-05-12. Closure evidence is recorded in `../../issues/phase-33-preview-distribution-execution.md`, including corrective public release publication evidence for `0.1.0-alpha.1` and `0.1.0-beta.1`.
+Completed on 2026-05-12. Closure evidence is recorded in `../issues/archive/phase-33-preview-distribution-execution.md`, including corrective public release publication evidence for `0.1.0-alpha.1` and `0.1.0-beta.1`.
 
 ## Objective
 
@@ -35,7 +35,7 @@ The compiler repository owns release automation, artifact building, generated in
 
 ## Depends On
 
-- Phase 32 is completed. Current closure evidence: Phase 32 is marked `status: completed` in `internal_docs/phases/32_async_ecosystem.md`, with corrective follow-up completed on 2026-05-12.
+- Phase 32 is completed. Current closure evidence: Phase 32 is marked `status: completed` in `plans/phases/32_async_ecosystem.md`, with corrective follow-up completed on 2026-05-12.
 - Phase 27 runtime-safety and diagnostics contracts remain green.
 - The `sifr.sh` site repository can deploy static files from `apps/sifr-site/public/`.
 
@@ -47,7 +47,7 @@ The following are not Phase 33 exit criteria:
 - Custom channel manifest and version manifest schemas, unless generated installer entrypoints cannot satisfy a concrete Phase 33 requirement.
 - Package-manager distribution (`brew`, `apt`, `npm`, `pip`, `cargo install`, Windows package managers).
 - Automatic runtime telemetry or update checks from installed binaries.
-- Rollback and incident governance beyond reverting preview channel pointers; Phase 39 (`internal_docs/phases/39_stable_channel_ga_promotion_and_release_governance.md`) owns GA rollback governance.
+- Rollback and incident governance beyond reverting preview channel pointers; Phase 39 (`plans/phases/39_stable_channel_ga_promotion_and_release_governance.md`) owns GA rollback governance.
 - Windows installer support for `curl | bash`; Windows artifacts may be added later behind a separate installer contract.
 - Long-term signing authority rotation policy.
 

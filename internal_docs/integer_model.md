@@ -2,7 +2,7 @@
 
 ## Status
 
-This document is the canonical design for Sifr's integer model before production. The implementation is tracked by `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md`.
+This document is the canonical design for Sifr's integer model before production. The implementation is tracked by `plans/issues/archive/ad-hoc-integer-model-and-fixed-width-numeric-contract.md`.
 
 Sifr intentionally does not preserve the older bootstrap model where source-level `int` lowered to Rust `i64` and arbitrary precision lived behind a separate user-facing `bigint`. The target language model is clean because Sifr is not production-released yet.
 

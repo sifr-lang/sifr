@@ -3,7 +3,7 @@
 status: M1 pre-flight gate
 
 This document is the implementation guardrail for
-`issues/ad-hoc-typescript-go-compiler-architecture-transfer.md` M1. It records
+`plans/issues/archive/ad-hoc-typescript-go-compiler-architecture-transfer.md` M1. It records
 the actual pre-session state after M0 and before M2-M5 behavior migration. Later
 milestones may update this file and its checker when they intentionally replace
 one of these current limitations.
