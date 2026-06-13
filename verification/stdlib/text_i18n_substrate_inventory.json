@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "phase-complete",
-  "platform_contract": "verification/platform/platform_contract.json",
+  "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
   "cpython_checkout": {
     "path": "/Users/yaseralnajjar/work/sifr/cpython",
     "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6"

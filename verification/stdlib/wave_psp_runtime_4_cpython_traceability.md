@@ -8,6 +8,6 @@ The previous `sifr.subprocess` compatibility fixtures from this wave were remove
 
 Current anchors:
 
-- Legacy public-module removal: `verification/platform/golden/legacy_sifr_runtime_surfaces_removed.sifr`
+- Legacy public-module removal: `verification/areas/runtime_platform/golden/legacy_sifr_runtime_surfaces_removed.sifr`
 - Negative import fixtures: `crates/sifr/tests/e2e/fail/legacy_sifr_subprocess_removed.sifr` and `crates/sifr/tests/e2e/fail/async_popen_unsupported.sifr`
 - Native future owner: `milestone_concurrency_runtime_4`

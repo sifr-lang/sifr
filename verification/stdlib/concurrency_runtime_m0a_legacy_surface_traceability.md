@@ -22,4 +22,4 @@ Implementation evidence:
 - `SIFR-IMPORT-0009` distinguishes removed legacy Sifr modules from unknown modules.
 - Legacy `sifr.asyncio` compatibility lowering, `asyncio.run` entrypoint inference, and `LowerCtx.asyncio_compat_imports` were removed so native task lowering no longer depends on CPython-shaped imports.
 - Historical fail fixture names that referenced member-level legacy behavior now assert the module-level removal diagnostic and provide imported-member payload coverage.
-- `verification/platform/golden/legacy_sifr_runtime_surfaces_removed.sifr` is active and checks the cross-surface removal gate.
+- `verification/areas/runtime_platform/golden/legacy_sifr_runtime_surfaces_removed.sifr` is active and checks the cross-surface removal gate.

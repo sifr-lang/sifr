@@ -218,7 +218,7 @@
       "milestone": "milestone_concurrency_runtime_7"
     }
   ],
-  "platform_contract": "verification/platform/platform_contract.json",
+  "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
   "production_surfaces": [
     {
       "notes": "Public affine observation handle; generated/internal Task names remain internal-only.",

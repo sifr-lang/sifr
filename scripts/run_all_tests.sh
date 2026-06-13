@@ -373,7 +373,10 @@ run_validation_contract_suites() {
 
 run_platform_golden_suite() {
   echo "Running platform golden fixtures"
-  bash "${SCRIPT_DIR}/run_platform_golden.sh"
+  uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify areas run \
+      --area runtime_platform \
+      --suite platform-golden
 }
 
 run_e2e_pass_suite() {

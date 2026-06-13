@@ -593,7 +593,7 @@ def write_inventory_json(files: list[dict[str, Any]], commit: str) -> None:
     data = {
         "schema_version": 1,
         "status": "milestone_concurrency_runtime_7-inventory-audited",
-        "platform_contract": "verification/platform/platform_contract.json",
+        "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
         "cpython_checkout": {"path": str(CPYTHON_ROOT), "commit": commit},
         "source_patterns": SOURCE_GROUPS,
         "domain_summary": aggregate_domains(files),
@@ -713,9 +713,9 @@ def write_m0_traceability_md() -> None:
         ["Human inventory", "verification/stdlib/concurrency_runtime_substrate_inventory.md"],
         ["Evidence matrix", "verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md"],
         ["Workload database", "verification/stdlib/concurrency_runtime_workload_database.md"],
-        ["Shared platform contract", "verification/platform/platform_contract.md and .json"],
-        ["Supported host matrix", "verification/platform/supported_host_matrix.md"],
-        ["Golden manifest entries", "verification/platform/golden/manifest.json"],
+        ["Shared platform contract", "verification/areas/runtime_platform/platform_contract.md and .json"],
+        ["Supported host matrix", "verification/areas/runtime_platform/supported_host_matrix.md"],
+        ["Golden manifest entries", "verification/areas/runtime_platform/golden/manifest.json"],
         ["Bare CPython import fixtures", "crates/sifr/tests/e2e/fail/bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixture family"],
     ]
     M0_TRACEABILITY_MD.write_text(

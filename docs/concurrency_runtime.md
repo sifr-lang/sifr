@@ -237,4 +237,4 @@ Representative validation lives in:
 - `verification/stdlib/concurrency_runtime_m4_process_traceability.md`
 - `verification/stdlib/concurrency_runtime_m5_shutdown_traceability.md`
 - `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md`
-- `verification/platform/supported_host_matrix.md`
+- `verification/areas/runtime_platform/supported_host_matrix.md`
