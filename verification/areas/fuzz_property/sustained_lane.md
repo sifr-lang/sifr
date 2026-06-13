@@ -11,4 +11,4 @@ Status contract:
 
 Operational note:
 - use the same seed corpus foundations as smoke gates, but larger iteration/time budgets
-- every actionable finding must follow the triage/minimization workflow in `internal_docs/verification/fuzz_property_policy.md`
+- every actionable finding must follow the triage/minimization workflow in `verification/policy/fuzz_property.md`

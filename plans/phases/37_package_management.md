@@ -630,7 +630,7 @@ Phase 37 should include concrete demos backed by Git repositories in the `sifr-l
 
 Closeout note: these repositories now exist under `sifr-lang/` and are checked
 out through git submodules under
-`verification/package_management/demo_repositories/`. The local guardrail
+`verification/areas/package_management/corpora/demo_repositories/`. The local guardrail
 validates the submodule declarations, required files, trust declarations, Git tag
 references, alias coverage, lockfile shape, and workspace shape.
 
@@ -1081,7 +1081,7 @@ Boundary rules:
 
 ## Guardrails
 
-Add `scripts/check_package_manager_guardrails.py` when `crates/sifr_package` lands.
+Add `verification/areas/package_management/tools/check_package_manager_guardrails.py` when `crates/sifr_package` lands.
 
 It must enforce:
 
@@ -1284,7 +1284,7 @@ Definition of done:
 Scope:
 
 - Add end-to-end fixtures for pure Sifr Cargo packages, Rust-backed Sifr packages, workspaces, path dependencies, Git dependencies, registry dependencies, multiple-version graphs, aliases, and publishing.
-- Add `scripts/check_package_manager_guardrails.py`.
+- Add `verification/areas/package_management/tools/check_package_manager_guardrails.py`.
 - Complete `DEPENDENCY_AUDIT.md`, `TRACEABILITY.md`, and `FEATURES.md`.
 - Update public docs and internal architecture docs.
 - Document uv/Python interop as future work rather than Phase 37 core.

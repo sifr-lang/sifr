@@ -13,7 +13,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 | `property` | Invariant tests for deterministic/high-value compiler behaviors. | yes | compiler/hardening | property manifest, deterministic run summary |
 | `fuzz-smoke` | Deterministic local fuzz smoke over curated corpora. | yes | compiler/hardening | seed corpus manifest, deterministic run summary |
 | `oss-curated` | Small pinned curated real-world gate that blocks merges. | yes | compiler/verification | corpus manifest, per-project outcomes, run summary |
-| `ecosystem-broader` | Larger non-blocking compatibility lane for signal and backlog generation. | no | compiler/verification | lane manifest, signal report |
+| `ecosystem-broader` | Larger non-blocking compatibility suite for signal and backlog generation. | no | compiler/verification | suite manifest, signal report |
 
 ## Fixture and Baseline Conventions
 
@@ -66,7 +66,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Policy and manifests live under `verification/areas/fuzz_property/`.
 - Seeds and deterministic generation rules are version-controlled.
 - Each run emits machine-readable case outcomes and seed provenance.
-- Operational policy: `internal_docs/verification/fuzz_property_policy.md`.
+- Operational policy: `verification/policy/fuzz_property.md`.
 
 ### OSS-Curated and Ecosystem-Broader
 - Manifests live under `verification/areas/ecosystem_compatibility/data/`.
@@ -82,6 +82,6 @@ This document defines the canonical suite taxonomy for compiler verification har
   ownership live in their area manifests under `verification/areas/`.
 - Suite runners must not hardcode fixture lists outside their owning manifest.
 - Manifest updates are review artifacts and follow normal PR review.
-- Corpus lifecycle and promotion rules: `internal_docs/verification/regression_corpus_policy.md`.
-- Deterministic sharding + flake policy: `internal_docs/verification/deterministic_sharding_and_flake_policy.md`.
-- Structured artifact schema + retention: `internal_docs/verification/artifact_schema_and_retention.md`.
+- Corpus lifecycle and promotion rules: `verification/policy/regression_corpus.md`.
+- Deterministic sharding + flake policy: `verification/policy/deterministic_sharding_and_flake_policy.md`.
+- Structured artifact schema + retention: `verification/policy/artifact_schema_and_retention.md`.

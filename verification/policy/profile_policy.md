@@ -1,20 +1,20 @@
-# Validation Lane Policy
+# Validation Profile Policy
 
 Status: active
 
-Sifr local validation uses four lanes:
+Sifr local validation uses four profiles:
 
 - `create-pr`: fast local create-PR signal, target <=120s warm and <=300s cold.
 - `merge`: authoritative merge gate for compiler correctness.
 - `nightly`: broad hardening, full generated-code quality, and full e2e pass corpus.
-- `release`: highest-confidence release qualification lane.
+- `release`: highest-confidence release qualification profile.
 
 Profile policy lives in `verification/profiles/{create-pr,merge,nightly,release}.json`.
 `uv run --project verification --locked python -m sifr_verify profiles shell --profile <profile>`
 is the shell-facing resolver for profile metadata while the bash facade remains
 the public validation entrypoint.
 
-## Create-PR Lane
+## Create-PR Profile
 
 `scripts/run_all_tests.sh --profile create-pr` proves fast compiler-relevant behavior:
 
@@ -27,7 +27,7 @@ the public validation entrypoint.
 
 It intentionally excludes editor packaging, editor asset release checks, distribution/self-update checks, LSP stress, LSP large-session smoke, broad verification hardening, broad project-mode matrices, full generated clippy/corpus, full performance budgets, and the slower `sifr` integration/e2e-support crate tests.
 
-## Merge Lane
+## Merge Profile
 
 `scripts/run_all_tests.sh --profile merge` is the authoritative merge gate. It preserves broader compiler coverage through:
 
@@ -41,7 +41,7 @@ It intentionally excludes editor packaging, editor asset release checks, distrib
 
 ## Change-Aware Ownership
 
-Use the broader lane or targeted family command when touching these surfaces:
+Use the broader profile or targeted family command when touching these surfaces:
 
 - Generated-code quality: codegen, runtime dependency selection, generated project layout, or emitted Rust quality.
 - LSP stress and large-session checks: `crates/sifr_lsp`, `crates/sifr_analysis`, frontend query scheduling/cancellation, LSP protocol scripts, or editor integration behavior.
