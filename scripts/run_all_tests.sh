@@ -438,15 +438,33 @@ run_crate_tests() {
 
 run_validation_contract_suites() {
   if [[ -n "${CONTRACT_SUITES}" ]]; then
-    echo "Running validation contract matrix suites"
-    CONTRACT_ARGS=()
+    echo "Running validation contract area suites"
+    CORE_LANGUAGE_CONTRACT_ARGS=()
+    PROJECT_WORKSPACE_CONTRACT_ARGS=()
     IFS=',' read -r -a CONTRACT_SUITE_ARRAY <<< "${CONTRACT_SUITES}"
     for suite in "${CONTRACT_SUITE_ARRAY[@]}"; do
       if [[ -n "${suite}" ]]; then
-        CONTRACT_ARGS+=(--suite "${suite}")
+        if [[ "${suite}" == "integer_dtype_contract" ||
+              "${suite}" == "phase24_hir_analysis" ||
+              "${suite}" == "phase25_cfg_flow" ]]; then
+          CORE_LANGUAGE_CONTRACT_ARGS+=(--suite "${suite}")
+        elif [[ "${suite}" == "frontend_mode_parity" ||
+                "${suite}" == "phase23_graph_isolation" ]]; then
+          PROJECT_WORKSPACE_CONTRACT_ARGS+=(--suite "${suite}")
+        else
+          echo "unknown validation contract suite: ${suite}" >&2
+          return 2
+        fi
       fi
     done
-    bash "${SCRIPT_DIR}/run_validation_contract_matrix.sh" "${CONTRACT_ARGS[@]}"
+    if [[ "${#CORE_LANGUAGE_CONTRACT_ARGS[@]}" -gt 0 ]]; then
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run --area core_language "${CORE_LANGUAGE_CONTRACT_ARGS[@]}"
+    fi
+    if [[ "${#PROJECT_WORKSPACE_CONTRACT_ARGS[@]}" -gt 0 ]]; then
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run --area project_workspace "${PROJECT_WORKSPACE_CONTRACT_ARGS[@]}"
+    fi
   fi
 }
 

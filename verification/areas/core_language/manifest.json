@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "name": "core_language",
+  "owner": "compiler/core-language",
+  "description": "Core compiler language semantics, contract matrices, and e2e language behavior.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 1200,
+  "suites": [
+    {
+      "name": "integer_dtype_contract",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "integer_dtype_contract",
+          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
+          "command": "contract-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "phase24_hir_analysis",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "phase24_hir_analysis",
+          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
+          "command": "contract-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "phase25_cfg_flow",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "phase25_cfg_flow",
+          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
+          "command": "contract-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

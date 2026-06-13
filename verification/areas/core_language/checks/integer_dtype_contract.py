@@ -7,8 +7,8 @@ import pathlib
 import sys
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-CONTRACT = ROOT / "verification" / "validation_contracts" / "integer_dtype_contract.md"
+ROOT = pathlib.Path(__file__).resolve().parents[4]
+CONTRACT = ROOT / "verification" / "areas" / "core_language" / "data" / "integer_dtype_contract.md"
 
 REQUIRED_TEXT = [
     "array[int32] + array[int32] -> Result[array[int32], OverflowError]",
