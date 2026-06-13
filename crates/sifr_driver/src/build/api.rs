@@ -1,7 +1,8 @@
+use super::report::BuildReport;
 use crate::build::{
     build_cached_package_project_binary, build_cached_project_binary,
-    build_cached_single_file_binary, build_rooted_entrypoint_binary, check_single_file_entrypoint,
-    emit_project_entrypoint, resolve_package_project_entrypoint_plan,
+    build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
+    check_single_file_entrypoint, emit_project_entrypoint, resolve_package_project_entrypoint_plan,
     resolve_project_entrypoint_plan, CachedBinaryArtifact, PackageEntrypoint, RootedEntrypoint,
 };
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
@@ -12,7 +13,14 @@ pub fn build_project(
     main_file: &Path,
     output_dir: &Path,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    build_rooted_entrypoint_binary(&RootedEntrypoint::Project { main_file }, output_dir)
+    build_project_report(main_file, output_dir).map(|report| report.binary_path().to_path_buf())
+}
+
+pub fn build_project_report(
+    main_file: &Path,
+    output_dir: &Path,
+) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
+    build_rooted_entrypoint_binary_with_report(&RootedEntrypoint::Project { main_file }, output_dir)
 }
 
 pub fn check_project(main_file: &Path) -> Vec<RenderedDiagnostic> {
@@ -38,10 +46,20 @@ pub fn emit_project(main_file: &Path) -> CompileResult {
 }
 
 pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    build_rooted_entrypoint_binary(
+    build_single_file_report(source, Path::new("main"), output_dir)
+        .map(|report| report.binary_path().to_path_buf())
+}
+
+pub fn build_single_file_report(
+    source: &str,
+    entrypoint_file: &Path,
+    output_dir: &Path,
+) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
+    let display_path = entrypoint_file.to_string_lossy();
+    build_rooted_entrypoint_binary_with_report(
         &RootedEntrypoint::SingleFile {
             source,
-            display_path: "main",
+            display_path: &display_path,
             lowering_options: LoweringOptions::default(),
         },
         output_dir,

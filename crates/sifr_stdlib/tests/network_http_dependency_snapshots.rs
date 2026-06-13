@@ -2,8 +2,9 @@ use serde_json::Value;
 use sifr_stdlib::{generated_cargo_dependencies, StdlibFeature};
 use std::collections::HashSet;
 
-const SNAPSHOT_JSON: &str =
-    include_str!("../../../verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json");
+const SNAPSHOT_JSON: &str = include_str!(
+    "../../../verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json"
+);
 
 fn normalize_runtime_path(dependency: String) -> String {
     if dependency.starts_with("sifr_runtime = ") {

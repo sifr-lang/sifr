@@ -1,10 +1,11 @@
 use super::materialize::{
-    cached_binary_path, materialize_binary_project, materialize_cached_binary_project,
+    cached_binary_path, materialize_binary_project_with_report,
+    materialize_cached_binary_project_with_report,
 };
 use super::project_codegen::{
     generated_project_binary_project, generated_single_file_binary_project, GeneratedBinaryProject,
 };
-use super::ArtifactCacheReport;
+use super::report::{BuildCompilationMode, BuildReport, BuildStageReport};
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
@@ -23,6 +24,7 @@ use sifr_lowering::LoweringOptions;
 use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum RootedEntrypointShape {
@@ -44,6 +46,24 @@ pub(crate) enum RootedEntrypoint<'a> {
     },
 }
 
+impl RootedEntrypoint<'_> {
+    fn build_mode(&self) -> BuildCompilationMode {
+        match self {
+            Self::SingleFile { .. } => BuildCompilationMode::SingleFile,
+            Self::Project { .. } => BuildCompilationMode::Project,
+            Self::PackageProject { .. } => BuildCompilationMode::PackageProject,
+        }
+    }
+
+    fn display_path(&self) -> PathBuf {
+        match self {
+            Self::SingleFile { display_path, .. } => PathBuf::from(display_path),
+            Self::Project { main_file } => (*main_file).to_path_buf(),
+            Self::PackageProject { entrypoint } => entrypoint.main_file.clone(),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct PackageEntrypoint {
     pub main_file: PathBuf,
@@ -54,7 +74,7 @@ pub struct PackageEntrypoint {
 
 pub struct CachedBinaryArtifact {
     binary_path: PathBuf,
-    cache_report: ArtifactCacheReport,
+    build_report: BuildReport,
 }
 
 impl CachedBinaryArtifact {
@@ -62,13 +82,8 @@ impl CachedBinaryArtifact {
         &self.binary_path
     }
 
-    pub fn cache_status_line(&self) -> String {
-        self.cache_report.status_line()
-    }
-
-    #[cfg(test)]
-    pub(crate) fn cache_report(&self) -> &ArtifactCacheReport {
-        &self.cache_report
+    pub fn build_report(&self) -> &BuildReport {
+        &self.build_report
     }
 }
 
@@ -76,6 +91,36 @@ pub(crate) struct RootedEntrypointPlan {
     shape: RootedEntrypointShape,
     stdlib: StdlibCompiled,
     project_lowering: ProjectLowering,
+}
+
+fn measure_stage<T>(
+    stages: &mut Vec<BuildStageReport>,
+    label: impl Into<String>,
+    f: impl FnOnce() -> Result<T, Vec<RenderedDiagnostic>>,
+) -> Result<T, Vec<RenderedDiagnostic>> {
+    let start = Instant::now();
+    let value = f()?;
+    stages.push(BuildStageReport::new(label, start.elapsed()));
+    Ok(value)
+}
+
+fn import_closure_label(module_count: usize) -> String {
+    format!(
+        "Parsing import closure ({})",
+        module_count_label(module_count)
+    )
+}
+
+fn module_analysis_label(module_count: usize) -> String {
+    format!("Analyzing {}", module_count_label(module_count))
+}
+
+fn module_count_label(module_count: usize) -> String {
+    if module_count == 1 {
+        "1 module".to_string()
+    } else {
+        format!("{module_count} modules")
+    }
 }
 
 pub(crate) fn compile_single_file_frontend(
@@ -149,14 +194,37 @@ pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
     }
 }
 
-pub(crate) fn build_rooted_entrypoint_binary(
+pub(crate) fn build_rooted_entrypoint_binary_with_report(
     entrypoint: &RootedEntrypoint<'_>,
     output_dir: &Path,
-) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
-    plan.emit_frontend_diagnostics();
-    let generated_project = plan.into_generated_binary_project()?;
-    materialize_binary_project(output_dir, "sifr_output", generated_project)
+) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
+    let total_start = Instant::now();
+    let mut stages = Vec::new();
+    let (plan, mode, entrypoint_path) =
+        RootedEntrypointPlan::from_entrypoint_with_stages(entrypoint, &mut stages)?;
+    let frontend_diagnostics = plan.frontend_diagnostics();
+    let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
+        plan.into_generated_binary_project()
+    })?;
+    let materialized =
+        materialize_binary_project_with_report(output_dir, "sifr_output", generated_project)?;
+    stages.push(BuildStageReport::new(
+        "Materializing Cargo project",
+        materialized.materialize_elapsed,
+    ));
+    stages.push(BuildStageReport::new(
+        "Building release binary",
+        materialized.cargo_elapsed,
+    ));
+    Ok(BuildReport::new(
+        entrypoint_path,
+        mode,
+        materialized.binary_path,
+        total_start.elapsed(),
+        stages,
+        frontend_diagnostics,
+        false,
+    ))
 }
 
 pub(crate) fn build_cached_project_binary(
@@ -200,42 +268,79 @@ fn build_cached_rooted_entrypoint_binary(
     cache_scope: &Path,
     cache_namespace: &str,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
-    plan.emit_frontend_diagnostics();
-    let generated_project = plan.into_generated_binary_project()?;
-    let cache_entry = materialize_cached_binary_project(
+    let total_start = Instant::now();
+    let mut stages = Vec::new();
+    let (plan, mode, entrypoint_path) =
+        RootedEntrypointPlan::from_entrypoint_with_stages(entrypoint, &mut stages)?;
+    let frontend_diagnostics = plan.frontend_diagnostics();
+    let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
+        plan.into_generated_binary_project()
+    })?;
+    let (cache_entry, native_report) = materialize_cached_binary_project_with_report(
         cache_namespace,
         cache_scope,
         "sifr_output",
         generated_project,
     )?;
+    if let Some(native_report) = native_report {
+        stages.push(BuildStageReport::new(
+            "Materializing Cargo project",
+            native_report.materialize_elapsed,
+        ));
+        stages.push(BuildStageReport::new(
+            "Building release binary",
+            native_report.cargo_elapsed,
+        ));
+    }
+    let binary_path = cached_binary_path(cache_entry.workspace_root(), "sifr_output");
+    let build_report = BuildReport::new(
+        entrypoint_path,
+        mode,
+        binary_path.clone(),
+        total_start.elapsed(),
+        stages,
+        frontend_diagnostics,
+        cache_entry.report().cache_hit(),
+    );
     Ok(CachedBinaryArtifact {
-        binary_path: cached_binary_path(cache_entry.workspace_root(), "sifr_output"),
-        cache_report: cache_entry.report().clone(),
+        binary_path,
+        build_report,
     })
 }
 
 impl RootedEntrypointPlan {
     fn from_entrypoint(entrypoint: &RootedEntrypoint<'_>) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let stdlib = compile_stdlib()?;
+        let mut stages = Vec::new();
+        Self::from_entrypoint_with_stages(entrypoint, &mut stages)
+            .map(|(plan, _mode, _entrypoint_path)| plan)
+    }
+
+    fn from_entrypoint_with_stages(
+        entrypoint: &RootedEntrypoint<'_>,
+        stages: &mut Vec<BuildStageReport>,
+    ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
+        let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
         let (shape, project_lowering) = match entrypoint {
             RootedEntrypoint::SingleFile {
                 source,
                 display_path,
                 lowering_options,
             } => {
-                let parsed_suite = parse_source(source)?;
-                let project_lowering = compile_single_frontend_module_with_source_and_options(
-                    "main",
-                    &parsed_suite,
-                    FrontendSourceContext {
-                        display_path,
-                        source,
-                    },
-                    stdlib.defs.clone(),
-                    FrontendDiagnosticStyle::Bare,
-                    *lowering_options,
-                )?;
+                let parsed_suite =
+                    measure_stage(stages, "Parsing source (1 module)", || parse_source(source))?;
+                let project_lowering = measure_stage(stages, "Analyzing 1 module", || {
+                    compile_single_frontend_module_with_source_and_options(
+                        "main",
+                        &parsed_suite,
+                        FrontendSourceContext {
+                            display_path,
+                            source,
+                        },
+                        stdlib.defs.clone(),
+                        FrontendDiagnosticStyle::Bare,
+                        *lowering_options,
+                    )
+                })?;
                 (RootedEntrypointShape::SingleFile, project_lowering)
             }
             RootedEntrypoint::Project { main_file } => {
@@ -256,6 +361,7 @@ impl RootedEntrypointPlan {
                     }
                     None => ModuleResolver::entry_parent(project_dir),
                 };
+                let parse_start = Instant::now();
                 let mut parsed_modules = parse_import_closure_source_modules(
                     &resolver,
                     &root_modules,
@@ -266,11 +372,19 @@ impl RootedEntrypointPlan {
                         parsed_modules.insert("main".to_string(), entry_module);
                     }
                 }
+                let module_count = parsed_modules.len();
+                stages.push(BuildStageReport::new(
+                    import_closure_label(module_count),
+                    parse_start.elapsed(),
+                ));
                 let project_lowering =
-                    collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())?;
+                    measure_stage(stages, module_analysis_label(module_count), || {
+                        collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())
+                    })?;
                 (RootedEntrypointShape::Project, project_lowering)
             }
             RootedEntrypoint::PackageProject { entrypoint } => {
+                let parse_start = Instant::now();
                 let (entry_module_name, mut parsed_modules) =
                     parse_package_import_closure_source_modules(
                         &entrypoint.graph,
@@ -284,17 +398,30 @@ impl RootedEntrypointPlan {
                         parsed_modules.insert("main".to_string(), entry_module);
                     }
                 }
+                let module_count = parsed_modules.len();
+                stages.push(BuildStageReport::new(
+                    import_closure_label(module_count),
+                    parse_start.elapsed(),
+                ));
                 let project_lowering =
-                    collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())?;
+                    measure_stage(stages, module_analysis_label(module_count), || {
+                        collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())
+                    })?;
                 (RootedEntrypointShape::Project, project_lowering)
             }
         };
 
-        Ok(Self {
-            shape,
-            stdlib,
-            project_lowering,
-        })
+        let mode = entrypoint.build_mode();
+        let entrypoint_path = entrypoint.display_path();
+        Ok((
+            Self {
+                shape,
+                stdlib,
+                project_lowering,
+            },
+            mode,
+            entrypoint_path,
+        ))
     }
 
     pub(crate) fn emit_frontend_diagnostics(&self) {
@@ -584,7 +711,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
         let first =
             build_cached_project_binary(&main_file).expect("first cached build should succeed");
         assert!(first.binary_path().exists());
-        assert!(!first.cache_report().cache_hit());
+        assert!(!first.build_report().cache_hit());
 
         let first_output = std::process::Command::new(first.binary_path())
             .output()
@@ -594,7 +721,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
 
         let second =
             build_cached_project_binary(&main_file).expect("second cached build should succeed");
-        assert!(second.cache_report().cache_hit());
+        assert!(second.build_report().cache_hit());
         assert_eq!(first.binary_path(), second.binary_path());
 
         let second_output = std::process::Command::new(second.binary_path())
@@ -621,15 +748,14 @@ def helper() -> bigint:\n    return bigint(1)\n",
 
         let first =
             build_cached_project_binary(&main_file).expect("first cached build should succeed");
-        assert!(!first.cache_report().cache_hit());
+        assert!(!first.build_report().cache_hit());
 
         std::fs::write(&helper, "def value() -> int:\n    return 22\n")
             .expect("helper should be updated");
         let second =
             build_cached_project_binary(&main_file).expect("second cached build should succeed");
-        assert!(!second.cache_report().cache_hit());
+        assert!(!second.build_report().cache_hit());
         assert_ne!(first.binary_path(), second.binary_path());
-        assert_ne!(first.cache_report().key(), second.cache_report().key());
 
         let output = std::process::Command::new(second.binary_path())
             .output()

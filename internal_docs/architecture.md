@@ -354,6 +354,12 @@ large-file check and a representative project check.
 - User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup, then searches the entry parent first and configured workspace source roots second. Dotted module IDs such as `helpers.nodes` map to `helpers/nodes.sifr`.
 - Generated Rust preserves canonical dotted module IDs through HIR/codegen and materializes them as nested Rust files, for example `helpers.nodes` -> `src/helpers/nodes.rs` plus `src/helpers/mod.rs`.
 - Both shapes materialize through the same generated-binary-project path and the same Cargo manifest generation helper.
+- Native binary builds return a `BuildReport` at the driver boundary. The
+  report records entrypoint path, compilation mode, target profile, binary
+  path, optional binary size, total elapsed time, cache-hit status where
+  applicable, and measured stage timings for stdlib loading, parsing, semantic
+  analysis, Rust project generation, Cargo project materialization, and release
+  native Cargo build.
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
 - Workspace design details and deferred package-management semantics are tracked in [`sifr_workspace_design.md`](./sifr_workspace_design.md).
 
@@ -380,7 +386,10 @@ Phase ad-hoc test strategy milestone 4 moved `run`/`test` away from invocation-s
 - cache misses build inside an isolated staging directory and promote atomically into the stable cache path only after `cargo build --release` succeeds
 - cache hits execute the previously built binary directly without paying the generated-project rebuild cost again
 - `sifr test` uses the same cache discipline for generated test-runner Cargo projects: unchanged input reuses the prior workspace and its `target/` artifacts, while still running `cargo test` on every invocation
-- both paths emit explicit cache-hit/miss status lines so validation logs surface reuse and invalidation behavior
+- `sifr run` emits human build progress only for cache misses, omits the final
+  `Binary:` footer because program output follows, and emits no build progress
+  for cache hits or `--quiet`. `sifr test` keeps explicit cache reporting in
+  validation logs so reuse and invalidation remain visible there.
 
 ---
 

@@ -1,7 +1,7 @@
 use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
 use super::diagnostic_rendering_and_run::{
-    cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run, cmd_tree, cmd_vendor,
-    render_diagnostics,
+    cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run_with_options, cmd_tree, cmd_vendor,
+    render_diagnostics, RunCommandOptions,
 };
 use super::formatter_cli::FmtArgs;
 use super::lint_cli::{cmd_lint, LintArgs};
@@ -21,7 +21,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::process;
 
-const SIFR_BUILD_VERSION: &str = env!("SIFR_BUILD_VERSION");
+pub(super) const SIFR_BUILD_VERSION: &str = env!("SIFR_BUILD_VERSION");
 
 #[derive(Parser)]
 #[command(
@@ -59,6 +59,9 @@ pub(crate) enum Commands {
         /// Output directory (default: current directory)
         #[arg(short, long, default_value = ".")]
         output: PathBuf,
+        /// Suppress build phase details
+        #[arg(long)]
+        quiet: bool,
     },
     /// Compile and run a .sifr file
     Run {
@@ -82,6 +85,9 @@ pub(crate) enum Commands {
         /// Combine --locked and --offline
         #[arg(long)]
         frozen: bool,
+        /// Suppress build phase details
+        #[arg(long)]
+        quiet: bool,
         /// Arguments passed to the selected app after --
         #[arg(last = true)]
         args: Vec<String>,
@@ -364,7 +370,11 @@ fn run_cli(cli: Cli) -> i32 {
         return EXIT_USAGE_OR_CONFIG;
     };
     match command {
-        Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
+        Commands::Build {
+            file,
+            output,
+            quiet,
+        } => cmd_build(&file, &output, quiet, diagnostic_format),
         Commands::Run {
             target,
             packages,
@@ -373,16 +383,21 @@ fn run_cli(cli: Cli) -> i32 {
             locked,
             offline,
             frozen,
+            quiet,
             args,
-        } => cmd_run(
-            target.as_deref(),
-            bin.as_deref(),
-            script.as_deref(),
-            &packages,
-            &args,
-            lock_mode_from_flags(locked, offline, frozen),
-            diagnostic_format,
-        ),
+        } => {
+            let options = RunCommandOptions {
+                target: target.as_deref(),
+                bin: bin.as_deref(),
+                script: script.as_deref(),
+                packages: &packages,
+                app_args: &args,
+                lock_mode: lock_mode_from_flags(locked, offline, frozen),
+                quiet,
+                diagnostic_format,
+            };
+            cmd_run_with_options(&options)
+        }
         Commands::Fetch {
             locked,
             offline,

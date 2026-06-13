@@ -57,8 +57,7 @@ pub(crate) struct ArtifactCacheReport {
 }
 
 impl ArtifactCacheReport {
-    #[cfg(test)]
-    pub(crate) fn cache_hit(&self) -> bool {
+    pub(crate) const fn cache_hit(&self) -> bool {
         self.cache_hit
     }
 

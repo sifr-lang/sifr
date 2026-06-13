@@ -249,7 +249,9 @@ fn test_cached_project_invalidates_when_workspace_helper_changes() {
         .expect("helper should be updated");
     let second = build_cached_project(&main_file).expect("second workspace build should succeed");
 
-    assert_ne!(first.cache_report().key(), second.cache_report().key());
+    assert!(!first.build_report().cache_hit());
+    assert!(!second.build_report().cache_hit());
+    assert_ne!(first.binary_path(), second.binary_path());
 
     let _ = std::fs::remove_dir_all(dir);
 }

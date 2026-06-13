@@ -11,9 +11,9 @@ use super::formatter_cli::FmtArgs;
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
-    build, build_cached_project, build_cached_single_file, build_project, check_package_project,
-    check_project, check_single_file, compile, emit_project, run_tests, CachedBinaryArtifact,
-    CompileResult, PackageEntrypoint,
+    build_cached_project, build_cached_single_file, build_project_report, build_single_file_report,
+    check_package_project, check_project, check_single_file, compile, emit_project, run_tests,
+    BuildReport, CachedBinaryArtifact, CompileResult, PackageEntrypoint,
 };
 use sifr_format::config::{effective_format_config, EffectiveFormatConfig, FormatConfigOverrides};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
@@ -333,15 +333,23 @@ pub(super) fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 
     }
 }
 
+#[cfg(test)]
 pub(super) fn compile_entrypoint(
     file: &Path,
     output: &Path,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+    compile_entrypoint_report(file, output).map(|report| report.binary_path().to_path_buf())
+}
+
+pub(super) fn compile_entrypoint_report(
+    file: &Path,
+    output: &Path,
+) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
     match resolve_compilation_mode(file)? {
-        CompilationMode::Project => build_project(file, output),
+        CompilationMode::Project => build_project_report(file, output),
         CompilationMode::SingleFile => {
             let source = read_source(file);
-            build(&source, output)
+            build_single_file_report(&source, file, output)
         }
     }
 }

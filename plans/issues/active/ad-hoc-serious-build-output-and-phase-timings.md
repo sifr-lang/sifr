@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Serious Build Output and Phase Timings
 
-Status: planning
+Status: implementation complete; PR open and locally merge-gate validated; pending merge
 Owner: unassigned
 Context: CLI polish phase for `sifr build` output, timing visibility, and compiler progress reporting
 
@@ -99,7 +99,8 @@ For default output, do not claim detailed sub-phases unless they are separately 
 - Binary size appears in default human output only when readable. A size read failure must not fail or warn after a successful build. `--quiet` omits binary size.
 - In `--diagnostic-format=json` and `--diagnostic-format=compact`, successful builds emit no human progress lines.
 - `sifr run` prints build progress only on cache miss, suppresses the final `Binary:` line because program output follows, and prints no build progress on cache hit. `sifr run --quiet` suppresses build progress even on cache miss.
-- Cache hits in `sifr build` print a concise cached success form: `Finished release build in <duration> (cached)` plus `Binary: <path>`. The duration is the current command's cache lookup and reporting time, not a stored historical compile time.
+- `sifr build` continues to materialize into the caller-provided output
+  directory and does not use the generated artifact cache in this phase.
 - Sifr passes `--quiet` to Cargo for native builds so Cargo progress does not collide with Sifr progress. Cargo/rustc errors remain visible.
 
 ## Scope
@@ -131,7 +132,7 @@ This phase does not own:
 
 - Add tests that capture the intended default success output shape.
 - Add tests for `--quiet` help text.
-- Add accepted fixture baselines for default success, quiet success, JSON-format success with no progress text, compact-format success with no progress text, and cache-hit success.
+- Add accepted fixture baselines for default success, quiet success, JSON-format success with no progress text, compact-format success with no progress text, and `sifr run` cache-hit success.
 - Add the scripting-stability statement to user-facing CLI docs.
 - Record the `sifr run` cache-hit and cache-miss output contract before touching shared build paths.
 
@@ -261,3 +262,60 @@ scripts/run_all_tests.sh
 - Claude Opus planning review pass 1: requested measured-boundary wording, explicit machine-format suppression, `sifr run` and cache-hit decisions, verbose-only best-effort binary size, Cargo `--quiet` policy, and unit-style cleanup.
 - Claude Opus planning review pass 2: implementation-ready; only minor wording polish requested for default alignment, verbose Cargo quiet policy, and cached duration semantics.
 - User follow-up on 2026-06-14: default human output should be the phase-aware summary; `--quiet` is the terse success mode.
+- Claude Opus implementation review pass 1: shippable with recommended fixes for
+  the cached `sifr build` doc contradiction, stale LeetCode benchmark parser,
+  and cached-artifact status cleanup; suggested project-mode and
+  warning-success machine-format coverage.
+- Claude Opus implementation review pass 2: all pass-1 recommendations and
+  testing gaps addressed; no further review rounds needed before PR validation.
+
+## Implementation Log
+
+- Implemented `BuildReport` / `BuildStageReport` in `sifr_driver` with measured
+  timings for stdlib loading, parsing/import closure, semantic analysis, Rust
+  project generation, Cargo project materialization, and release native Cargo
+  build.
+- Split generated Cargo project materialization from `cargo build --release`
+  execution and pass Cargo `--quiet` for native builds.
+- Added `sifr build --quiet` and `sifr run --quiet`.
+- Replaced the legacy `compiled successfully: ...` line with default human
+  phase output and quiet two-line success output.
+- Suppressed human success progress for `--diagnostic-format json` and
+  `--diagnostic-format compact`.
+- Updated `sifr run` output so cache misses show build progress without a
+  `Binary:` footer, cache hits are quiet, and the internal artifact-cache status
+  line is no longer printed to users.
+- Deferred cached `sifr build` output because `sifr build` still writes to the
+  caller-provided output directory and does not use the hidden generated
+  artifact cache; `sifr run` owns cache-hit reporting in this phase.
+- Added process-level tests covering default/quiet/machine-format build output,
+  run cache miss/hit behavior, run quiet behavior, frontend failure,
+  materialization failure, Cargo invocation failure, project-mode module counts,
+  and compact-format warning success without progress text.
+- Removed the stale LeetCode benchmark parser for the retired
+  `compiled successfully:` line in submodule PR
+  https://github.com/sifr-lang/leetcode/pull/39.
+- Updated TypeScript-Go M1 direct-read/probe inventory line references after
+  touched-file line drift; the M1 guardrail passes again.
+- Parent implementation PR: https://github.com/sifr-lang/sifr/pull/2555.
+
+Focused validation run so far:
+
+```bash
+cargo test -p sifr build_output --no-fail-fast
+cargo test -p sifr run_output --no-fail-fast
+cargo test -p sifr failed_ --no-fail-fast
+cargo test -p sifr --test build_output_contracts --no-fail-fast
+cargo test -p sifr_driver build:: --no-fail-fast
+cargo test -p sifr_driver test_cached_project_invalidates_when_workspace_helper_changes --no-fail-fast
+cargo test -p sifr -- --skip test_e2e_pass
+python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py
+cargo fmt --check
+cargo clippy --workspace -- -D warnings
+scripts/run_all_tests.sh --profile create-pr
+```
+
+`scripts/run_all_tests.sh --profile create-pr` passed locally on 2026-06-14.
+`scripts/run_all_tests.sh` passed locally on 2026-06-14 after a targeted
+performance-budget rerun confirmed the initial representative-budget failure
+was transient benchmark noise.
