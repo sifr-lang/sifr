@@ -26,4 +26,4 @@
 
 | Surface | State | Rationale |
 | --- | --- | --- |
-| CPython `bytes` / `bytearray` object model families from `Lib/test/test_bytes.py` | `unsupported` | Historical wave-`a2` status: first-class `bytes` had not landed yet. As of `wave_psp_bytes_2` and `wave_psp_bytes_3`, immutable first-class `bytes` is shipped and downstream binary contracts use `bytes`; remaining waivers are now narrowed to `bytearray`/`memoryview`/buffer-protocol families and tracked in `verification/stdlib/wave_psp_bytes_3_cpython_traceability.md`. |
+| CPython `bytes` / `bytearray` object model families from `Lib/test/test_bytes.py` | `unsupported` | Historical wave-`a2` status: first-class `bytes` had not landed yet. As of `wave_psp_bytes_2` and `wave_psp_bytes_3`, immutable first-class `bytes` is shipped and downstream binary contracts use `bytes`; remaining waivers are now narrowed to `bytearray`/`memoryview`/buffer-protocol families and tracked in `verification/areas/stdlib_parity/reports/wave_psp_bytes_3_cpython_traceability.md`. |

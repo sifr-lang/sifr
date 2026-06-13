@@ -16,7 +16,7 @@ Scope: successor-phase and FFI-readiness governance closeout after raw-byte back
 | --- | --- | --- | --- |
 | `test_io` binary file-handle and stream families | successor runtime/file-object planning now assumes canonical raw-byte-backed `bytes` and forbids reintroducing widened/list stand-ins on typed boundaries | `adapted` (governance closed) | `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`<br>`issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md` |
 | `test_hashlib` binary payload and digest families | successor RNG/crypto planning now assumes bytes-native paths consume typed raw-byte-backed `bytes` directly with no per-element typed-input revalidation | `adapted` (governance closed) | `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`<br>`issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md` |
-| `test_base64` binary payload families | successor governance keeps bytes as canonical binary carrier and preserves explicit conversion-boundary checks only | `adapted` | `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`<br>`verification/stdlib/wave_psp_bytes_4_cpython_traceability.md` |
+| `test_base64` binary payload families | successor governance keeps bytes as canonical binary carrier and preserves explicit conversion-boundary checks only | `adapted` | `verification/areas/stdlib_parity/reports/milestone_psp_7_parity_governance_inventory.md`<br>`verification/areas/stdlib_parity/reports/wave_psp_bytes_4_cpython_traceability.md` |
 | `test_bytes` ownership/model and interoperability-adjacent families | interoperability planning now explicitly anchors on owned immutable read-only `bytes` plus deferred mutable/view semantics | `adapted` (ownership contract locked) | `internal_docs/phases/43_interoperability.md`<br>`issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md` |
 
 ## Classified waivers (real remaining binary set after wave 5)
@@ -38,4 +38,4 @@ Scope: successor-phase and FFI-readiness governance closeout after raw-byte back
 - interoperability/FFI-readiness baseline:
   - `internal_docs/phases/43_interoperability.md`
 - canonical milestone parity/waiver ledger:
-  - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+  - `verification/areas/stdlib_parity/reports/milestone_psp_7_parity_governance_inventory.md`

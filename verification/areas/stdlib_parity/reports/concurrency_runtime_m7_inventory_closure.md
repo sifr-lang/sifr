@@ -6,7 +6,7 @@ post-merge phase-closure ledger.
 
 This audit closed the M7 validation-lane and inventory gate before final phase
 completion. Final external review and the full merge-gate validation are closed
-in `verification/stdlib/concurrency_runtime_m7_closeout_traceability.md` and
+in `verification/areas/stdlib_parity/reports/concurrency_runtime_m7_closeout_traceability.md` and
 the execution ledger.
 
 ## Validation Lane Audit
@@ -27,7 +27,7 @@ include representative coverage for each accepted concurrency/runtime family.
 
 ## Inventory Audit
 
-`scripts/generate_concurrency_runtime_inventory.py` now regenerates the
+`verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py` now regenerates the
 inventory artifacts with `milestone_concurrency_runtime_7-inventory-audited`
 status. The regenerated inventory records:
 

@@ -185,6 +185,12 @@ run_core_guardrails() {
     python -m sifr_verify areas run \
       --area package_management \
       --suite guardrails
+
+  echo "Running stdlib parity inventory guardrails"
+  uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify areas run \
+      --area stdlib_parity \
+      --suite complexity-resource
 }
 
 run_diagnostic_contracts() {

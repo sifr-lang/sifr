@@ -329,7 +329,7 @@
       "demos/text_i18n/main.sifr"
     ],
     "dependency_snapshots": [
-      "verification/stdlib/text_i18n_dependency_snapshots.json",
+      "verification/areas/stdlib_parity/data/text_i18n_dependency_snapshots.json",
       "crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_phase_combinations"
     ],
     "generated_code_quality": [
@@ -339,7 +339,7 @@
       "verification/validation_lanes/create_pr_e2e_manifest.json"
     ],
     "traceability": [
-      "verification/stdlib/text_i18n_m5_traceability.md"
+      "verification/areas/stdlib_parity/reports/text_i18n_m5_traceability.md"
     ]
   },
   "no_global_state_policy": {

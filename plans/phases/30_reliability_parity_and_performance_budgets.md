@@ -116,14 +116,14 @@ In particular:
 
 ### Milestone Evidence Artifacts
 - `milestone_30_1` parity governance matrix:
-  - `verification/stdlib/phase30_parity_matrix.md`
+  - `verification/areas/stdlib_parity/reports/phase30_parity_matrix.md`
 - `milestone_30_2` complexity/resource matrix and inventory:
-  - `verification/stdlib/phase30_complexity_resource_matrix.md`
-  - `verification/stdlib/phase30_complexity_resource_inventory.json`
-  - `scripts/check_phase30_complexity_resource_inventory.py`
+  - `verification/areas/stdlib_parity/reports/phase30_complexity_resource_matrix.md`
+  - `verification/areas/stdlib_parity/data/phase30_complexity_resource_inventory.json`
+  - `verification/areas/stdlib_parity/tools/check_complexity_resource_inventory.py`
 - `milestone_30_3` waiver and ownership discipline:
-  - `verification/stdlib/phase30_parity_matrix.md`
-  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+  - `verification/areas/stdlib_parity/reports/phase30_parity_matrix.md`
+  - `verification/areas/stdlib_parity/data/phase30_complexity_resource_inventory.json`
 - `milestone_30_4` parity test corpus structure and maintainability:
   - `audits/stdlib/cpython_parity_fixture_format.md`
   - `crates/sifr/tests/e2e/pass/`

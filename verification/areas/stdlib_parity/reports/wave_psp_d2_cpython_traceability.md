@@ -6,8 +6,9 @@ The OS, environment, sys, logging, platform, time, and timeit anchors from this 
 
 Current subprocess/process traceability lives in:
 
-- `verification/stdlib/concurrency_runtime_substrate_inventory.*`
-- `verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md`
+- `verification/areas/stdlib_parity/data/concurrency_runtime_substrate_inventory.json`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_substrate_inventory.md`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_cpython_evidence_matrix.md`
 - `verification/areas/runtime_platform/golden/legacy_sifr_runtime_surfaces_removed.sifr`
 
 Future production process APIs are owned by `milestone_concurrency_runtime_4` under the native `sifr.process` namespace.

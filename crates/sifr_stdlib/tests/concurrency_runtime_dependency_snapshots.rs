@@ -3,7 +3,7 @@ use sifr_stdlib::{feature_for_codegen_requirement, generated_cargo_dependencies}
 use std::collections::HashSet;
 
 const SNAPSHOT_JSON: &str =
-    include_str!("../../../verification/stdlib/concurrency_runtime_dependency_snapshots.json");
+    include_str!("../../../verification/areas/stdlib_parity/data/concurrency_runtime_dependency_snapshots.json");
 
 fn string_array<'a>(snapshot: &'a Value, field: &str) -> Vec<&'a str> {
     snapshot

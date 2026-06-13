@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Phase 30 complexity/resource inventory coverage and waiver discipline."""
+"""Validate stdlib complexity/resource inventory coverage and waiver discipline."""
 
 from __future__ import annotations
 
@@ -55,13 +55,13 @@ ALLOWED_DELTA_BANDS = {"within_2x", "within_5x", "within_10x", "waived"}
 
 
 def fail(message: str) -> None:
-    print(f"phase30 complexity inventory: FAIL - {message}", file=sys.stderr)
+    print(f"stdlib complexity inventory: FAIL - {message}", file=sys.stderr)
     sys.exit(1)
 
 
 def main() -> None:
-    repo_root = Path(__file__).resolve().parent.parent
-    inventory_path = repo_root / "verification/stdlib/phase30_complexity_resource_inventory.json"
+    area_root = Path(__file__).resolve().parents[1]
+    inventory_path = area_root / "data/phase30_complexity_resource_inventory.json"
     if not inventory_path.is_file():
         fail(f"missing inventory file: {inventory_path}")
 
@@ -126,7 +126,7 @@ def main() -> None:
         fail(f"missing module entries: {missing_modules}")
 
     print(
-        "phase30 complexity inventory: PASS "
+        "stdlib complexity inventory: PASS "
         f"(modules={len(entries)}, waived_constant_factor={waived_count})"
     )
 
