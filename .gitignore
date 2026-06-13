@@ -24,7 +24,8 @@ build/
 !crates/sifr_driver/src/build/
 !crates/sifr_driver/src/build/**
 **/target/
-Cargo.lock
+**/Cargo.lock
+!/Cargo.lock
 /sifr_output/
 /tmp/
 tmp_*

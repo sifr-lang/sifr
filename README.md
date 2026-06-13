@@ -147,6 +147,10 @@ cd sifr
 cargo build --release
 ```
 
+The root `Cargo.lock` is tracked intentionally. Source builds, local
+validation, and CI use the committed dependency graph; lockfile diffs are
+reviewable dependency changes.
+
 ### Restore optional sub-repositories
 
 Some large audit corpora live in separate Git repositories and are cloned back
