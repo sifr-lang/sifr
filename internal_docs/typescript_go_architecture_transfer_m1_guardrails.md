@@ -155,7 +155,7 @@ requests capture snapshots.
 
 M12 updated the protocol-level LSP performance gate from aggregate-only coverage
 to per-request editor latency budgets. `lsp.request_families` remains in
-`verification/performance/manifest.json` with budget id
+`verification/areas/performance/data/benchmark_manifest.json` with budget id
 `perf.lsp.request_families`, but its evidence category is now aggregate smoke
 coverage only. Enforced request-family budgets cover cold start, document
 diagnostics, workspace diagnostics, completion, hover, signature help,

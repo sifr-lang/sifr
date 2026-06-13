@@ -7,7 +7,7 @@
       "group": "check-single-file",
       "kind": "command",
       "mode": "check",
-      "source_path": "verification/performance/does-not-exist.sifr",
+      "source_path": "verification/areas/performance/does-not-exist.sifr",
       "warmups": 1,
       "measured": 5,
       "timeout_ms": 60000,

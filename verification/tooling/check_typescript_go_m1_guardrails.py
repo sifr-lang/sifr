@@ -37,7 +37,7 @@ EDITOR_QUERY_CORPUS = REPO_ROOT / "verification" / "tooling" / "editor_query_cor
 DIAGNOSTIC_CANONICALIZATION = (
     REPO_ROOT / "verification" / "tooling" / "check_diagnostic_source_canonicalization_contract.py"
 )
-PERF_MANIFEST = REPO_ROOT / "verification" / "performance" / "manifest.json"
+PERF_MANIFEST = REPO_ROOT / "verification" / "areas" / "performance" / "data" / "benchmark_manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
 DIRECT_FS_PATTERN = re.compile(
     r"(?:std::fs::|fs::)(?:read_to_string|read_dir)|\.is_file\(\)|\.is_dir\(\)"

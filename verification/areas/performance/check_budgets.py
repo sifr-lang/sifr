@@ -12,12 +12,13 @@ from pathlib import Path
 from typing import Any
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-PERF_ROOT = REPO_ROOT / "verification" / "performance"
-DEFAULT_MANIFEST = PERF_ROOT / "manifest.json"
-DEFAULT_BASELINES = PERF_ROOT / "baselines.json"
-DEFAULT_BUDGETS = PERF_ROOT / "budgets.json"
-DEFAULT_WAIVERS = PERF_ROOT / "waivers.json"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
+PERF_DATA = PERF_ROOT / "data"
+DEFAULT_MANIFEST = PERF_DATA / "benchmark_manifest.json"
+DEFAULT_BASELINES = PERF_DATA / "baselines.json"
+DEFAULT_BUDGETS = PERF_DATA / "budgets.json"
+DEFAULT_WAIVERS = PERF_DATA / "waivers.json"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
 ALLOWED_WAIVER_OVERRIDE_KEYS = {"median_ms", "p95_ms", "peak_rss_bytes", "cache_hits"}

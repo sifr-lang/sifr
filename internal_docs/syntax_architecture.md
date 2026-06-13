@@ -24,7 +24,7 @@ status: active
 
 ## Fork Update Contract
 
-The current Ruff fork revision is recorded in `verification/performance/ruff_fork_revalidation.json`. Token fixtures in `verification/performance/sifr_syntax_token_fixtures/` record the same revision. `verification/performance/check_ruff_fork_update_contract.py` fails when the submodule revision changes without fixture revalidation evidence.
+The current Ruff fork revision is recorded in `verification/areas/performance/ruff_fork_revalidation.json`. Token fixtures in `verification/areas/performance/sifr_syntax_token_fixtures/` record the same revision. `verification/areas/performance/check_ruff_fork_update_contract.py` fails when the submodule revision changes without fixture revalidation evidence.
 
 ## Migration State
 

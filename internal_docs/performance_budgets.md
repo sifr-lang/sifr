@@ -1,13 +1,14 @@
 # Performance Budgets
 
-Phase 35 performance policy is local-first and versioned under `verification/performance/`.
+Phase 35 performance policy is local-first and versioned under `verification/areas/performance/`.
 
 ## Files
 
-- `manifest.json` defines the benchmark corpus and stable budget ids.
-- `baselines.json` records the approved m35.1 baseline run for every manifest case.
-- `budgets.json` records thresholds derived from the checked-in baselines.
-- `waivers.json` records active temporary performance waivers.
+- `manifest.json` defines the verification area suites.
+- `data/benchmark_manifest.json` defines the benchmark corpus and stable budget ids.
+- `data/baselines.json` records the approved m35.1 baseline run for every manifest case.
+- `data/budgets.json` records thresholds derived from the checked-in baselines.
+- `data/waivers.json` records active temporary performance waivers.
 - `run_benchmarks.py` executes benchmarks and emits evidence under `target/performance/evidence/`.
 - `check_budgets.py` compares benchmark results against budgets and validates waivers.
 
@@ -16,21 +17,21 @@ Phase 35 performance policy is local-first and versioned under `verification/per
 Run the schema and negative-seed checks:
 
 ```bash
-python3 verification/performance/run_benchmarks.py --validate-only
-python3 verification/performance/run_benchmarks.py --self-test
-python3 verification/performance/check_budgets.py --self-test
+python3 verification/areas/performance/run_benchmarks.py --validate-only
+python3 verification/areas/performance/run_benchmarks.py --self-test
+python3 verification/areas/performance/check_budgets.py --self-test
 ```
 
 Run a fast representative benchmark smoke:
 
 ```bash
-python3 verification/performance/run_benchmarks.py --sample-scale smoke
+python3 verification/areas/performance/run_benchmarks.py --sample-scale smoke
 ```
 
 Run the budget gate against checked-in baselines:
 
 ```bash
-python3 verification/performance/check_budgets.py
+python3 verification/areas/performance/check_budgets.py
 ```
 
 `scripts/run_all_tests.sh --profile create-pr` runs manifest validation, benchmark
@@ -38,12 +39,9 @@ negative seeds, budget/waiver negative seeds, the checked-in baseline budget
 gate, and a minimal frontend-query smoke. `--profile merge`, `nightly`, and
 `release` run the same schema and negative checks, execute a reviewed
 representative subset with the manifest sample counts into
-`target/performance/<profile>.budget.latest.json`, and run `check_budgets.py
---allow-subset` against that result file. If that measured subset misses a
-budget, the lane reruns the same subset up to four more times with unchanged
-thresholds into `target/performance/<profile>.budget.retry-<attempt>.latest.json`;
-one measured attempt must pass. This keeps performance budgets hard while
-avoiding one noisy local host window from deciding the merge gate. The subset
+`target/performance/representative.budget.latest.json` for `merge` and
+`target/performance/full.budget.latest.json` for `nightly` and `release`, and
+run `check_budgets.py --allow-subset` against that result file. The subset
 covers single-file check, project check, single-file build, project build,
 incremental cache behavior, interactive diagnostics, and Phase 27
 diagnostic/exit-code non-regression.
@@ -52,8 +50,8 @@ Full-corpus benchmark execution and baseline refresh remain explicit:
 Refresh baselines intentionally after review:
 
 ```bash
-python3 verification/performance/run_benchmarks.py --capture-baseline
-python3 verification/performance/check_budgets.py
+python3 verification/areas/performance/run_benchmarks.py --capture-baseline
+python3 verification/areas/performance/check_budgets.py
 ```
 
 ## Threshold Rules
@@ -78,7 +76,7 @@ Frontend-query and local edit-loop benchmarks use stricter latency thresholds:
   `perf.lsp.*` budget ids. These cases execute `lsp_query_bench.py` through
   `sifr lsp --stdio` and are validated by the same manifest/budget gate. Cold
   start, workspace diagnostics, references, and rename run against
-  `verification/performance/query_projects/lsp_workspace/`, a multi-file
+  `verification/areas/performance/query_projects/lsp_workspace/`, a multi-file
   workspace fixture, so workspace-shaped protocol costs are not measured only
   on the single-file smoke fixture.
 

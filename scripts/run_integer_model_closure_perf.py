@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PERF_FIXTURE = REPO_ROOT / "verification/perf/sifr_int_loop.sifr"
+PERF_FIXTURE = REPO_ROOT / "verification/areas/performance/fixtures/sifr_int_loop.sifr"
 PROBE_DIR = REPO_ROOT / "target/integer_model_closure_perf_probe"
 
 

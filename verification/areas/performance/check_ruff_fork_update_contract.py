@@ -9,9 +9,10 @@ import sys
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-CONTRACT = REPO_ROOT / "verification/performance/ruff_fork_revalidation.json"
-FIXTURE_DIR = REPO_ROOT / "verification/performance/sifr_syntax_token_fixtures"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
+CONTRACT = PERF_ROOT / "ruff_fork_revalidation.json"
+FIXTURE_DIR = PERF_ROOT / "sifr_syntax_token_fixtures"
 
 
 def current_ruff_revision() -> str:

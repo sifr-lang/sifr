@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "name": "performance",
+  "owner": "compiler/performance",
+  "description": "Performance budgets, benchmark corpus, syntax/frontend guardrails, and budget policy checks.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "long-running"
+  ],
+  "timeout_seconds": 1800,
+  "suites": [
+    {
+      "name": "frontend-syntax-guardrails",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "ruff-fork-update-contract",
+          "entry": "verification/areas/performance/check_ruff_fork_update_contract.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "split-brain-guardrail",
+          "entry": "verification/areas/performance/check_split_brain_guardrail.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "split-brain-guardrail-self-test",
+          "entry": "verification/areas/performance/check_split_brain_guardrail.py",
+          "command": "python-script-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "frontend-cache-contract",
+          "entry": "verification/areas/performance/check_frontend_cache_contract.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "contracts",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "benchmark-manifest",
+          "entry": "verification/areas/performance/data/benchmark_manifest.json",
+          "command": "benchmark-validate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "benchmark-runner-self-test",
+          "entry": "verification/areas/performance/run_benchmarks.py",
+          "command": "benchmark-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "budget-policy",
+          "entry": "verification/areas/performance/data/budgets.json",
+          "command": "budget-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "budget-policy-self-test",
+          "entry": "verification/areas/performance/check_budgets.py",
+          "command": "budget-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "smoke",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "smoke",
+          "entry": "verification/areas/performance/data/benchmark_manifest.json",
+          "command": "performance-profile",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "representative",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "representative",
+          "entry": "verification/areas/performance/data/benchmark_manifest.json",
+          "command": "performance-profile",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "full",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "full",
+          "entry": "verification/areas/performance/data/benchmark_manifest.json",
+          "command": "performance-profile",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

@@ -10,7 +10,8 @@ import time
 from pathlib import Path
 from typing import Callable
 
-TOOLING_ROOT = Path(__file__).resolve().parents[1] / "tooling"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+TOOLING_ROOT = REPO_ROOT / "verification" / "tooling"
 sys.path.insert(0, str(TOOLING_ROOT))
 
 from lsp_protocol import LspClient, file_uri  # noqa: E402

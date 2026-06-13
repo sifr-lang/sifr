@@ -531,7 +531,7 @@ The protocol smoke/stress harness must be modeled on the audited `ty_server/test
 - validate that all expected server messages are consumed before test completion
 - inject request cancellation, timeouts, malformed JSON-RPC, invalid ranges, stale document versions, and unsupported methods
 
-Phase 36 extends Phase 35 `verification/performance/` with protocol-level `lsp-query` benchmark cases:
+Phase 36 extends Phase 35 `verification/areas/performance/` with protocol-level `lsp-query` benchmark cases:
 
 - `lsp-cold-start`: process spawn to initialized response
 - `lsp-did-open-diagnostics`: open document to first diagnostics publication
@@ -571,7 +571,7 @@ Default interactive budgets unless Phase 35 `budgets.json` records stricter valu
 - formatting median <= 500ms for representative files
 - generated Rust preview median <= 750ms for representative selections
 
-These are phase-start defaults. Final budgets must be derived from checked-in baselines and recorded in `verification/performance/budgets.json`.
+These are phase-start defaults. Final budgets must be derived from checked-in baselines and recorded in `verification/areas/performance/data/budgets.json`.
 
 ## Milestone Sequencing
 

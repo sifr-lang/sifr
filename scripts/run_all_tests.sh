@@ -204,10 +204,10 @@ run_diagnostic_contracts() {
 
 run_frontend_syntax_guardrails() {
   echo "Running Phase 35 frontend and syntax guardrails"
-  python3 "${SCRIPT_DIR}/../verification/performance/check_ruff_fork_update_contract.py"
-  python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.py"
-  python3 "${SCRIPT_DIR}/../verification/performance/check_split_brain_guardrail.py" --self-test
-  python3 "${SCRIPT_DIR}/../verification/performance/check_frontend_cache_contract.py"
+  uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify areas run \
+      --area performance \
+      --suite frontend-syntax-guardrails
 }
 
 tooling_enabled() {
@@ -279,42 +279,17 @@ run_developer_tooling_checks() {
 run_performance_budget_checks() {
   echo "Running Performance Budget Checks"
   echo "  mode=${PERFORMANCE_BUDGET_MODE}"
-  python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --validate-only
-  python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" --self-test
-  python3 "${SCRIPT_DIR}/../verification/performance/check_budgets.py"
-  python3 "${SCRIPT_DIR}/../verification/performance/check_budgets.py" --self-test
-  run_performance_budget_subset() {
-    local perf_results="$1"
-    python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" \
-      --case check-single-file-001-arithmetic \
-      --case check-project-004-project-graph \
-      --case build-single-file-001-break-continue \
-      --case build-project-001-additional-modules \
-      --case formatter-corpus-001-project-check \
-      --case formatter-large-file-001-check \
-      --case incremental-local-loop-001-unchanged-file-update \
-      --case interactive-tooling-foundation-002-warm-diagnostics-query \
-      --case lsp-query-003-diagnostics \
-      --case phase27-non-regression-002-json-diagnostic-schema \
-      --json-out "${perf_results}"
-    python3 "${SCRIPT_DIR}/../verification/performance/check_budgets.py" \
-      --results "${perf_results}" \
-      --allow-subset
-  }
-  if [[ "${PERFORMANCE_BUDGET_MODE}" == "smoke" ]]; then
-    python3 "${SCRIPT_DIR}/../verification/performance/run_benchmarks.py" \
-      --sample-scale smoke \
-      --case formatter-corpus-001-project-check \
-      --case formatter-large-file-001-check \
-      --case incremental-local-loop-001-unchanged-file-update \
-      --case interactive-tooling-foundation-002-warm-diagnostics-query \
-      --case lsp-query-003-diagnostics
-  elif [[ "${PERFORMANCE_BUDGET_MODE}" == "representative" || "${PERFORMANCE_BUDGET_MODE}" == "full" ]]; then
-    PERF_RESULTS="target/performance/${PROFILE}.budget.latest.json"
-    run_performance_budget_subset "${PERF_RESULTS}"
-  else
-    echo "Skipping performance benchmark execution for lane ${PROFILE}"
-  fi
+  case "${PERFORMANCE_BUDGET_MODE}" in
+    smoke|representative|full)
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run \
+          --area performance \
+          --suite "${PERFORMANCE_BUDGET_MODE}"
+      ;;
+    *)
+      echo "Skipping performance benchmark execution for lane ${PROFILE}"
+      ;;
+  esac
 }
 
 run_verification_hardening_self_tests() {

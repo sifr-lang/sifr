@@ -7,7 +7,7 @@ Rules:
 - Use `perf.lsp.<query>.<scenario>` for protocol latency budgets.
 - Use `perf.lsp.document_sync.<scenario>` for didOpen/didChange/didClose cache and invalidation budgets.
 - Use `perf.lsp.transport.<scenario>` only for JSON-RPC framing or startup costs that are outside editor query semantics.
-- Every LSP budget id must map to one `verification/performance/manifest.json` case once `sifr lsp` exists.
+- Every LSP budget id must map to one `verification/areas/performance/data/benchmark_manifest.json` case once `sifr lsp` exists.
 - LSP waivers use the same owner, issue, expiry, override, and correctness-non-waiver policy as compiler benchmark waivers.
 
 Reserved ids:
@@ -43,7 +43,7 @@ Reserved ids:
 
 ## m36.5 Implemented Evidence
 
-- `perf.lsp.request_families` maps to `verification/performance/manifest.json` case
+- `perf.lsp.request_families` maps to `verification/areas/performance/data/benchmark_manifest.json` case
   `lsp-query-001-request-families` and covers document sync plus document symbols,
   workspace symbols, completion, hover, definition, references, semantic tokens,
   inlay hints, folding ranges, code actions, formatting, and pull diagnostics

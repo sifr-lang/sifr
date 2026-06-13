@@ -159,8 +159,8 @@ python3 verification/tooling/check_formatter_phase_manifests.py
 python3 verification/tooling/check_formatter_phase_manifests.py --self-test
 python3 verification/tooling/check_formatter_ast_coverage.py
 python3 verification/tooling/check_formatter_ast_coverage.py --self-test
-python3 verification/performance/run_benchmarks.py --validate-only
-python3 verification/performance/check_budgets.py
+python3 verification/areas/performance/run_benchmarks.py --validate-only
+python3 verification/areas/performance/check_budgets.py
 ```
 
 `check_formatter_ast_coverage.py` discovers Sifr-specific parser/AST extension
