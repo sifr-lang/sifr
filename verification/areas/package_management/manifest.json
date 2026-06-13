@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "name": "package_management",
+  "owner": "compiler/package-management",
+  "description": "Package graph, package fixtures, demo repository corpora, and Cargo-aligned package guardrails.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "external-corpus"
+  ],
+  "timeout_seconds": 900,
+  "suites": [
+    {
+      "name": "guardrails",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "package-manager-guardrails",
+          "entry": "verification/areas/package_management/tools/check_package_manager_guardrails.py",
+          "command": "package-manager-guardrails",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

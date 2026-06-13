@@ -181,7 +181,10 @@ run_core_guardrails() {
   python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
 
   echo "Running package-manager guardrails"
-  python3 "${SCRIPT_DIR}/check_package_manager_guardrails.py"
+  uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify areas run \
+      --area package_management \
+      --suite guardrails
 }
 
 run_diagnostic_contracts() {

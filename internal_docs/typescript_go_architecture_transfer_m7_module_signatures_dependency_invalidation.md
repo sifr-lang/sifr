@@ -69,7 +69,7 @@ M7 focused validation so far:
 - `cargo test -p sifr_lsp`
 - `cargo clippy -p sifr_frontend -p sifr_analysis -p sifr_lsp -- -D warnings`
 - `python3 scripts/check_file_size_guardrails.py`
-- `python3 scripts/check_package_manager_guardrails.py`
+- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
 - `cargo test -p sifr -- --skip test_e2e_pass`
 - `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py`
 - `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test`

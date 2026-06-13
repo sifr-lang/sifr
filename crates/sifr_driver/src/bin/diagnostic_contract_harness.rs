@@ -193,7 +193,7 @@ fn check_cycle_runtime_contract(root: &Path) -> Result<(), String> {
 }
 
 fn check_package_runtime_contract(root: &Path) -> Result<(), String> {
-    let base = root.join("crates/sifr/tests/verification/package");
+    let base = root.join("verification/areas/package_management/fixtures/package");
     for (fixture, code, required_args) in PACKAGE_FIXTURES {
         let package = base.join(fixture);
         let diagnostics = package_diagnostics(&package)?;

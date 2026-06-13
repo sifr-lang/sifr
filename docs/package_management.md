@@ -133,13 +133,13 @@ Publishing and vendoring reuse Cargo-compatible behavior. Credentials remain Car
 
 ## Demo Workflow
 
-The checked-in `verification/package_management/demo_repositories/sifr-demo-*` subrepositories use the production `src/` layout and the same commands expected for public demos.
+The checked-in `verification/areas/package_management/corpora/demo_repositories/sifr-demo-*` subrepositories use the production `src/` layout and the same commands expected for public demos.
 
 First clone and fetch:
 
 ```bash
 scripts/clone_subrepos.sh
-cd verification/package_management/demo_repositories/sifr-demo-app
+cd verification/areas/package_management/corpora/demo_repositories/sifr-demo-app
 sifr fetch --locked
 ```
 

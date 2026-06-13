@@ -38,7 +38,7 @@
     },
     {
       "name": "package-manager",
-      "entrypoint": "scripts/check_package_manager_guardrails.py",
+      "entrypoint": "verification/areas/package_management/tools/check_package_manager_guardrails.py",
       "args": [],
       "timeout_seconds": 60,
       "report": "stdout"
