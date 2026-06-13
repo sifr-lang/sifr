@@ -208,6 +208,7 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR 21 Ecosystem Compatibility Area Migration | Merged | <https://github.com/sifr-lang/sifr/pull/2537> |
 | PR N+1 Verification Facade Cutover | Merged | <https://github.com/sifr-lang/sifr/pull/2539> |
 | PR N+2 Submodule Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2541> |
+| PR N+3 Scripts Verification Sweep | Merged | <https://github.com/sifr-lang/sifr/pull/2543> |
 
 ## Verification Migration Status
 
@@ -222,9 +223,9 @@ authoritative public facade and now delegates directly to
 | Profiles | Deleted `verification/validation_lanes/manifest.json`; retained `verification/validation_lanes/*_e2e_manifest.json` until `core_language` migration | `verification/profiles/{create-pr,merge,nightly,release}.json` | `uv run --project verification --locked python -m sifr_verify profiles run --profile <profile>`; `profiles shell` remains an inspection helper | `uv run --project verification --locked python -m sifr_verify profiles check`; create-pr profile execution through the thin facade; merge profile execution through the thin facade | Merged in PR 7; execution facade cut over in PR #2539; fixture manifests not migrated |
 | `diagnostics` | Deleted diagnostics row from `verification/suites/manifest.json`; moved diagnostic sync/coverage/hygiene scripts and `crates/sifr/tests/verification/diagnostics/` fixtures | `verification/areas/diagnostics/` | `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts`; merge/nightly/release hardening dispatches diagnostics baselines through `--suite baselines` | `uv run --project verification --locked python -m sifr_verify areas check`; diagnostics contracts and baselines area execution; legacy facade `scripts/run_all_tests.sh --profile create-pr` | Merged in PR 8; diagnostics source cut over, presentation synthetic baselines validated by diagnostics contract checker |
 | `project_workspace` | Deleted project row from `verification/suites/manifest.json`; moved `crates/sifr/tests/verification/project/` fixtures; deleted project/workspace contract shell wrappers | `verification/areas/project_workspace/` | `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite baselines`; `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite frontend_mode_parity --suite phase23_graph_isolation`; merge/nightly/release hardening dispatches project baselines through this area | Area schema validation, project area baseline execution, exact project workspace contract suite execution, legacy hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS after exact-suite filter review | Baselines merged in PR 9; exact contract suite migration merged in PR 10 |
-| `core_language` | `scripts/run_e2e_pass.sh`, `verification/validation_lanes/*_e2e_manifest.json`, core contract rows, `verification/validation_contracts/` | `verification/areas/core_language/` | `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite integer_dtype_contract --suite phase24_hir_analysis --suite phase25_cfg_flow`; legacy e2e runner remains authoritative for e2e pass fixtures | Exact core language contract suite execution; profile/facade contract dispatch through `sifr_verify areas run`; Opus PASS after exact-suite filter review; e2e migration pending | Contract matrix source cut over in PR 10; e2e pass runner and fixture manifests still pending |
-| `regression` | Deleted `verification/fixedbugs/index.json`, `verification/crashes/index.json`, and crate-local crash reproducers | `verification/areas/regression/` | `uv run --project verification --locked python -m sifr_verify areas run --area regression --suite fixedbugs --suite crashes`; merge/nightly/release hardening dispatches these suites through the regression area | Area schema validation, fixedbugs/crashes area execution, legacy hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 11 |
-| `fuzz_property` | Deleted `verification/fuzz_property/` and `scripts/run_smoke_fuzz_property.sh` | `verification/areas/fuzz_property/` | `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke`; nightly/release hardening dispatches property/fuzz-smoke through the fuzz/property area | Area schema validation, cargo smoke/property/fuzz-smoke area execution, legacy hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 12 |
+| `core_language` | Moved `scripts/run_e2e_pass.sh` to `verification/runner/e2e/run_e2e_pass.sh`; retained `verification/validation_lanes/*_e2e_manifest.json` until fixture ownership changes; core contract rows and `verification/validation_contracts/` already moved | `verification/areas/core_language/`; runner-owned e2e execution under `verification/runner/e2e/` | `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite integer_dtype_contract --suite phase24_hir_analysis --suite phase25_cfg_flow`; profile execution still calls the runner-owned e2e pass script for fixture pass suites | Exact core language contract suite execution; profile/facade contract dispatch through `sifr_verify areas run`; Opus PASS after exact-suite filter review; e2e script path swept in PR #2543 | Contract matrix source cut over in PR 10; e2e pass runner moved out of `scripts/` in PR #2543; fixture manifests still pending |
+| `regression` | Deleted `verification/fixedbugs/index.json`, `verification/crashes/index.json`, and crate-local crash reproducers; moved shared hardening implementation out of `scripts/` | `verification/areas/regression/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area regression --suite fixedbugs --suite crashes`; merge/nightly/release hardening dispatches these suites through the regression area | Area schema validation, fixedbugs/crashes area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 11; hardening implementation swept in PR #2543 |
+| `fuzz_property` | Deleted `verification/fuzz_property/` and `scripts/run_smoke_fuzz_property.sh`; moved shared hardening implementation out of `scripts/` | `verification/areas/fuzz_property/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke`; nightly/release hardening dispatches property/fuzz-smoke through the fuzz/property area | Area schema validation, cargo smoke/property/fuzz-smoke area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 12; hardening implementation swept in PR #2543 |
 | `generated_code_quality` | Deleted `verification/generated_code_quality/` and shell wrappers | `verification/areas/generated_code_quality/` | `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite smoke`; `--suite representative`; `--suite full`; generated-code profile dispatch in `scripts/run_all_tests.sh` uses the area runner | Area schema validation, generated-code quality area smoke/representative execution, legacy facade dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 13 |
 | `performance` | Deleted `verification/performance/`; moved `verification/perf/sifr_int_loop.sifr`; routed performance budget and frontend/syntax guardrails through the performance area | `verification/areas/performance/` | `uv run --project verification --locked python -m sifr_verify areas run --area performance --suite frontend-syntax-guardrails`; `--suite smoke`; `--suite representative`; `--suite full`; profile facade dispatches performance budgets through this area | Area schema validation, frontend/syntax guardrails, contracts, smoke, representative, profile check, `scripts/run_all_tests.sh --profile create-pr`; Opus PASS after doc/metadata cleanup review | Merged in PR 14 |
 | `developer_tooling` | Deleted `verification/tooling/`; moved the large LSP corpus submodule and wrapper under `verification/areas/developer_tooling/corpora/`; routed tooling, TypeScript-Go, and diagnostic tooling contracts through the developer tooling area | `verification/areas/developer_tooling/` | `uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite typescript-go-m1`; `--suite diagnostic-contracts`; profile facade dispatches `static`, `formatter`, `analysis`, `lsp-smoke`, `editor-release`, `lsp-stress`, `phase-closeout`, and `full` through this area | Area schema validation; TypeScript-Go, diagnostic contracts, static/lsp-smoke, formatter, analysis, editor-release, lsp-stress, phase-closeout suites; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 15 |
@@ -511,29 +512,29 @@ Stay in `scripts/` as public facades, repo guardrails, repo maintenance, code ge
 
 Move into verification areas or runner-owned policy:
 
-- `scripts/run_e2e_pass.sh` -> `verification/areas/core_language/` as an area suite runner or delete after the `create-pr` profile owns the same cases.
+- `scripts/run_e2e_pass.sh` -> moved to `verification/runner/e2e/run_e2e_pass.sh` in PR #2543; profile-owned e2e fixture execution remains runner infrastructure until fixture manifests are area-owned.
 - `scripts/run_validation_contract_matrix.sh` -> split by contract ownership: `core_language`, `project_workspace`, and `diagnostics`; shared harness pieces belong in `verification/runner/`.
 - `scripts/run_phase23_graph_isolation_matrix.sh` -> `project_workspace`.
 - `scripts/run_phase24_hir_analysis_consolidation_matrix.sh`, `scripts/run_phase25_cfg_flow_activation_matrix.sh` -> `core_language`.
 - `scripts/run_frontend_mode_parity_matrix.sh` -> `project_workspace`; it is a wrapper over the validation contract matrix for project/compiler frontend mode parity.
 - `scripts/run_platform_golden.sh` -> `runtime_platform`.
 - `scripts/run_smoke_fuzz_property.sh` -> `fuzz_property`.
-- `scripts/run_integer_model_closure_perf.py`, `scripts/ci_e2e_throughput.sh` -> `performance` with explicit budget/profile policy.
-- `scripts/check_codegen_binary_size.sh` -> `performance`; binary size is treated as an explicit performance budget.
+- `scripts/run_integer_model_closure_perf.py`, `scripts/ci_e2e_throughput.sh` -> moved to `verification/areas/performance/tools/` in PR #2543 with explicit budget/profile policy.
+- `scripts/check_codegen_binary_size.sh` -> moved to `verification/areas/performance/tools/` in PR #2543; binary size is treated as an explicit performance budget.
 - `scripts/check_diagnostic_baseline_hygiene.py`, `scripts/check_diagnostic_code_coverage.py`, `scripts/check_diagnostic_docs_sync.py`, `scripts/check_diagnostic_schema_sync.py` -> `diagnostics`.
 - `scripts/run_distribution_validation.sh`, `scripts/distribution/validate_self_update_metadata.sh` -> `distribution_release` if used as validation gates; keep only release-mutating operations in `scripts/distribution/`.
 - `scripts/run_stdlib_namespace_corpus_validation.py`, `scripts/check_phase30_complexity_resource_inventory.py` -> `stdlib_parity`.
 - `scripts/build_full_corpus_failure_taxonomy.py` -> `algorithmic_compatibility`; it builds failure taxonomy artifacts for full algorithmic corpus result JSON.
 - `scripts/generate_concurrency_runtime_inventory.py` -> `stdlib_parity` as an area-local data generator if the output is verification inventory.
-- `scripts/run_verification_hardening.py` and `scripts/run_verification_hardening/` -> split across `regression`, `fuzz_property`, `ecosystem_compatibility`, and runner self-tests; do not keep a generic hardening runner after areas own the suites.
-- `scripts/check_e2e_report_determinism.sh`, `scripts/check_e2e_sequential_parallel_equivalence.sh` -> `verification/runner/` self-tests and `verification/policy/` evidence.
+- `scripts/run_verification_hardening.py` and `scripts/run_verification_hardening/` -> moved to `verification/runner/sifr_verify/hardening/` in PR #2543; area adapters call the shared runner implementation.
+- `scripts/check_e2e_report_determinism.sh`, `scripts/check_e2e_sequential_parallel_equivalence.sh` -> moved to `verification/runner/e2e/` in PR #2543 as runner self-tests and policy evidence.
 - `scripts/validation_lane.py`, `scripts/validation_lane_report.py` -> replaced with `verification/runner/sifr_verify/profiles.py` and profile report handling; deleted in PR 7.
 
 Delete or replace after references are removed:
 
-- `scripts/__pycache__/` and `scripts/run_verification_hardening/__pycache__/` -> delete and guard against tracked Python bytecode.
-- `scripts/validate_phase15_backlog.py` -> delete; it protects a historical phase-15 backlog path and should not survive the planning-tree move.
-- `scripts/phase_contract_gate_check.py` -> replace with a current `plans/phases/index.md` consistency guardrail if still useful; delete the phase-numbered path assumptions.
+- `scripts/__pycache__/` and `scripts/run_verification_hardening/__pycache__/` -> deleted and guarded by `scripts/check_scripts_verification_boundary.py` in PR #2543.
+- `scripts/validate_phase15_backlog.py` -> deleted in PR #2543; it protected a historical phase-15 backlog path and did not survive the planning-tree move.
+- `scripts/phase_contract_gate_check.py` -> deleted in PR #2543; no current `plans/phases/index.md` consistency guardrail was retained.
 - `scripts/archive_issues.sh`, `scripts/archive_reviews.sh`, `scripts/archive_reviews_and_issues.sh` -> update for `plans/issues/{active,completed,archive}` and `plans/reviews/{active,archive}` if still needed; otherwise delete in favor of direct `git mv` during planning PRs.
 
 ## Audits Cleanup
@@ -913,7 +914,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `scripts/distribution/validate_self_update_metadata.sh` | move | Validation gate moves to `distribution_release` if retained as a gate. | Yes | Yes | distribution area runner equivalence | Test cases belong to verification areas. |
 | `scripts/check_integer_dtype_contract.py` | move | Move to `core_language` because it validates compiler integer contract data. | Yes | Yes | core_language area runner equivalence | Compiler behavior contracts are area-owned. |
 | `scripts/check_package_manager_guardrails.py` | move | Move to `package_management` to validate package boundaries with package fixtures. | Yes | Yes | package_management area execution | Area ownership follows asserted contract. |
-| `scripts/run_e2e_pass.sh` | move | Move into `core_language` or delete after profile owns the cases. | Yes | Yes | e2e equivalence and snapshot stability | TypeScript cases belong to test areas. |
+| `scripts/run_e2e_pass.sh` | moved | Moved to `verification/runner/e2e/run_e2e_pass.sh` in PR #2543 while profile-owned fixture execution remains runner infrastructure. | Yes | Yes | e2e equivalence and snapshot stability | TypeScript cases belong to test areas. |
 | `scripts/run_validation_contract_matrix.sh` | move | Split by contract owner across `core_language`, `project_workspace`, and `diagnostics`. | Yes | Yes | side-by-side matrix equivalence | Suites should follow contract ownership. |
 | `scripts/run_phase23_graph_isolation_matrix.sh` | move | Move to `project_workspace`; active filename encodes stale phase number. | Yes | Yes | project_workspace area equivalence | Stable test names should describe behavior. |
 | `scripts/run_phase24_hir_analysis_consolidation_matrix.sh` | move | Move to `core_language`; remove phase-numbered entrypoint. | Yes | Yes | core_language area equivalence | Behavior area names outlive phase numbers. |
@@ -921,9 +922,9 @@ The audit scope is tracked repository material plus currently discovered generat
 | `scripts/run_frontend_mode_parity_matrix.sh` | move | Move to `project_workspace` as frontend/project mode parity. | Yes | Yes | project_workspace area equivalence | Workspace behavior should be area-owned. |
 | `scripts/run_platform_golden.sh` | move | Move to `runtime_platform`; delete old wrapper after cutover. | Yes | Yes | runtime_platform golden case execution | Golden cases still need one owning area. |
 | `scripts/run_smoke_fuzz_property.sh` | move | Move to `fuzz_property`. | Yes | Yes | fuzz_property smoke equivalence | Fuzz/property checks need resource policy. |
-| `scripts/run_integer_model_closure_perf.py` | move | Move to `performance` with explicit budget policy. | Yes | Yes | performance runner budget check | Benchmarks are distinct from correctness gates. |
-| `scripts/ci_e2e_throughput.sh` | move | Move to `performance`; CI wrapper name is not a public gate. | No | Yes | performance runner equivalence if retained | Performance validation needs profile policy. |
-| `scripts/check_codegen_binary_size.sh` | move | Move to `performance` as binary-size budget validation. | No | Yes | performance budget execution if retained | Binary size is a budget, not source hygiene. |
+| `scripts/run_integer_model_closure_perf.py` | moved | Moved to `verification/areas/performance/tools/run_integer_model_closure_perf.py` in PR #2543 with explicit budget policy. | Yes | Yes | performance runner budget check | Benchmarks are distinct from correctness gates. |
+| `scripts/ci_e2e_throughput.sh` | moved | Moved to `verification/areas/performance/tools/ci_e2e_throughput.sh` in PR #2543; CI wrapper name is not a public gate. | No | Yes | performance runner equivalence if retained | Performance validation needs profile policy. |
+| `scripts/check_codegen_binary_size.sh` | moved | Moved to `verification/areas/performance/tools/check_codegen_binary_size.sh` in PR #2543 as binary-size budget validation. | No | Yes | performance budget execution if retained | Binary size is a budget, not source hygiene. |
 | `scripts/check_diagnostic_baseline_hygiene.py` | move | Move to `diagnostics`. | Yes | Yes | diagnostics area execution | Baselines belong to output contract owners. |
 | `scripts/check_diagnostic_code_coverage.py` | move | Move to `diagnostics`. | Yes | Yes | diagnostics area execution | Diagnostic coverage is an area contract. |
 | `scripts/check_diagnostic_docs_sync.py` | move | Move to `diagnostics`. | Yes | Yes | diagnostics area execution | Docs/schema sync belongs with diagnostics policy. |
@@ -933,19 +934,19 @@ The audit scope is tracked repository material plus currently discovered generat
 | `scripts/check_phase30_complexity_resource_inventory.py` | move | Move to `stdlib_parity`; stale phase number removed. | Yes | Yes | stdlib_parity inventory validation | Resource parity data belongs to the area. |
 | `scripts/build_full_corpus_failure_taxonomy.py` | moved | Moved to `algorithmic_compatibility` as taxonomy builder in PR #2535. | No | Yes | taxonomy generation check | External corpus results are area artifacts. |
 | `scripts/generate_concurrency_runtime_inventory.py` | move | Move to `stdlib_parity` if the output remains verification inventory. | No | Yes | inventory generation diff check | Verification inventories belong with area data. |
-| `scripts/run_verification_hardening.py` | move | Split across regression, fuzz_property, ecosystem_compatibility, and runner self-tests. | Yes | Yes | per-area equivalence and runner self-tests | Generic hardening runners hide ownership. |
-| `scripts/run_verification_hardening/` | move | Split module implementation with the same owners as the facade above. | Yes | Yes | per-area equivalence | Harness code should live under runner or areas. |
-| `scripts/check_e2e_report_determinism.sh` | move | Move to runner self-tests and policy data. | Yes | Yes | runner determinism self-test | Determinism is runner behavior, not a domain area. |
-| `scripts/check_e2e_sequential_parallel_equivalence.sh` | move | Move to runner self-tests and policy data. | Yes | Yes | sequential/parallel equivalence self-test | Scheduling policy belongs to the runner. |
+| `scripts/run_verification_hardening.py` | moved | Moved to `verification/runner/sifr_verify/hardening/` in PR #2543; area adapters import the shared runner implementation. | Yes | Yes | per-area equivalence and runner self-tests | Generic hardening runners hide ownership. |
+| `scripts/run_verification_hardening/` | moved | Moved module implementation to `verification/runner/sifr_verify/hardening/` in PR #2543. | Yes | Yes | per-area equivalence | Harness code should live under runner or areas. |
+| `scripts/check_e2e_report_determinism.sh` | moved | Moved to `verification/runner/e2e/check_report_determinism.sh` in PR #2543 as runner self-test and policy data. | Yes | Yes | runner determinism self-test | Determinism is runner behavior, not a domain area. |
+| `scripts/check_e2e_sequential_parallel_equivalence.sh` | moved | Moved to `verification/runner/e2e/check_sequential_parallel_equivalence.sh` in PR #2543 as runner self-test and policy data. | Yes | Yes | sequential/parallel equivalence self-test | Scheduling policy belongs to the runner. |
 | `scripts/validation_lane.py` | move | Replace with `sifr_verify.profiles`; delete old name in PR 7. | Yes | Yes | profile shell export equivalence | Profiles are runner policy, not scripts. |
 | `scripts/validation_lane_report.py` | move | Replace with `sifr_verify` report handling; delete old name in PR 7. | Yes | Yes | report shape equivalence | Generated reports belong under runner/target. |
 | `scripts/archive_issues.sh` | move | Retarget to `plans/issues/` or delete if no longer useful. | No | Yes | dry-run path check | Planning lifecycle tools should follow plan tree. |
 | `scripts/archive_reviews.sh` | move | Retarget to `plans/reviews/` or delete if no longer useful. | No | Yes | dry-run path check | Review archives belong under plans. |
 | `scripts/archive_reviews_and_issues.sh` | move | Retarget to `plans/` lifecycle or delete if redundant. | No | Yes | dry-run path check | Avoid duplicate lifecycle entrypoints. |
-| `scripts/phase_contract_gate_check.py` | delete | Replace only with current `plans/phases/index.md` consistency guardrail if useful. | Yes | Yes | new phase-index guardrail self-test | Stable phase indexes beat phase-numbered assumptions. |
-| `scripts/validate_phase15_backlog.py` | delete | Historical phase-15 backlog guardrail; no active destination. | Yes | Yes | no stale references | Historical phase tooling should not survive. |
-| `scripts/__pycache__/` | delete | Python bytecode is generated local output and must remain untracked. | No | No | bytecode/cache guardrail | Generated caches are not source. |
-| `scripts/run_verification_hardening/__pycache__/` | delete | Python bytecode is generated local output and must remain untracked. | No | No | bytecode/cache guardrail | Generated caches are not source. |
+| `scripts/phase_contract_gate_check.py` | deleted | Deleted in PR #2543; no replacement retained. | Yes | Yes | no stale references | Stable phase indexes beat phase-numbered assumptions. |
+| `scripts/validate_phase15_backlog.py` | deleted | Deleted in PR #2543; no active destination. | Yes | Yes | no stale references | Historical phase tooling should not survive. |
+| `scripts/__pycache__/` | deleted | Deleted and guarded by `scripts/check_scripts_verification_boundary.py` in PR #2543. | No | No | bytecode/cache guardrail | Generated caches are not source. |
+| `scripts/run_verification_hardening/__pycache__/` | deleted | Deleted and guarded by `scripts/check_scripts_verification_boundary.py` in PR #2543. | No | No | bytecode/cache guardrail | Generated caches are not source. |
 
 ### Verification Surface Audit
 
@@ -1231,6 +1232,37 @@ Validation:
 ### PR N+3: Scripts Verification Sweep
 
 Prove no verification implementation remains in `scripts/` after the area migrations and add the guardrail that keeps it that way. Delete any missed old entrypoints. Do not add compatibility wrappers.
+
+Status: merged in PR #2543. The milestone moved runner-owned e2e scripts to
+`verification/runner/e2e/`, performance-owned tools to
+`verification/areas/performance/tools/`, and hardening implementation to
+`verification/runner/sifr_verify/hardening/`. It deleted obsolete historical
+phase scripts and added `scripts/check_scripts_verification_boundary.py` to the
+profile guardrails so verification implementation does not drift back into
+`scripts/`.
+
+Review evidence:
+
+- Opus review round 1 found a local-first workflow still calling deleted
+  `scripts/run_smoke_fuzz_property.sh`; fixed by routing through
+  `sifr_verify areas run`.
+- Opus review round 2 found the replacement workflow only ran `cargo-smoke`;
+  fixed by running `cargo-smoke`, `property`, and `fuzz-smoke`.
+- Opus review round 3 passed with no blocking findings.
+
+Validation evidence:
+
+- `python3 scripts/check_scripts_verification_boundary.py`
+- `python3 scripts/check_scripts_verification_boundary.py --self-test`
+- `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke`
+- `cargo run -q -p sifr -- emit demos/verification_baselines/main.sifr`
+- `python3 scripts/check_file_size_guardrails.py`
+- `git diff --check`
+- `scripts/run_all_tests.sh --profile create-pr`: passed with no test
+  failures; warm rerun still exceeded the advisory two-minute warm budget
+  (`budget_ok=no`, 131.57s).
+- `scripts/run_all_tests.sh`: passed on warm rerun with `budget_ok=yes`
+  (608.19s), 51/51 e2e cache hits, and hardening variants 40/40 passing.
 
 Validation:
 
