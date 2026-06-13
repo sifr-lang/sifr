@@ -17,5 +17,5 @@ sed -i.bak 's/APP_VERSION="0.1.0-beta.7"/APP_VERSION="0.1.0-beta.6"/' \
 
 require_failure_contains \
   "immutable installer APP_VERSION drift for beta" \
-  "${REPO_ROOT}/scripts/distribution/validate_self_update_metadata.sh" \
+  "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
     --install-root "${install_root}"

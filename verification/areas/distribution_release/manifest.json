@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "name": "distribution_release",
+  "owner": "release/distribution",
+  "description": "Preview release, installer, self-update, dispatcher, and artifact validation.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "platform-specific"
+  ],
+  "timeout_seconds": 1200,
+  "suites": [
+    {
+      "name": "representative",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "distribution-cases",
+          "entry": "verification/areas/distribution_release/cases",
+          "command": "distribution-case-directory",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "full",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "distribution-cases",
+          "entry": "verification/areas/distribution_release/cases",
+          "command": "distribution-case-directory",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

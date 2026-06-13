@@ -2,8 +2,9 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SITE_INSTALL_ROOT="${SIFR_SITE_INSTALL_ROOT:-/Users/yaseralnajjar/work/sifr/sifr-blog-website/apps/sifr-site/public/install}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+DEFAULT_SITE_INSTALL_ROOT="${REPO_ROOT}/target/distribution_release/default-site-install"
+SITE_INSTALL_ROOT="${SIFR_SITE_INSTALL_ROOT:-${DEFAULT_SITE_INSTALL_ROOT}}"
 DISPATCH_BASE_URL="${SIFR_INSTALL_BASE_URL:-file://${SITE_INSTALL_ROOT}}"
 
 run_dispatcher() {
@@ -160,6 +161,9 @@ make_self_update_install_root_fixture() {
 
 make_site_repo_fixture() {
   local target_repo="$1"
+  if [[ -z "${SIFR_SITE_INSTALL_ROOT:-}" && ! -d "${SITE_INSTALL_ROOT}" ]]; then
+    make_self_update_install_root_fixture "${SITE_INSTALL_ROOT}"
+  fi
   mkdir -p "${target_repo}/apps/sifr-site/public"
   cp -R "${SITE_INSTALL_ROOT}" "${target_repo}/apps/sifr-site/public/install"
 }

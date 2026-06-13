@@ -26,5 +26,5 @@ PY
 
 require_failure_contains \
   "stable channel metadata is disabled until Phase 39" \
-  "${REPO_ROOT}/scripts/distribution/validate_self_update_metadata.sh" \
+  "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
     --install-root "${install_root}"

@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/distribution/validate_self_update_metadata.sh --install-root <dir>
+Usage: verification/areas/distribution_release/tools/validate_self_update_metadata.sh --install-root <dir>
 
 Validate that self-update channel metadata, preview dispatchers, and immutable
 version installers agree.

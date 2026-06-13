@@ -262,7 +262,18 @@ run_distribution_checks() {
   fi
   echo "Running distribution validation"
   echo "  mode=${DISTRIBUTION_MODE}"
-  bash "${SCRIPT_DIR}/run_distribution_validation.sh"
+  case "${DISTRIBUTION_MODE}" in
+    representative|full)
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run \
+          --area distribution_release \
+          --suite "${DISTRIBUTION_MODE}"
+      ;;
+    *)
+      echo "unknown distribution validation mode: ${DISTRIBUTION_MODE}" >&2
+      return 2
+      ;;
+  esac
 }
 
 run_generated_code_quality_checks() {

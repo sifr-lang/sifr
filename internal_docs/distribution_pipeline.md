@@ -10,7 +10,7 @@ Phase 33 does not copy or adapt code from `astral-sh/uv`. The current implementa
 
 ## Site Layout
 
-Static site files live in `/Users/yaseralnajjar/work/sifr/sifr-blog-website/apps/sifr-site/public/install/`.
+Static site files live under the site repository at `<site-repo>/apps/sifr-site/public/install/`.
 
 The filesystem layout is:
 
@@ -35,7 +35,7 @@ Generate dispatchers with:
 
 ```bash
 scripts/distribution/generate_dispatchers.sh \
-  --install-root /Users/yaseralnajjar/work/sifr/sifr-blog-website/apps/sifr-site/public/install \
+  --install-root <site-repo>/apps/sifr-site/public/install \
   --alpha-version 0.1.0-alpha.1 \
   --beta-version 0.1.0-beta.1
 ```
@@ -73,15 +73,15 @@ Milestone 33.1 uses mocked immutable generated installers until milestone 33.2 a
 Run dispatcher validation with:
 
 ```bash
-verification/distribution/install_default_beta_dispatcher.sh
-verification/distribution/install_alpha_dispatcher.sh
-verification/distribution/install_version_pin_dispatcher.sh
-verification/distribution/install_stable_channel_gated.sh
-verification/distribution/install_invalid_channel_rejected.sh
-verification/distribution/install_conflicting_channel_and_version_rejected.sh
-verification/distribution/install_stable_version_pin_rejected.sh
-verification/distribution/install_missing_generated_installer_rejected.sh
-verification/distribution/install_dispatcher_malformed_config_rejected.sh
+verification/areas/distribution_release/cases/install_default_beta_dispatcher.sh
+verification/areas/distribution_release/cases/install_alpha_dispatcher.sh
+verification/areas/distribution_release/cases/install_version_pin_dispatcher.sh
+verification/areas/distribution_release/cases/install_stable_channel_gated.sh
+verification/areas/distribution_release/cases/install_invalid_channel_rejected.sh
+verification/areas/distribution_release/cases/install_conflicting_channel_and_version_rejected.sh
+verification/areas/distribution_release/cases/install_stable_version_pin_rejected.sh
+verification/areas/distribution_release/cases/install_missing_generated_installer_rejected.sh
+verification/areas/distribution_release/cases/install_dispatcher_malformed_config_rejected.sh
 ```
 
 ## Artifact Format
@@ -134,7 +134,7 @@ Generate the immutable installer from the verified artifact directory:
 scripts/distribution/generate_version_installer.sh \
   --version 0.1.0-beta.1 \
   --artifact-dir target/preview-artifacts/0.1.0-beta.1 \
-  --out /Users/yaseralnajjar/work/sifr/sifr-blog-website/apps/sifr-site/public/install/versions/0.1.0-beta.1
+  --out <site-repo>/apps/sifr-site/public/install/versions/0.1.0-beta.1
 ```
 
 The generated installer embeds:
@@ -171,7 +171,7 @@ Official standalone installers write a schema-versioned `install.json` receipt:
 }
 ```
 
-The authoritative field enumeration lives at `verification/distribution/self_update_install_receipt.schema.json`. Receipts must use `schema_version: 1`, include every listed field, and reject unknown fields. Pre-schema, partial, malformed, or mismatched receipts are treated as unmanaged installs by `sifr self update`; the diagnostic tells users to re-run `curl -LsSf https://sifr.sh/install | sh` if they want standalone self-update management.
+The authoritative field enumeration lives at `verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json`. Receipts must use `schema_version: 1`, include every listed field, and reject unknown fields. Pre-schema, partial, malformed, or mismatched receipts are treated as unmanaged installs by `sifr self update`; the diagnostic tells users to re-run `curl -LsSf https://sifr.sh/install | sh` if they want standalone self-update management.
 
 `channel` is derived from the installer version prerelease label. `modify_path` records the actual installer request, including `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` records the canonical installed binary path when the platform can resolve it.
 
@@ -200,30 +200,30 @@ Before invoking an immutable installer, `sifr self update` acquires `<install_di
 Run artifact and installer validation with:
 
 ```bash
-scripts/run_distribution_validation.sh
+uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full
 ```
 
 The milestone 33.2-specific checks are:
 
 ```bash
-verification/distribution/artifact_generated_installer_all_preview_targets.sh
-verification/distribution/artifact_sha256_validated.sh
-verification/distribution/install_matching_target_artifact.sh
-verification/distribution/channel_dispatcher_points_to_generated_installer.sh
-verification/distribution/artifact_missing_target_rejected.sh
-verification/distribution/artifact_checksum_mismatch_rejected.sh
-verification/distribution/artifact_target_mismatch_rejected.sh
-verification/distribution/stable_entrypoints_unchanged_by_preview_release.sh
+verification/areas/distribution_release/cases/artifact_generated_installer_all_preview_targets.sh
+verification/areas/distribution_release/cases/artifact_sha256_validated.sh
+verification/areas/distribution_release/cases/install_matching_target_artifact.sh
+verification/areas/distribution_release/cases/channel_dispatcher_points_to_generated_installer.sh
+verification/areas/distribution_release/cases/artifact_missing_target_rejected.sh
+verification/areas/distribution_release/cases/artifact_checksum_mismatch_rejected.sh
+verification/areas/distribution_release/cases/artifact_target_mismatch_rejected.sh
+verification/areas/distribution_release/cases/stable_entrypoints_unchanged_by_preview_release.sh
 ```
 
 The self-update metadata drift checks validate that `metadata/channels.json`, preview dispatchers, and immutable installer `APP_VERSION` values are generated from one release plan:
 
 ```bash
-scripts/distribution/validate_self_update_metadata.sh --install-root <install-root>
-verification/distribution/channel_metadata_installer_agreement.sh
-verification/distribution/channel_metadata_dispatcher_drift_rejected.sh
-verification/distribution/channel_metadata_installer_drift_rejected.sh
-verification/distribution/channel_metadata_stable_rejected.sh
+verification/areas/distribution_release/tools/validate_self_update_metadata.sh --install-root <install-root>
+verification/areas/distribution_release/cases/channel_metadata_installer_agreement.sh
+verification/areas/distribution_release/cases/channel_metadata_dispatcher_drift_rejected.sh
+verification/areas/distribution_release/cases/channel_metadata_installer_drift_rejected.sh
+verification/areas/distribution_release/cases/channel_metadata_stable_rejected.sh
 ```
 
 ## Preview Release Command
@@ -265,13 +265,13 @@ The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
 The milestone 33.3-specific checks are:
 
 ```bash
-verification/distribution/create_new_version_alpha_dry_run.sh
-verification/distribution/create_new_version_beta_dry_run.sh
-verification/distribution/create_new_version_real_run_plan_reuse.sh
-verification/distribution/create_new_version_release_checklist.sh
-verification/distribution/create_new_version_attribution_checklist.sh
-verification/distribution/create_new_version_stable_rejected.sh
-verification/distribution/create_new_version_bad_semver_rejected.sh
-verification/distribution/create_new_version_missing_artifact_rejected.sh
-verification/distribution/create_new_version_site_dispatcher_drift_rejected.sh
+verification/areas/distribution_release/cases/create_new_version_alpha_dry_run.sh
+verification/areas/distribution_release/cases/create_new_version_beta_dry_run.sh
+verification/areas/distribution_release/cases/create_new_version_real_run_plan_reuse.sh
+verification/areas/distribution_release/cases/create_new_version_release_checklist.sh
+verification/areas/distribution_release/cases/create_new_version_attribution_checklist.sh
+verification/areas/distribution_release/cases/create_new_version_stable_rejected.sh
+verification/areas/distribution_release/cases/create_new_version_bad_semver_rejected.sh
+verification/areas/distribution_release/cases/create_new_version_missing_artifact_rejected.sh
+verification/areas/distribution_release/cases/create_new_version_site_dispatcher_drift_rejected.sh
 ```

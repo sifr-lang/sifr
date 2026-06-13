@@ -50,5 +50,5 @@ test -x "${site_repo}/apps/sifr-site/public/install/versions/${version}"
 test -f "${work_dir}/plan.txt"
 test -f "${work_dir}/release-checklist.md"
 test -f "${work_dir}/recovery-note.md"
-"${REPO_ROOT}/scripts/distribution/validate_self_update_metadata.sh" \
+"${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
   --install-root "${site_repo}/apps/sifr-site/public/install"

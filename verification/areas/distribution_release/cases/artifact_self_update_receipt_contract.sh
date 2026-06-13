@@ -30,7 +30,7 @@ SIFR_TARGET="${target}" \
   sh "${installer}" --no-modify-path >/dev/null
 
 receipt_path="${install_dir}/install.json"
-schema_path="${REPO_ROOT}/verification/distribution/self_update_install_receipt.schema.json"
+schema_path="${REPO_ROOT}/verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json"
 
 python3 - "${receipt_path}" "${schema_path}" "${install_dir}" "${version}" "${target}" <<'PY'
 import json
