@@ -16,8 +16,8 @@ done < <(
   find \
     "${REPO_ROOT}/issues" \
     "${REPO_ROOT}/issues/archive" \
-    "${REPO_ROOT}/reviews" \
-    "${REPO_ROOT}/reviews/archive" \
+    "${REPO_ROOT}/plans/reviews/active" \
+    "${REPO_ROOT}/plans/reviews/archive" \
     -maxdepth 1 \
     -type f \
     -name '*.claude.log' \

@@ -78,19 +78,15 @@ M8 focused validation so far:
   `target/validation_lane_reports/create-pr.latest.json`, wall time 306.27s,
   advisories: warm wall-time budget exceeded; group skew is high
 - Claude reviewer pass 3 -> SATISFIED
-  (`reviews/typescript-go-m8-first-class-flow-graph-review-pass-3.md`)
 - Loop-else follow-up validation: `cargo fmt --check`,
   `cargo test -p sifr_lowering flow_graph -- --nocapture`,
   `cargo clippy -p sifr_lowering -- -D warnings`
 - Claude reviewer loop-else follow-up pass 1 -> SATISFIED
-  (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)
 - M8 closeout create-pr validation: `scripts/run_all_tests.sh --profile create-pr` ->
   PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time
   280.58s, advisory: group skew is high
 - Claude reviewer closeout pass 1 -> SATISFIED
-  (`reviews/typescript-go-m8-closeout-review-pass-1.md`)
 - M8 loop-else follow-up: `cargo fmt --check`,
   `cargo test -p sifr_lowering flow_graph -- --nocapture`,
   `cargo clippy -p sifr_lowering -- -D warnings`
 - Claude reviewer loop-else follow-up pass 1 -> SATISFIED
-  (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)

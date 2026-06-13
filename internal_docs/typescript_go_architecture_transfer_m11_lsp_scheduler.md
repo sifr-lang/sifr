@@ -45,8 +45,8 @@ Validation so far:
 - `cargo clippy -p sifr_lsp -- -D warnings` -> PASS
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
-- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED with residual low-priority cleanup (`reviews/typescript-go-m11-lsp-scheduler-review-pass-2.md`)
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-3.md`)
+- Claude reviewer pass 1 -> CHANGES_REQUESTED
+- Claude reviewer pass 2 -> SATISFIED with residual low-priority cleanup
+- Claude reviewer pass 3 -> SATISFIED
 - `cargo clippy --workspace -- -D warnings` -> PASS
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 263.26s, advisory: group skew is high
