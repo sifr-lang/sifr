@@ -2,20 +2,6 @@
   "schema_version": 1,
   "suites": [
     {
-      "name": "fixedbugs",
-      "runner": "fixedbugs",
-      "owner": "compiler/hardening",
-      "blocking": true,
-      "index": "verification/fixedbugs/index.json"
-    },
-    {
-      "name": "crashes",
-      "runner": "crashes",
-      "owner": "compiler/hardening",
-      "blocking": true,
-      "index": "verification/crashes/index.json"
-    },
-    {
       "name": "property",
       "runner": "property",
       "owner": "compiler/hardening",

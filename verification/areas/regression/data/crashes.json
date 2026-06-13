@@ -8,7 +8,7 @@
       "status": "unresolved",
       "root_cause_category": "cfg-invariant-panic-path",
       "source_reference": "crates/sifr_lowering/src/cfg.rs",
-      "reproducer_fixture": "crates/sifr/tests/verification/crashes/CR-0001_cfg_invariant_minimized.sifr",
+      "reproducer_fixture": "verification/areas/regression/fixtures/crashes/CR-0001_cfg_invariant_minimized.sifr",
       "promotion_target_suite": "fixedbugs",
       "note": "Track HIR CFG invariant panic conversion into typed diagnostics. Promote to fixedbugs with minimized reproducer when resolved."
     },
@@ -19,7 +19,7 @@
       "status": "unresolved",
       "root_cause_category": "parser-invariant-unwrap-audit",
       "source_reference": "third_party/ruff/crates/ruff_python_parser/src/lexer.rs",
-      "reproducer_fixture": "crates/sifr/tests/verification/crashes/CR-0002_parser_invariant_minimized.sifr",
+      "reproducer_fixture": "verification/areas/regression/fixtures/crashes/CR-0002_parser_invariant_minimized.sifr",
       "promotion_target_suite": "fixedbugs",
       "note": "Track parser invariant unwrap/expect audit and conversion where feasible; promote to fixedbugs when reproducible issue is fixed."
     }

@@ -5,7 +5,7 @@ This policy defines the canonical regression corpus contract for phase 29.
 ## `fixedbugs` Contract
 
 Source of truth:
-- `verification/fixedbugs/index.json`
+- `verification/areas/regression/data/fixedbugs.json`
 
 Each fixedbug entry must include:
 - `id` (stable corpus id)
@@ -24,7 +24,7 @@ Execution contract:
 ## `crashes` Sentinel Contract
 
 Source of truth:
-- `verification/crashes/index.json`
+- `verification/areas/regression/data/crashes.json`
 
 Each crash sentinel entry must include:
 - `id`

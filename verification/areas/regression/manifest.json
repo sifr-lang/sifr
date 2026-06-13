@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "name": "regression",
+  "owner": "compiler/hardening",
+  "description": "Fixed bug locks and unresolved crash sentinel metadata.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 600,
+  "suites": [
+    {
+      "name": "fixedbugs",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "fixedbugs",
+          "entry": "verification/areas/regression/data/fixedbugs.json",
+          "command": "fixedbugs-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "crashes",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "crashes",
+          "entry": "verification/areas/regression/data/crashes.json",
+          "command": "crashes-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}
