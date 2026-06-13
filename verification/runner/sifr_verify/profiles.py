@@ -177,10 +177,10 @@ def print_summary(requested_profile: str) -> None:
 
 def run_command(argv: list[str]) -> int:
     if not argv:
-        print("profiles command requires one of: profile, shell, summary, check", file=sys.stderr)
+        print("profiles command requires one of: profile, shell, summary, check, run", file=sys.stderr)
         return 2
     command = argv[0]
-    profile_name = _profile_arg(argv[1:]) if command in {"profile", "shell", "summary"} else ""
+    profile_name = _profile_arg(argv[1:]) if command in {"profile", "shell", "summary", "run"} else ""
     if command == "profile":
         profile = load_profile(profile_name)
         print(profile["name"])
@@ -195,6 +195,10 @@ def run_command(argv: list[str]) -> int:
         profiles = load_all_profiles()
         print(f"verification profiles valid: {', '.join(sorted(profiles))}")
         return 0
+    if command == "run":
+        from .profile_runner import run_profile
+
+        return run_profile(profile_name, _forward_args(argv[1:]))
     print(f"unsupported profiles command: {command}", file=sys.stderr)
     return 2
 
@@ -204,3 +208,10 @@ def _profile_arg(argv: list[str]) -> str:
         if value == "--profile" and index + 1 < len(argv):
             return argv[index + 1]
     raise ProfileError("--profile is required")
+
+
+def _forward_args(argv: list[str]) -> list[str]:
+    if "--" not in argv:
+        return []
+    separator = argv.index("--")
+    return argv[separator + 1 :]

@@ -20,16 +20,17 @@ The public validation entrypoint remains:
 scripts/run_all_tests.sh --profile create-pr
 ```
 
-During the migration, `scripts/run_all_tests.sh` is still the authoritative
-facade for local and CI validation. It fail-fasts when `uv` is missing or below
-the minimum version so the runner foundation and lockfile stay reproducible
-before profile execution is cut over to `sifr_verify`.
+`scripts/run_all_tests.sh` is a thin public facade over
+`uv run --project verification --locked python -m sifr_verify profiles run`.
+It fail-fasts when `uv` is missing or below the minimum version so profile
+execution stays reproducible for local and CI validation.
 
 ## Layout
 
 - `runner/sifr_verify/` contains runner code and self-tests.
 - `schemas/` contains the supported committed data contracts.
-- `profiles/` contains profile JSON files selected by `scripts/run_all_tests.sh --profile`.
+- `profiles/` contains profile JSON files selected by `scripts/run_all_tests.sh --profile`
+  and executed by `sifr_verify profiles run`.
 - `areas/` contains area-owned manifests, fixtures, baselines, and adapters.
   `diagnostics` is migrated and can be run with
   `uv run --project verification python -m sifr_verify areas run --area diagnostics`.
