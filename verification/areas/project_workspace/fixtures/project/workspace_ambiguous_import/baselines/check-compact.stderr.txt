@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-IMPORT-0005 verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/main.sifr:1:6 ambiguous import target: 'helper'

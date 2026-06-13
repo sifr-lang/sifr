@@ -48,7 +48,7 @@ Use the broader lane or targeted family command when touching these surfaces:
 - Developer tooling/editor release: formatter, linter, editor assets, VS Code packaging, analysis snapshots, or editor query behavior.
 - Distribution/self-update: installer scripts, self-update metadata, release channel scripts, or stable/preview channel behavior.
 - Performance budgets: compiler performance-sensitive paths, frontend cache, formatter, LSP latency, or build/run/check workflows.
-- Verification hardening: diagnostics, project graph, regression corpus, crash fixtures, and OSS-curated validation.
+- Verification hardening: diagnostics, project workspace graph, regression corpus, crash fixtures, and OSS-curated validation.
 
 ## Timing Evidence
 

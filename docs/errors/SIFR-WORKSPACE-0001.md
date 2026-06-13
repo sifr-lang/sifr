@@ -11,6 +11,6 @@ Malformed workspace manifest.
 | Severity | Error |
 | Owner | `sifr_driver::workspace` |
 | Message template | `could not parse workspace manifest at {path}: {reason}` |
-| Representative fixture | `crates/sifr/tests/verification/project/workspace_malformed_manifest` |
+| Representative fixture | `verification/areas/project_workspace/fixtures/project/workspace_malformed_manifest` |
 | Declared args | `path (message+json)`, `reason (message+json)` |
 | Dedupe args | `path`, `reason` |

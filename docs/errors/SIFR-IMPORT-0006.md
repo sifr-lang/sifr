@@ -11,6 +11,6 @@ Source module namespace and file import collision.
 | Severity | Error |
 | Owner | `sifr_driver::project::discovery` |
 | Message template | `import target '{module}' collides with a namespace package` |
-| Representative fixture | `crates/sifr/tests/verification/project/workspace_namespace_collision_canonical` |
+| Representative fixture | `verification/areas/project_workspace/fixtures/project/workspace_namespace_collision_canonical` |
 | Declared args | `module (message+json)`, `resolved_path (json-only)`, `parent_path (json-only)` |
 | Dedupe args | `module`, `resolved_path`, `parent_path` |

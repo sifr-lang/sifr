@@ -23,13 +23,13 @@
       },
       "tried_paths": {
         "kind": "string",
-        "value": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/math.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/lib/math.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/./math.sifr"
+        "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/math.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/lib/math.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/./math.sifr"
       }
     },
     "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0008",
     "spans": [
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/main.sifr",
         "byte_start": 5,
         "byte_end": 9,
         "line": 1,
@@ -50,15 +50,15 @@
     "children": [
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/math.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/math.sifr"
       },
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/lib/math.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/lib/math.sifr"
       },
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_bare_stdlib_import/./math.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/./math.sifr"
       }
     ],
     "help": "use 'from sifr.math import sqrt'",

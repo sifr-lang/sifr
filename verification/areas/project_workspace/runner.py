@@ -1,4 +1,4 @@
-"""Diagnostics verification area adapter."""
+"""Project workspace verification area adapter."""
 
 from __future__ import annotations
 
@@ -9,15 +9,15 @@ from sifr_verify.area_adapter import AreaAdapterConfig, AreaRunOptions, run_area
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = Path(__file__).resolve().with_name("manifest.json")
-ACTUAL_ROOT = REPO_ROOT / "target" / "verification" / "actual" / "diagnostics"
-RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "diagnostics-results.json"
+ACTUAL_ROOT = REPO_ROOT / "target" / "verification" / "actual" / "project_workspace"
+RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "project-workspace-results.json"
 CONFIG = AreaAdapterConfig(
-    area="diagnostics",
-    owner="compiler/diagnostics",
-    runner_name="diagnostics-area",
+    area="project_workspace",
+    owner="compiler/frontend",
+    runner_name="project-workspace-area",
     manifest_path=MANIFEST_PATH,
     actual_root=ACTUAL_ROOT,
-    status_label="diagnostics",
+    status_label="project workspace",
 )
 
 
@@ -28,7 +28,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--result-json",
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
-        help="Path for machine-readable diagnostics area result summary.",
+        help="Path for machine-readable project workspace area result summary.",
     )
     parser.add_argument(
         "--hardening-summary",

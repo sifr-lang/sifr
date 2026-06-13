@@ -11,6 +11,6 @@ Legacy workspace import target could not be resolved; source imports use SIFR-IM
 | Severity | Error |
 | Owner | `sifr_driver::project::discovery` |
 | Message template | `could not resolve import {module}` |
-| Representative fixture | `crates/sifr/tests/verification/project/workspace_unresolved_import` |
+| Representative fixture | `verification/areas/project_workspace/fixtures/project/workspace_unresolved_import` |
 | Declared args | `module (message+json)`, `searched_paths (json-only)` |
 | Dedupe args | `module`, `searched_paths` |

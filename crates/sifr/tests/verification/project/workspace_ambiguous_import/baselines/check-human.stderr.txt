@@ -1,8 +1,0 @@
-error[SIFR-IMPORT-0005]: ambiguous import target: 'helper'
-  --> crates/sifr/tests/verification/project/workspace_ambiguous_import/main.sifr:1:6
-     |
-   1 | from helper import value
-     |      ^^^^^^
-  = note: candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr
-  = note: candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr
-  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0005

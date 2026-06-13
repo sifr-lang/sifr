@@ -11,6 +11,6 @@ Circular source module import graph.
 | Severity | Error |
 | Owner | `sifr_driver::project::compile_order` |
 | Message template | `circular import detected: {cycle}` |
-| Representative fixture | `crates/sifr/tests/verification/project/import_cycle_source_spans` |
+| Representative fixture | `verification/areas/project_workspace/fixtures/project/import_cycle_source_spans` |
 | Declared args | `cycle (message+json)`, `cycle_edges (json-only)` |
 | Dedupe args | `cycle`, `cycle_edges` |

@@ -207,7 +207,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "IMPORT",
             "Ambiguous source module import target.",
             Severity::Error,
-            "crates/sifr/tests/verification/project/workspace_ambiguous_import_canonical",
+            "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import_canonical",
             "ambiguous import target: '{module}'",
             "sifr_driver::project::discovery",
             [
@@ -222,7 +222,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "IMPORT",
             "Source module namespace and file import collision.",
             Severity::Error,
-            "crates/sifr/tests/verification/project/workspace_namespace_collision_canonical",
+            "verification/areas/project_workspace/fixtures/project/workspace_namespace_collision_canonical",
             "import target '{module}' collides with a namespace package",
             "sifr_driver::project::discovery",
             [
@@ -237,7 +237,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "IMPORT",
             "Circular source module import graph.",
             Severity::Error,
-            "crates/sifr/tests/verification/project/import_cycle_source_spans",
+            "verification/areas/project_workspace/fixtures/project/import_cycle_source_spans",
             "circular import detected: {cycle}",
             "sifr_driver::project::compile_order",
             [arg!("cycle"), json_arg!("cycle_edges")],
