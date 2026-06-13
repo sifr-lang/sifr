@@ -1,7 +1,0 @@
-1 error, 0 warnings, 0 notes
-E SIFR-WORKSPACE-0001 <unknown> could not parse sifr.toml at '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_malformed_manifest/sifr.toml': TOML parse error at line 1, column 8
-  |
-1 | [source
-  |        ^
-unclosed table, expected `]`
-

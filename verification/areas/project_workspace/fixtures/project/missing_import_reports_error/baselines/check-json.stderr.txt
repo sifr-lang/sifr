@@ -15,13 +15,13 @@
       },
       "tried_paths": {
         "kind": "string",
-        "value": "<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr"
+        "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/missing_math_utils.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/./missing_math_utils.sifr"
       }
     },
     "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0002",
     "spans": [
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/main.sifr",
         "byte_start": 5,
         "byte_end": 23,
         "line": 1,
@@ -42,11 +42,11 @@
     "children": [
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/missing_math_utils.sifr"
       },
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/./missing_math_utils.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/./missing_math_utils.sifr"
       }
     ],
     "help": null,

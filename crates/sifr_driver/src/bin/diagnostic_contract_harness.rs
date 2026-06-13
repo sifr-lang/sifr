@@ -155,7 +155,7 @@ fn check_parser_runtime_contract(root: &Path) -> Result<(), String> {
 }
 
 fn check_project_runtime_contract(root: &Path) -> Result<(), String> {
-    let base = root.join("crates/sifr/tests/verification/project");
+    let base = root.join("verification/areas/project_workspace/fixtures/project");
     for (fixture, code, required_args) in PROJECT_FIXTURES {
         let entry = base.join(fixture).join("main.sifr");
         let diagnostics = check_project(&entry);
@@ -174,7 +174,7 @@ fn check_project_runtime_contract(root: &Path) -> Result<(), String> {
 }
 
 fn check_cycle_runtime_contract(root: &Path) -> Result<(), String> {
-    let base = root.join("crates/sifr/tests/verification/project");
+    let base = root.join("verification/areas/project_workspace/fixtures/project");
     for (fixture, code, required_args) in CYCLE_FIXTURES {
         let entry = base.join(fixture).join("main.sifr");
         let diagnostics = check_project(&entry);

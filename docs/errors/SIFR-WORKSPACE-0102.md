@@ -11,6 +11,6 @@ Legacy workspace import target is ambiguous; source imports use SIFR-IMPORT-0005
 | Severity | Error |
 | Owner | `sifr_driver::project::discovery` |
 | Message template | `module {module} is ambiguous in workspace {workspace}` |
-| Representative fixture | `crates/sifr/tests/verification/project/workspace_ambiguous_import` |
+| Representative fixture | `verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import` |
 | Declared args | `module (message+json)`, `workspace (message+json)`, `candidate_paths (json-only)` |
 | Dedupe args | `module`, `workspace`, `candidate_paths` |

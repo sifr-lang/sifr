@@ -80,18 +80,9 @@
       ]
     },
     {
-      "area": "regression",
+      "area": "project_workspace",
       "suites": [
-        "diagnostics"
-      ],
-      "resource_classes": [
-        "default-local"
-      ]
-    },
-    {
-      "area": "regression",
-      "suites": [
-        "project"
+        "baselines"
       ],
       "resource_classes": [
         "default-local"

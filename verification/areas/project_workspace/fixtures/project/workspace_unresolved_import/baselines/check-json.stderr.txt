@@ -15,13 +15,13 @@
       },
       "tried_paths": {
         "kind": "string",
-        "value": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/missing/helper.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/lib/missing/helper.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/./missing/helper.sifr"
+        "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/missing/helper.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/lib/missing/helper.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/./missing/helper.sifr"
       }
     },
     "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0002",
     "spans": [
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/main.sifr",
         "byte_start": 5,
         "byte_end": 19,
         "line": 1,
@@ -42,15 +42,15 @@
     "children": [
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/missing/helper.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/missing/helper.sifr"
       },
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/lib/missing/helper.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/lib/missing/helper.sifr"
       },
       {
         "severity": "Note",
-        "message": "tried path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/./missing/helper.sifr"
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/./missing/helper.sifr"
       }
     ],
     "help": null,

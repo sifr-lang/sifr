@@ -7,7 +7,7 @@
     "args": {
       "candidate_paths": {
         "kind": "string",
-        "value": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr;<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr"
+        "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/src_a/helper.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/src_b/helper.sifr"
       },
       "module": {
         "kind": "string",
@@ -21,7 +21,7 @@
     "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0005",
     "spans": [
       {
-        "file": "<WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/main.sifr",
+        "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/main.sifr",
         "byte_start": 5,
         "byte_end": 11,
         "line": 1,
@@ -42,11 +42,11 @@
     "children": [
       {
         "severity": "Note",
-        "message": "candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_a/helper.sifr"
+        "message": "candidate path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/src_a/helper.sifr"
       },
       {
         "severity": "Note",
-        "message": "candidate path: <WORKSPACE>/crates/sifr/tests/verification/project/workspace_ambiguous_import/src_b/helper.sifr"
+        "message": "candidate path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/src_b/helper.sifr"
       }
     ],
     "help": null,

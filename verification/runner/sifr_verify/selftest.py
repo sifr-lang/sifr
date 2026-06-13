@@ -76,6 +76,8 @@ def _discovery_self_test() -> None:
     committed_areas = {area.name for area in discover_areas()}
     if "diagnostics" not in committed_areas:
         raise AssertionError(f"diagnostics area was not discovered: {sorted(committed_areas)}")
+    if "project_workspace" not in committed_areas:
+        raise AssertionError(f"project_workspace area was not discovered: {sorted(committed_areas)}")
 
     with tempfile.TemporaryDirectory() as tmp:
         areas_dir = Path(tmp) / "areas"

@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "name": "project_workspace",
+  "owner": "compiler/frontend",
+  "description": "Project workspace import, manifest, and multi-module baseline contracts.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 600,
+  "suites": [
+    {
+      "name": "baselines",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "multi_module_run",
+          "entry": "verification/areas/project_workspace/fixtures/project/multi_module_run/main.sifr",
+          "command": "run",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "missing_import_reports_error",
+          "entry": "verification/areas/project_workspace/fixtures/project/missing_import_reports_error/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_dotted_helper_run",
+          "entry": "verification/areas/project_workspace/fixtures/project/workspace_dotted_helper_run/app.sifr",
+          "command": "run",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "workspace_ambiguous_import",
+          "entry": "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_malformed_manifest",
+          "entry": "verification/areas/project_workspace/fixtures/project/workspace_malformed_manifest/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_unresolved_import",
+          "entry": "verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_bare_stdlib_import",
+          "entry": "verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+[
+  {
+    "code": "SIFR-WORKSPACE-0001",
+    "severity": "Error",
+    "message": "could not parse sifr.toml at '<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_malformed_manifest/sifr.toml': TOML parse error at line 1, column 8\n  |\n1 | [source\n  |        ^\nunclosed table, expected `]`\n",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "could not parse sifr.toml at '<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_malformed_manifest/sifr.toml': TOML parse error at line 1, column 8\n  |\n1 | [source\n  |        ^\nunclosed table, expected `]`\n"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-WORKSPACE-0001",
+    "spans": [],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  }
+]

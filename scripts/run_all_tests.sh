@@ -481,11 +481,14 @@ run_hardening_suites() {
     echo "Running phase 29 verification hardening suites"
     HARDENING_ARGS=(--profile "${PROFILE}")
     DIAGNOSTICS_HARDENING=0
+    PROJECT_WORKSPACE_HARDENING=0
     IFS=',' read -r -a HARDENING_SUITE_ARRAY <<< "${HARDENING_SUITES}"
     for suite in "${HARDENING_SUITE_ARRAY[@]}"; do
       if [[ -n "${suite}" ]]; then
         if [[ "${suite}" == "diagnostics" ]]; then
           DIAGNOSTICS_HARDENING=1
+        elif [[ "${suite}" == "project" ]]; then
+          PROJECT_WORKSPACE_HARDENING=1
         else
           HARDENING_ARGS+=(--suite "${suite}")
         fi
@@ -494,6 +497,10 @@ run_hardening_suites() {
     if [[ "${DIAGNOSTICS_HARDENING}" == "1" ]]; then
       uv run --project "${SCRIPT_DIR}/../verification" --locked \
         python -m sifr_verify areas run --area diagnostics --suite baselines --hardening-summary
+    fi
+    if [[ "${PROJECT_WORKSPACE_HARDENING}" == "1" ]]; then
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run --area project_workspace --suite baselines --hardening-summary
     fi
     if [[ "${#HARDENING_ARGS[@]}" -gt 2 ]]; then
       python3 "${SCRIPT_DIR}/run_verification_hardening.py" "${HARDENING_ARGS[@]}"

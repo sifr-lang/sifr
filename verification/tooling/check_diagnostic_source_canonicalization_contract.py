@@ -117,7 +117,7 @@ def check_required_fixtures(root: Path) -> None:
         path = root / "verification/areas/diagnostics/fixtures/diagnostics" / fixture / "main.sifr"
         require(path.is_file(), f"required parser fixture missing: {fixture}")
     for fixture in PROJECT_FIXTURES | CYCLE_FIXTURES:
-        path = root / "crates/sifr/tests/verification/project" / fixture / "main.sifr"
+        path = root / "verification/areas/project_workspace/fixtures/project" / fixture / "main.sifr"
         require(path.is_file(), f"required project fixture missing: {fixture}")
     for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:
         path = root / "crates/sifr/tests/verification/package" / fixture
@@ -345,7 +345,7 @@ def check_parser_runtime_contract(root: Path) -> None:
 
 
 def check_project_runtime_contract(root: Path) -> None:
-    base = root / "crates/sifr/tests/verification/project"
+    base = root / "verification/areas/project_workspace/fixtures/project"
     required_args = {
         "workspace_missing_import_canonical": {"resolution_scope", "tried_paths"},
         "workspace_ambiguous_import_canonical": {"resolution_scope", "candidate_paths"},
@@ -367,7 +367,7 @@ def check_project_runtime_contract(root: Path) -> None:
 
 
 def check_cycle_runtime_contract(root: Path) -> None:
-    base = root / "crates/sifr/tests/verification/project"
+    base = root / "verification/areas/project_workspace/fixtures/project"
     for fixture, code in CYCLE_FIXTURES.items():
         entry = base / fixture / "main.sifr"
         json_result = run_sifr(["--diagnostic-format", "json", "check", str(entry)])
@@ -498,7 +498,7 @@ def seed_minimal_repo(root: Path) -> None:
         )
     for fixture in PROJECT_FIXTURES | CYCLE_FIXTURES:
         write(
-            root / f"crates/sifr/tests/verification/project/{fixture}/main.sifr",
+            root / f"verification/areas/project_workspace/fixtures/project/{fixture}/main.sifr",
             "def main():\n    pass\n",
         )
     for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:

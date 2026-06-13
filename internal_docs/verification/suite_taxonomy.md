@@ -7,7 +7,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 | suite | purpose | blocking | owner | required artifacts |
 | --- | --- | --- | --- | --- |
 | `diagnostics` | Lock compiler diagnostics contract (code/message/severity/url/spans/renderer views/exit code). | yes | compiler/diagnostics | fixtures, baselines, machine-readable run summary |
-| `project` | Lock multi-file/module project behavior and deterministic project-mode outcomes. | yes | compiler/frontend | fixtures, baselines, machine-readable run summary |
+| `project_workspace` | Lock multi-file/module project behavior and deterministic project-mode outcomes. | yes | compiler/frontend | fixtures, baselines, machine-readable run summary |
 | `fixedbugs` | Permanent issue-linked regressions for resolved compiler bugs. | yes | compiler/hardening | regression index, issue/root-cause metadata, run summary |
 | `crashes` | Visible sentinel corpus for unresolved crashes/invariant failures. | yes | compiler/hardening | sentinel index, issue linkage, promotion log |
 | `property` | Invariant tests for deterministic/high-value compiler behaviors. | yes | compiler/hardening | property manifest, deterministic run summary |
@@ -34,8 +34,8 @@ This document defines the canonical suite taxonomy for compiler verification har
   - JSON diagnostics are canonicalized and pretty-printed before baseline compare.
   - Exit code is baseline-checked separately.
 
-### Project
-- Fixture root: `crates/sifr/tests/verification/project/<case_id>/`.
+### Project Workspace
+- Fixture root: `verification/areas/project_workspace/fixtures/project/<case_id>/`.
 - Entrypoint: `main.sifr`.
 - Required baseline files per configured command variant:
   - `<variant>.stdout.txt`
@@ -78,8 +78,9 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 - Canonical legacy manifest for unmigrated hardening suites:
   `verification/suites/manifest.json`.
-- Migrated diagnostics suite ownership lives in
-  `verification/areas/diagnostics/manifest.json`.
+- Migrated diagnostics and project workspace suite ownership live in
+  `verification/areas/diagnostics/manifest.json` and
+  `verification/areas/project_workspace/manifest.json`.
 - Suite runners must not hardcode fixture lists outside their owning manifest.
 - Manifest updates are review artifacts and follow normal PR review.
 - Corpus lifecycle and promotion rules: `internal_docs/verification/regression_corpus_policy.md`.

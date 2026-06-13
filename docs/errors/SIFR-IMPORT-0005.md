@@ -11,6 +11,6 @@ Ambiguous source module import target.
 | Severity | Error |
 | Owner | `sifr_driver::project::discovery` |
 | Message template | `ambiguous import target: '{module}'` |
-| Representative fixture | `crates/sifr/tests/verification/project/workspace_ambiguous_import_canonical` |
+| Representative fixture | `verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import_canonical` |
 | Declared args | `module (message+json)`, `candidate_paths (json-only)`, `resolution_scope (json-only)` |
 | Dedupe args | `module`, `candidate_paths`, `resolution_scope` |
