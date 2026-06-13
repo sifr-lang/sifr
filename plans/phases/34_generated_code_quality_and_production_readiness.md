@@ -77,7 +77,7 @@ The Phase 34 generated-code corpus is defined by `verification/areas/generated_c
 The manifest must include these groups:
 
 1. `e2e-pass-representative`: representative entries from `crates/sifr/tests/e2e/pass`, including control flow, ownership/borrowing, collections, generics, classes, modules/imports, stdlib I/O, bytes, decimal/integer, diagnostics-adjacent emit cases, async/concurrency, and project-mode dependencies.
-2. `stdlib-flows`: fixtures mapped from `verification/stdlib/*_traceability.md` surfaces where emitted Rust exercises nontrivial stdlib/runtime codegen.
+2. `stdlib-flows`: fixtures mapped from `verification/areas/stdlib_parity/reports/*_traceability.md` surfaces where emitted Rust exercises nontrivial stdlib/runtime codegen.
 3. `multi-module-projects`: multi-file project inputs covering imports, dependency manifests, helper modules, and project-mode emit/build behavior.
 4. `demos-required`: required demos listed in `milestone_34_5`.
 5. `negative-seeds`: intentionally broken generated-code-quality fixtures used to prove scan, lint, format, and determinism gates fail when expected.

@@ -116,7 +116,7 @@
     {
       "decision": "tls_close",
       "outcome": "TlsStream.close and TlsWriteHalf.close consume their handle, attempt close_notify first, flush accepted plaintext/alert before success, and preserve cancellation or lower-transport evidence on failure",
-      "evidence": "verification/stdlib/network_http_substrate_inventory.md TLS close row"
+      "evidence": "verification/areas/stdlib_parity/reports/network_http_substrate_inventory.md TLS close row"
     },
     {
       "decision": "so_reuseport",
@@ -243,15 +243,15 @@
       "state": "blocked-on-concurrency-runtime-m6"
     }
   ],
-  "evidence_matrix": "verification/stdlib/network_http_cpython_evidence_matrix.md",
-  "workload_database": "verification/stdlib/network_http_workload_database.md",
-  "dependency_snapshots": "verification/stdlib/network_http_dependency_snapshots.json",
-  "dependency_audit": "verification/stdlib/network_http_dependency_audit.md",
+  "evidence_matrix": "verification/areas/stdlib_parity/reports/network_http_cpython_evidence_matrix.md",
+  "workload_database": "verification/areas/stdlib_parity/reports/network_http_workload_database.md",
+  "dependency_snapshots": "verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json",
+  "dependency_audit": "verification/areas/stdlib_parity/reports/network_http_dependency_audit.md",
   "milestone_backlog": [
-    "verification/stdlib/network_http_m1_async_network_traceability.md",
-    "verification/stdlib/network_http_m2_tls_traceability.md",
-    "verification/stdlib/network_http_m3_url_header_cookie_traceability.md",
-    "verification/stdlib/network_http_m4_http_transport_traceability.md",
-    "verification/stdlib/network_http_m5_handoff_traceability.md"
+    "verification/areas/stdlib_parity/reports/network_http_m1_async_network_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_m2_tls_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_m3_url_header_cookie_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_m4_http_transport_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_m5_handoff_traceability.md"
   ]
 }

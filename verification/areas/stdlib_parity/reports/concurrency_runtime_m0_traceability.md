@@ -4,10 +4,10 @@ Milestone: `milestone_concurrency_runtime_0`
 
 | Requirement | Evidence |
 | --- | --- |
-| CPython source scan | verification/stdlib/concurrency_runtime_substrate_inventory.json |
-| Human inventory | verification/stdlib/concurrency_runtime_substrate_inventory.md |
-| Evidence matrix | verification/stdlib/concurrency_runtime_cpython_evidence_matrix.md |
-| Workload database | verification/stdlib/concurrency_runtime_workload_database.md |
+| CPython source scan | verification/areas/stdlib_parity/data/concurrency_runtime_substrate_inventory.json |
+| Human inventory | verification/areas/stdlib_parity/reports/concurrency_runtime_substrate_inventory.md |
+| Evidence matrix | verification/areas/stdlib_parity/reports/concurrency_runtime_cpython_evidence_matrix.md |
+| Workload database | verification/areas/stdlib_parity/reports/concurrency_runtime_workload_database.md |
 | Shared platform contract | verification/areas/runtime_platform/platform_contract.md and .json |
 | Supported host matrix | verification/areas/runtime_platform/supported_host_matrix.md |
 | Golden manifest entries | verification/areas/runtime_platform/golden/manifest.json |

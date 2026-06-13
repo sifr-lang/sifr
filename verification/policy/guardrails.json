@@ -42,6 +42,13 @@
       "args": [],
       "timeout_seconds": 60,
       "report": "stdout"
+    },
+    {
+      "name": "stdlib-complexity-resource",
+      "entrypoint": "verification/areas/stdlib_parity/tools/check_complexity_resource_inventory.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
     }
   ]
 }

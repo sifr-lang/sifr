@@ -231,10 +231,10 @@ The supported-host matrix records whether a surface is host-independent, Unix/ma
 
 Representative validation lives in:
 
-- `verification/stdlib/concurrency_runtime_m1_traceability.md`
-- `verification/stdlib/concurrency_runtime_m2_sync_traceability.md`
-- `verification/stdlib/concurrency_runtime_m3_offload_traceability.md`
-- `verification/stdlib/concurrency_runtime_m4_process_traceability.md`
-- `verification/stdlib/concurrency_runtime_m5_shutdown_traceability.md`
-- `verification/stdlib/concurrency_runtime_m6_typed_ipc_design.md`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_m1_traceability.md`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_m2_sync_traceability.md`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_m3_offload_traceability.md`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_m4_process_traceability.md`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_m5_shutdown_traceability.md`
+- `verification/areas/stdlib_parity/reports/concurrency_runtime_m6_typed_ipc_design.md`
 - `verification/areas/runtime_platform/supported_host_matrix.md`

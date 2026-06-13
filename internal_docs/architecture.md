@@ -15,10 +15,10 @@
 - Ownership-aware collection lowering continuation is in closure review:
   - phase docs: `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
   - completed waves:
-    - `wave_clone_0` lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
-    - `wave_clone_1` iterator/comprehension ownership correction artifact: `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
-    - `wave_clone_2` indexing/slicing/star-unpack ownership correction artifact: `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
-    - `wave_clone_3` generic hardening/regression lock artifact: `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
+    - `wave_clone_0` lock/baseline artifact: `verification/areas/stdlib_parity/reports/wave_clone_0_codegen_traceability.md`
+    - `wave_clone_1` iterator/comprehension ownership correction artifact: `verification/areas/stdlib_parity/reports/wave_clone_1_iterator_codegen_traceability.md`
+    - `wave_clone_2` indexing/slicing/star-unpack ownership correction artifact: `verification/areas/stdlib_parity/reports/wave_clone_2_index_slice_unpack_traceability.md`
+    - `wave_clone_3` generic hardening/regression lock artifact: `verification/areas/stdlib_parity/reports/wave_clone_3_generic_hardening_traceability.md`
   - active closure stage: external review/closure cycles after wave-level implementation completion
   - locked planner contract for implementation waves:
     - value category: `Place | Temporary`
@@ -39,10 +39,10 @@
     - this continuation removes unnecessary clone-heavy lowering patterns for targeted surfaces
     - it does not claim full CPython parity for move-heavy runtime representations that depend on broader runtime/model changes
   - traceability artifacts:
-    - `verification/stdlib/wave_clone_0_codegen_traceability.md`
-    - `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
-    - `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
-    - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
+    - `verification/areas/stdlib_parity/reports/wave_clone_0_codegen_traceability.md`
+    - `verification/areas/stdlib_parity/reports/wave_clone_1_iterator_codegen_traceability.md`
+    - `verification/areas/stdlib_parity/reports/wave_clone_2_index_slice_unpack_traceability.md`
+    - `verification/areas/stdlib_parity/reports/wave_clone_3_generic_hardening_traceability.md`
 - Integer model amendment source of truth:
   - `internal_docs/integer_model.md` defines the canonical semantic contract and replaces the historical machine-integer/separate user-facing `bigint` design before production.
   - `plans/issues/archive/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` tracks the implementation phase and milestone breakdown for that contract.
@@ -135,7 +135,7 @@ This safety test layer is tracked in each milestone's Definition of Done as: **"
 
 For the ad-hoc Python source parity closure track (roadmap phase `31.5`), the canonical parity governance source is:
 
-- `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+- `verification/areas/stdlib_parity/reports/milestone_psp_7_parity_governance_inventory.md`
 
 It is the single consolidated inventory for builtin parity status, core object-model parity status, shipped-module terminal classification, CPython adopt/adapt/waive traceability links, and waiver-index governance rules.
 

@@ -3,10 +3,10 @@
 This file is the canonical milestone_30_2 artifact for API-level complexity and resource parity.
 
 Primary machine-readable source:
-- `verification/stdlib/phase30_complexity_resource_inventory.json`
+- `verification/areas/stdlib_parity/data/phase30_complexity_resource_inventory.json`
 
 Validator:
-- `python3 scripts/check_phase30_complexity_resource_inventory.py`
+- `python3 verification/areas/stdlib_parity/tools/check_complexity_resource_inventory.py`
 
 ## Canonical Check Patterns
 

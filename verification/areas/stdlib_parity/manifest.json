@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "name": "stdlib_parity",
+  "owner": "stdlib/parity",
+  "description": "CPython-adapted stdlib behavior, namespace corpus checks, complexity/resource parity, dependency snapshots, and stdlib parity evidence.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "external-corpus",
+    "long-running"
+  ],
+  "timeout_seconds": 1800,
+  "suites": [
+    {
+      "name": "complexity-resource",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "complexity-resource-inventory",
+          "entry": "verification/areas/stdlib_parity/tools/check_complexity_resource_inventory.py",
+          "command": "stdlib-complexity-resource",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "namespace-demos-check",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "namespace-demos-check",
+          "entry": "verification/areas/stdlib_parity/tools/run_stdlib_namespace_corpus_validation.py",
+          "command": "stdlib-namespace-demos-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "namespace-leetcode-check",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "namespace-leetcode-check",
+          "entry": "verification/areas/stdlib_parity/tools/run_stdlib_namespace_corpus_validation.py",
+          "command": "stdlib-namespace-leetcode-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

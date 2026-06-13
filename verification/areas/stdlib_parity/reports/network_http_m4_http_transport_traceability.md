@@ -12,7 +12,7 @@ Status: implemented in M4 candidate branch.
 | Malformed protocol errors | malformed protocol input maps to typed `HttpError`/protocol evidence and must not panic. | Runtime test `http1_malformed_response_maps_to_typed_error` feeds an invalid HTTP/1 response and asserts a typed HTTP error string. |
 | Server accept/dispatch/shutdown substrate | single-runtime-worker per process; Phase 41 owns framework routing and lifecycle product. | Internal one-shot loopback harness validates client/server connection ownership handoff without adding public server API. `sifr.http_transport` is not an embedded stdlib source; the driver seeds it only as test harness metadata/Rust wrappers, and ordinary user imports are rejected with `SIFR-IMPORT-0009`. E2e fixtures must opt into the test-only harness with `# sifr-e2e-allow-http-transport-harness`. Serving-scale remains owned by `issues/ad-hoc-network-http-serving-scale-follow-up.md` stable identifier `ad-hoc-network-http-serving-scale-follow-up`. |
 | HTTP/1 keep-alive | Deferred from the one-shot M4 loopback harness. | M4 forces `Connection: close` for HTTP/1.1 responses to keep single-connection substrate fixtures deterministic; M5 must record whether keep-alive remains deferred or add explicit keep-alive coverage before handoff. |
-| Hyper-Util | conditional internal-only. | `verification/stdlib/hyper_util_necessity.md` records Hyper-only adapter burden, selected `tokio` feature, and no public Sifr contract dependency. |
+| Hyper-Util | conditional internal-only. | `verification/areas/stdlib_parity/reports/hyper_util_necessity.md` records Hyper-only adapter burden, selected `tokio` feature, and no public Sifr contract dependency. |
 
 ## CPython Evidence
 
