@@ -209,6 +209,7 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR N+1 Verification Facade Cutover | Merged | <https://github.com/sifr-lang/sifr/pull/2539> |
 | PR N+2 Submodule Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2541> |
 | PR N+3 Scripts Verification Sweep | Merged | <https://github.com/sifr-lang/sifr/pull/2543> |
+| PR N+4 Audits Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2545> |
 
 ## Verification Migration Status
 
@@ -581,6 +582,17 @@ Rules:
 - The LeetCode corpus belongs under `verification/areas/algorithmic_compatibility/corpora/leetcode/`.
 - Audit fixtures must be executable by the verification runner.
 - Audit output reports are generated under `target/`, not committed.
+
+Current status:
+
+- PR #2545 deleted the top-level `audits/` tree from the active repository.
+- Retained `.sifr` audit fixtures are now owned by `core_language`,
+  `project_workspace`, and `stdlib_parity` audit-fixture manifests.
+- The retired generated-code panic audit script is replaced by the
+  `generated_code_quality` intrinsic-panic-lint suite plus the existing
+  generated-output panic scan.
+- `scripts/check_audits_normalization.py` guards against the top-level audit
+  tree returning and verifies manifest ownership for retained audit fixtures.
 
 ## Verification Material Cleanup
 
@@ -1275,12 +1287,29 @@ Validation:
 
 Promote retained audit fixtures into verification manifests and remove historical report markdown from the active tree.
 
+Status: merged in PR #2545.
+
+Review:
+
+- Opus round 1 found profile-wiring and generated-code panic-lint coverage
+  blockers; both were fixed before the PR.
+- Opus round 2 reported no blockers and was satisfied for the milestone PR to
+  open.
+
 Validation:
 
 - no top-level `audits/`
 - every retained audit fixture is manifest-owned
-- audit area executes through the runner
-- `scripts/run_all_tests.sh --profile create-pr`
+- audit fixture suites execute through the owning area runners
+- `uv run --project verification --locked python -m sifr_verify areas check`
+- `python3 scripts/check_audits_normalization.py && python3 scripts/check_audits_normalization.py --self-test`
+- `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite audit-fixtures`
+- `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite audit-fixtures`
+- `uv run --project verification --locked python -m sifr_verify areas run --area stdlib_parity --suite audit-fixtures`
+- `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite intrinsic-panic-lint`
+- `scripts/run_all_tests.sh --profile create-pr`: passed with no test
+  failures; warm rerun exceeded the advisory two-minute warm budget
+  (`budget_ok=no`, 152.28s).
 
 ### PR N+5: Internal Docs Relevance Cleanup
 
