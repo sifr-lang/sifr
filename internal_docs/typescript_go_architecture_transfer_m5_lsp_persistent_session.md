@@ -59,12 +59,12 @@ M5 focused validation so far:
 - `cargo test -p sifr_analysis`
 - `cargo test -p sifr_frontend`
 - `cargo test -p sifr -- --skip test_e2e_pass`
-- `python3 verification/tooling/lsp_protocol_smoke.py`
-- `python3 verification/tooling/lsp_protocol_smoke.py --self-test`
-- `python3 verification/tooling/lsp_protocol_stress.py`
-- `python3 verification/tooling/lsp_protocol_stress.py --self-test`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py`
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test`
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py`
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py --self-test`
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test`
 - `cargo fmt --check`
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`

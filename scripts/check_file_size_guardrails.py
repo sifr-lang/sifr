@@ -241,7 +241,7 @@ def run_self_test() -> None:
         passing_included = (
             "crates/example/src/lib.rs",
             "scripts/tool.py",
-            "verification/tooling/check.py",
+            "verification/areas/developer_tooling/check.py",
             "demos/sample.sifr",
             "crates/sifr/tests/e2e/pass/sample.sifr",
         )

@@ -71,12 +71,12 @@ M7 focused validation so far:
 - `python3 scripts/check_file_size_guardrails.py`
 - `python3 scripts/check_package_manager_guardrails.py`
 - `cargo test -p sifr -- --skip test_e2e_pass`
-- `python3 verification/tooling/lsp_protocol_smoke.py`
-- `python3 verification/tooling/lsp_protocol_smoke.py --self-test`
-- `python3 verification/tooling/lsp_protocol_stress.py`
-- `python3 verification/tooling/lsp_protocol_stress.py --self-test`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py`
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test`
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py`
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py --self-test`
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
   `target/validation_lane_reports/create-pr.latest.json`, wall time 254.29s,

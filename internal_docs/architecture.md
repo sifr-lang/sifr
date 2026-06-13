@@ -338,7 +338,7 @@ The single formatter core is shared by:
 - `sifr_lsp` `textDocument/formatting` and `textDocument/rangeFormatting`
 - checked-in editor integrations through `sifr lsp --stdio`
 
-Formatter validation is part of local validation. `verification/tooling/check_formatter_ast_coverage.py`
+Formatter validation is part of local validation. `verification/areas/developer_tooling/check_formatter_ast_coverage.py`
 fails when a Sifr parser or AST extension lacks both Ruff fork formatter fixture
 coverage and Sifr wrapper corpus coverage. Formatter performance budgets cover a
 large-file check and a representative project check.

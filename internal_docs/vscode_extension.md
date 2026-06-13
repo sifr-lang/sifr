@@ -21,7 +21,7 @@ grammar, LSP launcher, settings, commands, test controller, local tests, CI, and
 
 ## Manifest Contract
 
-The checked-in contract is `verification/tooling/vscode_extension_contract.json`.
+The checked-in contract is `verification/areas/developer_tooling/vscode_extension_contract.json`.
 
 Required identity:
 
@@ -102,9 +102,9 @@ Before m36.7 closes, the extension must document whether its version is coupled 
 
 ## Validation
 
-`verification/tooling/check_vscode_extension_contract.py` validates the main-repo contract and, once extension validation is active, checks the extension repository manifest, commands, settings, launch command, package scripts, and forbidden semantic behavior.
+`verification/areas/developer_tooling/check_vscode_extension_contract.py` validates the main-repo contract and, once extension validation is active, checks the extension repository manifest, commands, settings, launch command, package scripts, and forbidden semantic behavior.
 
-`verification/tooling/check_vscode_extension.py` runs m36.7 build/test/package
+`verification/areas/developer_tooling/check_vscode_extension.py` runs m36.7 build/test/package
 validation against the real extension checkout: `npm ci` when dependencies are
 missing, `npm run lint`, `npm run typecheck`, `npm test`,
 `npm run test:extension`, and `npm run package`.

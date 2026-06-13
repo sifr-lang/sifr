@@ -165,7 +165,7 @@ type hierarchy, code actions, formatting, and generated Rust preview
 
 ## Automation
 
-`verification/tooling/check_typescript_go_m1_guardrails.py` validates:
+`verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` validates:
 
 - M1 documentation contains the locked terms, direct-read inventory, current LSP
   limitations, serialized M1-M4 rule, and aggregate LSP budget status.
@@ -194,7 +194,7 @@ type hierarchy, code actions, formatting, and generated Rust preview
   debugging.
 - M17 editor corpus and handle preparation are visible: `SnapshotHandleKind`
   stays internal to `sifr_analysis`, marker fixtures live under
-  `verification/tooling/editor_query_corpus`, and runtime package fixtures
+  `verification/areas/developer_tooling/editor_query_corpus`, and runtime package fixtures
   include `package_fatal_source_map_no_import_ambiguity` to prove fatal
   package-map diagnostics do not duplicate source import ambiguity.
 

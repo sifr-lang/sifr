@@ -53,7 +53,7 @@ m36.4 implementation:
 - Diagnostics combine canonical frontend hard diagnostics with `sifr_lint` policy diagnostics.
 - Code actions offer explicit Sifr policy suppression edits for lint diagnostics.
 - Generated Rust preview calls the canonical `sifr_driver::compile_with_metadata` handoff and returns structured unavailability when compilation fails.
-- Parity coverage lives in `verification/tooling/parity_manifest.json`, `verification/tooling/editor_query_snapshots/`, and `verification/tooling/completion_quality/`.
+- Parity coverage lives in `verification/areas/developer_tooling/parity_manifest.json`, `verification/areas/developer_tooling/editor_query_snapshots/`, and `verification/areas/developer_tooling/completion_quality/`.
 
 TypeScript-Go architecture transfer M4 implementation:
 
@@ -150,11 +150,11 @@ Ad hoc production-grade linter phase:
 
 - phase contract: `plans/issues/archive/ad-hoc-production-grade-sifr-linter.md`
 - execution tracker: `plans/issues/archive/ad-hoc-production-grade-sifr-linter-execution.md`
-- Ruff rule-family/config audit manifest: `verification/tooling/linter_manifests/ruff_rule_config_audit.json`
-- lint CLI parity manifest: `verification/tooling/linter_manifests/lint_cli_parity.json`
-- rule metadata manifest: `verification/tooling/linter_manifests/lint_rule_metadata.json`
-- suppression-gate manifest: `verification/tooling/linter_manifests/suppression_gate.json`
-- enforcement: `python3 verification/tooling/check_linter_reuse_contract.py`
+- Ruff rule-family/config audit manifest: `verification/areas/developer_tooling/linter_manifests/ruff_rule_config_audit.json`
+- lint CLI parity manifest: `verification/areas/developer_tooling/linter_manifests/lint_cli_parity.json`
+- rule metadata manifest: `verification/areas/developer_tooling/linter_manifests/lint_rule_metadata.json`
+- suppression-gate manifest: `verification/areas/developer_tooling/linter_manifests/suppression_gate.json`
+- enforcement: `python3 verification/areas/developer_tooling/check_linter_reuse_contract.py`
 
 The ad hoc phase keeps Ruff Python rule families, Ruff's Python rule registry,
 Ruff Server diagnostic behavior, and Python project/module semantics out of

@@ -106,7 +106,7 @@ parent-process watchdog behavior.
 
 ## Capability Matrix
 
-The checked-in capability source of truth is `verification/tooling/lsp_protocol_matrix.json`. A capability must not be advertised unless the matrix maps it to:
+The checked-in capability source of truth is `verification/areas/developer_tooling/lsp_protocol_matrix.json`. A capability must not be advertised unless the matrix maps it to:
 
 - a Sifr owner
 - positive coverage
@@ -114,7 +114,7 @@ The checked-in capability source of truth is `verification/tooling/lsp_protocol_
 - unsupported-feature behavior where applicable
 - a performance budget id where latency matters
 
-The matrix locks all required Phase 36 methods and workspace commands before implementation begins. `verification/tooling/check_tooling_contract_lock.py` validates required matrix coverage.
+The matrix locks all required Phase 36 methods and workspace commands before implementation begins. `verification/areas/developer_tooling/check_tooling_contract_lock.py` validates required matrix coverage.
 
 ## Settings
 
@@ -182,12 +182,12 @@ LSP 3.17 is the Phase 36 target. Any `lsp-types` version bump requires a reviewe
 
 ## m36.5 Protocol Coverage
 
-`verification/tooling/lsp_protocol_smoke.py` initializes the server, opens a
+`verification/areas/developer_tooling/lsp_protocol_smoke.py` initializes the server, opens a
 `.sifr` buffer, validates versioned push diagnostics, runs the required
 document/workspace query families, exercises generated-Rust and test commands,
 and shuts down through `shutdown` plus `exit`.
 
-`verification/tooling/lsp_protocol_stress.py` covers cancellation
+`verification/areas/developer_tooling/lsp_protocol_stress.py` covers cancellation
 notifications, full sync, stale-version rejection, invalid-range protocol
 errors, workspace configuration, watched-file refresh, save/close flows,
 unknown command errors, and closed-document query rejection.

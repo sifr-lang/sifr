@@ -172,8 +172,10 @@ run_core_guardrails() {
   python3 "${SCRIPT_DIR}/check_source_crate_dependency_direction.py" --self-test
 
   echo "Running TypeScript-Go architecture transfer M1 guardrails"
-  python3 "${SCRIPT_DIR}/../verification/tooling/check_typescript_go_m1_guardrails.py"
-  python3 "${SCRIPT_DIR}/../verification/tooling/check_typescript_go_m1_guardrails.py" --self-test
+  uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify areas run \
+      --area developer_tooling \
+      --suite typescript-go-m1
 
   echo "Running sifr_driver maintainability guardrails"
   python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
@@ -194,12 +196,10 @@ run_diagnostic_contracts() {
   python3 "${SCRIPT_DIR}/check_diagnostic_transport_cleanup.py"
 
   echo "Running diagnostic presentation contract check"
-  python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_presentation_contract.py"
-  python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_presentation_contract.py" --self-test
-
-  echo "Running diagnostic source canonicalization contract check"
-  python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_source_canonicalization_contract.py"
-  python3 "${SCRIPT_DIR}/../verification/tooling/check_diagnostic_source_canonicalization_contract.py" --self-test
+  uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify areas run \
+      --area developer_tooling \
+      --suite diagnostic-contracts
 }
 
 run_frontend_syntax_guardrails() {
@@ -210,69 +210,21 @@ run_frontend_syntax_guardrails() {
       --suite frontend-syntax-guardrails
 }
 
-tooling_enabled() {
-  local suite="$1"
-  [[ ",${TOOLING_SUITES}," == *",full,"* || ",${TOOLING_SUITES}," == *",${suite},"* ]]
-}
-
 run_developer_tooling_checks() {
   echo "Running Developer Tooling Checks"
   echo "  suites=${TOOLING_SUITES:-none}"
-  if tooling_enabled static; then
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_contract_lock.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_contract_lock.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_dependency_boundaries.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_tooling_dependency_boundaries.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_lsp_split_brain.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_linter_diagnostic_class.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_linter_diagnostic_class.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_rule_suppression_contract.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_completion_quality.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_completion_quality.py" --self-test
-  fi
-  if tooling_enabled formatter; then
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_contract.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_phase_manifests.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_phase_manifests.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_ast_coverage.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_formatter_ast_coverage.py" --self-test
-  fi
-  if tooling_enabled analysis; then
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_contract.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_coherence.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_snapshot_coherence.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_analysis_split_brain.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/run_tooling_parity.py" --self-test
-  fi
-  if tooling_enabled lsp-smoke; then
-    python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_smoke.py" --self-test
-  fi
-  if tooling_enabled editor-release; then
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension_contract.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_vscode_extension.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_editor_assets.py" --self-test
-  fi
-  if tooling_enabled lsp-stress; then
-    python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/lsp_protocol_stress.py" --self-test
-    git submodule update --init verification/sifr-large-lsp-verification
-    python3 "${SCRIPT_DIR}/../verification/sifr-large-lsp-verification/tools/generate_corpus.py" check
-    python3 "${SCRIPT_DIR}/../verification/tooling/lsp_large_session.py" --self-test
-    python3 "${SCRIPT_DIR}/../verification/tooling/lsp_large_session.py" --mode smoke --require-submodule
-  fi
-  if tooling_enabled phase-closeout; then
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_phase36_closeout.py"
-    python3 "${SCRIPT_DIR}/../verification/tooling/check_phase36_closeout.py" --self-test
+  DEVELOPER_TOOLING_ARGS=()
+  IFS=',' read -r -a TOOLING_SUITE_ARRAY <<< "${TOOLING_SUITES}"
+  for suite in "${TOOLING_SUITE_ARRAY[@]}"; do
+    if [[ -n "${suite}" ]]; then
+      DEVELOPER_TOOLING_ARGS+=(--suite "${suite}")
+    fi
+  done
+  if [[ "${#DEVELOPER_TOOLING_ARGS[@]}" -gt 0 ]]; then
+    uv run --project "${SCRIPT_DIR}/../verification" --locked \
+      python -m sifr_verify areas run \
+        --area developer_tooling \
+        "${DEVELOPER_TOOLING_ARGS[@]}"
   fi
 }
 
