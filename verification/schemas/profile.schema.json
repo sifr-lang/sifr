@@ -1,0 +1,178 @@
+{
+  "$schema": "https://sifr-lang.local/verification/profile.schema.json",
+  "title": "Sifr verification profile",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "name",
+    "description",
+    "budgets",
+    "resource_policy",
+    "selected_areas",
+    "toolchain_steps",
+    "guardrail_steps",
+    "retry_policy",
+    "shard_policy",
+    "resume_policy",
+    "report"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [1]
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "budgets": {
+      "type": "object",
+      "required": ["warm_wall_time_minutes", "cold_wall_time_minutes"],
+      "additionalProperties": false,
+      "properties": {
+        "warm_wall_time_minutes": {
+          "type": "integer"
+        },
+        "cold_wall_time_minutes": {
+          "type": "integer"
+        }
+      }
+    },
+    "resource_policy": {
+      "type": "object",
+      "required": ["classes", "max_parallel"],
+      "additionalProperties": false,
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "default-local",
+              "network",
+              "large-memory",
+              "platform-specific",
+              "long-running",
+              "external-corpus"
+            ]
+          }
+        },
+        "max_parallel": {
+          "type": "integer"
+        }
+      }
+    },
+    "selected_areas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["area", "suites", "resource_classes"],
+        "additionalProperties": false,
+        "properties": {
+          "area": {
+            "type": "string"
+          },
+          "suites": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resource_classes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "default-local",
+                "network",
+                "large-memory",
+                "platform-specific",
+                "long-running",
+                "external-corpus"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "toolchain_steps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "cargo-build-release",
+          "cargo-fmt-check",
+          "cargo-clippy-workspace",
+          "cargo-test-sifr-smoke",
+          "cargo-test-sifr-full",
+          "cargo-test-workspace"
+        ]
+      }
+    },
+    "guardrail_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "retry_policy": {
+      "type": "object",
+      "required": ["max_attempts", "retry_flaky_only"],
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts": {
+          "type": "integer"
+        },
+        "retry_flaky_only": {
+          "type": "boolean"
+        }
+      }
+    },
+    "shard_policy": {
+      "type": "object",
+      "required": ["strategy", "shards"],
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["none", "deterministic"]
+        },
+        "shards": {
+          "type": "integer"
+        }
+      }
+    },
+    "resume_policy": {
+      "type": "object",
+      "required": ["enabled", "failure_reproduction"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "failure_reproduction": {
+          "type": "string",
+          "enum": ["profile-and-case"]
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "required": ["format", "output_dir"],
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["json-v1"]
+        },
+        "output_dir": {
+          "type": "string",
+          "format": "repo-relative-path"
+        }
+      }
+    }
+  }
+}

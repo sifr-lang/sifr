@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "guardrails": [
+    {
+      "name": "hir-maintainability",
+      "entrypoint": "scripts/check_hir_maintainability_guardrails.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
+      "name": "file-size",
+      "entrypoint": "scripts/check_file_size_guardrails.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
+      "name": "cursor-hygiene",
+      "entrypoint": "scripts/check_cursor_hygiene.py",
+      "args": ["--self-test"],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
+      "name": "source-crate-dependency-direction",
+      "entrypoint": "scripts/check_source_crate_dependency_direction.py",
+      "args": ["--self-test"],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
+      "name": "driver-maintainability",
+      "entrypoint": "scripts/check_sifr_driver_maintainability_guardrails.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
+      "name": "package-manager",
+      "entrypoint": "scripts/check_package_manager_guardrails.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    }
+  ]
+}

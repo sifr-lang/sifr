@@ -1,0 +1,62 @@
+{
+  "$schema": "https://sifr-lang.local/verification/result.schema.json",
+  "title": "Sifr verification result report",
+  "type": "object",
+  "required": ["schema_version", "profile", "status", "generated_at", "elapsed_ms", "cases", "failures"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [1]
+    },
+    "profile": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pass", "fail"]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "elapsed_ms": {
+      "type": "integer"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "elapsed_ms"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pass", "fail", "skip"]
+          },
+          "elapsed_ms": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "reproduce"],
+        "additionalProperties": false,
+        "properties": {
+          "case_id": {
+            "type": "string"
+          },
+          "reproduce": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

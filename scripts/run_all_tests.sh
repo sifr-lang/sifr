@@ -9,16 +9,16 @@ usage() {
   cat <<'EOF'
 Usage: scripts/run_all_tests.sh [options]
 
-Run local-first validation for the selected lane.
+Run local-first validation for the selected profile.
 
-Lanes:
+Profiles:
   create-pr Fast local create-PR signal.
   merge     Authoritative merge gate (default).
   nightly Broad hardening and full-corpus signal.
   release Highest-confidence local qualification gate.
 
 Options:
-  --profile <create-pr|merge|nightly|release>  Validation lane (default: merge)
+  --profile <create-pr|merge|nightly|release>  Validation profile (default: merge)
   --help                         Show this help
 
 Any remaining arguments are forwarded to scripts/run_e2e_pass.sh.
@@ -27,6 +27,7 @@ EOF
 
 PROFILE="${SIFR_TEST_PROFILE:-merge}"
 FORWARD_ARGS=()
+MIN_UV_VERSION="${SIFR_MIN_UV_VERSION:-0.9.28}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -44,6 +45,48 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+version_gte() {
+  python3 - "$1" "$2" <<'PY'
+import re
+import sys
+
+
+def parse(value: str) -> tuple[int, ...]:
+    parts = [int(part) for part in re.findall(r"\d+", value)]
+    return tuple(parts)
+
+
+actual = parse(sys.argv[1])
+minimum = parse(sys.argv[2])
+width = max(len(actual), len(minimum))
+actual += (0,) * (width - len(actual))
+minimum += (0,) * (width - len(minimum))
+raise SystemExit(0 if actual >= minimum else 1)
+PY
+}
+
+require_uv() {
+  if ! command -v uv >/dev/null 2>&1; then
+    cat >&2 <<EOF
+error: uv ${MIN_UV_VERSION} or newer is required for verification tooling.
+Install uv and re-run this facade; see verification/README.md.
+EOF
+    exit 2
+  fi
+
+  local uv_version
+  uv_version="$(uv --version | awk '{print $2}')"
+  if ! version_gte "${uv_version}" "${MIN_UV_VERSION}"; then
+    cat >&2 <<EOF
+error: uv ${MIN_UV_VERSION} or newer is required for verification tooling; found ${uv_version}.
+Upgrade uv and re-run this facade; see verification/README.md.
+EOF
+    exit 2
+  fi
+}
+
+require_uv
 
 if [[ -z "${SIFR_LANE_REPORT_CAPTURED:-}" ]]; then
   REPORT_DIR="${SCRIPT_DIR}/../target/validation_lane_reports"
@@ -287,6 +330,12 @@ run_verification_hardening_self_tests() {
   python3 "${SCRIPT_DIR}/run_verification_hardening.py" --self-test
 }
 
+run_verification_runner_foundation_checks() {
+  echo "Running verification runner foundation checks"
+  uv lock --project "${SCRIPT_DIR}/../verification" --check
+  uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify --self-test
+}
+
 run_distribution_checks() {
   if [[ "${DISTRIBUTION_MODE}" == "none" ]]; then
     echo "Skipping distribution validation for lane ${PROFILE}"
@@ -467,6 +516,7 @@ timed_step frontend_syntax_guardrails run_frontend_syntax_guardrails
 timed_step developer_tooling_checks run_developer_tooling_checks
 timed_step performance_budget_checks run_performance_budget_checks
 timed_step verification_hardening_self_tests run_verification_hardening_self_tests
+timed_step verification_runner_foundation run_verification_runner_foundation_checks
 timed_step distribution_validation run_distribution_checks
 
 if [[ "${GENERATED_CODE_QUALITY_MODE}" != "none" ]]; then
