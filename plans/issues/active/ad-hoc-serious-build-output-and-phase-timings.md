@@ -22,11 +22,11 @@ The gap is not cosmetic color or icons. The gap is that build output does not co
 - how long meaningful phases took
 - where the final binary is and, when cheap to measure, how large it is
 
-This phase designs and implements a serious compiler-style build output contract: terse by default, explicit under `--verbose`, truthful to actual compiler boundaries, stable in non-interactive contexts, and compatible with existing diagnostic formats.
+This phase designs and implements a serious compiler-style build output contract: phase-aware by default, terser under `--quiet`, truthful to actual compiler boundaries, stable in non-interactive contexts, and compatible with existing diagnostic formats.
 
 ## Current Implementation Facts
 
-- `sifr build` only accepts `<FILE>`, `-o/--output`, global `--config`, and global `--isolated`; there is no verbosity flag today.
+- `sifr build` only accepts `<FILE>`, `-o/--output`, global `--config`, and global `--isolated`; there is no quiet/progress flag today.
 - `cmd_build` renders successful builds as `compiled successfully: {binary_path}` on stderr.
 - Build execution currently goes through `compile_entrypoint`, resolves single-file vs project mode, builds a rooted entrypoint plan, emits frontend diagnostics, converts the plan to a generated Rust binary project, materializes files, and runs `cargo build --release`.
 - Single-file builds parse one source and call `compile_single_frontend_module_with_source_and_options`.
@@ -37,8 +37,8 @@ This phase designs and implements a serious compiler-style build output contract
 ## Design Principles
 
 - **Truth over theater.** Output names must correspond to measured implementation boundaries, not aspirational compiler phases.
-- **Quiet default.** Successful default output should remain short enough for scripts and normal terminal use.
-- **Useful verbosity.** Verbose output should explain major work boundaries and durations without becoming a trace dump.
+- **Useful default.** Successful default output should explain major work boundaries and durations without becoming a trace dump.
+- **Quiet when requested.** `--quiet` should suppress phase detail while still leaving a short, useful success result for humans.
 - **Diagnostics stay canonical.** Human build progress must not pollute JSON or compact diagnostic output.
 - **TTY-aware presentation.** Color and alignment are allowed only when appropriate; output must remain readable with color disabled and when redirected.
 - **No symbolic status gimmicks.** Use words such as `Compiling`, `Analyzing`, `Generating`, `Building`, `Finished`, `Binary`, `error`, and `warning`, not emoji or decorative glyphs.
@@ -47,7 +47,7 @@ This phase designs and implements a serious compiler-style build output contract
 ## Output Streams and Machine Formats
 
 - Human progress lines are emitted to stderr only. Stdout remains reserved for command surfaces that intentionally print program output, generated code, or machine-readable content.
-- When `--diagnostic-format` is `json` or `compact`, no human progress lines are emitted on either stream, regardless of `--verbose`. Only diagnostics flow through the diagnostic renderer.
+- When `--diagnostic-format` is `json` or `compact`, no human progress lines are emitted on either stream, regardless of `--quiet`. Only diagnostics flow through the diagnostic renderer.
 - Human progress text is not a stable public API. Scripts must use `--diagnostic-format=json` or `--diagnostic-format=compact` and parse the structured diagnostic stream instead of grepping `Finished`, `Binary`, or phase labels.
 - If color is added, it is enabled only when stderr is a terminal and `NO_COLOR` is not set. Non-TTY output has no ANSI sequences.
 - If paths contain whitespace, render them with stable shell-style quoting in human output.
@@ -55,14 +55,6 @@ This phase designs and implements a serious compiler-style build output contract
 ## Proposed User-Facing Contract
 
 Default successful build:
-
-```text
-   Compiling main.sifr
-    Finished release build in 42 ms
-     Binary: ./main
-```
-
-Verbose successful build:
 
 ```text
 sifr v0.1.0
@@ -82,6 +74,13 @@ Binary: ./main
 Size:   1.4 MB
 ```
 
+Quiet successful build:
+
+```text
+Finished release build in 54 ms
+Binary: ./main
+```
+
 When the compiler can cheaply report module counts, prefer count-aware labels:
 
 ```text
@@ -89,29 +88,30 @@ When the compiler can cheaply report module counts, prefer count-aware labels:
    Analyzing 4 modules
 ```
 
-For normal output, do not claim detailed sub-phases unless they are separately instrumented. `Analyzing types, ownership, and flow` is acceptable as one frontend semantic boundary only when the timer covers that combined semantic stage. Splitting it into `Checked types`, `Resolved lifetimes`, and `Verified ownership` is not acceptable until those timings are measured independently.
+For default output, do not claim detailed sub-phases unless they are separately instrumented. `Analyzing types, ownership, and flow` is acceptable as one frontend semantic boundary only when the timer covers that combined semantic stage. Splitting it into `Checked types`, `Resolved lifetimes`, and `Verified ownership` is not acceptable until those timings are measured independently.
 
 ## Decisions
 
-- The flag is `--verbose`. Do not add a separate `--timings` flag in this phase; verbose mode shows timings.
-- Default successful `sifr build` output includes `Compiling <path>`, `Finished release build in <duration>`, and `Binary: <path>`.
+- The flag is `--quiet`. Do not add `--verbose` or `--timings` in this phase; phase timings are part of the default human build output.
+- Default successful `sifr build` output includes the phase-aware summary, final duration, binary path, and best-effort binary size.
+- Quiet successful `sifr build` output includes only `Finished release build in <duration>` and `Binary: <path>`.
 - Human progress is stderr-only. Stdout is untouched by `sifr build` success rendering.
-- Binary size appears only in `--verbose`, and only when readable. A size read failure must not fail or warn after a successful build.
+- Binary size appears in default human output only when readable. A size read failure must not fail or warn after a successful build. `--quiet` omits binary size.
 - In `--diagnostic-format=json` and `--diagnostic-format=compact`, successful builds emit no human progress lines.
-- `sifr run` prints build progress only on cache miss, suppresses the final `Binary:` line because program output follows, and prints no build progress on cache hit.
+- `sifr run` prints build progress only on cache miss, suppresses the final `Binary:` line because program output follows, and prints no build progress on cache hit. `sifr run --quiet` suppresses build progress even on cache miss.
 - Cache hits in `sifr build` print a concise cached success form: `Finished release build in <duration> (cached)` plus `Binary: <path>`. The duration is the current command's cache lookup and reporting time, not a stored historical compile time.
-- Non-verbose native builds pass `--quiet` to Cargo so Cargo progress does not collide with Sifr progress. Verbose native builds do not pass `--quiet`.
+- Sifr passes `--quiet` to Cargo for native builds so Cargo progress does not collide with Sifr progress. Cargo/rustc errors remain visible.
 
 ## Scope
 
 This phase owns:
 
-- adding the explicit `--verbose` build output mode
+- adding the explicit `--quiet` build output mode
 - introducing a build progress/timing data model in the driver or CLI boundary
 - reporting elapsed time for major build stages
-- reporting build mode and target shape in verbose output
+- reporting build mode and target shape in default human output
 - reporting binary path in all success modes
-- reporting binary size in verbose mode when the final binary exists and metadata is cheap to read
+- reporting binary size in default human output when the final binary exists and metadata is cheap to read
 - preserving current diagnostic behavior for errors and warnings
 - documenting output stability rules for scripts and snapshots
 
@@ -130,8 +130,8 @@ This phase does not own:
 ### Wave 0: Output Contract Lock
 
 - Add tests that capture the intended default success output shape.
-- Add tests for `--verbose` help text.
-- Add accepted fixture baselines for default success, verbose success, JSON-format success with no progress text, compact-format success with no progress text, and cache-hit success.
+- Add tests for `--quiet` help text.
+- Add accepted fixture baselines for default success, quiet success, JSON-format success with no progress text, compact-format success with no progress text, and cache-hit success.
 - Add the scripting-stability statement to user-facing CLI docs.
 - Record the `sifr run` cache-hit and cache-miss output contract before touching shared build paths.
 
@@ -168,17 +168,18 @@ Exit criteria:
 ### Wave 2: CLI Rendering
 
 - Replace the existing `compiled successfully: ...` success line with the new default output.
-- In default mode, right-align the leading verbs in the Cargo style used by the accepted fixture.
-- Add verbose rendering with aligned text in human mode: left-align labels, right-align durations, and compute spacing from the longest label.
+- Render default phase lines with aligned text in human mode: left-align labels, right-align durations, and compute spacing from the longest label.
+- Render `--quiet` success as the two-line quiet contract.
 - Keep JSON and compact diagnostic modes free of human progress decorations.
 - Make color TTY-aware and respect `NO_COLOR` if color is added.
 - Ensure output remains readable without color.
-- Pass `--quiet` to Cargo in non-verbose native builds, while preserving Cargo/rustc error output.
+- Pass `--quiet` to Cargo while preserving Cargo/rustc error output.
 
 Exit criteria:
 
-- Default output is concise.
-- Verbose output is phase-aware and measurable.
+- Default output is bounded and readable.
+- Default output is phase-aware and measurable.
+- Quiet output is terse and stable enough for human terminal use.
 - Non-human diagnostic formats remain parseable and unaffected by progress banners.
 
 ### Wave 3: Failure Surface Hardening
@@ -231,12 +232,13 @@ Minimum focused validation for implementation PRs:
 ```bash
 cargo test -p sifr build_output
 cargo run -q -p sifr -- build demos/own_mut_appends/main.sifr
-cargo run -q -p sifr -- build --verbose demos/own_mut_appends/main.sifr
+cargo run -q -p sifr -- build --quiet demos/own_mut_appends/main.sifr
 cargo run -q -p sifr -- --diagnostic-format json build demos/own_mut_appends/main.sifr
 cargo run -q -p sifr -- --diagnostic-format compact build demos/own_mut_appends/main.sifr
 cargo run -q -p sifr -- run demos/own_mut_appends/main.sifr
-cargo run -q -p sifr -- build --verbose demos/own_mut_appends/main.sifr 2>&1 | cat
-NO_COLOR=1 cargo run -q -p sifr -- build --verbose demos/own_mut_appends/main.sifr
+cargo run -q -p sifr -- run --quiet demos/own_mut_appends/main.sifr
+cargo run -q -p sifr -- build demos/own_mut_appends/main.sifr 2>&1 | cat
+NO_COLOR=1 cargo run -q -p sifr -- build demos/own_mut_appends/main.sifr
 cargo run -q -p sifr -- trace demos/own_mut_appends/main.sifr
 python3 scripts/check_hir_maintainability_guardrails.py
 cargo fmt --check
@@ -258,3 +260,4 @@ scripts/run_all_tests.sh
 
 - Claude Opus planning review pass 1: requested measured-boundary wording, explicit machine-format suppression, `sifr run` and cache-hit decisions, verbose-only best-effort binary size, Cargo `--quiet` policy, and unit-style cleanup.
 - Claude Opus planning review pass 2: implementation-ready; only minor wording polish requested for default alignment, verbose Cargo quiet policy, and cached duration semantics.
+- User follow-up on 2026-06-14: default human output should be the phase-aware summary; `--quiet` is the terse success mode.
