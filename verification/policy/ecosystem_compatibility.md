@@ -1,6 +1,6 @@
 # OSS Gate Policy
 
-This policy defines the curated blocking OSS gate and broader non-blocking ecosystem lane.
+This policy defines the curated blocking OSS gate and broader non-blocking ecosystem suite.
 
 ## Curated OSS Gate (Blocking)
 

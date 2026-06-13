@@ -1292,8 +1292,8 @@ Note: `extract_expect_stdout` is retained for legacy runner compatibility only. 
 cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile create-pr # Fast local-first profile
 ./scripts/run_all_tests.sh --profile merge   # Authoritative merge gate
-./scripts/run_all_tests.sh --profile nightly # Broad nightly validation lane
-./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification lane
+./scripts/run_all_tests.sh --profile nightly # Broad nightly validation profile
+./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification profile
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full     # Preview installer/artifact/release automation checks
 ./verification/runner/e2e/check_report_determinism.sh --profile release # Stable e2e report signature across reruns
 uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
@@ -1309,7 +1309,7 @@ cargo bench                                   # Run benchmarks (layer 6, milesto
 
 Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release}.json` and executed by `verification/runner/sifr_verify/profile_runner.py` through `uv run --project verification python -m sifr_verify profiles run --profile <profile>`. `scripts/run_all_tests.sh` is only the stable public facade over that runner. Verification areas are owned by `verification/areas/*/manifest.json` and executed through `uv run --project verification python -m sifr_verify areas run`. Representative `create-pr` and `merge` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in area-owned validation contract manifests under `verification/areas/{core_language,project_workspace}/data/validation_contracts/`; profiles select the individual contract suite names, and the area adapter invokes the Rust-native `tests/validation_contracts.rs` harness with that exact suite filter. Fixed bug locks and unresolved crash sentinels live under `verification/areas/regression/`.
 
-`profile_runner.py` emits a per-lane runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-lane RSS regressions.
+`profile_runner.py` emits a per-profile runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-profile RSS regressions.
 
 ### Adding Tests for New Features (Agent Workflow)
 

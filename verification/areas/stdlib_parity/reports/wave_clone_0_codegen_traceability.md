@@ -9,7 +9,7 @@ Capture a reproducible clone-heavy generated-code baseline and lock one canonica
 
 ## Baseline Validation Snapshot (2026-03-21)
 
-- validation lane: `scripts/run_all_tests.sh --profile create-pr`
+- validation profile: `scripts/run_all_tests.sh --profile create-pr`
 - result: PASS
   - unit + non-pass e2e: PASS (`37` + `25`)
   - validation matrix (`frontend_mode_parity`, `phase23_graph_isolation`): PASS (`7` rows)

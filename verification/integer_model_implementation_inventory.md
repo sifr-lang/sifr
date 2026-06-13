@@ -88,7 +88,7 @@ These references are intentional audit findings, not blockers for the docs split
 - `internal_docs/phases/13_type_system_completion.md`: milestone for public `bigint` as arbitrary-precision alternative.
 - `internal_docs/phases/28_decimal_type_and_exact_numeric_semantics.md`: decimal conversions mention `bigint`; these should become exact `int` conversions or transition-alias notes.
 - `internal_docs/diagnostic_emission_inventory.md`: `SIFR-TYPE-0006` int/bigint mixing entries.
-- `verification/validation_lanes/*_e2e_manifest.json`: historical `bigint_arithmetic` lane entries are retired from create-pr/merge manifests by INT-7.
+- `verification/areas/core_language/data/*_e2e_manifest.json`: historical `bigint_arithmetic` profile entries are retired from create-pr/merge manifests by INT-7.
 - `crates/sifr/tests/e2e/pass/*bigint*.sifr`, `crates/sifr/tests/e2e/fail/bigint_*.sifr`, and adjacent consolidated fixtures that still exercise the temporary alias are quarantined in `verification/integer_model_bigint_transition_quarantine.md` until the public alias-removal PR deletes or rewrites them.
 - `demos/cargo_manifest`, `demos/project_build`, and `demos/generic_stdlib`: demo references to `bigint` or generated `num_bigint::BigInt`.
 - `issues/archive/*`: historical references should remain archived unless a current doc links to them as active guidance.

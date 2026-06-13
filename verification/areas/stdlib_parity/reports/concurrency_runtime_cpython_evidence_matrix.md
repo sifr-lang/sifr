@@ -2,7 +2,7 @@
 
 Status: M7 inventory audited; generated from the phase source-of-truth list.
 
-CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
+CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 
 | Reference | Domain | Native mapping | Evidence state | Extracted signal |
 | --- | --- | --- | --- | --- |

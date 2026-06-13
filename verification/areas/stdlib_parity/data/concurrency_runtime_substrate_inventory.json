@@ -1,7 +1,7 @@
 {
   "cpython_checkout": {
     "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6",
-    "path": "/Users/yaseralnajjar/work/sifr/cpython"
+    "path": "../cpython"
   },
   "domain_summary": [
     {
@@ -212,7 +212,7 @@
       "milestone": "milestone_concurrency_runtime_6"
     },
     {
-      "acceptance": "docs, demos, validation lanes, panic scans, final inventory closure, final external PASS review",
+      "acceptance": "docs, demos, validation profiles, panic scans, final inventory closure, final external PASS review",
       "artifact": "concurrency_runtime_m7_closeout_traceability.md",
       "fixtures": "structured task demo, channel pipeline demo, offload demo, process demo, shutdown/cleanup demo",
       "milestone": "milestone_concurrency_runtime_7"

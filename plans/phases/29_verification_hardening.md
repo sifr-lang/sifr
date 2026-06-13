@@ -24,7 +24,7 @@ This phase owns the compiler verification foundation:
 - known-failure sentinel policy
 - fuzz/property operating model
 - curated real-world blocking gate
-- broader ecosystem non-blocking lane definition
+- broader ecosystem non-blocking suite definition
 - deterministic sharding, rerun, and flake policy
 - machine-readable validation artifacts
 
@@ -123,9 +123,9 @@ Minimum suite kinds:
   - required commands (`check`, `build`, `run`, `test` as applicable)
   - timeout policy
   - expected result classification
-- The phase must also define a broader non-blocking ecosystem lane separately from the curated gate.
+- The phase must also define a broader non-blocking ecosystem suite separately from the curated gate.
 - The curated gate is a hard verification gate.
-- The broader lane is for compatibility signal and backlog generation, not merge blocking.
+- The broader suite is for compatibility signal and backlog generation, not merge blocking.
 
 ## Incremental Boundary Note
 - This phase may verify repeatability and deterministic behavior of the canonical local validation entrypoints, including edit-run workflows exercised by owned suites.
@@ -178,14 +178,14 @@ Minimum suite kinds:
   - Minimized reproducible cases are required before closure.
   - Local fuzz/property runs are reproducible enough for routine engineering use.
 
-### milestone_29_4: Curated OSS Gate and Broader Ecosystem Lane
+### milestone_29_4: Curated OSS Gate and Broader Ecosystem Suite
 - Scope:
   - Build a small pinned curated real-world/project corpus that blocks merges.
-  - Define a separate broader non-blocking ecosystem lane.
+  - Define a separate broader non-blocking ecosystem suite.
   - Require structured result classification and reproducible execution.
 - Definition of done:
   - Curated gate is version-controlled, pinned, and locally reproducible.
-  - Broader ecosystem lane is explicitly non-blocking and separately classified.
+  - Broader ecosystem suite is explicitly non-blocking and separately classified.
   - Results are structured and comparable over time.
 
 ### milestone_29_5: Deterministic Scale, Flake Control, and Structured Evidence
@@ -251,7 +251,7 @@ Minimum suite kinds:
 - `milestone_29_1` (Suite Taxonomy and Baseline Governance): validation goals cover: Define canonical suite taxonomy and per-suite contracts; Add baseline-backed verification for diagnostics and project behavior; Define canonical checked-in artifacts, normalization rules, and a bless/accept workflow. Include negative-path goals that catch regressions against these guarantees.
 - `milestone_29_2` (Fixedbugs and Crashes Corpus): validation goals cover: Require every resolved compiler bug in scope to land in `fixedbugs`; Add issue-linked metadata and root-cause traceability; Define `crashes` sentinel policy and promotion rules. Include negative-path goals that catch regressions against these guarantees.
 - `milestone_29_3` (Fuzz and Property Operationalization): validation goals cover: Define fuzz targets, property suites, and seed corpora for highest-value compiler surfaces; Define reproducibility, deduplication, minimization, and triage rules; Separate local smoke fuzz/property gates from longer-running sustained lanes. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_29_4` (Curated OSS Gate and Broader Ecosystem Lane): validation goals cover: Build a small pinned curated real-world/project corpus that blocks merges; Define a separate broader non-blocking ecosystem lane; Require structured result classification and reproducible execution. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_29_4` (Curated OSS Gate and Broader Ecosystem Suite): validation goals cover: Build a small pinned curated real-world/project corpus that blocks merges; Define a separate broader non-blocking ecosystem suite; Require structured result classification and reproducible execution. Include negative-path goals that catch regressions against these guarantees.
 - `milestone_29_5` (Deterministic Scale, Flake Control, and Structured Evidence): validation goals cover: Define deterministic sharding and per-suite runtime expectations; Add repeat-run and sequential-vs-parallel equivalence checks; Define rerun/quarantine policy for flakes; Require machine-readable artifacts from all hardening gates; Add suggestion/autofix validation if suggestions are part of the stable contract. Include negative-path goals that catch regressions against these guarantees.
 - Exit-gate evidence explicitly demonstrates: Verification hardening is a concrete compiler verification system rather than an informal collection of tests.
 
@@ -288,7 +288,7 @@ The phase must define and keep current:
 - crashes/sentinel policy
 - fuzz triage and minimization policy
 - curated OSS gate policy
-- broader ecosystem lane policy
+- broader ecosystem suite policy
 - deterministic sharding policy
 - rerun/quarantine/flake policy
 - machine-readable artifact schema and retention policy
@@ -301,7 +301,7 @@ The phase must define and keep current:
 - crashes/sentinel index
 - fuzz target and corpus manifest
 - curated OSS corpus manifest with pinned revisions
-- broader ecosystem lane definition
+- broader ecosystem suite definition
 - deterministic sharding and flake policy
 - structured gate result schema
 - exit-gate evidence summary
@@ -313,7 +313,7 @@ The phase must define and keep current:
 - Known unresolved crashes are visible and intentionally tracked.
 - Fuzz/property operations are active and documented.
 - Curated OSS gate is reproducible and blocking.
-- Broader ecosystem lane is defined separately and non-blocking.
+- Broader ecosystem suite is defined separately and non-blocking.
 - Sharding, rerun, and flake rules are active and enforced.
 - Hardening gates emit structured machine-readable evidence.
 

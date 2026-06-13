@@ -2,7 +2,7 @@
 
 Status: closed; M0-M5 implementation milestones are merged, terminal-state inventory is closed, and final phase review is recorded.
 
-CPython checkout: `/Users/yaseralnajjar/work/sifr/cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
+CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 
 Platform contract: [platform_contract.md](../platform/platform_contract.md).
 

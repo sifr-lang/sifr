@@ -573,7 +573,7 @@ flowchart TD
   - Implement process-local module-level query cache keys and invalidation reports.
   - Integrate Phase 19 stdlib cache fingerprinting so stdlib reuse is an explicit query input.
   - Add representative `sifr_syntax` token/trivia fixtures and the Sifr Ruff fork update/rebase contract check.
-  - Add the split-brain guardrail script and wire it into the create-pr validation lane.
+  - Add the split-brain guardrail script and wire it into the create-pr validation profile.
 - Definition of done:
   - `sifr_syntax` compiles and wraps parse/source-map/token/trivia surfaces without owning semantics.
   - The frontend API compiles and has unit tests for single-file load, project load, parse, lower, type-check, diagnostics, graph inspection, source-map inspection, and per-module/project analysis queries.
@@ -615,7 +615,7 @@ flowchart TD
   - Add a clearly named "Performance Budget Checks" step to `scripts/run_all_tests.sh`.
   - Wire budget checks into `scripts/run_all_tests.sh --profile merge`.
   - Keep `create-pr` fast by running manifest/schema/negative-seed budget checks and a minimal representative query-cache scenario rather than the full benchmark corpus.
-  - Add optional `nightly` or `release` coverage for broader benchmark sampling if the existing validation lane policy supports it.
+  - Add optional `nightly` or `release` coverage for broader benchmark sampling if the existing validation profile policy supports it.
   - Ensure local and CI commands are the same; CI-only performance behavior is forbidden.
 - Definition of done:
   - Regressions fail local gates unless a valid waiver exists.
