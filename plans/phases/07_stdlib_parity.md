@@ -6,7 +6,7 @@ This phase closes the remaining gaps between Sifr's stdlib and CPython's stdlib.
 
 **Successor:** Phase 8 (Ecosystem) — the async runtime, web framework, and all ecosystem milestones depend on a mature stdlib with both function and class APIs, CPython-compatible naming, proper `with` statement support, and lazy iteration.
 
-**Detailed plan:** [issues/stdlib_architecture_remaining_milestones.md](../../issues/stdlib_architecture_remaining_milestones.md)
+**Detailed plan:** [plans/issues/archive/stdlib_architecture_remaining_milestones.md](../issues/archive/stdlib_architecture_remaining_milestones.md)
 
 ---
 

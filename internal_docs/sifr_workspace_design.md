@@ -1,6 +1,6 @@
 # Sifr Workspace Design
 
-Source phase: `issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
+Source phase: `plans/issues/archive/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 
 ## Scope
 

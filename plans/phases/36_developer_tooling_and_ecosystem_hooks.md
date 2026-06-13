@@ -427,7 +427,7 @@ Policy-rule requirements:
 
 Phase 36 must implement and package the VS Code extension. A separate repository such as `sifr-lang/sifr-vscode` is acceptable only if the phase PR records the repository boundary and the validation commands are still reproducible from this repository through the `editor_integrations/vscode` submodule or from an explicitly configured checkout.
 
-The concrete execution checklist is `issues/phase36-vscode-extension-production-execution.md`. The default recommendation is a separate `sifr-lang/sifr-vscode` repository; `milestone_36_1` may choose an in-repo extension only with reviewed rationale and equivalent validation/release-boundary guarantees. This is a required Phase 36 milestone, not an ad hoc phase after Phase 36.
+The concrete execution checklist is `plans/issues/archive/phase36-vscode-extension-production-execution.md`. The default recommendation is a separate `sifr-lang/sifr-vscode` repository; `milestone_36_1` may choose an in-repo extension only with reviewed rationale and equivalent validation/release-boundary guarantees. This is a required Phase 36 milestone, not an ad hoc phase after Phase 36.
 
 The extension owns:
 
@@ -606,7 +606,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - Choose final crate/module names for `sifr_analysis`, formatter, policy-rule/lint, and LSP boundaries.
   - Decide whether the VS Code extension implementation lives in the recommended separate `sifr-lang/sifr-vscode` repository or in this repository, and record the validation checkout/release boundary.
   - Create or confirm the `sifr-lang/sifr-vscode` repository when the separate-repo default is kept.
-  - Update `issues/phase36-vscode-extension-production-execution.md` with the final repository decision and any reviewed deviations from its default separate-repo plan.
+  - Update `plans/issues/archive/phase36-vscode-extension-production-execution.md` with the final repository decision and any reviewed deviations from its default separate-repo plan.
   - Lock the LSP capability matrix, command set, diagnostics modes, settings schema, semantic token legend, code-action kinds, generated-Rust preview command shape, test explorer command shape, syntax asset source of truth, minimum VS Code engine version, and package-management boundary.
   - Convert the local Ruff/ty LSP audit inputs in this file into `lsp_protocol_matrix.json`, including selection range, type hierarchy, dynamic diagnostics, request cancellation, workspace folders/configuration, and unsupported notebook/Python behavior.
   - Create `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, and `internal_docs/tooling_verification.md`.
@@ -694,7 +694,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 
 ### milestone_36_7: VS Code Extension
 - Scope:
-  - Implement the VS Code extension in the chosen repository boundary after the shared syntax assets are validated, following `issues/phase36-vscode-extension-production-execution.md`.
+  - Implement the VS Code extension in the chosen repository boundary after the shared syntax assets are validated, following `plans/issues/archive/phase36-vscode-extension-production-execution.md`.
   - Add language id, file extension, grammar, language configuration, LSP launcher, settings, commands, trace/logging, binary discovery, generated Rust preview, explain diagnostic, check/test commands, VS Code Test Explorer integration, format command, restart server, and server log access.
   - Add `.vsix` packaging, extension integration tests, and `vscode_extension_contract.json`.
   - Ensure extension tests can launch the locally built `sifr lsp --stdio`.

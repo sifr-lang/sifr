@@ -198,10 +198,10 @@ status: complete
 
 ## Ad Hoc Follow-up Milestones
 
-Phase 31 is closed, but its unresolved compatibility backlog now has a concrete carry-forward execution plan in `issues/phase31-ad-hoc-followup-milestones.md`.
+Phase 31 is closed, but its unresolved compatibility backlog now has a concrete carry-forward execution plan in `plans/issues/archive/phase31-ad-hoc-followup-milestones.md`.
 
 Latest closure-track plan (`2026-04-05`):
-- `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.md` is marked `ready_to_implement` for the live `codegen_runtime_build_gap=58` baseline.
+- `plans/issues/archive/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.md` is marked `ready_to_implement` for the live `codegen_runtime_build_gap=58` baseline.
 - Source artifacts:
   - historical artifact `full_corpus_current_results_20260405_live_rerun1.json` (removed from the lean LeetCode subrepo; recoverable from git history)
   - historical artifact `full_corpus_failure_taxonomy_20260405_live_rerun1.json` (removed from the lean LeetCode subrepo; recoverable from git history)
@@ -209,12 +209,12 @@ Latest closure-track plan (`2026-04-05`):
 - External review sign-off for this breakdown/phase basis reached `READY`.
 
 Latest execution note (`2026-03-11`):
-- `m31_c_stdlib_module_parity` slice 1 is locally validated and tracked in `issues/phase31-m31c-stdlib-module-parity-execution.md`.
+- `m31_c_stdlib_module_parity` slice 1 is locally validated and tracked in `plans/issues/archive/phase31-m31c-stdlib-module-parity-execution.md`.
 - Targeted six-case rerun artifact: historical artifact `phase31_m31c_wave1_results.json` (removed from the lean LeetCode subrepo; recoverable from git history).
 - Measured outcome for that slice: `PASS=1`, `CHECK_ERROR=5`, `RUN_ERROR=0`, with `0007_reverse_integer` now passing and `0502_ipo` advanced past the original missing-stdlib blocker.
 
 Ownership/mutability boundary closure update (`2026-04-02`):
-- Analysis and execution ledger: `issues/ownership-mutability-boundary-root-cause-2026-04-02.md`.
+- Analysis and execution ledger: `plans/issues/archive/ownership-mutability-boundary-root-cause-2026-04-02.md`.
 - Targeted post-fix artifact: historical artifact `ownership_mutability_boundary_targeted_results_20260402_post_fix.md` (removed from the lean LeetCode subrepo; recoverable from git history).
 - Full-corpus rerun artifact: historical artifact `full_corpus_current_results_20260402_live_after_ownership_boundary_closure.json` (removed from the lean LeetCode subrepo; recoverable from git history).
 - Post-closure breakdown artifact: historical artifact `ownership_mutability_boundary_breakdown_20260402_live_after_closure.json` (removed from the lean LeetCode subrepo; recoverable from git history).

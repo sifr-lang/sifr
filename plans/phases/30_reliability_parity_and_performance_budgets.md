@@ -5,7 +5,7 @@ Close the reliability track by proving stdlib behavioral parity, API-level compl
 
 ## Closure Status
 - Status: completed (2026-03-09)
-- Closure evidence issue: `issues/phase30-reliability-parity-and-performance-budgets-execution.md`
+- Closure evidence issue: `plans/issues/archive/phase30-reliability-parity-and-performance-budgets-execution.md`
 - Closure note: the original explicit reviewer closure on 2026-03-09 covered `milestone_30_1`, `milestone_30_2`, and `milestone_30_3`. `milestone_30_4` was added on 2026-03-10 as a post-closure structural clarification for parity fixtures. It does not reopen the closed phase by default; an explicit reviewer pass is only required if this milestone is later promoted from planning guidance to a retroactive closure gate.
 
 Phase 30 uses CPython as the behavioral reference model, but parity must always be aligned with Sifr's language guarantees:
@@ -48,7 +48,7 @@ A module is complete only when the reviewer explicitly confirms all of the follo
 - the module is CPython-parity aligned for the approved scope, aligned with Sifr safety guarantees, and production-ready
 
 ## Safety Alignment Rules
-All Phase 30 work must follow the language safety contract in `.cursor/plans/main/architecture.md`.
+All Phase 30 work must follow the language safety contract in `internal_docs/architecture.md`.
 In particular:
 - where CPython raises an exception, Sifr must return `Result[T, E]` unless the architecture explicitly defines `Option[T]`
 - where CPython raises `IndexError`, Sifr returns `Option`
@@ -127,7 +127,7 @@ In particular:
 - `milestone_30_4` parity test corpus structure and maintainability:
   - `audits/stdlib/cpython_parity_fixture_format.md`
   - `crates/sifr/tests/e2e/pass/`
-  - `issues/phase30-reliability-parity-and-performance-budgets-execution.md`
+  - `plans/issues/archive/phase30-reliability-parity-and-performance-budgets-execution.md`
 
 ## Behavioral Parity Waves
 

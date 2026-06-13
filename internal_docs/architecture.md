@@ -2,18 +2,18 @@
 
 ## Execution Plan Source of Truth
 
-- Authoritative phase sequencing for current execution is tracked in [`roadmap.md`](./roadmap.md), starting at **Phase 15** through **Phase 41**.
-- Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in phase files `15`-`41` under `## Quality Contract`.
+- Authoritative phase sequencing for current execution is tracked in [`plans/roadmap.md`](../plans/roadmap.md), starting at **Phase 15** through **Phase 41**.
+- Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in [`plans/phases/`](../plans/phases/) files `15`-`41` under `## Quality Contract`.
 - Iterator architecture execution has two closed stages:
-  - stage 1 (closed): `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
-  - stage 2 (closed corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
+  - stage 1 (closed): `plans/issues/archive/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `plans/issues/archive/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
+  - stage 2 (closed corrective continuation): `plans/issues/archive/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `plans/issues/archive/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
   - stage-2 wave closure: `wave_psp_iter_fix_0` through `wave_psp_iter_fix_8` are merged and review-closed (including post-closure CPython `itertools` parity sweep/remediation passes)
   - stage-2 contract lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
 - RNG/crypto continuation is production-grade closed:
-  - phase docs: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
+  - phase docs: `plans/issues/archive/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `plans/issues/archive/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
   - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts and phase-closure pass-2 approval
 - Ownership-aware collection lowering continuation is in closure review:
-  - phase docs: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
+  - phase docs: `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
   - completed waves:
     - `wave_clone_0` lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
     - `wave_clone_1` iterator/comprehension ownership correction artifact: `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
@@ -45,11 +45,11 @@
     - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
 - Integer model amendment source of truth:
   - `internal_docs/integer_model.md` defines the canonical semantic contract and replaces the historical machine-integer/separate user-facing `bigint` design before production.
-  - `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` tracks the implementation phase and milestone breakdown for that contract.
+  - `plans/issues/archive/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` tracks the implementation phase and milestone breakdown for that contract.
   - Target source semantics: `int` is an exact signed arbitrary-precision value-semantic scalar backed by inline-small `SifrInt`; explicit fixed-width `int8`/`int16`/`int32`/`int64` and `uint8`/`uint16`/`uint32`/`uint64` are for storage, dtypes, binary formats, and FFI.
   - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
-- When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
+- When phase-number conflicts exist, follow [`plans/roadmap.md`](../plans/roadmap.md) and the matching files under [`plans/phases/`](../plans/phases/).
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
 
 ## Vision

@@ -1,7 +1,7 @@
 # Narrowing Flow Facts And Invalidation
 
 Status: accepted for WS1 D0
-Phase: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
+Phase: `plans/issues/archive/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 
 ## Goal
 

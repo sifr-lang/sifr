@@ -1,6 +1,6 @@
 # Error Safety (Compiler Infrastructure)
 
-**Why first:** Every subsequent phase depends on proper error types. You cannot make stdlib safe without error classes. You cannot do exhaustiveness checking without the compiler infrastructure. This is the [milestone_error_safety](../../issues/milestone_error_safety.md) issue, which is the enabler for everything.
+**Why first:** Every subsequent phase depends on proper error types. You cannot make stdlib safe without error classes. You cannot do exhaustiveness checking without the compiler infrastructure. This is the [milestone_error_safety](../issues/archive/milestone_error_safety.md) issue, which is the enabler for everything.
 
 ---
 
@@ -10,7 +10,7 @@ status: done
 
 **Goal:** Make the sifr compiler enforce the error handling model defined in architecture.md contract #3. After this milestone, all `Result` error types must be classes extending `Error`, `str` is no longer a valid error type, and the compiler performs exhaustiveness checking on `except` arms.
 
-As defined in [issues/milestone_error_safety.md](../../issues/milestone_error_safety.md):
+As defined in [plans/issues/archive/milestone_error_safety.md](../issues/archive/milestone_error_safety.md):
 
 ### 1. Define Built-in Error Classes
 
