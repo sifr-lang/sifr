@@ -49,6 +49,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "audit-fixtures",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "audit-fixtures",
+          "entry": "verification/areas/stdlib_parity/checks/audit_fixtures.py",
+          "command": "stdlib-audit-fixtures",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ]
 }

@@ -94,6 +94,11 @@ FORBIDDEN_PATTERNS = [
     ("unsafe", re.compile(r"\bunsafe\b")),
     ("#[allow(...)]", re.compile(r"#\s*\[\s*allow\s*\(")),
 ]
+RUST_RAW_STRING_RE = re.compile(r"r(?P<hashes>#*)\"(?P<body>.*?)\"(?P=hashes)")
+RUST_NORMAL_STRING_RE = re.compile(r'"(?P<body>(?:\\.|[^"\\])*)"')
+GENERATED_SOURCE_CONTEXT_RE = re.compile(
+    r"\b(format!|emit_line|RustExpr::Ident|RustType::Named|RustLiteral::Str|push_str)\b"
+)
 GENERATED_CLIPPY_ARGS = [
     "-D",
     "warnings",
@@ -253,7 +258,15 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "mode",
-        choices=("corpus", "panic-scan", "rustfmt", "clippy", "determinism", "demos"),
+        choices=(
+            "corpus",
+            "panic-scan",
+            "rustfmt",
+            "clippy",
+            "determinism",
+            "demos",
+            "intrinsic-panic-lint",
+        ),
     )
     parser.add_argument(
         "--manifest",
@@ -491,6 +504,45 @@ def scan_files(paths: Iterable[Path]) -> list[str]:
             for label, pattern in FORBIDDEN_PATTERNS:
                 if pattern.search(line):
                     violations.append(f"{path}:{line_number}: forbidden generated construct {label}")
+    return violations
+
+
+def codegen_source_files() -> list[Path]:
+    src_root = REPO_ROOT / "crates" / "sifr_codegen" / "src"
+    return sorted(
+        path
+        for path in src_root.rglob("*.rs")
+        if path.name not in {"tests.rs"}
+        and not path.name.endswith("_tests.rs")
+        and "tests" not in path.relative_to(src_root).parts
+    )
+
+
+def rust_string_literals(line: str) -> list[str]:
+    literals: list[str] = []
+    raw_ranges: list[tuple[int, int]] = []
+    for match in RUST_RAW_STRING_RE.finditer(line):
+        literals.append(match.group("body"))
+        raw_ranges.append(match.span())
+    for match in RUST_NORMAL_STRING_RE.finditer(line):
+        if any(start <= match.start() < end for start, end in raw_ranges):
+            continue
+        literals.append(match.group("body"))
+    return literals
+
+
+def scan_codegen_source_emissions() -> list[str]:
+    violations: list[str] = []
+    for path in codegen_source_files():
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if not GENERATED_SOURCE_CONTEXT_RE.search(line):
+                continue
+            for literal in rust_string_literals(line):
+                for label, pattern in FORBIDDEN_PATTERNS:
+                    if pattern.search(literal):
+                        violations.append(
+                            f"{path}:{line_number}: forbidden emitted source construct {label}"
+                        )
     return violations
 
 
@@ -770,6 +822,26 @@ def gate_demos(entries: list[Entry], args: argparse.Namespace) -> None:
     gate_corpus(entries, args)
 
 
+def gate_intrinsic_panic_lint(_entries: list[Entry], _args: argparse.Namespace) -> None:
+    def check_intrinsic_layout() -> None:
+        codegen_lib = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "lib.rs"
+        source = codegen_lib.read_text(encoding="utf-8")
+        forbidden = ("fn emit_intrinsic_call(", "pub(crate) fn emit_intrinsic_call(")
+        for marker in forbidden:
+            if marker in source:
+                raise RuntimeError(f"retired intrinsic emitter monolith returned: {marker}")
+        source_violations = scan_codegen_source_emissions()
+        if source_violations:
+            raise RuntimeError("\n".join(["forbidden emitted constructs in codegen source", *source_violations]))
+
+    timed_case(
+        "generated_code_quality",
+        "intrinsic-panic-lint/no-retired-emit-intrinsic-call",
+        check_intrinsic_layout,
+    )
+    print("generated-code intrinsic panic lint passed")
+
+
 def main() -> None:
     args = parse_args()
     entries = load_manifest(Path(args.manifest))
@@ -786,6 +858,8 @@ def main() -> None:
             gate_determinism(entries, args)
         elif args.mode == "demos":
             gate_demos(entries, args)
+        elif args.mode == "intrinsic-panic-lint":
+            gate_intrinsic_panic_lint(entries, args)
         else:
             raise SystemExit(f"unsupported mode {args.mode}")
     except Exception as error:

@@ -227,6 +227,15 @@ class ProfileRunner:
         run_python("scripts/check_scripts_verification_boundary.py")
         run_python("scripts/check_scripts_verification_boundary.py", "--self-test")
 
+        print("Running audits normalization guardrail")
+        run_python("scripts/check_audits_normalization.py")
+        run_python("scripts/check_audits_normalization.py", "--self-test")
+
+        print("Running audit fixture smoke suites")
+        run_command(uv_area_command("--area", "core_language", "--suite", "audit-fixtures"))
+        run_command(uv_area_command("--area", "project_workspace", "--suite", "audit-fixtures"))
+        run_command(uv_area_command("--area", "stdlib_parity", "--suite", "audit-fixtures"))
+
         print("Running TypeScript-Go architecture transfer M1 guardrails")
         run_command(uv_area_command("--area", "developer_tooling", "--suite", "typescript-go-m1"))
 

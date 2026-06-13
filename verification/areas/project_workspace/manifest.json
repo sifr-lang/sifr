@@ -109,6 +109,19 @@
           ]
         }
       ]
+    },
+    {
+      "name": "audit-fixtures",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "audit-fixtures",
+          "entry": "verification/areas/project_workspace/checks/audit_fixtures.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ]
 }

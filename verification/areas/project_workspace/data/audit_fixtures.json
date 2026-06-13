@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "area": "project_workspace",
+  "owner": "compiler/frontend",
+  "fixture_root": "verification/areas/project_workspace/fixtures/imports/audits",
+  "description": "Promoted legacy audit fixtures. All entries are ownership-tracked; smoke entries are executed by the area audit suite.",
+  "entries": [
+    {
+      "id": "modules-and-imports-01-basic-import",
+      "path": "verification/areas/project_workspace/fixtures/imports/audits/modules_and_imports/01_basic_import.sifr",
+      "category": "modules_and_imports",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 1
+    },
+    {
+      "id": "modules-and-imports-02-from-import",
+      "path": "verification/areas/project_workspace/fixtures/imports/audits/modules_and_imports/02_from_import.sifr",
+      "category": "modules_and_imports",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "modules-and-imports-03-import-as",
+      "path": "verification/areas/project_workspace/fixtures/imports/audits/modules_and_imports/03_import_as.sifr",
+      "category": "modules_and_imports",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "modules-and-imports-04-multi-file",
+      "path": "verification/areas/project_workspace/fixtures/imports/audits/modules_and_imports/04_multi_file.sifr",
+      "category": "modules_and_imports",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "modules-and-imports-05-stdlib-imports",
+      "path": "verification/areas/project_workspace/fixtures/imports/audits/modules_and_imports/05_stdlib_imports.sifr",
+      "category": "modules_and_imports",
+      "command": "check",
+      "smoke": false
+    }
+  ]
+}

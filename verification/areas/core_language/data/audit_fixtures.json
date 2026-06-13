@@ -1,0 +1,1318 @@
+{
+  "schema_version": 1,
+  "area": "core_language",
+  "owner": "compiler/core-language",
+  "fixture_root": "verification/areas/core_language/fixtures/audits",
+  "description": "Promoted legacy audit fixtures. All entries are ownership-tracked; smoke entries are executed by the area audit suite.",
+  "entries": [
+    {
+      "id": "iteration-protocol-01-for-over-collections",
+      "path": "verification/areas/core_language/fixtures/audits/iteration_protocol/01_for_over_collections.sifr",
+      "category": "iteration_protocol",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "iteration-protocol-02-enumerate-zip-reversed",
+      "path": "verification/areas/core_language/fixtures/audits/iteration_protocol/02_enumerate_zip_reversed.sifr",
+      "category": "iteration_protocol",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "iteration-protocol-03-unpacking-in-for",
+      "path": "verification/areas/core_language/fixtures/audits/iteration_protocol/03_unpacking_in_for.sifr",
+      "category": "iteration_protocol",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "iteration-protocol-04-generator-protocol",
+      "path": "verification/areas/core_language/fixtures/audits/iteration_protocol/04_generator_protocol.sifr",
+      "category": "iteration_protocol",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "iteration-protocol-05-comprehension-types",
+      "path": "verification/areas/core_language/fixtures/audits/iteration_protocol/05_comprehension_types.sifr",
+      "category": "iteration_protocol",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "object-model-01-equality-vs-identity",
+      "path": "verification/areas/core_language/fixtures/audits/object_model/01_equality_vs_identity.sifr",
+      "category": "object_model",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "object-model-02-truthiness",
+      "path": "verification/areas/core_language/fixtures/audits/object_model/02_truthiness.sifr",
+      "category": "object_model",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "object-model-03-mutability",
+      "path": "verification/areas/core_language/fixtures/audits/object_model/03_mutability.sifr",
+      "category": "object_model",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "object-model-04-dunder-methods",
+      "path": "verification/areas/core_language/fixtures/audits/object_model/04_dunder_methods.sifr",
+      "category": "object_model",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "object-model-05-attribute-access",
+      "path": "verification/areas/core_language/fixtures/audits/object_model/05_attribute_access.sifr",
+      "category": "object_model",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "object-model-06-hash-builtin",
+      "path": "verification/areas/core_language/fixtures/audits/object_model/06_hash_builtin.sifr",
+      "category": "object_model",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-01-copy-types-reuse",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/01_copy_types_reuse.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "ownership-02-move-str-assignment",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/02_move_str_assignment.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-03-move-str-use-after-assign",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/03_move_str_use_after_assign.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-04-move-list-assignment",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/04_move_list_assignment.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-05-move-list-use-after-assign",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/05_move_list_use_after_assign.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-06-move-dict-assignment",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/06_move_dict_assignment.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-07-move-dict-use-after-assign",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/07_move_dict_use_after_assign.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-08-move-into-function",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/08_move_into_function.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-09-use-after-move-into-function",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/09_use_after_move_into_function.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-10-copy-type-into-function",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/10_copy_type_into_function.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-11-print-borrows-not-moves",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/11_print_borrows_not_moves.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-12-len-borrows-not-moves",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/12_len_borrows_not_moves.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-13-string-method-borrow",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/13_string_method_borrow.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-14-reassignment-resets-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/14_reassignment_resets_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-15-move-in-loop",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/15_move_in_loop.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-16-move-in-loop-consume",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/16_move_in_loop_consume.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-17-for-loop-borrows-collection",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/17_for_loop_borrows_collection.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-18-multiple-for-loops-same-collection",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/18_multiple_for_loops_same_collection.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-19-class-instance-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/19_class_instance_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-20-class-instance-use-after-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/20_class_instance_use_after_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-21-class-method-self-borrow",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/21_class_method_self_borrow.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-22-class-method-mut-self",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/22_class_method_mut_self.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-23-pass-class-to-function",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/23_pass_class_to_function.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-24-use-class-after-function-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/24_use_class_after_function_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-25-tuple-copy-vs-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/25_tuple_copy_vs_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-26-tuple-use-after-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/26_tuple_use_after_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-27-list-append-after-use",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/27_list_append_after_use.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-28-return-local-string",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/28_return_local_string.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-29-return-local-list",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/29_return_local_list.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-30-multiple-function-calls-same-var",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/30_multiple_function_calls_same_var.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-31-str-move-into-two-functions",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/31_str_move_into_two_functions.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-32-conditional-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/32_conditional_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-33-move-in-both-branches",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/33_move_in_both_branches.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-34-sorted-borrows",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/34_sorted_borrows.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-35-enumerate-borrows",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/35_enumerate_borrows.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-36-zip-borrows",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/36_zip_borrows.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-37-list-comprehension-borrows",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/37_list_comprehension_borrows.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-38-dict-method-borrow",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/38_dict_method_borrow.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-39-nested-collection-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/39_nested_collection_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-40-nested-collection-use-after-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/40_nested_collection_use_after_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-41-fstring-borrows",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/41_fstring_borrows.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-42-chained-string-methods",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/42_chained_string_methods.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-43-list-sort-in-place",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/43_list_sort_in_place.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-44-list-pop-mutates",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/44_list_pop_mutates.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-45-multiple-borrows-same-scope",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/45_multiple_borrows_same_scope.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-46-set-move-semantics",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/46_set_move_semantics.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-47-set-use-after-move",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/47_set_use_after_move.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-48-builtin-functions-borrow",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/48_builtin_functions_borrow.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-49-str-concat-creates-new",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/49_str_concat_creates_new.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "ownership-50-augmented-assign-str",
+      "path": "verification/areas/core_language/fixtures/audits/ownership/50_augmented_assign_str.sifr",
+      "category": "ownership",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-01-arithmetic-full",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/01_arithmetic_full.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "python-basics-02-comparison-operators",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/02_comparison_operators.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-03-boolean-logic",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/03_boolean_logic.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-04-string-methods",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/04_string_methods.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-05-string-formatting",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/05_string_formatting.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-06-string-slicing",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/06_string_slicing.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-07-list-operations",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/07_list_operations.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-08-dict-operations",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/08_dict_operations.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-09-tuple-operations",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/09_tuple_operations.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-10-control-flow-if",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/10_control_flow_if.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-11-loops-for",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/11_loops_for.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-12-loops-while",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/12_loops_while.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-13-functions-basic",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/13_functions_basic.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-14-functions-advanced",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/14_functions_advanced.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-15-list-comprehension",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/15_list_comprehension.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-16-dict-comprehension",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/16_dict_comprehension.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-17-set-comprehension",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/17_set_comprehension.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-18-builtins",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/18_builtins.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-19-augmented-assignment",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/19_augmented_assignment.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-20-unpacking",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/20_unpacking.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-21-scope-and-closures",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/21_scope_and_closures.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-22-lambda-expressions",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/22_lambda_expressions.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-23-generators",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/23_generators.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-24-error-handling",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/24_error_handling.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-25-classes-basic",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/25_classes_basic.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-26-classes-inheritance",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/26_classes_inheritance.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-27-classes-static-class-methods",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/27_classes_static_class_methods.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-28-decorators",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/28_decorators.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-29-context-managers",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/29_context_managers.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-30-assert",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/30_assert.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-31-del-statement",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/31_del_statement.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-32-walrus-operator",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/32_walrus_operator.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-33-ternary-expression",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/33_ternary_expression.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-34-multiple-assignment",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/34_multiple_assignment.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-35-pass-statement",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/35_pass_statement.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-36-global-constants",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/36_global_constants.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-37-type-conversions",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/37_type_conversions.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-38-multiline-expressions",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/38_multiline_expressions.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-39-nested-data-structures",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/39_nested_data_structures.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-40-real-world-fizzbuzz",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/40_real_world_fizzbuzz.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-41-real-world-fibonacci",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/41_real_world_fibonacci.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-42-real-world-word-count",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/42_real_world_word_count.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-43-real-world-todo-list",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/43_real_world_todo_list.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-44-real-world-calculator",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/44_real_world_calculator.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "python-basics-45-real-world-matrix-ops",
+      "path": "verification/areas/core_language/fixtures/audits/python_basics/45_real_world_matrix_ops.sifr",
+      "category": "python_basics",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "syntax-01-numeric-literals",
+      "path": "verification/areas/core_language/fixtures/audits/syntax/01_numeric_literals.sifr",
+      "category": "syntax",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "syntax-02-string-literals",
+      "path": "verification/areas/core_language/fixtures/audits/syntax/02_string_literals.sifr",
+      "category": "syntax",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "syntax-03-comments-whitespace",
+      "path": "verification/areas/core_language/fixtures/audits/syntax/03_comments_whitespace.sifr",
+      "category": "syntax",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "syntax-04-line-continuation",
+      "path": "verification/areas/core_language/fixtures/audits/syntax/04_line_continuation.sifr",
+      "category": "syntax",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "syntax-05-expression-precedence",
+      "path": "verification/areas/core_language/fixtures/audits/syntax/05_expression_precedence.sifr",
+      "category": "syntax",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "syntax-06-bitwise-operators",
+      "path": "verification/areas/core_language/fixtures/audits/syntax/06_bitwise_operators.sifr",
+      "category": "syntax",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "syntax-07-assignment-forms",
+      "path": "verification/areas/core_language/fixtures/audits/syntax/07_assignment_forms.sifr",
+      "category": "syntax",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-01-variable-from-literal",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/01_variable_from_literal.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "type-inference-02-variable-from-expression",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/02_variable_from_expression.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-03-variable-from-function-call",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/03_variable_from_function_call.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-04-collection-literal-inference",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/04_collection_literal_inference.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-05-return-type-inference",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/05_return_type_inference.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-06-infer-from-method-call",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/06_infer_from_method_call.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-07-infer-from-conditional",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/07_infer_from_conditional.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-08-infer-from-comprehension",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/08_infer_from_comprehension.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-09-infer-from-map-filter",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/09_infer_from_map_filter.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-10-infer-from-class-constructor",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/10_infer_from_class_constructor.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-11-infer-in-for-loop",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/11_infer_in_for_loop.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-12-infer-chained-operations",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/12_infer_chained_operations.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-13-infer-mixed-no-annotation",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/13_infer_mixed_no_annotation.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-14-infer-from-fstring",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/14_infer_from_fstring.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-15-infer-from-optional-return",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/15_infer_from_optional_return.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-16-infer-from-union-return",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/16_infer_from_union_return.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-17-infer-from-result-return",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/17_infer_from_result_return.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-18-infer-empty-collection",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/18_infer_empty_collection.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-19-infer-reassignment-same-type",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/19_infer_reassignment_same_type.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-20-infer-reassignment-different-type",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/20_infer_reassignment_different_type.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-21-infer-from-builtin-functions",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/21_infer_from_builtin_functions.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-22-infer-nested-collection",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/22_infer_nested_collection.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-23-infer-class-field-access",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/23_infer_class_field_access.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-24-infer-from-index-access",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/24_infer_from_index_access.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-25-infer-from-walrus",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/25_infer_from_walrus.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-26-infer-lambda-param-from-context",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/26_infer_lambda_param_from_context.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-27-infer-multiline-no-annotations",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/27_infer_multiline_no_annotations.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-28-infer-from-zip-enumerate",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/28_infer_from_zip_enumerate.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-29-infer-from-any-all",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/29_infer_from_any_all.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-inference-30-infer-from-string-ops",
+      "path": "verification/areas/core_language/fixtures/audits/type_inference/30_infer_from_string_ops.sifr",
+      "category": "type_inference",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-01-basic-unions",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/01_basic_unions.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "type-system-02-literal-types",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/02_literal_types.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-02-literal-types-v2",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/02_literal_types_v2.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-03-type-narrowing",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/03_type_narrowing.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-03-type-narrowing-v2",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/03_type_narrowing_v2.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-04-classes-and-inheritance",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/04_classes_and_inheritance.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-05-protocols",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/05_protocols.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-06-discriminated-unions",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/06_discriminated_unions.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-07-result-option",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/07_result_option.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-08-newtypes",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/08_newtypes.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-09-generics-basic",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/09_generics_basic.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-10-generic-classes",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/10_generic_classes.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-11-generic-constraints",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/11_generic_constraints.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-12-tuple-types",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/12_tuple_types.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-13-collections-typed",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/13_collections_typed.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-14-higher-order-functions",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/14_higher_order_functions.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-15-type-composition",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/15_type_composition.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-16-exhaustive-matching",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/16_exhaustive_matching.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-17-mapped-conditional-types",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/17_mapped_conditional_types.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-18-recursive-types",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/18_recursive_types.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-19-type-guards-custom",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/19_type_guards_custom.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-20-complex-patterns",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/20_complex_patterns.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-21-generic-functions-syntax",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/21_generic_functions_syntax.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-22-generic-class-syntax",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/22_generic_class_syntax.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-23-interface-as-param",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/23_interface_as_param.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-24-elif-equality-chain",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/24_elif_equality_chain.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-25-union-field-access-after-narrow",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/25_union_field_access_after_narrow.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-26-multiple-use-after-print",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/26_multiple_use_after_print.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-27-narrowing-reassign",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/27_narrowing_reassign.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-28-return-type-coercion",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/28_return_type_coercion.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-29-string-methods-after-narrow",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/29_string_methods_after_narrow.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-30-float-to-int-cast",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/30_float_to_int_cast.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-31-3way-isinstance-elif",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/31_3way_isinstance_elif.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-32-field-named-message",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/32_field_named_message.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-33-field-named-common",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/33_field_named_common.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-34-protocol-param-dispatch",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/34_protocol_param_dispatch.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-35-class-reuse-after-method",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/35_class_reuse_after_method.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-36-optional-field-narrowing",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/36_optional_field_narrowing.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-37-3way-isinstance-no-field",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/37_3way_isinstance_no_field.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-38-int-division-returns",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/38_int_division_returns.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-39-class-with-optional-init",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/39_class_with_optional_init.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-40-print-then-field",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/40_print_then_field.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "type-system-41-pass-class-to-fn",
+      "path": "verification/areas/core_language/fixtures/audits/type_system/41_pass_class_to_fn.sifr",
+      "category": "type_system",
+      "command": "check",
+      "smoke": false
+    }
+  ]
+}
