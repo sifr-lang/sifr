@@ -17,7 +17,7 @@ Sharding applies at suite granularity across baseline, corpus, property, fuzz-sm
 ## Determinism Checks
 
 Determinism-scale manifest:
-- `verification/determinism/manifest.json`
+- `verification/runner/sifr_verify/hardening/data/determinism_manifest.json`
 
 Required checks:
 - repeat-run report signature stability
@@ -36,7 +36,7 @@ Policy:
 ## Quarantine Policy
 
 Source of truth:
-- `verification/flake/quarantine.json`
+- `verification/policy/flake_quarantine.json`
 
 Each quarantine entry (when present) must include:
 - `suite`
@@ -47,4 +47,4 @@ Each quarantine entry (when present) must include:
 - `reenable_criteria`
 
 Quarantine is temporary and must be re-evaluated with explicit re-enable criteria.
-`verification/flake/quarantine.json` includes a concrete template entry to keep the format operational.
+`verification/policy/flake_quarantine.json` includes a concrete template entry to keep the format operational.

@@ -76,8 +76,8 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 ## Manifest Source of Truth
 
-- Canonical legacy manifest for unmigrated hardening suites:
-  `verification/suites/manifest.json`.
+- Runner-owned hardening suite data lives under
+  `verification/runner/sifr_verify/hardening/data/`.
 - Migrated diagnostics, project workspace, and ecosystem compatibility suite
   ownership live in their area manifests under `verification/areas/`.
 - Suite runners must not hardcode fixture lists outside their owning manifest.

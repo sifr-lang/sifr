@@ -345,7 +345,7 @@ Core rule: Sifr never silently loses integer precision when crossing a boundary.
 
 The reviewable contract artifact for schema, client, generated serde, and
 storage boundary mappings is
-`verification/integer_model_serialization_boundary_contract.md`. Future web,
+`verification/areas/core_language/data/integer_model/serialization_boundary_contract.md`. Future web,
 ORM, and schema phases must update that artifact when they implement the
 corresponding runtime surfaces.
 
