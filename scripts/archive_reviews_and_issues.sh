@@ -7,7 +7,6 @@ REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 
 find_roots=(
   "${REPO_ROOT}/plans/issues/active"
-  "${REPO_ROOT}/plans/issues/completed"
   "${REPO_ROOT}/plans/issues/archive"
   "${REPO_ROOT}/plans/reviews/active"
   "${REPO_ROOT}/plans/reviews/archive"

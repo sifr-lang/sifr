@@ -62,7 +62,7 @@ Fix: PR 4 scope must include "create `plans/reviews/{active,archive}/` and retar
 - **Pin the runner invocation and package layout.** `pyproject.toml` at `verification/` with the package at `verification/runner/sifr_verify/` requires explicit package-dir configuration. State the canonical command once (e.g. `uv run --project verification python -m sifr_verify --profile create-pr`) and the layout choice, so PR 6 doesn't bikeshed it.
 - **PR N+3 is nearly empty by construction.** Each area PR already requires "old verification script names deleted, not wrapped", so by PR N+3 little should remain. Re-scope it honestly as "sweep: prove no verification implementation remains in `scripts/` and add the guardrail enforcing it" or fold it into PR N+6.
 - **Say that area PRs edit the legacy facade.** `run_all_tests.sh` calls `verification/tooling/*.py` and `verification/performance/*.py` checks directly today, so each PR 8-N area migration necessarily edits the facade's dispatch in the same PR. Add one line to the PR 8-N validation list ("legacy facade dispatch updated atomically with moved paths") so it isn't discovered mid-PR.
-- **Plan for the Review Notes section's own afterlife.** Per the plan's review-artifact policy, when this issue moves to `plans/issues/completed/`, "Review Notes" should already be the concise-summary form (it nearly is; just keep it that way rather than appending per-pass logs).
+- **Plan for the Review Notes section's own afterlife.** Per the plan's review-artifact policy, when this issue moves to `plans/issues/archive/`, "Review Notes" should already be the concise-summary form (it nearly is; just keep it that way rather than appending per-pass logs).
 
 ## 3. Vocabulary and folder-structure recommendations
 
