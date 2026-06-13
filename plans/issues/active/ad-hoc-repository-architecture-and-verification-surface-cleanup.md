@@ -551,7 +551,7 @@ Initial disposition:
 | `audits/lint_panic_patterns.sh` | Replace under `generated_code_quality`; it enforces user-facing generated-code panic policy for `sifr_codegen` and should be owned with the other generated-code quality gates. |
 | `audits/STDLIB_PARITY_MASTER_REPORT.md` | Archive or delete after any current state is reflected in `stdlib_parity` manifests/data. It must not remain an active report. |
 | `audits/*/REPORT.md`, `audits/*/POST_HARDENING_REPORT.md` | Archive or delete. Keep only concise current state in area manifests, area README files, or `plans/` if the history matters. |
-| `audits/stdlib/cpython_parity_fixture_format.md` | Keep as a convention, but move to the owning location: `internal_docs/verification/` if it is a human convention, or `verification/areas/stdlib_parity/README.md` if it is area-specific runner guidance. |
+| `audits/stdlib/cpython_parity_fixture_format.md` | Keep as area-specific runner guidance under `verification/areas/stdlib_parity/docs/`. |
 | `audits/borrowing/*.sifr` | Promote into `verification/areas/core_language/fixtures/ownership/` or delete duplicates once coverage is proven elsewhere. |
 | `audits/lexical_and_syntax/*.sifr` | Promote into `verification/areas/core_language/fixtures/syntax/` or delete duplicates once covered by syntax/parser suites. |
 | `audits/type_inference/*.sifr` | Promote into `verification/areas/core_language/fixtures/type_inference/` or delete duplicates once covered by type-system suites. |
@@ -666,7 +666,7 @@ Clean up docs in place instead of over-classifying them:
 - consolidate scattered docs when one current design document would be clearer
 - remove stale status sections once the current state is described elsewhere
 - rewrite procedural "how to implement" sections into state/contract descriptions, or move them to `plans/`
-- keep verification conventions in `internal_docs/verification/` when they describe human-facing conventions
+- keep verification conventions in `verification/policy/` when they describe human-facing conventions
 - move runner mechanics, schemas, profile data, baseline retention, and generated-artifact policy under `verification/`
 
 Rules:
@@ -677,7 +677,7 @@ Rules:
 - Phase-numbered architecture-transfer notes should either consolidate into a small design narrative or move to an archive directory.
 - Absolute personal reference paths must become environment-variable based references, repo-relative references, or explicit external-reference notes.
 - Docs that describe planned work but not accepted design belong under `plans/`, not `internal_docs/`.
-- Verification convention docs may live in `internal_docs/verification/` when they describe human-facing conventions.
+- Verification convention docs live in `verification/policy/` when they describe human-facing conventions.
 - Verification docs that are part of runner mechanics, schema contracts, profile data, baseline retention, or generated-artifact policy belong under `verification/policy/`, `verification/schemas/`, or a verification area.
 
 ## Submodule Policy
@@ -836,7 +836,7 @@ Internal docs exact disposition:
 | `internal_docs/verification/fuzz_property_policy.md` | Move to `verification/policy/fuzz_property.md` and update lane wording to profile wording. |
 | `internal_docs/verification/oss_gate_policy.md` | Move to `verification/policy/ecosystem_compatibility.md`. |
 | `internal_docs/verification/regression_corpus_policy.md` | Move to `verification/policy/regression_corpus.md`. |
-| `internal_docs/verification/suite_taxonomy.md` | Delete after the new area/profile README and schemas replace it. |
+| `internal_docs/verification/suite_taxonomy.md` | Moved to `verification/policy/suite_taxonomy.md` as an interim policy doc in PR #2547; delete after the new area/profile README and schemas replace it. |
 | `internal_docs/validation_lane_policy.md` | Move to `verification/policy/profile_policy.md` with lane vocabulary removed. |
 | `internal_docs/compiler_pipeline.html` | Stop linking as the canonical compiler overview; either regenerate from source into `target/` or move public visualizer material to `docs/`. `README.md` currently links to this file and must be updated in the same PR. |
 | `internal_docs/typescript_go_architecture_transfer_m*.md` | Consolidate current accepted state into the existing current-state docs (`frontend_query_architecture.md`, `lsp_server.md`, `tooling_analysis.md`, `tooling_verification.md`, `editor_integrations.md`, `vscode_extension.md`) and delete milestone transfer notes from active `internal_docs/`. |
@@ -1036,7 +1036,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `internal_docs/verification/fuzz_property_policy.md` | move | Move to `verification/policy/fuzz_property.md` with profile vocabulary. | Yes | Yes | policy wording and link checks | Resource-heavy fuzzing needs profile policy. |
 | `internal_docs/verification/oss_gate_policy.md` | move | Move to `verification/policy/ecosystem_compatibility.md`. | Yes | Yes | ecosystem policy link checks | External corpora need explicit policy. |
 | `internal_docs/verification/regression_corpus_policy.md` | move | Move to `verification/policy/regression_corpus.md`. | Yes | Yes | regression policy link checks | Regression corpus rules belong with verification. |
-| `internal_docs/verification/suite_taxonomy.md` | delete | Delete after area/profile README and schemas replace it. | No | Yes | no stale references | Top-level suite taxonomy conflicts with area ownership. |
+| `internal_docs/verification/suite_taxonomy.md` | move then delete | Moved to `verification/policy/suite_taxonomy.md` as an interim policy doc in PR #2547; delete after area/profile README and schemas replace it. | No | Yes | no stale references | Top-level suite taxonomy conflicts with area ownership. |
 | `internal_docs/validation_lane_policy.md` | move | Move to `verification/policy/profile_policy.md` and remove lane vocabulary. | Yes | Yes | profile policy link checks | Profiles are runner policy. |
 | `internal_docs/compiler_pipeline.html` | delete | Regenerate into `target/` or replace README links with source docs. | No | Yes | README link check | Generated visualizations should not be canonical docs. |
 | `internal_docs/typescript_go_architecture_transfer_m*.md` | delete | Consolidate accepted state into current docs, then delete milestone transfer notes. | No | Yes | current-doc link checks | Current docs should not be transfer ledgers. |
@@ -1322,6 +1322,34 @@ Validation:
 - verification policy docs live under `verification/policy/`
 - no active internal doc contains long validation transcript ledgers
 - `git diff --check`
+
+Status:
+
+- Completed in PR #2547.
+- Verification policy docs now live under `verification/policy/`.
+- Active phase docs and current internal docs were retargeted away from
+  stale top-level `audits/` references and old verification roots.
+- `verification/policy/suite_taxonomy.md` remains as an interim policy doc;
+  schema/README replacement and deletion remain scoped to closeout.
+
+Review:
+
+- Opus review:
+  `plans/reviews/active/arch-cleanup-internal-docs-relevance-opus-review-1.md`.
+- Verdict: satisfied; no blockers.
+
+Validation evidence:
+
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_audits_normalization.py && python3 scripts/check_audits_normalization.py --self-test`
+- `python3 scripts/check_scripts_verification_boundary.py && python3 scripts/check_scripts_verification_boundary.py --self-test`
+- `uv run --project verification --locked python -m sifr_verify areas check`
+- `uv run --project verification --locked python -m sifr_verify profiles check`
+- targeted stale-reference scan across current docs/policy surfaces: no matches
+- `scripts/run_all_tests.sh --profile create-pr`: passed with no test
+  failures; warm rerun exceeded the advisory two-minute warm budget
+  (`budget_ok=no`, 164.78s).
 
 ### PR N+6: Docs And Guardrails Closeout
 
