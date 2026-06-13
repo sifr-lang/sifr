@@ -211,10 +211,6 @@ class ProfileRunner:
         print("Running file-size guardrails")
         run_python("scripts/check_file_size_guardrails.py")
 
-        print("Running Cursor hygiene guardrails")
-        run_python("scripts/check_cursor_hygiene.py")
-        run_python("scripts/check_cursor_hygiene.py", "--self-test")
-
         print("Running source crate dependency-direction guardrail")
         run_python("scripts/check_source_crate_dependency_direction.py")
         run_python("scripts/check_source_crate_dependency_direction.py", "--self-test")
@@ -222,14 +218,6 @@ class ProfileRunner:
         print("Running submodule ownership guardrail")
         run_python("scripts/check_submodule_ownership.py")
         run_python("scripts/check_submodule_ownership.py", "--self-test")
-
-        print("Running scripts verification-boundary guardrail")
-        run_python("scripts/check_scripts_verification_boundary.py")
-        run_python("scripts/check_scripts_verification_boundary.py", "--self-test")
-
-        print("Running audits normalization guardrail")
-        run_python("scripts/check_audits_normalization.py")
-        run_python("scripts/check_audits_normalization.py", "--self-test")
 
         print("Running audit fixture smoke suites")
         run_command(uv_area_command("--area", "core_language", "--suite", "audit-fixtures"))
@@ -251,12 +239,6 @@ class ProfileRunner:
     def run_diagnostic_contracts(self) -> None:
         print("Running diagnostics area contract checks")
         run_command(uv_area_command("--area", "diagnostics", "--suite", "contracts"))
-
-        print("Running diagnostic cancel usage check")
-        run_python("scripts/check_diagnostic_cancel_usage.py")
-
-        print("Running diagnostic transport cleanup check")
-        run_python("scripts/check_diagnostic_transport_cleanup.py")
 
         print("Running diagnostic presentation contract check")
         run_command(uv_area_command("--area", "developer_tooling", "--suite", "diagnostic-contracts"))

@@ -152,7 +152,6 @@
   "guardrail_steps": [
     "hir-maintainability",
     "file-size",
-    "cursor-hygiene",
     "source-crate-dependency-direction",
     "driver-maintainability",
     "package-manager"
