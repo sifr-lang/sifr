@@ -97,14 +97,18 @@ pub(crate) fn load(repo_root: &Path) -> Result<Vec<Suite>, String> {
     Ok(suites)
 }
 
-fn manifest_path(repo_root: &Path) -> Result<PathBuf, String> {
+fn manifest_path(_repo_root: &Path) -> Result<PathBuf, String> {
     let from_env = env::var(MANIFEST_PATH_ENV)
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty());
     let path = match from_env {
         Some(raw) => PathBuf::from(raw),
-        None => repo_root.join("verification/validation_contracts/manifest.json"),
+        None => {
+            return Err(format!(
+                "{MANIFEST_PATH_ENV} must point at an area-owned validation contract manifest"
+            ));
+        }
     };
     if !path.is_file() {
         return Err(format!(

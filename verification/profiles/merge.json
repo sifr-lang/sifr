@@ -16,7 +16,10 @@
     {
       "area": "core_language",
       "suites": [
-        "e2e-pass"
+        "e2e-pass",
+        "integer_dtype_contract",
+        "phase24_hir_analysis",
+        "phase25_cfg_flow"
       ],
       "resource_classes": [
         "default-local"
@@ -107,6 +110,8 @@
     {
       "area": "project_workspace",
       "suites": [
+        "frontend_mode_parity",
+        "phase23_graph_isolation",
         "baselines"
       ],
       "resource_classes": [

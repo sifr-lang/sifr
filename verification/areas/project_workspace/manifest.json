@@ -10,6 +10,32 @@
   "timeout_seconds": 600,
   "suites": [
     {
+      "name": "frontend_mode_parity",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "frontend_mode_parity",
+          "entry": "verification/areas/project_workspace/data/validation_contracts/manifest.json",
+          "command": "contract-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "phase23_graph_isolation",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "phase23_graph_isolation",
+          "entry": "verification/areas/project_workspace/data/validation_contracts/manifest.json",
+          "command": "contract-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "baselines",
       "kind": "adapter",
       "cases": [

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -21,6 +22,7 @@ TMP_PATTERNS = (
 )
 ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
 BASELINE_COMMANDS = {"check", "run", "build", "test"}
+CONTRACT_MATRIX_COMMAND = "contract-matrix"
 
 
 @dataclass(frozen=True)
@@ -158,6 +160,8 @@ def run_case(
     command = str(case["command"])
     if command == "area-check":
         return run_area_check_case(config, suite_name, case)
+    if command == CONTRACT_MATRIX_COMMAND:
+        return run_contract_matrix_case(config, suite_name, case)
     return run_baseline_case(config, suite_name, case, options)
 
 
@@ -197,6 +201,78 @@ def run_area_check_case(
                     "label": "area-check",
                     "diagnostic_format": None,
                     "argv": [sys.executable, str(entry)],
+                    "status": status,
+                    "mismatches": mismatches,
+                    "expected_exit_code": expected_exit,
+                    "actual_exit_code": proc.returncode,
+                    "duration_ms": round(elapsed_ms, 3),
+                }
+            ],
+        },
+        bool(mismatches),
+        len(mismatches),
+    )
+
+
+def run_contract_matrix_case(
+    config: AreaAdapterConfig,
+    suite_name: str,
+    case: dict[str, Any],
+) -> tuple[dict[str, Any], bool, int]:
+    case_id = str(case["id"])
+    contract_suite = case_id
+    entry = case_entry_path(config, suite_name, case_id, case)
+    if not entry.is_file():
+        raise SystemExit(
+            f"{config.area} case '{case_id}' contract manifest does not exist: {entry}"
+        )
+    expected_exit = int(case["expect_exit_code"])
+    argv = [
+        "cargo",
+        "test",
+        "-p",
+        "sifr",
+        "--test",
+        "validation_contracts",
+        "test_validation_contract_matrix",
+        "--",
+        "--ignored",
+        "--nocapture",
+    ]
+    started = time.perf_counter()
+    proc = subprocess.run(
+        argv,
+        cwd=REPO_ROOT,
+        env={
+            **_contract_matrix_env(),
+            "SIFR_VALIDATION_CONTRACT_MANIFEST": str(entry),
+            "SIFR_VALIDATION_CONTRACT_SUITE_FILTER": contract_suite,
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    if proc.stdout:
+        sys.stdout.write(proc.stdout)
+    if proc.stderr:
+        sys.stderr.write(proc.stderr)
+    mismatches = []
+    if proc.returncode != expected_exit:
+        mismatches.append("unexpected-exit")
+    status = "pass" if not mismatches else "fail"
+    emit_case_timing(config.area, suite_name, case_id, CONTRACT_MATRIX_COMMAND, elapsed_ms, status)
+    return (
+        {
+            "id": case_id,
+            "entry": format_repo_relative_path(entry),
+            "command": CONTRACT_MATRIX_COMMAND,
+            "variants": [
+                {
+                    "label": CONTRACT_MATRIX_COMMAND,
+                    "diagnostic_format": None,
+                    "argv": argv,
+                    "contract_suite": contract_suite,
                     "status": status,
                     "mismatches": mismatches,
                     "expected_exit_code": expected_exit,
@@ -318,7 +394,10 @@ def validate_unique_baseline_artifact_paths(
 ) -> None:
     seen: dict[Path, str] = {}
     for case in cases:
-        if not isinstance(case, dict) or str(case.get("command")) == "area-check":
+        if not isinstance(case, dict):
+            continue
+        command = str(case.get("command"))
+        if command in {"area-check", CONTRACT_MATRIX_COMMAND}:
             continue
         case_id, entry, command_name, formats = baseline_case_metadata(config, suite_name, case)
         for diagnostic_format in formats:
@@ -512,3 +591,9 @@ def emit_case_timing(
 
 def timing_token(value: object) -> str:
     return "".join(char if char.isalnum() or char in "_.:/+-" else "_" for char in str(value))
+
+
+def _contract_matrix_env() -> dict[str, str]:
+    env = dict(os.environ)
+    env.pop("SIFR_VALIDATION_CONTRACT_SUITE_FILTER", None)
+    return env

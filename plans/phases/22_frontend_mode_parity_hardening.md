@@ -52,7 +52,7 @@ Eliminate semantic drift between `check`, `build`, `run`, and `test` by enforcin
   - Include positive and negative fixtures covering imports, externals, and multi-module resolution.
 - Definition of done:
   - Mode drift regressions are caught automatically before merge.
-  - Matrix gate is wired into `scripts/run_all_tests.sh` (via `scripts/run_frontend_mode_parity_matrix.sh`).
+  - Matrix gate is wired into `scripts/run_all_tests.sh` through the `project_workspace` verification area contract suite.
 
 ## Quality Contract
 - Entry criteria: Phase 21 is completed and traversal/control-flow behavior is stable.

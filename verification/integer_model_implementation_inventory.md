@@ -76,7 +76,7 @@ Primary surfaces:
 - Future web/API schema generation and TypeScript/OpenAPI mapping.
 - Generated `serde::Serialize`/`Deserialize` behavior for structs/classes with `int` fields.
 - SQL/model mapping: fixed-width or explicit decimal/string representation for storage.
-- Arrow/Parquet/dataframe/tensor contracts: fixed-width dtypes, dtype-preserving arithmetic, explicit overflow policy, explicit widen kernels. INT-6A locks this surface in `verification/validation_contracts/integer_dtype_contract.md` and `scripts/check_integer_dtype_contract.py`.
+- Arrow/Parquet/dataframe/tensor contracts: fixed-width dtypes, dtype-preserving arithmetic, explicit overflow policy, explicit widen kernels. INT-6A locks this surface in `verification/areas/core_language/data/integer_dtype_contract.md` and `verification/areas/core_language/checks/integer_dtype_contract.py`.
 
 The dtype contract must land as a verification artifact or blocked fixtures even if array/tensor/dataframe runtime kernels are deferred.
 

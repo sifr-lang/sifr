@@ -3,7 +3,7 @@
 mod validation_contract_support;
 
 #[test]
-#[ignore = "invoked explicitly by scripts/run_validation_contract_matrix.sh"]
+#[ignore = "invoked explicitly by verification area runners"]
 fn test_validation_contract_matrix() {
     if let Err(error) = validation_contract_support::run() {
         panic!("{error}");
