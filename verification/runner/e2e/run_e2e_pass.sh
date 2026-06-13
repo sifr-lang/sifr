@@ -15,7 +15,7 @@ FIXTURE_MANIFEST_DEFAULT=""
 
 usage() {
   cat <<'EOF'
-Usage: scripts/run_e2e_pass.sh [options]
+Usage: verification/runner/e2e/run_e2e_pass.sh [options]
 
 Profiles:
   create-pr Fast local signal; bounded parallel workers; cache enabled.
@@ -38,7 +38,7 @@ EOF
 }
 
 resolve_profile() {
-  uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify profiles profile --profile "$1"
+  uv run --project "${REPO_ROOT}/verification" --locked python -m sifr_verify profiles profile --profile "$1"
 }
 
 set_profile_defaults() {
@@ -127,6 +127,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 PROFILE="$(resolve_profile "${PROFILE}")"
 set_profile_defaults "${PROFILE}"
 
@@ -164,10 +165,10 @@ if [[ -n "${FIXTURE_MANIFEST_OVERRIDE}" ]]; then
   FIXTURE_MANIFEST="${FIXTURE_MANIFEST_OVERRIDE}"
 fi
 if [[ "${CACHE_DIR}" != /* ]]; then
-  CACHE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)/${CACHE_DIR}"
+  CACHE_DIR="${REPO_ROOT}/${CACHE_DIR}"
 fi
 if [[ -n "${FIXTURE_MANIFEST}" && "${FIXTURE_MANIFEST}" != /* ]]; then
-  FIXTURE_MANIFEST="$(cd "${SCRIPT_DIR}/.." && pwd)/${FIXTURE_MANIFEST}"
+  FIXTURE_MANIFEST="${REPO_ROOT}/${FIXTURE_MANIFEST}"
 fi
 
 echo "Running e2e pass suite"

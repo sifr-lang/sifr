@@ -27,7 +27,7 @@ Status: merged in PR #2497 at `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`.
 | `cargo test -p sifr_stdlib --test network_http_dependency_snapshots -- --nocapture` | PASS | Verifies M0-M3 generated dependency snapshots, no external cookie crate for cookie-header helpers, and Ring 5 absence from M3 production dependencies. |
 | `cargo fmt --check` | PASS | Rust formatting check. |
 | `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after Opus pass-3 remediation. |
-| `scripts/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
+| `verification/runner/e2e/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed after the final review evidence check; report `target/validation_lane_reports/merge.latest.json`; all 14 lane steps passed, wall time 783.02s, hardening failures 0, advisory: high e2e group skew only. |
 | `python3 scripts/check_file_size_guardrails.py` | PASS | File-size guardrail passed with 2319 files under the 900-line limit. |

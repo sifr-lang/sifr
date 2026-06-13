@@ -21,7 +21,7 @@ Options:
   --profile <create-pr|merge|nightly|release>  Validation profile (default: merge)
   --help                                      Show this help
 
-Any remaining arguments are forwarded to scripts/run_e2e_pass.sh.
+Any remaining arguments are forwarded to the verification-owned e2e pass runner.
 EOF
 }
 

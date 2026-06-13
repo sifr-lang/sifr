@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/check_e2e_report_determinism.sh [--profile <merge|nightly|release>] [--help]
+Usage: verification/runner/e2e/check_report_determinism.sh [--profile <merge|nightly|release>] [--help]
 
 Run the e2e pass suite twice and assert the emitted report signature is identical.
 EOF
@@ -12,6 +12,7 @@ EOF
 
 PROFILE="release"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,13 +32,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-PROFILE="$(uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify profiles profile --profile "${PROFILE}")"
+PROFILE="$(uv run --project "${REPO_ROOT}/verification" --locked python -m sifr_verify profiles profile --profile "${PROFILE}")"
 if [[ "${PROFILE}" == "create-pr" ]]; then
   echo "determinism checks are not part of the create-pr lane; use merge, nightly, or release" >&2
   exit 2
 fi
-REPO_ROOT="${SCRIPT_DIR}/.."
-
 extract_signature() {
   local run_id="$1"
   local log_file

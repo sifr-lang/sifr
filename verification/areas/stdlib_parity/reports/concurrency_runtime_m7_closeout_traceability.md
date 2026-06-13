@@ -58,7 +58,7 @@ M7 final validation must include:
 - `python3 scripts/check_file_size_guardrails.py`
 - `cargo test -p sifr_stdlib`
 - `cargo test -p sifr -- stdlib`
-- `scripts/run_e2e_pass.sh`
+- `verification/runner/e2e/run_e2e_pass.sh`
 - `scripts/run_all_tests.sh --profile create-pr`
 - `scripts/run_all_tests.sh`
 

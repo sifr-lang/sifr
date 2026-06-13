@@ -17,7 +17,7 @@ Each fixedbug entry must include:
 - `note` (short context when name alone is insufficient)
 
 Execution contract:
-- Every fixedbug entry is executed by `scripts/run_verification_hardening.py`.
+- Every fixedbug entry is executed by `uv run --project verification --locked python -m sifr_verify.hardening`.
 - Exit-code contract is enforced for each entry.
 - Missing metadata fields fail the hardening gate.
 
@@ -38,7 +38,7 @@ Each crash sentinel entry must include:
 - `note`
 
 Execution contract:
-- Crash sentinels are machine-validated by `scripts/run_verification_hardening.py`.
+- Crash sentinels are machine-validated by `uv run --project verification --locked python -m sifr_verify.hardening`.
 - Invalid metadata or missing `source_reference`/`reproducer_fixture` paths fail the hardening gate.
 - Unresolved sentinels remain visible and blocking until resolved or explicitly promoted.
 

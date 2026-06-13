@@ -6,10 +6,10 @@ This document defines canonical baseline governance for compiler-facing verifica
 
 - Verify baselines:
   - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines`
-  - `python3 scripts/run_verification_hardening.py --profile merge`
+  - `uv run --project verification --locked python -m sifr_verify.hardening --profile merge`
 - Bless baselines:
   - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless`
-  - `python3 scripts/run_verification_hardening.py --profile merge --bless`
+  - `uv run --project verification --locked python -m sifr_verify.hardening --profile merge --bless`
 
 Only explicit `--bless` updates checked-in baseline files.
 

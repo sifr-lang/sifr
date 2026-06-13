@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verification hardening runner entrypoint."""
 
-from run_verification_hardening import main
+from . import main
 
 
 if __name__ == "__main__":

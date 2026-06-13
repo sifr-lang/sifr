@@ -34,7 +34,7 @@ Status: merged via PR #2495 at `ce5a411f4284404a1a374f77c0176351771e7cb9`; Opus 
 | `cargo fmt --check` | PASS | Clean after M1 edits. |
 | `python3 scripts/check_file_size_guardrails.py` | PASS | 2302 files, limit 900 lines. |
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails passed. |
-| `scripts/run_e2e_pass.sh` | PASS | Merge-manifest e2e pass suite completed 138 pass tests, 0 failed. |
+| `verification/runner/e2e/run_e2e_pass.sh` | PASS | Merge-manifest e2e pass suite completed 138 pass tests, 0 failed. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_all_tests.sh` | PASS | Report `target/validation_lane_reports/merge.latest.json`; all merge-lane steps passed. Advisories: warm wall-time budget exceeded and high group skew. |
 

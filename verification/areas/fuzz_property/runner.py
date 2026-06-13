@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
 
-from scripts.run_verification_hardening.property_and_fuzz import (  # noqa: E402
+from sifr_verify.hardening.property_and_fuzz import (  # noqa: E402
     run_fuzz_smoke_suite,
     run_property_suite,
 )

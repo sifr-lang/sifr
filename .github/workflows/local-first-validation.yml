@@ -55,8 +55,11 @@ jobs:
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.SIFR_MIN_UV_VERSION }}
       - name: Run smoke fuzz/property checks
-        run: bash scripts/run_smoke_fuzz_property.sh
+        run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 
   deterministic-report-signature:
     name: deterministic-report-signature
@@ -67,5 +70,8 @@ jobs:
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.SIFR_MIN_UV_VERSION }}
       - name: Verify deterministic report signature
-        run: bash scripts/check_e2e_report_determinism.sh --profile merge
+        run: bash verification/runner/e2e/check_report_determinism.sh --profile merge

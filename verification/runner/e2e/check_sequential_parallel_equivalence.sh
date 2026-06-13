@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/check_e2e_sequential_parallel_equivalence.sh [--profile <merge|nightly|release>] [--help]
+Usage: verification/runner/e2e/check_sequential_parallel_equivalence.sh [--profile <merge|nightly|release>] [--help]
 
 Run the e2e pass suite with sequential and parallel worker settings and assert report signature equivalence.
 EOF
@@ -12,6 +12,7 @@ EOF
 
 PROFILE="release"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,13 +32,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-PROFILE="$(uv run --project "${SCRIPT_DIR}/../verification" --locked python -m sifr_verify profiles profile --profile "${PROFILE}")"
+PROFILE="$(uv run --project "${REPO_ROOT}/verification" --locked python -m sifr_verify profiles profile --profile "${PROFILE}")"
 if [[ "${PROFILE}" == "create-pr" ]]; then
   echo "sequential-vs-parallel equivalence is not part of the create-pr lane; use merge, nightly, or release" >&2
   exit 2
 fi
-REPO_ROOT="${SCRIPT_DIR}/.."
-
 extract_signature() {
   local mode="$1"
   local log_file
