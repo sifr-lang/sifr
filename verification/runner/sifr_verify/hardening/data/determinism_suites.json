@@ -6,7 +6,7 @@
       "runner": "determinism-scale",
       "owner": "compiler/hardening",
       "blocking": true,
-      "index": "verification/determinism/manifest.json"
+      "index": "verification/runner/sifr_verify/hardening/data/determinism_manifest.json"
     }
   ]
 }

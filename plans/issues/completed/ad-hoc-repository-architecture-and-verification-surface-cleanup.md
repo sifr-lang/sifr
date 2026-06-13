@@ -212,6 +212,7 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR N+4 Audits Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2545> |
 | PR N+5 Internal Docs Relevance Cleanup | Merged | <https://github.com/sifr-lang/sifr/pull/2547> |
 | PR N+6 Docs And Guardrails Closeout | Merged | <https://github.com/sifr-lang/sifr/pull/2549> |
+| PR N+7 Final Verification Residue Cleanup | In Review | TBD |
 
 ## Verification Migration Status
 
@@ -1337,7 +1338,7 @@ Status:
 Review:
 
 - Opus review:
-  `plans/reviews/active/arch-cleanup-internal-docs-relevance-opus-review-1.md`.
+  `plans/reviews/archive/arch-cleanup-internal-docs-relevance-opus-review-1.md`.
 - Verdict: satisfied; no blockers.
 
 Validation evidence:
@@ -1409,9 +1410,51 @@ Validation:
 - `scripts/run_all_tests.sh --profile create-pr`
 - `scripts/run_all_tests.sh --profile merge`
 
+### PR N+7: Final Verification Residue Cleanup
+
+Close blockers found by the final whole-phase review.
+
+Status:
+
+- Implemented for review.
+- Moved determinism-scale suite/index data from top-level
+  `verification/suites/` and `verification/determinism/` into
+  `verification/runner/sifr_verify/hardening/data/`.
+- Moved flake quarantine data from `verification/flake/quarantine.json` to
+  `verification/policy/flake_quarantine.json`.
+- Moved root `verification/integer_model_*.md` artifacts into
+  `verification/areas/core_language/data/integer_model/` and retargeted current
+  references.
+- Removed stale verification-root allowlist entries from
+  `scripts/check_scripts_verification_boundary.py`.
+
+Review:
+
+- Final whole-phase Opus review found the residual top-level verification
+  paths and root integer-model markdown artifacts as blockers. This milestone
+  addresses those findings directly rather than weakening the acceptance
+  criteria.
+
+Validation evidence:
+
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 scripts/check_scripts_verification_boundary.py && python3 scripts/check_scripts_verification_boundary.py --self-test`
+- `uv run --project verification --locked python -m sifr_verify.hardening --self-test`
+- `uv run --project verification --locked python -m sifr_verify profiles check`
+- `uv run --project verification --locked python -m sifr_verify areas check`
+- `python3 -m json.tool` on moved determinism/quarantine JSON artifacts
+- stale-path scan for `verification/{suites,determinism,flake}` and root
+  `verification/integer_model_*.md` references across active surfaces
+- `scripts/run_all_tests.sh --profile create-pr`: passed with no test
+  failures; e2e used
+  `verification/areas/core_language/data/create_pr_e2e_manifest.json`;
+  132/132 pass tests completed; warm rerun exceeded the advisory two-minute
+  warm budget (`budget_ok=no`, 152.16s).
+
 ## Acceptance Criteria
 
-Status: complete after PR #2549 and final status PR.
+Status: complete after PR #2549, PR #2550, and final verification residue cleanup.
 
 - Fresh clone top-level tree matches the top-level contract.
 - No top-level tracked `reviews/` tree exists.

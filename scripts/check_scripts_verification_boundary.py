@@ -86,8 +86,6 @@ REFERENCE_PATHS = [
     "verification/policy",
     "scripts",
     "verification/areas",
-    "verification/determinism",
-    "verification/integer_model_closure_hardening.md",
     "verification/runner",
 ]
 

@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--manifest",
-        default="verification/suites/manifest.json",
+        default="verification/runner/sifr_verify/hardening/data/determinism_suites.json",
         help="Path to suite manifest JSON.",
     )
     parser.add_argument(
@@ -77,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--quarantine-file",
-        default="verification/flake/quarantine.json",
+        default="verification/policy/flake_quarantine.json",
         help="Path to quarantine metadata file.",
     )
     parser.add_argument(
