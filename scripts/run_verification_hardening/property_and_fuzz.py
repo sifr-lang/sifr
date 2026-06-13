@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 from pathlib import Path
@@ -448,5 +449,4 @@ def run_fuzz_smoke_suite(
         result["failed_cases"] += 1
     result["cases"].append(case_result)
     return result
-
 

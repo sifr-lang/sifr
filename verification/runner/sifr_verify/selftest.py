@@ -82,6 +82,8 @@ def _discovery_self_test() -> None:
         raise AssertionError(f"project_workspace area was not discovered: {sorted(committed_areas)}")
     if "regression" not in committed_areas:
         raise AssertionError(f"regression area was not discovered: {sorted(committed_areas)}")
+    if "fuzz_property" not in committed_areas:
+        raise AssertionError(f"fuzz_property area was not discovered: {sorted(committed_areas)}")
 
     with tempfile.TemporaryDirectory() as tmp:
         areas_dir = Path(tmp) / "areas"

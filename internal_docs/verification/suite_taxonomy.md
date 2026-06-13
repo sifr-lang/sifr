@@ -63,7 +63,7 @@ This document defines the canonical suite taxonomy for compiler verification har
   - promotion target once fixed
 
 ### Property and Fuzz-Smoke
-- Policy and manifests live under `verification/fuzz_property/`.
+- Policy and manifests live under `verification/areas/fuzz_property/`.
 - Seeds and deterministic generation rules are version-controlled.
 - Each run emits machine-readable case outcomes and seed provenance.
 - Operational policy: `internal_docs/verification/fuzz_property_policy.md`.

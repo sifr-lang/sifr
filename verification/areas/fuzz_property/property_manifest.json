@@ -3,7 +3,7 @@
   "entries": [
     {
       "id": "PROP-0001",
-      "entry": "verification/fuzz_property/seeds/invalid_import_seed.sifr",
+      "entry": "verification/areas/fuzz_property/seeds/invalid_import_seed.sifr",
       "command": "check",
       "diagnostic_format": "json",
       "expect_exit_code": 1,
@@ -13,7 +13,7 @@
     },
     {
       "id": "PROP-0002",
-      "entry": "verification/fuzz_property/seeds/valid_control_flow_seed.sifr",
+      "entry": "verification/areas/fuzz_property/seeds/valid_control_flow_seed.sifr",
       "command": "check",
       "diagnostic_format": "json",
       "expect_exit_code": 0,
@@ -23,7 +23,7 @@
     },
     {
       "id": "PROP-INT-0001",
-      "entry": "verification/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
+      "entry": "verification/areas/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
       "command": "run",
       "diagnostic_format": "json",
       "expect_exit_code": 0,
@@ -33,7 +33,7 @@
     },
     {
       "id": "PROP-INT-0002",
-      "entry": "verification/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr",
+      "entry": "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr",
       "command": "run",
       "diagnostic_format": "json",
       "expect_exit_code": 0,

@@ -267,7 +267,7 @@ Minimum suite kinds:
 - Determinism recheck:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/check_e2e_report_determinism.sh`
 - Fuzz/property smoke runner:
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_smoke_fuzz_property.sh`
+  - `/Users/yaseralnajjar/work/sifr/codebase/verification/areas/fuzz_property/`
 - Milestone demos:
   - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
 - Baseline bless/accept command:

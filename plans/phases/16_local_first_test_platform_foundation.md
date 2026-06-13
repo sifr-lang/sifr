@@ -47,7 +47,7 @@ status: done (2026-03-03, PR #808)
   - Smoke fuzz/property checks run in default validation flow.
 - Evidence:
   - CI workflow parity is implemented in `.github/workflows/local-first-validation.yml`, invoking `scripts/run_all_tests.sh` profiles directly.
-  - Always-on smoke jobs are implemented via `scripts/run_smoke_fuzz_property.sh` and `scripts/check_e2e_report_determinism.sh`.
+  - Always-on smoke jobs are implemented via the `fuzz_property` verification area and `scripts/check_e2e_report_determinism.sh`.
   - Smoke fuzz/property checks are embedded into default local validation through `cargo test -p sifr -- --skip test_e2e_pass` in `scripts/run_all_tests.sh`.
   - Milestone demo: `cargo run -q -p sifr -- run demos/m16_3_ci_parity_smoke_hardening_demo.sifr`.
 
