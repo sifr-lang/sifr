@@ -428,6 +428,7 @@ run_hardening_suites() {
     PROJECT_WORKSPACE_HARDENING=0
     REGRESSION_HARDENING_ARGS=()
     FUZZ_PROPERTY_HARDENING_ARGS=()
+    ECOSYSTEM_COMPATIBILITY_HARDENING_ARGS=()
     IFS=',' read -r -a HARDENING_SUITE_ARRAY <<< "${HARDENING_SUITES}"
     for suite in "${HARDENING_SUITE_ARRAY[@]}"; do
       if [[ -n "${suite}" ]]; then
@@ -439,6 +440,8 @@ run_hardening_suites() {
           REGRESSION_HARDENING_ARGS+=(--suite "${suite}")
         elif [[ "${suite}" == "property" || "${suite}" == "fuzz-smoke" ]]; then
           FUZZ_PROPERTY_HARDENING_ARGS+=(--suite "${suite}")
+        elif [[ "${suite}" == "oss-curated" || "${suite}" == "ecosystem-broader" ]]; then
+          ECOSYSTEM_COMPATIBILITY_HARDENING_ARGS+=(--suite "${suite}")
         else
           HARDENING_ARGS+=(--suite "${suite}")
         fi
@@ -459,6 +462,10 @@ run_hardening_suites() {
     if [[ "${#FUZZ_PROPERTY_HARDENING_ARGS[@]}" -gt 0 ]]; then
       uv run --project "${SCRIPT_DIR}/../verification" --locked \
         python -m sifr_verify areas run --area fuzz_property "${FUZZ_PROPERTY_HARDENING_ARGS[@]}" --hardening-summary
+    fi
+    if [[ "${#ECOSYSTEM_COMPATIBILITY_HARDENING_ARGS[@]}" -gt 0 ]]; then
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run --area ecosystem_compatibility "${ECOSYSTEM_COMPATIBILITY_HARDENING_ARGS[@]}" --hardening-summary
     fi
     if [[ "${#HARDENING_ARGS[@]}" -gt 2 ]]; then
       python3 "${SCRIPT_DIR}/run_verification_hardening.py" "${HARDENING_ARGS[@]}"

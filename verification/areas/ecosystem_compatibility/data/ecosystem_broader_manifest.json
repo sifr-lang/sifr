@@ -3,8 +3,8 @@
   "entries": [
     {
       "id": "OSS-BROADER-0001",
-      "project_root": "verification/oss/projects/broader_pass_signal",
-      "pinned_revision": "local-main@f6ababa5",
+      "project_root": "verification/areas/ecosystem_compatibility/projects/broader_pass_signal",
+      "pinned_revision": "local-main@5f8f145",
       "owner": "compiler/verification",
       "rationale": "Signal-only broader lane pass project for trend comparison.",
       "expected_result_classification": "pass",
@@ -25,8 +25,8 @@
     },
     {
       "id": "OSS-BROADER-0002",
-      "project_root": "verification/oss/projects/broader_known_failure_signal",
-      "pinned_revision": "local-main@f6ababa5",
+      "project_root": "verification/areas/ecosystem_compatibility/projects/broader_known_failure_signal",
+      "pinned_revision": "local-main@5f8f145",
       "owner": "compiler/verification",
       "rationale": "Known-compatibility signal case intentionally expected to fail compilation.",
       "expected_result_classification": "known-failure",

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "name": "ecosystem_compatibility",
+  "owner": "compiler/verification",
+  "description": "Curated OSS compatibility gate and broader ecosystem signal suites.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "external-corpus"
+  ],
+  "timeout_seconds": 1800,
+  "suites": [
+    {
+      "name": "oss-curated",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "oss-curated-manifest",
+          "entry": "verification/areas/ecosystem_compatibility/data/curated_manifest.json",
+          "command": "oss-curated-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "ecosystem-broader",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "ecosystem-broader-manifest",
+          "entry": "verification/areas/ecosystem_compatibility/data/ecosystem_broader_manifest.json",
+          "command": "ecosystem-broader-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}
