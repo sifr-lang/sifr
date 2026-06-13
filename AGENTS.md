@@ -25,7 +25,7 @@ cargo test -p sifr -- --skip test_e2e_pass
 cargo test -p sifr -- <test_name>
 
 # E2E pass suite only
-scripts/run_e2e_pass.sh
+verification/runner/e2e/run_e2e_pass.sh
 
 # Linting
 cargo clippy --workspace -- -D warnings

@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<USAGE
-Usage: scripts/check_codegen_binary_size.sh <baseline_ref> [candidate_ref] [demo_path]
+Usage: verification/areas/performance/tools/check_codegen_binary_size.sh <baseline_ref> [candidate_ref] [demo_path]
 
 Compares release binary size for a Sifr demo between two git refs.
 Exits non-zero if candidate binary is larger than baseline.

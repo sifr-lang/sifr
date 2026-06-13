@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
 
-from scripts.run_verification_hardening.fixedbugs_and_crashes import (  # noqa: E402
+from sifr_verify.hardening.fixedbugs_and_crashes import (  # noqa: E402
     collect_fixedbug_ids,
     run_crashes_suite,
     run_fixedbugs_suite,

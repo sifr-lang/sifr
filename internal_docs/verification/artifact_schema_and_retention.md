@@ -4,7 +4,7 @@ Canonical artifact:
 - `target/verification/hardening-results.json`
 
 Producer:
-- `scripts/run_verification_hardening.py`
+- `uv run --project verification --locked python -m sifr_verify.hardening`
 
 ## Schema (high level)
 

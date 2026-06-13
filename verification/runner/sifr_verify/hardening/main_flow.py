@@ -50,7 +50,7 @@ def main() -> int:
     if args.rerun_failures < 0:
         raise SystemExit("--rerun-failures must be >= 0")
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[4]
     if args.self_test:
         return run_self_tests()
 

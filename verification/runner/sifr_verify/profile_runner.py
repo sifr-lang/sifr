@@ -223,6 +223,10 @@ class ProfileRunner:
         run_python("scripts/check_submodule_ownership.py")
         run_python("scripts/check_submodule_ownership.py", "--self-test")
 
+        print("Running scripts verification-boundary guardrail")
+        run_python("scripts/check_scripts_verification_boundary.py")
+        run_python("scripts/check_scripts_verification_boundary.py", "--self-test")
+
         print("Running TypeScript-Go architecture transfer M1 guardrails")
         run_command(uv_area_command("--area", "developer_tooling", "--suite", "typescript-go-m1"))
 
@@ -270,8 +274,8 @@ class ProfileRunner:
             print(f"Skipping performance benchmark execution for lane {self.profile_name}")
 
     def run_verification_hardening_self_tests(self) -> None:
-        print("Running verification hardening script self-tests")
-        run_python("scripts/run_verification_hardening.py", "--self-test")
+        print("Running verification hardening runner self-tests")
+        run_command([sys.executable, "-m", "sifr_verify.hardening", "--self-test"])
 
     def run_verification_runner_foundation_checks(self) -> None:
         print("Running verification runner foundation checks")
@@ -384,7 +388,7 @@ class ProfileRunner:
             e2e_args.extend(["--fixture-manifest", str(fixture_manifest)])
         if bool(self.e2e["disable_cache"]):
             e2e_args.append("--no-cache")
-        run_command(["bash", "scripts/run_e2e_pass.sh", *e2e_args, *self.forward_args])
+        run_command(["bash", "verification/runner/e2e/run_e2e_pass.sh", *e2e_args, *self.forward_args])
 
     def run_hardening_suites(self) -> None:
         if not self.hardening_suites:
@@ -420,15 +424,22 @@ class ProfileRunner:
         if ecosystem_args:
             run_command(uv_area_command("--area", "ecosystem_compatibility", *ecosystem_args, "--hardening-summary"))
         if len(legacy_args) > 2:
-            run_command(["python3", "scripts/run_verification_hardening.py", *legacy_args])
+            run_command([sys.executable, "-m", "sifr_verify.hardening", *legacy_args])
 
     def run_extra_e2e_checks(self) -> None:
         if "e2e_report_determinism" in self.extra_checks:
             print("Running e2e report determinism check")
-            run_command(["bash", "scripts/check_e2e_report_determinism.sh", "--profile", self.profile_name])
+            run_command(["bash", "verification/runner/e2e/check_report_determinism.sh", "--profile", self.profile_name])
         if "e2e_sequential_parallel_equivalence" in self.extra_checks:
             print("Running e2e sequential-vs-parallel equivalence check")
-            run_command(["bash", "scripts/check_e2e_sequential_parallel_equivalence.sh", "--profile", self.profile_name])
+            run_command(
+                [
+                    "bash",
+                    "verification/runner/e2e/check_sequential_parallel_equivalence.sh",
+                    "--profile",
+                    self.profile_name,
+                ]
+            )
 
 
 def write_time_file(path: Path, *, start: float, usage_start: resource.struct_rusage) -> None:

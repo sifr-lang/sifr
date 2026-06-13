@@ -6,7 +6,7 @@
       "description": "Repeat-run deterministic report signature check",
       "command": [
         "bash",
-        "scripts/check_e2e_report_determinism.sh",
+        "verification/runner/e2e/check_report_determinism.sh",
         "--profile",
         "<PROFILE>"
       ],
@@ -18,7 +18,7 @@
       "description": "Sequential vs parallel e2e report-signature equivalence",
       "command": [
         "bash",
-        "scripts/check_e2e_sequential_parallel_equivalence.sh",
+        "verification/runner/e2e/check_sequential_parallel_equivalence.sh",
         "--profile",
         "<PROFILE>"
       ],

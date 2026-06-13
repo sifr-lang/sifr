@@ -5,8 +5,8 @@ INT-8 closes the integer-model phase with concrete local evidence instead of a C
 ## Performance Gate
 
 - Fixture: `verification/areas/performance/fixtures/sifr_int_loop.sifr`
-- Runner: `scripts/run_integer_model_closure_perf.py`
-- Command: `python3 scripts/run_integer_model_closure_perf.py`
+- Runner: `verification/areas/performance/tools/run_integer_model_closure_perf.py`
+- Command: `python3 verification/areas/performance/tools/run_integer_model_closure_perf.py`
 
 The runner first executes the Sifr fixture through the normal CLI. It then builds a temporary Rust probe under `target/integer_model_closure_perf_probe` that depends on the local `sifr_runtime` crate and checks:
 
