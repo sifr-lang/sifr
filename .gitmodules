@@ -33,3 +33,4 @@
 [submodule "verification/areas/developer_tooling/corpora/sifr-large-lsp-verification"]
 	path = verification/areas/developer_tooling/corpora/sifr-large-lsp-verification
 	url = https://github.com/sifr-lang/sifr-large-lsp-verification.git
+	branch = main
