@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -108,14 +109,56 @@ def run_self_tests() -> int:
             ],
         ),
     )
+    with tempfile.TemporaryDirectory(prefix="sifr-hardening-history-") as tmp:
+        history_root = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=history_root, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "self-test@example.invalid"],
+            cwd=history_root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Self Test"],
+            cwd=history_root,
+            check=True,
+        )
+        old_project_root = history_root / "verification/oss/projects/example"
+        old_project_root.mkdir(parents=True)
+        (old_project_root / "main.sifr").write_text("def main() -> None:\n    pass\n")
+        subprocess.run(["git", "add", "."], cwd=history_root, check=True)
+        subprocess.run(["git", "commit", "-qm", "add example"], cwd=history_root, check=True)
+        initial_revision = latest_project_revision(
+            history_root,
+            "verification/oss/projects/example",
+        )
+        assert initial_revision is not None
+        new_project_root = history_root / "verification/areas/ecosystem_compatibility/projects/example"
+        new_project_root.parent.mkdir(parents=True)
+        subprocess.run(
+            [
+                "git",
+                "mv",
+                "verification/oss/projects/example",
+                "verification/areas/ecosystem_compatibility/projects/example",
+            ],
+            cwd=history_root,
+            check=True,
+        )
+        subprocess.run(["git", "commit", "-qm", "move example"], cwd=history_root, check=True)
+        history = project_revision_history(
+            history_root,
+            "verification/areas/ecosystem_compatibility/projects/example",
+        )
+        assert initial_revision in history
+        assert history[0] != initial_revision
     print("verification hardening self-tests ok")
     return 0
 
 
-def latest_project_revision(repo_root: Path, project_root: str) -> str | None:
+def run_git(repo_root: Path, args: list[str]) -> subprocess.CompletedProcess[str] | None:
     try:
-        proc = subprocess.run(
-            ["git", "log", "-n", "1", "--format=%H", "--", project_root],
+        return subprocess.run(
+            ["git", *args],
             cwd=repo_root,
             text=True,
             capture_output=True,
@@ -123,12 +166,46 @@ def latest_project_revision(repo_root: Path, project_root: str) -> str | None:
         )
     except OSError:
         return None
-    if proc.returncode != 0:
+
+
+def project_tracked_paths(repo_root: Path, project_root: str) -> list[str]:
+    proc = run_git(repo_root, ["ls-files", "--", project_root])
+    if proc is None or proc.returncode != 0:
+        return []
+    paths = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    if paths:
+        return paths
+
+    fallback = run_git(repo_root, ["cat-file", "-e", f"HEAD:{project_root}"])
+    if fallback is None or fallback.returncode != 0:
+        return []
+    return [project_root]
+
+
+def project_revision_history(repo_root: Path, project_root: str) -> list[str]:
+    revisions: list[str] = []
+    seen: set[str] = set()
+    for tracked_path in project_tracked_paths(repo_root, project_root):
+        proc = run_git(
+            repo_root,
+            ["log", "--follow", "--find-renames", "--format=%H", "--", tracked_path],
+        )
+        if proc is None or proc.returncode != 0:
+            continue
+        for revision in proc.stdout.splitlines():
+            revision = revision.strip()
+            if revision in seen or re.fullmatch(r"[0-9a-f]{40}", revision) is None:
+                continue
+            revisions.append(revision)
+            seen.add(revision)
+    return revisions
+
+
+def latest_project_revision(repo_root: Path, project_root: str) -> str | None:
+    history = project_revision_history(repo_root, project_root)
+    if not history:
         return None
-    revision = proc.stdout.strip()
-    if not re.fullmatch(r"[0-9a-f]{40}", revision):
-        return None
-    return revision
+    return history[0]
 
 
 def baseline_case_result(
@@ -283,5 +360,3 @@ def run_baseline_suite(
             result["failed_cases"] += 1
 
     return result
-
-

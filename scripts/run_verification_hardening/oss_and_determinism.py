@@ -15,7 +15,7 @@ from .core import (
     run_variant,
 )
 from .fixedbugs_and_crashes import contains_internal_panic
-from .self_tests_and_baselines import latest_project_revision
+from .self_tests_and_baselines import project_revision_history
 
 def run_oss_suite(
     *,
@@ -46,7 +46,7 @@ def run_oss_suite(
     }
 
     allowed_classifications = {"pass", "known-failure", "investigate"}
-    pinned_revision_cache: dict[str, str | None] = {}
+    pinned_revision_cache: dict[str, list[str]] = {}
 
     for entry in entries:
         case_id = str(entry.get("id", "<missing-id>"))
@@ -115,11 +115,11 @@ def run_oss_suite(
             result["cases"].append(case_result)
             continue
         expected_sha = pinned_match.group(1)
-        latest_sha = pinned_revision_cache.get(project_root_raw)
+        revision_history = pinned_revision_cache.get(project_root_raw)
         if project_root_raw not in pinned_revision_cache:
-            latest_sha = latest_project_revision(repo_root, project_root_raw)
-            pinned_revision_cache[project_root_raw] = latest_sha
-        if latest_sha is None:
+            revision_history = project_revision_history(repo_root, project_root_raw)
+            pinned_revision_cache[project_root_raw] = revision_history
+        if not revision_history:
             result["total_variants"] += 1
             result["total_failures"] += 1
             result["failed_cases"] += 1
@@ -132,7 +132,9 @@ def run_oss_suite(
             )
             result["cases"].append(case_result)
             continue
-        if not latest_sha.startswith(expected_sha):
+        latest_sha = revision_history[0]
+        matched_sha = next((sha for sha in revision_history if sha.startswith(expected_sha)), None)
+        if matched_sha is None:
             result["total_variants"] += 1
             result["total_failures"] += 1
             result["failed_cases"] += 1
@@ -155,6 +157,7 @@ def run_oss_suite(
                 "mismatches": [],
                 "expected_pinned_revision": pinned_revision_raw,
                 "latest_project_revision": f"local-main@{latest_sha[:len(expected_sha)]}",
+                "matched_project_revision": f"local-main@{matched_sha[:len(expected_sha)]}",
             }
         )
 
@@ -441,5 +444,4 @@ def failed_case_ids(suite_result: dict[str, Any]) -> set[str]:
             if any(isinstance(variant, dict) and variant.get("status") == "fail" for variant in variants):
                 failed.add(case_id)
     return failed
-
 

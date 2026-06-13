@@ -5,7 +5,7 @@ This policy defines the curated blocking OSS gate and broader non-blocking ecosy
 ## Curated OSS Gate (Blocking)
 
 Manifest:
-- `verification/oss/curated_manifest.json`
+- `verification/areas/ecosystem_compatibility/data/curated_manifest.json`
 
 Contract per entry:
 - pinned revision
@@ -17,18 +17,19 @@ Contract per entry:
 
 Pinned revision contract:
 - format must be `local-main@<git-sha-prefix>`
-- `<git-sha-prefix>` must match the latest commit that touched `project_root`
+- `<git-sha-prefix>` must match a commit in the followed history of tracked files under `project_root`
+- path-only moves do not require repinning when the underlying fixture content is unchanged
 - mismatches fail fast in the suite as `pinned_revision_mismatch`
 
 Execution:
 - suite name `oss-curated`
-- runner: `scripts/run_verification_hardening.py`
+- runner: `uv run --project verification --locked python -m sifr_verify areas run --area ecosystem_compatibility --suite oss-curated`
 - blocking: true
 
 ## Broader Ecosystem Lane (Non-blocking)
 
 Manifest:
-- `verification/oss/ecosystem_broader_manifest.json`
+- `verification/areas/ecosystem_compatibility/data/ecosystem_broader_manifest.json`
 
 Purpose:
 - compatibility signal collection
@@ -37,7 +38,7 @@ Purpose:
 
 Execution:
 - suite name `ecosystem-broader`
-- runner: `scripts/run_verification_hardening.py`
+- runner: `uv run --project verification --locked python -m sifr_verify areas run --area ecosystem_compatibility --suite ecosystem-broader`
 - blocking: false
 
 ## Result Classification
@@ -48,4 +49,4 @@ Allowed classifications:
 - `investigate`
 
 Any mismatch between expected command outcomes and observed outcomes is recorded in structured artifacts.
-Only `oss-curated` mismatches block merges in phase 29.
+Only `oss-curated` mismatches block merge-gate profiles.

@@ -2,20 +2,6 @@
   "schema_version": 1,
   "suites": [
     {
-      "name": "oss-curated",
-      "runner": "oss-curated",
-      "owner": "compiler/verification",
-      "blocking": true,
-      "index": "verification/oss/curated_manifest.json"
-    },
-    {
-      "name": "ecosystem-broader",
-      "runner": "ecosystem-broader",
-      "owner": "compiler/verification",
-      "blocking": false,
-      "index": "verification/oss/ecosystem_broader_manifest.json"
-    },
-    {
       "name": "determinism-scale",
       "runner": "determinism-scale",
       "owner": "compiler/hardening",

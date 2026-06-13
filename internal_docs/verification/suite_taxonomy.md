@@ -69,18 +69,17 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Operational policy: `internal_docs/verification/fuzz_property_policy.md`.
 
 ### OSS-Curated and Ecosystem-Broader
-- Manifests live under `verification/oss/`.
+- Manifests live under `verification/areas/ecosystem_compatibility/data/`.
 - `oss-curated` entries must include pinned revision, owner, rationale, commands, timeout, and expected class.
 - `ecosystem-broader` is explicitly non-blocking and emits signal-only reports.
-- Operational policy: `internal_docs/verification/oss_gate_policy.md`.
+- Operational policy: `verification/policy/ecosystem_compatibility.md`.
 
 ## Manifest Source of Truth
 
 - Canonical legacy manifest for unmigrated hardening suites:
   `verification/suites/manifest.json`.
-- Migrated diagnostics and project workspace suite ownership live in
-  `verification/areas/diagnostics/manifest.json` and
-  `verification/areas/project_workspace/manifest.json`.
+- Migrated diagnostics, project workspace, and ecosystem compatibility suite
+  ownership live in their area manifests under `verification/areas/`.
 - Suite runners must not hardcode fixture lists outside their owning manifest.
 - Manifest updates are review artifacts and follow normal PR review.
 - Corpus lifecycle and promotion rules: `internal_docs/verification/regression_corpus_policy.md`.
