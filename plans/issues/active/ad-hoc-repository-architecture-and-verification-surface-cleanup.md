@@ -207,6 +207,7 @@ Long review transcripts may be retained under `plans/reviews/archive/` when they
 | PR 20 Algorithmic Compatibility Area Migration | Merged | <https://github.com/sifr-lang/sifr/pull/2535> |
 | PR 21 Ecosystem Compatibility Area Migration | Merged | <https://github.com/sifr-lang/sifr/pull/2537> |
 | PR N+1 Verification Facade Cutover | Merged | <https://github.com/sifr-lang/sifr/pull/2539> |
+| PR N+2 Submodule Normalization | Merged | <https://github.com/sifr-lang/sifr/pull/2541> |
 
 ## Verification Migration Status
 
@@ -1036,8 +1037,8 @@ The audit scope is tracked repository material plus currently discovered generat
 | `editor_integrations` | keep | Editor integration repository remains under editor surface. | Yes | Yes | submodule status and tooling checks | Editor integrations are separate product surfaces. |
 | `editor_integrations/vscode` | keep | VS Code extension submodule remains under editor integrations. | Yes | Yes | submodule status and extension checks | Editor-specific assets stay under editor owner. |
 | `audits/leetcode` | moved | Moved to algorithmic compatibility corpus owner in PR #2535. | Yes | Yes | `.gitmodules`, clone script, area runner | External corpora need one owning area. |
-| `verification/sifr-large-lsp-verification` | move | Move to developer tooling corpus owner. | Yes | Yes | `.gitmodules`, submodule status, tooling runner | Large LSP corpora belong to tooling validation. |
-| `verification/package_management/demo_repositories/*` | move | Remain submodules but under package_management area-owned corpora/fixtures. | Yes | Yes | `.gitmodules`, package runner | Demo repos are package verification inputs. |
+| `verification/sifr-large-lsp-verification` | moved | Normalized under `verification/areas/developer_tooling/corpora/sifr-large-lsp-verification/`; `.gitmodules` branch metadata and recursive checkout guardrails finalized in PR #2541. | Yes | Yes | `.gitmodules`, submodule ownership guardrail, submodule status, tooling runner | Large LSP corpora belong to tooling validation. |
+| `verification/package_management/demo_repositories/*` | moved | Normalized under `verification/areas/package_management/corpora/demo_repositories/*`; `.gitmodules` ownership and restoration guardrails finalized in PR #2541. | Yes | Yes | `.gitmodules`, submodule ownership guardrail, package runner | Demo repos are package verification inputs. |
 
 ## Proposed PR Sequence
 
@@ -1213,6 +1214,11 @@ Validation:
 ### PR N+2: Submodule Normalization
 
 Resolve submodule ownership and move any submodule paths that belong under verification areas.
+
+Status: merged in PR #2541. The milestone added `scripts/check_submodule_ownership.py`
+to the profile guardrails, completed branch metadata for all submodules, made
+local-first CI checkout submodules recursively, and documented restoration
+ownership in `README.md`.
 
 Validation:
 
