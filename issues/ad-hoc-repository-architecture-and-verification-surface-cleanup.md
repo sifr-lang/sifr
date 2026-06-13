@@ -787,6 +787,205 @@ Stale reference cleanup discovered:
 | `/Users/yaseralnajjar/...` references in `.cursor/skills/*` and `verification/distribution/common.sh` | Replace with environment variables or repo-relative paths; fail guardrail on future personal paths. |
 | `verification/validation_lanes/*` references in scripts and inventories | Replace with `verification/profiles/*` and area-owned suite references. |
 
+## PR 1 Repository Surface And Relevance Audit
+
+This audit is the no-move planning artifact for PR 1. Later PRs must update the rows they complete rather than inventing a second disposition source. "Gate consumed" means a current validation, CI, release, or workflow command directly reads or executes the path today. "Doc referenced" means active docs, workflow files, or issue plans point at the path today. Classification values are `keep`, `move`, `delete`, and `generate`; `generate` is reserved for currently untracked material that must become tracked only through a later explicit generation or lockfile policy step.
+
+The audit scope is tracked repository material plus currently discovered generated or local-state artifacts that sit under active ownership surfaces and need guardrails. Ignored root-level working-tree artifacts such as `.DS_Store`, `.obsidian/`, `.sifr_cache/`, `sifr_output/`, `target/`, and `tmp*` remain covered by the top-level ignored-material disposition table above rather than repeated in every surface table.
+
+### Top-Level Entry Audit
+
+| Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
+| --- | --- | --- | --- | --- | --- | --- |
+| `.github/` | keep | CI workflows remain top-level repo automation; retarget lane vocabulary to profiles. | Yes | Yes | local facade plus workflow syntax review | CPython keeps CI policy outside source and test data. |
+| `.cursor/` | keep | Portable workflow assets only after local state, `.rules`, and extra Claude variants are removed. | Yes | Yes | Cursor hygiene guardrail and create-pr validation | Mature repos keep contributor workflow metadata portable. |
+| `.gitignore` | keep | Root hygiene contract; edit for tracked lockfile, bytecode, editor state, and generated reports. | Yes | Yes | git status and hygiene guardrails | Rust treats generated build output as untracked. |
+| `.gitmodules` | keep | Submodule ownership registry; update atomically with corpus and integration moves. | Yes | Yes | `git submodule status --recursive` | TypeScript and Rust keep external inputs explicit. |
+| `AGENTS.md` | keep | Contributor automation contract; retarget to `plans/` and profiles as moves land. | Yes | Yes | link/reference checks and create-pr validation | CPython separates maintainer guidance from implementation. |
+| `CLAUDE.md` | keep | Agent guidance mirrors current repo workflow after path cleanup. | Yes | Yes | stale reference guardrail | Portable workflow docs should not encode local machines. |
+| `Cargo.lock` | generate | Currently ignored and untracked, but PR 2 tracks it as the workspace dependency contract. | Yes | Yes | `cargo check --workspace` and create-pr validation | Rust binary workspaces review lockfile diffs. |
+| `Cargo.toml` | keep | Workspace manifest remains top-level build contract. | Yes | Yes | cargo check/test | Rust keeps workspace ownership at the root. |
+| `LICENSE.md` | keep | Legal root surface. | No | Yes | link check only | Standard project root convention. |
+| `README.md` | keep | Public repo entrypoint; update validation and structure references. | Yes | Yes | link/reference checks and create-pr validation | CPython and Rust keep human validation entrypoints current. |
+| `logo.webp` | keep | Public branding asset referenced from docs. | No | Yes | asset link check | Public assets stay explicit, not hidden in tooling. |
+| `sifr.toml` | keep | Root Sifr project configuration. | Yes | Yes | package/workspace validation | Product repo root should show buildable project intent. |
+| `crates/` | keep | Compiler implementation remains the primary source tree. | Yes | Yes | cargo test/build and facade validation | Rust separates compiler crates from tests and tools. |
+| `demos/` | keep | User-facing executable examples and milestone demos. | Yes | Yes | demo compilation and create-pr validation | Rust keeps examples separate from compiler tests and benchmarks. |
+| `docs/` | keep | Public documentation surface. | No | Yes | link/reference checks | CPython separates public docs from internal docs. |
+| `editor_integrations/` | keep | Editor integration ownership surface and submodule parent. | Yes | Yes | tooling checks and submodule status | TypeScript keeps editor tooling contracts explicit. |
+| `internal_docs/` | keep | Current architecture and durable conventions only after moving planning/policy out. | No | Yes | link/reference checks | CPython keeps internal docs current, not process history. |
+| `issues/` | move | Active and archived issue plans move to `plans/issues/{active,completed,archive}`. | No | Yes | roadmap/Cursor/AGENTS reference checks | Mature repos separate plans from architecture. |
+| `reviews/` | move | Retained summaries move to `plans/reviews/`; logs and low-value transcripts delete. | No | Yes | no top-level reviews guardrail | Review process history should not obscure product surface. |
+| `audits/` | move | Top-level audit system is dissolved into verification areas or deleted history. | Yes | Yes | area manifest ownership and runner execution | TypeScript keeps fixtures area-owned, not audit-owned. |
+| `scripts/` | keep | Public facade, guardrails, generators, release and maintenance tools only. | Yes | Yes | create-pr/merge validation and stale script guardrails | Rust separates test runner/tooling from compiler implementation. |
+| `verification/` | keep | Rebuilt as runner, schemas, profiles, areas, and policy. | Yes | Yes | schema validation, area execution, facade validation | TypeScript and Rust make verification inputs first-class. |
+| `lib/` | keep | Runtime/library payload remains active top-level product surface. | Yes | Yes | cargo and e2e validation | Product runtime is distinct from repo tooling. |
+| `third_party/` | keep | External parser/compiler dependencies remain explicitly vendored/submoduled. | Yes | Yes | submodule status and parser build tests | Rust and CPython isolate external dependencies. |
+
+### Cursor Workflow Audit
+
+| Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
+| --- | --- | --- | --- | --- | --- | --- |
+| `.cursor/commands/*.md` | keep | Keep commands, but retarget paths only after destination trees exist. | Yes | Yes | Cursor hygiene and stale path guardrails | Contributor workflows should follow the current repo map. |
+| `.cursor/references/*.md` | keep | Keep portable templates and field references; remove local assumptions. | Yes | Yes | Cursor hygiene guardrail | Templates are active process docs, not local state. |
+| `.cursor/skills/project-workflow/` | keep | Retain workflow skill with `plans/` paths after planning tree exists. | Yes | Yes | workflow reference checks | CPython keeps contributor process docs concise. |
+| `.cursor/skills/phase-closure-loop/` | keep | Retain closure loop after replacing absolute Telegram and review-skill assumptions. | Yes | Yes | personal-path guardrail | Workflow automation must be portable. |
+| `.cursor/skills/sifr-demo-authoring/` | keep | Retain demo authoring guidance and ensure paths stay repo-relative. | Yes | Yes | demo validation | Demos are product examples, not validation logs. |
+| `.cursor/skills/talk-to-claude-opus/` | keep | Single retained Claude/Fable review workflow; retarget output to `plans/reviews/active/`. | Yes | Yes | reviewer handoff smoke check | One review workflow contract avoids process forks. |
+| `.cursor/skills/talk-to-claude-default/` | delete | Delete after useful content is folded into the Opus workflow. | Yes | Yes | no duplicate Claude skill guardrail | Avoid model-branded workflow variants. |
+| `.cursor/skills/talk-to-claude-gui-review/` | delete | Delete after useful GUI wording is folded into the Opus workflow if needed. | Yes | Yes | no duplicate Claude skill guardrail | Workflow variants should not encode obsolete review paths. |
+| `.cursor/.rules/` | delete | Remove obsolete Cursor rules tree. | Yes | No | Cursor hygiene guardrail | Portable repo metadata should be minimal. |
+| `.cursor/plans/.obsidian/` | delete | Local Obsidian state is not repo material. | No | No | local-state guardrail | Local editor state belongs outside source control. |
+| `.cursor/.DS_Store` | delete | Local macOS artifact. | No | No | local-state guardrail | Generated/editor artifacts are not active tree material. |
+
+### Scripts Audit
+
+| Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
+| --- | --- | --- | --- | --- | --- | --- |
+| `scripts/run_all_tests.sh` | keep | Only public validation facade; final state delegates to `sifr_verify`. | Yes | Yes | create-pr and merge profile validation | CPython keeps a stable public test facade over runner internals. |
+| `scripts/check_file_size_guardrails.py` | keep | Source guardrail for first-party file-size policy. | Yes | Yes | self-test and create-pr validation | Repo hygiene should be enforced by tooling. |
+| `scripts/check_hir_maintainability_guardrails.py` | keep | HIR source ownership guardrail. | Yes | Yes | self-test and create-pr validation | Compiler internals need structural guardrails. |
+| `scripts/check_sifr_driver_maintainability_guardrails.py` | keep | Driver source ownership guardrail. | Yes | Yes | self-test and create-pr validation | Source layout policy belongs in tools, not convention. |
+| `scripts/check_source_crate_dependency_direction.py` | keep | Crate dependency direction guardrail. | Yes | Yes | self-test and create-pr validation | Rust workspaces enforce architecture boundaries. |
+| `scripts/check_codegen_rawcode_gate.sh` | keep | Source guardrail unless it grows generated-output inspection. | No | Yes | manual guardrail invocation or future create-pr wiring | Generated-code quality checks belong to area runners when output-facing. |
+| `scripts/check_diagnostic_cancel_usage.py` | keep | Diagnostics source hygiene guardrail. | Yes | Yes | create-pr validation | Diagnostics contracts are compiler-source policy. |
+| `scripts/check_diagnostic_transport_cleanup.py` | keep | Diagnostics transport source guardrail. | Yes | Yes | create-pr validation | Keep source hygiene separate from output baselines. |
+| `scripts/clone_subrepos.sh` | keep | Repository maintenance utility. | No | Yes | submodule status and clone smoke check | External corpora should have explicit restoration. |
+| `scripts/generate_unicode_tables.py` | keep | Code generator. | No | Yes | generated output diff check | CPython separates generators from tests. |
+| `scripts/distribution/build_preview_artifacts.sh` | keep | Release artifact builder. | No | Yes | release dry-run smoke check | Release tooling is distinct from validation cases. |
+| `scripts/distribution/create_new_version.sh` | keep | Release mutation tool. | No | Yes | release dry-run smoke check | Release mutation scripts stay under tooling. |
+| `scripts/distribution/generate_dispatchers.sh` | keep | Release code generator. | No | Yes | dispatcher generation diff check | Generated release assets need explicit generators. |
+| `scripts/distribution/generate_version_installer.sh` | keep | Release installer generator. | No | Yes | installer generation diff check | Release generation differs from validation. |
+| `scripts/distribution/validate_self_update_metadata.sh` | move | Validation gate moves to `distribution_release` if retained as a gate. | Yes | Yes | distribution area runner equivalence | Test cases belong to verification areas. |
+| `scripts/check_integer_dtype_contract.py` | move | Move to `core_language` because it validates compiler integer contract data. | Yes | Yes | core_language area runner equivalence | Compiler behavior contracts are area-owned. |
+| `scripts/check_package_manager_guardrails.py` | move | Move to `package_management` to validate package boundaries with package fixtures. | Yes | Yes | package_management area execution | Area ownership follows asserted contract. |
+| `scripts/run_e2e_pass.sh` | move | Move into `core_language` or delete after profile owns the cases. | Yes | Yes | e2e equivalence and snapshot stability | TypeScript cases belong to test areas. |
+| `scripts/run_validation_contract_matrix.sh` | move | Split by contract owner across `core_language`, `project_workspace`, and `diagnostics`. | Yes | Yes | side-by-side matrix equivalence | Suites should follow contract ownership. |
+| `scripts/run_phase23_graph_isolation_matrix.sh` | move | Move to `project_workspace`; active filename encodes stale phase number. | Yes | Yes | project_workspace area equivalence | Stable test names should describe behavior. |
+| `scripts/run_phase24_hir_analysis_consolidation_matrix.sh` | move | Move to `core_language`; remove phase-numbered entrypoint. | Yes | Yes | core_language area equivalence | Behavior area names outlive phase numbers. |
+| `scripts/run_phase25_cfg_flow_activation_matrix.sh` | move | Move to `core_language`; remove phase-numbered entrypoint. | Yes | Yes | core_language area equivalence | Mode-specific suites belong under owning areas. |
+| `scripts/run_frontend_mode_parity_matrix.sh` | move | Move to `project_workspace` as frontend/project mode parity. | Yes | Yes | project_workspace area equivalence | Workspace behavior should be area-owned. |
+| `scripts/run_platform_golden.sh` | move | Move to `runtime_platform`; delete old wrapper after cutover. | Yes | Yes | runtime_platform golden case execution | Golden cases still need one owning area. |
+| `scripts/run_smoke_fuzz_property.sh` | move | Move to `fuzz_property`. | Yes | Yes | fuzz_property smoke equivalence | Fuzz/property checks need resource policy. |
+| `scripts/run_integer_model_closure_perf.py` | move | Move to `performance` with explicit budget policy. | Yes | Yes | performance runner budget check | Benchmarks are distinct from correctness gates. |
+| `scripts/ci_e2e_throughput.sh` | move | Move to `performance`; CI wrapper name is not a public gate. | No | Yes | performance runner equivalence if retained | Performance validation needs profile policy. |
+| `scripts/check_codegen_binary_size.sh` | move | Move to `performance` as binary-size budget validation. | No | Yes | performance budget execution if retained | Binary size is a budget, not source hygiene. |
+| `scripts/check_diagnostic_baseline_hygiene.py` | move | Move to `diagnostics`. | Yes | Yes | diagnostics area execution | Baselines belong to output contract owners. |
+| `scripts/check_diagnostic_code_coverage.py` | move | Move to `diagnostics`. | Yes | Yes | diagnostics area execution | Diagnostic coverage is an area contract. |
+| `scripts/check_diagnostic_docs_sync.py` | move | Move to `diagnostics`. | Yes | Yes | diagnostics area execution | Docs/schema sync belongs with diagnostics policy. |
+| `scripts/check_diagnostic_schema_sync.py` | move | Move to `diagnostics`. | Yes | Yes | diagnostics area execution | Schema sync should be area-owned. |
+| `scripts/run_distribution_validation.sh` | move | Move executable validation cases to `distribution_release`. | Yes | Yes | distribution_release runner equivalence | Release validation cases are fixtures. |
+| `scripts/run_stdlib_namespace_corpus_validation.py` | move | Move to `stdlib_parity`. | Yes | Yes | stdlib_parity runner equivalence | CPython-observable behavior belongs to stdlib parity. |
+| `scripts/check_phase30_complexity_resource_inventory.py` | move | Move to `stdlib_parity`; stale phase number removed. | Yes | Yes | stdlib_parity inventory validation | Resource parity data belongs to the area. |
+| `scripts/build_full_corpus_failure_taxonomy.py` | move | Move to `algorithmic_compatibility` as taxonomy builder. | No | Yes | taxonomy generation check | External corpus results are area artifacts. |
+| `scripts/generate_concurrency_runtime_inventory.py` | move | Move to `stdlib_parity` if the output remains verification inventory. | No | Yes | inventory generation diff check | Verification inventories belong with area data. |
+| `scripts/run_verification_hardening.py` | move | Split across regression, fuzz_property, ecosystem_compatibility, and runner self-tests. | Yes | Yes | per-area equivalence and runner self-tests | Generic hardening runners hide ownership. |
+| `scripts/run_verification_hardening/` | move | Split module implementation with the same owners as the facade above. | Yes | Yes | per-area equivalence | Harness code should live under runner or areas. |
+| `scripts/check_e2e_report_determinism.sh` | move | Move to runner self-tests and policy data. | Yes | Yes | runner determinism self-test | Determinism is runner behavior, not a domain area. |
+| `scripts/check_e2e_sequential_parallel_equivalence.sh` | move | Move to runner self-tests and policy data. | Yes | Yes | sequential/parallel equivalence self-test | Scheduling policy belongs to the runner. |
+| `scripts/validation_lane.py` | move | Replace with `sifr_verify.profiles`; delete old name in PR 7. | Yes | Yes | profile shell export equivalence | Profiles are runner policy, not scripts. |
+| `scripts/validation_lane_report.py` | move | Replace with `sifr_verify` report handling; delete old name in PR 7. | Yes | Yes | report shape equivalence | Generated reports belong under runner/target. |
+| `scripts/archive_issues.sh` | move | Retarget to `plans/issues/` or delete if no longer useful. | No | Yes | dry-run path check | Planning lifecycle tools should follow plan tree. |
+| `scripts/archive_reviews.sh` | move | Retarget to `plans/reviews/` or delete if no longer useful. | No | Yes | dry-run path check | Review archives belong under plans. |
+| `scripts/archive_reviews_and_issues.sh` | move | Retarget to `plans/` lifecycle or delete if redundant. | No | Yes | dry-run path check | Avoid duplicate lifecycle entrypoints. |
+| `scripts/phase_contract_gate_check.py` | delete | Replace only with current `plans/phases/index.md` consistency guardrail if useful. | Yes | Yes | new phase-index guardrail self-test | Stable phase indexes beat phase-numbered assumptions. |
+| `scripts/validate_phase15_backlog.py` | delete | Historical phase-15 backlog guardrail; no active destination. | Yes | Yes | no stale references | Historical phase tooling should not survive. |
+| `scripts/__pycache__/` | delete | Python bytecode is generated local output and must remain untracked. | No | No | bytecode/cache guardrail | Generated caches are not source. |
+| `scripts/run_verification_hardening/__pycache__/` | delete | Python bytecode is generated local output and must remain untracked. | No | No | bytecode/cache guardrail | Generated caches are not source. |
+
+### Verification Surface Audit
+
+| Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
+| --- | --- | --- | --- | --- | --- | --- |
+| `verification/validation_lanes/` | move | Convert to `verification/profiles/` and profile schema data. | Yes | Yes | profile schema validation and facade equivalence | Profile policy selects areas, not fixtures. |
+| `verification/suites/manifest.json` | move | Dissolve into area manifests and profiles. | Yes | Yes | area/profile schema validation | Suites are area-local like Rust mode families. |
+| `verification/validation_contracts/` | move | Split contracts to `core_language`, `project_workspace`, and `diagnostics`. | Yes | Yes | per-area contract execution | Contracts belong to behavior owners. |
+| `verification/crashes/index.json` | move | Move to `regression/data/crashes.json`. | Yes | Yes | regression area manifest validation | Fixed crashes are regression data. |
+| `verification/fixedbugs/index.json` | move | Move to `regression/data/fixedbugs.json`. | Yes | Yes | regression area manifest validation | Fixed bugs are minimized regression cases. |
+| `verification/determinism/manifest.json` | move | Split into runner self-tests and policy data; no determinism area. | Yes | Yes | runner determinism self-test | Scheduling determinism is runner policy. |
+| `verification/flake/quarantine.json` | move | Move to `verification/policy/flake_quarantine.json`. | Yes | Yes | policy schema validation | Flake policy is global runner policy. |
+| `verification/fuzz_property/` | move | Move under `areas/fuzz_property/`; replace lane wording with profiles. | Yes | Yes | fuzz_property runner execution | Fuzz corpora need resource class policy. |
+| `verification/generated_code_quality/` | move | Move under `areas/generated_code_quality/`; rewrite helpers unless shell is tested. | Yes | Yes | generated-code-quality runner equivalence | Generated output quality is its own contract. |
+| `verification/perf/` | move | Move fixture to `areas/performance/fixtures/`. | Yes | Yes | performance runner execution | Benchmarks need explicit budget ownership. |
+| `verification/performance/` | move | Move under `areas/performance/`. | Yes | Yes | performance schema and budget checks | Bun separates benchmarks from correctness. |
+| `verification/platform/` | move | Move under `areas/runtime_platform/`; golden fixtures become owned cases. | Yes | Yes | runtime_platform golden execution | Golden baselines remain area-owned. |
+| `verification/distribution/` | move | Move validation cases and schema under `areas/distribution_release/`. | Yes | Yes | distribution_release runner equivalence | Release validation cases are fixtures. |
+| `verification/oss/` | move | Move manifests to `areas/ecosystem_compatibility/`. | Yes | Yes | ecosystem area execution | External compatibility should be profile-selected. |
+| `verification/package_management/` | move | Move under `areas/package_management/`. | Yes | Yes | package_management runner execution | Package fixtures belong to package area. |
+| `verification/tooling/` | move | Move under `areas/developer_tooling/`. | Yes | Yes | developer_tooling runner execution | Tooling checks have their own ownership. |
+| `verification/sifr-large-lsp-verification/` | move | Move submodule to `developer_tooling/corpora/`. | Yes | Yes | submodule status and tooling runner | Large editor corpora should be area-owned. |
+| `verification/sifr_large_lsp_verification.md` | move | Move wrapper/runbook with the developer tooling corpus or delete stale content. | No | Yes | link/reference check | Corpus docs travel with the corpus owner. |
+| `verification/stdlib/` | move | Move to `areas/stdlib_parity/`; delete generated traceability reports when represented. | Yes | Yes | stdlib_parity schema/data validation | CPython parity data needs area ownership. |
+| `verification/integer_model_*.md` | move | Move current contract data to `core_language` or consolidate into `internal_docs/integer_model.md`. | Yes | Yes | core_language data validation and doc link check | Compiler semantics data belongs to core language. |
+| `verification/.DS_Store` | delete | Local macOS artifact. | No | No | local-state guardrail | Editor artifacts are not source. |
+| `verification/**/__pycache__/`, `verification/**/*.pyc` | delete | Generated Python bytecode. | No | No | bytecode/cache guardrail | Generated caches are not verification assets. |
+| `crates/sifr/tests/verification/crashes/` | move | Move fixtures to `areas/regression/fixtures/crashes/`. | Yes | Yes | Rust harness path update and regression runner | Repo-level fixtures should not hide under a crate. |
+| `crates/sifr/tests/verification/diagnostics/` | move | Move fixtures and baselines to `areas/diagnostics/`. | Yes | Yes | diagnostics harness and baseline stability | Baselines are first-class area contracts. |
+| `crates/sifr/tests/verification/package/` | move | Move fixtures to `areas/package_management/fixtures/`. | Yes | Yes | package tests and area runner | Ownership follows package behavior. |
+| `crates/sifr/tests/verification/project/` | move | Move fixtures to `areas/project_workspace/fixtures/`. | Yes | Yes | project tests and area runner | Workspace behavior belongs to workspace area. |
+
+### Audits Surface Audit
+
+| Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
+| --- | --- | --- | --- | --- | --- | --- |
+| `audits/borrowing/` | move | Promote `.sifr` fixtures to `core_language/fixtures/ownership/`; delete report. | Yes | Yes | core_language runner ownership check | Compiler semantics fixtures are area-owned. |
+| `audits/lexical_and_syntax/` | move | Promote fixtures to `core_language/fixtures/syntax/`; delete reports. | Yes | Yes | parser/syntax suite execution | Syntax cases should be first-class test inputs. |
+| `audits/type_inference/` | move | Promote fixtures to `core_language/fixtures/type_inference/`; delete reports. | Yes | Yes | type inference suite execution | Cases should outlive audit reports. |
+| `audits/type_system/` | move | Promote fixtures to `core_language/fixtures/type_system/`; delete reports. | Yes | Yes | type system suite execution | Behavior fixtures belong with the compiler contract. |
+| `audits/modules_and_imports/` | move | Promote fixtures to `project_workspace/fixtures/imports/`; delete reports. | Yes | Yes | project_workspace imports suite | Module graph behavior belongs to workspace area. |
+| `audits/iteration_protocol/` | move | Split fixtures by asserted contract across core_language, stdlib_parity, or regression. | Yes | Yes | manifest ownership and runner execution | Ownership follows the behavior asserted. |
+| `audits/object_model/` | move | Split fixtures by asserted contract across core_language, stdlib_parity, or regression. | Yes | Yes | manifest ownership and runner execution | Avoid generic audit buckets. |
+| `audits/python_basics/` | move | Split syntax/type/control-flow to core_language, stdlib behavior to stdlib_parity, fixed bugs to regression. | Yes | Yes | coverage map and duplicate pruning | CPython-observable behavior belongs to parity suites. |
+| `audits/stdlib/` | move | Promote fixtures to stdlib_parity and move fixture format guidance into its runbook. | Yes | Yes | stdlib_parity runner execution | Area runbooks should live with fixtures. |
+| `audits/leetcode` | move | Move submodule to `algorithmic_compatibility/corpora/leetcode/`. | Yes | Yes | `.gitmodules` and corpus runner | External corpora need one ownership model. |
+| `audits/lint_panic_patterns.sh` | move | Replace under `generated_code_quality`. | Yes | Yes | generated-code-quality panic scan equivalence | Generated runtime panic policy belongs to codegen quality. |
+| `audits/run_audit.sh` | delete | Delete after area runners own equivalent fixtures. | Yes | Yes | no stale references and area equivalence | Public wrappers should not duplicate runner ownership. |
+| `audits/run_audit_fast.sh` | delete | Delete after area runners own equivalent fixtures. | Yes | Yes | no stale references and area equivalence | Compatibility wrappers are forbidden. |
+| `audits/run_borrowing_audit.sh` | delete | Delete after core_language ownership suite executes borrowing fixtures. | Yes | Yes | core_language borrowing suite | Old audit-specific wrappers are obsolete. |
+| `audits/STDLIB_PARITY_MASTER_REPORT.md` | delete | Historical report; current state must live in manifests/data/docs. | No | Yes | no active report reference | Generated reports belong under `target/`. |
+| `audits/*/REPORT.md`, `audits/*/POST_HARDENING_REPORT.md` | delete | Historical reports; delete from active tree after current state is represented. | No | Yes | no active report reference | History stays in git unless a current runbook is needed. |
+| `audits/.DS_Store` | delete | Local macOS artifact. | No | No | local-state guardrail | Local editor artifacts are not source. |
+
+### Internal Docs And Planning Audit
+
+| Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
+| --- | --- | --- | --- | --- | --- | --- |
+| `internal_docs/architecture.md` | keep | Current architecture entrypoint; update references as surfaces move. | No | Yes | link/reference checks | Architecture docs describe current state. |
+| `internal_docs/*_architecture.md`, model/design docs | keep | Keep when they describe implemented architecture and accepted conventions; enumerate this grouped row during PR 5 relevance cleanup. | No | Yes | stale status cleanup and link checks | CPython separates current design from plans. |
+| `internal_docs/diagnostic_codes.md` | keep | Durable diagnostic code contract. | Yes | Yes | diagnostics docs/schema checks | Diagnostics need source-of-truth docs. |
+| `internal_docs/diagnostic_emission_inventory.md` | keep | Keep after removing validation ledgers and stale milestone prose. | Yes | Yes | diagnostics reference checks | Inventories are retained only when current. |
+| `internal_docs/tooling_verification.md` | keep | Keep as human-facing tooling verification convention after ledger cleanup. | Yes | Yes | developer_tooling reference checks | Human conventions can stay outside runner data. |
+| `internal_docs/roadmap.md` | move | Move to `plans/roadmap.md`. | No | Yes | roadmap link checks | Execution plans should not live in architecture docs. |
+| `internal_docs/phases/*.md` | move | Move flat to `plans/phases/` and add `plans/phases/index.md`. | No | Yes | phase index/link checks | Stable phase files belong to planning. |
+| `issues/ad-hoc-repository-architecture-and-verification-surface-cleanup.md` | move | Active phase plan moves to `plans/issues/active/`. | No | Yes | AGENTS/Cursor/roadmap references | Active plans live under plans. |
+| `issues/ad-hoc-serious-build-output-and-phase-timings.md` | move | Completed or active status determines `plans/issues/completed/` or `active/`. | No | Yes | issue index checks | Issue lifecycle should be explicit. |
+| `issues/archive/` | move | Move to `plans/issues/archive/`. | No | Yes | archive link checks | Historical plans should not sit at root. |
+| `reviews/*.md` | move | Retain active summaries under `plans/reviews/active/`; archive historical value under `archive/`. | No | Yes | review path reference checks | Review artifacts belong with plans. |
+| `reviews/*.claude.log`, `reviews/**/*.stderr.log` | delete | Point-in-time process logs are not active repo material. | No | Yes | no log references | Logs are generated artifacts. |
+| `reviews/archive/` | move | Move retained archival reviews to `plans/reviews/archive/`. | No | Yes | archive link checks | Archives should not be top-level surfaces. |
+| `internal_docs/verification/artifact_schema_and_retention.md` | move | Move to `verification/policy/artifact_schema_and_retention.md`. | Yes | Yes | policy link checks | Runner artifact policy belongs under verification. |
+| `internal_docs/verification/baseline_governance.md` | move | Move to `verification/policy/baseline_governance.md`. | Yes | Yes | policy link checks | Baseline governance is verification policy. |
+| `internal_docs/verification/deterministic_sharding_and_flake_policy.md` | move | Move to `verification/policy/deterministic_sharding_and_flake_policy.md`. | Yes | Yes | runner policy validation | Sharding/flake policy is runner-owned. |
+| `internal_docs/verification/fuzz_property_policy.md` | move | Move to `verification/policy/fuzz_property.md` with profile vocabulary. | Yes | Yes | policy wording and link checks | Resource-heavy fuzzing needs profile policy. |
+| `internal_docs/verification/oss_gate_policy.md` | move | Move to `verification/policy/ecosystem_compatibility.md`. | Yes | Yes | ecosystem policy link checks | External corpora need explicit policy. |
+| `internal_docs/verification/regression_corpus_policy.md` | move | Move to `verification/policy/regression_corpus.md`. | Yes | Yes | regression policy link checks | Regression corpus rules belong with verification. |
+| `internal_docs/verification/suite_taxonomy.md` | delete | Delete after area/profile README and schemas replace it. | No | Yes | no stale references | Top-level suite taxonomy conflicts with area ownership. |
+| `internal_docs/validation_lane_policy.md` | move | Move to `verification/policy/profile_policy.md` and remove lane vocabulary. | Yes | Yes | profile policy link checks | Profiles are runner policy. |
+| `internal_docs/compiler_pipeline.html` | delete | Regenerate into `target/` or replace README links with source docs. | No | Yes | README link check | Generated visualizations should not be canonical docs. |
+| `internal_docs/typescript_go_architecture_transfer_m*.md` | delete | Consolidate accepted state into current docs, then delete milestone transfer notes. | No | Yes | current-doc link checks | Current docs should not be transfer ledgers. |
+| `internal_docs/.DS_Store` | delete | Local macOS artifact. | No | No | local-state guardrail | Editor artifacts are not source. |
+
+### Submodule Audit
+
+| Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
+| --- | --- | --- | --- | --- | --- | --- |
+| `third_party/ruff` | keep | Parser fork remains under external compiler dependency owner. | Yes | Yes | submodule status and parser tests | External compiler dependencies stay separate. |
+| `editor_integrations` | keep | Editor integration repository remains under editor surface. | Yes | Yes | submodule status and tooling checks | Editor integrations are separate product surfaces. |
+| `editor_integrations/vscode` | keep | VS Code extension submodule remains under editor integrations. | Yes | Yes | submodule status and extension checks | Editor-specific assets stay under editor owner. |
+| `audits/leetcode` | move | Move to algorithmic compatibility corpus owner. | Yes | Yes | `.gitmodules`, clone script, area runner | External corpora need one owning area. |
+| `verification/sifr-large-lsp-verification` | move | Move to developer tooling corpus owner. | Yes | Yes | `.gitmodules`, submodule status, tooling runner | Large LSP corpora belong to tooling validation. |
+| `verification/package_management/demo_repositories/*` | move | Remain submodules but under package_management area-owned corpora/fixtures. | Yes | Yes | `.gitmodules`, package runner | Demo repos are package verification inputs. |
+
 ## Proposed PR Sequence
 
 ### PR 1: Repository Surface And Relevance Inventory
