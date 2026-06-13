@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "name": "algorithmic_compatibility",
+  "owner": "algorithmic/compatibility",
+  "description": "Algorithmic corpus compatibility, LeetCode fixture checks, and full-corpus failure taxonomy tooling.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "external-corpus",
+    "long-running"
+  ],
+  "timeout_seconds": 1800,
+  "suites": [
+    {
+      "name": "taxonomy-smoke",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "full-corpus-taxonomy-smoke",
+          "entry": "verification/areas/algorithmic_compatibility/tools/build_full_corpus_failure_taxonomy.py",
+          "command": "algorithmic-taxonomy-smoke",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "leetcode-check",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "leetcode-corpus-check",
+          "entry": "verification/areas/algorithmic_compatibility/corpora/leetcode/src",
+          "command": "algorithmic-leetcode-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

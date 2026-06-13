@@ -36,6 +36,12 @@ LEGACY_DRIVER_GUARDRAIL_PATHS = (
     "crates/sifr_driver/src/tests/project_graph.rs",
 )
 
+EXTERNAL_CORPUS_PREFIXES = (
+    "verification/areas/algorithmic_compatibility/corpora/leetcode/",
+    "verification/areas/developer_tooling/corpora/sifr-large-lsp-verification/",
+    "verification/areas/package_management/corpora/demo_repositories/",
+)
+
 
 @dataclass(frozen=True)
 class SourceFile:
@@ -81,10 +87,17 @@ def has_any_part(rel_path: Path, names: set[str]) -> bool:
     return bool(names.intersection(path_parts(rel_path)))
 
 
+def has_any_prefix(rel_path: Path, prefixes: Sequence[str]) -> bool:
+    rel = rel_path.as_posix()
+    return any(rel.startswith(prefix) for prefix in prefixes)
+
+
 def is_excluded_source_path(rel_path: Path) -> bool:
     parts = path_parts(rel_path)
     name = rel_path.name
     if has_any_part(rel_path, {"target", "third_party", "snapshots"}):
+        return True
+    if has_any_prefix(rel_path, EXTERNAL_CORPUS_PREFIXES):
         return True
     if name.endswith(".lock") or name == "Cargo.lock":
         return True
@@ -259,6 +272,9 @@ def run_self_test() -> None:
         "third_party/vendor/tool.py",
         "crates/example/src/snapshots/output.rs",
         "verification/areas/performance/baselines/result.py",
+        "verification/areas/algorithmic_compatibility/corpora/leetcode/benchmarks/report.py",
+        "verification/areas/developer_tooling/corpora/sifr-large-lsp-verification/src/main.py",
+        "verification/areas/package_management/corpora/demo_repositories/sifr-demo-app/src/app.py",
         "Cargo.lock",
         "crates/example/src/emitted.rs",
         "crates/example/src/idiomatic.rs",

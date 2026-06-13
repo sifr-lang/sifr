@@ -153,21 +153,23 @@ reviewable dependency changes.
 
 ### Restore optional sub-repositories
 
-Some large audit corpora live in separate Git repositories and are cloned back
-into their expected paths when needed. The LeetCode audit corpus lives at
+Some large audit corpora live in separate Git submodules and are restored to
+their expected paths when needed. The LeetCode audit corpus lives at
 [`sifr-lang/leetcode`](https://github.com/sifr-lang/leetcode) and is restored to
-`audits/leetcode`.
+`verification/areas/algorithmic_compatibility/corpora/leetcode`.
 
 ```bash
 scripts/clone_subrepos.sh
 ```
 
-The script is safe to run repeatedly. It clones missing sub-repositories and
-fast-forwards existing clean checkouts.
+The script is safe to run repeatedly. It initializes missing submodules and
+fast-forwards existing clean checkouts when `--remote` is selected.
 
-LeetCode fixtures live under `audits/leetcode/src`. Historical generated
-LeetCode reports, verification outputs, and old audit notes were removed from
-the lean LeetCode sub-repository and remain recoverable from its git history.
+LeetCode fixtures live under
+`verification/areas/algorithmic_compatibility/corpora/leetcode/src`. Historical
+generated LeetCode reports, verification outputs, and old audit notes were
+removed from the lean LeetCode sub-repository and remain recoverable from its
+git history.
 
 ### Restore maintenance submodules
 

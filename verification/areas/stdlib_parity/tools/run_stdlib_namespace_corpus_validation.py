@@ -12,7 +12,15 @@ import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-LEETCODE_ROOT = REPO_ROOT / "audits" / "leetcode" / "src"
+LEETCODE_ROOT = (
+    REPO_ROOT
+    / "verification"
+    / "areas"
+    / "algorithmic_compatibility"
+    / "corpora"
+    / "leetcode"
+    / "src"
+)
 DEMOS_ROOT = REPO_ROOT / "demos"
 DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
 
