@@ -87,11 +87,11 @@
     {"id": "multi-004-dependency-manifest", "group": "multi-module-projects", "source_path": "demos/dependency_manifest/main.sifr", "expected_command": "build", "evidence_category": "project-manifest"},
     {"id": "multi-005-project-graph", "group": "multi-module-projects", "source_path": "demos/project_graph/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},
 
-    {"id": "negative-001-forbidden-unwrap", "group": "negative-seeds", "source_path": "verification/generated_code_quality/negative_seeds/forbidden_unwrap.rs", "expected_command": "scan-fail", "evidence_category": "panic-scan-negative"},
-    {"id": "negative-002-format-violation", "group": "negative-seeds", "source_path": "verification/generated_code_quality/negative_seeds/format_violation.rs", "expected_command": "rustfmt-fail", "evidence_category": "rustfmt-negative"},
-    {"id": "negative-003-clippy-warning", "group": "negative-seeds", "source_path": "verification/generated_code_quality/negative_seeds/clippy_warning.rs", "expected_command": "clippy-fail", "evidence_category": "clippy-negative"},
-    {"id": "negative-004-determinism-mismatch-a", "group": "negative-seeds", "source_path": "verification/generated_code_quality/negative_seeds/determinism_a.rs", "expected_command": "determinism-fail", "evidence_category": "determinism-negative"},
-    {"id": "negative-005-determinism-mismatch-b", "group": "negative-seeds", "source_path": "verification/generated_code_quality/negative_seeds/determinism_b.rs", "expected_command": "determinism-fail", "evidence_category": "determinism-negative"},
+    {"id": "negative-001-forbidden-unwrap", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/forbidden_unwrap.rs", "expected_command": "scan-fail", "evidence_category": "panic-scan-negative"},
+    {"id": "negative-002-format-violation", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/format_violation.rs", "expected_command": "rustfmt-fail", "evidence_category": "rustfmt-negative"},
+    {"id": "negative-003-clippy-warning", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/clippy_warning.rs", "expected_command": "clippy-fail", "evidence_category": "clippy-negative"},
+    {"id": "negative-004-determinism-mismatch-a", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/determinism_a.rs", "expected_command": "determinism-fail", "evidence_category": "determinism-negative"},
+    {"id": "negative-005-determinism-mismatch-b", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/determinism_b.rs", "expected_command": "determinism-fail", "evidence_category": "determinism-negative"},
 
     {"id": "stdlib-001-json", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_json_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-json"},
     {"id": "stdlib-002-io", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-io"},

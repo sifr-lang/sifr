@@ -40,19 +40,18 @@ The driver owns transient generated-Rust project creation, invocation ordering, 
 
 ## Verification Infrastructure
 
-Phase 34 creates and owns `verification/generated_code_quality/`.
+Phase 34 owns the `generated_code_quality` verification area under
+`verification/areas/generated_code_quality/`.
 
 Required files:
 
-- `verification/generated_code_quality/manifest.json` — version-controlled source of truth for the generated-code corpus.
-- `verification/generated_code_quality/generated_code_quality_corpus.sh` — emits and checks the required corpus.
-- `verification/generated_code_quality/generated_code_quality_panic_scan.sh` — blocks forbidden runtime constructs.
-- `verification/generated_code_quality/generated_code_quality_clippy.sh` — runs the generated-code clippy profile.
-- `verification/generated_code_quality/generated_code_quality_rustfmt.sh` — runs the generated-code rustfmt profile.
-- `verification/generated_code_quality/generated_code_quality_determinism.sh` — verifies byte-stable repeated emission.
-- `verification/generated_code_quality/generated_code_quality_demos.sh` — runs required demo quality evidence checks.
+- `verification/areas/generated_code_quality/manifest.json` — area-level suite manifest.
+- `verification/areas/generated_code_quality/data/corpus_manifest.json` — version-controlled source of truth for the generated-code corpus.
+- `verification/areas/generated_code_quality/generated_code_quality.py` — emits and checks corpus, panic-scan, rustfmt, clippy, determinism, and demo gates.
+- `verification/areas/generated_code_quality/runner.py` — maps `sifr_verify` area suites to the generated-code quality gate modes.
 
-Scripts must be deterministic, local-first, and usable both directly and through `scripts/run_all_tests.sh --profile merge`.
+The area runner must be deterministic, local-first, and usable both directly and
+through `scripts/run_all_tests.sh --profile merge`.
 
 ## Generated Rust Compilation Pipeline
 
@@ -73,7 +72,7 @@ Forbidden construct scans operate on generated `.rs` files after emission and be
 
 ## Corpus Contract
 
-The Phase 34 generated-code corpus is defined by `verification/generated_code_quality/manifest.json`.
+The Phase 34 generated-code corpus is defined by `verification/areas/generated_code_quality/data/corpus_manifest.json`.
 
 The manifest must include these groups:
 
@@ -99,7 +98,7 @@ Phase 27's `milestone_27_6` required a checked-in panic inventory covering parse
 
 Phase 34 lookup order:
 
-1. Primary artifact: `verification/generated_code_quality/panic_inventory.md`, created or refreshed in `milestone_34_1`.
+1. Primary artifact: `verification/areas/generated_code_quality/panic_inventory.md`, created or refreshed in `milestone_34_1`.
 2. Historical Phase 27 execution checklist issue, if it contains a more complete inventory.
 3. Any existing named panic inventory artifact under `verification/`.
 
@@ -128,14 +127,14 @@ flowchart TD
 ### milestone_34_1: Emission Quality Baseline and Corpus
 - Scope:
   - Define generated-code quality profile and acceptance thresholds.
-  - Add `verification/generated_code_quality/manifest.json`.
+  - Add `verification/areas/generated_code_quality/data/corpus_manifest.json`.
   - Build the representative corpus from stdlib flows, demos, e2e pass fixtures, and multi-module samples.
   - Add the generated Rust transient project pipeline.
   - Record the Phase 27 panic inventory location or create a current generated-code panic inventory if the Phase 27 artifact is missing or stale.
 - Definition of done:
   - Corpus manifest is version-controlled, lexicographically reproducible, and meets the coverage thresholds in this file.
   - Transient generated-Rust projects can be emitted for every corpus entry.
-  - `verification/generated_code_quality/generated_code_quality_corpus.sh` passes.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite corpus` passes.
   - Phase 27 panic inventory linkage is recorded in the phase execution checklist issue.
   - Positive and negative validation evidence is recorded.
 
@@ -149,7 +148,7 @@ flowchart TD
 - Definition of done:
   - User-facing generated paths are panic-safe by this contract.
   - Data-dependent user paths have zero `.unwrap(`, `.expect(`, `panic!`, `todo!`, `unimplemented!`, or `unsafe` occurrences.
-  - `verification/generated_code_quality/generated_code_quality_panic_scan.sh` passes and fails on seeded violations.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite panic-scan` passes and fails on seeded violations.
 
 ### milestone_34_3: Lint/Format/Static Analysis Compliance
 - Scope:
@@ -158,8 +157,8 @@ flowchart TD
   - Enforce generated-code clippy profile: `cargo clippy -- -D warnings` in each transient generated crate, using workspace defaults plus an explicit generated-code style-debt allowlist.
   - Ensure generated Rust compiles without warnings through `cargo check`.
 - Definition of done:
-  - `verification/generated_code_quality/generated_code_quality_rustfmt.sh` passes and fails on seeded format violations.
-  - `verification/generated_code_quality/generated_code_quality_clippy.sh` passes and fails on seeded lint/warning violations.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite rustfmt` passes and fails on seeded format violations.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite clippy` passes and fails on seeded lint/warning violations.
   - Generated corpus passes compile/lint/format gates with zero unresolved violations.
 
 ### milestone_34_4: Deterministic and Reproducible Emission
@@ -171,7 +170,7 @@ flowchart TD
 - Definition of done:
   - Byte-stable generated Rust means source text is identical across repeated `emit` or generated-project emission runs for identical input and compiler configuration.
   - Build artifacts, timestamps, rustc metadata, and platform-specific binary contents are outside the byte-stable source guarantee.
-  - `verification/generated_code_quality/generated_code_quality_determinism.sh` passes and fails on seeded nondeterministic ordering.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite determinism` passes and fails on seeded nondeterministic ordering.
   - Existing e2e report determinism remains green.
 
 ### milestone_34_5: Demo Quality Validation Contract
@@ -189,14 +188,14 @@ flowchart TD
   - One async/concurrency demo selected from `demos/async_generator_comprehension_demo/main.sifr` or `demos/blocking_offload_demo/main.sifr`, whichever is supported by the current corpus at milestone start.
 - Definition of done:
   - Required demos pass generated-code quality checks.
-  - `verification/generated_code_quality/generated_code_quality_demos.sh` records pass/fail evidence for each required demo.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite demos` records pass/fail evidence for each required demo.
   - Demo validation evidence is recorded in the phase execution checklist issue.
 
 ## Quality Contract
 
 ### Entry criteria
 - Phase 33 exit gate is satisfied.
-- Phase 34 generated-code corpus seed is defined in `verification/generated_code_quality/manifest.json`.
+- Phase 34 generated-code corpus seed is defined in `verification/areas/generated_code_quality/data/corpus_manifest.json`.
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
 - Phase 27 panic inventory is the starting source of truth for reachable user-triggerable panic paths. If the inventory cannot be located or is stale, `milestone_34_1` must create or refresh it before `milestone_34_2` starts.
@@ -205,7 +204,7 @@ flowchart TD
 ### Milestone quality checks
 - Local validation gates pass for each milestone before merge:
   - `scripts/run_all_tests.sh --profile create-pr`
-  - milestone-specific `verification/generated_code_quality/generated_code_quality_*.sh`
+  - milestone-specific `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite <suite>`
 - The authoritative pre-PR gate passes before phase-closing PRs:
   - `scripts/run_all_tests.sh --profile merge`
 - Generated Rust compiles with `-D warnings` on defined corpus.
@@ -243,13 +242,13 @@ Generated-code quality checks must run in `scripts/run_all_tests.sh --profile me
 - All milestone quality checks pass with zero unresolved critical violations.
 - Determinism is verified across repeated runs on required corpus.
 - Required demos pass and have recorded validation evidence.
-- `verification/generated_code_quality/generated_code_quality_corpus.sh` passes.
-- `verification/generated_code_quality/generated_code_quality_panic_scan.sh` passes with zero forbidden user-path violations.
-- `verification/generated_code_quality/generated_code_quality_rustfmt.sh` passes.
-- `verification/generated_code_quality/generated_code_quality_clippy.sh` passes with
+- `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite corpus` passes.
+- `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite panic-scan` passes with zero forbidden user-path violations.
+- `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite rustfmt` passes.
+- `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite clippy` passes with
   `-D warnings` and an explicit generated-code style-debt allowlist.
-- `verification/generated_code_quality/generated_code_quality_determinism.sh` passes.
-- `verification/generated_code_quality/generated_code_quality_demos.sh` passes.
+- `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite determinism` passes.
+- `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite demos` passes.
 - `scripts/run_all_tests.sh --profile merge` passes.
 - Any waiver is explicit, time-bounded, owner-assigned, and issue-linked.
 

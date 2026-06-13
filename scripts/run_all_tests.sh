@@ -349,36 +349,12 @@ run_generated_code_quality_checks() {
   rm -rf "${shared_root}"
   export SIFR_GCQ_SHARED_ROOT="${shared_root}"
   case "${GENERATED_CODE_QUALITY_MODE}" in
-    smoke)
-      SIFR_GCQ_MAX_ENTRIES=2 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_corpus.sh"
-      SIFR_GCQ_MAX_ENTRIES=2 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_panic_scan.sh"
-      SIFR_GCQ_MAX_ENTRIES=2 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_rustfmt.sh"
-      SIFR_GCQ_MAX_ENTRIES=2 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_determinism.sh"
-      ;;
-    representative)
-      SIFR_GCQ_MAX_ENTRIES=12 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_corpus.sh"
-      SIFR_GCQ_MAX_ENTRIES=12 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_panic_scan.sh"
-      SIFR_GCQ_MAX_ENTRIES=12 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_rustfmt.sh"
-      SIFR_GCQ_MAX_ENTRIES=12 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_clippy.sh"
-      SIFR_GCQ_MAX_ENTRIES=12 \
-        bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_determinism.sh"
-      bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_demos.sh"
-      ;;
-    full)
-      bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_corpus.sh"
-      bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_panic_scan.sh"
-      bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_rustfmt.sh"
-      bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_clippy.sh"
-      bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_determinism.sh"
-      bash "${SCRIPT_DIR}/../verification/generated_code_quality/generated_code_quality_demos.sh"
+    smoke|representative|full)
+      uv run --project "${SCRIPT_DIR}/../verification" --locked \
+        python -m sifr_verify areas run \
+          --area generated_code_quality \
+          --suite "${GENERATED_CODE_QUALITY_MODE}" \
+          --hardening-summary
       ;;
     *)
       echo "unsupported generated-code quality mode: ${GENERATED_CODE_QUALITY_MODE}" >&2
