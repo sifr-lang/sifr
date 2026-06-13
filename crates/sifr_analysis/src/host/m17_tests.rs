@@ -37,7 +37,7 @@ fn temp_project_dir(name: &str) -> PathBuf {
 fn corpus_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
-        .join("verification/tooling/editor_query_corpus/multi_file")
+        .join("verification/areas/developer_tooling/editor_query_corpus/multi_file")
 }
 
 fn load_fixture(relative_path: &str) -> FixtureFile {

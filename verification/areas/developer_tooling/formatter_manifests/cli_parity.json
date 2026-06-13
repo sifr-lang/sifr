@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "source": "plans/issues/archive/ad-hoc-production-grade-sifr-formatter-execution.md#formatter-cli-parity-contract",
+  "command": "sifr fmt [OPTIONS] [FILES]...",
+  "ruff_command": "ruff format [FILES]...",
+  "allowed_classifications": ["supported", "adapted", "not-applicable", "not-exposed"],
+  "rows": [
+    {"ruff_surface": "ruff format [FILES]...", "sifr_spelling": "sifr fmt [FILES]...", "classification": "adapted", "required_fixture": "fmt_cli_default_dot_and_multi_path"},
+    {"ruff_surface": "no positional files defaults to `.`", "sifr_spelling": "same", "classification": "supported", "required_fixture": "fmt_cli_default_dot_and_multi_path"},
+    {"ruff_surface": "`--check`", "sifr_spelling": "`--check`", "classification": "supported", "required_fixture": "fmt_cli_check_exit_status_and_changed_listing"},
+    {"ruff_surface": "`--diff`", "sifr_spelling": "`--diff`", "classification": "supported", "required_fixture": "fmt_cli_diff_exit_status_and_unified_diff"},
+    {"ruff_surface": "`--no-cache`", "sifr_spelling": "`--no-cache`", "classification": "adapted", "required_fixture": "fmt_cli_cache_flags"},
+    {"ruff_surface": "`--cache-dir <path>`", "sifr_spelling": "`--cache-dir <path>`", "classification": "adapted", "required_fixture": "fmt_cli_cache_flags"},
+    {"ruff_surface": "`--respect-gitignore`", "sifr_spelling": "`--respect-gitignore`", "classification": "adapted", "required_fixture": "fmt_cli_gitignore_flags"},
+    {"ruff_surface": "`--no-respect-gitignore`", "sifr_spelling": "`--no-respect-gitignore`", "classification": "adapted", "required_fixture": "fmt_cli_gitignore_flags"},
+    {"ruff_surface": "`--exclude <pattern[,pattern...]>`", "sifr_spelling": "`--exclude <pattern[,pattern...]>`", "classification": "supported", "required_fixture": "fmt_cli_exclude_and_force_exclude"},
+    {"ruff_surface": "`--force-exclude`", "sifr_spelling": "`--force-exclude`", "classification": "adapted", "required_fixture": "fmt_cli_exclude_and_force_exclude"},
+    {"ruff_surface": "`--no-force-exclude`", "sifr_spelling": "`--no-force-exclude`", "classification": "adapted", "required_fixture": "fmt_cli_exclude_and_force_exclude"},
+    {"ruff_surface": "`--line-length <n>`", "sifr_spelling": "`--line-length <n>`", "classification": "supported", "required_fixture": "fmt_cli_line_length_override"},
+    {"ruff_surface": "`--stdin-filename <path>`", "sifr_spelling": "`--stdin-filename <path>`", "classification": "adapted", "required_fixture": "fmt_cli_stdin_filename"},
+    {"ruff_surface": "stdin without files", "sifr_spelling": "stdin without files", "classification": "adapted", "required_fixture": "fmt_cli_stdin_default_context"},
+    {"ruff_surface": "`--extension <ext:language>`", "sifr_spelling": "none", "classification": "not-applicable", "required_fixture": "fmt_cli_extension_rejected_or_absent"},
+    {"ruff_surface": "`--target-version <version>`", "sifr_spelling": "none", "classification": "not-exposed", "required_fixture": "fmt_cli_target_version_absent"},
+    {"ruff_surface": "`--preview`", "sifr_spelling": "`--preview`", "classification": "supported", "required_fixture": "fmt_cli_preview_flags"},
+    {"ruff_surface": "`--no-preview`", "sifr_spelling": "`--no-preview`", "classification": "supported", "required_fixture": "fmt_cli_preview_flags"},
+    {"ruff_surface": "`--range <range>`", "sifr_spelling": "`--range <range>`", "classification": "supported", "required_fixture": "fmt_cli_single_file_range"},
+    {"ruff_surface": "global `--config <file-or-override>`", "sifr_spelling": "`--config <file-or-override>` or reviewed Sifr equivalent", "classification": "adapted", "required_fixture": "fmt_cli_config_override_precedence"},
+    {"ruff_surface": "global `--isolated`", "sifr_spelling": "`--isolated` or reviewed Sifr equivalent", "classification": "adapted", "required_fixture": "fmt_cli_isolated_ignores_config"},
+    {"ruff_surface": "global logging flags used by formatter summaries", "sifr_spelling": "Sifr diagnostic/logging equivalent", "classification": "adapted", "required_fixture": "fmt_cli_summary_and_error_streams"}
+  ]
+}

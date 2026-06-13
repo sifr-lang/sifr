@@ -4,7 +4,7 @@ status: phase36-m36.8-closeout
 
 ## Verification Directory
 
-Phase 36 owns `verification/tooling/`.
+Phase 36 owns `verification/areas/developer_tooling/`.
 
 m36.1 adds contract checks and guardrail seeds. Later milestones add formatter, rule, analysis, LSP, editor asset, VS Code, parity, completion quality, stress, and performance checks.
 
@@ -13,14 +13,14 @@ m36.1 adds contract checks and guardrail seeds. Later milestones add formatter, 
 Required m36.1 commands:
 
 ```bash
-python3 verification/tooling/check_tooling_contract_lock.py
-python3 verification/tooling/check_tooling_contract_lock.py --self-test
-python3 verification/tooling/check_tooling_dependency_boundaries.py
-python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test
-python3 verification/tooling/check_lsp_split_brain.py
-python3 verification/tooling/check_lsp_split_brain.py --self-test
-python3 verification/tooling/check_vscode_extension_contract.py
-python3 verification/tooling/check_vscode_extension_contract.py --self-test
+python3 verification/areas/developer_tooling/check_tooling_contract_lock.py
+python3 verification/areas/developer_tooling/check_tooling_contract_lock.py --self-test
+python3 verification/areas/developer_tooling/check_tooling_dependency_boundaries.py
+python3 verification/areas/developer_tooling/check_tooling_dependency_boundaries.py --self-test
+python3 verification/areas/developer_tooling/check_lsp_split_brain.py
+python3 verification/areas/developer_tooling/check_lsp_split_brain.py --self-test
+python3 verification/areas/developer_tooling/check_vscode_extension_contract.py
+python3 verification/areas/developer_tooling/check_vscode_extension_contract.py --self-test
 ```
 
 ## m36.2 Checks
@@ -28,10 +28,10 @@ python3 verification/tooling/check_vscode_extension_contract.py --self-test
 Required m36.2 commands:
 
 ```bash
-python3 verification/tooling/check_formatter_contract.py
-python3 verification/tooling/check_formatter_contract.py --self-test
-python3 verification/tooling/check_rule_suppression_contract.py
-python3 verification/tooling/check_rule_suppression_contract.py --self-test
+python3 verification/areas/developer_tooling/check_formatter_contract.py
+python3 verification/areas/developer_tooling/check_formatter_contract.py --self-test
+python3 verification/areas/developer_tooling/check_rule_suppression_contract.py
+python3 verification/areas/developer_tooling/check_rule_suppression_contract.py --self-test
 ```
 
 ## m36.3 Checks
@@ -39,10 +39,10 @@ python3 verification/tooling/check_rule_suppression_contract.py --self-test
 Required m36.3 commands:
 
 ```bash
-python3 verification/tooling/check_analysis_snapshot_contract.py
-python3 verification/tooling/check_analysis_snapshot_contract.py --self-test
-python3 verification/tooling/check_analysis_split_brain.py
-python3 verification/tooling/check_analysis_split_brain.py --self-test
+python3 verification/areas/developer_tooling/check_analysis_snapshot_contract.py
+python3 verification/areas/developer_tooling/check_analysis_snapshot_contract.py --self-test
+python3 verification/areas/developer_tooling/check_analysis_split_brain.py
+python3 verification/areas/developer_tooling/check_analysis_split_brain.py --self-test
 ```
 
 ## m36.4 Checks
@@ -50,8 +50,8 @@ python3 verification/tooling/check_analysis_split_brain.py --self-test
 Required m36.4 commands:
 
 ```bash
-python3 verification/tooling/run_tooling_parity.py
-python3 verification/tooling/run_tooling_parity.py --self-test
+python3 verification/areas/developer_tooling/run_tooling_parity.py
+python3 verification/areas/developer_tooling/run_tooling_parity.py --self-test
 ```
 
 The m36.1, m36.2, m36.3, and m36.4 checks are wired into `scripts/run_all_tests.sh` under "Developer Tooling Checks".
@@ -61,14 +61,14 @@ The m36.1, m36.2, m36.3, and m36.4 checks are wired into `scripts/run_all_tests.
 Required m36.5 commands:
 
 ```bash
-python3 verification/tooling/lsp_protocol_smoke.py
-python3 verification/tooling/lsp_protocol_smoke.py --self-test
-python3 verification/tooling/lsp_protocol_stress.py
-python3 verification/tooling/lsp_protocol_stress.py --self-test
-python3 verification/tooling/check_lsp_split_brain.py
-python3 verification/tooling/check_lsp_split_brain.py --self-test
-python3 verification/tooling/check_tooling_dependency_boundaries.py
-python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test
+python3 verification/areas/developer_tooling/lsp_protocol_smoke.py
+python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test
+python3 verification/areas/developer_tooling/lsp_protocol_stress.py
+python3 verification/areas/developer_tooling/lsp_protocol_stress.py --self-test
+python3 verification/areas/developer_tooling/check_lsp_split_brain.py
+python3 verification/areas/developer_tooling/check_lsp_split_brain.py --self-test
+python3 verification/areas/developer_tooling/check_tooling_dependency_boundaries.py
+python3 verification/areas/developer_tooling/check_tooling_dependency_boundaries.py --self-test
 ```
 
 `scripts/run_all_tests.sh` now runs the protocol smoke/stress checks under
@@ -84,8 +84,8 @@ budget id `perf.lsp.request_families` remains aggregate smoke coverage only.
 Required m36.6 commands:
 
 ```bash
-python3 verification/tooling/check_editor_assets.py
-python3 verification/tooling/check_editor_assets.py --self-test
+python3 verification/areas/developer_tooling/check_editor_assets.py
+python3 verification/areas/developer_tooling/check_editor_assets.py --self-test
 ```
 
 `check_editor_assets.py` verifies the checked-in Neovim, Zed, Helix, and Emacs
@@ -101,10 +101,10 @@ Tooling Checks".
 Required m36.7 commands:
 
 ```bash
-python3 verification/tooling/check_vscode_extension_contract.py --require-extension-repo
-python3 verification/tooling/check_vscode_extension_contract.py --self-test
-python3 verification/tooling/check_vscode_extension.py
-python3 verification/tooling/check_vscode_extension.py --self-test
+python3 verification/areas/developer_tooling/check_vscode_extension_contract.py --require-extension-repo
+python3 verification/areas/developer_tooling/check_vscode_extension_contract.py --self-test
+python3 verification/areas/developer_tooling/check_vscode_extension.py
+python3 verification/areas/developer_tooling/check_vscode_extension.py --self-test
 ```
 
 `check_vscode_extension.py` locates `editor_integrations/vscode`,
@@ -121,12 +121,12 @@ The m36.7 package check is wired into `scripts/run_all_tests.sh` under
 Required m36.8 commands:
 
 ```bash
-python3 verification/tooling/check_analysis_snapshot_coherence.py
-python3 verification/tooling/check_analysis_snapshot_coherence.py --self-test
-python3 verification/tooling/check_completion_quality.py
-python3 verification/tooling/check_completion_quality.py --self-test
-python3 verification/tooling/check_phase36_closeout.py
-python3 verification/tooling/check_phase36_closeout.py --self-test
+python3 verification/areas/developer_tooling/check_analysis_snapshot_coherence.py
+python3 verification/areas/developer_tooling/check_analysis_snapshot_coherence.py --self-test
+python3 verification/areas/developer_tooling/check_completion_quality.py
+python3 verification/areas/developer_tooling/check_completion_quality.py --self-test
+python3 verification/areas/developer_tooling/check_phase36_closeout.py
+python3 verification/areas/developer_tooling/check_phase36_closeout.py --self-test
 scripts/run_all_tests.sh --profile create-pr
 scripts/run_all_tests.sh --profile merge
 ```
@@ -136,7 +136,7 @@ and delegates to the concrete `AnalysisHost` stale-version, stale-snapshot, and
 revision-boundary evidence in `check_analysis_snapshot_contract.py`.
 
 `check_completion_quality.py` validates the checked-in completion ranking
-fixtures and thresholds from `verification/tooling/completion_quality/`, reruns
+fixtures and thresholds from `verification/areas/developer_tooling/completion_quality/`, reruns
 the required `sifr_analysis` cargo evidence, and fails on a seeded top-candidate
 regression.
 
@@ -153,12 +153,12 @@ corpus, and performance budgets.
 Required formatter closeout commands:
 
 ```bash
-python3 verification/tooling/check_formatter_contract.py
-python3 verification/tooling/check_formatter_contract.py --self-test
-python3 verification/tooling/check_formatter_phase_manifests.py
-python3 verification/tooling/check_formatter_phase_manifests.py --self-test
-python3 verification/tooling/check_formatter_ast_coverage.py
-python3 verification/tooling/check_formatter_ast_coverage.py --self-test
+python3 verification/areas/developer_tooling/check_formatter_contract.py
+python3 verification/areas/developer_tooling/check_formatter_contract.py --self-test
+python3 verification/areas/developer_tooling/check_formatter_phase_manifests.py
+python3 verification/areas/developer_tooling/check_formatter_phase_manifests.py --self-test
+python3 verification/areas/developer_tooling/check_formatter_ast_coverage.py
+python3 verification/areas/developer_tooling/check_formatter_ast_coverage.py --self-test
 python3 verification/areas/performance/run_benchmarks.py --validate-only
 python3 verification/areas/performance/check_budgets.py
 ```
@@ -182,16 +182,16 @@ actions.
 Required linter closeout commands:
 
 ```bash
-python3 verification/tooling/check_linter_reuse_contract.py
-python3 verification/tooling/check_linter_reuse_contract.py --self-test
-python3 verification/tooling/check_rule_suppression_contract.py
-python3 verification/tooling/check_rule_suppression_contract.py --self-test
-python3 verification/tooling/check_linter_diagnostic_class.py
-python3 verification/tooling/check_linter_diagnostic_class.py --self-test
-python3 verification/tooling/lsp_protocol_smoke.py
-python3 verification/tooling/lsp_protocol_smoke.py --self-test
-python3 verification/tooling/lsp_protocol_stress.py
-python3 verification/tooling/lsp_protocol_stress.py --self-test
+python3 verification/areas/developer_tooling/check_linter_reuse_contract.py
+python3 verification/areas/developer_tooling/check_linter_reuse_contract.py --self-test
+python3 verification/areas/developer_tooling/check_rule_suppression_contract.py
+python3 verification/areas/developer_tooling/check_rule_suppression_contract.py --self-test
+python3 verification/areas/developer_tooling/check_linter_diagnostic_class.py
+python3 verification/areas/developer_tooling/check_linter_diagnostic_class.py --self-test
+python3 verification/areas/developer_tooling/lsp_protocol_smoke.py
+python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test
+python3 verification/areas/developer_tooling/lsp_protocol_stress.py
+python3 verification/areas/developer_tooling/lsp_protocol_stress.py --self-test
 ```
 
 `check_linter_reuse_contract.py` validates the Ruff rule/config/CLI manifests,

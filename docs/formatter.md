@@ -140,8 +140,8 @@ their primary document-formatting provider.
 Formatter coverage is guarded by:
 
 ```bash
-python3 verification/tooling/check_formatter_ast_coverage.py
-python3 verification/tooling/check_formatter_ast_coverage.py --self-test
+python3 verification/areas/developer_tooling/check_formatter_ast_coverage.py
+python3 verification/areas/developer_tooling/check_formatter_ast_coverage.py --self-test
 ```
 
 The guardrail fails when a Sifr parser or AST extension lacks both a Ruff fork

@@ -38,13 +38,13 @@ Validation so far:
 - `cargo build -p sifr` -> PASS
 - `cargo test -p sifr_lsp` -> PASS, 23 tests
 - `cargo clippy -p sifr_lsp -p sifr -- -D warnings` -> PASS
-- `python3 -m py_compile verification/tooling/lsp_protocol.py verification/tooling/lsp_protocol_smoke.py verification/tooling/lsp_protocol_stress.py` -> PASS
-- `python3 verification/tooling/lsp_protocol_smoke.py` -> PASS
-- `python3 verification/tooling/lsp_protocol_stress.py` -> PASS
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
-- `python3 verification/tooling/check_phase36_closeout.py` -> PASS
-- `python3 verification/tooling/check_phase36_closeout.py --self-test` -> PASS
+- `python3 -m py_compile verification/areas/developer_tooling/lsp_protocol.py verification/areas/developer_tooling/lsp_protocol_smoke.py verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py` -> PASS
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_phase36_closeout.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_phase36_closeout.py --self-test` -> PASS
 - `python3 scripts/check_diagnostic_cancel_usage.py` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS

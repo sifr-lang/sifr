@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-TOOLING_ROOT = REPO_ROOT / "verification" / "tooling"
+TOOLING_ROOT = REPO_ROOT / "verification" / "areas" / "developer_tooling"
 sys.path.insert(0, str(TOOLING_ROOT))
 
 from lsp_protocol import LspClient, file_uri  # noqa: E402

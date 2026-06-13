@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "name": "developer_tooling",
+  "owner": "compiler/tooling",
+  "description": "Developer tooling contracts for LSP, formatter, linter, editor assets, analysis queries, and Phase 36 closeout.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "external-corpus",
+    "long-running"
+  ],
+  "timeout_seconds": 1800,
+  "suites": [
+    {
+      "name": "typescript-go-m1",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "typescript-go-m1",
+          "entry": "verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "diagnostic-contracts",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "diagnostic-contracts",
+          "entry": "verification/areas/developer_tooling/check_diagnostic_presentation_contract.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "static",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "static",
+          "entry": "verification/areas/developer_tooling/check_tooling_contract_lock.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "formatter",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "formatter",
+          "entry": "verification/areas/developer_tooling/check_formatter_contract.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "analysis",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "analysis",
+          "entry": "verification/areas/developer_tooling/check_analysis_snapshot_contract.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "lsp-smoke",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "lsp-smoke",
+          "entry": "verification/areas/developer_tooling/lsp_protocol_smoke.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "editor-release",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "editor-release",
+          "entry": "verification/areas/developer_tooling/check_vscode_extension_contract.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "lsp-stress",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "lsp-stress",
+          "entry": "verification/areas/developer_tooling/lsp_protocol_stress.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "phase-closeout",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "phase-closeout",
+          "entry": "verification/areas/developer_tooling/check_phase36_closeout.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "full",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "full",
+          "entry": "verification/areas/developer_tooling/manifest.json",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

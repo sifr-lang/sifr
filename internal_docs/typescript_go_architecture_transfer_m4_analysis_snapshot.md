@@ -50,8 +50,8 @@ M4 focused validation so far:
 - `cargo test -p sifr -- --skip test_e2e_pass`
 - `cargo clippy -p sifr_analysis -p sifr_lsp -p sifr_frontend -- -D warnings`
 - `cargo clippy --workspace -- -D warnings`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py`
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test`
 - `python3 scripts/check_file_size_guardrails.py`
 - `python3 scripts/check_package_manager_guardrails.py`
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report

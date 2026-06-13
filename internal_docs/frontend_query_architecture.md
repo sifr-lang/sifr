@@ -88,7 +88,7 @@ enriches status with side-effect-free symbol bucket readiness, and `sifr trace`
 exposes a local CLI snapshot for bug reports.
 
 TypeScript-Go architecture transfer M17 note: marker-based multi-file editor
-fixtures in `verification/tooling/editor_query_corpus` exercise query behavior
+fixtures in `verification/areas/developer_tooling/editor_query_corpus` exercise query behavior
 through `AnalysisHost`, not duplicated protocol semantics. Internal snapshot
 handles for symbols, types, signatures, diagnostics, and source spans store
 `WorkspaceSnapshotId` plus graph/source revision and reject wrong-snapshot

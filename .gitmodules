@@ -30,6 +30,6 @@
 	path = verification/package_management/demo_repositories/sifr-demo-workspace
 	url = https://github.com/sifr-lang/sifr-demo-workspace.git
 	branch = main
-[submodule "verification/sifr-large-lsp-verification"]
-	path = verification/sifr-large-lsp-verification
+[submodule "verification/areas/developer_tooling/corpora/sifr-large-lsp-verification"]
+	path = verification/areas/developer_tooling/corpora/sifr-large-lsp-verification
 	url = https://github.com/sifr-lang/sifr-large-lsp-verification.git

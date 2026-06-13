@@ -8,7 +8,7 @@ work.
 
 ## Editor Corpus
 
-`verification/tooling/editor_query_corpus/multi_file` contains checked-in
+`verification/areas/developer_tooling/editor_query_corpus/multi_file` contains checked-in
 `.sifr` fixtures with `# @marker` directives. The analysis test harness strips
 marker lines into a temporary project, then drives hover, completion,
 definition, references, rename, diagnostics, semantic tokens, formatting, code
@@ -38,7 +38,7 @@ ambiguity and fatal package-map errors:
 - `package_fatal_source_map_no_import_ambiguity` emits `SIFR-PACKAGE-0713`
   and no companion `SIFR-IMPORT-*`.
 
-`verification/tooling/check_diagnostic_source_canonicalization_contract.py`
+`verification/areas/developer_tooling/check_diagnostic_source_canonicalization_contract.py`
 enforces both non-duplication directions.
 
 ## Validation
@@ -46,10 +46,10 @@ enforces both non-duplication directions.
 - `cargo test -p sifr_analysis marker_editor_corpus_covers_multifile_queries_and_stale_snapshots -- --nocapture` -> PASS
 - `cargo test -p sifr_analysis snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution -- --nocapture` -> PASS
 - `cargo test -p sifr_analysis` -> PASS, 23 tests
-- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py` -> PASS
-- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test` -> PASS
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_diagnostic_source_canonicalization_contract.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_diagnostic_source_canonicalization_contract.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
 - `cargo test -p sifr -- --skip test_e2e_pass` -> PASS, 57 unit tests and 33 non-pass e2e tests
 - `cargo fmt --check` -> PASS
 - `cargo clippy -p sifr_analysis -p sifr -- -D warnings` -> PASS

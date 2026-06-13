@@ -79,7 +79,7 @@ Emacs:
 
 ## Validation
 
-m36.6 adds checked-in editor assets and `verification/tooling/check_editor_assets.py`.
+m36.6 adds checked-in editor assets and `verification/areas/developer_tooling/check_editor_assets.py`.
 The check is wired into `scripts/run_all_tests.sh` and has a negative self-test
 for bad LSP launch configuration, direct formatter fallback wiring, and syntax
 scope drift. m36.1 locks the validation expectation and split-brain rule so
