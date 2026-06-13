@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "area": "stdlib_parity",
+  "owner": "stdlib/parity",
+  "fixture_root": "verification/areas/stdlib_parity/fixtures/audits",
+  "description": "Promoted legacy audit fixtures. All entries are ownership-tracked; smoke entries are executed by the area audit suite.",
+  "entries": [
+    {
+      "id": "stdlib-01-math",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/01_math.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": true,
+      "expect_exit_code": 0
+    },
+    {
+      "id": "stdlib-02-json",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/02_json.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-03-string-full",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/03_string_full.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-04-re",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/04_re.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-05-collections",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/05_collections.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-06-io",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/06_io.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-07-time",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/07_time.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-08-env",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/08_env.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-09-random",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/09_random.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    },
+    {
+      "id": "stdlib-10-hash-encoding",
+      "path": "verification/areas/stdlib_parity/fixtures/audits/stdlib/10_hash_encoding.sifr",
+      "category": "stdlib",
+      "command": "check",
+      "smoke": false
+    }
+  ]
+}

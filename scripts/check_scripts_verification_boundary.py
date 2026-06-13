@@ -16,6 +16,7 @@ ALLOWED_SCRIPT_FILES = {
     "archive_reviews.sh",
     "archive_reviews_and_issues.sh",
     "check_codegen_rawcode_gate.sh",
+    "check_audits_normalization.py",
     "check_cursor_hygiene.py",
     "check_diagnostic_cancel_usage.py",
     "check_diagnostic_transport_cleanup.py",

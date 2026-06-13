@@ -16,6 +16,7 @@ MANIFEST_PATH = AREA_ROOT / "manifest.json"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "stdlib-parity-results.json"
 
 COMMAND_ARGS = {
+    "stdlib-audit-fixtures": [],
     "stdlib-complexity-resource": [],
     "stdlib-namespace-demos-check": ["--scope", "demos", "--command", "check"],
     "stdlib-namespace-leetcode-check": ["--scope", "leetcode", "--command", "check"],
@@ -136,7 +137,7 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
     if command not in COMMAND_ARGS:
         raise SystemExit(f"unsupported stdlib_parity command: {command}")
     expected_exit = int(case.get("expect_exit_code", 0))
-    argv = ["python3", str(entry.relative_to(REPO_ROOT)), *COMMAND_ARGS[command]]
+    argv = [sys.executable, str(entry.relative_to(REPO_ROOT)), *COMMAND_ARGS[command]]
     started = time.perf_counter()
     result = subprocess.run(argv, cwd=REPO_ROOT, text=True, capture_output=True, check=False)
     elapsed_ms = (time.perf_counter() - started) * 1000.0

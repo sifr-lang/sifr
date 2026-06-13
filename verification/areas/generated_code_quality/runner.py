@@ -22,12 +22,14 @@ PROFILE_SUITES = {
     "smoke": [
         ("corpus", "2"),
         ("panic-scan", "2"),
+        ("intrinsic-panic-lint", None),
         ("rustfmt", "2"),
         ("determinism", "2"),
     ],
     "representative": [
         ("corpus", "12"),
         ("panic-scan", "12"),
+        ("intrinsic-panic-lint", None),
         ("rustfmt", "12"),
         ("clippy", "12"),
         ("determinism", "12"),
@@ -36,13 +38,22 @@ PROFILE_SUITES = {
     "full": [
         ("corpus", None),
         ("panic-scan", None),
+        ("intrinsic-panic-lint", None),
         ("rustfmt", None),
         ("clippy", None),
         ("determinism", None),
         ("demos", None),
     ],
 }
-GATE_SUITES = {"corpus", "panic-scan", "rustfmt", "clippy", "determinism", "demos"}
+GATE_SUITES = {
+    "corpus",
+    "panic-scan",
+    "intrinsic-panic-lint",
+    "rustfmt",
+    "clippy",
+    "determinism",
+    "demos",
+}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
