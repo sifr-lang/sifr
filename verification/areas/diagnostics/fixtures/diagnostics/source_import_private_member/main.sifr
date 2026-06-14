@@ -1,0 +1,4 @@
+from local_math import _secret
+
+def main():
+    pass

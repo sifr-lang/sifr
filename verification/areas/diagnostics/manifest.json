@@ -936,6 +936,42 @@
           "diagnostic_formats": [
             "compact"
           ]
+        },
+        {
+          "id": "source_import_ambiguous_module",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_ambiguous_module/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "source_import_cycle",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_cycle/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "source_import_namespace_collision",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_namespace_collision/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "source_import_private_member",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_private_member/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
         }
       ]
     }

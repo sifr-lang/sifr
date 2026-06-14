@@ -1907,6 +1907,66 @@
       "renderer": "compact",
       "source_hash": "sha256:19fefa320cb2516fe64a4d92929a2f1311c300c41b846d93fbc33aa65f06294d",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
+      "fixture_id": "source_import_private_member",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:39bd96c8bd2968e01469f7a808a7a6ddf9f8f0b5aa5847892638ac4635a2eb10",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
+      "fixture_id": "source_import_ambiguous_module",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:16a15c2908801c728acef50fb9c07adae953f1e3dccaa9fe7b95a3ce3152c929",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
+      "fixture_id": "source_import_namespace_collision",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:7fda5d1715f176e5dd598b13242aaf1bf900fb65e1e2f70f2532d7b98bfa3f64",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
+      "fixture_id": "source_import_cycle",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:95a48d511f1b20994d0473dd04ce3cb6ec440a031930c801e07170bb10f32fe9",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1
