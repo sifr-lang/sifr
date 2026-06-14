@@ -133,8 +133,8 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
 
     let rust_code = generate_rust(&module);
     assert!(rust_code.contains("if !__sifr_generator_initialized {"));
-    assert!(rust_code.contains("_yields.push(1 as i64);"));
-    assert!(rust_code.contains("_yields.push(2 as i64);"));
+    assert!(rust_code.contains("_yields.push(1_i64);"));
+    assert!(rust_code.contains("_yields.push(2_i64);"));
     assert!(rust_code.contains("__sifr_generator_iter.next()"));
 }
 
@@ -187,7 +187,7 @@ fn test_generate_rust_iterable_binding_from_iterator_materializes_once() {
         "def main():\n    base: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = it\n    print(list(xs))\n",
     );
 
-    assert!(rust_code.contains("let xs: Vec<i64> = (it).into_iter().collect::<Vec<_>>();"));
+    assert!(rust_code.contains("let xs: Vec<i64> = it.collect::<Vec<_>>();"));
 }
 
 #[test]
@@ -197,7 +197,7 @@ fn test_generate_rust_iterable_return_from_iterator_materializes_for_signature()
     );
 
     assert!(rust_code.contains("fn adapt(it: Box<dyn Iterator<Item = i64>>) -> Vec<i64> {"));
-    assert!(rust_code.contains("return it.collect::<Vec<_>>();"));
+    assert!(rust_code.contains("it.collect::<Vec<_>>()"));
 }
 
 #[test]
@@ -207,7 +207,7 @@ fn test_generate_rust_iterator_return_consumes_local_list_binding() {
     );
 
     assert!(rust_code.contains("fn build() -> Box<dyn Iterator<Item = i64>> {"));
-    assert!(rust_code.contains("return Box::new(result.into_iter());"));
+    assert!(rust_code.contains("Box::new(result.into_iter())"));
 }
 
 #[test]
@@ -217,7 +217,7 @@ fn test_generate_rust_iterator_return_consumes_owned_param_binding() {
     );
 
     assert!(rust_code.contains("fn adapt(items: Vec<i64>) -> Box<dyn Iterator<Item = i64>> {"));
-    assert!(rust_code.contains("return Box::new(items.into_iter());"));
+    assert!(rust_code.contains("Box::new(items.into_iter())"));
 }
 
 #[test]
@@ -251,7 +251,7 @@ fn test_generate_rust_recursive_constructor_argument_wraps_optional_box_field() 
     );
 
     assert!(rust_code.contains(
-        "let long: Entry = Entry::new(4 as i64, Some(Box::new(Entry::new(5 as i64, Some(Box::new(Entry::new(6 as i64, None)))))));"
+        "let long: Entry = Entry::new(4_i64, Some(Box::new(Entry::new(5_i64, Some(Box::new(Entry::new(6_i64, None)))))));"
     ));
 }
 
@@ -656,7 +656,7 @@ fn test_codegen_structured_lowering_applies_to_simple_stmt() {
 
     let generated = generate_rust_with_metadata(&module);
 
-    assert!(generated.rust_source.contains("1 as i64"));
+    assert!(generated.rust_source.contains("1_i64"));
     assert!(generated.lowering_stats.stmt_structured > 0);
 }
 
@@ -711,9 +711,7 @@ fn test_structured_aug_assign_uses_string_and_list_methods() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("s.push_str("));
-    assert!(generated
-        .rust_source
-        .contains("items.extend(vec![2 as i64])"));
+    assert!(generated.rust_source.contains("items.extend(vec![2_i64])"));
     assert!(!generated.rust_source.contains("s += "));
     assert!(!generated.rust_source.contains("items += "));
 }

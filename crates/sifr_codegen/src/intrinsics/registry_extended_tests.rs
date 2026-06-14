@@ -495,7 +495,7 @@ pub(crate) fn lowers_extended_math_intrinsics_via_registry() {
     assert!(render_expr(&sumprod.expr).contains("__p.len().min(__q.len())"));
 
     let ldexp = lower_intrinsic("ldexp", &["m".to_string(), "e".to_string()]).expect("ldexp");
-    assert!(render_expr(&ldexp.expr).contains("(2.0 as f64).powi"));
+    assert!(render_expr(&ldexp.expr).contains("(2.0_f64).powi"));
 
     let modf = lower_intrinsic("modf", &["x".to_string()]).expect("modf");
     assert!(render_expr(&modf.expr).contains("__x.is_nan()"));

@@ -318,7 +318,7 @@ mod tests {
 
         assert_snapshot!(rendered, @r###"
         pub fn identity<T: Clone + std::fmt::Display>(value: T) -> T {
-            return value;
+            value
         }
         "###);
     }

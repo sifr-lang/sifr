@@ -256,7 +256,7 @@ fn render_strict_lowered_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Stri
 fn test_expr_to_string_leaf_rendering() {
     let mut emitter = RustEmitter::new();
     let int_code = render_strict_lowered_expr(&mut emitter, &HirExpr::IntLiteral(7));
-    assert_eq!(int_code, "7 as i64");
+    assert_eq!(int_code, "7_i64");
 
     let bool_op = HirExpr::BoolOp {
         op: "and".to_string(),
@@ -351,7 +351,7 @@ fn test_structured_stmt_path_rewrites_module_constant_name() {
     };
 
     let result = generate_rust_with_metadata(&module);
-    assert!(result.rust_source.contains("const LIMIT: i64 = 7 as i64;"));
+    assert!(result.rust_source.contains("const LIMIT: i64 = 7_i64;"));
     assert!(result.rust_source.contains("let x: i64 = LIMIT;"));
     assert!(result.lowering_stats.stmt_structured >= 1);
 }
@@ -524,7 +524,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
     assert!(!main_rs.contains("pub fn main("));
     assert!(utils_rs.contains("pub fn helper() -> i64"));
     assert!(utils_rs.contains("pub struct Thing"));
-    assert!(utils_rs.contains("pub const ANSWER: i64 = 7 as i64;"));
+    assert!(utils_rs.contains("pub const ANSWER: i64 = 7_i64;"));
     assert!(utils_rs.contains("pub value: i64"));
     assert!(utils_rs.contains("pub fn new(value: i64) -> Self"));
 }

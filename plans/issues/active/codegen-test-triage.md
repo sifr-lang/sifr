@@ -1,6 +1,6 @@
 # Codegen Test Triage
 
-Status: Wave 2.0 inventory; no compiler code changes in this artifact.
+Status: Wave 2.1 stale expectation repairs in progress; Wave 2.0 inventory merged in PR https://github.com/sifr-lang/sifr/pull/2561.
 
 Reproduction command:
 
@@ -8,16 +8,18 @@ Reproduction command:
 cargo test -p sifr_codegen -- --nocapture
 ```
 
-Observed result on 2026-06-14: `655 passed; 52 failed; 707 total`. The saved local log for this working pass is `target/wave2/sifr_codegen_nocapture.log`; the checked-in machine-readable inventory is `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`.
+Observed Wave 2.0 result on 2026-06-14: `655 passed; 52 failed; 707 total`. After Wave 2.1 stale expectation repairs, the current local result is `675 passed; 32 failed; 707 total`. The saved local Wave 2.0 log is `target/wave2/sifr_codegen_nocapture.log`; the checked-in machine-readable inventory is `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`.
 
 The JSON inventory records closure with `closes_in_wave: 2` and `closes_in_subwave` for each row. `proposed_pr_slice` below is the human-readable repair slice label.
 
-Classification counts:
+Classification counts from the Wave 2.0 inventory:
 
 - `stale-expectation`: 36.
 - `obsolete-test`: 6.
 - `compiler-bug`: 10.
 - `production-bug`: 0; no unresolved production sentinel rows in Wave 2.0.
+
+Wave 2.1 closes the 20 `proposed_pr_slice: 2.1` rows by refreshing stale literal, final-return, render snapshot, and iterator materialization expectations to the current generated-Rust contract. The remaining 32 open rows stay assigned to Waves 2.2, 2.3, 2.4, and 2.5.
 
 Proposed PR slices:
 

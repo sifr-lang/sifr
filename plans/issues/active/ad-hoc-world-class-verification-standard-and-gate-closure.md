@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0 and Wave 1 merged; Wave 2.0 codegen failure inventory in progress
+Status: in progress; Wave 0, Wave 1, and Wave 2.0 merged; Wave 2.1 codegen stale-expectation repairs in progress
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -306,7 +306,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 2.0 Implementation Notes
 
-- Status: inventory drafted locally; PR/review/merge pending.
+- Status: merged in PR `https://github.com/sifr-lang/sifr/pull/2561`.
 - Scope: no compiler code changes; failure inventory only for the current `sifr_codegen` red-blocker.
 - Reproduction:
   - `cargo test -p sifr_codegen -- --nocapture`: expected failure; 655 passed, 52 failed, 707 total.
@@ -328,6 +328,23 @@ Implementation re-check started 2026-06-14.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-0-review-pass-1.md`: found three blockers; addressed by reclassifying fixable user-visible defects as `compiler-bug`, using `closes_in_wave: 2` plus `closes_in_subwave`, and replacing maintainer-local/source-helper locations with repository-relative test locations.
   - Post-review validation: `scripts/run_all_tests.sh --profile create-pr` produced a passing lane report at `target/validation_lane_reports/create-pr.latest.json`; wall time 149.03s with existing warm-budget advisory. The terminal process was terminated after the passing report was written because the e2e process left pipes open after completion.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-0-review-pass-2.md`: no blocking issues; reviewer explicitly approved Wave 2.0 for merge and left only non-blocking follow-ups for later Wave 2.x work.
+
+### Wave 2.1 Implementation Notes
+
+- Status: implemented locally; review and PR pending.
+- Scope: close all 20 stale expectation rows assigned to `proposed_pr_slice: 2.1` in the `sifr_codegen` red-blocker inventory.
+- Changes: refreshed normalized integer/float literal expectations, final-return tail-expression expectations, the render helper inline snapshot, and source-based iterator materialization assertions to match the current generated-Rust contract.
+- Validation:
+  - `cargo test -p sifr_codegen -- --nocapture`: expected failure; improved from 655 passed / 52 failed to 675 passed / 32 failed, closing exactly the 20 Wave 2.1 rows while leaving later Wave 2.x rows red.
+  - `cargo test -p sifr_codegen render::render_helpers::tests::renders_function_type_param_bounds -- --exact --nocapture`: pass.
+  - `cargo fmt --check`: pass.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass; wall time 508.98s with cold e2e cache and the existing warm-budget advisory.
+- Artifacts:
+  - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: `red_blocker.failure_count` updated to 32, `test_result` updated to 675/32/707, and all 20 Wave 2.1 rows marked `closed`.
+  - `plans/issues/active/codegen-test-triage.md`: current Wave 2.1 state and remaining open-row count documented.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-1-review-pass-1.md`: no blocking issues; reviewer approved Wave 2.1 for merge and left only low-priority follow-ups for assertion hardening.
 
 ## Full Discovery Snapshot
 

@@ -30,7 +30,7 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("(9.0 as f64).sqrt()"));
+    assert!(generated.rust_source.contains("(9.0_f64).sqrt()"));
     assert!(
         generated.lowering_stats.expr_structured > 0,
         "intrinsic call should be emitted through structured expr path"
@@ -336,7 +336,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("x = (9.0 as f64).sqrt();"));
+    assert!(generated.rust_source.contains("x = (9.0_f64).sqrt();"));
     assert!(
         generated.lowering_stats.stmt_structured >= 2,
         "let + assign should be emitted through structured stmt path"
@@ -379,7 +379,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
     let generated = generate_rust_with_metadata(&module);
     assert!(generated
         .rust_source
-        .contains("let x: f64 = (9.0 as f64).sqrt();"));
+        .contains("let x: f64 = (9.0_f64).sqrt();"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed let should be emitted through structured stmt path"
@@ -417,9 +417,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated
-        .rust_source
-        .contains("return (9.0 as f64).sqrt();"));
+    assert!(generated.rust_source.contains("(9.0_f64).sqrt()"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt path"
