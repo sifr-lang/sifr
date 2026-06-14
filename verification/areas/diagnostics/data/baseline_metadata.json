@@ -695,7 +695,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_annotated_variable_requires_initializer",
       "normalizers": [
         "workspace-path",
@@ -710,7 +710,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_comprehension_await_filter_deferred",
       "normalizers": [
         "workspace-path",
@@ -725,7 +725,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_for_non_async_iterable_rejected",
       "normalizers": [
         "workspace-path",
@@ -740,7 +740,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_generator_aclose_wrong_arity",
       "normalizers": [
         "workspace-path",
@@ -755,7 +755,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_generator_mut_borrow_across_yield_rejected",
       "normalizers": [
         "workspace-path",
@@ -770,7 +770,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_generator_non_send_boundary_rejected",
       "normalizers": [
         "workspace-path",
@@ -785,7 +785,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_no_suspend_rejected",
       "normalizers": [
         "workspace-path",
@@ -800,7 +800,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_popen_unsupported",
       "normalizers": [
         "workspace-path",
@@ -815,7 +815,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_transitive_no_suspend_await_rejected",
       "normalizers": [
         "workspace-path",
@@ -830,7 +830,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_auto_init_inheritance_missing_super",
       "normalizers": [
         "workspace-path",
@@ -845,7 +845,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_auto_init_required_after_default",
       "normalizers": [
         "workspace-path",
@@ -860,7 +860,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bare_cpython_asyncio_import",
       "normalizers": [
         "workspace-path",
@@ -875,7 +875,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bare_defaultdict_constructor_rejected",
       "normalizers": [
         "workspace-path",
@@ -890,7 +890,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_constructor_float",
       "normalizers": [
         "workspace-path",
@@ -905,7 +905,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_constructor_non_literal_string",
       "normalizers": [
         "workspace-path",
@@ -920,7 +920,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_quantize_negative_scale_context",
       "normalizers": [
         "workspace-path",
@@ -935,7 +935,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigint_int_mixed_arithmetic",
       "normalizers": [
         "workspace-path",
@@ -950,7 +950,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_blocking_io_direct_call_in_async_rejected",
       "normalizers": [
         "workspace-path",
@@ -965,7 +965,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_blocking_io_on_async_def_rejected",
       "normalizers": [
         "workspace-path",
@@ -980,7 +980,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bool_integer_comparison",
       "normalizers": [
         "workspace-path",
@@ -995,7 +995,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_borrow_escape_return",
       "normalizers": [
         "workspace-path",
@@ -1010,7 +1010,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_break_outside_loop",
       "normalizers": [
         "workspace-path",
@@ -1025,7 +1025,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bytes_augmented_subscript_assignment_unsupported",
       "normalizers": [
         "workspace-path",
@@ -1040,7 +1040,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bytes_subscript_assignment_unsupported",
       "normalizers": [
         "workspace-path",
@@ -1055,7 +1055,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_callable_type_annotation_param_list_required",
       "normalizers": [
         "workspace-path",
@@ -1070,7 +1070,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_cancellation_error_not_result_error",
       "normalizers": [
         "workspace-path",
@@ -1085,7 +1085,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_cancelled_task_use_rejected",
       "normalizers": [
         "workspace-path",
@@ -1100,7 +1100,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_channel_non_send_element_rejected",
       "normalizers": [
         "workspace-path",
@@ -1115,7 +1115,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_class_init_missing_type_annotation",
       "normalizers": [
         "workspace-path",
@@ -1130,7 +1130,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_class_unknown_parent",
       "normalizers": [
         "workspace-path",
@@ -1145,7 +1145,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_class_unsupported_field_default",
       "normalizers": [
         "workspace-path",
@@ -1160,7 +1160,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_container_dict_key_type_conflict",
       "normalizers": [
         "workspace-path",
@@ -1175,7 +1175,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_contextvars_deferred",
       "normalizers": [
         "workspace-path",
@@ -1190,7 +1190,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_continue_outside_loop",
       "normalizers": [
         "workspace-path",
@@ -1205,7 +1205,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_cpu_heavy_direct_call_in_async_rejected",
       "normalizers": [
         "workspace-path",
@@ -1220,7 +1220,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_bigdecimal_mixed_arithmetic",
       "normalizers": [
         "workspace-path",
@@ -1235,7 +1235,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_constructor_float",
       "normalizers": [
         "workspace-path",
@@ -1250,7 +1250,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_float_mixed_arithmetic",
       "normalizers": [
         "workspace-path",
@@ -1265,7 +1265,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_quantize_requires_int_scale",
       "normalizers": [
         "workspace-path",
@@ -1280,7 +1280,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_duplicate_function_definition",
       "normalizers": [
         "workspace-path",
@@ -1295,7 +1295,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_elif_condition_numeric_truthiness",
       "normalizers": [
         "workspace-path",
@@ -1310,7 +1310,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_enum_duplicate_value",
       "normalizers": [
         "workspace-path",
@@ -1325,7 +1325,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_enum_match_non_exhaustive",
       "normalizers": [
         "workspace-path",
@@ -1340,7 +1340,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_enumerate_duplicate_start_keyword",
       "normalizers": [
         "workspace-path",
@@ -1355,7 +1355,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_error_raise_bare",
       "normalizers": [
         "workspace-path",
@@ -1370,7 +1370,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_exact_int_negative_power_requires_handling",
       "normalizers": [
         "workspace-path",
@@ -1385,7 +1385,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_exact_int_true_division_requires_handling",
       "normalizers": [
         "workspace-path",
@@ -1400,7 +1400,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_fixed_width_const_expression_out_of_range",
       "normalizers": [
         "workspace-path",
@@ -1415,7 +1415,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_fixed_width_generic_addable_output_boundary",
       "normalizers": [
         "workspace-path",
@@ -1430,7 +1430,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_for_loop_tuple_target_arity_mismatch",
       "normalizers": [
         "workspace-path",
@@ -1445,7 +1445,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_generic_class_missing_type_arg",
       "normalizers": [
         "workspace-path",
@@ -1460,7 +1460,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_import_intrinsic",
       "normalizers": [
         "workspace-path",
@@ -1475,7 +1475,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_invalid_iter_parameter_signature",
       "normalizers": [
         "workspace-path",
@@ -1490,7 +1490,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_ipc_multiprocessing_fork_unsupported",
       "normalizers": [
         "workspace-path",
@@ -1505,7 +1505,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_ipc_payload_process_resource_rejected",
       "normalizers": [
         "workspace-path",
@@ -1520,7 +1520,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_map_callable_arity_mismatch",
       "normalizers": [
         "workspace-path",
@@ -1535,7 +1535,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_match_invalid_field_name",
       "normalizers": [
         "workspace-path",
@@ -1550,7 +1550,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_match_tuple_pattern_requires_tuple_subject",
       "normalizers": [
         "workspace-path",
@@ -1565,7 +1565,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_match_type_mismatch_guard",
       "normalizers": [
         "workspace-path",
@@ -1580,7 +1580,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_missing_field",
       "normalizers": [
         "workspace-path",
@@ -1595,7 +1595,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_missing_return_value",
       "normalizers": [
         "workspace-path",
@@ -1610,7 +1610,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_nested_function_recursive_nonlocal_unsupported",
       "normalizers": [
         "workspace-path",
@@ -1625,7 +1625,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_optional_arithmetic_reachable_after_partial_narrowing",
       "normalizers": [
         "workspace-path",
@@ -1640,7 +1640,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_own_parameter_augassign_requires_mut",
       "normalizers": [
         "workspace-path",
@@ -1655,7 +1655,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_own_parameter_method_mutation_requires_mut",
       "normalizers": [
         "workspace-path",
@@ -1670,7 +1670,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_process_async_pipe_writer_shared_rejected",
       "normalizers": [
         "workspace-path",
@@ -1685,7 +1685,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_process_shell_exec_direct_async_rejected",
       "normalizers": [
         "workspace-path",
@@ -1700,7 +1700,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_reserved_int128_annotation",
       "normalizers": [
         "workspace-path",
@@ -1715,7 +1715,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_sorted_unexpected_keyword",
       "normalizers": [
         "workspace-path",
@@ -1730,7 +1730,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_spawn_blocking_unannotated_rejected",
       "normalizers": [
         "workspace-path",
@@ -1745,7 +1745,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_ternary_type_mismatch",
       "normalizers": [
         "workspace-path",
@@ -1760,7 +1760,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_try_except_uncovered_error_types",
       "normalizers": [
         "workspace-path",
@@ -1775,7 +1775,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_typevar_constraints_violation",
       "normalizers": [
         "workspace-path",
@@ -1790,7 +1790,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unhashable_dict_key",
       "normalizers": [
         "workspace-path",
@@ -1805,7 +1805,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unknown_except_error_type",
       "normalizers": [
         "workspace-path",
@@ -1820,7 +1820,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unsupported_default_expr_call",
       "normalizers": [
         "workspace-path",
@@ -1835,7 +1835,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unsupported_import_statement",
       "normalizers": [
         "workspace-path",
@@ -1850,7 +1850,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unused_result",
       "normalizers": [
         "workspace-path",
@@ -1865,7 +1865,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_use_after_move_loop",
       "normalizers": [
         "workspace-path",
@@ -1880,7 +1880,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_with_non_context_manager",
       "normalizers": [
         "workspace-path",
@@ -1895,7 +1895,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "wave-4-core-semantic-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_yield_without_value",
       "normalizers": [
         "workspace-path",
