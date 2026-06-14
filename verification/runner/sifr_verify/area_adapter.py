@@ -230,6 +230,7 @@ def run_contract_matrix_case(
     argv = [
         "cargo",
         "test",
+        "--locked",
         "-p",
         "sifr",
         "--test",
@@ -446,7 +447,7 @@ def run_sifr_variant(
     entry: Path,
     diagnostic_format: str | None,
 ) -> tuple[int, str, str, float, list[str]]:
-    argv = ["cargo", "run", "-q", "-p", "sifr", "--"]
+    argv = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
     if diagnostic_format is not None:
         argv.extend(["--diagnostic-format", diagnostic_format])
     argv.extend([command_name, str(entry)])

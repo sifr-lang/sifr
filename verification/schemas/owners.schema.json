@@ -1,0 +1,45 @@
+{
+  "$schema": "https://sifr-lang.local/verification/owners.schema.json",
+  "title": "Sifr verification owner registry",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "owners"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "display_name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "team",
+              "individual"
+            ]
+          },
+          "display_name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

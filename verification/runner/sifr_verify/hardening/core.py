@@ -152,7 +152,7 @@ def run_variant(
     diagnostic_format: str | None,
     timeout_secs: int | None = None,
 ) -> tuple[int, str, str, float, list[str]]:
-    args = ["cargo", "run", "-q", "-p", "sifr", "--"]
+    args = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
     if diagnostic_format is not None:
         args.extend(["--diagnostic-format", diagnostic_format])
     args.extend([command_name, str(entry)])

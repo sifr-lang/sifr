@@ -83,6 +83,14 @@ def uv_area_command(*args: str) -> list[str]:
     ]
 
 
+def cargo_command(*args: str) -> list[str]:
+    command = ["cargo", *args]
+    if "--" in command:
+        separator = command.index("--")
+        return [*command[:separator], "--locked", *command[separator:]]
+    return [*command, "--locked"]
+
+
 def run_python(script: str, *args: str) -> None:
     run_command(["python3", script, *args])
 
@@ -117,10 +125,14 @@ class ProfileRunner:
         self.legacy = legacy_facade(self.profile)
         self.forward_args = forward_args
         self.env = os.environ.copy()
+        if self.profile.get("cargo_policy", {}).get("offline") is True:
+            self.env["CARGO_NET_OFFLINE"] = "true"
+            os.environ["CARGO_NET_OFFLINE"] = "true"
 
     def run(self) -> int:
         self.print_header()
         steps: list[tuple[str, Callable[[], None]]] = [
+            ("coverage_matrix_checks", self.run_coverage_matrix_checks),
             ("core_guardrails", self.run_core_guardrails),
             ("diagnostic_contracts", self.run_diagnostic_contracts),
             ("frontend_syntax_guardrails", self.run_frontend_syntax_guardrails),
@@ -203,6 +215,26 @@ class ProfileRunner:
             f"thermal:{self.legacy['thermal_policy']} "
             f"memory:{self.legacy['memory_policy']}"
         )
+
+    def selected_suites_for_area(self, area_name: str) -> list[str]:
+        suites: list[str] = []
+        for selection in self.profile.get("selected_areas", []):
+            if not isinstance(selection, dict) or selection.get("area") != area_name:
+                continue
+            raw_suites = selection.get("suites", [])
+            if isinstance(raw_suites, list):
+                suites.extend(str(suite) for suite in raw_suites)
+        return suites
+
+    def run_coverage_matrix_checks(self) -> None:
+        suites = self.selected_suites_for_area("coverage_matrix")
+        if not suites:
+            print(f"Skipping coverage matrix checks for lane {self.profile_name}")
+            return
+        args = ["--area", "coverage_matrix"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args))
 
     def run_core_guardrails(self) -> None:
         print("Running lowering maintainability guardrails")
@@ -308,30 +340,33 @@ class ProfileRunner:
         print("Running crate tests")
         print(f"  mode={self.crate_test_mode}")
         crate_commands = [
-            ("Running sifr_diagnostics tests", ["cargo", "test", "-p", "sifr_diagnostics"]),
-            ("Running sifr_lowering tests", ["cargo", "test", "-p", "sifr_lowering", "--", "--skip", "test_e2e_pass"]),
-            ("Running sifr_syntax tests", ["cargo", "test", "-p", "sifr_syntax"]),
-            ("Running sifr_frontend tests", ["cargo", "test", "-p", "sifr_frontend"]),
-            ("Running sifr_analysis tests", ["cargo", "test", "-p", "sifr_analysis"]),
-            ("Running sifr_lsp tests", ["cargo", "test", "-p", "sifr_lsp"]),
-            ("Running sifr_package tests", ["cargo", "test", "-p", "sifr_package"]),
-            ("Running sifr_stdlib tests", ["cargo", "test", "-p", "sifr_stdlib"]),
-            ("Running sifr_runtime tests", ["cargo", "test", "-p", "sifr_runtime"]),
-            ("Running sifr_runtime HTTP feature tests", ["cargo", "test", "-p", "sifr_runtime", "--features", "http"]),
+            ("Running sifr_diagnostics tests", cargo_command("test", "-p", "sifr_diagnostics")),
+            (
+                "Running sifr_lowering tests",
+                cargo_command("test", "-p", "sifr_lowering", "--", "--skip", "test_e2e_pass"),
+            ),
+            ("Running sifr_syntax tests", cargo_command("test", "-p", "sifr_syntax")),
+            ("Running sifr_frontend tests", cargo_command("test", "-p", "sifr_frontend")),
+            ("Running sifr_analysis tests", cargo_command("test", "-p", "sifr_analysis")),
+            ("Running sifr_lsp tests", cargo_command("test", "-p", "sifr_lsp")),
+            ("Running sifr_package tests", cargo_command("test", "-p", "sifr_package")),
+            ("Running sifr_stdlib tests", cargo_command("test", "-p", "sifr_stdlib")),
+            ("Running sifr_runtime tests", cargo_command("test", "-p", "sifr_runtime")),
+            ("Running sifr_runtime HTTP feature tests", cargo_command("test", "-p", "sifr_runtime", "--features", "http")),
         ]
         for label, command in crate_commands:
             print(label)
             run_command(command)
         if self.crate_test_mode == "smoke":
             print("Running sifr CLI unit tests")
-            run_command(["cargo", "test", "-p", "sifr", "--bin", "sifr"])
+            run_command(cargo_command("test", "-p", "sifr", "--bin", "sifr"))
         elif self.crate_test_mode == "full":
             print("Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)")
-            run_command(["cargo", "test", "-p", "sifr", "--", "--skip", "test_e2e_pass"])
+            run_command(cargo_command("test", "-p", "sifr", "--", "--skip", "test_e2e_pass"))
         else:
             raise ProfileRunnerError(f"unsupported crate test mode: {self.crate_test_mode}")
         print("Running sifr_driver library tests")
-        run_command(["cargo", "test", "-p", "sifr_driver", "--lib"])
+        run_command(cargo_command("test", "-p", "sifr_driver", "--lib"))
 
     def run_validation_contract_suites(self) -> None:
         if not self.matrix_suites:

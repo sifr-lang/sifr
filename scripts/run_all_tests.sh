@@ -19,6 +19,7 @@ Profiles:
 
 Options:
   --profile <create-pr|merge|nightly|release>  Validation profile (default: merge)
+  --emit-plan                                 Print the selected profile execution plan and exit
   --help                                      Show this help
 
 Any remaining arguments are forwarded to the verification-owned e2e pass runner.
@@ -26,6 +27,7 @@ EOF
 }
 
 PROFILE="${SIFR_TEST_PROFILE:-merge}"
+EMIT_PLAN=0
 FORWARD_ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -37,6 +39,10 @@ while [[ $# -gt 0 ]]; do
     --help)
       usage
       exit 0
+      ;;
+    --emit-plan)
+      EMIT_PLAN=1
+      shift
       ;;
     *)
       FORWARD_ARGS+=("$1")
@@ -86,6 +92,11 @@ EOF
 }
 
 require_uv
+
+if [[ "${EMIT_PLAN}" -eq 1 ]]; then
+  exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify profiles plan --profile "${PROFILE}"
+fi
 
 exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
   python -m sifr_verify profiles run --profile "${PROFILE}" -- "${FORWARD_ARGS[@]}"

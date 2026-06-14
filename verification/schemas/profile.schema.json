@@ -21,7 +21,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "enum": [1]
+      "enum": [1, 2]
     },
     "name": {
       "type": "string"
@@ -63,6 +63,95 @@
         },
         "max_parallel": {
           "type": "integer"
+        }
+      }
+    },
+    "network_policy": {
+      "type": "object",
+      "required": ["mode", "live_network_allowed"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["offline", "live"]
+        },
+        "live_network_allowed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "cargo_policy": {
+      "type": "object",
+      "required": ["locked", "offline", "setup_command"],
+      "additionalProperties": false,
+      "properties": {
+        "locked": {
+          "type": "boolean"
+        },
+        "offline": {
+          "type": "boolean"
+        },
+        "setup_command": {
+          "type": "string"
+        }
+      }
+    },
+    "reference_host": {
+      "type": "object",
+      "required": ["os", "arch", "notes"],
+      "additionalProperties": false,
+      "properties": {
+        "os": {
+          "type": "string"
+        },
+        "arch": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "execution_sandbox": {
+      "type": "object",
+      "required": [
+        "tempdir_only",
+        "external_network",
+        "loopback_network",
+        "subprocess_cleanup",
+        "stdout_stderr_byte_limit"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tempdir_only": {
+          "type": "boolean"
+        },
+        "external_network": {
+          "type": "string",
+          "enum": ["forbidden", "allowed"]
+        },
+        "loopback_network": {
+          "type": "string",
+          "enum": ["forbidden", "declared-only", "allowed"]
+        },
+        "subprocess_cleanup": {
+          "type": "boolean"
+        },
+        "stdout_stderr_byte_limit": {
+          "type": "integer"
+        }
+      }
+    },
+    "profile_plan": {
+      "type": "object",
+      "required": ["emit_command", "compare_command"],
+      "additionalProperties": false,
+      "properties": {
+        "emit_command": {
+          "type": "string"
+        },
+        "compare_command": {
+          "type": "string"
         }
       }
     },

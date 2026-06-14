@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shlex
 import sys
 from pathlib import Path
@@ -35,6 +36,7 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     validate_data(payload, load_schema("profile.schema.json"), source=str(path.relative_to(REPO_ROOT)))
     if payload.get("name") != profile:
         raise ProfileError(f"profile name '{payload.get('name')}' must match file stem '{profile}'")
+    validate_selected_area_suites(payload)
     return payload
 
 
@@ -91,6 +93,31 @@ def legacy_facade(profile: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(legacy, dict):
         raise ProfileError(f"profile {profile.get('name')} is missing legacy_facade")
     return legacy
+
+
+def validate_selected_area_suites(profile: dict[str, Any]) -> None:
+    area_suites: dict[str, set[str]] = {}
+    for manifest_path in sorted((REPO_ROOT / "verification" / "areas").glob("*/manifest.json")):
+        manifest = load_json(manifest_path)
+        if not isinstance(manifest, dict):
+            continue
+        name = manifest.get("name")
+        suites = manifest.get("suites", [])
+        if isinstance(name, str) and isinstance(suites, list):
+            area_suites[name] = {
+                str(suite.get("name"))
+                for suite in suites
+                if isinstance(suite, dict) and isinstance(suite.get("name"), str)
+            }
+    for selection in profile.get("selected_areas", []):
+        area = selection.get("area") if isinstance(selection, dict) else None
+        if not isinstance(area, str) or area not in area_suites:
+            raise ProfileError(f"profile {profile.get('name')} selects unknown area: {area}")
+        for suite in selection.get("suites", []):
+            if suite not in area_suites[area]:
+                raise ProfileError(
+                    f"profile {profile.get('name')} selects unknown suite {area}:{suite}"
+                )
 
 
 def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
@@ -175,12 +202,83 @@ def print_summary(requested_profile: str) -> None:
     print(f"  manifest={profile_path(str(profile['name'])).relative_to(REPO_ROOT)}")
 
 
+def build_profile_plan(profile_name: str) -> dict[str, Any]:
+    profile = load_profile(profile_name)
+    legacy = legacy_facade(profile)
+    selected_areas = [
+        {
+            "area": selection["area"],
+            "suites": list(selection["suites"]),
+            "resource_classes": list(selection["resource_classes"]),
+        }
+        for selection in profile["selected_areas"]
+    ]
+    e2e = legacy["e2e"]
+    fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
+    return {
+        "schema_version": 1,
+        "profile": profile["name"],
+        "description": profile.get("description", ""),
+        "network_policy": profile.get("network_policy", {}),
+        "cargo_policy": profile.get("cargo_policy", {}),
+        "reference_host": profile.get("reference_host", {}),
+        "execution_sandbox": profile.get("execution_sandbox", {}),
+        "budgets": profile["budgets"],
+        "selected_areas": selected_areas,
+        "legacy_facade": {
+            "matrix_suites": list(legacy["matrix_suites"]),
+            "tooling_suites": list(legacy["tooling_suites"]),
+            "distribution": legacy["distribution"],
+            "generated_code_quality": legacy["generated_code_quality"],
+            "performance_budget": legacy["performance_budget"],
+            "crate_tests": legacy["crate_tests"],
+            "hardening_suites": list(legacy["hardening_suites"]),
+            "extra_checks": list(legacy["extra_checks"]),
+        },
+        "e2e": {
+            "fixture_manifest": "" if fixture_manifest is None else str(fixture_manifest.relative_to(REPO_ROOT)),
+            "fixture_count": 0 if fixture_manifest is None else fixture_count(fixture_manifest),
+            "sifr_jobs": e2e["sifr_jobs"],
+            "rust_jobs": e2e["rust_jobs"],
+            "run_jobs": e2e["run_jobs"],
+            "cargo_build_jobs": e2e["cargo_build_jobs"],
+            "max_group_fixtures": e2e["max_group_fixtures"],
+            "disable_cache": e2e["disable_cache"],
+        },
+    }
+
+
+def print_plan(profile_name: str) -> None:
+    print(json.dumps(build_profile_plan(profile_name), indent=2, sort_keys=True))
+
+
+def compare_plans(local_path: str, ci_path: str) -> int:
+    local = load_json(Path(local_path))
+    ci = load_json(Path(ci_path))
+    keys = [
+        "profile",
+        "selected_areas",
+        "legacy_facade",
+        "e2e",
+        "network_policy",
+        "cargo_policy",
+        "reference_host",
+        "execution_sandbox",
+    ]
+    mismatches = [key for key in keys if local.get(key) != ci.get(key)]
+    if mismatches:
+        print("profile plan mismatch: " + ", ".join(mismatches), file=sys.stderr)
+        return 1
+    print(f"profile plans equivalent: {local.get('profile')}")
+    return 0
+
+
 def run_command(argv: list[str]) -> int:
     if not argv:
-        print("profiles command requires one of: profile, shell, summary, check, run", file=sys.stderr)
+        print("profiles command requires one of: profile, shell, summary, check, plan, compare-plans, run", file=sys.stderr)
         return 2
     command = argv[0]
-    profile_name = _profile_arg(argv[1:]) if command in {"profile", "shell", "summary", "run"} else ""
+    profile_name = _profile_arg(argv[1:]) if command in {"profile", "shell", "summary", "plan", "run"} else ""
     if command == "profile":
         profile = load_profile(profile_name)
         print(profile["name"])
@@ -191,6 +289,11 @@ def run_command(argv: list[str]) -> int:
     if command == "summary":
         print_summary(profile_name)
         return 0
+    if command == "plan":
+        print_plan(profile_name)
+        return 0
+    if command == "compare-plans":
+        return compare_plans(_path_arg(argv[1:], "--local"), _path_arg(argv[1:], "--ci"))
     if command == "check":
         profiles = load_all_profiles()
         print(f"verification profiles valid: {', '.join(sorted(profiles))}")
@@ -215,3 +318,10 @@ def _forward_args(argv: list[str]) -> list[str]:
         return []
     separator = argv.index("--")
     return argv[separator + 1 :]
+
+
+def _path_arg(argv: list[str], flag: str) -> str:
+    for index, value in enumerate(argv):
+        if value == flag and index + 1 < len(argv):
+            return argv[index + 1]
+    raise ProfileError(f"{flag} is required")

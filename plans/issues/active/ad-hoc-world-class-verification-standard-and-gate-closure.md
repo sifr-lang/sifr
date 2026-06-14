@@ -244,6 +244,35 @@ Re-measure at implementation start:
 
 If any count has changed, update this issue's execution checklist with the current measured count before implementing gate changes.
 
+## Execution Checklist
+
+Implementation re-check started 2026-06-14.
+
+- Current branch/worktree at start: `main` tracking `origin/main`, clean.
+- E2E manifest counts: `create_pr_e2e_manifest.json` has 132 fixtures; `merge_e2e_manifest.json` has 145 fixtures.
+- Current `.sifr` files under `verification/areas/core_language`: 186.
+- Cargo metadata still lists the initially omitted first-party crates: `sifr_codegen`, `sifr_type_system`, `sifr_format`, `sifr_lint`, `sifr_ir`, and `sifr_source`.
+- Warm/cold merge wall time: pending measurement before the first gate-expanding wave.
+
+### Wave 0 Implementation Notes
+
+- Status: implemented locally; reviewer pass 3 found no remaining blockers; pending PR.
+- Scope: schema v2 compatibility, owner registry, coverage-matrix area, shipped guarantee registry, compiler surface matrix, CLI/workspace inventories, hermetic profile metadata, profile-plan emission, and policy docs.
+- Focused validation:
+  - `uv run --project verification --locked python -m sifr_verify --self-test`: pass.
+  - `uv run --project verification --locked python -m sifr_verify profiles check`: pass.
+  - `uv run --project verification --locked python -m sifr_verify areas check`: pass.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix`: pass; 13 guarantees, 33 surface rows, 22 temporary rows.
+  - `SIFR_COVERAGE_MATRIX_STRICT=1 uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix`: fails as expected on temporary rows.
+  - `scripts/run_all_tests.sh --profile merge --emit-plan`: pass; merge plan reports 145 e2e fixtures.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass; wall time 559.37s on cold/no-e2e-cache run, with an existing warm-budget advisory; coverage-matrix step elapsed 94ms.
+  - `uv run --project verification --locked python -m sifr_verify doctor`: pass required checks; optional sanitizer tool `llvm-symbolizer` reported as skip for broad lanes.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass after enforcing locked/offline Cargo policy; wall time 198.34s with warm e2e cache, with the existing warm-budget advisory; coverage-matrix step elapsed 97ms.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-1.md`: found five blocking issues; all addressed.
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-2.md`: found one remaining blocker in the e2e cargo invocation; addressed with `--locked`.
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-3.md`: no remaining blocking Wave 0 issues.
+
 ## Full Discovery Snapshot
 
 Discovery commands used for this phase:

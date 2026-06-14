@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "release",
   "description": "Highest-confidence local qualification gate with full breadth plus determinism/equivalence checks.",
   "budgets": {
@@ -14,11 +14,35 @@
     ],
     "max_parallel": 6
   },
+  "network_policy": {
+    "mode": "offline",
+    "live_network_allowed": false
+  },
+  "cargo_policy": {
+    "locked": true,
+    "offline": true,
+    "setup_command": "cargo fetch --locked"
+  },
+  "reference_host": {
+    "os": "darwin-or-linux",
+    "arch": "aarch64-or-x86_64",
+    "notes": "Release qualification archives local evidence and may add broader host-specific artifacts through explicit suite metadata."
+  },
+  "execution_sandbox": {
+    "tempdir_only": true,
+    "external_network": "forbidden",
+    "loopback_network": "declared-only",
+    "subprocess_cleanup": true,
+    "stdout_stderr_byte_limit": 10485760
+  },
+  "profile_plan": {
+    "emit_command": "scripts/run_all_tests.sh --profile release --emit-plan",
+    "compare_command": "uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>"
+  },
   "selected_areas": [
     {
       "area": "core_language",
       "suites": [
-        "e2e-pass",
         "integer_dtype_contract",
         "phase24_hir_analysis",
         "phase25_cfg_flow"
@@ -145,15 +169,6 @@
       ],
       "resource_classes": [
         "external-corpus"
-      ]
-    },
-    {
-      "area": "regression",
-      "suites": [
-        "determinism-scale"
-      ],
-      "resource_classes": [
-        "default-local"
       ]
     }
   ],

@@ -6,6 +6,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 | suite | purpose | blocking | owner | required artifacts |
 | --- | --- | --- | --- | --- |
+| `coverage_matrix` | Record shipped guarantees, compiler surfaces, owners, profile evidence, and temporary gate gaps. | advisory until phase closeout, then yes | compiler-verification | guarantee registry, surface matrix, owner registry, profile plan evidence |
 | `diagnostics` | Lock compiler diagnostics contract (code/message/severity/url/spans/renderer views/exit code). | yes | compiler/diagnostics | fixtures, baselines, machine-readable run summary |
 | `project_workspace` | Lock multi-file/module project behavior and deterministic project-mode outcomes. | yes | compiler/frontend | fixtures, baselines, machine-readable run summary |
 | `fixedbugs` | Permanent issue-linked regressions for resolved compiler bugs. | yes | compiler/hardening | regression index, issue/root-cause metadata, run summary |
@@ -76,6 +77,11 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 ## Manifest Source of Truth
 
+- Shipped guarantee coverage lives in
+  `verification/areas/coverage_matrix/shipped_guarantees.json`.
+- Compiler-surface profile assignments live in
+  `verification/areas/coverage_matrix/compiler_surface_matrix.json`.
+- Owner ids live in `verification/owners.json`; `unassigned` is invalid.
 - Runner-owned hardening suite data lives under
   `verification/runner/sifr_verify/hardening/data/`.
 - Migrated diagnostics, project workspace, and ecosystem compatibility suite
