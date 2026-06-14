@@ -145,7 +145,7 @@ fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
     );
 
     let cond_idx = rust_code
-        .find("if i < (3 as i64) {")
+        .find("if i < (3_i64) {")
         .expect("generator conditional branch should be emitted");
     let cond_region = &rust_code[cond_idx..];
 
@@ -155,7 +155,7 @@ fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
         "generator else branch should be preserved"
     );
     assert!(
-        cond_region.contains("i = i + (1 as i64);"),
+        cond_region.contains("i += 1_i64;"),
         "generator else branch body should be preserved"
     );
 }
@@ -624,12 +624,9 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
         "{rust_code}"
     );
     assert!(!rust_code.contains("self.items.clone().push(x)"));
-    assert!(rust_code.contains("return self.table.get(\"k\").copied();"));
+    assert!(rust_code.contains("self.table.get(\"k\").copied()"));
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
-    assert!(
-        rust_code.contains("return self.label.clone();"),
-        "{rust_code}"
-    );
+    assert!(rust_code.contains("self.label.clone()"), "{rust_code}");
 }
 
 #[test]

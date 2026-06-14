@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, and Wave 2.3 merged; Wave 2.4 structured lowering compiler-bug repairs locally validated and under review
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, and Wave 2.4 merged; Wave 2.5 final codegen red rows locally green
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -383,7 +383,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 2.4 Implementation Notes
 
-- Status: locally validated and approved by second review; PR pending.
+- Status: merged in PR https://github.com/sifr-lang/sifr/pull/2565.
 - Scope: close all 6 structured lowering compiler-bug rows assigned to `proposed_pr_slice: 2.4` in the `sifr_codegen` red-blocker inventory.
 - Changes: restored simple lowering for non-`self` field assignments when field/value types already match, kept `self` field assignments and mismatched typed field assignments on the structured path for class/recursive storage adaptations, and made option unwrapping patterns mutation-aware in both simple lowering and the structured emitter path. Updated the related break-guard regression to assert the non-`mut` option pattern when the unwrapped value is not mutated.
 - Validation:
@@ -400,6 +400,24 @@ Implementation re-check started 2026-06-14.
 - Artifacts:
   - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: `red_blocker.failure_count` updated to 4, `test_result` updated to 704/4/708, and all 6 Wave 2.4 rows marked `closed`.
   - `plans/issues/active/codegen-test-triage.md`: current Wave 2.4 state and remaining open-row count documented.
+
+### Wave 2.5 Implementation Notes
+
+- Status: implemented locally; review and PR pending.
+- Scope: close the final 4 Wave 2 codegen red-blocker rows assigned to `proposed_pr_slice: 2.5`.
+- Changes: reinspection showed the generated Rust already preserved the intended async cleanup, generator else-branch, self-field clone suppression, and string-index guard behavior. Refreshed the four stale assertions to current generated-Rust spelling and tail-expression/char-cache output contracts; the string-index assertion now validates the current `Vec<char>` cache plus let-else guard shape rather than the older direct `chars().nth(...)` spelling.
+- Validation:
+  - Four previously failing Wave 2.5 exact tests: pass.
+  - `cargo test -p sifr_codegen -- --nocapture`: pass; 708 passed / 0 failed / 708 total.
+  - `cargo fmt --check`: pass after formatting.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass after review-nit follow-up; wall time 168.01s with the existing warm-budget advisory and 100% e2e cache hit rate.
+- Artifacts:
+  - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: `red_blocker.failure_count` updated to 0, `red_blocker.status` updated to `closed`, `test_result` updated to 708/0/708, and the final 4 Wave 2.5 rows marked `closed`.
+  - `plans/issues/active/codegen-test-triage.md`: current Wave 2.5 green state and final row reclassification documented.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-5-review-pass-1.md`: approved with nits and no blocking issues; the string-index assertion/doc honesty nits were addressed.
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-5-review-pass-2.md`: approved with no blocking issues; reviewer confirmed Wave 2.5 is ready to merge and Wave 2.final promotion is unblocked.
 
 ## Full Discovery Snapshot
 
