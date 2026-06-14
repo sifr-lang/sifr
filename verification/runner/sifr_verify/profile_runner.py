@@ -360,7 +360,12 @@ class ProfileRunner:
         if not self.matrix_suites:
             return
         print("Running validation contract area suites")
-        core_language = {"integer_dtype_contract", "phase24_hir_analysis", "phase25_cfg_flow"}
+        core_language = {
+            "integer_dtype_contract",
+            "phase24_hir_analysis",
+            "phase25_cfg_flow",
+            "syntax_parser_lexer_matrix",
+        }
         project_workspace = {"frontend_mode_parity", "phase23_graph_isolation"}
         core_args: list[str] = []
         project_args: list[str] = []

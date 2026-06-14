@@ -19,14 +19,11 @@
       "guarantee_id": "parser-syntax-contract",
       "support_status": "stable",
       "owner": "compiler/core-language",
-      "status": "expected-missing",
-      "merge_suite": "core_language:e2e-pass",
-      "nightly_release_suite": "core_language:full-syntax-matrix",
+      "status": "blocking",
+      "merge_suite": "core_language:syntax_parser_lexer_matrix",
+      "nightly_release_suite": "core_language:syntax_parser_lexer_matrix",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "verification/runner/e2e/run_e2e_pass.sh --profile merge",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-3",
-      "closes_in_wave": "3",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite syntax_parser_lexer_matrix"
     },
     {
       "surface_id": "parser_fuzz_hardening",

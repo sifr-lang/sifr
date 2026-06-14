@@ -30,7 +30,7 @@ def main() -> None:
 
     bad_encode_codec_rejected: bool = False
     try:
-        codec: str = "latin-1"
+        codec: str = "definitely-not-a-codec"
         _encoded: bytes = "abc".encode(codec)
     except ParseError as e:
         bad_encode_codec_rejected = True
@@ -38,7 +38,7 @@ def main() -> None:
 
     bad_decode_codec_rejected: bool = False
     try:
-        codec2: str = "latin-1"
+        codec2: str = "definitely-not-a-codec"
         _decoded: str = b"abc".decode(codec2)
     except ParseError as e:
         bad_decode_codec_rejected = True

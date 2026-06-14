@@ -451,6 +451,32 @@
           ]
         }
       ]
+    },
+    {
+      "name": "syntax_parser_lexer_matrix",
+      "label": "Syntax parser and lexer coverage matrix",
+      "rows": [
+        {
+          "id": "matrix_backed_parser_and_lexer_contracts",
+          "commands": [
+            {
+              "id": "syntax_matrix_tests",
+              "argv": [
+                "cargo",
+                "test",
+                "-q",
+                "-p",
+                "sifr_syntax",
+                "syntax_matrix_tests::",
+                "--",
+                "--nocapture"
+              ],
+              "expected_exit": 0
+            }
+          ],
+          "assertions": []
+        }
+      ]
     }
   ]
 }

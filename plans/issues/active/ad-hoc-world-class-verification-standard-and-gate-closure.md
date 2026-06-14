@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, and Wave 2.5 merged; Wave 2.final codegen merge-gate promotion locally validated
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, and Wave 2.final merged; Wave 3 semantic and parser coverage locally validated and reviewer-approved
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -250,6 +250,7 @@ Implementation re-check started 2026-06-14.
 
 - Current branch/worktree at start: `main` tracking `origin/main`, clean.
 - E2E manifest counts: `create_pr_e2e_manifest.json` has 132 fixtures; `merge_e2e_manifest.json` has 145 fixtures.
+- Post-Wave 3 E2E profile counts: create-pr still uses 132 selected fixtures; merge/nightly/release select the full discovered pass corpus of 651 fixtures with no fixture manifest.
 - Current `.sifr` files under `verification/areas/core_language`: 186.
 - Cargo metadata still lists the initially omitted first-party crates: `sifr_codegen`, `sifr_type_system`, `sifr_format`, `sifr_lint`, `sifr_ir`, and `sifr_source`.
 - Warm/cold merge wall time: pre-Wave 1 baseline was not separately captured before the gate-expanding edit; Wave 1 post-change merge run completed in 986.72s with a cold e2e cache, above warm budget and below cold budget.
@@ -421,7 +422,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 2.final Implementation Notes
 
-- Status: implemented and locally validated; review and PR pending.
+- Status: merged in PR https://github.com/sifr-lang/sifr/pull/2567.
 - Scope: promote `sifr_codegen` from planned red-blocker membership to executed merge membership after the suite reached 708 passed / 0 failed / 708 total in Wave 2.5.
 - Changes: profile membership for `create-pr`, `merge`, `nightly`, and `release` now marks `sifr_codegen` as `blocking` with `executed_in_merge: true`; the verification runner self-test now requires codegen to be blocking/executed across all four profiles; cargo metadata target classification now assigns `sifr_codegen` to `merge`; the coverage matrix no longer carries a `red-blocker` row for the generated-Rust contract; baseline governance now records `sifr_codegen` snapshot bless requirements.
 - Post-promotion repair: the first full merge run after profile promotion executed `sifr_codegen` but then exposed a real e2e regression in `recursive_mutual_classes_runtime.sifr`; structured option let-else bindings for recursive class values now emit `Some(mut value)` when later child moves require `.take()`, covered by a new codegen regression. The same validation pass also exposed a parallel IPC fixture startup race in `sifr_stdlib`; worker startup is now serialized only through the cargo-run/bootstrap handoff.
@@ -767,6 +768,20 @@ bash verification/runner/e2e/check_report_determinism.sh --profile merge
 bash verification/runner/e2e/check_sequential_parallel_equivalence.sh --profile merge
 scripts/run_all_tests.sh --profile create-pr
 ```
+
+### Wave 3 Implementation Notes
+
+- Status: implemented, locally validated, and reviewer-approved; PR pending.
+- Scope: promote merge semantic e2e from the 145-fixture merge subset to the full 651-fixture pass corpus, keep create-pr on its 132-fixture representative subset, add matrix-backed parser/lexer coverage, and close the `parser_acceptance_rejection` coverage-matrix row.
+- Profile changes: `merge`, `nightly`, and `release` now select full e2e pass corpus mode through an empty fixture manifest; create-pr remains the only profile using `create_pr_e2e_manifest.json`. The stale `merge_e2e_manifest.json` subset was removed. Profile self-tests now reject merge/nightly/release e2e manifests and require the full fail corpus to remain covered by `sifr_cli_full`.
+- E2E runner changes: direct `verification/runner/e2e/run_e2e_pass.sh --profile ...` defaults now match profile JSON grouping: create-pr max group 8, merge max group 12, nightly/release max group 16. Direct merge runs now print and enforce `max_group_fixtures=12`.
+- Parser/lexer matrix: added `syntax_parser_lexer_matrix` under `core_language`, with positive Sifr-owned and parser-fork cases, negative stable parse-error families, token boundary/span checks, indentation/dedentation, comment trivia, non-logical newline handling, Unicode identifier span stability, and positive/negative contradiction checks. The merge/nightly/release profiles include this suite; create-pr remains representative.
+- Repair found by full corpus: the first cold full-corpus run exposed immutable context-manager target bindings for `with open(..., "w") as out: out.write(...)`; `RustWithItem` now carries mutability into rendering, and `sifr_codegen` has a regression requiring `let mut out = __guard_0.ctx.__enter__();`. The same run exposed a stale negative bytes fixture that expected `latin-1` to be unsupported; it now uses `definitely-not-a-codec` because Latin-1 is supported.
+- Focused validation: cold full-corpus merge e2e passed 651/651 in 111.80s with 0/182 cache hits, groups=182, largest group=12, signature `ee5e5d44306f270c`; second warm merge e2e passed 651/651 in 13.18s with 182/182 cache hits; deterministic report check passed with signature `ee5e5d44306f270c`; sequential-vs-parallel equivalence passed with signature `ee5e5d44306f270c`; `cargo test --locked -p sifr --test e2e test_e2e_fail -- --nocapture` passed with 481 fail fixtures; `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e fixtures and signature `5edef8cd4b961ef8`.
+- Full validation: `scripts/run_all_tests.sh` passed for merge in 719.80s with budget_ok=yes, full e2e 651/651, 182/182 cache hits, largest group 12, hardening variants=41, failures=0. Non-blocking advisory: group skew is high.
+- Static validation: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `python3 scripts/check_hir_maintainability_guardrails.py`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` all passed.
+- Review: `plans/reviews/active/ad-hoc-world-class-verification-wave-3-review-pass-1.md` and `plans/reviews/active/ad-hoc-world-class-verification-wave-3-review-pass-2.md` found no blockers and approved Wave 3. The optional symmetric parser-matrix contradiction check was applied before final validation.
+- Matrix status: coverage matrix now reports `parser_acceptance_rejection` as blocking through `core_language:syntax_parser_lexer_matrix`; parser fuzzing remains a separate later-wave `expected-missing` hardening row.
 
 ### Wave 4: Diagnostic Baseline and Recovery Expansion
 

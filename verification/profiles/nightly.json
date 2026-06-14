@@ -68,7 +68,8 @@
       "suites": [
         "integer_dtype_contract",
         "phase24_hir_analysis",
-        "phase25_cfg_flow"
+        "phase25_cfg_flow",
+        "syntax_parser_lexer_matrix"
       ],
       "resource_classes": [
         "default-local"
@@ -227,7 +228,8 @@
       "phase23_graph_isolation",
       "integer_dtype_contract",
       "phase24_hir_analysis",
-      "phase25_cfg_flow"
+      "phase25_cfg_flow",
+      "syntax_parser_lexer_matrix"
     ],
     "tooling_suites": [
       "full"

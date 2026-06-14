@@ -19,7 +19,7 @@ Usage: verification/runner/e2e/run_e2e_pass.sh [options]
 
 Profiles:
   create-pr Fast local signal; bounded parallel workers; cache enabled.
-  merge     Authoritative merge gate; representative corpus; cache enabled.
+  merge     Authoritative merge gate; full pass corpus; cache enabled.
   nightly Broad pass-corpus profile; cache enabled.
   release Highest-confidence local gate; cache enabled.
 
@@ -49,6 +49,7 @@ set_profile_defaults() {
       RUST_JOBS="2"
       RUN_JOBS="2"
       CARGO_BUILD_JOBS="1"
+      MAX_GROUP_FIXTURES="8"
       DISABLE_CACHE="0"
       FIXTURE_MANIFEST_DEFAULT="verification/areas/core_language/data/create_pr_e2e_manifest.json"
       ;;
@@ -57,14 +58,16 @@ set_profile_defaults() {
       RUST_JOBS="3"
       RUN_JOBS="3"
       CARGO_BUILD_JOBS="1"
+      MAX_GROUP_FIXTURES="12"
       DISABLE_CACHE="0"
-      FIXTURE_MANIFEST_DEFAULT="verification/areas/core_language/data/merge_e2e_manifest.json"
+      FIXTURE_MANIFEST_DEFAULT=""
       ;;
     nightly|release)
       SIFR_JOBS="6"
       RUST_JOBS="4"
       RUN_JOBS="4"
       CARGO_BUILD_JOBS="1"
+      MAX_GROUP_FIXTURES="16"
       DISABLE_CACHE="0"
       FIXTURE_MANIFEST_DEFAULT=""
       ;;
@@ -135,7 +138,7 @@ SIFR_JOBS="${SIFR_E2E_SIFR_JOBS:-${SIFR_JOBS}}"
 RUST_JOBS="${SIFR_E2E_RUST_JOBS:-${RUST_JOBS}}"
 RUN_JOBS="${SIFR_E2E_RUN_JOBS:-${RUN_JOBS}}"
 CARGO_BUILD_JOBS="${SIFR_E2E_CARGO_BUILD_JOBS:-${CARGO_BUILD_JOBS}}"
-MAX_GROUP_FIXTURES="${SIFR_E2E_MAX_GROUP_FIXTURES:-}"
+MAX_GROUP_FIXTURES="${SIFR_E2E_MAX_GROUP_FIXTURES:-${MAX_GROUP_FIXTURES}}"
 DISABLE_CACHE="${SIFR_E2E_DISABLE_CACHE:-${DISABLE_CACHE}}"
 CACHE_DIR="${SIFR_E2E_CACHE_DIR:-target/sifr_e2e_cache/${PROFILE}}"
 FIXTURE_MANIFEST="${SIFR_E2E_FIXTURE_MANIFEST:-${FIXTURE_MANIFEST_DEFAULT}}"

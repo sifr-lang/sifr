@@ -31,6 +31,7 @@ impl RustEmitter {
                 None
             };
             lowered_items.push(crate::RustWithItem {
+                mutable: self.mutated_vars.contains(var),
                 binding,
                 value: lowered_value,
                 has_cm: *has_cm,

@@ -20,6 +20,7 @@ class ProfileError(VerificationError):
 
 
 _WORKSPACE_PACKAGE_NAMES: set[str] | None = None
+E2E_PASS_FIXTURE_DIR = REPO_ROOT / "crates" / "sifr" / "tests" / "e2e" / "pass"
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -83,6 +84,10 @@ def fixture_count(path: Path) -> int:
     if not isinstance(fixture_names, list) or not all(isinstance(name, str) for name in fixture_names):
         raise ProfileError(f"invalid fixture manifest: {path}")
     return len(fixture_names)
+
+
+def full_pass_fixture_count() -> int:
+    return sum(1 for path in E2E_PASS_FIXTURE_DIR.glob("*.sifr") if path.is_file())
 
 
 def resolve_fixture_manifest(raw_path: str) -> Path | None:
@@ -275,7 +280,7 @@ def print_summary(requested_profile: str) -> None:
     legacy = legacy_facade(profile)
     e2e = legacy["e2e"]
     fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
-    fixture_count_display = "full-corpus"
+    fixture_count_display = f"full-corpus ({full_pass_fixture_count()})"
     fixture_manifest_display = "none"
     if fixture_manifest is not None:
         fixture_count_display = str(fixture_count(fixture_manifest))
@@ -292,7 +297,7 @@ def print_summary(requested_profile: str) -> None:
     )
     print("  resource_classes=" + ", ".join(profile["resource_policy"]["classes"]))
     print("  matrix_suites=" + (", ".join(legacy["matrix_suites"]) if legacy["matrix_suites"] else "none"))
-    print(f"  representative_e2e={fixture_count_display} fixtures (manifest={fixture_manifest_display})")
+    print(f"  e2e={fixture_count_display} fixtures (manifest={fixture_manifest_display})")
     print(
         "  hardening_suites="
         + (", ".join(legacy["hardening_suites"]) if legacy["hardening_suites"] else "none")
@@ -319,6 +324,10 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
     ]
     e2e = legacy["e2e"]
     fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
+    fixture_selection = "full-corpus" if fixture_manifest is None else "manifest"
+    selected_fixture_count = (
+        full_pass_fixture_count() if fixture_manifest is None else fixture_count(fixture_manifest)
+    )
     return {
         "schema_version": 1,
         "profile": profile["name"],
@@ -342,7 +351,8 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
         "crate_test_membership": profile.get("crate_test_membership", {}),
         "e2e": {
             "fixture_manifest": "" if fixture_manifest is None else str(fixture_manifest.relative_to(REPO_ROOT)),
-            "fixture_count": 0 if fixture_manifest is None else fixture_count(fixture_manifest),
+            "fixture_selection": fixture_selection,
+            "fixture_count": selected_fixture_count,
             "sifr_jobs": e2e["sifr_jobs"],
             "rust_jobs": e2e["rust_jobs"],
             "run_jobs": e2e["run_jobs"],

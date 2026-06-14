@@ -239,6 +239,61 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
 }
 
 #[test]
+fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it() {
+    let handle_ty = Type::Class {
+        name: "TextFileHandle".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    };
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::With {
+                items: vec![(
+                    "out".to_string(),
+                    HirExpr::Name {
+                        name: "ctx".to_string(),
+                        ty: handle_ty.clone(),
+                    },
+                    true,
+                )],
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::MethodCall {
+                        object: Box::new(HirExpr::Name {
+                            name: "out".to_string(),
+                            ty: handle_ty,
+                        }),
+                        method: "write".to_string(),
+                        args: vec![HirExpr::StringLiteral("x".to_string())],
+                        ty: Type::Int,
+                    },
+                }],
+            }],
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(
+        generated
+            .rust_source
+            .contains("let mut out = __guard_0.ctx.__enter__();"),
+        "context-manager target should be mutable when body calls a mutating method"
+    );
+}
+
+#[test]
 fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
     let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
     let module = HirModule {

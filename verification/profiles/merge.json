@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "name": "merge",
-  "description": "Authoritative merge gate with full contract matrices, representative e2e, and selected hardening.",
+  "description": "Authoritative merge gate with full contract matrices, full semantic e2e, and selected hardening.",
   "budgets": {
     "warm_wall_time_minutes": 15,
     "cold_wall_time_minutes": 25
@@ -75,7 +75,8 @@
       "suites": [
         "integer_dtype_contract",
         "phase24_hir_analysis",
-        "phase25_cfg_flow"
+        "phase25_cfg_flow",
+        "syntax_parser_lexer_matrix"
       ],
       "resource_classes": [
         "default-local"
@@ -234,7 +235,8 @@
       "phase23_graph_isolation",
       "integer_dtype_contract",
       "phase24_hir_analysis",
-      "phase25_cfg_flow"
+      "phase25_cfg_flow",
+      "syntax_parser_lexer_matrix"
     ],
     "tooling_suites": [
       "static",
@@ -247,7 +249,7 @@
     "performance_budget": "representative",
     "crate_tests": "full",
     "e2e": {
-      "fixture_manifest": "verification/areas/core_language/data/merge_e2e_manifest.json",
+      "fixture_manifest": "",
       "sifr_jobs": 4,
       "rust_jobs": 3,
       "run_jobs": 3,
