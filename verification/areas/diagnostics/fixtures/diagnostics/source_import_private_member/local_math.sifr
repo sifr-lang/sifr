@@ -1,0 +1,4 @@
+VALUE: int = 1
+
+def _secret() -> int:
+    return VALUE
