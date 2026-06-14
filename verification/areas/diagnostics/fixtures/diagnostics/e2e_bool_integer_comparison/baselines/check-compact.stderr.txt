@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-INT-0007 verification/areas/diagnostics/fixtures/diagnostics/e2e_bool_integer_comparison/main.sifr:4:28 cannot compare bool and integer values without explicit conversion

@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_own_parameter_method_mutation_requires_mut/main.sifr:5:5 cannot mutate through immutable parameter `items`: add `mut` to the parameter declaration

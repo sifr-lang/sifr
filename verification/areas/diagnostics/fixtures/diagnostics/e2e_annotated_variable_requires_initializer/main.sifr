@@ -1,0 +1,5 @@
+# expect-error[col=5]: SIFR-NAME-0006
+# Test: annotated locals must have initializers and use a structured name diagnostic.
+
+def main():
+    value: int

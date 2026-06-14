@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-RESULT-0002 verification/areas/diagnostics/fixtures/diagnostics/e2e_cancellation_error_not_result_error/main.sifr:3:27 `CancellationError` is not a valid error type in Result — use a class extending Error, e.g. `Result[None, ValueError]`

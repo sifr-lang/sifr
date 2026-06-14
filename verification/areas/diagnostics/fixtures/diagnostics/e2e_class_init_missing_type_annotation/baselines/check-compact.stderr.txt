@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-TYPE-0004 verification/areas/diagnostics/fixtures/diagnostics/e2e_class_init_missing_type_annotation/main.sifr:6:24 parameter 'value' in Box.__init__ is missing a type annotation

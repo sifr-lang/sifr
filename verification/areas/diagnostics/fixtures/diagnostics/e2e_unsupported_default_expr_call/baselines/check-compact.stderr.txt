@@ -1,0 +1,3 @@
+2 errors, 0 warnings, 0 notes
+E SIFR-CALL-0004 verification/areas/diagnostics/fixtures/diagnostics/e2e_unsupported_default_expr_call/main.sifr:9:11 pick() missing required argument 'x'
+E SIFR-TYPE-0011 verification/areas/diagnostics/fixtures/diagnostics/e2e_unsupported_default_expr_call/main.sifr:5:19 function 'pick': unsupported default argument expression for parameter 'x'

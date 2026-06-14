@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-INT-0003 verification/areas/diagnostics/fixtures/diagnostics/e2e_reserved_int128_annotation/main.sifr:4:12 reserved integer width name 'int128' is not supported yet

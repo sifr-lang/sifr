@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PROTO-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_fixed_width_generic_addable_output_boundary/main.sifr:9:20 type 'int32' does not implement protocol 'Addable' required by type parameter 'T'

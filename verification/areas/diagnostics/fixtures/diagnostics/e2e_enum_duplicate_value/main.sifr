@@ -1,0 +1,12 @@
+# expect-error[col=5]: SIFR-CLASS-0003
+# Test: enum with duplicate integer values
+from enum import Enum
+
+class Status(Enum):
+    OK = 200
+    SUCCESS = 200
+    NOT_FOUND = 404
+
+def main():
+    s: Status = Status.OK
+    print(s)

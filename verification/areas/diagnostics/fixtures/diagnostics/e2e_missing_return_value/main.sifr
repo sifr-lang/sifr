@@ -1,0 +1,5 @@
+# expect-error[col=5]: SIFR-FLOW-0004
+
+def choose(flag: bool) -> int:
+    if flag:
+        return 1

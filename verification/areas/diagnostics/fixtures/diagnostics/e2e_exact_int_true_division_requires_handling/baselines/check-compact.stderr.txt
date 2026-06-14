@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-INT-0006 verification/areas/diagnostics/fixtures/diagnostics/e2e_exact_int_true_division_requires_handling/main.sifr:4:20 exact integer to float conversion requires handling possible overflow or precision loss

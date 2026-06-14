@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-MATCH-0002 verification/areas/diagnostics/fixtures/diagnostics/e2e_match_type_mismatch_guard/main.sifr:4:19 match guard must be a bool expression, got 'int'

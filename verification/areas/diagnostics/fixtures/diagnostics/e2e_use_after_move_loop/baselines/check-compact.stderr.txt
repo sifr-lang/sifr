@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0004 verification/areas/diagnostics/fixtures/diagnostics/e2e_use_after_move_loop/main.sifr:7:5 value 's' is moved inside loop body; it would be unavailable on subsequent iterations

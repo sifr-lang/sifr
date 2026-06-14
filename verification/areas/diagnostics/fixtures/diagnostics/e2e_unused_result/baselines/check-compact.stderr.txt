@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-RESULT-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_unused_result/main.sifr:7:5 unused Result value of type 'Result[int, ValueError]' must be used. Use 'let _ = expr' to explicitly discard

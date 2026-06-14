@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PROTO-0003 verification/areas/diagnostics/fixtures/diagnostics/e2e_with_non_context_manager/main.sifr:10:10 type 'PlainClass' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)

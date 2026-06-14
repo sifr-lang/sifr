@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-IMPORT-0003 verification/areas/diagnostics/fixtures/diagnostics/e2e_unsupported_import_statement/main.sifr:4:8 unsupported import form: import local_math; use 'from local_math import <name>'

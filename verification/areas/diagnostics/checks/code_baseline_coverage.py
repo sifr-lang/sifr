@@ -213,12 +213,33 @@ def validate_coverage(
                 errors.append(f"{code}: renderer_formats are not in manifest case formats")
             if code in catalog and not renderers.issubset(set(catalog[code].get("renderer_support", []))):
                 errors.append(f"{code}: renderer_formats exceed catalog renderer_support")
+            if case is not None:
+                validate_coverage_baseline_evidence(errors, code, case, renderers)
     active_codes = set(active)
     coverage_codes = set(by_code)
     for code in sorted(active_codes - coverage_codes):
         errors.append(f"{code}: active diagnostic missing from code_baseline_coverage.json")
     for code in sorted(coverage_codes - active_codes):
         errors.append(f"{code}: coverage entry is not active")
+
+
+def validate_coverage_baseline_evidence(
+    errors: list[str],
+    code: str,
+    case: dict[str, Any],
+    renderers: set[str],
+) -> None:
+    baseline_dir = case["entry"].parent / "baselines"
+    for renderer in sorted(renderers):
+        baseline = baseline_dir / f"{case['command']}-{renderer}.stderr.txt"
+        if not baseline.is_file():
+            errors.append(f"{code}: coverage baseline evidence is missing: {repo_relative(baseline)}")
+            continue
+        if code not in baseline.read_text(encoding="utf-8"):
+            errors.append(
+                f"{code}: coverage references {case['entry'].parent.name}/{renderer}, "
+                f"but {repo_relative(baseline)} does not render that code"
+            )
 
 
 def validate_baseline_metadata(

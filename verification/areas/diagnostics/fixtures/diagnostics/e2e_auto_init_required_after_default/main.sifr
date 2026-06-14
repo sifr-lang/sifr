@@ -1,0 +1,8 @@
+# expect-error[col=5]: SIFR-CLASS-0002
+
+class BadConfig:
+    debug: bool = False
+    name: str
+
+def main():
+    c: BadConfig = BadConfig(True, "test")

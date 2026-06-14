@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-NAME-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_duplicate_function_definition/main.sifr:7:5 duplicate function definition in module: 'same'

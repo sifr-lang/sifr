@@ -1,0 +1,14 @@
+# expect-error: SIFR-ASYNC-0001
+# expect-error: SIFR-ASYNC-0001
+# expect-error: SIFR-ASYNC-0002
+async def leaf() -> int:
+    return 1
+
+
+async def wrapper() -> int:
+    value: int = await leaf()
+    return value
+
+
+def main() -> None:
+    return None

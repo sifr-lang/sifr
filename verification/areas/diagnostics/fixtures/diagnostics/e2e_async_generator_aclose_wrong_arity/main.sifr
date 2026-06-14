@@ -1,0 +1,8 @@
+# expect-error: SIFR-CALL-0001
+
+async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 1
+
+async def main() -> None:
+    agen: AsyncGenerator[int, GeneratorCloseError] = numbers()
+    await agen.aclose(1)

@@ -1,0 +1,4 @@
+# expect-error[col=5]: SIFR-RESULT-0003
+
+def main():
+    raise

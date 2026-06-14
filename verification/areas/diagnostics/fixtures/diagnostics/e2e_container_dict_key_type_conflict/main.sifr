@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0008
+
+def main():
+    values = {1: "one", "two": "two"}
+    print(len(values))

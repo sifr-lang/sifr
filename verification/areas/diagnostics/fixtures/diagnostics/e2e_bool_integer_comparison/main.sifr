@@ -1,0 +1,4 @@
+# expect-error: SIFR-INT-0007
+
+def main() -> None:
+    result: bool = True == 1

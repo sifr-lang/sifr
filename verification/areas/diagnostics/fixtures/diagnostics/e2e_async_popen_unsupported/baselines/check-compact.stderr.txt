@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-IMPORT-0009 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_popen_unsupported/main.sifr:2:1 legacy stdlib module 'sifr.subprocess' is unsupported; use 'sifr.process'

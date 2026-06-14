@@ -1,0 +1,13 @@
+# expect-error[col=13]: SIFR-CLASS-0004
+
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+def main():
+    p: Point = Point(1.0, 2.0)
+    print(p.z)

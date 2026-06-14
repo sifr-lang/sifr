@@ -1,0 +1,3 @@
+# expect-error[col=33]: SIFR-TYPE-0003
+def main():
+    x: str = "yes" if True else 42

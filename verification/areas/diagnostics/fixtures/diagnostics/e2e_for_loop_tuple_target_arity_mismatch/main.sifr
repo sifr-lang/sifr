@@ -1,0 +1,6 @@
+# expect-error[col=9]: SIFR-TYPE-0009
+
+def main():
+    triples: list[tuple[int, int, int]] = [(1, 2, 3)]
+    for left, right in triples:
+        print(left + right)

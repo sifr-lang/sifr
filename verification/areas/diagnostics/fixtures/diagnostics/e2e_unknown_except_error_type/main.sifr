@@ -1,0 +1,11 @@
+# expect-error[col=12]: SIFR-RESULT-0004
+# Test: unknown except-arm error classes use a structured Result diagnostic.
+
+def fallible() -> Result[int, ValueError]:
+    raise ValueError("bad")
+
+def main():
+    try:
+        value: int = fallible()
+    except MissingError as e:
+        pass

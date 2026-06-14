@@ -1,0 +1,8 @@
+# expect-error: SIFR-OWN-0012
+from sifr.process import AsyncPipeWriter
+from sifr.sync import Shared
+
+
+def main() -> None:
+    writer: AsyncPipeWriter = AsyncPipeWriter(0)
+    shared: Shared[AsyncPipeWriter] = Shared(writer)

@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-CALL-0002 verification/areas/diagnostics/fixtures/diagnostics/e2e_sorted_unexpected_keyword/main.sifr:6:39 sorted() got an unexpected keyword argument 'bogus'

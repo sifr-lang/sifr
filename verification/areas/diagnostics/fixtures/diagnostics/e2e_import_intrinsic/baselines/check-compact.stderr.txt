@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-IMPORT-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_import_intrinsic/main.sifr:3:1 cannot import from '_sifr.io' — _sifr.* modules are internal compiler intrinsics

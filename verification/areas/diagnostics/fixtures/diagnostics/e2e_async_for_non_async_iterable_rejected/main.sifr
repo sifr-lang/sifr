@@ -1,0 +1,11 @@
+# expect-error[col=24]: SIFR-FLOW-0008
+
+class StreamError(Error):
+    pass
+
+
+async def main() -> Result[None, StreamError]:
+    values: list[int] = [1, 2, 3]
+    async for value in values:
+        assert value > 0
+    return None

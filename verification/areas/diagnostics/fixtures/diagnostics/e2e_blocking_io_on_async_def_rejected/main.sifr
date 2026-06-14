@@ -1,0 +1,9 @@
+# expect-error: SIFR-ASYNC-0006
+@blocking_io
+async def read_async() -> None:
+    await task.sleep(0.0)
+    return None
+
+
+def main() -> None:
+    return None

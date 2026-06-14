@@ -1,0 +1,14 @@
+# expect-error[col=26]: SIFR-MATCH-0003
+class Point:
+    x: int
+    y: int
+
+def classify(p: Point) -> str:
+    match p:
+        case Point(x=px, z=pz):
+            return "has z"
+        case _:
+            return "other"
+
+def main():
+    print(classify(Point(1, 2)))

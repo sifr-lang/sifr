@@ -1,0 +1,3 @@
+# expect-error[col=5]: SIFR-FLOW-0002
+def main():
+    continue

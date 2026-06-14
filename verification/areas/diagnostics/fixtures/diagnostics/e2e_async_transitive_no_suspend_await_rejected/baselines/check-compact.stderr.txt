@@ -1,0 +1,4 @@
+3 errors, 0 warnings, 0 notes
+E SIFR-ASYNC-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_transitive_no_suspend_await_rejected/main.sifr:4:11 async function 'leaf' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required
+E SIFR-ASYNC-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_transitive_no_suspend_await_rejected/main.sifr:8:11 async function 'wrapper' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required
+E SIFR-ASYNC-0002 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_transitive_no_suspend_await_rejected/main.sifr:9:24 awaited async function 'leaf' has no real suspension effect; remove await and make it a synchronous function

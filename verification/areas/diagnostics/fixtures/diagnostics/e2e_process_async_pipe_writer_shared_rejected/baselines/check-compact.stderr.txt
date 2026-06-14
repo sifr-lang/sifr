@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0012 verification/areas/diagnostics/fixtures/diagnostics/e2e_process_async_pipe_writer_shared_rejected/main.sifr:8:46 Shared cannot publish `writer` of type `AsyncPipeWriter` because `AsyncPipeWriter` is a process pipe writer handle for async subprocesses; wrap mutable state in `sync.Lock`/`sync.RwLock` or keep ownership local

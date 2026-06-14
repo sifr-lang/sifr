@@ -1,0 +1,5 @@
+# expect-error[col=32]: SIFR-DECIMAL-0002
+def main():
+    s: str = "1.0"
+    x: bigdecimal = BigDecimal(s)
+    print(x)

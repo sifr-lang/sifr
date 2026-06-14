@@ -1,0 +1,4 @@
+# expect-error: SIFR-RESULT-0002
+
+def bad() -> Result[None, CancellationError]:
+    return None

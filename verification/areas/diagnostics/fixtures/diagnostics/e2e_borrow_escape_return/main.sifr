@@ -1,0 +1,11 @@
+# expect-error[col=12]: SIFR-OWN-0003
+# Test: returning a borrowed parameter should produce a compile error.
+# The parameter `items` is borrowed by default (&Vec<i64>),
+# so it cannot be returned (would escape the borrow).
+
+def steal(items: list[int]) -> list[int]:
+    return items  # ERROR: cannot return borrowed parameter
+
+def main():
+    data: list[int] = [1, 2, 3]
+    stolen: list[int] = steal(data)

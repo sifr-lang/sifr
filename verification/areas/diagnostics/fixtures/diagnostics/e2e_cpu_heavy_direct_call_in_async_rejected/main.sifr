@@ -1,0 +1,14 @@
+# expect-error: SIFR-ASYNC-0004
+@cpu_heavy
+def compute_heavy() -> int:
+    total: int = 0
+    for value in range(5):
+        total = total + value
+    return total
+
+
+async def main() -> None:
+    value: int = compute_heavy()
+    await task.sleep(0.0)
+    assert value == 10
+    return None

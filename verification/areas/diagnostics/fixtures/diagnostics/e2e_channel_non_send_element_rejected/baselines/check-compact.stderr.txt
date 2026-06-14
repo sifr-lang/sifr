@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0011 verification/areas/diagnostics/fixtures/diagnostics/e2e_channel_non_send_element_rejected/main.sifr:12:30 channel send cannot transfer `cell` of type `LocalCell` because `LocalCell` inherits the `NonSend` marker; use an explicit synchronization primitive or keep the value in the current task

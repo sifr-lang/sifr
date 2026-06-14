@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-NAME-0003 verification/areas/diagnostics/fixtures/diagnostics/e2e_generic_class_missing_type_arg/main.sifr:4:8 unknown type: 'UnknownType'

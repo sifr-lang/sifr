@@ -1,0 +1,4 @@
+# expect-error: SIFR-OWN-0009
+
+async def stream(mut items: list[int]) -> AsyncGenerator[int, GeneratorCloseError]:
+    yield len(items)
