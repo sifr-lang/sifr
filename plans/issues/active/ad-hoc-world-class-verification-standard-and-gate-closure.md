@@ -299,6 +299,7 @@ Implementation re-check started 2026-06-14.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-1-review-pass-1.md`: no blocking issues; accepted small hardening follow-ups for `merge-red-blocker` policy wording, duplicate full-mode package membership handling, and invalid non-executed full-mode blocking suites.
   - Post-review validation: `scripts/run_all_tests.sh --profile create-pr` passed; wall time 169.32s with existing warm-budget advisory.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-1-review-pass-2.md`: no blocking issues; reviewer explicitly approved Wave 1 for merge and listed only non-blocking follow-ups for later waves.
+  - Post-rebase validation: `uv run --project verification --locked python -m sifr_verify areas run --area core_language` passed after warming a transient audit-fixture timeout, then `scripts/run_all_tests.sh --profile create-pr` passed; wall time 200.62s with existing warm-budget advisory.
 - Budget evidence:
   - Create-pr remains above its warm budget but improved from the all-smoke trial run by making the Wave 1 additions full-mode only.
   - Merge completed below the cold budget but above the warm budget due primarily to generated-code quality and full e2e cache misses; follow-up batching/cache-budget work remains outside this Wave 1 gate-closure scope.
