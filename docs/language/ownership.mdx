@@ -1,0 +1,156 @@
+---
+title: "Sifr Ownership: Borrow by Default and the own Keyword"
+sidebarTitle: "Ownership"
+description: "Learn Sifr's borrow-by-default model: args borrow automatically, own transfers ownership, and the compiler catches use-after-move. No lifetime annotations."
+---
+
+Sifr gives you Rust's memory-safety guarantees without requiring you to write lifetime annotations. The key insight is that most function calls do not need ownership of their arguments — they just need to read them. Sifr makes borrowing the default, so you can pass a value to a function and still use it afterwards, exactly as you would expect in Python, but with compile-time safety.
+
+## Borrow by Default
+
+When you pass a value to a function, Sifr borrows it by default. The function receives the value as an immutable borrow, and the caller retains ownership. The variable is still usable after the call.
+
+```python
+def get_length(items: list[int]) -> int:
+    # items is borrowed — the caller keeps ownership
+    return len(items)
+
+def main():
+    my_list: list[int] = [10, 20, 30]
+    length: int = get_length(my_list)
+    print(length)   # 3
+    print(my_list)  # [10, 20, 30] — still yours
+```
+
+This applies to any heap-allocated type: lists, strings, dictionaries, and class instances.
+
+```python
+def get_first_char(s: str) -> str:
+    # s is borrowed — the caller keeps ownership
+    result: str | None = s[0]
+    if result is not None:
+        return result
+    return ""
+
+def main():
+    greeting: str = "Hello, Sifr!"
+    first: str = get_first_char(greeting)
+    print(first)    # H
+    print(greeting) # Hello, Sifr! — still usable
+```
+
+## Copy Types
+
+Primitive scalars — `int`, `float`, and `bool` — are **Copy** types. When you pass them to a function, the compiler copies the value automatically. There is no borrowing or ownership transfer involved.
+
+```python
+def add(x: int, y: int) -> int:
+    # x and y are Copy types — passed by value
+    return x + y
+
+def is_positive(n: float) -> bool:
+    return n > 0.0
+
+def main():
+    result: int = add(10, 20)
+    print(result)  # 30
+
+    pi: float = 3.14
+    print(is_positive(pi))  # True
+    print(pi)               # 3.14 — still usable
+```
+
+## Transferring Ownership with `own`
+
+When a function genuinely needs to take ownership of an argument — for example, to store it inside a data structure or to ensure it is dropped at a specific point — annotate the parameter with `own`.
+
+```python
+def consume_and_count(own items: list[int]) -> int:
+    # items is owned — ownership transferred from caller
+    return len(items)
+
+def main():
+    owned_list: list[int] = [1, 2, 3, 4, 5]
+    count: int = consume_and_count(owned_list)
+    print(count)  # 5
+    # owned_list is now moved — cannot use it after this point
+```
+
+<Warning>
+After passing a value to an `own` parameter, the compiler treats that variable as moved. Any subsequent read or write of the moved variable is a compile-time error.
+</Warning>
+
+## The `longest` Example
+
+The classic ownership puzzle — returning a reference to the longer of two strings — requires no lifetime annotations in Sifr. The function borrows its input, clones the winning value to give the caller an owned `str`, and the compiler verifies everything is sound.
+
+```python
+def longest(items: list[str]) -> str:  # items is borrowed, not moved
+    best: str = ""
+    for s in items:
+        if len(s) > len(best):
+            best = s.clone()
+    return best
+
+def main():
+    names: list[str] = ["alice", "bob", "charlie"]
+    print(longest(names))  # charlie
+    print(names)           # ["alice", "bob", "charlie"] — still yours
+```
+
+<Note>
+`s.clone()` creates an owned copy of the borrowed string slice so the function can return it. Without `.clone()`, the compiler would reject the return because you cannot return a borrow that might outlive the caller.
+</Note>
+
+## Borrowing in Loops
+
+Borrow-by-default makes it natural to pass the same collection into a function multiple times without copying.
+
+```python
+def sum_multiple_times(items: list[int], times: int) -> int:
+    total: int = 0
+    for i in range(times):
+        total = total + get_length(items)
+    return total
+
+def main():
+    items: list[int] = [10, 20, 30]
+    loop_total: int = sum_multiple_times(items, 3)
+    print(loop_total)  # 9 (3 × 3)
+    print(items)       # [10, 20, 30] — still usable
+```
+
+## Callables and Borrow Convention
+
+When you pass a collection to a higher-order function via a `Callable` parameter, the same borrow-by-default rule applies. The callable borrows the argument, and the caller keeps ownership.
+
+```python
+from typing import Callable
+
+def apply_and_return(f: Callable[[list[int]], int], items: list[int]) -> int:
+    return f(items)
+
+def compute_sum(nums: list[int]) -> int:
+    total: int = 0
+    for n in nums:
+        total = total + n
+    return total
+
+def main():
+    nums: list[int] = [5, 10, 15]
+    sum_result: int = apply_and_return(compute_sum, nums)
+    print(sum_result)  # 30
+    print(nums)        # [5, 10, 15] — still usable
+```
+
+## Ownership Rules at a Glance
+
+| Parameter style | What the callee receives | Caller retains ownership? |
+|-----------------|--------------------------|--------------------------|
+| `items: list[int]` (default) | Immutable borrow | ✅ Yes |
+| `own items: list[int]` | Owned value | ❌ No — value is moved |
+| `x: int` (Copy type) | Copy of the value | ✅ Yes — value is copied |
+
+<Tip>
+Start with the default borrow convention. Reach for `own` only when the function's contract genuinely requires ownership — such as spawning a task, storing a value in a struct, or explicitly dropping a resource.
+</Tip>

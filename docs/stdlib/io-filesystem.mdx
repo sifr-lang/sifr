@@ -1,0 +1,188 @@
+---
+title: "File I/O and Filesystem Operations in the Sifr Stdlib"
+sidebarTitle: "I/O & Files"
+description: "Read and write files in Sifr with sifr.io explicit encodings. Covers sifr.pathlib, sifr.os, binary I/O, and why open() without encoding= is unsupported."
+---
+
+Sifr treats every byte/text boundary as an explicit decision. There is no locale-derived default encoding and no implicit byte-to-string coercion. When you open a text file you must name the encoding; when you read raw bytes you get `bytes` until you call `decode` yourself. This design prevents an entire class of silent data corruption bugs that plague programs relying on platform locale settings.
+
+## Text Files with `sifr.io`
+
+Use `open_text` from `sifr.io` to read or write text files. The `encoding=` parameter is required:
+
+```python
+from sifr.encoding import latin1
+from sifr.io import open_text, TextFileHandle
+
+# Write a text file in Latin-1
+try:
+    writer: TextFileHandle = open_text("/tmp/example.txt", "w", encoding=latin1())
+    writer.write("café")
+    writer.close()
+except IOError as e:
+    print(e.message)
+
+# Read it back
+try:
+    reader: TextFileHandle = open_text("/tmp/example.txt", "r", encoding=latin1())
+    text: str = reader.read()
+    reader.close()
+    print(text)   # café
+except IOError as e:
+    print(e.message)
+```
+
+<Warning>
+`open(path)` and text-mode `open(path, "r")` without `encoding=` are intentionally unsupported and raise `SIFR-IO-0801` at compile time. Sifr never falls back to a locale-derived default encoding. Always pass an explicit codec descriptor.
+</Warning>
+
+### Supported Encodings
+
+Import codec descriptors from `sifr.encoding`:
+
+| Descriptor | Encoding |
+|---|---|
+| `utf8()` | UTF-8 (Tier 0 — default for most text) |
+| `utf8_sig()` | UTF-8 with BOM (`utf-8-sig`) |
+| `ascii()` | ASCII (7-bit) |
+| `latin1()` | Latin-1 / ISO-8859-1 |
+| `utf16_le()` | UTF-16 little-endian |
+| `utf16_be()` | UTF-16 big-endian |
+
+Windows-125x encodings (e.g., `windows1252()`) are available through Tier 1 support via `encoding_rs`. Tier 2 CJK and UTF-32 encodings are deferred to a future release.
+
+## Binary Files
+
+For binary I/O, open a file without a text mode. Binary reads return `bytes` directly:
+
+```python
+from sifr.io import open_binary
+
+try:
+    f = open_binary("/tmp/data.bin", "rb")
+    raw: bytes = f.read()
+    f.close()
+    print(len(raw))
+except IOError as e:
+    print(e.message)
+```
+
+Decode the bytes explicitly when you need text:
+
+```python
+from sifr.encoding import decode, utf8
+
+text: str = decode(raw, utf8())
+```
+
+## Path Operations with `sifr.pathlib`
+
+`sifr.pathlib` provides a `Path` type for constructing, inspecting, and navigating filesystem paths:
+
+```python
+from sifr.pathlib import Path
+
+p: Path = Path("/home/user/documents/report.txt")
+
+print(p.name())       # report.txt
+print(p.stem())       # report
+print(p.suffix())     # .txt
+print(p.parent())     # /home/user/documents
+
+config = p.parent().join("config.toml")
+print(str(config))    # /home/user/documents/config.toml
+```
+
+<Tip>
+Use `p.exists()` before reading a file to surface a clean boolean check rather than catching `IOError`:
+
+```python
+if p.exists():
+    reader = open_text(str(p), "r", encoding=utf8())
+    content = reader.read()
+    reader.close()
+```
+</Tip>
+
+## File and Directory Operations with `sifr.os`
+
+`sifr.os` provides low-level filesystem operations. All return typed errors — never raw OS panics:
+
+```python
+from sifr.os import remove_file, rename, mkdir, listdir
+
+# Delete a file
+try:
+    remove_file("/tmp/old_report.txt")
+except IOError as e:
+    print(e.message)
+
+# Rename or move
+try:
+    rename("/tmp/draft.txt", "/tmp/final.txt")
+except IOError as e:
+    print(e.message)
+
+# Create a directory
+try:
+    mkdir("/tmp/output_dir")
+except IOError as e:
+    print(e.message)
+
+# List directory contents
+try:
+    entries: list[str] = listdir("/tmp")
+    for entry in entries:
+        print(entry)
+except IOError as e:
+    print(e.message)
+```
+
+## Putting It Together: Text File Round-Trip
+
+The following example — drawn directly from the Sifr text/i18n demo — shows the complete round-trip pattern: write, read back, and clean up:
+
+```python
+from sifr.encoding import latin1
+from sifr.io import TextFileHandle, open_text
+from sifr.os import remove_file
+
+path: str = "/tmp/sifr_demo_latin1.txt"
+
+try:
+    writer: TextFileHandle = open_text(path, "w", encoding=latin1())
+    writer.write("café")
+    writer.close()
+
+    reader: TextFileHandle = open_text(path, "r", encoding=latin1())
+    text: str = reader.read()
+    reader.close()
+
+    remove_file(path)
+    print(text)       # café
+except IOError as e:
+    print(e.message)
+```
+
+## Temporary Files
+
+For temporary files, construct a path under the OS temp directory using `sifr.os` and `sifr.pathlib`, and clean up explicitly with `remove_file`. Sifr does not expose a `tempfile` module; explicit paths and explicit cleanup keep resource lifetimes visible in the ownership graph.
+
+```python
+from sifr.os import remove_file
+from sifr.io import open_text
+from sifr.encoding import utf8
+
+tmp_path: str = "/tmp/sifr_work_" + some_unique_id
+try:
+    writer = open_text(tmp_path, "w", encoding=utf8())
+    writer.write("temporary data")
+    writer.close()
+    # ... use the file ...
+finally:
+    remove_file(tmp_path)
+```
+
+<Note>
+Resource cleanup under task cancellation is part of Sifr's structured runtime contract. File handles that go out of scope are closed before cancellation evidence is surfaced to the caller.
+</Note>

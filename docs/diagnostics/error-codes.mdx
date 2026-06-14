@@ -1,0 +1,410 @@
+---
+title: "Sifr Diagnostic Code Reference for All Error Families"
+sidebarTitle: "Error Codes"
+description: "A complete reference of all 24 Sifr diagnostic code families, with every active code, its severity, and a concise description of what it means."
+---
+
+Sifr organizes every diagnostic into a named family. Each code follows the format `SIFR-<FAMILY>-dddd`, where the four-digit number is scoped within its family. This page lists all 24 families and every active code in each one. Use `sifr --explain <CODE>` in your terminal to get full detail, message templates, and fix guidance for any specific code.
+
+<Accordion title="PARSE — Parsing and source syntax">
+
+The `PARSE` family covers errors that the parser encounters before any semantic analysis. These diagnostics fire when your source file contains syntax the Sifr parser cannot recover from.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-PARSE-0002` | Error | Expected token or generic parser recovery failure. |
+| `SIFR-PARSE-0003` | Error | Lexical or interpolated string parser failure. |
+| `SIFR-PARSE-0004` | Error | Indentation or same-line statement layout parser failure. |
+| `SIFR-PARSE-0005` | Error | Invalid assignment, delete, starred, or named-expression target syntax. |
+| `SIFR-PARSE-0006` | Error | Invalid call argument order or unpacking syntax. |
+| `SIFR-PARSE-0007` | Error | Empty or malformed declaration list syntax. |
+| `SIFR-PARSE-0008` | Error | Invalid match-pattern syntax. |
+| `SIFR-PARSE-0009` | Error | Unsupported parser syntax or interactive-only syntax. |
+
+</Accordion>
+
+<Accordion title="NAME — Name binding and resolution">
+
+The `NAME` family covers errors that arise when the compiler cannot resolve an identifier — a variable, function, type, or member — to a known declaration.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-NAME-0001` | Error | Undefined variable. |
+| `SIFR-NAME-0002` | Error | Undefined function or callable. |
+| `SIFR-NAME-0003` | Error | Unknown type or generic type name. |
+| `SIFR-NAME-0004` | Error | Missing module or class member. |
+| `SIFR-NAME-0005` | Error | Duplicate function definition in a module. |
+| `SIFR-NAME-0006` | Error | Variable declaration lacks a required initializer. |
+
+</Accordion>
+
+<Accordion title="IMPORT — Module import and path resolution">
+
+The `IMPORT` family covers errors that occur when resolving `import` and `from … import` statements. These diagnostics fire before type-checking when the module graph cannot be built.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-IMPORT-0001` | Error | Forbidden intrinsic import. |
+| `SIFR-IMPORT-0002` | Error | Unknown source module import target. |
+| `SIFR-IMPORT-0003` | Error | Unsupported import statement form. |
+| `SIFR-IMPORT-0004` | Error | Private module member import. |
+| `SIFR-IMPORT-0005` | Error | Ambiguous source module import target. |
+| `SIFR-IMPORT-0006` | Error | Source module namespace and file import collision. |
+| `SIFR-IMPORT-0007` | Error | Circular source module import graph. |
+| `SIFR-IMPORT-0008` | Error | Bare CPython-style stdlib import attempt. |
+| `SIFR-IMPORT-0009` | Error | Unsupported legacy Sifr stdlib module import. |
+
+<Note>
+`SIFR-IMPORT-0008` fires when you write `from math import floor` instead of `from sifr.math import floor`. Sifr's standard library lives under the `sifr.*` namespace.
+</Note>
+
+</Accordion>
+
+<Accordion title="TYPE — Static type compatibility and inference">
+
+The `TYPE` family covers type system violations detected during static analysis and lowering. These diagnostics indicate that the inferred or annotated types in your program are not compatible with each other or with the operation being performed.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-TYPE-0002` | Error | Expected and actual types are incompatible. |
+| `SIFR-TYPE-0003` | Error | If-expression or conditional branches have incompatible types. |
+| `SIFR-TYPE-0004` | Error | A required type annotation is missing. |
+| `SIFR-TYPE-0005` | Error | Unsupported operator or operand types. |
+| `SIFR-TYPE-0006` | Error | Int and bigint are mixed without an explicit conversion. |
+| `SIFR-TYPE-0007` | Error | Invalid type annotation shape. |
+| `SIFR-TYPE-0008` | Error | Container literal elements, keys, or values have conflicting types. |
+| `SIFR-TYPE-0009` | Error | Tuple or list unpacking shape mismatch. |
+| `SIFR-TYPE-0010` | Error | TypeVar constraints are not satisfied by the inferred concrete type. |
+| `SIFR-TYPE-0011` | Error | Unsupported default argument expression. |
+| `SIFR-TYPE-0012` | Error | Unsupported expression form. |
+| `SIFR-TYPE-0901` | Warning | Integer arithmetic may overflow at runtime. |
+| `SIFR-TYPE-0902` | Note | Reveal the inferred static type of an expression. |
+
+</Accordion>
+
+<Accordion title="ASYNC — Async effect and awaitability">
+
+The `ASYNC` family covers violations of Sifr's async effect system. Sifr tracks whether functions perform real suspension, and it enforces that blocking or CPU-heavy work is never called directly from an async context.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-ASYNC-0001` | Error | Async function body has no real suspension effect. |
+| `SIFR-ASYNC-0002` | Error | Awaited same-task coroutine has no real suspension effect. |
+| `SIFR-ASYNC-0003` | Error | Blocking I/O function called directly from async context. |
+| `SIFR-ASYNC-0004` | Error | CPU-heavy function called directly from async context. |
+| `SIFR-ASYNC-0005` | Error | Blocking offload target is not classified as blocking I/O or CPU-heavy work. |
+| `SIFR-ASYNC-0006` | Error | Synchronous workload annotation applied to async function. |
+| `SIFR-ASYNC-0007` | Error | Shell execution function called directly from async context. |
+
+</Accordion>
+
+<Accordion title="DECIMAL — Decimal and fixed-point arithmetic">
+
+The `DECIMAL` family covers errors in Sifr's `Decimal` and `BigDecimal` numeric types. Sifr's decimal types are distinct from Python floats and have their own literal syntax, scale rules, and construction constraints.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-DECIMAL-0001` | Error | Invalid `Decimal` exact literal. |
+| `SIFR-DECIMAL-0002` | Error | Invalid `BigDecimal` exact literal. |
+| `SIFR-DECIMAL-0003` | Error | Float mixed with a decimal numeric type. |
+| `SIFR-DECIMAL-0004` | Error | `Decimal` and `BigDecimal` mixed in one operation. |
+| `SIFR-DECIMAL-0005` | Error | `Decimal` float construction or conversion is forbidden. |
+| `SIFR-DECIMAL-0006` | Error | `BigDecimal` float construction or conversion is forbidden. |
+| `SIFR-DECIMAL-0007` | Error | `Decimal` scale argument is invalid. |
+| `SIFR-DECIMAL-0008` | Error | `BigDecimal` scale or context argument is invalid. |
+
+</Accordion>
+
+<Accordion title="INT — Exact and fixed-width integer model">
+
+The `INT` family covers errors in Sifr's exact integer (`int`) and fixed-width integer types (`i8`–`i128`, `u8`–`u128`). Sifr enforces explicit conversions and overflow handling rather than silently wrapping or truncating.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-INT-0001` | Error | Fixed-width integer literal or const expression is out of range. |
+| `SIFR-INT-0003` | Error | Reserved integer width name used before support lands. |
+| `SIFR-INT-0004` | Error | Compile-time integer evaluation budget exceeded. |
+| `SIFR-INT-0005` | Error | Integer division, modulo, or exponentiation requires handling a typed failure. |
+| `SIFR-INT-0006` | Error | Exact integer to float conversion requires handling precision loss. |
+| `SIFR-INT-0007` | Error | Bool and integer comparison requires explicit conversion. |
+| `SIFR-INT-0011` | Warning | Temporary bigint transition alias used. |
+
+</Accordion>
+
+<Accordion title="IO — File and stream text/binary boundary">
+
+The `IO` family covers errors at the boundary between text-mode and binary-mode file operations. Sifr requires that text-mode file opens declare an explicit encoding at compile time.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-IO-0801` | Error | Text-mode `open` requires an explicit encoding. |
+| `SIFR-IO-0802` | Error | Open mode must be statically known. |
+
+</Accordion>
+
+<Accordion title="ENCODING — Text encoding and error handlers">
+
+The `ENCODING` family covers errors related to text encoding configuration. Sifr requires that encoding error handlers be statically known so that encoding behavior is predictable and verifiable at compile time.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-ENCODING-0803` | Error | Encoding error handler must be statically known. |
+
+</Accordion>
+
+<Accordion title="CALL — Function and method call diagnostics">
+
+The `CALL` family covers errors at call sites: wrong argument counts, unexpected keyword arguments, duplicate arguments, missing required arguments, and uncallable expressions.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-CALL-0001` | Error | Wrong positional argument count. |
+| `SIFR-CALL-0002` | Error | Unexpected keyword argument. |
+| `SIFR-CALL-0003` | Error | Duplicate argument from positional and keyword overlap. |
+| `SIFR-CALL-0004` | Error | Missing required argument. |
+| `SIFR-CALL-0005` | Error | Callable arity failure or expression is not callable. |
+
+</Accordion>
+
+<Accordion title="OWN — Ownership, borrow, move, and lifetime">
+
+The `OWN` family covers violations of Sifr's ownership and borrow model. Because Sifr compiles to Rust, it enforces that values are not used after being moved, that borrows do not conflict, and that values respect sendability and shareability boundaries across task and channel boundaries.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-OWN-0001` | Error | Use after move. |
+| `SIFR-OWN-0002` | Error | Same-call borrow conflict. |
+| `SIFR-OWN-0003` | Error | Borrowed parameter escapes by return or store. |
+| `SIFR-OWN-0004` | Error | Moved value is reused across loop iterations. |
+| `SIFR-OWN-0005` | Error | Immutable parameter is mutated. |
+| `SIFR-OWN-0006` | Error | Immutable parameter is reassigned. |
+| `SIFR-OWN-0007` | Error | Immutable bytes value is mutated. |
+| `SIFR-OWN-0008` | Error | Immutable bytes value is mutated by augmented assignment. |
+| `SIFR-OWN-0009` | Error | Mutable borrow remains live across an `await` point. |
+| `SIFR-OWN-0010` | Error | Non-sendable value crosses a spawned task boundary. |
+| `SIFR-OWN-0011` | Error | Non-sendable value is sent through a channel. |
+| `SIFR-OWN-0012` | Error | Non-share-safe value is wrapped in `sync.Shared`. |
+| `SIFR-OWN-0013` | Error | Non-IPC-serializable value is used as a typed IPC payload. |
+
+</Accordion>
+
+<Accordion title="FLOW — Control flow and reachability">
+
+The `FLOW` family covers control-flow correctness: invalid `break`/`continue` placement, missing return values, unsupported loop forms, and constructs that HIR lowering cannot represent.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-FLOW-0001` | Error | `break` outside a loop. |
+| `SIFR-FLOW-0002` | Error | `continue` outside a loop. |
+| `SIFR-FLOW-0003` | Error | Invalid `nonlocal` or nested-function flow. |
+| `SIFR-FLOW-0004` | Error | Function may finish without returning a required value. |
+| `SIFR-FLOW-0005` | Error | Control-flow condition has an unsupported type. |
+| `SIFR-FLOW-0006` | Error | Statement form is unsupported by HIR lowering. |
+| `SIFR-FLOW-0007` | Error | Assignment target form is unsupported by HIR lowering. |
+| `SIFR-FLOW-0008` | Error | For-loop iteration form or source is invalid. |
+| `SIFR-FLOW-0901` | Warning | Unreachable statement ignored during lowering. |
+
+</Accordion>
+
+<Accordion title="FMT — Source formatting">
+
+The `FMT` family covers formatting enforcement. It fires when `sifr fmt --check` detects that one or more source files have drifted from canonical Sifr formatting.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-FMT-0001` | Error | Source formatting drift detected by `sifr fmt --check`. |
+
+<Tip>
+Run `sifr fmt` (without `--check`) to automatically rewrite all files to canonical formatting and resolve `SIFR-FMT-0001`.
+</Tip>
+
+</Accordion>
+
+<Accordion title="LINT — Suppressible policy-rule diagnostics">
+
+The `LINT` family covers the policy-rule engine (`sifr lint`). These are `Warning`-severity diagnostics that can be suppressed per-line with `# sifr: ignore[rule-id]`. The family also includes meta-diagnostics about suppression hygiene.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-LINT-0001` | Warning | Suppression references an unknown policy rule ID. |
+| `SIFR-LINT-0002` | Warning | Suppression did not suppress any diagnostic. |
+| `SIFR-LINT-0003` | Warning | Suppression must list explicit Sifr policy rule IDs. |
+| `SIFR-LINT-0004` | Warning | Line ends with trailing horizontal whitespace. |
+| `SIFR-LINT-0005` | Warning | Comment contains a tracked TODO or FIXME marker. |
+| `SIFR-LINT-0006` | Warning | Call passes a boolean literal positionally. |
+| `SIFR-LINT-0007` | Warning | Function has more parameters than the policy limit. |
+| `SIFR-LINT-0008` | Warning | Import duplicates a module/name pair already imported in the same source file. |
+
+</Accordion>
+
+<Accordion title="MATCH — Pattern matching and exhaustiveness">
+
+The `MATCH` family covers `match` statement correctness. Sifr requires that match statements are exhaustive over enum types and that patterns are well-formed.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-MATCH-0001` | Error | Non-exhaustive match — one or more enum variants are not covered. |
+| `SIFR-MATCH-0002` | Error | Match guard must be `bool`. |
+| `SIFR-MATCH-0003` | Error | Invalid class pattern field. |
+| `SIFR-MATCH-0004` | Error | Invalid or unsupported match pattern form. |
+
+</Accordion>
+
+<Accordion title="PROTO — Protocol and structural conformance">
+
+The `PROTO` family covers violations of Sifr's structural protocol system: iterator and reversible protocols, context-manager protocols, and hashability/comparability constraints.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-PROTO-0001` | Error | Protocol bound or conformance failure. |
+| `SIFR-PROTO-0002` | Error | Invalid iterator or reversible protocol signature. |
+| `SIFR-PROTO-0003` | Error | Context-manager protocol is missing (`__enter__` or `__exit__` absent). |
+| `SIFR-PROTO-0004` | Error | Hashable or comparable protocol is required. |
+
+</Accordion>
+
+<Accordion title="CLASS — Class declaration, fields, and methods">
+
+The `CLASS` family covers class-level structural errors: missing field initializers, field ordering violations, duplicate enum variants, invalid base classes, and unsupported class forms.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-CLASS-0001` | Error | Class fields require an initializer or super initializer. |
+| `SIFR-CLASS-0002` | Error | Required field declared after a defaulted field. |
+| `SIFR-CLASS-0003` | Error | Duplicate enum or class value, or invalid variant. |
+| `SIFR-CLASS-0004` | Error | Missing class field. |
+| `SIFR-CLASS-0005` | Error | Invalid class base. |
+| `SIFR-CLASS-0006` | Error | Unsupported class declaration. |
+
+</Accordion>
+
+<Accordion title="RESULT — Result, Option, and checked error flow">
+
+The `RESULT` family covers Sifr's checked error-handling model. Sifr requires that `Result` values are explicitly handled, that error types are valid, and that `try`/`except` blocks cover all possible error types from the `try` body.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-RESULT-0001` | Error | Unused `Result` value. |
+| `SIFR-RESULT-0002` | Error | Invalid `Result` error type. |
+| `SIFR-RESULT-0003` | Error | Invalid `raise` expression. |
+| `SIFR-RESULT-0004` | Error | `except` arm references an unknown error type. |
+| `SIFR-RESULT-0005` | Error | `try` body error types are not fully covered by `except` arms. |
+| `SIFR-RESULT-0006` | Error | `except` arm type expression has an unsupported form. |
+
+<Note>
+`SIFR-RESULT-0001` fires whenever you call a function that returns `Result` and discard the return value without handling it. Use `match`, `unwrap()`, or propagate the result with `?` syntax to resolve it.
+</Note>
+
+</Accordion>
+
+<Accordion title="STDLIB — Standard library surface and intrinsics">
+
+The `STDLIB` family covers errors related to Sifr's embedded standard library. These diagnostics fire when a stdlib constructor or method is called in an unsupported way, or when the stdlib bootstrap or cache has a problem.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-STDLIB-0001` | Error | Unsupported standard-library constructor, method, or surface. |
+| `SIFR-STDLIB-0003` | Error | Embedded standard-library bootstrap failure. |
+| `SIFR-STDLIB-0004` | Error | Standard-library cache build or reuse failure. |
+
+</Accordion>
+
+<Accordion title="WORKSPACE — Workspace manifest and project discovery">
+
+The `WORKSPACE` family covers errors in workspace configuration: malformed manifests, source roots that escape the workspace boundary, and invalid source root entries. It also includes legacy import resolution errors that mirror the `IMPORT` family for workspaces not yet migrated to the current module system.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-WORKSPACE-0001` | Error | Malformed workspace manifest. |
+| `SIFR-WORKSPACE-0002` | Error | Workspace source root escapes the workspace root. |
+| `SIFR-WORKSPACE-0003` | Error | Workspace source root is not a directory. |
+| `SIFR-WORKSPACE-0004` | Error | Workspace source root entry has an invalid shape or path. |
+| `SIFR-WORKSPACE-0101` | Error | Legacy workspace import target could not be resolved. |
+| `SIFR-WORKSPACE-0102` | Error | Legacy workspace import target is ambiguous. |
+| `SIFR-WORKSPACE-0103` | Error | Legacy workspace namespace package collision. |
+| `SIFR-WORKSPACE-0104` | Error | Legacy workspace import graph cycle. |
+
+</Accordion>
+
+<Accordion title="PACKAGE — Cargo-backed package coordination">
+
+The `PACKAGE` family is the largest family and covers the full lifecycle of Sifr packages: manifest validation, dependency resolution, import scope enforcement, trust policy, archive integrity, and publish guardrails.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-PACKAGE-0001` | Error | Missing or invalid Cargo Sifr discovery metadata. |
+| `SIFR-PACKAGE-0002` | Error | Missing or invalid `sifr.toml` package manifest. |
+| `SIFR-PACKAGE-0003` | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
+| `SIFR-PACKAGE-0101` | Error | Cargo command invocation failed. |
+| `SIFR-PACKAGE-0102` | Error | A selected Cargo package is Rust-only. |
+| `SIFR-PACKAGE-0103` | Error | Cargo metadata parsing or normalization failed. |
+| `SIFR-PACKAGE-0104` | Error | Package source is unavailable in offline or frozen mode. |
+| `SIFR-PACKAGE-0106` | Error | Rust-only package depends directly on a Sifr source package. |
+| `SIFR-PACKAGE-0201` | Error | Direct package import root resolves to multiple package instances. |
+| `SIFR-PACKAGE-0202` | Error | Package imports a module outside its direct dependency scope. |
+| `SIFR-PACKAGE-0203` | Error | Package imports a private module from another package. |
+| `SIFR-PACKAGE-0204` | Error | Type identity crosses resolved package instances. |
+| `SIFR-PACKAGE-0301` | Error | Backend Rust crate is not allowed by the Sifr trust policy. |
+| `SIFR-PACKAGE-0305` | Error | Trust policy names a backend crate that is not a direct dependency. |
+| `SIFR-PACKAGE-0401` | Error | Cargo package archive is missing required Sifr source. |
+| `SIFR-PACKAGE-0402` | Error | Package publish or archive validation failed. |
+| `SIFR-PACKAGE-0403` | Error | Cargo include/exclude rules omit required Sifr files. |
+| `SIFR-PACKAGE-0404` | Error | Cargo package archive contains an unsafe path. |
+| `SIFR-PACKAGE-0501` | Error | Pure Sifr Rust marker contains implementation. |
+| `SIFR-PACKAGE-0601` | Error | Package selector is ambiguous or invalid. |
+| `SIFR-PACKAGE-0602` | Error | Workspace selection contains duplicate import roots. |
+| `SIFR-PACKAGE-0603` | Error | Changed file could not be mapped to a package. |
+| `SIFR-PACKAGE-0604` | Error | Outdated query cannot inspect this Cargo source. |
+| `SIFR-PACKAGE-0605` | Error | Runnable package target or script selection is missing or ambiguous. |
+| `SIFR-PACKAGE-0606` | Error | Discovered app target name is invalid. |
+| `SIFR-PACKAGE-0607` | Error | Selected workspace members use the same Sifr package name. |
+| `SIFR-PACKAGE-0701` | Error | Production `sifr.toml` uses manifest-level exports. |
+| `SIFR-PACKAGE-0703` | Error | Sifr-managed Cargo projection manifest pointer drift. |
+| `SIFR-PACKAGE-0704` | Error | Sifr-managed Cargo projection include rules omit required package files. |
+| `SIFR-PACKAGE-0709` | Error | Pure package marker is missing from Sifr-managed projection. |
+| `SIFR-PACKAGE-0710` | Error | Explicit Sifr file target is outside the package source root. |
+| `SIFR-PACKAGE-0711` | Error | Production `sifr.toml` uses manifest binary target tables. |
+| `SIFR-PACKAGE-0713` | Error | Public API symbol is exported more than once. |
+| `SIFR-PACKAGE-0714` | Error | Package script expansion attempted to invoke another script. |
+
+</Accordion>
+
+<Accordion title="CODEGEN — Rust lowering and code generation">
+
+The `CODEGEN` family is reserved for diagnostics that arise during the Rust lowering and code-generation phase, after HIR construction. No codes are active yet; this family is reserved for future use.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| *(no active codes)* | — | This family has no active codes in the current release. |
+
+</Accordion>
+
+<Accordion title="BUILD — Build orchestration and artifacts">
+
+The `BUILD` family covers failures in Sifr's build pipeline: file materialization, temporary workspace creation, Cargo manifest generation, Rustc/Cargo execution, and missing artifacts.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-BUILD-0002` | Error | Build file materialization failed. |
+| `SIFR-BUILD-0003` | Error | Temporary build workspace creation failed. |
+| `SIFR-BUILD-0004` | Error | Cargo manifest generation failed. |
+| `SIFR-BUILD-0005` | Error | Rustc or Cargo execution failed. |
+| `SIFR-BUILD-0006` | Error | Expected build artifact was not produced. |
+| `SIFR-BUILD-0901` | Error | Standalone install receipt is missing or outside the self-update contract. |
+
+</Accordion>
+
+<Accordion title="INTERNAL — Compiler invariant and internal failures">
+
+The `INTERNAL` family covers compiler-internal failures that escape the panic boundary. If you see an `INTERNAL` diagnostic, it indicates a compiler bug rather than a problem with your source code.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-INTERNAL-0001` | Error | Unclassified compiler panic after a panic boundary. |
+| `SIFR-INTERNAL-0002` | Note | Structured recovery-cap omission summary. |
+
+<Warning>
+`SIFR-INTERNAL-0001` always indicates a compiler bug. If you encounter it, please file a report with the Sifr issue tracker and include a minimal reproduction of the failing source file.
+</Warning>
+
+</Accordion>

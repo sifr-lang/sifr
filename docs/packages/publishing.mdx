@@ -1,0 +1,158 @@
+---
+title: "How to Package, Publish, and Vendor Sifr Libraries"
+sidebarTitle: "Publishing"
+description: "Package, validate, and publish Sifr libraries with sifr package, sifr publish, and sifr vendor — including dry-run, include/exclude rules, and vendoring."
+---
+
+Publishing a Sifr package is a two-layer process: Sifr validates your Sifr-specific metadata and source files first, then delegates to Cargo for the actual archive assembly and registry upload. This means you get Cargo's full publishing infrastructure — credentials, registries, and lockfile semantics — with an additional preflight pass that catches Sifr-specific problems before anything reaches the registry.
+
+## Defining a public API
+
+Before publishing a library, declare its public API in `src/__init__.sifr`. Any top-level class, function, or type alias defined or re-exported there becomes part of your package's public surface. Implementation files like `src/client.sifr` are private across package boundaries unless you explicitly re-export their names.
+
+```python
+# src/__init__.sifr
+from .client import HttpClient
+from .errors import HttpError as Error
+```
+
+A public child namespace is a sub-directory that contains its own `__init__.sifr`. Files not reachable through a public `__init__.sifr` are private and cannot be imported by packages that depend on yours.
+
+## Controlling archive contents with include/exclude
+
+Cargo owns the archive rules. Add an `include` list to your `Cargo.toml` to specify exactly which files ship in the published archive. The standard Sifr include pattern covers the manifest, all Sifr source files, and the Rust marker:
+
+```toml
+[package]
+name = "sifr-demo-json"
+version = "0.2.0"
+edition = "2024"
+include = [
+  "Cargo.toml",
+  "sifr.toml",
+  "src/**/*.sifr",
+  "src/lib.rs"
+]
+
+# sifr-managed
+[package.metadata.sifr]
+manifest = "sifr.toml"
+# end sifr-managed
+```
+
+<Warning>
+Sifr's publish preflight rejects archives that omit `sifr.toml`, omit `.sifr` source files, or contain archive traversal paths. Make sure your `include` list covers `sifr.toml` and `src/**/*.sifr` before running `sifr publish`.
+</Warning>
+
+## Assembling an archive with `sifr package`
+
+`sifr package` runs Sifr's preflight validation and then delegates to Cargo to assemble the release archive. Run it from your package directory:
+
+```bash
+sifr package
+```
+
+If you have uncommitted changes that you want to include in the archive (for example, during testing), pass `--allow-dirty`:
+
+```bash
+sifr package --allow-dirty
+```
+
+Sifr preflight validation checks for:
+
+- A valid `sifr.toml` at the expected location
+- All `.sifr` source files present and within the source root
+- No Cargo include/exclude omissions for required files
+- No archive traversal paths
+- Valid exports with no dangling re-exports
+- No backend trust policy violations
+
+## Publishing with `sifr publish`
+
+Once your archive validates cleanly, publish to the registry:
+
+```bash
+sifr publish
+```
+
+### Dry run
+
+Always run a dry run first to catch any remaining issues without uploading anything:
+
+```bash
+sifr publish --dry-run --allow-dirty --no-verify
+```
+
+`--dry-run` tells Cargo not to upload the crate. `--no-verify` skips Cargo's local build verification step, which is useful when you have already verified with `sifr check`. The same Sifr preflight runs regardless of `--no-verify`.
+
+<Note>
+Publishing credentials belong entirely to Cargo. They must never appear in `sifr.toml`, Sifr-generated files, package metadata, or Sifr diagnostic output. Configure credentials with `cargo login` or your registry's preferred Cargo credential provider.
+</Note>
+
+<Steps>
+  <Step title="Validate your archive">
+    Run the package command to trigger Sifr preflight and assemble the archive:
+
+    ```bash
+    sifr package --allow-dirty
+    ```
+  </Step>
+  <Step title="Do a dry run">
+    Confirm the publish flow succeeds end-to-end without uploading:
+
+    ```bash
+    sifr publish --dry-run --allow-dirty --no-verify
+    ```
+  </Step>
+  <Step title="Publish">
+    Upload the package to the registry:
+
+    ```bash
+    sifr publish
+    ```
+  </Step>
+</Steps>
+
+## Vendoring dependencies with `sifr vendor`
+
+Vendoring downloads all dependencies into a local directory so your project can build without network access. This is useful for air-gapped environments, reproducible builds, and auditing your full dependency tree.
+
+```bash
+sifr vendor vendor --versioned-dirs
+```
+
+This places all dependencies under the `vendor/` directory, with each dependency in its own versioned sub-directory. After vendoring, all `sifr` commands can run with `--offline` against the vendored copies.
+
+<Tip>
+Commit the `vendor/` directory to your repository if you need fully reproducible builds in environments with no registry access. Combine with `--frozen` for the strictest reproducibility guarantee.
+</Tip>
+
+## Development workflow reference
+
+<CodeGroup>
+```bash Library package
+# From the sifr-demo-json directory
+
+# Assemble and inspect the archive
+sifr package --allow-dirty
+
+# Full dry-run publish
+sifr publish --dry-run --allow-dirty --no-verify
+
+# Vendor all runtime dependencies
+sifr vendor vendor --versioned-dirs
+```
+
+```bash App package
+# From the sifr-demo-app directory
+
+# Run with locked dependencies
+sifr run --locked
+
+# Check the full workspace before release
+sifr check --workspace --locked
+
+# Run offline after vendoring
+sifr run --locked --offline
+```
+</CodeGroup>

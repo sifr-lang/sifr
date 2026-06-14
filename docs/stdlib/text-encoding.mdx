@@ -1,0 +1,340 @@
+---
+title: "Text Processing, Unicode, and Encoding in the Sifr Stdlib"
+sidebarTitle: "Text & Encoding"
+description: "Convert bytes to text with sifr.encoding, normalize Unicode 17.0.0 data with sifr.unicode, and format locale-aware output with sifr.i18n and .mo bundles."
+---
+
+Sifr treats every boundary between bytes and text as an explicit, typed decision. There is no locale-derived default encoding, no implicit coercion from `bytes` to `str`, and no process-global locale mutation. You name the encoding, you get a typed error if the bytes don't conform, and you can choose an error-recovery handler if you need one. This design makes text bugs visible at compile time rather than hiding them as runtime surprises.
+
+## Encoding: `sifr.encoding`
+
+`sifr.encoding` is the byte/text conversion surface. Use it to encode a `str` to `bytes` or decode `bytes` to `str` with an explicitly named codec.
+
+### Codec Descriptors
+
+Build a codec descriptor by calling one of the constructor functions:
+
+```python
+from sifr.encoding import ascii, latin1, decode, encode
+
+data: bytes = encode("café", latin1())
+text: str = decode(b"caf\xe9", latin1())
+
+print(data)   # b'caf\xe9'
+print(text)   # café
+```
+
+Available Tier 0 descriptors (always supported):
+
+| Function | Encoding |
+|---|---|
+| `utf8()` | UTF-8 |
+| `utf8_sig()` | UTF-8 with BOM |
+| `ascii()` | 7-bit ASCII |
+| `latin1()` | Latin-1 / ISO-8859-1 |
+| `utf16_le()` | UTF-16 little-endian |
+| `utf16_be()` | UTF-16 big-endian |
+
+Tier 1 Windows-125x encodings (e.g., `windows1252()`) are available through `encoding_rs`. Tier 2 CJK and UTF-32 are deferred to a future release.
+
+### Error Handlers
+
+By default, `decode` raises `DecodeError` on an invalid byte sequence. Supply an error handler to recover instead:
+
+```python
+from sifr.encoding import decode, ascii, replace_decode_handler, DecodeError
+
+try:
+    # Replace invalid bytes with U+FFFD (replacement character)
+    recovered: str = decode(b"\xffA", ascii(), replace_decode_handler())
+    print(recovered)   # "\ufffdA"
+except DecodeError as e:
+    print(e.message)
+```
+
+Error handlers are typed values — you pass them explicitly. Dynamic handler registration by name (as in CPython's `codecs.register_error`) is unsupported.
+
+### Typed Errors
+
+`encode` raises `EncodeError` when a character cannot be represented in the target encoding. `decode` raises `DecodeError` on invalid byte sequences. Both expose a `.message` field:
+
+```python
+from sifr.encoding import encode, ascii, EncodeError
+
+try:
+    _: bytes = encode("café", ascii())   # é is not ASCII
+except EncodeError as e:
+    print(e.message)
+```
+
+## Text File I/O: `sifr.io`
+
+Pass a codec descriptor to `open_text` whenever you open a text file. The `encoding=` parameter is required — omitting it raises `SIFR-IO-0801`:
+
+```python
+from sifr.encoding import latin1
+from sifr.io import TextFileHandle, open_text
+from sifr.os import remove_file
+
+path: str = "/tmp/sifr_demo.txt"
+
+try:
+    writer: TextFileHandle = open_text(path, "w", encoding=latin1())
+    writer.write("café")
+    writer.close()
+
+    reader: TextFileHandle = open_text(path, "r", encoding=latin1())
+    text: str = reader.read()
+    reader.close()
+
+    remove_file(path)
+    print(text)   # café
+except IOError as e:
+    print(e.message)
+```
+
+See the [I/O & Files](./io-filesystem) page for full filesystem coverage.
+
+## Unicode: `sifr.unicode`
+
+`sifr.unicode` provides normalization, scalar properties, and text segmentation using Unicode 17.0.0 data tables compiled into the Sifr runtime.
+
+### Normalization
+
+`normalize` accepts a normalization form constant and a `str`, and returns the normalized form:
+
+```python
+from sifr.unicode import NFC, NFD, NFKC, NFKD, normalize
+
+composed: str = normalize(NFC, "e\u0301")   # é (single code point)
+decomposed: str = normalize(NFD, "é")       # e + combining acute
+```
+
+### Scalar Properties
+
+`name` returns the Unicode name of a scalar; `category` returns the two-letter general category:
+
+```python
+from sifr.unicode import name, category
+
+snowman: str = name("\u2603")   # SNOWMAN
+kind: str = category("A")       # Lu  (uppercase letter)
+```
+
+### Grapheme and Word Segmentation
+
+`graphemes` splits a string into user-perceived grapheme clusters. `words` splits into word tokens, filtering punctuation and whitespace:
+
+```python
+from sifr.unicode import graphemes, words
+
+clusters: list[str] = graphemes("a\u0301b")     # ["á", "b"]
+tokens: list[str] = words("Hi, κόσμε!")         # ["Hi", "κόσμε"]
+
+print(len(clusters))   # 2
+print(len(tokens))     # 2
+```
+
+<Note>
+Unicode 17.0.0 data covers normalization, names, scalar properties, numeric values, case folding, grapheme boundaries, and word boundaries. Sentence boundaries and streaming segmentation cursors are deferred to a future release.
+</Note>
+
+<Warning>
+`sifr.unicodedata` is not a production API in this release. Do not import it. Use `sifr.unicode` instead.
+</Warning>
+
+## Locale and I18n: `sifr.i18n`
+
+`sifr.i18n` provides locale-aware number formatting, plural rules, and translation bundles. All state is scoped to explicit objects — there is no global locale, no `locale.setlocale`, and no `gettext.install`.
+
+### Locale Identifiers
+
+Create a `LocaleId` from a BCP 47 tag:
+
+```python
+from sifr.i18n import LocaleId
+
+locale = LocaleId("en-US")
+fr_locale = LocaleId("fr")
+```
+
+`host_locale()` returns the host's current locale as a read-only `LocaleId`. It cannot be used to make implicit text encodings legal.
+
+### Number Formatting
+
+`NumberFormatter` formats a numeric string according to locale conventions:
+
+```python
+from sifr.i18n import LocaleId, NumberFormatter
+
+formatter: NumberFormatter = NumberFormatter(LocaleId("en-US"))
+
+try:
+    formatted: str = formatter.format("12345")
+    print(formatted)   # 12,345
+except Error as e:
+    print(e.message)
+```
+
+### Plural Rules
+
+`PluralRules` selects the grammatical plural category for a given quantity:
+
+```python
+from sifr.i18n import LocaleId, PluralRules, PLURAL_CARDINAL
+
+rules: PluralRules = PluralRules(LocaleId("en"), PLURAL_CARDINAL)
+
+try:
+    one_cat: str = rules.category("1")    # one
+    two_cat: str = rules.category("2")    # other
+    print(one_cat, two_cat)
+except Error as e:
+    print(e.message)
+```
+
+### Translation Bundles
+
+Load translation catalogs from `.mo` file bytes and compose them into a `Translator` with an explicit fallback chain:
+
+```python
+from sifr.i18n import Bundle, Translator, bundle_from_mo_bytes, translator
+
+try:
+    primary: Bundle = bundle_from_mo_bytes(primary_catalog_bytes)
+    fallback: Bundle = bundle_from_mo_bytes(fallback_catalog_bytes)
+
+    tx: Translator = translator(primary).with_fallback(fallback)
+
+    hello: str = tx.translate("hello")
+    files: str = tx.translate_plural("file", "files", 2)
+    backup: str = tx.translate("backup")   # falls through to fallback bundle
+
+    print(hello)    # bonjour
+    print(files)    # fichiers
+    print(backup)   # secours
+except Error as e:
+    print(e.message)
+```
+
+The `.mo` format is a compatibility backend behind the native `Bundle` / `Translator` API. Catalog parsing uses the encoding substrate for declared charsets and rejects unsupported plural expressions with `CatalogError`.
+
+<Tip>
+Build `Translator` chains in order of preference. `with_fallback` chains are evaluated left-to-right: the primary bundle is tried first, then each fallback in the order you added it.
+</Tip>
+
+## Full Text and I18n Demo
+
+The following is the complete text/i18n demo from the Sifr repository:
+
+```python
+from sifr.encoding import ascii, decode, encode, latin1, replace_decode_handler
+from sifr.encoding import DecodeError, EncodeError
+from sifr.i18n import (
+    Bundle,
+    LocaleId,
+    NumberFormatter,
+    Translator,
+    bundle_from_mo_bytes,
+    translator,
+)
+from sifr.io import TextFileHandle, open_text
+from sifr.os import remove_file
+from sifr.unicode import NFC, category, graphemes, normalize, words
+from sifr.unicode import UnicodeDataError
+
+
+def collect_demo_checks() -> list[bool]:
+    checks: list[bool] = []
+
+    # Non-UTF-8 byte/text boundaries are explicit.
+    try:
+        latin_bytes: bytes = encode("caf\u00e9", latin1())
+        checks.append(latin_bytes == b"caf\xe9")
+    except EncodeError as e:
+        _ = e.message
+        checks.append(False)
+
+    try:
+        latin_text: str = decode(b"caf\xe9", latin1())
+        checks.append(latin_text == "caf\u00e9")
+    except DecodeError as e:
+        _ = e.message
+        checks.append(False)
+
+    try:
+        recovered_text: str = decode(b"\xffA", ascii(), replace_decode_handler())
+        checks.append(recovered_text == "\ufffdA")
+    except DecodeError as e:
+        _ = e.message
+        checks.append(False)
+
+    # Text I/O uses the same explicit encoding substrate.
+    path: str = "/tmp/sifr_text_i18n_demo_latin1.txt"
+    try:
+        writer: TextFileHandle = open_text(path, "w", encoding=latin1())
+        _written: None = writer.write("caf\u00e9")
+        writer.close()
+        reader: TextFileHandle = open_text(path, "r", encoding=latin1())
+        text: str = reader.read()
+        reader.close()
+        _removed: None = remove_file(path)
+        checks.append(text == "caf\u00e9")
+    except IOError as e:
+        _ = e.message
+        checks.append(False)
+
+    # Unicode core and segmentation APIs use Unicode 17.0.0 data.
+    try:
+        composed: str = normalize(NFC, "e\u0301")
+        clusters: list[str] = graphemes("a\u0301b")
+        tokens: list[str] = words("Hi, \u03ba\u03cc\u03c3\u03bc\u03b5!")
+        letter_category: str = category("A")
+        checks.append(composed == "\u00e9")
+        checks.append(letter_category == "Lu")
+        checks.append(len(clusters) == 2)
+        checks.append(len(tokens) == 2)
+    except UnicodeDataError as e:
+        _ = e.message
+        checks.append(False)
+
+    # Locale-sensitive formatting is object-scoped.
+    try:
+        formatter: NumberFormatter = NumberFormatter(LocaleId("en-US"))
+        formatted: str = formatter.format("12345")
+        checks.append(len(formatted) > 0)
+    except Error as e:
+        _ = e.message
+        checks.append(False)
+
+    # Translation bundles use explicit fallbacks and plural lookup.
+    try:
+        primary: Bundle = bundle_from_mo_bytes(primary_catalog_bytes())
+        fallback: Bundle = bundle_from_mo_bytes(fallback_catalog_bytes())
+        tx: Translator = translator(primary).with_fallback(fallback)
+        hello: str = tx.translate("hello")
+        files: str = tx.translate_plural("file", "files", 2)
+        backup: str = tx.translate("backup")
+        checks.append(hello == "bonjour")
+        checks.append(files == "fichiers")
+        checks.append(backup == "secours")
+    except Error as e:
+        _ = e.message
+        checks.append(False)
+
+    return checks
+```
+
+## What Is Not in This Release
+
+The following CPython-shaped names are intentionally absent and raise diagnostics if imported:
+
+| Rejected import | Use instead |
+|---|---|
+| `codecs`, `sifr.codecs` | `sifr.encoding` |
+| `encodings`, `sifr.encodings` | `sifr.encoding` |
+| `unicodedata`, `sifr.unicodedata` | `sifr.unicode` |
+| `locale`, `sifr.locale` | `sifr.i18n` |
+| `gettext`, `sifr.gettext` | `sifr.i18n` |
+
+These adapters may be reviewed for future phases, but any future compatibility wrappers must wrap the native Sifr substrate without process-global mutation.

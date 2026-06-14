@@ -1,0 +1,162 @@
+---
+title: "sifr test: Discover and Run Tests in Sifr Projects"
+sidebarTitle: "Test"
+description: "Use sifr test to discover and run test functions in your project — including how to write tests, how discovery works, and how to read results."
+---
+
+`sifr test` discovers and runs test functions in your Sifr source files. You do not need a separate test framework or configuration file — annotate a function with `@test` and the test runner finds it automatically.
+
+## Running tests
+
+Point `sifr test` at a directory and it discovers every test file and test function inside it:
+
+```bash
+# Run all tests in the current directory
+sifr test
+
+# Run all tests in a specific directory
+sifr test src/
+
+# Run tests in a nested test directory
+sifr test tests/
+```
+
+The `dir` argument defaults to `.` (the current directory), so `sifr test` with no arguments runs everything from where you are.
+
+## Writing test functions
+
+Mark any top-level function with `@test` to include it in the test suite. A test passes when the function returns normally and fails when it raises an error.
+
+```python
+@test
+def test_addition():
+    assert 1 + 1 == 2
+
+@test
+def test_string_length():
+    name: str = "sifr"
+    assert len(name) == 4
+
+@test
+def test_option_handling():
+    values: dict[str, int] = {"a": 1}
+    result: int | None = values["missing"]
+    assert result is None
+```
+
+Use `raise` to signal a deliberate failure:
+
+```python
+@test
+def test_parse_error():
+    try:
+        result: int = parse_int("not-a-number")
+        raise AssertionError("expected a parse error")
+    except ValueError:
+        pass  # expected path
+```
+
+## Test discovery
+
+`sifr test` discovers tests by walking the target directory for `.sifr` files, then scanning each file for functions decorated with `@test`. Discovery rules:
+
+- All `.sifr` files in the directory and its subdirectories are scanned.
+- Only top-level functions decorated with `@test` are collected.
+- Import resolution uses the standard library and local modules in the target directory.
+
+<Note>
+Test discovery imports are resolved against the standard library and local modules in the target directory — the same resolution rules used by the compiler for that directory. Tests that import from sibling `.sifr` files in the same directory are supported.
+</Note>
+
+## Reading test output
+
+`sifr test` reports each test result as it runs and prints a summary at the end.
+
+```text
+running 3 tests
+test test_addition         ... ok
+test test_string_length    ... ok
+test test_option_handling  ... ok
+
+test result: ok. 3 passed; 0 failed
+```
+
+When a test fails, the runner prints the failure reason:
+
+```text
+running 2 tests
+test test_addition         ... ok
+test test_parse_error      ... FAILED
+
+failures:
+
+---- test_parse_error ----
+AssertionError: expected a parse error
+
+test result: FAILED. 1 passed; 1 failed
+```
+
+## Diagnostic output format
+
+`sifr test` respects the global `--diagnostic-format` flag for compiler diagnostics that occur during test discovery or compilation:
+
+```bash
+# Emit compact diagnostics if a test file fails to compile
+sifr --diagnostic-format compact test src/
+
+# Emit JSON diagnostics for CI tooling
+sifr --diagnostic-format json test src/
+```
+
+<Tip>
+If `sifr test` reports a compilation error rather than a test failure, use `sifr check` on the affected file to get full diagnostic detail with source snippets and help text.
+</Tip>
+
+## Organising tests
+
+You can place tests directly in your source files alongside the code they test, or keep them in a dedicated directory. Both layouts work with `sifr test`.
+
+<Tabs>
+  <Tab title="Inline tests">
+    Tests live in the same file as the code they cover.
+
+    ```
+    src/
+      math.sifr       ← production code + @test functions
+      strings.sifr    ← production code + @test functions
+    ```
+
+    ```bash
+    sifr test src/
+    ```
+  </Tab>
+  <Tab title="Dedicated test directory">
+    Tests live in a separate directory and import the modules they exercise.
+
+    ```
+    src/
+      math.sifr
+      strings.sifr
+    tests/
+      test_math.sifr
+      test_strings.sifr
+    ```
+
+    ```bash
+    sifr test tests/
+    ```
+
+    ```python
+    # tests/test_math.sifr
+    from math import add, multiply
+
+    @test
+    def test_add():
+        assert add(2, 3) == 5
+
+    @test
+    def test_multiply():
+        assert multiply(4, 5) == 20
+    ```
+  </Tab>
+</Tabs>

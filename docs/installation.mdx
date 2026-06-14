@@ -1,0 +1,165 @@
+---
+title: "Install the Sifr Compiler on macOS or Linux — Quick Start"
+sidebarTitle: "Installation"
+description: "Install the Sifr compiler on macOS or Linux using the official installer script, with options for channels, version pinning, and custom directories."
+---
+
+The official Sifr installer is a shell script that downloads a prebuilt binary for your platform, verifies its SHA-256 checksum, installs the `sifr` executable to `~/.sifr/bin/sifr`, and updates your shell profile so new shells can find it. No package manager or build toolchain is required to get started.
+
+## Supported platforms
+
+Sifr provides prebuilt preview binaries for the following targets:
+
+- `aarch64-apple-darwin` (Apple Silicon Mac)
+- `x86_64-apple-darwin` (Intel Mac)
+- `x86_64-unknown-linux-gnu` (Linux, x86-64)
+- `aarch64-unknown-linux-gnu` (Linux, ARM64)
+
+<Note>
+  Windows installer support is not yet available. If you are on Windows, you can build Sifr from source using the Rust toolchain.
+</Note>
+
+## Install Sifr
+
+<Steps>
+  <Step title="Run the installer">
+    Paste the command below into your terminal. The installer detects your platform automatically and fetches the correct binary.
+
+    <CodeGroup>
+      ```bash Beta (recommended)
+      curl -fsSL https://sifr.sh/install | sh
+      ```
+
+      ```bash Alpha
+      curl -fsSL https://sifr.sh/install/alpha | sh
+      ```
+    </CodeGroup>
+
+    The beta channel is the recommended starting point. Use the alpha channel if you want the absolute latest preview features and are comfortable with a less stable build.
+  </Step>
+  <Step title="Reload your shell">
+    The installer updates your shell profile (`~/.bashrc`, `~/.zshrc`, or equivalent), but the change only takes effect in new shell sessions. Reload your profile now so the current session can find `sifr`:
+
+    ```bash
+    source ~/.bashrc   # or ~/.zshrc, ~/.profile — whichever your shell uses
+    ```
+  </Step>
+  <Step title="Verify the installation">
+    Confirm that `sifr` is on your PATH and reports a version:
+
+    ```bash
+    sifr --version
+    ```
+
+    You should see a version string such as `0.1.0-beta.1`. If the command is not found, check that `~/.sifr/bin` is in your `PATH`.
+  </Step>
+</Steps>
+
+## Install options
+
+### Pin an exact version
+
+If you need a specific preview release — for reproducible CI environments or to test a particular build — pass `--version` to the installer:
+
+```bash
+curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.1
+```
+
+### Install to a custom directory
+
+Set `SIFR_INSTALL_DIR` to place the binary somewhere other than `~/.sifr/bin`:
+
+```bash
+curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+```
+
+### Disable PATH modification
+
+If you manage your PATH manually or are scripting the install in a CI pipeline, prevent the installer from touching your shell profile:
+
+<CodeGroup>
+  ```bash Environment variable
+  curl -fsSL https://sifr.sh/install | SIFR_NO_MODIFY_PATH=1 sh
+  ```
+
+  ```bash Flag
+  curl -fsSL https://sifr.sh/install | sh -s -- --no-modify-path
+  ```
+</CodeGroup>
+
+## Keeping Sifr up to date
+
+Sifr includes a built-in self-update command for installs created by the official installer script.
+
+```bash
+sifr self update
+```
+
+Before applying an update, use `--dry-run` to preview what the command would do without downloading anything:
+
+```bash
+sifr self update --dry-run
+```
+
+### Switching channels
+
+By default, `sifr self update` stays on the channel recorded in your install receipt (alpha or beta). Pass `--channel` to switch:
+
+```bash
+sifr self update --channel alpha
+sifr self update --channel beta
+```
+
+### Pinning a version on update
+
+You can update to a specific preview version rather than the latest on your channel:
+
+```bash
+sifr self update --version 0.1.0-beta.2
+```
+
+### Reinstalls, downgrades, and channel switches
+
+Same-version reinstalls, downgrades, and channel switches all require `--force`:
+
+```bash
+sifr self update --version 0.1.0-beta.2 --force
+sifr self update --channel alpha --force
+```
+
+Regular updates to a newer version within your current channel do not need `--force`.
+
+### Check your install details
+
+`sifr self version` reports the current executable path, install directory, channel, and receipt status:
+
+```bash
+sifr self version
+sifr self version --short   # prints only the version string
+```
+
+<Warning>
+  `sifr self update` works only for standalone installs created by the official `https://sifr.sh/install` script. If you installed Sifr via Cargo, Homebrew, or a system package manager, use that tool's update mechanism instead.
+</Warning>
+
+## Troubleshooting
+
+**Receipt missing or malformed.** If `sifr self update` reports that the install receipt is missing, predates the self-update contract, or is malformed, rerun the standalone installer to create a fresh receipt:
+
+```bash
+curl -fsSL https://sifr.sh/install | sh
+```
+
+For a custom install directory, rerun the installer with the same environment variable:
+
+```bash
+curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+```
+
+**Wrong binary found on PATH.** If the diagnostic says the receipt belongs to a different executable, your `PATH` is resolving a different `sifr` binary. Run `command -v sifr` to see which one your shell finds, then either fix your PATH or reinstall the standalone binary so the receipt and executable match.
+
+**Network failure mid-update.** If a metadata or installer download fails, retry after your network recovers. The existing binary is never replaced until the delegated installer validates and installs the target artifact, so a failed update leaves your working install intact.
+
+<Tip>
+  Stable channels and release-candidate channels are not yet available in the self-update command. During the current preview phase, only `alpha` and `beta` channels are accepted.
+</Tip>

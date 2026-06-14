@@ -1,0 +1,171 @@
+---
+title: "sifr build and sifr run: Compile and Execute Sifr Programs"
+sidebarTitle: "Build & Run"
+description: "Use sifr run to compile and execute in one step, or sifr build to produce a standalone native binary — with full flag reference and mode examples."
+---
+
+The two most common commands you'll reach for are `sifr run` and `sifr build`. Both compile your Sifr source to native code through the same pipeline — the difference is what happens after compilation. `sifr run` executes the result immediately; `sifr build` writes a binary to disk that you can distribute or invoke later.
+
+## `sifr run` — compile and execute
+
+`sifr run` compiles your program and runs the resulting binary in a single step. When the compiler has a cached binary from a previous run on the same source, it skips the build phase and jumps straight to execution.
+
+```bash
+sifr run hello.sifr
+```
+
+Pass arguments to your program after `--`:
+
+```bash
+sifr run hello.sifr -- Alice 42
+```
+
+### Flags
+
+| Flag | Description |
+|---|---|
+| `--bin <NAME>` | Select a layout-discovered app target by name. |
+| `--script <NAME>` | Select a named package script. |
+| `--package <NAME>` / `-p <NAME>` | Select a workspace package by Cargo package name. May be repeated. |
+| `--locked` | Require `Cargo.lock` to be unchanged before running. |
+| `--offline` | Disable network access during dependency resolution. |
+| `--frozen` | Combine `--locked` and `--offline`. |
+| `--quiet` | Suppress build phase progress output. Cache hits are always quiet. |
+
+### Examples
+
+```bash
+# Run a single file
+sifr run main.sifr
+
+# Run and pass arguments to the program
+sifr run main.sifr -- --port 8080
+
+# Run a named binary target in a package
+sifr run --bin server
+
+# Run while requiring the lockfile stays unchanged
+sifr run main.sifr --locked
+
+# Run without any network access
+sifr run main.sifr --offline
+```
+
+<Note>
+`sifr run` prints build progress to stderr only when the binary cache misses. A cache hit produces no build output — your program's stdout follows immediately. `--quiet` suppresses progress even on a cache miss.
+</Note>
+
+## `sifr build` — compile to a native binary
+
+`sifr build` compiles your program and writes a native binary to the output directory. Use this when you want a standalone artifact you can run later, ship in a container, or benchmark.
+
+```bash
+sifr build hello.sifr
+```
+
+Specify an output directory with `-o`:
+
+```bash
+sifr build hello.sifr -o dist/
+```
+
+### Flags
+
+| Flag | Description |
+|---|---|
+| `-o <DIR>` / `--output <DIR>` | Write the binary to this directory. Defaults to `.` (current directory). |
+| `--quiet` | Suppress build phase details. Only the final `Finished` and `Binary:` lines are printed. |
+
+### Build output
+
+A successful build in the default `human` diagnostic format writes a phase-aware summary to stderr:
+
+```text
+Compiling hello.sifr (single-file)
+  Parsing      0.8ms
+  Type-check   2.1ms
+  Codegen      4.3ms
+  Link         9.7ms
+Finished release build in 16.9ms
+Binary: ./hello
+```
+
+With `--quiet`, the summary is shortened to:
+
+```text
+Finished release build in 16.9ms
+Binary: ./hello
+```
+
+<Warning>
+Build progress and success banners appear only in the default `human` diagnostic format. When you use `--diagnostic-format json` or `--diagnostic-format compact`, no human-readable progress is emitted on stdout or stderr. Scripts should consume a machine-oriented format instead of parsing words like `Finished` or `Binary`.
+</Warning>
+
+### Examples
+
+```bash
+# Build to the current directory
+sifr build app.sifr
+
+# Build to a specific output directory
+sifr build app.sifr -o ./out
+
+# Build with minimal output
+sifr build app.sifr --quiet
+
+# Build and emit JSON diagnostics for a CI script
+sifr --diagnostic-format json build app.sifr
+```
+
+## Single-file mode vs project mode
+
+Both `sifr run` and `sifr build` resolve the compilation mode automatically from the input file. The mode determines how imports are resolved.
+
+**Single-file mode** is used when:
+- The input filename is anything other than `main.sifr`.
+- The file is `main.sifr` but has no resolvable local imports.
+
+**Project mode** is used when `main.sifr` contains at least one `from <module> import ...` statement where `<module>.sifr` exists in the same directory.
+
+<Tabs>
+  <Tab title="Single-file mode">
+    A standalone file with no local module dependencies. Compiles in isolation.
+
+    ```bash
+    sifr run greet.sifr          # single-file — filename is not main
+    sifr run main.sifr           # single-file — no local imports present
+    ```
+
+    ```python
+    # greet.sifr
+    def main():
+        print("Hello, world!")
+    ```
+  </Tab>
+  <Tab title="Project mode">
+    `main.sifr` imports a sibling module file — both files are compiled together.
+
+    ```bash
+    sifr run main.sifr           # project mode — helper.sifr exists
+    sifr build main.sifr -o out/ # project mode — same resolver applies
+    ```
+
+    ```
+    my_project/
+      main.sifr
+      helper.sifr       ← sibling module
+    ```
+
+    ```python
+    # main.sifr
+    from helper import greet
+
+    def main():
+        greet("world")
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+`sifr run` and `sifr build` use the same mode resolver for the same input path. You will never see a file run in project mode but build in single-file mode or vice versa.
+</Tip>

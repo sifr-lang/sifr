@@ -1,0 +1,210 @@
+---
+title: "Sifr Pattern Matching: match/case Expressions Explained"
+sidebarTitle: "Pattern Matching"
+description: "Use Sifr's match statement for exhaustive pattern matching on literals, unions, class fields, and tuples — all verified at compile time, no missed cases."
+---
+
+Sifr supports Python 3.10-style `match`/`case` structural pattern matching. The compiler verifies that your `match` statement is exhaustive — every possible value of the matched type must be covered by some `case` branch. If you forget a variant, the compiler tells you at build time, not at runtime.
+
+## Literal Patterns
+
+Match against specific integer or string literals. Use a wildcard `case _` to cover any value not handled by an earlier branch.
+
+```python
+def describe_number(x: int) -> str:
+    match x:
+        case 0:
+            return "zero"
+        case 1:
+            return "one"
+        case 2:
+            return "two"
+        case _:
+            return "many"
+
+def main():
+    print(describe_number(0))   # zero
+    print(describe_number(1))   # one
+    print(describe_number(42))  # many
+```
+
+<Note>
+The `case _` wildcard acts as the default branch. The compiler requires it when the matched type has values not covered by the explicit literal cases.
+</Note>
+
+## OR Patterns
+
+Use `|` inside a `case` to match multiple literals in a single branch.
+
+```python
+def classify_http(method: str) -> str:
+    match method:
+        case "GET" | "HEAD":
+            return "read"
+        case "POST" | "PUT" | "PATCH":
+            return "write"
+        case "DELETE":
+            return "delete"
+        case _:
+            return "other"
+
+def main():
+    print(classify_http("GET"))      # read
+    print(classify_http("POST"))     # write
+    print(classify_http("DELETE"))   # delete
+    print(classify_http("OPTIONS"))  # other
+```
+
+## Guard Conditions
+
+Add an `if` guard to a `case` to impose an additional condition on the matched value. Guards let you express range checks and predicates without nesting extra `if` statements inside the branch.
+
+```python
+def classify_score(score: int) -> str:
+    match score:
+        case n if n >= 90:
+            return "A"
+        case n if n >= 80:
+            return "B"
+        case n if n >= 70:
+            return "C"
+        case n if n >= 60:
+            return "D"
+        case _:
+            return "F"
+
+def main():
+    print(classify_score(95))  # A
+    print(classify_score(85))  # B
+    print(classify_score(55))  # F
+```
+
+## Matching Optional Types
+
+Match on `None` explicitly to distinguish between a present and an absent value in an `int | None` or similar union.
+
+```python
+def describe_optional(x: int | None) -> str:
+    match x:
+        case None:
+            return "nothing"
+        case _:
+            return "something"
+
+def main():
+    print(describe_optional(None))  # nothing
+    print(describe_optional(42))    # something
+```
+
+## Matching Union Types
+
+Match on `int()` or `str()` patterns to dispatch on which member of a union type is present.
+
+```python
+def describe_union(x: int | str) -> str:
+    match x:
+        case int():
+            return "integer"
+        case str():
+            return "string"
+
+def main():
+    a: int | str = 42
+    b: int | str = "hello"
+    print(describe_union(a))  # integer
+    print(describe_union(b))  # string
+```
+
+<Tip>
+The compiler checks that all members of the union are covered. If you add a new member to the union later and forget to update a `match`, the compiler will catch the gap immediately.
+</Tip>
+
+## Class Pattern Destructuring
+
+Match on a class and bind its fields to named variables in a single `case` clause. Use `_` for fields you do not need.
+
+```python
+class Point:
+    x: int
+    y: int
+
+def classify_point(p: Point) -> str:
+    match p:
+        case Point(x=0, y=0):
+            return "origin"
+        case Point(x=px, y=0):
+            return "on x-axis"
+        case Point(x=0, y=py):
+            return "on y-axis"
+        case Point(x=px, y=py):
+            return "general"
+
+def main():
+    print(classify_point(Point(0, 0)))  # origin
+    print(classify_point(Point(3, 0)))  # on x-axis
+    print(classify_point(Point(0, 4)))  # on y-axis
+    print(classify_point(Point(3, 4)))  # general
+```
+
+## Tuple Patterns
+
+Match on tuples by listing the expected element patterns in parentheses.
+
+```python
+def classify_pair(p: tuple[int, int]) -> str:
+    match p:
+        case (0, 0):
+            return "origin"
+        case (x, 0):
+            return "x-axis"
+        case (0, y):
+            return "y-axis"
+        case (x, y):
+            return "general"
+
+def main():
+    print(classify_pair((0, 0)))  # origin
+    print(classify_pair((3, 0)))  # x-axis
+    print(classify_pair((0, 4)))  # y-axis
+    print(classify_pair((3, 4)))  # general
+```
+
+## Nested Patterns with Guards
+
+Combine class destructuring with `if` guards to express precise conditions. The bound variables from the class pattern are available in the guard expression.
+
+```python
+def classify_quadrant(p: Point) -> str:
+    match p:
+        case Point(x=0, y=0):
+            return "origin"
+        case Point(x=px, y=py) if px > 0 and py > 0:
+            return "Q1"
+        case Point(x=px, y=py) if px < 0 and py > 0:
+            return "Q2"
+        case _:
+            return "other"
+
+def main():
+    print(classify_quadrant(Point(0, 0)))   # origin
+    print(classify_quadrant(Point(3, 4)))   # Q1
+    print(classify_quadrant(Point(-2, 5)))  # Q2
+    print(classify_quadrant(Point(-1, -1))) # other
+```
+
+<Warning>
+A `case` with a guard is not considered exhaustive by the compiler, because the guard might not hold. Always include a final `case _` or a guard-free catch-all when using guarded patterns.
+</Warning>
+
+## Pattern Reference
+
+| Pattern syntax | What it matches |
+|----------------|----------------|
+| `case 0:` | Exact integer or string literal |
+| `case "a" \| "b":` | Any of several literals |
+| `case n if n > 0:` | Value bound to `n` when guard is true |
+| `case None:` | The `None` variant of an optional |
+| `case int():` | Any value of type `int` |
+| `case Point(x=px, y=0):` | Class with field `y == 0`, field `x` bound to `px` |
+| `case (x, 0):` | Two-element tuple with second element `0` |
+| `case _:` | Wildcard — matches anything |

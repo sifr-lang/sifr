@@ -1,0 +1,133 @@
+---
+title: "Sifr Standard Library: Built-in Modules Overview Guide"
+sidebarTitle: "Overview"
+description: "A complete reference to the sifr.* standard library namespace: how to import modules, why bare CPython names are rejected, and what every module provides."
+---
+
+Sifr ships a comprehensive standard library under the `sifr.*` namespace. Every module is designed with Rust-backed safety guarantees — predictable ownership, explicit error types, and no hidden global mutation. Because Sifr compiles to Rust rather than running on the CPython interpreter, the standard library is its own surface; it is not a thin wrapper around CPython's built-in modules.
+
+## How to Import
+
+Use `from sifr.<module> import <symbol>` for every standard library import:
+
+```python
+from sifr.math import sqrt
+from sifr.json import loads, dumps
+from sifr.encoding import decode, encode
+from sifr.unicode import normalize
+from sifr.i18n import LocaleId
+from sifr.task import TaskGroup
+from sifr.net import connect_tcp
+```
+
+<Warning>
+**Bare CPython module names are not supported.** Importing `math`, `json`, `os`, `collections`, `codecs`, `unicodedata`, `locale`, or any other CPython stdlib name directly triggers error `SIFR-IMPORT-0008` and the compiler suggests the correct `sifr.*` replacement.
+
+```python
+# ❌ Rejected — raises SIFR-IMPORT-0008
+from math import sqrt
+import json
+
+# ✅ Correct
+from sifr.math import sqrt
+from sifr.json import loads
+```
+</Warning>
+
+<Note>
+`import sifr.math` (module-object form) is also unsupported in the current release. Always import the specific symbols you need using `from sifr.<module> import <symbol>`.
+</Note>
+
+If a real user-defined or third-party top-level module named `math`, `json`, or similar exists in your project, the normal top-level resolution imports it without a diagnostic. The `SIFR-IMPORT-0008` error only fires when no real top-level module matches the bare name.
+
+## Available Modules
+
+<Accordion title="Math, Data, and Serialization">
+
+| Module | Description |
+|---|---|
+| `sifr.math` | Mathematical functions: `sqrt`, `floor`, `ceil`, `log`, trigonometric helpers, and numeric constants. |
+| `sifr.json` | JSON serialization and deserialization. `loads` returns a typed `JsonValue`; `dumps` serializes Sifr values to JSON strings. Malformed input raises `JSONDecodeError`. |
+| `sifr.re` | Regular expression matching and substitution with Unicode-aware patterns. |
+| `sifr.datetime` | Date and time values, durations, timezone-aware timestamps, and formatting. |
+| `sifr.random` | Cryptographically seeded random number generation. |
+| `sifr.hashlib` | Hash functions: SHA-256, SHA-512, MD5 (legacy), BLAKE3, and HMAC construction. |
+| `sifr.uuid` | UUID generation (`uuid4`) and parsing for v4 and v5 identifiers. |
+
+</Accordion>
+
+<Accordion title="Collections">
+
+| Module | Description |
+|---|---|
+| `sifr.collections` | `Counter`, `deque`, `defaultdict`, and set helpers (`set_from_list`, `set_union`, `set_intersection`). Safe indexing returns `Option` instead of raising `KeyError` or `IndexError`. |
+
+</Accordion>
+
+<Accordion title="Filesystem and Environment">
+
+| Module | Description |
+|---|---|
+| `sifr.io` | `open_text` for text files with a required explicit encoding, and binary file I/O. Text-mode `open()` without `encoding=` is unsupported (`SIFR-IO-0801`). |
+| `sifr.pathlib` | `Path` construction, joining, extension manipulation, existence checks, and directory traversal. |
+| `sifr.os` | File and directory operations: `remove_file`, `rename`, `mkdir`, `listdir`, and stat helpers. |
+| `sifr.env` | Read and write process environment variables as explicit typed values. |
+| `sifr.sys` | Process arguments (`argv`), exit helpers, and platform query values. |
+
+</Accordion>
+
+<Accordion title="Text, Encoding, and Internationalization">
+
+| Module | Description |
+|---|---|
+| `sifr.encoding` | Byte/text boundary conversions: `encode`, `decode`, codec descriptors (`ascii()`, `latin1()`), error handlers, and typed `DecodeError` / `EncodeError`. |
+| `sifr.unicode` | Unicode 17.0.0 data: `normalize` (NFC/NFD/NFKC/NFKD), `name`, `category`, `graphemes`, `words`, and scalar properties. |
+| `sifr.i18n` | Locale-aware formatting: `LocaleId`, `NumberFormatter`, `PluralRules`, `bundle_from_mo_bytes`, and `translator` with explicit fallback chains. |
+
+</Accordion>
+
+<Accordion title="Concurrency and Parallelism">
+
+| Module | Description |
+|---|---|
+| `sifr.task` | Structured task management: `TaskGroup`, `TaskHandle[T, E]`, scoped `spawn`, `timeout`, `deadline`, `join`, `race`, and `select`. |
+| `sifr.sync` | Same-process synchronization: `Shared[T]`, `channel`, `bounded_channel`, `Lock`, `RwLock`, `Semaphore`, and `Notify`. |
+| `sifr.parallel` | CPU-parallel map over owned data: `map`, `try_map`, `Pool`, and `PoolConfig`. |
+| `sifr.runtime` | Structured runtime diagnostics: `DiagnosticEvent`, `DiagnosticLevel`, `emit_diagnostic`, and `DiagnosticError`. |
+| `sifr.resource` | Deterministic cleanup helpers: `nullcontext` and `NullContext[T]`. |
+| `sifr.ipc` | Typed IPC substrate for Sifr-native process workers: `SchemaId`, `FrameKind`, `BackpressurePolicy`, and `IpcError`. |
+
+</Accordion>
+
+<Accordion title="Networking">
+
+| Module | Description |
+|---|---|
+| `sifr.net` | Async TCP client and server primitives: `connect_tcp` and `listen_tcp`. |
+| `sifr.http` | HTTP protocol substrate: methods, status codes, `HeaderMap`, `RequestHead`, `ResponseHead`, `BodyStream`, and cookie parsing. |
+| `sifr.tls` | Rustls-backed TLS client configurations and encrypted streams over `sifr.net`. |
+| `sifr.url` | Typed URL parsing, query-string manipulation, and percent-encoding helpers. |
+
+</Accordion>
+
+<Accordion title="Process, Signal, and Time">
+
+| Module | Description |
+|---|---|
+| `sifr.process` | Subprocess management: `run`, `spawn`, `output`, `output_text`, shell helpers, and async variants. Handles are owned resources with typed `ProcessError`. |
+| `sifr.signal` | Structured shutdown signals: `ctrl_c`, `shutdown_stream`, `SIGINT`, `SIGTERM`, and `strsignal`. |
+| `sifr.time` | Monotonic and wall-clock time, sleep, and interval helpers. |
+| `sifr.logging` | Structured log emission with levels (`DEBUG`, `INFO`, `WARN`, `ERROR`) and typed diagnostic events. |
+
+</Accordion>
+
+## What Sifr Does Not Expose
+
+Several CPython-shaped names are intentionally absent because they rely on global mutable state or interpreter-specific behavior that conflicts with Sifr's safety model:
+
+- `asyncio` event-loop objects and loop-policy mutation
+- `threading.Lock`, `queue.Queue`, and `multiprocessing.*`
+- `codecs.register`, `locale.setlocale`, and `gettext.install`
+- `signal.signal` and `set_wakeup_fd` for arbitrary handler registration
+
+Each of these has a typed, ownership-safe equivalent in the `sifr.*` namespace. See the individual module pages for details.

@@ -1,0 +1,100 @@
+---
+title: "Introduction to Sifr: What It Is and Why It Exists"
+sidebarTitle: "Introduction"
+description: "Discover what makes Sifr different — Python syntax that compiles to Rust, with compile-time ownership, union types, and zero runtime crashes."
+---
+
+Sifr is a compiled language that looks like Python but compiles to Rust, producing native binaries that run at full hardware speed. The goal is simple: you should not have to choose between a syntax you find readable and a runtime you can trust. Write code that feels familiar, and let the compiler handle the hard parts — type safety, ownership, and error handling — before your program ever executes.
+
+## Why Sifr exists
+
+Most high-level languages trade safety for convenience. You get concise syntax, but you also get runtime exceptions, null pointer crashes, and garbage-collected pauses. Rust solves those problems but demands a steep learning curve: lifetime annotations, explicit borrows, and a type system that can feel hostile to newcomers.
+
+Sifr takes a different approach. It borrows Rust's safety model and maps it onto Python's syntax, so the concepts that protect your program — ownership, `Option`, `Result` — are expressed in terms you already recognize. The compiler does the translation; you write the logic.
+
+## Key value propositions
+
+**Write Python, run Rust.** Sifr files use `.sifr` extensions and Python syntax. `def`, `for`, `if`, `class`, f-strings — all the constructs you already know. The compiler emits Rust source and builds a native binary. No virtual machine, no interpreter, no garbage collector at runtime.
+
+**No runtime crashes.** Dictionary lookups and list indexing return `Option` rather than throwing exceptions. The compiler forces you to handle the `None` case before the program can run. A missing key can never crash a production binary.
+
+**No exceptions — real error handling.** `try`/`except` in Sifr is pattern matching on `Result`, not stack unwinding. Functions that can fail declare `Result[T, E]` in their return type, and the compiler issues an error if you forget to handle the failure branch.
+
+**Ownership without the pain.** Function arguments borrow by default — no `&` sigils required. You can use a value after passing it to a function without the compiler complaining, because Sifr infers the correct lifetime. You get Rust's memory safety guarantees without writing Rust's borrow syntax.
+
+**TypeScript-style types.** Union types, literal types, and automatic type narrowing are first-class citizens. `int | str`, `int | None`, `isinstance` narrowing — the type system works the way a Python developer would expect it to, while still being fully static.
+
+## A complete example
+
+The program below demonstrates union types, safe dictionary indexing, and type narrowing — three features that work together to eliminate an entire class of runtime bugs.
+
+```python
+def main():
+    users: dict[str, int] = {"alice": 30, "bob": 25}
+
+    age: int | None = users["charlie"]  # missing key returns None, not a crash
+    if age is not None:
+        print(f"age: {age}")
+    else:
+        print("user not found")
+
+    # union types narrow automatically
+    def show(val: int | str) -> str:
+        if isinstance(val, int):
+            return f"number: {val}"
+        else:
+            return f"text: {val}"
+
+    print(show(42))       # number: 42
+    print(show("hello"))  # text: hello
+```
+
+In a conventional Python program, `users["charlie"]` raises a `KeyError` at runtime. In Sifr, the return type is `int | None`, and the compiler refuses to let you treat `age` as a plain `int` until you have checked the `None` branch. The bug is caught before the binary is built.
+
+## Error handling with Result
+
+Sifr replaces exceptions with `Result` types. Functions that can fail declare their error type explicitly, and the compiler tracks whether every call site handles the failure.
+
+```python
+class ParseError(Error):
+    message: str
+
+def parse_age(input: str) -> Result[int, ParseError]:
+    if input == "":
+        raise ParseError("empty input")  # maps to Err(...)
+    return int(input)                     # auto-wrapped in Ok(...)
+
+def main():
+    try:
+        age: int = parse_age("25")  # auto-unwrapped by the compiler
+        print(f"age: {age}")
+    except ParseError as e:
+        print(e.message)
+    # compiler error if you forget to handle ParseError ^
+```
+
+The `raise` statement inside a `Result`-returning function produces an `Err` variant, not a stack unwind. The `try`/`except` block at the call site is pattern matching, not exception catching. If you remove the `except` branch, the compiler tells you — at compile time, not in production.
+
+## Ownership by default
+
+Sifr functions borrow their arguments automatically. You never need to think about moves unless you explicitly want them.
+
+```python
+def longest(items: list[str]) -> str:  # items is borrowed (&Vec), not moved
+    best: str = ""
+    for s in items:
+        if len(s) > len(best):
+            best = s.clone()
+    return best
+
+def main():
+    names: list[str] = ["alice", "bob", "charlie"]
+    print(longest(names))  # charlie
+    print(names)           # ["alice", "bob", "charlie"] - still yours
+```
+
+After `longest(names)` returns, `names` is still valid and usable. The compiler infers the borrow automatically. You get the memory safety of Rust without annotating a single lifetime.
+
+<Note>
+  Sifr is currently in preview. The alpha and beta channels are available for early adopters. See the [Installation](/installation) page to get started.
+</Note>

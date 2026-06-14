@@ -1,0 +1,172 @@
+---
+title: "Collections and Data Structures in the Sifr Stdlib"
+sidebarTitle: "Collections"
+description: "Use sifr.collections for Counter, deque, and set helpers. Safe indexing returns Option instead of crashing, with full iteration and comprehension support."
+---
+
+Sifr's `sifr.collections` module provides the familiar Python collection types you already know — `Counter`, `deque`, `defaultdict`, plus set construction and operation helpers — with one important safety improvement: indexing operations that could fail return `Option` instead of raising `KeyError` or `IndexError`. You get compile-time visibility into every case where a lookup might not find a value.
+
+## Importing
+
+```python
+from sifr.collections import Counter, from_list, deque, set_from_list, set_union, set_intersection, set_len
+```
+
+<Note>
+Do not use bare `import collections` — that triggers `SIFR-IMPORT-0008`. Always use `from sifr.collections import ...`.
+</Note>
+
+## Lists
+
+Standard `list[T]` is a first-class language type in Sifr. You do not need to import it. Lists are mutable, ordered, and support all comprehension forms:
+
+```python
+numbers: list[int] = [1, 2, 3, 4, 5]
+squares: list[int] = [x * x for x in numbers]
+evens: list[int] = [x for x in numbers if x % 2 == 0]
+```
+
+Appending to a list requires the `mut` qualifier on the binding that owns it:
+
+```python
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+```
+
+## Dicts and Tuples
+
+`dict[K, V]` and `tuple[T, ...]` are built-in types. Dict literals and comprehensions work exactly as in Python:
+
+```python
+scores: dict[str, int] = {"alice": 42, "bob": 17}
+doubled: dict[str, int] = {k: v * 2 for k, v in scores.items()}
+```
+
+Safe access via `.get(key)` returns `Option[V]` (either the value or `None`). Direct `scores["missing"]` is a compile-time checked operation that produces a typed error if the key might be absent.
+
+## Sets
+
+Sifr represents sets as deduplicated `list[T]` values constructed through the helper functions in `sifr.collections`. This keeps ownership unambiguous while providing the set operations you need:
+
+```python
+from sifr.collections import set_from_list, set_union, set_intersection, set_len
+
+left: list[int] = set_from_list([1, 2, 3])
+right: list[int] = set_from_list([3, 4, 5])
+
+union_set: list[int] = set_union(left, right)       # [1, 2, 3, 4, 5]
+inter_set: list[int] = set_intersection(left, right) # [3]
+
+print(set_len(union_set))        # 5
+print(set_len(inter_set))        # 1
+```
+
+## Counter
+
+`Counter[T]` counts occurrences of hashable values. Build one from a list with `from_list`, then query counts or pull the most-common elements:
+
+```python
+from sifr.collections import Counter, from_list
+
+counts: Counter[str] = from_list(["x", "y", "x", "z", "x", "y"])
+
+print(counts.get("x"))            # 3
+print(counts.most_common(2))      # [("x", 3), ("y", 2)]
+```
+
+`counts.get(key)` returns the integer count for that key (0 if unseen). `most_common(n)` returns the top-n `(value, count)` pairs in descending order, exactly as Python's `Counter.most_common` does.
+
+## deque
+
+`deque[T]` is a double-ended queue. Pass `maxlen` to create a bounded deque that automatically drops the oldest element when capacity is exceeded — useful for sliding windows and ring buffers:
+
+```python
+from sifr.collections import deque
+
+d: deque[int] = deque(maxlen=2)
+d.append(10)
+d.append(20)
+d.append(30)   # drops 10 because maxlen=2
+
+print(d.len())       # 2
+print(d.popleft())   # 20
+```
+
+<Tip>
+`pop()` on an empty deque returns `None` rather than raising `IndexError`. Check the return value before using it:
+
+```python
+value = d.pop()
+if value is not None:
+    print(value)
+```
+</Tip>
+
+## Full Demo
+
+The following is the complete collections demo from the Sifr repository, showing sets, `Counter`, and `deque` working together:
+
+```python
+from sifr.collections import Counter, from_list, deque, set_from_list, set_union, set_intersection, set_len
+
+def collect_set_and_counter_checks() -> list[bool]:
+    checks: list[bool] = []
+    left: list[int] = set_from_list([1, 2, 3])
+    right: list[int] = set_from_list([3, 4, 5])
+    checks.append(set_len(set_union(left, right)) == 5)
+    checks.append(set_len(set_intersection(left, right)) == 1)
+
+    counts: Counter[str] = from_list(["x", "y", "x", "z", "x", "y"])
+    checks.append(counts.get("x") == 3)
+    checks.append(str(counts.most_common(2)) == "[(\"x\", 3), (\"y\", 2)]")
+    return checks
+
+def collect_deque_checks() -> list[bool]:
+    checks: list[bool] = []
+    d: deque[int] = deque(maxlen=2)
+    d.append(10)
+    d.append(20)
+    d.append(30)
+    checks.append(d.len() == 2 and d.popleft() == 20)
+
+    _ = d.pop()
+    checks.append(d.pop() is None)
+    return checks
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    checks: list[bool] = []
+    append_all(checks, collect_set_and_counter_checks())
+    append_all(checks, collect_deque_checks())
+
+    all_passed: bool = True
+    for check in checks:
+        if not check:
+            all_passed = False
+    print("collections demo: " + ("pass" if all_passed else "FAIL"))
+```
+
+## JSON and Serialization
+
+For working with JSON data structures, use `sifr.json` alongside your collections:
+
+```python
+from sifr.json import JsonValue, loads, dumps
+
+try:
+    parsed_obj: JsonValue = loads("{\"name\":\"sifr\"}")
+    parsed_arr: JsonValue = loads("[1,2,3]")
+    roundtrip: JsonValue = loads(dumps(7))
+
+    print(str(parsed_obj))  # {"name":"sifr"}
+    print(str(parsed_arr))  # [1,2,3]
+    print(str(roundtrip))   # 7
+except JSONDecodeError as e:
+    print(e.message)
+```
+
+`loads` raises `JSONDecodeError` on malformed input. Use a `try/except` block whenever parsing untrusted data.

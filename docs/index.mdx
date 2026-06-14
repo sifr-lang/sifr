@@ -1,0 +1,73 @@
+---
+title: "Sifr: Python Syntax That Compiles to Fast Rust Binaries"
+sidebarTitle: "Home"
+description: "Welcome to Sifr — a compiled language with Python syntax that produces native Rust binaries with compile-time safety and zero runtime crashes."
+---
+
+Sifr is a compiled language that lets you write familiar Python-style code and get native Rust performance in return. If your Sifr program compiles, it works — the compiler enforces static typing, safe error handling, and ownership before a single line of your code ever runs.
+
+<CardGroup cols={2}>
+  <Card
+    title="Introduction"
+    icon="book-open"
+    href="/introduction"
+    description="Learn what Sifr is, why it exists, and the core ideas behind its design."
+  />
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+    description="Install Sifr on macOS or Linux in seconds using the official installer script."
+  />
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/quickstart"
+    description="Write, run, and build your first Sifr program with a real end-to-end example."
+  />
+  <Card
+    title="Type System"
+    icon="shield-check"
+    href="/language/type-system"
+    description="Explore union types, literal types, type narrowing, and compile-time safety guarantees."
+  />
+  <Card
+    title="CLI Overview"
+    icon="terminal"
+    href="/cli/overview"
+    description="Run, build, check, and emit Rust from the Sifr command-line interface."
+  />
+  <Card
+    title="Packages"
+    icon="package"
+    href="/packages/overview"
+    description="Discover how to manage dependencies and share reusable Sifr libraries."
+  />
+</CardGroup>
+
+## Get up and running in three steps
+
+<Steps>
+  <Step title="Install Sifr">
+    Run the official installer script to download a prebuilt binary for your platform, verify its checksum, and add `sifr` to your shell's PATH.
+
+    ```bash
+    curl -fsSL https://sifr.sh/install | sh
+    ```
+  </Step>
+  <Step title="Write your first .sifr file">
+    Create a file called `hello.sifr` and add a `main` function. Sifr uses Python syntax, so if you know Python, you already know the basics.
+
+    ```python hello.sifr
+    def main():
+        print("Hello from Sifr!")
+    ```
+  </Step>
+  <Step title="Run it">
+    Use `sifr run` to compile and execute your program in a single command. When you are ready to ship, `sifr build` produces a standalone native binary.
+
+    ```bash
+    sifr run hello.sifr
+    ```
+  </Step>
+</Steps>

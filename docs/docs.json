@@ -1,0 +1,95 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Sifr",
+  "theme": "luma",
+  "logo": {
+    "light": "https://media.brand.dev/f7898bc2-f94f-4c73-8568-bf4f71a30799.svg",
+    "dark": "https://media.brand.dev/f7898bc2-f94f-4c73-8568-bf4f71a30799.svg"
+  },
+  "favicon": "https://media.brand.dev/3d52b5d6-1f09-40e2-9343-251b3aaf9a9c.webp",
+  "colors": {
+    "primary": "#f08312",
+    "light": "#077490",
+    "dark": "#645444"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Space Grotesk"
+    },
+    "body": {
+      "family": "Plus Jakarta Sans"
+    }
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/sifr-lang/sifr"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Language",
+            "pages": [
+              "language/type-system",
+              "language/error-handling",
+              "language/ownership",
+              "language/classes",
+              "language/pattern-matching",
+              "language/concurrency"
+            ]
+          },
+          {
+            "group": "CLI",
+            "pages": [
+              "cli/overview",
+              "cli/build-run",
+              "cli/check-emit",
+              "cli/fmt-lint",
+              "cli/test",
+              "cli/lsp"
+            ]
+          },
+          {
+            "group": "Packages",
+            "pages": [
+              "packages/overview",
+              "packages/manifest",
+              "packages/dependencies",
+              "packages/publishing"
+            ]
+          },
+          {
+            "group": "Standard Library",
+            "pages": [
+              "stdlib/overview",
+              "stdlib/collections",
+              "stdlib/io-filesystem",
+              "stdlib/networking",
+              "stdlib/concurrency",
+              "stdlib/text-encoding"
+            ]
+          },
+          {
+            "group": "Diagnostics",
+            "pages": [
+              "diagnostics/overview",
+              "diagnostics/error-codes"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

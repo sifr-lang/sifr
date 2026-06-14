@@ -1,0 +1,138 @@
+---
+title: "Quickstart: Write, Run, and Build Your First Sifr Program"
+sidebarTitle: "Quickstart"
+description: "Build a complete Sifr program using union types and error handling, then run, type-check, and compile it to a native binary in minutes."
+---
+
+This guide walks you through writing a real Sifr program from scratch, running it with `sifr run`, type-checking it with `sifr check`, and compiling it to a standalone native binary with `sifr build`. The example uses union types and `Result`-based error handling — two of Sifr's most important features — so you leave with a clear picture of how the language works in practice.
+
+<Steps>
+  <Step title="Create your Sifr file">
+    Create a new file called `greet.sifr`. This program looks up a user's age from a dictionary (demonstrating safe indexing with `int | None`), parses a string into an integer (demonstrating `Result` and compile-enforced error handling), and narrows a union type with `isinstance`.
+
+    ```python greet.sifr
+    class ParseError(Error):
+        message: str
+
+    def parse_age(input: str) -> Result[int, ParseError]:
+        if input == "":
+            raise ParseError("empty input")  # maps to Err(...)
+        return int(input)                     # auto-wrapped in Ok(...)
+
+    def main():
+        # Safe dictionary indexing — missing keys return None, not a crash
+        users: dict[str, int] = {"alice": 30, "bob": 25}
+
+        age: int | None = users["charlie"]
+        if age is not None:
+            print(f"age: {age}")
+        else:
+            print("user not found")
+
+        # Result-based error handling — compiler enforces the except branch
+        try:
+            parsed: int = parse_age("25")
+            print(f"parsed age: {parsed}")
+        except ParseError as e:
+            print(e.message)
+
+        # Union types narrow automatically with isinstance
+        def show(val: int | str) -> str:
+            if isinstance(val, int):
+                return f"number: {val}"
+            else:
+                return f"text: {val}"
+
+        print(show(42))       # number: 42
+        print(show("hello"))  # text: hello
+    ```
+
+    A few things to notice before you run this:
+
+    - `users["charlie"]` returns `int | None`. The compiler prevents you from using `age` as a plain `int` until you check the `None` branch.
+    - `parse_age` declares `Result[int, ParseError]`. If you remove the `except ParseError` block in `main`, the compiler rejects the program.
+    - `isinstance(val, int)` narrows the type of `val` inside each branch automatically — no cast required.
+  </Step>
+  <Step title="Type-check without compiling">
+    Before running the program, use `sifr check` to catch any type errors. This is the fastest feedback loop during development because it skips code generation entirely.
+
+    ```bash
+    sifr check greet.sifr
+    ```
+
+    If everything is correct, the command exits silently with a zero status code. If you have a type error — for example, you forgot to handle the `ParseError` branch — `sifr check` tells you exactly which line and why.
+
+    <Tip>
+      Run `sifr check` in your editor's save hook or CI pipeline to catch mistakes before they become build failures.
+    </Tip>
+  </Step>
+  <Step title="Run the program">
+    Use `sifr run` to compile and execute `greet.sifr` in a single command. You do not need to manage intermediate build artifacts.
+
+    ```bash
+    sifr run greet.sifr
+    ```
+
+    Expected output:
+
+    ```
+    user not found
+    parsed age: 25
+    number: 42
+    text: hello
+    ```
+
+    `user not found` appears because `"charlie"` is not in the `users` dictionary and the missing-key path returns `None`. `parsed age: 25` confirms that `parse_age("25")` returned `Ok(25)` and the compiler unwrapped it automatically at the `try` site.
+  </Step>
+  <Step title="Build a native binary">
+    When you are ready to ship, use `sifr build` to compile `greet.sifr` into a standalone native binary. No runtime or interpreter is bundled — the output is a plain executable linked against the system.
+
+    ```bash
+    sifr build greet.sifr
+    ```
+
+    Run the resulting binary directly:
+
+    ```bash
+    ./greet
+    ```
+
+    The output is identical to `sifr run`, but the binary is self-contained and can be distributed to any compatible platform without installing Sifr.
+  </Step>
+  <Step title="Inspect the generated Rust">
+    Curious what Sifr emits under the hood? Use `sifr emit` to print the generated Rust source without producing a binary. This is useful for understanding the ownership model and verifying that the compiler is doing what you expect.
+
+    ```bash
+    sifr emit greet.sifr
+    ```
+
+    The output is valid Rust source that you can read, audit, or paste into the Rust playground for further experimentation.
+  </Step>
+</Steps>
+
+## What you just did
+
+You wrote a Sifr program that exercises three core language features:
+
+- **Safe indexing** — dictionary access returns `int | None`, eliminating key-not-found crashes at the type level.
+- **Result-based error handling** — `parse_age` returns `Result[int, ParseError]`, and the compiler enforces that every call site handles the error branch.
+- **Automatic type narrowing** — `isinstance` checks inside `if`/`else` narrow the union type in each branch without explicit casts.
+
+All three guarantees are enforced at compile time. If your program compiles, none of these categories of bug can occur at runtime.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Language: Type System"
+    icon="shield-check"
+    href="/language/type-system"
+    description="Go deeper on union types, literal types, and how type narrowing works across complex expressions."
+  />
+  <Card
+    title="CLI Overview"
+    icon="terminal"
+    href="/cli/overview"
+    description="See all available commands — run, build, check, emit, format, and self — with their flags and guarantees."
+  />
+</CardGroup>
