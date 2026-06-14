@@ -1910,7 +1910,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
-      "bless_reference": "wave-4-source-import-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_private_member",
       "normalizers": [
         "workspace-path",
@@ -1925,7 +1925,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
-      "bless_reference": "wave-4-source-import-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_ambiguous_module",
       "normalizers": [
         "workspace-path",
@@ -1940,7 +1940,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
-      "bless_reference": "wave-4-source-import-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_namespace_collision",
       "normalizers": [
         "workspace-path",
@@ -1955,7 +1955,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
-      "bless_reference": "wave-4-source-import-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_cycle",
       "normalizers": [
         "workspace-path",
