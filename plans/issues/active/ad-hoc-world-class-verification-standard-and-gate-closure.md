@@ -104,6 +104,46 @@ Authoritative profile assignment after this phase:
 | Runtime/platform | schema/contract checks | host-supported golden smoke | executable host/target evidence | executable host/target evidence |
 | Performance | budget smoke | representative budgets | trend artifacts and broader benchmarks | trend artifacts and release benchmarks |
 
+Verification target matrix:
+
+Targets are derived from inventories and shipped guarantees rather than arbitrary corpus sizes. If a target says "every," the owning wave must add the inventory file first, then make the verification runner fail when an inventory entry lacks the required evidence.
+
+| Surface | Source-of-truth inventory | Merge target | Nightly/release target | Minimum content rule |
+| --- | --- | --- | --- | --- |
+| Shipped guarantees | `verification/areas/coverage_matrix/shipped_guarantees.json` | every `stable` guarantee has a blocking suite row, owner, reproduction command, and regression path | every `experimental` guarantee has broad signal or explicit unsupported boundary | no `stable` guarantee without merge evidence |
+| Compiler surfaces | `verification/areas/coverage_matrix/compiler_surface_matrix.json` | every stable surface status is `blocking`; only time-boxed Wave 0 rows may be `expected-missing` before their `closes_in_wave` | broad rows cover non-merge stress, platform, fuzz, and ecosystem lanes | no orphan matrix row; no suite without matrix row |
+| First-party crates | `cargo metadata` package list plus profile v2 crate membership | every first-party compiler crate with tests runs in merge; `sifr_ir` has seed tests | all first-party crate tests run in nightly/release | zero-test crate fails unless future data-only `tests:none` is time-boxed; none remain at closeout |
+| CLI behavior and exit codes | `verification/areas/developer_tooling/data/cli_exit_code_contracts.json` plus `sifr` integration test inventory: `e2e`, `validation_contracts`, `build_output_contracts` | every documented CLI exit-code contract has a corresponding integration test | full CLI behavior matrix and broader exit-code scenarios | exit-code contract without integration test fails |
+| Cargo features and targets | `cargo metadata` targets/features | default features, shipped bins, and test-fixture targets have merge classification | `all-targets --all-features`, `no-default-features`, examples, doctests, and release target matrix are assigned or unsupported with reason | every target/feature has exactly one classification: `merge`, `nightly`, `release`, `internal`, `performance`, `test-fixture`, or `unsupported` |
+| E2E pass semantics | e2e pass fixture discovery and manifest reports | full pass corpus or deterministic full-corpus local shards | full pass corpus plus broad hardening around it | executed fixture count must equal discovered count, excluding only explicitly unsupported fixtures |
+| E2E fail semantics | e2e fail fixture discovery and inline expected-error markers | full fail corpus code, position, and contradiction checks | full fail corpus plus renderer and recovery stress | every fail fixture has canonical diagnostic code/position expectations |
+| Parser acceptance/rejection | stable syntax inventory in `core_language` or coverage-matrix data | one positive fixture per stable syntax construct and one negative fixture per stable syntax error family | full syntax matrix including edge cases and parser-fork boundary cases | parser acceptance/rejection cannot be satisfied by fuzzing |
+| Project/workspace behavior | `verification/areas/project_workspace/data/workspace_contracts.json` plus suite manifests: `frontend_mode_parity`, `phase23_graph_isolation`, `baselines`, `audit-fixtures` | every shipped workspace and graph-isolation contract has a blocking suite row | broader project graph, workspace, and multi-module scenarios | workspace contract without suite row fails |
+| Diagnostics catalog | `verification/areas/diagnostics/data/code_catalog.json` | every stable `SIFR-*` code has severity, owner, docs link, renderer support, and baseline coverage row | unstable/experimental codes have broad signal or explicit deferral | no diagnostic emitted by compiler without catalog entry |
+| Diagnostic renderers | `verification/areas/diagnostics/data/code_baseline_coverage.json` | at least one rendered baseline for every stable `SIFR-*` code | human, compact, and JSON baselines for every stable `SIFR-*` code | stale/unused baseline detection is blocking |
+| Diagnostic recovery | recovery-surface list in `verification/policy/suite_taxonomy.md` | one multi-error fixture per parser, HIR, name-resolution, and type-checker recovery surface | recovery stress cases with suggestions/related notes where applicable | a recovery surface with zero multi-error fixture fails |
+| Suggestions/autofix | diagnostic code catalog `machine_applicable` field | every machine-applicable suggestion has emit/apply/recompile validation | broad suggestion application corpus | non-machine-applicable suggestions are render-only and explicitly marked |
+| Codegen red blocker | `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json` and `plans/issues/active/codegen-test-triage.md` | every current failing `sifr_codegen` test has classification, owner, affected contract, and repair PR; then `cargo test -p sifr_codegen` becomes merge-blocking | no `red-blocker` remains | red suite is never modeled as missing coverage |
+| Generated Rust toolchain survival | generated-code fixture classes and generated-code-quality manifests | every repaired stable fixture class proves emit, normalize, `rustfmt --check`, `cargo check`, runtime execution where applicable, and panic/unwrap scan | clippy and broader generated-code corpus | allowlist entries require owner, reason, issue, expiry |
+| HIR/name/type/CFG snapshots | `verification/areas/core_language/data/lowering_layer_inventory.json` | representative blocking snapshot suite for each stable layer | full layer snapshot suite with stale/unused detection | each stable lowering/analysis contract has at least one snapshot or mapped equivalent |
+| Codegen snapshots | `verification/areas/generated_code_quality/data/codegen_construct_inventory.json` | blocking snapshots for stable emitted constructs and structured codegen inputs | full snapshot suite with normalizer inventory | substring-only tests must be replaced or justified by contract |
+| Crash/ICE contract | `regression` crash manifest and compiler-crash policy rows | invalid user programs produce diagnostics, not panics; known crashes are issue-linked sentinels | adversarial crash stress and fuzz-found crash promotion | sentinel fails if expected crash disappears |
+| CPython hand-seeded differential | `verification/policy/cpython_differential.md` supported/excluded tables | hand-authored deterministic smoke suite covering each supported construct category | same plus broader seed set | canonical JSON-like serializer only; no `repr`/exception-message comparison |
+| CPython generated differential | generator grammar, seed manifest, shrinker metadata | minimized generated seeds graduate to merge only after stability policy | generated corpus with per-program and suite timeouts | every generated failure is minimized before issue/regression promotion |
+| Fuzz/property | `verification/areas/fuzz_property` manifests and `verification/policy/fuzz_property.md` | deterministic smoke seeds for parser/check, HIR/type/ownership, codegen, diagnostics renderer, package/project manifest | sustained valid and invalid fuzz lanes with corpus minimization | invalid-program and valid-program fuzz targets are separate |
+| Sanitizers/concurrency | sanitizer/platform manifest | host-supported smoke or structured skip with reason | full ASan/LSan/TSan, Miri where feasible, and Loom/Shuttle-style concurrency where feasible | skipped lane must record reason and reproduction command |
+| LSP markers | documented LSP capability inventory from `crates/sifr_lsp` | marker coverage for each stable documented capability category | full marker corpus | no documented stable capability without marker evidence |
+| LSP transcripts | JSON-RPC transcript manifest | cancellation, out-of-order request, stale diagnostics after edit, project reload, and long-session smoke where supported | full transcript replay and memory/perf stress | marker tests do not satisfy protocol transcript coverage |
+| Ecosystem curated | `ecosystem_compatibility` pinned corpus manifest | curated blocking set with checksum/revision/license/owner/commands | curated plus broader pinned set | live network is not allowed in merge |
+| Algorithmic compatibility | `algorithmic_compatibility` taxonomy/corpus manifests | representative LeetCode/algorithm subset | full corpus and taxonomy delta reports | taxonomy row required for each included problem/category |
+| Package management | package-management integration manifest and offline registry fixture | offline registry smoke, lockfile determinism, and package graph behavior | full integration suite plus live-registry signal if desired | merge package tests never use live network |
+| Stdlib parity | stdlib namespace inventory and example/doctest inventory | supported-namespace smoke and every inventoried shipped example/doctest | module-owned parity suites for supported namespaces | zero-example inventory row required if no examples exist |
+| Runtime/platform | `verification/areas/runtime_platform/supported_platforms.json` | host-supported golden smoke for declared supported host | executable host/target evidence for supported matrix | platform docs without executable evidence do not satisfy support |
+| Distribution/release | `distribution_release` manifest and release evidence archive | representative install/distribution smoke | full release qualification with toolchains, OS, suite counts, report hashes | release evidence must include commit and profile plan |
+| Incremental and determinism equivalence | clean-vs-incremental contract list owned by Wave 8 plus `check_report_determinism.sh` and `check_sequential_parallel_equivalence.sh` outputs | every shipped cache/query/incremental behavior has an equivalence fixture; report and parallel determinism remain blocking | full edit-run scenario matrix and long-session repeated-build stress | incremental contract without equivalence fixture fails; nondeterministic output fails |
+| Performance trends | `verification/areas/performance/data/trend/` benchmark ids | representative budget checks | time/RSS/output-size/binary-size/LSP/package trend artifacts with environment metadata | benchmark id rename requires old-id mapping |
+| Local/CI parity | `verification/profiles/*.json` plus emitted local-vs-CI profile plan equivalence artifact | local merge plan is source of truth; CI may not omit local merge checks | CI may add broader checks but must report deltas | CI-only behavior is invalid |
+
 Resolved implementation decisions:
 
 - **Profile schema migration:** introduce `verification/schemas/profile.schema.json` schema version `2` for explicit crate membership, hermetic/network policy, profile-plan emission, reference host, and feature/target assignments. `legacy_facade` remains the migration surface inside v2 profiles; new v2 fields land alongside it and `legacy_facade` field removal is out of scope for this phase. Keep schema version `1` readable only for migration tests until Wave 1 closes; no profile may remain v1 at phase close.
@@ -264,6 +304,8 @@ Tasks:
 - Add schema version `2` support for profiles and area manifests before adding new profile/area fields. Migration rule: v1 profiles/areas remain readable for self-tests only; shipped stable surfaces must be v2 by Wave 10.
 - Add `verification/areas/coverage_matrix/manifest.json` and a runner-owned check, or an equivalent first-class verification area if the existing schema prefers a different name.
 - Add `verification/areas/coverage_matrix/shipped_guarantees.json`, the authoritative registry of shipped guarantees. Each row records `guarantee_id`, support status, public doc path, owner, merge surface, nightly/release surface, regression surface, and unsupported-behavior policy.
+- Add `verification/areas/developer_tooling/data/cli_exit_code_contracts.json` and populate it from current CLI integration-test expectations and documented CLI command semantics.
+- Add `verification/areas/project_workspace/data/workspace_contracts.json` and populate it from current `project_workspace` suite manifests and shipped workspace/graph-isolation guarantees.
 - Matrix checks validate shipped-guarantee schema: status is one of `stable`, `experimental`, `internal`, or `unsupported`; surfaces resolve to matrix-row ids; public docs resolve or are explicitly marked internal; and every stable guarantee has at least one matrix row.
 - Define `verification/areas/coverage_matrix/compiler_surface_matrix.json` with rows for every compiler surface listed in the world-class standard.
 - For each row, record:
@@ -478,7 +520,7 @@ Goal: lock user-visible diagnostics at compiler scale, not just diagnostic codes
 Tasks:
 
 - Inventory all active `SIFR-*` diagnostic codes with stable user-facing messages.
-- Add `verification/areas/diagnostics/data/code_catalog.json` with code, severity, stability, owner, docs link, renderer support, suggestion applicability, and machine-application applicability.
+- Add `verification/areas/diagnostics/data/code_catalog.json` with code, severity, stability, owner, docs link, renderer support, suggestion applicability, and `machine_applicable`.
 - Add `verification/areas/diagnostics/data/code_baseline_coverage.json` mapping each active diagnostic code to:
   - baseline fixture id
   - renderer formats covered
@@ -546,6 +588,10 @@ Wave 5 ships as numbered sub-PRs, not a single PR:
 
 Tasks:
 
+- Create per-layer snapshot inventory files before adding snapshots:
+  - `verification/areas/core_language/data/lowering_layer_inventory.json` for parsed-source, HIR, name-resolution, type/ownership, and CFG/flow contracts
+  - `verification/areas/generated_code_quality/data/codegen_construct_inventory.json` for codegen IR, structured inputs, and emitted-Rust stable constructs
+- Each inventory entry declares the stable contract id, owner, source fixture or construct, snapshot id, normalizers, profile assignment, and replacement/mapping if coverage exists elsewhere.
 - Add or formalize layer-specific snapshot suites for:
   - parsed-source shape at the Sifr-owned boundary: `sifr_syntax` / `sifr_frontend` above `sifr_python_parser` / `sifr_python_ast`
   - HIR lowering
@@ -776,6 +822,7 @@ Wave 9 ships as numbered sub-PRs, not a single PR:
 - 9.3 Package-manager integration suites
 - 9.4 Stdlib parity per-module suites
 - 9.5 Runtime/platform executable evidence
+- 9.6 Algorithmic compatibility profile ownership and broader corpus
 
 Tasks:
 
@@ -820,10 +867,16 @@ Tasks:
   - install/distribution smoke
 - Networking tests use loopback only in create-pr and merge.
 - Add structured skip reasons for host-specific checks.
+- Promote `algorithmic_compatibility` from manifest/taxonomy signal to profile-owned evidence:
+  - merge runs a representative algorithm/LeetCode subset with taxonomy rows for each included problem/category
+  - nightly/release run the full corpus and taxonomy delta reports
+  - each problem/category has owner, expected classification, command, timeout, and result artifact
+  - live network is not required for merge
 
 Exit criteria:
 
 - Tooling, ecosystem, package, stdlib, and platform surfaces are no longer represented only by smoke scripts or documentation.
+- Algorithmic compatibility has profile-owned commands and structured evidence.
 - Each surface has profile-owned commands and evidence.
 - Unsupported host/target combinations are explicit.
 
@@ -916,6 +969,7 @@ This phase is complete only when all of the following are true:
 - `sifr_ir` has meaningful seed tests.
 - First-party compiler crate test membership is explicit and profile-owned.
 - Stable shipped guarantees are recorded in `shipped_guarantees.json` with non-`unassigned` owners and support status.
+- The verification target matrix is reflected by machine-checked inventories: every matrix target phrased with "every" has an inventory-backed check that fails when an inventory entry lacks the required evidence.
 - The coverage matrix exists, is blocking, and has zero `expected-missing` rows.
 - No `red-blocker`, expired `tests:none`, ownerless quarantine, or undocumented quarantine row remains.
 - Create-pr and merge profiles are hermetic/offline, and live-network checks are nightly/release only.
@@ -940,6 +994,7 @@ This phase is complete only when all of the following are true:
 - Clean-vs-repeated or clean-vs-incremental equivalence is tested according to shipped compiler behavior.
 - LSP marker corpus covers core IDE behaviors beyond protocol smoke, and JSON-RPC transcript replay covers wire behavior.
 - Ecosystem, package, stdlib, and platform suites have profile-owned commands and structured evidence.
+- Algorithmic compatibility taxonomy and corpus have profile-owned commands and structured evidence.
 - Platform support is recorded in `supported_platforms.json` and executable evidence respects host skip policy.
 - Performance trend artifacts include time, memory/RSS, output size, and benchmark environment metadata in addition to threshold budgets.
 - Every gate-expanding wave records measured warm/cold merge wall time before and after the change.
@@ -983,3 +1038,5 @@ This phase is complete only when all of the following are true:
 - 2026-06-14: Claude Opus review pass 3 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-3.md`; verdict was "ready after minor edits"; final minor edits incorporated and no further review required.
 - 2026-06-14: Claude Opus review pass 4 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-4.md`; verdict was "ready after minor edits"; final decision-precision edits incorporated.
 - 2026-06-14: Claude Opus review pass 5 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-5.md`; verdict was "elegant / implementation-ready"; optional polish edits incorporated.
+- 2026-06-14: Claude Opus target-matrix review pass 1 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-target-matrix-review-pass-1.md`; required target rows and inventory paths incorporated.
+- 2026-06-14: Claude Opus target-matrix review pass 2 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-target-matrix-review-pass-2.md`; verdict was "elegant / implementation-ready"; optional inventory-path polish incorporated.
