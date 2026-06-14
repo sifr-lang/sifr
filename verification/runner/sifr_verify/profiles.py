@@ -161,10 +161,16 @@ def validate_crate_test_membership(profile: dict[str, Any]) -> None:
                 f"does not match command package {command_package}"
             )
         status = suite.get("status")
+        modes = suite.get("modes", [])
         if status == "red-blocker" and suite.get("executed_in_merge") is not False:
             raise ProfileError(f"profile {profile.get('name')} red-blocker {suite_id} must not execute in merge")
         if status == "red-blocker" and not suite.get("must_be_executed_by"):
             raise ProfileError(f"profile {profile.get('name')} red-blocker {suite_id} has no execution deadline")
+        if "full" in modes and suite.get("executed_in_merge") is False and status != "red-blocker":
+            raise ProfileError(
+                f"profile {profile.get('name')} full-mode crate test {suite_id} "
+                "must execute in merge unless it is a red-blocker"
+            )
 
 
 def workspace_package_names() -> set[str]:

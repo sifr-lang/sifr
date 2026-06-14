@@ -360,11 +360,13 @@ def validate_cargo_metadata_classification(errors: list[str]) -> None:
 
     merge_profile = load_json_object(PROFILES_DIR / "merge.json", errors)
     merge_membership = merge_profile.get("crate_test_membership", {}).get("suites", [])
-    merge_packages = {
-        suite.get("package"): suite
-        for suite in merge_membership
-        if isinstance(suite, dict) and "full" in suite.get("modes", [])
-    }
+    merge_packages: dict[str, list[dict[str, Any]]] = {}
+    for suite in merge_membership:
+        if not isinstance(suite, dict) or "full" not in suite.get("modes", []):
+            continue
+        package = suite.get("package")
+        if isinstance(package, str):
+            merge_packages.setdefault(package, []).append(suite)
 
     for package_name, package in sorted(metadata_packages.items()):
         row = classified.get(package_name)
@@ -376,13 +378,22 @@ def validate_cargo_metadata_classification(errors: list[str]) -> None:
         validate_targets(package_name, package, row, errors)
         validate_features(package_name, package, row, errors)
         if classification_value == "first_party_compiler":
-            membership = merge_packages.get(package_name)
-            if membership is None:
+            memberships = merge_packages.get(package_name, [])
+            if not memberships:
                 errors.append(f"{package_name}: first-party compiler crate missing merge crate-test membership")
-            elif membership.get("status") == "red-blocker":
-                if membership.get("executed_in_merge") is not False or not membership.get("must_be_executed_by"):
-                    errors.append(f"{package_name}: red-blocker crate membership lacks execution deadline")
-            elif membership.get("executed_in_merge") is not True:
+                continue
+            executed = False
+            red_blocker = False
+            for membership in memberships:
+                if membership.get("status") == "red-blocker":
+                    red_blocker = True
+                    if membership.get("executed_in_merge") is not False or not membership.get("must_be_executed_by"):
+                        errors.append(f"{package_name}: red-blocker crate membership lacks execution deadline")
+                elif membership.get("executed_in_merge") is True:
+                    executed = True
+                else:
+                    errors.append(f"{package_name}: merge crate-test membership is not executed")
+            if not executed and not red_blocker:
                 errors.append(f"{package_name}: merge crate-test membership is not executed")
 
 

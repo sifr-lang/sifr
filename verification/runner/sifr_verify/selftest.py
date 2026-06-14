@@ -163,6 +163,29 @@ def _crate_membership_self_test() -> None:
     else:
         raise AssertionError("unknown crate membership package was accepted")
 
+    non_executed_full_profile = {
+        "name": "self-test",
+        "crate_test_membership": {
+            "suites": [
+                {
+                    "id": "not_executed",
+                    "package": "sifr_ir",
+                    "command": ["test", "-p", "sifr_ir"],
+                    "modes": ["full"],
+                    "status": "blocking",
+                    "executed_in_merge": False,
+                },
+            ],
+        },
+    }
+    try:
+        validate_crate_test_membership(non_executed_full_profile)
+    except ProfileError as exc:
+        if "must execute in merge unless it is a red-blocker" not in str(exc):
+            raise
+    else:
+        raise AssertionError("non-executed full-mode blocking suite was accepted")
+
     unknown_suite_profile = {
         "name": "self-test",
         "selected_areas": [{"area": "core_language", "suites": ["not_a_suite"]}],

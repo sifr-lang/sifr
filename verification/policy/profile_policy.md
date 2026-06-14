@@ -44,6 +44,8 @@ Cargo workspace packages, targets, and features are inventoried from
 Every first-party compiler crate must have full-mode merge membership. A
 temporary `red-blocker` entry is allowed only with `executed_in_merge=false`,
 an owner, a tracked deadline, and a phase wave that closes it.
+Targets and features use `merge-red-blocker` only for a suite that is planned
+for merge membership but intentionally not executed until its red-blocker closes.
 
 ## Create-PR Profile
 
