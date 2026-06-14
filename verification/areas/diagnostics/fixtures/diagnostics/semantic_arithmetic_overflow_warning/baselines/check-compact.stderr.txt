@@ -1,0 +1,2 @@
+0 errors, 1 warning, 0 notes
+W SIFR-TYPE-0901 verification/areas/diagnostics/fixtures/diagnostics/semantic_arithmetic_overflow_warning/main.sifr:2:12 integer multiplication may overflow at runtime

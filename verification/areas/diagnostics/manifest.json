@@ -938,6 +938,51 @@
           ]
         },
         {
+          "id": "semantic_arithmetic_overflow_warning",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_arithmetic_overflow_warning/main.sifr",
+          "command": "check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "semantic_bigint_transition_alias",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_bigint_transition_alias/main.sifr",
+          "command": "check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "semantic_result_invalid_except_type",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_result_invalid_except_type/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "semantic_reveal_type_note",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_reveal_type_note/main.sifr",
+          "command": "check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "semantic_unreachable_statement",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_unreachable_statement/main.sifr",
+          "command": "check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "source_import_ambiguous_module",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_ambiguous_module/main.sifr",
           "command": "check",

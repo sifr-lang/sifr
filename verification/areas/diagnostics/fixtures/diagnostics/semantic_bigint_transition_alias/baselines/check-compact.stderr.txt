@@ -1,0 +1,2 @@
+0 errors, 1 warning, 0 notes
+W SIFR-INT-0011 verification/areas/diagnostics/fixtures/diagnostics/semantic_bigint_transition_alias/main.sifr:2:12 bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values

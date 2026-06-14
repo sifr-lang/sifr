@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-RESULT-0006 verification/areas/diagnostics/fixtures/diagnostics/semantic_result_invalid_except_type/main.sifr:4:12 invalid except error type: except type must be a simple error class name
