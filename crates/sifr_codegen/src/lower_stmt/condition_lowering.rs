@@ -15,10 +15,10 @@ pub(super) fn try_lower_simple_if_stmt(
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
     let option_binding_pattern = |name: &str| {
-        if bindings.borrowed_params.contains(name) {
-            format!("Some({name})")
-        } else {
+        if bindings.mutated_vars.contains(name) {
             format!("Some(mut {name})")
+        } else {
+            format!("Some({name})")
         }
     };
     if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body)
@@ -108,10 +108,10 @@ pub(super) fn try_lower_simple_if_clause(
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<RustStmt> {
     let option_binding_pattern = |name: &str| {
-        if bindings.borrowed_params.contains(name) {
-            format!("Some({name})")
-        } else {
+        if bindings.mutated_vars.contains(name) {
             format!("Some(mut {name})")
+        } else {
+            format!("Some({name})")
         }
     };
     let lowered_then_body = try_lower_simple_stmt_block(

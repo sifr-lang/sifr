@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, and Wave 2.2 merged; Wave 2.3 codegen obsolete architecture guard retargeting in progress
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, and Wave 2.3 merged; Wave 2.4 structured lowering compiler-bug repairs locally validated and under review
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -365,7 +365,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 2.3 Implementation Notes
 
-- Status: implemented locally; review and PR pending.
+- Status: merged in PR `https://github.com/sifr-lang/sifr/pull/2564`.
 - Scope: close all 6 obsolete architecture guard rows assigned to `proposed_pr_slice: 2.3` in the `sifr_codegen` red-blocker inventory.
 - Changes: retargeted stale source-text guards from retired wrapper/helper locations to the current owner modules after decomposition: registry strict/recursive/result helpers, entrypoint body-item assembly, module body/constants emission, generator-init statement output, and structured statement orchestration in `lib_emitter_state.rs`.
 - Validation:
@@ -380,6 +380,26 @@ Implementation re-check started 2026-06-14.
 - Artifacts:
   - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: `red_blocker.failure_count` updated to 10, `test_result` updated to 697/10/707, and all 6 Wave 2.3 rows marked `closed`.
   - `plans/issues/active/codegen-test-triage.md`: current Wave 2.3 state and remaining open-row count documented.
+
+### Wave 2.4 Implementation Notes
+
+- Status: locally validated and approved by second review; PR pending.
+- Scope: close all 6 structured lowering compiler-bug rows assigned to `proposed_pr_slice: 2.4` in the `sifr_codegen` red-blocker inventory.
+- Changes: restored simple lowering for non-`self` field assignments when field/value types already match, kept `self` field assignments and mismatched typed field assignments on the structured path for class/recursive storage adaptations, and made option unwrapping patterns mutation-aware in both simple lowering and the structured emitter path. Updated the related break-guard regression to assert the non-`mut` option pattern when the unwrapped value is not mutated.
+- Validation:
+  - Six previously failing Wave 2.4 exact tests: pass.
+  - `cargo test -p sifr_codegen lib_codegen_tests::performance_codegen_tests::break_guard_unwraps_optional_tuple_before_indexing -- --exact --nocapture`: pass after assertion update for the mutation-aware option pattern.
+  - `cargo test -p sifr_codegen -- --nocapture`: expected failure; improved from 697 passed / 10 failed / 707 total to 704 passed / 4 failed / 708 total, closing exactly the 6 Wave 2.4 rows while leaving Wave 2.5 red and adding one field-assignment guard regression.
+  - `cargo fmt --check`: pass after formatting.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area core_language`: pass after both the initial and post-review `create-pr` attempts hit the same two transient 10s audit-fixture timeouts.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass after the post-review focused core-language rerun; wall time 198.88s with the existing warm-budget advisory and 100% e2e cache hit rate.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-4-review-pass-1.md`: approved with nits and no blocking issues; the non-self field assignment type-adaptation nit was addressed by guarding the simple path on matching resolved field/value types and adding a mismatched type regression.
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-4-review-pass-2.md`: approved with no blocking issues; reviewer confirmed Wave 2.4 is ready for PR/merge.
+- Artifacts:
+  - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: `red_blocker.failure_count` updated to 4, `test_result` updated to 704/4/708, and all 6 Wave 2.4 rows marked `closed`.
+  - `plans/issues/active/codegen-test-triage.md`: current Wave 2.4 state and remaining open-row count documented.
 
 ## Full Discovery Snapshot
 
