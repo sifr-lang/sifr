@@ -20,6 +20,8 @@ Only explicit `--bless` updates checked-in baseline files.
 - Exit-code behavior
 - Selected multi-file project behavior
 - Machine-readable suite result summaries
+- `sifr_codegen` insta snapshots and generated-Rust assertion baselines owned by
+  `crates/sifr_codegen/src/**`
 
 ## Normalization Rules
 
@@ -46,6 +48,8 @@ Baseline comparison and bless write-path use canonical normalization:
 - Baseline diffs are first-class review artifacts.
 - Incidental baseline updates are not allowed.
 - Any baseline change must be justified by an intentional contract change.
+- `sifr_codegen` snapshot blesses must be reviewed with the corresponding generated-Rust
+  contract change, and `cargo test -p sifr_codegen` must pass before the bless is accepted.
 
 ## Suggestion/Autofix Boundary (Phase 29)
 

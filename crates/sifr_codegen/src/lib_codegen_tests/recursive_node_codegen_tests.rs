@@ -107,6 +107,46 @@ def walk(own root: TreeNode | None) -> list[int]:
 }
 
 #[test]
+fn test_recursive_option_let_else_binding_is_mutable_for_child_moves() {
+    let rust_code = generate_rust_from_source(
+        r#"class Expr:
+    value: int
+    term: Term | None
+
+    def __init__(self, value: int, term: Term | None):
+        self.value = value
+        self.term = term
+
+class Term:
+    factor: int
+    expr: Expr | None
+
+    def __init__(self, factor: int, expr: Expr | None):
+        self.factor = factor
+        self.expr = expr
+
+def measure(expr: Expr | None) -> int:
+    if not expr:
+        return 0
+    term: Term | None = expr.term
+    if not term:
+        return expr.value
+    parent: Expr | None = term.expr
+    return expr.value + term.factor + measure(parent)
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let Some(mut term) = term else"),
+        "recursive option narrowing must bind mutable locals when later field reads use .take():\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("term.expr.take().map(|__sifr_boxed_recursive_value|"),
+        "owned recursive option field reads should still move boxed children:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_borrowed_optional_wrapper_clones_recursive_node() {
     let rust_code = generate_rust_from_source(
         r#"class TreeNode:

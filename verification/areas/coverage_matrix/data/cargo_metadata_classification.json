@@ -22,7 +22,7 @@
     {
       "name": "sifr_codegen",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge-red-blocker"}],
+      "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {

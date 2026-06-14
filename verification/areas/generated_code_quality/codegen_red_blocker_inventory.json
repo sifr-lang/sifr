@@ -2,11 +2,12 @@
   "schema_version": 1,
   "generated_from": "cargo test -p sifr_codegen -- --nocapture",
   "captured_on": "2026-06-14",
+  "updated_on": "2026-06-14 (post-Wave-2.final)",
   "test_result": {
-    "passed": 708,
+    "passed": 709,
     "failed": 0,
     "ignored": 0,
-    "total": 708
+    "total": 709
   },
   "red_blocker": {
     "profile_suite_id": "sifr_codegen",

@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, and Wave 2.4 merged; Wave 2.5 final codegen red rows locally green
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, and Wave 2.5 merged; Wave 2.final codegen merge-gate promotion locally validated
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -403,7 +403,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 2.5 Implementation Notes
 
-- Status: implemented locally; review and PR pending.
+- Status: merged in PR https://github.com/sifr-lang/sifr/pull/2566.
 - Scope: close the final 4 Wave 2 codegen red-blocker rows assigned to `proposed_pr_slice: 2.5`.
 - Changes: reinspection showed the generated Rust already preserved the intended async cleanup, generator else-branch, self-field clone suppression, and string-index guard behavior. Refreshed the four stale assertions to current generated-Rust spelling and tail-expression/char-cache output contracts; the string-index assertion now validates the current `Vec<char>` cache plus let-else guard shape rather than the older direct `chars().nth(...)` spelling.
 - Validation:
@@ -418,6 +418,16 @@ Implementation re-check started 2026-06-14.
 - Review:
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-5-review-pass-1.md`: approved with nits and no blocking issues; the string-index assertion/doc honesty nits were addressed.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-5-review-pass-2.md`: approved with no blocking issues; reviewer confirmed Wave 2.5 is ready to merge and Wave 2.final promotion is unblocked.
+
+### Wave 2.final Implementation Notes
+
+- Status: implemented and locally validated; review and PR pending.
+- Scope: promote `sifr_codegen` from planned red-blocker membership to executed merge membership after the suite reached 708 passed / 0 failed / 708 total in Wave 2.5.
+- Changes: profile membership for `create-pr`, `merge`, `nightly`, and `release` now marks `sifr_codegen` as `blocking` with `executed_in_merge: true`; the verification runner self-test now requires codegen to be blocking/executed across all four profiles; cargo metadata target classification now assigns `sifr_codegen` to `merge`; the coverage matrix no longer carries a `red-blocker` row for the generated-Rust contract; baseline governance now records `sifr_codegen` snapshot bless requirements.
+- Post-promotion repair: the first full merge run after profile promotion executed `sifr_codegen` but then exposed a real e2e regression in `recursive_mutual_classes_runtime.sifr`; structured option let-else bindings for recursive class values now emit `Some(mut value)` when later child moves require `.take()`, covered by a new codegen regression. The same validation pass also exposed a parallel IPC fixture startup race in `sifr_stdlib`; worker startup is now serialized only through the cargo-run/bootstrap handoff.
+- Baseline comparison: Wave 1 full merge baseline was 986.72s with cold e2e cache while `sifr_codegen` was logged as a planned Wave 2.final red-blocker. The first post-promotion merge run reached 848.99s and failed e2e because it caught the recursive option mutability bug. The final post-review full merge run passed in 726.99s with `sifr_codegen` executed as blocking, 51/51 e2e cache hits, and only the existing group-skew advisory.
+- Validation: `cargo test -p sifr_codegen` passed with 709 passed / 0 failed / 709 total; `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/recursive_mutual_classes_runtime.sifr` passed; `scripts/run_all_tests.sh --profile merge --emit-plan` passed and showed `sifr_codegen` as blocking/executed; `scripts/run_all_tests.sh --profile merge` passed in 726.99s; `scripts/run_all_tests.sh --profile create-pr` passed in 189.46s with a non-blocking warm wall-time advisory and 44/44 e2e cache hits; `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` passed; `cargo clippy --workspace -- -D warnings` passed; `python3 scripts/check_hir_maintainability_guardrails.py` passed.
+- Review: `plans/reviews/active/ad-hoc-world-class-verification-wave-2-final-review-pass-1.md` found one blocker: stale cargo metadata still labeled `sifr_codegen` as `merge-red-blocker`. The blocker was fixed by assigning the target to `merge`; non-blocking follow-ups accepted in this PR broadened the selftest across all profiles, renamed the generated-Rust matrix row and shipped-guarantee reference to `codegen_merge_blocking`, added an inventory post-Wave-2.final timestamp, and made the IPC startup lock poison-tolerant.
 
 ## Full Discovery Snapshot
 
@@ -463,7 +473,7 @@ Cargo workspace packages and notable targets/features currently observed:
 | --- | --- | --- |
 | `sifr` | bin plus integration tests `e2e`, `validation_contracts`, `build_output_contracts` | keep existing CLI tests; profile membership becomes explicit |
 | `sifr_analysis` | lib | already in current hard-coded crate path; keep explicit |
-| `sifr_codegen` | lib; currently red by review/re-check | `red-blocker` until Wave 2.final |
+| `sifr_codegen` | lib; 709 passed / 0 failed after Wave 2.final regression coverage | merge-blocking as of Wave 2.final |
 | `sifr_diagnostics` | lib plus bins `gen-diagnostic-schema`, `gen-error-docs` | bins are internal release-engineering tools; Wave 1 assigns internal tool smoke or explicit internal-no-run classification |
 | `sifr_driver` | lib plus bin `diagnostic_contract_harness` | bin is internal diagnostics harness; Wave 1 assigns internal tool smoke or explicit internal-no-run classification |
 | `sifr_format` | lib | merge crate test membership required |

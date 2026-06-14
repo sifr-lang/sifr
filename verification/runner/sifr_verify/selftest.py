@@ -83,7 +83,8 @@ def _profile_schema_self_test() -> None:
 
 
 def _crate_membership_self_test() -> None:
-    merge = load_all_profiles()["merge"]
+    profiles = load_all_profiles()
+    merge = profiles["merge"]
     full_suites = crate_test_suites_for_mode(merge, "full")
     by_id = {str(suite.get("id")): suite for suite in full_suites}
     expected_executed = {
@@ -101,13 +102,17 @@ def _crate_membership_self_test() -> None:
         if suite.get("status") != "blocking" or suite.get("executed_in_merge") is not True:
             raise AssertionError(f"merge crate suite is not blocking/executed: {suite_id}")
 
-    codegen = by_id.get("sifr_codegen")
-    if not isinstance(codegen, dict):
-        raise AssertionError("sifr_codegen red-blocker missing from merge crate membership")
-    if codegen.get("status") != "red-blocker" or codegen.get("executed_in_merge") is not False:
-        raise AssertionError(f"sifr_codegen red-blocker has invalid execution status: {codegen}")
-    if not codegen.get("must_be_executed_by"):
-        raise AssertionError("sifr_codegen red-blocker has no execution deadline")
+    for profile_name in ("create-pr", "merge", "nightly", "release"):
+        profile = profiles[profile_name]
+        profile_full_suites = crate_test_suites_for_mode(profile, "full")
+        profile_by_id = {str(suite.get("id")): suite for suite in profile_full_suites}
+        codegen = profile_by_id.get("sifr_codegen")
+        if not isinstance(codegen, dict):
+            raise AssertionError(f"sifr_codegen missing from {profile_name} crate membership")
+        if codegen.get("status") != "blocking" or codegen.get("executed_in_merge") is not True:
+            raise AssertionError(
+                f"sifr_codegen is not blocking/executed in {profile_name}: {codegen}",
+            )
 
     duplicate_profile = {
         "name": "self-test",

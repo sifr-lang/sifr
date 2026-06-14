@@ -1,6 +1,6 @@
 # Codegen Test Triage
 
-Status: Wave 2.5 final codegen red rows locally green; Wave 2.0 inventory merged in PR https://github.com/sifr-lang/sifr/pull/2561, Wave 2.1 merged in PR https://github.com/sifr-lang/sifr/pull/2562, Wave 2.2 merged in PR https://github.com/sifr-lang/sifr/pull/2563, Wave 2.3 merged in PR https://github.com/sifr-lang/sifr/pull/2564, and Wave 2.4 merged in PR https://github.com/sifr-lang/sifr/pull/2565.
+Status: Wave 2.5 final codegen red rows are green and merged; Wave 2.0 inventory merged in PR https://github.com/sifr-lang/sifr/pull/2561, Wave 2.1 merged in PR https://github.com/sifr-lang/sifr/pull/2562, Wave 2.2 merged in PR https://github.com/sifr-lang/sifr/pull/2563, Wave 2.3 merged in PR https://github.com/sifr-lang/sifr/pull/2564, Wave 2.4 merged in PR https://github.com/sifr-lang/sifr/pull/2565, and Wave 2.5 merged in PR https://github.com/sifr-lang/sifr/pull/2566. Wave 2.final promotes `sifr_codegen` from planned red-blocker membership to blocking merge membership.
 
 Reproduction command:
 
@@ -8,7 +8,7 @@ Reproduction command:
 cargo test -p sifr_codegen -- --nocapture
 ```
 
-Observed Wave 2.0 result on 2026-06-14: `655 passed; 52 failed; 707 total`. After Wave 2.1 stale expectation repairs, the result was `675 passed; 32 failed; 707 total`. After Wave 2.2 stale source-fixture repairs, the result was `691 passed; 16 failed; 707 total`. After Wave 2.3 obsolete architecture guard retargeting, the result was `697 passed; 10 failed; 707 total`. After Wave 2.4 structured lowering repairs plus a field-assignment guard regression, the result was `704 passed; 4 failed; 708 total`. After Wave 2.5 final assertion refreshes, the current local result is `708 passed; 0 failed; 708 total`. The saved local Wave 2.0 log is `target/wave2/sifr_codegen_nocapture.log`; the checked-in machine-readable inventory is `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`.
+Observed Wave 2.0 result on 2026-06-14: `655 passed; 52 failed; 707 total`. After Wave 2.1 stale expectation repairs, the result was `675 passed; 32 failed; 707 total`. After Wave 2.2 stale source-fixture repairs, the result was `691 passed; 16 failed; 707 total`. After Wave 2.3 obsolete architecture guard retargeting, the result was `697 passed; 10 failed; 707 total`. After Wave 2.4 structured lowering repairs plus a field-assignment guard regression, the result was `704 passed; 4 failed; 708 total`. After Wave 2.5 final assertion refreshes, the result was `708 passed; 0 failed; 708 total`. Wave 2.final added a recursive option let-else mutability regression after the merge gate exposed the e2e failure; the current local result is `709 passed; 0 failed; 709 total`. The saved local Wave 2.0 log is `target/wave2/sifr_codegen_nocapture.log`; the checked-in machine-readable inventory is `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`.
 
 The JSON inventory records closure with `closes_in_wave: 2` and `closes_in_subwave` for each row. `proposed_pr_slice` below is the human-readable repair slice label.
 
@@ -19,7 +19,7 @@ Final classification counts after Wave 2.5 reinspection:
 - `compiler-bug`: 6.
 - `production-bug`: 0; no unresolved production sentinel rows in Wave 2.0.
 
-Wave 2.1 closes the 20 `proposed_pr_slice: 2.1` rows by refreshing stale literal, final-return, render snapshot, and iterator materialization expectations to the current generated-Rust contract. Wave 2.2 closes the 16 `proposed_pr_slice: 2.2` rows by making parser, async-effect, and explicit-encoding fixtures policy-compliant while preserving their codegen assertions. Wave 2.3 closes the 6 `proposed_pr_slice: 2.3` rows by retargeting obsolete architecture guards to their current owner modules after decomposition/refactors. Wave 2.4 closes the 6 `proposed_pr_slice: 2.4` rows by restoring non-self field assignment lowering and mutation-aware option unwrapping. Wave 2.5 closes the final 4 rows after reinspection showed the current generated Rust already preserved the intended behavior and only the assertions were stale. The string-index row now validates the current `Vec<char>` cache plus let-else guard shape rather than the older direct `chars().nth(...)` spelling.
+Wave 2.1 closes the 20 `proposed_pr_slice: 2.1` rows by refreshing stale literal, final-return, render snapshot, and iterator materialization expectations to the current generated-Rust contract. Wave 2.2 closes the 16 `proposed_pr_slice: 2.2` rows by making parser, async-effect, and explicit-encoding fixtures policy-compliant while preserving their codegen assertions. Wave 2.3 closes the 6 `proposed_pr_slice: 2.3` rows by retargeting obsolete architecture guards to their current owner modules after decomposition/refactors. Wave 2.4 closes the 6 `proposed_pr_slice: 2.4` rows by restoring non-self field assignment lowering and mutation-aware option unwrapping. Wave 2.5 closes the final 4 rows after reinspection showed the current generated Rust already preserved the intended behavior and only the assertions were stale. The string-index row now validates the current `Vec<char>` cache plus let-else guard shape rather than the older direct `chars().nth(...)` spelling. Wave 2.final keeps the red-blocker rows closed, promotes the suite, and adds a post-promotion regression for recursive `Option[T]` let-else bindings whose narrowed class value must be mutable for recursive child moves.
 
 Proposed PR slices:
 
@@ -28,7 +28,7 @@ Proposed PR slices:
 - `2.3`: obsolete architecture guard tests after source decomposition/refactors.
 - `2.4`: internal structured lowering defects around field assignment and option narrowing.
 - `2.5`: final stale assertions for async cleanup ordering, generator else preservation, self-field clone suppression, and string-index guard output.
-- `2.final`: promote `sifr_codegen` into merge only after all rows are closed and `cargo test -p sifr_codegen` passes.
+- `2.final`: promote `sifr_codegen` into merge after all rows are closed and `cargo test -p sifr_codegen` passes.
 
 | # | test id | failure summary | classification | proposed PR slice | owner | replacement or regression target |
 | --- | --- | --- | --- | --- | --- | --- |

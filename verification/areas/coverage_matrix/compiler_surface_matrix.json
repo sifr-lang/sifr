@@ -137,22 +137,15 @@
       "expiry": "2026-09-30"
     },
     {
-      "surface_id": "codegen_red_blocker",
+      "surface_id": "codegen_merge_blocking",
       "guarantee_id": "codegen-generated-rust-contract",
       "support_status": "stable",
       "owner": "compiler/codegen",
-      "status": "red-blocker",
+      "status": "blocking",
       "merge_suite": "sifr_codegen:cargo-test",
       "nightly_release_suite": "generated_code_quality:full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "cargo test -p sifr_codegen",
-      "command": "cargo test -p sifr_codegen",
-      "current_failure_count": 52,
-      "triage_file": "plans/issues/active/codegen-test-triage.md",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-2",
-      "closes_in_wave": "2",
-      "closes_in_subwave": "final",
-      "expiry": "2026-09-30"
+      "reproduction_command": "cargo test -p sifr_codegen"
     },
     {
       "surface_id": "generated_rust_toolchain_survival",
