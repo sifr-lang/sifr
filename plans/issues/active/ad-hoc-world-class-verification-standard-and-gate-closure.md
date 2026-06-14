@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, and Wave 2.final merged; Wave 3 semantic and parser coverage locally validated and reviewer-approved
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, and Wave 3 merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -771,7 +771,7 @@ scripts/run_all_tests.sh --profile create-pr
 
 ### Wave 3 Implementation Notes
 
-- Status: implemented, locally validated, and reviewer-approved; PR pending.
+- Status: merged in PR https://github.com/sifr-lang/sifr/pull/2568.
 - Scope: promote merge semantic e2e from the 145-fixture merge subset to the full 651-fixture pass corpus, keep create-pr on its 132-fixture representative subset, add matrix-backed parser/lexer coverage, and close the `parser_acceptance_rejection` coverage-matrix row.
 - Profile changes: `merge`, `nightly`, and `release` now select full e2e pass corpus mode through an empty fixture manifest; create-pr remains the only profile using `create_pr_e2e_manifest.json`. The stale `merge_e2e_manifest.json` subset was removed. Profile self-tests now reject merge/nightly/release e2e manifests and require the full fail corpus to remain covered by `sifr_cli_full`.
 - E2E runner changes: direct `verification/runner/e2e/run_e2e_pass.sh --profile ...` defaults now match profile JSON grouping: create-pr max group 8, merge max group 12, nightly/release max group 16. Direct merge runs now print and enforce `max_group_fixtures=12`.
