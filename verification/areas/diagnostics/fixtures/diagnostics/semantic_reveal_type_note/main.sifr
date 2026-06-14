@@ -1,0 +1,2 @@
+def main():
+    reveal_type(1)

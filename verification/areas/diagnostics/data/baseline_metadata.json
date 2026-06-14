@@ -1967,6 +1967,81 @@
       "renderer": "compact",
       "source_hash": "sha256:95a48d511f1b20994d0473dd04ce3cb6ec440a031930c801e07170bb10f32fe9",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
+      "fixture_id": "semantic_unreachable_statement",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:03cdaa3a4e6ae25850c39cf4dde569d3e8279682429d7bca01b8bcfe1404d83c",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
+      "fixture_id": "semantic_bigint_transition_alias",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:17bea456c7565356da6b61c3cb3dc05d188f32ab54863e54829137ac10459437",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
+      "fixture_id": "semantic_result_invalid_except_type",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:bd10f24aa55a13de9fb6d6e5a7e93d1e1afda65d9199b20ab5e9060c550c4faf",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
+      "fixture_id": "semantic_arithmetic_overflow_warning",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:a242333c7eab622c4583274edda95bd397b5b14b1a133dd11e19954618de9929",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
+      "fixture_id": "semantic_reveal_type_note",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:d21f7a790e6f700bb974f2e56a59abc40414b108690337808443500f9299a359",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1

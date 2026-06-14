@@ -1,0 +1,2 @@
+0 errors, 0 warnings, 1 note
+N SIFR-TYPE-0902 verification/areas/diagnostics/fixtures/diagnostics/semantic_reveal_type_note/main.sifr:2:17 revealed type is int
