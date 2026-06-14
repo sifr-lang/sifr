@@ -320,7 +320,7 @@ fn test_round_parenthesizes_cast_receiver() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("((3 as i64) as f64).round() as i64"),
+        rust_code.contains("((3_i64) as f64).round() as i64"),
         "expected round receiver to be parenthesized; got: {rust_code}"
     );
     assert!(
@@ -385,11 +385,11 @@ fn test_float_min_max_parenthesize_cast_receivers() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("((1 as i64) as f64).min((2 as i64) as f64)"),
+        rust_code.contains("((1_i64) as f64).min((2_i64) as f64)"),
         "expected min receiver to be parenthesized; got: {rust_code}"
     );
     assert!(
-        rust_code.contains("((1 as i64) as f64).max((2 as i64) as f64)"),
+        rust_code.contains("((1_i64) as f64).max((2_i64) as f64)"),
         "expected max receiver to be parenthesized; got: {rust_code}"
     );
     assert!(

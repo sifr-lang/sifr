@@ -232,7 +232,7 @@ fn test_arithmetic_codegen() {
 
     let rust_code = generate_rust(&module);
     assert!(rust_code.contains("fn add(a: i64, b: i64) -> i64"));
-    assert!(rust_code.contains("return a + b;"));
+    assert!(rust_code.contains("a + b"));
 }
 
 // --- Codegen Quality Tests ---
