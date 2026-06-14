@@ -209,16 +209,15 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "hir_mixed_semantic_recovery",
       "code": "SIFR-CALL-0004",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "deferral": null,
+      "multi_error_recovery_fixture": "hir_mixed_semantic_recovery",
+      "renderer_formats": [
+        "human",
+        "json",
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -779,16 +778,15 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "hir_repeated_type_recovery",
       "code": "SIFR-INTERNAL-0002",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "deferral": null,
+      "multi_error_recovery_fixture": "hir_repeated_type_recovery",
+      "renderer_formats": [
+        "human",
+        "json",
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -974,16 +972,15 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "hir_mixed_semantic_recovery",
       "code": "SIFR-NAME-0001",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "deferral": null,
+      "multi_error_recovery_fixture": "hir_mixed_semantic_recovery",
+      "renderer_formats": [
+        "human",
+        "json",
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -1065,16 +1062,15 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "hir_mixed_semantic_recovery",
       "code": "SIFR-OWN-0002",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "deferral": null,
+      "multi_error_recovery_fixture": "hir_mixed_semantic_recovery",
+      "renderer_formats": [
+        "human",
+        "json",
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -1928,16 +1924,15 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "hir_mixed_semantic_recovery",
       "code": "SIFR-TYPE-0002",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "deferral": null,
+      "multi_error_recovery_fixture": "hir_repeated_type_recovery",
+      "renderer_formats": [
+        "human",
+        "json",
+        "compact"
+      ],
       "suggestion_rendering_fixture": "presentation_contract_cases"
     },
     {

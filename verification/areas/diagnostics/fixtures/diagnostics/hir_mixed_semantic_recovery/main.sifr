@@ -1,0 +1,14 @@
+def needs_verbose(name: str, *, verbose: bool) -> str:
+    if verbose:
+        return "verbose"
+    return "quiet"
+
+def read_then_mutate(a: list[int], mut b: list[int]):
+    pass
+
+def main():
+    x: int = "not an int"
+    print(needs_verbose("Alice"))
+    items: list[int] = [1, 2, 3]
+    read_then_mutate(items, items)
+    groups = collections.defaultdict(list)

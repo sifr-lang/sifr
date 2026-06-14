@@ -1,0 +1,24 @@
+error[SIFR-CALL-0004]: needs_verbose() missing required argument 'verbose'
+  --> verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:11:11
+      |
+   11 |     print(needs_verbose("Alice"))
+      |           ^^^^^^^^^^^^^
+  = docs: https://sifr.sh/docs/errors/SIFR-CALL-0004
+error[SIFR-NAME-0001]: undefined variable: 'collections'
+  --> verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:14:14
+      |
+   14 |     groups = collections.defaultdict(list)
+      |              ^^^^^^^^^^^
+  = docs: https://sifr.sh/docs/errors/SIFR-NAME-0001
+error[SIFR-OWN-0002]: cannot borrow 'items' as mutable because it is already borrowed as immutable in the same call to 'read_then_mutate'
+  --> verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:13:29
+      |
+   13 |     read_then_mutate(items, items)
+      |                             ^^^^^
+  = docs: https://sifr.sh/docs/errors/SIFR-OWN-0002
+error[SIFR-TYPE-0002]: type mismatch: expected 'int', got 'str'
+  --> verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:10:14
+      |
+   10 |     x: int = "not an int"
+      |              ^^^^^^^^^^^^
+  = docs: https://sifr.sh/docs/errors/SIFR-TYPE-0002

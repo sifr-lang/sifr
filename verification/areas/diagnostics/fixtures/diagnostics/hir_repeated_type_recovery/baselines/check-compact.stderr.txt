@@ -1,0 +1,7 @@
+5 errors, 0 warnings, 1 note
+E SIFR-TYPE-0002 verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:2:15 type mismatch: expected 'int', got 'str'
+E SIFR-TYPE-0002 verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:3:15 type mismatch: expected 'int', got 'str'
+E SIFR-TYPE-0002 verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:4:15 type mismatch: expected 'int', got 'str'
+E SIFR-TYPE-0002 verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:5:15 type mismatch: expected 'int', got 'str'
+E SIFR-TYPE-0002 verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:6:15 type mismatch: expected 'int', got 'str'
+N SIFR-INTERNAL-0002 <unknown> 3 additional diagnostics omitted by recovery cap (similar-diagnostic group)

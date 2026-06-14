@@ -1,0 +1,146 @@
+[
+  {
+    "code": "SIFR-CALL-0004",
+    "severity": "Error",
+    "message": "[main] needs_verbose() missing required argument 'verbose'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] needs_verbose() missing required argument 'verbose'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-CALL-0004",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
+        "byte_start": 228,
+        "byte_end": 241,
+        "line": 11,
+        "column": 11,
+        "end_line": 11,
+        "end_column": 24,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    print(needs_verbose(\"Alice\"))",
+            "highlight_start": 11,
+            "highlight_end": 24
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-NAME-0001",
+    "severity": "Error",
+    "message": "[main] undefined variable: 'collections'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] undefined variable: 'collections'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-NAME-0001",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
+        "byte_start": 333,
+        "byte_end": 344,
+        "line": 14,
+        "column": 14,
+        "end_line": 14,
+        "end_column": 25,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    groups = collections.defaultdict(list)",
+            "highlight_start": 14,
+            "highlight_end": 25
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-OWN-0002",
+    "severity": "Error",
+    "message": "[main] cannot borrow 'items' as mutable because it is already borrowed as immutable in the same call to 'read_then_mutate'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] cannot borrow 'items' as mutable because it is already borrowed as immutable in the same call to 'read_then_mutate'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-OWN-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
+        "byte_start": 313,
+        "byte_end": 318,
+        "line": 13,
+        "column": 29,
+        "end_line": 13,
+        "end_column": 34,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    read_then_mutate(items, items)",
+            "highlight_start": 29,
+            "highlight_end": 34
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-TYPE-0002",
+    "severity": "Error",
+    "message": "[main] type mismatch: expected 'int', got 'str'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] type mismatch: expected 'int', got 'str'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
+        "byte_start": 205,
+        "byte_end": 217,
+        "line": 10,
+        "column": 14,
+        "end_line": 10,
+        "end_column": 26,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    x: int = \"not an int\"",
+            "highlight_start": 14,
+            "highlight_end": 26
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  }
+]

@@ -77,6 +77,28 @@
           ]
         },
         {
+          "id": "hir_mixed_semantic_recovery",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "hir_repeated_type_recovery",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
           "id": "parser_bad_indent",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr",
           "command": "check",
