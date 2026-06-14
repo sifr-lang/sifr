@@ -57,7 +57,7 @@ fn test_try_finally_runs_cleanup_before_timeout_propagates() {
 
     let cleanup_pos = result
         .rust_source
-        .find("let marker: i64 = 1 as i64;")
+        .find("let marker: i64 = 1_i64;")
         .expect("cleanup marker should be emitted");
     let rethrow_pos = result
         .rust_source

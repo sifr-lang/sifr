@@ -514,11 +514,13 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("return {"));
     assert!(generated
         .rust_source
-        .contains("let Some(__indexed_char) = text.chars().nth(j as usize) else {"));
-    assert!(generated.rust_source.contains("__indexed_char.to_string()"));
+        .contains("let mut __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();"));
+    assert!(generated
+        .rust_source
+        .contains("let Some(__indexed_char) = __sifr_chars_text.get(j as usize).map(|c| c.to_string()) else {"));
+    assert!(generated.rust_source.contains(";\n    __indexed_char\n}"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "non-optional string index return should stay on the structured stmt path"
