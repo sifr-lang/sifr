@@ -1,0 +1,8 @@
+# expect-error[col=18]: SIFR-CLASS-0006
+# Test: unsupported class field defaults are rejected with a class diagnostic.
+
+class BadDefault:
+    value: int = 1 + 2
+
+def main():
+    b: BadDefault = BadDefault(3)

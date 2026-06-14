@@ -1,0 +1,4 @@
+# expect-error[col=26]: SIFR-DECIMAL-0005
+def main():
+    x: decimal = Decimal(1.25)
+    print(x)

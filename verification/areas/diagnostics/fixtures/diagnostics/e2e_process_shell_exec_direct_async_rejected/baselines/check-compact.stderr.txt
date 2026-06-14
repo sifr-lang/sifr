@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-ASYNC-0007 verification/areas/diagnostics/fixtures/diagnostics/e2e_process_shell_exec_direct_async_rejected/main.sifr:6:9 shell_exec function 'output_shell_text' called directly from async context; use an async process API or task.spawn_blocking around explicit shell work

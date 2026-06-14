@@ -1,0 +1,11 @@
+# expect-error[col=24]: SIFR-TYPE-0004
+
+class Box:
+    value: int
+
+    def __init__(self, value):
+        self.value = value
+
+def main():
+    box = Box(1)
+    print(box.value)

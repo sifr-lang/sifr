@@ -1,0 +1,9 @@
+# expect-error[col=5]: SIFR-OWN-0006
+# Test: borrowed parameters cannot be augmented unless explicitly marked mut.
+
+def borrowed_augassign(count: int) -> int:
+    count += 1
+    return count
+
+def main():
+    print("unreachable")

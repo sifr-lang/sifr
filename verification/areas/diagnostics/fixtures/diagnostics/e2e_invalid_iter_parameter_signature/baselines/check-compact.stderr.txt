@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PROTO-0002 verification/areas/diagnostics/fixtures/diagnostics/e2e_invalid_iter_parameter_signature/main.sifr:4:9 class 'BadIterParam.__iter__' must not declare parameters besides self

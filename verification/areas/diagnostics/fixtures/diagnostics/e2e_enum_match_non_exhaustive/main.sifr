@@ -1,0 +1,17 @@
+# expect-error[col=11]: SIFR-MATCH-0001
+from enum import Enum
+
+class Color(Enum):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+
+def describe(c: Color) -> str:
+    match c:
+        case Color.RED:
+            return "red"
+        case Color.GREEN:
+            return "green"
+
+def main():
+    print(describe(Color.BLUE))

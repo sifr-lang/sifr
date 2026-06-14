@@ -207,6 +207,735 @@
             "json",
             "compact"
           ]
+        },
+        {
+          "id": "e2e_annotated_variable_requires_initializer",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_annotated_variable_requires_initializer/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_comprehension_await_filter_deferred",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_comprehension_await_filter_deferred/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_for_non_async_iterable_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_for_non_async_iterable_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_generator_aclose_wrong_arity",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_generator_aclose_wrong_arity/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_generator_mut_borrow_across_yield_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_generator_mut_borrow_across_yield_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_generator_non_send_boundary_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_generator_non_send_boundary_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_no_suspend_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_no_suspend_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_popen_unsupported",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_popen_unsupported/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_async_transitive_no_suspend_await_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_async_transitive_no_suspend_await_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_auto_init_inheritance_missing_super",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_auto_init_inheritance_missing_super/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_auto_init_required_after_default",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_auto_init_required_after_default/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bare_cpython_asyncio_import",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bare_cpython_asyncio_import/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bare_defaultdict_constructor_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bare_defaultdict_constructor_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bigdecimal_constructor_float",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_constructor_float/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bigdecimal_constructor_non_literal_string",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_constructor_non_literal_string/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bigdecimal_quantize_negative_scale_context",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_quantize_negative_scale_context/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bigint_int_mixed_arithmetic",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigint_int_mixed_arithmetic/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_blocking_io_direct_call_in_async_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_blocking_io_direct_call_in_async_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_blocking_io_on_async_def_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_blocking_io_on_async_def_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bool_integer_comparison",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bool_integer_comparison/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_borrow_escape_return",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_borrow_escape_return/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_break_outside_loop",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_break_outside_loop/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bytes_augmented_subscript_assignment_unsupported",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bytes_augmented_subscript_assignment_unsupported/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_bytes_subscript_assignment_unsupported",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bytes_subscript_assignment_unsupported/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_callable_type_annotation_param_list_required",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_callable_type_annotation_param_list_required/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_cancellation_error_not_result_error",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_cancellation_error_not_result_error/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_cancelled_task_use_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_cancelled_task_use_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_channel_non_send_element_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_channel_non_send_element_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_class_init_missing_type_annotation",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_class_init_missing_type_annotation/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_class_unknown_parent",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_class_unknown_parent/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_class_unsupported_field_default",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_class_unsupported_field_default/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_container_dict_key_type_conflict",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_container_dict_key_type_conflict/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_contextvars_deferred",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_contextvars_deferred/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_continue_outside_loop",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_continue_outside_loop/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_cpu_heavy_direct_call_in_async_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_cpu_heavy_direct_call_in_async_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_decimal_bigdecimal_mixed_arithmetic",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_decimal_bigdecimal_mixed_arithmetic/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_decimal_constructor_float",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_decimal_constructor_float/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_decimal_float_mixed_arithmetic",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_decimal_float_mixed_arithmetic/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_decimal_quantize_requires_int_scale",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_decimal_quantize_requires_int_scale/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_duplicate_function_definition",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_duplicate_function_definition/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_elif_condition_numeric_truthiness",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_elif_condition_numeric_truthiness/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_enum_duplicate_value",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_enum_duplicate_value/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_enum_match_non_exhaustive",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_enum_match_non_exhaustive/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_enumerate_duplicate_start_keyword",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_enumerate_duplicate_start_keyword/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_error_raise_bare",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_error_raise_bare/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_exact_int_negative_power_requires_handling",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_exact_int_negative_power_requires_handling/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_exact_int_true_division_requires_handling",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_exact_int_true_division_requires_handling/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_fixed_width_const_expression_out_of_range",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_fixed_width_const_expression_out_of_range/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_fixed_width_generic_addable_output_boundary",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_fixed_width_generic_addable_output_boundary/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_for_loop_tuple_target_arity_mismatch",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_for_loop_tuple_target_arity_mismatch/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_generic_class_missing_type_arg",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_generic_class_missing_type_arg/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_import_intrinsic",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_import_intrinsic/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_invalid_iter_parameter_signature",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_invalid_iter_parameter_signature/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_ipc_multiprocessing_fork_unsupported",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_ipc_multiprocessing_fork_unsupported/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_ipc_payload_process_resource_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_ipc_payload_process_resource_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_map_callable_arity_mismatch",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_map_callable_arity_mismatch/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_match_invalid_field_name",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_match_invalid_field_name/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_match_tuple_pattern_requires_tuple_subject",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_match_tuple_pattern_requires_tuple_subject/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_match_type_mismatch_guard",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_match_type_mismatch_guard/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_missing_field",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_missing_field/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_missing_return_value",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_missing_return_value/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_nested_function_recursive_nonlocal_unsupported",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_nested_function_recursive_nonlocal_unsupported/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_optional_arithmetic_reachable_after_partial_narrowing",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_optional_arithmetic_reachable_after_partial_narrowing/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_own_parameter_augassign_requires_mut",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_own_parameter_augassign_requires_mut/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_own_parameter_method_mutation_requires_mut",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_own_parameter_method_mutation_requires_mut/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_process_async_pipe_writer_shared_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_process_async_pipe_writer_shared_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_process_shell_exec_direct_async_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_process_shell_exec_direct_async_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_reserved_int128_annotation",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_reserved_int128_annotation/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_sorted_unexpected_keyword",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_sorted_unexpected_keyword/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_spawn_blocking_unannotated_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_spawn_blocking_unannotated_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_ternary_type_mismatch",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_ternary_type_mismatch/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_try_except_uncovered_error_types",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_try_except_uncovered_error_types/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_typevar_constraints_violation",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_typevar_constraints_violation/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_unhashable_dict_key",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_unhashable_dict_key/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_unknown_except_error_type",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_unknown_except_error_type/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_unsupported_default_expr_call",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_unsupported_default_expr_call/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_unsupported_import_statement",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_unsupported_import_statement/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_unused_result",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_unused_result/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_use_after_move_loop",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_use_after_move_loop/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_with_non_context_manager",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_with_non_context_manager/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_yield_without_value",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_yield_without_value/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
         }
       ]
     }

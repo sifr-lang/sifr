@@ -1,0 +1,12 @@
+# expect-error[col=23]: SIFR-TYPE-0010
+# Test: TypeVar constraints reject unsupported concrete type
+from typing import TypeVar
+
+T = TypeVar("T", int, str)
+
+def echo(x: T) -> T:
+    return x
+
+def main():
+    bad: float = echo(1.5)
+    print(bad)

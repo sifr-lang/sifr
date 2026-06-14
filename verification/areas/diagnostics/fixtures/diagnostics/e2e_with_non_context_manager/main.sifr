@@ -1,0 +1,11 @@
+# expect-error[col=10]: SIFR-PROTO-0003
+# Test that using a non-context-manager type in with produces a compile error
+class PlainClass:
+    value: int
+
+    def __init__(self, value: int):
+        self.value = value
+
+def main():
+    with PlainClass(42) as p:
+        print("should not reach here")

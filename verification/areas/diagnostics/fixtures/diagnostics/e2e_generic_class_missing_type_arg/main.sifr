@@ -1,0 +1,5 @@
+# expect-error[col=8]: SIFR-NAME-0003
+# Test: using unknown generic type in annotation
+def main():
+    x: UnknownType[int] = 42
+    print(x)

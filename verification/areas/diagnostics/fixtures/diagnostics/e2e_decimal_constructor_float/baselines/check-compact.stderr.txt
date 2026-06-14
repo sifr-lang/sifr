@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-DECIMAL-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_decimal_constructor_float/main.sifr:3:26 Decimal(float_value) is not allowed; use Decimal("...") for exact construction

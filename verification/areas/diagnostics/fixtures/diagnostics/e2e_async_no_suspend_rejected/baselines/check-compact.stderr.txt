@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-ASYNC-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_no_suspend_rejected/main.sifr:2:11 async function 'value' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required

@@ -1,0 +1,9 @@
+# expect-error[col=5]: SIFR-OWN-0004
+def consume(own s: str) -> int:
+    return len(s)
+
+def main():
+    s: str = "hello"
+    for i in range(3):
+        result: int = consume(s)
+        print(result)

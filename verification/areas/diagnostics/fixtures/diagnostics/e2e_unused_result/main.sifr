@@ -1,0 +1,7 @@
+# expect-error[col=5]: SIFR-RESULT-0001
+
+def fallible() -> Result[int, ValueError]:
+    return 42
+
+def main():
+    fallible()

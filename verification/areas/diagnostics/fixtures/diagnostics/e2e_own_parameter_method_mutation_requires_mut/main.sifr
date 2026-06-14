@@ -1,0 +1,9 @@
+# expect-error[col=5]: SIFR-OWN-0005
+# Test: owned parameters cannot use mutating methods unless explicitly marked mut.
+
+def owned_immutable_append(own items: list[int]) -> list[int]:
+    items.append(5)
+    return items
+
+def main():
+    print("unreachable")

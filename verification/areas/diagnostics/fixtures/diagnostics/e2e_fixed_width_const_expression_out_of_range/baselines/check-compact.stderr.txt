@@ -1,0 +1,3 @@
+2 errors, 0 warnings, 0 notes
+E SIFR-INT-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_fixed_width_const_expression_out_of_range/main.sifr:5:23 integer value 256 does not fit target type uint8; valid range is 0..=255
+E SIFR-INT-0004 verification/areas/diagnostics/fixtures/diagnostics/e2e_fixed_width_const_expression_out_of_range/main.sifr:6:24 integer literal exceeds compile-time evaluation budget: 5001 decimal digits (max 4096)

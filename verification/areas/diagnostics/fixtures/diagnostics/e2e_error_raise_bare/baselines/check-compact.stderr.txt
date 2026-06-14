@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-RESULT-0003 verification/areas/diagnostics/fixtures/diagnostics/e2e_error_raise_bare/main.sifr:4:5 bare 'raise' without an expression is not supported

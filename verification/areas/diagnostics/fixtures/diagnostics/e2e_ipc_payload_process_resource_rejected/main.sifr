@@ -1,0 +1,8 @@
+# expect-error: SIFR-OWN-0013
+from sifr.ipc import require_serializable
+from sifr.process import PipeReader
+
+
+def main():
+    reader: PipeReader = PipeReader(0)
+    require_serializable(reader)

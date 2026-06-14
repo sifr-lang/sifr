@@ -1,0 +1,9 @@
+# expect-error[col=19]: SIFR-TYPE-0011
+def seed() -> int:
+    return 7
+
+def pick(x: int = seed()) -> int:
+    return x
+
+def main():
+    print(pick())

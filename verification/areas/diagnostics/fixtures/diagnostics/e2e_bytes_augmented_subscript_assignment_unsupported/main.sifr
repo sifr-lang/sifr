@@ -1,0 +1,5 @@
+# expect-error[col=5]: SIFR-OWN-0008
+
+def main() -> None:
+    payload: bytes = b"abc"
+    payload[0] += 1

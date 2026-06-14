@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0010 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_generator_non_send_boundary_rejected/main.sifr:20:30 scope.spawn() cannot move `agen` of type `AsyncGenerator[LocalCell, GeneratorCloseError]` across a task boundary because `LocalCell` inherits the `NonSend` marker; use an explicit synchronization primitive or keep the value in the current task

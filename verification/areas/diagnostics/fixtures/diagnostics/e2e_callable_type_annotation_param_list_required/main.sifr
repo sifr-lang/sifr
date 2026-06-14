@@ -1,0 +1,7 @@
+# expect-error[col=32]: SIFR-TYPE-0007
+
+def consume(callback: Callable[int, str]) -> int:
+    return 0
+
+def main():
+    print(consume(print))

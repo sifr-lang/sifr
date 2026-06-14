@@ -1,0 +1,13 @@
+# expect-error[col=7]: SIFR-CLASS-0001
+
+class Animal:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+class Dog(Animal):
+    breed: str
+
+def main():
+    d: Dog = Dog("Rex", "Labrador")

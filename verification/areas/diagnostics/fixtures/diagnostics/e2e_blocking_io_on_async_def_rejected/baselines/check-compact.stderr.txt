@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-ASYNC-0006 verification/areas/diagnostics/fixtures/diagnostics/e2e_blocking_io_on_async_def_rejected/main.sifr:2:2 @blocking_io is only valid on sync def; async APIs use suspension effects instead

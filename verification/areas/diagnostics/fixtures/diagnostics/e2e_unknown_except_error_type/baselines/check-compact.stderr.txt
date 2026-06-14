@@ -1,0 +1,3 @@
+2 errors, 0 warnings, 0 notes
+E SIFR-RESULT-0004 verification/areas/diagnostics/fixtures/diagnostics/e2e_unknown_except_error_type/main.sifr:10:12 unknown except error type 'MissingError'
+E SIFR-RESULT-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_unknown_except_error_type/main.sifr:8:5 except arms do not cover all error types from try body: ValueError

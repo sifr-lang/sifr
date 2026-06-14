@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-TYPE-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_optional_arithmetic_reachable_after_partial_narrowing/main.sifr:8:12 unsupported operand type(s) for +: 'None | int' and 'int'

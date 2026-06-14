@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-TYPE-0009 verification/areas/diagnostics/fixtures/diagnostics/e2e_for_loop_tuple_target_arity_mismatch/main.sifr:5:9 for loop tuple target expects 2 element(s), iterable yields 3

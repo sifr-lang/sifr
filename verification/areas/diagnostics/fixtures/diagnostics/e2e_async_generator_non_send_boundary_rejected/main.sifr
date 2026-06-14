@@ -1,0 +1,21 @@
+# expect-error[col=30]: SIFR-OWN-0010
+class LocalCell(NonSend):
+    pass
+
+
+async def cells() -> AsyncGenerator[LocalCell, GeneratorCloseError]:
+    yield LocalCell()
+
+
+async def consume(own mut agen: AsyncGenerator[LocalCell, GeneratorCloseError]) -> Result[int, GeneratorCloseError]:
+    count: int = 0
+    async for _ in agen:
+        count = count + 1
+    return count
+
+
+async def main() -> Result[None, ScopeFailure]:
+    agen = cells()
+    async with task.scope() as scope:
+        handle = scope.spawn(consume(agen))
+    return None

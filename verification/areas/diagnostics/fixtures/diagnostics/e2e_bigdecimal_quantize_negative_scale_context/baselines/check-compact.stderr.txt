@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-DECIMAL-0008 verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_quantize_negative_scale_context/main.sifr:4:32 bigdecimal.quantize() scale must be >= 0 for default context, got -1

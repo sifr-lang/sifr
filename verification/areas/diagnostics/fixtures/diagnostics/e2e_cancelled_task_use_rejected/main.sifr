@@ -1,0 +1,18 @@
+# expect-error: SIFR-OWN-0001
+
+async def fast() -> int:
+    return 1
+
+
+async def slow() -> int:
+    await task.sleep(1.0)
+    return 2
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        first = scope.spawn(fast())
+        second = scope.spawn(slow())
+        selected = await task.select(first=first, second=second)
+        late = await second
+    return None

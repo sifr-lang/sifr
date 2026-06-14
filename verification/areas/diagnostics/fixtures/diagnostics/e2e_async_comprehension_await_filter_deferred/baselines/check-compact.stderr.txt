@@ -1,0 +1,3 @@
+2 errors, 0 warnings, 0 notes
+E SIFR-ASYNC-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_comprehension_await_filter_deferred/main.sifr:6:11 async function 'keep' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required
+E SIFR-TYPE-0012 verification/areas/diagnostics/fixtures/diagnostics/e2e_async_comprehension_await_filter_deferred/main.sifr:10:45 await inside async comprehension filters is deferred in v1; compute the awaited value before the comprehension

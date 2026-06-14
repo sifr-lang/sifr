@@ -692,6 +692,1221 @@
       "renderer": "compact",
       "source_hash": "sha256:09e3418d02855579788221b8439ef293b4c18fe9a31eb6a362b088adeba25dc7",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_annotated_variable_requires_initializer",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:014e443d440106b559b91ba4b28f824a538e34f8e078c2142d74dbb3cc810147",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_comprehension_await_filter_deferred",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:e32d6f35de8254fd762607f172bd2a883884c3c70015c68055e80eb7f9808e3d",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_for_non_async_iterable_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:2ed3fbb7ed55c7230874793f70768e85e91dcb098b576900d840d606f65c4f18",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_generator_aclose_wrong_arity",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:8276c97066bf6031e749d78cd402badf9642c99d6abb07376d17d42e718418d4",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_generator_mut_borrow_across_yield_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:9c14c6638c380fbfb9041a76a3abc986c7d4fc139a0cf41726cc93076a11078e",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_generator_non_send_boundary_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:cfba927860acb2d6012f83c74e2f62cd1f5b248d3cda0e7128292356c3496f54",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_no_suspend_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:87020c467eb5842287eb1595462df81385bbce2afaeefdb6c7c13d316eacfb6d",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_popen_unsupported",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:31d4779b57991c5b5171111d64dad8acbae984f6d736de29177828e7a26cecc1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_async_transitive_no_suspend_await_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:f0812ceefbb7eb36aa0be8f8ed731109ac8b1e7351b00f9e7a42832f10f94053",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_auto_init_inheritance_missing_super",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:d59f7d7f108c6bd084dd4ee8eb1e17be7203bebdd9222ffe26af2e3bc4d46904",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_auto_init_required_after_default",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:49e693259f1e9576c1c505c22bc32e27f14e564808c41ddec387ccb15dbe6545",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bare_cpython_asyncio_import",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:80804538a7a41df6b7cfddef3a659bd6d96702fd2617f70b09a487acb367afc1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bare_defaultdict_constructor_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:1773f96a0b40dfa68425d215de292c0501bc87a88b1357e9bc7e2ee2c3455352",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bigdecimal_constructor_float",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:cb465ceb49aa95b7e64311c1743d5bff56f315fbee5e49a38c673f20687bf2ca",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bigdecimal_constructor_non_literal_string",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:73a409d42be51ecb998826cf12384ede2fe88042dff8e959134f1fb2c158159a",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bigdecimal_quantize_negative_scale_context",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:a0e71cbf19c983e4b881f8a2f7f521e490c984301d6044a7afe49a634ecefe68",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bigint_int_mixed_arithmetic",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:753ca2bd87288bb5ec0f712f7134aae79fe3d16f6a346b4c50f705be82c959be",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_blocking_io_direct_call_in_async_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:66ecda9186a67cf59797c84f382aa9f9aaf50f38f4469469ee28635fc1627973",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_blocking_io_on_async_def_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:527bcea9401f1e0163cec20c80ea8b367a10a204871312b54673703fa663a9af",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bool_integer_comparison",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:1c5de62348c944225fd9248bb27a1341ae8aa834a0610eec389905926d9bfbef",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_borrow_escape_return",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:73c453eb8b198ca2630980ebe943754b2e7d2148055136b04064bc998fc56666",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_break_outside_loop",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:8007568ecbfe8b732bf8b21d10cc4d219b202e2d4f3f32628e529fcb8a96eaa0",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bytes_augmented_subscript_assignment_unsupported",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:fe85a26814da7c6f40cb2644264c7757c6c4b1c947d99d9038039db5bc79ac10",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_bytes_subscript_assignment_unsupported",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:078b1a35d5f11f1ed2b2d7baccfb3dbf0bbc30caf531319fb26be10e50f71bd6",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_callable_type_annotation_param_list_required",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:0c873615fb7edd3ea666f21a5ac22ce7eb0e9d17d96735760729a7aabe5a683a",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_cancellation_error_not_result_error",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:69342778bec66277d421ed1842c5fd308564642038ca6144a179a4762f0166db",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_cancelled_task_use_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:5a64cb2c2204edf8b229a3f3b5098ab075f11d30cd261da36b969ec0d43e2ca1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_channel_non_send_element_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:bdf1e8ffc5abdf45a7c01fae86d2a93ee31959706f869e7dea8b58111d0636c8",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_class_init_missing_type_annotation",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:95bfc69018e689044bc206104acb1da2eb967b129691ffeb11627d63712d49f8",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_class_unknown_parent",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:a986e91ea9de5041be442438cc0805d2c23ac8a05db82ee139825191e8f200c6",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_class_unsupported_field_default",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:fec6b20217f16edb685c80f7d671190298ffb7ef72ecca1dec780c0f4bdeb2b1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_container_dict_key_type_conflict",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:361e1fde36c31313b81a6bd28495a6969bd73f5ed70070048d7b053bdc7b08e1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_contextvars_deferred",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:ee076271bacef66bd24d693a7ffdef2223935281188a4489df204ca516836a9d",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_continue_outside_loop",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:e577cb90c1e047d6bc39a2577dc8c85d301d97d998f0792687ffa361786a81f6",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_cpu_heavy_direct_call_in_async_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:6c3d9eef4bfa3bed1cb27bcb9f5e3170c480b0cbe107cbce898f56d49f5f930a",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_decimal_bigdecimal_mixed_arithmetic",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:8115df87e44297a6a32bc7553edac8ff8f8303829094c47755b4ff3cfdfac038",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_decimal_constructor_float",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:d371c245f5f681244553ca7ffc269b274d3ff3e61f802b4ca54a66448cf01113",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_decimal_float_mixed_arithmetic",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:1f083c40be08ba9b2507a3cad442d956aecdb1ec06a2afa56befd6424c44bbba",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_decimal_quantize_requires_int_scale",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:be9a211adba82ee2afb98d1735c15839de978fd85080543cdf6cd4ee0792566d",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_duplicate_function_definition",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:3089e1889ab77218d34cdd695942a0bfb4c6e35f23ea26ff2d9c1ebc62c3204c",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_elif_condition_numeric_truthiness",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:5aa8905c9c85e8ac06e05a71954a5a8fc93f50bf0bf26b144fa3792ea662de06",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_enum_duplicate_value",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:3ec86779fcb2d2dc1ad1d2c6f3be732a2e1dabc2b71546a2a93795200082ac31",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_enum_match_non_exhaustive",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:3481f42d35e069d4666d71a34f3e9a023db640d40cb2da74cc2a13c418477b15",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_enumerate_duplicate_start_keyword",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:9eabd9e59d1b7d12bde7ae998bdb52c3d81507cbc450318ef7f9167ec640b444",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_error_raise_bare",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:5eddcefe0d95fb3ca24389cb709cbea65dfa73e33192ae967157b8ceca2e516f",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_exact_int_negative_power_requires_handling",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:299bd52f53a16b2772fd157953e77e634fbbca97bd7dc111ec6227df2b6b00bf",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_exact_int_true_division_requires_handling",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:0a10abb63fe107a07496ef314b49fc1af9c0553760fb0fc675846ca2dad82c83",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_fixed_width_const_expression_out_of_range",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:12b301df05ddbb20e60c65457a4801c9ab39fed34d484f8ac5dda4450d2ff310",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_fixed_width_generic_addable_output_boundary",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:9c320e27505fb77f1c31d70c0441736ad596acd282bd2d559a41be3c5d545210",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_for_loop_tuple_target_arity_mismatch",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:31290f04c3ffb8ee9001a3141144fa1d9306f81ad84784d07f94c4121290b5fd",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_generic_class_missing_type_arg",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:aaab6b82163db4c717ba2f07d9e8e7f1f2d5cd9d8476fdee6ea65898a6dafb28",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_import_intrinsic",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:5943afe62a358e7a36f55eff6879f2bef3623b83e400e723166bd42af7b380c0",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_invalid_iter_parameter_signature",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:fbbb089f0533e829887fe07303c6e6213c2fd1b7e7a47fbd40bb5bdfc5b9d124",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_ipc_multiprocessing_fork_unsupported",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:168977a58e68a3a80bd87f87df003fa2bc81dd032fd2bb1ab572f9a6b1797f97",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_ipc_payload_process_resource_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:8ac99d29142bc7c34854c4db5ea14c1e55741b76cb4ec4ad79511d664724cb8d",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_map_callable_arity_mismatch",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:b30d4f5f7647fa3ea30a8f8c25c35597747578d99cf4300dbde00bae7c055588",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_match_invalid_field_name",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:5bc49ec5175dfae4e8511d8d4b023d63887d02eeb89f1f3f06ef3c7517318be9",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_match_tuple_pattern_requires_tuple_subject",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:475ef81bb4d9cb2ec99ee8a9a7c407e56bc3e92a261c7e2730340c9f2a216535",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_match_type_mismatch_guard",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:20a7f3343797d668efdef6f0595090fa5ee4ff8e19c966282937c75e41a92a57",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_missing_field",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:1b26ab3c8ba313d83c44923b10552b3bad2a2b45bc506362ae2e0e237545b584",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_missing_return_value",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:b72024a0036a17740d35d9e6ab1683df76216b353c935f842ade26c7365af46a",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_nested_function_recursive_nonlocal_unsupported",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:2954ac90bd0c3d3b481c40d940c99b2a93d8ffe4262cb77e00dc0fb9efc8ea48",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_optional_arithmetic_reachable_after_partial_narrowing",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:48a82a8c53576614e9771e16a548275b156df868a62427f4ea700f6286141c05",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_own_parameter_augassign_requires_mut",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:8eba6639f5cea5ec108e725255b1cf1eea9271cb6239ea8731352aa592653ab8",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_own_parameter_method_mutation_requires_mut",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:5bab48341f5ad629449dff3ca0b05fbb4ca4eb38aea48e4c47f77fcb30965cce",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_process_async_pipe_writer_shared_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:31500baab4588cbd914e31090157cfb17f4fc3b33fde7792f65850d781cd3bca",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_process_shell_exec_direct_async_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:7ad600ca30fa4c7e4c247aeec12d0c86ddeebeae4013a07fe500d0babf2b1f7d",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_reserved_int128_annotation",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:632b359ca5bf0a1071e7cf7095bc2c7908099f74386109ed5d2ab723c5700d6c",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_sorted_unexpected_keyword",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:aae4910e2908af99611fb06813c86049ac4a9254c5c4ccf5a376729d201a111b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_spawn_blocking_unannotated_rejected",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:e61831920c0a535eb00c35e55d689db85400c14403156aa3a0da7c9367b4a600",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_ternary_type_mismatch",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:964be89335d57123dbbeb5cef9595d87e0c215737e133b8405d0dc128b7550f8",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_try_except_uncovered_error_types",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:978bfe72ea04f5ebc44451f456b7af20ba24593cd205e4b714141c08986826d1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_typevar_constraints_violation",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:50516e8622bb7a95be956cbd9097e078f5e8f72df4d2f72fb03bce7f2ce34a61",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_unhashable_dict_key",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:cba2f923aed6fa054c821d34466c2458c4c19f96e012c285022a4d68ea8e5993",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_unknown_except_error_type",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:19e66fdf4e9f07d8884cd70ec08e07075be15f2e4066bd6b3063dda45fd7c267",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_unsupported_default_expr_call",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:26b84250c44ac7c44b9b99c6bb7203579d4751fa551149e8a16aa49a292e6c4b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_unsupported_import_statement",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:4b03b224016a3759ea422e3981e4d5af8410a90a98b2a5c356f94940efe460e4",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_unused_result",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:d30559ccd29478ad1758b6f12d8e16e1a0b9c95860595a870d773f24f758ab15",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_use_after_move_loop",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:0c13a4bbdf983efeea75be937bbefceadaa6b55bd618fbd4dd44d3085f74929b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_with_non_context_manager",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:9f0e49c32b1558c168df502011f968b2754a556cc512eee93da38d1ea23c450b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
+      "fixture_id": "e2e_yield_without_value",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:19fefa320cb2516fe64a4d92929a2f1311c300c41b846d93fbc33aa65f06294d",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1

@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PROTO-0004 verification/areas/diagnostics/fixtures/diagnostics/e2e_unhashable_dict_key/main.sifr:11:19 hash() argument must be hashable, got 'Measurement'

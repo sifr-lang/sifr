@@ -1,0 +1,9 @@
+# expect-error: SIFR-ASYNC-0005
+def compute_value() -> int:
+    return 42
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_blocking(compute_value)
+    result = await handle
+    return None

@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-CALL-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_map_callable_arity_mismatch/main.sifr:9:42 map() callable expects 1 argument(s), got 2 iterable(s)

@@ -1,0 +1,7 @@
+# expect-error[col=10]: SIFR-FLOW-0005
+
+def main(flag: bool) -> None:
+    if flag:
+        pass
+    elif 1:
+        pass

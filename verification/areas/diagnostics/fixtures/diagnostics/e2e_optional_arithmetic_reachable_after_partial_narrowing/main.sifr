@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0005
+# Test: narrowing in one branch does not permit optional arithmetic after a join
+
+def bad_increment(x: int | None, flag: bool) -> int:
+    if flag:
+        if x is None:
+            return 0
+    return x + 1
+
+def main():
+    print(bad_increment(3, True))

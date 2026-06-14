@@ -1,0 +1,4 @@
+# expect-error[col=32]: SIFR-DECIMAL-0008
+def main():
+    d: bigdecimal = BigDecimal("1.2345")
+    x: bigdecimal = d.quantize(-1)

@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0013 verification/areas/diagnostics/fixtures/diagnostics/e2e_ipc_payload_process_resource_rejected/main.sifr:8:26 typed IPC payload cannot transfer `reader` of type `PipeReader` because `PipeReader` is a process-local process pipe handle; pass owned schema data instead of process-local resources

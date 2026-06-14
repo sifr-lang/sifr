@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-CLASS-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_auto_init_inheritance_missing_super/main.sifr:9:7 class 'Dog' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)

@@ -1,0 +1,4 @@
+# expect-error[col=29]: SIFR-DECIMAL-0007
+def main():
+    d: decimal = Decimal("1.23")
+    x: decimal = d.quantize("2")

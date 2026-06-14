@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0003 verification/areas/diagnostics/fixtures/diagnostics/e2e_borrow_escape_return/main.sifr:7:12 cannot return borrowed parameter `items`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `items.clone()`

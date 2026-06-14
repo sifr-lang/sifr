@@ -1,0 +1,11 @@
+# expect-error[col=5]: SIFR-RESULT-0005
+# Test: incomplete try/except coverage uses a structured Result diagnostic.
+
+def fallible() -> Result[int, ValueError]:
+    raise ValueError("bad")
+
+def main():
+    try:
+        value: int = fallible()
+    except IOError as e:
+        pass
