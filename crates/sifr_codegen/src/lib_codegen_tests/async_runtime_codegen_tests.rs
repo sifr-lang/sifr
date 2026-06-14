@@ -107,7 +107,7 @@ fn test_async_generated_errors_convert_to_error_return_type() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, Error]:\n    async with task.timeout(1.0):\n        await task.sleep(0.0)\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
+                "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, Error]:\n    async with task.timeout(1.0):\n        await task.sleep(0.0)\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n    return None\n",
             )
             .expect("parse failed")
             .suite(),

@@ -3,8 +3,8 @@
   "generated_from": "cargo test -p sifr_codegen -- --nocapture",
   "captured_on": "2026-06-14",
   "test_result": {
-    "passed": 675,
-    "failed": 32,
+    "passed": 691,
+    "failed": 16,
     "ignored": 0,
     "total": 707
   },
@@ -13,7 +13,7 @@
     "package": "sifr_codegen",
     "status": "red-blocker",
     "owner": "codegen",
-    "failure_count": 32,
+    "failure_count": 16,
     "triage_file": "plans/issues/active/codegen-test-triage.md",
     "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md",
     "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
@@ -88,7 +88,7 @@
       "current_output": "Embedded source contains a function with no parser-accepted indented body after newer parser rules.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 33..36 }",
       "expected_output_or_snapshot": "Add explicit `pass`/valid body while preserving unreachable-return regression coverage.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -104,7 +104,7 @@
       "current_output": "Embedded nested function fixture is now parser-invalid because an empty block lacks an explicit body.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 12..15 }",
       "expected_output_or_snapshot": "Make fixture parser-valid and keep loop-else recursion plus try/except return assertions.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -120,7 +120,7 @@
       "current_output": "Fixture uses an async worker with no real suspension; HIR now rejects it with SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add a real suspension or convert helper to `def`, preserving generated-error conversion assertions.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -232,7 +232,7 @@
       "current_output": "Fixture worker is async without real suspension and is rejected by SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add a real suspension to worker while preserving join observation assertions.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -248,7 +248,7 @@
       "current_output": "Fixture worker raises without a suspension and is rejected by SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make coroutine policy-compliant and retain result-spawn helper coverage.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -264,7 +264,7 @@
       "current_output": "Fixture worker has no real suspension and is rejected before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add real suspension or accepted async escape hatch while keeping error-parameter assertion.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -280,7 +280,7 @@
       "current_output": "One or more gather helper coroutines have no real suspension and fail lowering.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'first' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..15), line: None, col: None }, HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'second' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(50..56), line: None, col: None }]",
       "expected_output_or_snapshot": "Make gather fixture coroutines policy-compliant and retain private gather helper assertions.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -296,7 +296,7 @@
       "current_output": "Fixture worker has no real suspension and is rejected by HIR before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add a real await in worker or adjust fixture to accepted async protocol.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -312,7 +312,7 @@
       "current_output": "Fixture worker has no real suspension and is rejected by HIR before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make fixture async-valid and keep task result observation regression target.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -328,7 +328,7 @@
       "current_output": "Race worker has no real suspension and fails SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make worker policy-compliant and preserve unwrapped error-parameter assertions.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -344,7 +344,7 @@
       "current_output": "At least one race coroutine has no real suspension and is rejected before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'first' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..15), line: None, col: None }]",
       "expected_output_or_snapshot": "Add real suspension to every async helper that must remain async.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -360,7 +360,7 @@
       "current_output": "Timeout worker has no real suspension and is rejected by HIR.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make timeout worker policy-compliant and retain private timeout result assertions.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -392,7 +392,7 @@
       "current_output": "Fieldless class fixture lacks parser-accepted body after newer parser rules.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after `class` definition\"), location: 13..17 }",
       "expected_output_or_snapshot": "Add explicit `pass` and keep default-constructor regression target.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -424,7 +424,7 @@
       "current_output": "Fixture source is parser-invalid due an empty function body/block.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 38..43 }",
       "expected_output_or_snapshot": "Make fixture parser-valid and keep guarded non-option compare assertion.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -440,7 +440,7 @@
       "current_output": "Nested function fixture is parser-invalid because a body is missing.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 12..16 }",
       "expected_output_or_snapshot": "Add explicit body and retain local nested mutborrow regression target.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },
@@ -584,7 +584,7 @@
       "current_output": "Fixture uses text-mode open without explicit encoding; HIR now rejects it with SIFR-IO-0801.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-IO-0801\", declared_severity: Error }), message: \"text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings\", args: {}, help: None, primary_range: Some(20..24), line: None, col: None }]",
       "expected_output_or_snapshot": "Add explicit encoding and keep canonical FileHandle constructor assertions.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "2"
     },

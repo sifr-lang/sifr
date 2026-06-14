@@ -47,16 +47,17 @@ pub(crate) fn empty_module() -> HirModule {
 #[test]
 fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     let loop_else_recursion = generate_rust_from_source(
-        "def main():\n\
-    def recurse(n: int) -> int:\n\
-        for i in [1]:\n\
-            pass\n\
-        else:\n\
-            if n > 0:\n\
-                return recurse(n - 1)\n\
-        return 0\n\
-\n\
-    print(recurse(4))\n",
+        r#"def main():
+    def recurse(n: int) -> int:
+        for i in [1]:
+            pass
+        else:
+            if n > 0:
+                return recurse(n - 1)
+        return 0
+
+    print(recurse(4))
+"#,
     );
     assert!(loop_else_recursion.contains("fn recurse(n: i64) -> i64"));
     assert!(
@@ -64,59 +65,64 @@ fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     );
 
     let try_except_return = generate_rust_from_source(
-        "def classify(n: int) -> int:\n\
-    try:\n\
-        if n > 0:\n\
-            return n\n\
-        else:\n\
-            raise ValueError('non-positive')\n\
-    except ValueError as e:\n\
-        return 99\n",
+        r#"def classify(n: int) -> int:
+    try:
+        if n > 0:
+            return n
+        else:
+            raise ValueError('non-positive')
+    except ValueError as e:
+        return 99
+"#,
     );
     assert!(
         try_except_return.contains("return Err(ValueError::new(\"non-positive\".to_string()));")
     );
-    assert!(try_except_return.contains("return 99 as i64;"));
+    assert!(try_except_return.contains("return 99_i64;"));
 
     let loop_guard_narrowing = generate_rust_from_source(
-        "def summarize(values: list[int]) -> int:\n\
-    total: int = 0\n\
-    for value in values:\n\
-        if value > 10:\n\
-            total = total + value\n\
-        else:\n\
-            total = total + 1\n\
-    return total\n",
+        r#"def summarize(values: list[int]) -> int:
+    total: int = 0
+    for value in values:
+        if value > 10:
+            total = total + value
+        else:
+            total = total + 1
+    return total
+"#,
     );
     assert!(loop_guard_narrowing.contains("fn summarize(values: &Vec<i64>) -> i64"));
-    assert!(loop_guard_narrowing.contains("if value > (10 as i64)"));
+    assert!(loop_guard_narrowing.contains("if value > (10_i64)"));
 }
 
 #[test]
 fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
     let always_exit_try = generate_rust_from_source(
-        "def classify(flag: bool) -> int:\n\
-    try:\n\
-        if flag:\n\
-            return 5\n\
-        raise ValueError('bad value')\n\
-        return 11\n\
-    except ValueError as e:\n\
-        return 77\n",
+        r#"def classify(flag: bool) -> int:
+    try:
+        if flag:
+            return 5
+        raise ValueError('bad value')
+        return 11
+    except ValueError as e:
+        return 77
+"#,
     );
     assert!(always_exit_try.contains("return Err(ValueError::new(\"bad value\".to_string()));"));
-    assert!(always_exit_try.contains("return 77 as i64;"));
-    assert!(!always_exit_try.contains("11 as i64"));
+    assert!(always_exit_try.contains("return 77_i64;"));
+    assert!(!always_exit_try.contains("11_i64"));
 
     let unreachable_tail = generate_rust_from_source(
-        "def inferred(flag: bool):\n\
-    if flag:\n\
-        return 1\n\
-    return 2\n\
-    return 'never'\n",
+        r#"def inferred(flag: bool):
+    if flag:
+        return 1
+    return 2
+    return 'never'
+"#,
     );
     assert!(unreachable_tail.contains("fn inferred(flag: bool) -> i64"));
-    assert!(unreachable_tail.contains("return 2 as i64;"));
+    assert!(unreachable_tail.contains("2_i64\n}"));
+    assert!(!unreachable_tail.contains("return 2_i64"));
     assert!(!unreachable_tail.contains("never"));
 }
 

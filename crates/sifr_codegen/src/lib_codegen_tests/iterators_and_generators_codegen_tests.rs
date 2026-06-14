@@ -223,12 +223,15 @@ fn test_generate_rust_iterator_return_consumes_owned_param_binding() {
 #[test]
 fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
     let rust_code = generate_rust_from_source(
-        "def main():\n    f = open(\"/tmp/sifr_codegen_open.txt\", \"w\")\n",
+        "def main():\n    f = open(\"/tmp/sifr_codegen_open.txt\", \"w\", encoding=\"utf-8\")\n",
     );
 
     assert!(rust_code.contains("struct FileHandle"));
-    assert!(rust_code.contains("fn new(_handle: i64, _mode: String) -> Self"));
-    assert!(rust_code.contains("return Ok(FileHandle::new(__handle_id, __mode.to_string()));"));
+    assert!(rust_code.contains("TextFileHandle::new("));
+    assert!(rust_code.contains("BinaryFileHandle::new(__handle_id, __mode.to_string())"));
+    assert!(rust_code.contains("Encoding::new(__encoding)"));
+    assert!(rust_code.contains("DecodeErrorHandler::new(__errors.clone())"));
+    assert!(rust_code.contains("EncodeErrorHandler::new(__errors)"));
     assert!(!rust_code
         .contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });"));
 }

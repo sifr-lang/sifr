@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, and Wave 2.0 merged; Wave 2.1 codegen stale-expectation repairs in progress
+Status: in progress; Wave 0, Wave 1, Wave 2.0, and Wave 2.1 merged; Wave 2.2 codegen stale source-fixture repairs in progress
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -331,7 +331,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 2.1 Implementation Notes
 
-- Status: implemented locally; review and PR pending.
+- Status: merged in PR `https://github.com/sifr-lang/sifr/pull/2562`.
 - Scope: close all 20 stale expectation rows assigned to `proposed_pr_slice: 2.1` in the `sifr_codegen` red-blocker inventory.
 - Changes: refreshed normalized integer/float literal expectations, final-return tail-expression expectations, the render helper inline snapshot, and source-based iterator materialization assertions to match the current generated-Rust contract.
 - Validation:
@@ -345,6 +345,23 @@ Implementation re-check started 2026-06-14.
   - `plans/issues/active/codegen-test-triage.md`: current Wave 2.1 state and remaining open-row count documented.
 - Review:
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-1-review-pass-1.md`: no blocking issues; reviewer approved Wave 2.1 for merge and left only low-priority follow-ups for assertion hardening.
+
+### Wave 2.2 Implementation Notes
+
+- Status: implemented locally; review and PR pending.
+- Scope: close all 16 stale source-fixture rows assigned to `proposed_pr_slice: 2.2` in the `sifr_codegen` red-blocker inventory.
+- Changes: converted parser-invalid `\n\` fixtures to raw multi-line source strings, added real `await task.sleep(0.0)` suspension points to async worker fixtures that must remain async, added explicit encoding to the `open()` fixture, and refreshed secondary normalized-literal / constructor assertions exposed after those fixtures started lowering. The newly reachable literal spelling refreshes are the same current-contract forms covered by Wave 2.1 (`99_i64`, `10_i64`, `77_i64`, and tail-expression `2_i64`).
+- Validation:
+  - `cargo fmt --check`: pass.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `cargo test -p sifr_codegen lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_open_uses_canonical_filehandle_constructor -- --exact --nocapture`: pass.
+  - `cargo test -p sifr_codegen -- --nocapture`: expected failure; improved from 675 passed / 32 failed to 691 passed / 16 failed, closing exactly the 16 Wave 2.2 rows while leaving later Wave 2.x rows red.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass after review follow-ups; wall time 185.80s with the existing warm-budget advisory and 100% e2e cache hit rate.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-2-review-pass-1.md`: no blocking issues; reviewer approved Wave 2.2 for PR/merge and requested assertion/evidence hardening, which was applied.
+- Artifacts:
+  - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: `red_blocker.failure_count` updated to 16, `test_result` updated to 691/16/707, and all 16 Wave 2.2 rows marked `closed`.
+  - `plans/issues/active/codegen-test-triage.md`: current Wave 2.2 state and remaining open-row count documented.
 
 ## Full Discovery Snapshot
 
