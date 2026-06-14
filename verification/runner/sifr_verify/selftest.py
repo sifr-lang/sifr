@@ -6,7 +6,15 @@ import tempfile
 from pathlib import Path
 
 from .areas import discover_areas
-from .profiles import failure_reproduction_command, load_all_profiles, selected_resource_classes
+from .profiles import (
+    ProfileError,
+    crate_test_suites_for_mode,
+    failure_reproduction_command,
+    load_all_profiles,
+    selected_resource_classes,
+    validate_crate_test_membership,
+    validate_selected_area_suites,
+)
 from .results import build_result
 from .schemas import load_schema, validate_all_committed_schemas, validate_data, validate_schema_contract
 
@@ -15,6 +23,7 @@ def run_all() -> list[str]:
     checks = [
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
+        ("crate membership self-test", _crate_membership_self_test),
         ("runner discovery self-test", _discovery_self_test),
         ("resource class selection self-test", _resource_class_self_test),
         ("resume/failure-reproduction self-test", _failure_reproduction_self_test),
@@ -34,6 +43,7 @@ def _schema_self_test() -> None:
         "verification/schemas/suite.schema.json",
         "verification/schemas/case.schema.json",
         "verification/schemas/result.schema.json",
+        "verification/schemas/owners.schema.json",
     }
     missing = required - set(committed)
     if missing:
@@ -70,6 +80,100 @@ def _profile_schema_self_test() -> None:
     expected = {"create-pr", "merge", "nightly", "release"}
     if set(profiles) != expected:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
+
+
+def _crate_membership_self_test() -> None:
+    merge = load_all_profiles()["merge"]
+    full_suites = crate_test_suites_for_mode(merge, "full")
+    by_id = {str(suite.get("id")): suite for suite in full_suites}
+    expected_executed = {
+        "sifr_type_system",
+        "sifr_format",
+        "sifr_lint",
+        "sifr_source",
+        "sifr_ir",
+    }
+    missing = sorted(expected_executed.difference(by_id))
+    if missing:
+        raise AssertionError(f"merge crate membership omitted expected suites: {missing}")
+    for suite_id in sorted(expected_executed):
+        suite = by_id[suite_id]
+        if suite.get("status") != "blocking" or suite.get("executed_in_merge") is not True:
+            raise AssertionError(f"merge crate suite is not blocking/executed: {suite_id}")
+
+    codegen = by_id.get("sifr_codegen")
+    if not isinstance(codegen, dict):
+        raise AssertionError("sifr_codegen red-blocker missing from merge crate membership")
+    if codegen.get("status") != "red-blocker" or codegen.get("executed_in_merge") is not False:
+        raise AssertionError(f"sifr_codegen red-blocker has invalid execution status: {codegen}")
+    if not codegen.get("must_be_executed_by"):
+        raise AssertionError("sifr_codegen red-blocker has no execution deadline")
+
+    duplicate_profile = {
+        "name": "self-test",
+        "crate_test_membership": {
+            "suites": [
+                {
+                    "id": "duplicate",
+                    "package": "sifr_ir",
+                    "command": ["test", "-p", "sifr_ir"],
+                    "modes": ["full"],
+                    "status": "blocking",
+                    "executed_in_merge": True,
+                },
+                {
+                    "id": "duplicate",
+                    "package": "sifr_ir",
+                    "command": ["test", "-p", "sifr_ir"],
+                    "modes": ["full"],
+                    "status": "blocking",
+                    "executed_in_merge": True,
+                },
+            ],
+        },
+    }
+    try:
+        validate_crate_test_membership(duplicate_profile)
+    except ProfileError as exc:
+        if "duplicate crate test suite duplicate" not in str(exc):
+            raise
+    else:
+        raise AssertionError("duplicate crate membership suite was accepted")
+
+    unknown_crate_profile = {
+        "name": "self-test",
+        "crate_test_membership": {
+            "suites": [
+                {
+                    "id": "unknown",
+                    "package": "sifr_does_not_exist",
+                    "command": ["test", "-p", "sifr_does_not_exist"],
+                    "modes": ["full"],
+                    "status": "blocking",
+                    "executed_in_merge": True,
+                },
+            ],
+        },
+    }
+    try:
+        validate_crate_test_membership(unknown_crate_profile)
+    except ProfileError as exc:
+        if "references unknown package sifr_does_not_exist" not in str(exc):
+            raise
+    else:
+        raise AssertionError("unknown crate membership package was accepted")
+
+    unknown_suite_profile = {
+        "name": "self-test",
+        "selected_areas": [{"area": "core_language", "suites": ["not_a_suite"]}],
+    }
+    try:
+        validate_selected_area_suites(unknown_suite_profile)
+    except ProfileError as exc:
+        if "selects unknown suite core_language:not_a_suite" not in str(exc):
+            raise
+    else:
+        raise AssertionError("unknown selected area suite was accepted")
 
 
 def _discovery_self_test() -> None:

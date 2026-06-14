@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "packages": [
+    {
+      "name": "sifr",
+      "classification": "first_party_tooling",
+      "targets": [
+        {"name": "sifr", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
+        {"name": "build_output_contracts", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "e2e", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "validation_contracts", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
+      ],
+      "features": []
+    },
+    {
+      "name": "sifr_analysis",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_analysis", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_codegen",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge-red-blocker"}],
+      "features": []
+    },
+    {
+      "name": "sifr_diagnostics",
+      "classification": "first_party_compiler",
+      "targets": [
+        {"name": "sifr_diagnostics", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "gen-diagnostic-schema", "kind": "bin", "classification": "internal_codegen_tool", "profile_assignment": "internal"},
+        {"name": "gen-error-docs", "kind": "bin", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
+      ],
+      "features": []
+    },
+    {
+      "name": "sifr_driver",
+      "classification": "first_party_compiler",
+      "targets": [
+        {"name": "sifr_driver", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "diagnostic_contract_harness", "kind": "bin", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
+      ],
+      "features": []
+    },
+    {
+      "name": "sifr_format",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_format", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_frontend",
+      "classification": "first_party_compiler",
+      "targets": [
+        {"name": "sifr_frontend", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "frontend_query_bench", "kind": "bin", "classification": "benchmark", "profile_assignment": "performance"}
+      ],
+      "features": []
+    },
+    {
+      "name": "sifr_ir",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_ir", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_lint",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_lint", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_lowering",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_lowering", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_lsp",
+      "classification": "first_party_tooling",
+      "targets": [{"name": "sifr_lsp", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_package",
+      "classification": "first_party_tooling",
+      "targets": [{"name": "sifr_package", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_runtime",
+      "classification": "first_party_runtime",
+      "targets": [{"name": "sifr_runtime", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"}],
+      "features": [
+        {"name": "default", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "http", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "i18n", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "net", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "tls", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "unicode", "profile_assignment": "nightly", "classification": "first_party_runtime"}
+      ]
+    },
+    {
+      "name": "sifr_source",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_source", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_stdlib",
+      "classification": "first_party_runtime",
+      "targets": [
+        {"name": "sifr_stdlib", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"},
+        {"name": "sifr-stdlib-ipc-pipe-fixture-worker", "kind": "bin", "classification": "test_fixture", "profile_assignment": "test-fixture"},
+        {"name": "concurrency_runtime_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "ipc_process_pipe_fixture", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "network_http_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "text_i18n_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
+      ],
+      "features": [
+        {"name": "__test_fixture", "profile_assignment": "test-fixture", "classification": "test_fixture"}
+      ]
+    },
+    {
+      "name": "sifr_syntax",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_syntax", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr_type_system",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_type_system", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    }
+  ]
+}

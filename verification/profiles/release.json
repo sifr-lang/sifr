@@ -39,6 +39,29 @@
     "emit_command": "scripts/run_all_tests.sh --profile release --emit-plan",
     "compare_command": "uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>"
   },
+  "crate_test_membership": {
+    "suites": [
+      {"id": "sifr_diagnostics", "package": "sifr_diagnostics", "command": ["test", "-p", "sifr_diagnostics"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_lowering", "package": "sifr_lowering", "command": ["test", "-p", "sifr_lowering", "--", "--skip", "test_e2e_pass"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_syntax", "package": "sifr_syntax", "command": ["test", "-p", "sifr_syntax"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_frontend", "package": "sifr_frontend", "command": ["test", "-p", "sifr_frontend"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_analysis", "package": "sifr_analysis", "command": ["test", "-p", "sifr_analysis"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_lsp", "package": "sifr_lsp", "command": ["test", "-p", "sifr_lsp"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_package", "package": "sifr_package", "command": ["test", "-p", "sifr_package"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_stdlib", "package": "sifr_stdlib", "command": ["test", "-p", "sifr_stdlib"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_runtime", "package": "sifr_runtime", "command": ["test", "-p", "sifr_runtime"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_runtime_http", "package": "sifr_runtime", "command": ["test", "-p", "sifr_runtime", "--features", "http"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_type_system", "package": "sifr_type_system", "command": ["test", "-p", "sifr_type_system"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_format", "package": "sifr_format", "command": ["test", "-p", "sifr_format"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_lint", "package": "sifr_lint", "command": ["test", "-p", "sifr_lint"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_source", "package": "sifr_source", "command": ["test", "-p", "sifr_source"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_ir", "package": "sifr_ir", "command": ["test", "-p", "sifr_ir"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_cli_bin", "package": "sifr", "command": ["test", "-p", "sifr", "--bin", "sifr"], "modes": ["smoke"], "status": "blocking", "executed_in_merge": false},
+      {"id": "sifr_cli_full", "package": "sifr", "command": ["test", "-p", "sifr", "--", "--skip", "test_e2e_pass"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_driver_lib", "package": "sifr_driver", "command": ["test", "-p", "sifr_driver", "--lib"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_codegen", "package": "sifr_codegen", "command": ["test", "-p", "sifr_codegen"], "modes": ["full"], "status": "red-blocker", "executed_in_merge": false, "must_be_executed_by": "Wave 2.final", "reason": "Known red suite tracked by codegen red-blocker inventory until Wave 2.final."}
+    ]
+  },
   "selected_areas": [
     {
       "area": "core_language",

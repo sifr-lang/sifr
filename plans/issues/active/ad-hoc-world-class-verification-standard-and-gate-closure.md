@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: implementation-ready; pending implementation, local validation, PRs, review, and merge
+Status: in progress; Wave 0 merged; Wave 1 implementation validated locally, PR/review/merge pending
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -252,11 +252,11 @@ Implementation re-check started 2026-06-14.
 - E2E manifest counts: `create_pr_e2e_manifest.json` has 132 fixtures; `merge_e2e_manifest.json` has 145 fixtures.
 - Current `.sifr` files under `verification/areas/core_language`: 186.
 - Cargo metadata still lists the initially omitted first-party crates: `sifr_codegen`, `sifr_type_system`, `sifr_format`, `sifr_lint`, `sifr_ir`, and `sifr_source`.
-- Warm/cold merge wall time: pending measurement before the first gate-expanding wave.
+- Warm/cold merge wall time: pre-Wave 1 baseline was not separately captured before the gate-expanding edit; Wave 1 post-change merge run completed in 986.72s with a cold e2e cache, above warm budget and below cold budget.
 
 ### Wave 0 Implementation Notes
 
-- Status: implemented locally; reviewer pass 3 found no remaining blockers; pending PR.
+- Status: merged in PR https://github.com/sifr-lang/sifr/pull/2558.
 - Scope: schema v2 compatibility, owner registry, coverage-matrix area, shipped guarantee registry, compiler surface matrix, CLI/workspace inventories, hermetic profile metadata, profile-plan emission, and policy docs.
 - Focused validation:
   - `uv run --project verification --locked python -m sifr_verify --self-test`: pass.
@@ -272,6 +272,32 @@ Implementation re-check started 2026-06-14.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-1.md`: found five blocking issues; all addressed.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-2.md`: found one remaining blocker in the e2e cargo invocation; addressed with `--locked`.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-3.md`: no remaining blocking Wave 0 issues.
+
+### Wave 1 Implementation Notes
+
+- Status: implementation complete locally; PR/review/merge pending.
+- Scope: profile-owned crate test membership, Cargo metadata package/target/feature classification, merge-gate closure for previously omitted green first-party compiler crates, full-mode `sifr_codegen` red-blocker visibility, and `sifr_ir` seed tests.
+- Matrix changes: `first_party_crate_tests` and `cargo_features_targets` promoted from `expected-missing` to `blocking`; coverage matrix now reports 20 temporary rows.
+- Create-pr behavior: newly added omitted crates are full-mode only so create-pr remains representative; merge runs all green first-party compiler crate tests.
+- Validation:
+  - `uv run --project verification --locked python -m sifr_verify --self-test`: pass, including crate membership self-test.
+  - `uv run --project verification --locked python -m sifr_verify profiles check`: pass.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix`: pass; 13 guarantees, 33 surface rows, 20 temporary rows.
+  - `cargo test -p sifr_type_system --locked`: pass, 92 tests.
+  - `cargo test -p sifr_format --locked`: pass, 7 tests.
+  - `cargo test -p sifr_lint --locked`: pass, 22 tests.
+  - `cargo test -p sifr_source --locked`: pass, 3 tests.
+  - `cargo test -p sifr_ir --locked`: pass, 3 tests.
+  - `cargo check --workspace --all-targets --all-features --locked`: pass.
+  - `cargo fmt --check`: pass.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `python3 scripts/check_hir_maintainability_guardrails.py`: pass.
+  - `scripts/run_all_tests.sh --profile merge --emit-plan`: pass; merge plan includes explicit crate membership.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass after narrowing new omitted crates to full-mode only; wall time 176.70s with existing warm-budget advisory.
+  - `scripts/run_all_tests.sh`: pass for merge; wall time 986.72s with cold e2e cache, all blocking checks green, `sifr_codegen` logged as planned red-blocker for Wave 2.final.
+- Budget evidence:
+  - Create-pr remains above its warm budget but improved from the all-smoke trial run by making the Wave 1 additions full-mode only.
+  - Merge completed below the cold budget but above the warm budget due primarily to generated-code quality and full e2e cache misses; follow-up batching/cache-budget work remains outside this Wave 1 gate-closure scope.
 
 ## Full Discovery Snapshot
 

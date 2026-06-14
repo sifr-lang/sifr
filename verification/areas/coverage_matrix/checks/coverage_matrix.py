@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -18,6 +19,7 @@ GUARANTEES_PATH = AREA_ROOT / "shipped_guarantees.json"
 SURFACES_PATH = AREA_ROOT / "compiler_surface_matrix.json"
 CLI_CONTRACTS_PATH = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "data" / "cli_exit_code_contracts.json"
 WORKSPACE_CONTRACTS_PATH = REPO_ROOT / "verification" / "areas" / "project_workspace" / "data" / "workspace_contracts.json"
+CARGO_CLASSIFICATION_PATH = AREA_ROOT / "data" / "cargo_metadata_classification.json"
 PROFILES_DIR = REPO_ROOT / "verification" / "profiles"
 AREAS_DIR = REPO_ROOT / "verification" / "areas"
 
@@ -30,6 +32,27 @@ VALID_MATRIX_STATUSES = {
     "not-applicable",
     "red-blocker",
     "quarantined",
+}
+VALID_CARGO_CLASSIFICATIONS = {
+    "first_party_compiler",
+    "first_party_runtime",
+    "first_party_tooling",
+    "test_fixture",
+    "benchmark",
+    "internal_codegen_tool",
+    "third_party",
+    "generated",
+    "external_tooling",
+}
+VALID_PROFILE_ASSIGNMENTS = {
+    "merge",
+    "merge-red-blocker",
+    "nightly",
+    "release",
+    "internal",
+    "performance",
+    "test-fixture",
+    "unsupported",
 }
 TEMPORARY_STATUSES = {"expected-missing", "tests:none", "red-blocker", "quarantined"}
 NON_CLOSEOUT_STATUSES = {"expected-missing", "tests:none", "red-blocker"}
@@ -56,6 +79,7 @@ def main() -> int:
     validate_contract_inventory(CLI_CONTRACTS_PATH, "contracts", "profile_surface", errors)
     validate_contract_inventory(WORKSPACE_CONTRACTS_PATH, "contracts", "profile_surface", errors)
     validate_profile_policy(errors)
+    validate_cargo_metadata_classification(errors)
 
     if errors:
         for error in errors:
@@ -310,6 +334,146 @@ def validate_profile_policy(errors: list[str]) -> None:
         profile_plan = profile.get("profile_plan")
         if not isinstance(profile_plan, dict) or not profile_plan.get("emit_command"):
             errors.append(f"{profile_name}: missing profile plan emission command")
+
+
+def validate_cargo_metadata_classification(errors: list[str]) -> None:
+    classification = load_json_object(CARGO_CLASSIFICATION_PATH, errors)
+    packages = classification.get("packages", [])
+    if not isinstance(packages, list) or not packages:
+        errors.append(f"{repo_path(CARGO_CLASSIFICATION_PATH)} must define non-empty packages")
+        return
+    classified = {pkg.get("name"): pkg for pkg in packages if isinstance(pkg, dict)}
+    metadata = load_cargo_metadata(errors)
+    if not metadata:
+        return
+    metadata_packages = {
+        package["name"]: package
+        for package in metadata.get("packages", [])
+        if isinstance(package, dict) and isinstance(package.get("name"), str)
+    }
+    for package_name in sorted(metadata_packages):
+        if package_name not in classified:
+            errors.append(f"cargo metadata package lacks classification: {package_name}")
+    stale = sorted(set(classified) - set(metadata_packages))
+    for package_name in stale:
+        errors.append(f"cargo classification references unknown package: {package_name}")
+
+    merge_profile = load_json_object(PROFILES_DIR / "merge.json", errors)
+    merge_membership = merge_profile.get("crate_test_membership", {}).get("suites", [])
+    merge_packages = {
+        suite.get("package"): suite
+        for suite in merge_membership
+        if isinstance(suite, dict) and "full" in suite.get("modes", [])
+    }
+
+    for package_name, package in sorted(metadata_packages.items()):
+        row = classified.get(package_name)
+        if not isinstance(row, dict):
+            continue
+        classification_value = row.get("classification")
+        if classification_value not in VALID_CARGO_CLASSIFICATIONS:
+            errors.append(f"{package_name}: invalid classification {classification_value}")
+        validate_targets(package_name, package, row, errors)
+        validate_features(package_name, package, row, errors)
+        if classification_value == "first_party_compiler":
+            membership = merge_packages.get(package_name)
+            if membership is None:
+                errors.append(f"{package_name}: first-party compiler crate missing merge crate-test membership")
+            elif membership.get("status") == "red-blocker":
+                if membership.get("executed_in_merge") is not False or not membership.get("must_be_executed_by"):
+                    errors.append(f"{package_name}: red-blocker crate membership lacks execution deadline")
+            elif membership.get("executed_in_merge") is not True:
+                errors.append(f"{package_name}: merge crate-test membership is not executed")
+
+
+def load_cargo_metadata(errors: list[str]) -> dict[str, Any]:
+    proc = subprocess.run(
+        ["cargo", "metadata", "--locked", "--no-deps", "--format-version", "1"],
+        cwd=REPO_ROOT,
+        env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        errors.append("cargo metadata --locked failed: " + (proc.stderr.strip() or proc.stdout.strip()))
+        return {}
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        errors.append(f"cargo metadata returned invalid JSON: {exc}")
+        return {}
+    if not isinstance(payload, dict):
+        errors.append("cargo metadata root must be an object")
+        return {}
+    return payload
+
+
+def validate_targets(
+    package_name: str,
+    package: dict[str, Any],
+    row: dict[str, Any],
+    errors: list[str],
+) -> None:
+    targets = row.get("targets", [])
+    if not isinstance(targets, list):
+        errors.append(f"{package_name}: targets classification must be an array")
+        return
+    classified_targets = {
+        (target.get("name"), target.get("kind")): target
+        for target in targets
+        if isinstance(target, dict)
+    }
+    metadata_targets = set()
+    for target in package.get("targets", []):
+        if not isinstance(target, dict):
+            continue
+        name = target.get("name")
+        kinds = target.get("kind", [])
+        if not isinstance(name, str) or not isinstance(kinds, list) or not kinds:
+            continue
+        kind = str(kinds[0])
+        metadata_targets.add((name, kind))
+        classified = classified_targets.get((name, kind))
+        if classified is None:
+            errors.append(f"{package_name}: target lacks classification: {kind}:{name}")
+            continue
+        if classified.get("classification") not in VALID_CARGO_CLASSIFICATIONS:
+            errors.append(f"{package_name}:{name}: invalid target classification")
+        if classified.get("profile_assignment") not in VALID_PROFILE_ASSIGNMENTS:
+            errors.append(f"{package_name}:{name}: invalid target profile_assignment")
+    for name, kind in sorted(set(classified_targets) - metadata_targets):
+        errors.append(f"{package_name}: stale target classification: {kind}:{name}")
+
+
+def validate_features(
+    package_name: str,
+    package: dict[str, Any],
+    row: dict[str, Any],
+    errors: list[str],
+) -> None:
+    features = row.get("features", [])
+    if not isinstance(features, list):
+        errors.append(f"{package_name}: features classification must be an array")
+        return
+    classified_features = {
+        feature.get("name"): feature
+        for feature in features
+        if isinstance(feature, dict)
+    }
+    metadata_features = set(package.get("features", {}).keys())
+    for feature_name in sorted(metadata_features):
+        classified = classified_features.get(feature_name)
+        if classified is None:
+            errors.append(f"{package_name}: feature lacks classification: {feature_name}")
+            continue
+        if classified.get("classification") not in VALID_CARGO_CLASSIFICATIONS:
+            errors.append(f"{package_name}:{feature_name}: invalid feature classification")
+        if classified.get("profile_assignment") not in VALID_PROFILE_ASSIGNMENTS:
+            errors.append(f"{package_name}:{feature_name}: invalid feature profile_assignment")
+    for feature_name in sorted(set(classified_features) - metadata_features):
+        errors.append(f"{package_name}: stale feature classification: {feature_name}")
 
 
 def load_area_suites(errors: list[str]) -> dict[str, set[str]]:

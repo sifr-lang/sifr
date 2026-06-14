@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import shlex
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -15,6 +17,9 @@ from .schemas import load_json, load_schema, validate_data
 
 class ProfileError(VerificationError):
     """Profile data or profile lookup failed."""
+
+
+_WORKSPACE_PACKAGE_NAMES: set[str] | None = None
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -37,6 +42,7 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     if payload.get("name") != profile:
         raise ProfileError(f"profile name '{payload.get('name')}' must match file stem '{profile}'")
     validate_selected_area_suites(payload)
+    validate_crate_test_membership(payload)
     return payload
 
 
@@ -118,6 +124,98 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                 raise ProfileError(
                     f"profile {profile.get('name')} selects unknown suite {area}:{suite}"
                 )
+
+
+def validate_crate_test_membership(profile: dict[str, Any]) -> None:
+    membership = profile.get("crate_test_membership")
+    if membership is None:
+        return
+    suites = membership.get("suites") if isinstance(membership, dict) else None
+    if not isinstance(suites, list) or not suites:
+        raise ProfileError(f"profile {profile.get('name')} crate_test_membership has no suites")
+    workspace_packages = workspace_package_names()
+    seen: set[str] = set()
+    for suite in suites:
+        if not isinstance(suite, dict):
+            raise ProfileError(f"profile {profile.get('name')} has invalid crate test suite")
+        suite_id = str(suite.get("id", ""))
+        if suite_id in seen:
+            raise ProfileError(f"profile {profile.get('name')} has duplicate crate test suite {suite_id}")
+        seen.add(suite_id)
+        command = suite.get("command", [])
+        if not isinstance(command, list) or not command or not all(isinstance(arg, str) for arg in command):
+            raise ProfileError(f"profile {profile.get('name')} crate test {suite_id} has invalid command")
+        if command[0] != "test":
+            raise ProfileError(f"profile {profile.get('name')} crate test {suite_id} must use cargo test")
+        package = suite.get("package")
+        if not isinstance(package, str) or not package:
+            raise ProfileError(f"profile {profile.get('name')} crate test {suite_id} has invalid package")
+        if package not in workspace_packages:
+            raise ProfileError(
+                f"profile {profile.get('name')} crate test {suite_id} references unknown package {package}"
+            )
+        command_package = package_from_cargo_test_command(command)
+        if command_package != package:
+            raise ProfileError(
+                f"profile {profile.get('name')} crate test {suite_id} package {package} "
+                f"does not match command package {command_package}"
+            )
+        status = suite.get("status")
+        if status == "red-blocker" and suite.get("executed_in_merge") is not False:
+            raise ProfileError(f"profile {profile.get('name')} red-blocker {suite_id} must not execute in merge")
+        if status == "red-blocker" and not suite.get("must_be_executed_by"):
+            raise ProfileError(f"profile {profile.get('name')} red-blocker {suite_id} has no execution deadline")
+
+
+def workspace_package_names() -> set[str]:
+    global _WORKSPACE_PACKAGE_NAMES
+    if _WORKSPACE_PACKAGE_NAMES is not None:
+        return _WORKSPACE_PACKAGE_NAMES
+    proc = subprocess.run(
+        ["cargo", "metadata", "--locked", "--no-deps", "--format-version", "1"],
+        cwd=REPO_ROOT,
+        env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        detail = proc.stderr.strip() or proc.stdout.strip()
+        raise ProfileError(f"cargo metadata --locked failed while validating crate membership: {detail}")
+    payload = json.loads(proc.stdout)
+    packages = payload.get("packages") if isinstance(payload, dict) else None
+    if not isinstance(packages, list):
+        raise ProfileError("cargo metadata returned no packages while validating crate membership")
+    _WORKSPACE_PACKAGE_NAMES = {
+        package["name"]
+        for package in packages
+        if isinstance(package, dict) and isinstance(package.get("name"), str)
+    }
+    return _WORKSPACE_PACKAGE_NAMES
+
+
+def package_from_cargo_test_command(command: list[str]) -> str | None:
+    for index, arg in enumerate(command):
+        if arg in {"-p", "--package"} and index + 1 < len(command):
+            return command[index + 1]
+        if arg.startswith("--package="):
+            return arg.removeprefix("--package=")
+    return None
+
+
+def crate_test_suites_for_mode(profile: dict[str, Any], mode: str) -> list[dict[str, Any]]:
+    if mode not in {"smoke", "full"}:
+        raise ProfileError(f"unsupported crate test mode: {mode}")
+    membership = profile.get("crate_test_membership")
+    suites = membership.get("suites") if isinstance(membership, dict) else None
+    if not isinstance(suites, list) or not suites:
+        raise ProfileError(f"profile {profile.get('name')} has no crate_test_membership suites")
+    return [
+        suite
+        for suite in suites
+        if isinstance(suite, dict) and mode in suite.get("modes", [])
+    ]
 
 
 def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
@@ -235,6 +333,7 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
             "hardening_suites": list(legacy["hardening_suites"]),
             "extra_checks": list(legacy["extra_checks"]),
         },
+        "crate_test_membership": profile.get("crate_test_membership", {}),
         "e2e": {
             "fixture_manifest": "" if fixture_manifest is None else str(fixture_manifest.relative_to(REPO_ROOT)),
             "fixture_count": 0 if fixture_manifest is None else fixture_count(fixture_manifest),
@@ -259,6 +358,7 @@ def compare_plans(local_path: str, ci_path: str) -> int:
         "profile",
         "selected_areas",
         "legacy_facade",
+        "crate_test_membership",
         "e2e",
         "network_policy",
         "cargo_policy",
