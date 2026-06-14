@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0 merged; Wave 1 validated locally and approved by two review passes; Wave 1 merge pending
+Status: in progress; Wave 0 and Wave 1 merged; Wave 2.0 codegen failure inventory in progress
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -275,7 +275,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 1 Implementation Notes
 
-- Status: implementation complete locally; PR open and approved by two Claude Opus review passes; merge pending.
+- Status: merged in PR `https://github.com/sifr-lang/sifr/pull/2559`.
 - Scope: profile-owned crate test membership, Cargo metadata package/target/feature classification, merge-gate closure for previously omitted green first-party compiler crates, full-mode `sifr_codegen` red-blocker visibility, and `sifr_ir` seed tests.
 - Matrix changes: `first_party_crate_tests` and `cargo_features_targets` promoted from `expected-missing` to `blocking`; coverage matrix now reports 20 temporary rows.
 - Create-pr behavior: newly added omitted crates are full-mode only so create-pr remains representative; merge runs all green first-party compiler crate tests.
@@ -303,6 +303,31 @@ Implementation re-check started 2026-06-14.
 - Budget evidence:
   - Create-pr remains above its warm budget but improved from the all-smoke trial run by making the Wave 1 additions full-mode only.
   - Merge completed below the cold budget but above the warm budget due primarily to generated-code quality and full e2e cache misses; follow-up batching/cache-budget work remains outside this Wave 1 gate-closure scope.
+
+### Wave 2.0 Implementation Notes
+
+- Status: inventory drafted locally; PR/review/merge pending.
+- Scope: no compiler code changes; failure inventory only for the current `sifr_codegen` red-blocker.
+- Reproduction:
+  - `cargo test -p sifr_codegen -- --nocapture`: expected failure; 655 passed, 52 failed, 707 total.
+- Validation:
+  - `jq empty verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: pass.
+  - Inventory parity check against `target/wave2/sifr_codegen_nocapture.log`: pass; 52 failures matched in order with all required fields.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area core_language`: pass after warming a transient audit-fixture timeout.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass; wall time 175.52s with existing warm-budget advisory.
+- Artifacts:
+  - `plans/issues/active/codegen-test-triage.md`: one row per failing test with classification, owner, proposed PR slice, and replacement/regression target.
+  - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: machine-readable inventory with current output, source location, affected compiler contract, owner, and `closes_in_wave`.
+- Classification summary:
+  - `stale-expectation`: 36.
+  - `obsolete-test`: 6.
+  - `compiler-bug`: 10.
+  - `production-bug`: 0; no unresolved production sentinel rows in Wave 2.0.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-0-review-pass-1.md`: found three blockers; addressed by reclassifying fixable user-visible defects as `compiler-bug`, using `closes_in_wave: 2` plus `closes_in_subwave`, and replacing maintainer-local/source-helper locations with repository-relative test locations.
+  - Post-review validation: `scripts/run_all_tests.sh --profile create-pr` produced a passing lane report at `target/validation_lane_reports/create-pr.latest.json`; wall time 149.03s with existing warm-budget advisory. The terminal process was terminated after the passing report was written because the e2e process left pipes open after completion.
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-0-review-pass-2.md`: no blocking issues; reviewer explicitly approved Wave 2.0 for merge and left only non-blocking follow-ups for later Wave 2.x work.
 
 ## Full Discovery Snapshot
 
