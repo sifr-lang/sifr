@@ -567,6 +567,7 @@ fn test_emit_expr_borrowed_compare_is_structured() {
 #[test]
 fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     let lib_src = include_str!("../lib.rs");
+    let emitter_state_src = include_str!("../lib_emitter_state.rs");
 
     assert!(!lib_src.contains("mod stmt_emitter;"));
     assert!(!lib_src.contains("mod expr_emitter;"));
@@ -576,14 +577,16 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(!lib_src.contains("should_force_expr_string_path"));
     assert!(!lib_src.contains("fn emit_expr(&mut self, expr: &HirExpr) {"));
     assert!(!lib_src.contains("fn try_lower_structured_expr("));
+    assert!(!lib_src.contains("fn emit_stmt(&mut self, stmt: &HirStmt) {"));
 
-    let emit_stmt_start = lib_src
+    let emit_stmt_start = emitter_state_src
         .find("fn emit_stmt(&mut self, stmt: &HirStmt) {")
         .expect("emit_stmt wrapper should exist");
-    let body_contains_yield_start = lib_src
-        .find("pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {")
-        .expect("body_contains_yield should exist");
-    let emit_stmt_wrapper = &lib_src[emit_stmt_start..body_contains_yield_start];
+    let impl_end = emitter_state_src[emit_stmt_start..]
+        .find("\n    }\n}")
+        .map(|offset| emit_stmt_start + offset)
+        .expect("emit_stmt wrapper should end before impl close");
+    let emit_stmt_wrapper = &emitter_state_src[emit_stmt_start..impl_end];
     assert!(emit_stmt_wrapper.contains("structured statement emission missing for production path"));
     assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_string_"));
     assert!(
@@ -601,14 +604,15 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
 #[test]
 fn test_production_lowering_contract_uses_result_helpers_only() {
     let lib_src = include_str!("../lib.rs");
-    let lower_expr_src = include_str!("../lower_expr.rs");
+    let emitter_state_src = include_str!("../lib_emitter_state.rs");
+    let lower_expr_src = include_str!("../lower_expr/leaves_and_plain_calls.rs");
     let module_constants_src = include_str!("../module_constants.rs");
-    let expr_render_helpers_src = include_str!("../expr_render_helpers.rs");
+    let field_rewrites_src = include_str!("../expr_render_helpers/field_and_stdlib_rewrites.rs");
 
-    assert!(lib_src.contains("try_lower_simple_stmt_with_scope_result("));
+    assert!(emitter_state_src.contains("try_lower_simple_stmt_with_scope_result_and_bindings("));
     assert!(lower_expr_src.contains("pub fn try_lower_leaf_expr_result("));
     assert!(module_constants_src.contains("try_lower_simple_module_constant_item_result("));
-    assert!(expr_render_helpers_src.contains("try_lower_registry_expr_result("));
+    assert!(field_rewrites_src.contains("try_lower_registry_expr_result("));
 
     assert!(!lib_src.contains("try_lower_simple_stmt_with_scope("));
     assert!(!lib_src.contains("try_lower_leaf_expr("));
