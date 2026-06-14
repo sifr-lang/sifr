@@ -322,8 +322,11 @@ Implementation re-check started 2026-06-14.
 - Classification summary:
   - `stale-expectation`: 36.
   - `obsolete-test`: 6.
-  - `compiler-bug`: 7.
-  - `production-bug`: 3.
+  - `compiler-bug`: 10.
+  - `production-bug`: 0; no unresolved production sentinel rows in Wave 2.0.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-2-0-review-pass-1.md`: found three blockers; addressed by reclassifying fixable user-visible defects as `compiler-bug`, using `closes_in_wave: 2` plus `closes_in_subwave`, and replacing maintainer-local/source-helper locations with repository-relative test locations.
+  - Post-review validation: `scripts/run_all_tests.sh --profile create-pr` produced a passing lane report at `target/validation_lane_reports/create-pr.latest.json`; wall time 149.03s with existing warm-budget advisory. The terminal process was terminated after the passing report was written because the e2e process left pipes open after completion.
 
 ## Full Discovery Snapshot
 

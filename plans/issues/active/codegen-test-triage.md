@@ -10,12 +10,14 @@ cargo test -p sifr_codegen -- --nocapture
 
 Observed result on 2026-06-14: `655 passed; 52 failed; 707 total`. The saved local log for this working pass is `target/wave2/sifr_codegen_nocapture.log`; the checked-in machine-readable inventory is `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`.
 
+The JSON inventory records closure with `closes_in_wave: 2` and `closes_in_subwave` for each row. `proposed_pr_slice` below is the human-readable repair slice label.
+
 Classification counts:
 
-- `stale-expectation`: 36
-- `obsolete-test`: 6
-- `compiler-bug`: 7
-- `production-bug`: 3
+- `stale-expectation`: 36.
+- `obsolete-test`: 6.
+- `compiler-bug`: 10.
+- `production-bug`: 0; no unresolved production sentinel rows in Wave 2.0.
 
 Proposed PR slices:
 
@@ -23,7 +25,7 @@ Proposed PR slices:
 - `2.2`: stale source fixtures invalidated by newer parser, async, or IO policy.
 - `2.3`: obsolete architecture guard tests after source decomposition/refactors.
 - `2.4`: internal structured lowering defects around field assignment and option narrowing.
-- `2.5`: user-visible generated-Rust semantic defects for try/finally, generator branches, self-field access, and safe string indexing.
+- `2.5`: user-visible generated-Rust semantic defects that are still fixable compiler bugs in this phase.
 - `2.final`: promote `sifr_codegen` into merge only after all rows are closed and `cargo test -p sifr_codegen` passes.
 
 | # | test id | failure summary | classification | proposed PR slice | owner | replacement or regression target |
@@ -39,7 +41,7 @@ Proposed PR slices:
 | 9 | `lib_codegen_tests::async_runtime_codegen_tests::test_module_body_flows_through_assembled_body_items` | Guard expects assembled body logic in lib.rs even though implementation moved out during decomposition. | `obsolete-test` | `2.3` | `codegen` | Retarget to the owning module_body/entrypoint source or remove if covered by decomposition guardrails. |
 | 10 | `lib_codegen_tests::async_runtime_codegen_tests::test_module_constants_flow_through_assembled_body_items` | Guard expects lib.rs to contain body_items wiring after decomposition moved the responsibility. | `obsolete-test` | `2.3` | `codegen` | Retarget to current module_constants/entrypoint files with a stable ownership assertion. |
 | 11 | `lib_codegen_tests::async_runtime_codegen_tests::test_round_parenthesizes_cast_receiver` | Current output is correctly parenthesized but literal spelling changed from `3 as i64` to `3_i64`. | `stale-expectation` | `2.1` | `codegen` | Refresh expected substring and keep the invalid-precedence negative assertion. |
-| 12 | `lib_codegen_tests::async_runtime_codegen_tests::test_try_finally_runs_cleanup_before_timeout_propagates` | Valid async timeout/try/finally fixture does not emit the expected cleanup marker before propagation. | `production-bug` | `2.5` | `codegen` | Add regression proving finally cleanup runs before timeout/error propagation in generated Rust. |
+| 12 | `lib_codegen_tests::async_runtime_codegen_tests::test_try_finally_runs_cleanup_before_timeout_propagates` | Valid async timeout/try/finally fixture does not emit the expected cleanup marker before propagation. | `compiler-bug` | `2.5` | `codegen` | Add regression proving finally cleanup runs before timeout/error propagation in generated Rust. |
 | 13 | `lib_codegen_tests::async_task_runtime_codegen_tests::test_await_task_handle_desugars_to_join_observation` | Fixture worker is async without real suspension and is rejected by SIFR-ASYNC-0001. | `stale-expectation` | `2.2` | `codegen` | Add a real suspension to worker while preserving join observation assertions. |
 | 14 | `lib_codegen_tests::async_task_runtime_codegen_tests::test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper` | Fixture worker raises without a suspension and is rejected by SIFR-ASYNC-0001. | `stale-expectation` | `2.2` | `codegen` | Make coroutine policy-compliant and retain result-spawn helper coverage. |
 | 15 | `lib_codegen_tests::async_task_runtime_codegen_tests::test_task_gather_fallible_tasks_keeps_error_parameter_unwrapped` | Fixture worker has no real suspension and is rejected before codegen. | `stale-expectation` | `2.2` | `codegen` | Add real suspension or accepted async escape hatch while keeping error-parameter assertion. |
@@ -56,7 +58,7 @@ Proposed PR slices:
 | 26 | `lib_codegen_tests::classes_and_basics_codegen_tests::test_mut_on_local_nested_function_mutborrow_call_argument` | Nested function fixture is parser-invalid because a body is missing. | `stale-expectation` | `2.2` | `codegen` | Add explicit body and retain local nested mutborrow regression target. |
 | 27 | `lib_codegen_tests::classes_and_basics_codegen_tests::test_structured_stmt_path_rewrites_module_constant_name` | Assertion expects `const LIMIT: i64 = 7 as i64`; current output uses normalized integer literal spelling. | `stale-expectation` | `2.1` | `codegen` | Refresh expected constant spelling and keep module-constant rewrite assertion. |
 | 28 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_codegen_structured_lowering_applies_to_simple_stmt` | Assertion expects `1 as i64`; current output uses normalized integer literal spelling. | `stale-expectation` | `2.1` | `codegen` | Refresh substring while preserving structured statement stats assertion. |
-| 29 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_generator_conditional_yield_preserves_else_branch` | Valid generator fixture does not emit the expected conditional branch/else region. | `production-bug` | `2.5` | `codegen` | Fix generator lowering to preserve else branch and add generated Rust survival check for the fixture. |
+| 29 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_generator_conditional_yield_preserves_else_branch` | Valid generator fixture does not emit the expected conditional branch/else region. | `compiler-bug` | `2.5` | `codegen` | Fix generator lowering to preserve else branch and add generated Rust survival check for the fixture. |
 | 30 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_generator_try_except_materializes_without_shape_panic` | Assertion expects `_yields.push(1 as i64)`; current output likely uses normalized integer literal spelling. | `stale-expectation` | `2.1` | `codegen` | Refresh yield literal spelling after confirming shape still materializes without panic. |
 | 31 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_iterable_binding_from_iterator_materializes_once` | Assertion expects an exact `let xs` statement spelling that changed under normalized rendering/tail expression cleanup. | `stale-expectation` | `2.1` | `codegen` | Replace brittle substring with current materialization contract or structured assertion. |
 | 32 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_iterable_return_from_iterator_materializes_for_signature` | Assertion expects explicit `return it.collect::<Vec<_>>();`; final return may now render as a tail expression. | `stale-expectation` | `2.1` | `codegen` | Refresh to current return-style contract while preserving materialization for Iterable signature. |
@@ -64,7 +66,7 @@ Proposed PR slices:
 | 34 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_iterator_return_consumes_owned_param_binding` | Assertion expects explicit return statement for owned param iterator conversion. | `stale-expectation` | `2.1` | `codegen` | Refresh to current tail-expression/return rendering while preserving ownership consumption assertion. |
 | 35 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_open_uses_canonical_filehandle_constructor` | Fixture uses text-mode open without explicit encoding; HIR now rejects it with SIFR-IO-0801. | `stale-expectation` | `2.2` | `codegen` | Add explicit encoding and keep canonical FileHandle constructor assertions. |
 | 36 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_generate_rust_recursive_constructor_argument_wraps_optional_box_field` | Assertion expects `4 as i64`/`5 as i64`/`6 as i64`; current output uses normalized integer literals. | `stale-expectation` | `2.1` | `codegen` | Refresh expected constructor string or assert optional boxing structurally. |
-| 37 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_self_field_clone_suppression_is_scoped_and_non_sticky` | Valid HIR no longer emits the expected copied self.table access, risking sticky clone suppression or borrow behavior drift. | `production-bug` | `2.5` | `codegen` | Fix scoped clone suppression and add regression proving table lookup uses non-cloned self field while label return still clones. |
+| 37 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_self_field_clone_suppression_is_scoped_and_non_sticky` | Valid HIR no longer emits the expected copied self.table access, risking sticky clone suppression or borrow behavior drift. | `compiler-bug` | `2.5` | `codegen` | Fix scoped clone suppression and add regression proving table lookup uses non-cloned self field while label return still clones. |
 | 38 | `lib_codegen_tests::iterators_and_generators_codegen_tests::test_structured_aug_assign_uses_string_and_list_methods` | Assertion expects `items.extend(vec![2 as i64])`; current output uses normalized integer literal spelling. | `stale-expectation` | `2.1` | `codegen` | Refresh expected literal spelling and keep push_str/extend no-operator regression. |
 | 39 | `lib_codegen_tests::structured_lowering_codegen_tests::test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs` | Guard expects an `emit_stmt` wrapper in lib.rs after decomposition moved statement lowering out. | `obsolete-test` | `2.3` | `codegen` | Retarget decomposition guard to current owner files or rely on maintainability guardrail. |
 | 40 | `lib_codegen_tests::structured_lowering_codegen_tests::test_production_lowering_contract_uses_result_helpers_only` | Guard expects old helper names in lib.rs/module files after result-helper refactor. | `obsolete-test` | `2.3` | `codegen` | Replace with current helper-name contract or delete if no longer meaningful. |
