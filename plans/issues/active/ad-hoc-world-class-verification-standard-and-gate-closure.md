@@ -1,0 +1,1179 @@
+# Ad Hoc Phase: World-Class Verification Standard and Gate Closure
+
+Status: implementation-ready; pending implementation, local validation, PRs, review, and merge
+Owner: compiler-verification
+Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
+
+## Problem
+
+Sifr has a strong verification framework: profiles, area manifests, policy documents, machine-readable reports, e2e fixture discovery, generated-code quality checks, diagnostic contracts, curated ecosystem hooks, regression manifests, and deterministic runner mechanics.
+
+That framework is not yet a world-class verification standard in execution. The current gap is not naming or process. The gap is that several compiler-critical surfaces are thin, non-blocking, or represented by aspirational policy rather than enforced gates.
+
+The most serious concrete mismatch is that `sifr_codegen` has the largest codegen unit/snapshot suite, but it is not in the authoritative merge gate and is currently known to have failing tests. The merge profile also omits passing first-party crates such as `sifr_type_system`, `sifr_format`, and `sifr_lint`. Diagnostic renderer baselines are thin compared with the fail-fixture corpus. Fuzz/property lanes are deterministic smoke tests, not sustained compiler hardening. LSP/tooling and ecosystem coverage exist but are closer to smoke signals than TypeScript/Bun-scale corpus gates. There is no first-class generative CPython-vs-Sifr miscompilation oracle even though Sifr's Python syntax gives the project an unusually strong reference semantics source.
+
+This phase turns the existing verification machinery into an executable standard: every shipped compiler guarantee must have an owner, support-boundary entry, blocking evidence path, broader hardening path, regression story, and reproducible artifact.
+
+## Verdict From Review Synthesis
+
+The reviews agree on the same core assessment:
+
+- Sifr's verification architecture is strong and unusually well-organized.
+- Sifr's verification execution is not yet at Rust, TypeScript, CPython, or Bun level.
+- The highest-risk gaps are gate completeness, codegen enforcement, rendered diagnostics depth, miscompilation detection, IR/lowering snapshots, sustained fuzzing, sanitizer lanes, LSP corpus depth, ecosystem breadth, and platform evidence.
+
+This phase adopts the stricter interpretation: world-class verification is defined by what blocks merges and what produces durable evidence, not by the existence of policy files.
+
+## World-Class Verification Standard
+
+For every stable shipped Sifr guarantee, there must be:
+
+- an entry in the shipped guarantee registry
+- a registry support status of `stable`
+- a fast or representative merge-blocking case
+- a broad nightly or release hardening case
+- a permanent regression path for failures found later
+- machine-readable evidence from the validation runner
+- a documented owner, suite kind, and reproduction command
+
+Experimental and internal guarantees follow the matrix status semantics: they may be `blocking` or `broad-only`, but must still have owner, support status, reproduction command, and documented evidence path.
+
+Every stable shipped compiler surface must have at least one profile-blocking suite at its assigned support level; stable user-facing guarantees require merge-blocking representative evidence unless explicitly deferred during this phase.
+
+- parser and syntax acceptance/rejection
+- compiler crash/ICE behavior for invalid and adversarial user inputs
+- diagnostics, spans, renderer output, JSON schema, compact output, and recovery
+- HIR lowering and name resolution
+- type checking and ownership/flow analysis
+- codegen lowering and generated Rust structure
+- generated Rust quality: `rustfmt`, clippy, panic/unwrap scans, determinism
+- runtime behavior and platform behavior
+- project/workspace/package behavior
+- CLI behavior and exit codes
+- language service behavior for diagnostics, hover, definition, completion, and long sessions
+- performance budgets and drift evidence
+- fuzz/property hardening and minimized regression promotion
+- sanitizer/leak/thread/UB hardening where applicable
+- ecosystem and stdlib compatibility
+
+Parser acceptance/rejection and parser fuzzing are distinct surfaces. Parser acceptance/rejection is a curated positive/negative source corpus. Parser fuzzing is an input-hardening lane. Both require matrix rows, but they do not satisfy each other.
+
+## Decisions
+
+- This is a new ad-hoc issue phase under `plans/issues/active`, not a rewrite of completed Phase 29.
+- Phase 29 remains the foundation. This phase owns enforcement, breadth, and promotion to a world-class executable standard.
+- The authoritative merge profile must become profile-data-driven enough to express crate test membership explicitly; hard-coded omissions are not acceptable after this phase.
+- Local validation remains authoritative for PR and merge readiness. CI mirrors local profile commands and may add broader evidence, but implementation work must not wait on CI and must not rely on CI-only behavior.
+- Create-pr and merge profiles must be hermetic/offline by default: no network, pinned toolchains and corpus revisions, tempdirs only, deterministic locale/timezone unless explicitly varied, and no hidden dependence on user-global caches. Live-network package or ecosystem checks are nightly/release signal only and never required for local merge.
+- `cargo test -p sifr_codegen` must be made green and added to the merge gate before this phase can close.
+- `cargo test -p sifr_type_system`, `cargo test -p sifr_format`, `cargo test -p sifr_lint`, `cargo test -p sifr_source`, and every other first-party compiler crate with tests must be added to the merge gate.
+- First-party compiler crates without tests must receive a minimal test seed in Wave 1. Based on local re-check during this planning pass, `sifr_ir` currently has zero tests and is the initial seed-test target. `tests:none` is reserved only for future data-only crates, requires issue link and expiry, and is illegal at phase close.
+- Failing `sifr_codegen` is modeled as `red-blocker`, not as missing coverage. A `red-blocker` row must have a suite command, current failure count, owner, issue or triage file, reproduction command, and `closes_in_wave`; it is illegal at phase close.
+- Failing `sifr_codegen` tests are triaged as one of:
+  - stale expectation: update to the current correct contract
+  - obsolete test: delete only after documenting the covered replacement
+  - real compiler bug: fix root cause and add or update regression coverage
+  - unresolved production bug: move to an explicit tracked crash/sentinel suite, not silent exclusion
+- At phase exit, no first-party compiler crate test suite may be excluded from merge because it is red.
+- Wave 0's coverage-matrix check lands in advisory mode with a closed list of `expected-missing` rows. Each row carries a `closes_in_wave` field naming exactly one wave in 1-9. Subwaves are expressed via `closes_in_subwave`, for example `closes_in_wave: 2` and `closes_in_subwave: final`; the matrix check rejects unknown wave or subwave names. The same wave may close several rows, but no row may be open after its named wave merges. After Wave 0, a new stable shipped guarantee may not be added unless the same PR adds a blocking row, or the phase owner approves a time-boxed `expected-missing` row with owner, issue, reproduction command, expiry, and `closes_in_wave`. Adding `expected-missing` for pre-existing Wave 0 surfaces remains forbidden. The check is promoted to blocking mode in Wave 10 and must have zero `expected-missing` rows at phase close.
+- Merge must run the full e2e pass corpus unless measured warm/cold runtime exceeds `verification/profiles/merge.json` budgets on the declared reference host. Any exception must run deterministic full-corpus local shards as part of the authoritative merge command.
+- Across merge, nightly, and release, diagnostic baselines must cover every active stable `SIFR-*` code and every stable renderer. Merge requires at least one rendered baseline per active stable code; nightly and release require every stable renderer for every active stable code. Code-only fail annotations are not sufficient for user-facing diagnostic presentation.
+- Every baseline-backed suite must fail stale/unused baseline files, fixtures missing required baselines, unchecked blesses, nondeterministic output, and mass baseline updates without a per-suite summary.
+- The CPython differential oracle is required for supported Python-compatible semantics. It is a semantic correctness gate, not a fuzzing nice-to-have.
+- CPython differential generation cannot start until an authoritative divergence catalogue is checked in. The generator must lint against that catalogue and refuse to emit programs whose semantics depend on excluded behavior.
+- Sustained fuzzing and sanitizer lanes may be nightly/release rather than merge-blocking, but deterministic smoke reproductions and minimized regressions from those lanes must become merge-blocking.
+- Quarantine is allowed only through the existing flake/crash policy with issue linkage, owner, expiry, and reproduction command. Quarantine is not a way to make red suites disappear.
+- No fallback compiler paths, compatibility bypasses, or "best effort" verification shortcuts are introduced by this phase.
+
+Authoritative profile assignment after this phase:
+
+| Surface | Create-pr | Merge | Nightly | Release |
+| --- | --- | --- | --- | --- |
+| First-party crate tests | representative where needed | all green first-party compiler crate tests | all | all |
+| Cargo features/targets | manifest check | default features and shipped bins | all-targets/all-features/no-default-features policy | release target matrix |
+| E2E pass semantics | representative subset | full corpus or deterministic local full-corpus shards | full corpus | full corpus |
+| Parser acceptance/rejection | representative syntax corpus | stable syntax matrix | full syntax matrix | full syntax matrix |
+| Lexer/token stream and indentation | representative lexical/indentation corpus | stable lexical and indentation matrix | full lexical/span matrix | full lexical/span matrix |
+| E2E fail and diagnostics | full code/position checks plus representative baselines | full fail suite plus all required rendered baselines | same | same |
+| HIR/CFG/lowering/codegen snapshots | representative changed-surface checks | blocking layer suites | full layer suites | full layer suites |
+| CPython differential | deterministic smoke seed set | deterministic smoke seed set | broader generated corpus | broader generated corpus plus extended subset |
+| Fuzz/property | deterministic smoke if runtime permits | deterministic smoke seeds | sustained per-target budget | sustained per-target budget |
+| Sanitizers/leak/thread | none unless cheap and host-stable | smoke where host-supported | full supported lanes | full supported lanes |
+| LSP marker corpus | smoke subset | documented capability coverage subset | full marker corpus | full marker corpus |
+| Ecosystem curated | schema/manifest checks | curated blocking set | curated plus broader pinned set | curated plus broader pinned set |
+| Algorithmic compatibility | manifest checks | representative LeetCode/algorithm subset | full corpus | full corpus |
+| Package management | guardrails | stable integration smoke | full integration suite | full integration suite |
+| Stdlib parity | audit-fixture guardrails | supported-namespace smoke | module-owned supported namespace suites | module-owned supported namespace suites |
+| Runtime/platform | schema/contract checks | host-supported golden smoke | executable host/target evidence | executable host/target evidence |
+| Performance | budget smoke | representative budgets | trend artifacts and broader benchmarks | trend artifacts and release benchmarks |
+
+Target-matrix rows without an explicit profile-assignment row inherit the profile assignment of their owning compiler-surface row. For example, suggestions/autofix inherits diagnostics unless the owning area creates a more specific row.
+
+Verification target matrix:
+
+Targets are derived from inventories and shipped guarantees rather than arbitrary corpus sizes. If a target says "every," the owning wave must add the inventory file first, then make the verification runner fail when an inventory entry lacks the required evidence.
+
+| Surface | Source-of-truth inventory | Merge target | Nightly/release target | Minimum content rule |
+| --- | --- | --- | --- | --- |
+| Shipped guarantees | `verification/areas/coverage_matrix/shipped_guarantees.json` | every `stable` guarantee has a blocking suite row, owner, reproduction command, and regression path | every `experimental` guarantee has broad signal or explicit unsupported boundary | no `stable` guarantee without merge evidence |
+| Compiler surfaces | `verification/areas/coverage_matrix/compiler_surface_matrix.json` | every stable surface status is `blocking`; only time-boxed Wave 0 rows may be `expected-missing` before their `closes_in_wave` | broad rows cover non-merge stress, platform, fuzz, and ecosystem lanes | no orphan matrix row; no suite without matrix row |
+| First-party crates | `cargo metadata` package list plus profile v2 crate membership | every first-party compiler crate with tests runs in merge; `sifr_ir` has seed tests | all first-party crate tests run in nightly/release | zero-test crate fails unless future data-only `tests:none` is time-boxed; none remain at closeout |
+| CLI behavior and exit codes | `verification/areas/developer_tooling/data/cli_exit_code_contracts.json` plus `sifr` integration test inventory: `e2e`, `validation_contracts`, `build_output_contracts` | every documented CLI exit-code contract has a corresponding integration test | full CLI behavior matrix and broader exit-code scenarios | exit-code contract without integration test fails |
+| Cargo features and targets | `cargo metadata` targets/features | default features, shipped bins, and test-fixture targets have merge classification | `all-targets --all-features`, `no-default-features`, examples, doctests, and release target matrix are assigned or unsupported with reason | every target/feature has exactly one classification: `merge`, `nightly`, `release`, `internal`, `performance`, `test-fixture`, or `unsupported` |
+| E2E pass semantics | e2e pass fixture discovery and manifest reports | full pass corpus or deterministic full-corpus local shards | full pass corpus plus broad hardening around it | executed fixture count must equal discovered count, excluding only explicitly unsupported fixtures |
+| E2E fail semantics | e2e fail fixture discovery and inline expected-error markers | full fail corpus code, position, and contradiction checks | full fail corpus plus renderer and recovery stress | every fail fixture has canonical diagnostic code/position expectations |
+| Lexer/token stream and indentation | lexer/token/indentation contract list in `verification/areas/core_language/data/lexer_token_inventory.json` | token boundaries, indentation/dedentation, newline handling, comments/trivia preservation if supported, Unicode identifiers if supported, and source-span stability each have representative fixtures | full lexical/span matrix including parser-fork boundary cases | parser syntax tests do not satisfy token/indentation coverage |
+| Parser acceptance/rejection | stable syntax inventory in `core_language` or coverage-matrix data | one positive fixture per stable syntax construct and one negative fixture per stable syntax error family | full syntax matrix including edge cases and parser-fork boundary cases | parser acceptance/rejection cannot be satisfied by fuzzing |
+| Project/workspace behavior | `verification/areas/project_workspace/data/workspace_contracts.json` plus suite manifests: `frontend_mode_parity`, `phase23_graph_isolation`, `baselines`, `audit-fixtures` | every shipped workspace and graph-isolation contract has a blocking suite row | broader project graph, workspace, and multi-module scenarios | workspace contract without suite row fails |
+| Diagnostics catalog | `verification/areas/diagnostics/data/code_catalog.json` | every stable `SIFR-*` code has severity, owner, docs link, renderer support, and baseline coverage row | unstable/experimental codes have broad signal or explicit deferral | no diagnostic emitted by compiler without catalog entry |
+| Diagnostic renderers | `verification/areas/diagnostics/data/code_baseline_coverage.json` | at least one rendered baseline for every stable `SIFR-*` code | human, compact, and JSON baselines for every stable `SIFR-*` code | stale/unused baseline detection is blocking |
+| Diagnostic recovery | recovery-surface list in `verification/policy/suite_taxonomy.md` | one multi-error fixture per parser, HIR, name-resolution, and type-checker recovery surface | recovery stress cases with suggestions/related notes where applicable | a recovery surface with zero multi-error fixture fails |
+| Suggestions/autofix | diagnostic code catalog `machine_applicable` field | every machine-applicable suggestion has emit/apply/recompile validation | broad suggestion application corpus | non-machine-applicable suggestions are render-only and explicitly marked |
+| Codegen red blocker | `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json` and `plans/issues/active/codegen-test-triage.md` | every current failing `sifr_codegen` test has classification, owner, affected contract, and repair PR; then `cargo test -p sifr_codegen` becomes merge-blocking | no `red-blocker` remains | red suite is never modeled as missing coverage |
+| Generated Rust toolchain survival | generated-code fixture classes and generated-code-quality manifests | every repaired stable fixture class proves emit, normalize, `rustfmt --check`, `cargo check`, runtime execution where applicable, and panic/unwrap scan | clippy and broader generated-code corpus | allowlist entries require owner, reason, issue, expiry |
+| HIR/name/type/CFG snapshots | `verification/areas/core_language/data/lowering_layer_inventory.json` | representative blocking snapshot suite for each stable layer | full layer snapshot suite with stale/unused detection | each stable lowering/analysis contract has at least one snapshot or mapped equivalent |
+| Codegen snapshots | `verification/areas/generated_code_quality/data/codegen_construct_inventory.json` | blocking snapshots for stable emitted constructs and structured codegen inputs | full snapshot suite with normalizer inventory | substring-only tests must be replaced or justified by contract |
+| Crash/ICE contract | `regression` crash manifest and compiler-crash policy rows | invalid user programs produce diagnostics, not panics; known crashes are issue-linked sentinels | adversarial crash stress and fuzz-found crash promotion | sentinel fails if expected crash disappears |
+| CPython hand-seeded differential | `verification/policy/cpython_differential.md` supported/excluded tables | hand-authored deterministic smoke suite covering each supported construct category | same plus broader seed set | canonical JSON-like serializer only; no `repr`/exception-message comparison |
+| CPython generated differential | generator grammar, seed manifest, shrinker metadata | minimized generated seeds graduate to merge only after stability policy | generated corpus with per-program and suite timeouts | every generated failure is minimized before issue/regression promotion |
+| Fuzz/property | `verification/areas/fuzz_property` manifests and `verification/policy/fuzz_property.md` | deterministic smoke seeds for parser/check, HIR/type/ownership, codegen, diagnostics renderer, package/project manifest | sustained valid and invalid fuzz lanes with corpus minimization | invalid-program and valid-program fuzz targets are separate |
+| Sanitizers/concurrency | sanitizer/platform manifest | host-supported smoke or structured skip with reason | full ASan/LSan/TSan, Miri where feasible, and Loom/Shuttle-style concurrency where feasible | skipped lane must record reason and reproduction command |
+| LSP markers | documented LSP capability inventory from `crates/sifr_lsp` | marker coverage for each stable documented capability category | full marker corpus | no documented stable capability without marker evidence |
+| LSP transcripts | JSON-RPC transcript manifest | cancellation, out-of-order request, stale diagnostics after edit, project reload, and long-session smoke where supported | full transcript replay and memory/perf stress | marker tests do not satisfy protocol transcript coverage |
+| Ecosystem curated | `ecosystem_compatibility` pinned corpus manifest | curated blocking set with checksum/revision/license/owner/commands | curated plus broader pinned set | live network is not allowed in merge |
+| Algorithmic compatibility | `algorithmic_compatibility` taxonomy/corpus manifests | representative LeetCode/algorithm subset | full corpus and taxonomy delta reports | taxonomy row required for each included problem/category |
+| Package management | package-management integration manifest and offline registry fixture | offline registry smoke, lockfile determinism, and package graph behavior | full integration suite plus live-registry signal if desired | merge package tests never use live network |
+| Stdlib parity | stdlib namespace inventory and example/doctest inventory | supported-namespace smoke and every inventoried shipped example/doctest | module-owned parity suites for supported namespaces | zero-example inventory row required if no examples exist |
+| Runtime/platform | `verification/areas/runtime_platform/supported_platforms.json` | host-supported golden smoke for declared supported host | executable host/target evidence for supported matrix | platform docs without executable evidence do not satisfy support |
+| Distribution/release | `distribution_release` manifest and release evidence archive | representative install/distribution smoke | full release qualification with toolchains, OS, suite counts, report hashes | release evidence must include commit and profile plan |
+| Incremental and determinism equivalence | clean-vs-incremental contract list owned by Wave 8 plus `check_report_determinism.sh` and `check_sequential_parallel_equivalence.sh` outputs | every shipped cache/query/incremental behavior has an equivalence fixture; report and parallel determinism remain blocking | full edit-run scenario matrix and long-session repeated-build stress | incremental contract without equivalence fixture fails; nondeterministic output fails |
+| Performance trends | `verification/areas/performance/data/trend/` benchmark ids | representative budget checks | time/RSS/output-size/binary-size/LSP/package trend artifacts with environment metadata | benchmark id rename requires old-id mapping |
+| Local/CI parity | `verification/profiles/*.json` plus emitted local-vs-CI profile plan equivalence artifact | local merge plan is source of truth; CI may not omit local merge checks | CI may add broader checks but must report deltas | CI-only behavior is invalid |
+
+Matrix status semantics:
+
+| status | Allowed for | Closeout allowed | Required fields | Meaning |
+| --- | --- | --- | --- | --- |
+| `blocking` | `stable`, `experimental`, `internal` | yes | owner, profile command, reproduction command, suite row | assigned profile command exists and fails the owning profile on regression |
+| `broad-only` | `experimental`, `internal` | not for stable guarantees | owner, broad profile command, reason no merge representative exists | nightly/release coverage exists but no merge-blocking representative case exists |
+| `expected-missing` | `stable` only during this phase | no | owner, issue, reproduction command, `closes_in_wave`, optional `closes_in_subwave`, expiry | known temporary gap that must close in the named wave/subwave |
+| `tests:none` | temporary migration status for zero-test crates/surfaces only | no | owner, reason, issue, expiry, cargo/package evidence | temporary status while seed tests or a permanent `not-applicable` classification are added |
+| `not-applicable` | `internal` or `unsupported` data-only crates/surfaces with no executable behavior | yes, never for stable compiler/runtime behavior | owner, reason, cargo target evidence, support status | permanent non-testable classification for data-only surfaces; example: a data-only crate that ships only static JSON consumed by tests, with no executable code path |
+| `red-blocker` | known-red existing suite only with phase-owner approval | no | command, current failure count, triage file, owner, issue, reproduction command, `closes_in_wave`, optional `closes_in_subwave`, expiry | suite exists and is intentionally visible but not yet executed in merge |
+| `quarantined` | flaky or host-specific failures only under quarantine policy | only if unexpired, issue-linked, owner-assigned, and not a stable shipped guarantee gap | owner, issue, reproduction command, reason, expiry, re-enable criteria | tracked temporary quarantine, not missing coverage |
+
+Resolved implementation decisions:
+
+- **Profile schema migration:** introduce `verification/schemas/profile.schema.json` schema version `2` for explicit crate membership, hermetic/network policy, profile-plan emission, reference host, and feature/target assignments. `legacy_facade` remains the migration surface inside v2 profiles; new v2 fields land alongside it and `legacy_facade` field removal is out of scope for this phase. Keep schema version `1` readable only for migration tests until Wave 1 closes; no profile may remain v1 at phase close.
+- **Area schema migration:** introduce schema version `2` for owner, network mode, pinned corpus checksum/revision, skip policy, baseline metadata contract, and suite artifact declarations. Existing v1 area manifests migrate incrementally by wave, but Wave 10 blocks any remaining v1 manifest for a shipped stable surface.
+- **Suite schema strategy:** keep `verification/schemas/suite.schema.json` at v1 minimal shape. Suite-level metadata, including owners, normalizers, artifacts, baseline metadata, and stale-baseline rules, lives in area-owned data files validated by per-area checks. No v2 suite schema is introduced in this phase.
+- **Coverage registry paths:** the shipped guarantee registry lives at `verification/areas/coverage_matrix/shipped_guarantees.json`; the compiler surface matrix lives at `verification/areas/coverage_matrix/compiler_surface_matrix.json`; the profile assignment matrix check lives under `verification/areas/coverage_matrix/checks/profile_assignment_matrix.py`.
+- **Diagnostic registry paths:** the diagnostic code catalog lives at `verification/areas/diagnostics/data/code_catalog.json`; renderer baseline coverage lives at `verification/areas/diagnostics/data/code_baseline_coverage.json`; the enforcement check lives at `verification/areas/diagnostics/checks/code_baseline_coverage.py`.
+- **Red suite handling:** `sifr_codegen` is the only known initial `red-blocker`. It is tracked in Wave 0 with current failure count, triage file target, planned merge membership, and `executed_in_merge: false`, then resolved by Wave 2.final. No other suite may become `red-blocker` without phase-owner approval, issue link, current failure inventory, reproduction command, and expiry.
+- **Ownership:** use `verification/owners.json` as the authoritative owner registry. Team-style owners are allowed until individual owners are assigned: `compiler-verification`, `codegen`, `diagnostics`, `runtime-platform`, `developer-tooling`, `package-management`, `stdlib`, `performance`, and `release-engineering`. `unassigned` and unknown owner ids are invalid.
+- **Hermetic local-first rule:** create-pr and merge never require external network. Any suite requiring live network, remote registries, remote package indexes, or GitHub/API access is nightly/release-only signal and must not be required for PR or merge readiness.
+- **Local/CI parity:** CI may execute the same local profiles and may add broader profiles, but it cannot be the source of truth. The runner emits a local profile plan and CI profile plan; CI is invalid if it omits a local merge check except for declared host skips.
+- **Reference host:** merge budget decisions use the reference host recorded in profile v2 metadata. If a developer host is slower, deterministic sharding/parallelism is still implemented in the local command rather than moving merge-only coverage to CI.
+- **Crate and target coverage:** `cargo metadata` is the source of truth for first-party packages, targets, examples, bins, tests, features, and required feature gates. Profile membership is checked from metadata rather than hand-maintained lists.
+- **Feature policy:** default features are merge-blocking; `all-targets --all-features` is nightly/release unless measured budget allows merge; `no-default-features` is either nightly/release or explicitly unsupported with reason.
+- **Secondary bins/features:** default profile classification for non-test bins and features is `internal` for compiler harness/tools or `performance` for benchmark bins. Test-only bins and features, such as `sifr_stdlib`'s `__test_fixture` feature and fixture bin, are classified as `test-fixture` and validated by their owning test suite rather than separate runtime profile membership. Each workspace bin and feature must carry a profile classification by Wave 1 close; the Wave 1 cargo-metadata guardrail fails if any first-party bin or feature lacks an explicit assignment.
+- **Baseline metadata:** all baseline-backed suites use sidecar metadata or a manifest entry with fixture id, suite, format/snapshot kind, owner, source hash, normalizers, bless reason, and PR or issue reference.
+- **CPython oracle:** hand-seeded deterministic CPython differential tests are merge-blocking immediately in Wave 6.0. Generated differential tests run in nightly/release first; only minimized stable generated seeds graduate to merge.
+- **CPython serialization:** differential programs compare a canonical JSON-like serializer implemented in both Python and Sifr, not Python `repr`, display text, or exception messages.
+- **Local Python prerequisite:** `python3` matching the version constraints used by `verification/pyproject.toml` is a required local development prerequisite for create-pr and merge profiles. Absence is a contributor setup failure, not a host skip. CPython differential hand-seeded smoke is therefore merge-blocking without weakening local-first validation.
+- **Generated Rust toolchain support:** supported Rust toolchain/channel and any MSRV for generated output are recorded in a manifest. Generated Rust is checked against the supported toolchain. Nightly-only generated Rust is illegal unless marked `experimental` or `internal`.
+- **Crash/ICE policy:** unexpected compiler panics are failures. Known crashes are issue-linked sentinels only; sentinels fail if the crash disappears so the issue must be closed or reclassified.
+- **Fuzz policy:** invalid-program fuzzing and valid-program fuzzing are separate target classes. Invalid fuzzing hunts ICEs/diagnostic crashes; valid fuzzing hunts wrong-code/invariant breaks.
+- **Sanitizer policy:** ASan/LSan/TSan are preferred where host-supported; Miri and deterministic concurrency modeling are attempted where feasible. Any skipped sanitizer/model lane records a reason and reproduction command.
+- **Platform policy:** platform support is declared in `verification/areas/runtime_platform/supported_platforms.json`; executable evidence must match that declaration. Loopback-only networking is allowed in create-pr/merge; external networking is not.
+- **Package policy:** package-management merge tests use an offline registry fixture and prove lockfile determinism. Live registry tests are nightly/release-only.
+- **Performance policy:** performance evidence includes time, peak RSS, emitted Rust size, binary size, diagnostic rendering time, LSP indexing/edit latency, package resolution/install time when shipped, and environment metadata.
+- **Performance blocking policy:** create-pr validates benchmark schema and smoke budgets; merge enforces stable representative budgets only; nightly/release produce trend deltas on reference hardware; trend regressions require owner review; local developer machines do not fail solely because of noisy trend deltas; checked-in trend baselines may only be updated from approved reference runs.
+- **Execution sandbox policy:** generated binaries, CPython differential programs, ecosystem projects, package tests, and fuzz reproducers run with per-test timeouts, stdout/stderr size limits, tempdir-only writable outputs, no writes outside declared output dirs, subprocess cleanup verification, and no external network in create-pr/merge. Loopback networking is allowed only for suites that declare it.
+- **Closeout policy:** Wave 10 cannot close with any `expected-missing`, `red-blocker`, expired `tests:none`, illegal `not-applicable`, ownerless row, undocumented quarantine, live-network merge requirement, or v1 stable-surface manifest.
+
+## Scope
+
+This phase owns:
+
+- merge-gate closure for all first-party compiler crate tests
+- codegen test triage and enforcement
+- executable coverage matrix for compiler guarantees
+- diagnostic renderer baseline expansion and recovery coverage
+- HIR/CFG/lowering/codegen snapshot suite definition and enforcement
+- CPython differential valid-program oracle for supported semantics
+- property/fuzz evolution from smoke-only to sustained compiler hardening
+- sanitizer/leak/thread hardening lanes for compiler/runtime/generated binaries
+- incremental-vs-clean and deterministic rebuild checks where current architecture supports them
+- LSP marker corpus for core IDE behaviors
+- ecosystem, package, stdlib, and platform profile ownership
+- performance trend evidence beyond point-in-time threshold budgets
+- documentation updates that make the new standard durable
+
+This phase does not own:
+
+- adding new language features
+- broad stdlib feature expansion unrelated to verification
+- replacing the compiler pipeline
+- changing user-facing semantics to make tests easier
+- waiting for CI instead of validating locally
+- fixing unrelated dirty worktree changes
+
+## Existing Facts To Verify During Implementation
+
+Implementation must start by re-checking these facts locally because the repository may have changed.
+
+Verified during this planning pass:
+
+- `verification/profiles/merge.json` declares the merge lane and uses `legacy_facade.e2e.fixture_manifest` pointing at `verification/areas/core_language/data/merge_e2e_manifest.json`.
+- `verification/runner/sifr_verify/profile_runner.py` hard-codes crate tests in `run_crate_tests`.
+- The hard-coded crate test list includes several core crates but omits `sifr_codegen`, `sifr_type_system`, `sifr_format`, `sifr_lint`, `sifr_ir`, and `sifr_source`.
+- `cargo test -p sifr_type_system` passes with `92` unit tests.
+- `cargo test -p sifr_format` passes with `7` unit tests.
+- `cargo test -p sifr_lint` passes with `22` unit tests.
+- `cargo test -p sifr_source` passes with `3` unit tests.
+- `cargo test -p sifr_ir` passes with `0` unit tests and therefore needs seed tests in Wave 1.
+- `verification/areas/algorithmic_compatibility` and `verification/areas/fuzz_property` already exist; this phase extends them rather than creating parallel runners.
+- `cargo test -p sifr_codegen`: `655 passed`, `52 failed`, `707 total`; red and excluded from merge.
+- `verification/areas/diagnostics/manifest.json` ships exactly two rendered baseline fixtures: `decimal_invalid_literal` and `multiline_span_rendering`.
+
+Re-measure at implementation start:
+
+- E2E corpus size under `verification/areas/core_language/`.
+- Current warm/cold merge wall time on the implementer's host.
+
+If any count has changed, update this issue's execution checklist with the current measured count before implementing gate changes.
+
+## Full Discovery Snapshot
+
+Discovery commands used for this phase:
+
+```bash
+find verification/areas -maxdepth 2 -name manifest.json -print | sort
+find verification/profiles verification/policy verification/schemas -maxdepth 2 -type f | sort
+cargo metadata --no-deps --format-version 1
+```
+
+Verification areas currently present:
+
+| area | suites observed |
+| --- | --- |
+| `algorithmic_compatibility` | `taxonomy-smoke`, `leetcode-check` |
+| `core_language` | `integer_dtype_contract`, `phase24_hir_analysis`, `phase25_cfg_flow`, `audit-fixtures` |
+| `developer_tooling` | `typescript-go-m1`, `diagnostic-contracts`, `static`, `formatter`, `analysis`, `lsp-smoke`, `editor-release`, `lsp-stress`, `phase-closeout`, `full` |
+| `diagnostics` | `contracts`, `baselines` |
+| `distribution_release` | `representative`, `full` |
+| `ecosystem_compatibility` | `oss-curated`, `ecosystem-broader` |
+| `fuzz_property` | `cargo-smoke`, `property`, `fuzz-smoke` |
+| `generated_code_quality` | `smoke`, `representative`, `full`, `corpus`, `panic-scan`, `intrinsic-panic-lint`, `rustfmt`, `clippy`, `determinism`, `demos` |
+| `package_management` | `guardrails` |
+| `performance` | `frontend-syntax-guardrails`, `contracts`, `smoke`, `representative`, `full` |
+| `project_workspace` | `frontend_mode_parity`, `phase23_graph_isolation`, `baselines`, `audit-fixtures` |
+| `regression` | `fixedbugs`, `crashes` |
+| `runtime_platform` | `platform-golden`, `platform-contract` |
+| `stdlib_parity` | `complexity-resource`, `namespace-demos-check`, `namespace-leetcode-check`, `audit-fixtures` |
+
+Profile state currently observed:
+
+| profile | warm/cold budget | selected area coverage | hardening | current gap |
+| --- | --- | --- | --- | --- |
+| `create-pr` | 2/5 min | core, diagnostics, runtime, tooling, generated-code quality, performance | none | fast signal only; no coverage matrix or crate membership accounting |
+| `merge` | 15/25 min | core, diagnostics, runtime, tooling, generated-code quality, performance, distribution, project, regression, ecosystem | diagnostics, project, fixedbugs, crashes, oss-curated | authoritative but omits known crate suites and full semantic corpus |
+| `nightly` | 30/45 min | merge-like plus fuzz/property | diagnostics, project, fixedbugs, crashes, property, fuzz-smoke, oss-curated, ecosystem-broader, determinism-scale | broader signal but not enough sustained fuzz/sanitizer/platform evidence |
+| `release` | 45/60 min | nightly-like | nightly hardening plus determinism extras | strongest current profile but still lacks guarantee registry and platform/support evidence |
+
+Cargo workspace packages and notable targets/features currently observed:
+
+| package | notable targets/features | phase decision |
+| --- | --- | --- |
+| `sifr` | bin plus integration tests `e2e`, `validation_contracts`, `build_output_contracts` | keep existing CLI tests; profile membership becomes explicit |
+| `sifr_analysis` | lib | already in current hard-coded crate path; keep explicit |
+| `sifr_codegen` | lib; currently red by review/re-check | `red-blocker` until Wave 2.final |
+| `sifr_diagnostics` | lib plus bins `gen-diagnostic-schema`, `gen-error-docs` | bins are internal release-engineering tools; Wave 1 assigns internal tool smoke or explicit internal-no-run classification |
+| `sifr_driver` | lib plus bin `diagnostic_contract_harness` | bin is internal diagnostics harness; Wave 1 assigns internal tool smoke or explicit internal-no-run classification |
+| `sifr_format` | lib | merge crate test membership required |
+| `sifr_frontend` | lib plus bin `frontend_query_bench` | benchmark bin classified under performance |
+| `sifr_ir` | lib with zero tests | seed tests required in Wave 1 |
+| `sifr_lint` | lib | merge crate test membership required |
+| `sifr_lowering` | lib | already in current hard-coded crate path; keep explicit |
+| `sifr_lsp` | lib | keep crate tests and add marker/transcript corpus |
+| `sifr_package` | lib | package integration expands beyond guardrails |
+| `sifr_runtime` | lib with features `default`, `http`, `i18n`, `net`, `tls`, `unicode` | feature matrix required; default+http currently represented, remaining features need profile assignment |
+| `sifr_source` | lib | merge crate test membership required |
+| `sifr_stdlib` | lib, fixture bin, snapshot tests, feature `__test_fixture` | fixture bin and `__test_fixture` feature are test-only internal surfaces; Wave 1 assigns them to merge/nightly fixture validation or explicit internal-no-run classification |
+| `sifr_syntax` | lib | parser/syntax acceptance rows required |
+| `sifr_type_system` | lib | merge crate test membership required |
+
+Schema constraints currently observed:
+
+- `verification/schemas/profile.schema.json` is strict and schema version `1` only. It does not allow explicit crate membership, network policy, reference host, feature policy, or emitted profile plans. This phase therefore chooses profile schema version `2`.
+- `verification/schemas/area.schema.json` is strict and schema version `1` only. It does not encode baseline metadata, network mode, pinned corpus checksums, or skip policies. This phase therefore chooses area schema version `2`.
+- `verification/schemas/suite.schema.json` is minimal and does not encode owners, normalizers, artifacts, or stale-baseline metadata. This phase keeps suite-specific metadata in area-owned data files validated by area checks.
+
+## Implementation Sequence
+
+This phase is intentionally split into small PR-sized waves and sub-waves. Each numbered wave or sub-wave must be implemented, validated locally, opened as a PR, reviewed, merged, and documented before dependent work starts.
+
+Focused Cargo validation commands are run through the profile wrapper when possible. If a command must be run directly, it must use the same hermetic settings as the profile: `--locked` and `CARGO_NET_OFFLINE=true` after documented setup fetch/vendor steps. Focused validation snippets below show the semantic command being validated; the wrapper or invoking shell is responsible for injecting the hermetic profile policy.
+
+### Wave 0: Baseline Audit and Executable Coverage Matrix
+
+Goal: make the current verification reality measurable and prevent future gaps from hiding in profile runner code.
+
+Wave 0 may ship as sub-PRs if needed: 0.1 schema v2 support, 0.2 coverage matrix area plus shipped guarantee registry, and 0.3 hermetic/offline policy plus plan-equivalence skeleton and policy docs.
+
+Tasks:
+
+- Add schema version `2` support for profiles and area manifests before adding new profile/area fields. Migration rule: v1 profiles/areas remain readable for self-tests only; shipped stable surfaces must be v2 by Wave 10.
+- Add `verification/areas/coverage_matrix/manifest.json` and a runner-owned check as the first-class verification area for guarantee and surface coverage.
+- Add `verification/areas/coverage_matrix/shipped_guarantees.json`, the authoritative registry of shipped guarantees. Each row records `guarantee_id`, support status, public doc path, owner, merge surface, nightly/release surface, regression surface, and unsupported-behavior policy.
+- Add `verification/areas/developer_tooling/data/cli_exit_code_contracts.json` and populate it from current CLI integration-test expectations and documented CLI command semantics.
+- Add `verification/areas/project_workspace/data/workspace_contracts.json` and populate it from current `project_workspace` suite manifests and shipped workspace/graph-isolation guarantees.
+- Matrix checks validate shipped-guarantee schema: status is one of `stable`, `experimental`, `internal`, or `unsupported`; surfaces resolve to matrix-row ids; public docs resolve or are explicitly marked internal; and every stable guarantee has at least one matrix row.
+- Define `verification/areas/coverage_matrix/compiler_surface_matrix.json` with rows for every compiler surface listed in the world-class standard.
+- For each row, record:
+  - surface id
+  - shipped guarantee
+  - merge suite
+  - nightly or release suite
+  - regression suite
+  - owner
+  - reproduction command
+  - current status: `blocking`, `broad-only`, `expected-missing`, `tests:none`, `not-applicable`, `red-blocker`, or `quarantined`
+  - linked wave or issue for any non-blocking status
+  - `closes_in_wave`, required for each `expected-missing` or `red-blocker` row and naming exactly one wave in 1-9
+  - optional `closes_in_subwave`, required when closure is assigned to a named subwave such as `final`
+  - expiry date for any temporary non-blocking status
+- Include existing areas in the matrix rather than duplicating them:
+  - `algorithmic_compatibility` is the algorithm/LeetCode compatibility surface.
+  - `fuzz_property` is the existing property and fuzz-smoke surface.
+  - parser acceptance/rejection and parser fuzzing are separate rows.
+- Add `verification/owners.json` as the authoritative owner registry. `CODEOWNERS` may be used as an input only if it can express the same owner ids used in verification metadata.
+- Add owner validation: no shipped guarantee, matrix row, quarantine row, `tests:none` row, `red-blocker` row, or wave task may have owner `unassigned` or any owner id absent from the owner registry.
+- Add hermetic/offline policy fields to profile or suite metadata: `network: offline|live`, pinned corpus revision/checksum, reference host, max parallelism, warm/cold budget, and allowed host skips.
+- Add the Cargo hermetic contract for create-pr and merge:
+  - Cargo commands run with `--locked`
+  - profile execution uses `CARGO_NET_OFFLINE=true` or equivalent
+  - dependencies are satisfied by the checked-in lockfile plus documented setup cache or vendor procedure
+  - tests do not rely on undocumented user-global `~/.cargo` state
+  - `cargo fetch --locked` or a vendored equivalent is setup, not profile execution
+  - rustup/toolchain downloads are contributor setup, not profile execution
+- Add the execution sandbox contract for generated and external programs:
+  - per-test timeout
+  - memory limit where host-supported
+  - tempdir-only writable filesystem
+  - no writes outside declared output dirs
+  - no external network in create-pr/merge
+  - loopback-only networking when declared
+  - subprocess cleanup verification
+  - captured stdout/stderr size limits
+- Add a local/CI plan-equivalence skeleton: the runner can emit a profile execution plan, and CI/local plans can be compared for same suites, commands, fixture counts, and allowed host skips. Local profile execution remains authoritative for PR and merge readiness.
+- Add `scripts/verification_doctor.sh` or `uv run --project verification --locked python -m sifr_verify doctor` to check local prerequisites: Rust toolchain, Python version, uv lock state, Cargo offline setup, required sanitizer tools where applicable, and supported host metadata.
+- Add a zero-test and zero-fixture fail rule unless an explicit `tests:none` row exists.
+- Add an advisory-mode check that fails schema errors and unknown statuses, but initially permits the closed Wave 0 `expected-missing` list.
+- Add a promotion switch so the same check becomes blocking in Wave 10 and fails any remaining `expected-missing`, `red-blocker`, expired `tests:none`, illegal `not-applicable`, or undocumented `quarantined` row.
+- Add coverage-matrix execution to `create-pr` as a schema/consistency check and to `merge` as an advisory check until Wave 10 promotion.
+- Update `verification/policy/profile_policy.md` and `verification/policy/suite_taxonomy.md` with the coverage-matrix rule.
+
+Exit criteria:
+
+- A reviewer can answer "what blocks merges for this compiler guarantee?" without reading Python runner code.
+- Every stable shipped guarantee has an owner and coverage row.
+- Hermetic/offline requirements are encoded for create-pr and merge profiles.
+- Missing or broad-only surfaces are explicit, finite, and mapped to later waves.
+- No new `expected-missing` row may be added after Wave 0 for a pre-existing Wave 0 surface. New stable shipped guarantees added after Wave 0 must either add a blocking row in the same PR or carry a phase-owner-approved, time-boxed `expected-missing` row with owner, issue, reproduction command, expiry, and `closes_in_wave`.
+
+Focused validation:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas check
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 1: Merge-Gate Crate Closure
+
+Goal: no first-party compiler crate test suite is silently omitted from the authoritative merge gate.
+
+Tasks:
+
+- Replace the hard-coded crate test membership in `ProfileRunner.run_crate_tests` with profile-owned data, or extend the profile schema with an explicit crate test list while preserving the current facade behavior during migration.
+- Add a checked-in package/target classification file validated against `cargo metadata`. `cargo metadata` is the source of truth for package, target, feature, bin, example, and doctest discovery; the checked-in classifier is the source of truth for Sifr-specific classification.
+- Classification values are:
+  - `first_party_compiler`
+  - `first_party_runtime`
+  - `first_party_tooling`
+  - `test_fixture`
+  - `benchmark`
+  - `internal_codegen_tool`
+  - `third_party`
+  - `generated`
+  - `external_tooling`
+- The cargo-metadata guardrail fails unclassified packages, bins, features, examples, and doctests.
+- Add the omitted first-party crate suites to the profile-owned merge crate list:
+  - `cargo test -p sifr_codegen`, tracked as planned merge membership with status `red-blocker`, `executed_in_merge: false`, and `must_be_executed_by: Wave 2.final`
+  - `cargo test -p sifr_type_system`
+  - `cargo test -p sifr_format`
+  - `cargo test -p sifr_lint`
+  - `cargo test -p sifr_source`
+  - `cargo test -p sifr_ir`, after seed tests are added
+- Keep existing crate tests in merge.
+- Add profile self-tests proving that a crate listed in profile data is executed and an unknown crate/suite name fails validation.
+- Add profile-plan emission, for example `scripts/run_all_tests.sh --profile merge --emit-plan`, so local and CI profile plans can be compared without depending on CI for correctness.
+- Profile plans must emit planned-but-not-executed `red-blocker` entries so reviewers can see known-red suites before they become blocking.
+- Add a guardrail that detects:
+  - workspace first-party crates with tests but no profile membership
+  - workspace first-party crates with zero tests and no explicit `tests:none` coverage-matrix row
+  - stale `tests:none` rows whose expiry has passed
+- Add a `cargo metadata` guardrail for every first-party compiler crate:
+  - default feature tests are represented
+  - stable feature flags have a merge/nightly/release assignment
+  - shipped bins are smoke-tested
+  - examples are checked or explicitly excluded
+  - doctests are run or explicitly disabled with reason
+  - `all-targets`, `all-features`, and `no-default-features` policy is documented
+- Exclude only documented parser submodules, generated crates, third-party code, and intentionally external tooling.
+- Update `verification/README.md` and `verification/policy/profile_policy.md` with the crate-test membership rule.
+- Measure warm/cold merge wall time before and after adding crate suites. If the merge lane exceeds the documented budget, ship sharding or profile execution parallelism in the same PR.
+
+Exit criteria:
+
+- `merge.json` or an adjacent checked-in profile data file is the source of truth for first-party crate tests.
+- Omitted crates with tests are represented in the merge gate.
+- `sifr_ir` has seed tests.
+- New first-party compiler crates cannot be added without an explicit verification decision.
+- Cargo features, bins, examples, doctests, and targets have profile assignments or explicit unsupported entries.
+
+Focused validation:
+
+```bash
+cargo test -p sifr_type_system
+cargo test -p sifr_format
+cargo test -p sifr_lint
+cargo test -p sifr_source
+cargo test -p sifr_ir
+cargo check --workspace --all-targets --all-features
+uv run --project verification --locked python -m sifr_verify --self-test
+uv run --project verification --locked python -m sifr_verify profiles check
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 2: Codegen Test Triage and Enforcement
+
+Goal: make `sifr_codegen` green, meaningful, and merge-blocking.
+
+#### Wave 2.0: Codegen Failure Inventory
+
+Tasks:
+
+- Run `cargo test -p sifr_codegen -- --nocapture` and capture the failure inventory in this issue's execution checklist.
+- Add `plans/issues/active/codegen-test-triage.md` with one row per failure:
+  - test id
+  - failure summary
+  - classification: `stale-expectation`, `obsolete-test`, `compiler-bug`, or `production-bug`
+  - proposed PR slice
+  - owner
+  - replacement or regression target
+- Add a machine-readable inventory beside it, for example `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`, with current output, expected output or snapshot id, affected compiler contract, owner, and `closes_in_wave`.
+- Do not change code in Wave 2.0. The PR closes only after review agrees with the classification.
+
+Exit criteria:
+
+- Every failing `sifr_codegen` test has an explicit classification and next PR.
+- The inventory explains which failures are stale tests and which may represent real compiler defects.
+
+#### Wave 2.1..2.N: Per-Classification Repair PRs
+
+Tasks:
+
+- For stale expectations, update assertions or snapshots to match the current intended generated Rust contract.
+- For obsolete tests, delete only when a replacement test or broader suite covers the same behavior; record the replacement in the triage file.
+- For real compiler bugs, ship one root-cause fix PR per coherent bug group and add regression coverage.
+- For unresolved production bugs that cannot be fixed in this phase, add explicit issue-linked sentinels in `verification/areas/regression/crashes` or the relevant codegen suite. Do not leave them as untracked ignored unit tests.
+- For every repaired stable generated-Rust fixture class, prove the emitted Rust can survive the Rust toolchain:
+  - emit Rust
+  - normalize output
+  - run `rustfmt --check`
+  - run `cargo check` or equivalent
+  - run clippy for merge-safe subsets and nightly full subsets
+  - run generated binaries for runtime fixtures
+  - scan generated Rust for `panic!`, `.unwrap()`, `.expect()`, `todo!`, and `unimplemented!`
+- Define the merge-safe clippy subset with an explicit allowlist at `verification/areas/generated_code_quality/data/clippy_merge_lints.json`. Lints outside that allowlist are nightly-only until promoted through owner review.
+- Record generated Rust toolchain support:
+  - supported rustc channel/version
+  - generated-output MSRV if Sifr promises one
+  - whether the fixture is stable, experimental, or internal
+  - nightly-only generated Rust is illegal unless the generating surface is marked experimental/internal
+- Any generated-Rust scan allowlist entry must have owner, reason, issue link, expiry, and reproduction command.
+- Re-run the codegen suite after each PR and update the triage file's status.
+
+Exit criteria:
+
+- The triage file has no open stale-expectation or obsolete-test rows.
+- All real compiler bugs are fixed or represented by issue-linked sentinels.
+- `cargo test -p sifr_codegen` passes locally.
+
+#### Wave 2.final: Promote Codegen To Merge
+
+Tasks:
+
+- Add `cargo test -p sifr_codegen` to the merge crate test list only after it is green.
+- Change the codegen entry from planned merge membership to executed merge membership: status `blocking`, `executed_in_merge: true`.
+- Add codegen snapshot bless rules to `verification/policy/baseline_governance.md` if the suite uses snapshots.
+- Measure warm/cold merge wall time before and after enabling codegen. If the merge lane exceeds the documented budget, ship sharding or profile execution parallelism in the same PR.
+
+Exit criteria:
+
+- `cargo test -p sifr_codegen` passes locally.
+- All codegen test changes are explained by intended compiler contracts.
+- `scripts/run_all_tests.sh --profile merge` would fail if `sifr_codegen` regresses.
+
+Focused validation:
+
+```bash
+cargo test -p sifr_codegen
+cargo test -p sifr -- --skip test_e2e_pass
+verification/runner/e2e/run_e2e_pass.sh
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 3: Full Semantic E2E and Parser Corpus Coverage
+
+Goal: make merge authoritative for language semantics and stable syntax acceptance/rejection.
+
+Tasks:
+
+- Measure current full e2e pass runtime with cache warm and cold.
+- If full pass runtime fits the merge budget, remove the merge-only pass subset and run the full pass corpus in merge.
+- If full pass runtime does not fit, implement deterministic sharding in the merge profile and run all shards as part of the authoritative local merge command.
+- Run the full fail corpus code/position checks in merge; rendered diagnostic presentation remains Wave 4.
+- Add parser acceptance/rejection matrix coverage:
+  - every stable syntax construct has at least one positive fixture
+  - every stable syntax error family has at least one negative fixture
+  - parser-fork behavior and Sifr-owned syntax behavior are separated
+  - contradiction checks prevent a fixture from being both pass and expected-error
+- Add lexer/token stream and indentation coverage:
+  - token boundaries
+  - indentation/dedentation
+  - newline handling
+  - comments/trivia if preserved
+  - Unicode identifiers if supported
+  - source-span stability across tokenization
+- If `verification/areas/core_language/data/merge_e2e_manifest.json` remains after full-corpus promotion, freeze it as the create-pr subset or rename it so its purpose is unambiguous.
+- Keep create-pr as the fast representative subset.
+- Preserve deterministic ordering, report generation, and sequential-vs-parallel equivalence behavior.
+- Add a profile check that prevents merge from referencing stale fixture manifests when full corpus mode is selected.
+- Record how `merge`, `nightly`, and `release` differ after promotion. The expected end state is that merge and nightly both execute the full semantic pass corpus, while nightly can add broader hardening around it.
+
+Exit criteria:
+
+- Merge runs all pass fixtures, either in one lane or through deterministic local shards.
+- Merge runs the full fail corpus code/position checks.
+- Parser acceptance/rejection has matrix-backed positive and negative coverage independent of parser fuzzing.
+- Lexer/token stream and indentation have matrix-backed coverage independent of parser acceptance/rejection.
+- Subsetting remains a create-pr speed optimization only.
+- Reports make the executed fixture count visible.
+
+Focused validation:
+
+```bash
+verification/runner/e2e/run_e2e_pass.sh --profile merge
+bash verification/runner/e2e/check_report_determinism.sh --profile merge
+bash verification/runner/e2e/check_sequential_parallel_equivalence.sh --profile merge
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 4: Diagnostic Baseline and Recovery Expansion
+
+Goal: lock user-visible diagnostics at compiler scale, not just diagnostic codes.
+
+Tasks:
+
+- Inventory all active `SIFR-*` diagnostic codes with stable user-facing messages.
+- Add `verification/areas/diagnostics/data/code_catalog.json` with code, severity, stability, owner, docs link, renderer support, suggestion applicability, and `machine_applicable`.
+- Add `verification/areas/diagnostics/data/code_baseline_coverage.json` mapping each active diagnostic code to:
+  - baseline fixture id
+  - renderer formats covered
+  - multi-error recovery fixture if applicable
+  - suggestion rendering fixture if applicable
+  - documented deferral if the diagnostic is unstable
+- Add `verification/areas/diagnostics/checks/code_baseline_coverage.py`, or the equivalent diagnostics area check, to enforce code baseline coverage and recovery coverage.
+- Add unused/stale rendered-baseline detection:
+  - baseline file with no owning fixture fails
+  - fixture missing a required baseline fails
+  - blessed baseline without metadata fails
+  - nondeterministic baseline output fails
+  - mass baseline update without per-suite summary fails
+- Baseline metadata records fixture id, suite, renderer, owner, bless PR or local issue reference, bless reason, source hash, and normalizers.
+- Define renderer coverage by profile:
+  - merge requires at least one rendered baseline per active stable `SIFR-*` code
+  - nightly and release require every stable renderer for every active stable `SIFR-*` code
+- For every active `SIFR-*` code with a stable user-facing message, add at least one rendered baseline fixture covering:
+  - human format
+  - compact format
+  - JSON format
+  - stable span and column behavior
+  - message text
+  - related notes when applicable
+  - suggestions when applicable
+- For every parser, HIR, name-resolution, and type-checker recovery surface listed in `verification/policy/suite_taxonomy.md`, add at least one multi-error recovery fixture exercising that surface. Extend that policy document first if no recovery-surface list exists.
+- Make the diagnostics baseline coverage check fail when a documented recovery surface has zero multi-error fixtures.
+- Add contradiction checks where a fixture cannot both pass and contain expected errors.
+- Add suggestion-application validation only for suggestions marked machine-applicable in the diagnostic code catalog. If automated application is not stable, record that boundary explicitly.
+- Make the diagnostics baseline coverage check fail when a new diagnostic code has no rendered baseline or no documented deferral.
+- Measure warm/cold merge wall time before and after expanding diagnostic baselines. If the merge lane exceeds the documented budget, keep broad renderer permutations in nightly while preserving one merge-blocking baseline per active stable code.
+
+Exit criteria:
+
+- Merge has at least one rendered baseline per active `SIFR-*` code with a stable user-facing message.
+- Nightly and release have every stable renderer for every active `SIFR-*` code with a stable user-facing message.
+- Multi-error recovery quality is represented by baselines.
+- Diagnostic presentation regressions fail before release.
+
+Focused validation:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines
+cargo test -p sifr_diagnostics
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 5: IR, HIR, CFG, and Codegen Snapshot Suites
+
+Goal: catch lowering and codegen regressions at the layer where they are introduced.
+
+Dependency: Wave 5 is blocked on Wave 2.final because codegen snapshot work must not build on a red `sifr_codegen` suite.
+
+Wave 5 ships as numbered sub-PRs, not a single PR:
+
+- 5.1 Parsed-source shape snapshots at the Sifr-owned boundary: `sifr_syntax` / `sifr_frontend` above the parser fork
+- 5.2 HIR-lowering snapshots
+- 5.3 Name-resolution snapshots
+- 5.4 Type and ownership fact snapshots
+- 5.5 CFG and flow fact snapshots
+- 5.6 Codegen IR or structured input snapshots
+- 5.7 Emitted-Rust snapshots for stable constructs
+- 5.8 Compiler crash/ICE contract and sentinels
+
+Tasks:
+
+- Create per-layer snapshot inventory files before adding snapshots:
+  - `verification/areas/core_language/data/lowering_layer_inventory.json` for parsed-source, HIR, name-resolution, type/ownership, and CFG/flow contracts
+  - `verification/areas/generated_code_quality/data/codegen_construct_inventory.json` for codegen IR, structured inputs, and emitted-Rust stable constructs
+- Each inventory entry declares the stable contract id, owner, source fixture or construct, snapshot id, normalizers, profile assignment, and replacement/mapping if coverage exists elsewhere.
+- Add or formalize layer-specific snapshot suites for:
+  - parsed-source shape at the Sifr-owned boundary: `sifr_syntax` / `sifr_frontend` above `sifr_python_parser` / `sifr_python_ast`
+  - HIR lowering
+  - name resolution
+  - type and ownership facts
+  - CFG/flow facts
+  - generated Rust IR or structured codegen inputs
+  - emitted Rust for selected stable constructs
+- Prefer structured snapshots over string substring assertions where possible.
+- Normalize nondeterministic ids, paths, tempdirs, and ordering.
+- Add snapshot stale/unused detection, schema versioning, and normalizer inventory.
+- Add source-map/span mapping snapshots if generated Rust diagnostics or runtime errors are expected to map back to Sifr source.
+- Add debug-info or stack-trace coverage rows if Sifr ships debug/runtime stack traces.
+- Add a first-class compiler crash/ICE contract:
+  - invalid user programs produce diagnostics, not panics
+  - unexpected panics/ICEs are always test failures
+  - known crashes live only in issue-linked crash sentinel fixtures
+  - each sentinel has reproduction command, expected crash signature, owner, and expiry
+  - if a known crash stops crashing, the sentinel fails and must be closed or reclassified
+  - at expiry, the sentinel is re-triaged: fix the crash, reclassify the surface, or extend the expiry with reason; an expired sentinel fails the regression suite
+- Add bless/update workflow documentation.
+- Add coverage rows for each layer to the coverage matrix.
+- Keep snapshots focused on compiler contracts, not incidental formatting.
+
+Exit criteria:
+
+- A regression in lowering or codegen can fail without waiting for a native binary runtime mismatch.
+- Snapshot output is reviewable and normalized.
+- Existing HIR/CFG contract matrices are either integrated or explicitly mapped.
+
+Focused validation:
+
+```bash
+cargo test -p sifr_lowering
+cargo test -p sifr_analysis
+cargo test -p sifr_codegen
+uv run --project verification --locked python -m sifr_verify areas run --area core_language
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 6: CPython Differential Miscompilation Oracle
+
+Goal: detect silent wrong-code bugs using CPython as the reference for the supported Python-compatible subset.
+
+#### Wave 6.0: Divergence Catalogue and Hand-Seeded Merge Smoke
+
+Tasks:
+
+- Define the supported differential subset in `verification/policy/cpython_differential.md` before building the generator.
+- The policy file must contain two enumerated tables:
+  - supported constructs, with each Python construct and the exact Sifr-equivalent behavior
+  - excluded divergences, with each known Sifr/CPython semantic divergence and the generator exclusion rule
+- The policy file must contain an enumerated table of exit-code-stable programs, with each program's allowed exit code or codes and rationale.
+- The excluded divergence table must include at least:
+  - Result/Option error model versus CPython exceptions
+  - ownership and borrow restrictions
+  - integer overflow and fixed-width numeric policy
+  - default-argument evaluation behavior
+  - division and floor semantics
+  - dict ordering guarantees and mutation behavior
+  - string encoding and Unicode boundary behavior
+  - async runtime behavior
+  - narrowing and static type rejection cases
+- Add a catalogue linter that rejects duplicate, missing, or unreferenced exclusion ids.
+- Define the initial oracle subset precisely:
+  - bounded integer range, with overflow excluded or explicitly tested
+  - no floats initially unless Sifr has precise float semantics for the selected operation
+  - no default-argument cases unless Sifr matches Python evaluation timing for that case
+  - no dict mutation during iteration unless explicitly supported
+  - no reliance on Python `repr` or display formatting for semantic comparison
+  - canonical JSON-like serialization implemented in both Python and Sifr
+  - no exception-message comparison
+- Define CPython version and result-comparability policy:
+  - supported interpreter is CPython matching the `requires-python` range in `verification/pyproject.toml`
+  - oracle reports exact `sys.version`
+  - generated-corpus results are not comparable across Python minor versions unless the policy explicitly permits it
+- Define canonical serializer contract:
+  - every oracle program prints exactly one JSON line
+  - accepted value grammar is versioned
+  - dict key order is canonicalized or explicitly tested as insertion-order behavior
+  - Unicode normalization policy is explicit
+  - integer bounds are explicit
+  - recursive/container depth limits are explicit
+  - stdout normalization is limited to documented line-ending handling
+- Add `cpython_differential_hand_seeded_merge`, a hand-authored deterministic merge smoke suite that covers the supported subset before generated tests are promoted.
+
+Exit criteria:
+
+- The generator contract is reviewable before any generated test runs.
+- Unsupported semantics are explicit exclusions, not post-generation skips.
+- CPython differential smoke is already merge-blocking through hand-seeded fixtures before generator stability is proven.
+
+#### Wave 6.1: Generator, Canonical Serializer, and Shrinker
+
+Tasks:
+
+- Add a grammar-based valid-program generator for the subset. Initial subset must include:
+  - integer, bool, string, list, tuple, and dict values already supported by Sifr
+  - pure functions
+  - local variables and assignment
+  - if/else
+  - loops over supported iterables
+  - comparisons and arithmetic with defined Sifr semantics
+  - deterministic stdout serialization
+- Implement a shrinker/minimizer for generated failures. This is required before generated corpus promotion.
+- Exclude unsupported Python behavior by construction using the divergence catalogue. Do not generate broad invalid programs and filter them after the fact.
+- Build the Sifr CLI once with `cargo build --release -p sifr`, then run generated programs with `target/release/sifr run` to avoid rebuilding the compiler for every generated case.
+- The suite must build the release binary at run start or validate it against a recorded build artifact hash/source digest. Mtime-only freshness checks are not sufficient.
+- Run each generated program with `python3` and `target/release/sifr run`, using a per-program timeout and an overall suite timeout recorded in the suite manifest.
+- Compare:
+  - stdout: byte-equal after deterministic-output normalization documented in the subset contract
+  - exit code: bucketed as `0` or `non-zero`, with precise integer equality only for documented exit-code-stable programs
+  - error presence: `no-error`, `compile-error`, or `runtime-error`
+- Do not compare error message text in the differential oracle because Sifr's Result/Option error model versus CPython exceptions is an excluded divergence.
+- Store generator seeds and minimized failures.
+- Promote every found divergence to `fixedbugs` after root-cause fix.
+- Run the generated corpus in nightly/release.
+- Promote a deterministic generated seed subset to merge only after the suite has 20 consecutive nightly green runs with no quarantine entries and no flaky retries.
+
+Exit criteria:
+
+- Sifr has a real semantic oracle for supported Python-like behavior.
+- Silent miscompilations found by the oracle become permanent regressions.
+- Unsupported semantics are documented as generator exclusions and enforced by the generator linter.
+- Generated failures are minimized before becoming bug reports or regressions.
+
+Focused validation:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite cpython-differential-smoke
+uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite cpython-differential-broader
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 7: Fuzz, Property, and Sanitizer Hardening
+
+Goal: move from deterministic smoke checks to sustained compiler and runtime hardening.
+
+Tasks:
+
+- Extend existing `verification/areas/fuzz_property/manifest.json`, `fuzz_smoke_manifest.json`, `property_manifest.json`, and `verification/policy/fuzz_property.md`; do not introduce a parallel fuzz runner unless the existing runner cannot express a required target.
+- Add `cargo-fuzz` or equivalent coverage-guided fuzz targets for:
+  - parse/check entrypoint
+  - HIR/type/ownership entrypoint
+  - codegen entrypoint
+  - diagnostic renderer entrypoint
+  - package/project manifest entrypoint
+- The diagnostic renderer fuzz target consumes structured diagnostic values or their JSON serialization, not source code. Document the input grammar in `verification/policy/fuzz_property.md` so it does not duplicate parser fuzzing.
+- Keep parser-fork fuzzing separate from Sifr-original compiler fuzzing.
+- Define corpus directories, seed rotation policy, seed minimization, timeout policy, sustained-lane runtime budget, and crash promotion rules in `verification/policy/fuzz_property.md`.
+- Separate invalid-program fuzzing from valid-program fuzzing. Invalid fuzzing hunts ICEs and diagnostic crashes; valid fuzzing hunts wrong-code and invariant breaks.
+- Fuzz reports must include seed, minimized input path, exact reproduction command, and target id.
+- Check in corpus minimization commands.
+- Add a merge-blocking deterministic fuzz smoke using stable seeds and a short runtime budget.
+- Add nightly/release sustained fuzz lane documentation and commands.
+- Add sanitizer lanes for:
+  - generated binaries where feasible
+  - `sifr_runtime`
+  - async/concurrency runtime cases
+  - filesystem/process/network runtime cases where supported
+- Prefer ASan/LSan/TSan or platform-supported equivalents. If a sanitizer is unsupported on a host, emit a structured skip with reason.
+- Add a Miri lane for unsafe/runtime Rust code where feasible.
+- Add Loom, Shuttle, or equivalent deterministic concurrency tests where async/thread behavior is shipped and the model can run locally.
+- If Miri or Loom/Shuttle-style coverage is skipped, record the determination with reason and reproduction command in the platform or sanitizer manifest.
+- Promote every sanitizer/fuzz finding into regression coverage before closure.
+- Measure warm/cold merge wall time before and after adding merge fuzz/sanitizer smoke. If the merge lane exceeds the documented budget, keep only deterministic minimized reproductions in merge and move broad sanitizer/fuzz execution to nightly/release.
+
+Exit criteria:
+
+- Sifr-original compiler code is fuzzed, not only the inherited parser fork.
+- Fuzz and sanitizer outputs have deterministic reproduction paths.
+- Nightly hardening findings become merge-blocking regressions after minimization.
+
+Focused validation:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property
+uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite fuzz-smoke
+cargo test -p sifr_runtime
+cargo test -p sifr_runtime --features http
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 8: Incremental, Determinism, and Performance Trend Evidence
+
+Goal: prove repeated/editing workflows do not produce divergent behavior or slow drift.
+
+Tasks:
+
+- Add clean-vs-incremental equivalence checks for every cache/query/incremental behavior Sifr currently ships.
+- If Sifr does not yet ship true incremental compilation, add an explicit non-incremental boundary test proving repeated clean builds and cache-assisted frontend workflows produce identical canonical outputs.
+- Add edit-run scenario fixtures:
+  - edit that preserves success
+  - edit that introduces diagnostics
+  - edit that fixes diagnostics
+  - edit that changes project graph dependencies
+- Extend performance reporting from threshold-only budgets to trend artifacts:
+  - stable benchmark id
+  - sample count
+  - median
+  - variance or noise classification
+  - previous baseline comparison
+- Track at least these metrics where applicable:
+  - compile wall time
+  - peak RSS
+  - emitted Rust lines/bytes
+  - generated binary size
+  - diagnostic rendering time for large error cases
+  - LSP initial indexing time
+  - LSP steady-state edit latency
+  - package resolution/install time when package management is shipped
+- Record benchmark environment metadata: host CPU, OS, rustc, Python, uv, profile, thermal policy, and sample count.
+- Store trend baselines under `verification/areas/performance/data/trend/`.
+- Add a stale-baseline check that fails when a benchmark id has no current baseline update or explicit owner-reviewed deferral within the policy window.
+- Require benchmark ids to be stable; renames must carry old-id mapping so trend history is not silently reset.
+- Encode performance blocking policy in the performance area:
+  - create-pr validates benchmark schema and smoke budgets
+  - merge enforces stable representative budgets only
+  - nightly/release produce trend deltas on reference hardware
+  - trend regressions require owner review
+  - local developer machines do not fail solely because of noisy trend deltas
+  - checked-in trend baselines may only be updated from approved reference runs
+- Keep budget failures blocking where current policy already blocks.
+
+Exit criteria:
+
+- Cache and repeated-build behavior has explicit equivalence evidence.
+- Perf reports can identify drift, not only budget violations.
+- Trend artifacts have a durable checked-in home and stale-baseline detection.
+- Incremental claims are not made unless actually implemented and tested.
+
+Focused validation:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area performance --suite representative
+bash verification/runner/e2e/check_report_determinism.sh --profile merge
+bash verification/runner/e2e/check_sequential_parallel_equivalence.sh --profile merge
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 9: LSP, Tooling, Ecosystem, Package, Stdlib, and Platform Breadth
+
+Goal: move smoke-level surfaces toward named corpora with profile ownership.
+
+Wave 9 ships as numbered sub-PRs, not a single PR:
+
+- 9.1 LSP marker corpus
+- 9.2 Ecosystem-broader expansion
+- 9.3 Package-manager integration suites
+- 9.4 Stdlib parity per-module suites
+- 9.5 Runtime/platform executable evidence
+- 9.6 Algorithmic compatibility profile ownership and broader corpus
+
+Tasks:
+
+- Add `verification/areas/developer_tooling/data/lsp_capability_inventory.json`, populated from `crates/sifr_lsp` server-capability advertisement code.
+- Add a marker-based LSP corpus similar in spirit to TypeScript fourslash for:
+  - diagnostics
+  - hover
+  - definition
+  - references
+  - completion
+  - rename/refactor only if stable
+  - project reload
+  - long-session edits
+- Add LSP JSON-RPC transcript replay tests for wire behavior:
+  - initialize request/response snapshots
+  - server capability advertisement
+  - client capability combinations
+  - dynamic registration if supported
+  - unsupported capability behavior
+  - workspace folder or multi-root capability if supported
+  - cancellation
+  - out-of-order requests
+  - stale diagnostics after edit
+  - project reload
+  - long-session memory/perf smoke
+  - multi-root behavior if supported
+- Add a marker coverage check: every documented LSP capability in `crates/sifr_lsp` must have at least one marker test for its relevant behavior category. Numeric corpus size is secondary to capability coverage.
+- Add create-pr smoke, merge capability subset, and nightly/release full marker corpus profile assignments.
+- Expand `ecosystem_compatibility` from two local curated projects to a larger pinned curated set with rationale, revision, owner, command, timeout, and expected classification.
+- Add ecosystem license, checksum, and revision policy for pinned corpora.
+- Add `ecosystem_limitations.md` documenting:
+  - represented project types
+  - absent project types
+  - host/platform limitations
+  - dependency/network limitations
+  - unsupported package-manager scenarios
+  - known false negatives
+  - criteria for adding/removing projects
+- Add a hand-authored offline package-management merge smoke immediately, covering offline registry fixture, lockfile determinism, and package graph behavior.
+- Add broader package-management integration suites to nightly/release first.
+- Promote broader generated or expanded package-management cases to merge only after 20 consecutive nightly green runs with no quarantine entries and no flaky retries.
+- Package-management merge tests use an offline registry fixture and prove package lockfile determinism. Live registry/network checks are nightly/release signal only.
+- Expand stdlib parity from inventory/audit-fixture checks into module-owned parity suites for supported namespaces.
+- Inventory stdlib modules that currently ship examples or doctest-style documentation, then add validation for each inventoried supported API. If no module ships examples, record an explicit zero-example inventory row rather than silently satisfying this task.
+- Add `verification/areas/runtime_platform/supported_platforms.json` with host/target support status, merge/nightly requirement, toolchain, and allowed skips.
+- Convert runtime platform documentation into executable host/target evidence where feasible:
+  - filesystem paths
+  - path separators
+  - Unicode paths
+  - symlinks
+  - file permissions
+  - tempdir cleanup
+  - line endings
+  - subprocess behavior
+  - subprocess exit codes
+  - networking
+  - signals/process control
+  - locale/unicode assumptions
+  - install/distribution smoke
+- Networking tests use loopback only in create-pr and merge.
+- Add structured skip reasons for host-specific checks.
+- Promote `algorithmic_compatibility` from manifest/taxonomy signal to profile-owned evidence:
+  - merge runs a representative algorithm/LeetCode subset with taxonomy rows for each included problem/category
+  - nightly/release run the full corpus and taxonomy delta reports
+  - each problem/category has owner, expected classification, command, timeout, and result artifact
+  - live network is not required for merge
+
+Exit criteria:
+
+- Tooling, ecosystem, package, stdlib, and platform surfaces are no longer represented only by smoke scripts or documentation.
+- Algorithmic compatibility has profile-owned commands and structured evidence.
+- Each surface has profile-owned commands and evidence.
+- Unsupported host/target combinations are explicit.
+
+Focused validation:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling
+uv run --project verification --locked python -m sifr_verify areas run --area ecosystem_compatibility
+uv run --project verification --locked python -m sifr_verify areas run --area package_management
+uv run --project verification --locked python -m sifr_verify areas run --area stdlib_parity
+uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform
+scripts/run_all_tests.sh --profile create-pr
+```
+
+### Wave 10: Documentation, Release Evidence, and Closeout
+
+Goal: make the new verification standard durable and auditable.
+
+Tasks:
+
+- Update `internal_docs/architecture.md` with the final verification architecture.
+- Update `plans/roadmap.md` and relevant phase/index docs with phase status and merged PR links.
+- Update `verification/README.md` with:
+  - profile ownership
+  - crate test membership
+  - coverage matrix
+  - local commands
+  - baseline bless workflow
+  - fuzz/sanitizer reproduction workflow
+- Update `verification/policy/profile_policy.md` with final profile membership rules.
+- Update `verification/policy/suite_taxonomy.md` with new suite kinds and their artifact contracts.
+- Update `verification/policy/baseline_governance.md` with codegen and diagnostics baseline bless rules.
+- Add a closeout checklist with links to:
+  - coverage matrix report
+  - merge profile report
+  - diagnostics baseline report
+  - codegen green run
+  - CPython differential report
+  - fuzz/sanitizer reports
+  - platform evidence
+  - performance trend artifact
+- Archive exact release evidence with commit SHA, toolchains, OS, emitted profile plan, suite counts, and report hashes.
+- Run the authoritative local validation gate.
+- Promote the coverage-matrix check and local/CI plan-equivalence check from advisory to blocking and require zero `expected-missing` rows.
+- Add negative self-tests proving enforcement fails on:
+  - stable guarantee with no matrix row
+  - owner `unassigned`
+  - unknown owner id
+  - expired `expected-missing`
+  - expired `tests:none`
+  - lingering `red-blocker`
+  - illegal `not-applicable` on a stable compiler/runtime behavior
+  - stale/unused baseline
+  - fixture missing required baseline
+  - first-party crate with tests but no profile membership
+  - zero-test crate without seed tests or allowed status
+  - live-network suite in create-pr/merge
+  - undocumented or expired quarantine
+  - v1 manifest for a shipped stable surface
+  - unpinned corpus revision/checksum for a merge suite
+  - create-pr or merge Cargo command missing `--locked` or offline execution
+  - CI plan omitting a local merge suite
+  - profile assignment table mismatch
+- Verify no `red-blocker`, `expected-missing`, expired `tests:none`, illegal `not-applicable`, or undocumented quarantine row remains.
+- Add and run `verification/areas/coverage_matrix/checks/profile_assignment_matrix.py`, which verifies the decisions-table profile assignment against `verification/profiles/create-pr.json`, `verification/profiles/merge.json`, `verification/profiles/nightly.json`, and `verification/profiles/release.json`. Promotion to blocking happens with the coverage-matrix promotion.
+
+Exit criteria:
+
+- A new contributor can understand what verification is required before PRs.
+- The phase has durable merged PR links and local evidence.
+- The world-class standard is enforced by commands, not only described.
+
+Focused validation:
+
+```bash
+scripts/run_all_tests.sh --profile create-pr
+scripts/run_all_tests.sh
+scripts/run_all_tests.sh --profile nightly
+scripts/run_all_tests.sh --profile release
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+```
+
+## Required Tracking Updates Per Wave
+
+After each merged PR:
+
+- Update this issue with:
+  - PR link
+  - measured validation commands
+  - changed profile memberships
+  - any accepted temporary exceptions and expiry dates
+- For gate-expanding waves, record warm/cold merge wall time before and after the change. Gate-expanding waves include at least Wave 1, Wave 2.final, Wave 3, Wave 4, Wave 7, and Wave 9.3 package-management merge promotion. Wave 2.0 and Wave 2.1..2.N do not require wall-time measurement unless they independently change merge profile membership.
+- If a gate-expanding wave would push merge over `warm_wall_time_minutes` or `cold_wall_time_minutes`, the same PR must ship deterministic sharding, bounded profile parallelism, or a documented move of broad non-merge coverage to nightly while preserving merge smoke.
+- Update `plans/roadmap.md` if the wave changes project status.
+- Update `plans/phases/index.md` if the phase list or status changes.
+- Update relevant policy docs in `verification/policy/`.
+- Promote any found bug into `verification/areas/regression/fixedbugs` or `crashes`.
+
+## Acceptance Criteria
+
+This phase is complete only when all of the following are true:
+
+- `cargo test -p sifr_codegen` passes and is merge-blocking.
+- `sifr_type_system`, `sifr_format`, `sifr_lint`, and `sifr_source` crate tests are merge-blocking.
+- `sifr_ir` has meaningful seed tests.
+- First-party compiler crate test membership is explicit and profile-owned.
+- Stable shipped guarantees are recorded in `shipped_guarantees.json` with non-`unassigned` owners and support status.
+- The verification target matrix is reflected by machine-checked inventories: every matrix target phrased with "every" has an inventory-backed check that fails when an inventory entry lacks the required evidence.
+- The coverage matrix exists, is blocking, and has zero `expected-missing` rows.
+- No `red-blocker`, expired `tests:none`, illegal `not-applicable`, ownerless quarantine, or undocumented quarantine row remains.
+- Create-pr and merge profiles are hermetic/offline, and live-network checks are nightly/release only.
+- Local/CI plan-equivalence checking exists so CI cannot silently omit a local merge check.
+- Cargo feature, bin, example, doctest, all-targets, all-features, and no-default-features policies are enforced or explicitly marked unsupported.
+- Cargo create-pr and merge commands obey the hermetic Cargo contract: locked dependencies, offline execution, documented setup cache/vendor behavior, and no hidden user-global cache dependence.
+- Merge runs the full semantic e2e pass corpus or a documented deterministic full-corpus shard plan.
+- Merge runs the full fail corpus code/position checks.
+- Lexer/token stream and indentation have stable matrix coverage independent of parser acceptance/rejection.
+- Parser acceptance/rejection has stable syntax matrix coverage independent of parser fuzzing.
+- Merge: every active `SIFR-*` code with a stable user-facing message has at least one rendered baseline.
+- Nightly and release: every active `SIFR-*` code with a stable user-facing message has rendered baselines for every stable renderer: human, compact, and JSON.
+- The diagnostics baseline coverage check enforces both rules and fails on undocumented gaps.
+- Baseline-backed suites fail unused/stale baselines and unchecked blesses.
+- Multi-error diagnostic recovery is baseline-tested.
+- HIR/CFG/lowering/codegen snapshot suites exist or are explicitly mapped to equivalent blocking suites.
+- Generated Rust toolchain support is recorded and stable generated output is checked against the supported toolchain/MSRV policy.
+- Compiler crash/ICE behavior is a first-class contract with issue-linked sentinels for known crashes.
+- The CPython divergence catalogue exists and the generator lints against it.
+- The CPython oracle records supported Python version policy, canonical serializer grammar, integer/container bounds, Unicode policy, and build artifact hash/source digest validation.
+- CPython differential hand-seeded smoke is merge-blocking for the supported subset.
+- Broader CPython differential generation runs in nightly or release.
+- CPython generated failures are minimized before promotion to issues or regressions.
+- Sifr-original compiler fuzz targets exist with deterministic merge smoke and sustained lane documentation.
+- Sanitizer/leak/thread hardening lanes exist where platform-supported, with structured skip reasons otherwise.
+- Execution sandbox policy is enforced for generated binaries, CPython differential programs, package tests, ecosystem projects, and fuzz reproducers.
+- Clean-vs-repeated or clean-vs-incremental equivalence is tested according to shipped compiler behavior.
+- LSP marker corpus covers core IDE behaviors beyond protocol smoke, and JSON-RPC transcript replay covers wire behavior.
+- Ecosystem, package, stdlib, and platform suites have profile-owned commands and structured evidence.
+- Algorithmic compatibility taxonomy and corpus have profile-owned commands and structured evidence.
+- Platform support is recorded in `supported_platforms.json` and executable evidence respects host skip policy.
+- Distribution/release install smoke and release evidence archive exist with commit, toolchains, OS, suite counts, emitted profile plan, and report hashes.
+- Performance trend artifacts include time, memory/RSS, output size, and benchmark environment metadata in addition to threshold budgets.
+- Performance trend blocking policy prevents noisy local trend deltas from failing ordinary developer merge runs while keeping stable representative budgets blocking.
+- Every gate-expanding wave records measured warm/cold merge wall time before and after the change.
+- Profile assignment in the decisions table is reflected by `verification/profiles/create-pr.json`, `verification/profiles/merge.json`, `verification/profiles/nightly.json`, and `verification/profiles/release.json`.
+- Every temporary exception has an owner, issue link, expiry, reproduction command, and profile-visible status.
+- `scripts/run_all_tests.sh --profile create-pr`, `scripts/run_all_tests.sh`, `scripts/run_all_tests.sh --profile nightly`, and `scripts/run_all_tests.sh --profile release` pass locally before the closeout PR.
+- Negative self-tests cover every enforcement claim listed in Wave 10.
+
+## Non-Acceptable Closeout States
+
+- "Policy exists" but no failing check enforces it.
+- A stable shipped guarantee lacks an owner, support status, or coverage row.
+- Create-pr or merge requires network access.
+- CI has behavior that cannot be reproduced through local profile commands.
+- `sifr_codegen` remains red or excluded from merge.
+- Any `red-blocker` row remains at phase close.
+- Failing tests are ignored without issue-linked sentinel coverage.
+- Merge relies on an undocumented subset for semantics.
+- Diagnostic codes are checked but renderer output remains unbaselined.
+- Fuzzing only covers inherited parser code.
+- Sanitizer lanes are documented but not executable.
+- LSP remains limited to handshake/protocol smoke.
+- Platform matrix is documentation-only.
+- Performance only reports wall-clock budgets with no memory/size trend artifact.
+- Temporary exceptions have no expiry.
+- The coverage matrix remains advisory at phase close.
+- Any `expected-missing` row remains at phase close.
+
+## Decisions Log
+
+| date | decision | rationale | owner |
+| --- | --- | --- | --- |
+| 2026-06-14 | Keep this as a new ad-hoc issue phase rather than editing completed Phase 29. | Phase 29 created the verification foundation; this phase turns it into enforced breadth and gate closure. | compiler-verification |
+| 2026-06-14 | Coverage matrix lands advisory first and becomes blocking at closeout. | Immediate blocking would require a large temporary exception list before the phase has filled the surfaces. | compiler-verification |
+| 2026-06-14 | CPython differential work requires a divergence catalogue before generator implementation. | The oracle must avoid unsupported semantic drift by construction, not by filtering failures after generation. | compiler-verification |
+| 2026-06-14 | External reviewer additions incorporated. | The phase now enforces shipped guarantee registry, hermetic local-first profiles, red-blocker status, stale baseline detection, feature/target coverage, generated Rust toolchain gates, crash/ICE contract, CPython hand-seeded smoke and shrinker, LSP transcripts, memory/size trends, and platform support manifest. | compiler-verification |
+
+## Review Log
+
+- 2026-06-14: Claude Opus review pass 1 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-1.md`; actionable findings incorporated with locally verified crate-count corrections.
+- 2026-06-14: Claude Opus review pass 2 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-2.md`; verdict was "ready after minor edits"; required text-level edits incorporated.
+- 2026-06-14: Claude Opus review pass 3 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-3.md`; verdict was "ready after minor edits"; final minor edits incorporated.
+- 2026-06-14: Claude Opus review pass 4 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-4.md`; verdict was "ready after minor edits"; final decision-precision edits incorporated.
+- 2026-06-14: Claude Opus review pass 5 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-review-pass-5.md`; verdict was "implementation-ready"; optional polish edits incorporated.
+- 2026-06-14: Claude Opus target-matrix review pass 1 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-target-matrix-review-pass-1.md`; required target rows and inventory paths incorporated.
+- 2026-06-14: Claude Opus target-matrix review pass 2 completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-target-matrix-review-pass-2.md`; verdict was "implementation-ready"; optional inventory-path polish incorporated.
+- 2026-06-14: External precision review from `/Users/yaseralnajjar/.codex/attachments/af3521e9-f255-4f15-920e-a5a7a1d73a4b/pasted-text.txt` incorporated; status semantics, red-blocker execution semantics, offline Cargo/toolchain contracts, CPython oracle policy, lexer/indentation coverage, sandboxing, performance blocking, and negative self-tests tightened.
+- 2026-06-14: Claude Opus final precision review completed in `plans/reviews/active/ad-hoc-world-class-verification-standard-and-gate-closure-final-precision-review.md`; verdict was "implementation-ready"; non-blocking clarity edits incorporated.
+- 2026-06-14: External final consistency review incorporated from user-provided review text; stable guarantee wording, post-Wave 0 `expected-missing` semantics, owner registry validation, package-management merge promotion, hermetic focused validation, canonical profile-assignment checker path, and closeout negative self-tests tightened.
