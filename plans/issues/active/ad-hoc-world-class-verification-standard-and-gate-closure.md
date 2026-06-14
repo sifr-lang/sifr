@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0 merged; Wave 1 implementation validated locally, PR/review/merge pending
+Status: in progress; Wave 0 merged; Wave 1 validated locally and approved by two review passes; Wave 1 merge pending
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -275,7 +275,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 1 Implementation Notes
 
-- Status: implementation complete locally; PR/review/merge pending.
+- Status: implementation complete locally; PR open and approved by two Claude Opus review passes; merge pending.
 - Scope: profile-owned crate test membership, Cargo metadata package/target/feature classification, merge-gate closure for previously omitted green first-party compiler crates, full-mode `sifr_codegen` red-blocker visibility, and `sifr_ir` seed tests.
 - Matrix changes: `first_party_crate_tests` and `cargo_features_targets` promoted from `expected-missing` to `blocking`; coverage matrix now reports 20 temporary rows.
 - Create-pr behavior: newly added omitted crates are full-mode only so create-pr remains representative; merge runs all green first-party compiler crate tests.
@@ -298,6 +298,7 @@ Implementation re-check started 2026-06-14.
 - Review:
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-1-review-pass-1.md`: no blocking issues; accepted small hardening follow-ups for `merge-red-blocker` policy wording, duplicate full-mode package membership handling, and invalid non-executed full-mode blocking suites.
   - Post-review validation: `scripts/run_all_tests.sh --profile create-pr` passed; wall time 169.32s with existing warm-budget advisory.
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-1-review-pass-2.md`: no blocking issues; reviewer explicitly approved Wave 1 for merge and listed only non-blocking follow-ups for later waves.
 - Budget evidence:
   - Create-pr remains above its warm budget but improved from the all-smoke trial run by making the Wave 1 additions full-mode only.
   - Merge completed below the cold budget but above the warm budget due primarily to generated-code quality and full e2e cache misses; follow-up batching/cache-budget work remains outside this Wave 1 gate-closure scope.
