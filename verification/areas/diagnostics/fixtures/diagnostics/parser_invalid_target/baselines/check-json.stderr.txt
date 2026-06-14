@@ -1,0 +1,47 @@
+[
+  {
+    "code": "SIFR-PARSE-0005",
+    "severity": "Error",
+    "message": "invalid target: assignment target",
+    "message_template": "invalid target: {target_kind}",
+    "args": {
+      "parser_category": {
+        "kind": "string",
+        "value": "invalid_assignment_target"
+      },
+      "target_kind": {
+        "kind": "string",
+        "value": "assignment target"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0005",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 16,
+        "byte_end": 17,
+        "line": 2,
+        "column": 5,
+        "end_line": 2,
+        "end_column": 6,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    1 = 2",
+            "highlight_start": 5,
+            "highlight_end": 6
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "code": "SIFR-PARSE-0009",
+    "severity": "Error",
+    "message": "unsupported syntax: Cannot use `lazy` import statement on Python 3.14 (syntax was added in Python 3.15)",
+    "message_template": "unsupported syntax: {syntax_kind}",
+    "args": {
+      "parser_category": {
+        "kind": "string",
+        "value": "unsupported_syntax"
+      },
+      "syntax_kind": {
+        "kind": "string",
+        "value": "Cannot use `lazy` import statement on Python 3.14 (syntax was added in Python 3.15)"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0009",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 0,
+        "byte_end": 4,
+        "line": 1,
+        "column": 1,
+        "end_line": 1,
+        "end_column": 5,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "lazy import value",
+            "highlight_start": 1,
+            "highlight_end": 5
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]

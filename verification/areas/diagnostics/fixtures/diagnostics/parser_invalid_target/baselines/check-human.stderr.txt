@@ -1,0 +1,7 @@
+error[SIFR-PARSE-0005]: invalid target: assignment target
+  --> main:2:5
+     |
+   2 |     1 = 2
+     |     ^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0005

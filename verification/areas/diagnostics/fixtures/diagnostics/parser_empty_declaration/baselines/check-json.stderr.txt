@@ -1,0 +1,52 @@
+[
+  {
+    "code": "SIFR-PARSE-0007",
+    "severity": "Error",
+    "message": "malformed declaration list: global statement",
+    "message_template": "malformed declaration list: {declaration_kind}",
+    "args": {
+      "declaration_kind": {
+        "kind": "string",
+        "value": "global statement"
+      },
+      "parser_category": {
+        "kind": "string",
+        "value": "declaration_list"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0007",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 22,
+        "byte_end": 23,
+        "line": 2,
+        "column": 11,
+        "end_line": 3,
+        "end_column": 1,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    global",
+            "highlight_start": 11,
+            "highlight_end": 11
+          },
+          {
+            "text": "",
+            "highlight_start": 1,
+            "highlight_end": 1
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]

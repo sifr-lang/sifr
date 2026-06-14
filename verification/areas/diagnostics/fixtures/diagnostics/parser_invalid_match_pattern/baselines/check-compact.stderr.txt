@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PARSE-0008 main:3:14 invalid match pattern: star pattern outside a sequence pattern

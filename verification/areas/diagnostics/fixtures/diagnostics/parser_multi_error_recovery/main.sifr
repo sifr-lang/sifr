@@ -1,0 +1,3 @@
+def main():
+print("bad indent")
+    1 = 2

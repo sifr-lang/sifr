@@ -1,0 +1,47 @@
+[
+  {
+    "code": "SIFR-PARSE-0006",
+    "severity": "Error",
+    "message": "invalid call arguments: positional argument after keyword argument",
+    "message_template": "invalid call arguments: {reason}",
+    "args": {
+      "parser_category": {
+        "kind": "string",
+        "value": "positional_after_keyword_argument"
+      },
+      "reason": {
+        "kind": "string",
+        "value": "positional argument after keyword argument"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0006",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 77,
+        "byte_end": 78,
+        "line": 5,
+        "column": 18,
+        "end_line": 5,
+        "end_column": 19,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    print(f(a=1, 2))",
+            "highlight_start": 18,
+            "highlight_end": 19
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]

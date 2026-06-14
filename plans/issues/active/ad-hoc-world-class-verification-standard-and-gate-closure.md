@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, and Wave 3 merged
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, and Wave 3 merged; Wave 4 diagnostic baseline catalog slice locally validated
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -838,6 +838,16 @@ uv run --project verification --locked python -m sifr_verify areas run --area di
 cargo test -p sifr_diagnostics
 scripts/run_all_tests.sh --profile create-pr
 ```
+
+### Wave 4 Implementation Notes
+
+- Status: first diagnostics-baseline slice implemented, reviewed twice with no blockers, and merge-gate validated; PR pending.
+- Scope: added `code_catalog.json`, `code_baseline_coverage.json`, `baseline_metadata.json`, and `recovery_surface_coverage.json` as the diagnostics metadata layer above rendered baselines. The new `code_baseline_coverage` contract checks active registry parity, catalog severity/docs/owner metadata, rendered-baseline ownership, stale/missing baseline files, source-hash metadata, and recovery-surface coverage.
+- Baseline expansion: wired the existing parser diagnostics fixtures into the executable `baselines` suite, added missing `parser_invalid_layout`, `parser_invalid_target`, and `parser_multi_error_recovery` fixtures, and blessed human/json/compact baselines for the parser family. The synthetic `presentation_contract_cases` renderer baseline remains metadata-owned and is not re-blessed through the CLI baseline runner.
+- Coverage status: active stable diagnostic codes now require either rendered baseline coverage or an explicit Wave 4 deferral in `code_baseline_coverage.json`. This slice closes rendered baseline coverage for all active `SIFR-PARSE-*` codes plus the existing decimal and multiline assignment fixtures; remaining active codes carry owner/issue/expiry deferrals for later Wave 4 baseline expansion.
+- Recovery coverage: `verification/policy/suite_taxonomy.md` now lists parser, mixed HIR/type, and repeated type recovery surfaces; `recovery_surface_coverage.json` maps each to a multi-error fixture, and the coverage contract verifies expected diagnostic-code evidence for those fixtures.
+- Review: Claude Opus 4.7 review pass 1 and pass 2 both approved with no blockers; review artifacts are recorded in `plans/reviews/active/`.
+- Validation: `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with 12 cases and 36 renderer variants; `cargo test -p sifr_diagnostics` passed; `python3 -m py_compile verification/areas/diagnostics/checks/code_baseline_coverage.py` passed; `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e fixtures and signature `5edef8cd4b961ef8`; `scripts/run_all_tests.sh` passed with `wall_time=818.51s`, `budget_ok=yes`, e2e `651/651`, e2e signature `ee5e5d44306f270c`, and hardening `variants=71 failures=0 blocking_failures=0`.
 
 ### Wave 5: IR, HIR, CFG, and Codegen Snapshot Suites
 

@@ -1,0 +1,2726 @@
+{
+  "codes": [
+    {
+      "code": "SIFR-ASYNC-0001",
+      "constant": "ASYNC_NO_SUSPEND",
+      "docs_link": "docs/errors/SIFR-ASYNC-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/async_no_suspend_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-ASYNC-0002",
+      "constant": "ASYNC_AWAIT_NO_SUSPEND",
+      "docs_link": "docs/errors/SIFR-ASYNC-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/async_transitive_no_suspend_await_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-ASYNC-0003",
+      "constant": "ASYNC_DIRECT_BLOCKING_IO_CALL",
+      "docs_link": "docs/errors/SIFR-ASYNC-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/blocking_io_direct_call_in_async_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-ASYNC-0004",
+      "constant": "ASYNC_DIRECT_CPU_HEAVY_CALL",
+      "docs_link": "docs/errors/SIFR-ASYNC-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/cpu_heavy_direct_call_in_async_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-ASYNC-0005",
+      "constant": "ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET",
+      "docs_link": "docs/errors/SIFR-ASYNC-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/spawn_blocking_unannotated_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-ASYNC-0006",
+      "constant": "ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF",
+      "docs_link": "docs/errors/SIFR-ASYNC-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/blocking_io_on_async_def_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-ASYNC-0007",
+      "constant": "ASYNC_DIRECT_SHELL_EXEC_CALL",
+      "docs_link": "docs/errors/SIFR-ASYNC-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/process_shell_exec_direct_async_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-BUILD-0002",
+      "constant": "BUILD_MATERIALIZATION_FAILURE",
+      "docs_link": "docs/errors/SIFR-BUILD-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-BUILD-0003",
+      "constant": "BUILD_TEMP_WORKSPACE_FAILURE",
+      "docs_link": "docs/errors/SIFR-BUILD-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-BUILD-0004",
+      "constant": "BUILD_CARGO_MANIFEST_FAILURE",
+      "docs_link": "docs/errors/SIFR-BUILD-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-BUILD-0005",
+      "constant": "BUILD_RUSTC_OR_CARGO_FAILURE",
+      "docs_link": "docs/errors/SIFR-BUILD-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-BUILD-0006",
+      "constant": "BUILD_ARTIFACT_MISSING",
+      "docs_link": "docs/errors/SIFR-BUILD-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-BUILD-0901",
+      "constant": "SELF_UPDATE_UNMANAGED_RECEIPT",
+      "docs_link": "docs/errors/SIFR-BUILD-0901.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/src/self_update_receipt.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CALL-0001",
+      "constant": "CALL_WRONG_POSITIONAL_COUNT",
+      "docs_link": "docs/errors/SIFR-CALL-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CALL-0002",
+      "constant": "CALL_UNEXPECTED_KEYWORD",
+      "docs_link": "docs/errors/SIFR-CALL-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CALL-0003",
+      "constant": "CALL_DUPLICATE_ARGUMENT",
+      "docs_link": "docs/errors/SIFR-CALL-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/keyword_after_positional_error.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CALL-0004",
+      "constant": "CALL_MISSING_REQUIRED_ARGUMENT",
+      "docs_link": "docs/errors/SIFR-CALL-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/missing_required_argument.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CALL-0005",
+      "constant": "CALL_NOT_CALLABLE_OR_ARITY",
+      "docs_link": "docs/errors/SIFR-CALL-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/map_callable_arity_mismatch.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CLASS-0001",
+      "constant": "CLASS_MISSING_INITIALIZER",
+      "docs_link": "docs/errors/SIFR-CLASS-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CLASS-0002",
+      "constant": "CLASS_REQUIRED_FIELD_AFTER_DEFAULT",
+      "docs_link": "docs/errors/SIFR-CLASS-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/auto_init_required_after_default.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CLASS-0003",
+      "constant": "CLASS_DUPLICATE_OR_INVALID_VALUE",
+      "docs_link": "docs/errors/SIFR-CLASS-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/enum_duplicate_value.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CLASS-0004",
+      "constant": "CLASS_MISSING_MEMBER",
+      "docs_link": "docs/errors/SIFR-CLASS-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/missing_field.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CLASS-0005",
+      "constant": "CLASS_INVALID_BASE",
+      "docs_link": "docs/errors/SIFR-CLASS-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/class_unknown_parent.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-CLASS-0006",
+      "constant": "CLASS_UNSUPPORTED_DECLARATION",
+      "docs_link": "docs/errors/SIFR-CLASS-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/class_unsupported_field_default.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0001",
+      "constant": "DECIMAL_INVALID_LITERAL",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0002",
+      "constant": "DECIMAL_BIGDECIMAL_INVALID_LITERAL",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bigdecimal_invalid_literal_string.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0003",
+      "constant": "DECIMAL_FLOAT_MIXED",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0004",
+      "constant": "DECIMAL_MIXED_WITH_BIGDECIMAL",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/decimal_bigdecimal_mixed_arithmetic.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0005",
+      "constant": "DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/decimal_constructor_float.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0006",
+      "constant": "DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bigdecimal_constructor_float.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0007",
+      "constant": "DECIMAL_SCALE_INVALID",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/decimal_round_scale_out_of_range.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-DECIMAL-0008",
+      "constant": "DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bigdecimal_quantize_negative_scale_context.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-ENCODING-0803",
+      "constant": "ENCODING_HANDLER_REQUIRES_STATIC_VALUE",
+      "docs_link": "docs/errors/SIFR-ENCODING-0803.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0001",
+      "constant": "FLOW_BREAK_OUTSIDE_LOOP",
+      "docs_link": "docs/errors/SIFR-FLOW-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/break_outside_loop.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0002",
+      "constant": "FLOW_CONTINUE_OUTSIDE_LOOP",
+      "docs_link": "docs/errors/SIFR-FLOW-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/continue_outside_loop.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0003",
+      "constant": "FLOW_INVALID_NONLOCAL",
+      "docs_link": "docs/errors/SIFR-FLOW-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0004",
+      "constant": "FLOW_MISSING_RETURN_VALUE",
+      "docs_link": "docs/errors/SIFR-FLOW-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/missing_return_value.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0005",
+      "constant": "FLOW_INVALID_CONDITION_TYPE",
+      "docs_link": "docs/errors/SIFR-FLOW-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/if_condition_numeric_truthiness.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0006",
+      "constant": "FLOW_UNSUPPORTED_STATEMENT_FORM",
+      "docs_link": "docs/errors/SIFR-FLOW-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/yield_without_value.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0007",
+      "constant": "FLOW_INVALID_ASSIGNMENT_TARGET",
+      "docs_link": "docs/errors/SIFR-FLOW-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/invalid_assignment_target_attribute_base.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0008",
+      "constant": "FLOW_INVALID_ITERATION",
+      "docs_link": "docs/errors/SIFR-FLOW-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/for_loop_invalid_iterable.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FLOW-0901",
+      "constant": "FLOW_UNREACHABLE_STATEMENT",
+      "docs_link": "docs/errors/SIFR-FLOW-0901.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_unreachable_statement_as_structured_warning",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-FMT-0001",
+      "constant": "FMT_FORMATTING_DRIFT",
+      "docs_link": "docs/errors/SIFR-FMT-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_format/src/lib.rs::check_reports_formatting_drift",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0001",
+      "constant": "IMPORT_FORBIDDEN_INTRINSIC",
+      "docs_link": "docs/errors/SIFR-IMPORT-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0002",
+      "constant": "IMPORT_UNKNOWN_SOURCE_MODULE",
+      "docs_link": "docs/errors/SIFR-IMPORT-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0003",
+      "constant": "IMPORT_UNSUPPORTED_FORM",
+      "docs_link": "docs/errors/SIFR-IMPORT-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/unsupported_import_statement.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0004",
+      "constant": "IMPORT_PRIVATE_MEMBER",
+      "docs_link": "docs/errors/SIFR-IMPORT-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0005",
+      "constant": "IMPORT_AMBIGUOUS_SOURCE_MODULE",
+      "docs_link": "docs/errors/SIFR-IMPORT-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import_canonical",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0006",
+      "constant": "IMPORT_NAMESPACE_COLLISION",
+      "docs_link": "docs/errors/SIFR-IMPORT-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_namespace_collision_canonical",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0007",
+      "constant": "IMPORT_CYCLE",
+      "docs_link": "docs/errors/SIFR-IMPORT-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/project_workspace/fixtures/project/import_cycle_source_spans",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0008",
+      "constant": "IMPORT_BARE_STDLIB",
+      "docs_link": "docs/errors/SIFR-IMPORT-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bare_stdlib_from_math.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IMPORT-0009",
+      "constant": "IMPORT_UNSUPPORTED_LEGACY_STDLIB",
+      "docs_link": "docs/errors/SIFR-IMPORT-0009.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/legacy_sifr_asyncio_removed.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0001",
+      "constant": "INT_FIXED_WIDTH_OUT_OF_RANGE",
+      "docs_link": "docs/errors/SIFR-INT-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0003",
+      "constant": "INT_RESERVED_WIDTH_NAME",
+      "docs_link": "docs/errors/SIFR-INT-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/reserved_int128_annotation.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0004",
+      "constant": "INT_EVAL_BUDGET_EXCEEDED",
+      "docs_link": "docs/errors/SIFR-INT-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0005",
+      "constant": "INT_EXACT_DIVISION_REQUIRES_HANDLING",
+      "docs_link": "docs/errors/SIFR-INT-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0006",
+      "constant": "INT_EXACT_TO_FLOAT_REQUIRES_HANDLING",
+      "docs_link": "docs/errors/SIFR-INT-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/exact_int_true_division_requires_handling.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0007",
+      "constant": "INT_BOOL_INTEGER_COMPARISON",
+      "docs_link": "docs/errors/SIFR-INT-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bool_integer_comparison.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0011",
+      "constant": "INT_BIGINT_TRANSITION_ALIAS",
+      "docs_link": "docs/errors/SIFR-INT-0011.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INTERNAL-0001",
+      "constant": "INTERNAL_COMPILER_PANIC",
+      "docs_link": "docs/errors/SIFR-INTERNAL-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INTERNAL-0002",
+      "constant": "INTERNAL_RECOVERY_OMISSION_SUMMARY",
+      "docs_link": "docs/errors/SIFR-INTERNAL-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics",
+      "severity": "Note",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IO-0801",
+      "constant": "IO_TEXT_OPEN_REQUIRES_ENCODING",
+      "docs_link": "docs/errors/SIFR-IO-0801.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-IO-0802",
+      "constant": "IO_OPEN_MODE_REQUIRES_LITERAL",
+      "docs_link": "docs/errors/SIFR-IO-0802.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_mode.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0001",
+      "constant": "LINT_UNKNOWN_SUPPRESSION",
+      "docs_link": "docs/errors/SIFR-LINT-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0002",
+      "constant": "LINT_UNUSED_SUPPRESSION",
+      "docs_link": "docs/errors/SIFR-LINT-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0003",
+      "constant": "LINT_BLANKET_SUPPRESSION",
+      "docs_link": "docs/errors/SIFR-LINT-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/lib.rs::blanket_suppression_is_reported",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0004",
+      "constant": "LINT_TRAILING_WHITESPACE",
+      "docs_link": "docs/errors/SIFR-LINT-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/lib.rs::suppression_only_suppresses_matching_policy_rule",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0005",
+      "constant": "LINT_TODO_COMMENT",
+      "docs_link": "docs/errors/SIFR-LINT-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/rules/todo_comment.rs::todo_comment_reports_tracked_marker",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0006",
+      "constant": "LINT_BOOLEAN_POSITIONAL_ARGUMENT",
+      "docs_link": "docs/errors/SIFR-LINT-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/rules/boolean_positional_argument.rs::boolean_positional_argument_reports_literal_call_arg",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0007",
+      "constant": "LINT_LARGE_PARAMETER_LIST",
+      "docs_link": "docs/errors/SIFR-LINT-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/rules/large_parameter_list.rs::large_parameter_list_reports_hir_function",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-LINT-0008",
+      "constant": "LINT_DUPLICATE_IMPORT",
+      "docs_link": "docs/errors/SIFR-LINT-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lint/src/rules/duplicate_import.rs::duplicate_import_reports_repeated_import",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-MATCH-0001",
+      "constant": "MATCH_NON_EXHAUSTIVE",
+      "docs_link": "docs/errors/SIFR-MATCH-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/enum_match_non_exhaustive.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-MATCH-0002",
+      "constant": "MATCH_GUARD_NOT_BOOL",
+      "docs_link": "docs/errors/SIFR-MATCH-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-MATCH-0003",
+      "constant": "MATCH_INVALID_CLASS_PATTERN_FIELD",
+      "docs_link": "docs/errors/SIFR-MATCH-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/match_invalid_field_name.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-MATCH-0004",
+      "constant": "MATCH_INVALID_PATTERN_FORM",
+      "docs_link": "docs/errors/SIFR-MATCH-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/match_tuple_pattern_requires_tuple_subject.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-NAME-0001",
+      "constant": "NAME_UNDEFINED_VARIABLE",
+      "docs_link": "docs/errors/SIFR-NAME-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/undefined_var.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-NAME-0002",
+      "constant": "NAME_UNDEFINED_CALLABLE",
+      "docs_link": "docs/errors/SIFR-NAME-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/undefined_function.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-NAME-0003",
+      "constant": "NAME_UNKNOWN_TYPE",
+      "docs_link": "docs/errors/SIFR-NAME-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/generic_class_missing_type_arg.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-NAME-0004",
+      "constant": "NAME_MISSING_MODULE_MEMBER",
+      "docs_link": "docs/errors/SIFR-NAME-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-NAME-0005",
+      "constant": "NAME_DUPLICATE_DEFINITION",
+      "docs_link": "docs/errors/SIFR-NAME-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/duplicate_function_definition.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-NAME-0006",
+      "constant": "NAME_UNINITIALIZED_VARIABLE",
+      "docs_link": "docs/errors/SIFR-NAME-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/annotated_variable_requires_initializer.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0001",
+      "constant": "OWN_USE_AFTER_MOVE",
+      "docs_link": "docs/errors/SIFR-OWN-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/use_after_move.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0002",
+      "constant": "OWN_DOUBLE_MUTABLE_BORROW",
+      "docs_link": "docs/errors/SIFR-OWN-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/double_mut_borrow.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0003",
+      "constant": "OWN_BORROWED_PARAMETER_ESCAPES",
+      "docs_link": "docs/errors/SIFR-OWN-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/borrow_escape_return.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0004",
+      "constant": "OWN_MOVED_ACROSS_LOOP",
+      "docs_link": "docs/errors/SIFR-OWN-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/use_after_move_loop.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0005",
+      "constant": "OWN_IMMUTABLE_PARAMETER_MUTATION",
+      "docs_link": "docs/errors/SIFR-OWN-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/own_parameter_mutation_requires_mut.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0006",
+      "constant": "OWN_IMMUTABLE_PARAMETER_REASSIGNMENT",
+      "docs_link": "docs/errors/SIFR-OWN-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/own_parameter_reassignment_requires_mut.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0007",
+      "constant": "OWN_IMMUTABLE_BYTES_ASSIGNMENT",
+      "docs_link": "docs/errors/SIFR-OWN-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bytes_subscript_assignment_unsupported.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0008",
+      "constant": "OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT",
+      "docs_link": "docs/errors/SIFR-OWN-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bytes_augmented_subscript_assignment_unsupported.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0009",
+      "constant": "OWN_BORROW_ACROSS_AWAIT",
+      "docs_link": "docs/errors/SIFR-OWN-0009.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/borrow_across_await_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0010",
+      "constant": "OWN_NON_SEND_TASK_CAPTURE",
+      "docs_link": "docs/errors/SIFR-OWN-0010.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/spawn_non_send_field_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0011",
+      "constant": "OWN_NON_SEND_CHANNEL_ELEMENT",
+      "docs_link": "docs/errors/SIFR-OWN-0011.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/channel_non_send_element_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0012",
+      "constant": "OWN_NON_SHARE_SAFE_SHARED_VALUE",
+      "docs_link": "docs/errors/SIFR-OWN-0012.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/shared_mut_without_lock_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-OWN-0013",
+      "constant": "OWN_NON_IPC_SERIALIZABLE_PAYLOAD",
+      "docs_link": "docs/errors/SIFR-OWN-0013.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0001",
+      "constant": "PACKAGE_MISSING_OR_INVALID_CARGO_METADATA",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/manifest/metadata.rs::tests",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0002",
+      "constant": "PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/manifest/sifr.rs::tests",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0003",
+      "constant": "PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/manifest/metadata.rs::tests",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0101",
+      "constant": "PACKAGE_CARGO_COMMAND_FAILED",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0101.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0102",
+      "constant": "PACKAGE_SELECTED_RUST_ONLY",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0102.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::explicit_rust_only_selection_reports_0102",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0103",
+      "constant": "PACKAGE_METADATA_PARSE",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0103.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/cargo/metadata.rs::tests",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0104",
+      "constant": "PACKAGE_SOURCE_UNAVAILABLE_OFFLINE",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0104.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::offline_mode_reports_missing_sifr_source_package",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0106",
+      "constant": "PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0106.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::rust_only_member_depending_on_sifr_reports_0106",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0201",
+      "constant": "PACKAGE_AMBIGUOUS_IMPORT_ROOT",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0201.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_2_tests.rs::duplicate_direct_import_root_in_one_scope_reports_0201",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0202",
+      "constant": "PACKAGE_UNDECLARED_DIRECT_IMPORT",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0202.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_3_tests.rs::transitive_dependency_import_reports_0202",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0203",
+      "constant": "PACKAGE_PRIVATE_MODULE_ACCESS",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0203.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_3_tests.rs::private_dependency_module_reports_0203",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0204",
+      "constant": "PACKAGE_TYPE_IDENTITY_MISMATCH",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0204.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_2_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0301",
+      "constant": "PACKAGE_BACKEND_TRUST_VIOLATION",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0301.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_reports_untrusted_direct_backend_crate",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0305",
+      "constant": "PACKAGE_TRUST_NON_DIRECT_DEPENDENCY",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0305.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0401",
+      "constant": "PACKAGE_ARCHIVE_MISSING_SIFR_SOURCE",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0401.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_sifr_source_reports_0401",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0402",
+      "constant": "PACKAGE_PUBLISH_VALIDATION_FAILED",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0402.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::publish_validation_failed_reports_0402",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0403",
+      "constant": "PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0403.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_required_entry_reports_0403",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0404",
+      "constant": "PACKAGE_ARCHIVE_TRAVERSAL",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0404.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::archive_traversal_reports_0404",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0501",
+      "constant": "PACKAGE_NON_TRIVIAL_PURE_MARKER",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0501.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/source/layout.rs::tests",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0601",
+      "constant": "PACKAGE_SELECTOR_AMBIGUOUS",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0601.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::ambiguous_filter_reports_0601",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0602",
+      "constant": "PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0602.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_import_roots_report_0602",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0603",
+      "constant": "PACKAGE_CHANGED_FILE_MAPPING_FAILED",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0603.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::changed_file_mapping_reports_0603",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0604",
+      "constant": "PACKAGE_OUTDATED_QUERY_UNSUPPORTED",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0604.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::outdated_unknown_source_reports_0604",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0605",
+      "constant": "PACKAGE_RUN_TARGET_AMBIGUOUS",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0605.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_reports_script_target_ambiguity",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0606",
+      "constant": "PACKAGE_INVALID_APP_TARGET_NAME",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0606.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_invalid_nested_target_name",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0607",
+      "constant": "PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0607.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_sifr_names_report_0607",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0701",
+      "constant": "PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0701.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_exports_report_0701",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0703",
+      "constant": "PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0703.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_manifest_pointer_0703",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0704",
+      "constant": "PACKAGE_PROJECTION_INCLUDE_DRIFT",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0704.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_required_include_0704",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0709",
+      "constant": "PACKAGE_PROJECTION_PURE_MARKER_MISSING",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0709.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_regenerates_missing_pure_marker",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0710",
+      "constant": "PACKAGE_EXPLICIT_FILE_OUTSIDE_SOURCE_ROOT",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0710.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_explicit_file_outside_source_root",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0711",
+      "constant": "PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0711.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_bin_tables_report_0711",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0713",
+      "constant": "PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0713.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::duplicate_init_public_symbol_reports_0713",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PACKAGE-0714",
+      "constant": "PACKAGE_SCRIPT_RECURSION",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0714.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_nested_script_expansion",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0002",
+      "constant": "PARSE_EXPECTED_TOKEN_OR_RECOVERY",
+      "docs_link": "docs/errors/SIFR-PARSE-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_expected_token.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0003",
+      "constant": "PARSE_LEXICAL_OR_STRING",
+      "docs_link": "docs/errors/SIFR-PARSE-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_malformed_string.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0004",
+      "constant": "PARSE_LAYOUT",
+      "docs_link": "docs/errors/SIFR-PARSE-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_invalid_layout.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0005",
+      "constant": "PARSE_INVALID_TARGET",
+      "docs_link": "docs/errors/SIFR-PARSE-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_invalid_target.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0006",
+      "constant": "PARSE_INVALID_CALL_ARGUMENTS",
+      "docs_link": "docs/errors/SIFR-PARSE-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_invalid_call_arguments.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0007",
+      "constant": "PARSE_MALFORMED_DECLARATION_LIST",
+      "docs_link": "docs/errors/SIFR-PARSE-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_malformed_declaration_list.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0008",
+      "constant": "PARSE_INVALID_PATTERN",
+      "docs_link": "docs/errors/SIFR-PARSE-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_invalid_match_pattern.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PARSE-0009",
+      "constant": "PARSE_UNSUPPORTED_SYNTAX",
+      "docs_link": "docs/errors/SIFR-PARSE-0009.md",
+      "machine_applicable": false,
+      "owner": "compiler/diagnostics",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/parser_unsupported_syntax.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PROTO-0001",
+      "constant": "PROTO_BOUND_NOT_SATISFIED",
+      "docs_link": "docs/errors/SIFR-PROTO-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/generic_bounds_not_satisfied.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PROTO-0002",
+      "constant": "PROTO_INVALID_ITERATOR_SIGNATURE",
+      "docs_link": "docs/errors/SIFR-PROTO-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/invalid_iter_signature.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PROTO-0003",
+      "constant": "PROTO_CONTEXT_MANAGER_MISSING",
+      "docs_link": "docs/errors/SIFR-PROTO-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/with_non_context_manager.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PROTO-0004",
+      "constant": "PROTO_HASHABLE_OR_COMPARABLE_REQUIRED",
+      "docs_link": "docs/errors/SIFR-PROTO-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/unhashable_dict_key.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RESULT-0001",
+      "constant": "RESULT_UNUSED_VALUE",
+      "docs_link": "docs/errors/SIFR-RESULT-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/unused_result.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RESULT-0002",
+      "constant": "RESULT_INVALID_ERROR_TYPE",
+      "docs_link": "docs/errors/SIFR-RESULT-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RESULT-0003",
+      "constant": "RESULT_INVALID_RAISE",
+      "docs_link": "docs/errors/SIFR-RESULT-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/error_raise_str.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RESULT-0004",
+      "constant": "RESULT_UNKNOWN_EXCEPT_TYPE",
+      "docs_link": "docs/errors/SIFR-RESULT-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/unknown_except_error_type.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RESULT-0005",
+      "constant": "RESULT_UNCOVERED_TRY_ERRORS",
+      "docs_link": "docs/errors/SIFR-RESULT-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/try_except_uncovered_error_types.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RESULT-0006",
+      "constant": "RESULT_INVALID_EXCEPT_TYPE",
+      "docs_link": "docs/errors/SIFR-RESULT-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/statement_diagnostics_tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-STDLIB-0001",
+      "constant": "STDLIB_UNSUPPORTED_SURFACE",
+      "docs_link": "docs/errors/SIFR-STDLIB-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-STDLIB-0003",
+      "constant": "STDLIB_BOOTSTRAP_FAILURE",
+      "docs_link": "docs/errors/SIFR-STDLIB-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/stdlib_exports.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-STDLIB-0004",
+      "constant": "STDLIB_CACHE_FAILURE",
+      "docs_link": "docs/errors/SIFR-STDLIB-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0002",
+      "constant": "TYPE_MISMATCH",
+      "docs_link": "docs/errors/SIFR-TYPE-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/type_mismatch.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "manual"
+    },
+    {
+      "code": "SIFR-TYPE-0003",
+      "constant": "TYPE_IF_BRANCH_MISMATCH",
+      "docs_link": "docs/errors/SIFR-TYPE-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0004",
+      "constant": "TYPE_MISSING_ANNOTATION",
+      "docs_link": "docs/errors/SIFR-TYPE-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/missing_type_annotation.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0005",
+      "constant": "TYPE_UNSUPPORTED_OPERATOR",
+      "docs_link": "docs/errors/SIFR-TYPE-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0006",
+      "constant": "TYPE_INT_BIGINT_MIXED",
+      "docs_link": "docs/errors/SIFR-TYPE-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0007",
+      "constant": "TYPE_INVALID_ANNOTATION",
+      "docs_link": "docs/errors/SIFR-TYPE-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0008",
+      "constant": "TYPE_CONTAINER_ELEMENT_CONFLICT",
+      "docs_link": "docs/errors/SIFR-TYPE-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/container_literal_type_conflict.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0009",
+      "constant": "TYPE_UNPACK_SHAPE_MISMATCH",
+      "docs_link": "docs/errors/SIFR-TYPE-0009.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/tuple_unpack_shape_mismatch.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0010",
+      "constant": "TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED",
+      "docs_link": "docs/errors/SIFR-TYPE-0010.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/typevar_constraints_violation.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0011",
+      "constant": "TYPE_UNSUPPORTED_DEFAULT_ARGUMENT",
+      "docs_link": "docs/errors/SIFR-TYPE-0011.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0012",
+      "constant": "TYPE_UNSUPPORTED_EXPRESSION_FORM",
+      "docs_link": "docs/errors/SIFR-TYPE-0012.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/unsupported_yield_expression.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0901",
+      "constant": "TYPE_ARITHMETIC_OVERFLOW_RISK",
+      "docs_link": "docs/errors/SIFR-TYPE-0901.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_arithmetic_overflow_as_structured_warning",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-TYPE-0902",
+      "constant": "TYPE_REVEAL_TYPE",
+      "docs_link": "docs/errors/SIFR-TYPE-0902.md",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note",
+      "severity": "Note",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0001",
+      "constant": "WORKSPACE_MALFORMED_MANIFEST",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_malformed_manifest",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0002",
+      "constant": "WORKSPACE_SOURCE_ROOT_ESCAPES",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0003",
+      "constant": "WORKSPACE_SOURCE_ROOT_NOT_DIRECTORY",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0004",
+      "constant": "WORKSPACE_INVALID_SOURCE_ROOT",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0101",
+      "constant": "WORKSPACE_UNRESOLVED_IMPORT",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0101.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_unresolved_import",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0102",
+      "constant": "WORKSPACE_AMBIGUOUS_IMPORT",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0102.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0103",
+      "constant": "WORKSPACE_NAMESPACE_COLLISION",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0103.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-WORKSPACE-0104",
+      "constant": "WORKSPACE_IMPORT_CYCLE",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0104.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/project_graph.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    }
+  ],
+  "generated_from": "crates/sifr_diagnostics/src/codes/registry.rs",
+  "schema_version": 1
+}

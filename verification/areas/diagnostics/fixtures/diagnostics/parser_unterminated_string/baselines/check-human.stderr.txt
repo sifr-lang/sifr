@@ -1,0 +1,14 @@
+error[SIFR-PARSE-0003]: lexical error: missing closing quote in string literal
+  --> main:2:11
+     |
+   2 |     print("unterminated)
+     |           ^^^^^^^^^^^^^^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0003
+error[SIFR-PARSE-0003]: lexical error: unexpected EOF while parsing
+  --> main:3:1
+     |
+   3 |
+     | ^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0003

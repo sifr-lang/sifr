@@ -40,6 +40,13 @@
           "command": "area-check",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "code_baseline_coverage",
+          "entry": "verification/areas/diagnostics/checks/code_baseline_coverage.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
@@ -61,6 +68,116 @@
         {
           "id": "multiline_span_rendering",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_bad_indent",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_empty_declaration",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_empty_declaration/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_invalid_call_order",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_invalid_call_order/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_invalid_declaration",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_invalid_declaration/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_invalid_layout",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_invalid_layout/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_invalid_match_pattern",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_invalid_match_pattern/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_invalid_target",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_invalid_target/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_multi_error_recovery",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_multi_error_recovery/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_unsupported_syntax",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_unsupported_syntax/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "parser_unterminated_string",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_unterminated_string/main.sifr",
           "command": "check",
           "expect_exit_code": 1,
           "diagnostic_formats": [

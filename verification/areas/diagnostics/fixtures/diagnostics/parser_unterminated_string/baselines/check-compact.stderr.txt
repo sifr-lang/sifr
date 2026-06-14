@@ -1,0 +1,3 @@
+2 errors, 0 warnings, 0 notes
+E SIFR-PARSE-0003 main:2:11 lexical error: missing closing quote in string literal
+E SIFR-PARSE-0003 main:3:1 lexical error: unexpected EOF while parsing

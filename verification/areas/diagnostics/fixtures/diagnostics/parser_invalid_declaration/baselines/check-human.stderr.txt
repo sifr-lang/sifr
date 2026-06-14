@@ -1,0 +1,7 @@
+error[SIFR-PARSE-0002]: syntax error: expected recovery: Trailing comma not allowed
+  --> main:2:17
+     |
+   2 |     global value,
+     |                 ^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0002

@@ -1,0 +1,14 @@
+error[SIFR-PARSE-0002]: syntax error: expected a statement
+  --> main:2:1
+     |
+   2 |
+     | ^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0002
+error[SIFR-PARSE-0004]: invalid layout: unexpected indentation
+  --> main:1:1
+     |
+   1 |     value = 1
+     | ^^^^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0004
