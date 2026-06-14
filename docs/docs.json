@@ -2,45 +2,74 @@
   "$schema": "https://mintlify.com/docs.json",
   "name": "Sifr",
   "theme": "luma",
-  "logo": {
-    "light": "https://media.brand.dev/f7898bc2-f94f-4c73-8568-bf4f71a30799.svg",
-    "dark": "https://media.brand.dev/f7898bc2-f94f-4c73-8568-bf4f71a30799.svg"
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.sifr.sh"
+    }
   },
-  "favicon": "https://media.brand.dev/3d52b5d6-1f09-40e2-9343-251b3aaf9a9c.webp",
   "colors": {
-    "primary": "#f08312",
-    "light": "#077490",
-    "dark": "#645444"
+    "primary": "#0EA5E9",
+    "light": "#38BDF8",
+    "dark": "#0284C7"
+  },
+  "background": {
+    "decoration": "gradient"
+  },
+  "favicon": "/logo/logo.webp",
+  "icons": {
+    "library": "lucide"
   },
   "fonts": {
     "heading": {
-      "family": "Space Grotesk"
+      "family": "Space Grotesk",
+      "weight": 700
     },
     "body": {
       "family": "Plus Jakarta Sans"
     }
   },
+  "appearance": {
+    "default": "light"
+  },
+  "logo": {
+    "light": "/logo/logo.webp",
+    "dark": "/logo/logo.webp",
+    "href": "https://sifr.sh"
+  },
   "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/sifr-lang/sifr"
-    }
+    "links": [
+      {
+        "label": "Website",
+        "href": "https://sifr.sh",
+        "icon": "globe"
+      },
+      {
+        "label": "Install Sifr",
+        "href": "/installation",
+        "icon": "download",
+        "primary": true
+      }
+    ]
   },
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Language",
+        "icon": "code",
         "groups": [
           {
             "group": "Get Started",
+            "icon": "rocket",
             "pages": [
+              "index",
               "introduction",
               "installation",
               "quickstart"
             ]
           },
           {
-            "group": "Language",
+            "group": "Core Language",
+            "icon": "braces",
             "pages": [
               "language/type-system",
               "language/error-handling",
@@ -49,9 +78,16 @@
               "language/pattern-matching",
               "language/concurrency"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "icon": "terminal",
+        "groups": [
           {
-            "group": "CLI",
+            "group": "Commands",
+            "icon": "square-terminal",
             "pages": [
               "cli/overview",
               "cli/build-run",
@@ -60,18 +96,32 @@
               "cli/test",
               "cli/lsp"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Projects",
+        "icon": "folder-kanban",
+        "groups": [
           {
-            "group": "Packages",
+            "group": "Package management",
+            "icon": "package",
             "pages": [
               "packages/overview",
               "packages/manifest",
               "packages/dependencies",
               "packages/publishing"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Standard Library",
+        "icon": "library",
+        "groups": [
           {
-            "group": "Standard Library",
+            "group": "Modules",
+            "icon": "book-open",
             "pages": [
               "stdlib/overview",
               "stdlib/collections",
@@ -80,16 +130,33 @@
               "stdlib/concurrency",
               "stdlib/text-encoding"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Diagnostics",
+        "icon": "triangle-alert",
+        "groups": [
           {
-            "group": "Diagnostics",
+            "group": "Compiler errors",
+            "icon": "scan-search",
             "pages": [
               "diagnostics/overview",
               "diagnostics/error-codes"
             ]
           }
         ]
+      },
+      {
+        "tab": "Blog",
+        "icon": "newspaper",
+        "href": "https://sifr.sh/blog"
       }
     ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/sifr-lang/sifr"
+    }
   }
 }
