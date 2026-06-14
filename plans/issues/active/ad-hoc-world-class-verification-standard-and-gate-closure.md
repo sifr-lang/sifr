@@ -851,7 +851,7 @@ scripts/run_all_tests.sh --profile create-pr
 
 Second Wave 4 diagnostics-baseline slice:
 
-- Status: HIR recovery baseline expansion implemented, locally validated, and reviewed twice with no blockers; PR pending.
+- Status: HIR recovery baseline expansion implemented, locally validated, reviewed twice with no blockers, and merged in PR [#2571](https://github.com/sifr-lang/sifr/pull/2571).
 - Scope: added executable `hir_mixed_semantic_recovery` and `hir_repeated_type_recovery` diagnostics fixtures with human/json/compact baselines. The mixed fixture covers independent semantic diagnostics (`SIFR-CALL-0004`, `SIFR-NAME-0001`, `SIFR-OWN-0002`, `SIFR-TYPE-0002`); the repeated fixture covers capped repeated type diagnostics plus the `SIFR-INTERNAL-0002` recovery summary note.
 - Coverage status: rendered diagnostic coverage is now 15 active codes, with 155 active codes still carrying Wave 4 deferrals.
 - Recovery coverage: `hir_mixed_recovery` and `repeated_type_recovery` now point at diagnostics-area rendered fixtures instead of legacy e2e expectation comments.
