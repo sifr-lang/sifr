@@ -841,7 +841,7 @@ scripts/run_all_tests.sh --profile create-pr
 
 ### Wave 4 Implementation Notes
 
-- Status: first diagnostics-baseline slice implemented, reviewed twice with no blockers, and merge-gate validated; PR pending.
+- Status: first diagnostics-baseline slice implemented, reviewed twice with no blockers, merge-gate validated, and merged in PR [#2570](https://github.com/sifr-lang/sifr/pull/2570).
 - Scope: added `code_catalog.json`, `code_baseline_coverage.json`, `baseline_metadata.json`, and `recovery_surface_coverage.json` as the diagnostics metadata layer above rendered baselines. The new `code_baseline_coverage` contract checks active registry parity, catalog severity/docs/owner metadata, rendered-baseline ownership, stale/missing baseline files, source-hash metadata, and recovery-surface coverage.
 - Baseline expansion: wired the existing parser diagnostics fixtures into the executable `baselines` suite, added missing `parser_invalid_layout`, `parser_invalid_target`, and `parser_multi_error_recovery` fixtures, and blessed human/json/compact baselines for the parser family. The synthetic `presentation_contract_cases` renderer baseline remains metadata-owned and is not re-blessed through the CLI baseline runner.
 - Coverage status: active stable diagnostic codes now require either rendered baseline coverage or an explicit Wave 4 deferral in `code_baseline_coverage.json`. This slice closes rendered baseline coverage for all active `SIFR-PARSE-*` codes plus the existing decimal and multiline assignment fixtures; remaining active codes carry owner/issue/expiry deferrals for later Wave 4 baseline expansion.
