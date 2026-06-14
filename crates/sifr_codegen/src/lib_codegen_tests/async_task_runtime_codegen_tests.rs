@@ -4,7 +4,7 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.TaskGroup() as group:\n        handle = group.spawn(worker())\n        result = await handle.join()\n    return None\n",
+                "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.TaskGroup() as group:\n        handle = group.spawn(worker())\n        result = await handle.join()\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -34,7 +34,7 @@ fn test_task_gather_lowers_to_private_gather_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
+                "async def first() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def second() -> int:\n    await task.sleep(0.0)\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -62,7 +62,7 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
+                "async def worker() -> Result[int, ValueError]:\n    await task.sleep(0.0)\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -99,7 +99,7 @@ fn test_task_gather_fallible_tasks_keeps_error_parameter_unwrapped() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
+                "async def worker() -> Result[int, ValueError]:\n    await task.sleep(0.0)\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.gather([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -131,7 +131,7 @@ fn test_task_race_lowers_to_private_race_helper() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def first() -> int:\n    return 1\n\nasync def second() -> int:\n    await task.sleep(1.0)\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
+                "async def first() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def second() -> int:\n    await task.sleep(1.0)\n    return 2\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(first()), scope.spawn(second())])\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -159,7 +159,7 @@ fn test_task_race_fallible_tasks_keeps_error_parameter_unwrapped() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> Result[int, ValueError]:\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
+                "async def worker() -> Result[int, ValueError]:\n    await task.sleep(0.0)\n    raise ValueError(\"bad\")\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        result = await task.race([scope.spawn(worker()), scope.spawn(worker())])\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -248,7 +248,7 @@ fn test_task_handle_join_lowers_to_task_result_observation() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle.join()\n    return None\n",
+                "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle.join()\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -274,7 +274,7 @@ fn test_await_task_handle_desugars_to_join_observation() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
+                "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await handle\n    return None\n",
             )
             .expect("parse failed")
             .suite(),
@@ -323,7 +323,7 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
     let result = generate_rust_with_metadata(
         &lower_module(
             parse_module(
-                "async def worker() -> int:\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n    return None\n",
+                "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        result = await task.timeout(handle, 1.0)\n    return None\n",
             )
             .expect("parse failed")
             .suite(),

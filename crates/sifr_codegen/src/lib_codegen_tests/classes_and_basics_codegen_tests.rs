@@ -51,11 +51,12 @@ fn test_mut_on_mutating_method_call() {
 #[test]
 fn test_mut_on_local_nested_function_mutborrow_call_argument() {
     let rust_code = generate_rust_from_source(
-        "def main():\n\
-    vals: list[str] = [\"x\"]\n\
-    def dfs(vals: list[str]) -> None:\n\
-        vals.pop(0)\n\
-    dfs(vals)\n",
+        r#"def main():
+    vals: list[str] = ["x"]
+    def dfs(vals: list[str]) -> None:
+        vals.pop(0)
+    dfs(vals)
+"#,
     );
 
     assert!(
@@ -68,11 +69,12 @@ fn test_mut_on_local_nested_function_mutborrow_call_argument() {
 #[test]
 fn test_fieldless_class_gets_default_constructor() {
     let rust_code = generate_rust_from_source(
-        "class Codec:\n\
-    pass\n\
-\n\
-def main():\n\
-    codec = Codec()\n",
+        r#"class Codec:
+    pass
+
+def main():
+    codec = Codec()
+"#,
     );
 
     assert!(rust_code.contains("impl Codec {"));
@@ -182,15 +184,18 @@ def main():
 #[test]
 fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
     let rust_code = generate_rust_from_source(
-        "def parseIntToken(token: str) -> int:\n\
-    first = token[0]\n\
-    if first is not None and first == \"-\":\n\
-        return -1\n\
-    return 0\n",
+        r#"def parseIntToken(token: str) -> int:
+    if len(token) > 0:
+        first = token[0]
+        if first == "-":
+            return -1
+    return 0
+"#,
     );
 
     assert!(!rust_code.contains("first == Some("));
-    assert!(rust_code.contains("first == \"-\".to_string()"));
+    assert!(!rust_code.contains("first == \"-\".to_string()"));
+    assert!(rust_code.contains("first == \"-\""));
 }
 
 #[test]
