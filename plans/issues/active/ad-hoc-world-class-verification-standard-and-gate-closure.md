@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0 merged; Wave 1 validated locally and approved by two review passes; Wave 1 merge pending
+Status: in progress; Wave 0 and Wave 1 merged; Wave 2.0 codegen failure inventory in progress
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -275,7 +275,7 @@ Implementation re-check started 2026-06-14.
 
 ### Wave 1 Implementation Notes
 
-- Status: implementation complete locally; PR open and approved by two Claude Opus review passes; merge pending.
+- Status: merged in PR `https://github.com/sifr-lang/sifr/pull/2559`.
 - Scope: profile-owned crate test membership, Cargo metadata package/target/feature classification, merge-gate closure for previously omitted green first-party compiler crates, full-mode `sifr_codegen` red-blocker visibility, and `sifr_ir` seed tests.
 - Matrix changes: `first_party_crate_tests` and `cargo_features_targets` promoted from `expected-missing` to `blocking`; coverage matrix now reports 20 temporary rows.
 - Create-pr behavior: newly added omitted crates are full-mode only so create-pr remains representative; merge runs all green first-party compiler crate tests.
@@ -303,6 +303,27 @@ Implementation re-check started 2026-06-14.
 - Budget evidence:
   - Create-pr remains above its warm budget but improved from the all-smoke trial run by making the Wave 1 additions full-mode only.
   - Merge completed below the cold budget but above the warm budget due primarily to generated-code quality and full e2e cache misses; follow-up batching/cache-budget work remains outside this Wave 1 gate-closure scope.
+
+### Wave 2.0 Implementation Notes
+
+- Status: inventory drafted locally; PR/review/merge pending.
+- Scope: no compiler code changes; failure inventory only for the current `sifr_codegen` red-blocker.
+- Reproduction:
+  - `cargo test -p sifr_codegen -- --nocapture`: expected failure; 655 passed, 52 failed, 707 total.
+- Validation:
+  - `jq empty verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: pass.
+  - Inventory parity check against `target/wave2/sifr_codegen_nocapture.log`: pass; 52 failures matched in order with all required fields.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area core_language`: pass after warming a transient audit-fixture timeout.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass; wall time 175.52s with existing warm-budget advisory.
+- Artifacts:
+  - `plans/issues/active/codegen-test-triage.md`: one row per failing test with classification, owner, proposed PR slice, and replacement/regression target.
+  - `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`: machine-readable inventory with current output, source location, affected compiler contract, owner, and `closes_in_wave`.
+- Classification summary:
+  - `stale-expectation`: 36.
+  - `obsolete-test`: 6.
+  - `compiler-bug`: 7.
+  - `production-bug`: 3.
 
 ## Full Discovery Snapshot
 
