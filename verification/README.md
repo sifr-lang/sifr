@@ -43,10 +43,16 @@ lanes.
 - `schemas/` contains the supported committed data contracts.
 - `profiles/` contains profile JSON files selected by `scripts/run_all_tests.sh --profile`
   and executed by `sifr_verify profiles run`.
+  Profile v2 data owns `crate_test_membership`, the executable list of cargo
+  crate suites per profile mode. The runner rejects unknown workspace packages,
+  mismatched `cargo test -p` package names, duplicate suite ids, and red blockers
+  without execution deadlines.
 - `areas/` contains area-owned manifests, fixtures, baselines, and adapters.
   `coverage_matrix` owns the shipped guarantee registry and compiler surface
-  matrix. It runs in advisory mode during the gate-closure phase and is promoted
-  to strict blocking mode at closeout.
+  matrix. It also owns `data/cargo_metadata_classification.json`, which maps
+  every Cargo workspace package, target, and feature to its verification
+  assignment. The coverage-matrix check runs in advisory mode during the
+  gate-closure phase and is promoted to strict blocking mode at closeout.
   `diagnostics` is migrated and can be run with
   `uv run --project verification python -m sifr_verify areas run --area diagnostics`.
 - `policy/` contains machine-facing runner policy such as guardrail mappings.

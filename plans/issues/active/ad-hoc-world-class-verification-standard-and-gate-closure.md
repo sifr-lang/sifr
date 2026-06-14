@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: implementation-ready; pending implementation, local validation, PRs, review, and merge
+Status: in progress; Wave 0 merged; Wave 1 validated locally and approved by two review passes; Wave 1 merge pending
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -119,7 +119,7 @@ Targets are derived from inventories and shipped guarantees rather than arbitrar
 | Compiler surfaces | `verification/areas/coverage_matrix/compiler_surface_matrix.json` | every stable surface status is `blocking`; only time-boxed Wave 0 rows may be `expected-missing` before their `closes_in_wave` | broad rows cover non-merge stress, platform, fuzz, and ecosystem lanes | no orphan matrix row; no suite without matrix row |
 | First-party crates | `cargo metadata` package list plus profile v2 crate membership | every first-party compiler crate with tests runs in merge; `sifr_ir` has seed tests | all first-party crate tests run in nightly/release | zero-test crate fails unless future data-only `tests:none` is time-boxed; none remain at closeout |
 | CLI behavior and exit codes | `verification/areas/developer_tooling/data/cli_exit_code_contracts.json` plus `sifr` integration test inventory: `e2e`, `validation_contracts`, `build_output_contracts` | every documented CLI exit-code contract has a corresponding integration test | full CLI behavior matrix and broader exit-code scenarios | exit-code contract without integration test fails |
-| Cargo features and targets | `cargo metadata` targets/features | default features, shipped bins, and test-fixture targets have merge classification | `all-targets --all-features`, `no-default-features`, examples, doctests, and release target matrix are assigned or unsupported with reason | every target/feature has exactly one classification: `merge`, `nightly`, `release`, `internal`, `performance`, `test-fixture`, or `unsupported` |
+| Cargo features and targets | `cargo metadata` targets/features | default features, shipped bins, test-fixture targets, and planned red-blocker targets have merge classification | `all-targets --all-features`, `no-default-features`, examples, doctests, and release target matrix are assigned or unsupported with reason | every target/feature has exactly one classification: `merge`, `merge-red-blocker`, `nightly`, `release`, `internal`, `performance`, `test-fixture`, or `unsupported` |
 | E2E pass semantics | e2e pass fixture discovery and manifest reports | full pass corpus or deterministic full-corpus local shards | full pass corpus plus broad hardening around it | executed fixture count must equal discovered count, excluding only explicitly unsupported fixtures |
 | E2E fail semantics | e2e fail fixture discovery and inline expected-error markers | full fail corpus code, position, and contradiction checks | full fail corpus plus renderer and recovery stress | every fail fixture has canonical diagnostic code/position expectations |
 | Lexer/token stream and indentation | lexer/token/indentation contract list in `verification/areas/core_language/data/lexer_token_inventory.json` | token boundaries, indentation/dedentation, newline handling, comments/trivia preservation if supported, Unicode identifiers if supported, and source-span stability each have representative fixtures | full lexical/span matrix including parser-fork boundary cases | parser syntax tests do not satisfy token/indentation coverage |
@@ -252,11 +252,11 @@ Implementation re-check started 2026-06-14.
 - E2E manifest counts: `create_pr_e2e_manifest.json` has 132 fixtures; `merge_e2e_manifest.json` has 145 fixtures.
 - Current `.sifr` files under `verification/areas/core_language`: 186.
 - Cargo metadata still lists the initially omitted first-party crates: `sifr_codegen`, `sifr_type_system`, `sifr_format`, `sifr_lint`, `sifr_ir`, and `sifr_source`.
-- Warm/cold merge wall time: pending measurement before the first gate-expanding wave.
+- Warm/cold merge wall time: pre-Wave 1 baseline was not separately captured before the gate-expanding edit; Wave 1 post-change merge run completed in 986.72s with a cold e2e cache, above warm budget and below cold budget.
 
 ### Wave 0 Implementation Notes
 
-- Status: implemented locally; reviewer pass 3 found no remaining blockers; pending PR.
+- Status: merged in PR https://github.com/sifr-lang/sifr/pull/2558.
 - Scope: schema v2 compatibility, owner registry, coverage-matrix area, shipped guarantee registry, compiler surface matrix, CLI/workspace inventories, hermetic profile metadata, profile-plan emission, and policy docs.
 - Focused validation:
   - `uv run --project verification --locked python -m sifr_verify --self-test`: pass.
@@ -272,6 +272,37 @@ Implementation re-check started 2026-06-14.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-1.md`: found five blocking issues; all addressed.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-2.md`: found one remaining blocker in the e2e cargo invocation; addressed with `--locked`.
   - `plans/reviews/active/ad-hoc-world-class-verification-wave-0-review-pass-3.md`: no remaining blocking Wave 0 issues.
+
+### Wave 1 Implementation Notes
+
+- Status: implementation complete locally; PR open and approved by two Claude Opus review passes; merge pending.
+- Scope: profile-owned crate test membership, Cargo metadata package/target/feature classification, merge-gate closure for previously omitted green first-party compiler crates, full-mode `sifr_codegen` red-blocker visibility, and `sifr_ir` seed tests.
+- Matrix changes: `first_party_crate_tests` and `cargo_features_targets` promoted from `expected-missing` to `blocking`; coverage matrix now reports 20 temporary rows.
+- Create-pr behavior: newly added omitted crates are full-mode only so create-pr remains representative; merge runs all green first-party compiler crate tests.
+- Validation:
+  - `uv run --project verification --locked python -m sifr_verify --self-test`: pass, including crate membership self-test.
+  - `uv run --project verification --locked python -m sifr_verify profiles check`: pass.
+  - `uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix`: pass; 13 guarantees, 33 surface rows, 20 temporary rows.
+  - `cargo test -p sifr_type_system --locked`: pass, 92 tests.
+  - `cargo test -p sifr_format --locked`: pass, 7 tests.
+  - `cargo test -p sifr_lint --locked`: pass, 22 tests.
+  - `cargo test -p sifr_source --locked`: pass, 3 tests.
+  - `cargo test -p sifr_ir --locked`: pass, 3 tests.
+  - `cargo check --workspace --all-targets --all-features --locked`: pass.
+  - `cargo fmt --check`: pass.
+  - `python3 scripts/check_file_size_guardrails.py`: pass.
+  - `python3 scripts/check_hir_maintainability_guardrails.py`: pass.
+  - `scripts/run_all_tests.sh --profile merge --emit-plan`: pass; merge plan includes explicit crate membership.
+  - `scripts/run_all_tests.sh --profile create-pr`: pass after narrowing new omitted crates to full-mode only; wall time 176.70s with existing warm-budget advisory.
+  - `scripts/run_all_tests.sh`: pass for merge; wall time 986.72s with cold e2e cache, all blocking checks green, `sifr_codegen` logged as planned red-blocker for Wave 2.final.
+- Review:
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-1-review-pass-1.md`: no blocking issues; accepted small hardening follow-ups for `merge-red-blocker` policy wording, duplicate full-mode package membership handling, and invalid non-executed full-mode blocking suites.
+  - Post-review validation: `scripts/run_all_tests.sh --profile create-pr` passed; wall time 169.32s with existing warm-budget advisory.
+  - `plans/reviews/active/ad-hoc-world-class-verification-wave-1-review-pass-2.md`: no blocking issues; reviewer explicitly approved Wave 1 for merge and listed only non-blocking follow-ups for later waves.
+  - Post-rebase validation: `uv run --project verification --locked python -m sifr_verify areas run --area core_language` passed after warming a transient audit-fixture timeout, then `scripts/run_all_tests.sh --profile create-pr` passed; wall time 200.62s with existing warm-budget advisory.
+- Budget evidence:
+  - Create-pr remains above its warm budget but improved from the all-smoke trial run by making the Wave 1 additions full-mode only.
+  - Merge completed below the cold budget but above the warm budget due primarily to generated-code quality and full e2e cache misses; follow-up batching/cache-budget work remains outside this Wave 1 gate-closure scope.
 
 ## Full Discovery Snapshot
 

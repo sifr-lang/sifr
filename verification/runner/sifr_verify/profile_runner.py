@@ -17,7 +17,7 @@ from typing import Any, Callable, TextIO
 from . import reports
 from .errors import VerificationError
 from .paths import REPO_ROOT
-from .profiles import legacy_facade, load_profile, resolve_fixture_manifest
+from .profiles import crate_test_suites_for_mode, legacy_facade, load_profile, resolve_fixture_manifest
 
 
 class ProfileRunnerError(VerificationError):
@@ -339,34 +339,22 @@ class ProfileRunner:
     def run_crate_tests(self) -> None:
         print("Running crate tests")
         print(f"  mode={self.crate_test_mode}")
-        crate_commands = [
-            ("Running sifr_diagnostics tests", cargo_command("test", "-p", "sifr_diagnostics")),
-            (
-                "Running sifr_lowering tests",
-                cargo_command("test", "-p", "sifr_lowering", "--", "--skip", "test_e2e_pass"),
-            ),
-            ("Running sifr_syntax tests", cargo_command("test", "-p", "sifr_syntax")),
-            ("Running sifr_frontend tests", cargo_command("test", "-p", "sifr_frontend")),
-            ("Running sifr_analysis tests", cargo_command("test", "-p", "sifr_analysis")),
-            ("Running sifr_lsp tests", cargo_command("test", "-p", "sifr_lsp")),
-            ("Running sifr_package tests", cargo_command("test", "-p", "sifr_package")),
-            ("Running sifr_stdlib tests", cargo_command("test", "-p", "sifr_stdlib")),
-            ("Running sifr_runtime tests", cargo_command("test", "-p", "sifr_runtime")),
-            ("Running sifr_runtime HTTP feature tests", cargo_command("test", "-p", "sifr_runtime", "--features", "http")),
-        ]
-        for label, command in crate_commands:
-            print(label)
-            run_command(command)
-        if self.crate_test_mode == "smoke":
-            print("Running sifr CLI unit tests")
-            run_command(cargo_command("test", "-p", "sifr", "--bin", "sifr"))
-        elif self.crate_test_mode == "full":
-            print("Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)")
-            run_command(cargo_command("test", "-p", "sifr", "--", "--skip", "test_e2e_pass"))
-        else:
-            raise ProfileRunnerError(f"unsupported crate test mode: {self.crate_test_mode}")
-        print("Running sifr_driver library tests")
-        run_command(cargo_command("test", "-p", "sifr_driver", "--lib"))
+        suites = crate_test_suites_for_mode(self.profile, self.crate_test_mode)
+        for suite in suites:
+            suite_id = str(suite["id"])
+            status = str(suite["status"])
+            executed = bool(suite["executed_in_merge"])
+            if status == "red-blocker" and not executed:
+                print(
+                    "Planned crate test red-blocker "
+                    f"{suite_id}: must_be_executed_by={suite.get('must_be_executed_by', 'unknown')}"
+                )
+                continue
+            command = suite.get("command", [])
+            if not isinstance(command, list) or not all(isinstance(arg, str) for arg in command):
+                raise ProfileRunnerError(f"crate test suite {suite_id} has invalid command")
+            print(f"Running crate test suite {suite_id}")
+            run_command(cargo_command(*command))
 
     def run_validation_contract_suites(self) -> None:
         if not self.matrix_suites:

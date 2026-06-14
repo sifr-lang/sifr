@@ -155,6 +155,62 @@
         }
       }
     },
+    "crate_test_membership": {
+      "type": "object",
+      "required": ["suites"],
+      "additionalProperties": false,
+      "properties": {
+        "suites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "package",
+              "command",
+              "modes",
+              "status",
+              "executed_in_merge"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "package": {
+                "type": "string"
+              },
+              "command": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "modes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["smoke", "full"]
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": ["blocking", "red-blocker"]
+              },
+              "executed_in_merge": {
+                "type": "boolean"
+              },
+              "must_be_executed_by": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
     "selected_areas": {
       "type": "array",
       "items": {

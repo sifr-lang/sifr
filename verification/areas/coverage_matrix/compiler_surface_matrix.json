@@ -435,28 +435,22 @@
       "guarantee_id": "project-workspace-package-contract",
       "support_status": "stable",
       "owner": "compiler-verification",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "cargo:first-party-crate-tests",
       "nightly_release_suite": "cargo:first-party-crate-tests",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "scripts/run_all_tests.sh --profile merge",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-1",
-      "closes_in_wave": "1",
-      "expiry": "2026-09-30"
+      "reproduction_command": "scripts/run_all_tests.sh --profile merge"
     },
     {
       "surface_id": "cargo_features_targets",
       "guarantee_id": "project-workspace-package-contract",
       "support_status": "stable",
       "owner": "compiler-verification",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "cargo:metadata-guardrail",
       "nightly_release_suite": "cargo:all-targets-all-features",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "cargo metadata --no-deps --format-version 1",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-1",
-      "closes_in_wave": "1",
-      "expiry": "2026-09-30"
+      "reproduction_command": "cargo metadata --locked --no-deps --format-version 1"
     }
   ]
 }

@@ -19,6 +19,11 @@ Profiles at schema version 2 carry local-first execution policy:
 - `network_policy.mode=offline` for create-pr and merge.
 - Cargo profile execution is locked and offline; `cargo fetch --locked` is setup,
   not part of profile execution.
+- `crate_test_membership.suites` is the source of truth for profile-owned crate
+  tests. Each suite has a stable id, workspace package, exact `cargo test`
+  command, profile modes, status, and merge-execution marker. The runner rejects
+  duplicate suite ids, unknown packages, and commands whose `-p/--package`
+  argument does not match the suite package.
 - generated binaries and external programs run under the execution sandbox
   contract: tempdir-only writes, no external network, declared loopback-only
   networking, subprocess cleanup, and bounded captured output.
@@ -28,9 +33,19 @@ Profiles at schema version 2 carry local-first execution policy:
 
 The `coverage_matrix` area is selected by create-pr and merge in advisory mode
 during the gate-closure phase. It fails schema, owner, status, profile-policy,
-and expiry errors immediately while permitting the closed Wave 0 list of
-temporary `expected-missing` and `red-blocker` rows. Closeout promotes the same
-check to strict mode with `SIFR_COVERAGE_MATRIX_STRICT=1`.
+expiry, cargo metadata classification, and crate-membership errors immediately
+while permitting the closed Wave 0 list of temporary `expected-missing` and
+`red-blocker` rows. Closeout promotes the same check to strict mode with
+`SIFR_COVERAGE_MATRIX_STRICT=1`.
+
+Cargo workspace packages, targets, and features are inventoried from
+`cargo metadata --locked --no-deps --format-version 1` and classified in
+`verification/areas/coverage_matrix/data/cargo_metadata_classification.json`.
+Every first-party compiler crate must have full-mode merge membership. A
+temporary `red-blocker` entry is allowed only with `executed_in_merge=false`,
+an owner, a tracked deadline, and a phase wave that closes it.
+Targets and features use `merge-red-blocker` only for a suite that is planned
+for merge membership but intentionally not executed until its red-blocker closes.
 
 ## Create-PR Profile
 
