@@ -521,12 +521,14 @@ impl Renderer {
                         self.emit_line(&format!(
                             "let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};"
                         ));
+                        let mutable = if item.mutable { "mut " } else { "" };
                         self.emit_line(&format!(
-                            "let {} = {guard_var}.ctx.__enter__();",
+                            "let {mutable}{} = {guard_var}.ctx.__enter__();",
                             item.binding
                         ));
                     } else {
-                        self.emit_line(&format!("let {} = {value};", item.binding));
+                        let mutable = if item.mutable { "mut " } else { "" };
+                        self.emit_line(&format!("let {mutable}{} = {value};", item.binding));
                     }
                 }
                 self.render_body(body);

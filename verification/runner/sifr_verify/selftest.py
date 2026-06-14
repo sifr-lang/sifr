@@ -10,6 +10,7 @@ from .profiles import (
     ProfileError,
     crate_test_suites_for_mode,
     failure_reproduction_command,
+    legacy_facade,
     load_all_profiles,
     selected_resource_classes,
     validate_crate_test_membership,
@@ -24,6 +25,7 @@ def run_all() -> list[str]:
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
         ("crate membership self-test", _crate_membership_self_test),
+        ("e2e profile self-test", _e2e_profile_self_test),
         ("runner discovery self-test", _discovery_self_test),
         ("resource class selection self-test", _resource_class_self_test),
         ("resume/failure-reproduction self-test", _failure_reproduction_self_test),
@@ -202,6 +204,33 @@ def _crate_membership_self_test() -> None:
             raise
     else:
         raise AssertionError("unknown selected area suite was accepted")
+
+
+def _e2e_profile_self_test() -> None:
+    profiles = load_all_profiles()
+    create_pr_manifest = legacy_facade(profiles["create-pr"])["e2e"].get("fixture_manifest")
+    if create_pr_manifest != "verification/areas/core_language/data/create_pr_e2e_manifest.json":
+        raise AssertionError(f"create-pr e2e must remain representative, got: {create_pr_manifest}")
+
+    for profile_name in ("merge", "nightly", "release"):
+        fixture_manifest = legacy_facade(profiles[profile_name])["e2e"].get("fixture_manifest")
+        if fixture_manifest:
+            raise AssertionError(
+                f"{profile_name} e2e must use the full pass corpus, got fixture manifest: "
+                f"{fixture_manifest}",
+            )
+
+    merge_full_suites = crate_test_suites_for_mode(profiles["merge"], "full")
+    by_id = {str(suite.get("id")): suite for suite in merge_full_suites}
+    cli_suite = by_id.get("sifr_cli_full")
+    if not isinstance(cli_suite, dict):
+        raise AssertionError("merge full crate tests must include sifr_cli_full")
+    command = cli_suite.get("command")
+    if command != ["test", "-p", "sifr", "--", "--skip", "test_e2e_pass"]:
+        raise AssertionError(
+            "sifr_cli_full must skip only test_e2e_pass so the full fail corpus remains "
+            f"merge-blocking, got: {command}",
+        )
 
 
 def _discovery_self_test() -> None:

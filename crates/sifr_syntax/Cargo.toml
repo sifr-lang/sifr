@@ -13,5 +13,8 @@ sifr_python_ast = { workspace = true }
 sifr_python_parser = { workspace = true }
 ruff_text_size = { workspace = true }
 
+[dev-dependencies]
+serde_json = { workspace = true }
+
 [lints]
 workspace = true

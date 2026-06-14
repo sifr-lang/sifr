@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "positive_parse_cases": [
+    {
+      "id": "sifr_owned_function_class_match",
+      "owner": "sifr-owned-stable-syntax",
+      "source": "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main() -> int:\n    box = Box(2)\n    match box.value:\n        case 2:\n            return 1\n        case _:\n            return 0\n",
+      "required_token_kinds": ["Class", "Def", "Match", "Case", "Return"]
+    },
+    {
+      "id": "parser_fork_async_and_comprehension",
+      "owner": "parser-fork-compatible-syntax",
+      "source": "async def collect(items: list[int]) -> list[int]:\n    return [value for value in items if value > 0]\n",
+      "required_token_kinds": ["Async", "Def", "For", "If", "Return"]
+    }
+  ],
+  "negative_parse_cases": [
+    {
+      "id": "unexpected_indentation",
+      "owner": "sifr-owned-layout",
+      "source": "def main():\nprint('bad indent')\n",
+      "expected_code": "SIFR-PARSE-0002",
+      "expected_parser_category": "parser_recovery",
+      "expected_message_contains": "expected an indented block"
+    },
+    {
+      "id": "unexpected_eof",
+      "owner": "parser-fork-recovery",
+      "source": "def main(\n",
+      "expected_code": "SIFR-PARSE-0003",
+      "expected_parser_category": "lexical_eof",
+      "expected_message_contains": "unexpected EOF"
+    },
+    {
+      "id": "unsupported_lazy_import",
+      "owner": "parser-fork-unsupported-syntax",
+      "source": "lazy import value\n",
+      "expected_code": "SIFR-PARSE-0009",
+      "expected_parser_category": "unsupported_syntax",
+      "expected_message_contains": "unsupported syntax"
+    }
+  ],
+  "token_stream_cases": [
+    {
+      "id": "function_indent_dedent_boundaries",
+      "source": "def main():\n    value = 1\n    return value\n",
+      "required_token_kinds": ["Def", "Name", "Indent", "Dedent", "Return", "Newline"],
+      "span_assertions": [
+        {"kind": "Def", "occurrence": 1, "byte_start": 0, "byte_end": 3},
+        {"kind": "Indent", "occurrence": 1, "byte_start": 12, "byte_end": 16},
+        {"kind": "Return", "occurrence": 1, "byte_start": 30, "byte_end": 36}
+      ]
+    },
+    {
+      "id": "comment_trivia_is_preserved",
+      "source": "# tracked comment\nvalue = 1\n",
+      "required_token_kinds": ["Comment", "Name", "Int", "Newline"],
+      "span_assertions": [
+        {"kind": "Comment", "occurrence": 1, "byte_start": 0, "byte_end": 17}
+      ]
+    },
+    {
+      "id": "non_logical_newline_inside_parentheses",
+      "source": "value = (\n    1\n)\n",
+      "required_token_kinds": ["Name", "Lpar", "NonLogicalNewline", "Int", "Rpar", "Newline"],
+      "span_assertions": [
+        {"kind": "NonLogicalNewline", "occurrence": 1, "byte_start": 9, "byte_end": 10}
+      ]
+    },
+    {
+      "id": "unicode_identifier_span_stability",
+      "source": "café = 1\n",
+      "required_token_kinds": ["Name", "Int", "Newline"],
+      "span_assertions": [
+        {"kind": "Name", "occurrence": 1, "byte_start": 0, "byte_end": 5}
+      ]
+    }
+  ],
+  "contradiction_checks": [
+    {
+      "id": "no_fixture_can_be_both_positive_and_negative",
+      "positive_sources_must_not_appear_in_negative_cases": true
+    }
+  ]
+}

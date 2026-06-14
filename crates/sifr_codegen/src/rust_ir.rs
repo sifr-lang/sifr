@@ -154,6 +154,7 @@ pub enum RustStmt {
 pub struct RustWithItem {
     pub binding: String,
     pub value: RustExpr,
+    pub mutable: bool,
     pub has_cm: bool,
     pub class_name: Option<String>,
 }

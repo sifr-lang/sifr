@@ -775,6 +775,7 @@ impl RustEmitter {
                     .map(|item| crate::RustWithItem {
                         binding: item.binding,
                         value: self.rewrite_stdlib_constant_idents_in_expr(item.value),
+                        mutable: item.mutable,
                         has_cm: item.has_cm,
                         class_name: item.class_name,
                     })

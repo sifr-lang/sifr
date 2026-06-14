@@ -49,6 +49,19 @@
       ]
     },
     {
+      "name": "syntax_parser_lexer_matrix",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "syntax_parser_lexer_matrix",
+          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
+          "command": "contract-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "audit-fixtures",
       "kind": "adapter",
       "cases": [
