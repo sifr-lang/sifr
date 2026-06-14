@@ -258,6 +258,21 @@ fn does_not_lower_field_assign_with_non_leaf_value() {
 }
 
 #[test]
+fn does_not_lower_field_assign_with_mismatched_value_type() {
+    let stmt = HirStmt::FieldAssign {
+        object: "node".to_string(),
+        field: "value".to_string(),
+        field_ty: Type::Union(vec![Type::Int, Type::None]),
+        value: HirExpr::Name {
+            name: "next_value".to_string(),
+            ty: Type::Int,
+        },
+    };
+
+    assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+}
+
+#[test]
 fn lowers_simple_tuple_unpack_stmt() {
     let tuple_unpack = HirStmt::TupleUnpack {
         targets: vec![

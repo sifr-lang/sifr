@@ -368,7 +368,11 @@ def compute(values: list[int]) -> list[int]:
     );
 
     assert!(
-        generated.contains("let Some(mut pair) = pair else"),
+        generated.contains("let Some(pair) = pair else"),
+        "{generated}"
+    );
+    assert!(
+        !generated.contains("let Some(mut pair) = pair else"),
         "{generated}"
     );
     assert!(

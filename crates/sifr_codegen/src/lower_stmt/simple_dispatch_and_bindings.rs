@@ -106,9 +106,9 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         HirStmt::FieldAssign {
             object,
             field,
+            field_ty,
             value,
-            ..
-        } => try_lower_simple_field_assign_stmt(object, field, value),
+        } => try_lower_simple_field_assign_stmt(object, field, field_ty, value),
         HirStmt::NestedFieldAssign { .. } => None,
         HirStmt::Return { value: None } => {
             if ctx.in_display_impl {

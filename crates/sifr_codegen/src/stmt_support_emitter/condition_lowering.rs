@@ -142,12 +142,10 @@ impl RustEmitter {
     }
 
     pub(crate) fn option_binding_pattern_for_ir(&self, option_var: &str) -> String {
-        let is_borrowed_param = self.borrowed_params.contains(option_var)
-            || self.mut_borrowed_params.contains(option_var);
-        if is_borrowed_param {
-            format!("Some({option_var})")
-        } else {
+        if self.mutated_vars.contains(option_var) {
             format!("Some(mut {option_var})")
+        } else {
+            format!("Some({option_var})")
         }
     }
 

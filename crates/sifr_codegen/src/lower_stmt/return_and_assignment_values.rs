@@ -157,13 +157,27 @@ pub(super) fn try_lower_simple_assign_value(
 }
 
 pub(super) fn try_lower_simple_field_assign_stmt(
-    _object: &str,
-    _field: &str,
-    _value: &HirExpr,
+    object: &str,
+    field: &str,
+    field_ty: &Type,
+    value: &HirExpr,
 ) -> Option<Vec<RustStmt>> {
-    // Keep field assignments on the structured path so class/recursive storage
-    // adaptations (boxing and option handling) are consistently applied.
-    None
+    if object == "self" {
+        // Keep self-field assignments on the structured path so class/recursive
+        // storage adaptations (boxing and option handling) are consistently applied.
+        return None;
+    }
+    if resolve_alias_type(field_ty) != resolve_alias_type(value.ty()) {
+        return None;
+    }
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    Some(vec![RustStmt::Assign {
+        target: RustExpr::Field {
+            expr: Box::new(RustExpr::Ident(object.to_string())),
+            field: field.to_string(),
+        },
+        value: lowered_value,
+    }])
 }
 
 pub(super) fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {

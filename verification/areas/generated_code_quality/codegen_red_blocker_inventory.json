@@ -3,17 +3,17 @@
   "generated_from": "cargo test -p sifr_codegen -- --nocapture",
   "captured_on": "2026-06-14",
   "test_result": {
-    "passed": 697,
-    "failed": 10,
+    "passed": 704,
+    "failed": 4,
     "ignored": 0,
-    "total": 707
+    "total": 708
   },
   "red_blocker": {
     "profile_suite_id": "sifr_codegen",
     "package": "sifr_codegen",
     "status": "red-blocker",
     "owner": "codegen",
-    "failure_count": 10,
+    "failure_count": 4,
     "triage_file": "plans/issues/active/codegen-test-triage.md",
     "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md",
     "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
@@ -760,7 +760,7 @@
       "current_output": "Internal simple-stmt lowering no longer handles non-self field assignment.",
       "panic": "field assign lowered",
       "expected_output_or_snapshot": "Restore/replace structured field assignment lowering and add regression for non-self target assignment.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "4"
     },
@@ -776,7 +776,7 @@
       "current_output": "Internal simple-stmt lowering no longer emits expected IfLet for option truthiness in elif.",
       "panic": "assertion failed: matches!(else_body[0], RustStmt::IfLet { pattern: ref p, expr: RustExpr::Ident(ref n), else_body: Some(_), .. } if p == \"Some(maybe_x)\" && n == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix option-truthiness elif lowering or update to an equivalent safe Rust IR shape with regression.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "4"
     },
@@ -792,7 +792,7 @@
       "current_output": "Option-is-none exiting-body optimization no longer emits expected LetElse without unwrap.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::LetElse { pattern: ref p, value: RustExpr::Ident(ref name), ref else_body, } if p == \"Some(maybe_x)\" && name == \"maybe_x\" && !else_body.is_empty())",
       "expected_output_or_snapshot": "Restore safe LetElse lowering or replace with equivalent no-unwrap codegen regression.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "4"
     },
@@ -808,7 +808,7 @@
       "current_output": "Alias option truthiness no longer lowers to expected IfLet shape.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::IfLet { pattern: ref p, expr: RustExpr::Ident(ref n), else_body: Some(_), .. } if p == \"Some(maybe_x)\" && n == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix alias-aware option narrowing or assert equivalent generated no-unwrap behavior.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "4"
     },
@@ -824,7 +824,7 @@
       "current_output": "Option `is not None` compare no longer lowers to expected IfLet shape.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::IfLet { ref pattern, expr: RustExpr::Ident(ref name), .. } if pattern == \"Some(maybe_x)\" && name == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix option compare narrowing or replace with equivalent no-unwrap regression.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "4"
     },
@@ -840,7 +840,7 @@
       "current_output": "Option truthiness no longer lowers to expected IfLet shape with else body.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::IfLet { pattern: ref p, expr: RustExpr::Ident(ref n), else_body: Some(_), .. } if p == \"Some(maybe_x)\" && n == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix option truthiness lowering or assert equivalent safe generated Rust shape.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "4"
     },
