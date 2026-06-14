@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PARSE-0005 main:2:5 invalid target: assignment target

@@ -1,0 +1,47 @@
+[
+  {
+    "code": "SIFR-PARSE-0008",
+    "severity": "Error",
+    "message": "invalid match pattern: star pattern outside a sequence pattern",
+    "message_template": "invalid match pattern: {reason}",
+    "args": {
+      "parser_category": {
+        "kind": "string",
+        "value": "match_pattern"
+      },
+      "reason": {
+        "kind": "string",
+        "value": "star pattern outside a sequence pattern"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0008",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 38,
+        "byte_end": 44,
+        "line": 3,
+        "column": 14,
+        "end_line": 3,
+        "end_column": 20,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "        case *value:",
+            "highlight_start": 14,
+            "highlight_end": 20
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]

@@ -1,0 +1,9 @@
+error[SIFR-PARSE-0007]: malformed declaration list: global statement
+  --> main:2:11
+     |
+   2 |     global
+     |           ^
+   3 |
+     | ^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0007

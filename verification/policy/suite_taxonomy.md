@@ -34,6 +34,23 @@ This document defines the canonical suite taxonomy for compiler verification har
   - Human and compact renderer output baselines are text files.
   - JSON diagnostics are canonicalized and pretty-printed before baseline compare.
   - Exit code is baseline-checked separately.
+- Diagnostic code catalog: `verification/areas/diagnostics/data/code_catalog.json`.
+- Diagnostic baseline coverage: `verification/areas/diagnostics/data/code_baseline_coverage.json`.
+- Baseline metadata: `verification/areas/diagnostics/data/baseline_metadata.json`.
+- Recovery surface coverage: `verification/areas/diagnostics/data/recovery_surface_coverage.json`.
+- Synthetic baselines are allowed only when `baseline_metadata.json` marks them
+  with `"synthetic": true`; executable diagnostic baselines must be owned by the
+  area manifest.
+
+#### Diagnostic Recovery Surfaces
+
+| surface id | compiler layer | required multi-error behavior |
+| --- | --- | --- |
+| `parser_recovery` | parser | one malformed source can emit more than one stable parser diagnostic without losing code/span identity |
+| `hir_mixed_recovery` | HIR/type checking | mixed independent semantic errors are preserved in one run without collapse to a catch-all diagnostic |
+| `repeated_type_recovery` | HIR/type checking | repeated similar type errors are bounded by recovery caps while preserving a summary diagnostic |
+
+Every surface listed here must have at least one multi-error fixture in `recovery_surface_coverage.json`.
 
 ### Project Workspace
 - Fixture root: `verification/areas/project_workspace/fixtures/project/<case_id>/`.

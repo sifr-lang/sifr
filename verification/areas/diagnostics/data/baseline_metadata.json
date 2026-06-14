@@ -1,0 +1,606 @@
+{
+  "baselines": [
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "decimal_invalid_literal",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:d422af5492be02ff57bb9b961e337b18833b4d6538863e2e594ecc2bae6d0542",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "decimal_invalid_literal",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:d422af5492be02ff57bb9b961e337b18833b4d6538863e2e594ecc2bae6d0542",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "decimal_invalid_literal",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:d422af5492be02ff57bb9b961e337b18833b4d6538863e2e594ecc2bae6d0542",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "multiline_span_rendering",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:db8f94674f55830416a73f0ee27bf3ea59358d4f2db4ef56587aac5b91f0aa11",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "multiline_span_rendering",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:db8f94674f55830416a73f0ee27bf3ea59358d4f2db4ef56587aac5b91f0aa11",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "multiline_span_rendering",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:db8f94674f55830416a73f0ee27bf3ea59358d4f2db4ef56587aac5b91f0aa11",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_bad_indent",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:1fbb99a621f23f7c7070b212af0749bc7c576138255b0042b24e48cd8593fca2",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_bad_indent",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:1fbb99a621f23f7c7070b212af0749bc7c576138255b0042b24e48cd8593fca2",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_bad_indent",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:1fbb99a621f23f7c7070b212af0749bc7c576138255b0042b24e48cd8593fca2",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_empty_declaration",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:3a09fc2ac8df79bef544b63b1c7daf166d51dbd474b0d14da838f4e9f26b810b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_empty_declaration",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:3a09fc2ac8df79bef544b63b1c7daf166d51dbd474b0d14da838f4e9f26b810b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_empty_declaration",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:3a09fc2ac8df79bef544b63b1c7daf166d51dbd474b0d14da838f4e9f26b810b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_call_order",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:27730dc0c719dc4adbec38499e77d0cfbd0874873aa5e9644bc4be59248ba2be",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_call_order",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:27730dc0c719dc4adbec38499e77d0cfbd0874873aa5e9644bc4be59248ba2be",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_call_order",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:27730dc0c719dc4adbec38499e77d0cfbd0874873aa5e9644bc4be59248ba2be",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_declaration",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:fd67dcfb17a5d1c94c94037ae2b49680a7409d44b5456615a8103f68fe9b89dd",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_declaration",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:fd67dcfb17a5d1c94c94037ae2b49680a7409d44b5456615a8103f68fe9b89dd",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_declaration",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:fd67dcfb17a5d1c94c94037ae2b49680a7409d44b5456615a8103f68fe9b89dd",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_layout",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:0fe00d5b4e351136c3833f5e97a95f3665928ffd8389740d87137b4fc1cffe97",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_layout",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:0fe00d5b4e351136c3833f5e97a95f3665928ffd8389740d87137b4fc1cffe97",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_layout",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:0fe00d5b4e351136c3833f5e97a95f3665928ffd8389740d87137b4fc1cffe97",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_match_pattern",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:29c777bf1f862ba5ed803e8b20cb96846c78a603b9b0e97e06592a2aa525c209",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_match_pattern",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:29c777bf1f862ba5ed803e8b20cb96846c78a603b9b0e97e06592a2aa525c209",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_match_pattern",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:29c777bf1f862ba5ed803e8b20cb96846c78a603b9b0e97e06592a2aa525c209",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_target",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:37b7471ac4781f1e19dfdbcefbfe41dc8f0b533d1a0bc4bb1441327941048d21",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_target",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:37b7471ac4781f1e19dfdbcefbfe41dc8f0b533d1a0bc4bb1441327941048d21",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_invalid_target",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:37b7471ac4781f1e19dfdbcefbfe41dc8f0b533d1a0bc4bb1441327941048d21",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_multi_error_recovery",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:286ae9be8b4d9a8d1ea32a49638bd154a410ec6c11912f7edc308b1858b89879",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_multi_error_recovery",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:286ae9be8b4d9a8d1ea32a49638bd154a410ec6c11912f7edc308b1858b89879",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_multi_error_recovery",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:286ae9be8b4d9a8d1ea32a49638bd154a410ec6c11912f7edc308b1858b89879",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_unsupported_syntax",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:593ac6893c9c9cdb51b0efe6487f0b2786c958dc090bb7523f3dbc50009fddf5",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_unsupported_syntax",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:593ac6893c9c9cdb51b0efe6487f0b2786c958dc090bb7523f3dbc50009fddf5",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_unsupported_syntax",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:593ac6893c9c9cdb51b0efe6487f0b2786c958dc090bb7523f3dbc50009fddf5",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_unterminated_string",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:1b126e0298bf4b9e7b615049e212fc9de4a8b870946daa35f291ec25c1a1ae1b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_unterminated_string",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:1b126e0298bf4b9e7b615049e212fc9de4a8b870946daa35f291ec25c1a1ae1b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "parser_unterminated_string",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:1b126e0298bf4b9e7b615049e212fc9de4a8b870946daa35f291ec25c1a1ae1b",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "presentation_contract_cases",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "human",
+      "source_hash": "sha256:7dae6ac45b465389ced5bf76beb3e6f020bb7db1cd74c2daa305588635b05223",
+      "suite": "synthetic_baselines",
+      "synthetic": true
+    },
+    {
+      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "presentation_contract_cases",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines",
+        "json-sort"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "json",
+      "source_hash": "sha256:7dae6ac45b465389ced5bf76beb3e6f020bb7db1cd74c2daa305588635b05223",
+      "suite": "synthetic_baselines",
+      "synthetic": true
+    },
+    {
+      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "fixture_id": "presentation_contract_cases",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:7dae6ac45b465389ced5bf76beb3e6f020bb7db1cd74c2daa305588635b05223",
+      "suite": "synthetic_baselines",
+      "synthetic": true
+    }
+  ],
+  "schema_version": 1
+}

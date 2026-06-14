@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PARSE-0009 main:1:1 unsupported syntax: Cannot use `lazy` import statement on Python 3.14 (syntax was added in Python 3.15)

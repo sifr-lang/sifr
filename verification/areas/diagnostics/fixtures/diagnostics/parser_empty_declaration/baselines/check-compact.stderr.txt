@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PARSE-0007 main:2:11 malformed declaration list: global statement

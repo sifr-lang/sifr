@@ -1,0 +1,28 @@
+error[SIFR-PARSE-0002]: syntax error: expected a statement
+  --> main:4:1
+     |
+   4 |
+     | ^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0002
+error[SIFR-PARSE-0002]: syntax error: expected an indented block after function definition
+  --> main:2:1
+     |
+   2 | print("bad indent")
+     | ^^^^^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0002
+error[SIFR-PARSE-0004]: invalid layout: unexpected indentation
+  --> main:3:1
+     |
+   3 |     1 = 2
+     | ^^^^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0004
+error[SIFR-PARSE-0005]: invalid target: assignment target
+  --> main:3:5
+     |
+   3 |     1 = 2
+     |     ^
+  = note: while parsing main
+  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0005

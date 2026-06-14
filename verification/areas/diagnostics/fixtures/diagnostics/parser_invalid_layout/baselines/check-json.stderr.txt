@@ -1,0 +1,92 @@
+[
+  {
+    "code": "SIFR-PARSE-0002",
+    "severity": "Error",
+    "message": "syntax error: expected a statement",
+    "message_template": "syntax error: expected {expected}",
+    "args": {
+      "expected": {
+        "kind": "string",
+        "value": "a statement"
+      },
+      "parser_category": {
+        "kind": "string",
+        "value": "parser_recovery"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0002",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 14,
+        "byte_end": 14,
+        "line": 2,
+        "column": 1,
+        "end_line": 2,
+        "end_column": 1,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "",
+            "highlight_start": 1,
+            "highlight_end": 1
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-PARSE-0004",
+    "severity": "Error",
+    "message": "invalid layout: unexpected indentation",
+    "message_template": "invalid layout: {reason}",
+    "args": {
+      "parser_category": {
+        "kind": "string",
+        "value": "layout"
+      },
+      "reason": {
+        "kind": "string",
+        "value": "unexpected indentation"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0004",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 0,
+        "byte_end": 4,
+        "line": 1,
+        "column": 1,
+        "end_line": 1,
+        "end_column": 5,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    value = 1",
+            "highlight_start": 1,
+            "highlight_end": 5
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]

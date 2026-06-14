@@ -1,0 +1,43 @@
+{
+  "policy_source": "verification/policy/suite_taxonomy.md#diagnostic-recovery-surfaces",
+  "schema_version": 1,
+  "surfaces": [
+    {
+      "expected_codes": [
+        "SIFR-PARSE-0002",
+        "SIFR-PARSE-0004",
+        "SIFR-PARSE-0005"
+      ],
+      "id": "parser_recovery",
+      "multi_error_fixtures": [
+        "verification/areas/diagnostics/fixtures/diagnostics/parser_multi_error_recovery/main.sifr"
+      ],
+      "owner": "compiler/diagnostics"
+    },
+    {
+      "expected_codes": [
+        "SIFR-TYPE-0002",
+        "SIFR-TYPE-0002",
+        "SIFR-TYPE-0002"
+      ],
+      "id": "hir_mixed_recovery",
+      "multi_error_fixtures": [
+        "crates/sifr/tests/e2e/fail/bounded_multi_error_recovery.sifr"
+      ],
+      "owner": "compiler/core-language"
+    },
+    {
+      "expected_codes": [
+        "SIFR-TYPE-0002",
+        "SIFR-TYPE-0002",
+        "SIFR-TYPE-0002",
+        "SIFR-TYPE-0002"
+      ],
+      "id": "repeated_type_recovery",
+      "multi_error_fixtures": [
+        "crates/sifr/tests/e2e/fail/bounded_multi_error_recovery_repeated_type_errors.sifr"
+      ],
+      "owner": "compiler/core-language"
+    }
+  ]
+}

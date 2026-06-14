@@ -1,0 +1,92 @@
+[
+  {
+    "code": "SIFR-PARSE-0003",
+    "severity": "Error",
+    "message": "lexical error: missing closing quote in string literal",
+    "message_template": "lexical error: {reason}",
+    "args": {
+      "parser_category": {
+        "kind": "string",
+        "value": "lexical_string"
+      },
+      "reason": {
+        "kind": "string",
+        "value": "missing closing quote in string literal"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0003",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 22,
+        "byte_end": 36,
+        "line": 2,
+        "column": 11,
+        "end_line": 2,
+        "end_column": 25,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    print(\"unterminated)",
+            "highlight_start": 11,
+            "highlight_end": 25
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-PARSE-0003",
+    "severity": "Error",
+    "message": "lexical error: unexpected EOF while parsing",
+    "message_template": "lexical error: {reason}",
+    "args": {
+      "parser_category": {
+        "kind": "string",
+        "value": "lexical_eof"
+      },
+      "reason": {
+        "kind": "string",
+        "value": "unexpected EOF while parsing"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0003",
+    "spans": [
+      {
+        "file": "main",
+        "byte_start": 37,
+        "byte_end": 37,
+        "line": 3,
+        "column": 1,
+        "end_line": 3,
+        "end_column": 1,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "",
+            "highlight_start": 1,
+            "highlight_end": 1
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "while parsing main"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]
