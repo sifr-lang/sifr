@@ -140,7 +140,7 @@ def run_smoke_entries(area: str, entries: list[dict[str, Any]]) -> list[str]:
         started = time.perf_counter()
         try:
             proc = subprocess.run(
-                ["cargo", "run", "-q", "-p", "sifr", "--", "check", str(entry_path)],
+                ["cargo", "run", "--locked", "-q", "-p", "sifr", "--", "check", str(entry_path)],
                 cwd=REPO_ROOT,
                 text=True,
                 capture_output=True,

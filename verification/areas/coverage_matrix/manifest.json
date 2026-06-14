@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "name": "coverage_matrix",
+  "owner": "compiler-verification",
+  "description": "Executable registry of shipped guarantees, compiler surfaces, owners, and profile-visible verification status.",
+  "parallel_safe": true,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 60,
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_contract": {
+    "required": false,
+    "source": "not-applicable"
+  },
+  "artifact_declarations": [
+    {
+      "id": "coverage-matrix-result",
+      "path": "target/verification/areas/coverage-matrix-results.json",
+      "retention": "latest-local-run"
+    }
+  ],
+  "suites": [
+    {
+      "name": "advisory",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "coverage_matrix_consistency",
+          "entry": "verification/areas/coverage_matrix/checks/coverage_matrix.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

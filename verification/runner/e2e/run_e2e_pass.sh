@@ -195,4 +195,4 @@ SIFR_E2E_MAX_GROUP_FIXTURES="${MAX_GROUP_FIXTURES}" \
 SIFR_E2E_DISABLE_CACHE="${DISABLE_CACHE}" \
 SIFR_E2E_CACHE_DIR="${CACHE_DIR}" \
 SIFR_E2E_FIXTURE_MANIFEST="${FIXTURE_MANIFEST}" \
-cargo test -p sifr --test e2e test_e2e_pass -- --nocapture
+cargo test --locked -p sifr --test e2e test_e2e_pass -- --nocapture

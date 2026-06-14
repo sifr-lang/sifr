@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "owners": [
+    {
+      "id": "algorithmic/compatibility",
+      "kind": "team",
+      "display_name": "Algorithmic Compatibility"
+    },
+    {
+      "id": "compiler-verification",
+      "kind": "team",
+      "display_name": "Compiler Verification"
+    },
+    {
+      "id": "compiler/codegen",
+      "kind": "team",
+      "display_name": "Compiler Codegen"
+    },
+    {
+      "id": "compiler/core-language",
+      "kind": "team",
+      "display_name": "Compiler Core Language"
+    },
+    {
+      "id": "compiler/diagnostics",
+      "kind": "team",
+      "display_name": "Compiler Diagnostics"
+    },
+    {
+      "id": "compiler/frontend",
+      "kind": "team",
+      "display_name": "Compiler Frontend"
+    },
+    {
+      "id": "compiler/hardening",
+      "kind": "team",
+      "display_name": "Compiler Hardening"
+    },
+    {
+      "id": "compiler/package-management",
+      "kind": "team",
+      "display_name": "Compiler Package Management"
+    },
+    {
+      "id": "compiler/performance",
+      "kind": "team",
+      "display_name": "Compiler Performance"
+    },
+    {
+      "id": "compiler/tooling",
+      "kind": "team",
+      "display_name": "Compiler Tooling"
+    },
+    {
+      "id": "compiler/verification",
+      "kind": "team",
+      "display_name": "Compiler Verification"
+    },
+    {
+      "id": "developer-tooling",
+      "kind": "team",
+      "display_name": "Developer Tooling"
+    },
+    {
+      "id": "release/distribution",
+      "kind": "team",
+      "display_name": "Release Distribution"
+    },
+    {
+      "id": "runtime/platform",
+      "kind": "team",
+      "display_name": "Runtime Platform"
+    },
+    {
+      "id": "stdlib/parity",
+      "kind": "team",
+      "display_name": "Standard Library Parity"
+    }
+  ]
+}

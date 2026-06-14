@@ -14,11 +14,30 @@ Profile policy lives in `verification/profiles/{create-pr,merge,nightly,release}
 is the shell-facing resolver for profile metadata while the bash facade remains
 the public validation entrypoint.
 
+Profiles at schema version 2 carry local-first execution policy:
+
+- `network_policy.mode=offline` for create-pr and merge.
+- Cargo profile execution is locked and offline; `cargo fetch --locked` is setup,
+  not part of profile execution.
+- generated binaries and external programs run under the execution sandbox
+  contract: tempdir-only writes, no external network, declared loopback-only
+  networking, subprocess cleanup, and bounded captured output.
+- `profile_plan.emit_command` is the local source of truth for CI parity checks.
+- `uv run --project verification --locked python -m sifr_verify doctor` is the
+  setup boundary for local prerequisites before profile execution.
+
+The `coverage_matrix` area is selected by create-pr and merge in advisory mode
+during the gate-closure phase. It fails schema, owner, status, profile-policy,
+and expiry errors immediately while permitting the closed Wave 0 list of
+temporary `expected-missing` and `red-blocker` rows. Closeout promotes the same
+check to strict mode with `SIFR_COVERAGE_MATRIX_STRICT=1`.
+
 ## Create-PR Profile
 
 `scripts/run_all_tests.sh --profile create-pr` proves fast compiler-relevant behavior:
 
 - static guardrails and diagnostic registry/docs contracts
+- advisory coverage-matrix consistency for shipped guarantees and surfaces
 - parser/frontend cache and split-brain guardrails
 - static tooling contracts and LSP protocol smoke
 - smoke performance budgets
@@ -32,6 +51,7 @@ It intentionally excludes editor packaging, editor asset release checks, distrib
 `scripts/run_all_tests.sh --profile merge` is the authoritative merge gate. It preserves broader compiler coverage through:
 
 - full core contract matrices listed in the manifest
+- advisory coverage-matrix consistency for shipped guarantees and surfaces
 - representative hardening suites
 - representative performance budget subset
 - representative generated-code quality checks with shared generated artifacts and Cargo target reuse

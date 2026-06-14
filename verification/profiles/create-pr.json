@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "create-pr",
   "description": "Fast local developer confidence with bounded contract coverage and representative e2e only.",
   "budgets": {
@@ -12,11 +12,36 @@
     ],
     "max_parallel": 2
   },
+  "network_policy": {
+    "mode": "offline",
+    "live_network_allowed": false
+  },
+  "cargo_policy": {
+    "locked": true,
+    "offline": true,
+    "setup_command": "cargo fetch --locked"
+  },
+  "reference_host": {
+    "os": "darwin-or-linux",
+    "arch": "aarch64-or-x86_64",
+    "notes": "Create-pr uses bounded local defaults and must not depend on external network during profile execution."
+  },
+  "execution_sandbox": {
+    "tempdir_only": true,
+    "external_network": "forbidden",
+    "loopback_network": "declared-only",
+    "subprocess_cleanup": true,
+    "stdout_stderr_byte_limit": 10485760
+  },
+  "profile_plan": {
+    "emit_command": "scripts/run_all_tests.sh --profile create-pr --emit-plan",
+    "compare_command": "uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>"
+  },
   "selected_areas": [
     {
-      "area": "core_language",
+      "area": "coverage_matrix",
       "suites": [
-        "e2e-pass"
+        "advisory"
       ],
       "resource_classes": [
         "default-local"

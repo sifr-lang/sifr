@@ -16,7 +16,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "enum": [1]
+      "enum": [1, 2]
     },
     "name": {
       "type": "string"
@@ -46,6 +46,72 @@
     },
     "timeout_seconds": {
       "type": "integer"
+    },
+    "network_mode": {
+      "type": "string",
+      "enum": ["offline", "live"]
+    },
+    "pinned_corpus": {
+      "type": "object",
+      "required": ["required", "revision", "checksum"],
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "checksum": {
+          "type": "string"
+        }
+      }
+    },
+    "skip_policy": {
+      "type": "object",
+      "required": ["allowed", "requires_reason"],
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean"
+        },
+        "requires_reason": {
+          "type": "boolean"
+        }
+      }
+    },
+    "baseline_metadata_contract": {
+      "type": "object",
+      "required": ["required", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "artifact_declarations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "retention"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "format": "repo-relative-path"
+          },
+          "retention": {
+            "type": "string"
+          }
+        }
+      }
     },
     "suites": {
       "type": "array",

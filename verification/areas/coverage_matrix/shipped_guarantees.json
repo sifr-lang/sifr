@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "guarantees": [
+    {
+      "guarantee_id": "parser-syntax-contract",
+      "support_status": "stable",
+      "public_doc_path": "internal_docs/architecture.md",
+      "owner": "compiler/core-language",
+      "merge_surface": "parser_acceptance_rejection",
+      "nightly_release_surface": "parser_fuzz_hardening",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Unsupported parser-fork divergence must be recorded in the parser syntax inventory before fixtures are accepted."
+    },
+    {
+      "guarantee_id": "compiler-crash-ice-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/policy/regression_corpus.md",
+      "owner": "compiler/hardening",
+      "merge_surface": "compiler_crash_ice_contract",
+      "nightly_release_surface": "compiler_crash_stress",
+      "regression_surface": "regression_crashes",
+      "unsupported_behavior_policy": "Known crashes are issue-linked sentinels only; unexpected panics fail validation."
+    },
+    {
+      "guarantee_id": "diagnostic-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/policy/suite_taxonomy.md",
+      "owner": "compiler/diagnostics",
+      "merge_surface": "diagnostics_contracts",
+      "nightly_release_surface": "diagnostic_renderer_baselines",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Unstable diagnostic codes must be catalogued before renderer baseline requirements are deferred."
+    },
+    {
+      "guarantee_id": "hir-name-type-flow-contract",
+      "support_status": "stable",
+      "public_doc_path": "internal_docs/architecture.md",
+      "owner": "compiler/core-language",
+      "merge_surface": "hir_name_type_flow_contracts",
+      "nightly_release_surface": "lowering_layer_snapshots",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Lowering or analysis behavior without stable semantics is internal until mapped to an inventory row."
+    },
+    {
+      "guarantee_id": "codegen-generated-rust-contract",
+      "support_status": "stable",
+      "public_doc_path": "internal_docs/architecture.md",
+      "owner": "compiler/codegen",
+      "merge_surface": "codegen_red_blocker",
+      "nightly_release_surface": "generated_rust_toolchain_survival",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Generated Rust must not rely on nightly-only behavior unless the source surface is experimental or internal."
+    },
+    {
+      "guarantee_id": "runtime-platform-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/areas/runtime_platform/platform_contract.md",
+      "owner": "runtime/platform",
+      "merge_surface": "runtime_platform_golden",
+      "nightly_release_surface": "runtime_supported_platforms",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Host-specific skips require structured reasons and reproduction commands."
+    },
+    {
+      "guarantee_id": "project-workspace-package-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/policy/suite_taxonomy.md",
+      "owner": "compiler/frontend",
+      "merge_surface": "project_workspace_contracts",
+      "nightly_release_surface": "package_management_integration",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Package and workspace merge tests use offline fixtures; live registry checks are nightly or release only."
+    },
+    {
+      "guarantee_id": "cli-exit-code-contract",
+      "support_status": "stable",
+      "public_doc_path": "docs",
+      "owner": "developer-tooling",
+      "merge_surface": "cli_exit_codes",
+      "nightly_release_surface": "cli_exit_codes",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Every documented CLI exit-code contract requires an integration test or explicit deferral."
+    },
+    {
+      "guarantee_id": "tooling-lsp-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/policy/suite_taxonomy.md",
+      "owner": "compiler/tooling",
+      "merge_surface": "lsp_marker_corpus",
+      "nightly_release_surface": "lsp_transcript_replay",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Capabilities advertised by the server must have marker or transcript evidence before being called stable."
+    },
+    {
+      "guarantee_id": "performance-determinism-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/policy/profile_policy.md",
+      "owner": "compiler/performance",
+      "merge_surface": "performance_budgets",
+      "nightly_release_surface": "performance_trends",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Noisy local trend deltas do not fail ordinary merge runs; representative budgets remain blocking."
+    },
+    {
+      "guarantee_id": "hardening-oracle-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/policy/fuzz_property.md",
+      "owner": "compiler/hardening",
+      "merge_surface": "fuzz_property_smoke",
+      "nightly_release_surface": "cpython_generated_differential",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Generated oracle inputs must be excluded by catalogue rules, not filtered after execution."
+    },
+    {
+      "guarantee_id": "ecosystem-stdlib-algorithm-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/policy/ecosystem_compatibility.md",
+      "owner": "compiler/verification",
+      "merge_surface": "ecosystem_curated",
+      "nightly_release_surface": "algorithmic_compatibility_profile",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Pinned corpora require owner, checksum or revision, command, timeout, and expected classification."
+    },
+    {
+      "guarantee_id": "distribution-release-contract",
+      "support_status": "stable",
+      "public_doc_path": "verification/README.md",
+      "owner": "release/distribution",
+      "merge_surface": "distribution_release_representative",
+      "nightly_release_surface": "distribution_release_full",
+      "regression_surface": "regression_fixedbugs",
+      "unsupported_behavior_policy": "Release evidence must include commit, toolchains, OS, profile plan, suite counts, and report hashes."
+    }
+  ]
+}
