@@ -9,6 +9,9 @@ use sifr_stdlib::{
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
+use std::sync::{Mutex, MutexGuard};
+
+static WORKER_STARTUP_LOCK: Mutex<()> = Mutex::new(());
 
 fn sample_schema() -> IpcWireSchema {
     IpcWireSchema {
@@ -24,10 +27,14 @@ struct WorkerProcess {
     child: Child,
     stdin: ChildStdin,
     stdout: ChildStdout,
+    startup_lock: Option<MutexGuard<'static, ()>>,
 }
 
 impl WorkerProcess {
     fn spawn() -> Self {
+        let startup_lock = WORKER_STARTUP_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let repo_root = manifest_dir
             .parent()
@@ -59,7 +66,12 @@ impl WorkerProcess {
             child,
             stdin,
             stdout,
+            startup_lock: Some(startup_lock),
         }
+    }
+
+    fn release_startup_lock(&mut self) {
+        drop(self.startup_lock.take());
     }
 
     fn finish(self) {
@@ -89,6 +101,7 @@ fn connect(worker: &mut WorkerProcess) -> IpcConnectionState {
     let ready = read_frame(&mut worker.stdout, IPC_DEFAULT_MAX_FRAME_BYTES)
         .expect("read worker bootstrap frame")
         .expect("worker emits bootstrap frame");
+    worker.release_startup_lock();
     connection
         .accept_worker_bootstrap(&ready)
         .expect("worker ready is accepted");

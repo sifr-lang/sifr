@@ -142,11 +142,34 @@ impl RustEmitter {
     }
 
     pub(crate) fn option_binding_pattern_for_ir(&self, option_var: &str) -> String {
-        if self.mutated_vars.contains(option_var) {
+        if self.option_binding_requires_mut_for_ir(option_var) {
             format!("Some(mut {option_var})")
         } else {
             format!("Some({option_var})")
         }
+    }
+
+    fn option_binding_requires_mut_for_ir(&self, option_var: &str) -> bool {
+        if self.mutated_vars.contains(option_var) {
+            return true;
+        }
+        if self.borrowed_params.contains(option_var)
+            || self.mut_borrowed_params.contains(option_var)
+        {
+            return false;
+        }
+        let Some(option_ty) = self.local_binding_types.get(option_var) else {
+            return false;
+        };
+        let Some(inner_ty) = Self::option_inner_type_for_ir(option_ty) else {
+            return false;
+        };
+        let Type::Class { name, .. } = crate::resolve_alias_type_for_plain_call(inner_ty) else {
+            return false;
+        };
+        self.recursive_fields
+            .iter()
+            .any(|(class_name, _)| class_name == name)
     }
 
     pub(crate) fn try_lower_collection_truthiness_condition_for_ir(

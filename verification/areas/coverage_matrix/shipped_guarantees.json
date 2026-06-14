@@ -46,7 +46,7 @@
       "support_status": "stable",
       "public_doc_path": "internal_docs/architecture.md",
       "owner": "compiler/codegen",
-      "merge_surface": "codegen_red_blocker",
+      "merge_surface": "codegen_merge_blocking",
       "nightly_release_surface": "generated_rust_toolchain_survival",
       "regression_surface": "regression_fixedbugs",
       "unsupported_behavior_policy": "Generated Rust must not rely on nightly-only behavior unless the source surface is experimental or internal."
