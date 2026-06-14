@@ -1,0 +1,155 @@
+---
+title: "Sifr Type System: Unions, Narrowing, and Generics Guide"
+sidebarTitle: "Type System"
+description: "Explore Sifr's static type system: union types, None-safety, isinstance narrowing, literal types, and TypeVar generics — all enforced at compile time."
+---
+
+Sifr enforces static typing at compile time, which means every variable, parameter, and return value has a known type before your program ever runs. The syntax closely mirrors Python's type annotation style, so if you have written typed Python you will feel right at home — but unlike Python's runtime type hints, Sifr's types are mandatory and the compiler rejects programs that violate them.
+
+## Type Annotations
+
+Every variable and function signature must carry a type annotation. Sifr infers types in some positions, but being explicit is encouraged and required at function boundaries.
+
+```python
+def add(x: int, y: int) -> int:
+    return x + y
+
+name: str = "alice"
+score: float = 9.5
+active: bool = True
+```
+
+## Union Types
+
+Use the `|` operator to declare that a value can be one of several types. Union types are first-class in Sifr and appear throughout the standard library — for example, dictionary lookups return `T | None` instead of raising a `KeyError`.
+
+```python
+def main():
+    users: dict[str, int] = {"alice": 30, "bob": 25}
+
+    age: int | None = users["charlie"]  # missing key returns None, not a crash
+    if age is not None:
+        print(f"age: {age}")
+    else:
+        print("user not found")
+```
+
+<Note>
+A missing dictionary key returns `None` instead of raising an exception. The compiler requires you to handle the `None` case before using the value as an `int`.
+</Note>
+
+## Type Narrowing
+
+When you test a union value with `isinstance` or `is None`, the compiler narrows the type inside that branch. You can then access type-specific fields and methods without any cast.
+
+```python
+def show(val: int | str) -> str:
+    if isinstance(val, int):
+        return f"number: {val}"  # val is int here
+    else:
+        return f"text: {val}"   # val is str here
+
+print(show(42))       # number: 42
+print(show("hello"))  # text: hello
+```
+
+Narrowing also works across `elif` chains. Each branch receives only the types that were not eliminated by the preceding conditions.
+
+```python
+class Dog:
+    name: str
+    breed: str
+
+class Cat:
+    name: str
+    color: str
+
+class Bird:
+    name: str
+    wingspan: float
+
+def describe_pet(pet: Dog | Cat | Bird) -> str:
+    if isinstance(pet, Dog):
+        return f"{pet.name} is a {pet.breed}"
+    elif isinstance(pet, Cat):
+        return f"{pet.name} is {pet.color}"
+    else:
+        return f"{pet.name} has wingspan {pet.wingspan}"
+```
+
+<Tip>
+The compiler tracks which types remain possible at each point in your code. If you reach an `else` branch after exhausting all union members, the compiler knows which single type must be present.
+</Tip>
+
+## None Safety
+
+`int | None`, `str | None`, and similar optional types are the standard way to represent values that might be absent. The compiler prevents you from using an optional value as its inner type without first checking for `None`.
+
+```python
+def find_value(x: int | None, target: int) -> str:
+    if x == target:
+        return "found"
+    return "not found"
+
+def is_positive(x: int | None) -> bool:
+    if x > 0:
+        return True
+    return False
+```
+
+## Equality Narrowing
+
+The compiler narrows `str` and other scalar types through equality checks as well. In an `if`/`elif` chain comparing a string variable against literal values, each branch receives a narrowed type that excludes already-matched cases.
+
+```python
+def route_handler(method: str) -> str:
+    if method == "GET":
+        return "get handler"
+    elif method == "POST":
+        return "post handler"
+    elif method == "PUT":
+        return "put handler"
+    return "unknown"
+```
+
+## Collection Truthiness
+
+You can test a collection for emptiness with a plain `if not` check. The compiler maps this to an efficient empty check on the collection.
+
+```python
+def summarize(items: list[str]) -> str:
+    if not items:
+        return "no items"
+    return f"{len(items)} items"
+```
+
+## Generics and TypeVar
+
+Sifr supports generic functions and classes through `TypeVar`. Declare a type variable and use it in parameter and return type positions to express relationships between types.
+
+```python
+from typing import TypeVar
+
+T = TypeVar("T")
+
+def first(items: list[T]) -> T | None:
+    if not items:
+        return None
+    return items[0]
+```
+
+The compiler instantiates a separate, fully-typed version of the function for each concrete type it is called with, so there is no runtime boxing or overhead.
+
+## Built-in Scalar Types
+
+| Sifr type | Description |
+|-----------|------------|
+| `int`     | 64-bit signed integer |
+| `float`   | 64-bit IEEE 754 double |
+| `bool`    | `True` / `False` |
+| `str`     | UTF-8 string |
+| `None`    | Absence of value |
+
+<Note>
+Primitive types (`int`, `float`, `bool`) are **Copy** types. Passing them to a function does not move or borrow them — the compiler copies the value automatically.
+</Note>

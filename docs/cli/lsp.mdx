@@ -1,0 +1,169 @@
+---
+title: "sifr lsp: Language Server Protocol Support for Sifr"
+sidebarTitle: "LSP"
+description: "Start the Sifr language server with sifr lsp --stdio for diagnostics, completions, hover, go-to-definition, formatting, and code actions in any LSP editor."
+---
+
+Sifr includes a native Language Server Protocol (LSP) server that gives your editor real-time feedback as you write code. Once configured, your editor gets type-checking diagnostics, completions, hover documentation, go-to-definition, formatting, and more — all powered by the same compiler that runs `sifr check` and `sifr build`.
+
+## Starting the language server
+
+Launch the language server over stdio:
+
+```bash
+sifr lsp --stdio
+```
+
+The `--stdio` flag is required. The server reads JSON-RPC messages from stdin and writes responses to stdout. Your editor's LSP client is responsible for launching and managing the process.
+
+An optional `--parent-pid` flag tells the server to exit when the specified process is no longer alive:
+
+```bash
+sifr lsp --stdio --parent-pid 12345
+```
+
+Most editor integrations pass this automatically.
+
+<Note>
+`sifr lsp --stdio` is the only supported transport in the current release. Socket and pipe transports are not yet available.
+</Note>
+
+## What the language server provides
+
+| Capability | Description |
+|---|---|
+| **Diagnostics** | Hard compiler errors and policy-rule warnings, pushed to the editor as you type. |
+| **Completions** | Context-aware identifier and keyword completions. |
+| **Hover** | Type information and documentation for the symbol under the cursor. |
+| **Go-to-definition** | Jump to the definition of any symbol in your project. |
+| **Formatting** | Document and range formatting backed by the Sifr formatter. |
+| **Code actions** | Safe-fix application and inline suppression for policy diagnostics. |
+| **Inlay hints** | Inline type annotations and parameter labels shown in the editor gutter. |
+| **Semantic tokens** | Rich syntax highlighting based on the compiler's understanding of your code. |
+| **Folding ranges** | Code folding regions for functions, classes, and other block-level constructs. |
+| **Selection range** | Expand and shrink selection by syntax node boundaries. |
+| **Type hierarchy** | Navigate supertypes and subtypes for any named type in your project. |
+
+### Diagnostics
+
+The language server publishes two kinds of diagnostics:
+
+- **Hard diagnostics** — compiler errors from parsing and type-checking. These cannot be suppressed with inline comments and are marked as `hard` in the diagnostic metadata.
+- **Policy diagnostics** — lint-rule violations from `sifr lint`. These are marked as `policy` and include the Sifr rule ID. Editors may offer suppression and safe-fix code actions for policy diagnostics only.
+
+Fix-all is policy-only, safe by default, and deferred through `codeAction/resolve`. The server rejects a fix if the document version changed between the time the action was offered and the time it is resolved.
+
+### Formatting
+
+The language server advertises formatting support when `sifr.format.enable` is `true` in your editor configuration. Editors should request formatting through standard LSP methods (`textDocument/formatting` and `textDocument/rangeFormatting`) rather than invoking `sifr fmt` as a shell command.
+
+<Warning>
+Editor integrations must not call `sifr fmt` as their primary document-formatting provider. LSP-based formatting through `sifr lsp --stdio` is the correct integration point. Calling `sifr fmt` directly from an editor bypasses the server's document-version tracking and can conflict with in-flight edits.
+</Warning>
+
+## Configuring your editor
+
+### VS Code
+
+Install the Sifr extension from the VS Code Marketplace. The extension automatically locates `sifr` on your `PATH` and launches `sifr lsp --stdio` when you open a `.sifr` file. No manual configuration is needed for a standard installation.
+
+To point the extension at a custom binary:
+
+```json
+{
+  "sifr.serverPath": "/path/to/sifr"
+}
+```
+
+### Neovim
+
+Use `nvim-lspconfig` with a manual server definition. Add the following to your Neovim configuration:
+
+```lua
+local lspconfig = require('lspconfig')
+local configs = require('lspconfig.configs')
+
+if not configs.sifr then
+  configs.sifr = {
+    default_config = {
+      cmd = { 'sifr', 'lsp', '--stdio' },
+      filetypes = { 'sifr' },
+      root_dir = lspconfig.util.root_pattern('sifr.toml', '.git'),
+      settings = {},
+    },
+  }
+end
+
+lspconfig.sifr.setup {}
+```
+
+Add a filetype detection autocmd if your editor does not recognise `.sifr` files automatically:
+
+```lua
+vim.filetype.add({ extension = { sifr = 'sifr' } })
+```
+
+### Helix
+
+Add a language entry to your `languages.toml`:
+
+```toml
+[[language]]
+name = "sifr"
+scope = "source.sifr"
+file-types = ["sifr"]
+roots = ["sifr.toml"]
+language-servers = ["sifr"]
+
+[language-server.sifr]
+command = "sifr"
+args = ["lsp", "--stdio"]
+```
+
+### Zed
+
+Add a language server entry in your Zed settings:
+
+```json
+{
+  "languages": {
+    "Sifr": {
+      "language_servers": ["sifr"]
+    }
+  },
+  "lsp": {
+    "sifr": {
+      "binary": {
+        "path": "sifr",
+        "arguments": ["lsp", "--stdio"]
+      }
+    }
+  }
+}
+```
+
+### Emacs
+
+Use `eglot` (built into Emacs 29+) or `lsp-mode`. With `eglot`:
+
+```elisp
+(add-to-list 'eglot-server-programs
+             '(sifr-mode . ("sifr" "lsp" "--stdio")))
+
+(add-hook 'sifr-mode-hook #'eglot-ensure)
+```
+
+## Keeping `sifr` on your PATH
+
+Every editor integration listed above discovers `sifr` by searching your `PATH`. If you installed Sifr with the official installer, `~/.sifr/bin` is added to your shell profile automatically. Verify that the binary is reachable:
+
+```bash
+which sifr
+sifr --version
+```
+
+If your editor cannot find `sifr`, configure the full binary path explicitly in your editor settings using the `serverPath` or `binary.path` option shown in the examples above.
+
+<Tip>
+Run `sifr lsp --stdio` manually in a terminal and confirm it starts without error before troubleshooting editor connectivity. A clean startup means the binary is working; the issue is likely a path or editor configuration problem.
+</Tip>

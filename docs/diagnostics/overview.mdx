@@ -1,0 +1,205 @@
+---
+title: "Understanding Sifr Diagnostics and Error Reporting"
+sidebarTitle: "Overview"
+description: "Learn how Sifr reports errors and warnings, interpret severity levels, choose output formats, and suppress lint rules safely in your Sifr projects."
+---
+
+Sifr surfaces every compiler diagnostic with a stable, machine-readable code in the format `SIFR-<FAMILY>-dddd`. Whether you are reading terminal output, wiring up a CI pipeline, or integrating an editor extension, the same structured information is always available — you only choose how it is rendered. This page explains the diagnostic system from end to end: output formats, severity levels, the `--diagnostic-format` flag, the JSON envelope schema, exit codes, and how to suppress lint rules when needed.
+
+## Severity Levels
+
+Every diagnostic carries one of three severity levels.
+
+| Severity | Meaning |
+|----------|---------|
+| **Error** | A hard compiler error that prevents compilation. The build will not produce an artifact. |
+| **Warning** | A condition that compiles successfully but signals a potential problem. |
+| **Note** | Informational output, such as a revealed type from `reveal_type()`. |
+
+<Note>
+Only `Error`-severity diagnostics block a successful build. `Warning` and `Note` diagnostics are emitted alongside the build result and do not prevent artifact generation on their own.
+</Note>
+
+## Output Formats
+
+Compiler-facing commands (`sifr build`, `sifr run`, `sifr check`, `sifr emit`) accept the `--diagnostic-format` flag with three values: `human`, `json`, and `compact`. The default is `human`.
+
+```bash
+sifr check src/main.sifr --diagnostic-format human
+sifr check src/main.sifr --diagnostic-format compact
+sifr check src/main.sifr --diagnostic-format json
+```
+
+### Human Format (default)
+
+The `human` format is designed for developer terminals. It renders source file locations, code snippets, caret highlights, related spans, notes, help text, code-action suggestions, and documentation URLs whenever span data is available. Spanless internal diagnostics fall back to an explicit `location: <unavailable>` line.
+
+```text
+error[SIFR-TYPE-0002]: type mismatch: expected int, got str
+  --> src/main.sifr:7:12
+   |
+ 7 |     x: int = "hello"
+   |              ^^^^^^^ expected `int`, found `str`
+   |
+   = help: remove the string literal or change the type annotation to `str`
+   = docs: https://docs.sifr-lang.org/diagnostics/error-codes#sifr-type-0002
+```
+
+<Tip>
+Human progress text (`Finished`, `Binary:`, phase summaries) is written to **stderr** only in `human` format. Do not grep for these words in scripts — use `compact` or `json` instead.
+</Tip>
+
+### Compact Format
+
+The `compact` format is a stable, line-oriented format suited for CI pipelines, agents, and quick terminal scanning. It emits a one-line summary followed by one line per diagnostic after recovery limiting. The first four fields on each diagnostic line are stable: severity abbreviation, code, location (or `<unknown>`), and message.
+
+```text
+1 error, 0 warnings, 0 notes
+E SIFR-DECIMAL-0001 src/main.sifr:3:30 Decimal() received invalid exact literal '12.34.56'
+```
+
+Compact mode intentionally omits code snippets and documentation URLs to keep output machine-friendly.
+
+### JSON Format
+
+The `json` format emits a `DiagnosticEnvelope` object to stdout. It is the canonical format for editor integrations, language servers, and any tool that needs to consume structured diagnostic data. Successful builds in `json` mode emit no human progress text on stdout or stderr.
+
+## JSON Diagnostic Schema
+
+The `DiagnosticEnvelope` wraps a versioned array of `RenderedDiagnostic` objects.
+
+```json
+{
+  "version": 1,
+  "diagnostics": [
+    {
+      "code": "SIFR-OWN-0001",
+      "severity": "Error",
+      "message": "use of moved value 'config'",
+      "message_template": "use of moved value {binding}",
+      "args": {
+        "binding": { "kind": "string", "value": "config" }
+      },
+      "url": "https://docs.sifr-lang.org/diagnostics/error-codes#sifr-own-0001",
+      "spans": [
+        {
+          "file": "src/main.sifr",
+          "byte_start": 142,
+          "byte_end": 148,
+          "line": 9,
+          "column": 4,
+          "end_line": 9,
+          "end_column": 10,
+          "is_primary": true,
+          "label": "value used here after move",
+          "lines": [
+            { "text": "    process(config)", "highlight_start": 12, "highlight_end": 18 }
+          ]
+        }
+      ],
+      "children": [
+        { "severity": "Note", "message": "'config' was moved on line 6" }
+      ],
+      "help": "clone the value before the first move, or restructure to avoid moving",
+      "suggestions": []
+    }
+  ]
+}
+```
+
+<Accordion title="DiagnosticEnvelope field reference">
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `version` | `uint32` | Schema version. Currently `1`. |
+| `diagnostics` | `RenderedDiagnostic[]` | Ordered list of emitted diagnostics. |
+
+**RenderedDiagnostic fields**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | `string` | Stable diagnostic code, e.g. `SIFR-TYPE-0002`. |
+| `severity` | `"Error" \| "Warning" \| "Note"` | Diagnostic severity level. |
+| `message` | `string` | Fully rendered human-readable message with arguments interpolated. |
+| `message_template` | `string` | Raw template before argument substitution. |
+| `args` | `object` | Named arguments used to fill the template. Each value has a `kind` (`"string"`, `"signed"`, `"unsigned"`, `"float"`, `"bool"`) and a `value`. |
+| `url` | `string` | Documentation URL for this code. |
+| `spans` | `DiagnosticSpan[]` | Source locations associated with this diagnostic. |
+| `children` | `RenderedDiagnosticChild[]` | Secondary notes and help messages attached to the primary diagnostic. |
+| `help` | `string` | Top-level help text. |
+| `suggestions` | `RenderedDiagnosticSuggestion[]` | Machine-applicable or advisory code-change suggestions. |
+
+**DiagnosticSpan fields**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `file` | `string` | Workspace-relative source file path. |
+| `byte_start` / `byte_end` | `uint32` | Byte offsets for the highlighted region. |
+| `line` / `column` | `uint32` | One-based line and column of the span start. |
+| `end_line` / `end_column` | `uint32` | One-based line and column of the span end. |
+| `is_primary` | `boolean` | `true` for the primary span; `false` for secondary/contextual spans. |
+| `label` | `string` | Short inline annotation shown in human format. |
+| `lines` | `DiagnosticSpanLine[]` | Source text lines with highlight column ranges. |
+
+**SuggestionApplicability values**
+
+| Value | Meaning |
+|-------|---------|
+| `MachineApplicable` | Safe to apply automatically without human review. |
+| `MaybeIncorrect` | Plausible but may not be correct in all cases. |
+| `HasPlaceholders` | Requires the user to fill in a placeholder before the edit is valid. |
+| `Unspecified` | Applicability is not classified. |
+
+</Accordion>
+
+## Exit Codes
+
+Sifr commands use consistent exit codes across all subcommands.
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success — compilation completed with no errors. |
+| `1` | Diagnostic error — one or more `Error`-severity diagnostics were emitted, or (for `sifr lint`) policy diagnostics remain unfixed. |
+| `2` | Configuration or usage error — invalid flags, a missing or malformed manifest, or a bad command invocation. |
+| `3` | Internal panic — an unrecoverable compiler-internal failure occurred after the panic boundary. |
+
+<Warning>
+Exit code `3` indicates a compiler bug, not a user error. If you encounter it, please report the `SIFR-INTERNAL-0001` diagnostic output along with a minimal reproduction to the Sifr issue tracker.
+</Warning>
+
+## Looking Up Error Details
+
+You can get detailed documentation for any diagnostic code directly in your terminal using either `sifr --explain` or the `sifr explain` subcommand:
+
+```bash
+sifr --explain SIFR-TYPE-0002
+sifr explain SIFR-OWN-0001
+sifr --explain SIFR-RESULT-0001
+```
+
+Both forms print the diagnostic description, message template, severity, and any relevant guidance without performing a build or package operation. This works even for retired codes — for example, `sifr --explain SIFR-PACKAGE-0105` redirects you to the replacement code `SIFR-PACKAGE-0101`.
+
+## Suppressing Lint Diagnostics
+
+Sifr's policy-rule engine (`sifr lint`) emits suppressible `Warning`-level diagnostics. You can silence a specific rule on a single line using an inline comment:
+
+```python
+value = legacy_call()  # sifr: ignore[rule-id]
+```
+
+Replace `rule-id` with the exact Sifr rule identifier such as `todo-comment`, `trailing-whitespace`, or `boolean-positional-argument`.
+
+<Warning>
+Blanket suppressions — comments that do not name at least one explicit rule ID — are **rejected** by the compiler. Sifr will emit `SIFR-LINT-0003` and will not apply the suppression.
+</Warning>
+
+<Note>
+Suppressions apply only to **policy diagnostics** from `sifr lint`. Hard compiler errors (`Error`-severity diagnostics from `sifr check` or `sifr build`) cannot be suppressed with inline comments.
+</Note>
+
+Sifr also reports two additional lint-related warnings to keep suppression hygiene clean:
+
+- **`SIFR-LINT-0001`** — the rule ID in a suppression comment does not match any known policy rule.
+- **`SIFR-LINT-0002`** — the suppression comment is present but did not actually suppress any diagnostic on that line.
+
+To audit all suppressions without applying them, run `sifr lint --ignore-suppressions`. This flag does not affect per-file ignores or hard compiler diagnostics.

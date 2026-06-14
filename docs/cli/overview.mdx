@@ -1,0 +1,127 @@
+---
+title: "Sifr CLI Reference: Commands, Flags, and Exit Codes"
+sidebarTitle: "Overview"
+description: "A complete reference for every Sifr CLI command, global flags, exit codes, and the rules that determine single-file vs project mode."
+---
+
+The `sifr` command is your single entry point for compiling, running, type-checking, formatting, linting, testing, and serving editor tooling for Sifr programs. Every workflow — from a one-off script to a multi-file project — runs through the same binary with a consistent set of flags and predictable exit codes.
+
+## Global flags
+
+These flags apply across all subcommands.
+
+| Flag | Values | Description |
+|---|---|---|
+| `--diagnostic-format` | `human` \| `json` \| `compact` | Controls how diagnostics are rendered. Defaults to `human`. |
+| `--explain <CODE>` | e.g. `SIFR-DECIMAL-0001` | Prints a description of a diagnostic code and exits — no compilation needed. |
+| `--config <KEY=VALUE or PATH>` | string | Applies an inline config override or an explicit config file path. May be repeated. |
+| `--isolated` | — | Ignores all discovered `sifr.toml` files. Inline `--config KEY=VALUE` overrides still apply. |
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Success — no errors. |
+| `1` | User diagnostic — a compiler or lint error was emitted. |
+| `2` | Usage or config error — bad flags, missing config, or an unknown subcommand. |
+| `3` | Internal compiler panic — an unexpected failure inside the compiler itself. |
+
+## Available commands
+
+| Command | Summary |
+|---|---|
+| `sifr run [TARGET]` | Compile and immediately execute a `.sifr` file or package target. |
+| `sifr build <FILE>` | Compile a `.sifr` file to a native binary on disk. |
+| `sifr check [PATH]` | Type-check without producing a binary — fast feedback loop. |
+| `sifr emit <FILE>` | Print the generated Rust source code for a `.sifr` file. |
+| `sifr fmt [FILES]...` | Format `.sifr` source files. |
+| `sifr lint [FILES]...` | Run suppressible policy-rule diagnostics. |
+| `sifr test [DIR]` | Discover and run test functions. |
+| `sifr lsp --stdio` | Start the Language Server Protocol server over stdio. |
+| `sifr init [PATH]` | Create a new Sifr package in the given directory. |
+| `sifr fetch` | Fetch package dependencies. |
+| `sifr tree` | Show the package dependency tree. |
+| `sifr package` | Assemble and verify a Cargo package archive. |
+| `sifr publish` | Publish a Sifr package through Cargo. |
+| `sifr vendor [PATH]` | Vendor dependency sources. |
+| `sifr repair` | Repair Sifr-managed Cargo projection drift. |
+| `sifr trace <FILE>` | Print deterministic compiler-service trace and status output. |
+| `sifr self update` | Update a standalone Sifr installation. |
+| `--explain <CODE>` | Look up a diagnostic code without running a command. |
+
+## Single-file mode vs project mode
+
+Sifr automatically selects a compilation strategy based on your input file. Understanding the two modes helps you predict how imports are resolved and what gets compiled.
+
+**Single-file mode** compiles one `.sifr` file in isolation. It is always used when:
+
+- The input file stem is anything other than `main` (e.g. `hello.sifr`, `scratch.sifr`).
+- The file is named `main.sifr` but has no resolvable local imports.
+
+**Project mode** compiles `main.sifr` together with its local module siblings. It activates when `main.sifr` contains at least one `from <module> import ...` statement where `<module>.sifr` exists in the same directory.
+
+<Note>
+Standard library imports such as `from sifr.math import floor` and typing imports such as `from typing import List` never activate project mode — they are handled at the type level.
+</Note>
+
+The table below summarises which import forms trigger project mode.
+
+| Import form in `main.sifr` | `helper.sifr` exists? | Mode activated |
+|---|---|---|
+| `from helper import value` | yes | Project |
+| `from .helper import value` | yes | Project |
+| `from .helper import value` | no | Single-file |
+| `from ..helper import value` | — | Single-file |
+| `from . import helper` | — | Single-file |
+| `import helper` | — | Single-file |
+| `from typing import List` | — | Single-file |
+| `from enum import Enum` | — | Single-file |
+
+<Tip>
+`sifr run` and `sifr build` always use the same mode resolver for identical input paths, so the mode you observe interactively is the same mode a CI script sees.
+</Tip>
+
+## Diagnostic output formats
+
+Pass `--diagnostic-format` to any compiler-facing command to change how diagnostics are rendered.
+
+<Tabs>
+  <Tab title="human (default)">
+    Renders source locations, code snippets, caret highlights, related spans, notes, help text, fix suggestions, and documentation URLs. Best for interactive development.
+
+    ```text
+    error[SIFR-DECIMAL-0001]: Decimal() received invalid exact literal '12.34.56'
+      --> src/main.sifr:3:30
+       |
+     3 |     price = Decimal("12.34.56")
+       |                              ^^^^^^^^ invalid literal
+    ```
+  </Tab>
+  <Tab title="compact">
+    One summary line followed by one line per diagnostic. Stable for CI, agents, and terminal scanning.
+
+    ```text
+    1 error, 0 warnings, 0 notes
+    E SIFR-DECIMAL-0001 src/main.sifr:3:30 Decimal() received invalid exact literal '12.34.56'
+    ```
+
+    The first four fields are stable: severity abbreviation, diagnostic code, location, then message.
+  </Tab>
+  <Tab title="json">
+    Emits a `RenderedDiagnostic[]` JSON array including `code`, `severity`, `message`, `spans`, `children`, `help`, and `suggestions`. Intended for tools and editor integrations.
+  </Tab>
+</Tabs>
+
+## Looking up a diagnostic code
+
+Use `--explain` to get a description of any diagnostic code without compiling anything:
+
+```bash
+sifr --explain SIFR-DECIMAL-0001
+```
+
+Pass `--diagnostic-format json` to get machine-readable output:
+
+```bash
+sifr --diagnostic-format json --explain SIFR-DECIMAL-0001
+```

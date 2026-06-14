@@ -1,0 +1,153 @@
+---
+title: "Sifr Error Handling: Result Types and Custom Errors"
+sidebarTitle: "Error Handling"
+description: "Learn how Sifr replaces exceptions with Result[T, E] return types, compiler-enforced error handling, and custom Error classes — no runtime surprises."
+---
+
+Sifr eliminates runtime exceptions by making errors part of a function's return type. When a function can fail, it declares `Result[T, E]` as its return type. The compiler then refuses to compile any call site that does not handle the error — you cannot accidentally ignore a failure the way you can with an uncaught exception in Python.
+
+## The Result Type
+
+`Result[T, E]` is a built-in union that represents either a successful value (`Ok(T)`) or a failure (`Err(E)`). You never construct `Ok` or `Err` directly in Sifr source code — the compiler handles the wrapping for you.
+
+- A plain `return` value is automatically wrapped in `Ok`.
+- A `raise` statement inside a `Result`-returning function is mapped to `Err`.
+
+```python
+class ParseError(Error):
+    message: str
+
+def parse_age(input: str) -> Result[int, ParseError]:
+    if input == "":
+        raise ParseError("empty input")  # maps to Err(...)
+    return int(input)                     # auto-wrapped in Ok(...)
+```
+
+<Note>
+`raise` inside a `Result`-returning function does **not** unwind the call stack. It is syntactic sugar for constructing and returning an `Err` variant. No exception propagates.
+</Note>
+
+## Custom Error Classes
+
+Define your own error types by subclassing `Error`. Add typed fields to carry diagnostic information — the compiler treats them as plain structs.
+
+```python
+class ValidationError(Error):
+    message: str
+
+def validate_range(x: int, lo: int, hi: int) -> Result[int, ValidationError]:
+    if x < lo:
+        raise ValidationError(f"value out of range: {x}")
+    if x > hi:
+        raise ValidationError(f"value out of range: {x}")
+    return x
+```
+
+You can define as many error types as you need. Each one is an independent type, so the compiler can distinguish them in `try`/`except` branches.
+
+## Handling Errors with try/except
+
+Use `try`/`except` to consume a `Result`-returning function. Inside the `try` block, the return value is automatically unwrapped to its success type `T`. The `except` clause receives the typed error value.
+
+```python
+def main():
+    try:
+        age: int = parse_age("25")  # auto-unwrapped to int
+        print(f"age: {age}")
+    except ParseError as e:
+        print(e.message)
+    # compiler error if you forget to handle ParseError ^
+```
+
+<Warning>
+If you call a `Result`-returning function without a `try`/`except`, the compiler emits an error. You must either handle the error or explicitly discard it with `_ = ...`.
+</Warning>
+
+## Fallible vs Infallible Conversions
+
+Some conversions can fail and return `Result`, while others are guaranteed to succeed and return the value directly.
+
+<CodeGroup>
+```python Fallible (Result)
+# Parsing a string might fail
+try:
+    n: int = int("42")
+    print(f"parsed: {n}")
+except ParseError as e:
+    print(f"parse failed: {e.message}")
+
+try:
+    n2: int = int("not_a_number")
+    print(f"parsed: {n2}")
+except ParseError as e:
+    print(f"parse failed (expected): {e.message}")
+```
+
+```python Infallible (direct)
+# Converting between numeric types always succeeds
+x1: int   = int(3.7)    # truncates, never fails
+x2: float = float(5)    # always succeeds
+x3: str   = str(42)     # always succeeds
+x4: bool  = bool(1)     # always succeeds
+```
+</CodeGroup>
+
+## Division and Domain Errors
+
+Use the same `Result` pattern for any operation that can fail due to invalid inputs.
+
+```python
+def safe_divide(a: int, b: int) -> Result[int, DivisionError]:
+    if b == 0:
+        raise DivisionError("division by zero")
+    return a // b
+
+def main():
+    try:
+        d1: int = safe_divide(10, 3)
+        print(f"divide(10, 3) = {d1}")
+    except DivisionError as e:
+        print(f"divide error: {e.message}")
+
+    try:
+        d2: int = safe_divide(10, 0)
+        print(f"divide(10, 0) = {d2}")
+    except DivisionError as e:
+        print(f"divide(10, 0) error: {e.message}")
+```
+
+## Explicitly Discarding Results
+
+If you intentionally do not need the result of a fallible call, assign it to `_`. This signals to the compiler that the discard is deliberate, not accidental.
+
+```python
+_ = safe_divide(10, 2)
+print("result discarded safely")
+```
+
+<Tip>
+Use explicit discard sparingly. Prefer handling the error so your program reacts correctly when something goes wrong in production.
+</Tip>
+
+## Assertions
+
+Use `assert` to express invariants that must hold at a specific point in your program. An assertion failure is a programmer error, not a recoverable runtime condition — it immediately aborts the program with a diagnostic message.
+
+```python
+x: int = 42
+assert x > 0
+print("all assertions passed")
+```
+
+Reserve `assert` for internal correctness checks. Use `Result` and custom error types for anything that could fail due to external input or environment conditions.
+
+## Error Handling at a Glance
+
+| Situation | Sifr pattern |
+|-----------|-------------|
+| Function that can fail | `-> Result[T, MyError]` return type |
+| Signal a failure | `raise MyError("reason")` inside the function |
+| Success return | Plain `return value` — compiler wraps in `Ok` |
+| Consume a result | `try` / `except MyError as e` |
+| Discard a result | `_ = fallible_call()` |
+| Invariant check | `assert condition` |

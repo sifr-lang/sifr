@@ -1,0 +1,60 @@
+---
+title: Welcome to Sifr
+description: Python syntax that compiles to native Rust binaries with compile-time safety.
+mode: center
+---
+
+<CardGroup>
+  <Card
+    icon="code"
+    title="Language"
+    href="/introduction"
+    cta="Read the introduction"
+  >
+    Types, ownership, Result types, and the compiler model behind Sifr.
+  </Card>
+  <Card
+    icon="terminal"
+    title="CLI"
+    href="/cli/overview"
+    cta="View commands"
+  >
+    Build, run, check, format, lint, and test from the terminal.
+  </Card>
+  <Card
+    icon="folder-kanban"
+    title="Projects"
+    href="/packages/overview"
+    cta="Manage packages"
+  >
+    Manifests, dependencies, lockfiles, and publishing Sifr libraries.
+  </Card>
+  <Card
+    icon="library"
+    title="Standard Library"
+    href="/stdlib/overview"
+    cta="Browse modules"
+  >
+    Built-in `sifr.*` modules for I/O, networking, concurrency, and text.
+  </Card>
+</CardGroup>
+
+---
+
+## Get Started
+
+New to Sifr? Install the toolchain and compile your first program.
+
+<CardGroup cols={2}>
+  <Card icon="download" title="Installation" href="/installation">
+    Install on macOS or Linux with the official script.
+  </Card>
+  <Card icon="zap" title="Quickstart" href="/quickstart">
+    Write, run, and build a small program end to end.
+  </Card>
+</CardGroup>
+
+```bash
+curl -fsSL https://sifr.sh/install | sh
+sifr run hello.sifr
+```

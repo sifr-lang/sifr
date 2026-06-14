@@ -1,0 +1,162 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Sifr",
+  "theme": "luma",
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.sifr.sh"
+    }
+  },
+  "colors": {
+    "primary": "#0EA5E9",
+    "light": "#38BDF8",
+    "dark": "#0284C7"
+  },
+  "background": {
+    "decoration": "gradient"
+  },
+  "favicon": "/logo/logo.webp",
+  "icons": {
+    "library": "lucide"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Space Grotesk",
+      "weight": 700
+    },
+    "body": {
+      "family": "Plus Jakarta Sans"
+    }
+  },
+  "appearance": {
+    "default": "light"
+  },
+  "logo": {
+    "light": "/logo/logo.webp",
+    "dark": "/logo/logo.webp",
+    "href": "https://sifr.sh"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Website",
+        "href": "https://sifr.sh",
+        "icon": "globe"
+      },
+      {
+        "label": "Install Sifr",
+        "href": "/installation",
+        "icon": "download",
+        "primary": true
+      }
+    ]
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Language",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "Get Started",
+            "icon": "rocket",
+            "pages": [
+              "index",
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Language",
+            "icon": "braces",
+            "pages": [
+              "language/type-system",
+              "language/error-handling",
+              "language/ownership",
+              "language/classes",
+              "language/pattern-matching",
+              "language/concurrency"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "icon": "terminal",
+        "groups": [
+          {
+            "group": "Commands",
+            "icon": "square-terminal",
+            "pages": [
+              "cli/overview",
+              "cli/build-run",
+              "cli/check-emit",
+              "cli/fmt-lint",
+              "cli/test",
+              "cli/lsp"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Projects",
+        "icon": "folder-kanban",
+        "groups": [
+          {
+            "group": "Package management",
+            "icon": "package",
+            "pages": [
+              "packages/overview",
+              "packages/manifest",
+              "packages/dependencies",
+              "packages/publishing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Standard Library",
+        "icon": "library",
+        "groups": [
+          {
+            "group": "Modules",
+            "icon": "book-open",
+            "pages": [
+              "stdlib/overview",
+              "stdlib/collections",
+              "stdlib/io-filesystem",
+              "stdlib/networking",
+              "stdlib/concurrency",
+              "stdlib/text-encoding"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Diagnostics",
+        "icon": "triangle-alert",
+        "groups": [
+          {
+            "group": "Compiler errors",
+            "icon": "scan-search",
+            "pages": [
+              "diagnostics/overview",
+              "diagnostics/error-codes"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Blog",
+        "icon": "newspaper",
+        "href": "https://sifr.sh/blog"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/sifr-lang/sifr"
+    }
+  }
+}

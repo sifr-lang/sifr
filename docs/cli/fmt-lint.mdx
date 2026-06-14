@@ -1,0 +1,271 @@
+---
+title: "sifr fmt and sifr lint: Format and Lint Sifr Source Files"
+sidebarTitle: "Format & Lint"
+description: "Keep Sifr code consistently styled with sifr fmt and catch policy violations with sifr lint — with configuration, suppression, and auto-fix references."
+---
+
+Sifr ships two code-quality commands that operate independently of the compiler: `sifr fmt` for deterministic source formatting and `sifr lint` for suppressible policy-rule diagnostics. Neither command runs the type-checker or produces binaries, so both are fast to invoke in editors, pre-commit hooks, and CI pipelines.
+
+## `sifr fmt` — format source files
+
+`sifr fmt` formats `.sifr` source files using the same parser, AST, and formatter that the Sifr language server uses for editor formatting. The formatter is syntax-aware, deterministic, and idempotent — running it twice produces the same output as running it once.
+
+```bash
+sifr fmt [OPTIONS] [FILES]...
+```
+
+When no files are supplied, `sifr fmt` formats the current directory. File and directory inputs discover `.sifr` files, respect formatter excludes, and honour `.gitignore` by default.
+
+### Common usage
+
+```bash
+# Format everything in the current directory
+sifr fmt .
+
+# Format a single file
+sifr fmt src/main.sifr
+
+# Check whether any files would change (exits nonzero if yes)
+sifr fmt --check .
+
+# Print a unified diff without writing files
+sifr fmt --diff src/main.sifr
+
+# Override line length for a single run
+sifr fmt --line-length 100 src/main.sifr
+
+# Format from stdin, write formatted output to stdout
+sifr fmt --stdin-filename src/main.sifr < src/main.sifr
+```
+
+### Flags
+
+| Flag | Description |
+|---|---|
+| `--check` | Exit nonzero if any file would change. No files are written. |
+| `--diff` | Print a unified diff without writing files. |
+| `--line-length <N>` | Override the configured line length for this run. |
+| `--stdin-filename <PATH>` | Format stdin, using `PATH` for config lookup and diagnostics. |
+| `--range <START:END>` | Format a single file over a UTF-8 byte range. Intended for editor integrations. |
+| `--preview` / `--no-preview` | Enable or disable preview formatting rules. |
+| `--exclude <PATTERN>` | Add formatter exclude patterns (comma-separated). |
+| `--respect-gitignore` / `--no-respect-gitignore` | Control whether VCS ignore files are honoured. |
+| `--force-exclude` / `--no-force-exclude` | Apply or bypass excludes for explicit file targets. |
+| `--no-cache` | Disable formatter cache reads and writes. |
+| `--cache-dir <PATH>` | Override the formatter cache directory. |
+| `--config <KEY=VALUE or PATH>` | Apply an inline override or an explicit config file. |
+| `--isolated` | Ignore all discovered `sifr.toml` files. |
+
+### Configuration in `sifr.toml`
+
+Place formatter configuration under the `[format]` section of `sifr.toml`.
+
+```toml
+[format]
+line-length = 88
+preview = false
+docstring-code-format = false
+docstring-code-line-length = "dynamic"
+exclude = ["target/**"]
+respect-gitignore = true
+force-exclude = false
+cache = true
+cache-dir = ".sifr_cache/formatter"
+```
+
+Supported keys:
+
+| Key | Description |
+|---|---|
+| `line-length` | Maximum line length before the formatter wraps. |
+| `preview` | Enable preview formatting rules. |
+| `docstring-code-format` | Format Sifr code snippets inside docstrings. |
+| `docstring-code-line-length` | Line length for docstring code blocks (`"dynamic"` or an integer). |
+| `exclude` | Patterns for paths the formatter should skip. |
+| `respect-gitignore` | Honour `.gitignore` files when discovering targets. |
+| `force-exclude` | Apply exclude patterns even to files named explicitly on the command line. |
+| `cache` | Enable the formatter result cache. |
+| `cache-dir` | Directory for formatter cache files. |
+| `extend` | Path or list of paths to additional config files to inherit from. |
+
+<Warning>
+Ruff-only keys such as `target-version` and `extension` are rejected — Sifr formats `.sifr` source only. Unknown keys fail deterministically so typos surface immediately.
+</Warning>
+
+### Formatter pragmas
+
+The formatter respects inline pragma comments at Sifr syntax boundaries:
+
+```python
+# fmt: off
+legacy_matrix = [[1,0,0],[0,1,0],[0,0,1]]
+# fmt: on
+
+x = compute()  # fmt: skip
+```
+
+| Pragma | Effect |
+|---|---|
+| `# fmt: off` / `# fmt: on` | Disable and re-enable formatting for the enclosed region. |
+| `# fmt: skip` | Skip formatting for the statement on this line. |
+| `# yapf: disable` / `# yapf: enable` | Equivalent to `fmt: off` / `fmt: on`. |
+
+### Style conventions
+
+The formatter canonicalises Sifr's ownership-qualifier syntax. For example:
+
+```python
+# Before formatting
+def consume(mut own items: list[int]) -> list[int]:
+    return items
+```
+
+```python
+# After formatting
+def consume(own mut items: list[int]) -> list[int]:
+    return items
+```
+
+<Note>
+Editor formatting is LSP-first. Editors should invoke `sifr lsp --stdio` and request formatting through standard LSP methods — not call `sifr fmt` directly. See the [LSP page](/cli/lsp) for details.
+</Note>
+
+---
+
+## `sifr lint` — run policy diagnostics
+
+`sifr lint` runs Sifr-owned policy rules against your source. It operates independently of the compiler — it does not type-check, does not produce binaries, and does not make hard compiler errors suppressible.
+
+```bash
+sifr lint [OPTIONS] [FILES]...
+```
+
+When no files are provided, `sifr lint` checks the current directory. Targets may be individual files, directories, or `-` for stdin.
+
+### Common usage
+
+```bash
+# Lint the current directory
+sifr lint
+
+# Lint specific files and directories
+sifr lint src demos
+
+# Emit JSON diagnostics
+sifr lint --output-format json src/main.sifr
+
+# Show which files would be linted
+sifr lint --show-files
+
+# Print a summary of violations by rule
+sifr lint --statistics
+
+# Apply all safe fixes automatically
+sifr lint --fix src/main.sifr
+
+# Preview what fixes would be applied, without writing
+sifr lint --diff src/main.sifr
+```
+
+### Flags
+
+| Flag | Description |
+|---|---|
+| `--output-format <FORMAT>` | `concise`, `full`, or `json`. Controls diagnostic rendering. |
+| `--output-file <PATH>` | Write diagnostic output to a file instead of stdout. |
+| `--select <RULE>` | Run only the specified rules. |
+| `--extend-select <RULE>` | Add rules on top of the configured selection. |
+| `--ignore <RULE>` | Suppress one or more rules. |
+| `--fix` | Write safe fixes to disk. |
+| `--fix-only` | Apply fixes without printing remaining diagnostics. |
+| `--diff` | Print the fix patch without modifying files. |
+| `--show-fixes` | Print the count of available fixes by rule. |
+| `--fixable <RULE>` | Limit `--fix` to these rules only. |
+| `--unfixable <RULE>` | Exclude these rules from `--fix`. |
+| `--unsafe-fixes` | Enable explicitly unsafe policy fixes. |
+| `--no-unsafe-fixes` | Disable unsafe fixes (the default). |
+| `--exit-zero` | Always exit `0`, even when diagnostics are emitted. |
+| `--exit-non-zero-on-fix` | Exit `1` when fixes were applied. |
+| `--statistics` | Print a violation count per rule. |
+| `--show-files` | Print files that would be linted. |
+| `--show-settings` | Print the resolved lint configuration. |
+| `--ignore-suppressions` | Ignore inline `# sifr: ignore[...]` comments for this run. |
+| `--exclude <PATTERN>` | Add path exclude patterns. |
+| `--extend-exclude <PATTERN>` | Add patterns on top of configured excludes. |
+| `--stdin-filename <PATH>` | Use `PATH` for config lookup when reading from stdin. |
+| `--config <KEY=VALUE or PATH>` | Apply an inline override or explicit config file. |
+| `--isolated` | Ignore all discovered `sifr.toml` files. |
+
+### Available rules
+
+| Rule ID | Default severity | Description |
+|---|---|---|
+| `trailing-whitespace` | warning | Line ends with one or more whitespace characters. |
+| `todo-comment` | warning | A `TODO` or `FIXME` comment is present in the source. |
+| `boolean-positional-argument` | warning | A `bool` value is passed positionally where it is ambiguous. |
+| `large-parameter-list` | warning | A function has more parameters than the configured threshold. |
+| `duplicate-import` | warning | The same name is imported more than once. |
+
+<Note>
+These are Sifr-owned rule IDs. Python rule IDs, Ruff prefixes, and `# noqa` comments have no effect in `sifr lint`.
+</Note>
+
+### Configuration in `sifr.toml`
+
+Place lint configuration under the `[lint]` section of `sifr.toml`.
+
+```toml
+[lint]
+select = ["trailing-whitespace", "todo-comment"]
+ignore = ["todo-comment"]
+exclude = ["target/**"]
+extend-exclude = ["vendor/**"]
+include = ["*.sifr"]
+respect-gitignore = true
+unsafe-fixes = "disabled"
+
+[lint.rules]
+large-parameter-list = "warn"
+duplicate-import = "ignore"
+
+[lint.per-file-ignores]
+"demos/**" = ["todo-comment"]
+```
+
+### Suppressing a diagnostic inline
+
+Suppress a policy diagnostic on a specific line with a `# sifr: ignore[rule-id]` comment:
+
+```python
+value = legacy_call()  # sifr: ignore[todo-comment]
+```
+
+Blanket suppressions (without a rule ID) are rejected. Unknown rule IDs in suppression comments are themselves reported as policy diagnostics. Use `--ignore-suppressions` to run lint as if no inline comments were present.
+
+### Fixing violations automatically
+
+`sifr lint --fix` writes all available safe fixes to disk. Use `--diff` first to preview what would change:
+
+```bash
+# Preview fixes
+sifr lint --diff src/
+
+# Apply safe fixes
+sifr lint --fix src/
+
+# Apply fixes for a specific rule only
+sifr lint --fix --fixable trailing-whitespace src/
+
+# Apply fixes and report any that remain unfixed
+sifr lint --fix --show-fixes src/
+```
+
+Hard compiler diagnostics are never auto-fixed. Only suppressible policy rules are eligible.
+
+### Exit codes
+
+| Code | Condition |
+|---|---|
+| `0` | No diagnostics emitted, or `--exit-zero` was used. |
+| `1` | Policy diagnostics remain, or `--exit-non-zero-on-fix` was used and fixes were applied. |
+| `2` | Usage or configuration error. |

@@ -1,0 +1,155 @@
+---
+title: "sifr check and sifr emit: Type-Check and Inspect Sifr Code"
+sidebarTitle: "Check & Emit"
+description: "Run sifr check for fast type-check feedback without producing a binary, and sifr emit to inspect the Rust code that Sifr generates from your source."
+---
+
+When you want feedback from the compiler without waiting for a full native-code build, `sifr check` is the right tool. It runs the parser and type-checker and reports all diagnostics, but stops before code generation or linking. When you want to see exactly what Rust code Sifr produces for a given source file, `sifr emit` prints it to stdout.
+
+## `sifr check` — type-check without compiling
+
+`sifr check` runs the compiler frontend — parsing, name resolution, and type-checking — and exits. No binary is produced and no linking happens, which makes it the fastest way to verify that your code is correct.
+
+```bash
+sifr check main.sifr
+```
+
+Run a check on a whole package or workspace:
+
+```bash
+# Check the current package
+sifr check
+
+# Check all workspace members
+sifr check --workspace
+
+# Check a specific package
+sifr check --package my_lib
+```
+
+### Flags
+
+| Flag | Description |
+|---|---|
+| `--workspace` | Check all Sifr-capable workspace members. |
+| `--package <SPEC>` / `-p <SPEC>` | Select one package by Cargo package spec or unambiguous package name. May be repeated. |
+| `--exclude <SPEC>` | Exclude a package from workspace selection. |
+| `--message-format <FORMAT>` | Use a Cargo-compatible message format for package checks. |
+| `--locked` | Require `Cargo.lock` to be unchanged. |
+| `--offline` | Disable network access. |
+| `--frozen` | Combine `--locked` and `--offline`. |
+
+### Using check in your workflow
+
+`sifr check` is designed for tight edit-check loops. Run it on save, in a watch loop, or as the first step in CI before invoking `sifr build`.
+
+```bash
+# Check a single file
+sifr check main.sifr
+
+# Check and emit compact diagnostics for CI
+sifr --diagnostic-format compact check main.sifr
+
+# Check and emit JSON for a tool or editor
+sifr --diagnostic-format json check main.sifr
+
+# Check the whole workspace with compact output
+sifr --diagnostic-format compact check --workspace
+```
+
+<Tip>
+Use `sifr check` as your primary feedback loop during development and reserve `sifr build` for when you need an artifact. Check is substantially faster because it skips code generation and linking.
+</Tip>
+
+## `sifr emit` — inspect the generated Rust code
+
+`sifr emit` runs the compiler up through code generation and prints the generated Rust source to stdout. No binary is written. This is useful when you want to understand how Sifr translates a particular construct, diagnose unexpected output, or satisfy your curiosity.
+
+```bash
+sifr emit main.sifr
+```
+
+Pipe the output to a pager or capture it to a file:
+
+```bash
+sifr emit main.sifr | less
+sifr emit main.sifr > generated.rs
+```
+
+### Example
+
+Given this Sifr source:
+
+```python
+# hello.sifr
+def main():
+    name: str = "world"
+    print(f"Hello, {name}!")
+```
+
+Running `sifr emit hello.sifr` prints the corresponding Rust code that the compiler produced before handing off to the Rust toolchain.
+
+<Note>
+The output of `sifr emit` reflects the compiler's internal representation and is not intended to be a stable public API. Its exact form may change between compiler versions as the code generator evolves.
+</Note>
+
+## Diagnostic output formats
+
+Both `sifr check` and `sifr emit` respect the global `--diagnostic-format` flag. Pass it before the subcommand name.
+
+<Tabs>
+  <Tab title="human (default)">
+    Source snippets, caret highlights, notes, help text, and documentation URLs. Best for interactive use.
+
+    ```bash
+    sifr check main.sifr
+    ```
+
+    ```text
+    error[SIFR-TYPE-0042]: expected `int`, found `str`
+      --> main.sifr:4:18
+       |
+     4 |     count: int = "three"
+       |                  ^^^^^^^ type mismatch
+       |
+       = help: assign an integer value, for example `3`
+    ```
+  </Tab>
+  <Tab title="compact">
+    One summary line then one line per diagnostic. Stable for CI and scripting.
+
+    ```bash
+    sifr --diagnostic-format compact check main.sifr
+    ```
+
+    ```text
+    1 error, 0 warnings, 0 notes
+    E SIFR-TYPE-0042 main.sifr:4:18 expected `int`, found `str`
+    ```
+  </Tab>
+  <Tab title="json">
+    Full structured JSON for tools and editor integrations.
+
+    ```bash
+    sifr --diagnostic-format json check main.sifr
+    ```
+
+    The response is a `RenderedDiagnostic[]` array with fields including `code`, `severity`, `message`, `spans`, `children`, `help`, and `suggestions`.
+  </Tab>
+</Tabs>
+
+## Explaining a diagnostic code
+
+When you see a diagnostic code such as `SIFR-TYPE-0042`, pass it to `--explain` to get a human-readable description without re-running the compiler:
+
+```bash
+sifr --explain SIFR-TYPE-0042
+```
+
+Request JSON output for programmatic consumption:
+
+```bash
+sifr --diagnostic-format json --explain SIFR-TYPE-0042
+```
+
+`--explain` works for any diagnostic code the compiler knows about and exits with code `0` on success or `2` if the code is unknown.

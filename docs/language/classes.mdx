@@ -1,0 +1,193 @@
+---
+title: "Sifr Classes: Typed Fields, Methods, and Inheritance"
+sidebarTitle: "Classes"
+description: "Define classes with typed fields, methods, and union narrowing in Sifr. Learn how classes integrate with isinstance checks and the Error base class."
+---
+
+Classes in Sifr look and behave like Python classes, with one important difference: every field must have a type annotation, and the compiler verifies those types at compile time. You get the familiar `class`, `def __init__`, and `self.field` syntax with compile-time safety and zero runtime overhead.
+
+## Defining a Class
+
+Declare fields as class-level annotations, then implement `__init__` to accept and assign them. The compiler enforces that every field is initialized and that the types match throughout the class body.
+
+```python
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def distance(self, other: Point) -> float:
+        dx: float = self.x - other.x
+        dy: float = self.y - other.y
+        return (dx * dx + dy * dy) ** 0.5
+```
+
+Instantiate a class by calling it like a function. Field access uses standard dot notation.
+
+```python
+def main():
+    origin: Point = Point(0.0, 0.0)
+    target: Point = Point(3.0, 4.0)
+    d: float = origin.distance(target)
+    print(f"Distance from origin to (3,4): {d}")
+```
+
+## Multiple Methods
+
+A class can have as many methods as you need. Each method receives `self` as its first parameter, and the compiler enforces that the return type matches the annotation.
+
+```python
+class Rectangle:
+    width: float
+    height: float
+
+    def __init__(self, width: float, height: float):
+        self.width = width
+        self.height = height
+
+    def area(self) -> float:
+        return self.width * self.height
+
+    def perimeter(self) -> float:
+        return 2.0 * (self.width + self.height)
+
+def main():
+    rect: Rectangle = Rectangle(5.0, 3.0)
+    print(f"Rectangle area: {rect.area()}")
+    print(f"Rectangle perimeter: {rect.perimeter()}")
+    print(f"Rectangle width: {rect.width}")
+    print(f"Rectangle height: {rect.height}")
+```
+
+## Classes in Union Types
+
+Classes are first-class members of union types. Declare a parameter as `Dog | Cat | Bird` and the compiler tracks all three possibilities throughout the function body.
+
+```python
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+def describe_shape(shape: Circle | Square):
+    if isinstance(shape, Circle):
+        print(f"Circle: radius={shape.radius}")
+    else:
+        print(f"Square: side={shape.side}")
+
+def main():
+    c: Circle = Circle(10.0)
+    s: Square = Square(7.0)
+    describe_shape(c)
+    describe_shape(s)
+```
+
+<Tip>
+After an `isinstance(shape, Circle)` check, the compiler narrows `shape` to `Circle` inside the `if` block. In the `else` block it knows `shape` must be `Square`. You never need a cast.
+</Tip>
+
+## isinstance Narrowing with Multi-Member Unions
+
+When your union has more than two members, use `elif` chains. The compiler eliminates one variant per branch, leaving only the remaining possibilities.
+
+```python
+class Dog:
+    name: str
+    breed: str
+
+class Cat:
+    name: str
+    color: str
+
+class Bird:
+    name: str
+    wingspan: float
+
+def describe_pet(pet: Dog | Cat | Bird) -> str:
+    if isinstance(pet, Dog):
+        return f"{pet.name} is a {pet.breed}"
+    elif isinstance(pet, Cat):
+        return f"{pet.name} is {pet.color}"
+    else:
+        return f"{pet.name} has wingspan {pet.wingspan}"
+```
+
+## Hashable Classes
+
+Classes are hashable by default. Call `hash()` on any instance to get a deterministic integer hash based on its field values.
+
+```python
+class Color:
+    r: int
+    g: int
+    b: int
+
+    def __init__(self, r: int, g: int, b: int):
+        self.r = r
+        self.g = g
+        self.b = b
+
+def main():
+    red: Color = Color(255, 0, 0)
+    also_red: Color = Color(255, 0, 0)
+    h1: int = hash(red)
+    h2: int = hash(also_red)
+    print(f"Same color same hash: {h1 == h2}")  # True
+```
+
+## Error Subclasses
+
+Subclass `Error` to define custom error types for use with `Result[T, E]`. Error subclasses carry typed fields just like any other class.
+
+```python
+class ValidationError(Error):
+    message: str
+
+def validate_range(x: int, lo: int, hi: int) -> Result[int, ValidationError]:
+    if x < lo:
+        raise ValidationError(f"value out of range: {x}")
+    if x > hi:
+        raise ValidationError(f"value out of range: {x}")
+    return x
+```
+
+<Note>
+`Error` subclasses carry no hidden stack trace or exception machinery — only the fields you declare. They are lightweight typed values, not exception objects.
+</Note>
+
+You consume them with `try`/`except` at the call site:
+
+```python
+def main():
+    try:
+        v: int = validate_range(50, 0, 100)
+        print(f"validated: {v}")
+    except ValidationError as e:
+        print(f"caught: {e.message}")
+
+    try:
+        v2: int = validate_range(-5, 0, 100)
+        print(f"validated: {v2}")
+    except ValidationError as e:
+        print(f"caught: {e.message}")
+```
+
+## Class Design Guidelines
+
+<Tip>
+Keep classes small and focused on a single concept. Prefer multiple small classes in a union over a single large class with many optional fields.
+</Tip>
+
+<Warning>
+Sifr does not support multiple inheritance. A class may subclass at most one base class, and only `Error` is a recognized base type at this time.
+</Warning>

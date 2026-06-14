@@ -1,0 +1,130 @@
+---
+title: "Adding and Managing Dependencies in Your Sifr Package"
+sidebarTitle: "Dependencies"
+description: "Manage Sifr package dependencies with Cargo-backed resolution, lock modes, sifr fetch, sifr tree, and trust policy for backend Rust crates."
+---
+
+Sifr delegates all dependency resolution, lockfile management, and registry communication to Cargo. When you add a dependency to your `Cargo.toml`, Sifr reads the resolved package graph via `cargo metadata` and constructs its own Sifr package graph on top of it. This means the full power of Cargo's ecosystem — version ranges, Git sources, path dependencies, private registries — is available to every Sifr project without Sifr having to reimplement a resolver.
+
+## Declaring dependencies
+
+Add dependencies to `Cargo.toml` exactly as you would in any Rust project. Runtime dependencies go in `[dependencies]`; dependencies used only for tests or development tooling go in `[dev-dependencies]`.
+
+```toml
+[dependencies]
+sifr-http = "0.2"
+serde_json = "1"
+
+[dev-dependencies]
+sifr-testkit = "0.1"
+```
+
+<Note>
+Normal `sifr run`, `sifr check`, `sifr package`, and `sifr publish` commands only expose runtime `[dependencies]` as import roots. Dev dependencies are available only in test contexts. Use `sifr tree --edges dev` if you want to inspect the dev dependency graph explicitly.
+</Note>
+
+## Fetching dependencies with `sifr fetch`
+
+After adding or changing a dependency, run `sifr fetch` to resolve and download it:
+
+```bash
+sifr fetch
+```
+
+In CI or any environment where you need a reproducible build, use `--locked` to prevent the lockfile from being updated:
+
+```bash
+sifr fetch --locked
+```
+
+`sifr fetch` delegates to Cargo under the hood and forwards your lock and network flags automatically through the package session.
+
+## Inspecting the dependency tree with `sifr tree`
+
+Visualize your full dependency graph with `sifr tree`:
+
+```bash
+sifr tree --locked
+```
+
+To include dev dependencies in the output:
+
+```bash
+sifr tree --locked --edges dev
+```
+
+Workspace-level tree inspection works the same way — run from the workspace root and pass `--workspace` if needed.
+
+## Lock modes
+
+Sifr passes lock and network semantics directly to Cargo. Use these flags consistently across all package commands for reproducible results.
+
+| Flag | Effect |
+|---|---|
+| `--locked` | Cargo rejects any lockfile updates. Fails if the lockfile is out of date. |
+| `--offline` | Cargo does not access the network. All required package sources must already be cached locally. |
+| `--frozen` | Combines `--locked` and `--offline`. No lockfile updates and no network access. |
+
+<Tip>
+Use `--locked` in CI pipelines and `--frozen` in air-gapped or vendor-only environments. Use neither flag during local development when you intentionally want to update dependencies.
+</Tip>
+
+These flags apply uniformly across all Sifr commands that touch the package graph:
+
+```bash
+sifr check --locked --offline
+sifr run --locked
+sifr tree --locked
+```
+
+## Pure Sifr packages
+
+A pure Sifr package contains no non-trivial Rust code — all behavior is expressed in `.sifr` files. Because Cargo requires at least one build target, Sifr generates a minimal marker file at `src/lib.rs`:
+
+```rust
+// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.
+```
+
+Sifr validates this marker and rejects any package that contains non-trivial Rust in `src/lib.rs` but does not declare Rust-backed behavior. Do not add Rust logic to `lib.rs` in a pure Sifr package.
+
+## Trust policy for backend Rust crates
+
+Some Sifr packages interoperate with Rust crates at the backend level. Sifr enforces a trust policy that controls which Rust crates a package is permitted to call. This policy is configured in `sifr.toml` and validated during `sifr package` and `sifr publish`.
+
+Packages that exceed their declared trust boundary are rejected at publish time with a backend trust violation error.
+
+<Warning>
+Sifr wraps Cargo process failures in diagnostic code `SIFR-PACKAGE-0101`. If a dependency fetch, tree command, or other Cargo-delegated operation fails, run `sifr --explain SIFR-PACKAGE-0101` for structured diagnostic help. The explainer does not perform any package operations — it is safe to run at any time.
+</Warning>
+
+## Cross-package imports and public APIs
+
+Only names that a dependency exposes through its public namespace are importable from outside that package. A package's public API is defined by `src/__init__.sifr` and any child namespaces that have their own `__init__.sifr`. Implementation files such as `src/client.sifr` are private to the package unless explicitly re-exported.
+
+```python
+# src/__init__.sifr in the dependency
+from .client import HttpClient
+from .errors import HttpError as Error
+```
+
+In your consuming package, you import through that public namespace:
+
+```python
+from sifr_http import HttpClient, Error
+```
+
+Local package code may import its own implementation files directly. Attempting to import a dependency's private implementation file is a compile-time error.
+
+## Keeping Cargo.toml in sync with `sifr repair`
+
+After manual edits to `Cargo.toml` or after a merge conflict, the Sifr-managed entries in `Cargo.toml` may drift from the expected state. Check for drift without making any changes:
+
+```bash
+sifr repair --check
+```
+
+To regenerate Sifr-managed `Cargo.toml` entries and restore a missing pure marker:
+
+```bash
+sifr repair
+```

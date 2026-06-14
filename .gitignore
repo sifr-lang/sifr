@@ -53,3 +53,6 @@ demos/**/*.exe
 
 # Optional local reference checkout; uv production dependencies are pinned by Cargo.
 /third_party/uv/
+
+# Mintlify docs tooling (local analysis cache; also in docs/.mintignore)
+docs/.atlas-analysis.json

@@ -1,0 +1,19 @@
+# Internal compiler reference (not published on docs.sifr.sh yet).
+errors/
+schemas/
+cli_command_semantics.md
+concurrency_runtime.md
+formatter.md
+linter.md
+network_http.md
+package_management.md
+self_update.md
+stdlib_imports.md
+text_i18n.md
+
+# Mintlify tooling
+.atlas-analysis.json
+
+# Draft content
+drafts/
+*.draft.mdx

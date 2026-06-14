@@ -1,0 +1,163 @@
+---
+title: "Configuring a Sifr Package with the sifr.toml Manifest"
+sidebarTitle: "Manifest"
+description: "A complete reference for sifr.toml — the Sifr manifest that controls compiler semantics, source layout, edition, scripts, and native trust policy."
+---
+
+Every Sifr package has two manifests: `Cargo.toml` and `sifr.toml`. While `Cargo.toml` handles distribution concerns such as registries, lockfiles, and publishing credentials, `sifr.toml` is where you configure everything the Sifr compiler cares about: your package name, edition, required compiler version, source root, scripts, and trust policy for backend Rust crates. This page covers every section of `sifr.toml` and explains what belongs there rather than in `Cargo.toml`.
+
+## A complete sifr.toml example
+
+```toml
+[package]
+name = "demo_json"
+version = "0.2.0"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+roots = ["src"]
+
+[format]
+line-length = 88
+
+[lint]
+select = ["all"]
+ignore = ["E501"]
+
+[scripts]
+dev = { command = "run", args = [] }
+check-all = { command = "check", args = ["--workspace"] }
+```
+
+## `[package]` — identity and compiler requirements
+
+The `[package]` section identifies your package to the Sifr compiler and locks it to a compatible compiler range.
+
+| Key | Required | Description |
+|---|---|---|
+| `name` | Yes | The Sifr package name. Use `snake_case`. |
+| `version` | Recommended | SemVer version string. Required for publishing. |
+| `edition` | Yes | The Sifr language edition. Currently `"2026"`. |
+| `sifr-version` | Recommended | Version requirement for the Sifr compiler. Use a range such as `">=0.3,<0.4"` to express compatibility. |
+| `default-run` | No | Name of the default `src/bin/*.sifr` target when `sifr run` finds more than one. |
+
+<Note>
+The `name` in `sifr.toml` is the Sifr package name used for imports and diagnostics. The Cargo package name in `Cargo.toml` follows the `sifr-<kebab-case-name>` convention and is distinct — do not assume they are the same string.
+</Note>
+
+A minimal `[package]` section for a library package looks like this:
+
+```toml
+[package]
+name = "demo_json"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+```
+
+## `[source]` — source roots
+
+The `[source]` section tells Sifr where to find your `.sifr` source files.
+
+```toml
+[source]
+roots = ["src"]
+```
+
+`roots` defaults to `["src"]` for production packages — you can omit the section entirely in a standard layout. You only need to specify `roots` explicitly when your source files live outside `src/`, which is an uncommon scenario reserved for legacy migration or non-standard project shapes.
+
+<Warning>
+New production packages should not use `[exports].modules` or Sifr manifest `[[bin]]` target tables. These are preserved only for legacy layout migration. Use `src/__init__.sifr` for library public APIs and `src/bin/*.sifr` for additional app targets instead.
+</Warning>
+
+## `[format]` — formatter settings
+
+The `[format]` section configures the Sifr source formatter. Settings here apply when you run `sifr fmt`.
+
+```toml
+[format]
+line-length = 88
+```
+
+Consult the [Format & Lint](/cli/fmt-lint) guide for the full list of available keys.
+
+## `[lint]` — lint configuration
+
+The `[lint]` section controls which diagnostics the Sifr linter reports. You can select lint rule sets and suppress specific codes.
+
+```toml
+[lint]
+select = ["all"]
+ignore = ["E501"]
+```
+
+<Tip>
+Start with `select = ["all"]` and add `ignore` entries only for rules that conflict with your team's style. This keeps your lint surface maximal by default.
+</Tip>
+
+## `[scripts]` — structured command plans
+
+Scripts let you define reusable Sifr command sequences and invoke them with `sifr run --script <name>`. Each entry is a structured Sifr command plan — not a shell string.
+
+```toml
+[scripts]
+dev        = { command = "run",   args = [] }
+check-all  = { command = "check", args = ["--workspace"] }
+status-smoke = { command = "run", args = ["--bin", "status"] }
+```
+
+Invoke a script with:
+
+```bash
+sifr run --script dev --locked
+sifr run --script check-all --locked
+```
+
+<Warning>
+Scripts do not execute shell strings or external programs. A script may only expand a single Sifr command. Nested script expansion — calling one script from another — is rejected with `SIFR-PACKAGE-0714`.
+</Warning>
+
+If an app target and a script share the same name, Sifr reports `SIFR-PACKAGE-0605` and requires you to disambiguate with `--bin` or `--script`.
+
+## What goes in Cargo.toml vs sifr.toml
+
+Knowing where to put configuration prevents confusion and keeps Sifr's tooling working correctly.
+
+**Put in `sifr.toml`:**
+- Package name, edition, `sifr-version`
+- Source root (`[source].roots`)
+- Formatter and lint configuration
+- Named scripts
+- Native trust policy for backend Rust crates
+
+**Put in `Cargo.toml`:**
+- Distribution metadata (description, authors, license, repository URL)
+- Dependency declarations (`[dependencies]`, `[dev-dependencies]`)
+- Registry and Git/path source configuration
+- `include` and `exclude` archive rules for publishing
+- Workspace configuration
+- Publishing credentials (never in `sifr.toml` or any Sifr-generated output)
+
+The Cargo metadata hook is the bridge between the two files. Sifr reads `cargo metadata --format-version 1`, locates `sifr.toml` via the pointer below, and derives the Sifr package graph from Cargo's resolved dependency graph:
+
+```toml
+# In Cargo.toml — generated by sifr init, do not remove
+# sifr-managed
+[package.metadata.sifr]
+manifest = "sifr.toml"
+# end sifr-managed
+```
+
+## Keeping Cargo.toml in sync with `sifr repair`
+
+If your `Cargo.toml` gets out of sync with what Sifr expects — for example after a manual edit or a merge conflict — you can check for drift without writing any files:
+
+```bash
+sifr repair --check
+```
+
+To regenerate Sifr-managed `Cargo.toml` entries and restore a missing pure marker:
+
+```bash
+sifr repair
+```
