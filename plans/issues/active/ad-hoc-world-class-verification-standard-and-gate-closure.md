@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, and Wave 3 merged; Wave 4 semantic straggler compact baseline slice locally merge-gate validated and reviewed twice
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, and Wave 3 merged; Wave 4 semantic straggler compact baseline slice opened in PR #2576 after local merge-gate validation and two clean reviews
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -876,7 +876,7 @@ Fourth Wave 4 diagnostics-baseline slice:
 
 Fifth Wave 4 diagnostics-baseline slice:
 
-- Status: semantic straggler compact baseline expansion implemented, locally merge-gate validated, and reviewed twice with no blockers; pending PR.
+- Status: semantic straggler compact baseline expansion implemented, locally merge-gate validated, reviewed twice with no blockers, and opened in PR [#2576](https://github.com/sifr-lang/sifr/pull/2576).
 - Scope: added five diagnostics-area compact baselines for the remaining check-emitted semantic warning, note, and result straggler diagnostics: unreachable statements (`SIFR-FLOW-0901`), bigint transition alias warnings (`SIFR-INT-0011`), invalid except type forms (`SIFR-RESULT-0006`), integer overflow-risk warnings (`SIFR-TYPE-0901`), and reveal-type notes (`SIFR-TYPE-0902`). Each fixture is purpose-built to emit exactly one intended compact diagnostic.
 - Coverage status: rendered diagnostic coverage is now 106 active codes, with 64 active codes still carrying Wave 4 deferrals. The remaining deferred families are `BUILD` (6), `ENCODING` (1), `FMT` (1), `INTERNAL` (1), `IO` (2), `LINT` (8), `PACKAGE` (34), `STDLIB` (3), and `WORKSPACE` (8).
 - Validation: `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 104 cases / 132 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; `cargo test -p sifr_diagnostics` passed; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with 104 cases and 132 renderer variants; `python3 scripts/check_file_size_guardrails.py` passed; `git diff --check` passed. `scripts/run_all_tests.sh --profile create-pr` passed with e2e `132/132`, signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, and non-blocking warm wall-time/cache advisories (`471.00s`, `cache_hits=2/44`). The first `scripts/run_all_tests.sh` merge attempt and first isolated representative performance rerun hit non-repeatable p95 budget outliers on different benchmarks; the second isolated representative performance rerun passed, and the final `scripts/run_all_tests.sh` merge rerun passed with e2e `651/651`, signature `ee5e5d44306f270c`, diagnostics baselines `variants=132 failures=0 blocking_failures=0`, and hardening `variants=167 failures=0 blocking_failures=0`. Existing non-blocking advisories: warm wall-time budget exceeded at `1041.37s` and group skew is high.
