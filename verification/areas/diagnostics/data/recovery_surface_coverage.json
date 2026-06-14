@@ -16,13 +16,14 @@
     },
     {
       "expected_codes": [
-        "SIFR-TYPE-0002",
-        "SIFR-TYPE-0002",
+        "SIFR-CALL-0004",
+        "SIFR-NAME-0001",
+        "SIFR-OWN-0002",
         "SIFR-TYPE-0002"
       ],
       "id": "hir_mixed_recovery",
       "multi_error_fixtures": [
-        "crates/sifr/tests/e2e/fail/bounded_multi_error_recovery.sifr"
+        "verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr"
       ],
       "owner": "compiler/core-language"
     },
@@ -31,11 +32,13 @@
         "SIFR-TYPE-0002",
         "SIFR-TYPE-0002",
         "SIFR-TYPE-0002",
-        "SIFR-TYPE-0002"
+        "SIFR-TYPE-0002",
+        "SIFR-TYPE-0002",
+        "SIFR-INTERNAL-0002"
       ],
       "id": "repeated_type_recovery",
       "multi_error_fixtures": [
-        "crates/sifr/tests/e2e/fail/bounded_multi_error_recovery_repeated_type_errors.sifr"
+        "verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr"
       ],
       "owner": "compiler/core-language"
     }

@@ -1,0 +1,9 @@
+def main():
+    e1: int = "1"
+    e2: int = "2"
+    e3: int = "3"
+    e4: int = "4"
+    e5: int = "5"
+    e6: int = "6"
+    e7: int = "7"
+    e8: int = "8"

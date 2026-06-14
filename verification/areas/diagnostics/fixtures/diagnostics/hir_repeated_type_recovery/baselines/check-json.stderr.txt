@@ -1,0 +1,207 @@
+[
+  {
+    "code": "SIFR-TYPE-0002",
+    "severity": "Error",
+    "message": "[main] type mismatch: expected 'int', got 'str'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] type mismatch: expected 'int', got 'str'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
+        "byte_start": 26,
+        "byte_end": 29,
+        "line": 2,
+        "column": 15,
+        "end_line": 2,
+        "end_column": 18,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    e1: int = \"1\"",
+            "highlight_start": 15,
+            "highlight_end": 18
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-TYPE-0002",
+    "severity": "Error",
+    "message": "[main] type mismatch: expected 'int', got 'str'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] type mismatch: expected 'int', got 'str'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
+        "byte_start": 44,
+        "byte_end": 47,
+        "line": 3,
+        "column": 15,
+        "end_line": 3,
+        "end_column": 18,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    e2: int = \"2\"",
+            "highlight_start": 15,
+            "highlight_end": 18
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-TYPE-0002",
+    "severity": "Error",
+    "message": "[main] type mismatch: expected 'int', got 'str'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] type mismatch: expected 'int', got 'str'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
+        "byte_start": 62,
+        "byte_end": 65,
+        "line": 4,
+        "column": 15,
+        "end_line": 4,
+        "end_column": 18,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    e3: int = \"3\"",
+            "highlight_start": 15,
+            "highlight_end": 18
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-TYPE-0002",
+    "severity": "Error",
+    "message": "[main] type mismatch: expected 'int', got 'str'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] type mismatch: expected 'int', got 'str'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
+        "byte_start": 80,
+        "byte_end": 83,
+        "line": 5,
+        "column": 15,
+        "end_line": 5,
+        "end_column": 18,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    e4: int = \"4\"",
+            "highlight_start": 15,
+            "highlight_end": 18
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-TYPE-0002",
+    "severity": "Error",
+    "message": "[main] type mismatch: expected 'int', got 'str'",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "[main] type mismatch: expected 'int', got 'str'"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
+        "byte_start": 98,
+        "byte_end": 101,
+        "line": 6,
+        "column": 15,
+        "end_line": 6,
+        "end_column": 18,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "    e5: int = \"5\"",
+            "highlight_start": 15,
+            "highlight_end": 18
+          }
+        ]
+      }
+    ],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-INTERNAL-0002",
+    "severity": "Note",
+    "message": "3 additional diagnostics omitted by recovery cap (similar-diagnostic group)",
+    "message_template": "{omitted_count} additional {omitted_kind} omitted by recovery cap ({cap_kind})",
+    "args": {
+      "cap_kind": {
+        "kind": "string",
+        "value": "similar-diagnostic group"
+      },
+      "omitted_count": {
+        "kind": "unsigned",
+        "value": 3
+      },
+      "omitted_kind": {
+        "kind": "string",
+        "value": "diagnostics"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-INTERNAL-0002",
+    "spans": [],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  }
+]

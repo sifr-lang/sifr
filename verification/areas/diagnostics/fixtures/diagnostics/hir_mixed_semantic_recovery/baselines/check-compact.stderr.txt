@@ -1,0 +1,5 @@
+4 errors, 0 warnings, 0 notes
+E SIFR-CALL-0004 verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:11:11 needs_verbose() missing required argument 'verbose'
+E SIFR-NAME-0001 verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:14:14 undefined variable: 'collections'
+E SIFR-OWN-0002 verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:13:29 cannot borrow 'items' as mutable because it is already borrowed as immutable in the same call to 'read_then_mutate'
+E SIFR-TYPE-0002 verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr:10:14 type mismatch: expected 'int', got 'str'
