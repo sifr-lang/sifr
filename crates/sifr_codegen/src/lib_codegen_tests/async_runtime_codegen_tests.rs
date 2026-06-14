@@ -170,7 +170,6 @@ fn test_generate_project_emits_tokio_dependency_when_required() {
 fn test_module_constants_flow_through_assembled_body_items() {
     let module_constants_src = include_str!("../module_constants.rs");
     let entrypoints_src = include_str!("../entrypoints.rs");
-    let lib_src = include_str!("../lib.rs");
 
     assert!(module_constants_src.contains("self.body_items.push(item);"));
     assert!(module_constants_src
@@ -179,38 +178,37 @@ fn test_module_constants_flow_through_assembled_body_items() {
     assert!(!module_constants_src.contains("render_items(&[item])"));
 
     assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
-    assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
     assert!(!entrypoints_src.contains("assert_output_drained("));
     assert!(!entrypoints_src.contains("emitter.output"));
-    assert!(!lib_src.contains("emitter.output"));
 }
 
 #[test]
 fn test_module_body_flows_through_assembled_body_items() {
     let module_body_src = include_str!("../module_body.rs");
-    let lib_src = include_str!("../lib.rs");
+    let entrypoints_src = include_str!("../entrypoints.rs");
 
     assert!(!module_body_src.contains("self.drain_emitted_output_items("));
     assert!(!module_body_src.contains("self.push_syn_items_from_source(&emitted"));
     assert!(module_body_src.contains("self.emit_class(class, module, module_public);"));
     assert!(module_body_src.contains("self.emit_function(func, module_public, test_mode);"));
     assert!(!module_body_src.contains("self.output"));
-    assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
+    assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
 }
 
 #[test]
 fn test_generator_init_emission_is_structured_only() {
-    let stmt_support_src = include_str!("../stmt_support_emitter.rs");
-    assert!(stmt_support_src.contains("self.lower_stmt_expr_for_ir(value)"));
-    assert!(stmt_support_src.contains("self.try_lower_structured_stmt(stmt)"));
-    assert!(stmt_support_src
+    let emitter_state_src = include_str!("../lib_emitter_state.rs");
+    let statement_output_src = include_str!("../stmt_support_emitter/statement_output.rs");
+    assert!(statement_output_src.contains("self.lower_stmt_expr_for_ir(value)"));
+    assert!(emitter_state_src.contains("self.try_lower_structured_stmt(stmt)"));
+    assert!(statement_output_src
         .contains("structured generator-init expression emission missing for production path"));
-    assert!(stmt_support_src
+    assert!(statement_output_src
         .contains("structured generator-init statement emission missing for production path"));
-    assert!(!stmt_support_src.contains("self.try_emit_expr_string_"));
-    assert!(!stmt_support_src.contains("self.try_emit_stmt_string_"));
-    assert!(!stmt_support_src.contains("self.emit_expr(value);"));
-    assert!(!stmt_support_src.contains("self.emit_stmt(stmt);"));
+    assert!(!statement_output_src.contains("self.try_emit_expr_string_"));
+    assert!(!statement_output_src.contains("self.try_emit_stmt_string_"));
+    assert!(!statement_output_src.contains("self.emit_expr(value);"));
+    assert!(!statement_output_src.contains("self.emit_stmt(stmt);"));
 }
 
 #[test]

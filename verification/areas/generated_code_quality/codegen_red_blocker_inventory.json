@@ -3,8 +3,8 @@
   "generated_from": "cargo test -p sifr_codegen -- --nocapture",
   "captured_on": "2026-06-14",
   "test_result": {
-    "passed": 691,
-    "failed": 16,
+    "passed": 697,
+    "failed": 10,
     "ignored": 0,
     "total": 707
   },
@@ -13,7 +13,7 @@
     "package": "sifr_codegen",
     "status": "red-blocker",
     "owner": "codegen",
-    "failure_count": 16,
+    "failure_count": 10,
     "triage_file": "plans/issues/active/codegen-test-triage.md",
     "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md",
     "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
@@ -40,7 +40,7 @@
       "current_output": "Guard expects removed helper names in intrinsic_method_emitters.rs; replace with a current structured-registry boundary check or delete if covered by production no-non-IR-token scan.",
       "panic": "assertion failed: prod_src.contains(\"fn try_lower_registry_expr_strict(\") note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
       "expected_output_or_snapshot": "Current production source should be guarded by token/architecture checks that match the refactored helper names.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "3"
     },
@@ -152,7 +152,7 @@
       "current_output": "Guard looks for old stmt_support_emitter helper text after source decomposition/refactor.",
       "panic": "assertion failed: stmt_support_src.contains(\"self.lower_stmt_expr_for_ir(value)\")",
       "expected_output_or_snapshot": "Replace with a current structured generator-init path guard or map to existing no-non-IR-token scan.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "3"
     },
@@ -168,7 +168,7 @@
       "current_output": "Guard expects assembled body logic in lib.rs even though implementation moved out during decomposition.",
       "panic": "assertion failed: lib_src.contains(\"if !emitter.body_items.is_empty() {\")",
       "expected_output_or_snapshot": "Retarget to the owning module_body/entrypoint source or remove if covered by decomposition guardrails.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "3"
     },
@@ -184,7 +184,7 @@
       "current_output": "Guard expects lib.rs to contain body_items wiring after decomposition moved the responsibility.",
       "panic": "assertion failed: lib_src.contains(\"if !emitter.body_items.is_empty() {\")",
       "expected_output_or_snapshot": "Retarget to current module_constants/entrypoint files with a stable ownership assertion.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "3"
     },
@@ -648,7 +648,7 @@
       "current_output": "Guard expects an `emit_stmt` wrapper in lib.rs after decomposition moved statement lowering out.",
       "panic": "emit_stmt wrapper should exist FAILED",
       "expected_output_or_snapshot": "Retarget decomposition guard to current owner files or rely on maintainability guardrail.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "3"
     },
@@ -664,7 +664,7 @@
       "current_output": "Guard expects old helper names in lib.rs/module files after result-helper refactor.",
       "panic": "assertion failed: lib_src.contains(\"try_lower_simple_stmt_with_scope_result(\")",
       "expected_output_or_snapshot": "Replace with current helper-name contract or delete if no longer meaningful.",
-      "status": "open",
+      "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
       "closes_in_subwave": "3"
     },

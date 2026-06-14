@@ -1,6 +1,6 @@
 # Codegen Test Triage
 
-Status: Wave 2.2 stale source-fixture repairs in progress; Wave 2.0 inventory merged in PR https://github.com/sifr-lang/sifr/pull/2561 and Wave 2.1 merged in PR https://github.com/sifr-lang/sifr/pull/2562.
+Status: Wave 2.3 obsolete architecture guard retargeting in progress; Wave 2.0 inventory merged in PR https://github.com/sifr-lang/sifr/pull/2561, Wave 2.1 merged in PR https://github.com/sifr-lang/sifr/pull/2562, and Wave 2.2 merged in PR https://github.com/sifr-lang/sifr/pull/2563.
 
 Reproduction command:
 
@@ -8,7 +8,7 @@ Reproduction command:
 cargo test -p sifr_codegen -- --nocapture
 ```
 
-Observed Wave 2.0 result on 2026-06-14: `655 passed; 52 failed; 707 total`. After Wave 2.1 stale expectation repairs, the result was `675 passed; 32 failed; 707 total`. After Wave 2.2 stale source-fixture repairs, the current local result is `691 passed; 16 failed; 707 total`. The saved local Wave 2.0 log is `target/wave2/sifr_codegen_nocapture.log`; the checked-in machine-readable inventory is `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`.
+Observed Wave 2.0 result on 2026-06-14: `655 passed; 52 failed; 707 total`. After Wave 2.1 stale expectation repairs, the result was `675 passed; 32 failed; 707 total`. After Wave 2.2 stale source-fixture repairs, the result was `691 passed; 16 failed; 707 total`. After Wave 2.3 obsolete architecture guard retargeting, the current local result is `697 passed; 10 failed; 707 total`. The saved local Wave 2.0 log is `target/wave2/sifr_codegen_nocapture.log`; the checked-in machine-readable inventory is `verification/areas/generated_code_quality/codegen_red_blocker_inventory.json`.
 
 The JSON inventory records closure with `closes_in_wave: 2` and `closes_in_subwave` for each row. `proposed_pr_slice` below is the human-readable repair slice label.
 
@@ -19,7 +19,7 @@ Classification counts from the Wave 2.0 inventory:
 - `compiler-bug`: 10.
 - `production-bug`: 0; no unresolved production sentinel rows in Wave 2.0.
 
-Wave 2.1 closes the 20 `proposed_pr_slice: 2.1` rows by refreshing stale literal, final-return, render snapshot, and iterator materialization expectations to the current generated-Rust contract. Wave 2.2 closes the 16 `proposed_pr_slice: 2.2` rows by making parser, async-effect, and explicit-encoding fixtures policy-compliant while preserving their codegen assertions. The remaining 16 open rows stay assigned to Waves 2.3, 2.4, and 2.5.
+Wave 2.1 closes the 20 `proposed_pr_slice: 2.1` rows by refreshing stale literal, final-return, render snapshot, and iterator materialization expectations to the current generated-Rust contract. Wave 2.2 closes the 16 `proposed_pr_slice: 2.2` rows by making parser, async-effect, and explicit-encoding fixtures policy-compliant while preserving their codegen assertions. Wave 2.3 closes the 6 `proposed_pr_slice: 2.3` rows by retargeting obsolete architecture guards to their current owner modules after decomposition/refactors. The remaining 10 open rows stay assigned to Waves 2.4 and 2.5.
 
 Proposed PR slices:
 
