@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package library diagnostic synthetic-baseline coverage merged in PR [#2615](https://github.com/sifr-lang/sifr/pull/2615)
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package library diagnostic synthetic-baseline coverage merged in PR [#2615](https://github.com/sifr-lang/sifr/pull/2615); internal diagnostic synthetic-baseline coverage is open in PR [#2617](https://github.com/sifr-lang/sifr/pull/2617)
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1048,6 +1048,16 @@ Twenty-third Wave 4 diagnostics-baseline slice:
 - Review: Claude Opus review pass 1 recorded no blocking findings in `plans/reviews/active/ad-hoc-world-class-verification-wave-4-package-library-diagnostic-baselines-review-pass-1.md` and stated another review round is not required before create-pr / merge-gate validation. The reviewer verified source-hash binding, baseline trio hygiene, stderr code evidence for all nine package diagnostics, renderer-support cross-checks, tracker counts, and synthetic-baseline precedent parity.
 - Create-pr validation: `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e pass fixtures, report signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm-cache timing/cache notes.
 - Merge-gate validation: the first `scripts/run_all_tests.sh` attempt stopped on a representative performance p95 timing miss for `check-project-004-project-graph` (`measured=1593.865`, `threshold=1428.693`); a focused rerun of `uv run --project verification --locked python -m sifr_verify areas run --area performance --suite representative` passed. The subsequent full `scripts/run_all_tests.sh` passed with 651/651 e2e pass fixtures, report signature `ee5e5d44306f270c`, diagnostics baselines `variants=174 failures=0 blocking_failures=0`, project-workspace baselines `variants=17 failures=0 blocking_failures=0`, hardening `variants=209 failures=0 blocking_failures=0`, and advisory-only warm-cache timing/cache/skew notes.
+
+Twenty-fourth Wave 4 diagnostics-baseline slice:
+
+- Status: internal diagnostic synthetic renderer coverage open in PR [#2617](https://github.com/sifr-lang/sifr/pull/2617).
+- Scope: reuses the existing metadata-owned `presentation_contract_cases` synthetic renderer fixture to close the `SIFR-INTERNAL-0001` rendered-baseline deferral across human, JSON, and compact renderers. The fixture already owns source-hash-checked `synthetic: true` metadata and baseline trios for all three renderer formats, and the baselines render the spanless internal diagnostic.
+- Coverage status: of 170 stable active diagnostic codes, 159 now have rendered baseline coverage and 11 carry Wave 4 deferrals. Internal diagnostic deferrals are closed; the remaining deferred families are `BUILD` (5), `STDLIB` (2), and `WORKSPACE` (4).
+- Focused validation: `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed with `variants=5 failures=0 blocking_failures=0`; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` passed.
+- Review: Claude Opus review pass 1 recorded no blocking findings in `plans/reviews/active/ad-hoc-world-class-verification-wave-4-internal-diagnostic-baseline-review-pass-1.md` and stated another review round is not required. The reviewer verified all three renderer evidence files, synthetic metadata ownership, source-hash/trio enforcement, renderer subset checks, and the 159 covered / 11 deferred tracker counts.
+- Create-pr validation: the first `scripts/run_all_tests.sh --profile create-pr` attempt stopped on `task_gather_cleanup_error_secondary` with one cached e2e assertion failure; a targeted one-fixture e2e rerun passed. The subsequent full `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e pass fixtures, report signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm-cache timing notes.
+- Merge-gate validation: `scripts/run_all_tests.sh` passed with 651/651 e2e pass fixtures, report signature `ee5e5d44306f270c`, diagnostics baselines `variants=174 failures=0 blocking_failures=0`, project-workspace baselines `variants=17 failures=0 blocking_failures=0`, hardening `variants=209 failures=0 blocking_failures=0`, and advisory-only warm wall-time / group-skew notes.
 
 ### Wave 5: IR, HIR, CFG, and Codegen Snapshot Suites
 
