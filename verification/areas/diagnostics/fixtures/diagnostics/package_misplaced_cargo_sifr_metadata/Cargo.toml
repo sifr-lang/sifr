@@ -1,0 +1,12 @@
+[package]
+name = "package-misplaced-cargo-sifr-metadata"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[package.metadata.sifr.package]
+name = "package_misplaced_cargo_sifr_metadata"
+
+[workspace]

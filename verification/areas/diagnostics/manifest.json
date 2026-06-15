@@ -506,6 +506,33 @@
           ]
         },
         {
+          "id": "package_missing_sifr_manifest",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_missing_sifr_manifest/src/main.sifr",
+          "command": "package-check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_misplaced_cargo_sifr_metadata",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_misplaced_cargo_sifr_metadata/src/main.sifr",
+          "command": "package-check",
+          "expect_exit_code": 2,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_non_trivial_pure_marker",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_non_trivial_pure_marker/src/main.sifr",
+          "command": "package-check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "package_projection_manifest_pointer_drift",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_projection_manifest_pointer_drift/Cargo.toml",
           "command": "package-repair-check",
