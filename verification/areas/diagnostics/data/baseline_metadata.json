@@ -2387,6 +2387,36 @@
       "renderer": "compact",
       "source_hash": "sha256:cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package projection repair checks.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2598",
+      "fixture_id": "package_projection_manifest_pointer_drift",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:b3c890efc0e9c9f3889a3d712e7b6a0cdadc23aba8cd39fcc15ec9d12c4fde25",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package projection repair checks.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2598",
+      "fixture_id": "package_projection_pure_marker_missing",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:c3b9381c60dc2e7656d8150a72097ac155d12c9d959bdfe638d7405660349b3d",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1

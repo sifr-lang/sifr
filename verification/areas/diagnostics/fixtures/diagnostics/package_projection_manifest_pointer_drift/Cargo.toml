@@ -1,0 +1,6 @@
+[package]
+name = "package-projection-manifest-pointer-drift"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
