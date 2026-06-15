@@ -1,0 +1,2 @@
+def main(): # sifr: ignore[not-a-rule]
+    pass

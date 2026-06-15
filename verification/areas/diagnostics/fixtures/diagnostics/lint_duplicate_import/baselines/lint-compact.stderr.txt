@@ -1,0 +1,2 @@
+0 errors, 1 warning, 0 notes
+W SIFR-LINT-0008 verification/areas/diagnostics/fixtures/diagnostics/lint_duplicate_import/main.sifr:2:8 duplicate import of 'math'
