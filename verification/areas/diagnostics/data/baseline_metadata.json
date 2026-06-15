@@ -602,6 +602,22 @@
       "synthetic": true
     },
     {
+      "bless_reason": "Wave 4 synthetic compact diagnostic baseline coverage for stable package diagnostics that are library-level or Cargo-environment dependent rather than deterministic public CLI fixtures.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2615",
+      "fixture_id": "package_library_diagnostic_contract_cases",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:aa2229e7c6b1f24cc8ee802bfa7607c69c8fafe0f68134dfcd31b64bef60df96",
+      "suite": "synthetic_baselines",
+      "synthetic": true
+    },
+    {
       "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
       "bless_reference": "wave-4-hir-recovery-baseline-pr",
       "fixture_id": "hir_mixed_semantic_recovery",

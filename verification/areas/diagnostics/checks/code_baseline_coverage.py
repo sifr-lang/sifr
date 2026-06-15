@@ -84,6 +84,31 @@ def manifest_baseline_cases() -> dict[str, dict[str, Any]]:
     return cases
 
 
+def synthetic_baseline_cases() -> dict[str, dict[str, Any]]:
+    payload = load_json(METADATA_PATH)
+    entries = payload.get("baselines")
+    if payload.get("schema_version") != 1 or not isinstance(entries, list):
+        return {}
+    cases: dict[str, dict[str, Any]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict) or not entry.get("synthetic"):
+            continue
+        fixture_id = str(entry.get("fixture_id", ""))
+        renderer = str(entry.get("renderer", ""))
+        source_path = AREA_ROOT / "fixtures" / "diagnostics" / fixture_id / "main.sifr"
+        case = cases.setdefault(
+            fixture_id,
+            {
+                "suite": "synthetic_baselines",
+                "entry": source_path,
+                "command": "check",
+                "formats": set(),
+            },
+        )
+        case["formats"].add(renderer)
+    return cases
+
+
 def expected_baseline_files(cases: dict[str, dict[str, Any]]) -> set[pathlib.Path]:
     files: set[pathlib.Path] = set()
     for case in cases.values():
@@ -174,6 +199,7 @@ def validate_coverage(
     active: dict[str, dict[str, str]],
     catalog: dict[str, dict[str, Any]],
     cases: dict[str, dict[str, Any]],
+    synthetic_cases: dict[str, dict[str, Any]],
 ) -> None:
     payload = load_json(COVERAGE_PATH)
     entries = payload.get("coverage")
@@ -204,18 +230,20 @@ def validate_coverage(
         else:
             fixture_key = str(fixture_id)
             case = cases.get(fixture_key)
-            if case is None:
+            synthetic_case = synthetic_cases.get(fixture_key)
+            baseline_case = case if case is not None else synthetic_case
+            if baseline_case is None:
                 errors.append(f"{code}: unknown baseline fixture {fixture_key}")
             if not renderers:
                 errors.append(f"{code}: baseline fixture requires renderer_formats")
             if not renderers.issubset(ALLOWED_RENDERERS):
                 errors.append(f"{code}: invalid renderer_formats {sorted(renderers)}")
-            if case is not None and not renderers.issubset(case["formats"]):
-                errors.append(f"{code}: renderer_formats are not in manifest case formats")
+            if baseline_case is not None and not renderers.issubset(baseline_case["formats"]):
+                errors.append(f"{code}: renderer_formats are not in baseline fixture formats")
             if code in catalog and not renderers.issubset(set(catalog[code].get("renderer_support", []))):
                 errors.append(f"{code}: renderer_formats exceed catalog renderer_support")
-            if case is not None:
-                validate_coverage_baseline_evidence(errors, code, case, renderers)
+            if baseline_case is not None:
+                validate_coverage_baseline_evidence(errors, code, baseline_case, renderers)
     active_codes = set(active)
     coverage_codes = set(by_code)
     for code in sorted(active_codes - coverage_codes):
@@ -398,8 +426,9 @@ def main() -> int:
     errors: list[str] = []
     active = active_registry()
     cases = manifest_baseline_cases()
+    synthetic_cases = synthetic_baseline_cases()
     catalog = validate_catalog(errors, active)
-    validate_coverage(errors, active, catalog, cases)
+    validate_coverage(errors, active, catalog, cases, synthetic_cases)
     validate_baseline_metadata(errors, cases, covered_pairs())
     validate_recovery_surfaces(errors)
     if errors:
