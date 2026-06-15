@@ -30,6 +30,8 @@ BASELINE_COMMANDS = {
     "fmt-check",
     "package-check",
     "package-check-default",
+    "package-list-missing-selector",
+    "package-list-rust-helper",
     "package-repair-check",
     "package-workspace-list",
     "package-run-bin-bad-name",
@@ -467,6 +469,8 @@ def run_sifr_variant(
     if command_name in {
         "package-check",
         "package-check-default",
+        "package-list-missing-selector",
+        "package-list-rust-helper",
         "package-repair-check",
         "package-workspace-list",
         "package-run-bin-bad-name",
@@ -493,6 +497,10 @@ def run_sifr_variant(
         argv.extend(["check", str(entry.relative_to(cwd))])
     elif command_name == "package-check-default":
         argv.append("check")
+    elif command_name == "package-list-missing-selector":
+        argv.extend(["package", "-p", "missing", "--list", "--no-verify", "--allow-dirty"])
+    elif command_name == "package-list-rust-helper":
+        argv.extend(["package", "-p", "rust-helper", "--list", "--no-verify", "--allow-dirty"])
     elif command_name == "package-repair-check":
         argv.extend(["repair", "--check"])
     elif command_name == "package-workspace-list":

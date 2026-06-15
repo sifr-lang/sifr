@@ -506,6 +506,33 @@
           ]
         },
         {
+          "id": "package_selected_rust_only",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_selected_rust_only/sifr.toml",
+          "command": "package-list-rust-helper",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_rust_only_depends_on_sifr",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_rust_only_depends_on_sifr/sifr.toml",
+          "command": "package-workspace-list",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_selector_invalid",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_selector_invalid/sifr.toml",
+          "command": "package-list-missing-selector",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "package_workspace_duplicate_import_root",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_import_root/sifr.toml",
           "command": "package-workspace-list",

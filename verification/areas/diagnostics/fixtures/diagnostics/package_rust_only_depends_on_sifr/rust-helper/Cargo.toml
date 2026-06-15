@@ -1,0 +1,10 @@
+[package]
+name = "rust-helper"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sifr-lib = { path = "../sifr-lib" }
+
+[lib]
+path = "src/lib.rs"

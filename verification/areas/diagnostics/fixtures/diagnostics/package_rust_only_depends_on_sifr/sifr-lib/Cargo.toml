@@ -1,0 +1,10 @@
+[package]
+name = "sifr-lib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
