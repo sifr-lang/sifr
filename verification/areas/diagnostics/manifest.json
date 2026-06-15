@@ -470,6 +470,15 @@
           ]
         },
         {
+          "id": "package_explicit_file_outside_source_root",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_explicit_file_outside_source_root/tools/task.sifr",
+          "command": "package-check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "e2e_bigdecimal_constructor_float",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_constructor_float/main.sifr",
           "command": "check",

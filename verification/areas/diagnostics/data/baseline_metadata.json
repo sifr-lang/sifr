@@ -919,6 +919,21 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package explicit-file source-root diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2592",
+      "fixture_id": "package_explicit_file_outside_source_root",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for self-update receipt diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2588",
       "fixture_id": "self_update_missing_receipt",
