@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PACKAGE-0501 <unknown> pure Sifr package marker '<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/package_non_trivial_pure_marker/src/lib.rs' contains Rust implementation: Rust item or expression
