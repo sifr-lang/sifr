@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-IO-0801 verification/areas/diagnostics/fixtures/diagnostics/e2e_text_i18n_open_without_encoding/main.sifr:5:9 text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings

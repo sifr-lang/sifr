@@ -965,6 +965,33 @@
           ]
         },
         {
+          "id": "e2e_text_i18n_dynamic_errors_handler",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_text_i18n_dynamic_errors_handler/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_text_i18n_open_dynamic_mode",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_text_i18n_open_dynamic_mode/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_text_i18n_open_without_encoding",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_text_i18n_open_without_encoding/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "e2e_try_except_uncovered_error_types",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_try_except_uncovered_error_types/main.sifr",
           "command": "check",

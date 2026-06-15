@@ -343,16 +343,13 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "e2e_text_i18n_dynamic_errors_handler",
       "code": "SIFR-ENCODING-0803",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -643,29 +640,23 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "e2e_text_i18n_open_without_encoding",
       "code": "SIFR-IO-0801",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "e2e_text_i18n_open_dynamic_mode",
       "code": "SIFR-IO-0802",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
