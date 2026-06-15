@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package explicit-file source-root coverage merged
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package script-recursion coverage merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -953,7 +953,7 @@ Thirteenth Wave 4 diagnostics-baseline slice:
 
 Fourteenth Wave 4 diagnostics-baseline slice:
 
-- Status: package script-recursion compact baseline expansion implemented, locally merge-gate validated, reviewed with no blockers, and opened in PR [#2594](https://github.com/sifr-lang/sifr/pull/2594); pending merge.
+- Status: package script-recursion compact baseline expansion merged in PR [#2594](https://github.com/sifr-lang/sifr/pull/2594) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation.
 - Scope: added one package-root public `sifr run --script dev` compact baseline for package scripts that attempt to expand another script (`SIFR-PACKAGE-0714`). This adds the diagnostics-area `package-run-script` command path beside `package-check`, sharing the same package-root discovery and Cargo manifest invocation.
 - Coverage status: of 170 stable active diagnostic codes, 127 now have rendered baseline coverage and 43 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (31), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI check for `package_script_recursion` emitted exactly one intended `SIFR-PACKAGE-0714` diagnostic, exited 1, and wrote empty stdout; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 125 cases / 153 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with 125 cases and 153 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py` passed; `python3 scripts/check_file_size_guardrails.py` passed; `git diff --check` passed.
