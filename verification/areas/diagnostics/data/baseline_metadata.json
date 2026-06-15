@@ -2539,6 +2539,66 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
+      "fixture_id": "package_untrusted_backend",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:e3cb20b46f675c270ebf253a837e97a9b78c06e8a196d85ab3cf67b79c89c0c1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
+      "fixture_id": "package_stale_trust_entry",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:0dc0de1aa19dad38eb30d385d2152515309894d093e7962392f8b92ff95d6509",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
+      "fixture_id": "package_archive_missing_sifr_source",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:e33a56c8df235d3e6f4a199436a50ec59c486ba8de2531cb5858f823a7693f9f",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
+      "fixture_id": "package_archive_omits_required_source",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:38aae65eec33c9b5227263673441e8a565d9d972a9afc14e15cf06b71ecb53d9",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for package workspace selection diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2604",
       "fixture_id": "package_workspace_duplicate_import_root",

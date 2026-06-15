@@ -1,0 +1,12 @@
+[package]
+name = "package-archive-missing-sifr-source"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[lib]
+path = "src/lib.rs"
+
+[workspace]

@@ -1,0 +1,12 @@
+[package]
+name = "package-stale-trust-entry"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[lib]
+path = "src/lib.rs"
+
+[workspace]

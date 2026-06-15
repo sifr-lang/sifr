@@ -533,6 +533,42 @@
           ]
         },
         {
+          "id": "package_untrusted_backend",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_untrusted_backend/sifr.toml",
+          "command": "package-list-default",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_stale_trust_entry",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_stale_trust_entry/sifr.toml",
+          "command": "package-list-default",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_archive_missing_sifr_source",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_archive_missing_sifr_source/sifr.toml",
+          "command": "package-list-default",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_archive_omits_required_source",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_archive_omits_required_source/sifr.toml",
+          "command": "package-list-default",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "package_workspace_duplicate_import_root",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_import_root/sifr.toml",
           "command": "package-workspace-list",

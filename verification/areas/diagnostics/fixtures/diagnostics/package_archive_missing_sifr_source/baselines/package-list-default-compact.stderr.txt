@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PACKAGE-0401 <unknown> package 'package-archive-missing-sifr-source@0.1.0#path' archive contains no .sifr source files

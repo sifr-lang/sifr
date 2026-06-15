@@ -1,0 +1,10 @@
+[package]
+name = "package_stale_trust_entry"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[trust]
+native = ["missing-backend"]
