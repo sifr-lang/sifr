@@ -171,6 +171,42 @@
           ]
         },
         {
+          "id": "workspace_malformed_manifest",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/workspace_malformed_manifest/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_source_root_escapes",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/workspace_source_root_escapes/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_source_root_not_directory",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/workspace_source_root_not_directory/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_invalid_source_root",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/workspace_invalid_source_root/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "parser_bad_indent",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr",
           "command": "check",
