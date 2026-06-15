@@ -29,6 +29,7 @@ BASELINE_COMMANDS = {
     "lint",
     "fmt-check",
     "package-check",
+    "package-run-script",
     "self-version",
 }
 CONTRACT_MATRIX_COMMAND = "contract-matrix"
@@ -458,7 +459,7 @@ def run_sifr_variant(
 ) -> tuple[int, str, str, float, list[str]]:
     cwd = REPO_ROOT
     argv = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
-    if command_name == "package-check":
+    if command_name in {"package-check", "package-run-script"}:
         cwd = find_package_root(entry)
         argv = [
             "cargo",
@@ -477,6 +478,8 @@ def run_sifr_variant(
         argv.extend(["fmt", "--check", "--no-cache", str(entry)])
     elif command_name == "package-check":
         argv.extend(["check", str(entry.relative_to(cwd))])
+    elif command_name == "package-run-script":
+        argv.extend(["run", "--script", "dev"])
     elif command_name == "self-version":
         argv.extend(["self", "version"])
     else:
@@ -599,7 +602,7 @@ def find_package_root(entry: Path) -> Path:
             break
         if (candidate / "Cargo.toml").is_file() and (candidate / "sifr.toml").is_file():
             return candidate
-    raise SystemExit(f"package-check entry is not inside a package fixture: {entry}")
+    raise SystemExit(f"package command entry is not inside a package fixture: {entry}")
 
 
 def resolve_repo_path(path: Path) -> Path:
