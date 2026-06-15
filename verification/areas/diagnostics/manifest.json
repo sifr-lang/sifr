@@ -443,6 +443,15 @@
           ]
         },
         {
+          "id": "e2e_stdlib_defaultdict_keyword_constructor",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_stdlib_defaultdict_keyword_constructor/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "e2e_bigdecimal_constructor_float",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_constructor_float/main.sifr",
           "command": "check",

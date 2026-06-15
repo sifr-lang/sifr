@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-STDLIB-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_stdlib_defaultdict_keyword_constructor/main.sifr:6:26 defaultdict() does not support keyword arguments

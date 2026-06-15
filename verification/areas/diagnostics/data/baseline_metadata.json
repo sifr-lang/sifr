@@ -889,6 +889,21 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for a purpose-built stdlib unsupported-surface fixture.",
+      "bless_reference": "wave-4-stdlib-compact-baseline-pr",
+      "fixture_id": "e2e_stdlib_defaultdict_keyword_constructor",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:dcf4e2f768e51ce646f4a2af23514664177cc7b3021488385e575b0583fc92e0",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_constructor_float",

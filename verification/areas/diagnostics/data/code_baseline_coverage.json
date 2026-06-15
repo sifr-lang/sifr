@@ -1612,16 +1612,13 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "e2e_stdlib_defaultdict_keyword_constructor",
       "code": "SIFR-STDLIB-0001",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4. This code is incidentally emitted by e2e_bare_defaultdict_constructor_rejected, but it remains deferred until the stdlib-owned Wave 4 slice adds a purpose-built rendered baseline with stdlib ownership."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -1631,7 +1628,7 @@
         "expires_in_wave": "4",
         "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
         "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
+        "reason": "Embedded stdlib bootstrap failures are active stable diagnostics, but no current public command can trigger this code without corrupting compiled-in stdlib sources. Wave 4 follow-up must either add a lower-level rendered diagnostics harness for stdlib bootstrap failures or make an explicit coverage-policy decision."
       },
       "multi_error_recovery_fixture": null,
       "renderer_formats": [],
@@ -1644,7 +1641,7 @@
         "expires_in_wave": "4",
         "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
         "owner": "compiler/core-language",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
+        "reason": "Stdlib cache failures are active stable diagnostics, but no current public command can deterministically trigger a cache error without injecting an internal cache failure. Wave 4 follow-up must either add a lower-level rendered diagnostics harness for stdlib cache failures or make an explicit coverage-policy decision."
       },
       "multi_error_recovery_fixture": null,
       "renderer_formats": [],
