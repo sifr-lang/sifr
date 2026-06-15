@@ -1,0 +1,12 @@
+11 errors, 0 warnings, 0 notes
+E SIFR-BUILD-0002 <unknown> failed to materialize build file <TMP>/sifr-build/main.rs
+E SIFR-BUILD-0003 <unknown> failed to create temporary build workspace <TMP>/sifr-build
+E SIFR-BUILD-0004 <unknown> failed to generate Cargo manifest at <TMP>/sifr-build/Cargo.toml
+E SIFR-BUILD-0005 <unknown> cargo failed with exit status 101
+E SIFR-BUILD-0006 <unknown> expected build artifact <TMP>/sifr-build/target/debug/app was not produced
+E SIFR-STDLIB-0003 <unknown> embedded standard library bootstrap failed during parse embedded module sifr.collections
+E SIFR-STDLIB-0004 <unknown> standard-library cache failed during build cached stdlib project
+E SIFR-WORKSPACE-0101 <unknown> could not resolve import missing.helper
+E SIFR-WORKSPACE-0102 <unknown> module helper is ambiguous in workspace <TMP>/sifr-workspace
+E SIFR-WORKSPACE-0103 <unknown> module helper collides with namespace path <TMP>/sifr-workspace/src/helper
+E SIFR-WORKSPACE-0104 <unknown> workspace import cycle detected: main -> helper -> main

@@ -618,6 +618,22 @@
       "synthetic": true
     },
     {
+      "bless_reason": "Wave 4 synthetic compact diagnostic baseline coverage for active frontend build, stdlib, and legacy workspace diagnostics that require internal fault injection or retired public renderer paths.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2619",
+      "fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:549962e33a8eb6c199dbe186a23cee41746582b1e279a7de30a91a4e92dabd9b",
+      "suite": "synthetic_baselines",
+      "synthetic": true
+    },
+    {
       "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
       "bless_reference": "wave-4-hir-recovery-baseline-pr",
       "fixture_id": "hir_mixed_semantic_recovery",

@@ -71,68 +71,53 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-BUILD-0002",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-BUILD-0003",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-BUILD-0004",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-BUILD-0005",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-BUILD-0006",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -1516,29 +1501,23 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-STDLIB-0003",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Embedded stdlib bootstrap failures are active stable diagnostics, but no current public command can trigger this code without corrupting compiled-in stdlib sources. Wave 4 follow-up must either add a lower-level rendered diagnostics harness for stdlib bootstrap failures or make an explicit coverage-policy decision."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-STDLIB-0004",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/core-language",
-        "reason": "Stdlib cache failures are active stable diagnostics, but no current public command can deterministically trigger a cache error without injecting an internal cache failure. Wave 4 follow-up must either add a lower-level rendered diagnostics harness for stdlib cache failures or make an explicit coverage-policy decision."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
@@ -1714,55 +1693,43 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-WORKSPACE-0101",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Legacy workspace graph diagnostic remains active, but current public project import paths intentionally render source-spanned SIFR-IMPORT replacements. Wave 4 follow-up must either add a lower-level rendered harness for this legacy code or make an explicit coverage-policy decision."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-WORKSPACE-0102",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Legacy workspace graph diagnostic remains active, but current public project import paths intentionally render source-spanned SIFR-IMPORT replacements. Wave 4 follow-up must either add a lower-level rendered harness for this legacy code or make an explicit coverage-policy decision."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-WORKSPACE-0103",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Legacy workspace graph diagnostic remains active, but current public project import paths intentionally render source-spanned SIFR-IMPORT replacements. Wave 4 follow-up must either add a lower-level rendered harness for this legacy code or make an explicit coverage-policy decision."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
       "code": "SIFR-WORKSPACE-0104",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/frontend",
-        "reason": "Legacy workspace graph diagnostic remains active, but current public project import paths intentionally render source-spanned SIFR-IMPORT replacements. Wave 4 follow-up must either add a lower-level rendered harness for this legacy code or make an explicit coverage-policy decision."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     }
   ],
