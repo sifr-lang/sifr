@@ -1,0 +1,6 @@
+from sifr.json import json_dumps
+
+
+def main() -> None:
+    values: list[int] = [1 + 2 * 3, 17 // 5, 17 % 5, -5 + 9, (8 - 3) * 4]
+    print(json_dumps(values))

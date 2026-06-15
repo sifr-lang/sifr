@@ -1,0 +1,10 @@
+from sifr.json import json_dumps
+
+
+def main() -> None:
+    items: list[int] = [3, 1, 4, 1, 5]
+    total: int = 0
+    for value in items:
+        total = total + value
+    values: list[bool] = [len(items) == 5, items[0] == 3, items[2] == 4, total == 14]
+    print(json_dumps(values))

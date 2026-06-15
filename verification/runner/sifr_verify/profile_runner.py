@@ -135,6 +135,7 @@ class ProfileRunner:
             ("coverage_matrix_checks", self.run_coverage_matrix_checks),
             ("core_guardrails", self.run_core_guardrails),
             ("diagnostic_contracts", self.run_diagnostic_contracts),
+            ("cpython_differential", self.run_cpython_differential_suites),
             ("frontend_syntax_guardrails", self.run_frontend_syntax_guardrails),
             ("developer_tooling_checks", self.run_developer_tooling_checks),
             ("performance_budget_checks", self.run_performance_budget_checks),
@@ -274,6 +275,17 @@ class ProfileRunner:
 
         print("Running diagnostic presentation contract check")
         run_command(uv_area_command("--area", "developer_tooling", "--suite", "diagnostic-contracts"))
+
+    def run_cpython_differential_suites(self) -> None:
+        suites = self.selected_suites_for_area("cpython_differential")
+        if not suites:
+            print(f"Skipping CPython differential checks for lane {self.profile_name}")
+            return
+        print("Running CPython differential checks")
+        args = ["--area", "cpython_differential"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args))
 
     def run_frontend_syntax_guardrails(self) -> None:
         print("Running Phase 35 frontend and syntax guardrails")

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "serializer": {
+    "version": 1,
+    "stdout": "exactly-one-json-line",
+    "line_ending_normalization": "crlf-to-lf-only",
+    "integer_bounds": [-1000000, 1000000],
+    "max_container_depth": 4
+  },
+  "forbidden_exclusions": [
+    "D001_RESULT_OPTION_ERRORS",
+    "D002_OWNERSHIP_BORROW",
+    "D003_FIXED_WIDTH_OVERFLOW",
+    "D004_DEFAULT_ARGUMENT_EVALUATION",
+    "D005_DIVISION_FLOOR",
+    "D006_DICT_ORDER_MUTATION",
+    "D007_UNICODE_ENCODING",
+    "D008_ASYNC_RUNTIME",
+    "D009_STATIC_NARROWING_REJECTION",
+    "D010_FLOAT_PRECISION",
+    "D011_REPR_FORMATTING",
+    "D012_EXCEPTION_MESSAGES"
+  ],
+  "cases": [
+    {
+      "id": "bounded_int_arithmetic",
+      "python": "verification/areas/cpython_differential/fixtures/hand_seeded/bounded_int_arithmetic/case.py",
+      "sifr": "verification/areas/cpython_differential/fixtures/hand_seeded/bounded_int_arithmetic/main.sifr",
+      "allowed_exit_codes": [0],
+      "supported_constructs": [1, 2, 5, 9],
+      "excluded_divergences": []
+    },
+    {
+      "id": "boolean_string_logic",
+      "python": "verification/areas/cpython_differential/fixtures/hand_seeded/boolean_string_logic/case.py",
+      "sifr": "verification/areas/cpython_differential/fixtures/hand_seeded/boolean_string_logic/main.sifr",
+      "allowed_exit_codes": [0],
+      "supported_constructs": [1, 3, 4, 5, 8, 9],
+      "excluded_divergences": []
+    },
+    {
+      "id": "list_iteration_indexing",
+      "python": "verification/areas/cpython_differential/fixtures/hand_seeded/list_iteration_indexing/case.py",
+      "sifr": "verification/areas/cpython_differential/fixtures/hand_seeded/list_iteration_indexing/main.sifr",
+      "allowed_exit_codes": [0],
+      "supported_constructs": [1, 2, 5, 7, 9],
+      "excluded_divergences": []
+    },
+    {
+      "id": "dict_lookup_order_independent",
+      "python": "verification/areas/cpython_differential/fixtures/hand_seeded/dict_lookup_order_independent/case.py",
+      "sifr": "verification/areas/cpython_differential/fixtures/hand_seeded/dict_lookup_order_independent/main.sifr",
+      "allowed_exit_codes": [0],
+      "supported_constructs": [1, 2, 5, 6, 9],
+      "excluded_divergences": []
+    }
+  ]
+}
