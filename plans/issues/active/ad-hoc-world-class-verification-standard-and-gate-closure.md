@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package script-recursion coverage merged
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package production-manifest coverage merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -962,7 +962,7 @@ Fourteenth Wave 4 diagnostics-baseline slice:
 
 Fifteenth Wave 4 diagnostics-baseline slice:
 
-- Status: package production-manifest compact baseline expansion implemented, focused validated, reviewed with no blockers, locally merge-gate validated, and opened in PR [#2596](https://github.com/sifr-lang/sifr/pull/2596); merge is pending.
+- Status: package production-manifest compact baseline expansion merged in PR [#2596](https://github.com/sifr-lang/sifr/pull/2596) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation.
 - Scope: added package-root public `sifr check` default-command baseline support for production `sifr.toml` manifest-shape diagnostics and compact baselines for `[exports].modules` (`SIFR-PACKAGE-0701`) and `[[bin]]` target tables (`SIFR-PACKAGE-0711`). The diagnostics-area runner now has `package-check-default`, which reuses package-root discovery and invokes `check` without an explicit file so the manifest itself is the entrypoint and source-hash evidence.
 - Coverage status: of 170 stable active diagnostic codes, 129 now have rendered baseline coverage and 41 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (29), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI checks from the two fixture package roots emitted exactly one intended `SIFR-PACKAGE-0701` or `SIFR-PACKAGE-0711` diagnostic respectively, exited 2, and wrote empty stdout; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 127 cases / 155 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with 127 cases and 155 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py` passed; `python3 scripts/check_file_size_guardrails.py` passed; `git diff --check` passed.
