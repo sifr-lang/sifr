@@ -31,6 +31,7 @@ BASELINE_COMMANDS = {
     "package-check",
     "package-check-default",
     "package-repair-check",
+    "package-workspace-list",
     "package-run-bin-bad-name",
     "package-run-script",
     "package-run-target-admin",
@@ -467,6 +468,7 @@ def run_sifr_variant(
         "package-check",
         "package-check-default",
         "package-repair-check",
+        "package-workspace-list",
         "package-run-bin-bad-name",
         "package-run-script",
         "package-run-target-admin",
@@ -493,6 +495,8 @@ def run_sifr_variant(
         argv.append("check")
     elif command_name == "package-repair-check":
         argv.extend(["repair", "--check"])
+    elif command_name == "package-workspace-list":
+        argv.extend(["package", "--workspace", "--list", "--no-verify", "--allow-dirty"])
     elif command_name == "package-run-bin-bad-name":
         argv.extend(["run", "--bin", "bad!name"])
     elif command_name == "package-run-script":

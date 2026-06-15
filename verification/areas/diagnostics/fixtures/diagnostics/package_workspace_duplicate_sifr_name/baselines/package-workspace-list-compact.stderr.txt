@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PACKAGE-0607 <unknown> workspace packages use duplicate Sifr package name 'shared_name': alpha@0.1.0#path, beta@0.1.0#path
