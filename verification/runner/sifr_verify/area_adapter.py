@@ -21,7 +21,7 @@ TMP_PATTERNS = (
     re.compile(r"/var/folders/[^\s\"']+"),
 )
 ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
-BASELINE_COMMANDS = {"check", "run", "build", "test", "lint"}
+BASELINE_COMMANDS = {"check", "run", "build", "test", "lint", "fmt-check"}
 CONTRACT_MATRIX_COMMAND = "contract-matrix"
 
 
@@ -450,7 +450,10 @@ def run_sifr_variant(
     argv = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
     if diagnostic_format is not None:
         argv.extend(["--diagnostic-format", diagnostic_format])
-    argv.extend([command_name, str(entry)])
+    if command_name == "fmt-check":
+        argv.extend(["fmt", "--check", "--no-cache", str(entry)])
+    else:
+        argv.extend([command_name, str(entry)])
     started = time.perf_counter()
     proc = subprocess.run(
         argv,

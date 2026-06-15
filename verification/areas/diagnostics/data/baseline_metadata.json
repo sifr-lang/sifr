@@ -2164,6 +2164,21 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for formatter diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2582",
+      "fixture_id": "fmt_formatting_drift",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:21709500f2a6fd73a11af3a5bd46d4f3badf2d4a0366d250ccb0f0028dea2372",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_malformed_manifest",
