@@ -2045,7 +2045,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_blanket_suppression",
       "normalizers": [
         "workspace-path",
@@ -2060,7 +2060,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_boolean_positional_argument",
       "normalizers": [
         "workspace-path",
@@ -2075,7 +2075,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_duplicate_import",
       "normalizers": [
         "workspace-path",
@@ -2090,7 +2090,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_large_parameter_list",
       "normalizers": [
         "workspace-path",
@@ -2105,7 +2105,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_todo_comment",
       "normalizers": [
         "workspace-path",
@@ -2120,7 +2120,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_trailing_whitespace",
       "normalizers": [
         "workspace-path",
@@ -2135,7 +2135,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_unknown_suppression",
       "normalizers": [
         "workspace-path",
@@ -2150,7 +2150,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
-      "bless_reference": "wave-4-lint-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_unused_suppression",
       "normalizers": [
         "workspace-path",
