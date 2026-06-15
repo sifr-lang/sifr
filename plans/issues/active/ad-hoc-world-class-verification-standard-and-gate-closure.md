@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package dependency-boundary coverage merged in PR [#2612](https://github.com/sifr-lang/sifr/pull/2612); package library diagnostic synthetic-baseline coverage is open in PR [#2615](https://github.com/sifr-lang/sifr/pull/2615)
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package library diagnostic synthetic-baseline coverage merged in PR [#2615](https://github.com/sifr-lang/sifr/pull/2615)
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1041,7 +1041,7 @@ Twenty-second Wave 4 diagnostics-baseline slice:
 
 Twenty-third Wave 4 diagnostics-baseline slice:
 
-- Status: package library/Cargo-environment diagnostic synthetic compact baseline expansion open in PR [#2615](https://github.com/sifr-lang/sifr/pull/2615).
+- Status: package library/Cargo-environment diagnostic synthetic compact baseline expansion merged in PR [#2615](https://github.com/sifr-lang/sifr/pull/2615).
 - Scope: extends `code_baseline_coverage.py` so metadata-owned `synthetic: true` baseline fixtures can satisfy rendered baseline coverage when the baseline trio exists, the metadata source hash is current, the renderer is supported by the code catalog, and stderr evidence contains the claimed code. Adds a compact synthetic package diagnostic contract baseline for the remaining stable package diagnostics that are library-level, Cargo-backend dependent, or not deterministic through public CLI fixtures: invalid Cargo Sifr metadata (`SIFR-PACKAGE-0001`), Cargo command failure (`SIFR-PACKAGE-0101`), Cargo metadata parse failure (`SIFR-PACKAGE-0103`), offline source unavailability (`SIFR-PACKAGE-0104`), package type identity mismatch (`SIFR-PACKAGE-0204`), publish validation failure (`SIFR-PACKAGE-0402`), package archive traversal (`SIFR-PACKAGE-0404`), changed-file mapping failure (`SIFR-PACKAGE-0603`), and unsupported outdated query source (`SIFR-PACKAGE-0604`).
 - Coverage status: of 170 stable active diagnostic codes, 158 now have rendered baseline coverage and 12 carry Wave 4 deferrals. Package diagnostic deferrals are closed; the remaining deferred families are `BUILD` (5), `INTERNAL` (1), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: `python3 -m py_compile verification/areas/diagnostics/checks/code_baseline_coverage.py` passed; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed with `variants=5 failures=0 blocking_failures=0`; unblessed `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with `variants=174 failures=0 blocking_failures=0`; `python3 scripts/check_file_size_guardrails.py` and `git diff --check` passed.
