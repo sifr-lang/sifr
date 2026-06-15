@@ -1,0 +1,2 @@
+0 errors, 1 warning, 0 notes
+W SIFR-LINT-0002 verification/areas/diagnostics/fixtures/diagnostics/lint_unused_suppression/main.sifr:1:1 unused Sifr suppression for policy rule 'trailing-whitespace'

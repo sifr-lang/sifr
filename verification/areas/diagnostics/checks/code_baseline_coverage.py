@@ -114,7 +114,7 @@ def baseline_file_keys(files: set[pathlib.Path]) -> dict[tuple[str, str], set[st
         if match is None:
             continue
         label = match.group("label")
-        renderer = label.removeprefix("check-")
+        renderer = label.rsplit("-", maxsplit=1)[-1]
         fixture_id = path.parent.parent.name
         keys.setdefault((fixture_id, renderer), set()).add(match.group("stream"))
     return keys

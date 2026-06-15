@@ -1,0 +1,2 @@
+0 errors, 1 warning, 0 notes
+W SIFR-LINT-0005 verification/areas/diagnostics/fixtures/diagnostics/lint_todo_comment/main.sifr:1:3 comment contains tracked task marker 'TODO'

@@ -672,107 +672,83 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_unknown_suppression",
       "code": "SIFR-LINT-0001",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_unused_suppression",
       "code": "SIFR-LINT-0002",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_blanket_suppression",
       "code": "SIFR-LINT-0003",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_trailing_whitespace",
       "code": "SIFR-LINT-0004",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_todo_comment",
       "code": "SIFR-LINT-0005",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_boolean_positional_argument",
       "code": "SIFR-LINT-0006",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_large_parameter_list",
       "code": "SIFR-LINT-0007",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
+      "baseline_fixture_id": "lint_duplicate_import",
       "code": "SIFR-LINT-0008",
-      "deferral": {
-        "expires_in_wave": "4",
-        "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#wave-4-diagnostic-baseline-and-recovery-expansion",
-        "owner": "compiler/diagnostics",
-        "reason": "Rendered baseline fixture expansion is staged inside Wave 4; this code is active and tracked by registry/docs/e2e coverage until its rendered baseline lands."
-      },
+      "deferral": null,
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
+      "renderer_formats": [
+        "compact"
+      ],
       "suggestion_rendering_fixture": null
     },
     {

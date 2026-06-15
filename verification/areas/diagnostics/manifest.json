@@ -99,6 +99,78 @@
           ]
         },
         {
+          "id": "lint_blanket_suppression",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_blanket_suppression/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "lint_boolean_positional_argument",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_boolean_positional_argument/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "lint_duplicate_import",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_duplicate_import/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "lint_large_parameter_list",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_large_parameter_list/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "lint_todo_comment",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_todo_comment/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "lint_trailing_whitespace",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_trailing_whitespace/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "lint_unknown_suppression",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_unknown_suppression/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "lint_unused_suppression",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/lint_unused_suppression/main.sifr",
+          "command": "lint",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "parser_bad_indent",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr",
           "command": "check",

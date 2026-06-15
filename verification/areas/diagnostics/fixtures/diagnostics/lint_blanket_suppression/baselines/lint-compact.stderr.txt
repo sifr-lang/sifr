@@ -1,0 +1,2 @@
+0 errors, 1 warning, 0 notes
+W SIFR-LINT-0003 verification/areas/diagnostics/fixtures/diagnostics/lint_blanket_suppression/main.sifr:1:1 sifr suppression must list explicit policy rule ids

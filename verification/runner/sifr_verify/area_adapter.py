@@ -21,7 +21,7 @@ TMP_PATTERNS = (
     re.compile(r"/var/folders/[^\s\"']+"),
 )
 ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
-BASELINE_COMMANDS = {"check", "run", "build", "test"}
+BASELINE_COMMANDS = {"check", "run", "build", "test", "lint"}
 CONTRACT_MATRIX_COMMAND = "contract-matrix"
 
 

@@ -2042,6 +2042,126 @@
       "renderer": "compact",
       "source_hash": "sha256:d21f7a790e6f700bb974f2e56a59abc40414b108690337808443500f9299a359",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_blanket_suppression",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:8a6bf53b54dd8c9be9ffcd47ed1fa6035f378e4276a00b74d617e7c57e224f5f",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_boolean_positional_argument",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:6635e06aa9d149fff1810d4c336926c006a00afc704ecf004d91687dd94d706d",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_duplicate_import",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:9b4ffb1683b96855b6a25b88af19e99e20d4c2f009b39775a9432e84d175ff21",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_large_parameter_list",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:209005cd5f3b9179435f3b002531af5f00086b1ac3f339ef4392a70260ad5f8c",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_todo_comment",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:9b028d43ddce15844d15e0ab2442d6844d6eedb105eccb917f17974a4cc62af1",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_trailing_whitespace",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:0257d23e409d423a74fa846faa26b976c2ddce5fbdb3a778633184aa2e704792",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_unknown_suppression",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:3d2d2e150218ff0afa213aed577c0f3c2cc3692883e7bb4733c07d640e38e283",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
+      "fixture_id": "lint_unused_suppression",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/diagnostics",
+      "renderer": "compact",
+      "source_hash": "sha256:ffcd24ebcf12aa8d7d19a548b011941755f1b8bed18f1f604d5667038eec3662",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1

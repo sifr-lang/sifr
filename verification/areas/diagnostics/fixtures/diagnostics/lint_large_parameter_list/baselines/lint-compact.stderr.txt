@@ -1,0 +1,2 @@
+0 errors, 1 warning, 0 notes
+W SIFR-LINT-0007 verification/areas/diagnostics/fixtures/diagnostics/lint_large_parameter_list/main.sifr:1:1 function 'configure' has 6 parameters, exceeding the policy limit of 5
