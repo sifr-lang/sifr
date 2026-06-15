@@ -19,6 +19,7 @@ bigdecimal = "0.4.10"
 num-bigint = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

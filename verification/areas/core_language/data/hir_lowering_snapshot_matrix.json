@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "hir_snapshots": [
+    {
+      "id": "basic_function_arithmetic",
+      "owner": "compiler/hir",
+      "source": "def add(a: int, b: int) -> int:\n    total = a + b\n    return total\n",
+      "expected_hir_snapshot": {
+        "functions": [
+          {
+            "name": "add",
+            "params": [
+              {
+                "name": "a",
+                "ty": "int"
+              },
+              {
+                "name": "b",
+                "ty": "int"
+              }
+            ],
+            "return_type": "int",
+            "body": [
+              {
+                "kind": "Let",
+                "name": "total",
+                "ty": "int",
+                "value": {
+                  "kind": "BinOp",
+                  "ty": "int",
+                  "op": "+",
+                  "left": {
+                    "kind": "Name",
+                    "ty": "int",
+                    "name": "a"
+                  },
+                  "right": {
+                    "kind": "Name",
+                    "ty": "int",
+                    "name": "b"
+                  }
+                }
+              },
+              {
+                "kind": "Return",
+                "value": {
+                  "kind": "Name",
+                  "ty": "int",
+                  "name": "total"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "for_if_accumulator",
+      "owner": "compiler/hir",
+      "source": "def sum_positive(items: list[int]) -> int:\n    total = 0\n    for value in items:\n        if value > 0:\n            total += value\n    return total\n",
+      "expected_hir_snapshot": {
+        "functions": [
+          {
+            "name": "sum_positive",
+            "params": [
+              {
+                "name": "items",
+                "ty": "list[int]"
+              }
+            ],
+            "return_type": "int",
+            "body": [
+              {
+                "kind": "Let",
+                "name": "total",
+                "ty": "int",
+                "value": {
+                  "kind": "IntLiteral",
+                  "ty": "int"
+                }
+              },
+              {
+                "kind": "For",
+                "target": "value",
+                "target_ty": "int",
+                "iter": {
+                  "kind": "IteratorCall",
+                  "ty": "Iterator[int]",
+                  "op": "Iter",
+                  "args": [
+                    {
+                      "kind": "Name",
+                      "ty": "list[int]",
+                      "name": "items"
+                    }
+                  ]
+                },
+                "body": [
+                  {
+                    "kind": "If",
+                    "condition": {
+                      "kind": "Compare",
+                      "ty": "bool",
+                      "ops": [
+                        ">"
+                      ],
+                      "left": {
+                        "kind": "Name",
+                        "ty": "int",
+                        "name": "value"
+                      },
+                      "comparators": [
+                        {
+                          "kind": "IntLiteral",
+                          "ty": "int"
+                        }
+                      ]
+                    },
+                    "then_body": [
+                      {
+                        "kind": "AugAssign",
+                        "name": "total",
+                        "op": "+=",
+                        "value": {
+                          "kind": "Name",
+                          "ty": "int",
+                          "name": "value"
+                        }
+                      }
+                    ],
+                    "elif_clauses": [],
+                    "else_body": null
+                  }
+                ],
+                "else_body": null
+              },
+              {
+                "kind": "Return",
+                "value": {
+                  "kind": "Name",
+                  "ty": "int",
+                  "name": "total"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

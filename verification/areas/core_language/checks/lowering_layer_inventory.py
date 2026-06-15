@@ -11,6 +11,28 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 INVENTORY = (
     REPO_ROOT / "verification" / "areas" / "core_language" / "data" / "lowering_layer_inventory.json"
 )
+MATRIX_COLLECTIONS = [
+    (
+        REPO_ROOT
+        / "verification"
+        / "areas"
+        / "core_language"
+        / "data"
+        / "syntax_parser_lexer_matrix.json",
+        "shape_snapshots",
+        "expected_statement_tree",
+    ),
+    (
+        REPO_ROOT
+        / "verification"
+        / "areas"
+        / "core_language"
+        / "data"
+        / "hir_lowering_snapshot_matrix.json",
+        "hir_snapshots",
+        "expected_hir_snapshot",
+    ),
+]
 ALLOWED_LAYERS = {
     "parsed_source",
     "hir_lowering",
@@ -19,6 +41,10 @@ ALLOWED_LAYERS = {
     "cfg_flow",
 }
 ALLOWED_PROFILES = {"create-pr", "merge", "nightly", "release"}
+EXPECTED_FIELD_BY_SNAPSHOT_KIND = {
+    "statement_tree": "expected_statement_tree",
+    "hir_module_shape": "expected_hir_snapshot",
+}
 REQUIRED_FIELDS = {
     "id",
     "compiler_layer",
@@ -92,6 +118,7 @@ def validate_inventory() -> list[str]:
             failures.append(f"{row_id} active snapshot replacement must be null")
         failures.extend(validate_source_fixture(row, row_id))
 
+    failures.extend(validate_matrix_fixtures_are_claimed(layers))
     return failures
 
 
@@ -171,12 +198,49 @@ def validate_source_fixture(row: dict[str, Any], row_id: str) -> list[str]:
     if not matched:
         return [f"{row_id} source_fixture target {fragment!r} does not exist"]
     target = matched[0]
-    if "expected_statement_tree" not in target:
-        return [f"{row_id} source_fixture target {fragment!r} lacks expected_statement_tree"]
+    snapshot_kind = row.get("snapshot_kind")
+    expected_field = EXPECTED_FIELD_BY_SNAPSHOT_KIND.get(snapshot_kind)
+    if expected_field is None:
+        return [f"{row_id} snapshot_kind {snapshot_kind!r} is not supported"]
+    if expected_field not in target:
+        return [f"{row_id} source_fixture target {fragment!r} lacks {expected_field}"]
     expected_snapshot_id = f"{fixture_path.stem}.{collection}.{fixture_id}"
     if row.get("snapshot_id") != expected_snapshot_id:
         return [f"{row_id} snapshot_id does not match source_fixture fragment {fragment!r}"]
     return []
+
+
+def validate_matrix_fixtures_are_claimed(layers: list[Any]) -> list[str]:
+    claimed = {
+        row.get("source_fixture")
+        for row in layers
+        if isinstance(row, dict) and isinstance(row.get("source_fixture"), str)
+    }
+    failures: list[str] = []
+    for matrix_path, collection, expected_field in MATRIX_COLLECTIONS:
+        try:
+            payload = json.loads(matrix_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            failures.append(f"failed to read {matrix_path.relative_to(REPO_ROOT)}: {error}")
+            continue
+        rows = payload.get(collection)
+        if not isinstance(rows, list):
+            failures.append(f"{matrix_path.relative_to(REPO_ROOT)} {collection!r} is not a list")
+            continue
+        for index, item in enumerate(rows):
+            if not isinstance(item, dict) or expected_field not in item:
+                continue
+            fixture_id = item.get("id")
+            if not isinstance(fixture_id, str) or not fixture_id:
+                matrix_name = matrix_path.relative_to(REPO_ROOT)
+                failures.append(
+                    f"{matrix_name} {collection}[{index}] id must be a non-empty string"
+                )
+                continue
+            fixture_ref = f"{matrix_path.relative_to(REPO_ROOT)}#{collection}/{fixture_id}"
+            if fixture_ref not in claimed:
+                failures.append(f"matrix fixture {fixture_ref!r} lacks lowering inventory row")
+    return failures
 
 
 if __name__ == "__main__":
