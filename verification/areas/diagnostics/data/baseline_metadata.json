@@ -2165,7 +2165,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for formatter diagnostics.",
-      "bless_reference": "wave-4-fmt-compact-baseline-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2582",
       "fixture_id": "fmt_formatting_drift",
       "normalizers": [
         "workspace-path",
