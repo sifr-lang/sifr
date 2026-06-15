@@ -62,6 +62,19 @@
       ]
     },
     {
+      "name": "lowering_layer_inventory",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "lowering_layer_inventory",
+          "entry": "verification/areas/core_language/checks/lowering_layer_inventory.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "audit-fixtures",
       "kind": "adapter",
       "cases": [

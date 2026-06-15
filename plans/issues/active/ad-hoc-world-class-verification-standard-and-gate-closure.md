@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage merged in PR [#2619](https://github.com/sifr-lang/sifr/pull/2619)
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage merged in PR [#2619](https://github.com/sifr-lang/sifr/pull/2619); Wave 5.1 parsed-source shape inventory is open in PR [#2621](https://github.com/sifr-lang/sifr/pull/2621)
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1131,6 +1131,15 @@ cargo test -p sifr_codegen
 uv run --project verification --locked python -m sifr_verify areas run --area core_language
 scripts/run_all_tests.sh --profile create-pr
 ```
+
+### Wave 5 Implementation Notes
+
+Wave 5.1 parsed-source shape inventory slice:
+
+- Status: parsed-source shape inventory and snapshots open in PR [#2621](https://github.com/sifr-lang/sifr/pull/2621).
+- Scope: adds `verification/areas/core_language/data/lowering_layer_inventory.json`, a core-language `lowering_layer_inventory` area-check, and Sifr-owned parsed-source statement-tree snapshots in `syntax_parser_lexer_matrix.json`. The existing syntax-matrix tests were split from `crates/sifr_syntax/src/lib.rs` into `crates/sifr_syntax/src/syntax_matrix_tests.rs` to keep hand-maintained source under the 900-line guardrail.
+- Focused validation: `cargo test -p sifr_syntax` passed; `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite lowering_layer_inventory --suite syntax_parser_lexer_matrix` passed with `variants=2 failures=0 blocking_failures=0`; full `uv run --project verification --locked python -m sifr_verify areas run --area core_language` passed with `variants=6 failures=0 blocking_failures=0`; after review follow-up edits, `python3 -m py_compile verification/areas/core_language/checks/lowering_layer_inventory.py`, `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite lowering_layer_inventory`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` passed. Wave 5 crate-test trio `cargo test -p sifr_lowering -p sifr_analysis -p sifr_codegen` passed. `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e pass fixtures, report signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm wall-time / warm-cache hit-rate notes.
+- Review: Claude Opus review pass 1 reported no blocking findings in `plans/reviews/active/ad-hoc-world-class-verification-wave-5-1-parsed-source-shape-review-pass-1.md` and stated no full review round was required. Non-blocking residual risks were addressed by documenting the `primary-body-only` normalizer and tightening inventory replacement/snapshot-id invariants. Review pass 2 in `plans/reviews/active/ad-hoc-world-class-verification-wave-5-1-parsed-source-shape-review-pass-2.md` reported no blocking findings and stated no further review round is required.
 
 ### Wave 6: CPython Differential Miscompilation Oracle
 
