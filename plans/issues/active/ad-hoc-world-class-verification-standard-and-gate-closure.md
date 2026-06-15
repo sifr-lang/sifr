@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 lint compact baseline slice, and Wave 4 workspace manifest/source-root compact baseline slice merged; Wave 4 formatter compact baseline slice locally focused-validated
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package explicit-file source-root coverage merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -944,7 +944,7 @@ Twelfth Wave 4 diagnostics-baseline slice:
 
 Thirteenth Wave 4 diagnostics-baseline slice:
 
-- Status: package explicit-file source-root compact baseline expansion implemented, locally merge-gate validated, reviewed with no blockers, and opened in PR [#2592](https://github.com/sifr-lang/sifr/pull/2592); pending merge.
+- Status: package explicit-file source-root compact baseline expansion merged in PR [#2592](https://github.com/sifr-lang/sifr/pull/2592) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation.
 - Scope: added one package-root public `sifr check tools/task.sifr` compact baseline for explicit files outside the package source root (`SIFR-PACKAGE-0710`). This reuses the existing diagnostics-area `package-check` command and nested baseline attribution support for entrypoint-local `tools/baselines/` files.
 - Coverage status: of 170 stable active diagnostic codes, 126 now have rendered baseline coverage and 44 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (32), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI check for `package_explicit_file_outside_source_root` emitted exactly one intended `SIFR-PACKAGE-0710` diagnostic, exited 1, and wrote empty stdout; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 124 cases / 152 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with 124 cases and 152 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py` passed; `python3 scripts/check_file_size_guardrails.py` passed; `git diff --check` passed.
