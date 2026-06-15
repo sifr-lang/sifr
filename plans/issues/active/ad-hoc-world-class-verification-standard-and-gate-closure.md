@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through package production-manifest coverage merged, and package projection repair-check coverage opened in PR #2598 with local review/gates passed
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package projection repair-check coverage merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -971,7 +971,7 @@ Fifteenth Wave 4 diagnostics-baseline slice:
 
 Sixteenth Wave 4 diagnostics-baseline slice:
 
-- Status: package projection repair-check compact baseline expansion opened in PR [#2598](https://github.com/sifr-lang/sifr/pull/2598) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation; pending PR merge and tracker merge.
+- Status: package projection repair-check compact baseline expansion merged in PR [#2598](https://github.com/sifr-lang/sifr/pull/2598) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation.
 - Scope: added package-root public `sifr repair --check` baseline support and compact baselines for Cargo projection manifest pointer drift (`SIFR-PACKAGE-0703`), Cargo projection include drift (`SIFR-PACKAGE-0704`), and missing pure-package marker repair diagnostics (`SIFR-PACKAGE-0709`). The diagnostics-area runner now has `package-repair-check`, which reuses package-root discovery and invokes `repair --check` from the fixture root so Cargo projection diagnostics are exercised through the public CLI path.
 - Coverage status: of 170 stable active diagnostic codes, 132 now have rendered baseline coverage and 38 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (26), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI checks from the two fixture package roots emitted the intended diagnostics through `sifr repair --check`: the manifest-pointer fixture emitted `SIFR-PACKAGE-0703` and `SIFR-PACKAGE-0704`, exited 1, and wrote empty stdout; the missing-pure-marker fixture emitted `SIFR-PACKAGE-0709`, exited 1, and wrote empty stdout. `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 129 cases / 157 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with 129 cases and 157 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py` passed; `python3 scripts/check_file_size_guardrails.py` passed; `git diff --check` passed.
