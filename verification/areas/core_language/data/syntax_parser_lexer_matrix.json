@@ -76,6 +76,81 @@
       ]
     }
   ],
+  "shape_snapshots": [
+    {
+      "id": "sifr_owned_class_match_function_shapes",
+      "owner": "compiler/syntax",
+      "source": "class Box:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\ndef main() -> int:\n    box = Box(2)\n    match box.value:\n        case 2:\n            return 1\n        case _:\n            return 0\n",
+      "expected_statement_tree": [
+        {
+          "kind": "ClassDef",
+          "body": [
+            {
+              "kind": "AnnAssign"
+            },
+            {
+              "kind": "FunctionDef",
+              "body": [
+                {
+                  "kind": "Assign"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FunctionDef",
+          "body": [
+            {
+              "kind": "Assign"
+            },
+            {
+              "kind": "Match",
+              "body": [
+                {
+                  "kind": "Return"
+                },
+                {
+                  "kind": "Return"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sifr_owned_loop_and_if_shapes",
+      "owner": "compiler/syntax",
+      "source": "def main(items: list[int]) -> int:\n    total = 0\n    for value in items:\n        if value > 0:\n            total += value\n    return total\n",
+      "expected_statement_tree": [
+        {
+          "kind": "FunctionDef",
+          "body": [
+            {
+              "kind": "Assign"
+            },
+            {
+              "kind": "For",
+              "body": [
+                {
+                  "kind": "If",
+                  "body": [
+                    {
+                      "kind": "AugAssign"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "Return"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "contradiction_checks": [
     {
       "id": "no_fixture_can_be_both_positive_and_negative",

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "layers": [
+    {
+      "id": "parsed_source.sifr_owned_class_match_function_shapes",
+      "compiler_layer": "parsed_source",
+      "owner": "compiler/syntax",
+      "contract_id": "wave5.parsed_source.shape.class_match_function",
+      "source_fixture": "verification/areas/core_language/data/syntax_parser_lexer_matrix.json#shape_snapshots/sifr_owned_class_match_function_shapes",
+      "snapshot_id": "syntax_parser_lexer_matrix.shape_snapshots.sifr_owned_class_match_function_shapes",
+      "snapshot_kind": "statement_tree",
+      "normalizers": [
+        "statement-kind-only",
+        "primary-body-only",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
+    },
+    {
+      "id": "parsed_source.sifr_owned_loop_and_if_shapes",
+      "compiler_layer": "parsed_source",
+      "owner": "compiler/syntax",
+      "contract_id": "wave5.parsed_source.shape.loop_and_if",
+      "source_fixture": "verification/areas/core_language/data/syntax_parser_lexer_matrix.json#shape_snapshots/sifr_owned_loop_and_if_shapes",
+      "snapshot_id": "syntax_parser_lexer_matrix.shape_snapshots.sifr_owned_loop_and_if_shapes",
+      "snapshot_kind": "statement_tree",
+      "normalizers": [
+        "statement-kind-only",
+        "primary-body-only",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
+    }
+  ]
+}
