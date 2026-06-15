@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package release-preflight coverage merged; package dependency-boundary coverage implemented, reviewed, and locally gate-clean pending PR/tracker merge
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package dependency-boundary coverage merged in PR [#2612](https://github.com/sifr-lang/sifr/pull/2612); tracker closeout pending
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1031,7 +1031,7 @@ Twenty-first Wave 4 diagnostics-baseline slice:
 
 Twenty-second Wave 4 diagnostics-baseline slice:
 
-- Status: package dependency-boundary compact baseline expansion implemented, focused-validation clean, reviewed by Claude Opus with no blockers, create-pr validated, and merge-gate validated; pending PR and tracker merge.
+- Status: package dependency-boundary compact baseline expansion merged in PR [#2612](https://github.com/sifr-lang/sifr/pull/2612) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation; tracker closeout pending.
 - Scope: added public `sifr check src/main.sifr` package-session compact baselines for ambiguous direct dependency import roots (`SIFR-PACKAGE-0201`), imports from transitive dependencies that are outside the current package's direct scope (`SIFR-PACKAGE-0202`), and private dependency module imports (`SIFR-PACKAGE-0203`).
 - Coverage status: of 170 stable active diagnostic codes, 149 now have rendered baseline coverage and 21 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (9), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI checks from the three package app roots emitted exactly one intended `SIFR-PACKAGE-0201`, `SIFR-PACKAGE-0202`, or `SIFR-PACKAGE-0203` diagnostic through `sifr check src/main.sifr` and exited 1. `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 146 cases / 174 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; unblessed `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed 146 cases / 174 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` passed.
