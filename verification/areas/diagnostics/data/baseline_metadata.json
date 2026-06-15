@@ -904,6 +904,21 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package manifest public API diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2590",
+      "fixture_id": "package_duplicate_public_api_symbol",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:16a15c2908801c728acef50fb9c07adae953f1e3dccaa9fe7b95a3ce3152c929",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for self-update receipt diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2588",
       "fixture_id": "self_update_missing_receipt",

@@ -1,0 +1,9 @@
+[package]
+name = "package-fatal-source-map-no-import-ambiguity"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[workspace]

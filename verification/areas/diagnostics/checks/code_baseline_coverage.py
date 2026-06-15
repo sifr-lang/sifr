@@ -102,20 +102,21 @@ def actual_baseline_files() -> set[pathlib.Path]:
     fixture_root = AREA_ROOT / "fixtures" / "diagnostics"
     return {
         path
-        for path in fixture_root.glob("*/baselines/*.txt")
+        for path in fixture_root.glob("**/baselines/*.txt")
         if BASELINE_RE.fullmatch(path.name)
     }
 
 
 def baseline_file_keys(files: set[pathlib.Path]) -> dict[tuple[str, str], set[str]]:
     keys: dict[tuple[str, str], set[str]] = {}
+    fixture_root = AREA_ROOT / "fixtures" / "diagnostics"
     for path in files:
         match = BASELINE_RE.fullmatch(path.name)
         if match is None:
             continue
         label = match.group("label")
         renderer = label.rsplit("-", maxsplit=1)[-1]
-        fixture_id = path.parent.parent.name
+        fixture_id = path.relative_to(fixture_root).parts[0]
         keys.setdefault((fixture_id, renderer), set()).add(match.group("stream"))
     return keys
 
