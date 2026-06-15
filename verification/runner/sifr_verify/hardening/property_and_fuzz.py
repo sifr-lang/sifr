@@ -18,6 +18,22 @@ from .core import (
 )
 from .fixedbugs_and_crashes import contains_internal_panic
 
+FUZZ_SMOKE_MANIFEST = Path("verification/areas/fuzz_property/fuzz_smoke_manifest.json")
+REQUIRED_TARGET_IDS = {
+    "parse_check_entrypoint",
+    "hir_type_ownership_entrypoint",
+    "codegen_entrypoint",
+    "diagnostic_renderer_entrypoint",
+    "package_project_manifest_entrypoint",
+}
+ALLOWED_PROGRAM_CLASSES = {
+    "valid-only",
+    "invalid-only",
+    "mixed-valid-invalid",
+    "structured-diagnostics",
+}
+
+
 def run_property_suite(
     *,
     suite: dict[str, Any],
@@ -32,6 +48,7 @@ def run_property_suite(
     if not entries:
         raise SystemExit(f"suite '{suite_name}' has empty index: {index_path}")
     print(f"  suite={suite_name} owner={suite.get('owner', 'unknown')} entries={len(entries)}")
+    known_targets = load_known_targets(repo_root)
 
     result = {
         "name": suite_name,
@@ -59,11 +76,13 @@ def run_property_suite(
             (
                 "id",
                 "entry",
+                "program_class",
                 "command",
                 "diagnostic_format",
                 "note",
             ),
         )
+        mismatches.extend(validate_property_target_contract(entry, known_targets))
 
         entry_path_raw = entry.get("entry")
         command_name = entry.get("command")
@@ -296,6 +315,7 @@ def run_fuzz_smoke_suite(
         "note",
     )
     mismatches = required_missing(payload, required)
+    mismatches.extend(validate_fuzz_target_contract(payload, repo_root))
     seed_files = payload.get("seed_files")
     iterations = payload.get("iterations")
     random_seed = payload.get("random_seed")
@@ -450,3 +470,117 @@ def run_fuzz_smoke_suite(
     result["cases"].append(case_result)
     return result
 
+
+def load_known_targets(repo_root: Path) -> dict[str, dict[str, Any]]:
+    manifest_path = repo_root / FUZZ_SMOKE_MANIFEST
+    if not manifest_path.is_file():
+        raise SystemExit(f"fuzz target contract manifest missing: {manifest_path}")
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    mismatches = validate_fuzz_target_contract(payload, repo_root)
+    if mismatches:
+        raise SystemExit(
+            "fuzz target contract invalid: " + ", ".join(sorted(set(mismatches)))
+        )
+    targets = payload.get("targets", [])
+    return {str(target["id"]): target for target in targets}
+
+
+def validate_property_target_contract(entry: dict[str, Any], known_targets: dict[str, dict[str, Any]]) -> list[str]:
+    mismatches: list[str] = []
+    target_ids = entry.get("target_ids")
+    if not isinstance(target_ids, list) or not target_ids:
+        mismatches.append("target_ids")
+    else:
+        for target_id in target_ids:
+            if not isinstance(target_id, str) or target_id not in known_targets:
+                mismatches.append(f"target_ids:{target_id}")
+                continue
+            if not program_class_is_compatible(
+                property_class=entry.get("program_class"),
+                target_class=known_targets[target_id].get("program_class"),
+            ):
+                mismatches.append(f"program_class:{target_id}")
+    program_class = entry.get("program_class")
+    if program_class not in {"valid-only", "invalid-only"}:
+        mismatches.append("program_class")
+    if not command_list(entry.get("reproduction_command")):
+        mismatches.append("reproduction_command")
+    return mismatches
+
+
+def validate_fuzz_target_contract(payload: dict[str, Any], repo_root: Path) -> list[str]:
+    mismatches: list[str] = []
+    if payload.get("target_contract_version") != 1:
+        mismatches.append("target_contract_version")
+    required_target_ids = payload.get("required_target_ids")
+    if not isinstance(required_target_ids, list) or set(required_target_ids) != REQUIRED_TARGET_IDS:
+        mismatches.append("required_target_ids")
+    elif len(required_target_ids) != len(set(required_target_ids)):
+        mismatches.append("required_target_ids.duplicate")
+    targets = payload.get("targets")
+    if not isinstance(targets, list) or not targets:
+        mismatches.append("targets")
+        return mismatches
+
+    seen: set[str] = set()
+    for target in targets:
+        if not isinstance(target, dict):
+            mismatches.append("target")
+            continue
+        target_id = target.get("id")
+        if not isinstance(target_id, str) or target_id not in REQUIRED_TARGET_IDS:
+            mismatches.append(f"target.id:{target_id}")
+        elif target_id in seen:
+            mismatches.append(f"target.duplicate:{target_id}")
+        else:
+            seen.add(target_id)
+        for field in ("entrypoint", "input_grammar", "coverage_mode", "finding_promotion"):
+            if not isinstance(target.get(field), str) or not target[field]:
+                mismatches.append(f"{target_id}.{field}")
+        if target.get("program_class") not in ALLOWED_PROGRAM_CLASSES:
+            mismatches.append(f"{target_id}.program_class")
+        corpus_dir = target.get("corpus_dir")
+        if not isinstance(corpus_dir, str) or not (repo_root / corpus_dir).is_dir():
+            mismatches.append(f"{target_id}.corpus_dir")
+        seed_files = target.get("seed_files")
+        if not isinstance(seed_files, list) or not seed_files:
+            mismatches.append(f"{target_id}.seed_files")
+        else:
+            for seed in seed_files:
+                if not isinstance(seed, str) or not (repo_root / seed).is_file():
+                    mismatches.append(f"{target_id}.seed_file:{seed}")
+        if not command_list(target.get("reproduction_command")):
+            mismatches.append(f"{target_id}.reproduction_command")
+        minimization_command = target.get("minimization_command")
+        if not command_list(minimization_command):
+            mismatches.append(f"{target_id}.minimization_command")
+        else:
+            mismatches.extend(validate_command_paths(target_id, minimization_command, repo_root))
+    missing_targets = REQUIRED_TARGET_IDS.difference(seen)
+    for target_id in sorted(missing_targets):
+        mismatches.append(f"target.missing:{target_id}")
+    return mismatches
+
+
+def program_class_is_compatible(*, property_class: object, target_class: object) -> bool:
+    if property_class == "valid-only":
+        return target_class in {"valid-only", "mixed-valid-invalid"}
+    if property_class == "invalid-only":
+        return target_class in {"invalid-only", "mixed-valid-invalid"}
+    return False
+
+
+def command_list(value: object) -> bool:
+    return isinstance(value, list) and bool(value) and all(
+        isinstance(part, str) and bool(part) for part in value
+    )
+
+
+def validate_command_paths(target_id: object, command: object, repo_root: Path) -> list[str]:
+    mismatches: list[str] = []
+    if not isinstance(command, list):
+        return mismatches
+    for part in command:
+        if isinstance(part, str) and part.endswith(".py") and not (repo_root / part).is_file():
+            mismatches.append(f"{target_id}.command_path:{part}")
+    return mismatches
