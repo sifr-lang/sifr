@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PACKAGE-0305 <unknown> package 'package-stale-trust-entry@0.1.0#path' trusts backend crate 'missing-backend', but it is not a direct backend dependency

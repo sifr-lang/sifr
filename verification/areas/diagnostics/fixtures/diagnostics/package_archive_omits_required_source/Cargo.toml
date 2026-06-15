@@ -1,0 +1,13 @@
+[package]
+name = "package-archive-omits-required-source"
+version = "0.1.0"
+edition = "2021"
+exclude = ["src/main.sifr"]
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[lib]
+path = "src/lib.rs"
+
+[workspace]
