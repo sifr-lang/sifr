@@ -2162,6 +2162,66 @@
       "renderer": "compact",
       "source_hash": "sha256:ffcd24ebcf12aa8d7d19a548b011941755f1b8bed18f1f604d5667038eec3662",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "fixture_id": "workspace_malformed_manifest",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "fixture_id": "workspace_source_root_escapes",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "fixture_id": "workspace_source_root_not_directory",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "fixture_id": "workspace_invalid_source_root",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1

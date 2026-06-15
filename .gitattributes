@@ -1,1 +1,2 @@
 verification/areas/diagnostics/fixtures/diagnostics/lint_trailing_whitespace/main.sifr whitespace=-blank-at-eol
+verification/areas/diagnostics/fixtures/diagnostics/workspace_malformed_manifest/baselines/check-compact.stderr.txt whitespace=-blank-at-eof
