@@ -1,0 +1,10 @@
+[package]
+name = "private-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+math = { path = "../math", package = "private-math" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

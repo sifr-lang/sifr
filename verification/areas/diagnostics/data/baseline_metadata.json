@@ -934,6 +934,51 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package dependency boundary diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2612",
+      "fixture_id": "package_ambiguous_direct_import_root",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:cb2f17d745f65326d54b2400b4e525c2331c7562f9d8ec36c93b4af07f6689f4",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package dependency boundary diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2612",
+      "fixture_id": "package_transitive_dependency_import",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:c85d4b53267b670752a217e62a4579125371515c471879b4ac4f3156b9f1ca8e",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package dependency boundary diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2612",
+      "fixture_id": "package_private_dependency_module",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:a3fb7b3cffb339470dfdda8d35eff9571a42fe1a086b2b1194aba66d8a24ff0d",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for production manifest exports diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
       "fixture_id": "package_manifest_exports_not_production",

@@ -1,0 +1,7 @@
+[package]
+name = "package_transitive_dependency_import"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"

@@ -1,0 +1,4 @@
+from geometry._internal import value
+
+def main():
+    print(value())

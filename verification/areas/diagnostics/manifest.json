@@ -479,6 +479,33 @@
           ]
         },
         {
+          "id": "package_ambiguous_direct_import_root",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_ambiguous_direct_import_root/app/src/main.sifr",
+          "command": "package-check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_transitive_dependency_import",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_transitive_dependency_import/app/src/main.sifr",
+          "command": "package-check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_private_dependency_module",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_private_dependency_module/app/src/main.sifr",
+          "command": "package-check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "package_script_recursion",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_script_recursion/sifr.toml",
           "command": "package-run-script",

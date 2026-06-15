@@ -1,0 +1,4 @@
+from geometry.vector import value
+
+def main():
+    print(value())

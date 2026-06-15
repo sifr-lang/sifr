@@ -1,0 +1,10 @@
+[package]
+name = "transitive-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+image = { path = "../image", package = "image-package" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

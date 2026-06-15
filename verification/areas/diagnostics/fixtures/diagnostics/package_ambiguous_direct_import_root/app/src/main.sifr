@@ -1,0 +1,4 @@
+from shared import value
+
+def main():
+    print(value())

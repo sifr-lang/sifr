@@ -1,0 +1,11 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+math1 = { path = "../math-v1", package = "math-v1" }
+math2 = { path = "../math-v2", package = "math-v2" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
