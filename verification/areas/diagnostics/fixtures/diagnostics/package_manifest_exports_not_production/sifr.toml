@@ -1,0 +1,10 @@
+[package]
+name = "package_manifest_exports_not_production"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[exports]
+modules = ["package_manifest_exports_not_production"]

@@ -488,6 +488,24 @@
           ]
         },
         {
+          "id": "package_manifest_exports_not_production",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_manifest_exports_not_production/sifr.toml",
+          "command": "package-check-default",
+          "expect_exit_code": 2,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_manifest_bin_tables_not_production",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_manifest_bin_tables_not_production/sifr.toml",
+          "command": "package-check-default",
+          "expect_exit_code": 2,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "e2e_bigdecimal_constructor_float",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_constructor_float/main.sifr",
           "command": "check",
