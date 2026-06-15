@@ -86,6 +86,17 @@
       ]
     },
     {
+      "area": "cpython_differential",
+      "suites": [
+        "policy",
+        "hand_seeded_merge",
+        "generated_broader"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "runtime_platform",
       "suites": [
         "platform-golden"

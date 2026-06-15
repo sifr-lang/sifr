@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, and Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke merged in PR [#2627](https://github.com/sifr-lang/sifr/pull/2627); Wave 6.1 generator, serializer, and shrinker next
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, and Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke merged in PR [#2627](https://github.com/sifr-lang/sifr/pull/2627); Wave 6.1 generator, serializer, and shrinker in progress on branch `codex/wave-6-1-cpython-generator-shrinker`
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1167,6 +1167,16 @@ Wave 6.0 CPython divergence catalogue and hand-seeded merge smoke slice:
 - Deferred non-blocking risks: make policy prose checks more structural, embed `sys.version` in a durable area result artifact, and enforce the full version-1 value grammar at runtime before generated Wave 6.1 programs are promoted.
 - Closeout validation: docs-only closeout `git diff --check` passed, and `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e pass fixtures, report signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, plus an advisory-only warm wall-time budget overrun.
 
+Wave 6.1 generated CPython differential generator, serializer, and shrinker slice:
+
+- Status: in progress on branch `codex/wave-6-1-cpython-generator-shrinker`.
+- Scope: adds a deterministic grammar-based generated seed manifest, generated CPython-vs-Sifr suite runners for `generated_minimized_seeds` and `generated_broader`, value-grammar validation, release-binary build/hash/source-digest evidence, timeout and exit/error-bucket comparison, minimized-failure artifact output, an empty checked-in minimized-failure ledger, generated-manifest linting, and nightly/release profile wiring for `generated_broader`. Merge promotion remains blocked by the 20-consecutive-nightly-green rule.
+- Focused validation so far: `jq empty` passed for the CPython area manifest, generated seed manifest, minimized-failure ledger, nightly profile, and release profile; `python3 -m py_compile` passed for the generated runner, generator, wrapper scripts, and catalogue linter; `uv run --project verification --locked python -m sifr_verify areas run --area cpython_differential --suite policy` passed; `uv run --project verification --locked python -m sifr_verify areas run --area cpython_differential --suite generated_minimized_seeds` passed with four generated seeds; `uv run --project verification --locked python -m sifr_verify areas run --area cpython_differential --suite generated_broader` passed with six generated seeds; combined `policy`, `hand_seeded_merge`, `generated_minimized_seeds`, and `generated_broader` passed with `variants=4 failures=0 blocking_failures=0`; nightly and release profile plans include `cpython_differential` suites `policy`, `hand_seeded_merge`, and `generated_broader`; `uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite advisory` passed; `uv run --project verification --locked python -m sifr_verify areas check` passed; `uv run --project verification --locked python -m sifr_verify --self-test` passed; `python3 scripts/check_file_size_guardrails.py` passed; and `git diff --check` passed.
+- Implementation note: the generated dict shape originally exposed unsupported raw dict serialization/order and Option-valued direct lookup materialization. The generator now excludes that behavior by construction and tests dict support through existing-key lookup facts serialized as a homogeneous boolean list, matching the Wave 6.0 supported subset.
+- Review: Claude Opus review pass 4 in `plans/reviews/active/ad-hoc-world-class-verification-wave-6-1-cpython-generator-shrinker-review-pass-4.md` reported no blocking findings and said another Opus round is not required after fixing two required follow-ups. Fixed follow-ups: the generated suite deadline now starts after release-binary build success, and Python-version validation no longer imports `tomllib` before checking the minimum interpreter version. Additional accepted polish: source digest inputs now include per-crate `Cargo.toml` files and the Sifr-only compile-error bucket is documented in code.
+- Post-review validation: `jq empty verification/areas/cpython_differential/data/generated_seed_manifest.json`, `python3 -m py_compile verification/areas/cpython_differential/checks/generated_suite.py verification/areas/cpython_differential/checks/generated_programs.py verification/areas/cpython_differential/checks/catalogue_lint.py`, and `git diff --check` passed. `uv run --project verification --locked python -m sifr_verify areas run --area cpython_differential --suite policy --suite hand_seeded_merge --suite generated_minimized_seeds --suite generated_broader` passed with `variants=4 failures=0 blocking_failures=0`.
+- Create-pr validation: `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e pass fixtures, report signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm wall-time / warm-cache hit-rate notes (`wall_time=375.95s`, `cache_hits=27/44`).
+
 ### Wave 6: CPython Differential Miscompilation Oracle
 
 Goal: detect silent wrong-code bugs using CPython as the reference for the supported Python-compatible subset.
@@ -1226,6 +1236,13 @@ Exit criteria:
 - CPython differential smoke is already merge-blocking through hand-seeded fixtures before generator stability is proven.
 
 #### Wave 6.1: Generator, Canonical Serializer, and Shrinker
+
+Implementation slice:
+
+- Status: in progress on branch `codex/wave-6-1-cpython-generator-shrinker`.
+- Scope: adds generated CPython differential seed manifesting, deterministic generation, release-binary execution, canonical v1 value validation, shrinker/minimized-failure artifact plumbing, and nightly/release profile selection for generated broader coverage without merge promotion.
+- Focused validation so far: `uv run --project verification --locked python -m sifr_verify areas run --area cpython_differential --suite policy --suite hand_seeded_merge --suite generated_minimized_seeds --suite generated_broader` passed with `variants=4 failures=0 blocking_failures=0`; nightly/release profile plans include `cpython_differential:policy,hand_seeded_merge,generated_broader`; coverage matrix advisory, area discovery, runner self-test, file-size guardrail, and `git diff --check` passed.
+- Review: Claude Opus review pass 4 reported no blockers and required only deadline/import-order fixes, both now applied and revalidated.
 
 Tasks:
 

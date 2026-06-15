@@ -18,6 +18,22 @@ HAND_SEEDED = (
     / "data"
     / "hand_seeded_manifest.json"
 )
+GENERATED_SEEDS = (
+    REPO_ROOT
+    / "verification"
+    / "areas"
+    / "cpython_differential"
+    / "data"
+    / "generated_seed_manifest.json"
+)
+MINIMIZED_FAILURES = (
+    REPO_ROOT
+    / "verification"
+    / "areas"
+    / "cpython_differential"
+    / "data"
+    / "minimized_failures.json"
+)
 REQUIRED_TABLES = {
     "Table 1. Supported Constructs",
     "Table 2. Excluded Divergences",
@@ -39,6 +55,8 @@ REQUIRED_EXCLUSION_IDS = {
     "D012_EXCEPTION_MESSAGES",
 }
 EXCLUSION_ID_RE = re.compile(r"^D\d{3}_[A-Z0-9_]+$")
+GENERATED_SUITES = {"generated_minimized_seeds", "generated_broader"}
+ERROR_PRESENCE = {"no-error", "compile-error", "runtime-error"}
 
 
 def main() -> int:
@@ -60,6 +78,14 @@ def lint() -> list[str]:
         manifest = json.loads(HAND_SEEDED.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         return [f"failed to read {HAND_SEEDED.relative_to(REPO_ROOT)}: {error}"]
+    try:
+        generated = json.loads(GENERATED_SEEDS.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return [f"failed to read {GENERATED_SEEDS.relative_to(REPO_ROOT)}: {error}"]
+    try:
+        minimized = json.loads(MINIMIZED_FAILURES.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return [f"failed to read {MINIMIZED_FAILURES.relative_to(REPO_ROOT)}: {error}"]
 
     tables = parse_tables(policy_text)
     failures: list[str] = []
@@ -77,11 +103,132 @@ def lint() -> list[str]:
     failures.extend(validate_exclusion_ids(declared_ids, referenced_ids))
     supported_constructs = supported_construct_ids(supported_rows, failures)
     failures.extend(validate_manifest(manifest, declared_ids, supported_constructs, exit_rows))
+    failures.extend(validate_generated_manifest(generated, minimized, declared_ids))
     if "requires-python" not in policy_text:
         failures.append("policy must state that CPython follows verification/pyproject.toml requires-python")
     if "exactly one JSON line" not in policy_text:
         failures.append("policy must state the exactly-one-JSON-line serializer contract")
     return failures
+
+
+def validate_generated_manifest(
+    generated: dict[str, Any],
+    minimized: dict[str, Any],
+    declared_ids: list[str],
+) -> list[str]:
+    failures: list[str] = []
+    declared = set(declared_ids)
+    if generated.get("schema_version") != 1:
+        failures.append("generated seed manifest schema_version must be 1")
+    if generated.get("generator_contract_version") != 1:
+        failures.append("generated seed manifest generator_contract_version must be 1")
+    release = generated.get("release_binary")
+    if not isinstance(release, dict):
+        failures.append("generated seed manifest release_binary must be an object")
+    else:
+        if release.get("build_command") != ["cargo", "build", "--release", "-p", "sifr"]:
+            failures.append("generated suite must build the release Sifr CLI once with cargo build --release -p sifr")
+        if release.get("path") != "target/release/sifr":
+            failures.append("generated suite release binary path must be target/release/sifr")
+        if not release.get("source_digest_inputs"):
+            failures.append("generated suite must declare source_digest_inputs")
+    promotion = generated.get("merge_promotion_policy")
+    if not isinstance(promotion, dict) or promotion.get("requires_consecutive_green_runs") != 20:
+        failures.append("generated suite merge promotion policy must require 20 consecutive green runs")
+    required = generated.get("required_coverage")
+    if not isinstance(required, list) or not all(isinstance(item, str) for item in required):
+        failures.append("generated seed manifest required_coverage must be a string list")
+        required = []
+    suites = generated.get("suites")
+    if not isinstance(suites, dict) or set(suites) != GENERATED_SUITES:
+        failures.append("generated seed manifest suites must exactly define generated_minimized_seeds and generated_broader")
+        return failures
+    covered: set[str] = set()
+    seen_cases: list[str] = []
+    seen_seeds: list[str] = []
+    for suite_name, suite in suites.items():
+        validate_generated_suite(str(suite_name), suite, declared, covered, seen_cases, seen_seeds, failures)
+    missing_coverage = sorted(set(required) - covered)
+    if missing_coverage:
+        failures.append(f"generated seed coverage missing required category/categories: {', '.join(missing_coverage)}")
+    duplicate_cases = duplicates(seen_cases)
+    if duplicate_cases:
+        failures.append(f"duplicate generated case id(s): {', '.join(duplicate_cases)}")
+    duplicate_seeds = duplicates(seen_seeds)
+    if duplicate_seeds:
+        failures.append(f"duplicate generated seed(s): {', '.join(duplicate_seeds)}")
+    if minimized.get("schema_version") != 1:
+        failures.append("minimized failures ledger schema_version must be 1")
+    if not isinstance(minimized.get("entries"), list):
+        failures.append("minimized failures ledger entries must be a list")
+    return failures
+
+
+def validate_generated_suite(
+    suite_name: str,
+    suite: Any,
+    declared_ids: set[str],
+    covered: set[str],
+    seen_cases: list[str],
+    seen_seeds: list[str],
+    failures: list[str],
+) -> None:
+    if not isinstance(suite, dict):
+        failures.append(f"{suite_name} generated suite must be an object")
+        return
+    per_timeout = suite.get("per_program_timeout_seconds")
+    overall_timeout = suite.get("overall_timeout_seconds")
+    if not isinstance(per_timeout, int) or per_timeout <= 0:
+        failures.append(f"{suite_name} per_program_timeout_seconds must be a positive integer")
+    if not isinstance(overall_timeout, int) or overall_timeout <= 0:
+        failures.append(f"{suite_name} overall_timeout_seconds must be a positive integer")
+    cases = suite.get("cases")
+    if not isinstance(cases, list) or not cases:
+        failures.append(f"{suite_name} generated suite cases must be a non-empty list")
+        return
+    if isinstance(per_timeout, int) and isinstance(overall_timeout, int) and overall_timeout < per_timeout:
+        failures.append(f"{suite_name} overall timeout must be at least one per-program timeout")
+    for case in cases:
+        validate_generated_case(suite_name, case, declared_ids, covered, seen_cases, seen_seeds, failures)
+
+
+def validate_generated_case(
+    suite_name: str,
+    case: Any,
+    declared_ids: set[str],
+    covered: set[str],
+    seen_cases: list[str],
+    seen_seeds: list[str],
+    failures: list[str],
+) -> None:
+    if not isinstance(case, dict):
+        failures.append(f"{suite_name} generated case must be an object")
+        return
+    case_id = case.get("id")
+    if not isinstance(case_id, str) or not case_id:
+        failures.append(f"{suite_name} generated case id must be a non-empty string")
+    else:
+        seen_cases.append(case_id)
+    seed = case.get("seed")
+    if not isinstance(seed, int):
+        failures.append(f"{case_id} generated seed must be an integer")
+    else:
+        seen_seeds.append(str(seed))
+    if case.get("expected_exit_bucket") not in {"0", "non-zero"}:
+        failures.append(f"{case_id} expected_exit_bucket must be 0 or non-zero")
+    if case.get("expected_error_presence") not in ERROR_PRESENCE:
+        failures.append(f"{case_id} expected_error_presence must be one of {', '.join(sorted(ERROR_PRESENCE))}")
+    covers = case.get("covers")
+    if not isinstance(covers, list) or not all(isinstance(item, str) for item in covers):
+        failures.append(f"{case_id} covers must be a string list")
+    else:
+        covered.update(covers)
+    exclusions = case.get("forbidden_exclusions")
+    if not isinstance(exclusions, list) or set(exclusions) != declared_ids:
+        failures.append(f"{case_id} forbidden_exclusions must exactly match policy ids")
+    shape = case.get("shape")
+    if shape not in {"arith_branch", "string_choice", "list_tuple_loop", "dict_sorted"}:
+        failures.append(f"{case_id} generated shape is not supported by the generator")
 
 
 def parse_tables(text: str) -> dict[str, list[dict[str, str]]]:
