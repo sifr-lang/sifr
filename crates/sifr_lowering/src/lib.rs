@@ -12,6 +12,8 @@ mod hir_nodes;
 #[cfg(test)]
 mod hir_snapshot_tests;
 mod lower;
+#[cfg(test)]
+mod name_resolution_snapshot_tests;
 mod scope;
 
 pub use hir_nodes::*;

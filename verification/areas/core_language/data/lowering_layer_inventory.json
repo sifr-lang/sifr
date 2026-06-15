@@ -84,6 +84,69 @@
       ],
       "status": "active",
       "replacement": null
+    },
+    {
+      "id": "name_resolution.parameter_shadows_module_constant",
+      "compiler_layer": "name_resolution",
+      "owner": "compiler/hir",
+      "contract_id": "wave5.name_resolution.parameter_shadows_module_constant",
+      "source_fixture": "verification/areas/core_language/data/name_resolution_snapshot_matrix.json#name_snapshots/parameter_shadows_module_constant",
+      "snapshot_id": "name_resolution_snapshot_matrix.name_snapshots.parameter_shadows_module_constant",
+      "snapshot_kind": "name_resolution_facts",
+      "normalizers": [
+        "name-resolution-facts",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
+    },
+    {
+      "id": "name_resolution.nested_function_capture_and_call",
+      "compiler_layer": "name_resolution",
+      "owner": "compiler/hir",
+      "contract_id": "wave5.name_resolution.nested_function_capture_and_call",
+      "source_fixture": "verification/areas/core_language/data/name_resolution_snapshot_matrix.json#name_snapshots/nested_function_capture_and_call",
+      "snapshot_id": "name_resolution_snapshot_matrix.name_snapshots.nested_function_capture_and_call",
+      "snapshot_kind": "name_resolution_facts",
+      "normalizers": [
+        "name-resolution-facts",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
+    },
+    {
+      "id": "name_resolution.builtin_call_loop_target_and_local_reuse",
+      "compiler_layer": "name_resolution",
+      "owner": "compiler/hir",
+      "contract_id": "wave5.name_resolution.builtin_call_loop_target_and_local_reuse",
+      "source_fixture": "verification/areas/core_language/data/name_resolution_snapshot_matrix.json#name_snapshots/builtin_call_loop_target_and_local_reuse",
+      "snapshot_id": "name_resolution_snapshot_matrix.name_snapshots.builtin_call_loop_target_and_local_reuse",
+      "snapshot_kind": "name_resolution_facts",
+      "normalizers": [
+        "name-resolution-facts",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
     }
   ]
 }
