@@ -2494,6 +2494,51 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2606",
+      "fixture_id": "package_selected_rust_only",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:769f43073457700a41f696d82aaecf287ae074fe086318feb21cdda5a90b6499",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2606",
+      "fixture_id": "package_rust_only_depends_on_sifr",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:9e739fac6d4f271da495bccce710066569388e3f062961fda2ba40ecd6420b59",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2606",
+      "fixture_id": "package_selector_invalid",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:843d2cfe88eb5ae67c151c83311630fa915941b4a9056898dd66892dcd49a361",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for package workspace selection diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2604",
       "fixture_id": "package_workspace_duplicate_import_root",
