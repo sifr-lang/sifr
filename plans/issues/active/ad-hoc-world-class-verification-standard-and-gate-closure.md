@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through package workspace-selection coverage merged, and package selection/classification coverage implemented pending review/gates
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package selection/classification coverage merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1011,7 +1011,7 @@ Nineteenth Wave 4 diagnostics-baseline slice:
 
 Twentieth Wave 4 diagnostics-baseline slice:
 
-- Status: package selection/classification compact baseline expansion merged in PR [#2606](https://github.com/sifr-lang/sifr/pull/2606) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation; tracker closeout pending.
+- Status: package selection/classification compact baseline expansion merged in PR [#2606](https://github.com/sifr-lang/sifr/pull/2606) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation; tracker closeout merged in PR [#2607](https://github.com/sifr-lang/sifr/pull/2607).
 - Scope: added public package-root compact baselines for explicit Rust-only package selection (`SIFR-PACKAGE-0102`) through `sifr package -p rust-helper --list --no-verify --allow-dirty`, Rust-only workspace member dependency on a Sifr package (`SIFR-PACKAGE-0106`) through `sifr package --workspace --list --no-verify --allow-dirty`, and invalid package selector handling (`SIFR-PACKAGE-0601`) through `sifr package -p missing --list --no-verify --allow-dirty`. The slice added diagnostics adapter aliases for the explicit public package selector commands.
 - Coverage status: of 170 stable active diagnostic codes, 142 now have rendered baseline coverage and 28 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (16), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI checks from the three fixture package roots emitted the intended diagnostics through public package commands: the Rust-only selection fixture emitted `SIFR-PACKAGE-0102` and exited 1, the Rust-only dependency fixture emitted `SIFR-PACKAGE-0106` and exited 1, and the invalid selector fixture emitted `SIFR-PACKAGE-0601` and exited 1. `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 139 cases / 167 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; unblessed `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed 139 cases / 167 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` passed.
