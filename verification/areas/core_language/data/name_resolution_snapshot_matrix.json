@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "name_snapshots": [
+    {
+      "id": "parameter_shadows_module_constant",
+      "owner": "compiler/hir",
+      "source": "VALUE = \"global\"\n\ndef pick(VALUE: int) -> int:\n    return VALUE\n",
+      "expected_name_resolution_snapshot": {
+        "constants": [
+          {
+            "name": "VALUE",
+            "ty": "str",
+            "value_kind": "StringLiteral"
+          }
+        ],
+        "functions": [
+          {
+            "name": "pick",
+            "params": [
+              {
+                "name": "VALUE",
+                "ty": "int"
+              }
+            ],
+            "return_type": "int",
+            "local_bindings": [],
+            "loop_targets": [],
+            "name_references": [
+              {
+                "path": "pick/body[0]/return",
+                "name": "VALUE",
+                "ty": "int"
+              }
+            ],
+            "calls": [],
+            "nested_functions": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "nested_function_capture_and_call",
+      "owner": "compiler/hir",
+      "source": "def outer(value: int) -> int:\n    def inner() -> int:\n        return value\n    return inner()\n",
+      "expected_name_resolution_snapshot": {
+        "constants": [],
+        "functions": [
+          {
+            "name": "outer",
+            "params": [
+              {
+                "name": "value",
+                "ty": "int"
+              }
+            ],
+            "return_type": "int",
+            "local_bindings": [],
+            "loop_targets": [],
+            "name_references": [],
+            "calls": [
+              {
+                "kind": "Call",
+                "path": "outer/body[1]/return",
+                "func": "inner",
+                "ty": "int",
+                "args": []
+              }
+            ],
+            "nested_functions": [
+              {
+                "name": "inner",
+                "params": [],
+                "return_type": "int",
+                "local_bindings": [],
+                "loop_targets": [],
+                "name_references": [
+                  {
+                    "path": "outer/body[0]/nested:inner/body[0]/return",
+                    "name": "value",
+                    "ty": "int"
+                  }
+                ],
+                "calls": [],
+                "nested_functions": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin_call_loop_target_and_local_reuse",
+      "owner": "compiler/hir",
+      "source": "def count_items(items: list[int]) -> int:\n    total = len(items)\n    for value in items:\n        total += value\n    return total\n",
+      "expected_name_resolution_snapshot": {
+        "constants": [],
+        "functions": [
+          {
+            "name": "count_items",
+            "params": [
+              {
+                "name": "items",
+                "ty": "list[int]"
+              }
+            ],
+            "return_type": "int",
+            "local_bindings": [
+              {
+                "path": "count_items/body[0]/let:total",
+                "name": "total",
+                "ty": "int",
+                "value_kind": "MethodCall"
+              }
+            ],
+            "loop_targets": [
+              {
+                "path": "count_items/body[1]/for:value",
+                "name": "value",
+                "ty": "int"
+              }
+            ],
+            "name_references": [
+              {
+                "path": "count_items/body[0]/let:total/object",
+                "name": "items",
+                "ty": "list[int]"
+              },
+              {
+                "path": "count_items/body[1]/for:value/iter/arg[0]",
+                "name": "items",
+                "ty": "list[int]"
+              },
+              {
+                "path": "count_items/body[1]/for:value/body[0]/augassign:total",
+                "name": "value",
+                "ty": "int"
+              },
+              {
+                "path": "count_items/body[2]/return",
+                "name": "total",
+                "ty": "int"
+              }
+            ],
+            "calls": [
+              {
+                "kind": "MethodCall",
+                "path": "count_items/body[0]/let:total",
+                "method": "len",
+                "receiver": {
+                  "kind": "Name",
+                  "ty": "list[int]",
+                  "name": "items"
+                },
+                "ty": "int",
+                "args": []
+              }
+            ],
+            "nested_functions": []
+          }
+        ]
+      }
+    }
+  ]
+}

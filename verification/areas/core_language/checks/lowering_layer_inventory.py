@@ -32,6 +32,16 @@ MATRIX_COLLECTIONS = [
         "hir_snapshots",
         "expected_hir_snapshot",
     ),
+    (
+        REPO_ROOT
+        / "verification"
+        / "areas"
+        / "core_language"
+        / "data"
+        / "name_resolution_snapshot_matrix.json",
+        "name_snapshots",
+        "expected_name_resolution_snapshot",
+    ),
 ]
 ALLOWED_LAYERS = {
     "parsed_source",
@@ -44,6 +54,22 @@ ALLOWED_PROFILES = {"create-pr", "merge", "nightly", "release"}
 EXPECTED_FIELD_BY_SNAPSHOT_KIND = {
     "statement_tree": "expected_statement_tree",
     "hir_module_shape": "expected_hir_snapshot",
+    "name_resolution_facts": "expected_name_resolution_snapshot",
+}
+ALLOWED_NORMALIZERS_BY_SNAPSHOT_KIND = {
+    "statement_tree": {
+        "statement-kind-only",
+        "primary-body-only",
+        "source-order",
+        "no-byte-spans",
+    },
+    "hir_module_shape": {"hir-kind-only", "type-display-name", "source-order", "no-byte-spans"},
+    "name_resolution_facts": {
+        "name-resolution-facts",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans",
+    },
 }
 REQUIRED_FIELDS = {
     "id",
@@ -102,7 +128,8 @@ def validate_inventory() -> list[str]:
         validate_required_string(row, "snapshot_kind", failures, row_id)
         validate_enum(row, "compiler_layer", ALLOWED_LAYERS, failures, row_id)
         validate_enum(row, "status", {"active", "mapped", "deferred"}, failures, row_id)
-        validate_string_list(row, "normalizers", failures, row_id)
+        normalizers = validate_string_list(row, "normalizers", failures, row_id)
+        validate_normalizers(row, normalizers, failures, row_id)
         profiles = validate_string_list(row, "profile_assignment", failures, row_id)
         for profile in profiles:
             if profile not in ALLOWED_PROFILES:
@@ -176,6 +203,27 @@ def validate_string_list(
     if len(strings) != len(value):
         failures.append(f"{row_id} {field} must contain only non-empty strings")
     return strings
+
+
+def validate_normalizers(
+    row: dict[str, Any],
+    normalizers: list[str],
+    failures: list[str],
+    row_id: str,
+) -> None:
+    snapshot_kind = row.get("snapshot_kind")
+    if not isinstance(snapshot_kind, str):
+        return
+    expected = ALLOWED_NORMALIZERS_BY_SNAPSHOT_KIND.get(snapshot_kind)
+    if expected is None:
+        return
+    actual = set(normalizers)
+    missing = sorted(expected - actual)
+    unknown = sorted(actual - expected)
+    if missing:
+        failures.append(f"{row_id} normalizers missing required entries: {', '.join(missing)}")
+    if unknown:
+        failures.append(f"{row_id} normalizers contain unknown entries: {', '.join(unknown)}")
 
 
 def validate_source_fixture(row: dict[str, Any], row_id: str) -> list[str]:
