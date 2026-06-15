@@ -1,0 +1,10 @@
+# expect-error[col=59]: SIFR-IO-0802
+
+
+def choose_mode() -> str:
+    return "rb"
+
+
+def main() -> None:
+    mode: str = choose_mode()
+    _ = open("/tmp/sifr_text_i18n_open_dynamic_mode.bin", mode)

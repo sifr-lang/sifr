@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-ENCODING-0803 verification/areas/diagnostics/fixtures/diagnostics/e2e_text_i18n_dynamic_errors_handler/main.sifr:10:33 encoding error handlers must be statically known typed values

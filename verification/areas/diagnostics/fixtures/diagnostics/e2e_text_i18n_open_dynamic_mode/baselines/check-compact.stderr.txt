@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-IO-0802 verification/areas/diagnostics/fixtures/diagnostics/e2e_text_i18n_open_dynamic_mode/main.sifr:10:59 open mode must be a string literal so Sifr can choose a binary or text handle type

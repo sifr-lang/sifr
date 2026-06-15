@@ -1759,6 +1759,51 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
+      "bless_reference": "wave-4-text-io-encoding-compact-baselines-pr",
+      "fixture_id": "e2e_text_i18n_dynamic_errors_handler",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:24aa100fcf0d16c2b668f0630abc4b1d8b276be8fddcc257fdb4a0b425351f66",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
+      "bless_reference": "wave-4-text-io-encoding-compact-baselines-pr",
+      "fixture_id": "e2e_text_i18n_open_dynamic_mode",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:6156347688091cea60cd5f8a0f3d5bfb62721ede0afbfa465fe9b1feb939af47",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
+      "bless_reference": "wave-4-text-io-encoding-compact-baselines-pr",
+      "fixture_id": "e2e_text_i18n_open_without_encoding",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:0325959c5e2b04210743534512f7e396677d6d71b40e017ba1084a0a054b96b9",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_try_except_uncovered_error_types",
