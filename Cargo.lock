@@ -2940,6 +2940,7 @@ dependencies = [
  "ruff_python_parser",
  "ruff_text_size",
  "rust_decimal",
+ "serde_json",
  "sifr_diagnostics",
  "sifr_ir",
  "sifr_stdlib",

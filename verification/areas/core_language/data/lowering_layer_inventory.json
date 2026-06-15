@@ -42,6 +42,48 @@
       ],
       "status": "active",
       "replacement": null
+    },
+    {
+      "id": "hir_lowering.basic_function_arithmetic",
+      "compiler_layer": "hir_lowering",
+      "owner": "compiler/hir",
+      "contract_id": "wave5.hir_lowering.shape.basic_function_arithmetic",
+      "source_fixture": "verification/areas/core_language/data/hir_lowering_snapshot_matrix.json#hir_snapshots/basic_function_arithmetic",
+      "snapshot_id": "hir_lowering_snapshot_matrix.hir_snapshots.basic_function_arithmetic",
+      "snapshot_kind": "hir_module_shape",
+      "normalizers": [
+        "hir-kind-only",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
+    },
+    {
+      "id": "hir_lowering.for_if_accumulator",
+      "compiler_layer": "hir_lowering",
+      "owner": "compiler/hir",
+      "contract_id": "wave5.hir_lowering.shape.for_if_accumulator",
+      "source_fixture": "verification/areas/core_language/data/hir_lowering_snapshot_matrix.json#hir_snapshots/for_if_accumulator",
+      "snapshot_id": "hir_lowering_snapshot_matrix.hir_snapshots.for_if_accumulator",
+      "snapshot_kind": "hir_module_shape",
+      "normalizers": [
+        "hir-kind-only",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
     }
   ]
 }
