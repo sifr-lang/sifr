@@ -1,0 +1,10 @@
+9 errors, 0 warnings, 0 notes
+E SIFR-PACKAGE-0001 <unknown> invalid [package.metadata.sifr] for Cargo package 'synthetic-app': `manifest` must be a non-empty string
+E SIFR-PACKAGE-0101 <unknown> cargo metadata failed: manifest parse failed
+E SIFR-PACKAGE-0103 <unknown> could not parse Cargo package graph metadata: expected value at line 1 column 1
+E SIFR-PACKAGE-0104 <unknown> package source '/cargo/registry/src/synthetic-package' is unavailable in Offline mode
+E SIFR-PACKAGE-0204 <unknown> package type identity mismatch: expected sifr-math@1.0.0#registry [registry+sifr-math@1.0.0]::math.vector.Vector via registry+sifr-math@1.0.0, got sifr-math@2.0.0#registry [registry+sifr-math@2.0.0]::math.vector.Vector via registry+sifr-math@2.0.0
+E SIFR-PACKAGE-0402 <unknown> package publish validation failed: registry rejected package metadata
+E SIFR-PACKAGE-0404 <unknown> Cargo package archive entry escapes the package root: '../escape.sifr'
+E SIFR-PACKAGE-0603 <unknown> changed path '/outside/file.sifr' does not map to one Sifr package
+E SIFR-PACKAGE-0604 <unknown> cannot determine newest compatible package version from source 'sparse+custom'
