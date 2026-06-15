@@ -1,6 +1,182 @@
 {
   "schema_version": 1,
   "id": "FUZZ-SMOKE-LOCAL-0001",
+  "target_contract_version": 1,
+  "required_target_ids": [
+    "parse_check_entrypoint",
+    "hir_type_ownership_entrypoint",
+    "codegen_entrypoint",
+    "diagnostic_renderer_entrypoint",
+    "package_project_manifest_entrypoint"
+  ],
+  "targets": [
+    {
+      "id": "parse_check_entrypoint",
+      "entrypoint": "sifr check mutated Sifr source",
+      "program_class": "mixed-valid-invalid",
+      "input_grammar": "sifr-source",
+      "coverage_mode": "deterministic-smoke",
+      "corpus_dir": "verification/areas/fuzz_property/seeds",
+      "seed_files": [
+        "verification/areas/fuzz_property/seeds/invalid_import_seed.sifr",
+        "verification/areas/fuzz_property/seeds/valid_control_flow_seed.sifr",
+        "verification/areas/fuzz_property/seeds/string_numeric_literals_seed.sifr"
+      ],
+      "reproduction_command": [
+        "uv",
+        "run",
+        "--project",
+        "verification",
+        "--locked",
+        "python",
+        "-m",
+        "sifr_verify",
+        "areas",
+        "run",
+        "--area",
+        "fuzz_property",
+        "--suite",
+        "fuzz-smoke"
+      ],
+      "minimization_command": [
+        "python3",
+        "verification/areas/fuzz_property/checks/minimize_seed.py",
+        "--target",
+        "parse_check_entrypoint",
+        "<failing-source>"
+      ],
+      "finding_promotion": "minimize then add unresolved crashes under verification/areas/regression/fixtures/crashes/ or fixed bugs under verification/areas/regression/data/fixedbugs.json"
+    },
+    {
+      "id": "hir_type_ownership_entrypoint",
+      "entrypoint": "sifr check HIR/type/ownership lowering",
+      "program_class": "mixed-valid-invalid",
+      "input_grammar": "sifr-source",
+      "coverage_mode": "deterministic-smoke",
+      "corpus_dir": "verification/areas/fuzz_property/seeds",
+      "seed_files": [
+        "verification/areas/fuzz_property/seeds/type_mismatch_seed.sifr",
+        "verification/areas/fuzz_property/seeds/function_signature_seed.sifr",
+        "verification/areas/fuzz_property/seeds/import_callable_seed.sifr"
+      ],
+      "reproduction_command": [
+        "uv",
+        "run",
+        "--project",
+        "verification",
+        "--locked",
+        "python",
+        "-m",
+        "sifr_verify",
+        "areas",
+        "run",
+        "--area",
+        "fuzz_property",
+        "--suite",
+        "fuzz-smoke"
+      ],
+      "minimization_command": [
+        "python3",
+        "verification/areas/fuzz_property/checks/minimize_seed.py",
+        "--target",
+        "hir_type_ownership_entrypoint",
+        "<failing-source>"
+      ],
+      "finding_promotion": "minimize then add unresolved crashes under verification/areas/regression/fixtures/crashes/ or fixed bugs under verification/areas/regression/data/fixedbugs.json"
+    },
+    {
+      "id": "codegen_entrypoint",
+      "entrypoint": "sifr run valid generated binary path",
+      "program_class": "valid-only",
+      "input_grammar": "sifr-source",
+      "coverage_mode": "property-smoke",
+      "corpus_dir": "verification/areas/fuzz_property/seeds",
+      "seed_files": [
+        "verification/areas/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
+        "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr"
+      ],
+      "reproduction_command": [
+        "uv",
+        "run",
+        "--project",
+        "verification",
+        "--locked",
+        "python",
+        "-m",
+        "sifr_verify",
+        "areas",
+        "run",
+        "--area",
+        "fuzz_property",
+        "--suite",
+        "property"
+      ],
+      "minimization_command": [
+        "python3",
+        "verification/areas/fuzz_property/checks/minimize_seed.py",
+        "--target",
+        "codegen_entrypoint",
+        "<failing-source>"
+      ],
+      "finding_promotion": "minimize then add valid wrong-code or panic regression before closing the root-cause fix"
+    },
+    {
+      "id": "diagnostic_renderer_entrypoint",
+      "entrypoint": "structured RenderedDiagnostic JSON/human/compact rendering",
+      "program_class": "structured-diagnostics",
+      "input_grammar": "rendered-diagnostic-json-v1",
+      "coverage_mode": "diagnostic-contract-smoke",
+      "corpus_dir": "verification/areas/diagnostics/fixtures/diagnostics",
+      "seed_files": [
+        "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr"
+      ],
+      "reproduction_command": [
+        "cargo",
+        "run",
+        "-q",
+        "-p",
+        "sifr_driver",
+        "--bin",
+        "diagnostic_contract_harness"
+      ],
+      "minimization_command": [
+        "python3",
+        "verification/areas/fuzz_property/checks/minimize_diagnostic_json.py",
+        "--target",
+        "diagnostic_renderer_entrypoint",
+        "<failing-rendered-diagnostic-json>"
+      ],
+      "finding_promotion": "minimize to structured diagnostic JSON, then add renderer regression coverage before closing the root-cause fix"
+    },
+    {
+      "id": "package_project_manifest_entrypoint",
+      "entrypoint": "package/project manifest and import-resolution diagnostics",
+      "program_class": "mixed-valid-invalid",
+      "input_grammar": "sifr-project-tree",
+      "coverage_mode": "diagnostic-contract-smoke",
+      "corpus_dir": "verification/areas/project_workspace/fixtures/project",
+      "seed_files": [
+        "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/main.sifr"
+      ],
+      "reproduction_command": [
+        "cargo",
+        "run",
+        "-q",
+        "-p",
+        "sifr_driver",
+        "--bin",
+        "diagnostic_contract_harness"
+      ],
+      "minimization_command": [
+        "python3",
+        "verification/areas/fuzz_property/checks/minimize_project_tree.py",
+        "--target",
+        "package_project_manifest_entrypoint",
+        "<failing-project-dir>"
+      ],
+      "finding_promotion": "minimize project tree, then add crash/fixedbug regression before closing the root-cause fix"
+    }
+  ],
   "seed_files": [
     "verification/areas/fuzz_property/seeds/invalid_import_seed.sifr",
     "verification/areas/fuzz_property/seeds/valid_control_flow_seed.sifr",
