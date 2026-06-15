@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through package run-target coverage merged, and package workspace-selection coverage implemented pending review/gates
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package workspace-selection coverage merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1001,7 +1001,7 @@ Eighteenth Wave 4 diagnostics-baseline slice:
 
 Nineteenth Wave 4 diagnostics-baseline slice:
 
-- Status: package workspace-selection compact baseline expansion implemented, focused-validation clean, reviewed by Claude Opus with no blockers, and create-pr/merge-gate validation clean; pending PR and tracker merge.
+- Status: merged via https://github.com/sifr-lang/sifr/pull/2604; tracker closeout pending.
 - Scope: added public package-root `sifr package --workspace --list --no-verify --allow-dirty` compact baselines for duplicate workspace import roots (`SIFR-PACKAGE-0602`) and duplicate Sifr package names (`SIFR-PACKAGE-0607`). The slice added a diagnostics adapter alias for that exact public CLI form so the baselines stay tied to release-package workspace selection rather than lower-level graph helpers.
 - Coverage status: of 170 stable active diagnostic codes, 139 now have rendered baseline coverage and 31 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (19), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI checks from the two fixture workspace roots emitted the intended diagnostics through public package workspace-selection commands: the duplicate import-root fixture emitted `SIFR-PACKAGE-0602` and exited 1, and the duplicate Sifr-name fixture emitted `SIFR-PACKAGE-0607` and exited 1. `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 136 cases / 164 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; unblessed `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed 136 cases / 164 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` passed.
