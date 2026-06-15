@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package library diagnostic synthetic-baseline coverage merged in PR [#2615](https://github.com/sifr-lang/sifr/pull/2615); internal diagnostic synthetic-baseline coverage is open in PR [#2617](https://github.com/sifr-lang/sifr/pull/2617)
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through internal diagnostic synthetic-baseline coverage merged in PR [#2617](https://github.com/sifr-lang/sifr/pull/2617); remaining Wave 4 deferrals are BUILD, STDLIB, and WORKSPACE
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1051,7 +1051,7 @@ Twenty-third Wave 4 diagnostics-baseline slice:
 
 Twenty-fourth Wave 4 diagnostics-baseline slice:
 
-- Status: internal diagnostic synthetic renderer coverage open in PR [#2617](https://github.com/sifr-lang/sifr/pull/2617).
+- Status: internal diagnostic synthetic renderer coverage merged in PR [#2617](https://github.com/sifr-lang/sifr/pull/2617).
 - Scope: reuses the existing metadata-owned `presentation_contract_cases` synthetic renderer fixture to close the `SIFR-INTERNAL-0001` rendered-baseline deferral across human, JSON, and compact renderers. The fixture already owns source-hash-checked `synthetic: true` metadata and baseline trios for all three renderer formats, and the baselines render the spanless internal diagnostic.
 - Coverage status: of 170 stable active diagnostic codes, 159 now have rendered baseline coverage and 11 carry Wave 4 deferrals. Internal diagnostic deferrals are closed; the remaining deferred families are `BUILD` (5), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed with `variants=5 failures=0 blocking_failures=0`; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` passed.
