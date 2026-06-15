@@ -2165,7 +2165,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
-      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_malformed_manifest",
       "normalizers": [
         "workspace-path",
@@ -2180,7 +2180,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
-      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_source_root_escapes",
       "normalizers": [
         "workspace-path",
@@ -2195,7 +2195,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
-      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_source_root_not_directory",
       "normalizers": [
         "workspace-path",
@@ -2210,7 +2210,7 @@
     },
     {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
-      "bless_reference": "wave-4-workspace-source-root-compact-baselines-pr",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_invalid_source_root",
       "normalizers": [
         "workspace-path",
