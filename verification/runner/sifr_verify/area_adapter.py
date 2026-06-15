@@ -31,7 +31,9 @@ BASELINE_COMMANDS = {
     "package-check",
     "package-check-default",
     "package-repair-check",
+    "package-run-bin-bad-name",
     "package-run-script",
+    "package-run-target-admin",
     "self-version",
 }
 CONTRACT_MATRIX_COMMAND = "contract-matrix"
@@ -465,7 +467,9 @@ def run_sifr_variant(
         "package-check",
         "package-check-default",
         "package-repair-check",
+        "package-run-bin-bad-name",
         "package-run-script",
+        "package-run-target-admin",
     }:
         cwd = find_package_root(entry)
         argv = [
@@ -489,8 +493,12 @@ def run_sifr_variant(
         argv.append("check")
     elif command_name == "package-repair-check":
         argv.extend(["repair", "--check"])
+    elif command_name == "package-run-bin-bad-name":
+        argv.extend(["run", "--bin", "bad!name"])
     elif command_name == "package-run-script":
         argv.extend(["run", "--script", "dev"])
+    elif command_name == "package-run-target-admin":
+        argv.extend(["run", "admin"])
     elif command_name == "self-version":
         argv.extend(["self", "version"])
     else:

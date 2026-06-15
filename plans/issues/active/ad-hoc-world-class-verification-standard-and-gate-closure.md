@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package metadata/source-layout coverage merged
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through package metadata/source-layout coverage merged, and package run-target coverage implemented pending review/gates
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -987,6 +987,17 @@ Seventeenth Wave 4 diagnostics-baseline slice:
 - Review: Claude Opus review pass 1 recorded no blocking findings in `plans/reviews/active/ad-hoc-world-class-verification-wave-4-package-metadata-layout-baselines-review-pass-1.md` and stated another review round is not required before gates.
 - Create-pr validation: `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e pass fixtures, report signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm-cache timing/cache notes.
 - Merge-gate validation: first `scripts/run_all_tests.sh` attempt failed only on representative performance budget noise for `build-single-file-001-break-continue` (`measured=1798.338`, `threshold=1653.637`); focused `uv run --project verification --locked python -m sifr_verify areas run --area performance --suite representative` rerun passed. The second full `scripts/run_all_tests.sh` passed with 651/651 e2e pass fixtures, report signature `ee5e5d44306f270c`, diagnostics baselines `variants=160`, project-workspace baselines `variants=17`, hardening `variants=195 failures=0 blocking_failures=0`, and advisory-only warm-cache timing/cache notes.
+
+Eighteenth Wave 4 diagnostics-baseline slice:
+
+- Status: package run-target compact baseline expansion implemented, focused-validation clean, reviewed by Claude Opus with no blockers, create-pr/merge-gate validation clean, and implementation PR opened; pending PR merge and tracker merge.
+- Scope: added public package-root `sifr run admin` and `sifr run --bin bad!name` compact baselines for ambiguous app/script run target selection (`SIFR-PACKAGE-0605`) and invalid app target naming (`SIFR-PACKAGE-0606`). The slice added diagnostics adapter aliases for those exact public CLI forms so the baselines stay tied to user-facing commands.
+- Coverage status: of 170 stable active diagnostic codes, 137 now have rendered baseline coverage and 33 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (21), `STDLIB` (2), and `WORKSPACE` (4).
+- Focused validation: direct compact CLI checks from the two fixture package roots emitted the intended diagnostics through public package run-target commands: the ambiguous target fixture emitted `SIFR-PACKAGE-0605` and exited 1, and the invalid app target fixture emitted `SIFR-PACKAGE-0606` and exited 1. `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 134 cases / 162 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; unblessed `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed 134 cases / 162 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` passed.
+- Review: Claude Opus review pass 1 recorded no blocking findings in `plans/reviews/active/ad-hoc-world-class-verification-wave-4-package-run-target-baselines-review-pass-1.md` and stated another review round is not required before gates.
+- PR: https://github.com/sifr-lang/sifr/pull/2602
+- Create-pr validation: `scripts/run_all_tests.sh --profile create-pr` passed with 132/132 e2e pass fixtures, report signature `5edef8cd4b961ef8`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm-cache timing/cache notes.
+- Merge-gate validation: `scripts/run_all_tests.sh` passed with 651/651 e2e pass fixtures, report signature `ee5e5d44306f270c`, diagnostics baselines `variants=162`, project-workspace baselines `variants=17`, hardening `variants=197 failures=0 blocking_failures=0`, and advisory-only warm-cache timing/skew notes.
 
 ### Wave 5: IR, HIR, CFG, and Codegen Snapshot Suites
 

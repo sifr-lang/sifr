@@ -2462,6 +2462,36 @@
       "renderer": "compact",
       "source_hash": "sha256:cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package run-target diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2602",
+      "fixture_id": "package_run_target_ambiguous",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:e2e5edbfc117dc8e5e9367dd3f1e7b3ece4d2e6d851488e38ecf4be4a32bf2ef",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package run-target diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2602",
+      "fixture_id": "package_run_invalid_app_target",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:5c017ef7939c18c59f89526b5f8b84be22ff0dce7977076a3fe33238af897567",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1

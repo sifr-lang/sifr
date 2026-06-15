@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PACKAGE-0605 <unknown> ambiguous package run target 'admin': candidates: bin:admin, script:admin

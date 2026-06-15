@@ -488,6 +488,24 @@
           ]
         },
         {
+          "id": "package_run_target_ambiguous",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_run_target_ambiguous/sifr.toml",
+          "command": "package-run-target-admin",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "package_run_invalid_app_target",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_run_invalid_app_target/sifr.toml",
+          "command": "package-run-bin-bad-name",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "package_manifest_exports_not_production",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_manifest_exports_not_production/sifr.toml",
           "command": "package-check-default",
