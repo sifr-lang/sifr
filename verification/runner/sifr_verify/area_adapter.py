@@ -29,6 +29,7 @@ BASELINE_COMMANDS = {
     "lint",
     "fmt-check",
     "package-check",
+    "package-check-default",
     "package-run-script",
     "self-version",
 }
@@ -459,7 +460,7 @@ def run_sifr_variant(
 ) -> tuple[int, str, str, float, list[str]]:
     cwd = REPO_ROOT
     argv = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
-    if command_name in {"package-check", "package-run-script"}:
+    if command_name in {"package-check", "package-check-default", "package-run-script"}:
         cwd = find_package_root(entry)
         argv = [
             "cargo",
@@ -478,6 +479,8 @@ def run_sifr_variant(
         argv.extend(["fmt", "--check", "--no-cache", str(entry)])
     elif command_name == "package-check":
         argv.extend(["check", str(entry.relative_to(cwd))])
+    elif command_name == "package-check-default":
+        argv.append("check")
     elif command_name == "package-run-script":
         argv.extend(["run", "--script", "dev"])
     elif command_name == "self-version":

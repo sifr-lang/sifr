@@ -934,6 +934,36 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for production manifest exports diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
+      "fixture_id": "package_manifest_exports_not_production",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:b24dac3c83506d4a22491b9896561b75f62e6d3454e07f0f973f955ed47998d3",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for production manifest bin table diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
+      "fixture_id": "package_manifest_bin_tables_not_production",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:abf8bd06629ab0d28caa83a938631e60055a2168a7f5f21a7a387a969c47da39",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for package script recursion diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2594",
       "fixture_id": "package_script_recursion",
