@@ -1,0 +1,3 @@
+2 errors, 0 warnings, 0 notes
+E SIFR-PACKAGE-0703 <unknown> Cargo projection manifest pointer drift at '<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/package_projection_manifest_pointer_drift/Cargo.toml': missing [package.metadata.sifr] manifest pointer
+E SIFR-PACKAGE-0704 <unknown> Cargo projection include rules omit required entry 'sifr.toml'

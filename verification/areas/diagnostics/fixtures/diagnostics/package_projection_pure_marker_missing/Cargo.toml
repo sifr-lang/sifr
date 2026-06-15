@@ -1,0 +1,12 @@
+[package]
+name = "package-projection-pure-marker-missing"
+version = "0.1.0"
+edition = "2024"
+include = ["Cargo.toml", "Cargo.lock", "sifr.toml", "src/**/*.sifr", "src/lib.rs", "README.md", "LICENSE"]
+
+# sifr-managed
+[package.metadata.sifr]
+manifest = "sifr.toml"
+# end sifr-managed
+
+[workspace]
