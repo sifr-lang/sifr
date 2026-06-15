@@ -171,6 +171,15 @@
           ]
         },
         {
+          "id": "fmt_formatting_drift",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/fmt_formatting_drift/main.sifr",
+          "command": "fmt-check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "workspace_malformed_manifest",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/workspace_malformed_manifest/main.sifr",
           "command": "check",

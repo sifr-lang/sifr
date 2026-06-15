@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-FMT-0001 verification/areas/diagnostics/fixtures/diagnostics/fmt_formatting_drift/main.sifr:2:15 source is not formatted with sifr fmt
