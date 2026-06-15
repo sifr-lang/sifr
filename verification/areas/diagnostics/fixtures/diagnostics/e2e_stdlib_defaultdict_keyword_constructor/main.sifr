@@ -1,0 +1,7 @@
+# expect-error[col=26]: SIFR-STDLIB-0001
+from sifr.collections import defaultdict
+
+
+def main() -> None:
+    groups = defaultdict(default_factory=list)
+    _ = groups
