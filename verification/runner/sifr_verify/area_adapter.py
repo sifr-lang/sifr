@@ -21,7 +21,7 @@ TMP_PATTERNS = (
     re.compile(r"/var/folders/[^\s\"']+"),
 )
 ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
-BASELINE_COMMANDS = {"check", "run", "build", "test", "lint", "fmt-check"}
+BASELINE_COMMANDS = {"check", "run", "build", "test", "lint", "fmt-check", "self-version"}
 CONTRACT_MATRIX_COMMAND = "contract-matrix"
 
 
@@ -452,12 +452,19 @@ def run_sifr_variant(
         argv.extend(["--diagnostic-format", diagnostic_format])
     if command_name == "fmt-check":
         argv.extend(["fmt", "--check", "--no-cache", str(entry)])
+    elif command_name == "self-version":
+        argv.extend(["self", "version"])
     else:
         argv.extend([command_name, str(entry)])
+    env = None
+    if command_name == "self-version":
+        env = dict(os.environ)
+        env["SIFR_INSTALL_MANIFEST_DIR"] = str(entry.parent / "missing-receipt")
     started = time.perf_counter()
     proc = subprocess.run(
         argv,
         cwd=REPO_ROOT,
+        env=env,
         text=True,
         capture_output=True,
         check=False,

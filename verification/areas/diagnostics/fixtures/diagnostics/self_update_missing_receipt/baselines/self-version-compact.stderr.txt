@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-BUILD-0901 <unknown> standalone install receipt is missing at <WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/self_update_missing_receipt/missing-receipt/install.json from SIFR_INSTALL_MANIFEST_DIR

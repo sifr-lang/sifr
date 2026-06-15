@@ -904,6 +904,21 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for self-update receipt diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2588",
+      "fixture_id": "self_update_missing_receipt",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:812141fdbe57ddcfb0246fb0640923aa4c9a7435077667c3f4b75467a6632ed4",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_constructor_float",
