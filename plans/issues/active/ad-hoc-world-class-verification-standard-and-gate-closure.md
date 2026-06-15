@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through internal diagnostic synthetic-baseline coverage merged in PR [#2617](https://github.com/sifr-lang/sifr/pull/2617); final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage is validated and ready to merge in PR [#2619](https://github.com/sifr-lang/sifr/pull/2619)
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage merged in PR [#2619](https://github.com/sifr-lang/sifr/pull/2619)
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1061,7 +1061,7 @@ Twenty-fourth Wave 4 diagnostics-baseline slice:
 
 Twenty-fifth Wave 4 diagnostics-baseline slice:
 
-- Status: final BUILD, STDLIB, and legacy WORKSPACE synthetic compact baseline coverage open in PR [#2619](https://github.com/sifr-lang/sifr/pull/2619).
+- Status: final BUILD, STDLIB, and legacy WORKSPACE synthetic compact baseline coverage merged in PR [#2619](https://github.com/sifr-lang/sifr/pull/2619).
 - Scope: adds metadata-owned synthetic compact rendered evidence for the remaining lower-level active stable diagnostic codes whose deterministic public CLI fixtures require internal fault injection or retired public renderer paths: `SIFR-BUILD-0002`, `SIFR-BUILD-0003`, `SIFR-BUILD-0004`, `SIFR-BUILD-0005`, `SIFR-BUILD-0006`, `SIFR-STDLIB-0003`, `SIFR-STDLIB-0004`, `SIFR-WORKSPACE-0101`, `SIFR-WORKSPACE-0102`, `SIFR-WORKSPACE-0103`, and `SIFR-WORKSPACE-0104`.
 - Coverage status: all 170 stable active diagnostic codes now have rendered baseline coverage and zero Wave 4 rendered-baseline deferrals remain.
 - Focused validation: `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed with `variants=5 failures=0 blocking_failures=0`; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed with `variants=174 failures=0 blocking_failures=0`; coverage count check reported `170` rows covered and `0` deferred.
