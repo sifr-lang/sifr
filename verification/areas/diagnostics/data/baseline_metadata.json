@@ -934,6 +934,21 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package script recursion diagnostics.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2594",
+      "fixture_id": "package_script_recursion",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:6965acc44aac6372ad1b9e620260511965104383f8bebf7112becdfa31b6d636",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Wave 4 compact diagnostic baseline coverage for self-update receipt diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2588",
       "fixture_id": "self_update_missing_receipt",

@@ -479,6 +479,15 @@
           ]
         },
         {
+          "id": "package_script_recursion",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_script_recursion/sifr.toml",
+          "command": "package-run-script",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "e2e_bigdecimal_constructor_float",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigdecimal_constructor_float/main.sifr",
           "command": "check",
