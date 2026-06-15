@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through package projection repair-check coverage merged, and package metadata/source-layout coverage locally validated pending PR/tracker merge
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, and Wave 4 diagnostic-baseline slices through package metadata/source-layout coverage merged
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -980,7 +980,7 @@ Sixteenth Wave 4 diagnostics-baseline slice:
 
 Seventeenth Wave 4 diagnostics-baseline slice:
 
-- Status: package metadata/source-layout compact baseline expansion implemented, focused-validation clean, reviewed by Claude Opus with no blockers, create-pr validated, and merge-gate validated; pending PR and tracker merge.
+- Status: package metadata/source-layout compact baseline expansion merged in PR [#2600](https://github.com/sifr-lang/sifr/pull/2600) after focused validation, Claude Opus review, create-pr validation, and merge-gate validation.
 - Scope: added package-root public `sifr check src/main.sifr` compact baselines for missing pointed-to Sifr manifests (`SIFR-PACKAGE-0002`), misplaced compiler semantics in Cargo metadata (`SIFR-PACKAGE-0003`), and non-trivial Rust implementation in pure-package marker targets (`SIFR-PACKAGE-0501`). The slice intentionally keeps `SIFR-PACKAGE-0001` deferred because it represents malformed Cargo metadata JSON parsing, not a natural `cargo metadata` public CLI emission path.
 - Coverage status: of 170 stable active diagnostic codes, 135 now have rendered baseline coverage and 35 carry Wave 4 deferrals. The remaining deferred families are `BUILD` (5), `INTERNAL` (1), `PACKAGE` (23), `STDLIB` (2), and `WORKSPACE` (4).
 - Focused validation: direct compact CLI checks from the three fixture package roots emitted the intended diagnostics through explicit package file checks: the missing-manifest fixture emitted `SIFR-PACKAGE-0002` and exited 1, the misplaced-metadata fixture emitted `SIFR-PACKAGE-0003` and exited 2, and the non-trivial-marker fixture emitted `SIFR-PACKAGE-0501` and exited 1. `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless` passed and wrote 132 cases / 160 renderer variants; `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts` passed; unblessed `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines` passed 132 cases / 160 renderer variants; `python3 -m py_compile verification/runner/sifr_verify/area_adapter.py verification/areas/diagnostics/checks/code_baseline_coverage.py`, `python3 scripts/check_file_size_guardrails.py`, and `git diff --check` passed.
