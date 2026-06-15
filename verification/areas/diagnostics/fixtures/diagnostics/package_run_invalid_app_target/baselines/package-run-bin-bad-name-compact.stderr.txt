@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PACKAGE-0606 <unknown> invalid package app target name 'bad!name'
