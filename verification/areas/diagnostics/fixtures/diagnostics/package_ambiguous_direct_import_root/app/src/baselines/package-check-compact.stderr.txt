@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-PACKAGE-0201 <unknown> ambiguous package import root 'shared' in 'app@0.1.0#path': math-v1@1.0.0#path via Cargo dependency `math1`, math-v2@2.0.0#path via Cargo dependency `math2`
