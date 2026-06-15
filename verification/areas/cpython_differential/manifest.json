@@ -34,6 +34,32 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "generated_minimized_seeds",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "generated_minimized_seeds",
+          "entry": "verification/areas/cpython_differential/checks/generated_minimized_seeds.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "generated_broader",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "generated_broader",
+          "entry": "verification/areas/cpython_differential/checks/generated_broader.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ]
 }

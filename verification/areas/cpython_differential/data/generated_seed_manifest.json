@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "generator_contract_version": 1,
+  "serializer": {
+    "version": 1,
+    "stdout": "exactly-one-json-line",
+    "line_ending_normalization": "crlf-to-lf-only",
+    "integer_bounds": [-1000000, 1000000],
+    "max_container_depth": 4,
+    "dict_output_policy": "dict-values-tested-through-existing-key-lookups"
+  },
+  "release_binary": {
+    "build_command": ["cargo", "build", "--release", "-p", "sifr"],
+    "path": "target/release/sifr",
+    "source_digest_inputs": ["Cargo.toml", "Cargo.lock", "crates/**/Cargo.toml", "crates/**/*.rs"],
+    "build_timeout_seconds": 300
+  },
+  "comparison": {
+    "stdout": "byte-equal-after-crlf-to-lf",
+    "exit_code": "bucketed-0-or-non-zero",
+    "error_presence": ["no-error", "compile-error", "runtime-error"],
+    "error_message_text": "not-compared"
+  },
+  "merge_promotion_policy": {
+    "status": "nightly-only",
+    "requires_consecutive_green_runs": 20,
+    "requires_quarantine_entries": 0,
+    "requires_flaky_retries": 0,
+    "merge_suite_after_promotion": "generated_minimized_seeds"
+  },
+  "required_coverage": [
+    "integer_values",
+    "bool_values",
+    "string_values",
+    "list_values",
+    "tuple_values",
+    "dict_values",
+    "pure_functions",
+    "local_assignment",
+    "if_else",
+    "loops_over_supported_iterables",
+    "comparisons_and_arithmetic",
+    "deterministic_serialization"
+  ],
+  "suites": {
+    "generated_minimized_seeds": {
+      "promotion_status": "nightly-only-until-20-green-runs",
+      "per_program_timeout_seconds": 20,
+      "overall_timeout_seconds": 180,
+      "cases": [
+        {
+          "id": "gen_seed_arith_branch_0001",
+          "seed": 1001,
+          "shape": "arith_branch",
+          "covers": ["integer_values", "bool_values", "pure_functions", "local_assignment", "if_else", "comparisons_and_arithmetic", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_seed_string_choice_0002",
+          "seed": 1002,
+          "shape": "string_choice",
+          "covers": ["bool_values", "string_values", "pure_functions", "local_assignment", "if_else", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_seed_list_tuple_loop_0003",
+          "seed": 1003,
+          "shape": "list_tuple_loop",
+          "covers": ["integer_values", "list_values", "tuple_values", "local_assignment", "loops_over_supported_iterables", "comparisons_and_arithmetic", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_seed_dict_sorted_0004",
+          "seed": 1004,
+          "shape": "dict_sorted",
+          "covers": ["integer_values", "dict_values", "string_values", "local_assignment", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        }
+      ]
+    },
+    "generated_broader": {
+      "promotion_status": "nightly-release-only",
+      "per_program_timeout_seconds": 20,
+      "overall_timeout_seconds": 240,
+      "cases": [
+        {
+          "id": "gen_broader_arith_branch_0101",
+          "seed": 2001,
+          "shape": "arith_branch",
+          "covers": ["integer_values", "bool_values", "pure_functions", "local_assignment", "if_else", "comparisons_and_arithmetic", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_broader_string_choice_0102",
+          "seed": 2002,
+          "shape": "string_choice",
+          "covers": ["bool_values", "string_values", "pure_functions", "local_assignment", "if_else", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_broader_list_tuple_loop_0103",
+          "seed": 2003,
+          "shape": "list_tuple_loop",
+          "covers": ["integer_values", "list_values", "tuple_values", "local_assignment", "loops_over_supported_iterables", "comparisons_and_arithmetic", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_broader_dict_sorted_0104",
+          "seed": 2004,
+          "shape": "dict_sorted",
+          "covers": ["integer_values", "dict_values", "string_values", "local_assignment", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_broader_arith_branch_0105",
+          "seed": 2005,
+          "shape": "arith_branch",
+          "covers": ["integer_values", "bool_values", "pure_functions", "local_assignment", "if_else", "comparisons_and_arithmetic", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        },
+        {
+          "id": "gen_broader_list_tuple_loop_0106",
+          "seed": 2006,
+          "shape": "list_tuple_loop",
+          "covers": ["integer_values", "list_values", "tuple_values", "local_assignment", "loops_over_supported_iterables", "comparisons_and_arithmetic", "deterministic_serialization"],
+          "forbidden_exclusions": ["D001_RESULT_OPTION_ERRORS", "D002_OWNERSHIP_BORROW", "D003_FIXED_WIDTH_OVERFLOW", "D004_DEFAULT_ARGUMENT_EVALUATION", "D005_DIVISION_FLOOR", "D006_DICT_ORDER_MUTATION", "D007_UNICODE_ENCODING", "D008_ASYNC_RUNTIME", "D009_STATIC_NARROWING_REJECTION", "D010_FLOAT_PRECISION", "D011_REPR_FORMATTING", "D012_EXCEPTION_MESSAGES"],
+          "expected_exit_bucket": "0",
+          "expected_error_presence": "no-error"
+        }
+      ]
+    }
+  }
+}
