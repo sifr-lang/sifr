@@ -83,6 +83,16 @@
       ]
     },
     {
+      "area": "cpython_differential",
+      "suites": [
+        "policy",
+        "hand_seeded_merge"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "diagnostics",
       "suites": [
         "contracts",

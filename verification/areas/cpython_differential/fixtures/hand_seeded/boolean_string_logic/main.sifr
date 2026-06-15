@@ -1,0 +1,16 @@
+from sifr.json import json_dumps
+
+
+def same_prefix(value: str) -> bool:
+    return value == "sifr" or value == "python"
+
+
+def main() -> None:
+    values: list[bool] = [
+        True and not False,
+        same_prefix("sifr"),
+        same_prefix("rust"),
+        len("safe") == 4,
+        "si" + "fr" == "sifr",
+    ]
+    print(json_dumps(values))

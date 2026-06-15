@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "name": "cpython_differential",
+  "owner": "compiler/core-language",
+  "description": "CPython-vs-Sifr differential oracle policy, catalogue linting, and hand-seeded smoke.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 600,
+  "suites": [
+    {
+      "name": "policy",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "catalogue_lint",
+          "entry": "verification/areas/cpython_differential/checks/catalogue_lint.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "hand_seeded_merge",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "hand_seeded_merge",
+          "entry": "verification/areas/cpython_differential/checks/hand_seeded_merge.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}
