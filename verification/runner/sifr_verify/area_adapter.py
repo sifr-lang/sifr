@@ -21,7 +21,16 @@ TMP_PATTERNS = (
     re.compile(r"/var/folders/[^\s\"']+"),
 )
 ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
-BASELINE_COMMANDS = {"check", "run", "build", "test", "lint", "fmt-check", "self-version"}
+BASELINE_COMMANDS = {
+    "check",
+    "run",
+    "build",
+    "test",
+    "lint",
+    "fmt-check",
+    "package-check",
+    "self-version",
+}
 CONTRACT_MATRIX_COMMAND = "contract-matrix"
 
 
@@ -447,11 +456,27 @@ def run_sifr_variant(
     entry: Path,
     diagnostic_format: str | None,
 ) -> tuple[int, str, str, float, list[str]]:
+    cwd = REPO_ROOT
     argv = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
+    if command_name == "package-check":
+        cwd = find_package_root(entry)
+        argv = [
+            "cargo",
+            "run",
+            "--manifest-path",
+            str(REPO_ROOT / "Cargo.toml"),
+            "--locked",
+            "-q",
+            "-p",
+            "sifr",
+            "--",
+        ]
     if diagnostic_format is not None:
         argv.extend(["--diagnostic-format", diagnostic_format])
     if command_name == "fmt-check":
         argv.extend(["fmt", "--check", "--no-cache", str(entry)])
+    elif command_name == "package-check":
+        argv.extend(["check", str(entry.relative_to(cwd))])
     elif command_name == "self-version":
         argv.extend(["self", "version"])
     else:
@@ -463,7 +488,7 @@ def run_sifr_variant(
     started = time.perf_counter()
     proc = subprocess.run(
         argv,
-        cwd=REPO_ROOT,
+        cwd=cwd,
         env=env,
         text=True,
         capture_output=True,
@@ -566,6 +591,15 @@ def normalize_string(value: str) -> str:
 def write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+
+
+def find_package_root(entry: Path) -> Path:
+    for candidate in [entry.parent, *entry.parents]:
+        if candidate == REPO_ROOT.parent:
+            break
+        if (candidate / "Cargo.toml").is_file() and (candidate / "sifr.toml").is_file():
+            return candidate
+    raise SystemExit(f"package-check entry is not inside a package fixture: {entry}")
 
 
 def resolve_repo_path(path: Path) -> Path:
