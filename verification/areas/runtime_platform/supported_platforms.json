@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "owner": "runtime-platform",
+  "policy": {
+    "create_pr_merge_network": "loopback-only",
+    "external_network": "nightly-release-only",
+    "undeclared_host": "fail"
+  },
+  "host_triples": [
+    {
+      "triple": "aarch64-apple-darwin",
+      "os": "macos",
+      "arch": "aarch64",
+      "status": "supported",
+      "merge_requirement": "execute",
+      "nightly_requirement": "execute",
+      "toolchain": "stable",
+      "allowed_skips": [],
+      "evidence_suites": [
+        "platform-golden",
+        "platform-evidence",
+        "sanitizer-smoke"
+      ]
+    },
+    {
+      "triple": "x86_64-apple-darwin",
+      "os": "macos",
+      "arch": "x86_64",
+      "status": "supported",
+      "merge_requirement": "execute",
+      "nightly_requirement": "execute",
+      "toolchain": "stable",
+      "allowed_skips": [],
+      "evidence_suites": [
+        "platform-golden",
+        "platform-evidence",
+        "sanitizer-smoke"
+      ]
+    },
+    {
+      "triple": "aarch64-unknown-linux-gnu",
+      "os": "linux",
+      "arch": "aarch64",
+      "status": "supported",
+      "merge_requirement": "execute",
+      "nightly_requirement": "execute",
+      "toolchain": "stable",
+      "allowed_skips": [],
+      "evidence_suites": [
+        "platform-golden",
+        "platform-evidence",
+        "sanitizer-smoke"
+      ]
+    },
+    {
+      "triple": "x86_64-unknown-linux-gnu",
+      "os": "linux",
+      "arch": "x86_64",
+      "status": "supported",
+      "merge_requirement": "execute",
+      "nightly_requirement": "execute",
+      "toolchain": "stable",
+      "allowed_skips": [],
+      "evidence_suites": [
+        "platform-golden",
+        "platform-evidence",
+        "sanitizer-smoke"
+      ]
+    },
+    {
+      "triple": "x86_64-pc-windows-msvc",
+      "os": "windows",
+      "arch": "x86_64",
+      "status": "host-limited",
+      "merge_requirement": "structured-skip",
+      "nightly_requirement": "structured-skip",
+      "toolchain": "stable",
+      "allowed_skips": [
+        "symlink privileges are host-policy dependent",
+        "POSIX signal delivery is not a Windows platform contract",
+        "Unix subprocess signal status is host-limited"
+      ],
+      "evidence_suites": [
+        "platform-golden",
+        "platform-evidence"
+      ]
+    },
+    {
+      "triple": "x86_64-pc-windows-gnu",
+      "os": "windows",
+      "arch": "x86_64",
+      "status": "host-limited",
+      "merge_requirement": "structured-skip",
+      "nightly_requirement": "structured-skip",
+      "toolchain": "stable",
+      "allowed_skips": [
+        "symlink privileges are host-policy dependent",
+        "POSIX signal delivery is not a Windows platform contract",
+        "Unix subprocess signal status is host-limited"
+      ],
+      "evidence_suites": [
+        "platform-golden",
+        "platform-evidence"
+      ]
+    }
+  ],
+  "target_triples": [
+    {
+      "triple": "aarch64-apple-darwin",
+      "status": "supported-host-target",
+      "merge_requirement": "execute-on-matching-host",
+      "nightly_requirement": "execute-on-matching-host"
+    },
+    {
+      "triple": "x86_64-apple-darwin",
+      "status": "supported-host-target",
+      "merge_requirement": "execute-on-matching-host",
+      "nightly_requirement": "execute-on-matching-host"
+    },
+    {
+      "triple": "aarch64-unknown-linux-gnu",
+      "status": "supported-host-target",
+      "merge_requirement": "execute-on-matching-host",
+      "nightly_requirement": "execute-on-matching-host"
+    },
+    {
+      "triple": "x86_64-unknown-linux-gnu",
+      "status": "supported-host-target",
+      "merge_requirement": "execute-on-matching-host",
+      "nightly_requirement": "execute-on-matching-host"
+    },
+    {
+      "triple": "x86_64-pc-windows-msvc",
+      "status": "host-limited",
+      "merge_requirement": "structured-skip",
+      "nightly_requirement": "structured-skip"
+    },
+    {
+      "triple": "x86_64-pc-windows-gnu",
+      "status": "host-limited",
+      "merge_requirement": "structured-skip",
+      "nightly_requirement": "structured-skip"
+    }
+  ]
+}

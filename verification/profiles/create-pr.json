@@ -82,7 +82,9 @@
     {
       "area": "runtime_platform",
       "suites": [
-        "platform-golden"
+        "platform-golden",
+        "platform-support-matrix",
+        "platform-evidence"
       ],
       "resource_classes": [
         "platform-specific"

@@ -37,6 +37,32 @@
       ]
     },
     {
+      "name": "platform-support-matrix",
+      "kind": "manifest",
+      "cases": [
+        {
+          "id": "platform-support-matrix",
+          "entry": "verification/areas/runtime_platform/supported_platforms.json",
+          "command": "platform-support-matrix-validate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "platform-evidence",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "platform-evidence",
+          "entry": "verification/areas/runtime_platform/platform_evidence_manifest.json",
+          "command": "platform-evidence-run",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "sanitizer-smoke",
       "kind": "manifest",
       "cases": [
