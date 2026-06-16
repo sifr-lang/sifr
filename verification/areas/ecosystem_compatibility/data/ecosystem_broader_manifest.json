@@ -5,6 +5,8 @@
       "id": "OSS-BROADER-0001",
       "project_root": "verification/areas/ecosystem_compatibility/projects/broader_pass_signal",
       "pinned_revision": "local-main@f6ababa5",
+      "source_checksum_sha256": "0682ba972ee027fb3a0208b7f47112589005756578f1561dec7cf61f32664774",
+      "license": "MIT",
       "owner": "compiler/verification",
       "rationale": "Signal-only broader lane pass project for trend comparison.",
       "expected_result_classification": "pass",
@@ -27,6 +29,8 @@
       "id": "OSS-BROADER-0002",
       "project_root": "verification/areas/ecosystem_compatibility/projects/broader_known_failure_signal",
       "pinned_revision": "local-main@f6ababa5",
+      "source_checksum_sha256": "3cec30ea80831351aa4e14053b7d9cb53dc17785445de94f103c612f23a2e764",
+      "license": "MIT",
       "owner": "compiler/verification",
       "rationale": "Known-compatibility signal case intentionally expected to fail compilation.",
       "expected_result_classification": "known-failure",
@@ -34,6 +38,48 @@
         {
           "command": "check",
           "entrypoint": "main.sifr",
+          "expect_exit_code": 1,
+          "timeout_secs": 120
+        }
+      ]
+    },
+    {
+      "id": "OSS-BROADER-0003",
+      "project_root": "verification/areas/ecosystem_compatibility/projects/broader_pass_signal",
+      "pinned_revision": "local-main@f6ababa5",
+      "source_checksum_sha256": "0682ba972ee027fb3a0208b7f47112589005756578f1561dec7cf61f32664774",
+      "license": "MIT",
+      "owner": "compiler/verification",
+      "rationale": "Signal-only broader lane project for local import coverage outside the blocking curated set.",
+      "expected_result_classification": "pass",
+      "commands": [
+        {
+          "command": "check",
+          "entrypoint": "module_signal.sifr",
+          "expect_exit_code": 0,
+          "timeout_secs": 120
+        },
+        {
+          "command": "run",
+          "entrypoint": "module_signal.sifr",
+          "expect_exit_code": 0,
+          "timeout_secs": 120
+        }
+      ]
+    },
+    {
+      "id": "OSS-BROADER-0004",
+      "project_root": "verification/areas/ecosystem_compatibility/projects/broader_known_failure_signal",
+      "pinned_revision": "local-main@f6ababa5",
+      "source_checksum_sha256": "3cec30ea80831351aa4e14053b7d9cb53dc17785445de94f103c612f23a2e764",
+      "license": "MIT",
+      "owner": "compiler/verification",
+      "rationale": "Known-compatibility signal case intentionally expected to fail a return-type check.",
+      "expected_result_classification": "known-failure",
+      "commands": [
+        {
+          "command": "check",
+          "entrypoint": "type_mismatch.sifr",
           "expect_exit_code": 1,
           "timeout_secs": 120
         }

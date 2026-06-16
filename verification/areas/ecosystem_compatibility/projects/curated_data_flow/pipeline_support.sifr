@@ -1,0 +1,11 @@
+def double(value: int) -> int:
+    return value * 2
+
+
+def pipeline_total(seed: int) -> int:
+    total: int = 0
+    step: int = 0
+    while step < 3:
+        total = total + double(seed + step)
+        step = step + 1
+    return total

@@ -1,0 +1,6 @@
+from pipeline_support import pipeline_total
+
+
+def main():
+    print("oss curated workspace pipeline")
+    print(str(pipeline_total(4)))

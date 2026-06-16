@@ -1,0 +1,11 @@
+def classify(value: int) -> str:
+    if value < 0:
+        return "negative"
+    if value == 0:
+        return "zero"
+    return "positive"
+
+
+def main():
+    print("oss curated control flow")
+    print(classify(7))

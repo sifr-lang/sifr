@@ -1,0 +1,2 @@
+def message() -> str:
+    return "oss broader module signal"
