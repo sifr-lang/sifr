@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "owner": "compiler/performance",
+  "description": "Wave 8 performance trend contract. Local create-pr and merge lanes keep threshold budgets blocking; trend deltas are reviewed on approved reference hardware so ordinary developer machines do not fail solely because of local timing noise.",
+  "baseline_window_days": 45,
+  "max_future_clock_skew_days": 2,
+  "required_result_fields": [
+    "id",
+    "sample_count",
+    "samples_ms",
+    "metrics",
+    "cache",
+    "baseline_captured_at_unix"
+  ],
+  "required_metrics": [
+    "median_ms",
+    "p95_ms",
+    "mad_ms",
+    "coefficient_variation",
+    "peak_rss_bytes"
+  ],
+  "tracked_optional_metrics": [
+    "emitted_rust_lines",
+    "emitted_rust_bytes",
+    "generated_binary_bytes"
+  ],
+  "required_cache_fields": [
+    "hits",
+    "misses"
+  ],
+  "required_metadata_fields": [
+    "captured_at_unix",
+    "host_cpu",
+    "host_os",
+    "architecture",
+    "rustc",
+    "python",
+    "uv",
+    "profile",
+    "thermal_policy",
+    "cargo",
+    "cargo_lock_sha256",
+    "compiler_fingerprint"
+  ],
+  "blocking_policy": {
+    "create_pr": "validate benchmark schema, trend policy, stale-baseline policy, and smoke budgets",
+    "merge": "enforce stable representative threshold budgets and trend policy; trend deltas remain reference-hardware reviewed",
+    "nightly_release": "produce trend deltas on approved reference hardware and require owner review for regressions",
+    "local_trend_delta": "do not fail local developer machines solely because of noisy trend deltas",
+    "checked_in_baseline_updates": "only approved reference runs may update checked-in trend baselines"
+  }
+}

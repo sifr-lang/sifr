@@ -18,6 +18,7 @@ BENCHMARK_MANIFEST = DATA_ROOT / "benchmark_manifest.json"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "performance-results.json"
 RUN_BENCHMARKS = AREA_ROOT / "run_benchmarks.py"
 CHECK_BUDGETS = AREA_ROOT / "check_budgets.py"
+CHECK_TREND_POLICY = AREA_ROOT / "check_trend_policy.py"
 
 SMOKE_CASES = [
     "formatter-corpus-001-project-check",
@@ -174,6 +175,12 @@ def run_contract_variants(suite_name: str) -> list[dict[str, Any]]:
             suite_name,
             "budget-policy-self-test",
             [sys.executable, str(CHECK_BUDGETS), "--self-test"],
+        ),
+        run_command_variant(suite_name, "trend-policy", [sys.executable, str(CHECK_TREND_POLICY)]),
+        run_command_variant(
+            suite_name,
+            "trend-policy-self-test",
+            [sys.executable, str(CHECK_TREND_POLICY), "--self-test"],
         ),
     ]
 

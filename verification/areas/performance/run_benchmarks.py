@@ -601,11 +601,15 @@ def baseline_from_run(run_report: dict[str, Any], manifest: dict[str, Any]) -> d
 def host_metadata() -> dict[str, Any]:
     return {
         "captured_at_unix": int(time.time()),
+        "host_cpu": platform.processor() or platform.machine(),
         "host_os": platform.platform(),
         "architecture": platform.machine(),
         "python": platform.python_version(),
+        "uv": command_output(["uv", "--version"]),
         "rustc": command_output(["rustc", "--version"]),
         "cargo": command_output(["cargo", "--version"]),
+        "profile": os.environ.get("SIFR_VALIDATION_PROFILE", "standalone"),
+        "thermal_policy": os.environ.get("SIFR_THERMAL_POLICY", "unspecified"),
         "cargo_lock_sha256": sha256(REPO_ROOT / "Cargo.lock"),
         "compiler_fingerprint": command_output(["cargo", "metadata", "--no-deps", "--format-version", "1"])[:64],
     }

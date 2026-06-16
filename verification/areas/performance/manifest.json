@@ -75,6 +75,20 @@
           "command": "budget-self-test",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "trend-policy",
+          "entry": "verification/areas/performance/check_trend_policy.py",
+          "command": "python-script",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "trend-policy-self-test",
+          "entry": "verification/areas/performance/check_trend_policy.py",
+          "command": "python-script-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
