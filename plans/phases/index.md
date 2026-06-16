@@ -37,7 +37,7 @@ Phase status remains authoritative in each phase file header and is mirrored her
 | 29 | Phase 29: Verification Hardening | completed | [29_verification_hardening.md](./29_verification_hardening.md) |
 | 30 | Phase 30: Reliability Parity and Performance Budgets | unspecified | [30_reliability_parity_and_performance_budgets.md](./30_reliability_parity_and_performance_budgets.md) |
 | 31 | Phase 31: Algorithmic Compatibility and LeetCode Coverage | complete | [31_algorithmic_compatibility_and_leetcode_coverage.md](./31_algorithmic_compatibility_and_leetcode_coverage.md) |
-| 31.8 | Ad Hoc World-Class Verification Standard and Gate Closure | in_progress | [../issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md](../issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md) |
+| 31.8 | Ad Hoc World-Class Verification Standard and Gate Closure | complete | [../issues/archive/ad-hoc-world-class-verification-standard-and-gate-closure.md](../issues/archive/ad-hoc-world-class-verification-standard-and-gate-closure.md) |
 | 32 | Phase 32: Async and Concurrency Model | completed | [32_async_ecosystem.md](./32_async_ecosystem.md) |
 | 33 | Phase 33: Preview Distribution and Release Automation (`alpha`/`beta`) | completed | [33_preview_distribution_and_release_automation.md](./33_preview_distribution_and_release_automation.md) |
 | 34 | Phase 34: Generated Code Quality and Production Readiness | completed and merged | [34_generated_code_quality_and_production_readiness.md](./34_generated_code_quality_and_production_readiness.md) |
