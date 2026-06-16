@@ -64,6 +64,15 @@
   },
   "selected_areas": [
     {
+      "area": "coverage_matrix",
+      "suites": [
+        "closeout"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "core_language",
       "suites": [
         "integer_dtype_contract",

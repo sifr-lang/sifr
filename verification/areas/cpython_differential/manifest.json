@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "cpython_differential",
   "owner": "compiler/core-language",
   "description": "CPython-vs-Sifr differential oracle policy, catalogue linting, and hand-seeded smoke.",
@@ -61,5 +61,19 @@
         }
       ]
     }
-  ]
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_contract": {
+    "required": false,
+    "source": "not-applicable"
+  }
 }

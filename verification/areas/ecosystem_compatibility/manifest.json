@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "ecosystem_compatibility",
   "owner": "compiler/verification",
   "description": "Curated OSS compatibility gate and broader ecosystem signal suites.",
@@ -36,5 +36,19 @@
         }
       ]
     }
-  ]
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": true,
+    "revision": "checked-in-local-corpus",
+    "checksum": "sha256:34dfaec9c0442f603726e0b96062726a9e0410dfa6ce5993512a7fd1eb14a80a"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_contract": {
+    "required": false,
+    "source": "not-applicable"
+  }
 }

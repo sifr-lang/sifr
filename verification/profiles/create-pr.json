@@ -64,7 +64,7 @@
     {
       "area": "coverage_matrix",
       "suites": [
-        "advisory"
+        "closeout"
       ],
       "resource_classes": [
         "default-local"

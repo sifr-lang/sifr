@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated_at": "2026-06-14",
-  "advisory_mode": true,
+  "advisory_mode": false,
   "allowed_temporary_waves": [
     "1",
     "2",
@@ -30,44 +30,33 @@
       "guarantee_id": "parser-syntax-contract",
       "support_status": "stable",
       "owner": "compiler/hardening",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "fuzz_property:fuzz-smoke",
-      "nightly_release_suite": "fuzz_property:sustained-parser-fuzz",
+      "nightly_release_suite": "fuzz_property:property,fuzz_property:fuzz-smoke",
       "regression_suite": "regression:crashes",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite fuzz-smoke",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-7",
-      "closes_in_wave": "7",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite fuzz-smoke"
     },
     {
       "surface_id": "compiler_crash_ice_contract",
       "guarantee_id": "compiler-crash-ice-contract",
       "support_status": "stable",
       "owner": "compiler/hardening",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "regression:crashes",
-      "nightly_release_suite": "regression:adversarial-crash-stress",
+      "nightly_release_suite": "regression:crashes",
       "regression_suite": "regression:crashes",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area regression --suite crashes",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-5",
-      "closes_in_wave": "5",
-      "closes_in_subwave": "8",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area regression --suite crashes"
     },
     {
       "surface_id": "compiler_crash_stress",
       "guarantee_id": "compiler-crash-ice-contract",
       "support_status": "stable",
       "owner": "compiler/hardening",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "regression:crashes",
-      "nightly_release_suite": "regression:adversarial-crash-stress",
+      "nightly_release_suite": "regression:crashes",
       "regression_suite": "regression:crashes",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area regression --suite crashes",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-5",
-      "closes_in_wave": "5",
-      "closes_in_subwave": "8",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area regression --suite crashes"
     },
     {
       "surface_id": "diagnostics_contracts",
@@ -85,28 +74,22 @@
       "guarantee_id": "diagnostic-contract",
       "support_status": "stable",
       "owner": "compiler/diagnostics",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "diagnostics:baselines",
       "nightly_release_suite": "diagnostics:baselines",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-4",
-      "closes_in_wave": "4",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines"
     },
     {
       "surface_id": "diagnostic_recovery",
       "guarantee_id": "diagnostic-contract",
       "support_status": "stable",
       "owner": "compiler/diagnostics",
-      "status": "expected-missing",
-      "merge_suite": "diagnostics:recovery-baselines",
-      "nightly_release_suite": "diagnostics:recovery-stress",
+      "status": "blocking",
+      "merge_suite": "diagnostics:baselines",
+      "nightly_release_suite": "diagnostics:baselines",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-4",
-      "closes_in_wave": "4",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines"
     },
     {
       "surface_id": "hir_name_type_flow_contracts",
@@ -124,14 +107,11 @@
       "guarantee_id": "hir-name-type-flow-contract",
       "support_status": "stable",
       "owner": "compiler/core-language",
-      "status": "expected-missing",
-      "merge_suite": "core_language:lowering-layer-snapshots",
-      "nightly_release_suite": "core_language:lowering-layer-snapshots",
+      "status": "blocking",
+      "merge_suite": "core_language:lowering_layer_inventory",
+      "nightly_release_suite": "core_language:lowering_layer_inventory",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area core_language",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-5",
-      "closes_in_wave": "5",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite lowering_layer_inventory"
     },
     {
       "surface_id": "codegen_merge_blocking",
@@ -160,15 +140,11 @@
       "guarantee_id": "codegen-generated-rust-contract",
       "support_status": "stable",
       "owner": "compiler/codegen",
-      "status": "expected-missing",
-      "merge_suite": "generated_code_quality:codegen-snapshots",
-      "nightly_release_suite": "generated_code_quality:codegen-snapshots",
+      "status": "blocking",
+      "merge_suite": "sifr_codegen:cargo-test",
+      "nightly_release_suite": "generated_code_quality:full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "cargo test -p sifr_codegen",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-5",
-      "closes_in_wave": "5",
-      "closes_in_subwave": "7",
-      "expiry": "2026-09-30"
+      "reproduction_command": "cargo test -p sifr_codegen"
     },
     {
       "surface_id": "runtime_platform_golden",
@@ -186,15 +162,11 @@
       "guarantee_id": "runtime-platform-contract",
       "support_status": "stable",
       "owner": "runtime/platform",
-      "status": "expected-missing",
-      "merge_suite": "runtime_platform:platform-golden",
-      "nightly_release_suite": "runtime_platform:supported-platforms",
+      "status": "blocking",
+      "merge_suite": "runtime_platform:platform-support-matrix,runtime_platform:platform-evidence",
+      "nightly_release_suite": "runtime_platform:platform-support-matrix,runtime_platform:platform-evidence",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-9",
-      "closes_in_wave": "9",
-      "closes_in_subwave": "5",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-support-matrix --suite platform-evidence"
     },
     {
       "surface_id": "project_workspace_contracts",
@@ -212,15 +184,11 @@
       "guarantee_id": "project-workspace-package-contract",
       "support_status": "stable",
       "owner": "compiler/package-management",
-      "status": "expected-missing",
-      "merge_suite": "package_management:offline-registry-smoke",
-      "nightly_release_suite": "package_management:full-integration",
+      "status": "blocking",
+      "merge_suite": "package_management:offline-merge-smoke",
+      "nightly_release_suite": "package_management:offline-integration",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area package_management",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-9",
-      "closes_in_wave": "9",
-      "closes_in_subwave": "3",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area package_management --suite offline-merge-smoke"
     },
     {
       "surface_id": "cli_exit_codes",
@@ -238,30 +206,22 @@
       "guarantee_id": "tooling-lsp-contract",
       "support_status": "stable",
       "owner": "compiler/tooling",
-      "status": "expected-missing",
-      "merge_suite": "developer_tooling:lsp-marker-corpus",
-      "nightly_release_suite": "developer_tooling:lsp-marker-corpus-full",
+      "status": "blocking",
+      "merge_suite": "developer_tooling:lsp-smoke",
+      "nightly_release_suite": "developer_tooling:full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-9",
-      "closes_in_wave": "9",
-      "closes_in_subwave": "1",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite lsp-smoke"
     },
     {
       "surface_id": "lsp_transcript_replay",
       "guarantee_id": "tooling-lsp-contract",
       "support_status": "stable",
       "owner": "compiler/tooling",
-      "status": "expected-missing",
-      "merge_suite": "developer_tooling:lsp-transcripts",
-      "nightly_release_suite": "developer_tooling:lsp-transcripts-full",
+      "status": "blocking",
+      "merge_suite": "developer_tooling:lsp-smoke",
+      "nightly_release_suite": "developer_tooling:full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-9",
-      "closes_in_wave": "9",
-      "closes_in_subwave": "1",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite lsp-smoke"
     },
     {
       "surface_id": "performance_budgets",
@@ -279,28 +239,22 @@
       "guarantee_id": "performance-determinism-contract",
       "support_status": "stable",
       "owner": "compiler/performance",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "performance:representative",
-      "nightly_release_suite": "performance:trend-artifacts",
+      "nightly_release_suite": "performance:full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area performance --suite representative",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-8",
-      "closes_in_wave": "8",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area performance --suite representative"
     },
     {
       "surface_id": "incremental_determinism_equivalence",
       "guarantee_id": "performance-determinism-contract",
       "support_status": "stable",
       "owner": "compiler/performance",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "e2e:determinism-equivalence",
-      "nightly_release_suite": "e2e:edit-run-matrix",
+      "nightly_release_suite": "e2e:determinism-equivalence",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "bash verification/runner/e2e/check_report_determinism.sh --profile merge",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-8",
-      "closes_in_wave": "8",
-      "expiry": "2026-09-30"
+      "reproduction_command": "bash verification/runner/e2e/check_report_determinism.sh --profile merge"
     },
     {
       "surface_id": "fuzz_property_smoke",
@@ -329,15 +283,11 @@
       "guarantee_id": "hardening-oracle-contract",
       "support_status": "stable",
       "owner": "compiler/core-language",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "cpython_differential:generated_minimized_seeds",
       "nightly_release_suite": "cpython_differential:generated_broader",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area cpython_differential --suite generated_broader",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-6",
-      "closes_in_wave": "6",
-      "closes_in_subwave": "1",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area cpython_differential --suite generated_minimized_seeds"
     },
     {
       "surface_id": "sanitizer_hardening",
@@ -366,30 +316,22 @@
       "guarantee_id": "ecosystem-stdlib-algorithm-contract",
       "support_status": "stable",
       "owner": "stdlib/parity",
-      "status": "expected-missing",
-      "merge_suite": "stdlib_parity:supported-namespace-smoke",
-      "nightly_release_suite": "stdlib_parity:module-owned-parity",
+      "status": "blocking",
+      "merge_suite": "stdlib_parity:module-merge-check",
+      "nightly_release_suite": "stdlib_parity:module-full-check",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area stdlib_parity",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-9",
-      "closes_in_wave": "9",
-      "closes_in_subwave": "4",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area stdlib_parity --suite module-merge-check"
     },
     {
       "surface_id": "algorithmic_compatibility_profile",
       "guarantee_id": "ecosystem-stdlib-algorithm-contract",
       "support_status": "stable",
       "owner": "algorithmic/compatibility",
-      "status": "expected-missing",
-      "merge_suite": "algorithmic_compatibility:leetcode-representative",
-      "nightly_release_suite": "algorithmic_compatibility:leetcode-check",
+      "status": "blocking",
+      "merge_suite": "algorithmic_compatibility:representative-subset",
+      "nightly_release_suite": "algorithmic_compatibility:leetcode-full,algorithmic_compatibility:taxonomy-smoke",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-check",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-9",
-      "closes_in_wave": "9",
-      "closes_in_subwave": "6",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite representative-subset"
     },
     {
       "surface_id": "distribution_release_representative",

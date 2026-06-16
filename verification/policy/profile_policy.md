@@ -31,28 +31,29 @@ Profiles at schema version 2 carry local-first execution policy:
 - `uv run --project verification --locked python -m sifr_verify doctor` is the
   setup boundary for local prerequisites before profile execution.
 
-The `coverage_matrix` area is selected by create-pr and merge in advisory mode
-during the gate-closure phase. It fails schema, owner, status, profile-policy,
-expiry, cargo metadata classification, and crate-membership errors immediately
-while permitting the closed Wave 0 list of temporary `expected-missing` and
-`red-blocker` rows. Closeout promotes the same check to strict mode with
-`SIFR_COVERAGE_MATRIX_STRICT=1`.
+The `coverage_matrix` area is selected by create-pr, merge, nightly, and release
+through the blocking `closeout` suite. The suite runs strict mode with
+`SIFR_COVERAGE_MATRIX_STRICT=1`, the profile-assignment matrix check, and
+negative self-tests. It rejects `expected-missing`, `tests:none`, `red-blocker`,
+ownerless rows, unknown owners, expired quarantine, v1 stable-surface manifests,
+unpinned required corpora, live-network create-pr/merge policy, missing locked
+or offline Cargo policy, and first-party compiler crates without executed merge
+membership.
 
 Cargo workspace packages, targets, and features are inventoried from
 `cargo metadata --locked --no-deps --format-version 1` and classified in
 `verification/areas/coverage_matrix/data/cargo_metadata_classification.json`.
-Every first-party compiler crate must have full-mode merge membership. A
-temporary `red-blocker` entry is allowed only with `executed_in_merge=false`,
-an owner, a tracked deadline, and a phase wave that closes it.
-Targets and features use `merge-red-blocker` only for a suite that is planned
-for merge membership but intentionally not executed until its red-blocker closes.
+Every first-party compiler crate must have full-mode merge membership. Temporary
+`red-blocker` membership is no longer an allowed closeout state. Targets and
+features use `merge-red-blocker` only for historical classification data that is
+not part of the current stable closeout surface.
 
 ## Create-PR Profile
 
 `scripts/run_all_tests.sh --profile create-pr` proves fast compiler-relevant behavior:
 
 - static guardrails and diagnostic registry/docs contracts
-- advisory coverage-matrix consistency for shipped guarantees and surfaces
+- strict closeout coverage-matrix consistency for shipped guarantees and surfaces
 - parser/frontend cache and split-brain guardrails
 - static tooling contracts and LSP protocol smoke
 - smoke performance budgets
@@ -66,7 +67,7 @@ It intentionally excludes editor packaging, editor asset release checks, distrib
 `scripts/run_all_tests.sh --profile merge` is the authoritative merge gate. It preserves broader compiler coverage through:
 
 - full core contract matrices listed in the manifest
-- advisory coverage-matrix consistency for shipped guarantees and surfaces
+- strict closeout coverage-matrix consistency for shipped guarantees and surfaces
 - representative hardening suites
 - representative performance budget subset
 - representative generated-code quality checks with shared generated artifacts and Cargo target reuse

@@ -42,6 +42,33 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "closeout",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "coverage_matrix_closeout",
+          "entry": "verification/areas/coverage_matrix/checks/coverage_matrix_closeout.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "profile_assignment_matrix",
+          "entry": "verification/areas/coverage_matrix/checks/profile_assignment_matrix.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "coverage_matrix_negative_self_tests",
+          "entry": "verification/areas/coverage_matrix/checks/coverage_matrix_self_test.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ]
 }

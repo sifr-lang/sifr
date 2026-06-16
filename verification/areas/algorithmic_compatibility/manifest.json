@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "algorithmic_compatibility",
   "owner": "algorithmic/compatibility",
   "description": "Algorithmic corpus compatibility, LeetCode fixture checks, and full-corpus failure taxonomy tooling.",
@@ -76,5 +76,19 @@
         }
       ]
     }
-  ]
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": true,
+    "revision": "checked-in-local-corpus",
+    "checksum": "sha256:4c16fa4f9a1fbc118c2d2e317535d7131242a27b7bc539b22f8c8e3385116f69"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_contract": {
+    "required": false,
+    "source": "not-applicable"
+  }
 }
