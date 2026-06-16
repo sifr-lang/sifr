@@ -1,0 +1,5 @@
+from support import message
+
+
+def main():
+    print(message())

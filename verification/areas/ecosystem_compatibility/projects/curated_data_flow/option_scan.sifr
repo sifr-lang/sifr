@@ -1,0 +1,17 @@
+def first_large(own values: list[int], threshold: int) -> int | None:
+    index: int = 0
+    while index < len(values):
+        current: int | None = values[index]
+        if current is not None:
+            if current > threshold:
+                return current
+        index = index + 1
+    return None
+
+
+def main():
+    values: list[int] = [2, 5, 11, 13]
+    found: int | None = first_large(values, 10)
+    if found is not None:
+        print("oss curated option scan")
+        print(str(found))

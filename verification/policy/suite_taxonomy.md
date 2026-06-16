@@ -88,7 +88,8 @@ Every surface listed here must have at least one multi-error fixture in `recover
 
 ### OSS-Curated and Ecosystem-Broader
 - Manifests live under `verification/areas/ecosystem_compatibility/data/`.
-- `oss-curated` entries must include pinned revision, owner, rationale, commands, timeout, and expected class.
+- `oss-curated` entries must include pinned revision, source checksum, SPDX license, owner, rationale, commands, timeout, and expected class.
+- `ecosystem-broader` entries use the same metadata contract, but remain non-blocking signal unless promoted by profile policy.
 - `ecosystem-broader` is explicitly non-blocking and emits signal-only reports.
 - Operational policy: `verification/policy/ecosystem_compatibility.md`.
 

@@ -17,6 +17,9 @@ from .core import (
 from .fixedbugs_and_crashes import contains_internal_panic
 from .self_tests_and_baselines import project_revision_history
 
+ALLOWED_SPDX_LICENSES = {"MIT"}
+
+
 def run_oss_suite(
     *,
     suite: dict[str, Any],
@@ -54,6 +57,8 @@ def run_oss_suite(
             "id": case_id,
             "project_root": entry.get("project_root"),
             "pinned_revision": entry.get("pinned_revision"),
+            "source_checksum_sha256": entry.get("source_checksum_sha256"),
+            "license": entry.get("license"),
             "expected_result_classification": entry.get("expected_result_classification"),
             "variants": [],
         }
@@ -64,6 +69,8 @@ def run_oss_suite(
                 "id",
                 "project_root",
                 "pinned_revision",
+                "source_checksum_sha256",
+                "license",
                 "owner",
                 "rationale",
                 "expected_result_classification",
@@ -79,6 +86,11 @@ def run_oss_suite(
         project_root = repo_root / str(project_root_raw) if isinstance(project_root_raw, str) else None
         if project_root is None or not project_root.is_dir():
             mismatches.append("project_root")
+        expected_source_checksum = entry.get("source_checksum_sha256")
+        if not is_sha256_hex(expected_source_checksum):
+            mismatches.append("source_checksum_sha256")
+        if entry.get("license") not in ALLOWED_SPDX_LICENSES:
+            mismatches.append("license")
         if not isinstance(commands, list) or not commands:
             mismatches.append("commands")
 
@@ -158,6 +170,32 @@ def run_oss_suite(
                 "expected_pinned_revision": pinned_revision_raw,
                 "latest_project_revision": f"local-main@{latest_sha[:len(expected_sha)]}",
                 "matched_project_revision": f"local-main@{matched_sha[:len(expected_sha)]}",
+            }
+        )
+
+        actual_source_checksum = project_source_checksum(repo_root, project_root_raw)
+        result["total_variants"] += 1
+        if actual_source_checksum != expected_source_checksum:
+            result["total_failures"] += 1
+            result["failed_cases"] += 1
+            case_result["variants"].append(
+                {
+                    "label": "source-checksum",
+                    "status": "fail",
+                    "mismatches": ["source_checksum_mismatch"],
+                    "expected_source_checksum_sha256": expected_source_checksum,
+                    "actual_source_checksum_sha256": actual_source_checksum,
+                }
+            )
+            result["cases"].append(case_result)
+            continue
+        case_result["variants"].append(
+            {
+                "label": "source-checksum",
+                "status": "pass",
+                "mismatches": [],
+                "expected_source_checksum_sha256": expected_source_checksum,
+                "actual_source_checksum_sha256": actual_source_checksum,
             }
         )
 
@@ -249,6 +287,33 @@ def run_oss_suite(
         result["cases"].append(case_result)
 
     return result
+
+
+def is_sha256_hex(value: object) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(char in "0123456789abcdef" for char in value)
+
+
+def project_source_checksum(repo_root: Path, project_root: str) -> str:
+    proc = subprocess.run(
+        ["git", "ls-files", "--", project_root],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return ""
+    digest = hashlib.sha256()
+    tracked_paths = sorted(line.strip() for line in proc.stdout.splitlines() if line.strip())
+    for relative in tracked_paths:
+        path = repo_root / relative
+        if not path.is_file():
+            return ""
+        digest.update(Path(relative).relative_to(project_root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def run_external_command(
@@ -444,4 +509,3 @@ def failed_case_ids(suite_result: dict[str, Any]) -> set[str]:
             if any(isinstance(variant, dict) and variant.get("status") == "fail" for variant in variants):
                 failed.add(case_id)
     return failed
-
