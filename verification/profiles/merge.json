@@ -187,6 +187,15 @@
       ]
     },
     {
+      "area": "package_management",
+      "suites": [
+        "offline-merge-smoke"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "regression",
       "suites": [
         "fixedbugs"

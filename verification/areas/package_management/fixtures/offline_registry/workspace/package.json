@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "offline-app",
+  "version": "0.1.0",
+  "dependencies": [
+    {
+      "name": "sifr-json",
+      "version": "1.0.0"
+    }
+  ],
+  "lockfile": "Sifr.lock"
+}

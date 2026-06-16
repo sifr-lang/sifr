@@ -22,6 +22,39 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "offline-merge-smoke",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "offline-registry-lock-graph",
+          "entry": "verification/areas/package_management/tools/check_offline_package_merge_smoke.py",
+          "command": "offline-package-merge-smoke",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "offline-registry-lock-graph-self-test",
+          "entry": "verification/areas/package_management/tools/check_offline_package_merge_smoke.py",
+          "command": "offline-package-merge-smoke-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "offline-integration",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "demo-corpus-lockfile-determinism",
+          "entry": "verification/areas/package_management/tools/check_offline_package_merge_smoke.py",
+          "command": "offline-package-demo-corpus-smoke",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ]
 }

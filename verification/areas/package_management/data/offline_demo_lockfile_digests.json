@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "description": "Checked-in package-management demo lockfile digests for offline nightly/release integration signal.",
+  "lockfiles": [
+    {
+      "repository": "sifr-demo-app",
+      "path": "verification/areas/package_management/corpora/demo_repositories/sifr-demo-app/Cargo.lock",
+      "sha256": "280f66ca5dbce4c0887307c73ac73996068ac6b24ce51144759bd1dcdf0b4828",
+      "expected_packages_present": [
+        "sifr-demo-app@0.1.0",
+        "sifr-demo-http@0.1.0",
+        "sifr-demo-json@0.1.0",
+        "sifr-demo-json@0.2.0",
+        "sifr-demo-test-support@0.1.0"
+      ]
+    },
+    {
+      "repository": "sifr-demo-json",
+      "path": "verification/areas/package_management/corpora/demo_repositories/sifr-demo-json/Cargo.lock",
+      "sha256": "db453c81d7e546e09398c483d1689ac2de4a464dd3654c62041d811f0f6f1454",
+      "expected_packages_present": [
+        "sifr-demo-json@0.1.0"
+      ]
+    },
+    {
+      "repository": "sifr-demo-http",
+      "path": "verification/areas/package_management/corpora/demo_repositories/sifr-demo-http/Cargo.lock",
+      "sha256": "5900c9ced376fdda5399737d20c2e09d36d56229400dca7c80a22542d23eae64",
+      "expected_packages_present": [
+        "sifr-demo-http@0.1.0"
+      ]
+    },
+    {
+      "repository": "sifr-demo-test-support",
+      "path": "verification/areas/package_management/corpora/demo_repositories/sifr-demo-test-support/Cargo.lock",
+      "sha256": "9bc7ad0b8ed4b05c26224bfd342425157215eca6f4c025ffab29009d946e57d6",
+      "expected_packages_present": [
+        "sifr-demo-test-support@0.1.0"
+      ]
+    },
+    {
+      "repository": "sifr-demo-workspace",
+      "path": "verification/areas/package_management/corpora/demo_repositories/sifr-demo-workspace/Cargo.lock",
+      "sha256": "108781297a14f0bf5334c5ac04427353ddee07d5713230a9c80357d8359f8650",
+      "expected_packages_present": [
+        "sifr-demo-app@0.1.0",
+        "sifr-demo-core@0.1.0",
+        "sifr-demo-utils@0.1.0"
+      ]
+    }
+  ]
+}

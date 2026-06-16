@@ -1,0 +1,4 @@
+from sifr_core import normalize
+
+def encode(value: Int) -> Int:
+    return normalize(value)
