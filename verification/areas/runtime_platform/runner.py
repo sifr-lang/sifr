@@ -18,6 +18,7 @@ MANIFEST_PATH = AREA_ROOT / "manifest.json"
 GOLDEN_MANIFEST = AREA_ROOT / "golden" / "manifest.json"
 PLATFORM_CONTRACT = AREA_ROOT / "platform_contract.json"
 SANITIZER_MANIFEST = AREA_ROOT / "sanitizer_manifest.json"
+PLATFORM_EVIDENCE_TOOL = AREA_ROOT / "tools" / "check_platform_evidence.py"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "runtime-platform-results.json"
 
 
@@ -108,6 +109,8 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
         variants = run_platform_golden()
     elif suite_name == "platform-contract":
         variants = [run_contract_variant()]
+    elif suite_name in {"platform-support-matrix", "platform-evidence"}:
+        variants = run_platform_evidence_suite(suite_name)
     elif suite_name in {"sanitizer-smoke", "sanitizer-full"}:
         variants = run_sanitizer_suite(suite_name)
     else:
@@ -160,6 +163,57 @@ def run_contract_variant() -> dict[str, Any]:
         "actual_exit_code": 0 if status == "pass" else 1,
         "duration_ms": round(elapsed_ms, 3),
     }
+
+
+def run_platform_evidence_suite(suite_name: str) -> list[dict[str, Any]]:
+    result_path = REPO_ROOT / "target" / "verification" / "areas" / f"runtime-platform-{suite_name}-results.json"
+    command = [
+        sys.executable,
+        str(PLATFORM_EVIDENCE_TOOL.relative_to(REPO_ROOT)),
+        "--suite",
+        suite_name,
+        "--json-out",
+        str(result_path.relative_to(REPO_ROOT)),
+    ]
+    result = subprocess.run(
+        command,
+        cwd=REPO_ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    print(result.stdout, end="", flush=True)
+    try:
+        payload = json.loads(result_path.read_text(encoding="utf-8"))
+        variants = payload["variants"]
+        if not isinstance(variants, list):
+            raise ValueError("variants must be a list")
+    except Exception as exc:  # noqa: BLE001 - reported as an area variant failure.
+        return [
+            {
+                "label": suite_name,
+                "argv": command,
+                "status": "fail",
+                "mismatches": [f"failed to read platform evidence result JSON: {exc}"],
+                "expected_exit_code": 0,
+                "actual_exit_code": result.returncode,
+                "duration_ms": 0.0,
+            }
+        ]
+    if result.returncode != 0 and not any(variant.get("status") == "fail" for variant in variants):
+        variants.append(
+            {
+                "label": suite_name,
+                "argv": command,
+                "status": "fail",
+                "mismatches": [f"platform evidence tool exited with {result.returncode}"],
+                "expected_exit_code": 0,
+                "actual_exit_code": result.returncode,
+                "duration_ms": 0.0,
+            }
+        )
+    return variants
 
 
 def run_platform_golden() -> list[dict[str, Any]]:
