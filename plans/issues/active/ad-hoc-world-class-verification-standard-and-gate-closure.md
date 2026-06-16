@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke, Wave 6.1 generated CPython differential suites, and Wave 7.1 fuzz target contract/minimization commands merged through PR [#2631](https://github.com/sifr-lang/sifr/pull/2631); Wave 7.2 per-target fuzz dispatch and merge smoke is in implementation review.
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke, Wave 6.1 generated CPython differential suites, Wave 7.1 fuzz target contract/minimization commands, and Wave 7.2 per-target fuzz dispatch plus merge smoke merged through PR [#2633](https://github.com/sifr-lang/sifr/pull/2633).
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1307,7 +1307,7 @@ Implementation slice:
 
 Implementation slice:
 
-- Status: in implementation review on branch `codex/wave-7-2-fuzz-dispatch-merge-smoke`.
+- Status: merged in PR [#2633](https://github.com/sifr-lang/sifr/pull/2633).
 - Scope: `fuzz-smoke` now dispatches each `fuzz_smoke_manifest.json` target independently instead of treating target entries as metadata. Source mutation targets run their own seed corpus, command, diagnostic format, exit-code policy, timeout, random seed, uniqueness budget, and deterministic rerun. `codegen_entrypoint` runs valid seeds through `sifr run`. `diagnostic_renderer_entrypoint` and `package_project_manifest_entrypoint` execute target-specific `diagnostic_contract_harness --target ... --seed ...` reproduction commands and enforce exit-code plus panic-signal checks.
 - Merge profile: `verification/profiles/merge.json` now selects `fuzz_property:fuzz-smoke`, and `profile_runner.py` has an explicit `run_fuzz_property_suites` step so selected fuzz/property suites are executed by profile runs. The step skips suites already routed through `legacy_facade.hardening_suites`, avoiding nightly/release double execution while preserving their existing legacy path.
 - Policy updates: `verification/policy/fuzz_property.md` and `verification/areas/fuzz_property/sustained_lane.md` now describe per-target dispatch and remove the prior caveat that non-parser targets were only reproduction/minimization routing.
