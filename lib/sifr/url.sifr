@@ -52,6 +52,9 @@ class Url:
     def to_string(self) -> str:
         return self.serialized
 
+    def __str__(self) -> str:
+        return self.serialized
+
     def get_scheme(self) -> str:
         return self.scheme
 

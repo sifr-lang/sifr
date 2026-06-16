@@ -42,11 +42,15 @@ impl DiagnosticsController {
         for uri in &uris {
             session.schedule_document_diagnostics(uri)?;
         }
-        Self::flush_ready(connection, session, mode)?;
         if let Some(handle) = progress {
+            let flush_result = Self::flush_ready(connection, session, mode);
             let message = format!("checked {} document(s)", uris.len());
-            publish_progress(connection, end_notification(&handle, &message))?;
+            let end_result = publish_progress(connection, end_notification(&handle, &message));
             session.end_progress(handle, &message);
+            flush_result?;
+            end_result?;
+        } else {
+            Self::flush_ready(connection, session, mode)?;
         }
         Ok(())
     }

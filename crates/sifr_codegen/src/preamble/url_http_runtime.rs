@@ -32,7 +32,7 @@ fn __sifr_url_reject_non_ascii_authority_host(input: &str) -> Result<(), UrlErro
     } else {
         host_port.split(':').next().unwrap_or(host_port)
     };
-    if host.chars().any(|ch| !ch.is_ascii()) {
+    if !host.is_ascii() {
         return Err(__sifr_url_error(
             "non-ASCII URL hosts are blocked until text/i18n IDNA alignment".to_string(),
         ));
@@ -54,7 +54,7 @@ fn __sifr_url_validate_ascii_host(host: &str) -> Result<(), UrlError> {
     if bare_host.is_empty() {
         return Err(__sifr_url_error("URL host is required".to_string()));
     }
-    if bare_host.chars().any(|ch| !ch.is_ascii()) {
+    if !bare_host.is_ascii() {
         return Err(__sifr_url_error(
             "non-ASCII URL hosts are blocked until text/i18n IDNA alignment".to_string(),
         ));
