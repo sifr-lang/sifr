@@ -35,11 +35,14 @@ def run_stress() -> None:
             progress = client.wait_for_notification("$/progress")
             if progress.get("params", {}).get("value", {}).get("kind") != "begin":
                 raise LspProtocolError("workspace diagnostics progress did not begin")
+            for _ in range(2):
+                client.wait_for_notification("textDocument/publishDiagnostics")
+            trace = client.request("sifr/debugTrace", {})
+            if not isinstance(trace, str) or "progress_start" not in trace:
+                raise LspProtocolError("debug trace did not record workspace diagnostics progress")
             progress = client.wait_for_notification("$/progress")
             if progress.get("params", {}).get("value", {}).get("kind") != "end":
                 raise LspProtocolError("workspace diagnostics progress did not end")
-            for _ in range(2):
-                client.wait_for_notification("textDocument/publishDiagnostics")
 
             client.notify("$/cancelRequest", {"id": 99999})
             client.notify(

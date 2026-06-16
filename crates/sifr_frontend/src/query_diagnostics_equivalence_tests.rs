@@ -63,7 +63,10 @@ fn project_edit_queries_match_clean_contexts() {
     write_project(&project, &sources);
     let mut context = load_project(&project);
 
-    assert_eq!(project_diagnostics(&mut context), clean_project_diagnostics(&sources));
+    assert_eq!(
+        project_diagnostics(&mut context),
+        clean_project_diagnostics(&sources)
+    );
     assert_eq!(edge_summary(&context), clean_project_edges(&sources));
 
     let helper = module_by_stem(&context, "helper");
