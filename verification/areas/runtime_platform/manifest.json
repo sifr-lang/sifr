@@ -35,6 +35,32 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "sanitizer-smoke",
+      "kind": "manifest",
+      "cases": [
+        {
+          "id": "sanitizer-smoke",
+          "entry": "verification/areas/runtime_platform/sanitizer_manifest.json",
+          "command": "sanitizer-smoke-manifest",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "sanitizer-full",
+      "kind": "manifest",
+      "cases": [
+        {
+          "id": "sanitizer-full",
+          "entry": "verification/areas/runtime_platform/sanitizer_manifest.json",
+          "command": "sanitizer-full-manifest",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ]
 }
