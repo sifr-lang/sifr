@@ -12,6 +12,45 @@
   "timeout_seconds": 1800,
   "suites": [
     {
+      "name": "profile-manifest",
+      "kind": "manifest",
+      "cases": [
+        {
+          "id": "leetcode-profile-manifest",
+          "entry": "verification/areas/algorithmic_compatibility/data/leetcode_profile_manifest.json",
+          "command": "algorithmic-profile-manifest",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "representative-subset",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "leetcode-representative-subset",
+          "entry": "verification/areas/algorithmic_compatibility/data/leetcode_profile_manifest.json",
+          "command": "algorithmic-representative-subset",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "leetcode-full",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "leetcode-full-corpus",
+          "entry": "verification/areas/algorithmic_compatibility/data/leetcode_profile_manifest.json",
+          "command": "algorithmic-leetcode-full",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "taxonomy-smoke",
       "kind": "adapter",
       "cases": [
