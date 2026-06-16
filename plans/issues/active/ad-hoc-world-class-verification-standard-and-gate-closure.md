@@ -1509,7 +1509,7 @@ First Wave 9.2 ecosystem entrypoint expansion slice:
 
 Wave 9.3 package-management offline merge smoke slice:
 
-- Status: implemented locally; PR pending.
+- Status: opened in PR #2645.
 - Scope: added a repo-local offline registry fixture under `verification/areas/package_management/fixtures/offline_registry/`, a deterministic checked-in `Sifr.lock`, and `check_offline_package_merge_smoke.py` to enforce registry source checksums, canonical lockfile output, package graph ids/edges, workspace dependency-order determinism, and fail-closed self-tests. Added demo-corpus lockfile digest evidence for broader nightly/release integration and a package-management policy document recording the 20-nightly-green promotion rule.
 - Profile ownership: `profile_runner.py` now always runs `package_management` `offline-merge-smoke` after the existing package-manager guardrails, so create-pr/merge/local profile runs get the offline registry and lockfile smoke. `merge.json` documents `offline-merge-smoke`; `nightly.json` and `release.json` document `offline-integration`, which adds the broader demo lockfile determinism signal without duplicating the merge smoke case.
 - Review: Claude Opus review pass 1 reported no blockers and confirmed the required dimensions: offline registry fixture integrity, deterministic lockfile generation, package graph behavior, fail-closed self-test coverage, profile wiring, merge/nightly boundary, schema/report accounting, and file-size maintainability. Non-blocking cleanup for duplicate nightly execution, clearer log labels, clearer demo lockfile field naming, and workspace dependency-order determinism was implemented. Claude Opus review pass 2 reported no blockers, verified the cleanup, and requested no further review round.
