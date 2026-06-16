@@ -1517,7 +1517,7 @@ Wave 9.3 package-management offline merge smoke slice:
 
 Wave 9.4 stdlib module parity slice:
 
-- Status: implemented, reviewed, and locally validated; PR pending.
+- Status: implemented, reviewed, locally validated, and opened in PR [#2646](https://github.com/sifr-lang/sifr/pull/2646).
 - Scope: added `verification/areas/stdlib_parity/data/module_parity_inventory.json` and `check_stdlib_module_parity.py` to promote stdlib parity into module-owned evidence. Supported rows execute checked examples for `sifr.math`, builtin string methods, `sifr.env`, and `sifr.time`; legacy examples for `sifr.json`, `sifr.re`, `sifr.collections`, `sifr.io`, `sifr.random`, and hash/encoding stay inventoried as explicit known-gap rows with reasons instead of silently satisfying coverage. The checker validates fixture existence, API token coverage for every inventoried API, known-gap reasons, zero-example inventory policy, and fail-closed self-test mutations.
 - Profile ownership: create-pr and merge document and execute `stdlib_parity` `module-merge-check` through `profile_runner.py`; nightly/release document `module-full-check`, which is picked up by the selected-suite loop after the always-on module inventory and merge checks.
 - Review: Claude Opus review pass 1 reported no blockers, confirmed module-owned executable evidence, honest known-gap rows, supported API token coverage, profile execution, schema/report accounting, and maintainability. A fail-closed cleanup rejecting blank API coverage tokens was implemented. Claude Opus review pass 2 reported no blockers, verified the blank-token cleanup and self-test, and requested no further review round.
