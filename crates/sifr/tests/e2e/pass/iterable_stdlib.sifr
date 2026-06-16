@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_6_itertools_iterable_stdlib_closure
+# Reference: stdlib_parity_iter_fix_6_itertools_iterable_stdlib_closure
 from sifr.itertools import islice, accumulate, compress, dropwhile, takewhile, filterfalse, pairwise, batched, cycle
 from sifr.pathlib import Path
 from sifr.io import write_text
@@ -34,7 +34,7 @@ def collect_iterable_input_actual() -> list[bool]:
 
 def collect_runtime_iterator_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_wave_psp_iter_fix_6_" + str(getpid())
+    base: str = "/tmp/sifr_stdlib_parity_iter_fix_6_" + str(getpid())
 
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")

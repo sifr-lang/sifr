@@ -17,9 +17,9 @@ RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "developer-tooli
 LSP_CORPUS = AREA_ROOT / "corpora" / "sifr-large-lsp-verification"
 
 SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
-    "typescript-go-m1": [
-        ("typescript-go-m1", [sys.executable, str(AREA_ROOT / "check_typescript_go_m1_guardrails.py")]),
-        ("typescript-go-m1-self-test", [sys.executable, str(AREA_ROOT / "check_typescript_go_m1_guardrails.py"), "--self-test"]),
+    "typescript-go-transfer": [
+        ("typescript-go-transfer", [sys.executable, str(AREA_ROOT / "check_typescript_go_transfer_guardrails.py")]),
+        ("typescript-go-transfer-self-test", [sys.executable, str(AREA_ROOT / "check_typescript_go_transfer_guardrails.py"), "--self-test"]),
     ],
     "diagnostic-contracts": [
         ("diagnostic-presentation", [sys.executable, str(AREA_ROOT / "check_diagnostic_presentation_contract.py")]),
@@ -66,10 +66,10 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
     "formatter": [
         ("formatter-contract", [sys.executable, str(AREA_ROOT / "check_formatter_contract.py")]),
         ("formatter-contract-self-test", [sys.executable, str(AREA_ROOT / "check_formatter_contract.py"), "--self-test"]),
-        ("formatter-phase-manifests", [sys.executable, str(AREA_ROOT / "check_formatter_phase_manifests.py")]),
+        ("formatter-contract-manifests", [sys.executable, str(AREA_ROOT / "check_formatter_contract_manifests.py")]),
         (
-            "formatter-phase-manifests-self-test",
-            [sys.executable, str(AREA_ROOT / "check_formatter_phase_manifests.py"), "--self-test"],
+            "formatter-contract-manifests-self-test",
+            [sys.executable, str(AREA_ROOT / "check_formatter_contract_manifests.py"), "--self-test"],
         ),
         ("formatter-ast-coverage", [sys.executable, str(AREA_ROOT / "check_formatter_ast_coverage.py")]),
         (
@@ -126,9 +126,9 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
             [sys.executable, str(AREA_ROOT / "lsp_large_session.py"), "--mode", "smoke", "--require-submodule"],
         ),
     ],
-    "phase-closeout": [
-        ("phase36-closeout", [sys.executable, str(AREA_ROOT / "check_phase36_closeout.py")]),
-        ("phase36-closeout-self-test", [sys.executable, str(AREA_ROOT / "check_phase36_closeout.py"), "--self-test"]),
+    "tooling-readiness": [
+        ("tooling-readiness", [sys.executable, str(AREA_ROOT / "check_tooling_readiness.py")]),
+        ("tooling-readiness-self-test", [sys.executable, str(AREA_ROOT / "check_tooling_readiness.py"), "--self-test"]),
     ],
 }
 
@@ -139,7 +139,7 @@ FULL_SUITES = [
     "lsp-smoke",
     "editor-release",
     "lsp-stress",
-    "phase-closeout",
+    "tooling-readiness",
 ]
 
 

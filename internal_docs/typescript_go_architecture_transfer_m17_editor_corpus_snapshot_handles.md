@@ -48,8 +48,8 @@ enforces both non-duplication directions.
 - `cargo test -p sifr_analysis` -> PASS, 23 tests
 - `python3 verification/areas/developer_tooling/check_diagnostic_source_canonicalization_contract.py` -> PASS
 - `python3 verification/areas/developer_tooling/check_diagnostic_source_canonicalization_contract.py --self-test` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
 - `cargo test -p sifr -- --skip test_e2e_pass` -> PASS, 57 unit tests and 33 non-pass e2e tests
 - `cargo fmt --check` -> PASS
 - `cargo clippy -p sifr_analysis -p sifr -- -D warnings` -> PASS

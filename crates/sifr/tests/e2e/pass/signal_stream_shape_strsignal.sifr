@@ -20,7 +20,7 @@ def main():
     assert termination_label == "SIGTERM"
 
     # Shape pin only: these futures are intentionally not awaited because
-    # deterministic external signal delivery belongs to a later M5 harness.
+    # deterministic external signal delivery belongs to a later shutdown-stream harness.
     _ctrl_c_wait: Awaitable[Result[Signal, SignalError]] = ctrl_c()
     _terminate_wait: Awaitable[Result[Signal, SignalError]] = terminate()
     _shutdown_wait: Awaitable[Result[Signal, SignalError]] = shutdown_stream().next()

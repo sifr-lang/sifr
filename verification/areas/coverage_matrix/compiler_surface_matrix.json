@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generated_at": "2026-06-14",
   "advisory_mode": false,
-  "allowed_temporary_waves": [
+  "allowed_temporary_resolution_gates": [
     "1",
     "2",
     "3",
@@ -97,10 +97,10 @@
       "support_status": "stable",
       "owner": "compiler/core-language",
       "status": "blocking",
-      "merge_suite": "core_language:phase24_hir_analysis,core_language:phase25_cfg_flow",
-      "nightly_release_suite": "core_language:phase24_hir_analysis,core_language:phase25_cfg_flow",
+      "merge_suite": "core_language:hir_analysis_contracts,core_language:cfg_flow_contracts",
+      "nightly_release_suite": "core_language:hir_analysis_contracts,core_language:cfg_flow_contracts",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite phase24_hir_analysis --suite phase25_cfg_flow"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite hir_analysis_contracts --suite cfg_flow_contracts"
     },
     {
       "surface_id": "lowering_layer_snapshots",
@@ -174,10 +174,10 @@
       "support_status": "stable",
       "owner": "compiler/frontend",
       "status": "blocking",
-      "merge_suite": "project_workspace:frontend_mode_parity,project_workspace:phase23_graph_isolation",
+      "merge_suite": "project_workspace:frontend_mode_parity,project_workspace:project_graph_isolation",
       "nightly_release_suite": "project_workspace:baselines",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite frontend_mode_parity --suite phase23_graph_isolation"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite frontend_mode_parity --suite project_graph_isolation"
     },
     {
       "surface_id": "package_management_integration",

@@ -41,8 +41,8 @@ Validation so far:
 - `python3 -m py_compile verification/areas/developer_tooling/lsp_protocol.py verification/areas/developer_tooling/lsp_protocol_smoke.py verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
 - `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py` -> PASS
 - `python3 verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py --self-test` -> PASS
 - `git diff --check` -> PASS

@@ -1,7 +1,7 @@
-# wave_psp_iter_fix_6 CPython Traceability
+# stdlib_parity_iter_fix_6 CPython Traceability
 
 Phase: `ad-hoc-canonical-iteration-model-and-lazy-parity-closure`
-Wave: `wave_psp_iter_fix_6` (`sifr.itertools` + iterator-returning stdlib closure)
+Wave: `stdlib_parity_iter_fix_6` (`sifr.itertools` + iterator-returning stdlib closure)
 
 ## Scope Closure
 

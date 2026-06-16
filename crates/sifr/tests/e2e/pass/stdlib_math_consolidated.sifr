@@ -1,4 +1,4 @@
-# Consolidated stdlib math coverage for milestone_30_4 structure rules
+# Consolidated stdlib math coverage for stdlib_consolidation structure rules
 from sifr.math import (
     sqrt, floor, ceil, pi, e, log, sin, cos, abs_val, pow_val, round_val,
     asin, acos, sinh, log10, degrees, trunc, hypot, tau, inf, nan, isnan, isinf,

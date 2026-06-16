@@ -1,6 +1,6 @@
-# wave_psp_iter_fix_3 CPython Traceability Matrix
+# stdlib_parity_iter_fix_3 CPython Traceability Matrix
 
-Wave: `wave_psp_iter_fix_3`  
+Wave: `stdlib_parity_iter_fix_3`
 Scope: concrete iterator codegen pipelines for iterator-consuming builtin surfaces
 
 ## CPython Harvest Inputs

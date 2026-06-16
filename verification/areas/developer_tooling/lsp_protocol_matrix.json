@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "phase": "36",
-  "milestone": "36.1",
+  "contract": "editor_tooling",
+  "contract_version": "lsp-protocol-current",
   "protocol": {
     "name": "Language Server Protocol",
     "target_version": "3.17",
@@ -98,10 +98,10 @@
     {"surface": "notebookDocumentSync", "policy": "do not advertise; reject notebook URIs deterministically"},
     {"surface": "textDocument/implementation", "policy": "defer unless Sifr type model exposes implementation relationships"},
     {"surface": "textDocument/linkedEditingRange", "policy": "defer until a paired-edit Sifr surface exists"},
-    {"surface": "textDocument/prepareCallHierarchy", "policy": "defer; references and workspace symbols cover Phase 36"},
+    {"surface": "textDocument/prepareCallHierarchy", "policy": "defer; references and workspace symbols cover editor tooling"},
     {"surface": "textDocument/documentLink", "policy": "defer until package/module UX stabilizes"},
-    {"surface": "textDocument/willSave", "policy": "do not advertise in Phase 36"},
-    {"surface": "textDocument/willSaveWaitUntil", "policy": "do not advertise in Phase 36"},
+    {"surface": "textDocument/willSave", "policy": "do not advertise in editor tooling"},
+    {"surface": "textDocument/willSaveWaitUntil", "policy": "do not advertise in editor tooling"},
     {"surface": "python.importResolution", "policy": "forbidden; Sifr workspace resolution only"},
     {"surface": "python.environmentDiscovery", "policy": "forbidden"}
   ]

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "approved-shared-baseline",
-  "owner_phases": [
+  "owner_contracts": [
     "text-i18n",
     "concurrency-runtime",
     "network-http"
@@ -12,8 +12,8 @@
     "compat-adapter",
     "internal-only",
     "test-only-harness",
-    "deferred-to-phase-X",
-    "blocked-on-phase-X",
+    "deferred-to-future-contract",
+    "blocked-on-contract",
     "host-limited",
     "unsupported-with-diagnostic",
     "rejected"
@@ -22,7 +22,7 @@
     "mined-as-substrate-fixture",
     "adapted-for-sifr-api",
     "compat-adapter-deferred",
-    "blocked-on-phase-X",
+    "blocked-on-contract",
     "external-signal",
     "waived-with-rationale",
     "rejected"
@@ -36,7 +36,7 @@
     "test-only-harness"
   ],
   "observability_fields": [
-    "sifr.phase",
+    "sifr.contract",
     "sifr.operation",
     "sifr.correlation_id",
     "sifr.task_id",

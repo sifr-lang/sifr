@@ -1,6 +1,6 @@
-# wave_psp_bytes_2 CPython Traceability Matrix
+# stdlib_parity_bytes_2 CPython Traceability Matrix
 
-Wave: `wave_psp_bytes_2`  
+Wave: `stdlib_parity_bytes_2`
 Scope: typed conversion surfaces and compatibility delegation on first-class `bytes`
 
 ## CPython Harvest Inputs

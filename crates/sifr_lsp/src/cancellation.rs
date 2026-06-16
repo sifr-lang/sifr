@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn token_preserves_request_identity() {
-        let id = RequestId::from("m13-token".to_string());
+        let id = RequestId::from("cancellation-token".to_string());
         let token = CancellationToken::new(&id);
 
         assert_eq!(token.request_id(), &id);

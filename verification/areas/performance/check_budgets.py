@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 35 performance budget and waiver gate."""
+"""performance budget and waiver gate."""
 
 from __future__ import annotations
 

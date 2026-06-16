@@ -1,6 +1,6 @@
 //! Editor-oriented Sifr analysis queries over the canonical frontend.
 //!
-//! This crate owns the Phase 36 editor session boundary. It deliberately routes
+//! This crate owns the editor tooling editor session boundary. It deliberately routes
 //! compiler facts through `sifr_frontend`, formatting through `sifr_format`, and
 //! policy diagnostics through `sifr_lint`.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]

@@ -1,5 +1,5 @@
-# Reference: phase31_numeric_sentinel_domain_normalization
-# Phase 31 m31_a slice 4
+# Reference: narrowing_numeric_sentinel_domain_normalization
+# Narrowing regression slice 4
 # Proves canonical float("inf") sentinels normalize onto the integer domain
 # for algorithmic accumulators without changing ordinary float(str) parsing.
 

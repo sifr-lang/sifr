@@ -65,4 +65,4 @@ Representative runnable examples:
 - `demos/network_tls_loopback/main.sifr`
 - `demos/network_http_substrate/main.sifr`
 
-Deterministic HTTP transport loopback coverage lives in e2e fixtures because it uses the private harness: `network_http_m4_http1_loopback`, `network_http_m4_http2_loopback`, and `network_http_m4_https_h2_loopback`.
+Deterministic HTTP transport loopback coverage lives in e2e fixtures because it uses the private harness: `network_http_http1_loopback`, `network_http_http2_loopback`, and `network_http_https_h2_loopback`.

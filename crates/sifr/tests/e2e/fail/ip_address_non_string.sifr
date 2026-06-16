@@ -1,4 +1,4 @@
-# Reference: phase_psp_e2_ip_address_non_string
+# Reference: stdlib_parity_e2_ip_address_non_string
 from sifr.ipaddress import ip_address, IPv4Address
 
 

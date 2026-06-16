@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_6_islice_non_iterable_input
+# Reference: stdlib_parity_iter_fix_6_islice_non_iterable_input
 # expect-error: SIFR-TYPE-0002
 from sifr.itertools import islice
 

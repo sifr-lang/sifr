@@ -1,4 +1,4 @@
-# Consolidated stdlib csv coverage for milestone_30_4 structure rules
+# Consolidated stdlib csv coverage for stdlib_consolidation structure rules
 from sifr.csv import (
     parse_row, parse_csv, format_row, format_csv,
     reader, writer, DictReader, DictWriter, reader_from_path, writer_to_path

@@ -1,6 +1,6 @@
 {
-  "phase": "37",
-  "description": "Concrete Phase 37 organization demo repositories checked out as git submodules. These subrepos are guarded locally so the demo surface does not regress.",
+  "contract": "cargo-backed-package-management",
+  "description": "Concrete package-management contract organization demo repositories checked out as git submodules. These subrepos are guarded locally so the demo surface does not regress.",
   "checkout_model": "git_submodule",
   "repository_root": "verification/areas/package_management/corpora/demo_repositories",
   "required_validations": [

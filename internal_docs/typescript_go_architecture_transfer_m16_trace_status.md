@@ -54,8 +54,8 @@ a representative CLI trace/status snapshot for project or single-file inputs.
 - `cargo check -p sifr_frontend -p sifr_analysis -p sifr_lsp -p sifr` -> PASS
 - `cargo fmt --check` -> PASS
 - `cargo clippy -p sifr_frontend -p sifr_analysis -p sifr_lsp -p sifr -- -D warnings` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
 - Claude reviewer pass 1 -> CHANGES_REQUESTED

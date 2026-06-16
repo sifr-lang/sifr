@@ -1,4 +1,4 @@
-# Reference: phase_psp_d1_shutil_copy_non_string_path
+# Reference: stdlib_parity_d1_shutil_copy_non_string_path
 from sifr.shutil import copy
 
 

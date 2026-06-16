@@ -1733,7 +1733,7 @@
       "suggestion_rendering_fixture": null
     }
   ],
-  "merge_requirement": "stable active codes require rendered baseline coverage or documented Wave 4 deferral",
-  "nightly_release_requirement": "all stable renderers per stable active code by Wave 4 closeout",
+  "merge_requirement": "stable active codes require rendered baseline coverage or documented diagnostic-baseline deferral",
+  "nightly_release_requirement": "all stable renderers per stable active code by diagnostic-baseline closeout",
   "schema_version": 1
 }

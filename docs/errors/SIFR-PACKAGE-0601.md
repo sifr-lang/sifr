@@ -11,6 +11,6 @@ Package selector is ambiguous or invalid.
 | Severity | Error |
 | Owner | `sifr_package::graph::filters` |
 | Message template | `package selector '{selector}' is ambiguous or invalid` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_5_tests.rs::ambiguous_filter_reports_0601` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::ambiguous_filter_reports_0601` |
 | Declared args | `selector (message+json)`, `candidates (json-only)` |
 | Dedupe args | `selector`, `candidates` |

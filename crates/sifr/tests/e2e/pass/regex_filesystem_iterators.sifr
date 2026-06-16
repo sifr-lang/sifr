@@ -1,4 +1,4 @@
-# Reference: phase_psp_ext_3_regex_filesystem_iterators
+# Reference: stdlib_parity_ext_3_regex_filesystem_iterators
 from sifr.re import finditer, compile, Match
 from sifr.glob import iglob
 from sifr.pathlib import Path

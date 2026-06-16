@@ -1,4 +1,4 @@
-# `wave_psp_rng_0` Architecture Lock (Stateful RNG, Crypto, and Polish Parity Expansion)
+# `stdlib_parity_rng_0` Architecture Lock (Stateful RNG, Crypto, and Polish Parity Expansion)
 
 Phase: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`  
 Execution ledger: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
@@ -36,8 +36,8 @@ The following phase-owned gaps are explicitly present at entry and are treated a
 
 | Surface | Classification | Enforcement anchor |
 | --- | --- | --- |
-| Full CPython buffer protocol parity | `unsupported` | inherited bytes governance from `wave_psp_bytes_0` / `wave_psp_bytes_5` |
-| `memoryview` and mutable `bytearray` ecosystem parity | `unsupported` | inherited bytes governance from `wave_psp_bytes_0` / `wave_psp_bytes_5` |
+| Full CPython buffer protocol parity | `unsupported` | inherited bytes governance from `stdlib_parity_bytes_0` / `stdlib_parity_bytes_5` |
+| `memoryview` and mutable `bytearray` ecosystem parity | `unsupported` | inherited bytes governance from `stdlib_parity_bytes_0` / `stdlib_parity_bytes_5` |
 | `SystemRandom` state export/import parity | `unsupported` | wave-owned policy lock (no deterministic state export for host RNG) |
 | Decimal/Fraction/context-sensitive `statistics` semantics | `unsupported` | wave-owned policy lock (float/int deterministic surfaces only) |
 
@@ -45,12 +45,12 @@ The following phase-owned gaps are explicitly present at entry and are treated a
 
 | CPython family | Direction | Owning wave | Local anchor |
 | --- | --- | --- | --- |
-| `Lib/test/test_random.py` | `adapted` | `wave_psp_rng_1` | deterministic state/object model + module-global proxy closure |
-| `Lib/test/test_hashlib.py` | `adapted` | `wave_psp_rng_2` | bytes-native digest/object API + algorithm inventory expansion |
-| `Lib/test/test_base64.py` | `adapted` | `wave_psp_rng_2` | bytes-native carrier parity on shipped codec families |
-| `Lib/test/test_statistics.py` | `adapted` | `wave_psp_rng_3` | narrow advanced deterministic surface closure |
-| `Lib/test/test_textwrap.py` | `adapted` | `wave_psp_rng_3` | residual formatter ecosystem waiver reduction only |
-| `Lib/test/test_html.py` | `adapted` | `wave_psp_rng_3` | residual top-level polish only; package parser family remains explicitly unsupported |
+| `Lib/test/test_random.py` | `adapted` | `stdlib_parity_rng_1` | deterministic state/object model + module-global proxy closure |
+| `Lib/test/test_hashlib.py` | `adapted` | `stdlib_parity_rng_2` | bytes-native digest/object API + algorithm inventory expansion |
+| `Lib/test/test_base64.py` | `adapted` | `stdlib_parity_rng_2` | bytes-native carrier parity on shipped codec families |
+| `Lib/test/test_statistics.py` | `adapted` | `stdlib_parity_rng_3` | narrow advanced deterministic surface closure |
+| `Lib/test/test_textwrap.py` | `adapted` | `stdlib_parity_rng_3` | residual formatter ecosystem waiver reduction only |
+| `Lib/test/test_html.py` | `adapted` | `stdlib_parity_rng_3` | residual top-level polish only; package parser family remains explicitly unsupported |
 
 ## Architecture-Lock Validation Artifacts (Wave 0)
 
@@ -64,6 +64,6 @@ The following phase-owned gaps are explicitly present at entry and are treated a
   - `crates/sifr/tests/e2e/fail/sha3_object_model_unsupported.sifr`
 
 Historical note:
-- `crates/sifr/tests/e2e/fail/phase_psp_rng_0_random_state_object_model_unsupported.sifr` was retired once `wave_psp_rng_1` shipped the deterministic state/object model.
-- `crates/sifr/tests/e2e/fail/phase_psp_rng_0_hashlib_bytes_digest_api_unsupported.sifr` was retired once `wave_psp_rng_2` shipped bytes-native `hashlib` object APIs.
-- `crates/sifr/tests/e2e/fail/phase_psp_rng_0_textwrap_max_lines_unsupported.sifr` was retired once `wave_psp_rng_3` shipped `TextWrapper` `max_lines`/`placeholder` formatter options.
+- `crates/sifr/tests/e2e/fail/stdlib_parity_rng_0_random_state_object_model_unsupported.sifr` was retired once `stdlib_parity_rng_1` shipped the deterministic state/object model.
+- `crates/sifr/tests/e2e/fail/stdlib_parity_rng_0_hashlib_bytes_digest_api_unsupported.sifr` was retired once `stdlib_parity_rng_2` shipped bytes-native `hashlib` object APIs.
+- `crates/sifr/tests/e2e/fail/stdlib_parity_rng_0_textwrap_max_lines_unsupported.sifr` was retired once `stdlib_parity_rng_3` shipped `TextWrapper` `max_lines`/`placeholder` formatter options.

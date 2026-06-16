@@ -1,6 +1,6 @@
-# wave_psp_bytes_1 CPython Traceability Matrix
+# stdlib_parity_bytes_1 CPython Traceability Matrix
 
-Wave: `wave_psp_bytes_1`  
+Wave: `stdlib_parity_bytes_1`
 Scope: core first-class `bytes` type, object-model foundation, and immutability enforcement
 
 ## CPython Harvest Inputs
@@ -22,7 +22,7 @@ Scope: core first-class `bytes` type, object-model foundation, and immutability 
 | --- | --- | --- |
 | Mutable `bytearray` object-model parity | `unsupported` | Wave 1 closes immutable `bytes` only. |
 | `memoryview` and generic buffer protocol | `unsupported` | View/protocol semantics are intentionally deferred. |
-| Conversion families (`bytes(size)`, `from_ints`, `from_hex`, codec-aware encode/decode) | `adapted` in successor wave | Closed in `wave_psp_bytes_2`; not claimed as wave-1 complete. |
+| Conversion families (`bytes(size)`, `from_ints`, `from_hex`, codec-aware encode/decode) | `adapted` in successor wave | Closed in `stdlib_parity_bytes_2`; not claimed as wave-1 complete. |
 
 ## Local fixture anchors (wave 1)
 

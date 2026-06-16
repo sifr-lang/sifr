@@ -305,7 +305,7 @@ struct TestPackage {
 impl TestPackage {
     fn new(name: &str) -> Self {
         let unique = format!(
-            "sifr_pkg_m3_{name}_{}_{}",
+            "sifr_pkg_session_{name}_{}_{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

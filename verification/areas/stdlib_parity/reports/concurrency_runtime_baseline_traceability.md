@@ -1,6 +1,6 @@
-# Concurrency Runtime M0 Traceability
+# Concurrency Runtime Baseline Traceability
 
-Milestone: `milestone_concurrency_runtime_0`
+Contract: `concurrency_runtime_baseline`
 
 | Requirement | Evidence |
 | --- | --- |
@@ -13,6 +13,6 @@ Milestone: `milestone_concurrency_runtime_0`
 | Golden manifest entries | verification/areas/runtime_platform/golden/manifest.json |
 | Bare CPython import fixtures | crates/sifr/tests/e2e/fail/bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixture family |
 
-## M0 Closure Gate
+## Baseline Closure Gate
 
-M0 is complete only after a post-M0 external review returns `PASS` and the result is recorded in the execution ledger. M1 remains blocked until M0a removes, hides, or diagnoses legacy CPython-shaped public surfaces.
+The baseline contract is complete only after a post-baseline external review returns `PASS` and the result is recorded in the execution ledger. The structured-tasks contract remains blocked until the legacy-surface contract removes, hides, or diagnoses legacy CPython-shaped public surfaces.

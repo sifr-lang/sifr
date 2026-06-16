@@ -5,7 +5,7 @@ set -euo pipefail
 source "$(dirname "$0")/common.sh"
 
 if [[ -e "${SITE_INSTALL_ROOT}/stable" ]]; then
-  echo "stable installer entrypoint must not exist in Phase 33: ${SITE_INSTALL_ROOT}/stable" >&2
+  echo "stable installer entrypoint must not exist before stable channel enablement: ${SITE_INSTALL_ROOT}/stable" >&2
   exit 1
 fi
 

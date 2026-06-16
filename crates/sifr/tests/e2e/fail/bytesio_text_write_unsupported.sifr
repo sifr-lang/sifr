@@ -1,4 +1,4 @@
-# Reference: phase_psp_runtime_1_bytesio_text_write_unsupported
+# Reference: stdlib_parity_runtime_1_bytesio_text_write_unsupported
 from sifr.io import BytesIO
 
 

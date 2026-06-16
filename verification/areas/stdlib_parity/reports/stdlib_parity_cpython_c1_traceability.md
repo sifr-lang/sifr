@@ -1,4 +1,4 @@
-# `wave_psp_c1` CPython Traceability
+# `stdlib_parity_c1` CPython Traceability
 
 CPython family references below indicate upstream source families used for adapted subset porting in this wave; they are not claims of full family parity.
 
@@ -25,7 +25,7 @@ CPython family references below indicate upstream source families used for adapt
 ## Structured/Class-Surface Continuation Lock (2026-03-18)
 
 - Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
-- Wave ownership: `wave_psp_struct_1` expands `json`/`configparser`/`csv` under bounded typed contracts.
+- Wave ownership: `stdlib_parity_struct_1` expands `json`/`configparser`/`csv` under bounded typed contracts.
 - Locked permanent diffs carried into continuation:
   - dynamic `json` callback hooks remain `unsupported` in this continuation tranche,
   - mutation-heavy csv dialect subclass registration remains `unsupported` in this continuation tranche.

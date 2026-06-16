@@ -81,8 +81,8 @@ M15 owns persistent build metadata and any future `.sifrbuildinfo` boundary.
 
 M2 focused validation:
 
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
 - `cargo fmt --check`
 - `python3 scripts/check_file_size_guardrails.py`
 - `cargo test -p sifr -- --skip test_e2e_pass`

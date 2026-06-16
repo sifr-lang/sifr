@@ -2,7 +2,7 @@
 
 Date: 2026-06-16
 Owner: compiler-verification
-Branch: `codex/wave-10-final-closeout-evidence`
+Branch: `codex/verification-final-closeout-evidence`
 Validation base commit: `c042c61f7a4f1e2c5d0a6470ef3b350018886d2d`
 
 ## Scope

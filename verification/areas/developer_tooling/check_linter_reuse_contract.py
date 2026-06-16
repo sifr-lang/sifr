@@ -22,9 +22,9 @@ RULE_METADATA_MANIFEST = MANIFEST_DIR / "lint_rule_metadata.json"
 CONFIG_SCHEMA_PLACEHOLDER = MANIFEST_DIR / "lint_config_schema_placeholder.json"
 SUPPRESSION_GATE_MANIFEST = MANIFEST_DIR / "suppression_gate.json"
 
-ALLOWED_DISPOSITIONS = {"adapt", "sifr-native", "formatter-owned", "future-phase", "reject"}
+ALLOWED_DISPOSITIONS = {"adapt", "sifr-native", "formatter-owned", "future-contract", "reject"}
 ALLOWED_CONFIG_DISPOSITIONS = {"adapt", "sifr-native"}
-REJECTED_CONFIG_DISPOSITIONS = {"reject", "formatter-owned", "future-phase"}
+REJECTED_CONFIG_DISPOSITIONS = {"reject", "formatter-owned", "future-contract"}
 ALLOWED_SUPPRESSION_COMPLEXITIES = {
     "physical-line",
     "single-node",
@@ -170,7 +170,7 @@ def validate_cli_manifest(manifest: dict[str, Any]) -> None:
     for surface in surfaces:
         disposition = surface.get("disposition")
         require(disposition in ALLOWED_DISPOSITIONS, f"invalid CLI disposition: {surface}")
-        require(surface.get("implementation_milestone"), f"missing CLI implementation milestone: {surface}")
+        require(surface.get("implementation_contract"), f"missing CLI implementation contract: {surface}")
         require(surface.get("fixture"), f"missing CLI fixture id: {surface}")
         require(isinstance(surface.get("conflicts_with"), list), f"conflicts_with must be an array: {surface}")
 
@@ -258,8 +258,8 @@ def validate_config_schema_placeholder(manifest: dict[str, Any]) -> None:
     require(manifest.get("schema") == 1, "lint config schema placeholder schema must be 1")
     require(manifest.get("authority") == "sifr.toml", "lint config authority must be sifr.toml")
     require(
-        manifest.get("state") in {"placeholder-unimplemented", "implemented-m2"},
-        "lint config schema state must be a known phase state",
+        manifest.get("state") in {"placeholder-unimplemented", "implemented-lint-config"},
+        "lint config schema state must be a known contract state",
     )
 
 
@@ -272,8 +272,8 @@ def validate_suppression_gate(manifest: dict[str, Any], rule_metadata: dict[str,
     require(set(allowed).issubset(ALLOWED_SUPPRESSION_COMPLEXITIES), "suppression gate allowed families contain invalid values")
     parser_api = manifest.get("parser_aware_api")
     require(parser_api == "sifr_lint::suppression::ParserAwareSuppressions", "unexpected parser-aware suppression API path")
-    milestone = manifest.get("updated_by_milestone")
-    require(isinstance(milestone, str) and re.fullmatch(r"m[1-7]", milestone), "suppression gate milestone must be m1..m7")
+    contract = manifest.get("updated_by_contract")
+    require(isinstance(contract, str) and contract in {"lint-suppression"}, "suppression gate contract marker must be lint-suppression")
     if state == "physical_line_only":
         require(allowed == ["physical-line"], "physical_line_only gate may allow only physical-line rules")
     else:

@@ -174,7 +174,7 @@
       ]
     },
     {
-      "name": "phase23_graph_isolation",
+      "name": "project_graph_isolation",
       "label": "Phase 23 graph and isolation regression matrix",
       "rows": [
         {

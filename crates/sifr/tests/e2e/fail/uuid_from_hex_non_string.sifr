@@ -1,4 +1,4 @@
-# Reference: phase_psp_e2_uuid_from_hex_non_string
+# Reference: stdlib_parity_e2_uuid_from_hex_non_string
 from sifr.uuid import uuid_from_hex, UUID
 
 

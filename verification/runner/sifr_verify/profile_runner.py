@@ -259,8 +259,8 @@ class ProfileRunner:
         run_command(uv_area_command("--area", "project_workspace", "--suite", "audit-fixtures"))
         run_command(uv_area_command("--area", "stdlib_parity", "--suite", "audit-fixtures"))
 
-        print("Running TypeScript-Go architecture transfer M1 guardrails")
-        run_command(uv_area_command("--area", "developer_tooling", "--suite", "typescript-go-m1"))
+        print("Running TypeScript-Go architecture transfer guardrails")
+        run_command(uv_area_command("--area", "developer_tooling", "--suite", "typescript-go-transfer"))
 
         print("Running sifr_driver maintainability guardrails")
         run_python("scripts/check_sifr_driver_maintainability_guardrails.py")
@@ -310,7 +310,7 @@ class ProfileRunner:
         run_command(uv_area_command(*args))
 
     def run_frontend_syntax_guardrails(self) -> None:
-        print("Running Phase 35 frontend and syntax guardrails")
+        print("Running frontend and syntax guardrails")
         run_command(uv_area_command("--area", "performance", "--suite", "frontend-syntax-guardrails"))
 
     def run_developer_tooling_checks(self) -> None:
@@ -425,11 +425,11 @@ class ProfileRunner:
         print("Running validation contract area suites")
         core_language = {
             "integer_dtype_contract",
-            "phase24_hir_analysis",
-            "phase25_cfg_flow",
+            "hir_analysis_contracts",
+            "cfg_flow_contracts",
             "syntax_parser_lexer_matrix",
         }
-        project_workspace = {"frontend_mode_parity", "phase23_graph_isolation"}
+        project_workspace = {"frontend_mode_parity", "project_graph_isolation"}
         core_args: list[str] = []
         project_args: list[str] = []
         for suite in self.matrix_suites:
@@ -482,7 +482,7 @@ class ProfileRunner:
     def run_hardening_suites(self) -> None:
         if not self.hardening_suites:
             return
-        print("Running phase 29 verification hardening suites")
+        print("Running verification hardening suites")
         diagnostics = False
         project_workspace = False
         regression_args: list[str] = []

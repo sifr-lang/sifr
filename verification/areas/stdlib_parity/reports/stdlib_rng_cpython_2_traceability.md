@@ -1,6 +1,6 @@
-# wave_psp_rng_2 CPython Traceability Matrix
+# stdlib_parity_rng_2 CPython Traceability Matrix
 
-Wave: `wave_psp_rng_2`  
+Wave: `stdlib_parity_rng_2`
 Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.base64`
 
 ## CPython Harvest Inputs
@@ -32,13 +32,13 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 
 | CPython test case | Sifr adaptation direction | Local anchor(s) | Coverage status |
 | --- | --- | --- | --- |
-| `HashLibTestCase.test_new_upper_to_lower` | constructor accepts uppercase algorithm names while normalizing to canonical internal algorithm state | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `lib/sifr/hashlib.sifr` | covered |
-| `HashLibTestCase.test_case_sha1_1` / `test_case_sha512_1` | deterministic digest vectors for shipped algorithms (`sha1`, `sha512`) | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` | covered |
-| `HashLibTestCase.test_copy` | `copy_hash` preserves source hash state while allowing independent updates on copied object | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` | covered |
-| `HashLibTestCase.test_large_update` | incremental `HashObject.update(...)` chunked writes must match one-shot constructor digest on large multi-block payloads | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `lib/sifr/hashlib.sifr` | covered |
+| `HashLibTestCase.test_new_upper_to_lower` | constructor accepts uppercase algorithm names while normalizing to canonical internal algorithm state | `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr`, `lib/sifr/hashlib.sifr` | covered |
+| `HashLibTestCase.test_case_sha1_1` / `test_case_sha512_1` | deterministic digest vectors for shipped algorithms (`sha1`, `sha512`) | `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` | covered |
+| `HashLibTestCase.test_copy` | `copy_hash` preserves source hash state while allowing independent updates on copied object | `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` | covered |
+| `HashLibTestCase.test_large_update` | incremental `HashObject.update(...)` chunked writes must match one-shot constructor digest on large multi-block payloads | `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr`, `lib/sifr/hashlib.sifr` | covered |
 | `TestBase64.test_b64encode` / `test_b64decode` and roundtrip matrix families | shipped text+bytes base64 encode/decode surfaces preserve deterministic roundtrip behavior | `crates/sifr/tests/e2e/pass/cpython_base64_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr`, `crates/sifr/tests/e2e/pass/bytes_hashing_and_base64.sifr` | covered |
 | `TestBase64.test_b64decode_invalid_chars` / strict validate families | invalid payloads remain typed `ParseError` boundaries for standard and urlsafe decode paths | `crates/sifr/tests/e2e/pass/cpython_base64_strictness_subset.sifr`, `crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr` | covered |
-| `TestBase64.test_b32decode_casefold` | lowercase Base32 payloads decode through current intrinsic behavior (casefold-style acceptance) | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `lib/sifr/base64.sifr` | covered |
+| `TestBase64.test_b32decode_casefold` | lowercase Base32 payloads decode through current intrinsic behavior (casefold-style acceptance) | `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr`, `lib/sifr/base64.sifr` | covered |
 
 ## Explicit Waivers / Boundaries After Wave 2
 
@@ -52,7 +52,7 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr`
   - `crates/sifr/tests/e2e/pass/bytes_hashing_and_base64.sifr`
-  - `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` (post-closure hashlib case/vector adaptation)
+  - `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` (post-closure hashlib case/vector adaptation)
 - Demo:
   - `demos/binary_hashing/main.sifr`
 - Negative fixtures:

@@ -1,4 +1,4 @@
-# Reference: phase_psp_d1_filesystem_paths_archives
+# Reference: stdlib_parity_d1_filesystem_paths_archives
 from sifr.io import read_lines, read_text, write_text, exists
 from sifr.pathlib import Path
 from sifr.glob import glob
@@ -75,12 +75,12 @@ def collect_shutil_temp_actual() -> list[bool]:
         moved: str = tree + "/moved.txt"
         temp_file: str = mkstemp("sifr_filesystem_paths_and_archives_file_")
 
-        _w: None = write_text(src, "wave-d1")
+        _w: None = write_text(src, "filesystem-d1")
         _cp: None = copy(src, copied)
         copied_content_ok: bool = False
         try:
             copied_content: str = read_text(copied)
-            copied_content_ok = copied_content == "wave-d1"
+            copied_content_ok = copied_content == "filesystem-d1"
         except IOError as e:
             _ = e.message
         copy_ok = exists(src) and exists(copied) and copied_content_ok
@@ -123,7 +123,7 @@ def collect_shutil_temp_actual() -> list[bool]:
 
 def collect_gzip_zip_actual() -> list[bool]:
     actual: list[bool] = []
-    payload: str = "wave-psp-d1"
+    payload: str = "filesystem-d1"
     compressed: list[int] = compress(payload)
     compress_ok: bool = len(compressed) > 0
 

@@ -259,7 +259,7 @@ fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
         "sifr.http.server" => Some(LegacyStdlibModule {
             legacy_module: "sifr.http.server",
             suggested_module: "sifr.http",
-            reason: "server framework behavior belongs to Phase 41 over the Sifr HTTP substrate",
+            reason: "server framework behavior belongs to the Sifr HTTP server-framework contract",
         }),
         "sifr.http_transport" => Some(LegacyStdlibModule {
             legacy_module: "sifr.http_transport",

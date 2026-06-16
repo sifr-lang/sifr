@@ -1,5 +1,5 @@
 # Reference: codegen_structured_ratio_gate
-# Structured-lowering ratio gate corpus for Phase 14 stmt/expr migration.
+# Structured-lowering ratio gate corpus for structured stmt/expr migration.
 # The goal is to exercise migrated simple stmt/expr paths with minimal fallback noise.
 
 def main():

@@ -2,7 +2,7 @@
   "deferrals": [
     {
       "expires": "2026-07-31",
-      "id": "wave8-legacy-baseline-environment-metadata",
+      "id": "legacy-baseline-environment-metadata",
       "metadata_fields": [
         "host_cpu",
         "uv",
@@ -10,11 +10,11 @@
         "thermal_policy"
       ],
       "owner": "compiler/performance",
-      "rationale": "The first Wave 8 trend artifact is derived from the existing checked-in baseline, which predates the extended environment metadata contract. New baseline captures record these fields in run_benchmarks.py, and the next approved reference baseline must carry them directly.",
+      "rationale": "The first performance trend artifact is derived from the existing checked-in baseline, which predates the extended environment metadata contract. New baseline captures record these fields in run_benchmarks.py, and the next approved reference baseline must carry them directly.",
       "reviewed_at": "2026-06-16"
     }
   ],
-  "manifest_sha256": "4a14798704537917f8b9dd56ae447092ca4956fbc2dc264794544bc12df2e15b",
+  "manifest_sha256": "2b50c1d2e33db9deb99cee881f3a34d37fdcbf0c5f83cb8ab60eea20b99b2e8d",
   "metadata": {
     "architecture": "arm64",
     "captured_at_unix": 1778968823,

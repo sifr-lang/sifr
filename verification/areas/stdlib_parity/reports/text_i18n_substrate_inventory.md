@@ -12,20 +12,20 @@ Sifr production text APIs are native substrate APIs, not CPython module clones:
 
 | Surface | Owner milestone | Terminal state | Stability | Notes |
 | --- | --- | --- | --- | --- |
-| `sifr.encoding.Encoding` | M1 | `production-public` | `stable-public-api` | Static enum/label value for accepted Tier 0/Tier 1 encodings. |
-| `sifr.encoding.encode` / `decode` | M1 | `production-public` | `stable-public-api` | Explicit byte/text boundary with typed errors and recovery outcomes. |
-| `sifr.encoding.Encoder` / `Decoder` | M1 | `production-public` | `stable-public-api` | Unique mutable incremental state; finalization transitions to exhausted. |
-| `str.encode(...)` / `bytes.decode(...)` | M1 | `production-public` | `compiler-known-intrinsic` | Lower through same static registry as `sifr.encoding`. |
-| `sifr.io.open_text` / `TextReader` / `TextWriter` | M1 | `production-public` | `stable-public-api` | Explicit encoding required; no locale-derived defaults. |
-| `open(..., encoding=..., errors=...)` | M1 | `production-public` | `compiler-known-intrinsic` | Literal/static mode required for binary-vs-text handle type selection. |
-| `sifr.unicode.normalize` / `is_normalized` | M2 | `production-public` | `stable-public-api` | NFC/NFD/NFKC/NFKD through selected Unicode data stack. |
-| `sifr.unicode` property APIs | M2 | `production-public` | `stable-public-api` | Names, categories, bidi, combining, width, mirrored, decomposition, numeric values. |
-| `sifr.unicode.case_fold` | M2 | `production-public` | `stable-public-api` | Locale-sensitive case mapping deferred. |
+| `sifr.encoding.Encoding` | TCP | `production-public` | `stable-public-api` | Static enum/label value for accepted Tier 0/Tier 1 encodings. |
+| `sifr.encoding.encode` / `decode` | TCP | `production-public` | `stable-public-api` | Explicit byte/text boundary with typed errors and recovery outcomes. |
+| `sifr.encoding.Encoder` / `Decoder` | TCP | `production-public` | `stable-public-api` | Unique mutable incremental state; finalization transitions to exhausted. |
+| `str.encode(...)` / `bytes.decode(...)` | TCP | `production-public` | `compiler-known-intrinsic` | Lower through same static registry as `sifr.encoding`. |
+| `sifr.io.open_text` / `TextReader` / `TextWriter` | TCP | `production-public` | `stable-public-api` | Explicit encoding required; no locale-derived defaults. |
+| `open(..., encoding=..., errors=...)` | TCP | `production-public` | `compiler-known-intrinsic` | Literal/static mode required for binary-vs-text handle type selection. |
+| `sifr.unicode.normalize` / `is_normalized` | TLS | `production-public` | `stable-public-api` | NFC/NFD/NFKC/NFKD through selected Unicode data stack. |
+| `sifr.unicode` property APIs | TLS | `production-public` | `stable-public-api` | Names, categories, bidi, combining, width, mirrored, decomposition, numeric values. |
+| `sifr.unicode.case_fold` | TLS | `production-public` | `stable-public-api` | Locale-sensitive case mapping deferred. |
 | `sifr.unicode.graphemes` / `words` and index/boundary variants | M2.5 | `production-public` | `stable-public-api` | Owned iterators; streaming segmentation deferred. |
-| `sifr.i18n.LocaleId` / `host_locale` | M3 | `production-public` / `host-limited` | `stable-public-api` | Host query is read-only and cannot provide default text encoding. |
-| `NumberFormatter`, `DateTimeFormatter`, `PluralRules`, `Collator` | M3 | `production-public` | `stable-public-api` | Object-scoped locale formatting through ICU4X components. |
-| `Bundle`, `Message`, `Translator` | M4 | `production-public` | `stable-public-api` | Explicit fallback chains and plural/context lookup. |
-| `.mo` catalog loader | M4 | `compat-adapter` | `compatibility-adapter` | Backend/import format behind native bundle API. |
+| `sifr.i18n.LocaleId` / `host_locale` | URL/HTTP primitives | `production-public` / `host-limited` | `stable-public-api` | Host query is read-only and cannot provide default text encoding. |
+| `NumberFormatter`, `DateTimeFormatter`, `PluralRules`, `Collator` | URL/HTTP primitives | `production-public` | `stable-public-api` | Object-scoped locale formatting through ICU4X components. |
+| `Bundle`, `Message`, `Translator` | HTTP transport | `production-public` | `stable-public-api` | Explicit fallback chains and plural/context lookup. |
+| `.mo` catalog loader | HTTP transport | `compat-adapter` | `compatibility-adapter` | Backend/import format behind native bundle API. |
 | `sifr.codecs`, `sifr.encodings`, `sifr.unicodedata`, `sifr.locale`, `sifr.gettext` | adapter phase | `deferred-to-phase-adapter` | `compatibility-adapter` | Not production API centers in this phase. |
 | bare `codecs`, `encodings`, `unicodedata`, `locale`, `gettext` imports | M0 | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `SIFR-IMPORT-0008` suggests native `sifr.*` APIs after normal resolution fails. |
 
@@ -33,18 +33,18 @@ Sifr production text APIs are native substrate APIs, not CPython module clones:
 
 | Surface | Owner milestone | Terminal state | Stability | CPython evidence | Regression fixture / revisit |
 | --- | --- | --- | --- | --- | --- |
-| `codecs.register` | M1 | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/codecs.py`, `Lib/test/test_codecs.py::CodecsModuleTest.test_register` | M1 unsupported registry-mutation fixture; bare root covered by `bare_cpython_text_i18n_imports.sifr`. |
-| `codecs.unregister` | M1 | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/codecs.py`, `Lib/test/test_codecs.py::CodecsModuleTest.test_unregister` | M1 unsupported registry-mutation fixture. |
-| `codecs.register_error` | M1 | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/codecs.py`, `Lib/test/test_codecs.py` error-handler families | M1 dynamic error-handler fixture. |
-| `codecs.open`, `EncodedFile`, `StreamReader`, `StreamWriter`, `StreamReaderWriter`, `StreamRecoder` | M1 | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/codecs.py`, `Lib/test/test_codecs.py` stream classes | Revisit only in adapter phase over `sifr.io.open_text`; bare root covered by `bare_cpython_text_i18n_imports.sifr`. |
-| public `encodings.*` modules | M1 | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/encodings/*.py`, `Lib/encodings/aliases.py` | `bare_cpython_encodings_import.sifr`; dotted root covered by `bare_cpython_dotted_codecs_import.sifr` pattern and future `encodings.*` fixture. |
-| CPython codec C APIs | M1 | `rejected` | `test-only-harness` | `Lib/test/test_capi/test_codecs.py`, `Modules/_codecsmodule.c` | No Sifr external CPython C-extension ABI in this phase. |
-| `locale.setlocale` | M3 | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/locale.py`, `Lib/test/test_locale.py::TestRealLocales.test_getsetlocale_issue1813` | `bare_cpython_locale_import.sifr`; M3 direct API negative fixture if an adapter root is added. |
-| `localeconv` | M3 | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/locale.py`, `Lib/test/test_locale.py` formatting tests | Use object-scoped `NumberFormatter`; M3 negative fixture. |
-| `strcoll` / `strxfrm` | M3 | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/locale.py`, `Lib/test/test_locale.py::TestCollation` | Native `Collator` is production API; adapter revisit requires no process-global locale. |
+| `codecs.register` | TCP | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/codecs.py`, `Lib/test/test_codecs.py::CodecsModuleTest.test_register` | M1 unsupported registry-mutation fixture; bare root covered by `bare_cpython_text_i18n_imports.sifr`. |
+| `codecs.unregister` | TCP | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/codecs.py`, `Lib/test/test_codecs.py::CodecsModuleTest.test_unregister` | M1 unsupported registry-mutation fixture. |
+| `codecs.register_error` | TCP | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/codecs.py`, `Lib/test/test_codecs.py` error-handler families | M1 dynamic error-handler fixture. |
+| `codecs.open`, `EncodedFile`, `StreamReader`, `StreamWriter`, `StreamReaderWriter`, `StreamRecoder` | TCP | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/codecs.py`, `Lib/test/test_codecs.py` stream classes | Revisit only in adapter phase over `sifr.io.open_text`; bare root covered by `bare_cpython_text_i18n_imports.sifr`. |
+| public `encodings.*` modules | TCP | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/encodings/*.py`, `Lib/encodings/aliases.py` | `bare_cpython_encodings_import.sifr`; dotted root covered by `bare_cpython_dotted_codecs_import.sifr` pattern and future `encodings.*` fixture. |
+| CPython codec C APIs | TCP | `rejected` | `test-only-harness` | `Lib/test/test_capi/test_codecs.py`, `Modules/_codecsmodule.c` | No Sifr external CPython C-extension ABI in this phase. |
+| `locale.setlocale` | URL/HTTP primitives | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/locale.py`, `Lib/test/test_locale.py::TestRealLocales.test_getsetlocale_issue1813` | `bare_cpython_locale_import.sifr`; M3 direct API negative fixture if an adapter root is added. |
+| `localeconv` | URL/HTTP primitives | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/locale.py`, `Lib/test/test_locale.py` formatting tests | Use object-scoped `NumberFormatter`; M3 negative fixture. |
+| `strcoll` / `strxfrm` | URL/HTTP primitives | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/locale.py`, `Lib/test/test_locale.py::TestCollation` | Native `Collator` is production API; adapter revisit requires no process-global locale. |
 | implicit preferred text encoding | M1/M3 | `rejected` | `compiler-known-intrinsic` | `Lib/locale.py`, `Lib/test/test_locale.py::TestMiscellaneous.test_getpreferredencoding` | M1 missing-encoding `open(...)` diagnostics. |
-| `gettext.install` and global `_` | M4 | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/gettext.py`, `Lib/test/test_gettext.py::MiscTestCase` | `bare_cpython_gettext_import.sifr`; M4 direct negative fixture if adapter root is added. |
-| `gettext.textdomain` / `bindtextdomain` and module-global domain functions | M4 | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/gettext.py`, `Lib/test/test_gettext.py::GettextTestCase2` | Native `Bundle`/`Translator` fallback chains are production API. |
+| `gettext.install` and global `_` | HTTP transport | `unsupported-with-diagnostic` | `compiler-known-intrinsic` | `Lib/gettext.py`, `Lib/test/test_gettext.py::MiscTestCase` | `bare_cpython_gettext_import.sifr`; M4 direct negative fixture if adapter root is added. |
+| `gettext.textdomain` / `bindtextdomain` and module-global domain functions | HTTP transport | `deferred-to-phase-adapter` | `compatibility-adapter` | `Lib/gettext.py`, `Lib/test/test_gettext.py::GettextTestCase2` | Native `Bundle`/`Translator` fallback chains are production API. |
 
 ## Encoding Tier Decisions
 
@@ -129,12 +129,12 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 
 | Milestone | Concrete backlog |
 | --- | --- |
-| M1 | Add `sifr.encoding` static registry, Tier 0/Tier 1 codecs, typed handlers/outcomes, incremental state, `str.encode`, `bytes.decode`, `sifr.io.open_text`, and explicit-encoding `open(...)` lowering. |
-| M2 | Add Unicode normalization, property tables, names/lookup, numeric APIs, case folding, and Unicode data version exposure. |
+| TCP | Add `sifr.encoding` static registry, Tier 0/Tier 1 codecs, typed handlers/outcomes, incremental state, `str.encode`, `bytes.decode`, `sifr.io.open_text`, and explicit-encoding `open(...)` lowering. |
+| TLS | Add Unicode normalization, property tables, names/lookup, numeric APIs, case folding, and Unicode data version exposure. |
 | M2.5 | Add grapheme and word segmentation iterators/boundaries using `unicode-segmentation`. |
-| M3 | Add `LocaleId`, canonicalization, read-only `host_locale`, object-scoped number/date/plural/collation APIs using ICU4X compiled data. |
-| M4 | Add native translation bundle/translator API, `.mo` parser, safe plural-expression parser, fallbacks, contexts, plural lookup, missing-key fallback, and missing-path errors. |
-| M5 | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory closure, final review, and full validation. |
+| URL/HTTP primitives | Add `LocaleId`, canonicalization, read-only `host_locale`, object-scoped number/date/plural/collation APIs using ICU4X compiled data. |
+| HTTP transport | Add native translation bundle/translator API, `.mo` parser, safe plural-expression parser, fallbacks, contexts, plural lookup, missing-key fallback, and missing-path errors. |
+| handoff | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory closure, final review, and full validation. |
 
 ## M5 Closure Evidence
 
@@ -143,7 +143,7 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 | Public docs | `docs/text_i18n.md` documents `sifr.encoding`, `sifr.unicode`, explicit `sifr.io` text I/O, `sifr.i18n`, and Python-shaped differences. |
 | Internal architecture | `internal_docs/architecture.md` records the architecture contract, and `internal_docs/text_i18n_architecture.md` carries the focused substrate closeout note. |
 | Demos | `demos/text_i18n/main.sifr` covers non-UTF-8 encode/decode, explicit text open, normalization/properties, segmentation, locale formatting, and translation fallback/plurals. |
-| Dependency snapshots | `verification/areas/stdlib_parity/data/text_i18n_dependency_snapshots.json` records generated Cargo dependency snapshots for each text/i18n module and every pairwise/full module combination; `crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_phase_combinations` locks the same combinations in unit tests. |
+| Dependency snapshots | `verification/areas/stdlib_parity/data/text_i18n_dependency_snapshots.json` records generated Cargo dependency snapshots for each text/i18n module and every pairwise/full module combination; `crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_feature_combinations` locks the same combinations in unit tests. |
 | Panic/emitted-code scans | `verification/areas/generated_code_quality/data/corpus_manifest.json` includes `demos/text_i18n/main.sifr` plus representative encoding, Unicode, segmentation, locale, and translation e2e fixtures. |
 | E2E fixture manifests | `verification/areas/core_language/data/create_pr_e2e_manifest.json` and `verification/areas/core_language/data/merge_e2e_manifest.json` include all M1-M4 text/i18n pass fixtures as representatives. |
 | External review | `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-1.md`, `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-2.md`, `reviews/ad-hoc-production-text-i18n-m5-implementation-review-pass-3.md`, and `reviews/ad-hoc-production-text-i18n-final-implementation-review-pass-1.md` returned `PASS`; no re-review required. |

@@ -69,8 +69,8 @@ M3 focused validation so far:
 - `cargo clippy --workspace -- -D warnings`
 - `cargo fmt --check`
 - `git diff --check`
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
 - `python3 scripts/check_file_size_guardrails.py`
 - `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report

@@ -1,4 +1,4 @@
-# Reference: phase_psp_a2_str_replace_invalid_count
+# Reference: stdlib_parity_a2_str_replace_invalid_count
 def main():
     text: str = "aaaa"
     updated: str = text.replace("a", "b", count="two")

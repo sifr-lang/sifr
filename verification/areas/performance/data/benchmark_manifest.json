@@ -1,7 +1,7 @@
 {
   "version": 1,
   "runner_version": 1,
-  "description": "Phase 35 benchmark corpus. Cases are processed lexicographically by id.",
+  "description": "Benchmark corpus. Cases are processed lexicographically by id.",
   "default_stability_limit": 0.10,
   "required_groups": {
     "check-single-file": 10,

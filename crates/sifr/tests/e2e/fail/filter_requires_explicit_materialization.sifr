@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_5_filter_requires_explicit_materialization
+# Reference: stdlib_parity_iter_fix_5_filter_requires_explicit_materialization
 # expect-error: SIFR-TYPE-0002
 def main() -> None:
     nums: list[int] = [1, 2, 3, 4]

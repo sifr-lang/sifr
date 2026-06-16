@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run phase-29 verification suites with baseline compare/bless support."""
+"""Run verification-hardening verification suites with baseline compare/bless support."""
 
 from __future__ import annotations
 

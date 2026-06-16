@@ -3,7 +3,7 @@ use super::{
     WorkspaceCompilerOptions, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
 };
 
-const CACHE_KEY_SCHEMA_VERSION: &str = "m9-cache-key-v1";
+const CACHE_KEY_SCHEMA_VERSION: &str = "frontend-cache-key-v1";
 const SOURCE_HASH_SCHEMA_VERSION: &str = "source-text-fnv1a64-v1";
 const SOURCE_MAP_ALGORITHM_VERSION: &str = "source-map-line-index-v1";
 const PARSER_OPTIONS_VERSION: &str = "ruff-0.15.12-sifr-parser-v1";

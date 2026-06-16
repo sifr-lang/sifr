@@ -1,6 +1,6 @@
-# wave_psp_iter_fix_8 CPython Traceability Matrix
+# stdlib_parity_iter_fix_8 CPython Traceability Matrix
 
-Wave: `wave_psp_iter_fix_8`  
+Wave: `stdlib_parity_iter_fix_8`
 Scope: downstream iterator-sensitive alignment for inherited bytes/runtime/stdlib surfaces
 
 ## Upstream references reviewed

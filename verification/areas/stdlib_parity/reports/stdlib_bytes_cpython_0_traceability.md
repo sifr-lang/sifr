@@ -1,6 +1,6 @@
-# wave_psp_bytes_0 CPython Traceability Matrix
+# stdlib_parity_bytes_0 CPython Traceability Matrix
 
-Wave: `wave_psp_bytes_0`  
+Wave: `stdlib_parity_bytes_0`
 Scope: architecture lock for first-class `bytes` and binary-surface foundation
 
 ## CPython Harvest Inputs
@@ -16,12 +16,12 @@ Scope: architecture lock for first-class `bytes` and binary-surface foundation
 
 | CPython family | Sifr surface direction | State | Owning wave |
 | --- | --- | --- | --- |
-| `test_bytes` immutable bytes constructors/index/slice/iter/equality/concat | first-class `bytes` type surface (typed, immutable) | `adapted` (planned) | `wave_psp_bytes_1` + `wave_psp_bytes_2` |
+| `test_bytes` immutable bytes constructors/index/slice/iter/equality/concat | first-class `bytes` type surface (typed, immutable) | `adapted` (planned) | `stdlib_parity_bytes_1` + `stdlib_parity_bytes_2` |
 | `test_bytes` mutable `bytearray` / subclass-heavy object-model features | out of scope for this phase | `unsupported` | locked permanent diff |
 | `test_bytes` `memoryview` and buffer-protocol families | out of scope for this phase | `unsupported` | locked permanent diff |
-| `test_base64` binary payload pathways | rewire to canonical `bytes` carrier in downstream contracts | `adapted` (planned) | `wave_psp_bytes_3` |
-| `test_hashlib` binary payload pathways | rewire to canonical `bytes` carrier in downstream contracts | `adapted` (planned) | `wave_psp_bytes_3` |
-| `test_io` binary file-handle pathways | rewire to canonical `bytes` carrier in downstream contracts | `adapted` (planned) | `wave_psp_bytes_3` |
+| `test_base64` binary payload pathways | rewire to canonical `bytes` carrier in downstream contracts | `adapted` (planned) | `stdlib_parity_bytes_3` |
+| `test_hashlib` binary payload pathways | rewire to canonical `bytes` carrier in downstream contracts | `adapted` (planned) | `stdlib_parity_bytes_3` |
+| `test_io` binary file-handle pathways | rewire to canonical `bytes` carrier in downstream contracts | `adapted` (planned) | `stdlib_parity_bytes_3` |
 
 ## Explicit Waivers Locked in Wave 0
 

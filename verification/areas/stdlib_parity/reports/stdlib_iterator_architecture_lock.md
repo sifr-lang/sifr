@@ -1,4 +1,4 @@
-# `wave_psp_iter_fix_0` Architecture Lock (Canonical Iteration Model and Lazy Parity Closure)
+# `stdlib_parity_iter_fix_0` Architecture Lock (Canonical Iteration Model and Lazy Parity Closure)
 
 Phase: `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`  
 Execution ledger: `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
@@ -52,12 +52,12 @@ Additional baseline mismatch captured at wave 0:
 
 | CPython family | Direction | Owning wave | Local anchor |
 | --- | --- | --- | --- |
-| `Lib/test/test_iter.py` | `adapted` | `wave_psp_iter_fix_1` + `wave_psp_iter_fix_2` + `wave_psp_iter_fix_3` | canonical typing/lowering/codegen closure targets |
-| `Lib/test/test_filter.py` | `adapted` | `wave_psp_iter_fix_3` + `wave_psp_iter_fix_5` | backend chain correctness + lazy builtin cleanup |
-| `Lib/test/test_enumerate.py` | `adapted` | `wave_psp_iter_fix_5` | builtin lazy/eager contract closure |
-| `Lib/test/test_generators.py` | `adapted` | `wave_psp_iter_fix_4` | generator backend unification and diagnostics |
-| `Lib/test/test_itertools.py` | `adapted` | `wave_psp_iter_fix_6` | iterable signatures, lazy composition, buffered-helper governance |
-| `Lib/test/test_tuple.py` (iteration-relevant subset) | `adapted` | `wave_psp_iter_fix_1` + `wave_psp_iter_fix_8` | tuple iteration consistency and downstream alignment |
+| `Lib/test/test_iter.py` | `adapted` | `stdlib_parity_iter_fix_1` + `stdlib_parity_iter_fix_2` + `stdlib_parity_iter_fix_3` | canonical typing/lowering/codegen closure targets |
+| `Lib/test/test_filter.py` | `adapted` | `stdlib_parity_iter_fix_3` + `stdlib_parity_iter_fix_5` | backend chain correctness + lazy builtin cleanup |
+| `Lib/test/test_enumerate.py` | `adapted` | `stdlib_parity_iter_fix_5` | builtin lazy/eager contract closure |
+| `Lib/test/test_generators.py` | `adapted` | `stdlib_parity_iter_fix_4` | generator backend unification and diagnostics |
+| `Lib/test/test_itertools.py` | `adapted` | `stdlib_parity_iter_fix_6` | iterable signatures, lazy composition, buffered-helper governance |
+| `Lib/test/test_tuple.py` (iteration-relevant subset) | `adapted` | `stdlib_parity_iter_fix_1` + `stdlib_parity_iter_fix_8` | tuple iteration consistency and downstream alignment |
 
 ## Architecture-Lock Validation Artifacts (Wave 0)
 

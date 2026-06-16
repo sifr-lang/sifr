@@ -1,4 +1,4 @@
-# Reference: phase_psp_e2_class_heavy_custom_cleanup
+# Reference: stdlib_parity_e2_class_heavy_custom_cleanup
 from sifr.argparse import ArgumentParser, Namespace
 from sifr.ipaddress import ip_address, AddressValueError, IPv4Address
 from sifr.uuid import uuid4_obj, uuid_from_hex, UUID
@@ -8,7 +8,7 @@ from sifr.test import assert_eq, assert_true, assert_bool_vector_eq
 
 def collect_argparse_actual() -> list[bool]:
     actual: list[bool] = []
-    parser: ArgumentParser = ArgumentParser("phase-e2")
+    parser: ArgumentParser = ArgumentParser("fixture-e2")
     parser.add_argument("--check", "check", "store_true")
     parser.add_argument("--mode", "mode", "store", "safe")
     parser.add_argument("entry", "entry", "store", "missing.sifr")

@@ -1,4 +1,4 @@
-# Reference: phase31_constructor_compat
+# Reference: narrowing_constructor_compat
 from sifr.collections import deque
 from sifr.test import assert_bool_vector_eq
 

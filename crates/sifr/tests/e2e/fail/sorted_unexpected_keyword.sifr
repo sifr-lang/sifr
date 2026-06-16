@@ -1,4 +1,4 @@
-# Reference: phase_psp_a1_sorted_unexpected_keyword
+# Reference: stdlib_parity_a1_sorted_unexpected_keyword
 # expect-error[col=39]: SIFR-CALL-0002
 
 def main():

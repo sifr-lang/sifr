@@ -11,6 +11,6 @@ Production sifr.toml uses manifest binary target tables.
 | Severity | Error |
 | Owner | `sifr_package::manifest::sifr` |
 | Message template | `production sifr.toml uses [[bin]]` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_bin_tables_report_0711` |
+| Representative fixture | `crates/sifr_package/src/package_public_api_tests.rs::production_manifest_bin_tables_report_0711` |
 | Declared args | `cargo_package_id (json-only)`, `manifest_path (json-only)` |
 | Dedupe args | `cargo_package_id`, `manifest_path` |

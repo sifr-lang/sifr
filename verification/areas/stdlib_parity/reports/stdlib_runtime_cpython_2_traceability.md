@@ -1,6 +1,6 @@
-# wave_psp_runtime_2 CPython Traceability Matrix
+# stdlib_parity_runtime_2 CPython Traceability Matrix
 
-Wave: `wave_psp_runtime_2`  
+Wave: `stdlib_parity_runtime_2`
 Scope: `tempfile` and `zipfile` object lifecycle expansion
 
 ## CPython Harvest Inputs

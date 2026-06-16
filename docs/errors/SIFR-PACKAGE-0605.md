@@ -11,6 +11,6 @@ Runnable package target or script selection is missing or ambiguous.
 | Severity | Error |
 | Owner | `sifr_package::ops::session` |
 | Message template | `ambiguous package run target: {selector}` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_reports_script_target_ambiguity` |
+| Representative fixture | `crates/sifr_package/src/package_session_tests.rs::package_session_reports_script_target_ambiguity` |
 | Declared args | `selector (message+json)`, `candidates (json-only)` |
 | Dedupe args | `selector`, `candidates` |

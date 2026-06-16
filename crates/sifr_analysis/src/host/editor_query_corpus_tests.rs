@@ -27,7 +27,7 @@ fn temp_project_dir(name: &str) -> PathBuf {
         .expect("time should move forward")
         .as_nanos();
     let dir = std::env::temp_dir().join(format!(
-        "sifr_analysis_m17_{name}_{}_{nonce}",
+        "sifr_analysis_editor_query_corpus_{name}_{}_{nonce}",
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("temp project should be created");

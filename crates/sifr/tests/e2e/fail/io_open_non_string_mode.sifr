@@ -1,4 +1,4 @@
-# Reference: phase_psp_d1_io_open_non_string_mode
+# Reference: stdlib_parity_d1_io_open_non_string_mode
 from sifr.io import read_text
 
 

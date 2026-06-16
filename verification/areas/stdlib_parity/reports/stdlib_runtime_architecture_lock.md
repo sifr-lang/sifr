@@ -1,4 +1,4 @@
-# `wave_psp_runtime_0` Architecture Lock (Runtime and File-Object Parity Expansion)
+# `stdlib_parity_runtime_0` Architecture Lock (Runtime and File-Object Parity Expansion)
 
 Phase: `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`  
 Execution ledger: `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`
@@ -16,7 +16,7 @@ This lock prevents later waves from re-inventing stream hierarchy, ownership cle
 | `io` hierarchy | Use sealed Sifr hierarchy (`IOBase`, `TextIOBase`, `BinaryIOBase`, `FileHandle`, `BinaryFileHandle`, `BytesIO`, `StringIO`) as the sole expansion target for this phase. |
 | Binary stream payloads | All binary stream and archive payloads consume first-class `bytes` from the predecessor bytes phase; no `list[int]` fallback contracts are allowed. |
 | Lifecycle model | RAII scope-exit cleanup is default; explicit cleanup APIs use typed `Result` on fallible operations; implicit cleanup is best-effort and panic-free. |
-| `tempfile` wrappers | `NamedTemporaryFile` and `TemporaryDirectory` are wave-owned targets for `wave_psp_runtime_2`; wave 0 intentionally uses `mkstemp`/`mkdtemp` as lifecycle prototype anchors until class wrappers are implemented. |
+| `tempfile` wrappers | `NamedTemporaryFile` and `TemporaryDirectory` are wave-owned targets for `stdlib_parity_runtime_2`; wave 0 intentionally uses `mkstemp`/`mkdtemp` as lifecycle prototype anchors until class wrappers are implemented. |
 | `zipfile` handles | `ZipFile.open(..., "r")` must produce binary-read handles only; streamed write-handle parity remains out of scope in this phase. |
 | `timeit` model | Callable-only timing model is locked; string-eval execution is explicitly out of scope. |
 
@@ -71,13 +71,13 @@ Current `logging` file-sink behavior is intentionally fail-soft in this architec
 
 | CPython family | Direction | Owning wave | Local anchor |
 | --- | --- | --- | --- |
-| `Lib/test/test_io/` | `adapted` | `wave_psp_runtime_1` | sealed hierarchy + `BytesIO`/`StringIO` coverage |
-| `Lib/test/test_tempfile.py` | `adapted` | `wave_psp_runtime_2` | tempfile wrappers + deterministic cleanup semantics |
-| `Lib/test/test_zipfile/` | `adapted` | `wave_psp_runtime_2` | archive object lifecycle and metadata helpers |
-| `Lib/test/test_logging.py` | `adapted` | `wave_psp_runtime_3` | deterministic single-process logging model |
-| `Lib/test/test_time.py` | `adapted` | `wave_psp_runtime_3` | struct_time/clock object-model parity surfaces |
-| `Lib/test/test_timeit.py` | `adapted` | `wave_psp_runtime_3` | callable-only timer model with explicit string-eval waiver |
-| `Lib/test/test_subprocess.py` | `adapted` | `wave_psp_runtime_4` | sync process boundary cleanup; async lifecycle explicitly waived |
+| `Lib/test/test_io/` | `adapted` | `stdlib_parity_runtime_1` | sealed hierarchy + `BytesIO`/`StringIO` coverage |
+| `Lib/test/test_tempfile.py` | `adapted` | `stdlib_parity_runtime_2` | tempfile wrappers + deterministic cleanup semantics |
+| `Lib/test/test_zipfile/` | `adapted` | `stdlib_parity_runtime_2` | archive object lifecycle and metadata helpers |
+| `Lib/test/test_logging.py` | `adapted` | `stdlib_parity_runtime_3` | deterministic single-process logging model |
+| `Lib/test/test_time.py` | `adapted` | `stdlib_parity_runtime_3` | struct_time/clock object-model parity surfaces |
+| `Lib/test/test_timeit.py` | `adapted` | `stdlib_parity_runtime_3` | callable-only timer model with explicit string-eval waiver |
+| `Lib/test/test_subprocess.py` | `adapted` | `stdlib_parity_runtime_4` | sync process boundary cleanup; async lifecycle explicitly waived |
 
 ## Architecture-Lock Validation Artifacts (Wave 0)
 

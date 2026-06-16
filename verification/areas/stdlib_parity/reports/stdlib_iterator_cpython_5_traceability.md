@@ -1,6 +1,6 @@
-# wave_psp_iter_fix_5 CPython Traceability Matrix
+# stdlib_parity_iter_fix_5 CPython Traceability Matrix
 
-Wave: `wave_psp_iter_fix_5`  
+Wave: `stdlib_parity_iter_fix_5`
 Scope: builtin lazy/eager boundary cleanup (`filter` laziness and iterable-input parity for core builtin consumers)
 
 ## CPython Harvest Inputs

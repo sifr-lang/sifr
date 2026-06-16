@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_1_append_unsupported
+# Reference: stdlib_parity_bytes_1_append_unsupported
 def main() -> None:
     payload: bytes = b"abc"
     payload.append(65)

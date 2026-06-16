@@ -1,5 +1,5 @@
-# Reference: phase_psp_iter_fix_1_type_capability_layer
-# Wave 1 positive fixture: capability-aware typing + homogeneous tuple iteration.
+# Reference: stdlib_parity_iter_fix_1_type_capability_layer
+# Reversible iteration positive fixture: capability-aware typing + homogeneous tuple iteration.
 
 
 def sum_reversed(values: Reversible[int]) -> int:

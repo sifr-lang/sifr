@@ -1,4 +1,4 @@
-# Reference: phase31_builtin_shadow_sum
+# Reference: narrowing_builtin_shadow_sum
 # Test: user-defined functions should shadow builtin call lowering.
 
 def sum(num1: int, num2: int) -> int:

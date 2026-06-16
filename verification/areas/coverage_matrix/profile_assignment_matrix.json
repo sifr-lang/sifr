@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Closeout profile-assignment table derived from the phase decisions table. Tokens with area:suite syntax must be selected by the named profile.",
+  "description": "Profile-assignment table derived from compiler surface ownership decisions. Tokens with area:suite syntax must be selected by the named profile.",
   "rows": [
     {
       "surface_id": "coverage_matrix_closeout",
@@ -24,9 +24,9 @@
       "surface_id": "core_hir_cfg_lowering",
       "profiles": {
         "create-pr": [],
-        "merge": ["core_language:phase24_hir_analysis", "core_language:phase25_cfg_flow"],
-        "nightly": ["core_language:phase24_hir_analysis", "core_language:phase25_cfg_flow"],
-        "release": ["core_language:phase24_hir_analysis", "core_language:phase25_cfg_flow"]
+        "merge": ["core_language:hir_analysis_contracts", "core_language:cfg_flow_contracts"],
+        "nightly": ["core_language:hir_analysis_contracts", "core_language:cfg_flow_contracts"],
+        "release": ["core_language:hir_analysis_contracts", "core_language:cfg_flow_contracts"]
       }
     },
     {
@@ -105,9 +105,9 @@
       "surface_id": "project_workspace_package",
       "profiles": {
         "create-pr": [],
-        "merge": ["project_workspace:frontend_mode_parity", "project_workspace:phase23_graph_isolation", "project_workspace:baselines", "package_management:offline-merge-smoke"],
-        "nightly": ["project_workspace:frontend_mode_parity", "project_workspace:phase23_graph_isolation", "project_workspace:baselines", "package_management:offline-integration"],
-        "release": ["project_workspace:frontend_mode_parity", "project_workspace:phase23_graph_isolation", "project_workspace:baselines", "package_management:offline-integration"]
+        "merge": ["project_workspace:frontend_mode_parity", "project_workspace:project_graph_isolation", "project_workspace:baselines", "package_management:offline-merge-smoke"],
+        "nightly": ["project_workspace:frontend_mode_parity", "project_workspace:project_graph_isolation", "project_workspace:baselines", "package_management:offline-integration"],
+        "release": ["project_workspace:frontend_mode_parity", "project_workspace:project_graph_isolation", "project_workspace:baselines", "package_management:offline-integration"]
       }
     },
     {

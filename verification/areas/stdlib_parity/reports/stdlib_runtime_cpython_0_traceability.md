@@ -1,6 +1,6 @@
-# wave_psp_runtime_0 CPython Traceability Matrix
+# stdlib_parity_runtime_0 CPython Traceability Matrix
 
-Wave: `wave_psp_runtime_0`  
+Wave: `stdlib_parity_runtime_0`
 Scope: architecture lock for runtime/file-object parity expansion
 
 ## CPython Harvest Inputs
@@ -17,13 +17,13 @@ Scope: architecture lock for runtime/file-object parity expansion
 
 | CPython family | Sifr surface direction | State | Owning wave |
 | --- | --- | --- | --- |
-| `test_io` sealed stream hierarchy, text/binary handles, in-memory stream object families | ship adapted sealed hierarchy (`IOBase`/`TextIOBase`/`BinaryIOBase`, `FileHandle`, `BinaryFileHandle`, `BytesIO`, `StringIO`) | `adapted` (planned) | `wave_psp_runtime_1` |
-| `test_tempfile` object wrappers and cleanup semantics | ship deterministic ownership wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit cleanup rules | `adapted` (planned) | `wave_psp_runtime_2` |
-| `test_zipfile` archive object helpers and metadata/file-handle behavior | expand beyond narrow create/write/read subset with explicit read-handle boundary | `adapted` (planned) | `wave_psp_runtime_2` |
-| `test_logging` handler/formatter hierarchy and deterministic process-local behavior | expand host-safe deterministic logger model without dynamic graph/thread-order guarantees | `adapted` (planned) | `wave_psp_runtime_3` |
-| `test_time` clock/object surfaces (`struct_time`, `gmtime`, `localtime`, `mktime`, constants) | ship adapted typed-safe object/time APIs where host/runtime permits | `adapted` (planned) | `wave_psp_runtime_3` |
-| `test_timeit` callable timing APIs | ship callable-only timing model; reject string-eval execution | `adapted` (planned) | `wave_psp_runtime_3` |
-| `test_subprocess` sync process boundary and option matrix | expand synchronous option matrix; keep async process lifecycle waived | `adapted` (planned) | `wave_psp_runtime_4` |
+| `test_io` sealed stream hierarchy, text/binary handles, in-memory stream object families | ship adapted sealed hierarchy (`IOBase`/`TextIOBase`/`BinaryIOBase`, `FileHandle`, `BinaryFileHandle`, `BytesIO`, `StringIO`) | `adapted` (planned) | `stdlib_parity_runtime_1` |
+| `test_tempfile` object wrappers and cleanup semantics | ship deterministic ownership wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit cleanup rules | `adapted` (planned) | `stdlib_parity_runtime_2` |
+| `test_zipfile` archive object helpers and metadata/file-handle behavior | expand beyond narrow create/write/read subset with explicit read-handle boundary | `adapted` (planned) | `stdlib_parity_runtime_2` |
+| `test_logging` handler/formatter hierarchy and deterministic process-local behavior | expand host-safe deterministic logger model without dynamic graph/thread-order guarantees | `adapted` (planned) | `stdlib_parity_runtime_3` |
+| `test_time` clock/object surfaces (`struct_time`, `gmtime`, `localtime`, `mktime`, constants) | ship adapted typed-safe object/time APIs where host/runtime permits | `adapted` (planned) | `stdlib_parity_runtime_3` |
+| `test_timeit` callable timing APIs | ship callable-only timing model; reject string-eval execution | `adapted` (planned) | `stdlib_parity_runtime_3` |
+| `test_subprocess` sync process boundary and option matrix | expand synchronous option matrix; keep async process lifecycle waived | `adapted` (planned) | `stdlib_parity_runtime_4` |
 
 ## Explicit Waivers Locked in Wave 0
 

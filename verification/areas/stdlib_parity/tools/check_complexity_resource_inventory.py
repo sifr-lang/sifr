@@ -61,7 +61,7 @@ def fail(message: str) -> None:
 
 def main() -> None:
     area_root = Path(__file__).resolve().parents[1]
-    inventory_path = area_root / "data/phase30_complexity_resource_inventory.json"
+    inventory_path = area_root / "data/stdlib_complexity_resource_inventory.json"
     if not inventory_path.is_file():
         fail(f"missing inventory file: {inventory_path}")
 

@@ -1,6 +1,6 @@
-# wave_psp_rng_3 CPython Traceability Matrix
+# stdlib_parity_rng_3 CPython Traceability Matrix
 
-Wave: `wave_psp_rng_3`  
+Wave: `stdlib_parity_rng_3`
 Scope: final polish waiver reduction for `sifr.statistics`, residual `sifr.textwrap`, and residual `sifr.html`
 
 ## CPython Harvest Inputs
@@ -22,11 +22,11 @@ Scope: final polish waiver reduction for `sifr.statistics`, residual `sifr.textw
 
 | CPython test case | Sifr adaptation direction | Local anchor(s) | Coverage status |
 | --- | --- | --- | --- |
-| `TestMedianGrouped.test_interval_argument` and invalid-domain variants | `median_grouped(data, interval)` supports interval argument and typed rejection for empty/invalid interval domains | `crates/sifr/tests/e2e/pass/cpython_statistics_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered |
-| `TestMode` tie behavior (`first encountered mode`) | `mode()` keeps first-encountered tie behavior for multi-modal integer inputs | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered |
-| `WrapTestCase.test_fix_sentence_endings` (selected sentence-spacing cases) | `TextWrapper(fix_sentence_endings=True)` enforces sentence-spacing normalization on short lines and newline-normalized inputs | `crates/sifr/tests/e2e/pass/cpython_textwrap_textwrapper_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered |
-| `HtmlTests.test_escape` | `html.escape` quote-default and `quote=False` surfaces match escaped-output expectations for top-level helper behavior | `crates/sifr/tests/e2e/pass/stdlib_html.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered |
-| `HtmlTests.test_unescape` numeric references (`&#39;`, `&#x27;`/`&#X27;`, `&#60;`, `&#x3C;`/`&#X3C;`, `&#62;`, `&#x3E;`/`&#X3E;`) | `html.unescape` decodes named entities plus the shipped numeric-reference subset used by top-level helper tests, including lowercase/uppercase hex prefixes | `lib/sifr/html.sifr`, `crates/sifr_codegen/src/intrinsics/html.rs`, `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered |
+| `TestMedianGrouped.test_interval_argument` and invalid-domain variants | `median_grouped(data, interval)` supports interval argument and typed rejection for empty/invalid interval domains | `crates/sifr/tests/e2e/pass/cpython_statistics_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered |
+| `TestMode` tie behavior (`first encountered mode`) | `mode()` keeps first-encountered tie behavior for multi-modal integer inputs | `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered |
+| `WrapTestCase.test_fix_sentence_endings` (selected sentence-spacing cases) | `TextWrapper(fix_sentence_endings=True)` enforces sentence-spacing normalization on short lines and newline-normalized inputs | `crates/sifr/tests/e2e/pass/cpython_textwrap_textwrapper_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered |
+| `HtmlTests.test_escape` | `html.escape` quote-default and `quote=False` surfaces match escaped-output expectations for top-level helper behavior | `crates/sifr/tests/e2e/pass/stdlib_html.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered |
+| `HtmlTests.test_unescape` numeric references (`&#39;`, `&#x27;`/`&#X27;`, `&#60;`, `&#x3C;`/`&#X3C;`, `&#62;`, `&#x3E;`/`&#X3E;`) | `html.unescape` decodes named entities plus the shipped numeric-reference subset used by top-level helper tests, including lowercase/uppercase hex prefixes | `lib/sifr/html.sifr`, `crates/sifr_codegen/src/intrinsics/html.rs`, `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered |
 
 ## Explicit Waivers / Boundaries After Wave 3
 
@@ -41,7 +41,7 @@ Scope: final polish waiver reduction for `sifr.statistics`, residual `sifr.textw
   - `crates/sifr/tests/e2e/pass/cpython_statistics_subset.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_textwrap_textwrapper_subset.sifr`
   - `crates/sifr/tests/e2e/pass/textwrapper_options.sifr`
-  - `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` (post-closure statistics/textwrap/html adaptation subset)
+  - `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` (post-closure statistics/textwrap/html adaptation subset)
 - Demo:
   - `demos/text_and_statistics/main.sifr`
 - Negative fixture:

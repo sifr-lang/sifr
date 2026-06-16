@@ -11,6 +11,6 @@ Type identity crosses resolved package instances.
 | Severity | Error |
 | Owner | `sifr_package::graph::type_identity` |
 | Message template | `package type identity mismatch: expected {expected}, got {actual}` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_2_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances` |
+| Representative fixture | `crates/sifr_package/src/package_dependency_scope_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances` |
 | Declared args | `expected (message+json)`, `actual (message+json)`, `cargo_package_id (json-only)` |
 | Dedupe args | `cargo_package_id`, `expected`, `actual` |

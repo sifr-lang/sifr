@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Phase 36 editor integration assets."""
+"""Validate editor tooling editor integration assets."""
 
 from __future__ import annotations
 

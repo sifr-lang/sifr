@@ -1,4 +1,4 @@
-# Reference: phase_psp_rng_2_hashlib_base64_bytes_native_surface
+# Reference: stdlib_parity_rng_2_hashlib_base64_bytes_native_surface
 from sifr.base64 import (
     b64decode_bytes, b64encode_bytes,
     standard_b64decode_bytes, standard_b64encode_bytes,

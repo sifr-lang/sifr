@@ -1,4 +1,4 @@
-# Reference: phase_psp_runtime_0_timezone_mutation_unsupported
+# Reference: stdlib_parity_runtime_0_timezone_mutation_unsupported
 from sifr.time import tzset
 
 

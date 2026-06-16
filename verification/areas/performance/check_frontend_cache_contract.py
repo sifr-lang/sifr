@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 35 frontend cache contract smoke gate."""
+"""frontend cache contract smoke gate."""
 
 from __future__ import annotations
 

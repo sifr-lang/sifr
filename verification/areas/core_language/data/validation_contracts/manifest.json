@@ -29,14 +29,14 @@
       ]
     },
     {
-      "name": "phase24_hir_analysis",
-      "label": "Phase 24 HIR analysis consolidation regression matrix",
+      "name": "hir_analysis_contracts",
+      "label": "HIR analysis consolidation regression matrix",
       "rows": [
         {
           "id": "matrix_fixture_full_modes",
           "commands": [
             {
-              "id": "m24_5_check",
+              "id": "hir_analysis_check",
               "argv": [
                 "cargo",
                 "run",
@@ -50,7 +50,7 @@
               "expected_exit": 0
             },
             {
-              "id": "m24_5_build",
+              "id": "hir_analysis_build",
               "argv": [
                 "cargo",
                 "run",
@@ -61,12 +61,12 @@
                 "build",
                 "demos/branch_paths/main.sifr",
                 "--output",
-                "<TMP>/m24_5_build"
+                "<TMP>/hir_analysis_build"
               ],
               "expected_exit": 0
             },
             {
-              "id": "m24_5_run",
+              "id": "hir_analysis_run",
               "argv": [
                 "cargo",
                 "run",
@@ -80,7 +80,7 @@
               "expected_exit": 0
             },
             {
-              "id": "m24_5_test",
+              "id": "hir_analysis_test",
               "argv": [
                 "cargo",
                 "run",
@@ -97,19 +97,19 @@
           "assertions": [
             {
               "kind": "contains",
-              "command_id": "m24_5_run",
+              "command_id": "hir_analysis_run",
               "stream": "stdout",
-              "text": "m24_5 analysis consolidation regression matrix demo:"
+              "text": "hir analysis consolidation regression matrix demo:"
             },
             {
               "kind": "contains",
-              "command_id": "m24_5_run",
+              "command_id": "hir_analysis_run",
               "stream": "stdout",
               "text": "20"
             },
             {
               "kind": "contains",
-              "command_id": "m24_5_run",
+              "command_id": "hir_analysis_run",
               "stream": "stdout",
               "text": "45"
             }
@@ -119,7 +119,7 @@
           "id": "negative_mixed_block_parity",
           "commands": [
             {
-              "id": "m24_5_neg_check",
+              "id": "hir_analysis_neg_check",
               "argv": [
                 "cargo",
                 "run",
@@ -133,7 +133,7 @@
               "expected_exit": 1
             },
             {
-              "id": "m24_5_neg_build",
+              "id": "hir_analysis_neg_build",
               "argv": [
                 "cargo",
                 "run",
@@ -144,12 +144,12 @@
                 "build",
                 "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr",
                 "--output",
-                "<TMP>/m24_5_neg_build"
+                "<TMP>/hir_analysis_neg_build"
               ],
               "expected_exit": 1
             },
             {
-              "id": "m24_5_neg_run",
+              "id": "hir_analysis_neg_run",
               "argv": [
                 "cargo",
                 "run",
@@ -166,19 +166,19 @@
           "assertions": [
             {
               "kind": "equal_streams",
-              "left_command_id": "m24_5_neg_check",
-              "right_command_id": "m24_5_neg_build",
+              "left_command_id": "hir_analysis_neg_check",
+              "right_command_id": "hir_analysis_neg_build",
               "stream": "stderr"
             },
             {
               "kind": "equal_streams",
-              "left_command_id": "m24_5_neg_check",
-              "right_command_id": "m24_5_neg_run",
+              "left_command_id": "hir_analysis_neg_check",
+              "right_command_id": "hir_analysis_neg_run",
               "stream": "stderr"
             },
             {
               "kind": "contains",
-              "command_id": "m24_5_neg_check",
+              "command_id": "hir_analysis_neg_check",
               "stream": "stderr",
               "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
             }
@@ -188,7 +188,7 @@
           "id": "negative_diagnostic_stability",
           "commands": [
             {
-              "id": "m24_5_neg_check_first",
+              "id": "hir_analysis_neg_check_first",
               "argv": [
                 "cargo",
                 "run",
@@ -202,7 +202,7 @@
               "expected_exit": 1
             },
             {
-              "id": "m24_5_neg_check_second",
+              "id": "hir_analysis_neg_check_second",
               "argv": [
                 "cargo",
                 "run",
@@ -219,8 +219,8 @@
           "assertions": [
             {
               "kind": "equal_streams",
-              "left_command_id": "m24_5_neg_check_first",
-              "right_command_id": "m24_5_neg_check_second",
+              "left_command_id": "hir_analysis_neg_check_first",
+              "right_command_id": "hir_analysis_neg_check_second",
               "stream": "stderr"
             }
           ]
@@ -228,14 +228,14 @@
       ]
     },
     {
-      "name": "phase25_cfg_flow",
-      "label": "Phase 25 CFG/flow activation regression matrix",
+      "name": "cfg_flow_contracts",
+      "label": "CFG/flow activation regression matrix",
       "rows": [
         {
           "id": "matrix_fixture_full_modes",
           "commands": [
             {
-              "id": "m25_5_check",
+              "id": "cfg_flow_check",
               "argv": [
                 "cargo",
                 "run",
@@ -249,7 +249,7 @@
               "expected_exit": 0
             },
             {
-              "id": "m25_5_build",
+              "id": "cfg_flow_build",
               "argv": [
                 "cargo",
                 "run",
@@ -260,12 +260,12 @@
                 "build",
                 "demos/control_flow_paths/main.sifr",
                 "--output",
-                "<TMP>/m25_5_build"
+                "<TMP>/cfg_flow_build"
               ],
               "expected_exit": 0
             },
             {
-              "id": "m25_5_run",
+              "id": "cfg_flow_run",
               "argv": [
                 "cargo",
                 "run",
@@ -279,7 +279,7 @@
               "expected_exit": 0
             },
             {
-              "id": "m25_5_test",
+              "id": "cfg_flow_test",
               "argv": [
                 "cargo",
                 "run",
@@ -296,25 +296,25 @@
           "assertions": [
             {
               "kind": "contains",
-              "command_id": "m25_5_run",
+              "command_id": "cfg_flow_run",
               "stream": "stdout",
-              "text": "m25_5 cfg flow activation regression matrix demo:"
+              "text": "cfg flow activation regression matrix demo:"
             },
             {
               "kind": "contains",
-              "command_id": "m25_5_run",
+              "command_id": "cfg_flow_run",
               "stream": "stdout",
               "text": "8"
             },
             {
               "kind": "contains",
-              "command_id": "m25_5_run",
+              "command_id": "cfg_flow_run",
               "stream": "stdout",
               "text": "42"
             },
             {
               "kind": "contains",
-              "command_id": "m25_5_run",
+              "command_id": "cfg_flow_run",
               "stream": "stdout",
               "text": "9"
             }
@@ -324,7 +324,7 @@
           "id": "cfg_shape_and_query_repeat_determinism",
           "commands": [
             {
-              "id": "m25_cfg_repeat",
+              "id": "cfg_flow_repeat",
               "argv": [
                 "cargo",
                 "test",
@@ -344,7 +344,7 @@
           "id": "negative_reachable_type_error_parity",
           "commands": [
             {
-              "id": "m25_5_neg_check",
+              "id": "cfg_flow_neg_check",
               "argv": [
                 "cargo",
                 "run",
@@ -358,7 +358,7 @@
               "expected_exit": 1
             },
             {
-              "id": "m25_5_neg_build",
+              "id": "cfg_flow_neg_build",
               "argv": [
                 "cargo",
                 "run",
@@ -369,12 +369,12 @@
                 "build",
                 "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr",
                 "--output",
-                "<TMP>/m25_5_neg_build"
+                "<TMP>/cfg_flow_neg_build"
               ],
               "expected_exit": 1
             },
             {
-              "id": "m25_5_neg_run",
+              "id": "cfg_flow_neg_run",
               "argv": [
                 "cargo",
                 "run",
@@ -391,19 +391,19 @@
           "assertions": [
             {
               "kind": "equal_streams",
-              "left_command_id": "m25_5_neg_check",
-              "right_command_id": "m25_5_neg_build",
+              "left_command_id": "cfg_flow_neg_check",
+              "right_command_id": "cfg_flow_neg_build",
               "stream": "stderr"
             },
             {
               "kind": "equal_streams",
-              "left_command_id": "m25_5_neg_check",
-              "right_command_id": "m25_5_neg_run",
+              "left_command_id": "cfg_flow_neg_check",
+              "right_command_id": "cfg_flow_neg_run",
               "stream": "stderr"
             },
             {
               "kind": "contains",
-              "command_id": "m25_5_neg_check",
+              "command_id": "cfg_flow_neg_check",
               "stream": "stderr",
               "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
             }
@@ -413,7 +413,7 @@
           "id": "negative_diagnostic_stability",
           "commands": [
             {
-              "id": "m25_5_neg_check_first",
+              "id": "cfg_flow_neg_check_first",
               "argv": [
                 "cargo",
                 "run",
@@ -427,7 +427,7 @@
               "expected_exit": 1
             },
             {
-              "id": "m25_5_neg_check_second",
+              "id": "cfg_flow_neg_check_second",
               "argv": [
                 "cargo",
                 "run",
@@ -444,8 +444,8 @@
           "assertions": [
             {
               "kind": "equal_streams",
-              "left_command_id": "m25_5_neg_check_first",
-              "right_command_id": "m25_5_neg_check_second",
+              "left_command_id": "cfg_flow_neg_check_first",
+              "right_command_id": "cfg_flow_neg_check_second",
               "stream": "stderr"
             }
           ]

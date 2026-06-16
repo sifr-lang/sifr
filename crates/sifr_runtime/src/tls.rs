@@ -600,15 +600,15 @@ mod tests {
     }
 
     fn materials() -> TlsMaterials {
-        let server_ca = ca("sifr-m2-server-ca.local");
-        let client_ca = ca("sifr-m2-client-ca.local");
+        let server_ca = ca("sifr-tls-server-ca.local");
+        let client_ca = ca("sifr-tls-client-ca.local");
         let (server_cert_pem, server_key_pem) = signed_leaf(
             vec!["localhost".to_string()],
             ExtendedKeyUsagePurpose::ServerAuth,
             &server_ca,
         );
         let (client_cert_pem, client_key_pem) = signed_leaf(
-            vec!["sifr-m2-client.local".to_string()],
+            vec!["sifr-tls-client.local".to_string()],
             ExtendedKeyUsagePurpose::ClientAuth,
             &client_ca,
         );

@@ -1,4 +1,4 @@
-# Reference: phase31_mutated_borrowed_param_shadow
+# Reference: narrowing_mutated_borrowed_param_shadow
 # Test: mutated borrowed params should be shadowed into owned mutable locals for codegen.
 
 def reverse_words(own mut s: str) -> str:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Phase 36 closeout wiring and performance-policy evidence."""
+"""Validate developer tooling wiring and performance-policy evidence."""
 
 from __future__ import annotations
 
@@ -12,8 +12,6 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PROFILE_RUNNER = REPO_ROOT / "verification" / "runner" / "sifr_verify" / "profile_runner.py"
-PHASE_DOC = REPO_ROOT / "plans" / "phases" / "36_developer_tooling_and_ecosystem_hooks.md"
-ISSUE_DOC = REPO_ROOT / "plans" / "issues" / "archive" / "phase36-developer-tooling-execution.md"
 TOOLING_VERIFICATION_DOC = REPO_ROOT / "internal_docs" / "tooling_verification.md"
 REUSE_DOC = REPO_ROOT / "internal_docs" / "tooling_reuse_strategy.md"
 TOOLING_ROOT = REPO_ROOT / "verification" / "areas" / "developer_tooling"
@@ -39,25 +37,13 @@ REQUIRED_TOOLING_CHECKS = [
     "lsp_protocol_smoke.py",
     "lsp_protocol_stress.py",
     "check_editor_assets.py",
-    "check_phase36_closeout.py",
+    "check_tooling_readiness.py",
 ]
 
 REQUIRED_PERFORMANCE_CHECKS = [
     "run_benchmarks.py",
     "check_budgets.py",
 ]
-
-REQUIRED_MILESTONE_MARKERS = [
-    "milestone_36_1",
-    "milestone_36_2",
-    "milestone_36_3",
-    "milestone_36_4",
-    "milestone_36_5",
-    "milestone_36_6",
-    "milestone_36_7",
-    "milestone_36_8",
-]
-
 
 def load_json(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -73,7 +59,7 @@ class CloseoutError(Exception):
 def validate_profile_runner_wiring(runner_text: str) -> list[str]:
     failures: list[str] = []
     for suite_name in [
-        "typescript-go-m1",
+        "typescript-go-transfer",
         "diagnostic-contracts",
     ]:
         if suite_name not in runner_text:
@@ -114,31 +100,24 @@ def validate_required_files() -> list[str]:
         path = PERF_ROOT / script_name
         if not path.is_file():
             failures.append(f"required performance check missing: {path.relative_to(REPO_ROOT)}")
-    for path in [PHASE_DOC, ISSUE_DOC, TOOLING_VERIFICATION_DOC, REUSE_DOC]:
+    for path in [TOOLING_VERIFICATION_DOC, REUSE_DOC]:
         if not path.is_file():
-            failures.append(f"required closeout doc missing: {path.relative_to(REPO_ROOT)}")
+            failures.append(f"required tooling contract doc missing: {path.relative_to(REPO_ROOT)}")
     return failures
 
 
 def validate_tracking_docs() -> list[str]:
     failures: list[str] = []
-    phase_text = PHASE_DOC.read_text(encoding="utf-8")
-    issue_text = ISSUE_DOC.read_text(encoding="utf-8")
     tooling_text = TOOLING_VERIFICATION_DOC.read_text(encoding="utf-8")
-    for marker in REQUIRED_MILESTONE_MARKERS:
-        if marker not in phase_text:
-            failures.append(f"phase doc missing {marker}")
-        if marker not in issue_text:
-            failures.append(f"execution checklist missing {marker}")
     for required in [
         "check_analysis_snapshot_coherence.py",
         "check_completion_quality.py",
-        "check_phase36_closeout.py",
+        "check_tooling_readiness.py",
         "scripts/run_all_tests.sh --profile create-pr",
         "scripts/run_all_tests.sh --profile merge",
     ]:
-        if required not in tooling_text and required not in issue_text and required not in phase_text:
-            failures.append(f"closeout docs missing required evidence marker: {required}")
+        if required not in tooling_text:
+            failures.append(f"tooling verification doc missing required evidence marker: {required}")
     return failures
 
 
@@ -163,7 +142,7 @@ def validate_lsp_performance_policy() -> list[str]:
     if "lsp-query-001-request-families" not in budget_entries:
         failures.append("budgets missing lsp-query-001-request-families")
     if any(waiver for waiver in waivers.get("waivers", []) if isinstance(waiver, dict) and "lsp" in str(waiver)):
-        failures.append("Phase 36 closeout must not carry active LSP budget waivers")
+        failures.append("developer tooling readiness must not carry active LSP budget waivers")
 
     matrix_budget_ids = {
         item.get("budget_id")
@@ -199,13 +178,13 @@ def run_self_test() -> None:
     bad_text = runner_text.replace('"developer_tooling"', '"missing_developer_tooling"')
     failures = validate_profile_runner_wiring(bad_text)
     if not any("developer_tooling area" in failure for failure in failures):
-        raise SystemExit("phase36 closeout self-test failed: missing developer_tooling area wiring passed")
+        raise SystemExit("tooling readiness self-test failed: missing developer_tooling area wiring passed")
 
     tooling_runner_text = TOOLING_RUNNER.read_text(encoding="utf-8")
     bad_tooling_runner_text = tooling_runner_text.replace("check_completion_quality.py", "missing_completion_quality.py")
     failures = validate_area_suite_wiring(bad_tooling_runner_text, PERF_MANIFEST.read_text(encoding="utf-8"))
     if not any("check_completion_quality.py" in failure for failure in failures):
-        raise SystemExit("phase36 closeout self-test failed: missing area runner wiring passed")
+        raise SystemExit("tooling readiness self-test failed: missing area runner wiring passed")
 
     manifest = load_json(PERF_DATA / "benchmark_manifest.json")
     bad_manifest = copy.deepcopy(manifest)
@@ -215,8 +194,8 @@ def run_self_test() -> None:
         if not (isinstance(case, dict) and case.get("id") == "lsp-query-001-request-families")
     ]
     if any(case.get("id") == "lsp-query-001-request-families" for case in bad_manifest.get("cases", [])):
-        raise SystemExit("phase36 closeout self-test setup failed")
-    print("phase36 closeout self-test: PASS")
+        raise SystemExit("tooling readiness self-test setup failed")
+    print("tooling readiness self-test: PASS")
 
 
 def main() -> int:
@@ -229,11 +208,11 @@ def main() -> int:
 
     failures = validate()
     if failures:
-        print("phase36 closeout: FAIL")
+        print("tooling readiness: FAIL")
         for failure in failures:
             print(f"  - {failure}")
         return 1
-    print("phase36 closeout: PASS")
+    print("tooling readiness: PASS")
     return 0
 
 

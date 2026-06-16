@@ -1,6 +1,6 @@
-# wave_psp_bytes_4 CPython Traceability Matrix
+# stdlib_parity_bytes_4 CPython Traceability Matrix
 
-Wave: `wave_psp_bytes_4`  
+Wave: `stdlib_parity_bytes_4`
 Scope: raw-byte backend storage and bytes/list lowering disentanglement
 
 ## CPython Harvest Inputs

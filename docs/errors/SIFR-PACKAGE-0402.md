@@ -11,6 +11,6 @@ Package publish or archive validation failed.
 | Severity | Error |
 | Owner | `sifr_package::cargo::package` |
 | Message template | `package publish validation failed: {reason}` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_6_tests.rs::publish_validation_failed_reports_0402` |
+| Representative fixture | `crates/sifr_package/src/package_publish_archive_tests.rs::publish_validation_failed_reports_0402` |
 | Declared args | `reason (message+json)`, `cargo_package_id (json-only)` |
 | Dedupe args | `cargo_package_id`, `reason` |

@@ -64,7 +64,7 @@ fn snapshot_dependencies(payload: &Value, snapshot_id: &str) -> Vec<String> {
 }
 
 #[test]
-fn network_http_m0_dependency_snapshots_exclude_ring5_from_production() {
+fn network_http_dependency_snapshots_exclude_ring5_from_production() {
     let payload: Value =
         serde_json::from_str(SNAPSHOT_JSON).expect("network HTTP dependency snapshot must parse");
     assert_eq!(
@@ -237,7 +237,7 @@ fn network_http_snapshot_json_matches_generated_dependency_output() {
 }
 
 #[test]
-fn network_http_m1_net_module_emits_locked_runtime_dependencies() {
+fn network_http_net_module_emits_locked_runtime_dependencies() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.net".to_string()]),
         &HashSet::new(),
@@ -270,7 +270,7 @@ fn network_http_m1_net_module_emits_locked_runtime_dependencies() {
 }
 
 #[test]
-fn network_http_m2_tls_module_emits_locked_runtime_dependencies() {
+fn network_http_tls_module_emits_locked_runtime_dependencies() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.tls".to_string()]),
         &HashSet::new(),
@@ -318,7 +318,7 @@ fn network_http_m2_tls_module_emits_locked_runtime_dependencies() {
 }
 
 #[test]
-fn network_http_m3_url_module_emits_locked_parser_dependencies() {
+fn network_http_url_module_emits_locked_parser_dependencies() {
     let deps =
         generated_cargo_dependencies(&HashSet::from(["sifr.url".to_string()]), &HashSet::new());
 
@@ -339,7 +339,7 @@ fn network_http_m3_url_module_emits_locked_parser_dependencies() {
 }
 
 #[test]
-fn network_http_m3_http_module_emits_locked_header_dependencies_without_cookie_crate() {
+fn network_http_http_module_emits_locked_header_dependencies_without_cookie_crate() {
     let deps =
         generated_cargo_dependencies(&HashSet::from(["sifr.http".to_string()]), &HashSet::new());
 
@@ -358,7 +358,7 @@ fn network_http_m3_http_module_emits_locked_header_dependencies_without_cookie_c
 }
 
 #[test]
-fn network_http_m3_combined_modules_emit_all_locked_m3_dependencies_without_ring5() {
+fn network_http_combined_modules_emit_all_locked_url_http_dependencies_without_ring5() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.url".to_string(), "sifr.http".to_string()]),
         &HashSet::new(),
@@ -378,7 +378,7 @@ fn network_http_m3_combined_modules_emit_all_locked_m3_dependencies_without_ring
 }
 
 #[test]
-fn network_http_m3_url_and_http_modules_emit_locked_dependencies() {
+fn network_http_url_and_http_modules_emit_locked_dependencies() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.url".to_string(), "sifr.http".to_string()]),
         &HashSet::new(),
@@ -415,7 +415,7 @@ fn network_http_m3_url_and_http_modules_emit_locked_dependencies() {
 }
 
 #[test]
-fn network_http_m4_transport_intrinsics_emit_locked_hyper_runtime_dependencies() {
+fn network_http_transport_intrinsics_emit_locked_hyper_runtime_dependencies() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.http".to_string()]),
         &HashSet::from([

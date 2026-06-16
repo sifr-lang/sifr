@@ -1,4 +1,4 @@
-# `wave_psp_d2` CPython Traceability
+# `stdlib_parity_d2` CPython Traceability
 
 Status: partially superseded by `milestone_concurrency_runtime_0a`.
 

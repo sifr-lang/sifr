@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "developer_tooling",
   "owner": "compiler/tooling",
-  "description": "Developer tooling contracts for LSP, formatter, linter, editor assets, analysis queries, and Phase 36 closeout.",
+  "description": "Developer tooling contracts for LSP, formatter, linter, editor assets, analysis queries, and editor tooling closeout.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local",
@@ -12,12 +12,12 @@
   "timeout_seconds": 1800,
   "suites": [
     {
-      "name": "typescript-go-m1",
+      "name": "typescript-go-transfer",
       "kind": "adapter",
       "cases": [
         {
-          "id": "typescript-go-m1",
-          "entry": "verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py",
+          "id": "typescript-go-transfer",
+          "entry": "verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -116,12 +116,12 @@
       ]
     },
     {
-      "name": "phase-closeout",
+      "name": "tooling-readiness",
       "kind": "adapter",
       "cases": [
         {
-          "id": "phase-closeout",
-          "entry": "verification/areas/developer_tooling/check_phase36_closeout.py",
+          "id": "tooling-readiness",
+          "entry": "verification/areas/developer_tooling/check_tooling_readiness.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []

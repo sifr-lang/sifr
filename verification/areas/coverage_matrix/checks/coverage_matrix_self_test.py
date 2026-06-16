@@ -101,7 +101,7 @@ def owner_unknown() -> list[str]:
 
 
 def expired_expected_missing() -> list[str]:
-    return validate_single_surface("expected-missing", {"closes_in_wave": "9"})
+    return validate_single_surface("expected-missing", {"resolution_gate": "9"})
 
 
 def expired_tests_none() -> list[str]:
@@ -112,7 +112,7 @@ def lingering_red_blocker() -> list[str]:
     return validate_single_surface(
         "red-blocker",
         {
-            "closes_in_wave": "9",
+            "resolution_gate": "9",
             "command": "cargo test -p sifr_codegen",
             "triage_file": "plans/issues/active/codegen-test-triage.md",
             "current_failure_count": 1,
@@ -274,7 +274,7 @@ def profile_assignment_mismatch() -> list[str]:
         "parser_acceptance_rejection",
         "merge",
         ["core_language:syntax_parser_lexer_matrix"],
-        {"core_language:phase24_hir_analysis"},
+        {"core_language:hir_analysis_contracts"},
         errors,
     )
     return errors

@@ -1,6 +1,6 @@
-# wave_psp_bytes_3 CPython Traceability Matrix
+# stdlib_parity_bytes_3 CPython Traceability Matrix
 
-Wave: `wave_psp_bytes_3`  
+Wave: `stdlib_parity_bytes_3`
 Scope: downstream binary-carrier contract adoption and governance closeout
 
 ## CPython Harvest Inputs

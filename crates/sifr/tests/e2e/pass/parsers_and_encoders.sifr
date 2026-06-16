@@ -1,4 +1,4 @@
-# Reference: phase_psp_struct_1_parser_serialization_expansion
+# Reference: stdlib_parity_struct_1_parser_serialization_expansion
 from sifr.json import JSONEncoder, JSONDecoder, JsonValue, from_array, from_int, from_object, from_str
 from sifr.configparser import ConfigParser, ParsingError, SectionProxy
 from sifr.csv import (
@@ -25,7 +25,7 @@ def main() -> None:
     encoded: str = encoder.encode(payload)
     assert encoded == "{\"service\":\"api\",\"ports\":[8080,8443]}"
 
-    json_path: str = "/tmp/sifr_wave_psp_struct_1.json"
+    json_path: str = "/tmp/sifr_stdlib_parity_struct_1.json"
     json_roundtrip_ok: bool = False
     try:
         _: None = encoder.dump(payload, json_path)
@@ -54,7 +54,7 @@ def main() -> None:
         assert proxy.get("log") == "/srv/log"
         assert proxy.get("workers") == "4"
 
-    ini_path: str = "/tmp/sifr_wave_psp_struct_1.ini"
+    ini_path: str = "/tmp/sifr_stdlib_parity_struct_1.ini"
     write_ok: bool = False
     try:
         _: None = parser.write(ini_path)

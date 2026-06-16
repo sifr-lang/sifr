@@ -46,8 +46,8 @@ and deterministic publication before using these lanes.
 - `cargo test -p sifr_analysis` -> PASS, 20 tests
 - `cargo fmt --check` -> PASS
 - `cargo clippy -p sifr_analysis -p sifr_frontend -- -D warnings` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py --self-test` -> PASS
 - `git diff --check` -> PASS

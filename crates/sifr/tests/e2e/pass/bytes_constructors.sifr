@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_2_conversion_surfaces
+# Reference: stdlib_parity_bytes_2_conversion_surfaces
 def main() -> None:
     size_ok: bool = False
     try:

@@ -102,7 +102,7 @@ def main() -> int:
     blocking_failures = 0
     non_blocking_failures = 0
 
-    print("Running phase-29 verification suites")
+    print("Running verification hardening suites")
     print(f"  profile={args.profile}")
     print(f"  manifest={manifest_path.relative_to(repo_root)}")
     print(f"  bless={'yes' if args.bless else 'no'}")

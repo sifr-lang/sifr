@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Phase 36 AnalysisHost snapshot/session contract."""
+"""Validate the editor tooling AnalysisHost snapshot/session contract."""
 
 from __future__ import annotations
 

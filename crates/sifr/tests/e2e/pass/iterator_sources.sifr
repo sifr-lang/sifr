@@ -1,5 +1,5 @@
-# Reference: phase_psp_iter_fix_2_canonical_iterator_hir
-# Wave 2 positive fixture: canonical iterator HIR for builtin and comprehension sources.
+# Reference: stdlib_parity_iter_fix_2_canonical_iterator_hir
+# Iterator source positive fixture: canonical iterator HIR for builtin and comprehension sources.
 
 
 def add_one(x: int) -> int:

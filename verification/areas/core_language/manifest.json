@@ -23,11 +23,11 @@
       ]
     },
     {
-      "name": "phase24_hir_analysis",
+      "name": "hir_analysis_contracts",
       "kind": "adapter",
       "cases": [
         {
-          "id": "phase24_hir_analysis",
+          "id": "hir_analysis_contracts",
           "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
           "command": "contract-matrix",
           "expect_exit_code": 0,
@@ -36,11 +36,11 @@
       ]
     },
     {
-      "name": "phase25_cfg_flow",
+      "name": "cfg_flow_contracts",
       "kind": "adapter",
       "cases": [
         {
-          "id": "phase25_cfg_flow",
+          "id": "cfg_flow_contracts",
           "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
           "command": "contract-matrix",
           "expect_exit_code": 0,

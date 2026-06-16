@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Phase 36 VS Code extension build, tests, and package."""
+"""Validate the editor tooling VS Code extension build, tests, and package."""
 
 from __future__ import annotations
 

@@ -1,11 +1,11 @@
 # sifr_package Dependency Audit
 
-Phase 37 keeps Cargo as the package substrate without linking to Cargo internals. The `sifr_package` crate consumes stable command output and builds Sifr-owned data structures for the compiler.
+package-management contract keeps Cargo as the package substrate without linking to Cargo internals. The `sifr_package` crate consumes stable command output and builds Sifr-owned data structures for the compiler.
 
 ## Cargo CLI Metadata JSON
 
 - Surface: `cargo metadata --format-version 1`.
-- Local toolchain audited for Phase 37 closeout: `cargo 1.94.0`, `rustc 1.94.0`.
+- Local toolchain audited for package-management contract closeout: `cargo 1.94.0`, `rustc 1.94.0`.
 - Used by: `crates/sifr_package::cargo::metadata`.
 - Fields consumed: `packages[].id`, `name`, `version`, `source`, `manifest_path`, `dependencies`, `targets`, `features`, `metadata.sifr`, `resolve.nodes[].deps[]`, `workspace_members`, `target_directory`, and `workspace_root`.
 - Reason: Cargo owns package resolution, source identity, workspace membership, dependency rename identity, selected package roots, and resolved dependency edges. Sifr needs those facts but not Cargo's internal resolver APIs.
@@ -17,7 +17,7 @@ Phase 37 keeps Cargo as the package substrate without linking to Cargo internals
 
 Sifr models Cargo command invocations as `CargoCommandPlan` values before any driver shell-out. The audited command surfaces are:
 
-| Cargo surface | Phase 37 use | Risk control |
+| Cargo surface | package-management contract use | Risk control |
 | --- | --- | --- |
 | `cargo metadata --format-version 1` | graph discovery and package roots | normalized JSON facade, no Cargo internal crate types |
 | `cargo fetch` | source materialization before offline/frozen validation | lock-mode arguments are explicit |
@@ -29,7 +29,7 @@ Sifr models Cargo command invocations as `CargoCommandPlan` values before any dr
 
 ## Cargo Integration Crates
 
-No `cargo_metadata` crate and no `cargo` internal crates are linked in Phase 37. If a future milestone introduces one, this file must record:
+No `cargo_metadata` crate and no `cargo` internal crates are linked in package-management contract. If a future contract introduces one, this file must record:
 
 - exact crate version pinned in `Cargo.lock`;
 - Cargo CLI version range and `--format-version` validated against it;

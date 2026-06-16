@@ -1,6 +1,6 @@
-# wave_psp_runtime_3 CPython Traceability Matrix
+# stdlib_parity_runtime_3 CPython Traceability Matrix
 
-Wave: `wave_psp_runtime_3`  
+Wave: `stdlib_parity_runtime_3`
 Scope: `logging`, `time`, and `timeit` object-surface expansion
 
 ## CPython Harvest Inputs

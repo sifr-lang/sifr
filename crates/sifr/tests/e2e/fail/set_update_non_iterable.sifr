@@ -1,4 +1,4 @@
-# Reference: phase_psp_a2_set_update_non_iterable
+# Reference: stdlib_parity_a2_set_update_non_iterable
 def main():
     seen: set[int] = {1}
     seen.update(2)

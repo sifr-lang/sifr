@@ -11,6 +11,6 @@ Package source is unavailable in offline or frozen mode.
 | Severity | Error |
 | Owner | `sifr_package::cargo::lock_modes` |
 | Message template | `package source unavailable in {lock_mode} mode` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_4_tests.rs::offline_mode_reports_missing_sifr_source_package` |
+| Representative fixture | `crates/sifr_package/src/cargo_backend_integration_tests.rs::offline_mode_reports_missing_sifr_source_package` |
 | Declared args | `lock_mode (message+json)`, `cargo_package_id (json-only)`, `package_path (json-only)` |
 | Dedupe args | `cargo_package_id`, `package_path`, `lock_mode` |

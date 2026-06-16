@@ -11,6 +11,6 @@ Outdated query cannot inspect this Cargo source.
 | Severity | Error |
 | Owner | `sifr_package::ops::read` |
 | Message template | `outdated query unsupported for source '{source}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_5_tests.rs::outdated_unknown_source_reports_0604` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::outdated_unknown_source_reports_0604` |
 | Declared args | `source (message+json)`, `cargo_package_id (json-only)` |
 | Dedupe args | `cargo_package_id`, `source` |

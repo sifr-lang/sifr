@@ -11,6 +11,6 @@ Package script expansion attempted to invoke another script.
 | Severity | Error |
 | Owner | `sifr_package::ops::session` |
 | Message template | `package script recursion is not allowed: {script}` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_nested_script_expansion` |
+| Representative fixture | `crates/sifr_package/src/package_session_tests.rs::package_session_rejects_nested_script_expansion` |
 | Declared args | `script (message+json)` |
 | Dedupe args | `script` |

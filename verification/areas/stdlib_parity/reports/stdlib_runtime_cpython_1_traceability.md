@@ -1,6 +1,6 @@
-# wave_psp_runtime_1 CPython Traceability Matrix
+# stdlib_parity_runtime_1 CPython Traceability Matrix
 
-Wave: `wave_psp_runtime_1`  
+Wave: `stdlib_parity_runtime_1`
 Scope: `io` and in-memory stream hierarchy (`BytesIO`, `StringIO`)
 
 ## CPython Harvest Inputs

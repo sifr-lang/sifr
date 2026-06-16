@@ -125,8 +125,8 @@ python3 verification/areas/developer_tooling/check_analysis_snapshot_coherence.p
 python3 verification/areas/developer_tooling/check_analysis_snapshot_coherence.py --self-test
 python3 verification/areas/developer_tooling/check_completion_quality.py
 python3 verification/areas/developer_tooling/check_completion_quality.py --self-test
-python3 verification/areas/developer_tooling/check_phase36_closeout.py
-python3 verification/areas/developer_tooling/check_phase36_closeout.py --self-test
+python3 verification/areas/developer_tooling/check_tooling_readiness.py
+python3 verification/areas/developer_tooling/check_tooling_readiness.py --self-test
 scripts/run_all_tests.sh --profile create-pr
 scripts/run_all_tests.sh --profile merge
 ```
@@ -140,7 +140,7 @@ fixtures and thresholds from `verification/areas/developer_tooling/completion_qu
 the required `sifr_analysis` cargo evidence, and fails on a seeded top-candidate
 regression.
 
-`check_phase36_closeout.py` verifies that all Phase 36 tooling and performance
+`check_tooling_readiness.py` verifies that all Phase 36 tooling and performance
 checks are present, wired into `scripts/run_all_tests.sh`, documented, backed by
 the LSP request-family budgets, and free of active LSP performance waivers.
 
@@ -155,8 +155,8 @@ Required formatter closeout commands:
 ```bash
 python3 verification/areas/developer_tooling/check_formatter_contract.py
 python3 verification/areas/developer_tooling/check_formatter_contract.py --self-test
-python3 verification/areas/developer_tooling/check_formatter_phase_manifests.py
-python3 verification/areas/developer_tooling/check_formatter_phase_manifests.py --self-test
+python3 verification/areas/developer_tooling/check_formatter_contract_manifests.py
+python3 verification/areas/developer_tooling/check_formatter_contract_manifests.py --self-test
 python3 verification/areas/developer_tooling/check_formatter_ast_coverage.py
 python3 verification/areas/developer_tooling/check_formatter_ast_coverage.py --self-test
 python3 verification/areas/performance/run_benchmarks.py --validate-only

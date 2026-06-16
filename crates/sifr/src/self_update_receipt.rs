@@ -126,7 +126,7 @@ fn validate_receipt_eligibility(
     }
     if receipt.channel != "alpha" && receipt.channel != "beta" {
         return Err(unmanaged_receipt_diagnostic(format!(
-            "standalone install receipt channel {} is not supported before Phase 39; use alpha or beta",
+            "standalone install receipt channel {} is not supported while stable release channels are disabled; use alpha or beta",
             receipt.channel
         )));
     }

@@ -11,6 +11,6 @@ A selected Cargo package is Rust-only.
 | Severity | Error |
 | Owner | `sifr_package::graph::workspace` |
 | Message template | `selected Rust-only package '{package_name}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_5_tests.rs::explicit_rust_only_selection_reports_0102` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::explicit_rust_only_selection_reports_0102` |
 | Declared args | `package_name (message+json)`, `cargo_package_id (json-only)` |
 | Dedupe args | `cargo_package_id`, `package_name` |

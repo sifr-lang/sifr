@@ -1,6 +1,6 @@
-# wave_psp_rng_1 CPython Traceability Matrix
+# stdlib_parity_rng_1 CPython Traceability Matrix
 
-Wave: `wave_psp_rng_1`  
+Wave: `stdlib_parity_rng_1`
 Scope: deterministic RNG state/object model closure for `sifr.random`
 
 ## CPython Harvest Inputs
@@ -24,9 +24,9 @@ Scope: deterministic RNG state/object model closure for `sifr.random`
 | `TestBasicOps.test_saverestore` | deterministic sequence replay through `getstate`/`setstate` | `crates/sifr/tests/e2e/pass/stateful_random.sifr`, `demos/random_state/main.sifr` | covered |
 | `SystemRandom_TestBasicOps.test_saverestore` | host-backed `SystemRandom` state export/import stays unsupported | `crates/sifr/tests/e2e/fail/system_random_state_unsupported.sifr` | covered (adapted typed boundary) |
 | `TestBasicOps.test_randbytes` / `MersenneTwister_TestBasicOps.test_randbytes` | deterministic bytes generation on typed first-class `bytes` | `crates/sifr/tests/e2e/pass/stateful_random.sifr` | covered |
-| `MersenneTwister_TestBasicOps.test_setstate_first_arg` and `test_setstate_middle_arg` | invalid state version/index/shape reject through typed `ValueError` | `lib/sifr/random.sifr`, `crates/sifr_codegen/src/intrinsics/random.rs` (`lower_random_module_set_state`), `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered |
-| `TestBasicOps.test_choices` / `test_choices_algorithms` | module-level `choices(items, k)` deterministic selection path is replayable under explicit seeding, with large-sample frequency bounds validating near-uniform selection behavior | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered (seeded deterministic + distribution-bound adaptation) |
-| `TestBasicOps.test_gauss` | `Random.gauss` cached-pair semantics are exercised via state inspection (`gauss_next` set/cleared) and deterministic replay under fixed seed | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered (typed deterministic adaptation) |
+| `MersenneTwister_TestBasicOps.test_setstate_first_arg` and `test_setstate_middle_arg` | invalid state version/index/shape reject through typed `ValueError` | `lib/sifr/random.sifr`, `crates/sifr_codegen/src/intrinsics/random.rs` (`lower_random_module_set_state`), `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered |
+| `TestBasicOps.test_choices` / `test_choices_algorithms` | module-level `choices(items, k)` deterministic selection path is replayable under explicit seeding, with large-sample frequency bounds validating near-uniform selection behavior | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered (seeded deterministic + distribution-bound adaptation) |
+| `TestBasicOps.test_gauss` | `Random.gauss` cached-pair semantics are exercised via state inspection (`gauss_next` set/cleared) and deterministic replay under fixed seed | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` | covered (typed deterministic adaptation) |
 | `TestBasicOps.test_randrange_nonunit_step`, `test_randint`, `test_choice`, `test_sample`, `test_shuffle`, `test_gauss`, `test_getrandbits` | existing random helper-family parity remains active while wave-1 module delegation moves those helpers onto deterministic shared state | `crates/sifr/tests/e2e/pass/cpython_random_subset.sifr`, `crates/sifr/tests/e2e/pass/stdlib_random.sifr`, `crates/sifr/tests/e2e/pass/stateful_random.sifr` | covered (legacy + wave-1 delegation replay) |
 
 ## Explicit Waivers / Boundaries After Wave 1
@@ -38,7 +38,7 @@ Scope: deterministic RNG state/object model closure for `sifr.random`
 
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/stateful_random.sifr`
-  - `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` (post-closure CPython state-validation adaptation)
+  - `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` (post-closure CPython state-validation adaptation)
 - Demo:
   - `demos/random_state/main.sifr`
 - Negative fixtures:

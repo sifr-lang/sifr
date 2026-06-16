@@ -11,6 +11,6 @@ Rust-only package depends directly on a Sifr source package.
 | Severity | Error |
 | Owner | `sifr_package::graph::workspace` |
 | Message template | `Rust-only package depends on Sifr package` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_5_tests.rs::rust_only_member_depending_on_sifr_reports_0106` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::rust_only_member_depending_on_sifr_reports_0106` |
 | Declared args | `from_cargo_package_id (json-only)`, `to_cargo_package_id (json-only)` |
 | Dedupe args | `from_cargo_package_id`, `to_cargo_package_id` |

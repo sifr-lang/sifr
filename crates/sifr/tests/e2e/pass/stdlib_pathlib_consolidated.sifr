@@ -1,4 +1,4 @@
-# Consolidated stdlib pathlib coverage for milestone_30_4 structure rules
+# Consolidated stdlib pathlib coverage for stdlib_consolidation structure rules
 from sifr.pathlib import basename, dirname, extension, stem, is_absolute, join_path, Path
 from sifr.os import getpid
 from sifr.test import assert_bool_vector_eq

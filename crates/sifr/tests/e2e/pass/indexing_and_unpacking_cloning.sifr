@@ -1,4 +1,4 @@
-# Reference: wave_clone_2_index_slice_unpack_ownership
+# Reference: ownership_clone_2_index_slice_unpack_ownership
 def main():
     nums: list[int] = [10, 20, 30, 40]
     first_opt: int | None = nums[0]

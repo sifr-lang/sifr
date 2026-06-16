@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_0_tuple_heterogeneous_iteration_unsupported
+# Reference: stdlib_parity_iter_fix_0_tuple_heterogeneous_iteration_unsupported
 def main() -> None:
     values: tuple[int, str] = (1, "x")
     for value in values:

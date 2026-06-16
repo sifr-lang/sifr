@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "milestone": "m36.4",
+  "contract": "editor-query-parity",
   "analysis_crate": "sifr_analysis",
   "editor_query_snapshots": [
     {
@@ -34,7 +34,7 @@
   "completion_quality": [
     {
       "name": "completion_ranking_prefix_quality",
-      "path": "verification/areas/developer_tooling/completion_quality/m36_4_completion_quality.json",
+      "path": "verification/areas/developer_tooling/completion_quality/completion_ranking_quality.json",
       "cargo_test": "completion_ranking_prefers_exact_then_prefix_then_substring",
       "minimum_pass_rate": 1.0
     }

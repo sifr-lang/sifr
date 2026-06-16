@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Phase 36 snapshot-coherence gate.
+"""editor tooling snapshot-coherence gate.
 
-This preserves the script name required by the Phase 36 exit contract while
-delegating to the m36.3 snapshot contract checker that owns the concrete
+This preserves the script name required by the editor tooling exit contract while
+delegating to the snapshot contract checker that owns the concrete
 AnalysisHost stale-version and stale-snapshot evidence.
 """
 

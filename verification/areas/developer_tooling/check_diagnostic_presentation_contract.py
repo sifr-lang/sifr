@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the diagnostic presentation phase contract."""
+"""Validate the diagnostic presentation contract."""
 
 from __future__ import annotations
 

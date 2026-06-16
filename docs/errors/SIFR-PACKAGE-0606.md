@@ -11,6 +11,6 @@ Discovered app target name is invalid.
 | Severity | Error |
 | Owner | `sifr_package::ops::session` |
 | Message template | `invalid package app target name: {target}` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_invalid_nested_target_name` |
+| Representative fixture | `crates/sifr_package/src/package_session_tests.rs::package_session_rejects_invalid_nested_target_name` |
 | Declared args | `target (message+json)` |
 | Dedupe args | `target` |

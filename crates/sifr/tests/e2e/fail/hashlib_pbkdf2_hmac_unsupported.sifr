@@ -1,8 +1,8 @@
-# Reference: phase_psp_rng_2_hashlib_pbkdf2_hmac_unsupported
+# Reference: stdlib_parity_rng_2_hashlib_pbkdf2_hmac_unsupported
 from sifr.hashlib import pbkdf2_hmac
 
 
 def main() -> None:
-    # pbkdf2_hmac remains explicitly unsupported in wave_psp_rng_2 scope.
+    # pbkdf2_hmac remains explicitly unsupported in stdlib_parity_rng_2 scope.
     key: bytes = pbkdf2_hmac("sha256", "password", "salt", 4)
     _ = key

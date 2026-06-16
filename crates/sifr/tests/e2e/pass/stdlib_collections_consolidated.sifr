@@ -1,4 +1,4 @@
-# Consolidated stdlib collections coverage for milestone_30_4 structure rules
+# Consolidated stdlib collections coverage for stdlib_consolidation structure rules
 from sifr.collections import (
     Counter, from_list, deque,
     new_set, set_add, set_contains, set_remove, set_len, set_union, set_intersection, set_from_list

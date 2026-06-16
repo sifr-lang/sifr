@@ -11,7 +11,7 @@ name = "sifr"
 path = "src/main.rs"
 
 [dependencies]
-# Wired early by milestone_diag_1; compiler emission migration starts in milestone_diag_4a.
+# Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 ruff_text_size = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_driver = { workspace = true }

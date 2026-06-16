@@ -218,7 +218,7 @@ def run_platform_evidence_suite(suite_name: str) -> list[dict[str, Any]]:
 
 def run_platform_golden() -> list[dict[str, Any]]:
     manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
-    closed = {item.strip() for item in os.environ.get("SIFR_PLATFORM_CLOSED_MILESTONES", "").split(",") if item.strip()}
+    closed = {item.strip() for item in os.environ.get("SIFR_PLATFORM_CLOSED_CONTRACTS", "").split(",") if item.strip()}
     variants = []
     passed = 0
     skipped = 0
@@ -235,9 +235,9 @@ def run_platform_golden() -> list[dict[str, Any]]:
 
 def run_platform_entry(entry: dict[str, Any], closed: set[str]) -> dict[str, Any]:
     program = str(entry["program"])
-    missing = [milestone for milestone in entry.get("blocked_until", []) if milestone not in closed]
+    missing = [contract for contract in entry.get("blocked_until_contracts", []) if contract not in closed]
     if missing:
-        print(f"[platform-golden] skip {program} blocked_until={','.join(missing)}", flush=True)
+        print(f"[platform-golden] skip {program} blocked_until_contracts={','.join(missing)}", flush=True)
         return {
             "label": program,
             "argv": [str(entry.get("command", ""))],
@@ -246,7 +246,7 @@ def run_platform_entry(entry: dict[str, Any], closed: set[str]) -> dict[str, Any
             "expected_exit_code": int(entry.get("expected_exit", 0)),
             "actual_exit_code": None,
             "duration_ms": 0.0,
-            "blocked_until": missing,
+            "blocked_until_contracts": missing,
         }
 
     started = time.perf_counter()

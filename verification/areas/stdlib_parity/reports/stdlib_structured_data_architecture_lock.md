@@ -1,4 +1,4 @@
-# `wave_psp_struct_0` Architecture Lock (Structured Data and Class-Surface Parity Expansion)
+# `stdlib_parity_struct_0` Architecture Lock (Structured Data and Class-Surface Parity Expansion)
 
 Phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`  
 Execution ledger: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`
@@ -36,15 +36,15 @@ Lock public contracts, permanent waivers, and CPython-family mapping for the str
 
 | CPython family | Module | Direction | Execution wave | Local fixture anchor |
 | --- | --- | --- | --- | --- |
-| `Lib/test/test_json/` | `json` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_json_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
-| `Lib/test/test_configparser.py` | `configparser` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
-| `Lib/test/test_csv.py` | `csv` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_csv_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
-| `Lib/test/test_collections.py` | `collections` | `adapted` | `wave_psp_struct_2` | `crates/sifr/tests/e2e/pass/ordered_collections.sifr`, `crates/sifr/tests/e2e/pass/counter_defaultdict_and_argparse.sifr` (new) |
-| `Lib/test/test_argparse.py` | `argparse` | `adapted` | `wave_psp_struct_2` | `crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`, `crates/sifr/tests/e2e/pass/counter_defaultdict_and_argparse.sifr` (new) |
-| `Lib/test/test_uuid.py` | `uuid` | `adapted` | `wave_psp_struct_3` | `crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr`, `crates/sifr/tests/e2e/pass/uuid_and_datetime.sifr` (new) |
-| `Lib/test/test_datetime.py` | `datetime` | `adapted` | `wave_psp_struct_3` | `crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr`, `crates/sifr/tests/e2e/pass/uuid_and_datetime.sifr` (new) |
-| `Lib/test/test_textwrap.py` | `textwrap` | `adapted` | `wave_psp_struct_4` | `crates/sifr/tests/e2e/pass/cpython_textwrap.sifr`, `crates/sifr/tests/e2e/pass/text_wrapping_and_html.sifr` (new) |
-| `Lib/test/test_html.py` | `html` | `adopted`/`adapted` | `wave_psp_struct_4` | `crates/sifr/tests/e2e/pass/stdlib_html.sifr`, `crates/sifr/tests/e2e/pass/text_wrapping_and_html.sifr` (new) |
+| `Lib/test/test_json/` | `json` | `adapted` | `stdlib_parity_struct_1` | `crates/sifr/tests/e2e/pass/cpython_json_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
+| `Lib/test/test_configparser.py` | `configparser` | `adapted` | `stdlib_parity_struct_1` | `crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
+| `Lib/test/test_csv.py` | `csv` | `adapted` | `stdlib_parity_struct_1` | `crates/sifr/tests/e2e/pass/cpython_csv_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
+| `Lib/test/test_collections.py` | `collections` | `adapted` | `stdlib_parity_struct_2` | `crates/sifr/tests/e2e/pass/ordered_collections.sifr`, `crates/sifr/tests/e2e/pass/counter_defaultdict_and_argparse.sifr` (new) |
+| `Lib/test/test_argparse.py` | `argparse` | `adapted` | `stdlib_parity_struct_2` | `crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`, `crates/sifr/tests/e2e/pass/counter_defaultdict_and_argparse.sifr` (new) |
+| `Lib/test/test_uuid.py` | `uuid` | `adapted` | `stdlib_parity_struct_3` | `crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr`, `crates/sifr/tests/e2e/pass/uuid_and_datetime.sifr` (new) |
+| `Lib/test/test_datetime.py` | `datetime` | `adapted` | `stdlib_parity_struct_3` | `crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr`, `crates/sifr/tests/e2e/pass/uuid_and_datetime.sifr` (new) |
+| `Lib/test/test_textwrap.py` | `textwrap` | `adapted` | `stdlib_parity_struct_4` | `crates/sifr/tests/e2e/pass/cpython_textwrap.sifr`, `crates/sifr/tests/e2e/pass/text_wrapping_and_html.sifr` (new) |
+| `Lib/test/test_html.py` | `html` | `adopted`/`adapted` | `stdlib_parity_struct_4` | `crates/sifr/tests/e2e/pass/stdlib_html.sifr`, `crates/sifr/tests/e2e/pass/text_wrapping_and_html.sifr` (new) |
 
 ## Architecture-Lock Validation Fixtures (Wave 0)
 

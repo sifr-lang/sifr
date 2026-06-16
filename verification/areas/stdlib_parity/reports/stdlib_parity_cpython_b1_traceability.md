@@ -1,4 +1,4 @@
-# `wave_psp_b1` CPython Traceability
+# `stdlib_parity_b1` CPython Traceability
 
 ## Reviewed upstream families
 
@@ -17,8 +17,8 @@
 
 | Surface | State | Rationale |
 | --- | --- | --- |
-| `Counter(**kwargs)` constructor form from `Lib/test/test_collections.py` | `unsupported` | `wave_psp_struct_2` closed mapping + keyword-iterable constructor parity for the bounded typed surface, but dynamic kwargs constructor overloading remains intentionally out of scope. |
-| `collections.defaultdict(..., default_factory=..., **kwargs)` dynamic keyword/class ecosystem | `intentional-diff` | `wave_psp_struct_2` promotes `defaultdict` to an explicit typed class (`default_factory: int`, typed methods), while dynamic keyword and broad class ecosystem parity remain intentionally bounded. |
+| `Counter(**kwargs)` constructor form from `Lib/test/test_collections.py` | `unsupported` | `stdlib_parity_struct_2` closed mapping + keyword-iterable constructor parity for the bounded typed surface, but dynamic kwargs constructor overloading remains intentionally out of scope. |
+| `collections.defaultdict(..., default_factory=..., **kwargs)` dynamic keyword/class ecosystem | `intentional-diff` | `stdlib_parity_struct_2` promotes `defaultdict` to an explicit typed class (`default_factory: int`, typed methods), while dynamic keyword and broad class ecosystem parity remain intentionally bounded. |
 | non-exported `heapq` private helpers `_heappush_max` / `_heappushpop_max` | `unsupported` | These private helpers are intentionally not part of the shipped compatibility surface in this wave; supported max-heap helpers remain `_heapify_max`, `_heappop_max`, and `_heapreplace_max`. |
 
 ## Waiver enforcement fixtures
@@ -29,7 +29,7 @@
 ## Structured/Class-Surface Continuation Closure (2026-03-18)
 
 - Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
-- Wave closure: `wave_psp_struct_2` broadens constructor/object-model parity for `collections`.
+- Wave closure: `stdlib_parity_struct_2` broadens constructor/object-model parity for `collections`.
 - Closed in continuation:
   - `Counter(iterable=...)` typed constructor form alongside mapping input.
   - explicit typed `defaultdict` class surface with deterministic missing-key initialization (`ensure`).

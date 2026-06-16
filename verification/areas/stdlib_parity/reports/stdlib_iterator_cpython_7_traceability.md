@@ -1,7 +1,7 @@
-# wave_psp_iter_fix_7 CPython Traceability
+# stdlib_parity_iter_fix_7 CPython Traceability
 
 Phase: `ad-hoc-canonical-iteration-model-and-lazy-parity-closure`
-Wave: `wave_psp_iter_fix_7` (user-defined iterable protocol participation)
+Wave: `stdlib_parity_iter_fix_7` (user-defined iterable protocol participation)
 
 ## Scope Closure
 

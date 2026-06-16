@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_3_downstream_contract_alignment
+# Reference: stdlib_parity_bytes_3_downstream_contract_alignment
 from sifr.io import exists
 from sifr.os import remove_file
 

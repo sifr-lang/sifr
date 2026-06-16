@@ -61,10 +61,10 @@ Validation so far:
 - `python3 verification/areas/performance/run_benchmarks.py --groups lsp-query --sample-scale smoke --json-out target/performance/m12_lsp_query_smoke.json` -> PASS, evidence `target/performance/evidence/bench-1780400215-529.json`
 - `python3 verification/areas/performance/check_budgets.py --results target/performance/m12_lsp_query_run.json --allow-subset` -> PASS
 - `python3 verification/areas/performance/check_budgets.py --results target/performance/m12_lsp_query_smoke.json --allow-subset` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py` -> PASS
 - `python3 verification/areas/developer_tooling/check_phase36_closeout.py --self-test` -> PASS
-- `python3 -m py_compile verification/areas/performance/lsp_query_bench.py verification/areas/performance/check_budgets.py verification/areas/performance/run_benchmarks.py verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
+- `python3 -m py_compile verification/areas/performance/lsp_query_bench.py verification/areas/performance/check_budgets.py verification/areas/performance/run_benchmarks.py verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS

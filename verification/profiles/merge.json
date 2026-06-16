@@ -74,8 +74,8 @@
       "area": "core_language",
       "suites": [
         "integer_dtype_contract",
-        "phase24_hir_analysis",
-        "phase25_cfg_flow",
+        "hir_analysis_contracts",
+        "cfg_flow_contracts",
         "syntax_parser_lexer_matrix"
       ],
       "resource_classes": [
@@ -190,7 +190,7 @@
       "area": "project_workspace",
       "suites": [
         "frontend_mode_parity",
-        "phase23_graph_isolation",
+        "project_graph_isolation",
         "baselines"
       ],
       "resource_classes": [
@@ -281,10 +281,10 @@
   "legacy_facade": {
     "matrix_suites": [
       "frontend_mode_parity",
-      "phase23_graph_isolation",
+      "project_graph_isolation",
       "integer_dtype_contract",
-      "phase24_hir_analysis",
-      "phase25_cfg_flow",
+      "hir_analysis_contracts",
+      "cfg_flow_contracts",
       "syntax_parser_lexer_matrix"
     ],
     "tooling_suites": [

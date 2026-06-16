@@ -76,8 +76,8 @@ Classifications:
 | CLI `--exclude` | supported | Match Ruff comma-delimited file-pattern override semantics for format file selection. |
 | CLI `--line-length` | supported | Match Ruff formatter override semantics and precedence. |
 | CLI `--preview` / `--no-preview` | supported | Match Ruff preview toggle behavior while keeping stable style default. |
-| CLI `--target-version` | not-exposed | Do not expose Python target-version semantics. Sifr has no formatter syntax-version flag in this phase; a future language-edition phase may add one explicitly. |
-| CLI `--extension` | not-applicable | Sifr formatter source kind is `.sifr` only in this phase; multiple source-kind mapping requires a later product decision. |
+| CLI `--target-version` | not-exposed | Do not expose Python target-version semantics. Sifr has no formatter syntax-version flag in the current contract; a future language-edition contract may add one explicitly. |
+| CLI `--extension` | not-applicable | Sifr formatter source kind is `.sifr` only in the current contract; multiple source-kind mapping requires a later product decision. |
 | Config discovery | adapted | Sifr canonical config is `sifr.toml`; Ruff config files are migration inputs only under the precedence rules below. |
 | Exclude/include and VCS ignores | adapted | Sifr file discovery must support formatter include/exclude settings, `.gitignore`, and explicit target overrides. |
 | Line length | supported | Map directly to Ruff `PyFormatOptions` line width. |
@@ -97,7 +97,7 @@ Classifications:
 | Editor setup and format-on-save | adapted | Neovim, Zed, Helix, Emacs, and VS Code assets/docs must expose formatting through `sifr lsp --stdio` and standard editor LSP formatting hooks. |
 | VS Code document formatting provider | adapted | The extension uses the Sifr LSP client document formatting provider and format-on-save settings; extension TypeScript owns no formatter. |
 | Formatter ecosystem checks | adapted | Add Sifr corpus checks inspired by Ruff ecosystem checks: idempotence, parser roundtrip, no panics, invalid-source diagnostics, comments/pragmas, config matrix, and performance budgets. |
-| Notebook formatting | not-applicable | Sifr has no notebook product surface in this phase. A later product phase must add this explicitly if needed. |
+| Notebook formatting | not-applicable | Sifr has no notebook product surface in the current contract. A later product contract must add this explicitly if needed. |
 | Import sorting | not-applicable | Ruff treats import sorting as lint/fix behavior, not formatting. Sifr format must not reorder imports. |
 
 Implementation must not add new unclassified formatter capability rows. If implementation discovers a Ruff formatter capability missing from this table, work stops for a reviewed planning update before code proceeds.

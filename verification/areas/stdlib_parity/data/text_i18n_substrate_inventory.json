@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "phase-complete",
+  "status": "contract-complete",
   "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
   "cpython_checkout": {
     "path": "../cpython",
@@ -9,43 +9,43 @@
   "production_surfaces": [
     {
       "surface": "sifr.encoding",
-      "owner_milestone": "milestone_text_i18n_1",
+      "owner_contract": "text_i18n_core_unicode",
       "terminal_state": "production-public",
       "stability": "stable-public-api"
     },
     {
       "surface": "sifr.io.open_text",
-      "owner_milestone": "milestone_text_i18n_1",
+      "owner_contract": "text_i18n_core_unicode",
       "terminal_state": "production-public",
       "stability": "stable-public-api"
     },
     {
       "surface": "open(..., encoding=..., errors=...)",
-      "owner_milestone": "milestone_text_i18n_1",
+      "owner_contract": "text_i18n_core_unicode",
       "terminal_state": "production-public",
       "stability": "compiler-known-intrinsic"
     },
     {
       "surface": "sifr.unicode",
-      "owner_milestone": "milestone_text_i18n_2",
+      "owner_contract": "text_i18n_normalization",
       "terminal_state": "production-public",
       "stability": "stable-public-api"
     },
     {
       "surface": "sifr.unicode segmentation",
-      "owner_milestone": "milestone_text_i18n_2_5",
+      "owner_contract": "text_i18n_normalization_bridge",
       "terminal_state": "production-public",
       "stability": "stable-public-api"
     },
     {
       "surface": "sifr.i18n locale formatting",
-      "owner_milestone": "milestone_text_i18n_3",
+      "owner_contract": "text_i18n_regex_locale",
       "terminal_state": "production-public",
       "stability": "stable-public-api"
     },
     {
       "surface": "sifr.i18n translation bundles",
-      "owner_milestone": "milestone_text_i18n_4",
+      "owner_contract": "text_i18n_formatting",
       "terminal_state": "production-public",
       "stability": "stable-public-api"
     }
@@ -53,35 +53,35 @@
   "unsupported_python_shaped_surfaces": [
     {
       "surface": "sifr.codecs",
-      "terminal_state": "deferred-to-phase-adapter",
+      "terminal_state": "deferred-to-adapter-contract",
       "stability": "compatibility-adapter",
       "suggestion": "sifr.encoding",
       "cpython_evidence": ["Lib/codecs.py", "Lib/test/test_codecs.py"]
     },
     {
       "surface": "sifr.encodings",
-      "terminal_state": "deferred-to-phase-adapter",
+      "terminal_state": "deferred-to-adapter-contract",
       "stability": "compatibility-adapter",
       "suggestion": "sifr.encoding",
       "cpython_evidence": ["Lib/encodings/*.py", "Lib/encodings/aliases.py"]
     },
     {
       "surface": "sifr.unicodedata",
-      "terminal_state": "deferred-to-phase-adapter",
+      "terminal_state": "deferred-to-adapter-contract",
       "stability": "compatibility-adapter",
       "suggestion": "sifr.unicode",
       "cpython_evidence": ["Doc/library/unicodedata.rst", "Lib/test/test_unicodedata.py"]
     },
     {
       "surface": "sifr.locale",
-      "terminal_state": "deferred-to-phase-adapter",
+      "terminal_state": "deferred-to-adapter-contract",
       "stability": "compatibility-adapter",
       "suggestion": "sifr.i18n",
       "cpython_evidence": ["Lib/locale.py", "Lib/test/test_locale.py"]
     },
     {
       "surface": "sifr.gettext",
-      "terminal_state": "deferred-to-phase-adapter",
+      "terminal_state": "deferred-to-adapter-contract",
       "stability": "compatibility-adapter",
       "suggestion": "sifr.i18n",
       "cpython_evidence": ["Lib/gettext.py", "Lib/test/test_gettext.py"]
@@ -105,21 +105,21 @@
       "terminal_state": "unsupported-with-diagnostic",
       "stability": "compiler-known-intrinsic",
       "cpython_evidence": ["Lib/codecs.py", "Lib/test/test_codecs.py::CodecsModuleTest"],
-      "revisit_rule": "Only a future adapter phase may revisit registry mutation, and only over the static Sifr registry without process-global mutation."
+      "revisit_rule": "Only a future adapter contract may revisit registry mutation, and only over the static Sifr registry without process-global mutation."
     },
     {
       "surface": "public encodings.* module parity",
-      "terminal_state": "deferred-to-phase-adapter",
+      "terminal_state": "deferred-to-adapter-contract",
       "stability": "compatibility-adapter",
       "cpython_evidence": ["Lib/encodings/*.py", "Lib/encodings/aliases.py"],
-      "revisit_rule": "Future adapter phase only; Tier 2/CJK requires separate dependency/data-size issue."
+      "revisit_rule": "Future adapter contract only; Tier 2/CJK requires separate dependency/data-size issue."
     },
     {
       "surface": "CPython codec C APIs",
       "terminal_state": "rejected",
       "stability": "test-only-harness",
       "cpython_evidence": ["Lib/test/test_capi/test_codecs.py", "Modules/_codecsmodule.c"],
-      "revisit_rule": "No CPython extension C ABI in this phase."
+      "revisit_rule": "No CPython extension C ABI in this contract."
     },
     {
       "surface": "locale.setlocale/localeconv/strcoll/strxfrm",
@@ -216,10 +216,10 @@
       "version": "0.8.35",
       "license": "(Apache-2.0 OR MIT) AND BSD-3-Clause",
       "rust_version": "1.36",
-      "owner_milestone": "milestone_text_i18n_1",
+      "owner_contract": "text_i18n_core_unicode",
       "sifr_abstraction": "sifr.encoding static registry and Encoder/Decoder wrappers",
       "unicode_alignment": "WHATWG encoding data; not a Sifr Unicode table source",
-      "panic_unsafe_audit": "M1 scans wrappers and emitted code for user-byte-dependent unwrap/expect/panic",
+      "panic_unsafe_audit": "core Unicode scans wrappers and emitted code for user-byte-dependent unwrap/expect/panic",
       "typed_error_mapping": "DecodeError, EncodeError, EncodeOutcome, DecodeOutcome",
       "test_strategy": "Tier 0/Tier 1 alias, BOM, malformed byte, incremental, and handler fixtures",
       "supply_chain_signal": "Gecko-oriented WHATWG-compatible Rust crate"
@@ -229,10 +229,10 @@
       "version": "0.1.25",
       "license": "MIT OR Apache-2.0",
       "rust_version": "1.36",
-      "owner_milestone": "milestone_text_i18n_2",
+      "owner_contract": "text_i18n_normalization",
       "sifr_abstraction": "sifr.unicode.normalize/is_normalized",
-      "unicode_alignment": "M2 records exact crate data version; skew blocks release",
-      "panic_unsafe_audit": "M2 wrapper and generated table panic scan",
+      "unicode_alignment": "normalization records exact crate data version; skew blocks release",
+      "panic_unsafe_audit": "normalization wrapper and generated table panic scan",
       "typed_error_mapping": "UnicodeDataError",
       "test_strategy": "CPython/Unicode normalization fixtures",
       "supply_chain_signal": "unicode-rs family"
@@ -242,9 +242,9 @@
       "version": "1.13.3",
       "license": "MIT OR Apache-2.0",
       "rust_version": "1.85.0",
-      "owner_milestone": "milestone_text_i18n_2_5",
+      "owner_contract": "text_i18n_normalization_bridge",
       "sifr_abstraction": "sifr.unicode grapheme/word iterators and boundaries",
-      "unicode_alignment": "M2.5 records crate data version; skew with M2 blocks release",
+      "unicode_alignment": "normalization bridge records crate data version; skew with normalization blocks release",
       "panic_unsafe_audit": "Boundary-safe slicing and emitted-code panic scan",
       "typed_error_mapping": "UnicodeDataError for construction/table failures if any",
       "test_strategy": "Combining mark, emoji, regional indicator, whitespace, punctuation fixtures",
@@ -255,10 +255,10 @@
       "version": "2.2.0",
       "license": "Unicode-3.0",
       "rust_version": "1.86",
-      "owner_milestone": "milestone_text_i18n_3",
+      "owner_contract": "text_i18n_regex_locale",
       "sifr_abstraction": "sifr.i18n.LocaleId parser, canonicalizer, and likely-subtag helpers",
       "unicode_alignment": "ICU4X 2.2 locale data family",
-      "panic_unsafe_audit": "M3 locale-string panic scan; user strings map to LocaleIdError",
+      "panic_unsafe_audit": "locale-string panic scan; user strings map to LocaleIdError",
       "typed_error_mapping": "LocaleIdError",
       "test_strategy": "Deterministic BCP47 parse/canonicalization fixtures",
       "supply_chain_signal": "Unicode/ICU4X official project"
@@ -268,10 +268,10 @@
       "version": "2.2.0",
       "license": "Unicode-3.0",
       "rust_version": "1.86",
-      "owner_milestone": "milestone_text_i18n_3",
+      "owner_contract": "text_i18n_regex_locale",
       "sifr_abstraction": "sifr.i18n.NumberFormatter",
       "unicode_alignment": "ICU4X 2.2 compiled data",
-      "panic_unsafe_audit": "M3 formatter construction/value panic scan",
+      "panic_unsafe_audit": "formatter construction/value panic scan",
       "typed_error_mapping": "FormatError",
       "test_strategy": "Stable-locale number formatting fixtures",
       "supply_chain_signal": "Unicode/ICU4X official project"
@@ -281,10 +281,10 @@
       "version": "2.2.0",
       "license": "Unicode-3.0",
       "rust_version": "1.86",
-      "owner_milestone": "milestone_text_i18n_3",
+      "owner_contract": "text_i18n_regex_locale",
       "sifr_abstraction": "sifr.i18n.DateTimeFormatter",
       "unicode_alignment": "ICU4X 2.2 compiled data",
-      "panic_unsafe_audit": "M3 formatter construction/input panic scan",
+      "panic_unsafe_audit": "formatter construction/input panic scan",
       "typed_error_mapping": "FormatError",
       "test_strategy": "Fixed date/time fixtures across selected locales",
       "supply_chain_signal": "Unicode/ICU4X official project"
@@ -294,10 +294,10 @@
       "version": "2.2.0",
       "license": "Unicode-3.0",
       "rust_version": "1.86",
-      "owner_milestone": "milestone_text_i18n_3",
+      "owner_contract": "text_i18n_regex_locale",
       "sifr_abstraction": "sifr.i18n.PluralRules and translation plural lookup",
       "unicode_alignment": "ICU4X 2.2 compiled data",
-      "panic_unsafe_audit": "M3/M4 plural selection panic scan",
+      "panic_unsafe_audit": "plural selection panic scan",
       "typed_error_mapping": "PluralRulesError, TranslationError",
       "test_strategy": "CLDR plural category and catalog plural fixtures",
       "supply_chain_signal": "Unicode/ICU4X official project"
@@ -307,16 +307,16 @@
       "version": "2.2.0",
       "license": "Unicode-3.0",
       "rust_version": "1.86",
-      "owner_milestone": "milestone_text_i18n_3",
+      "owner_contract": "text_i18n_regex_locale",
       "sifr_abstraction": "sifr.i18n.Collator",
       "unicode_alignment": "ICU4X 2.2 compiled data",
-      "panic_unsafe_audit": "M3 comparator construction/string panic scan",
+      "panic_unsafe_audit": "comparator construction/string panic scan",
       "typed_error_mapping": "FormatError or dedicated collation construction error",
       "test_strategy": "Locale-specific deterministic ordering fixtures",
       "supply_chain_signal": "Unicode/ICU4X official project"
     }
   ],
-  "m5_closure_evidence": {
+  "text_i18n_closeout_evidence": {
     "public_docs": [
       "docs/text_i18n.md",
       "docs/stdlib_imports.md"
@@ -330,7 +330,7 @@
     ],
     "dependency_snapshots": [
       "verification/areas/stdlib_parity/data/text_i18n_dependency_snapshots.json",
-      "crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_phase_combinations"
+      "crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_feature_combinations"
     ],
     "generated_code_quality": [
       "verification/areas/generated_code_quality/data/corpus_manifest.json"
@@ -339,7 +339,7 @@
       "verification/areas/core_language/data/create_pr_e2e_manifest.json"
     ],
     "traceability": [
-      "verification/areas/stdlib_parity/reports/text_i18n_m5_traceability.md"
+      "verification/areas/stdlib_parity/reports/text_i18n_io_traceability.md"
     ]
   },
   "no_global_state_policy": {

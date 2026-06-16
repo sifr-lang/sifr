@@ -23,11 +23,11 @@
       ]
     },
     {
-      "name": "phase23_graph_isolation",
+      "name": "project_graph_isolation",
       "kind": "adapter",
       "cases": [
         {
-          "id": "phase23_graph_isolation",
+          "id": "project_graph_isolation",
           "entry": "verification/areas/project_workspace/data/validation_contracts/manifest.json",
           "command": "contract-matrix",
           "expect_exit_code": 0,

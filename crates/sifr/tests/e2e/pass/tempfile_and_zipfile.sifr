@@ -1,4 +1,4 @@
-# Reference: phase_psp_runtime_2_tempfile_zipfile_lifecycle
+# Reference: stdlib_parity_runtime_2_tempfile_zipfile_lifecycle
 from sifr.tempfile import NamedTemporaryFile, TemporaryDirectory
 from sifr.zipfile import ZipFile, ZipReadHandle, is_zipfile, ZIP_STORED, ZIP_DEFLATED
 from sifr.io import exists

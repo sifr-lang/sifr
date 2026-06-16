@@ -7,7 +7,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
-# Wired early by milestone_diag_1; compiler emission migration starts in milestone_diag_4a.
+# Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 sifr_diagnostics = { workspace = true }
 sifr_ir = { workspace = true }
 sifr_stdlib = { workspace = true }

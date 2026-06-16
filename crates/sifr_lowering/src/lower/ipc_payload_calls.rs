@@ -76,7 +76,7 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
             if let Some(non_none) = option_payload_member(members) {
                 non_ipc_serializable_reason_inner(non_none.resolve_alias(), visiting)
             } else {
-                Some("IPC payload unions are limited to Option[T] in this milestone".to_string())
+                Some("IPC payload unions are limited to Option[T] in the current IPC payload contract".to_string())
             }
         }
         Type::Alias { body, .. } => {

@@ -1,4 +1,4 @@
-# Reference: phase_psp_struct_0_counter_kwargs_constructor_unsupported
+# Reference: stdlib_parity_struct_0_counter_kwargs_constructor_unsupported
 from sifr.collections import Counter
 
 

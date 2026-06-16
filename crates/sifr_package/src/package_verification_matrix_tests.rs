@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 #[test]
-fn phase37_fixture_matrix_covers_required_closeout_categories() {
+fn package_fixture_matrix_covers_required_categories() {
     let matrix = fixture_matrix();
     let fixtures = matrix["fixtures"]
         .as_array()
@@ -62,11 +62,11 @@ fn closeout_docs_lock_cargo_backed_boundary_and_future_uv_interop() {
     let traceability = std::fs::read_to_string(root.join("crates/sifr_package/TRACEABILITY.md"))
         .expect("read traceability");
     assert!(traceability.contains("Explicit Non-Port Decisions"));
-    assert!(traceability.contains("phase37_e2e_fixture_matrix.json"));
+    assert!(traceability.contains("package_e2e_fixture_matrix.json"));
 }
 
 #[test]
-fn phase37_demo_subrepos_cover_required_org_repos() {
+fn package_demo_subrepos_cover_required_org_repos() {
     let manifest = demo_repository_manifest();
     let repositories = manifest["repositories"]
         .as_array()
@@ -115,14 +115,14 @@ fn phase37_demo_subrepos_cover_required_org_repos() {
 
 fn fixture_matrix() -> Value {
     let path = repo_root()
-        .join("verification/areas/package_management/data/phase37_e2e_fixture_matrix.json");
+        .join("verification/areas/package_management/data/package_e2e_fixture_matrix.json");
     let source = std::fs::read_to_string(path).expect("read fixture matrix");
     serde_json::from_str(&source).expect("parse fixture matrix")
 }
 
 fn demo_repository_manifest() -> Value {
     let path = repo_root()
-        .join("verification/areas/package_management/data/phase37_demo_repositories.json");
+        .join("verification/areas/package_management/data/package_demo_repositories.json");
     let source = std::fs::read_to_string(path).expect("read demo repository manifest");
     serde_json::from_str(&source).expect("parse demo repository manifest")
 }

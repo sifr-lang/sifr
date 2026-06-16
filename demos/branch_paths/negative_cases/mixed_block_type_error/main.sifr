@@ -1,6 +1,6 @@
-# Reference: m24_5
+# Reference: hir_analysis_contract
 # Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_5 negative case
+# hir analysis negative case
 # Mixed block forms with reachable return mismatch must fail.
 
 def bad(flag: bool) -> int:

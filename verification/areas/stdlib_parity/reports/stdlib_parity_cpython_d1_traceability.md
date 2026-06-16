@@ -1,4 +1,4 @@
-# `wave_psp_d1` CPython Traceability
+# `stdlib_parity_d1` CPython Traceability
 
 ## Reviewed upstream families
 

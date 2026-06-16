@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Phase 36 completion-quality fixtures and regression thresholds."""
+"""Validate editor tooling completion-quality fixtures and regression thresholds."""
 
 from __future__ import annotations
 

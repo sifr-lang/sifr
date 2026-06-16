@@ -70,8 +70,8 @@ M8 focused validation so far:
 - `cargo test -p sifr_frontend -p sifr_analysis -p sifr_lsp`
 - `python3 scripts/check_file_size_guardrails.py`
 - `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
 - `cargo test -p sifr -- --skip test_e2e_pass`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report

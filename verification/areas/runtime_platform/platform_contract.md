@@ -1,27 +1,27 @@
 # Production Stdlib Platform Contract
 
-Status: approved shared baseline for split production-stdlib substrate phases.
+Status: approved shared baseline for split production-stdlib substrate contracts.
 
-This contract is shared by the text/i18n, concurrency/runtime, and network/HTTP production-stdlib substrate phases. It is not a CPython compatibility layer. It defines native Sifr platform rules for state vocabulary, ownership, cancellation, backpressure, typed error nesting, observability, host support, security/resource ownership, and executable cross-phase golden fixtures.
+This contract is shared by the text/i18n, concurrency/runtime, and network/HTTP production-stdlib substrate contracts. It is not a CPython compatibility layer. It defines native Sifr platform rules for state vocabulary, ownership, cancellation, backpressure, typed error nesting, observability, host support, security/resource ownership, and executable cross-contract golden fixtures.
 
 ## Terminal States
 
-Every phase inventory entry must use one terminal state:
+Every contract inventory entry must use one terminal state:
 
 | State | Meaning |
 | --- | --- |
 | `production-public` | Stable recommended Sifr API for user code. |
-| `production-substrate` | Stable substrate consumed by public APIs or later phases. |
+| `production-substrate` | Stable substrate consumed by public APIs or later contracts. |
 | `compat-adapter` | Thin adapter over production substrate with proven migration value. |
 | `internal-only` | Implementation detail hidden from stable imports. |
 | `test-only-harness` | Fixture or harness code unavailable as user API. |
-| `deferred-to-phase-X` | Explicitly deferred to a named phase or issue. |
-| `blocked-on-phase-X` | Blocked until a named provider milestone closes. |
+| `deferred-to-future-contract` | Explicitly deferred to a named contract or issue. |
+| `blocked-on-contract` | Blocked until a named provider contract closes. |
 | `host-limited` | Supported only on named hosts with documented behavior and tests. |
 | `unsupported-with-diagnostic` | Unsupported and must produce a stable diagnostic when referenced. |
 | `rejected` | Intentionally out of product scope with rationale and revisit rule if any. |
 
-Reference evidence and test families use `mined-as-substrate-fixture`, `adapted-for-sifr-api`, `compat-adapter-deferred`, `blocked-on-phase-X`, `external-signal`, `waived-with-rationale`, or `rejected`.
+Reference evidence and test families use `mined-as-substrate-fixture`, `adapted-for-sifr-api`, `compat-adapter-deferred`, `blocked-on-contract`, `external-signal`, `waived-with-rationale`, or `rejected`.
 
 Stable or semi-stable surfaces must also declare one stability level: `stable-public-api`, `stable-production-substrate`, `unstable-internal-substrate`, `compiler-known-intrinsic`, `compatibility-adapter`, or `test-only-harness`.
 
@@ -31,10 +31,10 @@ Stable or semi-stable surfaces must also declare one stability level: `stable-pu
 | --- | --- |
 | Text values | Always valid Unicode scalar text; arbitrary bytes never become text without explicit decoding. |
 | Bytes, HTTP bodies, subprocess pipes, and IPC payloads | Owned by default. Borrowing across async/task/process boundaries requires compiler proof. |
-| TCP streams, TLS streams, HTTP body streams, subprocess pipes, and text streams | Linear resources with explicit close/shutdown/drop behavior; double-close and use-after-close are diagnostics or typed errors. TCP/TLS full-duplex use requires owned split halves unless a future phase proves a borrowed lifetime-safe design. |
+| TCP streams, TLS streams, HTTP body streams, subprocess pipes, and text streams | Linear resources with explicit close/shutdown/drop behavior; double-close and use-after-close are diagnostics or typed errors. TCP/TLS full-duplex use requires owned split halves unless a future contract proves a borrowed lifetime-safe design. |
 | Incremental codecs | Unique mutable state; no concurrent aliasing or hidden shared mutation. |
 | Executor futures and task handles | Must be observed, joined, cancelled, or explicitly consumed; unobserved failure is diagnosed. |
-| Task, thread, process, and IPC boundary captures | Must satisfy the owning phase's sendability/shareability or IPC-serializability rules before codegen. |
+| Task, thread, process, and IPC boundary captures | Must satisfy the owning contract's sendability/shareability or IPC-serializability rules before codegen. |
 
 ## No Global State
 
@@ -52,13 +52,13 @@ Network/HTTP cancellation, timeout, shutdown, backpressure, offload, and diagnos
 
 ## Observability
 
-Structured platform events use shared fields: `sifr.phase`, `sifr.operation`, `sifr.correlation_id`, `sifr.task_id`, `sifr.resource_id`, `sifr.host`, `sifr.error.kind`, `sifr.error.cause`, `sifr.blocked_on`, and `sifr.duration_ms`.
+Structured platform events use shared fields: `sifr.contract`, `sifr.operation`, `sifr.correlation_id`, `sifr.task_id`, `sifr.resource_id`, `sifr.host`, `sifr.error.kind`, `sifr.error.cause`, `sifr.blocked_on`, and `sifr.duration_ms`.
 
 Redaction is required for URLs with credentials, headers, cookies, request/response bodies, certificate fields, subprocess command lines, environment variables, IPC payloads, locale data paths, and translation catalog contents.
 
 ## Security And Resource Ownership
 
-| Concern | Owning phase |
+| Concern | Owning contract |
 | --- | --- |
 | Codec amplification and malformed byte sequences | text/i18n |
 | Malicious `.mo` catalog, plural expression, and translation payload handling | text/i18n |
@@ -69,15 +69,15 @@ Redaction is required for URLs with credentials, headers, cookies, request/respo
 | Sendability/shareability across task, thread, process, and IPC boundaries | concurrency/runtime |
 | Structured signal shutdown and process termination escalation | concurrency/runtime |
 | Buffer/body size limits, parser DoS input, HTTP flow control, TLS verification, headers, and smuggling | network/HTTP |
-| Log redaction for URLs, headers, bodies, cookies, certificates, subprocess commands, env, and catalogs | shared contract with owning phase-specific fields |
+| Log redaction for URLs, headers, bodies, cookies, certificates, subprocess commands, env, and catalogs | shared contract with owning contract-specific fields |
 
 ## Golden Fixtures
 
-Executable platform fixtures live under `verification/areas/runtime_platform/golden` and are declared in `verification/areas/runtime_platform/golden/manifest.json`. `uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-golden` skips entries whose `blocked_until` milestones are not listed in `SIFR_PLATFORM_CLOSED_MILESTONES`; unblocked entries must satisfy their exit code and output expectations.
+Executable platform fixtures live under `verification/areas/runtime_platform/golden` and are declared in `verification/areas/runtime_platform/golden/manifest.json`. `uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-golden` skips entries whose `blocked_until_contracts` contracts are not listed in `SIFR_PLATFORM_CLOSED_CONTRACTS`; unblocked entries must satisfy their exit code and output expectations.
 
-Text/i18n owns the binary file I/O prerequisite fixture, unsupported CPython import diagnostic fixture, and text-dependent blocked entries. Later phases must consume this substrate instead of adding local encoding, Unicode, locale, or fallback decoder behavior.
+Text/i18n owns the binary file I/O prerequisite fixture, unsupported CPython import diagnostic fixture, and text-dependent blocked entries. Later contracts must consume this substrate instead of adding local encoding, Unicode, locale, or fallback decoder behavior.
 
-Network/HTTP owns the unsupported CPython network import fixture, loopback-only transport fixtures, and HTTP body text fixtures that remain blocked until the required text/i18n and network milestones close.
+Network/HTTP owns the unsupported CPython network import fixture, loopback-only transport fixtures, and HTTP body text fixtures that remain blocked until the required text/i18n and network contracts close.
 
 ## Sanitizer And Model Lanes
 

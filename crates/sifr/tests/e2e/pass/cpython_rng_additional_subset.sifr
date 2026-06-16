@@ -362,4 +362,4 @@ def main() -> None:
     check_statistics_grouped_cases()
     check_textwrap_sentence_cases()
     check_html_escape_cases()
-    assert str("cpython_rng_phase_additional_subset: pass") == "cpython_rng_phase_additional_subset: pass"
+    assert str("cpython_rng_additional_subset: pass") == "cpython_rng_additional_subset: pass"

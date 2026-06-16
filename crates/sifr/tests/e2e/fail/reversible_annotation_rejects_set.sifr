@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_1_reversible_annotation_rejects_set
+# Reference: stdlib_parity_iter_fix_1_reversible_annotation_rejects_set
 # expect-error: SIFR-TYPE-0002
 def consume(xs: Reversible[int]) -> int:
     rev: Iterator[int] = reversed(xs)

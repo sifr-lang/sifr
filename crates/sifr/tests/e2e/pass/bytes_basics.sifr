@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_1_core_type_support
+# Reference: stdlib_parity_bytes_1_core_type_support
 def sum_bytes(data: bytes) -> int:
     total: int = 0
     for value in data:

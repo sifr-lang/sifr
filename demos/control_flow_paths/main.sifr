@@ -1,6 +1,6 @@
-# Reference: m25_5
+# Reference: cfg_flow_contract
 # Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_5 cfg flow activation regression matrix demo
+# cfg flow activation regression matrix demo
 # Covers nested branching, loop exits, early return/raise, and unreachable tails.
 
 def evaluate(seed: int) -> int:
@@ -35,7 +35,7 @@ def test_cfg_flow_matrix():
     assert unreachable_tail() == 9
 
 def main():
-    print('m25_5 cfg flow activation regression matrix demo:')
+    print('cfg flow activation regression matrix demo:')
     print(safe(8))
     print(safe(3))
     print(unreachable_tail())

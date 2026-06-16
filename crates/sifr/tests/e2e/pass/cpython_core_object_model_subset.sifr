@@ -1,4 +1,4 @@
-# Adapted CPython core object-model subset for wave_psp_a2 list/dict/set/tuple/str parity
+# Adapted CPython core object-model subset for stdlib_parity_a2 list/dict/set/tuple/str parity
 from sifr.test import assert_bool_vector_eq
 
 

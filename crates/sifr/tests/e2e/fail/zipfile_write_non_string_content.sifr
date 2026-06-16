@@ -1,4 +1,4 @@
-# Reference: phase_psp_d1_zipfile_write_non_string_content
+# Reference: stdlib_parity_d1_zipfile_write_non_string_content
 from sifr.zipfile import ZipFile
 
 

@@ -1,6 +1,6 @@
-# wave_psp_runtime_4 CPython Traceability Matrix
+# stdlib_parity_runtime_4 CPython Traceability Matrix
 
-Wave: `wave_psp_runtime_4`
+Wave: `stdlib_parity_runtime_4`
 
 Status: superseded by `milestone_concurrency_runtime_0a`.
 

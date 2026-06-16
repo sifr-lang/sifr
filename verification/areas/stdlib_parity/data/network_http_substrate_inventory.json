@@ -9,28 +9,28 @@
   "production_surfaces": [
     {
       "surface": "sifr.net",
-      "owner_milestone": "milestone_network_http_1",
+      "owner_contract": "network_http_async_network",
       "terminal_state": "production-public",
       "stability": "stable-public-api",
       "notes": "Async TCP, DNS/address resolution, stream ownership, split halves, half-close, close, limits, typed errors."
     },
     {
       "surface": "sifr.tls",
-      "owner_milestone": "milestone_network_http_2",
+      "owner_contract": "network_http_tls",
       "terminal_state": "production-public",
       "stability": "stable-public-api",
       "notes": "Rustls-backed TLS configs and async streams with safe verification defaults, mTLS, SNI, ALPN, and typed errors."
     },
     {
       "surface": "sifr.url",
-      "owner_milestone": "milestone_network_http_3",
+      "owner_contract": "network_http_url_header_cookie",
       "terminal_state": "production-public",
       "stability": "stable-public-api",
-      "notes": "Typed URL/query/percent primitives; non-UTF-8 and Unicode/IDNA behavior blocked on text/i18n provider milestones."
+      "notes": "Typed URL/query/percent primitives; non-UTF-8 and Unicode/IDNA behavior blocked on text/i18n provider contracts."
     },
     {
       "surface": "sifr.http protocol substrate",
-      "owner_milestone": "milestone_network_http_3/milestone_network_http_4",
+      "owner_contract": "network_http_url_header_cookie/network_http_http_transport",
       "terminal_state": "production-substrate",
       "stability": "stable-production-substrate",
       "notes": "Method, status, version, headers, request/response heads, body streams, typed HTTP errors, and transport substrate."
@@ -39,9 +39,9 @@
   "deferred_or_rejected_surfaces": [
     {
       "surface": "sifr.net.UdpSocket",
-      "terminal_state": "deferred-to-phase-X",
+      "terminal_state": "deferred-to-future-contract",
       "replacement": "TCP/TLS/HTTP loopback substrate",
-      "rationale": "No named near-term production datagram consumer plus fixture-insufficiency rationale was recorded in M0.",
+      "rationale": "No named near-term production datagram consumer plus fixture-insufficiency rationale was recorded in the baseline contract.",
       "revisit_rule": "A future issue must name the production consumer and prove TCP/TLS/HTTP fixtures are insufficient."
     },
     {
@@ -69,39 +69,39 @@
       "surface": "sifr.urllib.*",
       "terminal_state": "unsupported-with-diagnostic",
       "replacement": "sifr.url",
-      "rationale": "URL parsing/building is typed; opener/request policy belongs to the future HTTP client phase.",
+      "rationale": "URL parsing/building is typed; opener/request policy belongs to the future HTTP client contract.",
       "revisit_rule": "Future client APIs must be Sifr-native."
     },
     {
       "surface": "sifr.http.client/sifr.http.server/socketserver",
       "terminal_state": "unsupported-with-diagnostic",
-      "replacement": "sifr.http substrate plus Phase 41/future client",
+      "replacement": "sifr.http substrate plus future HTTP product/future client",
       "rationale": "CPython-shaped client/server products are not substrate and handler subclasses are rejected.",
-      "revisit_rule": "Phase 41 and the future HTTP client phase own public product APIs."
+      "revisit_rule": "future HTTP product and the future HTTP client contract own public product APIs."
     },
     {
       "surface": "HTTP/3/QUIC",
-      "terminal_state": "deferred-to-phase-X",
-      "replacement": "future transport phase",
+      "terminal_state": "deferred-to-future-contract",
+      "replacement": "future transport contract",
       "rationale": "QUIC runtime/security strategy is outside this substrate.",
       "revisit_rule": "Open a transport issue after HTTP/2 substrate closes."
     }
   ],
-  "m0_decisions": [
+  "baseline_decisions": [
     {
       "decision": "serving_scale",
-      "outcome": "single-runtime-worker per process for this phase; multi-core throughput follow-up owns scale strategy",
+      "outcome": "single-runtime-worker per process for this contract; multi-core throughput follow-up owns scale strategy",
       "evidence": "issues/ad-hoc-network-http-serving-scale-follow-up.md"
     },
     {
       "decision": "udp",
-      "outcome": "deferred-to-phase-X",
+      "outcome": "deferred-to-future-contract",
       "evidence": "No named production consumer and insufficiency rationale recorded."
     },
     {
       "decision": "http_namespace",
       "outcome": "sifr.http owns substrate types; sifr.http.core is rejected",
-      "evidence": "Avoids duplicate stable namespace layers for Phase 41 and HTTP client handoff."
+      "evidence": "Avoids duplicate stable namespace layers for future HTTP product and HTTP client handoff."
     },
     {
       "decision": "byte_buffer",
@@ -206,52 +206,52 @@
   "text_i18n_dependencies": [
     {
       "surface": "HTTP body text helpers",
-      "state": "blocked-on-text-i18n-m1"
+      "state": "blocked-on-text-i18n-core-unicode"
     },
     {
       "surface": "URL non-UTF-8 encodings",
-      "state": "blocked-on-text-i18n-m1"
+      "state": "blocked-on-text-i18n-core-unicode"
     },
     {
       "surface": "Unicode/IDNA host canonicalization",
-      "state": "blocked-on-text-i18n-m2"
+      "state": "blocked-on-text-i18n-normalization"
     },
     {
       "surface": "locale-sensitive diagnostics",
-      "state": "blocked-on-text-i18n-m3"
+      "state": "blocked-on-text-i18n-regex-locale"
     }
   ],
   "concurrency_runtime_dependencies": [
     {
       "surface": "network/TLS/HTTP cancellation and deadline handling",
-      "state": "blocked-on-concurrency-runtime-m1"
+      "state": "blocked-on-concurrency-runtime-structured-tasks"
     },
     {
       "surface": "stream backpressure",
-      "state": "blocked-on-concurrency-runtime-m2"
+      "state": "blocked-on-concurrency-runtime-sync-primitives"
     },
     {
       "surface": "blocking helper offload",
-      "state": "blocked-on-concurrency-runtime-m3"
+      "state": "blocked-on-concurrency-runtime-offload"
     },
     {
       "surface": "graceful shutdown and diagnostics",
-      "state": "blocked-on-concurrency-runtime-m5"
+      "state": "blocked-on-concurrency-runtime-shutdown"
     },
     {
       "surface": "future process-worker serving scale",
-      "state": "blocked-on-concurrency-runtime-m6"
+      "state": "blocked-on-concurrency-runtime-typed-ipc"
     }
   ],
   "evidence_matrix": "verification/areas/stdlib_parity/reports/network_http_cpython_evidence_matrix.md",
   "workload_database": "verification/areas/stdlib_parity/reports/network_http_workload_database.md",
   "dependency_snapshots": "verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json",
   "dependency_audit": "verification/areas/stdlib_parity/reports/network_http_dependency_audit.md",
-  "milestone_backlog": [
-    "verification/areas/stdlib_parity/reports/network_http_m1_async_network_traceability.md",
-    "verification/areas/stdlib_parity/reports/network_http_m2_tls_traceability.md",
-    "verification/areas/stdlib_parity/reports/network_http_m3_url_header_cookie_traceability.md",
-    "verification/areas/stdlib_parity/reports/network_http_m4_http_transport_traceability.md",
-    "verification/areas/stdlib_parity/reports/network_http_m5_handoff_traceability.md"
+  "contract_backlog": [
+    "verification/areas/stdlib_parity/reports/network_http_async_network_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_tls_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_url_header_cookie_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_http_transport_traceability.md",
+    "verification/areas/stdlib_parity/reports/network_http_handoff_traceability.md"
   ]
 }

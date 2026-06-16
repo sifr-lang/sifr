@@ -21,7 +21,7 @@ INVENTORY_JSON = AREA_ROOT / "data/concurrency_runtime_substrate_inventory.json"
 INVENTORY_MD = AREA_ROOT / "reports/concurrency_runtime_substrate_inventory.md"
 EVIDENCE_MD = AREA_ROOT / "reports/concurrency_runtime_cpython_evidence_matrix.md"
 WORKLOAD_MD = AREA_ROOT / "reports/concurrency_runtime_workload_database.md"
-M0_TRACEABILITY_MD = AREA_ROOT / "reports/concurrency_runtime_m0_traceability.md"
+BASELINE_TRACEABILITY_MD = AREA_ROOT / "reports/concurrency_runtime_baseline_traceability.md"
 
 
 def display_path(path: Path) -> str:
@@ -86,7 +86,7 @@ SOURCE_GROUPS: dict[str, list[str]] = {
 PRODUCTION_SURFACES: list[dict[str, str]] = [
     {
         "surface": "sifr.task.TaskHandle[T, E]",
-        "owner_milestone": "milestone_concurrency_runtime_1",
+        "owner_contract": "concurrency_runtime_structured_tasks",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -94,15 +94,15 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.task.TaskGroup[E]",
-        "owner_milestone": "milestone_concurrency_runtime_1",
+        "owner_contract": "concurrency_runtime_structured_tasks",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Canonical mixed structured-runtime owner; no distinct Scope is introduced in M0.",
+        "notes": "Canonical mixed structured-runtime owner; no distinct Scope is introduced in baseline contract.",
     },
     {
         "surface": "sifr.task.spawn_scoped/sleep/timeout/deadline/cancel_scope/join_all/race/select",
-        "owner_milestone": "milestone_concurrency_runtime_1",
+        "owner_contract": "concurrency_runtime_structured_tasks",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -110,7 +110,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.sync channels, locks, semaphores, events",
-        "owner_milestone": "milestone_concurrency_runtime_2",
+        "owner_contract": "concurrency_runtime_sync_primitives",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -118,7 +118,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.runtime spawn_blocking/spawn_cpu/JoinSet",
-        "owner_milestone": "milestone_concurrency_runtime_3",
+        "owner_contract": "concurrency_runtime_offload",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -126,7 +126,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.parallel map/try_map/Pool/PoolConfig",
-        "owner_milestone": "milestone_concurrency_runtime_3",
+        "owner_contract": "concurrency_runtime_offload",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -134,23 +134,23 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.process Command/Child/ProcessHandle/owned pipes",
-        "owner_milestone": "milestone_concurrency_runtime_4",
+        "owner_contract": "concurrency_runtime_process",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "M0 chooses distinct ProcessHandle for scoped process supervision while preserving pipe access.",
+        "notes": "The baseline contract chooses distinct ProcessHandle for scoped process supervision while preserving pipe access.",
     },
     {
         "surface": "sifr.signal structured shutdown streams",
-        "owner_milestone": "milestone_concurrency_runtime_5",
+        "owner_contract": "concurrency_runtime_shutdown",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain M5 work and arbitrary signal.signal handlers are unsupported.",
+        "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain shutdown contract work and arbitrary signal.signal handlers are unsupported.",
     },
     {
         "surface": "sifr.resource ExitStack/AsyncExitStack/closing/aclosing/nullcontext",
-        "owner_milestone": "milestone_concurrency_runtime_5",
+        "owner_contract": "concurrency_runtime_shutdown",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -158,15 +158,15 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.task.Context/ContextKey[T]",
-        "owner_milestone": "milestone_concurrency_runtime_5",
+        "owner_contract": "concurrency_runtime_shutdown",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Value-model foundation is importable; explicit propagation remains M5 work with no contextvars parity or implicit dynamic mutation.",
+        "notes": "Value-model foundation is importable; explicit propagation remains shutdown contract work with no contextvars parity or implicit dynamic mutation.",
     },
     {
         "surface": "sifr.ipc typed frame protocol",
-        "owner_milestone": "milestone_concurrency_runtime_6",
+        "owner_contract": "concurrency_runtime_typed_ipc",
         "support_tier": "production-substrate",
         "terminal_state": "production-substrate",
         "stability": "stable-production-substrate",
@@ -180,7 +180,7 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.task and sifr.sync",
-        "owner_milestone": "milestone_concurrency_runtime_0a",
+        "owner_contract": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Only a new Sifr-native API design can revisit this; migration compatibility is insufficient.",
     },
     {
@@ -188,15 +188,15 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.process",
-        "owner_milestone": "milestone_concurrency_runtime_0a",
-        "revisit_rule": "No CPython-shaped process adapter survives M0a.",
+        "owner_contract": "concurrency_runtime_legacy_surface",
+        "revisit_rule": "No CPython-shaped process adapter survives legacy-surface contract.",
     },
     {
         "surface": "sifr.queue",
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.sync",
-        "owner_milestone": "milestone_concurrency_runtime_0a",
+        "owner_contract": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Future queue API must prove Sifr-native value over channels.",
     },
     {
@@ -204,7 +204,7 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.runtime and sifr.parallel",
-        "owner_milestone": "milestone_concurrency_runtime_0a",
+        "owner_contract": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Future adapter requires a separate design gate and cannot be the offload spine.",
     },
     {
@@ -212,15 +212,15 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "rejected",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.process plus sifr.ipc",
-        "owner_milestone": "milestone_concurrency_runtime_0a",
-        "revisit_rule": "Process workers require the M6 typed IPC design and a future process-worker phase.",
+        "owner_contract": "concurrency_runtime_legacy_surface",
+        "revisit_rule": "Process workers require the typed-IPC contract typed IPC design and a future process-worker contract.",
     },
     {
         "surface": "sifr.threading",
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.runtime, sifr.parallel, and sifr.sync",
-        "owner_milestone": "milestone_concurrency_runtime_0a",
+        "owner_contract": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Raw thread objects are not the public execution model.",
     },
     {
@@ -228,7 +228,7 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "rejected",
         "stability": "compiler-known-intrinsic",
         "replacement": "structured diagnostics/tracing events",
-        "owner_milestone": "milestone_concurrency_runtime_5",
+        "owner_contract": "concurrency_runtime_shutdown",
         "revisit_rule": "No process-global warning/filter mutation from concurrent contexts.",
     },
     {
@@ -236,23 +236,23 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.resource",
-        "owner_milestone": "milestone_concurrency_runtime_5",
-        "revisit_rule": "Generator decorator helpers require a future generator semantics phase; cleanup scopes remain Sifr-native.",
+        "owner_contract": "concurrency_runtime_shutdown",
+        "revisit_rule": "Generator decorator helpers require a future generator semantics contract; cleanup scopes remain Sifr-native.",
     },
     {
         "surface": "sifr.warnings",
         "terminal_state": "rejected",
         "stability": "compiler-known-intrinsic",
         "replacement": "structured diagnostics/tracing events",
-        "owner_milestone": "milestone_concurrency_runtime_5",
-        "revisit_rule": "No Python global warning filter adapter ships in this phase.",
+        "owner_contract": "concurrency_runtime_shutdown",
+        "revisit_rule": "No Python global warning filter adapter ships in this contract.",
     },
 ]
 
-M0_DECISIONS: list[dict[str, str]] = [
+BASELINE_DECISIONS: list[dict[str, str]] = [
     {
         "decision": "mixed runtime owner",
-        "outcome": "Use TaskGroup[E] as the canonical mixed owner; no distinct task.Scope/runtime.Scope is introduced in M0.",
+        "outcome": "Use TaskGroup[E] as the canonical mixed owner; no distinct task.Scope/runtime.Scope is introduced in baseline contract.",
         "evidence": "Server shutdown, process pump tasks, blocking offload, and CPU offload can be represented as typed child handles under TaskGroup or JoinSet without non-fail-fast scope semantics.",
     },
     {
@@ -263,7 +263,7 @@ M0_DECISIONS: list[dict[str, str]] = [
     {
         "decision": "observed TaskGroup failures",
         "outcome": "An explicitly awaited and statically handled child failure is observed and is not re-reported at group exit; unhandled child failure triggers fail-fast sibling cancellation and TaskGroupError[E].",
-        "evidence": "Matches the phase's static handled-failure proof while preserving deterministic fail-fast group exit.",
+        "evidence": "Matches the structured-runtime static handled-failure proof while preserving deterministic fail-fast group exit.",
     },
     {
         "decision": "race/select containers",
@@ -287,85 +287,85 @@ M0_DECISIONS: list[dict[str, str]] = [
     },
     {
         "decision": "lock/permit await policy",
-        "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in M2 unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns.",
+        "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in sync-primitives contract unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns.",
         "evidence": "Prevents hidden shared mutable state and unbounded permit retention across suspension points.",
     },
     {
         "decision": "Barrier and Once",
-        "outcome": "Barrier is deferred-to-phase-X unless M2 finds a near-term production need; Once remains internal-only over std::sync::OnceLock.",
+        "outcome": "Barrier is deferred-to-future-contract unless sync-primitives contract finds a near-term production need; Once remains internal-only over std::sync::OnceLock.",
         "evidence": "Channels, locks, semaphores, and events cover near-term web/worker/data needs without toy public primitives.",
     },
 ]
 
-MILESTONE_BACKLOG: list[dict[str, str]] = [
+CONTRACT_BACKLOG: list[dict[str, str]] = [
     {
-        "milestone": "milestone_concurrency_runtime_0a",
-        "artifact": "concurrency_runtime_m0a_legacy_surface_traceability.md",
+        "contract": "concurrency_runtime_legacy_surface",
+        "artifact": "concurrency_runtime_legacy_surface_traceability.md",
         "acceptance": "legacy public sifr.asyncio/sifr.subprocess/sifr.concurrent/sifr.threading surfaces removed, hidden, or diagnosed; native imports remain canonical",
         "fixtures": "bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixtures; legacy sifr.* unsupported-diagnostic fixtures",
     },
     {
-        "milestone": "milestone_concurrency_runtime_1",
-        "artifact": "concurrency_runtime_m1_task_traceability.md",
+        "contract": "concurrency_runtime_structured_tasks",
+        "artifact": "concurrency_runtime_structured_tasks_traceability.md",
         "acceptance": "TaskHandle/TaskGroup/cancel_scope/race/select/timeout behavior typed and no public Tokio leak",
         "fixtures": "task sendability, observed failure, unobserved drop, race/select loser evidence fixtures",
     },
     {
-        "milestone": "milestone_concurrency_runtime_2",
-        "artifact": "concurrency_runtime_m2_sync_traceability.md",
+        "contract": "concurrency_runtime_sync_primitives",
+        "artifact": "concurrency_runtime_sync_primitives_traceability.md",
         "acceptance": "bounded backpressure, close, cancellation, sendability, and lock/permit await diagnostics",
         "fixtures": "producer/consumer pipeline, channel non-send, sync lock across await, semaphore permit policy fixtures",
     },
     {
-        "milestone": "milestone_concurrency_runtime_3",
-        "artifact": "concurrency_runtime_m3_offload_traceability.md",
+        "contract": "concurrency_runtime_offload",
+        "artifact": "concurrency_runtime_offload_traceability.md",
         "acceptance": "spawn_blocking/spawn_cpu/JoinSet/parallel map use typed WorkerError and private Rayon pools",
         "fixtures": "JoinSet drop/order/cancel, non-send CPU capture, async direct parallel.map diagnostic fixtures",
     },
     {
-        "milestone": "milestone_concurrency_runtime_4",
-        "artifact": "concurrency_runtime_m4_process_traceability.md",
+        "contract": "concurrency_runtime_process",
+        "artifact": "concurrency_runtime_process_traceability.md",
         "acceptance": "sifr.process sync/async child supervision, owned pipes, text mode, shell_exec effect, timeout/cancel",
         "fixtures": "sync/async subprocess loopback, pipe ownership, shell effect, process cancellation fixtures",
     },
     {
-        "milestone": "milestone_concurrency_runtime_5",
-        "artifact": "concurrency_runtime_m5_shutdown_traceability.md",
+        "contract": "concurrency_runtime_shutdown",
+        "artifact": "concurrency_runtime_shutdown_traceability.md",
         "acceptance": "structured signals, cleanup stacks, explicit task Context, diagnostics/tracing policy",
         "fixtures": "shutdown stream, cleanup under cancellation, context propagation, signal.signal/warnings rejection fixtures",
     },
     {
-        "milestone": "milestone_concurrency_runtime_6",
-        "artifact": "concurrency_runtime_m6_ipc_traceability.md",
+        "contract": "concurrency_runtime_typed_ipc",
+        "artifact": "concurrency_runtime_typed_ipc_design.md",
         "acceptance": "typed IPC frame protocol, schema identity, version negotiation, malformed-frame errors, payload diagnostics",
         "fixtures": "schema accept/reject, unsupported payload, malformed frame, cancellation frame fixtures",
     },
     {
-        "milestone": "milestone_concurrency_runtime_7",
-        "artifact": "concurrency_runtime_m7_closeout_traceability.md",
+        "contract": "concurrency_runtime_closeout",
+        "artifact": "concurrency_runtime_closeout_traceability.md",
         "acceptance": "docs, demos, validation profiles, panic scans, final inventory closure, final external PASS review",
         "fixtures": "structured task demo, channel pipeline demo, offload demo, process demo, shutdown/cleanup demo",
     },
 ]
 
 WORKLOAD_ROWS: list[dict[str, str]] = [
-    {"api": "sifr.task.sleep", "owner": "M1", "classification": "async-suspension", "validation": "task sleep fixture"},
-    {"api": "sifr.task.timeout/deadline", "owner": "M1", "classification": "async-suspension cancellation", "validation": "timeout/deadline evidence fixture"},
-    {"api": "sifr.task.cancel_scope", "owner": "M1", "classification": "async-suspension cancellation", "validation": "cancel-scope fixture"},
-    {"api": "sifr.sync.Channel.send/receive async forms", "owner": "M2", "classification": "async-suspension backpressure", "validation": "channel backpressure and cancellation fixtures"},
-    {"api": "sifr.sync.Channel send/receive sync forms", "owner": "M2", "classification": "@blocking_io-equivalent sync wait", "validation": "blocking-in-async diagnostic fixture"},
-    {"api": "sifr.sync.Mutex/RwLock sync lock", "owner": "M2", "classification": "@blocking_io-equivalent sync wait", "validation": "lock direct async diagnostic fixture"},
-    {"api": "sifr.sync.AsyncMutex/AsyncRwLock/Semaphore/Event", "owner": "M2", "classification": "async-suspension", "validation": "async sync primitive fixtures"},
-    {"api": "sifr.runtime.spawn_blocking", "owner": "M3", "classification": "@blocking_io offload boundary", "validation": "spawn_blocking typed WorkerError fixture"},
-    {"api": "sifr.task.spawn_cpu", "owner": "M3", "classification": "@cpu_heavy offload boundary with typed runtime/worker evidence", "validation": "`spawn_cpu_basic`, `spawn_cpu_user_error_typed`, `spawn_cpu_worker_panic_typed`, `spawn_cpu_unannotated_rejected`, `spawn_cpu_blocking_io_rejected`, `spawn_cpu_non_send_rejected`"},
-    {"api": "sifr.task.TaskScope/TaskGroup scoped offload", "owner": "M3", "classification": "@blocking_io/@cpu_heavy scoped owner offload with typed task evidence", "validation": "`task_scope_spawn_blocking`, `task_group_spawn_cpu`, `task_group_spawn_cpu_user_error`, `task_scope_spawn_cpu_unannotated_rejected`, `task_group_spawn_blocking_error_mismatch_rejected`"},
-    {"api": "sifr.task.JoinSet", "owner": "M3", "classification": "homogeneous task/offload collection with explicit observation/cancellation", "validation": "`join_set_add_task_join_all`, `join_set_spawn_cpu_join_all_ordered`, `join_set_cancel_all_evidence`, `join_set_cancel_all_task_cancelled`, `join_set_spawn_blocking`, `join_set_bound_terminal_await`, `join_set_reassign_live_rejected`, `join_set_unconsumed_rejected`, `join_set_terminal_must_be_awaited_rejected`"},
-    {"api": "sifr.parallel.map/try_map", "owner": "M3", "classification": "@cpu_heavy synchronous, typed worker-runtime boundary", "validation": "`parallel_map_basic`, `parallel_try_map_basic`, `parallel_map_worker_panic_typed`, `parallel_try_map_user_error_typed`, async direct-call diagnostic fixture"},
-    {"api": "sifr.process.run/output/wait sync", "owner": "M4", "classification": "@blocking_io plus optional @shell_exec", "validation": "process blocking-in-async and shell-effect fixtures"},
-    {"api": "sifr.process async spawn/wait/communicate", "owner": "M4", "classification": "async-suspension plus optional @shell_exec", "validation": "async process loopback fixture"},
-    {"api": "sifr.signal.shutdown_stream/ctrl_c/terminate", "owner": "M5", "classification": "async-suspension host-limited", "validation": "signal host matrix fixture"},
-    {"api": "sifr.resource.AsyncExitStack", "owner": "M5", "classification": "async cleanup under cancellation", "validation": "async cleanup cancellation fixture"},
-    {"api": "sifr.ipc.Connection send/receive", "owner": "M6", "classification": "async-suspension backpressure serialization", "validation": "IPC frame/malformed/cancel fixtures"},
+    {"api": "sifr.task.sleep", "owner": "concurrency_runtime_structured_tasks", "classification": "async-suspension", "validation": "task sleep fixture"},
+    {"api": "sifr.task.timeout/deadline", "owner": "concurrency_runtime_structured_tasks", "classification": "async-suspension cancellation", "validation": "timeout/deadline evidence fixture"},
+    {"api": "sifr.task.cancel_scope", "owner": "concurrency_runtime_structured_tasks", "classification": "async-suspension cancellation", "validation": "cancel-scope fixture"},
+    {"api": "sifr.sync.Channel.send/receive async forms", "owner": "concurrency_runtime_sync_primitives", "classification": "async-suspension backpressure", "validation": "channel backpressure and cancellation fixtures"},
+    {"api": "sifr.sync.Channel send/receive sync forms", "owner": "concurrency_runtime_sync_primitives", "classification": "@blocking_io-equivalent sync wait", "validation": "blocking-in-async diagnostic fixture"},
+    {"api": "sifr.sync.Mutex/RwLock sync lock", "owner": "concurrency_runtime_sync_primitives", "classification": "@blocking_io-equivalent sync wait", "validation": "lock direct async diagnostic fixture"},
+    {"api": "sifr.sync.AsyncMutex/AsyncRwLock/Semaphore/Event", "owner": "concurrency_runtime_sync_primitives", "classification": "async-suspension", "validation": "async sync primitive fixtures"},
+    {"api": "sifr.runtime.spawn_blocking", "owner": "concurrency_runtime_offload", "classification": "@blocking_io offload boundary", "validation": "spawn_blocking typed WorkerError fixture"},
+    {"api": "sifr.task.spawn_cpu", "owner": "concurrency_runtime_offload", "classification": "@cpu_heavy offload boundary with typed runtime/worker evidence", "validation": "`spawn_cpu_basic`, `spawn_cpu_user_error_typed`, `spawn_cpu_worker_panic_typed`, `spawn_cpu_unannotated_rejected`, `spawn_cpu_blocking_io_rejected`, `spawn_cpu_non_send_rejected`"},
+    {"api": "sifr.task.TaskScope/TaskGroup scoped offload", "owner": "concurrency_runtime_offload", "classification": "@blocking_io/@cpu_heavy scoped owner offload with typed task evidence", "validation": "`task_scope_spawn_blocking`, `task_group_spawn_cpu`, `task_group_spawn_cpu_user_error`, `task_scope_spawn_cpu_unannotated_rejected`, `task_group_spawn_blocking_error_mismatch_rejected`"},
+    {"api": "sifr.task.JoinSet", "owner": "concurrency_runtime_offload", "classification": "homogeneous task/offload collection with explicit observation/cancellation", "validation": "`join_set_add_task_join_all`, `join_set_spawn_cpu_join_all_ordered`, `join_set_cancel_all_evidence`, `join_set_cancel_all_task_cancelled`, `join_set_spawn_blocking`, `join_set_bound_terminal_await`, `join_set_reassign_live_rejected`, `join_set_unconsumed_rejected`, `join_set_terminal_must_be_awaited_rejected`"},
+    {"api": "sifr.parallel.map/try_map", "owner": "concurrency_runtime_offload", "classification": "@cpu_heavy synchronous, typed worker-runtime boundary", "validation": "`parallel_map_basic`, `parallel_try_map_basic`, `parallel_map_worker_panic_typed`, `parallel_try_map_user_error_typed`, async direct-call diagnostic fixture"},
+    {"api": "sifr.process.run/output/wait sync", "owner": "concurrency_runtime_process", "classification": "@blocking_io plus optional @shell_exec", "validation": "process blocking-in-async and shell-effect fixtures"},
+    {"api": "sifr.process async spawn/wait/communicate", "owner": "concurrency_runtime_process", "classification": "async-suspension plus optional @shell_exec", "validation": "async process loopback fixture"},
+    {"api": "sifr.signal.shutdown_stream/ctrl_c/terminate", "owner": "concurrency_runtime_shutdown", "classification": "async-suspension host-limited", "validation": "signal host matrix fixture"},
+    {"api": "sifr.resource.AsyncExitStack", "owner": "concurrency_runtime_shutdown", "classification": "async cleanup under cancellation", "validation": "async cleanup cancellation fixture"},
+    {"api": "sifr.ipc.Connection send/receive", "owner": "concurrency_runtime_typed_ipc", "classification": "async-suspension backpressure serialization", "validation": "IPC frame/malformed/cancel fixtures"},
 ]
 
 
@@ -580,7 +580,7 @@ def native_mapping(relative_path: str) -> str:
         return "sifr.signal"
     if "asyncio" in relative_path:
         return "sifr.task"
-    return "phase evidence"
+    return "contract evidence"
 
 
 def aggregate_domains(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -599,15 +599,15 @@ def write_inventory_json(files: list[dict[str, Any]], commit: str) -> None:
     cpython_display_path = display_path(CPYTHON_ROOT)
     data = {
         "schema_version": 1,
-        "status": "milestone_concurrency_runtime_7-inventory-audited",
+        "status": "concurrency_runtime_closeout-inventory-audited",
         "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
         "cpython_checkout": {"path": cpython_display_path, "commit": commit},
         "source_patterns": SOURCE_GROUPS,
         "domain_summary": aggregate_domains(files),
         "production_surfaces": PRODUCTION_SURFACES,
         "legacy_python_shaped_surfaces": LEGACY_SURFACES,
-        "m0_resolved_decisions": M0_DECISIONS,
-        "milestone_backlog": MILESTONE_BACKLOG,
+        "baseline_resolved_decisions": BASELINE_DECISIONS,
+        "contract_backlog": CONTRACT_BACKLOG,
         "workload_database": WORKLOAD_ROWS,
         "scanned_files": files,
     }
@@ -635,20 +635,20 @@ def write_inventory_md(files: list[dict[str, Any]], commit: str) -> None:
         for row in aggregate_domains(files)
     ]
     surface_rows = [
-        [item["surface"], item["owner_milestone"], item["terminal_state"], item["stability"], item["notes"]]
+        [item["surface"], item["owner_contract"], item["terminal_state"], item["stability"], item["notes"]]
         for item in PRODUCTION_SURFACES
     ]
     legacy_rows = [
-        [item["surface"], item["owner_milestone"], item["terminal_state"], item["replacement"], item["revisit_rule"]]
+        [item["surface"], item["owner_contract"], item["terminal_state"], item["replacement"], item["revisit_rule"]]
         for item in LEGACY_SURFACES
     ]
-    decision_rows = [[item["decision"], item["outcome"], item["evidence"]] for item in M0_DECISIONS]
-    backlog_rows = [[item["milestone"], item["artifact"], item["acceptance"], item["fixtures"]] for item in MILESTONE_BACKLOG]
+    decision_rows = [[item["decision"], item["outcome"], item["evidence"]] for item in BASELINE_DECISIONS]
+    backlog_rows = [[item["contract"], item["artifact"], item["acceptance"], item["fixtures"]] for item in CONTRACT_BACKLOG]
     INVENTORY_MD.write_text(
         "\n\n".join(
             [
                 "# Concurrency Runtime Substrate Inventory",
-                "Status: M7 inventory audited; generated by `verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py`.",
+                "Status: concurrency runtime inventory audited; generated by `verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py`.",
                 f"CPython checkout: `{cpython_display_path}` at `{commit}`.",
                 "Platform contract: [platform_contract.md](../platform/platform_contract.md).",
                 "## Scan Summary\n\n"
@@ -657,13 +657,13 @@ def write_inventory_md(files: list[dict[str, Any]], commit: str) -> None:
                     domain_rows,
                 ),
                 "## Production Native Surface Boundary\n\n"
-                + md_table(["Surface", "Milestone", "Terminal state", "Stability", "Notes"], surface_rows),
+                + md_table(["Surface", "Owner Contract", "Terminal state", "Stability", "Notes"], surface_rows),
                 "## Legacy Python-Shaped Surface Disposition\n\n"
-                + md_table(["Surface", "Milestone", "Terminal state", "Replacement", "Revisit rule"], legacy_rows),
-                "## M0 Resolved Decisions\n\n" + md_table(["Decision", "Outcome", "Evidence"], decision_rows),
+                + md_table(["Surface", "Owner Contract", "Terminal state", "Replacement", "Revisit rule"], legacy_rows),
+                "## Baseline Resolved Decisions\n\n" + md_table(["Decision", "Outcome", "Evidence"], decision_rows),
                 "## Implementation Backlog\n\n"
-                + md_table(["Milestone", "Traceability artifact", "Acceptance", "Representative fixtures"], backlog_rows),
-                "## Regeneration\n\nRun `python3 verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py` after changing the phase source-of-truth list, CPython checkout, or M0 decisions.",
+                + md_table(["Contract", "Traceability artifact", "Acceptance", "Representative fixtures"], backlog_rows),
+                "## Regeneration\n\nRun `python3 verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py` after changing the contract source-of-truth list, CPython checkout, or baseline contract decisions.",
             ]
         )
         + "\n",
@@ -689,7 +689,7 @@ def write_evidence_md(files: list[dict[str, Any]], commit: str) -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime CPython Evidence Matrix",
-                "Status: M7 inventory audited; generated from the phase source-of-truth list.",
+                "Status: concurrency runtime inventory audited; generated from the contract source-of-truth list.",
                 f"CPython checkout: `{cpython_display_path}` at `{commit}`.",
                 md_table(["Reference", "Domain", "Native mapping", "Evidence state", "Extracted signal"], rows),
                 "## Notes\n\nCPython module shapes are evidence only. Production Sifr APIs are native `sifr.*` surfaces, and CPython-shaped imports are rejected or diagnosed according to the inventory.",
@@ -706,8 +706,8 @@ def write_workload_md() -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime Workload Database",
-                "Status: M7 inventory audited; implementation milestones have recorded validation evidence for accepted concurrency/runtime surfaces.",
-                md_table(["API", "Owner", "Workload/effect classification", "Validation"], rows),
+                "Status: concurrency runtime inventory audited; implementation contracts have recorded validation evidence for accepted concurrency/runtime surfaces.",
+                md_table(["API", "Owner contract", "Workload/effect classification", "Validation"], rows),
                 "## Rules\n\nSync APIs that can wait on channels, locks, processes, pipes, or external runtime state are classified as blocking and remain invalid in `async def` unless explicitly offloaded. CPU-heavy APIs use `@cpu_heavy` and must route through `spawn_cpu` in async contexts. Shell subprocess APIs carry `@shell_exec` in addition to blocking or async suspension classification.",
             ]
         )
@@ -716,7 +716,7 @@ def write_workload_md() -> None:
     )
 
 
-def write_m0_traceability_md() -> None:
+def write_baseline_traceability_md() -> None:
     rows = [
         [
             "CPython source scan",
@@ -739,13 +739,13 @@ def write_m0_traceability_md() -> None:
         ["Golden manifest entries", "verification/areas/runtime_platform/golden/manifest.json"],
         ["Bare CPython import fixtures", "crates/sifr/tests/e2e/fail/bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixture family"],
     ]
-    M0_TRACEABILITY_MD.write_text(
+    BASELINE_TRACEABILITY_MD.write_text(
         "\n\n".join(
             [
-                "# Concurrency Runtime M0 Traceability",
-                "Milestone: `milestone_concurrency_runtime_0`",
+                "# Concurrency Runtime Baseline Traceability",
+                "Contract: `concurrency_runtime_baseline`",
                 md_table(["Requirement", "Evidence"], rows),
-                "## M0 Closure Gate\n\nM0 is complete only after a post-M0 external review returns `PASS` and the result is recorded in the execution ledger. M1 remains blocked until M0a removes, hides, or diagnoses legacy CPython-shaped public surfaces.",
+                "## Baseline Closure Gate\n\nThe baseline contract is complete only after a post-baseline external review returns `PASS` and the result is recorded in the execution ledger. The structured-tasks contract remains blocked until the legacy-surface contract removes, hides, or diagnoses legacy CPython-shaped public surfaces.",
             ]
         )
         + "\n",
@@ -762,7 +762,7 @@ def main() -> None:
     write_inventory_md(files, commit)
     write_evidence_md(files, commit)
     write_workload_md()
-    write_m0_traceability_md()
+    write_baseline_traceability_md()
     print(f"generated {len(files)} CPython evidence entries")
 
 

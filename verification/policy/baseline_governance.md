@@ -55,9 +55,9 @@ Baseline comparison and bless write-path use canonical normalization:
 - `sifr_codegen` snapshot blesses must be reviewed with the corresponding generated-Rust
   contract change, and `cargo test -p sifr_codegen` must pass before the bless is accepted.
 
-## Suggestion/Autofix Boundary (Phase 29)
+## Suggestion/Autofix Boundary (Verification Hardening)
 
 - Suggestions are part of the stable diagnostics schema.
 - Suggestion rendering is baseline-validated through diagnostics JSON/human/compact baselines.
-- Automated suggestion application is not currently part of the stable compiler contract in this phase.
-- Autofix execution validation is therefore out-of-scope for phase 29 and explicitly deferred.
+- Automated suggestion application is not currently part of the stable compiler contract in the current stable compiler contract.
+- Autofix execution validation is therefore out-of-scope for verification hardening and explicitly deferred.

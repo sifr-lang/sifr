@@ -67,6 +67,13 @@
           "command": "area-check",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "verification_taxonomy",
+          "entry": "verification/areas/coverage_matrix/checks/verification_taxonomy.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     }

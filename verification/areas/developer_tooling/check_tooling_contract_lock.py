@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Phase 36 m36.1 tooling contract lock."""
+"""Validate the editor tooling tooling contract lock."""
 
 from __future__ import annotations
 
@@ -117,7 +117,7 @@ def validate_matrix(matrix: dict[str, Any]) -> list[str]:
     if matrix.get("protocol", {}).get("launch") != ["sifr", "lsp", "--stdio"]:
         failures.append("LSP launch command must be sifr lsp --stdio")
     if matrix.get("crate_names") != REQUIRED_CRATES:
-        failures.append("final tooling crate names are not locked to the Phase 36 contract")
+        failures.append("final tooling crate names are not locked to the editor tooling contract")
 
     modes = set(matrix.get("diagnostics_modes", []))
     if modes != {"off", "open-files", "workspace"}:

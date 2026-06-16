@@ -10,15 +10,15 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 
 | Surface | Owner milestone | Terminal state | Stability | Notes |
 | --- | --- | --- | --- | --- |
-| `sifr.net` TCP streams, listener, address values, DNS helpers | M1 | production-public | stable-public-api | Canonical low-level async network API. Tokio and raw descriptors stay internal. |
-| `sifr.net` constrained UDP datagrams | M1 | deferred-to-phase-X | stable-public-api if later accepted | M0 found no named near-term production consumer that cannot be served by TCP/TLS/HTTP loopback fixtures. No partial public UDP API ships. |
-| Internal readiness primitives | M1 | internal-only | unstable-internal-substrate | Used only behind async streams and transport drivers; no `select`/selector API. |
-| `sifr.tls` configs and TLS streams | M2 | production-public | stable-public-api | Rustls-backed TLS with safe verification defaults, mTLS, SNI, ALPN, and typed errors. |
-| `sifr.url` URL/query/percent primitives | M3 | production-public | stable-public-api | ASCII and already-valid Sifr text only until text/i18n unblocks codec and Unicode behavior. |
-| `sifr.http` method/status/version/header/head/body/error primitives | M3/M4 | production-substrate | stable-production-substrate | Protocol substrate consumed by Phase 41 and the future HTTP client phase. |
-| Internal HTTP client/server transport harness | M4 | test-only-harness | test-only-harness | Deterministic loopback validation only; not `sifr.http.client` or `sifr.http.server`. |
-| Server accept/dispatch/shutdown substrate | M4/M5 | production-substrate | stable-production-substrate | Single-runtime-worker per process; Phase 41 owns framework product and multi-core throughput waits for `ad-hoc-network-http-serving-scale-follow-up`. |
-| Observability hooks for DNS/connect/TLS/HTTP lifecycle | M5 | production-substrate | stable-production-substrate | `tracing` events and optional approved `metrics` schema; no global subscriber/exporter. |
+| `sifr.net` TCP streams, listener, address values, DNS helpers | TCP | production-public | stable-public-api | Canonical low-level async network API. Tokio and raw descriptors stay internal. |
+| `sifr.net` constrained UDP datagrams | TCP | deferred-to-phase-X | stable-public-api if later accepted | M0 found no named near-term production consumer that cannot be served by TCP/TLS/HTTP loopback fixtures. No partial public UDP API ships. |
+| Internal readiness primitives | TCP | internal-only | unstable-internal-substrate | Used only behind async streams and transport drivers; no `select`/selector API. |
+| `sifr.tls` configs and TLS streams | TLS | production-public | stable-public-api | Rustls-backed TLS with safe verification defaults, mTLS, SNI, ALPN, and typed errors. |
+| `sifr.url` URL/query/percent primitives | URL/HTTP primitives | production-public | stable-public-api | ASCII and already-valid Sifr text only until text/i18n unblocks codec and Unicode behavior. |
+| `sifr.http` method/status/version/header/head/body/error primitives | M3/M4 | production-substrate | stable-production-substrate | Protocol substrate consumed by Phase 41 and the future HTTP client contract. |
+| Internal HTTP client/server transport harness | HTTP transport | test-only-harness | test-only-harness | Deterministic loopback validation only; not `sifr.http.client` or `sifr.http.server`. |
+| Server accept/dispatch/shutdown substrate | M4/M5 | production-substrate | stable-production-substrate | Single-runtime-worker per process; the HTTP server-framework contract owns framework product and multi-core throughput wait for `ad-hoc-network-http-serving-scale-follow-up`. |
+| Observability hooks for DNS/connect/TLS/HTTP lifecycle | handoff | production-substrate | stable-production-substrate | `tracing` events and optional approved `metrics` schema; no global subscriber/exporter. |
 
 ## Rejected Or Unsupported CPython-Shaped Surfaces
 
@@ -27,13 +27,13 @@ Platform contract: [platform_contract.md](../platform/platform_contract.md).
 | bare `socket` and `sifr.socket` | unsupported-with-diagnostic | `sifr.net` | Descriptor-shaped sockets, `makefile`, `dup`, `detach`, `fromfd`, and monkeypatchable globals conflict with typed async stream ownership. | Only a new Sifr-native extension to `sifr.net` can revisit this. |
 | bare `ssl` and `sifr.ssl` | unsupported-with-diagnostic | `sifr.tls` | TLS is typed config/stream substrate, not `SSLContext`/`SSLSocket` parity. | Only a Sifr-native TLS product requirement can revisit this. |
 | bare `select`, `selectors`, `sifr.select`, `sifr.selectors` | unsupported-with-diagnostic | `sifr.net` / `sifr.task` | Manual readiness and raw event-loop policy are internal. | Future low-level readiness API needs a separate architecture issue. |
-| bare `urllib`, `sifr.urllib`, `sifr.urllib.parse`, `sifr.urllib.request` | unsupported-with-diagnostic | `sifr.url` | URL parsing is typed; opener/handler request APIs belong to a future HTTP client phase. | Future HTTP client must remain Sifr-native. |
+| bare `urllib`, `sifr.urllib`, `sifr.urllib.parse`, `sifr.urllib.request` | unsupported-with-diagnostic | `sifr.url` | URL parsing is typed; opener/handler request APIs belong to a future HTTP client contract. | Future HTTP client must remain Sifr-native. |
 | bare `http.client` and `sifr.http.client` | unsupported-with-diagnostic | `sifr.http` substrate now; client phase later | CPython-shaped client policy is not the product surface. | Future client phase owns modern pooling/retry/auth/cookie/proxy APIs. |
-| bare `http.server` and `sifr.http.server` | unsupported-with-diagnostic | Phase 41 over `sifr.http` | Toy server and handler-subclass model are rejected. | Phase 41 owns framework routing, middleware, extractors, and lifecycle. |
+| bare `http.server` and `sifr.http.server` | unsupported-with-diagnostic | Phase 41 over `sifr.http` | Toy server and handler-subclass model are rejected. | the HTTP server-framework contract owns framework routing, middleware, extractors, and lifecycle. |
 | bare `socketserver` and `sifr.socketserver` | rejected | Phase 41 over `sifr.http` | Inheritance-heavy mixins conflict with Sifr's static model and serving-scale boundary. | No compatibility adapter; new server APIs must be Sifr-native. |
 | HTTP/3 / QUIC | deferred-to-phase-X | future transport phase | Requires separate runtime, security, and QUIC strategy. | Revisit through a transport issue after HTTP/2 substrate closes. |
 | WebSocket and CONNECT public APIs | deferred-to-phase-X | future product phase | Upgrade behavior requires separate backpressure/security decisions. | Internal upgrade hooks may be test-only harness only. |
-| Multipart/form parsing | deferred-to-phase-41 | Phase 41 or HTTP client phase | Product-level body parsing and bomb limits are outside substrate. | Revisit with framework/client requirements. |
+| Multipart/form parsing | deferred-to-http-server-framework | Phase 41 or HTTP client phase | Product-level body parsing and bomb limits are outside substrate. | Revisit with framework/client requirements. |
 | Content-Encoding compression | deferred-to-phase-X | future client/framework compression | Compression/decompression bomb policy needs separate ownership. | HPACK remains in HTTP/2 substrate; body compression is separate. |
 
 ## M0 Resolved Decisions
@@ -185,21 +185,21 @@ Post-closure Fable High amendment, 2026-06-12: the closed implementation exposes
 
 | Error class | Owner | Evidence carried |
 | --- | --- | --- |
-| `NetError` | M1 | DNS, connect, timeout, reset, closed-handle, listener, stream, and socket-option evidence as stable messages. |
-| `TlsError` | M2 | TLS config, handshake, read/write/flush, close-notify, transport, timeout, and closed-handle evidence as stable messages. |
-| `CertificateError` | M2 | certificate/root/private-key parse and verification setup evidence as stable messages. |
-| `UrlError` | M3 | URL, authority, port, query, percent, provider-blocked, and size-limit evidence as stable messages. |
-| `HeaderError` | M3 | header name/value, header-list, and cookie-header validation evidence as stable messages. |
-| `ProtocolError` | M4 | HTTP method/status/version and protocol validation evidence as stable messages. |
-| `BodyError` | M4 | body chunk/collection size and body stream evidence as stable messages. |
-| `HttpError` | M4 | HTTP transport, TLS, protocol, body, timeout, and server/client lifecycle evidence as stable messages. |
+| `NetError` | TCP | DNS, connect, timeout, reset, closed-handle, listener, stream, and socket-option evidence as stable messages. |
+| `TlsError` | TLS | TLS config, handshake, read/write/flush, close-notify, transport, timeout, and closed-handle evidence as stable messages. |
+| `CertificateError` | TLS | certificate/root/private-key parse and verification setup evidence as stable messages. |
+| `UrlError` | URL/HTTP primitives | URL, authority, port, query, percent, provider-blocked, and size-limit evidence as stable messages. |
+| `HeaderError` | URL/HTTP primitives | header name/value, header-list, and cookie-header validation evidence as stable messages. |
+| `ProtocolError` | HTTP transport | HTTP method/status/version and protocol validation evidence as stable messages. |
+| `BodyError` | HTTP transport | body chunk/collection size and body stream evidence as stable messages. |
+| `HttpError` | HTTP transport | HTTP transport, TLS, protocol, body, timeout, and server/client lifecycle evidence as stable messages. |
 
 ## Implementation Backlog
 
 | Milestone | Traceability artifact | Acceptance |
 | --- | --- | --- |
-| M1 | `network_http_m1_async_network_traceability.md` | async TCP/DNS substrate, split/half-close, workload diagnostics, no UDP unless M0 is amended. |
-| M2 | `network_http_m2_tls_traceability.md` | TLS configs/streams, safe verification, mTLS, close semantics, host/build records. |
-| M3 | `network_http_m3_url_header_cookie_traceability.md` | URL, percent, header, and cookie-header primitives with text/i18n blocking states. |
-| M4 | `network_http_m4_http_transport_traceability.md` | HTTP/1.1 and HTTP/2 loopback transport, body streaming, HTTPS/ALPN, resource limits. |
-| M5 | `network_http_m5_handoff_traceability.md` | docs, demos, dependency snapshots, panic scans, final inventory closure, final review. |
+| TCP | `network_http_async_network_traceability.md` | async TCP/DNS substrate, split/half-close, workload diagnostics, no UDP unless the substrate baseline is amended. |
+| TLS | `network_http_tls_traceability.md` | TLS configs/streams, safe verification, mTLS, close semantics, host/build records. |
+| URL/HTTP primitives | `network_http_url_header_cookie_traceability.md` | URL, percent, header, and cookie-header primitives with text/i18n blocking states. |
+| HTTP transport | `network_http_http_transport_traceability.md` | HTTP/1.1 and HTTP/2 loopback transport, body streaming, HTTPS/ALPN, resource limits. |
+| handoff | `network_http_handoff_traceability.md` | docs, demos, dependency snapshots, panic scans, final inventory closure, final review. |

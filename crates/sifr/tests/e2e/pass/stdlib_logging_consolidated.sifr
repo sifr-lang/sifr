@@ -1,4 +1,4 @@
-# Consolidated stdlib logging coverage for milestone_30_4 structure rules
+# Consolidated stdlib logging coverage for stdlib_consolidation structure rules
 from sifr.logging import getLogger, Logger, Handler, FileHandler, StreamHandler, NullHandler, Formatter
 from sifr.logging import DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET
 from sifr.io import write_text, read_text, exists

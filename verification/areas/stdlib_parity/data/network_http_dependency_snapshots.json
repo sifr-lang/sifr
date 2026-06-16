@@ -11,8 +11,8 @@
   "production_snapshots": [
     {
       "id": "network-runtime-core",
-      "owner_milestones": [
-        "milestone_network_http_1"
+      "owner_contracts": [
+        "network_http_async_network"
       ],
       "required_features": [
         "tokio/macros",
@@ -40,8 +40,8 @@
     },
     {
       "id": "tls-runtime",
-      "owner_milestones": [
-        "milestone_network_http_2"
+      "owner_contracts": [
+        "network_http_tls"
       ],
       "required_features": [
         "rustls/aws_lc_rs",
@@ -70,8 +70,8 @@
     },
     {
       "id": "url-header-cookie",
-      "owner_milestones": [
-        "milestone_network_http_3"
+      "owner_contracts": [
+        "network_http_url_header_cookie"
       ],
       "required_features": [
         "url/std",
@@ -92,8 +92,8 @@
     },
     {
       "id": "http-transport",
-      "owner_milestones": [
-        "milestone_network_http_4"
+      "owner_contracts": [
+        "network_http_http_transport"
       ],
       "required_features": [
         "hyper/http1",

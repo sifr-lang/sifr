@@ -7,18 +7,18 @@
 - Iterator architecture execution has two closed stages:
   - stage 1 (closed): `plans/issues/archive/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `plans/issues/archive/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
   - stage 2 (closed corrective continuation): `plans/issues/archive/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `plans/issues/archive/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
-  - stage-2 wave closure: `wave_psp_iter_fix_0` through `wave_psp_iter_fix_8` are merged and review-closed (including post-closure CPython `itertools` parity sweep/remediation passes)
+  - stage-2 iterator closure contracts are merged and review-closed (including post-closure CPython `itertools` parity sweep/remediation passes)
   - stage-2 contract lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
 - RNG/crypto continuation is production-grade closed:
   - phase docs: `plans/issues/archive/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `plans/issues/archive/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
-  - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts and phase-closure pass-2 approval
+  - RNG closure contracts merged with external production-grade review artifacts and closure pass-2 approval
 - Ownership-aware collection lowering continuation is in closure review:
   - phase docs: `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
   - completed waves:
-    - `wave_clone_0` lock/baseline artifact: `verification/areas/stdlib_parity/reports/wave_clone_0_codegen_traceability.md`
-    - `wave_clone_1` iterator/comprehension ownership correction artifact: `verification/areas/stdlib_parity/reports/wave_clone_1_iterator_codegen_traceability.md`
-    - `wave_clone_2` indexing/slicing/star-unpack ownership correction artifact: `verification/areas/stdlib_parity/reports/wave_clone_2_index_slice_unpack_traceability.md`
-    - `wave_clone_3` generic hardening/regression lock artifact: `verification/areas/stdlib_parity/reports/wave_clone_3_generic_hardening_traceability.md`
+    - lock/baseline artifact: `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
+    - iterator/comprehension ownership correction artifact: `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
+    - indexing/slicing/star-unpack ownership correction artifact: `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
+    - generic hardening/regression lock artifact: `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
   - active closure stage: external review/closure cycles after wave-level implementation completion
   - locked planner contract for implementation waves:
     - value category: `Place | Temporary`
@@ -39,10 +39,10 @@
     - this continuation removes unnecessary clone-heavy lowering patterns for targeted surfaces
     - it does not claim full CPython parity for move-heavy runtime representations that depend on broader runtime/model changes
   - traceability artifacts:
-    - `verification/areas/stdlib_parity/reports/wave_clone_0_codegen_traceability.md`
-    - `verification/areas/stdlib_parity/reports/wave_clone_1_iterator_codegen_traceability.md`
-    - `verification/areas/stdlib_parity/reports/wave_clone_2_index_slice_unpack_traceability.md`
-    - `verification/areas/stdlib_parity/reports/wave_clone_3_generic_hardening_traceability.md`
+    - `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
+    - `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
+    - `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
+    - `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
 - Integer model amendment source of truth:
   - `internal_docs/integer_model.md` defines the canonical semantic contract and replaces the historical machine-integer/separate user-facing `bigint` design before production.
   - `plans/issues/archive/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` tracks the implementation phase and milestone breakdown for that contract.
@@ -102,7 +102,7 @@ Sifr uses the CPython source code (`/Users/yaseralnajjar/work/sifr/cpython`) as 
 | Test suite (behavioral reference)                                                   | `Lib/test/test_<module>.py`                                             | Use as specification for expected behavior                                   |
 
 
-### Bytes Representation Note (Phase 31.5 / wave_psp_bytes_4)
+### Bytes Representation Note
 
 - The first-class `bytes` surface is now a distinct compiler type (`Type::Bytes`) across type checking, lowering, and codegen.
 - Current Rust codegen representation is raw-byte storage (`Vec<u8>`) for typed bytes-native paths.
@@ -135,7 +135,7 @@ This safety test layer is tracked in each milestone's Definition of Done as: **"
 
 For the ad-hoc Python source parity closure track (roadmap phase `31.5`), the canonical parity governance source is:
 
-- `verification/areas/stdlib_parity/reports/milestone_psp_7_parity_governance_inventory.md`
+- `verification/areas/stdlib_parity/reports/stdlib_parity_governance_inventory.md`
 
 It is the single consolidated inventory for builtin parity status, core object-model parity status, shipped-module terminal classification, CPython adopt/adapt/waive traceability links, and waiver-index governance rules.
 
@@ -298,7 +298,7 @@ New crates added per milestone as needed:
 - milestone_core_stdlib/milestone_ext_collections: `sifr_std` (standard library wrappers, extended collections)
 - Ad-hoc semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
 - TypeScript-Go architecture transfer M0: `sifr_source` (bottom-of-graph source text, line-map, source-file metadata, and editor position conversion authority)
-- TypeScript-Go architecture transfer M1: `internal_docs/typescript_go_architecture_transfer_m1_guardrails.md` records the pre-session direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation before M2-M5 behavior migration.
+- TypeScript-Go architecture transfer guardrails: `internal_docs/typescript_go_architecture_transfer_guardrails.md` records the pre-session direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation before behavior migration.
 - TypeScript-Go architecture transfer M2: `sifr_frontend::SourceProvider` is the typed semantic filesystem boundary. `internal_docs/typescript_go_architecture_transfer_m2_source_provider.md` records how `DiskSourceProvider`, `OverlaySourceProvider`, and `TrackingSourceProvider` cover disk reads, unsaved editor buffers, read/probe/canonicalization dependency records, failed lookup records, and package import ambiguity before `WorkspaceSession` owns overlay lifecycle in M3.
 - TypeScript-Go architecture transfer M3: `sifr_frontend::WorkspaceSession` owns serialized compiler-service workspace state and can freeze inspectable `WorkspaceSnapshot` values. `internal_docs/typescript_go_architecture_transfer_m3_workspace_session.md` records the pre-analysis-migration session/snapshot state.
 - TypeScript-Go architecture transfer M4: `sifr_analysis::AnalysisSnapshot` is now an analysis-facing handle to a captured `WorkspaceSnapshot`, and LSP request handling routes editor queries through snapshot methods while staying serialized. `internal_docs/typescript_go_architecture_transfer_m4_analysis_snapshot.md` records query metadata snapshot ids, stale-result identity, and the conservative dirty-scope report slot before persistent LSP sessions and precise dirty scopes land in M5/M6.

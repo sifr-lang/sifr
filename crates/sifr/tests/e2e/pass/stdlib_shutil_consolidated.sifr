@@ -1,4 +1,4 @@
-# Consolidated stdlib shutil coverage for milestone_30_4 structure rules
+# Consolidated stdlib shutil coverage for stdlib_consolidation structure rules
 from sifr.shutil import copy, move_file, rmtree, which, disk_usage
 from sifr.io import write_text, read_text, exists
 from sifr.os import mkdir, run_command

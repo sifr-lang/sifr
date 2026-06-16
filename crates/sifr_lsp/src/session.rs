@@ -616,7 +616,7 @@ mod tests {
     }
 
     #[test]
-    fn active_request_cancellation_fails_phase_boundary_checks() {
+    fn active_request_cancellation_fails_scheduler_boundary_checks() {
         let mut session = Session::new();
         let id = RequestId::from(7);
         session

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate production formatter phase manifests and Ruff fork baseline."""
+"""Validate production formatter contract manifests and Ruff fork baseline."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_DIR = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "formatter_manifests"
-PHASE_DOC_NAME = "ad-hoc-production-grade-sifr-formatter.md"
+DESIGN_DOC_NAME = "ad-hoc-production-grade-sifr-formatter.md"
 EXECUTION_DOC_NAME = "ad-hoc-production-grade-sifr-formatter-execution.md"
 GITMODULES = REPO_ROOT / ".gitmodules"
 
@@ -65,7 +65,7 @@ def run(command: list[str], *, cwd: Path = REPO_ROOT) -> str:
     return completed.stdout.strip()
 
 
-def phase_doc_path(name: str) -> Path:
+def review_doc_path(name: str) -> Path:
     active_path = REPO_ROOT / "plans" / "issues" / "active" / name
     if active_path.exists():
         return active_path
@@ -100,12 +100,12 @@ def check_capability_manifest(failures: list[str], docs_text: str) -> None:
         )
         require(
             capability in docs_text,
-            f"capability {capability!r} is missing from reviewed phase docs",
+            f"capability {capability!r} is missing from reviewed formatter docs",
             failures,
         )
         require(
             isinstance(requirement, str) and requirement in docs_text,
-            f"capability {capability!r} requirement drifts from reviewed phase docs",
+            f"capability {capability!r} requirement drifts from reviewed formatter docs",
             failures,
         )
 
@@ -131,7 +131,7 @@ def check_cli_manifest(failures: list[str], docs_text: str) -> None:
         if ruff_surface not in {"stdin without files", "global logging flags used by formatter summaries"}:
             require(
                 isinstance(ruff_surface, str) and ruff_surface in docs_text,
-                f"CLI surface {ruff_surface!r} is missing from reviewed phase docs",
+                f"CLI surface {ruff_surface!r} is missing from reviewed formatter docs",
                 failures,
             )
         marker = RUFF_FORMAT_COMMAND_MARKERS.get(ruff_surface)
@@ -215,8 +215,8 @@ def check_baseline(failures: list[str]) -> None:
 def run_positive() -> None:
     docs_text = "\n".join(
         [
-            phase_doc_path(PHASE_DOC_NAME).read_text(encoding="utf-8"),
-            phase_doc_path(EXECUTION_DOC_NAME).read_text(encoding="utf-8"),
+            review_doc_path(DESIGN_DOC_NAME).read_text(encoding="utf-8"),
+            review_doc_path(EXECUTION_DOC_NAME).read_text(encoding="utf-8"),
         ]
     )
     failures: list[str] = []
@@ -225,11 +225,11 @@ def run_positive() -> None:
     check_ast_manifest(failures, docs_text)
     check_baseline(failures)
     if failures:
-        print("formatter phase manifests: FAIL", file=sys.stderr)
+        print("formatter contract manifests: FAIL", file=sys.stderr)
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
         raise SystemExit(1)
-    print("formatter phase manifests: PASS")
+    print("formatter contract manifests: PASS")
 
 
 def run_self_test() -> None:
@@ -259,8 +259,8 @@ def run_self_test() -> None:
         finally:
             globals()["MANIFEST_DIR"] = original_manifest_dir
         if not any("invalid classification" in failure for failure in failures):
-            raise SystemExit("formatter phase manifest self-test failed: invalid classification passed")
-    print("formatter phase manifests self-test: PASS")
+            raise SystemExit("formatter contract manifest self-test failed: invalid classification passed")
+    print("formatter contract manifests self-test: PASS")
 
 
 def main() -> int:

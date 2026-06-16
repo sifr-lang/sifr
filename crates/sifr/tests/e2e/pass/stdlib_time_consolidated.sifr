@@ -1,4 +1,4 @@
-# Consolidated stdlib time coverage for milestone_30_4 structure rules
+# Consolidated stdlib time coverage for stdlib_consolidation structure rules
 from sifr.time import time_now, time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time
 from sifr.time import mktime, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME
 from sifr.test import assert_bool_vector_eq

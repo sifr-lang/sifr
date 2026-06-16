@@ -11,6 +11,6 @@ Sifr-managed Cargo projection manifest pointer drift.
 | Severity | Error |
 | Owner | `sifr_package::projection` |
 | Message template | `Cargo projection manifest pointer drift` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_manifest_pointer_0703` |
+| Representative fixture | `crates/sifr_package/src/package_projection_tests.rs::repair_check_reports_missing_manifest_pointer_0703` |
 | Declared args | `cargo_package_id (json-only)`, `path (json-only)`, `reason (message+json)` |
 | Dedupe args | `cargo_package_id`, `path`, `reason` |

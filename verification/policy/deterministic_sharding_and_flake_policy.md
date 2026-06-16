@@ -1,6 +1,6 @@
 # Deterministic Sharding and Flake Policy
 
-This policy defines deterministic scale checks and flake handling for phase 29.
+This policy defines deterministic scale checks and flake handling for verification hardening.
 
 ## Deterministic Sharding
 

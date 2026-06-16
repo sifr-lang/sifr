@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the diagnostic source-canonicalization phase contract."""
+"""Validate the diagnostic source-canonicalization contract."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-# Reference: phase31_tuple_unpack_mutability
+# Reference: narrowing_tuple_unpack_mutability
 # Test: tuple destructuring should emit mutable bindings when targets are later reassigned.
 
 def my_sqrt(x: int) -> int:

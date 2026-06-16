@@ -256,7 +256,7 @@ impl TestWorkspace {
             .duration_since(UNIX_EPOCH)
             .expect("time should move forward")
             .as_nanos();
-        let root = std::env::temp_dir().join(format!("sifr_pkg_m2_{name}_{stamp}"));
+        let root = std::env::temp_dir().join(format!("sifr_pkg_import_resolution_{name}_{stamp}"));
         fs::create_dir_all(&root).expect("create temp workspace");
         Self { root }
     }

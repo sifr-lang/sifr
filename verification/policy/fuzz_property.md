@@ -1,6 +1,6 @@
 # Fuzz and Property Policy
 
-This policy defines phase-29 fuzz/property operating rules.
+This policy defines verification-hardening fuzz/property operating rules.
 
 ## Local Deterministic Smoke Gates (Blocking)
 

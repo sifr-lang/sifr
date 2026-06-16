@@ -1,6 +1,6 @@
 # Regression Corpus Policy (`fixedbugs` + `crashes`)
 
-This policy defines the canonical regression corpus contract for phase 29.
+This policy defines the canonical regression corpus contract for verification hardening.
 
 ## `fixedbugs` Contract
 

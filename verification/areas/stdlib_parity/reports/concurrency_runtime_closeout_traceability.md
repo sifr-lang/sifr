@@ -29,11 +29,11 @@ Status: Closed. This M7 artifact is the closeout audit surface for docs, demos, 
 | Milestone | Artifact | Closure state |
 | --- | --- | --- |
 | M0a | `concurrency_runtime_m0a_legacy_surface_traceability.md` | Closed by legacy-surface diagnostics and native surface boundary selection. |
-| M1 | `concurrency_runtime_m1_traceability.md` | Closed by structured task ownership, scoped spawn, timeout/cancellation, race/select, and task handle evidence. |
-| M2 | `concurrency_runtime_m2_sync_traceability.md` | Closed by channels, backpressure, close/drain, cancellation, locks, semaphores, events, and sendability/shareability diagnostics. |
-| M3 | `concurrency_runtime_m3_offload_traceability.md` | Closed by blocking/CPU offload, `JoinSet`, `sifr.parallel`, typed worker errors, and panic-boundary evidence. |
-| M4 | `concurrency_runtime_m4_process_traceability.md` | Closed by sync/async process supervision, owned pipes, text mode, shell effect, timeout, cancellation, kill/terminate, and scoped process ownership evidence. |
-| M5 | `concurrency_runtime_m5_shutdown_traceability.md` | Closed by signal values/streams, cleanup cancellation, `nullcontext`, task context propagation, diagnostics/tracing, and rejected global-state surfaces. |
+| TCP | `concurrency_runtime_m1_traceability.md` | Closed by structured task ownership, scoped spawn, timeout/cancellation, race/select, and task handle evidence. |
+| TLS | `concurrency_runtime_m2_sync_traceability.md` | Closed by channels, backpressure, close/drain, cancellation, locks, semaphores, events, and sendability/shareability diagnostics. |
+| URL/HTTP primitives | `concurrency_runtime_m3_offload_traceability.md` | Closed by blocking/CPU offload, `JoinSet`, `sifr.parallel`, typed worker errors, and panic-boundary evidence. |
+| HTTP transport | `concurrency_runtime_m4_process_traceability.md` | Closed by sync/async process supervision, owned pipes, text mode, shell effect, timeout, cancellation, kill/terminate, and scoped process ownership evidence. |
+| handoff | `concurrency_runtime_m5_shutdown_traceability.md` | Closed by signal values/streams, cleanup cancellation, `nullcontext`, task context propagation, diagnostics/tracing, and rejected global-state surfaces. |
 | M6 | `concurrency_runtime_m6_typed_ipc_design.md` | Closed by typed IPC schema/frame substrate, request tracking, connection negotiation, payload diagnostics, Unix process-pipe evidence, and `deferred-to-phase-X` worker boundaries. |
 
 ## Required M7 PR Slices

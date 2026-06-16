@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "closed_milestones_env": "SIFR_PLATFORM_CLOSED_MILESTONES",
+  "closed_contracts_env": "SIFR_PLATFORM_CLOSED_CONTRACTS",
   "entries": [
     {
       "program": "binary_file_io_contract.sifr",
@@ -12,9 +12,9 @@
       "expected_diagnostic_contains": [],
       "depends_on": [],
       "must_not_depend_on": [
-        "milestone_text_i18n_1"
+        "text_i18n_core_unicode"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "binary open",
         "byte-preserving round trip",
@@ -31,10 +31,10 @@
         "sifr.encoding"
       ],
       "depends_on": [
-        "milestone_text_i18n_0"
+        "text_i18n_import_boundary"
       ],
       "must_not_depend_on": [],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "bare CPython text import diagnostic",
         "Sifr-native namespace suggestion"
@@ -50,10 +50,10 @@
         "sifr.runtime"
       ],
       "depends_on": [
-        "milestone_concurrency_runtime_0"
+        "concurrency_runtime_import_boundary"
       ],
       "must_not_depend_on": [],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "bare CPython concurrency import diagnostics",
         "Sifr-native runtime namespace suggestions"
@@ -69,12 +69,12 @@
         "sifr.net"
       ],
       "depends_on": [
-        "milestone_network_http_0"
+        "network_http_import_boundary"
       ],
       "must_not_depend_on": [
         "sifr.socket"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "bare CPython network import diagnostic",
         "Sifr-native network namespace suggestion"
@@ -90,12 +90,12 @@
         "sifr.tls"
       ],
       "depends_on": [
-        "milestone_network_http_0"
+        "network_http_import_boundary"
       ],
       "must_not_depend_on": [
         "sifr.ssl"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "bare CPython TLS import diagnostic",
         "Sifr-native TLS namespace suggestion"
@@ -111,12 +111,12 @@
         "sifr.url"
       ],
       "depends_on": [
-        "milestone_network_http_0"
+        "network_http_import_boundary"
       ],
       "must_not_depend_on": [
         "sifr.urllib"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "bare CPython URL import diagnostic",
         "Sifr-native URL namespace suggestion"
@@ -132,12 +132,12 @@
         "sifr.http"
       ],
       "depends_on": [
-        "milestone_network_http_0"
+        "network_http_import_boundary"
       ],
       "must_not_depend_on": [
         "sifr.http.client"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "bare CPython HTTP import diagnostic",
         "Sifr-native HTTP substrate namespace suggestion"
@@ -153,12 +153,12 @@
         "sifr.net"
       ],
       "depends_on": [
-        "milestone_network_http_0"
+        "network_http_import_boundary"
       ],
       "must_not_depend_on": [
         "sifr.selectors"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "bare CPython readiness import diagnostic",
         "Sifr-native async network namespace suggestion"
@@ -179,16 +179,16 @@
         "sifr.resource"
       ],
       "depends_on": [
-        "milestone_concurrency_runtime_0a"
+        "concurrency_runtime_legacy_surface"
       ],
       "must_not_depend_on": [
         "sifr.asyncio",
         "sifr.subprocess",
         "sifr.concurrent"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
-        "legacy CPython-shaped Sifr runtime surfaces removed or diagnosed before M1"
+        "legacy CPython-shaped Sifr runtime surfaces removed or diagnosed before structured-tasks contract"
       ]
     },
     {
@@ -200,13 +200,13 @@
       ],
       "expected_diagnostic_contains": [],
       "depends_on": [
-        "milestone_text_i18n_1",
-        "milestone_network_http_1"
+        "text_i18n_core_unicode",
+        "network_http_async_network"
       ],
       "must_not_depend_on": [],
-      "blocked_until": [
-        "milestone_text_i18n_1",
-        "milestone_network_http_1"
+      "blocked_until_contracts": [
+        "text_i18n_core_unicode",
+        "network_http_async_network"
       ],
       "checks": [
         "HTTP body text decoding consumes text/i18n substrate"
@@ -221,11 +221,11 @@
       ],
       "expected_diagnostic_contains": [],
       "depends_on": [
-        "milestone_text_i18n_1",
-        "milestone_concurrency_runtime_4"
+        "text_i18n_core_unicode",
+        "concurrency_runtime_process"
       ],
       "must_not_depend_on": [],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "subprocess text mode consumes explicit encoding substrate"
       ]
@@ -239,12 +239,12 @@
       ],
       "expected_diagnostic_contains": [],
       "depends_on": [
-        "milestone_text_i18n_3"
+        "text_i18n_regex_locale"
       ],
       "must_not_depend_on": [
-        "milestone_text_i18n_1"
+        "text_i18n_core_unicode"
       ],
-      "blocked_until": [],
+      "blocked_until_contracts": [],
       "checks": [
         "explicit locale formatting",
         "host-limited locale discovery",

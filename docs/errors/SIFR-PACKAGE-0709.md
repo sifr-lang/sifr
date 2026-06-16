@@ -11,6 +11,6 @@ Pure package marker is missing from Sifr-managed projection.
 | Severity | Error |
 | Owner | `sifr_package::projection` |
 | Message template | `pure Sifr package marker is missing` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_regenerates_missing_pure_marker` |
+| Representative fixture | `crates/sifr_package/src/package_projection_tests.rs::repair_regenerates_missing_pure_marker` |
 | Declared args | `cargo_package_id (json-only)`, `marker_path (json-only)` |
 | Dedupe args | `cargo_package_id`, `marker_path` |

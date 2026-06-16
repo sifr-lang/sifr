@@ -11,6 +11,6 @@ Selected workspace members use the same Sifr package name.
 | Severity | Error |
 | Owner | `sifr_package::graph::workspace` |
 | Message template | `duplicate Sifr package name in workspace: {package}` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_sifr_names_report_0607` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::workspace_duplicate_sifr_names_report_0607` |
 | Declared args | `package (message+json)`, `members (json-only)` |
 | Dedupe args | `package`, `members` |

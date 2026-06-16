@@ -57,8 +57,8 @@ VALID_PROFILE_ASSIGNMENTS = {
 }
 TEMPORARY_STATUSES = {"expected-missing", "tests:none", "red-blocker", "quarantined"}
 NON_CLOSEOUT_STATUSES = {"expected-missing", "tests:none", "red-blocker"}
-ALLOWED_WAVES = {str(value) for value in range(1, 10)}
-ALLOWED_SUBWAVES_BY_WAVE = {
+ALLOWED_RESOLUTION_GATES = {str(value) for value in range(1, 10)}
+ALLOWED_SLICES_BY_GATE = {
     "2": {"final"},
     "5": {"1", "2", "3", "4", "5", "6", "7", "8"},
     "6": {"0", "1"},
@@ -237,14 +237,14 @@ def validate_temporary_row(row: dict[str, Any], location: str, today: date, erro
     for key in ("issue", "expiry"):
         require_string(row, key, location, errors)
     if row.get("status") in {"expected-missing", "red-blocker"}:
-        wave = require_string(row, "closes_in_wave", location, errors)
-        if wave and wave not in ALLOWED_WAVES:
-            errors.append(f"{location}: closes_in_wave must be one of 1-9")
-        subwave = row.get("closes_in_subwave")
-        if subwave is not None:
-            allowed = ALLOWED_SUBWAVES_BY_WAVE.get(str(wave), set())
-            if subwave not in allowed:
-                errors.append(f"{location}: unknown closes_in_subwave {wave}.{subwave}")
+        gate = require_string(row, "resolution_gate", location, errors)
+        if gate and gate not in ALLOWED_RESOLUTION_GATES:
+            errors.append(f"{location}: resolution_gate must be one of 1-9")
+        slice = row.get("resolution_slice")
+        if slice is not None:
+            allowed = ALLOWED_SLICES_BY_GATE.get(str(gate), set())
+            if slice not in allowed:
+                errors.append(f"{location}: unknown resolution_slice {gate}.{slice}")
     expiry = row.get("expiry")
     if isinstance(expiry, str):
         try:

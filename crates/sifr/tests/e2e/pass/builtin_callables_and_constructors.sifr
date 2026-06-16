@@ -1,5 +1,5 @@
-# Reference: phase_psp_a1_builtin_callable_surface
-# CPython-derived wave_psp_a1 coverage:
+# Reference: stdlib_parity_a1_builtin_callable_surface
+# CPython-derived stdlib_parity_a1 coverage:
 # - constructor entry parity for list/tuple/dict
 # - builtin helper call shapes for sorted/reversed/enumerate/zip/map/range
 # - ord/chr success and safe error adaptation

@@ -1,4 +1,4 @@
-# `wave_psp_bytes_0` Architecture Lock (First-Class Bytes and Binary Surface Foundation)
+# `stdlib_parity_bytes_0` Architecture Lock (First-Class Bytes and Binary Surface Foundation)
 
 Phase: `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`  
 Execution ledger: `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`
@@ -39,10 +39,10 @@ Lock one canonical binary carrier (`bytes`), one explicit text/binary boundary, 
 
 | CPython family | Direction | Owning wave | Local anchor |
 | --- | --- | --- | --- |
-| `Lib/test/test_bytes.py` core immutable object model and constructor/index/slice behaviors | `adapted` | `wave_psp_bytes_1` + `wave_psp_bytes_2` | `crates/sifr/tests/e2e/pass/bytes_basics.sifr`, `crates/sifr/tests/e2e/pass/bytes_constructors.sifr` |
-| `Lib/test/test_base64.py` binary payload pathways | `adapted` | `wave_psp_bytes_3` | downstream contract rewiring and parity-ledger updates |
-| `Lib/test/test_hashlib.py` digest/update binary pathways | `adapted` | `wave_psp_bytes_3` | downstream contract rewiring and parity-ledger updates |
-| `Lib/test/test_io/` binary file-handle pathways | `adapted` | `wave_psp_bytes_3` | downstream contract rewiring and parity-ledger updates |
+| `Lib/test/test_bytes.py` core immutable object model and constructor/index/slice behaviors | `adapted` | `stdlib_parity_bytes_1` + `stdlib_parity_bytes_2` | `crates/sifr/tests/e2e/pass/bytes_basics.sifr`, `crates/sifr/tests/e2e/pass/bytes_constructors.sifr` |
+| `Lib/test/test_base64.py` binary payload pathways | `adapted` | `stdlib_parity_bytes_3` | downstream contract rewiring and parity-ledger updates |
+| `Lib/test/test_hashlib.py` digest/update binary pathways | `adapted` | `stdlib_parity_bytes_3` | downstream contract rewiring and parity-ledger updates |
+| `Lib/test/test_io/` binary file-handle pathways | `adapted` | `stdlib_parity_bytes_3` | downstream contract rewiring and parity-ledger updates |
 
 ## Architecture-Lock Validation Fixtures (Wave 0)
 

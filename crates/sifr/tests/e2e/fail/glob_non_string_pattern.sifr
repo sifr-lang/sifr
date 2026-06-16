@@ -1,4 +1,4 @@
-# Reference: phase_psp_d1_glob_non_string_pattern
+# Reference: stdlib_parity_d1_glob_non_string_pattern
 from sifr.glob import glob
 
 

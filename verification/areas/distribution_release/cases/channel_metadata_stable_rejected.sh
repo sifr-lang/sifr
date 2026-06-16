@@ -25,6 +25,6 @@ path.write_text(json.dumps(metadata, indent=2) + "\n")
 PY
 
 require_failure_contains \
-  "stable channel metadata is disabled until Phase 39" \
+  "stable channel metadata is disabled until stable release channels are enabled" \
   "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
     --install-root "${install_root}"

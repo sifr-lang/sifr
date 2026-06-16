@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "owner": "compiler/performance",
-  "description": "Wave 8 performance trend contract. Local create-pr and merge lanes keep threshold budgets blocking; trend deltas are reviewed on approved reference hardware so ordinary developer machines do not fail solely because of local timing noise.",
+  "description": "Performance trend contract. Local create-pr and merge lanes keep threshold budgets blocking; trend deltas are reviewed on approved reference hardware so ordinary developer machines do not fail solely because of local timing noise.",
   "baseline_window_days": 45,
   "max_future_clock_skew_days": 2,
   "required_result_fields": [

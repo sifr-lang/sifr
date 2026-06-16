@@ -1,6 +1,6 @@
-# wave_psp_rng_0 CPython Traceability Matrix
+# stdlib_parity_rng_0 CPython Traceability Matrix
 
-Wave: `wave_psp_rng_0`  
+Wave: `stdlib_parity_rng_0`
 Scope: architecture lock and governance freeze for stateful RNG, bytes-native crypto, and residual polish ownership
 
 ## CPython Harvest Inputs
@@ -16,14 +16,14 @@ Scope: architecture lock and governance freeze for stateful RNG, bytes-native cr
 
 | CPython family | Sifr surface direction | State | Owning wave |
 | --- | --- | --- | --- |
-| `test_random` deterministic object/state semantics (`seed`, `getstate`, `setstate`, `Random`, `SystemRandom`) | replace current stateless host-random wrappers with typed deterministic state model (`RandomState`) + module-global delegation | `adapted` (planned) | `wave_psp_rng_1` |
-| `test_random` bytes generation (`randbytes`) | ship bytes-native random byte generation on first-class raw-byte-backed `bytes` | `adapted` (planned) | `wave_psp_rng_1` |
-| `test_hashlib` digest/object model parity | migrate from hex-string digest aliasing to bytes-native digest/object APIs (`digest`, `digest_bytes`, `update_bytes`, `new_bytes`) | `adapted` (planned) | `wave_psp_rng_2` |
-| `test_hashlib` algorithm inventory expansion (`sha3`/`shake`) | close only algorithms available in runtime dependency stack; keep unsupported algorithms explicit | `adapted` (planned) | `wave_psp_rng_2` |
-| `test_base64` binary-oriented API behavior | anchor binary-oriented parity on first-class `bytes` carrier while preserving text helpers | `adapted` (planned) | `wave_psp_rng_2` |
-| `test_statistics` advanced deterministic helpers | close narrow float/int advanced helpers only; preserve deterministic typed errors | `adapted` (planned) | `wave_psp_rng_3` |
-| `test_textwrap` residual formatter options | close only explicit residual waived options if low risk | `adapted` (planned) | `wave_psp_rng_3` |
-| `test_html` residual top-level polish | keep package parser ecosystem out of scope; close only explicit residual top-level gaps | `adapted` (planned) | `wave_psp_rng_3` |
+| `test_random` deterministic object/state semantics (`seed`, `getstate`, `setstate`, `Random`, `SystemRandom`) | replace current stateless host-random wrappers with typed deterministic state model (`RandomState`) + module-global delegation | `adapted` (planned) | `stdlib_parity_rng_1` |
+| `test_random` bytes generation (`randbytes`) | ship bytes-native random byte generation on first-class raw-byte-backed `bytes` | `adapted` (planned) | `stdlib_parity_rng_1` |
+| `test_hashlib` digest/object model parity | migrate from hex-string digest aliasing to bytes-native digest/object APIs (`digest`, `digest_bytes`, `update_bytes`, `new_bytes`) | `adapted` (planned) | `stdlib_parity_rng_2` |
+| `test_hashlib` algorithm inventory expansion (`sha3`/`shake`) | close only algorithms available in runtime dependency stack; keep unsupported algorithms explicit | `adapted` (planned) | `stdlib_parity_rng_2` |
+| `test_base64` binary-oriented API behavior | anchor binary-oriented parity on first-class `bytes` carrier while preserving text helpers | `adapted` (planned) | `stdlib_parity_rng_2` |
+| `test_statistics` advanced deterministic helpers | close narrow float/int advanced helpers only; preserve deterministic typed errors | `adapted` (planned) | `stdlib_parity_rng_3` |
+| `test_textwrap` residual formatter options | close only explicit residual waived options if low risk | `adapted` (planned) | `stdlib_parity_rng_3` |
+| `test_html` residual top-level polish | keep package parser ecosystem out of scope; close only explicit residual top-level gaps | `adapted` (planned) | `stdlib_parity_rng_3` |
 
 ## Explicit Waivers / Boundaries Locked in Wave 0
 
@@ -45,6 +45,6 @@ Scope: architecture lock and governance freeze for stateful RNG, bytes-native cr
   - `crates/sifr/tests/e2e/fail/sha3_object_model_unsupported.sifr`
 
 Historical note:
-- `crates/sifr/tests/e2e/fail/phase_psp_rng_0_random_state_object_model_unsupported.sifr` was retired after `wave_psp_rng_1` shipped deterministic state/object parity.
-- `crates/sifr/tests/e2e/fail/phase_psp_rng_0_hashlib_bytes_digest_api_unsupported.sifr` was retired after `wave_psp_rng_2` shipped bytes-native `hashlib` object parity.
-- `crates/sifr/tests/e2e/fail/phase_psp_rng_0_textwrap_max_lines_unsupported.sifr` was retired after `wave_psp_rng_3` shipped `TextWrapper` `max_lines`/`placeholder` support.
+- `crates/sifr/tests/e2e/fail/stdlib_parity_rng_0_random_state_object_model_unsupported.sifr` was retired after `stdlib_parity_rng_1` shipped deterministic state/object parity.
+- `crates/sifr/tests/e2e/fail/stdlib_parity_rng_0_hashlib_bytes_digest_api_unsupported.sifr` was retired after `stdlib_parity_rng_2` shipped bytes-native `hashlib` object parity.
+- `crates/sifr/tests/e2e/fail/stdlib_parity_rng_0_textwrap_max_lines_unsupported.sifr` was retired after `stdlib_parity_rng_3` shipped `TextWrapper` `max_lines`/`placeholder` support.

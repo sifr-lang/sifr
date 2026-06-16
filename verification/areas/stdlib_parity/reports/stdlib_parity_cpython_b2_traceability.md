@@ -1,4 +1,4 @@
-# `wave_psp_b2` CPython Traceability
+# `stdlib_parity_b2` CPython Traceability
 
 ## Reviewed upstream families
 
@@ -24,7 +24,7 @@ State note: ad-hoc iterator architecture phase closure moved core iterator/lazy 
 | `itertools.cycle(...)` infinite-iterator signature parity | `intentional-diff` | Sifr uses finite `cycle(data, n)` semantics instead of CPython's infinite `cycle(iterable)` for deterministic bounded execution. |
 | `itertools.product(..., repeat=<0)` error parity | `intentional-diff` | CPython raises `ValueError` for negative `repeat`; Sifr currently returns an empty iterator and treats this as a bounded safe adaptation (`cpython_itertools_subset.sifr` assertion). |
 | `operator.attrgetter` and `operator.methodcaller` callable factories | `unsupported` | Reflective attribute and method lookup by string is not available in the current statically typed object model (guarded by `operator_attrgetter_unsupported.sifr` and `operator_methodcaller_unsupported.sifr`). |
-| Residual `random` waiver family (`choices(weights=...)`, `SystemRandom.getstate/setstate`) | `unsupported` | Follow-up `wave_psp_rng_1` now ships deterministic mutable-state parity (`RandomState`, `Random`, module-level delegation, `randbytes`). Remaining unsupported pieces are weighted-distribution `choices(weights=...)` and host-backed `SystemRandom` state export/import (guarded by `random_choices_weights_unsupported.sifr` and `system_random_state_unsupported.sifr`). |
+| Residual `random` waiver family (`choices(weights=...)`, `SystemRandom.getstate/setstate`) | `unsupported` | Follow-up `stdlib_parity_rng_1` now ships deterministic mutable-state parity (`RandomState`, `Random`, module-level delegation, `randbytes`). Remaining unsupported pieces are weighted-distribution `choices(weights=...)` and host-backed `SystemRandom` state export/import (guarded by `random_choices_weights_unsupported.sifr` and `system_random_state_unsupported.sifr`). |
 | `secrets.token_urlsafe(...)` and bytes-oriented `compare_digest(...)` parity | `unsupported` | This wave stays on `str`-only parity and does not claim CPython's bytes/base64-oriented security surface without a first-class bytes type (guarded by `secrets_token_urlsafe_unsupported.sifr`). |
 | Constant-time timing-safety guarantees for `secrets.compare_digest(...)` | `unsupported` | The current implementation keeps value-equality semantics but does not provide a constant-time side-channel-hardening contract; callers must not treat it as timing-safe in this wave. |
 

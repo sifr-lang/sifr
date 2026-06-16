@@ -39,8 +39,8 @@ Validation so far:
 - `cargo test -p sifr_lsp` -> PASS, 13 tests
 - `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py` -> PASS
 - `python3 verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
 - `cargo fmt --check` -> PASS
 - `cargo clippy -p sifr_lsp -- -D warnings` -> PASS
 - `git diff --check`

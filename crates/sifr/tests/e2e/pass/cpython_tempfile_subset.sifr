@@ -38,7 +38,7 @@ def collect_tempfile_actual() -> list[bool]:
         actual.append(exists(empty_prefix_path))
 
         temp_root: str = dirname(p0)
-        missing_parent_name: str = "__sifr_phase30_missing_parent__"
+        missing_parent_name: str = "__sifr_missing_parent__"
         missing_parent_path: str = temp_root + "/" + missing_parent_name
         missing_prefix: str = missing_parent_name + "/tmp_"
         _rm_missing: str = run_command("rm -rf " + missing_parent_path)

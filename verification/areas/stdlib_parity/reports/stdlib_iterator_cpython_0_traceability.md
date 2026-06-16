@@ -1,6 +1,6 @@
-# wave_psp_iter_fix_0 CPython Traceability Matrix
+# stdlib_parity_iter_fix_0 CPython Traceability Matrix
 
-Wave: `wave_psp_iter_fix_0`  
+Wave: `stdlib_parity_iter_fix_0`
 Scope: contract freeze and governance lock for canonical iterator semantics
 
 ## CPython Harvest Inputs
@@ -16,12 +16,12 @@ Scope: contract freeze and governance lock for canonical iterator semantics
 
 | CPython family | Sifr surface direction | State | Owning wave |
 | --- | --- | --- | --- |
-| `test_iter` protocol semantics (`iter`, `next`, iterator-vs-iterable behavior) | preserve first-class iterable/iterator model while closing current backend-capability fractures | `adapted` (planned) | `wave_psp_iter_fix_1` + `wave_psp_iter_fix_2` + `wave_psp_iter_fix_3` |
-| `test_filter` lazy behavior | enforce true lazy `filter` semantics through canonical iterator lowering/codegen | `adapted` (planned) | `wave_psp_iter_fix_3` + `wave_psp_iter_fix_5` |
-| `test_enumerate` lazy iterator behavior | keep iterator-returning behavior across typing/lowering/execution with explicit materialization boundaries | `adapted` (planned) | `wave_psp_iter_fix_5` |
-| `test_generators` iterator-producing generator behavior | align generator functions and expressions with canonical iterator backend semantics | `adapted` (planned) | `wave_psp_iter_fix_4` |
-| `test_itertools` lazy adapter composition | rewrite `sifr.itertools` around `Iterable[...]`/lazy semantics where valid; preserve explicit buffered helpers | `adapted` (planned) | `wave_psp_iter_fix_6` |
-| `test_tuple` iteration behavior | support homogeneous tuple iteration and explicitly reject heterogeneous tuple union-yield iteration | `adapted` (planned) | `wave_psp_iter_fix_1` + `wave_psp_iter_fix_8` |
+| `test_iter` protocol semantics (`iter`, `next`, iterator-vs-iterable behavior) | preserve first-class iterable/iterator model while closing current backend-capability fractures | `adapted` (planned) | `stdlib_parity_iter_fix_1` + `stdlib_parity_iter_fix_2` + `stdlib_parity_iter_fix_3` |
+| `test_filter` lazy behavior | enforce true lazy `filter` semantics through canonical iterator lowering/codegen | `adapted` (planned) | `stdlib_parity_iter_fix_3` + `stdlib_parity_iter_fix_5` |
+| `test_enumerate` lazy iterator behavior | keep iterator-returning behavior across typing/lowering/execution with explicit materialization boundaries | `adapted` (planned) | `stdlib_parity_iter_fix_5` |
+| `test_generators` iterator-producing generator behavior | align generator functions and expressions with canonical iterator backend semantics | `adapted` (planned) | `stdlib_parity_iter_fix_4` |
+| `test_itertools` lazy adapter composition | rewrite `sifr.itertools` around `Iterable[...]`/lazy semantics where valid; preserve explicit buffered helpers | `adapted` (planned) | `stdlib_parity_iter_fix_6` |
+| `test_tuple` iteration behavior | support homogeneous tuple iteration and explicitly reject heterogeneous tuple union-yield iteration | `adapted` (planned) | `stdlib_parity_iter_fix_1` + `stdlib_parity_iter_fix_8` |
 
 ## Explicit Waivers / Boundaries Locked in Wave 0
 

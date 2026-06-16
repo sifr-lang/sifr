@@ -1,4 +1,4 @@
-# Consolidated stdlib datetime coverage for milestone_30_4 structure rules
+# Consolidated stdlib datetime coverage for stdlib_consolidation structure rules
 from sifr.datetime import now, today, from_timestamp, datetime, date, timedelta, timezone
 from sifr.test import assert_bool_vector_eq
 

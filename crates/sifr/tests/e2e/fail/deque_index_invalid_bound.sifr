@@ -1,4 +1,4 @@
-# Reference: phase_psp_b1_deque_index_invalid_bound
+# Reference: stdlib_parity_b1_deque_index_invalid_bound
 from sifr.collections import deque
 
 def main():

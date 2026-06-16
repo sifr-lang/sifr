@@ -130,8 +130,8 @@ future compiler-service layers. At the M1 planning gate:
 - `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
   `FrontendMode::SingleFile` on open/change/save.
 - The current `RequestQueue` tracks pending request ids and shutdown state only.
-- The current `Scheduler` maps request methods to lane labels only. M11 moved
-  priority queues and debounce into `RequestQueue`/`Session`; M13 moved
+- The current `Scheduler` maps request methods to lane labels only. The scheduler contract moved
+  priority queues and debounce into `RequestQueue`/`Session`; the cancellation contract moved
   cancellation tokens/state, delayed progress gates, and parent-pid watchdog
   state into `CancellationToken`, `RequestQueue`, `ProgressState`, `Session`,
   and `ParentWatchdog`.
@@ -139,21 +139,22 @@ future compiler-service layers. At the M1 planning gate:
   `AnalysisHost` use, not `WorkspaceSnapshot`/document-version publication
   identity.
 
-M1-M4 remain serialized. M5 is the first milestone allowed to remove the
+Bootstrap lanes remain serialized. The persistent-session contract removed the
 request-local LSP host shape by making LSP consume captured workspace snapshots.
-M11 owns priority queues and debounce. M13 owns request cancellation tokens,
-delayed progress, parent-pid watchdogs, and operational hardening. M14 defines
+The scheduler contract owns priority queues and debounce. The cancellation
+contract owns request cancellation tokens, delayed progress, parent-pid
+watchdogs, and operational hardening. The bucketed-index contract defines
 approved worker lanes in `sifr_analysis::ApprovedWorkerLane` while preserving
 single-owner compiler phases in `SingleOwnerCompilerPhase`.
 
-M5 replaced the request-local LSP host shape. `DocumentStore` now owns protocol
+The persistent session updated the request-local LSP host shape. `DocumentStore` now owns protocol
 document state only, and `Session` owns `LspAnalysisWorkspace`, which feeds
 open/change/save text through `WorkspaceSession` overlays before analysis-backed
 requests capture snapshots.
 
 ## Current LSP Budget Reality
 
-M12 updated the protocol-level LSP performance gate from aggregate-only coverage
+LSP latency budgets updated the protocol-level LSP performance gate from aggregate-only coverage
 to per-request editor latency budgets. `lsp.request_families` remains in
 `verification/areas/performance/data/benchmark_manifest.json` with budget id
 `perf.lsp.request_families`, but its evidence category is now aggregate smoke
@@ -165,65 +166,65 @@ type hierarchy, code actions, formatting, and generated Rust preview
 
 ## Automation
 
-`verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py` validates:
+`verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` validates:
 
-- M1 documentation contains the locked terms, direct-read inventory, current LSP
-  limitations, serialized M1-M4 rule, and aggregate LSP budget status.
+- Transfer documentation contains the locked terms, direct-read inventory, current LSP
+  limitations, bootstrap serialization rule, and aggregate LSP budget status.
 - `sifr_source` still has bottom-of-graph dependency direction.
 - `SourceMapView` no longer has no-op conversion stubs.
-- M5 LSP session ownership is visible in code: `DocumentStore` has no
+- Persistent LSP session ownership is visible in code: `DocumentStore` has no
   per-document analysis host, `Session` owns `LspAnalysisWorkspace`, and overlay
-  updates flow through the analysis workspace. M11/M13 scheduler, request-queue,
+  updates flow through the analysis workspace. Scheduler, request-queue,
   progress, and watchdog surfaces are visible without moving compiler ownership
   out of the serialized session.
-- The performance manifest contains the M12 split LSP request-family scenarios
+- The performance manifest contains the split LSP request-family scenarios
   and keeps `lsp.request_families` as aggregate smoke coverage only.
-- M14 bucketed index and worker-lane surfaces are visible:
+- Bucketed indexes updated the worker-lane surfaces:
   `SymbolBucketReadiness` and `SymbolBucketReadinessState` track
   workspace/package/stdlib symbol and import bucket state, host completion and
   import-symbol queries exercise bucketed APIs, and `ApprovedWorkerLane` stays
   separate from `SingleOwnerCompilerPhase`.
-- M15 residency, watcher, config, and build-info surfaces are visible:
+- Project residency updated the watcher, config, and build-info surfaces:
   `ProjectResidencyKind`, `ConfigRegistryEntry`, `WatchRegistrationReason`, and
   `SifrBuildInfoCandidate` keep long-lived project state and `.sifrbuildinfo`
   verification non-authoritative.
-- M16 trace and status surfaces are visible: `WorkspaceTracePhase`,
+- Trace status updated the trace and status surfaces: `WorkspaceTracePhase`,
   `WorkspaceStatusSnapshot`, and `WorkspaceDebugSnapshot` normalize compiler
   service phase traces, bounded status counters, side-effect-free index
   readiness, `sifr/debugTrace`, and `sifr trace` CLI output for local
   debugging.
-- M17 editor corpus and handle preparation are visible: `SnapshotHandleKind`
+- Editor corpus updated the handle preparation surface: `SnapshotHandleKind`
   stays internal to `sifr_analysis`, marker fixtures live under
   `verification/areas/developer_tooling/editor_query_corpus`, and runtime package fixtures
   include `package_fatal_source_map_no_import_ambiguity` to prove fatal
   package-map diagnostics do not duplicate source import ambiguity.
 
-### Future Milestone Update Obligations
+### Future Contract Update Obligations
 
-- M2 must either route every non-exempt inventory row through `SourceProvider`
+- The source-provider contract must either route every non-exempt inventory row through `SourceProvider`
   or update this inventory with a reviewed exception before closure.
-- M3 must move overlay lifecycle and tracked dependency records into
+- The workspace-session contract must move overlay lifecycle and tracked dependency records into
   `WorkspaceSession` snapshots instead of leaving them as ad hoc provider
   outputs.
-- M6 must consume tracked file, directory, canonicalization, probe, and failed
+- The dirty-scope contract must consume tracked file, directory, canonicalization, probe, and failed
   lookup records for dirty-scope classification and dependency-sensitive
   invalidation.
-- M5 updated the current LSP single-file rebuild caveat and matching script
+- Persistent session updated the current LSP single-file rebuild caveat and matching script
   checks when `DocumentStore` stopped owning request-local
   `AnalysisHost::open_single_file` rebuilds.
-- M12 updated the aggregate-only LSP budget caveat and the matching script
+- LSP latency budgets updated the aggregate-only LSP budget caveat and the matching script
   checks when `lsp.request_families` was split into per-request scenarios.
-- M13 updated the scheduler/request-queue caveats and matching script checks
+- cancellation progress watchdog updated the scheduler/request-queue caveats and matching script checks
   when cancellation tokens/state, delayed progress gates, and parent-pid
   watchdogs landed in the LSP modules.
-- M14 updated the serialized-execution caveat and matching script checks when
+- bucketed indexes updated the serialized-execution caveat and matching script checks when
   bucketed symbol/import readiness and approved worker-lane policy landed.
-- M15 updated the build-metadata exception and matching script checks when
+- project residency updated the build-metadata exception and matching script checks when
   verified, non-authoritative `.sifrbuildinfo` state became an explicit
   compiler-service input.
-- M16 updated the trace/status caveat and matching script checks when
+- trace status updated the trace/status caveat and matching script checks when
   deterministic compiler-service trace phases, debug status snapshots, LSP
   trace events, and `sifr trace` landed.
-- M17 updated editor-query corpus and package diagnostic caveats when
+- editor corpus updated editor-query corpus and package diagnostic caveats when
   marker-based fixtures, internal snapshot handles, and package diagnostic
   non-duplication runtime checks landed.

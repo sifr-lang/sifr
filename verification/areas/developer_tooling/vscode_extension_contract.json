@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "phase": "36",
-  "milestone": "36.7",
+  "contract": "editor_tooling",
+  "contract_version": "vscode-extension-current",
   "validation_stage": "extension-active",
   "repository": {
     "owner": "sifr-lang",
@@ -66,6 +66,6 @@
   "required_validation": {
     "contract_check": "python3 verification/areas/developer_tooling/check_vscode_extension_contract.py",
     "package_check": "python3 verification/areas/developer_tooling/check_vscode_extension.py",
-    "activation_milestone": "36.7"
+    "activation_contract": "36.7"
   }
 }

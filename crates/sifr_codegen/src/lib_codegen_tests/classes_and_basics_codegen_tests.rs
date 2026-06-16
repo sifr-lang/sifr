@@ -762,7 +762,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
                 expr: HirExpr::Call {
                     func: "loads".to_string(),
                     args: vec![HirExpr::StringLiteral(
-                        "name = \"phase-five\"\nvalue = 5".to_string(),
+                        "name = \"fixture-five\"\nvalue = 5".to_string(),
                     )],
                     ty: Type::Result(Box::new(Type::Str), Box::new(Type::Any)),
                 },

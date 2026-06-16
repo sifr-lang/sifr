@@ -3,7 +3,7 @@
 This file is the canonical milestone_30_2 artifact for API-level complexity and resource parity.
 
 Primary machine-readable source:
-- `verification/areas/stdlib_parity/data/phase30_complexity_resource_inventory.json`
+- `verification/areas/stdlib_parity/data/stdlib_complexity_resource_inventory.json`
 
 Validator:
 - `python3 verification/areas/stdlib_parity/tools/check_complexity_resource_inventory.py`
@@ -30,7 +30,7 @@ All 28 Phase 30 modules are covered in the inventory and mapped to a complexity/
 
 ## Asymptotic Comparison Status
 
-Inventory status summary (from `phase30_complexity_resource_inventory.json`):
+Inventory status summary (from `stdlib_complexity_resource_inventory.json`):
 - `28/28` modules have explicit expected and observed asymptotic classifications.
 - All entries are aligned with approved Phase 30 API scope.
 - No unresolved asymptotic mismatch remains open.
@@ -67,4 +67,3 @@ Non-waived modules use explicit delta bands (`within_2x`, `within_5x`, or `withi
   - `rationale`
   - `tracking_issue`
   - `revisit_rule`
-

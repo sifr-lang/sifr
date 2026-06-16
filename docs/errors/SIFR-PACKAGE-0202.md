@@ -11,6 +11,6 @@ Package imports a module outside its direct dependency scope.
 | Severity | Error |
 | Owner | `sifr_package::imports::source_map` |
 | Message template | `undeclared direct package import '{import_path}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_3_tests.rs::transitive_dependency_import_reports_0202` |
+| Representative fixture | `crates/sifr_package/src/package_source_map_tests.rs::transitive_dependency_import_reports_0202` |
 | Declared args | `import_path (message+json)`, `cargo_package_id (json-only)`, `package_id (json-only)` |
 | Dedupe args | `cargo_package_id`, `package_id`, `import_path` |

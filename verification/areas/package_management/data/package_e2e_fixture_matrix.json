@@ -1,6 +1,6 @@
 {
-  "phase": "37",
-  "description": "Phase 37 Cargo-backed package-management end-to-end fixture matrix. These fixtures exercise Sifr package behavior through Cargo-shaped metadata, package roots, source maps, command plans, diagnostics, archive plans, and checked-out demo repository submodules.",
+  "contract": "cargo-backed-package-management",
+  "description": "Cargo-backed package-management contract package-management end-to-end fixture matrix. These fixtures exercise Sifr package behavior through Cargo-shaped metadata, package roots, source maps, command plans, diagnostics, archive plans, and checked-out demo repository submodules.",
   "required_categories": [
     "pure_sifr_cargo_package",
     "rust_backed_sifr_package",
@@ -19,7 +19,7 @@
       "coverage": [
         "crates/sifr_package/src/lib.rs::tests::pure_sifr_package_graph_derives_from_cargo_metadata",
         "crates/sifr_package/src/lib.rs::tests::non_trivial_pure_marker_reports_package_0501",
-        "verification/areas/package_management/data/phase37_demo_repositories.json::sifr-demo-json"
+        "verification/areas/package_management/data/package_demo_repositories.json::sifr-demo-json"
       ],
       "notes": "Validates Cargo package metadata, sifr.toml loading, pure marker source acceptance, and non-trivial Rust marker rejection."
     },
@@ -27,9 +27,9 @@
       "category": "rust_backed_sifr_package",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_reports_untrusted_direct_backend_crate",
-        "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry",
-        "verification/areas/package_management/data/phase37_demo_repositories.json::sifr-demo-http"
+        "crates/sifr_package/src/cargo_backend_integration_tests.rs::backend_trust_reports_untrusted_direct_backend_crate",
+        "crates/sifr_package/src/cargo_backend_integration_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry",
+        "verification/areas/package_management/data/package_demo_repositories.json::sifr-demo-http"
       ],
       "notes": "Validates Rust-backed/native dependency trust policy through resolved backend crate metadata."
     },
@@ -37,9 +37,9 @@
       "category": "workspace_selection",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_5_tests.rs::explicit_rust_only_selection_reports_0102",
-        "crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_import_roots_report_0602",
-        "verification/areas/package_management/data/phase37_demo_repositories.json::sifr-demo-workspace"
+        "crates/sifr_package/src/package_workspace_query_tests.rs::explicit_rust_only_selection_reports_0102",
+        "crates/sifr_package/src/package_workspace_query_tests.rs::workspace_duplicate_import_roots_report_0602",
+        "verification/areas/package_management/data/package_demo_repositories.json::sifr-demo-workspace"
       ],
       "notes": "Validates Sifr-capable workspace member selection and workspace import-root diagnostics."
     },
@@ -47,8 +47,8 @@
       "category": "path_dependency",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_2_tests.rs::same_import_root_can_resolve_to_different_versions_in_different_scopes",
-        "crates/sifr_package/src/milestone_37_5_tests.rs::changed_file_mapping_reports_0603"
+        "crates/sifr_package/src/package_dependency_scope_tests.rs::same_import_root_can_resolve_to_different_versions_in_different_scopes",
+        "crates/sifr_package/src/package_workspace_query_tests.rs::changed_file_mapping_reports_0603"
       ],
       "notes": "Synthetic Cargo path package ids and package roots exercise local dependency identity, source maps, and changed-path ownership."
     },
@@ -56,8 +56,8 @@
       "category": "git_dependency",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_5_tests.rs::outdated_query_classifies_path_registry_and_git_sources_read_only",
-        "verification/areas/package_management/data/phase37_demo_repositories.json::sifr-demo-app"
+        "crates/sifr_package/src/package_workspace_query_tests.rs::outdated_query_classifies_path_registry_and_git_sources_read_only",
+        "verification/areas/package_management/data/package_demo_repositories.json::sifr-demo-app"
       ],
       "notes": "Git source ids are treated as opaque Cargo source identifiers and reported without lockfile mutation."
     },
@@ -65,8 +65,8 @@
       "category": "registry_dependency",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_4_tests.rs::offline_mode_reports_missing_sifr_source_package",
-        "crates/sifr_package/src/milestone_37_5_tests.rs::outdated_query_classifies_path_registry_and_git_sources_read_only"
+        "crates/sifr_package/src/cargo_backend_integration_tests.rs::offline_mode_reports_missing_sifr_source_package",
+        "crates/sifr_package/src/package_workspace_query_tests.rs::outdated_query_classifies_path_registry_and_git_sources_read_only"
       ],
       "notes": "Registry source ids are exercised through offline source availability and read-only outdated classification."
     },
@@ -74,9 +74,9 @@
       "category": "multiple_version_graph",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_2_tests.rs::same_import_root_can_resolve_to_different_versions_in_different_scopes",
-        "crates/sifr_package/src/milestone_37_2_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances",
-        "verification/areas/package_management/data/phase37_demo_repositories.json::sifr-demo-app"
+        "crates/sifr_package/src/package_dependency_scope_tests.rs::same_import_root_can_resolve_to_different_versions_in_different_scopes",
+        "crates/sifr_package/src/package_dependency_scope_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances",
+        "verification/areas/package_management/data/package_demo_repositories.json::sifr-demo-app"
       ],
       "notes": "Validates multiple resolved package instances, scoped imports, and package-instance-specific type identity diagnostics."
     },
@@ -84,9 +84,9 @@
       "category": "alias_imports",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_2_tests.rs::direct_dependency_aliases_allow_same_export_root_in_one_scope",
-        "crates/sifr_package/src/milestone_37_3_tests.rs::alias_import_root_remaps_to_dependency_export_root",
-        "verification/areas/package_management/data/phase37_demo_repositories.json::sifr-demo-app"
+        "crates/sifr_package/src/package_dependency_scope_tests.rs::direct_dependency_aliases_allow_same_export_root_in_one_scope",
+        "crates/sifr_package/src/package_source_map_tests.rs::alias_import_root_remaps_to_dependency_export_root",
+        "verification/areas/package_management/data/package_demo_repositories.json::sifr-demo-app"
       ],
       "notes": "Validates Cargo dependency rename plus Sifr alias metadata for same-scope duplicate import roots."
     },
@@ -94,9 +94,9 @@
       "category": "publishing",
       "status": "adapted",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_6_tests.rs::package_dry_run_includes_cargo_package_and_publish_dry_run_commands",
-        "crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_required_entry_reports_0403",
-        "crates/sifr_package/src/milestone_37_6_tests.rs::archive_traversal_reports_0402"
+        "crates/sifr_package/src/package_publish_archive_tests.rs::package_dry_run_includes_cargo_package_and_publish_dry_run_commands",
+        "crates/sifr_package/src/package_publish_archive_tests.rs::archive_missing_required_entry_reports_0403",
+        "crates/sifr_package/src/package_publish_archive_tests.rs::archive_traversal_reports_0402"
       ],
       "notes": "Validates dry-run package/publish planning, required archive entries, include/exclude omissions, and archive traversal rejection."
     }
@@ -104,10 +104,10 @@
   "explicit_non_port_decisions": [
     {
       "cargo_category": "live registry upload, yank, login, and alternate registry authentication",
-      "reason": "Phase 37 validates Sifr preflight and delegates upload/yank/login semantics to Cargo command surfaces. Local validation must not require external credentials or live registry mutation.",
+      "reason": "package-management contract validates Sifr preflight and delegates upload/yank/login semantics to Cargo command surfaces. Local validation must not require external credentials or live registry mutation.",
       "coverage": [
-        "crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials",
-        "crates/sifr_package/src/milestone_37_6_tests.rs::publish_and_vendor_plans_delegate_to_cargo_with_redaction_ready_commands"
+        "crates/sifr_package/src/cargo_backend_integration_tests.rs::cargo_failure_mapping_redacts_private_credentials",
+        "crates/sifr_package/src/package_publish_archive_tests.rs::publish_and_vendor_plans_delegate_to_cargo_with_redaction_ready_commands"
       ]
     },
     {

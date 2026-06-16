@@ -14,12 +14,12 @@ def main():
         assert bytes_out.status.success
 
         env_cmd: Command = Command("sh")
-        env_cmd.args(["-c", "printf \"$SIFR_M4_PROCESS_ENV\""])
-        env_cmd.set_env("SIFR_M4_PROCESS_ENV", "env-ok")
+        env_cmd.args(["-c", "printf \"$SIFR_PROCESS_ENV\""])
+        env_cmd.set_env("SIFR_PROCESS_ENV", "env-ok")
         env_out: TextOutput = output_text(env_cmd)
         assert env_out.stdout == "env-ok"
 
-        cwd_path: str = mktemp_path("sifr_m4_process_cwd_")
+        cwd_path: str = mktemp_path("sifr_process_cwd_")
         marker_path: str = cwd_path + "/marker.txt"
         _mkdir: Command = Command("mkdir")
         _mkdir.arg(cwd_path)

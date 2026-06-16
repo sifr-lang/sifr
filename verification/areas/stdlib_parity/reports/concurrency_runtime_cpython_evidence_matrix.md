@@ -1,6 +1,6 @@
 # Concurrency Runtime CPython Evidence Matrix
 
-Status: M7 inventory audited; generated from the phase source-of-truth list.
+Status: concurrency runtime inventory audited; generated from the contract source-of-truth list.
 
 CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 
@@ -8,7 +8,7 @@ CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 | --- | --- | --- | --- | --- |
 | `Doc/library/asyncio-subprocess.rst` | subprocess/process | sifr.process | adapted-for-sifr-api | public_functions=29, keyword_forms=5, deprecation_markers=1 |
 | `Doc/library/asyncio.rst` | queue/concurrency | sifr.task | adapted-for-sifr-api | keyword_forms=1 |
-| `Doc/library/concurrent.futures.rst` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=27, keyword_forms=12, deprecation_markers=3 |
+| `Doc/library/concurrent.futures.rst` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=27, keyword_forms=12, deprecation_markers=3 |
 | `Doc/library/contextlib.rst` | context/warnings/signal | sifr.resource | adapted-for-sifr-api | public_functions=31, keyword_forms=6, deprecation_markers=1 |
 | `Doc/library/multiprocessing.rst` | queue/concurrency | sifr.ipc deferred worker substrate | rejected | public_functions=158, keyword_forms=28, deprecation_markers=3 |
 | `Doc/library/multiprocessing.shared_memory.rst` | queue/concurrency | sifr.ipc deferred worker substrate | rejected | public_functions=16, keyword_forms=9 |
@@ -90,18 +90,18 @@ CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 | `Lib/test/test_asyncio/test_tasks.py` | queue/concurrency | sifr.task | adapted-for-sifr-api | public_functions=5, public_classes=26, public_methods=188, keyword_forms=10, test_classes=24, test_methods=167, deprecation_markers=3 |
 | `Lib/test/test_asyncio/test_timeouts.py` | queue/concurrency | sifr.task | adapted-for-sifr-api | public_functions=1, public_classes=1, public_methods=34, test_classes=1, test_methods=34 |
 | `Lib/test/test_asyncio/test_waitfor.py` | queue/concurrency | sifr.task | adapted-for-sifr-api | public_functions=1, public_classes=3, public_methods=20, test_classes=2, test_methods=19 |
-| `Lib/test/test_concurrent_futures/__init__.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=1 |
-| `Lib/test/test_concurrent_futures/executor.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=4, public_classes=4, public_methods=20, keyword_forms=1, test_classes=1, test_methods=19 |
-| `Lib/test/test_concurrent_futures/test_as_completed.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=2, public_classes=1, public_methods=5, test_classes=1, test_methods=5 |
-| `Lib/test/test_concurrent_futures/test_deadlock.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=1, public_classes=7, public_methods=16, test_classes=1, test_methods=16 |
-| `Lib/test/test_concurrent_futures/test_future.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=1, public_classes=1, public_methods=21, test_classes=1, test_methods=21 |
-| `Lib/test/test_concurrent_futures/test_init.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=4, public_classes=3, public_methods=6, public_constants=1, keyword_forms=1, test_classes=1, test_methods=4 |
-| `Lib/test/test_concurrent_futures/test_interpreter_pool.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=9, public_classes=4, public_methods=32, public_constants=1, keyword_forms=2, test_classes=2, test_methods=28 |
-| `Lib/test/test_concurrent_futures/test_process_pool.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=1, public_classes=2, public_methods=20, public_constants=3, test_classes=1, test_methods=20 |
-| `Lib/test/test_concurrent_futures/test_shutdown.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=2, public_classes=3, public_methods=20, test_classes=3, test_methods=20 |
-| `Lib/test/test_concurrent_futures/test_thread_pool.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=1, public_classes=1, public_methods=7, test_classes=1, test_methods=7, deprecation_markers=1 |
-| `Lib/test/test_concurrent_futures/test_wait.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=3, public_classes=2, public_methods=9, test_classes=2, test_methods=9 |
-| `Lib/test/test_concurrent_futures/util.py` | queue/concurrency | phase evidence | mined-as-substrate-fixture | public_functions=3, public_classes=7, public_methods=13, public_constants=6, keyword_forms=5, test_classes=1 |
+| `Lib/test/test_concurrent_futures/__init__.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=1 |
+| `Lib/test/test_concurrent_futures/executor.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=4, public_classes=4, public_methods=20, keyword_forms=1, test_classes=1, test_methods=19 |
+| `Lib/test/test_concurrent_futures/test_as_completed.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=2, public_classes=1, public_methods=5, test_classes=1, test_methods=5 |
+| `Lib/test/test_concurrent_futures/test_deadlock.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=1, public_classes=7, public_methods=16, test_classes=1, test_methods=16 |
+| `Lib/test/test_concurrent_futures/test_future.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=1, public_classes=1, public_methods=21, test_classes=1, test_methods=21 |
+| `Lib/test/test_concurrent_futures/test_init.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=4, public_classes=3, public_methods=6, public_constants=1, keyword_forms=1, test_classes=1, test_methods=4 |
+| `Lib/test/test_concurrent_futures/test_interpreter_pool.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=9, public_classes=4, public_methods=32, public_constants=1, keyword_forms=2, test_classes=2, test_methods=28 |
+| `Lib/test/test_concurrent_futures/test_process_pool.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=1, public_classes=2, public_methods=20, public_constants=3, test_classes=1, test_methods=20 |
+| `Lib/test/test_concurrent_futures/test_shutdown.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=2, public_classes=3, public_methods=20, test_classes=3, test_methods=20 |
+| `Lib/test/test_concurrent_futures/test_thread_pool.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=1, public_classes=1, public_methods=7, test_classes=1, test_methods=7, deprecation_markers=1 |
+| `Lib/test/test_concurrent_futures/test_wait.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=3, public_classes=2, public_methods=9, test_classes=2, test_methods=9 |
+| `Lib/test/test_concurrent_futures/util.py` | queue/concurrency | contract evidence | mined-as-substrate-fixture | public_functions=3, public_classes=7, public_methods=13, public_constants=6, keyword_forms=5, test_classes=1 |
 | `Lib/test/test_contextlib.py` | context/warnings/signal | sifr.resource | adapted-for-sifr-api | public_classes=15, public_methods=90, test_classes=14, test_methods=88 |
 | `Lib/test/test_contextlib_async.py` | context/warnings/signal | sifr.resource | adapted-for-sifr-api | public_classes=5, public_methods=39, test_classes=5, test_methods=39 |
 | `Lib/test/test_io/test_signals.py` | context/warnings/signal | sifr.signal | adapted-for-sifr-api | public_classes=3, public_methods=16, test_classes=3, test_methods=9 |

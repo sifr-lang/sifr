@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_8_downstream_alignment_closure
+# Reference: stdlib_parity_iter_fix_8_downstream_alignment_closure
 from sifr.test import assert_bool_vector_eq
 from sifr.re import finditer, Match
 from sifr.pathlib import Path

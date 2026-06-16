@@ -1,4 +1,4 @@
-# Reference: phase_psp_struct_2_collections_argparse_expansion
+# Reference: stdlib_parity_struct_2_collections_argparse_expansion
 from sifr.collections import Counter, defaultdict
 from sifr.argparse import ArgumentParser, Namespace
 

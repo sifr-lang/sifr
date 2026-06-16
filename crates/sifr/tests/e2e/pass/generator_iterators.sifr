@@ -1,5 +1,5 @@
-# Reference: phase_psp_iter_fix_4_generator_backend_unification
-# wave_psp_iter_fix_4: generator backend unification over canonical iterator surfaces
+# Reference: stdlib_parity_iter_fix_4_generator_backend_unification
+# stdlib_parity_iter_fix_4: generator backend unification over canonical iterator surfaces
 
 def gen_pairs(limit: int) -> Iterator[int]:
     i: int = 0

@@ -1,4 +1,4 @@
-# Reference: phase_psp_ext_3_pathlib_iterator_materialization_required
+# Reference: stdlib_parity_ext_3_pathlib_iterator_materialization_required
 from sifr.pathlib import Path
 
 

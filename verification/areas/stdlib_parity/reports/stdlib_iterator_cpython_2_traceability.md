@@ -1,6 +1,6 @@
-# wave_psp_iter_fix_2 CPython Traceability Matrix
+# stdlib_parity_iter_fix_2 CPython Traceability Matrix
 
-Wave: `wave_psp_iter_fix_2`  
+Wave: `stdlib_parity_iter_fix_2`
 Scope: canonical iterator HIR for protocol entry and iterator builtins (including generator-expression and comprehension sources)
 
 ## CPython Harvest Inputs

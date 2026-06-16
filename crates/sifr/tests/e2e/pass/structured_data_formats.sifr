@@ -1,4 +1,4 @@
-# Reference: phase_psp_c1_structured_parsing_serialization
+# Reference: stdlib_parity_c1_structured_parsing_serialization
 from sifr.csv import (
     QUOTE_ALL,
     DictReader,
@@ -27,7 +27,7 @@ def collect_json_actual() -> list[bool]:
     meta_kind: JsonValue | None = None
 
     try:
-        source_path: str = "/tmp/sifr_wave_psp_c1_source.json"
+        source_path: str = "/tmp/sifr_stdlib_parity_c1_source.json"
         _: None = write_text(source_path, "{\"name\":\"sifr\",\"items\":[1,true],\"meta\":{\"kind\":\"demo\"}}")
         parsed: JsonValue = load(source_path)
         name_value = parsed.get("name")
@@ -55,7 +55,7 @@ def collect_json_actual() -> list[bool]:
         )
         dumped_ok = dumps(payload) == "{\"name\":\"sifr\",\"items\":[1,true]}"
 
-        path: str = "/tmp/sifr_wave_psp_c1.json"
+        path: str = "/tmp/sifr_stdlib_parity_c1.json"
         _: None = dump(payload, path)
         payload_text: str = read_text(path)
         _: None = write_text(path, payload_text)
@@ -76,7 +76,7 @@ def collect_json_actual() -> list[bool]:
 
     invalid_rejected: bool = False
     try:
-        invalid_path: str = "/tmp/sifr_wave_psp_c1_invalid.json"
+        invalid_path: str = "/tmp/sifr_stdlib_parity_c1_invalid.json"
         _: None = write_text(invalid_path, "{")
         _invalid: JsonValue = load(invalid_path)
         _ = _invalid
@@ -251,7 +251,7 @@ def collect_configparser_actual() -> list[bool]:
 
     read_file_ok: bool = False
     try:
-        path: str = "/tmp/sifr_wave_psp_c1_configparser.ini"
+        path: str = "/tmp/sifr_stdlib_parity_c1_configparser.ini"
         _: None = write_text(path, "[file]\nname = sifr\n")
         file_parser: ConfigParser = ConfigParser()
         loaded_paths: list[str] = file_parser.read(path)

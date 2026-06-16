@@ -4,10 +4,10 @@ from sifr.process import Command, output_text, run, ProcessError, Status, TextOu
 def main():
     try:
         cmd: Command = Command("printf")
-        cmd.arg("m4-process")
+        cmd.arg("process-fixture")
 
         text: TextOutput = output_text(cmd, "utf-8")
-        assert text.stdout == "m4-process"
+        assert text.stdout == "process-fixture"
         assert text.stderr == ""
         assert text.status.success
         assert text.status.kind == "success"
