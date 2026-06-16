@@ -38,6 +38,16 @@ def main() -> None:
             "single_file_queries_are_cached_and_deterministic",
         ]
     )
+    run(
+        [
+            "cargo",
+            "test",
+            "-p",
+            "sifr_frontend",
+            "--lib",
+            "query_diagnostics_equivalence_tests",
+        ]
+    )
     print("frontend cache contract: PASS")
 
 
