@@ -1533,7 +1533,7 @@ Wave 9.5 runtime/platform executable evidence slice:
 
 Wave 9.6 algorithmic compatibility profile-owned evidence slice:
 
-- Status: implemented, reviewed, and locally validated; PR pending.
+- Status: implemented, reviewed, locally validated, and opened in PR [#2648](https://github.com/sifr-lang/sifr/pull/2648).
 - Scope: added `verification/areas/algorithmic_compatibility/data/leetcode_profile_manifest.json` plus all-pass full-corpus baseline result/taxonomy metadata, promoted algorithmic compatibility into profile-owned create-pr/merge/nightly/release execution, and expanded the runner to emit per-fixture variants and result artifacts. The representative merge subset covers 12 algorithm categories with per-problem owner, expected classification, command, timeout, and result artifact metadata; nightly/release full corpus writes result, taxonomy, taxonomy Markdown, and taxonomy-delta artifacts for all 411 checked-in LeetCode Sifr fixtures.
 - Profile ownership: create-pr runs `algorithmic_compatibility` `profile-manifest`; merge runs `representative-subset`; nightly/release run `leetcode-full` plus `taxonomy-smoke`.
 - Review: Claude Opus review pass 1 reported no blockers and confirmed the Wave 9.6 acceptance bullets. Cleanup added `cargo build --locked`, enforced a single representative result artifact, and moved the full-corpus taxonomy `generated_on` value into the profile manifest. Claude Opus review pass 2 reported no blockers/regressions and said the reviewer is satisfied.
