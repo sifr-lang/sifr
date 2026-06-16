@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke, Wave 6.1 generated CPython differential suites, Wave 7.1 fuzz target contract/minimization commands, and Wave 7.2 per-target fuzz dispatch plus merge smoke merged through PR [#2633](https://github.com/sifr-lang/sifr/pull/2633); Wave 7.3 sanitizer and runtime-platform hardening lanes are in implementation.
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke, Wave 6.1 generated CPython differential suites, Wave 7.1 fuzz target contract/minimization commands, Wave 7.2 per-target fuzz dispatch plus merge smoke, and Wave 7.3 sanitizer/runtime-platform hardening lanes merged through PR [#2635](https://github.com/sifr-lang/sifr/pull/2635).
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -1322,7 +1322,7 @@ Implementation slice:
 
 Implementation slice:
 
-- Status: in implementation on branch `codex/wave-7-3-sanitizer-platform-lanes`.
+- Status: merged in PR [#2635](https://github.com/sifr-lang/sifr/pull/2635).
 - Scope: `verification/areas/runtime_platform/sanitizer_manifest.json` now defines merge `sanitizer-smoke` and nightly/release `sanitizer-full` cases for generated binaries, `sifr_runtime`, async/concurrency runtime fixtures, filesystem/process/network runtime fixtures, Miri, and deterministic concurrency modeling. Each case includes supported host triples, required tools/toolchains/components, timeout, exact command/environment, skip reason, and finding-promotion policy.
 - Runner integration: the runtime-platform runner validates the sanitizer manifest, executes supported cases with offline Cargo and timeouts, and reports unsupported local cases as structured `skip` variants with host/toolchain/tool/component reasons. `profile_runner.py` now executes runtime-platform suites from profile data rather than hard-coding only `platform-golden`.
 - Profile and matrix integration: merge selects `runtime_platform:sanitizer-smoke`; nightly and release select `runtime_platform:sanitizer-full`; the `sanitizer_hardening` coverage-matrix row is now `blocking` with reproduction command `uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite sanitizer-smoke`.
