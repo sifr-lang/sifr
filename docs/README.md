@@ -4,12 +4,27 @@ Public docs: [docs.sifr.sh](https://docs.sifr.sh)
 
 Source in this directory is deployed by [Mintlify](https://mintlify.com) from `sifr-lang/sifr` (subdirectory `docs`).
 
+## Deployment
+
+Mintlify must be configured as a monorepo deployment:
+
+- Dashboard: **Git Settings**
+- Repository: `sifr-lang/sifr`
+- Branch: `main`
+- Documentation path: `/docs`
+
+Do not include a trailing slash in the documentation path. Mintlify expects `docs.json` and `.mintignore` relative to this directory.
+
 ## Local preview
 
 ```bash
 cd docs
 npx mint@latest dev
 ```
+
+## Assistant instructions
+
+Mintlify assistant instructions live in `.mintlify/Assistant.md`. Keep the file inside `.mintlify/` so it is not publicly served.
 
 ## Internal reference (not published)
 
