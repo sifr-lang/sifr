@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "performance",
   "owner": "compiler/performance",
   "description": "Performance budgets, benchmark corpus, syntax/frontend guardrails, and budget policy checks.",
@@ -131,5 +131,19 @@
         }
       ]
     }
-  ]
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_contract": {
+    "required": false,
+    "source": "not-applicable"
+  }
 }

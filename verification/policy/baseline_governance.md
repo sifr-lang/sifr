@@ -6,10 +6,11 @@ This document defines canonical baseline governance for compiler-facing verifica
 
 - Verify baselines:
   - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines`
-  - `uv run --project verification --locked python -m sifr_verify.hardening --profile merge`
+  - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts`
+  - `cargo test -p sifr_codegen`
 - Bless baselines:
   - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless`
-  - `uv run --project verification --locked python -m sifr_verify.hardening --profile merge --bless`
+  - `cargo insta review -p sifr_codegen` for intentional codegen snapshot changes
 
 Only explicit `--bless` updates checked-in baseline files.
 
@@ -48,6 +49,9 @@ Baseline comparison and bless write-path use canonical normalization:
 - Baseline diffs are first-class review artifacts.
 - Incidental baseline updates are not allowed.
 - Any baseline change must be justified by an intentional contract change.
+- Diagnostics baseline changes must update `baseline_metadata.json`, preserve
+  source hashes, and pass `diagnostics:contracts`; stale, unused, incomplete, or
+  metadata-less baseline files are blocking failures.
 - `sifr_codegen` snapshot blesses must be reviewed with the corresponding generated-Rust
   contract change, and `cargo test -p sifr_codegen` must pass before the bless is accepted.
 

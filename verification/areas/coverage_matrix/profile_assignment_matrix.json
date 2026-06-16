@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "description": "Closeout profile-assignment table derived from the phase decisions table. Tokens with area:suite syntax must be selected by the named profile.",
+  "rows": [
+    {
+      "surface_id": "coverage_matrix_closeout",
+      "profiles": {
+        "create-pr": ["coverage_matrix:closeout"],
+        "merge": ["coverage_matrix:closeout"],
+        "nightly": ["coverage_matrix:closeout"],
+        "release": ["coverage_matrix:closeout"]
+      }
+    },
+    {
+      "surface_id": "parser_acceptance_rejection",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["core_language:syntax_parser_lexer_matrix"],
+        "nightly": ["core_language:syntax_parser_lexer_matrix"],
+        "release": ["core_language:syntax_parser_lexer_matrix"]
+      }
+    },
+    {
+      "surface_id": "core_hir_cfg_lowering",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["core_language:phase24_hir_analysis", "core_language:phase25_cfg_flow"],
+        "nightly": ["core_language:phase24_hir_analysis", "core_language:phase25_cfg_flow"],
+        "release": ["core_language:phase24_hir_analysis", "core_language:phase25_cfg_flow"]
+      }
+    },
+    {
+      "surface_id": "cpython_differential",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["cpython_differential:policy", "cpython_differential:hand_seeded_merge"],
+        "nightly": ["cpython_differential:policy", "cpython_differential:hand_seeded_merge", "cpython_differential:generated_broader"],
+        "release": ["cpython_differential:policy", "cpython_differential:hand_seeded_merge", "cpython_differential:generated_broader"]
+      }
+    },
+    {
+      "surface_id": "diagnostics",
+      "profiles": {
+        "create-pr": ["diagnostics:contracts"],
+        "merge": ["diagnostics:contracts", "diagnostics:baselines"],
+        "nightly": ["diagnostics:contracts", "diagnostics:baselines"],
+        "release": ["diagnostics:contracts", "diagnostics:baselines"]
+      }
+    },
+    {
+      "surface_id": "runtime_platform",
+      "profiles": {
+        "create-pr": ["runtime_platform:platform-golden", "runtime_platform:platform-support-matrix", "runtime_platform:platform-evidence"],
+        "merge": ["runtime_platform:platform-golden", "runtime_platform:platform-support-matrix", "runtime_platform:platform-evidence", "runtime_platform:sanitizer-smoke"],
+        "nightly": ["runtime_platform:platform-golden", "runtime_platform:platform-support-matrix", "runtime_platform:platform-evidence", "runtime_platform:sanitizer-full"],
+        "release": ["runtime_platform:platform-golden", "runtime_platform:platform-support-matrix", "runtime_platform:platform-evidence", "runtime_platform:sanitizer-full"]
+      }
+    },
+    {
+      "surface_id": "algorithmic_compatibility",
+      "profiles": {
+        "create-pr": ["algorithmic_compatibility:profile-manifest"],
+        "merge": ["algorithmic_compatibility:representative-subset"],
+        "nightly": ["algorithmic_compatibility:leetcode-full", "algorithmic_compatibility:taxonomy-smoke"],
+        "release": ["algorithmic_compatibility:leetcode-full", "algorithmic_compatibility:taxonomy-smoke"]
+      }
+    },
+    {
+      "surface_id": "developer_tooling_lsp",
+      "profiles": {
+        "create-pr": ["developer_tooling:static", "developer_tooling:lsp-smoke"],
+        "merge": ["developer_tooling:static", "developer_tooling:formatter", "developer_tooling:analysis", "developer_tooling:lsp-smoke"],
+        "nightly": ["developer_tooling:full"],
+        "release": ["developer_tooling:full"]
+      }
+    },
+    {
+      "surface_id": "generated_code_quality",
+      "profiles": {
+        "create-pr": ["generated_code_quality:smoke"],
+        "merge": ["generated_code_quality:representative"],
+        "nightly": ["generated_code_quality:full"],
+        "release": ["generated_code_quality:full"]
+      }
+    },
+    {
+      "surface_id": "performance",
+      "profiles": {
+        "create-pr": ["performance:smoke"],
+        "merge": ["performance:representative"],
+        "nightly": ["performance:full"],
+        "release": ["performance:full"]
+      }
+    },
+    {
+      "surface_id": "distribution_release",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["distribution_release:representative"],
+        "nightly": ["distribution_release:full"],
+        "release": ["distribution_release:full"]
+      }
+    },
+    {
+      "surface_id": "project_workspace_package",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["project_workspace:frontend_mode_parity", "project_workspace:phase23_graph_isolation", "project_workspace:baselines", "package_management:offline-merge-smoke"],
+        "nightly": ["project_workspace:frontend_mode_parity", "project_workspace:phase23_graph_isolation", "project_workspace:baselines", "package_management:offline-integration"],
+        "release": ["project_workspace:frontend_mode_parity", "project_workspace:phase23_graph_isolation", "project_workspace:baselines", "package_management:offline-integration"]
+      }
+    },
+    {
+      "surface_id": "stdlib_parity",
+      "profiles": {
+        "create-pr": ["stdlib_parity:module-merge-check"],
+        "merge": ["stdlib_parity:module-merge-check"],
+        "nightly": ["stdlib_parity:module-full-check"],
+        "release": ["stdlib_parity:module-full-check"]
+      }
+    },
+    {
+      "surface_id": "regression",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["regression:fixedbugs", "regression:crashes"],
+        "nightly": ["regression:fixedbugs", "regression:crashes"],
+        "release": ["regression:fixedbugs", "regression:crashes"]
+      }
+    },
+    {
+      "surface_id": "fuzz_property",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["fuzz_property:fuzz-smoke"],
+        "nightly": ["fuzz_property:property", "fuzz_property:fuzz-smoke"],
+        "release": ["fuzz_property:property", "fuzz_property:fuzz-smoke"]
+      }
+    },
+    {
+      "surface_id": "ecosystem_compatibility",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["ecosystem_compatibility:oss-curated"],
+        "nightly": ["ecosystem_compatibility:oss-curated", "ecosystem_compatibility:ecosystem-broader"],
+        "release": ["ecosystem_compatibility:oss-curated", "ecosystem_compatibility:ecosystem-broader"]
+      }
+    }
+  ]
+}

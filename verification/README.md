@@ -31,6 +31,11 @@ execution stays reproducible for local and CI validation.
 `--emit-plan` prints the selected profile's machine-readable execution plan
 without running suites. CI may add broader profiles, but it must not omit suites
 from the local merge plan except through declared host skips.
+Compare local and CI plans with:
+
+```bash
+uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>
+```
 
 `sifr_verify doctor` checks required local prerequisites: Python version, Rust
 and Cargo availability, `uv` lock status, Cargo offline metadata resolution, and
@@ -51,11 +56,75 @@ lanes.
   `coverage_matrix` owns the shipped guarantee registry and compiler surface
   matrix. It also owns `data/cargo_metadata_classification.json`, which maps
   every Cargo workspace package, target, and feature to its verification
-  assignment. The coverage-matrix check runs in advisory mode during the
-  gate-closure phase and is promoted to strict blocking mode at closeout.
+  assignment. The `coverage_matrix:closeout` suite is selected by all four
+  profiles and runs strict closeout mode plus profile-assignment checks. It
+  rejects temporary rows (`expected-missing`, `tests:none`, `red-blocker`),
+  unknown or unassigned owners, missing profile membership, non-offline
+  create-pr/merge policy, v1 stable-surface manifests, and unpinned required
+  corpora.
   `diagnostics` is migrated and can be run with
   `uv run --project verification python -m sifr_verify areas run --area diagnostics`.
 - `policy/` contains machine-facing runner policy such as guardrail mappings.
+
+## Profile Ownership
+
+- `create-pr` is a fast representative profile. It selects closeout coverage,
+  diagnostics contracts, runtime/platform support evidence, algorithmic manifest
+  checks, static/LSP smoke tooling, generated-code smoke, performance smoke, and
+  stdlib module merge checks.
+- `merge` is the authoritative local gate. It selects the closeout coverage
+  suite, full first-party compiler crate membership, full semantic e2e pass
+  corpus, diagnostics baselines, representative generated-code/performance
+  suites, CPython hand-seeded differential checks, package offline smoke,
+  stdlib module merge checks, runtime/platform evidence, regression, fuzz smoke,
+  and curated ecosystem checks.
+- `nightly` and `release` run the same closeout coverage suite plus broader
+  full/generated/profile-owned suites such as full algorithmic compatibility,
+  full generated-code quality, full performance, full distribution, broader
+  CPython differential, sanitizer-full, ecosystem-broader, and module-full
+  stdlib parity.
+
+Crate test membership is data-owned by `crate_test_membership.suites` in each
+profile. The coverage matrix cross-checks that first-party compiler crates with
+tests are in merge membership and executed; temporary red blockers are illegal
+at closeout.
+
+## Baselines And Blessing
+
+Verify diagnostics baselines with:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines
+```
+
+Bless only intentional baseline changes with:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless
+```
+
+Baseline metadata, source hashes, stale/unused baseline detection, and recovery
+surface coverage are enforced by `diagnostics:contracts`.
+
+## Fuzz, Sanitizer, And Release Evidence
+
+Deterministic local fuzz/property evidence:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite fuzz-smoke
+```
+
+Runtime/platform sanitizer evidence:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite sanitizer-smoke
+uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite sanitizer-full
+```
+
+Release evidence is emitted under `target/validation_lane_reports/` and the
+area-specific `target/verification/areas/**` result files. A closeout archive
+must record commit SHA, OS/toolchain, emitted profile plans, suite counts,
+report signatures, and hashes of the validation report JSON files.
 
 Schemas intentionally support only a small subset: object shape, required keys,
 primitive scalar types, arrays of objects or strings, enums, booleans, integers,

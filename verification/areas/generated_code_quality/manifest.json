@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "generated_code_quality",
   "owner": "compiler/codegen",
   "description": "Generated Rust corpus, panic, formatting, lint, determinism, and demo quality gates.",
@@ -140,5 +140,19 @@
         }
       ]
     }
-  ]
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_contract": {
+    "required": false,
+    "source": "not-applicable"
+  }
 }

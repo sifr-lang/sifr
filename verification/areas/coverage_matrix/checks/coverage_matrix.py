@@ -1,4 +1,4 @@
-"""Validate the advisory coverage matrix introduced for gate closure."""
+"""Validate the coverage matrix introduced for gate closure."""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ WORKSPACE_CONTRACTS_PATH = REPO_ROOT / "verification" / "areas" / "project_works
 CARGO_CLASSIFICATION_PATH = AREA_ROOT / "data" / "cargo_metadata_classification.json"
 PROFILES_DIR = REPO_ROOT / "verification" / "profiles"
 AREAS_DIR = REPO_ROOT / "verification" / "areas"
+PROFILE_ASSIGNMENT_MATRIX_PATH = AREA_ROOT / "profile_assignment_matrix.json"
 
 VALID_SUPPORT_STATUSES = {"stable", "experimental", "internal", "unsupported"}
 VALID_MATRIX_STATUSES = {
@@ -80,6 +81,7 @@ def main() -> int:
     validate_contract_inventory(WORKSPACE_CONTRACTS_PATH, "contracts", "profile_surface", errors)
     validate_profile_policy(errors)
     validate_cargo_metadata_classification(errors)
+    validate_closeout_area_manifest_policy(surfaces, strict, errors)
 
     if errors:
         for error in errors:
@@ -311,29 +313,84 @@ def validate_profile_policy(errors: list[str]) -> None:
         profile = profiles.get(profile_name)
         if profile is None:
             continue
-        if profile.get("schema_version") != 2:
-            errors.append(f"{profile_name}: create-pr/merge profiles must use schema_version 2")
-        network_policy = profile.get("network_policy")
-        if not isinstance(network_policy, dict) or network_policy.get("mode") != "offline":
-            errors.append(f"{profile_name}: network_policy.mode must be offline")
-        if isinstance(network_policy, dict) and network_policy.get("live_network_allowed") is not False:
-            errors.append(f"{profile_name}: live network is forbidden")
-        cargo_policy = profile.get("cargo_policy")
-        if not isinstance(cargo_policy, dict):
-            errors.append(f"{profile_name}: missing cargo_policy")
-        elif cargo_policy.get("locked") is not True or cargo_policy.get("offline") is not True:
-            errors.append(f"{profile_name}: cargo_policy must require locked and offline execution")
-        selected = profile.get("selected_areas", [])
-        if not any(
-            isinstance(item, dict)
-            and item.get("area") == "coverage_matrix"
-            and "advisory" in item.get("suites", [])
-            for item in selected
-        ):
-            errors.append(f"{profile_name}: coverage_matrix advisory suite must be selected")
-        profile_plan = profile.get("profile_plan")
-        if not isinstance(profile_plan, dict) or not profile_plan.get("emit_command"):
-            errors.append(f"{profile_name}: missing profile plan emission command")
+        validate_profile_closeout_contract(profile_name, profile, errors)
+
+
+def validate_profile_closeout_contract(
+    profile_name: str,
+    profile: dict[str, Any],
+    errors: list[str],
+) -> None:
+    if profile.get("schema_version") != 2:
+        errors.append(f"{profile_name}: create-pr/merge profiles must use schema_version 2")
+    network_policy = profile.get("network_policy")
+    if not isinstance(network_policy, dict) or network_policy.get("mode") != "offline":
+        errors.append(f"{profile_name}: network_policy.mode must be offline")
+    if isinstance(network_policy, dict) and network_policy.get("live_network_allowed") is not False:
+        errors.append(f"{profile_name}: live network is forbidden")
+    cargo_policy = profile.get("cargo_policy")
+    if not isinstance(cargo_policy, dict):
+        errors.append(f"{profile_name}: missing cargo_policy")
+    elif cargo_policy.get("locked") is not True or cargo_policy.get("offline") is not True:
+        errors.append(f"{profile_name}: cargo_policy must require locked and offline execution")
+    selected = profile.get("selected_areas", [])
+    if not any(
+        isinstance(item, dict)
+        and item.get("area") == "coverage_matrix"
+        and "closeout" in item.get("suites", [])
+        for item in selected
+    ):
+        errors.append(f"{profile_name}: coverage_matrix closeout suite must be selected")
+    profile_plan = profile.get("profile_plan")
+    if not isinstance(profile_plan, dict) or not profile_plan.get("emit_command"):
+        errors.append(f"{profile_name}: missing profile plan emission command")
+
+
+def validate_closeout_area_manifest_policy(surfaces: Any, strict: bool, errors: list[str]) -> None:
+    if not strict or not isinstance(surfaces, list):
+        return
+    required_areas = matrix_referenced_areas(surfaces)
+    for area in sorted(required_areas):
+        manifest = AREAS_DIR / area / "manifest.json"
+        payload = load_json_object(manifest, errors)
+        if not payload:
+            continue
+        if payload.get("schema_version") != 2:
+            errors.append(f"{repo_path(manifest)}: stable-surface area manifest must use schema_version 2")
+        if payload.get("network_mode") != "offline":
+            errors.append(f"{repo_path(manifest)}: stable-surface area manifest must declare network_mode=offline")
+        pinned = payload.get("pinned_corpus")
+        if not isinstance(pinned, dict):
+            errors.append(f"{repo_path(manifest)}: missing pinned_corpus closeout policy")
+            continue
+        if not isinstance(pinned.get("required"), bool):
+            errors.append(f"{repo_path(manifest)}: pinned_corpus.required must be boolean")
+        if pinned.get("required") is True:
+            if not pinned.get("revision") or not pinned.get("checksum"):
+                errors.append(f"{repo_path(manifest)}: pinned corpus requires revision and checksum")
+
+
+def matrix_referenced_areas(surfaces: list[Any]) -> set[str]:
+    areas: set[str] = set()
+    for row in surfaces:
+        if not isinstance(row, dict):
+            continue
+        for key in ("merge_suite", "nightly_release_suite", "regression_suite"):
+            for token in split_suite_refs(row.get(key)):
+                area, _sep, _suite = token.partition(":")
+                if area and area in area_manifest_names():
+                    areas.add(area)
+    return areas
+
+
+def area_manifest_names() -> set[str]:
+    return {path.parent.name for path in AREAS_DIR.glob("*/manifest.json")}
+
+
+def split_suite_refs(value: Any) -> list[str]:
+    if not isinstance(value, str):
+        return []
+    return [part.strip() for part in value.split(",") if part.strip()]
 
 
 def validate_cargo_metadata_classification(errors: list[str]) -> None:
@@ -378,23 +435,34 @@ def validate_cargo_metadata_classification(errors: list[str]) -> None:
         validate_targets(package_name, package, row, errors)
         validate_features(package_name, package, row, errors)
         if classification_value == "first_party_compiler":
-            memberships = merge_packages.get(package_name, [])
-            if not memberships:
-                errors.append(f"{package_name}: first-party compiler crate missing merge crate-test membership")
-                continue
-            executed = False
-            red_blocker = False
-            for membership in memberships:
-                if membership.get("status") == "red-blocker":
-                    red_blocker = True
-                    if membership.get("executed_in_merge") is not False or not membership.get("must_be_executed_by"):
-                        errors.append(f"{package_name}: red-blocker crate membership lacks execution deadline")
-                elif membership.get("executed_in_merge") is True:
-                    executed = True
-                else:
-                    errors.append(f"{package_name}: merge crate-test membership is not executed")
-            if not executed and not red_blocker:
-                errors.append(f"{package_name}: merge crate-test membership is not executed")
+            validate_first_party_compiler_membership(
+                package_name,
+                merge_packages.get(package_name, []),
+                errors,
+            )
+
+
+def validate_first_party_compiler_membership(
+    package_name: str,
+    memberships: list[dict[str, Any]],
+    errors: list[str],
+) -> None:
+    if not memberships:
+        errors.append(f"{package_name}: first-party compiler crate missing merge crate-test membership")
+        return
+    executed = False
+    red_blocker = False
+    for membership in memberships:
+        if membership.get("status") == "red-blocker":
+            red_blocker = True
+            if membership.get("executed_in_merge") is not False or not membership.get("must_be_executed_by"):
+                errors.append(f"{package_name}: red-blocker crate membership lacks execution deadline")
+        elif membership.get("executed_in_merge") is True:
+            executed = True
+        else:
+            errors.append(f"{package_name}: merge crate-test membership is not executed")
+    if not executed and not red_blocker:
+        errors.append(f"{package_name}: merge crate-test membership is not executed")
 
 
 def load_cargo_metadata(errors: list[str]) -> dict[str, Any]:
