@@ -150,7 +150,7 @@ class ProfileRunner:
             [
                 ("crate_tests", self.run_crate_tests),
                 ("validation_contract_matrix", self.run_validation_contract_suites),
-                ("platform_golden", self.run_platform_golden_suite),
+                ("runtime_platform_suites", self.run_runtime_platform_suites),
                 ("e2e_pass_suite", self.run_e2e_pass_suite),
                 ("verification_hardening_suites", self.run_hardening_suites),
                 ("extra_e2e_checks", self.run_extra_e2e_checks),
@@ -412,9 +412,16 @@ class ProfileRunner:
         if project_args:
             run_command(uv_area_command("--area", "project_workspace", *project_args))
 
-    def run_platform_golden_suite(self) -> None:
-        print("Running platform golden fixtures")
-        run_command(uv_area_command("--area", "runtime_platform", "--suite", "platform-golden"))
+    def run_runtime_platform_suites(self) -> None:
+        suites = self.selected_suites_for_area("runtime_platform")
+        if not suites:
+            print(f"Skipping runtime platform suites for lane {self.profile_name}")
+            return
+        print("Running runtime platform suites")
+        args = ["--area", "runtime_platform"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args))
 
     def run_e2e_pass_suite(self) -> None:
         print("Running e2e pass suite")

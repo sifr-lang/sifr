@@ -78,3 +78,20 @@ Executable platform fixtures live under `verification/areas/runtime_platform/gol
 Text/i18n owns the binary file I/O prerequisite fixture, unsupported CPython import diagnostic fixture, and text-dependent blocked entries. Later phases must consume this substrate instead of adding local encoding, Unicode, locale, or fallback decoder behavior.
 
 Network/HTTP owns the unsupported CPython network import fixture, loopback-only transport fixtures, and HTTP body text fixtures that remain blocked until the required text/i18n and network milestones close.
+
+## Sanitizer And Model Lanes
+
+Sanitizer, Miri, and deterministic concurrency model lanes are declared in `verification/areas/runtime_platform/sanitizer_manifest.json`. The merge profile selects `sanitizer-smoke`; nightly and release select `sanitizer-full`.
+
+Each sanitizer case records:
+
+- a target suite (`sanitizer-smoke`, `sanitizer-full`, or both)
+- the runtime/platform scope under test
+- the sanitizer or model tool
+- supported host triples
+- required local tools, Rust toolchains, and Rustup components
+- the exact reproduction command and environment
+- timeout and finding-promotion policy
+- a structured skip reason when local support is unavailable
+
+The runtime-platform runner reports unsupported cases as `skip`, not `pass`, and keeps those skips machine-readable in the area result JSON. Supported hosts execute the checked-in command with `CARGO_NET_OFFLINE=true` unless the case explicitly overrides the environment. A sanitizer/Miri/model finding must be minimized and promoted to `regression:fixedbugs` or an owning runtime/platform golden fixture before the finding can close.

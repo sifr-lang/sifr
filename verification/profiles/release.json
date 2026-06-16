@@ -99,10 +99,12 @@
     {
       "area": "runtime_platform",
       "suites": [
-        "platform-golden"
+        "platform-golden",
+        "sanitizer-full"
       ],
       "resource_classes": [
-        "platform-specific"
+        "platform-specific",
+        "long-running"
       ]
     },
     {

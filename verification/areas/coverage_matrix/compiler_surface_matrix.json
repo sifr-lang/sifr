@@ -344,14 +344,11 @@
       "guarantee_id": "hardening-oracle-contract",
       "support_status": "stable",
       "owner": "runtime/platform",
-      "status": "expected-missing",
+      "status": "blocking",
       "merge_suite": "runtime_platform:sanitizer-smoke",
       "nightly_release_suite": "runtime_platform:sanitizer-full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform",
-      "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md#Wave-7",
-      "closes_in_wave": "7",
-      "expiry": "2026-09-30"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite sanitizer-smoke"
     },
     {
       "surface_id": "ecosystem_curated",

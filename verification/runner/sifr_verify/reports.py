@@ -31,7 +31,8 @@ ARTIFACT_CACHE_RE = re.compile(
     r"^\[sifr-artifact-cache\]\s+namespace=([a-z0-9_-]+)\s+key=([0-9a-f]+)\s+cache_hit=(true|false)\s+workspace=([^\s]+)(?:\s+miss_reason=([a-z0-9_-]+))?$"
 )
 HARDENING_OK_RE = re.compile(
-    r"^verification ok:\s+variants=(\d+),\s+failures=(\d+),\s+blocking_failures=(\d+),\s+non_blocking_failures=(\d+)$"
+    r"^verification ok:\s+variants=(\d+),\s+failures=(\d+),\s+blocking_failures=(\d+),"
+    r"\s+non_blocking_failures=(\d+)(?:,\s+skipped=(\d+))?$"
 )
 CACHE_DIR_RE = re.compile(r"^\s*cache_dir=(.+)$")
 LANE_STEP_RE = re.compile(
@@ -39,7 +40,7 @@ LANE_STEP_RE = re.compile(
 )
 CASE_TIMING_RE = re.compile(
     r"^\[sifr-case-timing\]\s+bucket=([A-Za-z0-9_-]+)\s+case=([A-Za-z0-9_.:/+-]+)"
-    r"\s+elapsed_ms=(\d+)\s+status=(pass|fail)$"
+    r"\s+elapsed_ms=(\d+)\s+status=(pass|fail|skip)$"
 )
 WARM_CACHE_HIT_TARGET = 0.90
 GROUP_SKEW_ADVISORY_RATIO = 4.0
@@ -264,6 +265,7 @@ def parse_log(path: Path) -> dict[str, Any]:
                 "failures": int(match.group(2)),
                 "blocking_failures": int(match.group(3)),
                 "non_blocking_failures": int(match.group(4)),
+                "skipped": int(match.group(5) or 0),
             }
             if hardening_summary is None:
                 hardening_summary = entry

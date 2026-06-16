@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "name": "runtime_platform_sanitizers",
+  "description": "Sanitizer, Miri, and deterministic concurrency hardening lanes for runtime/platform surfaces.",
+  "cases": [
+    {
+      "id": "runtime-asan-smoke",
+      "suites": ["sanitizer-smoke", "sanitizer-full"],
+      "scope": "sifr_runtime",
+      "tool": "asan",
+      "supported_host_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "required_tools": ["rustup", "llvm-symbolizer"],
+      "required_rustup_toolchains": ["nightly"],
+      "timeout_seconds": 120,
+      "env": {
+        "RUSTFLAGS": "-Zsanitizer=address"
+      },
+      "command": [
+        "cargo",
+        "+nightly",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_runtime",
+        "int::tests::parse_enforces_digit_limit_without_panicking"
+      ],
+      "skip_reason": "requires nightly Rust sanitizer support and llvm-symbolizer on the local host",
+      "finding_promotion": "Minimize to a focused runtime regression test, then add it to regression:fixedbugs before closing the sanitizer finding."
+    },
+    {
+      "id": "generated-binary-asan-smoke",
+      "suites": ["sanitizer-smoke", "sanitizer-full"],
+      "scope": "generated_binary",
+      "tool": "asan",
+      "supported_host_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "required_tools": ["rustup", "llvm-symbolizer"],
+      "required_rustup_toolchains": ["nightly"],
+      "timeout_seconds": 180,
+      "env": {
+        "RUSTFLAGS": "-Zsanitizer=address"
+      },
+      "command": [
+        "cargo",
+        "+nightly",
+        "run",
+        "--locked",
+        "-q",
+        "-p",
+        "sifr",
+        "--",
+        "run",
+        "demos/hello.sifr"
+      ],
+      "skip_reason": "requires nightly Rust sanitizer support and llvm-symbolizer for generated binary execution",
+      "finding_promotion": "Promote minimized Sifr source plus generated Rust evidence into generated_code_quality and regression coverage."
+    },
+    {
+      "id": "runtime-lsan-full",
+      "suites": ["sanitizer-full"],
+      "scope": "sifr_runtime",
+      "tool": "lsan",
+      "supported_host_triples": ["x86_64-unknown-linux-gnu"],
+      "required_tools": ["rustup", "llvm-symbolizer"],
+      "required_rustup_toolchains": ["nightly"],
+      "timeout_seconds": 180,
+      "env": {
+        "RUSTFLAGS": "-Zsanitizer=leak"
+      },
+      "command": [
+        "cargo",
+        "+nightly",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_runtime",
+        "json::tests::json_digit_limit_checks_nested_array_numbers"
+      ],
+      "skip_reason": "requires a Linux host with nightly Rust leak sanitizer support",
+      "finding_promotion": "Minimize leak evidence to the smallest runtime API or generated program and add a blocking regression."
+    },
+    {
+      "id": "runtime-http-asan-full",
+      "suites": ["sanitizer-full"],
+      "scope": "filesystem_process_network_runtime",
+      "tool": "asan",
+      "supported_host_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "required_tools": ["rustup", "llvm-symbolizer"],
+      "required_rustup_toolchains": ["nightly"],
+      "timeout_seconds": 240,
+      "env": {
+        "RUSTFLAGS": "-Zsanitizer=address"
+      },
+      "command": [
+        "cargo",
+        "+nightly",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_runtime",
+        "--features",
+        "http",
+        "http::tests::http1_malformed_response_maps_to_typed_error"
+      ],
+      "skip_reason": "requires nightly Rust sanitizer support and llvm-symbolizer for runtime HTTP fixtures",
+      "finding_promotion": "Promote minimized filesystem/process/network sanitizer findings into runtime_platform golden or regression coverage."
+    },
+    {
+      "id": "runtime-tsan-full",
+      "suites": ["sanitizer-full"],
+      "scope": "async_concurrency_runtime",
+      "tool": "tsan",
+      "supported_host_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "required_tools": ["rustup", "llvm-symbolizer"],
+      "required_rustup_toolchains": ["nightly"],
+      "timeout_seconds": 240,
+      "env": {
+        "RUSTFLAGS": "-Zsanitizer=thread"
+      },
+      "command": [
+        "cargo",
+        "+nightly",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_stdlib",
+        "ipc_connection::tests::shutdown_drains_and_rejects_new_runs"
+      ],
+      "skip_reason": "requires nightly Rust thread sanitizer support and llvm-symbolizer for async/concurrency fixtures",
+      "finding_promotion": "Promote minimized race evidence into deterministic concurrency or runtime regression coverage."
+    },
+    {
+      "id": "runtime-miri-full",
+      "suites": ["sanitizer-full"],
+      "scope": "sifr_runtime",
+      "tool": "miri",
+      "supported_host_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "required_tools": ["rustup"],
+      "required_rustup_toolchains": ["nightly"],
+      "required_rustup_components": [
+        {
+          "toolchain": "nightly",
+          "component": "miri"
+        }
+      ],
+      "timeout_seconds": 240,
+      "env": {},
+      "command": [
+        "cargo",
+        "+nightly",
+        "miri",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_runtime",
+        "timeouts::tests::rejects_non_finite_non_positive_and_overflow_sized_timeouts"
+      ],
+      "skip_reason": "requires nightly Rust with the miri component installed",
+      "finding_promotion": "Promote minimized Miri UB findings into runtime regression coverage before closing."
+    },
+    {
+      "id": "deterministic-concurrency-model-full",
+      "suites": ["sanitizer-full"],
+      "scope": "async_concurrency_runtime",
+      "tool": "loom-or-shuttle",
+      "supported_host_triples": ["*"],
+      "required_tools": [],
+      "required_rustup_toolchains": [],
+      "always_skip": true,
+      "timeout_seconds": 0,
+      "env": {},
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_stdlib",
+        "ipc_request_tracker"
+      ],
+      "skip_reason": "no Loom/Shuttle-style deterministic concurrency model is currently vendored; this structured skip records the required reproduction boundary",
+      "finding_promotion": "When a deterministic model is introduced, promote explored interleavings into merge-blocking stdlib/runtime regressions."
+    }
+  ]
+}
