@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "source": "crates/sifr_lsp/src/capabilities.rs",
+  "owner": "compiler/tooling",
+  "capabilities": [
+    {
+      "id": "code-actions",
+      "server_capability_path": "codeActionProvider",
+      "source_token": "codeActionProvider",
+      "methods": ["textDocument/codeAction", "codeAction/resolve"],
+      "marker_required": true,
+      "category": "code-actions"
+    },
+    {
+      "id": "completion",
+      "server_capability_path": "completionProvider",
+      "source_token": "completionProvider",
+      "methods": ["textDocument/completion", "completionItem/resolve"],
+      "marker_required": true,
+      "category": "completion"
+    },
+    {
+      "id": "declaration",
+      "server_capability_path": "declarationProvider",
+      "source_token": "declarationProvider",
+      "methods": ["textDocument/declaration"],
+      "marker_required": true,
+      "category": "definition"
+    },
+    {
+      "id": "definition",
+      "server_capability_path": "definitionProvider",
+      "source_token": "definitionProvider",
+      "methods": ["textDocument/definition"],
+      "marker_required": true,
+      "category": "definition"
+    },
+    {
+      "id": "diagnostics",
+      "server_capability_path": "diagnosticProvider",
+      "source_token": "diagnosticProvider",
+      "methods": ["textDocument/publishDiagnostics", "textDocument/diagnostic", "workspace/diagnostic"],
+      "marker_required": true,
+      "category": "diagnostics"
+    },
+    {
+      "id": "document-highlight",
+      "server_capability_path": "documentHighlightProvider",
+      "source_token": "documentHighlightProvider",
+      "methods": ["textDocument/documentHighlight"],
+      "marker_required": true,
+      "category": "references"
+    },
+    {
+      "id": "document-symbols",
+      "server_capability_path": "documentSymbolProvider",
+      "source_token": "documentSymbolProvider",
+      "methods": ["textDocument/documentSymbol"],
+      "marker_required": true,
+      "category": "symbols"
+    },
+    {
+      "id": "execute-commands",
+      "server_capability_path": "executeCommandProvider",
+      "source_token": "executeCommandProvider",
+      "methods": ["workspace/executeCommand"],
+      "commands": [
+        "sifr.restartServer",
+        "sifr.showServerLogs",
+        "sifr.explainDiagnostic",
+        "sifr.showGeneratedRust",
+        "sifr.checkWorkspace",
+        "sifr.runTests"
+      ],
+      "marker_required": true,
+      "category": "commands"
+    },
+    {
+      "id": "folding-ranges",
+      "server_capability_path": "foldingRangeProvider",
+      "source_token": "foldingRangeProvider",
+      "methods": ["textDocument/foldingRange"],
+      "marker_required": true,
+      "category": "syntax-navigation"
+    },
+    {
+      "id": "formatting",
+      "server_capability_path": "documentFormattingProvider",
+      "source_token": "documentFormattingProvider",
+      "methods": ["textDocument/formatting", "textDocument/rangeFormatting"],
+      "advertised_when": "formatEnable",
+      "marker_required": true,
+      "category": "formatting"
+    },
+    {
+      "id": "hover",
+      "server_capability_path": "hoverProvider",
+      "source_token": "hoverProvider",
+      "methods": ["textDocument/hover"],
+      "marker_required": true,
+      "category": "hover"
+    },
+    {
+      "id": "inlay-hints",
+      "server_capability_path": "inlayHintProvider",
+      "source_token": "inlayHintProvider",
+      "methods": ["textDocument/inlayHint"],
+      "marker_required": true,
+      "category": "inlay-hints"
+    },
+    {
+      "id": "references",
+      "server_capability_path": "referencesProvider",
+      "source_token": "referencesProvider",
+      "methods": ["textDocument/references"],
+      "marker_required": true,
+      "category": "references"
+    },
+    {
+      "id": "rename",
+      "server_capability_path": "renameProvider",
+      "source_token": "renameProvider",
+      "methods": ["textDocument/prepareRename", "textDocument/rename"],
+      "marker_required": true,
+      "category": "rename"
+    },
+    {
+      "id": "selection-ranges",
+      "server_capability_path": "selectionRangeProvider",
+      "source_token": "selectionRangeProvider",
+      "methods": ["textDocument/selectionRange"],
+      "marker_required": true,
+      "category": "syntax-navigation"
+    },
+    {
+      "id": "semantic-tokens",
+      "server_capability_path": "semanticTokensProvider",
+      "source_token": "semanticTokensProvider",
+      "methods": ["textDocument/semanticTokens/full", "textDocument/semanticTokens/range"],
+      "marker_required": true,
+      "category": "semantic-tokens"
+    },
+    {
+      "id": "signature-help",
+      "server_capability_path": "signatureHelpProvider",
+      "source_token": "signatureHelpProvider",
+      "methods": ["textDocument/signatureHelp"],
+      "marker_required": true,
+      "category": "signature-help"
+    },
+    {
+      "id": "text-sync",
+      "server_capability_path": "textDocumentSync",
+      "source_token": "textDocumentSync",
+      "methods": ["textDocument/didOpen", "textDocument/didChange", "textDocument/didSave", "textDocument/didClose"],
+      "marker_required": true,
+      "category": "long-session-edits"
+    },
+    {
+      "id": "type-definition",
+      "server_capability_path": "typeDefinitionProvider",
+      "source_token": "typeDefinitionProvider",
+      "methods": ["textDocument/typeDefinition"],
+      "marker_required": true,
+      "category": "definition"
+    },
+    {
+      "id": "type-hierarchy",
+      "server_capability_path": "typeHierarchyProvider",
+      "source_token": "typeHierarchyProvider",
+      "methods": ["textDocument/prepareTypeHierarchy", "typeHierarchy/supertypes", "typeHierarchy/subtypes"],
+      "marker_required": true,
+      "category": "type-hierarchy"
+    },
+    {
+      "id": "workspace-folders",
+      "server_capability_path": "workspace.workspaceFolders",
+      "source_token": "workspaceFolders",
+      "methods": ["workspace/didChangeWatchedFiles", "workspace/didChangeConfiguration"],
+      "marker_required": true,
+      "category": "project-reload"
+    },
+    {
+      "id": "workspace-symbols",
+      "server_capability_path": "workspaceSymbolProvider",
+      "source_token": "workspaceSymbolProvider",
+      "methods": ["workspace/symbol"],
+      "marker_required": true,
+      "category": "symbols"
+    }
+  ]
+}

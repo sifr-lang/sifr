@@ -1,0 +1,3 @@
+# @lsp-marker helper-public-api
+def public_value() -> int:
+    return 41

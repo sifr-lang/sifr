@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "owner": "compiler/tooling",
+  "description": "Wave 9.1 marker-based LSP corpus. Marker ids are stable anchors for LSP behavior categories; concrete protocol replay and snapshot expansion are tracked in later Wave 9 slices.",
+  "required_categories": [
+    "completion",
+    "definition",
+    "diagnostics",
+    "hover",
+    "long-session-edits",
+    "project-reload",
+    "references",
+    "rename"
+  ],
+  "cases": [
+    {
+      "id": "core-query-markers",
+      "fixture": "core_queries.sifr",
+      "category": "core-queries",
+      "covers": [
+        "completion",
+        "declaration",
+        "definition",
+        "document-highlight",
+        "document-symbols",
+        "folding-ranges",
+        "hover",
+        "inlay-hints",
+        "references",
+        "rename",
+        "selection-ranges",
+        "semantic-tokens",
+        "signature-help",
+        "type-definition",
+        "type-hierarchy",
+        "workspace-symbols"
+      ],
+      "markers": [
+        "helper-definition",
+        "helper-call",
+        "result-binding",
+        "return-result",
+        "loop-folding-range"
+      ]
+    },
+    {
+      "id": "diagnostic-and-code-action-markers",
+      "fixture": "diagnostics.sifr",
+      "category": "diagnostics",
+      "covers": ["code-actions", "diagnostics", "execute-commands"],
+      "markers": [
+        "type-error-diagnostic",
+        "policy-suppression-action",
+        "explain-diagnostic-command"
+      ]
+    },
+    {
+      "id": "formatting-and-long-session-markers",
+      "fixture": "long_session_edits.sifr",
+      "category": "long-session-edits",
+      "covers": ["execute-commands", "formatting", "text-sync"],
+      "markers": [
+        "initial-open",
+        "steady-state-edit",
+        "format-target",
+        "generated-rust-command"
+      ]
+    },
+    {
+      "id": "project-reload-markers",
+      "fixture": "project_reload/main.sifr",
+      "supporting_files": ["project_reload/helper.sifr"],
+      "category": "project-reload",
+      "covers": ["diagnostics", "text-sync", "workspace-folders"],
+      "markers": [
+        "import-edge",
+        "helper-public-api",
+        "watched-file-change",
+        "workspace-diagnostic-refresh"
+      ]
+    }
+  ]
+}

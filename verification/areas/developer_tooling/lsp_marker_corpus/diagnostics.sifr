@@ -1,0 +1,9 @@
+def expects_int(value: int) -> int:
+    return value
+
+def main() -> int:
+    # @lsp-marker type-error-diagnostic
+    problem: int = "not an int"
+    # @lsp-marker policy-suppression-action
+    # @lsp-marker explain-diagnostic-command
+    return expects_int(problem)

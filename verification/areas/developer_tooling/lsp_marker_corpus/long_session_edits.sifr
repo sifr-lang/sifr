@@ -1,0 +1,9 @@
+# @lsp-marker initial-open
+def main() -> int:
+    value: int = 1
+    # @lsp-marker steady-state-edit
+    value = value + 1
+    # @lsp-marker format-target
+    rendered: int = value
+    # @lsp-marker generated-rust-command
+    return rendered
