@@ -1,0 +1,2 @@
+def normalize(value: Int) -> Int:
+    return value

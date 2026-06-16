@@ -14,6 +14,12 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "package-management-results.json"
+COMMAND_ARGS = {
+    "package-manager-guardrails": [],
+    "offline-package-merge-smoke": [],
+    "offline-package-merge-smoke-self-test": ["--self-test"],
+    "offline-package-demo-corpus-smoke": ["--demo-corpus"],
+}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -97,16 +103,11 @@ def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[st
 
 def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
-    if suite_name != "guardrails":
-        raise SystemExit(f"unsupported package_management suite: {suite_name}")
     cases = suite.get("cases", [])
-    if not isinstance(cases, list) or len(cases) != 1:
-        raise SystemExit("package_management guardrails suite must contain exactly one case")
-    case = cases[0]
-    if str(case.get("command")) != "package-manager-guardrails":
-        raise SystemExit("package_management guardrails suite must use package-manager-guardrails")
-    variant = run_guardrail(case)
-    failures = 1 if variant["status"] == "fail" else 0
+    if not isinstance(cases, list) or not cases:
+        raise SystemExit(f"package_management {suite_name} suite must contain at least one case")
+    case_results = [run_case(case) for case in cases]
+    failures = sum(1 for variant in case_results if variant["status"] == "fail")
     return {
         "name": suite_name,
         "owner": "compiler/package-management",
@@ -119,19 +120,23 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
                 "command": str(case["command"]),
                 "variants": [variant],
             }
+            for case, variant in zip(cases, case_results, strict=True)
         ],
         "failed_cases": failures,
-        "total_variants": 1,
+        "total_variants": len(case_results),
         "total_failures": failures,
     }
 
 
-def run_guardrail(case: dict[str, Any]) -> dict[str, Any]:
+def run_case(case: dict[str, Any]) -> dict[str, Any]:
     entry = REPO_ROOT / str(case["entry"])
     if not entry.is_file():
-        raise SystemExit(f"package_management guardrail entry does not exist: {entry}")
+        raise SystemExit(f"package_management case entry does not exist: {entry}")
+    command = str(case.get("command"))
+    if command not in COMMAND_ARGS:
+        raise SystemExit(f"unsupported package_management case command: {command}")
     expected_exit = int(case.get("expect_exit_code", 0))
-    argv = ["python3", str(entry.relative_to(REPO_ROOT))]
+    argv = ["python3", str(entry.relative_to(REPO_ROOT)), *COMMAND_ARGS[command]]
     started = time.perf_counter()
     result = subprocess.run(argv, cwd=REPO_ROOT, text=True, capture_output=True, check=False)
     elapsed_ms = (time.perf_counter() - started) * 1000.0

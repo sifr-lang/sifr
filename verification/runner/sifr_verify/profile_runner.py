@@ -266,6 +266,13 @@ class ProfileRunner:
 
         print("Running package-manager guardrails")
         run_command(uv_area_command("--area", "package_management", "--suite", "guardrails"))
+        print("Running offline package merge smoke")
+        run_command(uv_area_command("--area", "package_management", "--suite", "offline-merge-smoke"))
+        for suite in self.selected_suites_for_area("package_management"):
+            if suite in {"guardrails", "offline-merge-smoke"}:
+                continue
+            print(f"Running package-management suite {suite}")
+            run_command(uv_area_command("--area", "package_management", "--suite", suite))
 
         print("Running stdlib parity inventory guardrails")
         run_command(uv_area_command("--area", "stdlib_parity", "--suite", "complexity-resource"))

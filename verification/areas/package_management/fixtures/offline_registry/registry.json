@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "sifr-offline-fixture",
+  "packages": [
+    {
+      "name": "sifr-json",
+      "version": "1.0.0",
+      "path": "packages/sifr-json-1.0.0",
+      "checksum_sha256": "c2a01adec994aa5e33f0a31b89b6d8a9d87b7002a3af3c06f62e6645195e8f5d"
+    },
+    {
+      "name": "sifr-core",
+      "version": "1.0.0",
+      "path": "packages/sifr-core-1.0.0",
+      "checksum_sha256": "d8e5b15583a465f156b8fae04d1b4c4606c4c7d933fbea67075e4b8a4c41e163"
+    }
+  ]
+}

@@ -155,6 +155,15 @@
       ]
     },
     {
+      "area": "package_management",
+      "suites": [
+        "offline-integration"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "regression",
       "suites": [
         "fixedbugs"
