@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "area": "stdlib_parity",
+  "owner": "stdlib/parity",
+  "description": "Module-owned stdlib parity evidence promoted from shipped audit examples. Supported rows execute; known-gap rows are inventory only and must carry a reason.",
+  "entries": [
+    {
+      "id": "stdlib-module-collections",
+      "module": "sifr.collections",
+      "owner": "stdlib/collections",
+      "support_status": "known_gap",
+      "profile": "inventory-only",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/05_collections.sifr",
+      "command": "check",
+      "known_gap": "Legacy Set example currently resolves through Any and does not type-check; keep inventoried until the collections package surface is finalized.",
+      "supported_apis": [
+        {"name": "Set", "tokens": ["Set(["]},
+        {"name": "Set.add", "tokens": [".add("]},
+        {"name": "Set.contains", "tokens": [".contains("]},
+        {"name": "Set.remove", "tokens": [".remove("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-env",
+      "module": "sifr.env",
+      "owner": "stdlib/env",
+      "support_status": "supported",
+      "profile": "full",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/08_env.sifr",
+      "command": "check",
+      "supported_apis": [
+        {"name": "env_get", "tokens": ["env_get("]},
+        {"name": "env_set", "tokens": ["env_set("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-hash-encoding",
+      "module": "sifr.hash+sifr.encoding",
+      "owner": "stdlib/hash-encoding",
+      "support_status": "known_gap",
+      "profile": "inventory-only",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/10_hash_encoding.sifr",
+      "command": "check",
+      "known_gap": "Hashing APIs are present, but the legacy encoding fixture still names unsupported base64 helpers.",
+      "supported_apis": [
+        {"name": "sha256", "tokens": ["sha256("]},
+        {"name": "md5", "tokens": ["md5("]},
+        {"name": "base64_encode", "tokens": ["base64_encode("]},
+        {"name": "base64_decode", "tokens": ["base64_decode("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-io",
+      "module": "sifr.io",
+      "owner": "stdlib/io",
+      "support_status": "known_gap",
+      "profile": "inventory-only",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/06_io.sifr",
+      "command": "check",
+      "known_gap": "Legacy fixture still catches string errors instead of the typed IOError result surface.",
+      "supported_apis": [
+        {"name": "write_text", "tokens": ["write_text("]},
+        {"name": "read_text", "tokens": ["read_text("]},
+        {"name": "exists", "tokens": ["exists("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-json",
+      "module": "sifr.json",
+      "owner": "stdlib/json",
+      "support_status": "known_gap",
+      "profile": "inventory-only",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/02_json.sifr",
+      "command": "check",
+      "known_gap": "Legacy fixture predates Result-returning json_loads and assigns directly to str.",
+      "supported_apis": [
+        {"name": "json_dumps", "tokens": ["json_dumps("]},
+        {"name": "json_loads", "tokens": ["json_loads("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-math",
+      "module": "sifr.math",
+      "owner": "stdlib/math",
+      "support_status": "supported",
+      "profile": "merge",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/01_math.sifr",
+      "command": "check",
+      "supported_apis": [
+        {"name": "sqrt", "tokens": ["sqrt("]},
+        {"name": "floor", "tokens": ["floor("]},
+        {"name": "ceil", "tokens": ["ceil("]},
+        {"name": "pi", "tokens": ["pi >"]},
+        {"name": "e", "tokens": ["e >"]},
+        {"name": "log", "tokens": ["log("]},
+        {"name": "sin", "tokens": ["sin("]},
+        {"name": "cos", "tokens": ["cos("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-random",
+      "module": "sifr.random",
+      "owner": "stdlib/random",
+      "support_status": "known_gap",
+      "profile": "inventory-only",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/09_random.sifr",
+      "command": "check",
+      "known_gap": "Legacy fixture includes random_choice, which is not currently exported by sifr.random.",
+      "supported_apis": [
+        {"name": "random_float", "tokens": ["random_float("]},
+        {"name": "random_int", "tokens": ["random_int("]},
+        {"name": "random_choice", "tokens": ["random_choice("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-re",
+      "module": "sifr.re",
+      "owner": "stdlib/re",
+      "support_status": "known_gap",
+      "profile": "inventory-only",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/04_re.sifr",
+      "command": "check",
+      "known_gap": "Legacy fixture predates Result-returning regex helpers.",
+      "supported_apis": [
+        {"name": "re_match", "tokens": ["re_match("]},
+        {"name": "re_find", "tokens": ["re_find("]},
+        {"name": "re_replace", "tokens": ["re_replace("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-string",
+      "module": "builtin.str",
+      "owner": "stdlib/string",
+      "support_status": "supported",
+      "profile": "merge",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/03_string_full.sifr",
+      "command": "check",
+      "supported_apis": [
+        {"name": "str.upper", "tokens": [".upper("]},
+        {"name": "str.lower", "tokens": [".lower("]},
+        {"name": "str.find", "tokens": [".find("]},
+        {"name": "str.count", "tokens": [".count("]},
+        {"name": "str.startswith", "tokens": [".startswith("]},
+        {"name": "str.endswith", "tokens": [".endswith("]},
+        {"name": "str.replace", "tokens": [".replace("]},
+        {"name": "str.strip", "tokens": [".strip("]},
+        {"name": "str.split", "tokens": [".split("]},
+        {"name": "str.isdigit", "tokens": [".isdigit("]},
+        {"name": "str.isalpha", "tokens": [".isalpha("]},
+        {"name": "str.isalnum", "tokens": [".isalnum("]},
+        {"name": "len", "tokens": ["len("]}
+      ]
+    },
+    {
+      "id": "stdlib-module-time",
+      "module": "sifr.time",
+      "owner": "stdlib/time",
+      "support_status": "supported",
+      "profile": "full",
+      "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/07_time.sifr",
+      "command": "check",
+      "supported_apis": [
+        {"name": "time_now", "tokens": ["time_now("]},
+        {"name": "sleep", "tokens": ["sleep("]}
+      ]
+    }
+  ]
+}
