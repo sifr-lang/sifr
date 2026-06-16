@@ -1,0 +1,15 @@
+# @lsp-marker helper-definition
+def helper(value: int) -> int:
+    return value + 1
+
+def main() -> int:
+    total: int = 0
+    # @lsp-marker loop-folding-range
+    for item in [1, 2, 3]:
+        total = total + item
+    # @lsp-marker helper-call
+    result: int = helper(total)
+    # @lsp-marker result-binding
+    renamed_result: int = result
+    # @lsp-marker return-result
+    return renamed_result

@@ -1,0 +1,8 @@
+from helper import public_value
+
+def main() -> int:
+    # @lsp-marker import-edge
+    loaded: int = public_value()
+    # @lsp-marker watched-file-change
+    # @lsp-marker workspace-diagnostic-refresh
+    return loaded

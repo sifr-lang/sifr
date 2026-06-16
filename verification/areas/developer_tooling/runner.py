@@ -96,6 +96,8 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
     "lsp-smoke": [
         ("lsp-protocol-smoke", [sys.executable, str(AREA_ROOT / "lsp_protocol_smoke.py")]),
         ("lsp-protocol-smoke-self-test", [sys.executable, str(AREA_ROOT / "lsp_protocol_smoke.py"), "--self-test"]),
+        ("lsp-marker-corpus", [sys.executable, str(AREA_ROOT / "check_lsp_marker_corpus.py")]),
+        ("lsp-marker-corpus-self-test", [sys.executable, str(AREA_ROOT / "check_lsp_marker_corpus.py"), "--self-test"]),
     ],
     "editor-release": [
         ("vscode-extension-contract", [sys.executable, str(AREA_ROOT / "check_vscode_extension_contract.py")]),
