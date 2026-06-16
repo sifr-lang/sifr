@@ -204,6 +204,15 @@
       ]
     },
     {
+      "area": "fuzz_property",
+      "suites": [
+        "fuzz-smoke"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "ecosystem_compatibility",
       "suites": [
         "oss-curated"

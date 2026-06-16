@@ -141,6 +141,7 @@ class ProfileRunner:
             ("performance_budget_checks", self.run_performance_budget_checks),
             ("verification_hardening_self_tests", self.run_verification_hardening_self_tests),
             ("verification_runner_foundation", self.run_verification_runner_foundation_checks),
+            ("fuzz_property_checks", self.run_fuzz_property_suites),
             ("distribution_validation", self.run_distribution_checks),
         ]
         if self.generated_code_quality_mode != "none":
@@ -316,6 +317,24 @@ class ProfileRunner:
         print("Running verification runner foundation checks")
         run_command(["uv", "lock", "--project", "verification", "--check"])
         run_command(["uv", "run", "--project", "verification", "--locked", "python", "-m", "sifr_verify", "--self-test"])
+
+    def run_fuzz_property_suites(self) -> None:
+        legacy_fuzz_suites = {
+            suite for suite in self.hardening_suites if suite in {"property", "fuzz-smoke"}
+        }
+        suites = [
+            suite
+            for suite in self.selected_suites_for_area("fuzz_property")
+            if suite not in legacy_fuzz_suites
+        ]
+        if not suites:
+            print(f"Skipping fuzz/property checks for lane {self.profile_name}")
+            return
+        print("Running fuzz/property checks")
+        args = ["--area", "fuzz_property"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args, "--hardening-summary"))
 
     def run_distribution_checks(self) -> None:
         if self.distribution_mode == "none":

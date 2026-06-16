@@ -11,6 +11,7 @@ Canonical manifests:
 
 Canonical runner:
 - `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite fuzz-smoke`
+- Merge profile runs the deterministic `fuzz-smoke` suite; `property` remains part of the broader local/nightly/release hardening command above.
 
 Contracts:
 - deterministic seeds and deterministic mutation stream
@@ -19,7 +20,7 @@ Contracts:
 - machine-readable result artifacts emitted through `target/verification/areas/fuzz-property-results.json`
 - mutation operators include import lines, string/numeric literals, and function signature shapes in addition to line-level edits
 - `fuzz_smoke_manifest.json` carries the versioned target contract. The runner rejects missing or duplicate target ids, missing seed files, malformed reproduction/minimization commands, and unknown target references from `property_manifest.json`.
-- The current deterministic fuzz-smoke mutator still mutates Sifr source through the top-level `command: check` stream. The per-target entries are executable contract metadata plus reproduction/minimization routing; later Wave 7 slices must add per-target dispatch before claiming sustained mutation coverage for codegen, diagnostic-renderer, or package/project targets.
+- The deterministic fuzz-smoke runner dispatches by target id. Source mutation targets run their own seed corpus, command, diagnostic format, exit-code policy, and uniqueness budget. Codegen smoke runs valid source seeds through the generated-binary path. Structured diagnostic and project/package targets execute their declared reproduction commands and enforce exit-code and panic-signal checks.
 - Required first-party hardening target ids are:
   - `parse_check_entrypoint`
   - `hir_type_ownership_entrypoint`
@@ -54,7 +55,7 @@ The diagnostic renderer fuzz target operates on the rendered diagnostic envelope
 - `args`: JSON object containing strings, integers, booleans, arrays, objects, or null
 - `children` and `suggestions`: optional arrays using the same bounded JSON value rules
 
-The current deterministic smoke path for this target is `cargo run -q -p sifr_driver --bin diagnostic_contract_harness`, which renders structured diagnostics through JSON, human, and compact renderers. Sustained fuzzing must mutate the structured envelope directly before rendering.
+The deterministic smoke path for this target is `cargo run --locked -q -p sifr_driver --bin diagnostic_contract_harness -- --target diagnostic_renderer_entrypoint --seed <fixture>`, which renders the named structured diagnostic through JSON, human, and compact renderers. Sustained fuzzing must mutate the structured envelope directly before rendering.
 
 ## Triage and Minimization Workflow
 

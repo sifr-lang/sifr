@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -38,6 +39,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    os.environ.setdefault("CARGO_NET_OFFLINE", "true")
     args = parse_args(argv)
     if args.bless:
         raise SystemExit("fuzz_property area does not support --bless")
