@@ -7,6 +7,7 @@ use sifr_package::{
     derive_package_graph, parse_metadata_json, CargoCommandPlan, CargoLockMode, PackageSourceMap,
 };
 use std::collections::BTreeSet;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -125,11 +126,64 @@ fn main() {
 
 fn run() -> Result<(), String> {
     let repo_root = repo_root()?;
-    check_parser_runtime_contract(&repo_root)?;
-    check_project_runtime_contract(&repo_root)?;
-    check_cycle_runtime_contract(&repo_root)?;
-    check_package_runtime_contract(&repo_root)?;
+    match HarnessArgs::parse()? {
+        HarnessArgs::All => {
+            check_parser_runtime_contract(&repo_root)?;
+            check_project_runtime_contract(&repo_root)?;
+            check_cycle_runtime_contract(&repo_root)?;
+            check_package_runtime_contract(&repo_root)?;
+        }
+        HarnessArgs::Target {
+            target_id,
+            seed_path,
+        } => match target_id.as_str() {
+            "diagnostic_renderer_entrypoint" => {
+                check_parser_seed_runtime_contract(&repo_root, &seed_path)?;
+            }
+            "package_project_manifest_entrypoint" => {
+                check_project_seed_runtime_contract(&repo_root, &seed_path)?;
+            }
+            _ => return Err(format!("unknown diagnostic contract target: {target_id}")),
+        },
+    }
     Ok(())
+}
+
+enum HarnessArgs {
+    All,
+    Target {
+        target_id: String,
+        seed_path: PathBuf,
+    },
+}
+
+impl HarnessArgs {
+    fn parse() -> Result<Self, String> {
+        let mut args = env::args().skip(1);
+        let Some(first) = args.next() else {
+            return Ok(Self::All);
+        };
+        if first != "--target" {
+            return Err(format!("unexpected argument: {first}"));
+        }
+        let target_id = args
+            .next()
+            .ok_or_else(|| "--target requires a target id".to_string())?;
+        if args.next().as_deref() != Some("--seed") {
+            return Err("--target requires --seed <path>".to_string());
+        }
+        let seed_path = args
+            .next()
+            .map(PathBuf::from)
+            .ok_or_else(|| "--seed requires a path".to_string())?;
+        if let Some(extra) = args.next() {
+            return Err(format!("unexpected trailing argument: {extra}"));
+        }
+        Ok(Self::Target {
+            target_id,
+            seed_path,
+        })
+    }
 }
 
 fn repo_root() -> Result<PathBuf, String> {
@@ -144,52 +198,112 @@ fn repo_root() -> Result<PathBuf, String> {
 fn check_parser_runtime_contract(root: &Path) -> Result<(), String> {
     let base = root.join("verification/areas/diagnostics/fixtures/diagnostics");
     for (fixture, code) in PARSER_FIXTURES {
-        let entry = base.join(fixture).join("main.sifr");
-        let source = std::fs::read_to_string(&entry)
-            .map_err(|err| format!("failed to read {}: {err}", entry.display()))?;
-        let diagnostics = check_single_file(&source, &entry);
-        assert_contract(&diagnostics, code, fixture, &[], &[], true, true)?;
-        assert_text_formats(&diagnostics, code, &entry)?;
+        check_parser_fixture(&base, fixture, code)?;
     }
     Ok(())
+}
+
+fn check_parser_seed_runtime_contract(root: &Path, seed_path: &Path) -> Result<(), String> {
+    let base = root.join("verification/areas/diagnostics/fixtures/diagnostics");
+    let seed = root.join(seed_path);
+    let fixture = fixture_name_for_seed(&base, &seed)?;
+    let (_, code) = PARSER_FIXTURES
+        .iter()
+        .find(|(candidate, _)| *candidate == fixture)
+        .ok_or_else(|| format!("seed is not a parser contract fixture: {}", seed.display()))?;
+    check_parser_fixture(&base, &fixture, code)
+}
+
+fn check_parser_fixture(base: &Path, fixture: &str, code: &str) -> Result<(), String> {
+    let entry = base.join(fixture).join("main.sifr");
+    let source = std::fs::read_to_string(&entry)
+        .map_err(|err| format!("failed to read {}: {err}", entry.display()))?;
+    let diagnostics = check_single_file(&source, &entry);
+    assert_contract(&diagnostics, code, fixture, &[], &[], true, true)?;
+    assert_text_formats(&diagnostics, code, &entry)
 }
 
 fn check_project_runtime_contract(root: &Path) -> Result<(), String> {
     let base = root.join("verification/areas/project_workspace/fixtures/project");
     for (fixture, code, required_args) in PROJECT_FIXTURES {
-        let entry = base.join(fixture).join("main.sifr");
-        let diagnostics = check_project(&entry);
-        assert_contract(
-            &diagnostics,
-            code,
-            fixture,
-            LEGACY_WORKSPACE_IMPORT_CODES,
-            required_args,
-            true,
-            true,
-        )?;
-        assert_text_formats(&diagnostics, code, &entry)?;
+        check_project_fixture(&base, fixture, code, required_args)?;
     }
     Ok(())
+}
+
+fn check_project_seed_runtime_contract(root: &Path, seed_path: &Path) -> Result<(), String> {
+    let base = root.join("verification/areas/project_workspace/fixtures/project");
+    let seed = root.join(seed_path);
+    let fixture = fixture_name_for_seed(&base, &seed)?;
+    if let Some((_, code, required_args)) = PROJECT_FIXTURES
+        .iter()
+        .find(|(candidate, _, _)| *candidate == fixture)
+    {
+        return check_project_fixture(&base, &fixture, code, required_args);
+    }
+    if let Some((_, code, required_args)) = CYCLE_FIXTURES
+        .iter()
+        .find(|(candidate, _, _)| *candidate == fixture)
+    {
+        return check_project_fixture(&base, &fixture, code, required_args);
+    }
+    Err(format!(
+        "seed is not a project contract fixture: {}",
+        seed.display()
+    ))
+}
+
+fn check_project_fixture(
+    base: &Path,
+    fixture: &str,
+    code: &str,
+    required_args: &[&str],
+) -> Result<(), String> {
+    let entry = base.join(fixture).join("main.sifr");
+    let diagnostics = check_project(&entry);
+    assert_contract(
+        &diagnostics,
+        code,
+        fixture,
+        LEGACY_WORKSPACE_IMPORT_CODES,
+        required_args,
+        true,
+        true,
+    )?;
+    assert_text_formats(&diagnostics, code, &entry)
 }
 
 fn check_cycle_runtime_contract(root: &Path) -> Result<(), String> {
     let base = root.join("verification/areas/project_workspace/fixtures/project");
     for (fixture, code, required_args) in CYCLE_FIXTURES {
-        let entry = base.join(fixture).join("main.sifr");
-        let diagnostics = check_project(&entry);
-        assert_contract(
-            &diagnostics,
-            code,
-            fixture,
-            LEGACY_WORKSPACE_IMPORT_CODES,
-            required_args,
-            true,
-            true,
-        )?;
-        assert_text_formats(&diagnostics, code, &entry)?;
+        check_project_fixture(&base, fixture, code, required_args)?;
     }
     Ok(())
+}
+
+fn fixture_name_for_seed(base: &Path, seed: &Path) -> Result<String, String> {
+    if seed.file_name().and_then(|name| name.to_str()) != Some("main.sifr") {
+        return Err(format!(
+            "seed must point at a main.sifr fixture: {}",
+            seed.display()
+        ));
+    }
+    let parent = seed
+        .parent()
+        .ok_or_else(|| format!("seed has no parent fixture: {}", seed.display()))?;
+    parent
+        .strip_prefix(base)
+        .ok()
+        .and_then(|relative| {
+            let mut components = relative.components();
+            let first = components.next()?;
+            if components.next().is_none() {
+                Some(first.as_os_str().to_string_lossy().into_owned())
+            } else {
+                None
+            }
+        })
+        .ok_or_else(|| format!("seed is outside expected fixture root: {}", seed.display()))
 }
 
 fn check_package_runtime_contract(root: &Path) -> Result<(), String> {

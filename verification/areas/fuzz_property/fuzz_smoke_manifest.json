@@ -22,6 +22,17 @@
         "verification/areas/fuzz_property/seeds/valid_control_flow_seed.sifr",
         "verification/areas/fuzz_property/seeds/string_numeric_literals_seed.sifr"
       ],
+      "iterations": 8,
+      "random_seed": 1349393279,
+      "min_unique_cases": 6,
+      "command": "check",
+      "diagnostic_format": "json",
+      "allow_exit_codes": [
+        0,
+        1
+      ],
+      "assert_no_panic": true,
+      "timeout_seconds": 30,
       "reproduction_command": [
         "uv",
         "run",
@@ -59,6 +70,17 @@
         "verification/areas/fuzz_property/seeds/function_signature_seed.sifr",
         "verification/areas/fuzz_property/seeds/import_callable_seed.sifr"
       ],
+      "iterations": 8,
+      "random_seed": 1349393410,
+      "min_unique_cases": 6,
+      "command": "check",
+      "diagnostic_format": "json",
+      "allow_exit_codes": [
+        0,
+        1
+      ],
+      "assert_no_panic": true,
+      "timeout_seconds": 30,
       "reproduction_command": [
         "uv",
         "run",
@@ -95,6 +117,15 @@
         "verification/areas/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
         "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr"
       ],
+      "random_seed": 1349393579,
+      "min_unique_cases": 2,
+      "command": "run",
+      "diagnostic_format": "json",
+      "allow_exit_codes": [
+        0
+      ],
+      "assert_no_panic": true,
+      "timeout_seconds": 60,
       "reproduction_command": [
         "uv",
         "run",
@@ -130,14 +161,23 @@
       "seed_files": [
         "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr"
       ],
+      "expect_exit_code": 0,
+      "assert_no_panic": true,
+      "timeout_seconds": 120,
       "reproduction_command": [
         "cargo",
         "run",
+        "--locked",
         "-q",
         "-p",
         "sifr_driver",
         "--bin",
-        "diagnostic_contract_harness"
+        "diagnostic_contract_harness",
+        "--",
+        "--target",
+        "diagnostic_renderer_entrypoint",
+        "--seed",
+        "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr"
       ],
       "minimization_command": [
         "python3",
@@ -158,14 +198,23 @@
       "seed_files": [
         "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/main.sifr"
       ],
+      "expect_exit_code": 0,
+      "assert_no_panic": true,
+      "timeout_seconds": 120,
       "reproduction_command": [
         "cargo",
         "run",
+        "--locked",
         "-q",
         "-p",
         "sifr_driver",
         "--bin",
-        "diagnostic_contract_harness"
+        "diagnostic_contract_harness",
+        "--",
+        "--target",
+        "package_project_manifest_entrypoint",
+        "--seed",
+        "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/main.sifr"
       ],
       "minimization_command": [
         "python3",

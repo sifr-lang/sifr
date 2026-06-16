@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import random
+import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
@@ -308,45 +311,9 @@ def run_fuzz_smoke_suite(
         "total_failures": 0,
     }
 
-    required = (
-        "id",
-        "command",
-        "diagnostic_format",
-        "note",
-    )
+    required = ("id", "note")
     mismatches = required_missing(payload, required)
     mismatches.extend(validate_fuzz_target_contract(payload, repo_root))
-    seed_files = payload.get("seed_files")
-    iterations = payload.get("iterations")
-    random_seed = payload.get("random_seed")
-    min_unique = payload.get("min_unique_cases")
-    allow_exit_codes = payload.get("allow_exit_codes")
-    assert_no_panic = bool(payload.get("assert_no_panic", True))
-
-    if not isinstance(seed_files, list) or not seed_files:
-        mismatches.append("seed_files")
-    if not isinstance(iterations, int) or iterations < 1:
-        mismatches.append("iterations")
-    if not isinstance(random_seed, int):
-        mismatches.append("random_seed")
-    if not isinstance(min_unique, int) or min_unique < 1:
-        mismatches.append("min_unique_cases")
-    if not isinstance(allow_exit_codes, list) or not all(
-        isinstance(code, int) for code in allow_exit_codes
-    ):
-        mismatches.append("allow_exit_codes")
-
-    sources: list[str] = []
-    if isinstance(seed_files, list):
-        for seed in seed_files:
-            if not isinstance(seed, str):
-                mismatches.append("seed_file_path")
-                continue
-            seed_path = repo_root / seed
-            if not seed_path.is_file():
-                mismatches.append(f"seed_missing:{seed}")
-                continue
-            sources.append(seed_path.read_text(encoding="utf-8"))
 
     case_result = {
         "id": payload.get("id", "fuzz-smoke"),
@@ -367,75 +334,131 @@ def run_fuzz_smoke_suite(
         result["cases"].append(case_result)
         return result
 
-    assert isinstance(iterations, int)
-    assert isinstance(random_seed, int)
-    assert isinstance(min_unique, int)
-    assert isinstance(allow_exit_codes, list)
+    for target in payload["targets"]:
+        target_result = run_fuzz_target_smoke(target=target, repo_root=repo_root)
+        result["total_variants"] += int(target_result["total_variants"])
+        result["total_failures"] += int(target_result["total_failures"])
+        if int(target_result["total_failures"]) > 0:
+            result["failed_cases"] += 1
+        result["cases"].append(target_result["case"])
+    return result
 
-    generated: list[str] = []
-    for idx, source in enumerate(sources):
-        generated.extend(
-            deterministic_mutations(
-                seed_source=source,
-                iterations=max(1, iterations // max(1, len(sources))),
-                random_seed=random_seed + (idx * 17),
-            )
-        )
 
-    if len(generated) < iterations:
-        while len(generated) < iterations:
-            generated.extend(
+def run_fuzz_target_smoke(*, target: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    coverage_mode = str(target["coverage_mode"])
+    if str(target["input_grammar"]) == "sifr-source" and coverage_mode == "deterministic-smoke":
+        return run_source_mutation_target(target=target, repo_root=repo_root)
+    if str(target["input_grammar"]) == "sifr-source" and coverage_mode == "property-smoke":
+        return run_source_seed_target(target=target, repo_root=repo_root)
+    if coverage_mode == "diagnostic-contract-smoke":
+        return run_reproduction_command_target(target=target, repo_root=repo_root)
+    return target_metadata_failure(target=target, mismatch=f"unsupported-coverage-mode:{coverage_mode}")
+
+
+def run_source_mutation_target(*, target: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    sources = load_seed_sources(target=target, repo_root=repo_root)
+    iterations = int(target["iterations"])
+    random_seed = int(target["random_seed"])
+    generated: list[tuple[str, str]] = []
+    per_seed = max(1, iterations // max(1, len(sources)))
+    for idx, (seed_path, source) in enumerate(sources):
+        for snippet in deterministic_mutations(
+            seed_source=source,
+            iterations=per_seed,
+            random_seed=random_seed + (idx * 17),
+        ):
+            generated.append((seed_path, snippet))
+
+    while len(generated) < iterations:
+        seed_path, source = sources[len(generated) % len(sources)]
+        generated.append(
+            (
+                seed_path,
                 deterministic_mutations(
-                    seed_source=sources[len(generated) % len(sources)],
+                    seed_source=source,
                     iterations=1,
                     random_seed=random_seed + len(generated),
-                )
+                )[0],
             )
+        )
     generated = generated[:iterations]
+    return run_source_snippets(target=target, repo_root=repo_root, snippets=generated, label_prefix="fuzz")
 
+
+def run_source_seed_target(*, target: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    snippets = load_seed_sources(target=target, repo_root=repo_root)
+    return run_source_snippets(target=target, repo_root=repo_root, snippets=snippets, label_prefix="seed")
+
+
+def run_source_snippets(
+    *,
+    target: dict[str, Any],
+    repo_root: Path,
+    snippets: list[tuple[str, str]],
+    label_prefix: str,
+) -> dict[str, Any]:
+    target_id = str(target["id"])
+    case_result = target_case(target)
+    total_variants = 0
+    total_failures = 0
     unique_hashes: set[str] = set()
-    case_failed = False
-    for i, snippet in enumerate(generated, start=1):
+    allow_exit_codes = target["allow_exit_codes"]
+    assert isinstance(allow_exit_codes, list)
+    timeout_seconds = int(target["timeout_seconds"])
+    tmp_dir = repo_root / "target/verification/tmp"
+    for stale_path in tmp_dir.glob(f"{target_id}_*.sifr"):
+        stale_path.unlink(missing_ok=True)
+    baseline_output: tuple[int, str, str] | None = None
+    baseline_snippet: tuple[str, str] | None = None
+    baseline_path: Path | None = None
+
+    for i, (seed_path, snippet) in enumerate(snippets, start=1):
         snippet_hash = hashlib.sha256(snippet.encode("utf-8")).hexdigest()[:16]
         unique_hashes.add(snippet_hash)
-        tmp_file = repo_root / "target/verification/tmp" / f"fuzz_smoke_{i:03d}_{snippet_hash}.sifr"
+        tmp_file = tmp_dir / f"{target_id}_{i:03d}_{snippet_hash}.sifr"
         write_text(tmp_file, snippet)
 
         exit_code, stdout, stderr, elapsed_ms, argv = run_variant(
             repo_root=repo_root,
-            command_name=str(payload["command"]),
+            command_name=str(target["command"]),
             entry=tmp_file,
-            diagnostic_format=str(payload["diagnostic_format"]),
+            diagnostic_format=str(target["diagnostic_format"]),
+            timeout_secs=timeout_seconds,
         )
         stdout_norm = canonicalize_output(
             repo_root=repo_root,
             text=stdout,
-            diagnostic_format=str(payload["diagnostic_format"]),
+            diagnostic_format=str(target["diagnostic_format"]),
             stream="stdout",
         )
         stderr_norm = canonicalize_output(
             repo_root=repo_root,
             text=stderr,
-            diagnostic_format=str(payload["diagnostic_format"]),
+            diagnostic_format=str(target["diagnostic_format"]),
             stream="stderr",
         )
 
         run_mismatches: list[str] = []
         if exit_code not in allow_exit_codes:
             run_mismatches.append("unexpected-exit")
-        if assert_no_panic and contains_internal_panic(stdout_norm + stderr_norm):
+        if bool(target.get("assert_no_panic", True)) and contains_internal_panic(stdout_norm + stderr_norm):
             run_mismatches.append("panic-signal")
+        if baseline_output is None and label_prefix == "fuzz" and not run_mismatches:
+            baseline_output = (exit_code, stdout_norm, stderr_norm)
+            baseline_snippet = (seed_path, snippet)
+            baseline_path = tmp_file
 
         status = "pass" if not run_mismatches else "fail"
-        result["total_variants"] += 1
+        total_variants += 1
         if run_mismatches:
-            case_failed = True
-            result["total_failures"] += 1
+            total_failures += 1
         else:
             tmp_file.unlink(missing_ok=True)
 
         variant_result = {
-            "label": f"fuzz-{i:03d}",
+            "label": f"{label_prefix}-{i:03d}",
+            "target_id": target_id,
+            "seed": seed_path,
             "status": status,
             "mismatches": run_mismatches,
             "source_hash": snippet_hash,
@@ -445,30 +468,177 @@ def run_fuzz_smoke_suite(
         }
         if run_mismatches:
             variant_result["source_path"] = str(tmp_file.relative_to(repo_root))
-
         case_result["variants"].append(variant_result)
 
+    if baseline_output is not None and baseline_snippet is not None and baseline_path is not None:
+        seed_path, snippet = baseline_snippet
+        determinism_hash = hashlib.sha256(snippet.encode("utf-8")).hexdigest()[:16]
+        tmp_file = baseline_path
+        write_text(tmp_file, snippet)
+        exit_code, stdout, stderr, elapsed_ms, argv = run_variant(
+            repo_root=repo_root,
+            command_name=str(target["command"]),
+            entry=tmp_file,
+            diagnostic_format=str(target["diagnostic_format"]),
+            timeout_secs=timeout_seconds,
+        )
+        current_output = (
+            exit_code,
+            canonicalize_output(
+                repo_root=repo_root,
+                text=stdout,
+                diagnostic_format=str(target["diagnostic_format"]),
+                stream="stdout",
+            ),
+            canonicalize_output(
+                repo_root=repo_root,
+                text=stderr,
+                diagnostic_format=str(target["diagnostic_format"]),
+                stream="stderr",
+            ),
+        )
+        determinism_mismatches: list[str] = []
+        if current_output[0] != baseline_output[0]:
+            determinism_mismatches.append("exit-code-drift")
+        if current_output[1] != baseline_output[1]:
+            determinism_mismatches.append("stdout-drift")
+        if current_output[2] != baseline_output[2]:
+            determinism_mismatches.append("stderr-drift")
+        total_variants += 1
+        if determinism_mismatches:
+            total_failures += 1
+        else:
+            tmp_file.unlink(missing_ok=True)
+        case_result["variants"].append(
+            {
+                "label": "determinism-rerun",
+                "target_id": target_id,
+                "seed": seed_path,
+                "status": "pass" if not determinism_mismatches else "fail",
+                "mismatches": determinism_mismatches,
+                "source_hash": determinism_hash,
+                "actual_exit_code": exit_code,
+                "duration_ms": round(elapsed_ms, 3),
+                "argv": argv,
+            }
+        )
+
     uniqueness_mismatch: list[str] = []
+    min_unique = int(target["min_unique_cases"])
     if len(unique_hashes) < min_unique:
         uniqueness_mismatch.append("insufficient-unique-cases")
-        case_failed = True
-        result["total_failures"] += 1
-
-    result["total_variants"] += 1
+        total_failures += 1
+    total_variants += 1
     case_result["variants"].append(
         {
             "label": "uniqueness",
+            "target_id": target_id,
             "status": "pass" if not uniqueness_mismatch else "fail",
             "mismatches": uniqueness_mismatch,
             "unique_cases": len(unique_hashes),
             "required_min_unique_cases": min_unique,
         }
     )
+    return {"case": case_result, "total_variants": total_variants, "total_failures": total_failures}
 
-    if case_failed:
-        result["failed_cases"] += 1
-    result["cases"].append(case_result)
-    return result
+
+def run_reproduction_command_target(*, target: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    target_id = str(target["id"])
+    case_result = target_case(target)
+    argv = list(target["reproduction_command"])
+    timeout_seconds = int(target["timeout_seconds"])
+    started = time.perf_counter()
+    try:
+        proc = subprocess.run(
+            argv,
+            cwd=repo_root,
+            env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=timeout_seconds,
+        )
+        exit_code = proc.returncode
+        stdout = proc.stdout
+        stderr = proc.stderr
+    except subprocess.TimeoutExpired as timeout_error:
+        exit_code = 124
+        stdout = timeout_error.stdout or ""
+        stderr = (timeout_error.stderr or "") + f"\ncommand timed out after {timeout_seconds} seconds"
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+
+    stdout_norm = canonicalize_output(
+        repo_root=repo_root,
+        text=stdout,
+        diagnostic_format=None,
+        stream="stdout",
+    )
+    stderr_norm = canonicalize_output(
+        repo_root=repo_root,
+        text=stderr,
+        diagnostic_format=None,
+        stream="stderr",
+    )
+    mismatches: list[str] = []
+    if exit_code == 124:
+        mismatches.append("timeout")
+    elif exit_code != int(target["expect_exit_code"]):
+        mismatches.append("unexpected-exit")
+    if bool(target.get("assert_no_panic", True)) and contains_internal_panic(stdout_norm + stderr_norm):
+        mismatches.append("panic-signal")
+
+    case_result["variants"].append(
+        {
+            "label": "reproduction-command",
+            "target_id": target_id,
+            "status": "pass" if not mismatches else "fail",
+            "mismatches": mismatches,
+            "expected_exit_code": int(target["expect_exit_code"]),
+            "actual_exit_code": exit_code,
+            "duration_ms": round(elapsed_ms, 3),
+            "argv": argv,
+        }
+    )
+    return {
+        "case": case_result,
+        "total_variants": 1,
+        "total_failures": 1 if mismatches else 0,
+    }
+
+
+def target_case(target: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": str(target["id"]),
+        "entrypoint": target.get("entrypoint"),
+        "input_grammar": target.get("input_grammar"),
+        "coverage_mode": target.get("coverage_mode"),
+        "program_class": target.get("program_class"),
+        "reproduction_command": target.get("reproduction_command"),
+        "minimization_command": target.get("minimization_command"),
+        "variants": [],
+    }
+
+
+def target_metadata_failure(*, target: dict[str, Any], mismatch: str) -> dict[str, Any]:
+    case_result = target_case(target)
+    case_result["variants"].append(
+        {
+            "label": "metadata",
+            "target_id": target.get("id"),
+            "status": "fail",
+            "mismatches": [mismatch],
+        }
+    )
+    return {"case": case_result, "total_variants": 1, "total_failures": 1}
+
+
+def load_seed_sources(*, target: dict[str, Any], repo_root: Path) -> list[tuple[str, str]]:
+    sources: list[tuple[str, str]] = []
+    for seed in target["seed_files"]:
+        assert isinstance(seed, str)
+        seed_path = repo_root / seed
+        sources.append((seed, seed_path.read_text(encoding="utf-8")))
+    return sources
 
 
 def load_known_targets(repo_root: Path) -> dict[str, dict[str, Any]]:
@@ -556,9 +726,56 @@ def validate_fuzz_target_contract(payload: dict[str, Any], repo_root: Path) -> l
             mismatches.append(f"{target_id}.minimization_command")
         else:
             mismatches.extend(validate_command_paths(target_id, minimization_command, repo_root))
+        mismatches.extend(validate_target_execution_fields(target_id, target))
     missing_targets = REQUIRED_TARGET_IDS.difference(seen)
     for target_id in sorted(missing_targets):
         mismatches.append(f"target.missing:{target_id}")
+    return mismatches
+
+
+def validate_target_execution_fields(target_id: object, target: dict[str, Any]) -> list[str]:
+    mismatches: list[str] = []
+    coverage_mode = target.get("coverage_mode")
+    input_grammar = target.get("input_grammar")
+    if not isinstance(target.get("timeout_seconds"), int) or int(target["timeout_seconds"]) < 1:
+        mismatches.append(f"{target_id}.timeout_seconds")
+    if input_grammar == "sifr-source" and coverage_mode in {"deterministic-smoke", "property-smoke"}:
+        if target.get("command") not in {"check", "run", "build", "test"}:
+            mismatches.append(f"{target_id}.command")
+        if not isinstance(target.get("diagnostic_format"), str) or not target["diagnostic_format"]:
+            mismatches.append(f"{target_id}.diagnostic_format")
+        if not isinstance(target.get("random_seed"), int):
+            mismatches.append(f"{target_id}.random_seed")
+        if not isinstance(target.get("min_unique_cases"), int) or int(target["min_unique_cases"]) < 1:
+            mismatches.append(f"{target_id}.min_unique_cases")
+        allow_exit_codes = target.get("allow_exit_codes")
+        if not isinstance(allow_exit_codes, list) or not all(
+            isinstance(code, int) for code in allow_exit_codes
+        ):
+            mismatches.append(f"{target_id}.allow_exit_codes")
+        if not isinstance(target.get("assert_no_panic"), bool):
+            mismatches.append(f"{target_id}.assert_no_panic")
+        if coverage_mode == "deterministic-smoke":
+            if not isinstance(target.get("iterations"), int) or int(target["iterations"]) < 1:
+                mismatches.append(f"{target_id}.iterations")
+        elif "iterations" in target:
+            mismatches.append(f"{target_id}.iterations.unused")
+    elif coverage_mode == "diagnostic-contract-smoke":
+        if not isinstance(target.get("expect_exit_code"), int):
+            mismatches.append(f"{target_id}.expect_exit_code")
+        if not isinstance(target.get("assert_no_panic"), bool):
+            mismatches.append(f"{target_id}.assert_no_panic")
+        reproduction_command = target.get("reproduction_command")
+        seed_files = target.get("seed_files")
+        if isinstance(reproduction_command, list):
+            if "--target" not in reproduction_command or target_id not in reproduction_command:
+                mismatches.append(f"{target_id}.reproduction_command.target")
+            if isinstance(seed_files, list):
+                for seed in seed_files:
+                    if seed not in reproduction_command:
+                        mismatches.append(f"{target_id}.reproduction_command.seed:{seed}")
+    else:
+        mismatches.append(f"{target_id}.coverage_mode")
     return mismatches
 
 
