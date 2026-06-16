@@ -44,6 +44,7 @@ class LspClient:
         self.timeout = timeout
         self.next_id = 1
         self.notifications: list[dict[str, Any]] = []
+        self.responses: dict[int | str, dict[str, Any]] = {}
         self.events: list[dict[str, Any]] = []
         self._record_event("spawn", {"pid": self.process.pid, "args": args})
 
@@ -65,6 +66,14 @@ class LspClient:
         if not isinstance(error, dict):
             raise LspProtocolError(f"{method} succeeded; expected protocol error")
         return error
+
+    def send_request(self, request_id: int | str, method: str, params: dict[str, Any] | None = None) -> None:
+        if isinstance(request_id, int):
+            self.next_id = max(self.next_id, request_id + 1)
+        self._send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}})
+
+    def wait_for_response(self, request_id: int | str) -> dict[str, Any]:
+        return self._wait_for_response(request_id)
 
     def notify(self, method: str, params: dict[str, Any] | None = None) -> None:
         self._send({"jsonrpc": "2.0", "method": method, "params": params or {}})
@@ -98,14 +107,18 @@ class LspClient:
             stderr = self.process.stderr.read().decode("utf-8", errors="replace") if self.process.stderr else ""
             raise LspProtocolError(self._diagnostic_context(f"LSP exited {self.process.returncode}", stderr))
 
-    def _wait_for_response(self, request_id: int) -> dict[str, Any]:
+    def _wait_for_response(self, request_id: int | str) -> dict[str, Any]:
         deadline = time.monotonic() + self.timeout
         while time.monotonic() < deadline:
+            if request_id in self.responses:
+                return self.responses.pop(request_id)
             message = self._read_message(deadline)
             if message.get("id") == request_id:
                 return message
             if "method" in message and "id" not in message:
                 self.notifications.append(message)
+            elif "id" in message and "method" not in message:
+                self.responses[message["id"]] = message
         raise LspProtocolError(f"timed out waiting for response {request_id}")
 
     def _send(self, payload: dict[str, Any]) -> None:
