@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "description": "Manifest-owned JSON-RPC transcript replay scenarios for stable Sifr LSP wire behavior.",
+  "profile_ownership": {
+    "create_pr": "developer_tooling/lsp-smoke",
+    "merge": "developer_tooling/lsp-smoke",
+    "full": "developer_tooling/full"
+  },
+  "required_categories": [
+    "cancellation",
+    "client-capabilities",
+    "initialize",
+    "out-of-order",
+    "project-reload",
+    "stale-diagnostics",
+    "unsupported-capability",
+    "workspace-folders"
+  ],
+  "scenarios": [
+    {
+      "id": "cancellation-and-out-of-order-requests",
+      "category": "cancellation",
+      "additional_categories": [
+        "out-of-order"
+      ],
+      "profile": "create-pr",
+      "required_methods": [
+        "$/cancelRequest",
+        "textDocument/documentSymbol",
+        "workspace/symbol"
+      ],
+      "assertions": [
+        "early responses are retained until their request id is awaited",
+        "unknown cancellation notifications are accepted without poisoning later requests"
+      ]
+    },
+    {
+      "id": "client-capability-combinations",
+      "category": "client-capabilities",
+      "profile": "create-pr",
+      "required_methods": [
+        "initialize",
+        "textDocument/formatting"
+      ],
+      "assertions": [
+        "formatting providers are omitted when formatEnable is false",
+        "formatting requests return MethodNotFound while disabled"
+      ]
+    },
+    {
+      "id": "initialize-capability-snapshot",
+      "category": "initialize",
+      "profile": "create-pr",
+      "required_methods": [
+        "exit",
+        "initialize",
+        "initialized",
+        "shutdown"
+      ],
+      "assertions": [
+        "workspace folders are advertised",
+        "semantic-token legend and Sifr execute commands are advertised"
+      ]
+    },
+    {
+      "id": "project-reload-watched-file",
+      "category": "project-reload",
+      "additional_categories": [
+        "workspace-folders"
+      ],
+      "profile": "create-pr",
+      "required_methods": [
+        "initialize",
+        "textDocument/publishDiagnostics",
+        "workspace/didChangeWatchedFiles",
+        "workspace/symbol"
+      ],
+      "assertions": [
+        "workspace folder initialization accepts project roots",
+        "watched-file changes revalidate the open project without losing workspace symbol identity"
+      ]
+    },
+    {
+      "id": "stale-diagnostics-after-edit",
+      "category": "stale-diagnostics",
+      "profile": "create-pr",
+      "required_methods": [
+        "textDocument/didChange",
+        "textDocument/didOpen",
+        "textDocument/hover",
+        "textDocument/publishDiagnostics"
+      ],
+      "assertions": [
+        "new diagnostics preserve the latest document version",
+        "stale edits do not corrupt later hover queries"
+      ]
+    },
+    {
+      "id": "unsupported-capability-behavior",
+      "category": "unsupported-capability",
+      "profile": "create-pr",
+      "required_methods": [
+        "textDocument/implementation"
+      ],
+      "assertions": [
+        "unadvertised request methods fail with MethodNotFound"
+      ]
+    }
+  ]
+}
