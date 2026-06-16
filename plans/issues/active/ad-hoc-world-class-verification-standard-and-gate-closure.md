@@ -1,6 +1,6 @@
 # Ad Hoc Phase: World-Class Verification Standard and Gate Closure
 
-Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke, Wave 6.1 generated CPython differential suites, Wave 7.1 fuzz target contract/minimization commands, Wave 7.2 per-target fuzz dispatch plus merge smoke, Wave 7.3 sanitizer/runtime-platform hardening lanes, and Wave 8.1 through Wave 8.3 trend-policy/edit-equivalence/trend-report slices merged through PR [#2639](https://github.com/sifr-lang/sifr/pull/2639).
+Status: in progress; Wave 0, Wave 1, Wave 2.0, Wave 2.1, Wave 2.2, Wave 2.3, Wave 2.4, Wave 2.5, Wave 2.final, Wave 3, Wave 4 diagnostic-baseline slices through final BUILD/STDLIB/legacy-WORKSPACE synthetic-baseline coverage, Wave 5.1 parsed-source shape inventory, Wave 5.2 HIR-lowering snapshots, Wave 5.3 name-resolution snapshots, Wave 6.0 CPython divergence catalogue plus hand-seeded merge smoke, Wave 6.1 generated CPython differential suites, Wave 7.1 fuzz target contract/minimization commands, Wave 7.2 per-target fuzz dispatch plus merge smoke, Wave 7.3 sanitizer/runtime-platform hardening lanes, and Wave 8.1 through Wave 8.4 trend-policy/edit-equivalence/trend-report/output-size trend slices merged through PR [#2640](https://github.com/sifr-lang/sifr/pull/2640).
 Owner: compiler-verification
 Context: Follow-on verification phase after Phase 29; based on local Sifr verification audit against TypeScript, TypeScript-Go, Rust, CPython, and Bun
 
@@ -769,6 +769,8 @@ bash verification/runner/e2e/check_sequential_parallel_equivalence.sh --profile 
 scripts/run_all_tests.sh --profile create-pr
 ```
 
+Operational note: run the two merge-profile e2e report checks serially. They both drive the full merge corpus and share target-side filesystem state; concurrent invocation can produce unrelated I/O/logging fixture interference.
+
 ### Wave 3 Implementation Notes
 
 - Status: merged in PR https://github.com/sifr-lang/sifr/pull/2568.
@@ -1456,10 +1458,17 @@ Third Wave 8 trend-report artifact slice:
 
 Fourth Wave 8 output-size trend metrics slice:
 
-- Status: implemented locally, reviewed by Claude Opus with no blockers, and create-pr validated; PR pending.
+- Status: merged in PR [#2640](https://github.com/sifr-lang/sifr/pull/2640).
 - Scope: split trend comparison report construction out of `run_benchmarks.py` and added build-artifact size collection for `sifr build` benchmark cases. Raw benchmark reports now populate `emitted_rust_lines`, `emitted_rust_bytes`, and `generated_binary_bytes` for build outputs; trend reports surface those optional size metrics in current/baseline snapshots and compute absolute/percent deltas when reference baselines contain comparable values.
 - Review: Claude Opus review pass 1 reported no blockers and identified two non-blocking quality issues: project-build cases initially counted only `src/main.rs`, and build layout drift could silently leave size metrics null. Both were fixed by summing all emitted `src/**/*.rs` files and raising `BenchmarkError` when build outputs are missing or unreadable. Targeted Opus review pass 2 marked both concerns resolved, found no blockers, and requested no further review round.
 - Focused validation so far: `python3 -m py_compile verification/areas/performance/run_benchmarks.py verification/areas/performance/trend_reports.py` passed; `uv run --project verification --locked python verification/areas/performance/run_benchmarks.py --self-test` passed; `uv run --project verification --locked python verification/areas/performance/run_benchmarks.py --sample-scale smoke --case build-project-001-additional-modules --trend-json-out target/performance/wave-8-4-project.trend.json --json-out target/performance/wave-8-4-project.run.json` passed and recorded aggregate project emitted Rust/binary metrics (`3769` lines, `126264` Rust bytes, `1874432` binary bytes); `uv run --project verification --locked python verification/areas/performance/run_benchmarks.py --sample-scale smoke --case build-single-file-001-break-continue --trend-json-out target/performance/wave-8-4-build.trend.json --json-out target/performance/wave-8-4-build.run.json` passed and recorded non-null single-file emitted Rust/binary metrics (`15` lines, `303` Rust bytes, `404640` binary bytes); `uv run --project verification --locked python -m sifr_verify areas run --area performance --suite smoke --hardening-summary` passed with `variants=7 failures=0 blocking_failures=0`; `python3 scripts/check_file_size_guardrails.py` passed; `git diff --check` passed; `scripts/run_all_tests.sh --profile create-pr` passed with e2e `132/132`, report signature `5edef8cd4b961ef8`, performance smoke `variants=7 failures=0 blocking_failures=0`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm wall-time overrun.
+
+Wave 8 closeout:
+
+- Status: implemented, reviewed, locally validated, and ready for tracker-only closeout PR.
+- Review: Claude Opus full Wave 8 closeout review in `plans/reviews/active/ad-hoc-world-class-verification-wave-8-closeout-review-pass-1.md` reported no blockers, confirmed Wave 8 exit criteria are met, and stated no further Wave 8 implementation review round is required. The review classified the remaining baseline refresh as an operational follow-up rather than a Wave 8 blocker.
+- Closeout validation: `uv run --project verification --locked python -m sifr_verify areas run --area performance --suite representative --hardening-summary` passed with `variants=8 failures=0 blocking_failures=0`; `bash verification/runner/e2e/check_report_determinism.sh --profile merge` passed on serial rerun with signature `ee5e5d44306f270c`; `bash verification/runner/e2e/check_sequential_parallel_equivalence.sh --profile merge` passed on serial rerun with signature `ee5e5d44306f270c`; `scripts/run_all_tests.sh --profile create-pr` passed with e2e `132/132`, report signature `5edef8cd4b961ef8`, performance smoke `variants=7 failures=0 blocking_failures=0`, hardening `variants=5 failures=0 blocking_failures=0`, and advisory-only warm wall-time/cache-hit-rate notes. An earlier concurrent attempt at the two merge-profile report checks produced filesystem-sensitive full-e2e I/O/logging fixture interference and was discarded; the serial reruns are the authoritative evidence.
+- Baseline refresh follow-up: compiler/performance owns an approved reference-hardware trend baseline refresh by 2026-06-28, ahead of the 45-day stale-baseline window for the 2026-05-16 checked-in baseline. That refresh should populate the Wave 8.4 optional size metrics in `verification/areas/performance/data/trend/current.json`.
 
 ### Wave 9: LSP, Tooling, Ecosystem, Package, Stdlib, and Platform Breadth
 
