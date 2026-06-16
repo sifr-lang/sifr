@@ -276,6 +276,19 @@ class ProfileRunner:
 
         print("Running stdlib parity inventory guardrails")
         run_command(uv_area_command("--area", "stdlib_parity", "--suite", "complexity-resource"))
+        run_command(uv_area_command("--area", "stdlib_parity", "--suite", "module-inventory"))
+        print("Running stdlib module parity merge check")
+        run_command(uv_area_command("--area", "stdlib_parity", "--suite", "module-merge-check"))
+        for suite in self.selected_suites_for_area("stdlib_parity"):
+            if suite in {
+                "audit-fixtures",
+                "complexity-resource",
+                "module-inventory",
+                "module-merge-check",
+            }:
+                continue
+            print(f"Running stdlib parity suite {suite}")
+            run_command(uv_area_command("--area", "stdlib_parity", "--suite", suite))
 
     def run_diagnostic_contracts(self) -> None:
         print("Running diagnostics area contract checks")

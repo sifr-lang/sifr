@@ -196,6 +196,15 @@
       ]
     },
     {
+      "area": "stdlib_parity",
+      "suites": [
+        "module-merge-check"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "regression",
       "suites": [
         "fixedbugs"

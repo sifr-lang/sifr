@@ -18,6 +18,10 @@ RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "stdlib-parity-r
 COMMAND_ARGS = {
     "stdlib-audit-fixtures": [],
     "stdlib-complexity-resource": [],
+    "stdlib-module-full-check": ["--scope", "full"],
+    "stdlib-module-inventory": ["--scope", "inventory"],
+    "stdlib-module-merge-check": ["--scope", "merge"],
+    "stdlib-module-self-test": ["--self-test"],
     "stdlib-namespace-demos-check": ["--scope", "demos", "--command", "check"],
     "stdlib-namespace-leetcode-check": ["--scope", "leetcode", "--command", "check"],
 }
@@ -105,11 +109,10 @@ def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[st
 def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
     cases = suite.get("cases", [])
-    if not isinstance(cases, list) or len(cases) != 1:
-        raise SystemExit(f"stdlib_parity suite '{suite_name}' must contain exactly one case")
-    case = cases[0]
-    variant = run_case(case)
-    failures = 1 if variant["status"] == "fail" else 0
+    if not isinstance(cases, list) or not cases:
+        raise SystemExit(f"stdlib_parity suite '{suite_name}' must contain at least one case")
+    case_results = [run_case(case) for case in cases]
+    failures = sum(1 for variant in case_results if variant["status"] == "fail")
     return {
         "name": suite_name,
         "owner": "stdlib/parity",
@@ -122,9 +125,10 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
                 "command": str(case["command"]),
                 "variants": [variant],
             }
+            for case, variant in zip(cases, case_results, strict=True)
         ],
         "failed_cases": failures,
-        "total_variants": 1,
+        "total_variants": len(case_results),
         "total_failures": failures,
     }
 

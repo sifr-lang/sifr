@@ -51,6 +51,52 @@
       ]
     },
     {
+      "name": "module-inventory",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "module-inventory",
+          "entry": "verification/areas/stdlib_parity/tools/check_stdlib_module_parity.py",
+          "command": "stdlib-module-inventory",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "module-inventory-self-test",
+          "entry": "verification/areas/stdlib_parity/tools/check_stdlib_module_parity.py",
+          "command": "stdlib-module-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "module-merge-check",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "module-merge-check",
+          "entry": "verification/areas/stdlib_parity/tools/check_stdlib_module_parity.py",
+          "command": "stdlib-module-merge-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "module-full-check",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "module-full-check",
+          "entry": "verification/areas/stdlib_parity/tools/check_stdlib_module_parity.py",
+          "command": "stdlib-module-full-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "audit-fixtures",
       "kind": "adapter",
       "cases": [
