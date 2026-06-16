@@ -23,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
 PERF_DATA = PERF_ROOT / "data"
 DEFAULT_MANIFEST = PERF_DATA / "benchmark_manifest.json"
+DEFAULT_TREND_BASELINES = PERF_DATA / "trend" / "current.json"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "target" / "performance"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
@@ -103,6 +104,8 @@ def main() -> int:
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--capture-baseline", action="store_true")
     parser.add_argument("--baseline-output", default="")
+    parser.add_argument("--trend-baselines", default=str(DEFAULT_TREND_BASELINES))
+    parser.add_argument("--trend-json-out", default="")
     parser.add_argument("--json-out", default="")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
@@ -130,6 +133,12 @@ def main() -> int:
 
         run_report = run_cases(selected, Path(args.output_root), args.sample_scale)
         evidence_path = write_run_report(run_report, Path(args.output_root))
+        trend_report = build_trend_report(run_report, load_json(Path(args.trend_baselines)))
+        if args.trend_json_out:
+            trend_path = (REPO_ROOT / args.trend_json_out).resolve()
+            write_json(trend_path, trend_report)
+        else:
+            trend_path = write_trend_report(trend_report, Path(args.output_root))
         if args.json_out:
             write_json((REPO_ROOT / args.json_out).resolve(), run_report)
         if args.capture_baseline:
@@ -143,6 +152,7 @@ def main() -> int:
             write_json(baseline_output, baseline)
             print(f"performance baseline captured: {baseline_output.relative_to(REPO_ROOT)}")
         print(f"performance benchmarks passed: {evidence_path.relative_to(REPO_ROOT)}")
+        print(f"performance trend report: {trend_path.relative_to(REPO_ROOT)}")
         return 0
     except BenchmarkError as error:
         print(f"performance benchmark error: {error}", file=sys.stderr)
@@ -150,14 +160,18 @@ def main() -> int:
 
 
 def load_manifest(path: Path) -> dict[str, Any]:
+    return load_json(path)
+
+
+def load_json(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except OSError as error:
-        raise BenchmarkError(f"failed to read manifest {path}: {error}") from error
+        raise BenchmarkError(f"failed to read JSON {path}: {error}") from error
     except json.JSONDecodeError as error:
-        raise BenchmarkError(f"malformed benchmark manifest {path}: {error}") from error
+        raise BenchmarkError(f"malformed JSON {path}: {error}") from error
     if not isinstance(data, dict):
-        raise BenchmarkError("benchmark manifest root must be an object")
+        raise BenchmarkError(f"{path} root must be an object")
     return data
 
 
@@ -598,6 +612,170 @@ def baseline_from_run(run_report: dict[str, Any], manifest: dict[str, Any]) -> d
     }
 
 
+def build_trend_report(run_report: dict[str, Any], trend_baselines: dict[str, Any]) -> dict[str, Any]:
+    if trend_baselines.get("schema_version") != 1:
+        raise BenchmarkError("trend baselines schema_version must be 1")
+    if trend_baselines.get("runner_version") != RUNNER_VERSION:
+        raise BenchmarkError(f"trend baselines runner_version must be {RUNNER_VERSION}")
+    baseline_results = trend_baselines.get("results")
+    if not isinstance(baseline_results, list):
+        raise BenchmarkError("trend baselines results must be a list")
+    baselines_by_id = {}
+    for raw in baseline_results:
+        if not isinstance(raw, dict) or not isinstance(raw.get("id"), str):
+            raise BenchmarkError("trend baseline entries must be objects with string ids")
+        baselines_by_id[raw["id"]] = raw
+
+    comparisons = []
+    missing_baselines = []
+    for result in run_report["results"]:
+        baseline = baselines_by_id.get(result["id"])
+        if baseline is None:
+            missing_baselines.append(result["id"])
+            continue
+        comparisons.append(compare_trend_result(result, baseline))
+    if missing_baselines:
+        raise BenchmarkError(f"trend baselines are missing benchmark ids: {missing_baselines}")
+
+    review_required = [
+        comparison["id"]
+        for comparison in comparisons
+        if comparison["classification"] == "regression_outside_noise"
+    ]
+    return {
+        "schema_version": 1,
+        "runner_version": RUNNER_VERSION,
+        "run_id": run_report["run_id"],
+        "generated_at_unix": int(time.time()),
+        "local_trend_delta_blocking": False,
+        "review_policy": "local trend deltas are advisory; regressions outside the noise band require owner review on approved reference hardware",
+        "metadata": run_report["metadata"],
+        "baseline_metadata": trend_baselines.get("metadata", {}),
+        "summary": {
+            "benchmarks_compared": len(comparisons),
+            "reference_review_required": len(review_required),
+            "reference_review_benchmark_ids": review_required,
+        },
+        "results": comparisons,
+    }
+
+
+def compare_trend_result(result: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
+    current_metrics = require_metrics(result, "benchmark result")
+    baseline_metrics = require_metrics(baseline, "trend baseline result")
+    current_cache = require_cache(result, "benchmark result")
+    baseline_cache = require_cache(baseline, "trend baseline result")
+    median_delta_percent = percent_delta(current_metrics["median_ms"], baseline_metrics["median_ms"])
+    p95_delta_percent = percent_delta(current_metrics["p95_ms"], baseline_metrics["p95_ms"])
+    rss_delta_percent = nullable_percent_delta(
+        current_metrics.get("peak_rss_bytes"),
+        baseline_metrics.get("peak_rss_bytes"),
+    )
+    noise_band_percent = max(5.0, float(baseline_metrics.get("coefficient_variation", 0.0)) * 200.0)
+    sample_count = int(result["sample_count"])
+    baseline_sample_count = int(baseline["sample_count"])
+    classification = classify_trend_delta(
+        median_delta_percent,
+        p95_delta_percent,
+        noise_band_percent,
+        sample_count,
+        baseline_sample_count,
+    )
+    return {
+        "id": result["id"],
+        "sample_count": sample_count,
+        "baseline_sample_count": baseline_sample_count,
+        "current": {
+            "median_ms": current_metrics["median_ms"],
+            "p95_ms": current_metrics["p95_ms"],
+            "mad_ms": current_metrics["mad_ms"],
+            "coefficient_variation": current_metrics["coefficient_variation"],
+            "peak_rss_bytes": current_metrics.get("peak_rss_bytes"),
+            "cache": current_cache,
+        },
+        "baseline": {
+            "median_ms": baseline_metrics["median_ms"],
+            "p95_ms": baseline_metrics["p95_ms"],
+            "mad_ms": baseline_metrics["mad_ms"],
+            "coefficient_variation": baseline_metrics["coefficient_variation"],
+            "peak_rss_bytes": baseline_metrics.get("peak_rss_bytes"),
+            "cache": baseline_cache,
+            "captured_at_unix": baseline["baseline_captured_at_unix"],
+        },
+        "delta": {
+            "median_ms": round(float(current_metrics["median_ms"]) - float(baseline_metrics["median_ms"]), 3),
+            "median_percent": median_delta_percent,
+            "p95_ms": round(float(current_metrics["p95_ms"]) - float(baseline_metrics["p95_ms"]), 3),
+            "p95_percent": p95_delta_percent,
+            "mad_ms": round(float(current_metrics["mad_ms"]) - float(baseline_metrics["mad_ms"]), 3),
+            "peak_rss_bytes": nullable_delta(
+                current_metrics.get("peak_rss_bytes"),
+                baseline_metrics.get("peak_rss_bytes"),
+            ),
+            "peak_rss_percent": rss_delta_percent,
+            "cache_hits": int(current_cache["hits"]) - int(baseline_cache["hits"]),
+            "cache_misses": int(current_cache["misses"]) - int(baseline_cache["misses"]),
+        },
+        "noise_band_percent": round(noise_band_percent, 3),
+        "classification": classification,
+        "reference_review_required": classification == "regression_outside_noise",
+        "local_blocking": False,
+    }
+
+
+def classify_trend_delta(
+    median_delta_percent: float,
+    p95_delta_percent: float,
+    noise_band_percent: float,
+    sample_count: int,
+    baseline_sample_count: int,
+) -> str:
+    if sample_count < baseline_sample_count:
+        return "sample_count_below_baseline"
+    if median_delta_percent > noise_band_percent or p95_delta_percent > noise_band_percent:
+        return "regression_outside_noise"
+    if median_delta_percent < -noise_band_percent or p95_delta_percent < -noise_band_percent:
+        return "improvement_outside_noise"
+    return "within_noise"
+
+
+def require_metrics(result: dict[str, Any], owner: str) -> dict[str, Any]:
+    metrics = result.get("metrics")
+    if not isinstance(metrics, dict):
+        raise BenchmarkError(f"{owner} {result.get('id')!r} is missing metrics")
+    for field in ["median_ms", "p95_ms", "mad_ms", "coefficient_variation"]:
+        if not isinstance(metrics.get(field), int | float):
+            raise BenchmarkError(f"{owner} {result.get('id')!r} metric {field} must be numeric")
+    return metrics
+
+
+def require_cache(result: dict[str, Any], owner: str) -> dict[str, int]:
+    cache = result.get("cache")
+    if not isinstance(cache, dict) or not isinstance(cache.get("hits"), int) or not isinstance(cache.get("misses"), int):
+        raise BenchmarkError(f"{owner} {result.get('id')!r} is missing cache hit/miss metrics")
+    return {"hits": int(cache["hits"]), "misses": int(cache["misses"])}
+
+
+def percent_delta(current: float, baseline: float) -> float:
+    baseline = float(baseline)
+    if baseline == 0.0:
+        # Zero-duration baselines are invalid upstream data; keep local trend reports non-crashing.
+        return 0.0
+    return round(((float(current) - baseline) / baseline) * 100.0, 3)
+
+
+def nullable_delta(current: Any, baseline: Any) -> int | None:
+    if not isinstance(current, int | float) or not isinstance(baseline, int | float):
+        return None
+    return int(current) - int(baseline)
+
+
+def nullable_percent_delta(current: Any, baseline: Any) -> float | None:
+    if not isinstance(current, int | float) or not isinstance(baseline, int | float):
+        return None
+    return percent_delta(float(current), float(baseline))
+
+
 def host_metadata() -> dict[str, Any]:
     return {
         "captured_at_unix": int(time.time()),
@@ -619,6 +797,14 @@ def write_run_report(report: dict[str, Any], output_root: Path) -> Path:
     evidence_dir = output_root / "evidence"
     evidence_dir.mkdir(parents=True, exist_ok=True)
     path = evidence_dir / f"{report['run_id']}.json"
+    write_json(path, report)
+    return path
+
+
+def write_trend_report(report: dict[str, Any], output_root: Path) -> Path:
+    trend_dir = output_root / "trend"
+    trend_dir.mkdir(parents=True, exist_ok=True)
+    path = trend_dir / f"{report['run_id']}.trend.json"
     write_json(path, report)
     return path
 
