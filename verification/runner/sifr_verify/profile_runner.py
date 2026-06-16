@@ -142,6 +142,7 @@ class ProfileRunner:
             ("verification_hardening_self_tests", self.run_verification_hardening_self_tests),
             ("verification_runner_foundation", self.run_verification_runner_foundation_checks),
             ("fuzz_property_checks", self.run_fuzz_property_suites),
+            ("algorithmic_compatibility_checks", self.run_algorithmic_compatibility_suites),
             ("distribution_validation", self.run_distribution_checks),
         ]
         if self.generated_code_quality_mode != "none":
@@ -352,6 +353,17 @@ class ProfileRunner:
             return
         print("Running fuzz/property checks")
         args = ["--area", "fuzz_property"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args, "--hardening-summary"))
+
+    def run_algorithmic_compatibility_suites(self) -> None:
+        suites = self.selected_suites_for_area("algorithmic_compatibility")
+        if not suites:
+            print(f"Skipping algorithmic compatibility checks for lane {self.profile_name}")
+            return
+        print("Running algorithmic compatibility checks")
+        args = ["--area", "algorithmic_compatibility"]
         for suite in suites:
             args.extend(["--suite", suite])
         run_command(uv_area_command(*args, "--hardening-summary"))

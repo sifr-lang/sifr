@@ -115,6 +115,15 @@
       ]
     },
     {
+      "area": "algorithmic_compatibility",
+      "suites": [
+        "representative-subset"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "developer_tooling",
       "suites": [
         "static"

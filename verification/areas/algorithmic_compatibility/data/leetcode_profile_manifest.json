@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "owner": "algorithmic/compatibility",
+  "corpus_root": "verification/areas/algorithmic_compatibility/corpora/leetcode/src",
+  "taxonomy": {
+    "required_categories": [
+      "arrays_hashing",
+      "backtracking",
+      "binary_search",
+      "design",
+      "dynamic_programming",
+      "graphs",
+      "greedy_intervals",
+      "heap_priority_queue",
+      "linked_lists_trees",
+      "sliding_window",
+      "stack",
+      "two_pointers_strings"
+    ],
+    "baseline_taxonomy": "verification/areas/algorithmic_compatibility/data/leetcode_full_baseline_taxonomy.json",
+    "baseline_results": "verification/areas/algorithmic_compatibility/data/leetcode_full_baseline_results.json",
+    "generated_on": "2026-06-16"
+  },
+  "representative_subset": [
+    {
+      "id": "0001_two_sum",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0001_two_sum.sifr",
+      "category": "arrays_hashing",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0001_two_sum.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0020_valid_parentheses",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0020_valid_parentheses.sifr",
+      "category": "stack",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0020_valid_parentheses.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0033_search_in_rotated_sorted_array",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0033_search_in_rotated_sorted_array.sifr",
+      "category": "binary_search",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0033_search_in_rotated_sorted_array.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0053_maximum_subarray",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0053_maximum_subarray.sifr",
+      "category": "dynamic_programming",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0053_maximum_subarray.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0078_subsets",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0078_subsets.sifr",
+      "category": "backtracking",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0078_subsets.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0102_binary_tree_level_order_traversal",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0102_binary_tree_level_order_traversal.sifr",
+      "category": "linked_lists_trees",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0102_binary_tree_level_order_traversal.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0146_lru_cache",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0146_lru_cache.sifr",
+      "category": "design",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0146_lru_cache.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0200_number_of_islands",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0200_number_of_islands.sifr",
+      "category": "graphs",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0200_number_of_islands.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0215_kth_largest_element_in_an_array",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0215_kth_largest_element_in_an_array.sifr",
+      "category": "heap_priority_queue",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0215_kth_largest_element_in_an_array.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0239_sliding_window_maximum",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0239_sliding_window_maximum.sifr",
+      "category": "sliding_window",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0239_sliding_window_maximum.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0253_meeting_rooms",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0253_meeting_rooms.sifr",
+      "category": "greedy_intervals",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0253_meeting_rooms.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    },
+    {
+      "id": "0347_top_k_frequent_elements",
+      "path": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0347_top_k_frequent_elements.sifr",
+      "category": "two_pointers_strings",
+      "owner": "algorithmic/compatibility",
+      "expected_classification": "PASS",
+      "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0347_top_k_frequent_elements.sifr",
+      "timeout_seconds": 15,
+      "result_artifact": "target/verification/areas/algorithmic_compatibility/representative-subset-results.json"
+    }
+  ],
+  "full_corpus": {
+    "id": "leetcode-full-corpus",
+    "command": "target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src",
+    "timeout_seconds": 1800,
+    "expected_fixture_count": 411,
+    "result_artifact": "target/verification/areas/algorithmic_compatibility/leetcode-full-results.json",
+    "taxonomy_artifact": "target/verification/areas/algorithmic_compatibility/leetcode-full-taxonomy.json",
+    "taxonomy_markdown": "target/verification/areas/algorithmic_compatibility/leetcode-full-taxonomy.md",
+    "delta_markdown": "target/verification/areas/algorithmic_compatibility/leetcode-full-taxonomy-delta.md"
+  }
+}

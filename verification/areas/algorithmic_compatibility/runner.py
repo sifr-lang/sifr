@@ -23,6 +23,7 @@ RESULT_JSON = (
 )
 LEETCODE_ROOT = AREA_ROOT / "corpora" / "leetcode" / "src"
 TAXONOMY_SMOKE_RESULTS = AREA_ROOT / "data" / "taxonomy_smoke_results.json"
+PROFILE_MANIFEST = AREA_ROOT / "data" / "leetcode_profile_manifest.json"
 DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
 
 
@@ -121,8 +122,8 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
             f"algorithmic_compatibility suite '{suite_name}' must contain exactly one case"
         )
     case = cases[0]
-    variant = run_case(case)
-    failures = 1 if variant["status"] == "fail" else 0
+    variants = run_case(case)
+    failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {
         "name": suite_name,
         "owner": "algorithmic/compatibility",
@@ -133,28 +134,46 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
                 "id": str(case["id"]),
                 "entry": str(case["entry"]),
                 "command": str(case["command"]),
-                "variants": [variant],
+                "variants": variants,
             }
         ],
-        "failed_cases": failures,
-        "total_variants": 1,
+        "failed_cases": 1 if failures else 0,
+        "total_variants": len(variants),
         "total_failures": failures,
     }
 
 
-def run_case(case: dict[str, Any]) -> dict[str, Any]:
+def run_case(case: dict[str, Any]) -> list[dict[str, Any]]:
     entry = REPO_ROOT / str(case["entry"])
     if not entry.exists():
         raise SystemExit(f"algorithmic_compatibility case entry does not exist: {entry}")
     command = str(case["command"])
     expected_exit = int(case.get("expect_exit_code", 0))
     started = time.perf_counter()
-    if command == "algorithmic-taxonomy-smoke":
+    if command == "algorithmic-profile-manifest":
+        variants = run_profile_manifest()
+    elif command == "algorithmic-representative-subset":
+        variants = run_representative_subset()
+    elif command == "algorithmic-leetcode-full":
+        variants = run_leetcode_full()
+    elif command == "algorithmic-taxonomy-smoke":
         argv, result = run_taxonomy_smoke()
+        variants = [completed_process_variant(str(case["id"]), argv, result, expected_exit, started)]
     elif command == "algorithmic-leetcode-check":
         argv, result = run_leetcode_check()
+        variants = [completed_process_variant(str(case["id"]), argv, result, expected_exit, started)]
     else:
         raise SystemExit(f"unsupported algorithmic_compatibility command: {command}")
+    return variants
+
+
+def completed_process_variant(
+    label: str,
+    argv: list[str],
+    result: subprocess.CompletedProcess[str],
+    expected_exit: int,
+    started: float,
+) -> dict[str, Any]:
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     failures = []
     if result.returncode != expected_exit:
@@ -164,9 +183,9 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
     if result.stderr:
         sys.stderr.write(result.stderr)
     status = "fail" if failures else "pass"
-    print_case_timing(str(case["id"]), elapsed_ms, status)
+    print_case_timing(label, elapsed_ms, status)
     return {
-        "label": str(case["id"]),
+        "label": label,
         "argv": argv,
         "status": status,
         "mismatches": failures,
@@ -174,6 +193,288 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         "actual_exit_code": result.returncode,
         "duration_ms": round(elapsed_ms, 3),
     }
+
+
+def run_profile_manifest() -> list[dict[str, Any]]:
+    started = time.perf_counter()
+    payload = load_profile_manifest()
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    variant = {
+        "label": "leetcode-profile-manifest",
+        "argv": ["json-validate", str(PROFILE_MANIFEST.relative_to(REPO_ROOT))],
+        "status": "pass",
+        "mismatches": [],
+        "expected_exit_code": 0,
+        "actual_exit_code": 0,
+        "duration_ms": round(elapsed_ms, 3),
+        "representative_cases": len(payload["representative_subset"]),
+        "required_categories": list(payload["taxonomy"]["required_categories"]),
+        "full_corpus_expected_fixture_count": int(payload["full_corpus"]["expected_fixture_count"]),
+    }
+    print_case_timing("leetcode-profile-manifest", elapsed_ms, "pass")
+    return [variant]
+
+
+def load_profile_manifest() -> dict[str, Any]:
+    payload = json.loads(PROFILE_MANIFEST.read_text(encoding="utf-8"))
+    validate_profile_manifest(payload)
+    return payload
+
+
+def validate_profile_manifest(payload: object) -> None:
+    if not isinstance(payload, dict):
+        raise SystemExit("leetcode profile manifest must be a JSON object")
+    if payload.get("schema_version") != 1:
+        raise SystemExit("leetcode profile manifest schema_version must be 1")
+    if payload.get("owner") != "algorithmic/compatibility":
+        raise SystemExit("leetcode profile manifest owner mismatch")
+    corpus_root = REPO_ROOT / required_string(payload, "corpus_root")
+    if corpus_root != LEETCODE_ROOT or not corpus_root.is_dir():
+        raise SystemExit("leetcode profile manifest corpus_root must point at the checked-in corpus")
+    taxonomy = payload.get("taxonomy")
+    if not isinstance(taxonomy, dict):
+        raise SystemExit("leetcode profile manifest taxonomy must be an object")
+    required_categories = taxonomy.get("required_categories")
+    if not isinstance(required_categories, list) or not required_categories:
+        raise SystemExit("leetcode profile manifest requires categories")
+    categories = [str(category) for category in required_categories]
+    if len(categories) != len(set(categories)):
+        raise SystemExit("leetcode profile manifest categories must be unique")
+    for path_key in ("baseline_taxonomy", "baseline_results"):
+        path = REPO_ROOT / required_string(taxonomy, path_key)
+        if not path.is_file():
+            raise SystemExit(f"leetcode profile manifest missing {path_key}: {path}")
+    required_string(taxonomy, "generated_on")
+    subset = payload.get("representative_subset")
+    if not isinstance(subset, list) or not subset:
+        raise SystemExit("leetcode profile manifest requires representative_subset")
+    seen_ids: set[str] = set()
+    seen_categories: set[str] = set()
+    result_artifacts: set[str] = set()
+    for row in subset:
+        validate_representative_row(row, seen_ids, set(categories))
+        seen_categories.add(str(row["category"]))
+        result_artifacts.add(str(row["result_artifact"]))
+    if len(result_artifacts) != 1:
+        raise SystemExit("representative subset rows must share one result_artifact")
+    missing_categories = sorted(set(categories).difference(seen_categories))
+    if missing_categories:
+        raise SystemExit("representative subset misses categories: " + ", ".join(missing_categories))
+    full_corpus = payload.get("full_corpus")
+    if not isinstance(full_corpus, dict):
+        raise SystemExit("leetcode profile manifest requires full_corpus")
+    expected_count = full_corpus.get("expected_fixture_count")
+    actual_count = len(list(LEETCODE_ROOT.glob("*.sifr")))
+    if expected_count != actual_count:
+        raise SystemExit(f"full corpus expected_fixture_count={expected_count} actual={actual_count}")
+    for key in ("id", "command", "result_artifact", "taxonomy_artifact", "taxonomy_markdown", "delta_markdown"):
+        required_string(full_corpus, key)
+    timeout = full_corpus.get("timeout_seconds")
+    if not isinstance(timeout, int) or timeout <= 0:
+        raise SystemExit("full corpus timeout_seconds must be a positive integer")
+
+
+def validate_representative_row(row: object, seen_ids: set[str], categories: set[str]) -> None:
+    if not isinstance(row, dict):
+        raise SystemExit("representative rows must be objects")
+    allowed_keys = {
+        "category",
+        "command",
+        "expected_classification",
+        "id",
+        "owner",
+        "path",
+        "result_artifact",
+        "timeout_seconds",
+    }
+    unknown = sorted(set(row).difference(allowed_keys))
+    if unknown:
+        raise SystemExit(f"representative row has unknown field(s): {', '.join(unknown)}")
+    row_id = required_string(row, "id")
+    if row_id in seen_ids:
+        raise SystemExit(f"duplicate representative row id: {row_id}")
+    seen_ids.add(row_id)
+    if required_string(row, "owner") != "algorithmic/compatibility":
+        raise SystemExit(f"representative row {row_id} owner mismatch")
+    if required_string(row, "category") not in categories:
+        raise SystemExit(f"representative row {row_id} has unknown category")
+    if required_string(row, "expected_classification") != "PASS":
+        raise SystemExit(f"representative row {row_id} expected classification must be PASS")
+    path = REPO_ROOT / required_string(row, "path")
+    if not path.is_file() or path.parent != LEETCODE_ROOT:
+        raise SystemExit(f"representative row {row_id} path must be a checked-in LeetCode fixture")
+    command = required_string(row, "command")
+    expected_command = f"target/debug/sifr check {path.relative_to(REPO_ROOT)}"
+    if command != expected_command:
+        raise SystemExit(f"representative row {row_id} command must be {expected_command}")
+    timeout = row.get("timeout_seconds")
+    if not isinstance(timeout, int) or timeout <= 0:
+        raise SystemExit(f"representative row {row_id} timeout_seconds must be positive")
+    required_string(row, "result_artifact")
+
+
+def required_string(payload: dict[str, Any], key: str) -> str:
+    value = payload.get(key)
+    if not isinstance(value, str) or not value:
+        raise SystemExit(f"required string field missing: {key}")
+    return value
+
+
+def run_representative_subset() -> list[dict[str, Any]]:
+    payload = load_profile_manifest()
+    ensure_sifr_bin(DEFAULT_SIFR_BIN)
+    result_path = REPO_ROOT / payload["representative_subset"][0]["result_artifact"]
+    results = []
+    variants = []
+    for row in payload["representative_subset"]:
+        variant, result_entry = run_manifest_fixture(row)
+        variants.append(variant)
+        results.append(result_entry)
+    write_results_artifact(result_path, results)
+    return variants
+
+
+def run_manifest_fixture(row: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    path = REPO_ROOT / str(row["path"])
+    started = time.perf_counter()
+    try:
+        result = run_fixture(DEFAULT_SIFR_BIN, path, timeout_seconds=int(row["timeout_seconds"]))
+        elapsed_ms = (time.perf_counter() - started) * 1000.0
+        status = "pass" if result.returncode == 0 else "fail"
+        failures = [] if result.returncode == 0 else [f"exit={result.returncode} expected=0"]
+    except subprocess.TimeoutExpired as exc:
+        elapsed_ms = (time.perf_counter() - started) * 1000.0
+        result = subprocess.CompletedProcess(args=[], returncode=124, stdout=exc.stdout or "", stderr=exc.stderr or "")
+        status = "fail"
+        failures = [f"timeout after {exc.timeout}s"]
+    print_case_timing(str(row["id"]), elapsed_ms, status)
+    result_entry = result_entry_for_fixture(path, result)
+    variant = {
+        "label": str(row["id"]),
+        "argv": ["target/debug/sifr", "check", str(path.relative_to(REPO_ROOT))],
+        "status": status,
+        "mismatches": failures,
+        "expected_exit_code": 0,
+        "actual_exit_code": result.returncode,
+        "duration_ms": round(elapsed_ms, 3),
+        "category": str(row["category"]),
+        "owner": str(row["owner"]),
+        "expected_classification": str(row["expected_classification"]),
+        "result_artifact": str(row["result_artifact"]),
+    }
+    return variant, result_entry
+
+
+def run_leetcode_full() -> list[dict[str, Any]]:
+    payload = load_profile_manifest()
+    full_corpus = payload["full_corpus"]
+    result_path = REPO_ROOT / str(full_corpus["result_artifact"])
+    taxonomy_path = REPO_ROOT / str(full_corpus["taxonomy_artifact"])
+    taxonomy_md = REPO_ROOT / str(full_corpus["taxonomy_markdown"])
+    delta_md = REPO_ROOT / str(full_corpus["delta_markdown"])
+    ensure_sifr_bin(DEFAULT_SIFR_BIN)
+    variants = []
+    results = []
+    for path in sorted(LEETCODE_ROOT.glob("*.sifr")):
+        started = time.perf_counter()
+        result = run_fixture(DEFAULT_SIFR_BIN, path, timeout_seconds=30)
+        elapsed_ms = (time.perf_counter() - started) * 1000.0
+        status = "pass" if result.returncode == 0 else "fail"
+        failures = [] if result.returncode == 0 else [f"exit={result.returncode} expected=0"]
+        print_case_timing(path.stem, elapsed_ms, status)
+        variants.append(
+            {
+                "label": path.stem,
+                "argv": ["target/debug/sifr", "check", str(path.relative_to(REPO_ROOT))],
+                "status": status,
+                "mismatches": failures,
+                "expected_exit_code": 0,
+                "actual_exit_code": result.returncode,
+                "duration_ms": round(elapsed_ms, 3),
+                "result_artifact": str(result_path.relative_to(REPO_ROOT)),
+            }
+        )
+        results.append(result_entry_for_fixture(path, result))
+    write_results_artifact(result_path, results)
+    build_taxonomy_artifacts(
+        results_path=result_path,
+        taxonomy_path=taxonomy_path,
+        taxonomy_md=taxonomy_md,
+        delta_md=delta_md,
+        profile_manifest=payload,
+    )
+    return variants
+
+
+def write_results_artifact(path: Path, results: list[dict[str, Any]]) -> None:
+    status_counts = {key: 0 for key in ["PASS", "CHECK_ERROR", "RUN_ERROR", "NO_ORACLE"]}
+    for result in results:
+        status_counts[str(result["status"])] += 1
+    payload = {
+        "summary": {
+            "case_count": len(results),
+            "status_counts": status_counts,
+        },
+        "results": results,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def result_entry_for_fixture(path: Path, result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+    fixture_slug = path.stem
+    if result.returncode == 0:
+        return {"fixture_slug": fixture_slug, "status": "PASS", "stages": []}
+    return {
+        "fixture_slug": fixture_slug,
+        "status": "CHECK_ERROR",
+        "failure_stage": "check",
+        "stages": [
+            {
+                "stage": "check",
+                "stdout": result.stdout[-4000:] if result.stdout else "",
+                "stderr": result.stderr[-4000:] if result.stderr else "",
+            }
+        ],
+    }
+
+
+def build_taxonomy_artifacts(
+    *,
+    results_path: Path,
+    taxonomy_path: Path,
+    taxonomy_md: Path,
+    delta_md: Path,
+    profile_manifest: dict[str, Any],
+) -> None:
+    taxonomy = profile_manifest["taxonomy"]
+    argv = [
+        "python3",
+        str(AREA_ROOT / "tools" / "build_full_corpus_failure_taxonomy.py"),
+        "--results",
+        str(results_path.relative_to(REPO_ROOT)),
+        "--output-json",
+        str(taxonomy_path.relative_to(REPO_ROOT)),
+        "--output-md",
+        str(taxonomy_md.relative_to(REPO_ROOT)),
+        "--name",
+        "leetcode-full",
+        "--generated-on",
+        str(taxonomy["generated_on"]),
+        "--baseline-taxonomy",
+        str(taxonomy["baseline_taxonomy"]),
+        "--baseline-results",
+        str(taxonomy["baseline_results"]),
+        "--delta-md",
+        str(delta_md.relative_to(REPO_ROOT)),
+    ]
+    result = subprocess.run(argv, cwd=REPO_ROOT, text=True, capture_output=True, check=False)
+    if result.stdout:
+        sys.stdout.write(result.stdout)
+    if result.stderr:
+        sys.stderr.write(result.stderr)
+    if result.returncode != 0:
+        raise SystemExit(f"failed to build LeetCode taxonomy artifacts: exit={result.returncode}")
 
 
 def run_taxonomy_smoke() -> tuple[list[str], subprocess.CompletedProcess[str]]:
@@ -244,12 +545,12 @@ def run_leetcode_check() -> tuple[list[str], subprocess.CompletedProcess[str]]:
 
 def ensure_sifr_bin(sifr_bin: Path) -> None:
     if sifr_bin == DEFAULT_SIFR_BIN:
-        subprocess.run(["cargo", "build", "-q", "-p", "sifr"], cwd=REPO_ROOT, check=True)
+        subprocess.run(["cargo", "build", "--locked", "-q", "-p", "sifr"], cwd=REPO_ROOT, check=True)
     elif not sifr_bin.exists():
         raise SystemExit(f"missing Sifr CLI binary: {sifr_bin}")
 
 
-def run_fixture(sifr_bin: Path, path: Path) -> subprocess.CompletedProcess[str]:
+def run_fixture(sifr_bin: Path, path: Path, *, timeout_seconds: int | None = None) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.setdefault("SIFR_ARTIFACT_CACHE", "1")
     return subprocess.run(
@@ -259,6 +560,7 @@ def run_fixture(sifr_bin: Path, path: Path) -> subprocess.CompletedProcess[str]:
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        timeout=timeout_seconds,
         check=False,
     )
 

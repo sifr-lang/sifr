@@ -110,6 +110,17 @@
       ]
     },
     {
+      "area": "algorithmic_compatibility",
+      "suites": [
+        "leetcode-full",
+        "taxonomy-smoke"
+      ],
+      "resource_classes": [
+        "external-corpus",
+        "long-running"
+      ]
+    },
+    {
       "area": "developer_tooling",
       "suites": [
         "full"
