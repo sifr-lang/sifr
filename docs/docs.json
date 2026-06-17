@@ -44,6 +44,11 @@
         "icon": "globe"
       },
       {
+        "label": "Blog",
+        "href": "https://sifr.sh/blog",
+        "icon": "newspaper"
+      },
+      {
         "label": "Install Sifr",
         "href": "/installation",
         "icon": "download",
@@ -54,8 +59,8 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Language",
-        "icon": "code",
+        "tab": "Documentation",
+        "icon": "book-open",
         "groups": [
           {
             "group": "Get Started",
@@ -78,13 +83,7 @@
               "language/pattern-matching",
               "language/concurrency"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "CLI",
-        "icon": "terminal",
-        "groups": [
+          },
           {
             "group": "Commands",
             "icon": "square-terminal",
@@ -96,13 +95,7 @@
               "cli/test",
               "cli/lsp"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Projects",
-        "icon": "folder-kanban",
-        "groups": [
+          },
           {
             "group": "Package management",
             "icon": "package",
@@ -112,13 +105,7 @@
               "packages/dependencies",
               "packages/publishing"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Standard Library",
-        "icon": "library",
-        "groups": [
+          },
           {
             "group": "Modules",
             "icon": "book-open",
@@ -130,13 +117,7 @@
               "stdlib/concurrency",
               "stdlib/text-encoding"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Diagnostics",
-        "icon": "triangle-alert",
-        "groups": [
+          },
           {
             "group": "Compiler errors",
             "icon": "scan-search",
@@ -148,9 +129,17 @@
         ]
       },
       {
-        "tab": "Blog",
-        "icon": "newspaper",
-        "href": "https://sifr.sh/blog"
+        "tab": "Guides",
+        "icon": "map",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "globe",
+            "pages": [
+              "guides/index"
+            ]
+          }
+        ]
       }
     ]
   },
