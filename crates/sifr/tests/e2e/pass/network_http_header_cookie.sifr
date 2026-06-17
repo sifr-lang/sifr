@@ -24,7 +24,7 @@ def main() -> Result[None, Error]:
             [
                 ("accept", " text/plain "),
                 ("accept", " application/json "),
-                ("x-sifr", "m3"),
+                ("x-sifr", "header-cookie"),
             ]
         )
         assert headers.len() == 3

@@ -17,7 +17,7 @@ async def server_once(own stream: TcpStream) -> Result[bool, Error]:
             1024,
         )
         assert request[0] == "PUT"
-        assert request[1] == "http://localhost/m4/h2c"
+        assert request[1] == "http://localhost/http2-loopback"
         assert request[2] == "HTTP/2"
         assert request[4] == b"ping-h2c"
         return True
@@ -38,7 +38,7 @@ async def main() -> Result[None, Error]:
             response: tuple[int, str, list[tuple[str, str]], bytes] = await transport_http2_client_roundtrip_tcp(
                 client._handle,
                 "PUT",
-                "http://localhost/m4/h2c",
+                "http://localhost/http2-loopback",
                 [("x-sifr-request", "h2c")],
                 b"ping-h2c",
                 1024,

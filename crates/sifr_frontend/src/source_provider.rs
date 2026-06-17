@@ -215,8 +215,8 @@ impl<P: SourceProvider> SourceProvider for OverlaySourceProvider<P> {
                 {
                     return Err(error);
                 }
-                // TODO(m6): surface the dirty directory when watcher invalidation
-                // starts consuming overlay-backed directory dependencies.
+                // TODO: surface the dirty directory when watcher invalidation starts
+                // consuming overlay-backed directory dependencies.
                 Vec::new()
             }
         };

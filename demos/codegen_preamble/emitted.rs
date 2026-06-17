@@ -966,7 +966,7 @@ static __SIFR_GLOBAL_LOG_LEVEL: std::sync::LazyLock<std::sync::Mutex<i64>> = std
 fn main() {
     let path: String = "/tmp/sifr_codegen_preamble_demo.txt".to_string();
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let _: () = std::fs::write(&path, "m14 preamble".to_string().as_bytes()).map(|_| ()).map_err(__io_err)?;
+    let _: () = std::fs::write(&path, "codegen preamble".to_string().as_bytes()).map(|_| ()).map_err(__io_err)?;
     let mut f: FileHandle = (|| {
     let __path = path.to_string();
     let __mode = "r".to_string().to_string();
@@ -1016,7 +1016,7 @@ fn main() {
     let text: String = f.read()?;
     f.close();
     println!("{}", format!("{}{}", "file = ".to_string(), text));
-    assert!(format!("{}", format!("{}{}", "file = ".to_string(), text)) == "file = m14 preamble".to_string());
+    assert!(format!("{}", format!("{}{}", "file = ".to_string(), text)) == "file = codegen preamble".to_string());
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -1024,7 +1024,7 @@ fn main() {
         println!("{}", format!("{}{}", "ioerror = ".to_string(), e.message));
         assert!(format!("{}", format!("{}{}", "ioerror = ".to_string(), e.message)) == "preamble demo complete".to_string());
     }
-    let mut log: Logger = getLogger(&"m14".to_string());
+    let mut log: Logger = getLogger(&"codegen".to_string());
     log.set_level(20 as i64);
     log.info(&"preamble logging alive".to_string());
     println!("preamble demo complete");

@@ -11,17 +11,17 @@ from sifr.logging import getLogger, Logger
 def main():
     path: str = "/tmp/sifr_codegen_preamble_demo.txt"
     try:
-        _: None = write_text(path, "m14 preamble")
+        _: None = write_text(path, "codegen preamble")
         f = open(path, "r", encoding="utf-8")
         text: str = f.read()
         f.close()
         print("file = " + text)
-        assert str("file = " + text) == "file = m14 preamble"
+        assert str("file = " + text) == "file = codegen preamble"
     except IOError as e:
         print("ioerror = " + e.message)
         assert str("ioerror = " + e.message) == "preamble demo complete"
 
-    log: Logger = getLogger("m14")
+    log: Logger = getLogger("codegen")
     log.set_level(20)
     log.info("preamble logging alive")
     print("preamble demo complete")

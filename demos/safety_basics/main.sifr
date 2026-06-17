@@ -1,4 +1,4 @@
-# Reference: m0
+# Reference: safety_basics
 # Reference: safety-basics-history
 # Safety basics demo: parity foundation safety + harness baseline
 from sifr.bytes import decode_utf8

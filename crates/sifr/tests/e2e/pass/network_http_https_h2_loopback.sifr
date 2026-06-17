@@ -35,7 +35,7 @@ async def server_once(own config: TlsServerConfig, own tcp: TcpStream) -> Result
             1024,
         )
         assert request[0] == "PATCH"
-        assert request[1] == "https://localhost/m4/https-h2"
+        assert request[1] == "https://localhost/https-h2-loopback"
         assert request[2] == "HTTP/2"
         assert request[4] == b"ping-https-h2"
         return True
@@ -62,7 +62,7 @@ async def main() -> Result[None, Error]:
             response: tuple[int, str, list[tuple[str, str]], bytes] = await transport_http2_client_roundtrip_tls(
                 tls._handle,
                 "PATCH",
-                "https://localhost/m4/https-h2",
+                "https://localhost/https-h2-loopback",
                 [("x-sifr-request", "https-h2")],
                 b"ping-https-h2",
                 1024,

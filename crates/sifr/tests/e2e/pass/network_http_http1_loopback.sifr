@@ -36,7 +36,7 @@ async def server_once(own stream: TcpStream) -> Result[bool, HttpError]:
             1024,
         )
         assert request[0] == "POST"
-        assert request[1] == "/m4/http1"
+        assert request[1] == "/http1-loopback"
         assert request[2] == "HTTP/1.1"
         assert request[4] == b"ping-http1"
         return True
@@ -47,7 +47,7 @@ async def server_once(own stream: TcpStream) -> Result[bool, HttpError]:
 async def main() -> Result[None, Error]:
     try:
         request_headers: HeaderMap = headers_from_pairs([("x-sifr-request", "http1")])
-        typed_head: RequestHead = request_head("POST", "/m4/http1", request_headers)
+        typed_head: RequestHead = request_head("POST", "/http1-loopback", request_headers)
         typed_body: BodyStream = chunked_body([b"ping", b"-http1"])
         typed_bytes: bytes = typed_body.collect_with_limit(1024)
 
@@ -85,7 +85,7 @@ async def main() -> Result[None, Error]:
                 _small_response_limit: tuple[int, str, list[tuple[str, str]], bytes] = await transport_http1_client_roundtrip_tcp(
                     client2._handle,
                     "POST",
-                    "/m4/http1",
+                    "/http1-loopback",
                     [("x-sifr-request", "http1")],
                     b"ping-http1",
                     1024,

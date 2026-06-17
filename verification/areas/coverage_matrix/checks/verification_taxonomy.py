@@ -201,6 +201,10 @@ TEXT_PATTERNS = (
     ),
     re.compile(r"\bwork items?\b", re.IGNORECASE),
     re.compile(r"`/(?:add-" + DELIVERY_WORK_ITEM + r"|work-on-item)`"),
+    re.compile(r"\bTODO\(m\d+\)", re.IGNORECASE),
+    re.compile(r"\bReference:\s*m\d+\b", re.IGNORECASE),
+    re.compile(r"['\"]m\d+(?:\s+[a-z][^'\"]*)?['\"]", re.IGNORECASE),
+    re.compile(r"['\"]/m\d+(?:[/-][a-z0-9][a-z0-9_/-]*)?['\"]", re.IGNORECASE),
     re.compile(r"\b[a-z][a-z0-9_]*_m\d+[a-z0-9_]*\b", re.IGNORECASE),
     re.compile(r"\bm\d+[_-][a-z0-9][a-z0-9_-]*\b", re.IGNORECASE),
     re.compile(r"\b[a-z][a-z0-9_-]*[_-]m\d+\b", re.IGNORECASE),
@@ -476,6 +480,18 @@ def run_self_test(*, quiet: bool = False) -> int:
         bad_work_item_command = root / "work_item_command_taxonomy.md"
         bad_work_item_command_label = "`/" + "work-on-item`"
         bad_work_item_command.write_text(f"{bad_work_item_command_label} should be rejected.\n", encoding="utf-8")
+        bad_todo_marker = root / "todo_marker_taxonomy.rs"
+        bad_todo_marker_label = "TODO(" + "m6" + ")"
+        bad_todo_marker.write_text(f"// {bad_todo_marker_label}: replace delivery marker.\n", encoding="utf-8")
+        bad_reference_marker = root / "reference_marker_taxonomy.sifr"
+        bad_reference_marker_label = "Reference: " + "m0"
+        bad_reference_marker.write_text(f"# {bad_reference_marker_label}\n", encoding="utf-8")
+        bad_quoted_marker = root / "quoted_marker_taxonomy.sifr"
+        bad_quoted_marker_label = "m" + "14 preamble"
+        bad_quoted_marker.write_text(f'write_text(path, "{bad_quoted_marker_label}")\n', encoding="utf-8")
+        bad_path_marker = root / "path_marker_taxonomy.sifr"
+        bad_path_marker_label = "/m" + "4/http1"
+        bad_path_marker.write_text(f'assert request[1] == "{bad_path_marker_label}"\n', encoding="utf-8")
         failures = collect_failures((root,))
     rendered = "\n".join(failure.render() for failure in failures)
     if (
@@ -529,6 +545,10 @@ def run_self_test(*, quiet: bool = False) -> int:
         or bad_work_item_label not in rendered
         or DELIVERY_WORK_ITEM + "-helper.md" not in rendered
         or bad_work_item_command_label not in rendered
+        or bad_todo_marker_label not in rendered
+        or bad_reference_marker_label not in rendered
+        or bad_quoted_marker_label not in rendered
+        or bad_path_marker_label not in rendered
         or "compiler_interface.rs" in rendered
     ):
         print(f"verification taxonomy self-test failed: {rendered}", file=sys.stderr)

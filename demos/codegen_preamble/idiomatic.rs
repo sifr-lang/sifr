@@ -35,17 +35,17 @@ fn main() {
     let path = "/tmp/sifr_codegen_preamble_demo.txt";
 
     match (|| -> io::Result<String> {
-        write_text(path, "m14 preamble")?;
+        write_text(path, "codegen preamble")?;
         fs::read_to_string(path)
     })() {
         Ok(text) => {
             println!("file = {text}");
-            assert_eq!(format!("file = {text}"), "file = m14 preamble");
+            assert_eq!(format!("file = {text}"), "file = codegen preamble");
         }
         Err(err) => println!("ioerror = {err}"),
     }
 
-    let mut log = Logger::new("m14");
+    let mut log = Logger::new("codegen");
     log.set_level(INFO);
     log.info("preamble logging alive");
     println!("preamble demo complete");
