@@ -1,5 +1,5 @@
-# Reference: ad_hoc_bytes_wave2
-# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
+# Reference: bytes_bytes_constructors
+# Reference: first-class-bytes-and-binary-surface-foundation
 def main() -> None:
     size_ok: bool = False
     try:
@@ -42,12 +42,12 @@ def main() -> None:
 
     encode_ok: bool = False
     try:
-        encoded: bytes = "wave2-demo".encode("utf-8")
+        encoded: bytes = "bytes_constructors-demo".encode("utf-8")
         decoded: str = encoded.decode("utf-8")
-        assert decoded == "wave2-demo"
+        assert decoded == "bytes_constructors-demo"
         encode_ok = True
     except ParseError as e:
         print("unexpected ParseError: " + e.message)
     assert encode_ok
 
-    print("ad_hoc_bytes_wave2_conversion_surface_demo: ok")
+    print("bytes_bytes_constructors_surface_demo: ok")

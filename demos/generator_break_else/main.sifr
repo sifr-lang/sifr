@@ -1,6 +1,5 @@
-# Reference: m21_3
-# Source issue: phase21-traversal-completeness-and-control-flow-correctness-execution.md
-# m21_3 yield/loop-path coverage demo
+# Reference: generator_break_else
+# generator_break_else yield/loop-path coverage demo
 # Demonstrates lazy generator iteration through break/else paths.
 
 def gen(flag: bool) -> Iterator[int]:
@@ -15,7 +14,7 @@ def gen(flag: bool) -> Iterator[int]:
 
 
 def main():
-    print('m21_3 yield/loop-path coverage demo:')
+    print('generator_break_else yield/loop-path coverage demo:')
     for v in gen(False):
         print(v)
     for v in gen(True):

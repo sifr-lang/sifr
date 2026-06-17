@@ -1,5 +1,5 @@
-# Reference: ad_hoc_clone_wave2
-# Source issue: ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md
+# Reference: clone_slice_unpacking
+# Reference: ownership-aware-collection-lowering-and-clone-elision
 def main():
     nums: list[int] = [3, 6, 9, 12]
     print(nums[0])
@@ -17,4 +17,4 @@ def main():
     print(nums[::2])
     print(len(nums))
 
-    print("ad_hoc_clone_wave2_index_slice_unpack_demo: pass")
+    print("clone_slice_unpacking_slice_unpack_demo: pass")

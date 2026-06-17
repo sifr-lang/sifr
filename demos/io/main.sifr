@@ -1,12 +1,11 @@
-# Reference: m30_1e
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: io
 from sifr.io import read_text, write_text, exists, append_text, read_lines
 from sifr.test import assert_bool_vector_eq
 
 
 def collect_io_roundtrip_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_m30_1e_io_demo.txt"
+    path: str = "/tmp/sifr_io_io_demo.txt"
     text_roundtrip_ok: bool = False
     try:
         _w: None = write_text(path, "hello")
@@ -22,7 +21,7 @@ def collect_io_roundtrip_actual() -> list[bool]:
 
 def collect_open_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_m30_1e_io_demo.txt"
+    path: str = "/tmp/sifr_io_io_demo.txt"
     first_ok: bool = False
     second_ok: bool = False
     eof_ok: bool = False
@@ -36,7 +35,7 @@ def collect_open_actual() -> list[bool]:
         _ = str(e.message)
 
     try:
-        _ = open("/tmp/sifr_m30_1e_io_demo_missing.txt", "r", encoding="utf-8")
+        _ = open("/tmp/sifr_io_io_demo_missing.txt", "r", encoding="utf-8")
     except IOError as e:
         _ = str(e.message)
         missing_rejected = True
@@ -60,4 +59,4 @@ def main():
     append_all(actual, collect_open_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1e io parity demo: pass")
+    print("io io parity demo: pass")

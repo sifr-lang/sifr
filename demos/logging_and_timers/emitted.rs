@@ -1425,10 +1425,10 @@ fn workload() {
 
 fn main() {
     let mut demo_ok: bool = false;
-    let log_path: String = "/tmp/sifr_runtime_wave3_demo.log".to_string();
+    let log_path: String = "/tmp/sifr_runtime_logging_and_timers.log".to_string();
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _w: () = std::fs::write(&log_path, "".to_string().as_bytes()).map(|_| ()).map_err(__io_err)?;
-    let mut logger: Logger = getLogger(&"wave3-demo".to_string());
+    let mut logger: Logger = getLogger(&"logging_and_timers-demo".to_string());
     logger.set_file(&log_path);
     let fh: FileHandler = FileHandler::new(format!("{}{}", log_path, "".to_string()), INFO);
     logger.add_handler(&fh);
@@ -1440,7 +1440,7 @@ fn main() {
     let mut timer: Timer = Timer::new();
     let elapsed: f64 = timer.__call__(workload, 4 as i64);
     let content: String = std::fs::read_to_string(&log_path).map_err(__io_err)?;
-    demo_ok = ((((((content == "INFO:wave3-demo:hello\n".to_string()) && (gmt.tm_year == (1970 as i64))) && (epoch_ok)) && (elapsed >= (0.0 as f64))) && (TIMEZONE == (0 as i64))) && ((__const_TZNAME()).0 == "UTC".to_string()));
+    demo_ok = ((((((content == "INFO:logging_and_timers-demo:hello\n".to_string()) && (gmt.tm_year == (1970 as i64))) && (epoch_ok)) && (elapsed >= (0.0 as f64))) && (TIMEZONE == (0 as i64))) && ((__const_TZNAME()).0 == "UTC".to_string()));
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -1458,5 +1458,5 @@ fn main() {
         let _: String = e.message;
     }
     assert!(demo_ok);
-    println!("ad_hoc_runtime_wave3_logging_time_timeit_object_surface_demo: ok");
+    println!("runtime_logging_and_timers_time_timeit_object_surface_demo: ok");
 }

@@ -44,12 +44,12 @@ INT-5 can close. All code artifacts are landed, all four PRs are reviewed and me
 
 - **Code registry**: `crates/sifr_diagnostics/src/codes.rs:62–70` — `SIFR-INT-0001` through `SIFR-INT-0011` inclusive except `0002`, `0008`, `0009`, `0010` are all registered. `SIFR-INT-0009` is **not** registered.
 - **Diagnostic emitter**: No code file emits `SIFR-INT-0009`. The search across `crates/sifr_diagnostics` for `SIFR-INT-0009` returns nothing.
-- **Documentation**: `internal_docs/integer_model.md:472` catalogs it; `verification/integer_model_serialization_boundary_contract.md:40, 94` locks the contract.
+- **Documentation**: `internal_docs/integer_model.md:472` catalogs it; `verification/integer_model_serialization_boundary_rules.md:40, 94` locks the contract.
 - **Architecture constraint context**: This repository has no active web/OpenAPI/typed model/ORM/schema emitter surfaces. The boundary contract explicitly states `SIFR-INT-0009` is emitted by a "compile-time, schema, or generation step" — none of those surfaces exist yet.
 
 **Assessment**: Not a blocker. `SIFR-INT-0009` is deferred to the future web/schema/ORM phase that owns a schema generation surface. The design intent and diagnostic contract are locked; the emitter has no owning surface to attach to.
 
-**Evidence of explicit deferral**: The implementation inventory (`verification/integer_model_implementation_inventory.md:71–81`) lists "Future web/API schema generation and TypeScript/OpenAPI mapping" and "Generated serde behavior" as deferred surfaces under Serialization, Web, and Data Contracts. The boundary contract (`verification/integer_model_serialization_boundary_contract.md:40`) explicitly says schema generation "must fail closed with `SIFR-INT-0009`" — this is a contract for future implementers, not an active diagnostic.
+**Evidence of explicit deferral**: The implementation inventory (`verification/integer_model_implementation_inventory.md:71–81`) lists "Future web/API schema generation and TypeScript/OpenAPI mapping" and "Generated serde behavior" as deferred surfaces under Serialization, Web, and Data Contracts. The boundary contract (`verification/integer_model_serialization_boundary_rules.md:40`) explicitly says schema generation "must fail closed with `SIFR-INT-0009`" — this is a contract for future implementers, not an active diagnostic.
 
 #### 5. Add parser digit limits and typed errors for untrusted JSON integer tokens
 
@@ -64,21 +64,21 @@ INT-5 can close. All code artifacts are landed, all four PRs are reviewed and me
 
 #### 6. Map OpenAPI/JSON Schema integer fields according to static range and selected profile
 
-**Assessment**: Deferred. OpenAPI/JSON Schema mapping requires a schema generation surface that does not exist in this repository. The boundary contract (`verification/integer_model_serialization_boundary_contract.md:25–42`) locks the mapping table. The design doc (`internal_docs/integer_model.md:370–374`) defines the requirements. No active surface owns this emitter.
+**Assessment**: Deferred. OpenAPI/JSON Schema mapping requires a schema generation surface that does not exist in this repository. The boundary contract (`verification/integer_model_serialization_boundary_rules.md:25–42`) locks the mapping table. The design doc (`internal_docs/integer_model.md:370–374`) defines the requirements. No active surface owns this emitter.
 
 **Evidence**: Implementation inventory (`verification/integer_model_implementation_inventory.md:71`) explicitly defers "Future web/API schema generation and TypeScript/OpenAPI mapping."
 
 #### 7. Define TypeScript client mappings
 
-**Assessment**: Deferred. TypeScript client generation requires a code generation surface that does not exist. The boundary contract (`verification/integer_model_serialization_boundary_contract.md:44–57`) locks the type mappings. No active surface owns this emitter.
+**Assessment**: Deferred. TypeScript client generation requires a code generation surface that does not exist. The boundary contract (`verification/integer_model_serialization_boundary_rules.md:44–57`) locks the type mappings. No active surface owns this emitter.
 
 #### 8. Define generated `serde::Serialize`/`Deserialize` derive behavior
 
-**Assessment**: Deferred. Serde derive generation for Sifr classes/structs requires a model/schema emitter. The boundary contract (`verification/integer_model_serialization_boundary_contract.md:59–75`) locks the required behavior. The implementation inventory explicitly defers this.
+**Assessment**: Deferred. Serde derive generation for Sifr classes/structs requires a model/schema emitter. The boundary contract (`verification/integer_model_serialization_boundary_rules.md:59–75`) locks the required behavior. The implementation inventory explicitly defers this.
 
 #### 9. Enforce SQL/storage range checks and explicit dtype/schema choices
 
-**Assessment**: Deferred. ORM/storage mapping requires data-layer surfaces. The boundary contract (`verification/integer_model_serialization_boundary_contract.md:77–88`) locks the storage contract. No active surface owns this.
+**Assessment**: Deferred. ORM/storage mapping requires data-layer surfaces. The boundary contract (`verification/integer_model_serialization_boundary_rules.md:77–88`) locks the storage contract. No active surface owns this.
 
 #### 10. Emit diagnostics with field paths and policy suggestions for serialization failures
 
@@ -91,7 +91,7 @@ INT-5 can close. All code artifacts are landed, all four PRs are reviewed and me
 - Each of the four INT-5 PRs has a satisfied review artifact in `reviews/`.
 - `#1893` ran `scripts/run_all_tests.sh --profile quick` successfully after the last code change.
 - `JsonIntegerRangeError` and `JsonLimitError` are registered in architecture docs with correct parent, fields, and rationale.
-- The boundary contract (`verification/integer_model_serialization_boundary_contract.md`) is locked and explicitly defers schema/client/generated-serde/storage emission to later phases.
+- The boundary contract (`verification/integer_model_serialization_boundary_rules.md`) is locked and explicitly defers schema/client/generated-serde/storage emission to later phases.
 
 ---
 

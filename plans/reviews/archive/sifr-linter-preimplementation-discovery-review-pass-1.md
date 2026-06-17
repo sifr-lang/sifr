@@ -43,14 +43,14 @@ The schema defines `updated_by_milestone` but never specifies:
 
 **3. W-8 references a compile-time gate but does not name the Rust API path**
 
-AC-13 says the gate is mechanically enforced through Rust types and that syntax/HIR/workspace rule modules must depend on the parser-aware suppression API at compile time. W-8 references this but does not name the specific API. The `check_linter_reuse_contract.py` validation check in M1 (line 549) says it will validate the suppression-gate manifest path, schema, and state — but it does not say it will verify that syntax/HIR/workspace modules import the required API.
+AC-13 says the gate is mechanically enforced through Rust types and that syntax/HIR/workspace rule modules must depend on the parser-aware suppression API at compile time. W-8 references this but does not name the specific API. The `check_linter_reuse_rules.py` validation check in M1 (line 549) says it will validate the suppression-gate manifest path, schema, and state — but it does not say it will verify that syntax/HIR/workspace modules import the required API.
 
-The M1 `check_linter_reuse_contract.py` scope (lines 548–558) covers `cargo tree` forbidden dependency checks, manifest schema validation, and Ruff filesystem-directory coverage. It does not include a Rust-source-level API-dependency check.
+The M1 `check_linter_reuse_rules.py` scope (lines 548–558) covers `cargo tree` forbidden dependency checks, manifest schema validation, and Ruff filesystem-directory coverage. It does not include a Rust-source-level API-dependency check.
 
 **Recommended edit location:** `issues/ad-hoc-production-grade-sifr-linter.md`, add to M1 scope after line 557:
 
 ```
-- verify that any Sifr rule module whose `suppression_complexity` is not `physical-line` imports `sifr_lint::suppression::ParserAwareSuppressions` through a positive import assertion in `check_linter_reuse_contract.py`
+- verify that any Sifr rule module whose `suppression_complexity` is not `physical-line` imports `sifr_lint::suppression::ParserAwareSuppressions` through a positive import assertion in `check_linter_reuse_rules.py`
 ```
 
 This makes the compile-time gate verifiable at M1, not deferred to M3.
@@ -72,7 +72,7 @@ This is a Phase plan requirement that has no current implementation. The phase c
 **Recommended edit location:** `issues/ad-hoc-production-grade-sifr-linter.md`, add to M6 scope at line 703:
 
 ```
-- verify that `check_lsp_split_brain.py` or `check_linter_reuse_contract.py` fails if LSP code-action handlers offer suppression actions for `Hard` class diagnostics
+- verify that `check_lsp_split_brain.py` or `check_linter_reuse_rules.py` fails if LSP code-action handlers offer suppression actions for `Hard` class diagnostics
 ```
 
 **Recommended edit location:** `scripts/run_all_tests.sh`, after the linter reuse contract check is wired in (after phase M7):
@@ -110,13 +110,13 @@ The phase already acknowledges this: "W-10: `sifr lint` currently has a placehol
 
 The formatter config (`crates/sifr_format/src/config.rs`) implements `effective_format_config` and `FormatConfigOverrides`. The lint config design (lines 436–470) mirrors the formatter config pattern. There is no `sifr_lint::config` module yet.
 
-The `check_linter_reuse_contract.py` verification in M1 (line 554) checks that accepted lint config keys appear in the manifest with allowed dispositions. This requires the manifest to include the planned `[lint]` config keys as `accepted_sifr_config_keys`.
+The `check_linter_reuse_rules.py` verification in M1 (line 554) checks that accepted lint config keys appear in the manifest with allowed dispositions. This requires the manifest to include the planned `[lint]` config keys as `accepted_sifr_config_keys`.
 
 **Recommended edit:** When encoding `lint_cli_parity.json` in M1, also encode the planned `[lint]` section config keys in `ruff_rule_config_audit.json` as `accepted_sifr_config_keys`. Keys include `select`, `extend-select`, `ignore`, `fixable`, `unfixable`, `unsafe-fixes`, `include`, `exclude`, `extend-exclude`, `respect-gitignore`, `force-exclude`, `preview`, `extend-safe-fixes`, `extend-unsafe-fixes`, `per-file-ignores`, `extend-per-file-ignores`, and `extend`. These must appear as `adapt` disposition in the audit manifest so M2 can implement them from an approved row.
 
 ### LOW — Missing Validation Tooling Manifests Directory
 
-**7. `verification/tooling/linter_manifests/` does not exist and `check_linter_reuse_contract.py` does not exist**
+**7. `verification/tooling/linter_manifests/` does not exist and `check_linter_reuse_rules.py` does not exist**
 
 These are M1 deliverables. No change needed to the phase — these are correctly listed in M1 scope. However, M1 implementation should use the formatter-phase manifests as a structural template since `verification/tooling/formatter_phase_manifests/` does not exist either (the formatter manifests live elsewhere or are embedded in the phase plan).
 
@@ -125,7 +125,7 @@ To avoid structural uncertainty, M1 should create:
 - `verification/tooling/linter_manifests/ruff_rule_config_audit.json`
 - `verification/tooling/linter_manifests/lint_cli_parity.json`
 - `verification/tooling/linter_manifests/suppression_gate.json`
-- `verification/tooling/check_linter_reuse_contract.py`
+- `verification/tooling/check_linter_reuse_rules.py`
 
 ### LOW — Phase-36 LSP Lint Integration Not Yet Wire-Through
 
@@ -211,4 +211,4 @@ The phase correctly defers the typed diagnostic class enforcement to M6 (Finding
 
 The three precision improvements (Findings 1-3: manifest field population, suppression-gate `updated_by_milestone` format, and W-8 API path naming) are minor encoding details that M1 should address as part of encoding the manifests, not blockers.
 
-M1 should start immediately and encode all three manifests, create `check_linter_reuse_contract.py` with the positive and negative self-tests, initialize the suppression gate manifest, and run `git diff --check` before opening the PR.
+M1 should start immediately and encode all three manifests, create `check_linter_reuse_rules.py` with the positive and negative self-tests, initialize the suppression gate manifest, and run `git diff --check` before opening the PR.

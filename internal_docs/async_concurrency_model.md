@@ -1,6 +1,6 @@
-# Async and Concurrency Model Contract
+# Async and Concurrency Model Rules
 
-Status: canonical async and concurrency model contract
+Status: canonical async and concurrency model rules
 Last updated: 2026-05-09
 
 ## Purpose
@@ -123,7 +123,7 @@ Deferred surfaces:
 - `ProcessPoolExecutor`
 - multiprocessing-style APIs
 
-Process pools require a stable typed data and IPC serialization contract. Shipping them first would force a premature transport model.
+Process pools require a stable typed data and IPC serialization rules. Shipping them first would force a premature transport model.
 
 ### No Implicit Shared Mutable Memory
 
@@ -155,7 +155,7 @@ Rejected implicit behavior:
 
 ### Typed Failure and Cancellation
 
-Cancellation is part of the contract, not an implementation detail.
+Cancellation is part of the rules, not an implementation detail.
 
 Timeouts, task cancellation, sibling failure, shutdown tokens, and resource cleanup must have deterministic behavior and Sifr-native diagnostics. Cancellation must not become an ambient exception leak or an ordinary `Result` error branch.
 
@@ -587,7 +587,7 @@ The compiler does not silently turn local state into shared state. Shared memory
 - types with their own synchronization may satisfy `ShareSafe`
 - `Shared[Cell[int]]` and `Shared[list[MutableThing]]` are rejected
 
-`sync.Lock[T]` and `sync.RwLock[T]` provide explicit mutable sharing. They use synchronous Rust mutex primitives in the first model. Acquiring one in async code may block the current runtime worker under contention, so they are permitted only for short, low-contention critical sections. Channels are preferred for async coordination. Distinct `sync.AsyncMutex[T]` and `sync.AsyncRwLock[T]` surfaces are deferred until a later milestone records await-safe guard semantics.
+`sync.Lock[T]` and `sync.RwLock[T]` provide explicit mutable sharing. They use synchronous Rust mutex primitives in the first model. Acquiring one in async code may block the current runtime worker under contention, so they are permitted only for short, low-contention critical sections. Channels are preferred for async coordination. Distinct `sync.AsyncMutex[T]` and `sync.AsyncRwLock[T]` surfaces are deferred until a later semantic record defines await-safe guard semantics.
 
 Lock guard rules:
 
@@ -618,7 +618,7 @@ Channels are the canonical queue-like concurrency primitive:
 - Buffered messages remain receivable after close.
 - Messages are received in channel enqueue order (FIFO).
 
-`sync.Semaphore` and `sync.Notify` cover common coordination patterns. `SemaphorePermit` is a guard-like resource: a live permit at an `await` point is a compile-time error, and permits cannot be returned from a function. `Notify` is edge-triggered; level-triggered `Event` behavior requires explicit state such as `sync.Shared[bool] + Notify` in the first model. Public `Barrier` is deferred and public `Once` remains internal-only unless a later phase records a production need.
+`sync.Semaphore` and `sync.Notify` cover common coordination patterns. `SemaphorePermit` is a guard-like resource: a live permit at an `await` point is a compile-time error, and permits cannot be returned from a function. `Notify` is edge-triggered; level-triggered `Event` behavior requires explicit state such as `sync.Shared[bool] + Notify` in the first model. Public `Barrier` is deferred and public `Once` remains internal-only unless a later design record records a production need.
 
 ## Blocking And Thread Offload
 
@@ -629,7 +629,7 @@ Async tasks are for waiting and cooperative scheduling. CPU-bound work and block
 - `@blocking_io`: the sync function performs I/O that can block an OS thread, such as file read/write, network I/O, database calls, pipe operations, or blocking timer waits. Calling a known `@blocking_io` function from an `async def` body is an error in the sealed async model: use an async API if available, or wrap the call with `spawn_blocking`.
 - `@cpu_heavy`: the sync function is CPU-intensive, such as cryptography, compression, hashing, parsing, numerical compute, or computation-heavy processing. Calling a known `@cpu_heavy` function from an `async def` body is an error in the sealed async model: use `task.spawn_cpu` or the accepted `sifr.parallel` APIs to avoid starving the runtime.
 
-The stdlib maintains a built-in annotation database for stdlib functions. User code can annotate sync declarations with `@blocking_io` or `@cpu_heavy`. Unannotated user functions are assumed to be cheap compute and do not warn by default; this avoids making every short helper look like a scheduler problem. External/FFI calls are treated conservatively as potentially blocking in async contexts unless a future FFI contract classifies them more precisely.
+The stdlib maintains a built-in annotation database for stdlib functions. User code can annotate sync declarations with `@blocking_io` or `@cpu_heavy`. Unannotated user functions are assumed to be cheap compute and do not warn by default; this avoids making every short helper look like a scheduler problem. External/FFI calls are treated conservatively as potentially blocking in async contexts unless a future FFI rules classifies them more precisely.
 
 These annotations guide diagnostics and offload validation. The compiler must not silently rewrite either call.
 
@@ -651,7 +651,7 @@ Async functions must be async for a real reason. The compiler tracks an internal
 
 `@blocking_io` and `@cpu_heavy` do not create async effects and do not make sync functions awaitable. They are sync workload facts. Applying either annotation to `async def` is an error; async APIs receive suspension summaries such as `AsyncIo`, not sync workload annotations. Calling a known `@blocking_io` or `@cpu_heavy` function directly from an `async def` body is an error in the sealed async model. Users must choose a native async API, `task.spawn_blocking`, `task.spawn_cpu`, or accepted `sifr.parallel` APIs.
 
-`task.spawn_blocking(fn)` requires classified sync work. The target function must be annotated `@blocking_io` or `@cpu_heavy`, known by the stdlib annotation database as blocking or CPU-heavy, or known by an external/FFI contract as blocking or CPU-heavy. Unannotated cheap sync helpers are rejected as offload targets; the diagnostic should say to call them directly, or annotate the declaration if it is genuinely blocking or expensive.
+`task.spawn_blocking(fn)` requires classified sync work. The target function must be annotated `@blocking_io` or `@cpu_heavy`, known by the stdlib annotation database as blocking or CPU-heavy, or known by an external/FFI rules as blocking or CPU-heavy. Unannotated cheap sync helpers are rejected as offload targets; the diagnostic should say to call them directly, or annotate the declaration if it is genuinely blocking or expensive.
 
 `spawn_blocking` on `@blocking_io` work is valid and should not warn by default. A later informational diagnostic may suggest a specific native async replacement only when the compiler knows one.
 
@@ -679,7 +679,7 @@ task.spawn_blocking(fn: Fn() -> Result[T, E]) -> BlockingTask[T, E]
 
 `async with` is part of the user-facing async model.
 
-`task.scope()` and `task.timeout(duration)` use async context-manager behavior. General user-defined async context managers follow the same cleanup contract:
+`task.scope()` and `task.timeout(duration)` use async context-manager behavior. General user-defined async context managers follow the same cleanup rules:
 
 - async enter/exit protocol methods are awaited
 - cleanup order is LIFO
@@ -699,7 +699,7 @@ protocol AsyncContextManager[T, EnterE, ExitE]:
 
 `__aenter__` and `__aexit__` are the async context-manager methods. If `__aenter__` fails, `__aexit__` is not called, because the resource was not acquired.
 
-Implementation status: the first milestone_async_7a compiler slice supports the normal-exit path for user-defined async context managers that structurally provide async `__aenter__` and `__aexit__` methods. Abnormal body exit, cancellation-specific causes, secondary cleanup evidence, and `async for` cleanup are still tracked as follow-up slices in the same milestone.
+Implementation status: the initial async context-manager and iterator compiler capability supports the normal-exit path for user-defined async context managers that structurally provide async `__aenter__` and `__aexit__` methods. Abnormal body exit, cancellation-specific causes, secondary cleanup evidence, and `async for` cleanup remain deferred cleanup cases in the same implementation track.
 
 ```sifr
 enum AsyncExitCause:
@@ -787,7 +787,7 @@ loop:
 
 ## Removed Compatibility Veneers
 
-CPython-shaped compatibility layers are removed or diagnosed. The native replacement table is a migration aid, not an importable adapter contract.
+CPython-shaped compatibility layers are removed or diagnosed. The native replacement table is a migration aid, not an importable adapter rules.
 
 | Removed legacy module | Native Sifr direction |
 | --- | --- |
@@ -800,7 +800,7 @@ CPython-shaped compatibility layers are removed or diagnosed. The native replace
 
 Unsupported compatibility surfaces are intentionally absent or diagnosed: raw event loops, loop policies, transports/protocols, public selectors, `contextvars`, process pools, signals shaped like CPython handlers, and raw callback-first APIs.
 
-## Diagnostics Contract
+## Diagnostics Rules
 
 Async diagnostics are Sifr-native and stable. Rust compiler errors may be used as implementation evidence, but they must not be the primary user experience for covered cases.
 
@@ -824,13 +824,13 @@ Diagnostic families cover:
 - `@blocking_io`, `@cpu_heavy`, or potentially blocking FFI call in async context
 - unclassified functions passed to `spawn_blocking`
 
-New diagnostic codes for the ad hoc async effect seal (`SIFR-ASYNC-*`):
+New diagnostic codes for the async effect seal (`SIFR-ASYNC-*`):
 
 - `SIFR-ASYNC-0001`: `async def` body has no real suspension effect (transitive `NoSuspend`).
 - `SIFR-ASYNC-0002`: awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend`.
 - `SIFR-ASYNC-0003`: direct `@blocking_io` call from async context.
 - `SIFR-ASYNC-0004`: direct `@cpu_heavy` call from async context.
-- `SIFR-ASYNC-0005`: `spawn_blocking` target is unannotated and not classified by stdlib/FFI contract.
+- `SIFR-ASYNC-0005`: `spawn_blocking` target is unannotated and not classified by stdlib/FFI rules.
 - `SIFR-ASYNC-0006`: `@blocking_io` or `@cpu_heavy` applied to `async def`.
 - lock guard live at an `await` point
 - invalid async protocol implementation
@@ -859,12 +859,12 @@ These decisions are part of the first async/concurrency model:
 10. Spawned tasks require sendable task boundaries. Local, non-send task sets are deferred.
 11. CPython-shaped compatibility veneers must not be publicly importable.
 12. Public selectors, `contextvars`, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
-13. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
+13. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization rules.
 14. `@blocking_io` and `@cpu_heavy` are declaration-site workload classification annotations for sync functions. They power diagnostics and offload validation but never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 15. Async functions must have a real suspension effect. `async def` with no suspension is rejected unless an explicit reviewed protocol-conformance escape hatch applies.
 16. Awaiting a same-task coroutine with no transitive suspension effect is rejected.
 17. Direct `@blocking_io` or `@cpu_heavy` sync calls from async code are errors in the sealed model; cheap unannotated sync helper calls remain allowed.
-18. `task.spawn_blocking` requires classified `@blocking_io`, `@cpu_heavy`, stdlib-known, or external-contract-known blocking/CPU-heavy work.
+18. `task.spawn_blocking` requires classified `@blocking_io`, `@cpu_heavy`, stdlib-known, or external-rules-known blocking/CPU-heavy work.
 19. Subprocess and signal APIs require a later model amendment.
 20. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; graceful shutdown uses structured scope cancellation and explicit channels.
 21. `async def` with `yield` creates `AsyncGenerator[T, E]`, not `Coroutine[AsyncGenerator[T, E], E]`.

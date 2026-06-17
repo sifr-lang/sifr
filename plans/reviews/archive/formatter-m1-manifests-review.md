@@ -67,7 +67,7 @@ Correctly encodes the merged seed PR contract: `sifr-lang/ruff#1` as `b251656613
 `ruff_fork_revalidation.json` and all 5 syntax token fixtures (`basic_module`, `class_and_methods`, `async_and_error_handling`, `collections_and_generics`, `control_flow_match`) record `b251656613629e054308951a4df1928b3f749b1b`. Rationale in `ruff_fork_revalidation.json` correctly states the seed commit changes Ruff formatter integration points only, so token fixture expectations remain valid.
 
 **9. Test wiring**  
-`scripts/run_all_tests.sh:142-143` wires `check_formatter_phase_manifests.py` and its self-test after `check_formatter_contract.py` — correct position after Phase 36 formatter contract check. No existing checks weakened.
+`scripts/run_all_tests.sh:142-143` wires `check_formatter_phase_manifests.py` and its self-test after `check_formatter_rules.py` — correct position after Phase 36 formatter contract check. No existing checks weakened.
 
 **10. Execution tracker accuracy**  
 Lines 390-391 accurately describe: new formatter manifest gate passes, lane reaches Phase 36 closeout guardrail, Phase 36 doc was archived. No overstatement of quick-lane success. `target/validation_lane_reports/quick.latest.json` exists as stated.

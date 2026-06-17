@@ -13,7 +13,7 @@ fn safe_divide(total: Option<i64>, count: i64) -> f64 {
 }
 
 fn main() {
-    println!("m26_3 optional arithmetic soundness demo:");
+    println!("optional_arithmetic optional arithmetic soundness demo:");
     println!("{}", safe_add_one(Some(5)));
     println!("{}", safe_add_one(None));
     println!("{}", safe_divide(Some(9), 3));

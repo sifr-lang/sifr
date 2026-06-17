@@ -1,5 +1,5 @@
-// Reference: milestone_imports
-// Source issue: milestone-imports-epic.md
+// Reference: import semantics work
+// Reference: imports
 pub fn greet(name: String) -> String {
     return format!("Welcome, {}!", name);
 }

@@ -9,5 +9,5 @@ fn main() {
     let mixed: Vec<Box<dyn std::any::Any>> = Vec::new();
     println!("{}", mixed.len() as i64);
 
-    println!("ad_hoc_clone_wave3_generic_hardening_demo: pass");
+    println!("clone_generic_cloning_hardening_demo: pass");
 }

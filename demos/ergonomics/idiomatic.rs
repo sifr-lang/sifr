@@ -234,5 +234,5 @@ fn main() {
     demo_walrus();
     placeholder();
     demo_builtins();
-    println!("All milestone_ergonomics features working!");
+    println!("All ergonomics features working!");
 }

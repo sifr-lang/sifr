@@ -305,7 +305,7 @@ Focused validation run so far:
 cargo test -p sifr build_output --no-fail-fast
 cargo test -p sifr run_output --no-fail-fast
 cargo test -p sifr failed_ --no-fail-fast
-cargo test -p sifr --test build_output_contracts --no-fail-fast
+cargo test -p sifr --test build_output_behavior --no-fail-fast
 cargo test -p sifr_driver build:: --no-fail-fast
 cargo test -p sifr_driver test_cached_project_invalidates_when_workspace_helper_changes --no-fail-fast
 cargo test -p sifr -- --skip test_e2e_pass

@@ -86,7 +86,7 @@ SOURCE_GROUPS: dict[str, list[str]] = {
 PRODUCTION_SURFACES: list[dict[str, str]] = [
     {
         "surface": "sifr.task.TaskHandle[T, E]",
-        "owner_contract": "concurrency_runtime_structured_tasks",
+        "owner_capability": "concurrency_runtime_structured_tasks",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -94,15 +94,15 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.task.TaskGroup[E]",
-        "owner_contract": "concurrency_runtime_structured_tasks",
+        "owner_capability": "concurrency_runtime_structured_tasks",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Canonical mixed structured-runtime owner; no distinct Scope is introduced in baseline contract.",
+        "notes": "Canonical mixed structured-runtime owner; no distinct Scope is introduced in baseline decision.",
     },
     {
         "surface": "sifr.task.spawn_scoped/sleep/timeout/deadline/cancel_scope/join_all/race/select",
-        "owner_contract": "concurrency_runtime_structured_tasks",
+        "owner_capability": "concurrency_runtime_structured_tasks",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -110,7 +110,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.sync channels, locks, semaphores, events",
-        "owner_contract": "concurrency_runtime_sync_primitives",
+        "owner_capability": "concurrency_runtime_sync_primitives",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -118,7 +118,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.runtime spawn_blocking/spawn_cpu/JoinSet",
-        "owner_contract": "concurrency_runtime_offload",
+        "owner_capability": "concurrency_runtime_offload",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -126,7 +126,7 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.parallel map/try_map/Pool/PoolConfig",
-        "owner_contract": "concurrency_runtime_offload",
+        "owner_capability": "concurrency_runtime_offload",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -134,23 +134,23 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.process Command/Child/ProcessHandle/owned pipes",
-        "owner_contract": "concurrency_runtime_process",
+        "owner_capability": "concurrency_runtime_process",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "The baseline contract chooses distinct ProcessHandle for scoped process supervision while preserving pipe access.",
+        "notes": "The baseline decision chooses distinct ProcessHandle for scoped process supervision while preserving pipe access.",
     },
     {
         "surface": "sifr.signal structured shutdown streams",
-        "owner_contract": "concurrency_runtime_shutdown",
+        "owner_capability": "concurrency_runtime_shutdown",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain shutdown contract work and arbitrary signal.signal handlers are unsupported.",
+        "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain shutdown rules work and arbitrary signal.signal handlers are unsupported.",
     },
     {
         "surface": "sifr.resource ExitStack/AsyncExitStack/closing/aclosing/nullcontext",
-        "owner_contract": "concurrency_runtime_shutdown",
+        "owner_capability": "concurrency_runtime_shutdown",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
@@ -158,15 +158,15 @@ PRODUCTION_SURFACES: list[dict[str, str]] = [
     },
     {
         "surface": "sifr.task.Context/ContextKey[T]",
-        "owner_contract": "concurrency_runtime_shutdown",
+        "owner_capability": "concurrency_runtime_shutdown",
         "support_tier": "production-public",
         "terminal_state": "production-public",
         "stability": "stable-public-api",
-        "notes": "Value-model foundation is importable; explicit propagation remains shutdown contract work with no contextvars parity or implicit dynamic mutation.",
+        "notes": "Value-model foundation is importable; explicit propagation remains shutdown rules work with no contextvars parity or implicit dynamic mutation.",
     },
     {
         "surface": "sifr.ipc typed frame protocol",
-        "owner_contract": "concurrency_runtime_typed_ipc",
+        "owner_capability": "concurrency_runtime_typed_ipc",
         "support_tier": "production-substrate",
         "terminal_state": "production-substrate",
         "stability": "stable-production-substrate",
@@ -180,7 +180,7 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.task and sifr.sync",
-        "owner_contract": "concurrency_runtime_legacy_surface",
+        "owner_capability": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Only a new Sifr-native API design can revisit this; migration compatibility is insufficient.",
     },
     {
@@ -188,15 +188,15 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.process",
-        "owner_contract": "concurrency_runtime_legacy_surface",
-        "revisit_rule": "No CPython-shaped process adapter survives legacy-surface contract.",
+        "owner_capability": "concurrency_runtime_legacy_surface",
+        "revisit_rule": "No CPython-shaped process adapter survives legacy-surface capability.",
     },
     {
         "surface": "sifr.queue",
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.sync",
-        "owner_contract": "concurrency_runtime_legacy_surface",
+        "owner_capability": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Future queue API must prove Sifr-native value over channels.",
     },
     {
@@ -204,7 +204,7 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.runtime and sifr.parallel",
-        "owner_contract": "concurrency_runtime_legacy_surface",
+        "owner_capability": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Future adapter requires a separate design gate and cannot be the offload spine.",
     },
     {
@@ -212,15 +212,15 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "rejected",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.process plus sifr.ipc",
-        "owner_contract": "concurrency_runtime_legacy_surface",
-        "revisit_rule": "Process workers require the typed-IPC contract typed IPC design and a future process-worker contract.",
+        "owner_capability": "concurrency_runtime_legacy_surface",
+        "revisit_rule": "Process workers require the typed IPC design and a future process-worker capability.",
     },
     {
         "surface": "sifr.threading",
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.runtime, sifr.parallel, and sifr.sync",
-        "owner_contract": "concurrency_runtime_legacy_surface",
+        "owner_capability": "concurrency_runtime_legacy_surface",
         "revisit_rule": "Raw thread objects are not the public execution model.",
     },
     {
@@ -228,7 +228,7 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "rejected",
         "stability": "compiler-known-intrinsic",
         "replacement": "structured diagnostics/tracing events",
-        "owner_contract": "concurrency_runtime_shutdown",
+        "owner_capability": "concurrency_runtime_shutdown",
         "revisit_rule": "No process-global warning/filter mutation from concurrent contexts.",
     },
     {
@@ -236,23 +236,23 @@ LEGACY_SURFACES: list[dict[str, str]] = [
         "terminal_state": "unsupported-with-diagnostic",
         "stability": "compiler-known-intrinsic",
         "replacement": "sifr.resource",
-        "owner_contract": "concurrency_runtime_shutdown",
-        "revisit_rule": "Generator decorator helpers require a future generator semantics contract; cleanup scopes remain Sifr-native.",
+        "owner_capability": "concurrency_runtime_shutdown",
+        "revisit_rule": "Generator decorator helpers require a future generator semantics capability; cleanup scopes remain Sifr-native.",
     },
     {
         "surface": "sifr.warnings",
         "terminal_state": "rejected",
         "stability": "compiler-known-intrinsic",
         "replacement": "structured diagnostics/tracing events",
-        "owner_contract": "concurrency_runtime_shutdown",
-        "revisit_rule": "No Python global warning filter adapter ships in this contract.",
+        "owner_capability": "concurrency_runtime_shutdown",
+        "revisit_rule": "No Python global warning filter adapter ships in this capability.",
     },
 ]
 
 BASELINE_DECISIONS: list[dict[str, str]] = [
     {
         "decision": "mixed runtime owner",
-        "outcome": "Use TaskGroup[E] as the canonical mixed owner; no distinct task.Scope/runtime.Scope is introduced in baseline contract.",
+        "outcome": "Use TaskGroup[E] as the canonical mixed owner; no distinct task.Scope/runtime.Scope is introduced in baseline decision.",
         "evidence": "Server shutdown, process pump tasks, blocking offload, and CPU offload can be represented as typed child handles under TaskGroup or JoinSet without non-fail-fast scope semantics.",
     },
     {
@@ -287,63 +287,63 @@ BASELINE_DECISIONS: list[dict[str, str]] = [
     },
     {
         "decision": "lock/permit await policy",
-        "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in sync-primitives contract unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns.",
+        "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in sync-primitives capability unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns.",
         "evidence": "Prevents hidden shared mutable state and unbounded permit retention across suspension points.",
     },
     {
         "decision": "Barrier and Once",
-        "outcome": "Barrier is deferred-to-future-contract unless sync-primitives contract finds a near-term production need; Once remains internal-only over std::sync::OnceLock.",
+        "outcome": "Barrier is deferred-to-future-capability unless sync-primitives capability finds a near-term production need; Once remains internal-only over std::sync::OnceLock.",
         "evidence": "Channels, locks, semaphores, and events cover near-term web/worker/data needs without toy public primitives.",
     },
 ]
 
-CONTRACT_BACKLOG: list[dict[str, str]] = [
+CAPABILITY_QUEUE: list[dict[str, str]] = [
     {
-        "contract": "concurrency_runtime_legacy_surface",
+        "capability": "concurrency_runtime_legacy_surface",
         "artifact": "concurrency_runtime_legacy_surface_traceability.md",
         "acceptance": "legacy public sifr.asyncio/sifr.subprocess/sifr.concurrent/sifr.threading surfaces removed, hidden, or diagnosed; native imports remain canonical",
         "fixtures": "bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixtures; legacy sifr.* unsupported-diagnostic fixtures",
     },
     {
-        "contract": "concurrency_runtime_structured_tasks",
+        "capability": "concurrency_runtime_structured_tasks",
         "artifact": "concurrency_runtime_structured_tasks_traceability.md",
         "acceptance": "TaskHandle/TaskGroup/cancel_scope/race/select/timeout behavior typed and no public Tokio leak",
         "fixtures": "task sendability, observed failure, unobserved drop, race/select loser evidence fixtures",
     },
     {
-        "contract": "concurrency_runtime_sync_primitives",
+        "capability": "concurrency_runtime_sync_primitives",
         "artifact": "concurrency_runtime_sync_primitives_traceability.md",
         "acceptance": "bounded backpressure, close, cancellation, sendability, and lock/permit await diagnostics",
         "fixtures": "producer/consumer pipeline, channel non-send, sync lock across await, semaphore permit policy fixtures",
     },
     {
-        "contract": "concurrency_runtime_offload",
+        "capability": "concurrency_runtime_offload",
         "artifact": "concurrency_runtime_offload_traceability.md",
         "acceptance": "spawn_blocking/spawn_cpu/JoinSet/parallel map use typed WorkerError and private Rayon pools",
         "fixtures": "JoinSet drop/order/cancel, non-send CPU capture, async direct parallel.map diagnostic fixtures",
     },
     {
-        "contract": "concurrency_runtime_process",
+        "capability": "concurrency_runtime_process",
         "artifact": "concurrency_runtime_process_traceability.md",
         "acceptance": "sifr.process sync/async child supervision, owned pipes, text mode, shell_exec effect, timeout/cancel",
         "fixtures": "sync/async subprocess loopback, pipe ownership, shell effect, process cancellation fixtures",
     },
     {
-        "contract": "concurrency_runtime_shutdown",
+        "capability": "concurrency_runtime_shutdown",
         "artifact": "concurrency_runtime_shutdown_traceability.md",
         "acceptance": "structured signals, cleanup stacks, explicit task Context, diagnostics/tracing policy",
         "fixtures": "shutdown stream, cleanup under cancellation, context propagation, signal.signal/warnings rejection fixtures",
     },
     {
-        "contract": "concurrency_runtime_typed_ipc",
+        "capability": "concurrency_runtime_typed_ipc",
         "artifact": "concurrency_runtime_typed_ipc_design.md",
         "acceptance": "typed IPC frame protocol, schema identity, version negotiation, malformed-frame errors, payload diagnostics",
         "fixtures": "schema accept/reject, unsupported payload, malformed frame, cancellation frame fixtures",
     },
     {
-        "contract": "concurrency_runtime_closeout",
-        "artifact": "concurrency_runtime_closeout_traceability.md",
-        "acceptance": "docs, demos, validation profiles, panic scans, final inventory closure, final external PASS review",
+        "capability": "concurrency_runtime_readiness",
+        "artifact": "concurrency_runtime_readiness_traceability.md",
+        "acceptance": "docs, demos, validation profiles, panic scans, final inventory readiness, final external PASS review",
         "fixtures": "structured task demo, channel pipeline demo, offload demo, process demo, shutdown/cleanup demo",
     },
 ]
@@ -580,7 +580,7 @@ def native_mapping(relative_path: str) -> str:
         return "sifr.signal"
     if "asyncio" in relative_path:
         return "sifr.task"
-    return "contract evidence"
+    return "rules evidence"
 
 
 def aggregate_domains(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -599,15 +599,15 @@ def write_inventory_json(files: list[dict[str, Any]], commit: str) -> None:
     cpython_display_path = display_path(CPYTHON_ROOT)
     data = {
         "schema_version": 1,
-        "status": "concurrency_runtime_closeout-inventory-audited",
-        "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
+        "status": "concurrency_runtime_readiness-inventory-audited",
+        "platform_rules": "verification/areas/runtime_platform/platform_rules.json",
         "cpython_checkout": {"path": cpython_display_path, "commit": commit},
         "source_patterns": SOURCE_GROUPS,
         "domain_summary": aggregate_domains(files),
         "production_surfaces": PRODUCTION_SURFACES,
         "legacy_python_shaped_surfaces": LEGACY_SURFACES,
         "baseline_resolved_decisions": BASELINE_DECISIONS,
-        "contract_backlog": CONTRACT_BACKLOG,
+        "capability_queue": CAPABILITY_QUEUE,
         "workload_database": WORKLOAD_ROWS,
         "scanned_files": files,
     }
@@ -635,35 +635,35 @@ def write_inventory_md(files: list[dict[str, Any]], commit: str) -> None:
         for row in aggregate_domains(files)
     ]
     surface_rows = [
-        [item["surface"], item["owner_contract"], item["terminal_state"], item["stability"], item["notes"]]
+        [item["surface"], item["owner_capability"], item["terminal_state"], item["stability"], item["notes"]]
         for item in PRODUCTION_SURFACES
     ]
     legacy_rows = [
-        [item["surface"], item["owner_contract"], item["terminal_state"], item["replacement"], item["revisit_rule"]]
+        [item["surface"], item["owner_capability"], item["terminal_state"], item["replacement"], item["revisit_rule"]]
         for item in LEGACY_SURFACES
     ]
     decision_rows = [[item["decision"], item["outcome"], item["evidence"]] for item in BASELINE_DECISIONS]
-    backlog_rows = [[item["contract"], item["artifact"], item["acceptance"], item["fixtures"]] for item in CONTRACT_BACKLOG]
+    backlog_rows = [[item["capability"], item["artifact"], item["acceptance"], item["fixtures"]] for item in CAPABILITY_QUEUE]
     INVENTORY_MD.write_text(
         "\n\n".join(
             [
                 "# Concurrency Runtime Substrate Inventory",
                 "Status: concurrency runtime inventory audited; generated by `verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py`.",
                 f"CPython checkout: `{cpython_display_path}` at `{commit}`.",
-                "Platform contract: [platform_contract.md](../platform/platform_contract.md).",
+                "Platform rules: [platform_rules.md](../platform/platform_rules.md).",
                 "## Scan Summary\n\n"
                 + md_table(
                     ["Domain", "Files", "Functions", "Classes", "Methods", "Constants", "Test methods"],
                     domain_rows,
                 ),
                 "## Production Native Surface Boundary\n\n"
-                + md_table(["Surface", "Owner Contract", "Terminal state", "Stability", "Notes"], surface_rows),
+                + md_table(["Surface", "Owner Capability", "Terminal state", "Stability", "Notes"], surface_rows),
                 "## Legacy Python-Shaped Surface Disposition\n\n"
-                + md_table(["Surface", "Owner Contract", "Terminal state", "Replacement", "Revisit rule"], legacy_rows),
+                + md_table(["Surface", "Owner Capability", "Terminal state", "Replacement", "Revisit rule"], legacy_rows),
                 "## Baseline Resolved Decisions\n\n" + md_table(["Decision", "Outcome", "Evidence"], decision_rows),
-                "## Implementation Backlog\n\n"
-                + md_table(["Contract", "Traceability artifact", "Acceptance", "Representative fixtures"], backlog_rows),
-                "## Regeneration\n\nRun `python3 verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py` after changing the contract source-of-truth list, CPython checkout, or baseline contract decisions.",
+                "## Capability Queue\n\n"
+                + md_table(["Capability", "Traceability artifact", "Acceptance", "Representative fixtures"], backlog_rows),
+                "## Regeneration\n\nRun `python3 verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py` after changing the capability source-of-truth list, CPython checkout, or runtime substrate decisions.",
             ]
         )
         + "\n",
@@ -689,7 +689,7 @@ def write_evidence_md(files: list[dict[str, Any]], commit: str) -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime CPython Evidence Matrix",
-                "Status: concurrency runtime inventory audited; generated from the contract source-of-truth list.",
+                "Status: concurrency runtime inventory audited; generated from the capability source-of-truth list.",
                 f"CPython checkout: `{cpython_display_path}` at `{commit}`.",
                 md_table(["Reference", "Domain", "Native mapping", "Evidence state", "Extracted signal"], rows),
                 "## Notes\n\nCPython module shapes are evidence only. Production Sifr APIs are native `sifr.*` surfaces, and CPython-shaped imports are rejected or diagnosed according to the inventory.",
@@ -706,8 +706,8 @@ def write_workload_md() -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime Workload Database",
-                "Status: concurrency runtime inventory audited; implementation contracts have recorded validation evidence for accepted concurrency/runtime surfaces.",
-                md_table(["API", "Owner contract", "Workload/effect classification", "Validation"], rows),
+                "Status: concurrency runtime inventory audited; implementation ruless have recorded validation evidence for accepted concurrency/runtime surfaces.",
+                md_table(["API", "Owner capability", "Workload/effect classification", "Validation"], rows),
                 "## Rules\n\nSync APIs that can wait on channels, locks, processes, pipes, or external runtime state are classified as blocking and remain invalid in `async def` unless explicitly offloaded. CPU-heavy APIs use `@cpu_heavy` and must route through `spawn_cpu` in async contexts. Shell subprocess APIs carry `@shell_exec` in addition to blocking or async suspension classification.",
             ]
         )
@@ -734,7 +734,7 @@ def write_baseline_traceability_md() -> None:
             "Workload database",
             "verification/areas/stdlib_parity/reports/concurrency_runtime_workload_database.md",
         ],
-        ["Shared platform contract", "verification/areas/runtime_platform/platform_contract.md and .json"],
+        ["Shared platform rules", "verification/areas/runtime_platform/platform_rules.md and .json"],
         ["Supported host matrix", "verification/areas/runtime_platform/supported_host_matrix.md"],
         ["Golden manifest entries", "verification/areas/runtime_platform/golden/manifest.json"],
         ["Bare CPython import fixtures", "crates/sifr/tests/e2e/fail/bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixture family"],
@@ -743,9 +743,9 @@ def write_baseline_traceability_md() -> None:
         "\n\n".join(
             [
                 "# Concurrency Runtime Baseline Traceability",
-                "Contract: `concurrency_runtime_baseline`",
+                "Capability: `concurrency_runtime_baseline`",
                 md_table(["Requirement", "Evidence"], rows),
-                "## Baseline Closure Gate\n\nThe baseline contract is complete only after a post-baseline external review returns `PASS` and the result is recorded in the execution ledger. The structured-tasks contract remains blocked until the legacy-surface contract removes, hides, or diagnoses legacy CPython-shaped public surfaces.",
+                "## Baseline Readiness Gate\n\nThe baseline decision is complete only after a post-baseline external review returns `PASS` and the result is recorded in the execution ledger. The structured-tasks capability remains blocked until the legacy-surface capability removes, hides, or diagnoses legacy CPython-shaped public surfaces.",
             ]
         )
         + "\n",

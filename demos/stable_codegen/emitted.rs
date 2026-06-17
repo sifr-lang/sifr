@@ -11,6 +11,6 @@ fn summarize(values: &Vec<i64>) -> i64 {
 }
 
 fn main() {
-    println!("m24_4 analysis/emission boundary hardening demo:");
+    println!("stable_codegen analysis/emission boundary hardening demo:");
     println!("{}", summarize(&vec![3 as i64, 12 as i64, 20 as i64]));
 }

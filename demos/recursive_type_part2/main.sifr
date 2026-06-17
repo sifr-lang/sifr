@@ -1,6 +1,6 @@
-# Reference: ad_hoc_recursive_type_part2
-# Source issue: ad-hoc-full-recursive-type-feature-part2-execution.md
-# Ad hoc recursive-type feature part 2 demo.
+# Reference: recursive_type_part2
+# Reference: full-recursive-type-feature-part2
+# Recursive-type feature part 2 demo.
 # Shows that well-formed recursive aliases are accepted while invalid cycles are reserved for diagnostics.
 
 type Payload = Response

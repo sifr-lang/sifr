@@ -49,9 +49,9 @@ This is a stub. The phase contract defines `type_check_module` as a distinct que
 
 `crates/sifr_frontend/src/lib.rs:774-786`: When `sifr_syntax::parse_module` returns an error, `parse_module` replaces it with an empty module via `ParsedModuleFallback`. This masks errors rather than surfacing them. For a canonical frontend API, a parse failure is a real failure — masking it silently can produce incorrect downstream state. The fallback may be intentional for the quick-cache test but needs explicit rationale.
 
-**N5: `check_frontend_cache_contract.py` uses `sys.exit()` in the test runner function**
+**N5: `check_frontend_cache_rules.py` uses `sys.exit()` in the test runner function**
 
-`verification/performance/check_frontend_cache_contract.py:17`: `raise SystemExit(completed.returncode)` — this raises a non-zero exit code from `run()` when tests fail. The `main()` function itself exits with `sys.exit(main())` which is correct. The pattern works but the `run()` helper conflates test-execution (which should propagate failure) with a test-runner (which should return a status). Minor.
+`verification/performance/check_frontend_cache_rules.py:17`: `raise SystemExit(completed.returncode)` — this raises a non-zero exit code from `run()` when tests fail. The `main()` function itself exits with `sys.exit(main())` which is correct. The pattern works but the `run()` helper conflates test-execution (which should propagate failure) with a test-runner (which should return a status). Minor.
 
 **N6: `check_split_brain_guardrail.py` allowlist includes `sifr/src/main.rs`**
 
@@ -66,17 +66,17 @@ This is correct as a migration shim entrypoint, but the comment says "migration-
 cargo clippy -p sifr_syntax -p sifr_frontend --workspace -- -D warnings
 cargo test -p sifr_syntax
 cargo test -p sifr_frontend
-python3 verification/performance/check_ruff_fork_update_contract.py
+python3 verification/performance/check_ruff_fork_update_rules.py
 python3 verification/performance/check_split_brain_guardrail.py
 python3 verification/performance/check_split_brain_guardrail.py --self-test
-python3 verification/performance/check_frontend_cache_contract.py
+python3 verification/performance/check_frontend_cache_rules.py
 python check_hir_maintainability_guardrails.py
 scripts/run_all_tests.sh --profile quick
 ```
 
 After adding more token fixtures:
 ```bash
-python3 verification/performance/check_ruff_fork_update_contract.py
+python3 verification/performance/check_ruff_fork_update_rules.py
 ```
 
 ---

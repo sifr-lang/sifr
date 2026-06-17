@@ -1,5 +1,4 @@
-# Reference: phase31
-# Source issue: phase31-m31a-reverse-range-recurrence-execution.md
+# Reference: reverse_indices
 # Reverse `range` loops should keep indexed reads definite.
 
 def reversed_values(values: list[int]) -> list[int]:

@@ -1,7 +1,6 @@
-# Reference: m18_4
-# Source issue: phase18-project-and-cli-semantics-execution.md
+# Reference: resolver_triggers
 from .helper import value
 
 def main():
-    print("m18_4 resolver trigger matrix demo:")
+    print("resolver_triggers resolver trigger matrix demo:")
     print(value())

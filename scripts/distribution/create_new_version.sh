@@ -13,7 +13,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/distribution/create_new_version.sh --channel alpha|beta --version <preview> (--dry-run|--real-run) [options]
 
-Plan or execute a Phase 33 preview release.
+  Plan or execute a preview release.
 
 Required:
   --channel alpha|beta       Preview channel to publish
@@ -135,7 +135,7 @@ validate_inputs() {
   [[ -n "${MODE}" ]] || fail "choose --dry-run or --real-run"
   [[ -n "${SITE_REPO}" ]] || fail "--site-repo is required when SIFR_SITE_REPO is not set"
   [[ "${MUTATION_MODE}" == "local" || "${MUTATION_MODE}" == "github" ]] || fail "--mutation-mode must be local or github"
-  [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "stable-looking versions are disabled until Phase 39: ${VERSION}"
+  [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "stable-looking versions are disabled until a stable channel is supported: ${VERSION}"
   version_channel="$(preview_channel_for_version "${VERSION}")" || fail "version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}"
   [[ "${version_channel}" == "${CHANNEL}" ]] || fail "version ${VERSION} belongs to ${version_channel}, not ${CHANNEL}"
   [[ -d "${SITE_REPO}" ]] || fail "site repo not found: ${SITE_REPO}"

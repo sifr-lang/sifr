@@ -6,15 +6,15 @@ Based on my review of all 13 files, here are my findings ordered by severity:
 
 ## CRITICAL (Blocker)
 
-### C-1: No `check_linter_reuse_contract.py` validation script
+### C-1: No `check_linter_reuse_rules.py` validation script
 
 **Phase:** Milestone 1 (`lint_reuse_contract_and_manifests`)
 
-**What:** The validation plan ties `check_linter_reuse_contract.py` to AC-1 ("reuse matrix is encoded in machine-readable or checkable form"), but no such script exists in `verification/tooling/`. The `check_tooling_dependency_boundaries.py` catches `ruff_python_semantic`, `ty_project`, and `ruff_server` imports—it does **not** catch production imports of `ruff_linter::rules::*`, `ruff_linter::registry`, `ruff_linter::linter`, or `ruff_python_semantic` into `sifr_lint`.
+**What:** The validation plan ties `check_linter_reuse_rules.py` to AC-1 ("reuse matrix is encoded in machine-readable or checkable form"), but no such script exists in `verification/tooling/`. The `check_tooling_dependency_boundaries.py` catches `ruff_python_semantic`, `ty_project`, and `ruff_server` imports—it does **not** catch production imports of `ruff_linter::rules::*`, `ruff_linter::registry`, `ruff_linter::linter`, or `ruff_python_semantic` into `sifr_lint`.
 
 **Why blocker:** AC-10 says `sifr_lint` must not import the Ruff Python rule engine. Without a script enforcing this at the Rust Cargo/package boundary before M1 closes, this is an unenforceable paper contract. A developer can merge an M2+ that adds `use ruff_linter::rules::*;` and nothing fails.
 
-**Fix:** M1 must add `verification/tooling/check_linter_reuse_contract.py` that parses `crates/sifr_lint/Cargo.toml` for forbidden crate dependencies, runs `cargo tree -p sifr_lint` in restricted mode, or uses `cargo-geiger` to verify no forbidden paths transit.
+**Fix:** M1 must add `verification/tooling/check_linter_reuse_rules.py` that parses `crates/sifr_lint/Cargo.toml` for forbidden crate dependencies, runs `cargo tree -p sifr_lint` in restricted mode, or uses `cargo-geiger` to verify no forbidden paths transit.
 
 ---
 
@@ -144,7 +144,7 @@ Based on my review of all 13 files, here are my findings ordered by severity:
 
 ## Summary**The phase is not yet implementation-ready.** Two critical blockers must be resolved before M1 starts:
 
-1. **C-1 (check_linter_reuse_contract.py):** Without a machine-enforceable script to verify no `ruff_linter` Python rules, `ruff_linter::registry`, `ruff_linter::linter`, or `ruff_python_semantic` imports enter `sifr_lint`, the reuse matrix is unenforceable. AC-10's guardrail cannot be verified.
+1. **C-1 (check_linter_reuse_rules.py):** Without a machine-enforceable script to verify no `ruff_linter` Python rules, `ruff_linter::registry`, `ruff_linter::linter`, or `ruff_python_semantic` imports enter `sifr_lint`, the reuse matrix is unenforceable. AC-10's guardrail cannot be verified.
 
 2. **C-2 (parser-aware suppression gate enforcement):** Without mechanical proof that syntax/HIR rules cannot compile or test-pass before M3 closes, the suppression gate is advisory, not enforced.
 
@@ -152,4 +152,4 @@ The hidden planning decisions review found **no hidden decisions**: the reuse ma
 
 With C-1 and C-2 addressed, the phase is implementation-ready. The remaining H-1 through H-4 and M-1 through M-4 findings are significant but do not block the phase from starting—they are precision improvements that should be addressed as implementation proceeds.
 
-**Recommendation:** Author a `verification/tooling/check_linter_reuse_contract.py` during M1 planning lock and add explicit suppression-gate enforcement (mechanical module dependency or negative test) before M5 opens. Address H-1 through H-4 and M-1 through M-4 in the implementation PRs where the relevant code is written. The phase structure, reuse decisions, milestone sequencing, and acceptance criteria are sound.
+**Recommendation:** Author a `verification/tooling/check_linter_reuse_rules.py` during M1 planning lock and add explicit suppression-gate enforcement (mechanical module dependency or negative test) before M5 opens. Address H-1 through H-4 and M-1 through M-4 in the implementation PRs where the relevant code is written. The phase structure, reuse decisions, milestone sequencing, and acceptance criteria are sound.

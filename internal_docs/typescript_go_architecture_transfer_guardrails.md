@@ -1,14 +1,14 @@
-# TypeScript-Go Architecture Transfer M1 Guardrails
+# TypeScript-Go Architecture Transfer: Guardrails
 
-status: M1 pre-flight gate
+status: source-provider workstream preflight gate
 
-This document is the implementation guardrail for
-`plans/issues/archive/ad-hoc-typescript-go-compiler-architecture-transfer.md` M1. It records
-the actual pre-session state after M0 and before M2-M5 behavior migration. Later
-milestones may update this file and its checker when they intentionally replace
+This document is the implementation guardrail for the
+`typescript-go-compiler-architecture-transfer record` source-provider workstream. It records
+the actual pre-session state before source-provider behavior migration. Later
+codebase work may update this file and its checker when it intentionally replaces
 one of these current limitations.
 
-M2 update: `crates/sifr_frontend/src/source_provider.rs` is now the intentional
+Source-provider update: `crates/sifr_frontend/src/source_provider.rs` is now the intentional
 filesystem boundary implementation and is excluded from the direct-read
 inventory scan. Direct `std::fs` calls or physical `Path` probes outside that
 boundary remain inventory-controlled until they are migrated or explicitly
@@ -16,33 +16,33 @@ classified as non-semantic exceptions.
 
 ## Locked Terms
 
-M1 locks the following terms before behavior migration starts:
+The source-provider workstream locks the following terms before behavior migration starts:
 
 - `sifr_source`: bottom-of-graph source text, line-map, source-file metadata,
   source hash, and UTF-8/UTF-16/UTF-32 position conversion authority.
 - `SourceProvider`: future semantic file-system boundary in `sifr_frontend` for
   disk, overlay, tracking, package, directory, canonicalization, and failed
-  lookup reads. Not implemented in M1.
+	  lookup reads. Not implemented in this workstream.
 - `WorkspaceSession`: future mutable owner of workspace compiler-service state.
-  Not implemented in M1.
+	  Not implemented in this workstream.
 - `WorkspaceSnapshot`: future immutable captured state shared by analysis, LSP,
   lint, format, diagnostics, package tooling, and future API handles. Not
-  implemented in M1.
+	  implemented in this workstream.
 - `DirtyScope`, `DirtyReason`, `ImportSignature`, `ExportSignature`,
   `ModuleSignature`, `CompilerFingerprint`, `CacheKeyFingerprint`,
   `FlowGraph`, `QueryReadiness`, and `.sifrbuildinfo`: locked architecture terms
-  for later milestones, not M1 behavior.
+  for later work, not behavior in this workstream.
 
 ## Current Direct-Read, Probe, And Documented Effect Inventory
 
 These production filesystem reads and path probes are semantic inputs, tooling
-inputs, package identity inputs, or command-surface inputs. M2 must route
+inputs, package identity inputs, or command-surface inputs. The source-provider workstream must route
 semantic entries through a typed source provider or explicitly reclassify a row
 as a non-semantic exception. Path probes are listed alongside content and
-directory reads so M2 can track successful and failed lookup dependencies
+directory reads so the workstream can track successful and failed lookup dependencies
 without treating probes as source content reads.
 
-| Area | Current site | Current behavior | M2 expectation |
+| Area | Current site | Current behavior | Source-provider expectation |
 | --- | --- | --- | --- |
 | Frontend project entrypoint read | `crates/sifr_frontend/src/graph_cache_and_queries.rs:312` | `FrontendContext::load_project` reads the entrypoint from disk. | Provider-tracked file read. |
 | Frontend project directory read | `crates/sifr_frontend/src/graph_cache_and_queries.rs:322` | `load_project` enumerates sibling `.sifr` files directly. | Provider-tracked directory read. |
@@ -62,23 +62,23 @@ without treating probes as source content reads.
 | Package namespace API | `crates/sifr_package/src/imports/namespace_api.rs:32`, `crates/sifr_package/src/imports/namespace_api.rs:264` | Package public API extraction reads `__init__.sifr` and probes child namespaces. | Provider-tracked package source reads and probes. |
 | Package source layout | `crates/sifr_package/src/source/layout.rs:30` | Pure-marker validation reads generated package source files. | Reviewed provider-backed package tooling read or non-semantic generated-output exception. |
 | Package session discovery and targets | `crates/sifr_package/src/ops/session_discovery.rs:6`, `crates/sifr_package/src/ops/session_discovery.rs:13`, `crates/sifr_package/src/ops/session_discovery.rs:25`, `crates/sifr_package/src/ops/session_targets.rs:17`, `crates/sifr_package/src/ops/session_targets.rs:34`, `crates/sifr_package/src/ops/session_targets.rs:42` | Package CLI/session discovery probes manifests and source roots. | Provider-tracked package session reads and probes where they affect compilation. |
-| CLI lint command reads | `crates/sifr/src/lint_cli.rs:308`, `crates/sifr/src/lint_cli.rs:496`, `crates/sifr/src/lint_cli.rs:499` | CLI lint command reads individual files for linting and probes path exclusion/start-dir shape. | Provider-backed for semantic source reads; CLI target filtering remains a documented command-surface probe until M2 classifies it. |
+| CLI lint command reads | `crates/sifr/src/lint_cli.rs:308`, `crates/sifr/src/lint_cli.rs:496`, `crates/sifr/src/lint_cli.rs:499` | CLI lint command reads individual files for linting and probes path exclusion/start-dir shape. | Provider-backed for semantic source reads; CLI target filtering remains a documented command-surface probe until the source-provider workstream classifies it. |
 | CLI check/package command reads | `crates/sifr/src/check_and_package_commands.rs:409`, `crates/sifr/src/check_and_package_commands.rs:415`, `crates/sifr/src/check_and_package_commands.rs:427`, `crates/sifr/src/check_and_package_commands.rs:551`, `crates/sifr/src/check_and_package_commands.rs:554`, `crates/sifr/src/check_and_package_commands.rs:587`, `crates/sifr/src/check_and_package_commands.rs:583`, `crates/sifr/src/check_and_package_commands.rs:590`, `crates/sifr/src/check_and_package_commands.rs:601` | CLI package/check command surfaces probe targets and cache paths and read package sources for command output. | Provider-backed for semantic source reads; command-output/cache probes remain documented exceptions where non-semantic. |
 | CLI entrypoint probing | `crates/sifr/src/cli_model_and_entrypoint.rs:634`, `crates/sifr/src/cli_model_and_entrypoint.rs:690`, `crates/sifr/src/cli_model_and_entrypoint.rs:716`, `crates/sifr/src/cli_model_and_entrypoint.rs:721` | CLI mode resolution reads manifests/source files and probes sibling modules. | Provider-backed for semantic source reads; CLI mode-selection probes remain tracked lookup dependencies. |
 | CLI self-update receipt state | `crates/sifr/src/self_update_receipt.rs:66`, `crates/sifr/src/self_update_receipt.rs:85`, `crates/sifr/src/self_update_receipt.rs:96`, `crates/sifr/src/self_update_receipt.rs:105`, `crates/sifr/src/self_update_receipt.rs:160` | Self-update reads and probes the standalone installer receipt to decide whether the current executable is managed by the official installer. | Non-semantic install-state command surface; not compiler source identity. Keep inventoried unless a later install-state provider boundary is introduced. |
 | CLI self-update runner fixture reads | `crates/sifr/src/self_update_runner.rs:492`, `crates/sifr/src/self_update_runner.rs:524`, `crates/sifr/src/self_update_runner.rs:594` | Self-update runner tests read fixture files written by fake installer scripts to assert delegated environment, manifest, and lock behavior. | Non-semantic test-fixture reads; not compiler source identity. Keep inventoried unless runner tests move to a dedicated fixture helper boundary. |
 
-Permitted M1 exceptions:
+Permitted exceptions for the source-provider workstream:
 
 - CLI stdin reads are not workspace identity until later explicitly modeled.
 - Generated-output and test-harness reads under tests, verification, and
-  generated artifact checks are outside the M2 semantic source-provider scope.
+  generated artifact checks are outside the source-provider semantic scope.
 - Codegen intrinsics that emit `std::fs::*` for user programs are not compiler
   service reads.
 - Build artifact cache metadata in `crates/sifr_driver/src/build/workspace.rs:223`,
   `crates/sifr_driver/src/build/workspace.rs:286`, and
-  `crates/sifr_driver/src/build/workspace.rs:300` is M15
-  `.sifrbuildinfo`/build-metadata territory, not M2 source-provider correctness.
+  `crates/sifr_driver/src/build/workspace.rs:300` belongs to
+  `.sifrbuildinfo`/build-metadata territory, not source-provider correctness.
 - Package projection writes and repair probes in
   `crates/sifr_package/src/projection.rs:100`,
   `crates/sifr_package/src/projection.rs:109`,
@@ -86,12 +86,12 @@ Permitted M1 exceptions:
   `crates/sifr_package/src/projection.rs:129`,
   `crates/sifr_package/src/projection.rs:169`, and
   `crates/sifr_package/src/projection.rs:187` are package-management output and
-  repair-state effects unless a later package-aware snapshot milestone promotes
+  repair-state effects unless a later package-aware snapshot work promotes
   a specific read into package identity.
 
-## M2 Disposition
+## Source-Provider Workstream Disposition
 
-M2 introduced `sifr_frontend::SourceProvider` and moved the following rows
+The source-provider workstream introduced `sifr_frontend::SourceProvider` and moved the following rows
 behind provider-backed APIs while keeping disk-backed compatibility wrappers for
 pre-session callers:
 
@@ -107,12 +107,12 @@ pre-session callers:
 Remaining CLI command-output and cache probes, including
 `crates/sifr/src/check_and_package_commands.rs:587`, stay documented
 non-semantic command-surface exceptions until a later package-aware snapshot or
-build-metadata milestone promotes a specific path into compiler-service
+build-metadata work promotes a specific path into compiler-service
 identity.
 
 ## Current Source-Map Guardrail
 
-M0 replaced the old `SourceMapView` stubs. Current guardrail:
+The source-provider workstream replaced the old `SourceMapView` stubs. Current guardrail:
 
 - `SourceMapView::text_position_to_span` delegates to
   `sifr_source::SourceText::byte_offset_with_encoding`.
@@ -121,17 +121,17 @@ M0 replaced the old `SourceMapView` stubs. Current guardrail:
 - Valid registered source-file conversions return `Some`; invalid files,
   non-boundary positions, and out-of-range spans return `None`.
 
-## Historical M1 LSP Reality And M5 Update
+## Historical LSP Reality And Source-Provider Update
 
-`internal_docs/lsp_server.md` describes both implemented Phase 36 behavior and
-future compiler-service layers. At the M1 planning gate:
+`internal_docs/lsp_server.md` describes both implemented developer tooling surface behavior and
+future compiler-service layers. At the source-provider workstream planning gate:
 
 - `DocumentStore` still owns per-document analysis hosts.
 - `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
   `FrontendMode::SingleFile` on open/change/save.
 - The current `RequestQueue` tracks pending request ids and shutdown state only.
-- The current `Scheduler` maps request methods to lane labels only. The scheduler contract moved
-  priority queues and debounce into `RequestQueue`/`Session`; the cancellation contract moved
+- The current `Scheduler` maps request methods to lane labels only. The scheduler rules moved
+  priority queues and debounce into `RequestQueue`/`Session`; the cancellation rules moved
   cancellation tokens/state, delayed progress gates, and parent-pid watchdog
   state into `CancellationToken`, `RequestQueue`, `ProgressState`, `Session`,
   and `ParentWatchdog`.
@@ -139,13 +139,13 @@ future compiler-service layers. At the M1 planning gate:
   `AnalysisHost` use, not `WorkspaceSnapshot`/document-version publication
   identity.
 
-Bootstrap lanes remain serialized. The persistent-session contract removed the
+Bootstrap lanes remain serialized. The persistent-session rules removed the
 request-local LSP host shape by making LSP consume captured workspace snapshots.
-The scheduler contract owns priority queues and debounce. The cancellation
-contract owns request cancellation tokens, delayed progress, parent-pid
-watchdogs, and operational hardening. The bucketed-index contract defines
+The scheduler rules owns priority queues and debounce. The cancellation
+rules owns request cancellation tokens, delayed progress, parent-pid
+watchdogs, and operational hardening. The bucketed-index rules defines
 approved worker lanes in `sifr_analysis::ApprovedWorkerLane` while preserving
-single-owner compiler phases in `SingleOwnerCompilerPhase`.
+single-owner compiler stages in `SingleOwnerCompilerPhase`.
 
 The persistent session updated the request-local LSP host shape. `DocumentStore` now owns protocol
 document state only, and `Session` owns `LspAnalysisWorkspace`, which feeds
@@ -190,7 +190,7 @@ type hierarchy, code actions, formatting, and generated Rust preview
   verification non-authoritative.
 - Trace status updated the trace and status surfaces: `WorkspaceTracePhase`,
   `WorkspaceStatusSnapshot`, and `WorkspaceDebugSnapshot` normalize compiler
-  service phase traces, bounded status counters, side-effect-free index
+  service stage traces, bounded status counters, side-effect-free index
   readiness, `sifr/debugTrace`, and `sifr trace` CLI output for local
   debugging.
 - Editor corpus updated the handle preparation surface: `SnapshotHandleKind`
@@ -199,14 +199,14 @@ type hierarchy, code actions, formatting, and generated Rust preview
   include `package_fatal_source_map_no_import_ambiguity` to prove fatal
   package-map diagnostics do not duplicate source import ambiguity.
 
-### Future Contract Update Obligations
+### Future Rule Update Obligations
 
-- The source-provider contract must either route every non-exempt inventory row through `SourceProvider`
-  or update this inventory with a reviewed exception before closure.
-- The workspace-session contract must move overlay lifecycle and tracked dependency records into
-  `WorkspaceSession` snapshots instead of leaving them as ad hoc provider
+- The source-provider rule must either route every non-exempt inventory row through `SourceProvider`
+  or update this inventory with a reviewed exception before acceptance.
+- The workspace-session rule must move overlay lifecycle and tracked dependency records into
+  `WorkspaceSession` snapshots instead of leaving them as one-off provider
   outputs.
-- The dirty-scope contract must consume tracked file, directory, canonicalization, probe, and failed
+- The dirty-scope rule must consume tracked file, directory, canonicalization, probe, and failed
   lookup records for dirty-scope classification and dependency-sensitive
   invalidation.
 - Persistent session updated the current LSP single-file rebuild caveat and matching script
@@ -223,7 +223,7 @@ type hierarchy, code actions, formatting, and generated Rust preview
   verified, non-authoritative `.sifrbuildinfo` state became an explicit
   compiler-service input.
 - trace status updated the trace/status caveat and matching script checks when
-  deterministic compiler-service trace phases, debug status snapshots, LSP
+  deterministic compiler-service trace stages, debug status snapshots, LSP
   trace events, and `sifr trace` landed.
 - editor corpus updated editor-query corpus and package diagnostic caveats when
   marker-based fixtures, internal snapshot handles, and package diagnostic

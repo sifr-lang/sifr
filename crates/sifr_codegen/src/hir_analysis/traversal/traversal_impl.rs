@@ -25,7 +25,7 @@ pub(crate) enum TraversalControl {
     Stop,
 }
 
-/// Canonical traversal contract for HIR analysis.
+/// Canonical traversal rules for HIR analysis.
 ///
 /// Invariants:
 /// - Expression/statement recursion for analysis must flow through this module.

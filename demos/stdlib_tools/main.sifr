@@ -1,6 +1,6 @@
-# Reference: milestone_stdlib_polish
-# Source issue: milestone_stdlib_polish.md
-# milestone_stdlib_polish Demo
+# Reference: stdlib_polish
+# Source issue: stdlib_polish.md
+# stdlib_polish Demo
 # Showcases: API alignment, monotonic clocks, timeit with Callable, new intrinsics
 
 from typing import Callable

@@ -1,6 +1,6 @@
-# Reference: milestone_borrow_default
-# Source issue: milestone-borrow-default-epic.md
-# Milestone: Borrow-by-Default Parameter Passing Demo
+# Reference: borrow_default
+# Reference: borrow-default
+# Feature Demo: Borrow-by-Default Parameter Passing Demo
 # ====================================================
 # This demo showcases the new borrow-by-default ownership model in Sifr.
 # Function parameters are immutably borrowed by default (&T),

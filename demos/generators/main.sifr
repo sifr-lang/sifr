@@ -1,7 +1,7 @@
-# Reference: milestone_generators
-# Source issue: milestone-generators-epic.md
+# Reference: generators
+# Reference: generators
 # =============================================================
-# Sifr Milestone: Generators & Context Managers Demo
+# Sifr Feature Demo: Generators & Context Managers Demo
 # =============================================================
 # Features demonstrated:
 # 1. Generator functions with yield

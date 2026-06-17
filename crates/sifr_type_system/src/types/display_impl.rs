@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decimal_assignability_contract() {
+    fn test_decimal_assignability_rules() {
         assert!(Type::Decimal.is_assignable_to(&Type::Decimal));
         assert!(Type::BigDecimal.is_assignable_to(&Type::BigDecimal));
         assert!(!Type::Decimal.is_assignable_to(&Type::BigDecimal));
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn test_iterator_and_iterable_type_contract() {
+    fn test_iterator_and_iterable_type_rules() {
         let iter_int = Type::Iterator(Box::new(Type::Int));
         let iterable_int = Type::Iterable(Box::new(Type::Int));
         let list_int = Type::List(Box::new(Type::Int));
@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bytes_iterable_and_index_contract_uses_uint8() {
+    fn test_bytes_iterable_and_index_rules_uses_uint8() {
         let uint8 = Type::FixedInt(FixedIntType::U8);
 
         assert_eq!(Type::Bytes.iterable_element_type(), Some(uint8.clone()));
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn test_reversible_alias_contract() {
+    fn test_reversible_alias_rules() {
         let reversible_int = Type::reversible(Type::Int);
         let iterable_int = Type::Iterable(Box::new(Type::Int));
         let list_int = Type::List(Box::new(Type::Int));

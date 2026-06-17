@@ -1,5 +1,4 @@
-# Reference: m30_1b
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: heapq
 from sifr.heapq import heapify, heappush, heappop, nsmallest, nlargest
 from sifr.test import assert_bool_vector_eq
 
@@ -33,4 +32,4 @@ def main():
     actual: list[bool] = collect_actual()
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1b heapq parity demo: pass")
+    print("heapq heapq parity demo: pass")

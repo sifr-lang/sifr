@@ -1,4 +1,3 @@
-# Reference: m23_3
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: project_test_discovery
 # This file is intentionally invalid and must be excluded from both project and test closures.
 def broken(:

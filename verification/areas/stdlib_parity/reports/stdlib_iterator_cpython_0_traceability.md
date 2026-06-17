@@ -1,7 +1,7 @@
 # stdlib_parity_iter_fix_0 CPython Traceability Matrix
 
-Wave: `stdlib_parity_iter_fix_0`
-Scope: contract freeze and governance lock for canonical iterator semantics
+Capability: `stdlib_parity_iter_fix_0`
+Scope: rules freeze and governance lock for canonical iterator semantics
 
 ## CPython Harvest Inputs
 
@@ -12,9 +12,9 @@ Scope: contract freeze and governance lock for canonical iterator semantics
 - `Lib/test/test_itertools.py`
 - `Lib/test/test_tuple.py` (iteration-focused subset)
 
-## Adopt / Adapt / Waive (Wave 0 Lock)
+## Adopt / Adapt / Waive (Capability 0 Lock)
 
-| CPython family | Sifr surface direction | State | Owning wave |
+| CPython family | Sifr surface direction | State | Owning capability |
 | --- | --- | --- | --- |
 | `test_iter` protocol semantics (`iter`, `next`, iterator-vs-iterable behavior) | preserve first-class iterable/iterator model while closing current backend-capability fractures | `adapted` (planned) | `stdlib_parity_iter_fix_1` + `stdlib_parity_iter_fix_2` + `stdlib_parity_iter_fix_3` |
 | `test_filter` lazy behavior | enforce true lazy `filter` semantics through canonical iterator lowering/codegen | `adapted` (planned) | `stdlib_parity_iter_fix_3` + `stdlib_parity_iter_fix_5` |
@@ -23,14 +23,14 @@ Scope: contract freeze and governance lock for canonical iterator semantics
 | `test_itertools` lazy adapter composition | rewrite `sifr.itertools` around `Iterable[...]`/lazy semantics where valid; preserve explicit buffered helpers | `adapted` (planned) | `stdlib_parity_iter_fix_6` |
 | `test_tuple` iteration behavior | support homogeneous tuple iteration and explicitly reject heterogeneous tuple union-yield iteration | `adapted` (planned) | `stdlib_parity_iter_fix_1` + `stdlib_parity_iter_fix_8` |
 
-## Explicit Waivers / Boundaries Locked in Wave 0
+## Explicit Waivers / Boundaries Locked in Capability 0
 
-- Async iteration families (`aiter`, `anext`, `async for`) remain `unsupported` in this phase.
+- Async iteration families (`aiter`, `anext`, `async for`) remain `unsupported` in this capability.
 - Advanced iterator-object families (`itertools.tee`, `itertools.groupby`) remain `unsupported`.
 - General-arity `itertools.starmap` callable/row parity remains `unsupported` (binary rows only).
 - Heterogeneous tuple union-yield iteration remains `unsupported`.
 
-## Local Fixture Anchors (Wave 0)
+## Local Fixture Anchors (Capability 0)
 
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/iterator_basics.sifr`

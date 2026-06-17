@@ -1,5 +1,5 @@
-# Reference: ad_hoc_bytes_wave5
-# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
+# Reference: bytes_readonly_bytes
+# Reference: first-class-bytes-and-binary-surface-foundation
 from sifr.io import exists
 from sifr.os import remove_file
 
@@ -13,7 +13,7 @@ def sum_bytes(data: bytes) -> int:
 
 
 def main():
-    # Wave 5 governance lock: successors consume bytes as the canonical
+    # Behavior Group 5 governance lock: successors consume bytes as the canonical
     # read-only binary carrier and only widen to int at explicit read boundaries.
     payload: bytes = b"ffi-ready"
 
@@ -27,7 +27,7 @@ def main():
     contains_ok: bool = payload.contains(102) and (not payload.contains(512))
     to_ints_ok: bool = str(payload.to_ints()) == "[102, 102, 105, 45, 114, 101, 97, 100, 121]"
 
-    path: str = "/tmp/sifr_ad_hoc_bytes_wave5_demo.bin"
+    path: str = "/tmp/sifr_bytes_readonly_bytes.bin"
     io_ok: bool = False
     cleanup_ok: bool = False
     try:

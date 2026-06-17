@@ -1,5 +1,4 @@
-# Reference: hir_analysis_contract
-# Source issue: phase24-hir-analysis-consolidation-execution.md
+# Reference: hir_analysis_behavior
 # hir analysis negative case
 # Mixed block forms with reachable return mismatch must fail.
 

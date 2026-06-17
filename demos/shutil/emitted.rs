@@ -201,7 +201,7 @@ impl std::error::Error for RegexError {
 
 fn collect_copy_move_tree_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let base: String = mktemp_path(&"sifr_m30_1e_shutil_demo_".to_string());
+    let base: String = mktemp_path(&"sifr_shutil_shutil_demo_".to_string());
     let src: String = format!("{}{}", base, "/src.txt".to_string());
     let copied: String = format!("{}{}", base, "/copied.txt".to_string());
     let moved: String = format!("{}{}", base, "/moved.txt".to_string());
@@ -245,7 +245,7 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
 
 fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let base: String = mktemp_path(&"sifr_m30_1e_shutil_demo_cleanup_".to_string());
+    let base: String = mktemp_path(&"sifr_shutil_shutil_demo_cleanup_".to_string());
     let mut base_ready: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _mk: () = std::fs::create_dir_all(&base).map(|_| ()).map_err(__io_err)?;
@@ -333,5 +333,5 @@ fn main() {
     append_all(&mut actual, &collect_copy_move_tree_actual());
     append_all(&mut actual, &collect_tooling_and_cleanup_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1e shutil parity demo: pass");
+    println!("shutil shutil parity demo: pass");
 }

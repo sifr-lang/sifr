@@ -254,12 +254,12 @@ fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
         "sifr.http.client" => Some(LegacyStdlibModule {
             legacy_module: "sifr.http.client",
             suggested_module: "sifr.http",
-            reason: "HTTP client policy belongs to a future Sifr-native client phase, not a CPython-shaped adapter",
+            reason: "HTTP client policy belongs to a future Sifr-native client capability, not a CPython-shaped adapter",
         }),
         "sifr.http.server" => Some(LegacyStdlibModule {
             legacy_module: "sifr.http.server",
             suggested_module: "sifr.http",
-            reason: "server framework behavior belongs to the Sifr HTTP server-framework contract",
+            reason: "server framework behavior belongs to the Sifr HTTP server framework capability",
         }),
         "sifr.http_transport" => Some(LegacyStdlibModule {
             legacy_module: "sifr.http_transport",

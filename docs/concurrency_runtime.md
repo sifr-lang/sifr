@@ -109,12 +109,12 @@ Public APIs:
 
 `map` preserves output order for successful items. `try_map` returns a typed worker error when an item fails. Captured values and return values must satisfy worker-boundary ownership and sendability requirements. Worker panics are converted to typed worker errors instead of surfacing as user-triggerable runtime panics.
 
-Blocking or CPU-heavy work should be explicit. Directly calling blocking helpers from async code is rejected by diagnostics; use accepted blocking/offload surfaces so the runtime can isolate the work.
+Blocking or CPU-heavy work should be explicit. Directly calling blocking helpers from async code is rejected by diagnostics; use accepted blocking and CPU offloads so the runtime can isolate the work.
 
 Intentional divergences:
 
 - `concurrent.futures.ThreadPoolExecutor` and `ProcessPoolExecutor` are not public aliases.
-- Public process worker pools are deferred to a future phase over `sifr.ipc`; M7 does not ship a public process-worker API.
+- Public process worker pools are deferred to a future rules over `sifr.ipc`; The current runtime readiness does not ship a public process-worker API.
 
 ## `sifr.process`
 
@@ -148,7 +148,7 @@ Public APIs include:
 
 Process handles and pipes are owned resources. Waiting on a child consumes the wait capability; duplicate wait or use-after-close is rejected or returns typed `ProcessError` evidence. Pipe readers and writers must be closed or consumed through the accepted APIs. Timeout, cancellation, `kill`, and `terminate` return structured status or error evidence.
 
-`output_text` and shell text helpers use explicit text behavior recorded by the platform contract. Raw byte output remains available through `Output.stdout` and `Output.stderr`.
+`output_text` and shell text helpers use explicit text behavior recorded by the platform rules. Raw byte output remains available through `Output.stdout` and `Output.stderr`.
 
 Intentional divergences:
 
@@ -190,7 +190,7 @@ Public APIs:
 - `NullContext[T]`
 - `nullcontext[T](value=None)`
 
-`nullcontext` is an owned value context manager. Language-level cleanup under cancellation is part of the structured runtime contract: cleanup runs before timeout or cancellation evidence is observed.
+`nullcontext` is an owned value context manager. Language-level cleanup under cancellation is part of the structured runtime rules: cleanup runs before timeout or cancellation evidence is observed.
 
 Intentional divergences:
 
@@ -222,7 +222,7 @@ The runtime substrate uses deterministic schema identity, protocol-version negot
 Intentional divergences:
 
 - CPython `multiprocessing.Queue`, `Pipe`, `Pool`, `Process`, `fork`, `forkserver`, and `shared_memory` names under `sifr.ipc` are rejected or unsupported with diagnostics.
-- M7 does not ship a public process-worker pool or public `ipc.Connection` API.
+- The current runtime readiness does not ship a public process-worker pool or public `ipc.Connection` API.
 - Windows process-pipe typed IPC fixture support remains host-limited until a deterministic Windows fixture is accepted.
 
 ## Validation And Host Support

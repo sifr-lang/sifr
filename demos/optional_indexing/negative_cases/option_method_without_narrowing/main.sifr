@@ -1,5 +1,4 @@
-# Reference: m27_1
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
+# Reference: optional_indexing
 # negative path: method calls on optional values without narrowing must fail
 # with a user-facing diagnostic (no runtime unwrap path).
 

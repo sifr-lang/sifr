@@ -1,7 +1,6 @@
-# Reference: m19_2
-# Source issue: phase19-module-graph-safety-determinism-cache-execution.md
+# Reference: module_assembly
 from consumer import joined
 
 def main():
-    print("m19_2 deterministic assembly demo:")
+    print("module_assembly deterministic assembly demo:")
     print(joined())

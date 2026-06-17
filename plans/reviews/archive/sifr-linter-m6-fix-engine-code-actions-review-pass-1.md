@@ -99,7 +99,7 @@ if let Some(policy) = context.diagnostics.iter().find(|diagnostic| diagnostic.cl
 
 ### ✅ SATISFIED: Manifest and Contract Coverage
 
-**`verification/tooling/linter_manifests/lint_cli_parity.json`**: All11 M6 rows present with `adapt` disposition and `M6` milestone. ✅**`verification/tooling/check_linter_reuse_contract.py`**: Scans `lint_cli.rs` from `Lint {` to `Lsp {` blocks (line 211), extracting `#[arg(long)]` fields. Self-test at line 400–404 validates CLI manifest coverage. `cargo tree -p sifr_lint` forbidden dep check at line 320. ✅
+**`verification/tooling/linter_manifests/lint_cli_parity.json`**: All11 M6 rows present with `adapt` disposition and `M6` milestone. ✅**`verification/tooling/check_linter_reuse_rules.py`**: Scans `lint_cli.rs` from `Lint {` to `Lsp {` blocks (line 211), extracting `#[arg(long)]` fields. Self-test at line 400–404 validates CLI manifest coverage. `cargo tree -p sifr_lint` forbidden dep check at line 320. ✅
 
 ---
 
@@ -118,7 +118,7 @@ if let Some(policy) = context.diagnostics.iter().find(|diagnostic| diagnostic.cl
 ### Architecture Cleanliness
 
 - No `ruff_linter::rules` imports in `sifr_lint` or downstream.
-- `check_linter_reuse_contract.py` `FORBIDDEN_SOURCE_PATTERNS` scan validates all SCAN_ROOTS.
+- `check_linter_reuse_rules.py` `FORBIDDEN_SOURCE_PATTERNS` scan validates all SCAN_ROOTS.
 - `fix_source` (fixes.rs line 73): reruns lint on fixed source, filters remaining diagnostics by `fix_rule_allowed` — no hard diagnostics leak through.
 - `unsafe_fixes` default in `LintOptions::default()` is `UnsafeFixPolicy::Hint` — unsafe fixes are never auto-applied (only `UnsafeFixPolicy::Enabled` activates them, and only for `MaybeIncorrect` applicability suggestions).
 

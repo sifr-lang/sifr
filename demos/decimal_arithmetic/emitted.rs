@@ -23,7 +23,7 @@ impl std::error::Error for DecimalConversionError {
 }
 
 fn main() {
-    println!("m28_2 deterministic arithmetic and context demo");
+    println!("decimal_arithmetic deterministic arithmetic and context demo");
     let cash: Decimal = Decimal::from_str_exact(("10.00".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
     let fee: Decimal = Decimal::from_str_exact(("3.00".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
     println!("{}", {

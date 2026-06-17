@@ -16,13 +16,13 @@
 | --- | --- | --- |
 | Full timezone-aware/calendar object parity in `datetime` (fold/zoneinfo/tz database semantics) | `unsupported` | Current runtime closes fixed-offset timezone helpers only and intentionally does not ship `zoneinfo`, DST folding, or extensible `tzinfo` ecosystems. |
 | Full `re` Match/Pattern object matrix (named groups, groupdict, and full capture-object APIs) | `unsupported` | Current `Match`/`Pattern` surfaces close high-value entry points (including `finditer`) but do not mirror every CPython capture-object API. |
-| Decimal/Fraction-specific and context-sensitive numeric semantics in `math` / `statistics` | `unsupported` | Wave e1 targets shipped float/int behavior and typed error contracts, not CPython decimal-context integration. |
+| Decimal/Fraction-specific and context-sensitive numeric semantics in `math` / `statistics` | `unsupported` | Capability e1 targets shipped float/int behavior and typed error ruless, not CPython decimal-context integration. |
 | SHA3/SHAKE constructor families in `hashlib` | `unsupported` | Runtime currently closes the guaranteed algorithm set and explicit placeholders raise typed errors for unsupported SHA3/SHAKE families; bytes-native digest/object APIs are now shipped by `stdlib_parity_rng_2`. |
 
-## Structured/Class-Surface Continuation Closure (2026-03-18)
+## Structured/Class-Surface Continuation Readiness (2026-03-18)
 
-- Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
-- Wave ownership: `stdlib_parity_struct_3` expanded `datetime` under fixed-offset timezone semantics only (completed).
+- Continuation capability: `structured-data-and-class-surface-parity-expansion record`
+- Capability ownership: `stdlib_parity_struct_3` expanded `datetime` under fixed-offset timezone semantics only (completed).
 - Closed in continuation:
   - fixed-offset timezone aliases (`UTC`, `utc`) and timezone-aware conversion entry points for `now`, `from_timestamp`, and `datetime.astimezone`.
   - continuation fixture: `crates/sifr/tests/e2e/pass/uuid_and_datetime.sifr`

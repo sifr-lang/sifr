@@ -1,6 +1,6 @@
-# Reference: ad_hoc_iter_fix_wave5
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
-# Wave 5 demo: builtin lazy/eager boundary cleanup.
+# Reference: iter_fix_iterator_builtins
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
+# Iterator behavior demo: builtin lazy/eager boundary cleanup.
 
 
 def is_even(x: int) -> bool:

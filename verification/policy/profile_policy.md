@@ -25,14 +25,14 @@ Profiles at schema version 2 carry local-first execution policy:
   duplicate suite ids, unknown packages, and commands whose `-p/--package`
   argument does not match the suite package.
 - generated binaries and external programs run under the execution sandbox
-  contract: tempdir-only writes, no external network, declared loopback-only
+  rules: tempdir-only writes, no external network, declared loopback-only
   networking, subprocess cleanup, and bounded captured output.
 - `profile_plan.emit_command` is the local source of truth for CI parity checks.
 - `uv run --project verification --locked python -m sifr_verify doctor` is the
   setup boundary for local prerequisites before profile execution.
 
 The `coverage_matrix` area is selected by create-pr, merge, nightly, and release
-through the blocking `closeout` suite. The suite runs strict mode with
+through the blocking `readiness` suite. The suite runs strict mode with
 `SIFR_COVERAGE_MATRIX_STRICT=1`, the profile-assignment matrix check, and
 negative self-tests. It rejects `expected-missing`, `tests:none`, `red-blocker`,
 ownerless rows, unknown owners, expired quarantine, v1 stable-surface manifests,
@@ -44,18 +44,18 @@ Cargo workspace packages, targets, and features are inventoried from
 `cargo metadata --locked --no-deps --format-version 1` and classified in
 `verification/areas/coverage_matrix/data/cargo_metadata_classification.json`.
 Every first-party compiler crate must have full-mode merge membership. Temporary
-`red-blocker` membership is no longer an allowed closeout state. Targets and
+`red-blocker` membership is no longer an allowed readiness state. Targets and
 features use `merge-red-blocker` only for historical classification data that is
-not part of the current stable closeout surface.
+not part of the current stable readiness surface.
 
 ## Create-PR Profile
 
 `scripts/run_all_tests.sh --profile create-pr` proves fast compiler-relevant behavior:
 
-- static guardrails and diagnostic registry/docs contracts
-- strict closeout coverage-matrix consistency for shipped guarantees and surfaces
+- static guardrails and diagnostic registry/docs ruless
+- strict readiness coverage-matrix consistency for shipped guarantees and surfaces
 - parser/frontend cache and split-brain guardrails
-- static tooling contracts and LSP protocol smoke
+- static tooling ruless and LSP protocol smoke
 - smoke performance budgets
 - generated-code quality smoke over a bounded fixture subset
 - library crate unit tests, CLI unit tests, and representative e2e pass fixtures
@@ -66,8 +66,8 @@ It intentionally excludes editor packaging, editor asset release checks, distrib
 
 `scripts/run_all_tests.sh --profile merge` is the authoritative merge gate. It preserves broader compiler coverage through:
 
-- full core contract matrices listed in the manifest
-- strict closeout coverage-matrix consistency for shipped guarantees and surfaces
+- full core rules matrices listed in the manifest
+- strict readiness coverage-matrix consistency for shipped guarantees and surfaces
 - representative hardening suites
 - representative performance budget subset
 - representative generated-code quality checks with shared generated artifacts and Cargo target reuse

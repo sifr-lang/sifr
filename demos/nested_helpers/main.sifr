@@ -1,6 +1,5 @@
-# Reference: phase31_m31d
-# Source issue: phase31-m31d-nested-helper-canonical-closure-execution.md
-# Phase 31 m31_d demo: nested-helper canonical closure
+# Reference: nested_helpersd
+# driver/package architecture nested_helpers demo: nested-helper canonical closure
 
 # Example 1: typed nested helper with explicit dict-key guard.
 def expand_keyed_strings(keys: str) -> list[str]:

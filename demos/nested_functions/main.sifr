@@ -1,10 +1,10 @@
-# Reference: milestone_nested_functions
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: nested_functions
+# Reference: compiler-feature-history
 # ============================================================
-# Milestone 11: Nested Functions and Closures Demo
+# compiler feature: Nested Functions and Closures Demo
 # ============================================================
 # This demo showcases all nested function patterns now supported
-# by the Sifr compiler after the Language Hardening Phase 2 M11.
+# by the Sifr compiler after the Language Hardening LSP scheduler.
 
 # --- Pattern 1: Basic nested function (no capture) ---
 # Inner function defined inside outer, called immediately.

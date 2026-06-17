@@ -1,6 +1,5 @@
-# Reference: m17_1
-# Source issue: phase17-import-and-externals-correctness-execution.md
-# milestone_17_1 demo
+# Reference: type_checking
+# type-checking-sample demo
 # Validates that frontend type-checking succeeds on a normal typed program.
 
 def identity(x: int) -> int:
@@ -8,5 +7,5 @@ def identity(x: int) -> int:
 
 def main():
     value: int = identity(17)
-    print("m17_1 frontend-only check path demo:")
+    print("type_checking frontend-only check path demo:")
     print(value)

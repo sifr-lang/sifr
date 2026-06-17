@@ -9,7 +9,7 @@ The wave is well-scoped: keeps the existing `Signal(name, number)` value model, 
 `crates/sifr_stdlib/src/features.rs:189` adds `"signal"` to `TOKIO_DEPS`, but three other places hard-code the old spec string and were not updated:
 
 - `crates/sifr/tests/e2e_support/fixture_compilation.rs:480-482` — `tokio_dependency_spec()` is the helper the grouped e2e harness uses to write Cargo.toml (called at line 421 from `generate_cargo_toml`, which `batch_execution.rs:65` and `:349` invoke for every grouped fixture build). It still emits `features = [..., "rt", "sync", "time"]` with no `"signal"`.
-- `crates/sifr/tests/e2e_support/harness_contract_tests.rs:522` — `test_generate_cargo_toml_required_tokio_uses_runtime_features` only passes because both the helper and the assertion still pin the stale string.
+- `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:522` — `test_generate_cargo_toml_required_tokio_uses_runtime_features` only passes because both the helper and the assertion still pin the stale string.
 - `crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:165` — `test_generate_project_emits_tokio_dependency_when_required` directly **FAILS** today against the updated `TOKIO_DEPS`. Verified locally:
   ```
   assertion failed: cargo_toml.contains("tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"sync\", \"time\"] }")
@@ -45,7 +45,7 @@ The reported "focused local validation" did not include `scripts/run_all_tests.s
 ## Required fixes before this PR can merge
 
 1. Update `crates/sifr/tests/e2e_support/fixture_compilation.rs:481` to include `"signal"` in the Tokio features list.
-2. Update the matching assertion at `crates/sifr/tests/e2e_support/harness_contract_tests.rs:522`.
+2. Update the matching assertion at `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:522`.
 3. Update the assertion at `crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:165`.
 4. Run `scripts/run_all_tests.sh --profile create-pr` (the authoritative gate from AGENTS.md) and capture the report, then update the execution ledger's "targeted local validation" block accordingly. The current ledger entry at issues/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md:591-600 only lists narrowly-scoped commands; that's why the grouped e2e regression was missed.
 

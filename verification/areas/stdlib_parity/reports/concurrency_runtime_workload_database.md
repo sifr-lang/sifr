@@ -1,8 +1,8 @@
 # Concurrency Runtime Workload Database
 
-Status: concurrency runtime inventory audited; implementation contracts have recorded validation evidence for accepted concurrency/runtime surfaces.
+Status: concurrency runtime inventory audited; implementation ruless have recorded validation evidence for accepted concurrency/runtime surfaces.
 
-| API | Owner contract | Workload/effect classification | Validation |
+| API | Owner capability | Workload/effect classification | Validation |
 | --- | --- | --- | --- |
 | sifr.task.sleep | concurrency_runtime_structured_tasks | async-suspension | task sleep fixture |
 | sifr.task.timeout/deadline | concurrency_runtime_structured_tasks | async-suspension cancellation | timeout/deadline evidence fixture |

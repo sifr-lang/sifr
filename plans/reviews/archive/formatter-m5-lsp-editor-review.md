@@ -30,7 +30,7 @@ All passed:
 - `python3 verification/tooling/lsp_protocol_smoke.py`
 - `python3 verification/tooling/lsp_protocol_stress.py`
 - `python3 verification/tooling/check_editor_assets.py`
-- `python3 verification/tooling/check_tooling_contract_lock.py`
+- `python3 verification/tooling/check_tooling_rules_lock.py`
 - `scripts/run_all_tests.sh --profile quick`
 - `python3 scripts/check_file_size_guardrails.py`
 - `git diff --check`

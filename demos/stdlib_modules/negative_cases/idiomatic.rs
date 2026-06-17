@@ -7,6 +7,6 @@
 //! This fixture exists to preserve the explicit frontend rule that `_sifr.*`
 //! modules are not part of the user-visible standard library. The Rust-side
 //! analogue is still compiler-owned import policy rather than a standalone Rust
-//! compile error, so this file remains a contract scaffold.
+//! compile error, so this file remains a rules scaffold.
 
 fn main() {}

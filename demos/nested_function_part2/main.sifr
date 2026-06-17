@@ -1,6 +1,6 @@
-# Reference: ad_hoc_nested_function_part2
-# Source issue: ad-hoc-full-nested-function-pipeline-part2-execution.md
-# Ad hoc nested-function pipeline part 2 demo
+# Reference: nested_function_part2
+# Reference: full-nested-function-pipeline-part2
+# Nested-function pipeline part 2 demo
 # Proves recursive nested helpers infer their parameter and return types from
 # supported call sites and body usage.
 

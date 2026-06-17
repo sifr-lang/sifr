@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "contract": "editor-query-parity",
+  "rules": "editor-query-parity",
   "analysis_crate": "sifr_analysis",
   "editor_query_snapshots": [
     {

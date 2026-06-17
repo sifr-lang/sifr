@@ -21,7 +21,7 @@ All five scope items verified against the diff vs `origin/main`:
 
 **5. Tests/docs/traceability honestly record the policy** ✓
 - `registry_core_tests.rs`: renamed tests to `..._with_observability_metadata` / `..._includes_observability_facades`; assert both `Metrics` and `Tracing` features, both `tracing::event!` and `metrics::counter!`, both counter names, `"reason" => "unsupported_level"`, `"surface" => "runtime"`, and the expected `vec![metrics, tracing]` cargo deps order.
-- `harness_contract_tests.rs`: `test_generate_cargo_toml_runtime_diagnostics_use_locked_observability_specs` asserts both `metrics = "0.24.6"` and the tracing spec via both module-driven and required-crate paths.
+- `harness_behavior_tests.rs`: `test_generate_cargo_toml_runtime_diagnostics_use_locked_observability_specs` asserts both `metrics = "0.24.6"` and the tracing spec via both module-driven and required-crate paths.
 - `verification/stdlib/concurrency_runtime_m5_shutdown_traceability.md`: records both metric names, full label sets and value enums, surface/reason constants, exclusion rationale (user-controlled / sensitive / high-cardinality), histogram deferral on future duration-bearing schema, redaction policy, updated test references in both Create-PR and Merge lanes.
 - `issues/...-substrate.md`: Ring 3 row and quick-reference row updated to "fixed-schema counters"; histogram deferral explicit.
 - `verification/platform/supported_host_matrix.md`: counters declared host-independent alongside tracing events.

@@ -964,7 +964,7 @@ fn __sifr_next_file_handle_id() -> i64 {
 static __SIFR_GLOBAL_LOG_LEVEL: std::sync::LazyLock<std::sync::Mutex<i64>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(20));
 
 fn main() {
-    let path: String = "/tmp/sifr_m14_preamble_demo.txt".to_string();
+    let path: String = "/tmp/sifr_codegen_preamble_demo.txt".to_string();
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _: () = std::fs::write(&path, "m14 preamble".to_string().as_bytes()).map(|_| ()).map_err(__io_err)?;
     let mut f: FileHandle = (|| {

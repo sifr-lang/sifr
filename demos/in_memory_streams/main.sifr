@@ -1,11 +1,11 @@
-# Reference: ad_hoc_runtime_wave1
-# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
+# Reference: runtime_in_memory_streams
+# Reference: runtime-and-file-object-parity-expansion
 from sifr.io import StringIO, BytesIO, BinaryFileHandle, open_binary, exists
 from sifr.os import remove_file
 
 
 def main():
-    path: str = "/tmp/sifr_runtime_wave1_demo.bin"
+    path: str = "/tmp/sifr_runtime_in_memory_streams.bin"
     stringio_ok: bool = False
     stringio_negative_seek_ok: bool = False
     bytesio_ok: bool = False
@@ -14,11 +14,11 @@ def main():
     cleanup_ok: bool = False
 
     try:
-        sio: StringIO = StringIO("wave")
+        sio: StringIO = StringIO("sample")
         _w: None = sio.write("1")
         _seek: int = sio.seek(0)
         text_value: str = sio.read()
-        stringio_ok = text_value == "1ave"
+        stringio_ok = text_value == "1ample"
         try:
             _bad_seek: int = sio.seek(-1)
             _ = _bad_seek
@@ -40,13 +40,13 @@ def main():
             bytesio_negative_seek_ok = True
 
         writer: BinaryFileHandle = open_binary(path, "wb")
-        _w_file: None = writer.write_bytes(b"runtime-wave1")
+        _w_file: None = writer.write_bytes(b"runtime-in_memory_streams")
         writer.close()
 
         reader: BinaryFileHandle = open_binary(path, "rb")
         loaded: bytes = reader.read_bytes()
         reader.close()
-        binary_file_ok = loaded == b"runtime-wave1"
+        binary_file_ok = loaded == b"runtime-in_memory_streams"
     except IOError as e:
         _ = str(e.message)
 
@@ -63,4 +63,4 @@ def main():
     assert bytesio_negative_seek_ok
     assert binary_file_ok
     assert cleanup_ok
-    print("ad_hoc_runtime_wave1_io_in_memory_hierarchy_demo: ok")
+    print("runtime_in_memory_streams_in_memory_hierarchy_demo: ok")

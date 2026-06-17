@@ -20,10 +20,10 @@ status: completed
 - `cargo clippy -p sifr_syntax -p sifr_frontend -- -D warnings` -> PASS.
 - `cargo test -p sifr_syntax` -> PASS.
 - `cargo test -p sifr_frontend` -> PASS.
-- `python3 verification/performance/check_ruff_fork_update_contract.py` -> PASS.
+- `python3 verification/performance/check_ruff_fork_update_rules.py` -> PASS.
 - `python3 verification/performance/check_split_brain_guardrail.py` -> PASS.
 - `python3 verification/performance/check_split_brain_guardrail.py --self-test` -> PASS.
-- `python3 verification/performance/check_frontend_cache_contract.py` -> PASS.
+- `python3 verification/performance/check_frontend_cache_rules.py` -> PASS.
 - `reviews/phase35-m35-4a-review-pass-1.md` -> NOT SATISFIED; blockers B1/B2 fixed.
 - `reviews/phase35-m35-4a-review-pass-2.md` -> SATISFIED for m35.4a.
 - `scripts/run_all_tests.sh --profile quick` -> PASS for m35.1 (`wall_time=944.94s`), m35.2 (`wall_time=748.90s`), m35.3 (`wall_time=564.73s`), and m35.4b (`wall_time=1236.88s`); wall-time advisories recorded in `target/validation_lane_reports/quick.latest.json`, report signature `f808284595f17a99`.
@@ -59,7 +59,7 @@ status: completed
 - `cargo fmt --check` -> PASS.
 - `cargo test -p sifr_frontend` -> PASS.
 - `cargo test -p sifr_driver project_build_check -- --skip cached_project_binary` -> PASS.
-- `python3 verification/performance/check_frontend_cache_contract.py` -> PASS.
+- `python3 verification/performance/check_frontend_cache_rules.py` -> PASS.
 - `python3 verification/performance/run_benchmarks.py --validate-only` -> PASS.
 - `python3 verification/performance/run_benchmarks.py --self-test` -> PASS.
 - `python3 verification/performance/check_budgets.py` -> PASS.

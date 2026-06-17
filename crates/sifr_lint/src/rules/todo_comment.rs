@@ -56,7 +56,7 @@ pub(crate) fn lint(
                 byte_start: marker_start,
                 byte_end: marker_start.saturating_add(u32::try_from(marker.len()).unwrap_or(1)),
                 label: "tracked task marker",
-                help: Some("track the work item externally or remove the marker"),
+                help: Some("track the task externally or remove the marker"),
                 extra_args: vec![("marker", marker.to_string())],
             }),
             RULE,

@@ -62,7 +62,7 @@ All three suppression diagnostics (unknown/unused/blanket) are emitted via deter
 
 **6. Suppression gate manifest transition**
 
-The JSON gate transitioned to `"gate_state": "parser_aware"` and `"updated_by_milestone": "m3"`. `check_linter_reuse_contract.py` passed both standard and `--self-test` modes.
+The JSON gate transitioned to `"gate_state": "parser_aware"` and `"updated_by_milestone": "m3"`. `check_linter_reuse_rules.py` passed both standard and `--self-test` modes.
 
 **7. Tests and validation**
 
@@ -87,8 +87,8 @@ The JSON gate transitioned to `"gate_state": "parser_aware"` and `"updated_by_mi
 | `cargo test -p sifr_lint` | PASS (8 tests) |
 | `cargo test -p sifr -- --skip test_e2e_pass` | PASS (33 tests) |
 | `cargo clippy -p sifr_lint -- -D warnings` | PASS |
-| `python3 .../check_linter_reuse_contract.py` | PASS |
-| `python3 .../check_linter_reuse_contract.py --self-test` | PASS |
+| `python3 .../check_linter_reuse_rules.py` | PASS |
+| `python3 .../check_linter_reuse_rules.py --self-test` | PASS |
 | CLI smoke: `--ignore-suppressions` suppresses diagnostics | PASS |
 | CLI smoke: `--ignore-suppressions` disables policy suppression comments | PASS |
 | `python3 scripts/check_file_size_guardrails.py` | PASS |

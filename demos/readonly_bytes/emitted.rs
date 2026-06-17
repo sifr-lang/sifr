@@ -299,7 +299,7 @@ fn main() {
     if (__needle < 0) || (__needle > 255) { false } else { payload.contains(&(__needle as u8)) }
 })));
     let to_ints_ok: bool = format!("{:?}", payload.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>()) == "[102, 102, 105, 45, 114, 101, 97, 100, 121]".to_string();
-    let path: String = "/tmp/sifr_ad_hoc_bytes_wave5_demo.bin".to_string();
+    let path: String = "/tmp/sifr_bytes_readonly_bytes.bin".to_string();
     let mut io_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {

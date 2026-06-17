@@ -1,7 +1,7 @@
-# Reference: milestone_control_flow
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: control_flow
+# Reference: compiler-feature-history
 # ============================================================
-# Sifr M2 Demo: Control Flow and Data Structures
+# Sifr Demo: Control Flow and Data Structures
 # Loops, list, dict, tuple, f-strings, string ops, unpacking
 # ============================================================
 

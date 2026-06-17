@@ -1,6 +1,6 @@
-# Reference: milestone_borrow_stdlib
-# Source issue: revised_phase_roadmap_698c629c.md
-# milestone_borrow_stdlib demo
+# Reference: borrow_stdlib
+# Reference: compiler-feature-history
+# borrow_stdlib demo
 # Demonstrates Sifr's borrow-by-default model applied to the standard library.
 #
 # Three ownership conventions:
@@ -159,4 +159,4 @@ def main() -> None:
     demo_bisect()
     demo_itertools()
     demo_counter()
-    print("=== milestone_borrow_stdlib demo complete ===")
+    print("=== borrow_stdlib demo complete ===")

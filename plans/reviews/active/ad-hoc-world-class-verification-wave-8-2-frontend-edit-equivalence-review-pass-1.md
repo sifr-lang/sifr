@@ -17,7 +17,7 @@ I have enough context. Let me consolidate my findings.
 
 **Project IDs line up across contexts.** `load_project_with_provider` sorts files and pins the entrypoint at index 0 (lines 420-423), so `ModuleId` assignment is deterministic from the source set alone. The test uses `module_by_stem` rather than hardcoded IDs, which is robust either way.
 
-**Performance contract runs it.** `check_frontend_cache_contract.py:41-50` adds `query_diagnostics_equivalence_tests` to the existing invalidation/determinism trio.
+**Performance contract runs it.** `check_frontend_cache_rules.py:41-50` adds `query_diagnostics_equivalence_tests` to the existing invalidation/determinism trio.
 
 **Guardrails respected.** Test file is 246 lines (< 900 cap). Module is `#[cfg(test)]`-gated in `lib.rs:22-23`, scoped to the `sifr_frontend` crate it tests, and mirrors the style of the sibling `query_diagnostics_m10_tests.rs`.
 

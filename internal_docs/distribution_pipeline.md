@@ -1,12 +1,12 @@
 # Sifr Preview Distribution Pipeline
 
-Status: Phase 33 implementation contract.
+Status: preview-release pipeline implementation requirement.
 
 ## Installer Model
 
 Sifr preview distribution uses generated shell installer entrypoints with the same high-level shape as Astral's `uv` installer: a channel dispatcher selects an immutable version installer, and the immutable installer owns platform/artifact selection and checksum verification.
 
-Phase 33 does not copy or adapt code from `astral-sh/uv`. The current implementation is Sifr-owned shell generation in `scripts/distribution/`, so the uv MIT attribution checklist is recorded as not applicable until copied or adapted uv code is introduced.
+preview-release pipeline does not copy or adapt code from `astral-sh/uv`. The current implementation is Sifr-owned shell generation in `scripts/distribution/`, so the uv MIT attribution checklist is recorded as not applicable until copied or adapted uv code is introduced.
 
 ## Site Layout
 
@@ -29,7 +29,7 @@ public/install/
 
 This directory layout avoids the impossible static-file shape where `public/install` is both an executable file and a directory for nested channel paths.
 
-## Channel Dispatcher Contract
+## Channel Dispatcher Rules
 
 Generate dispatchers with:
 
@@ -64,11 +64,11 @@ Generating dispatchers also writes `metadata/channels.json` from the same alpha/
 }
 ```
 
-The metadata file is resolution metadata only. It records channel-to-version mappings and must not contain executable URLs. The Rust CLI derives immutable installer URLs from the trusted install base URL and the resolved version string. Stable metadata remains absent until Phase 39 changes the stable-channel contract.
+The metadata file is resolution metadata only. It records channel-to-version mappings and must not contain executable URLs. The Rust CLI derives immutable installer URLs from the trusted install base URL and the resolved version string. Stable metadata remains absent until stable-channel release architecture changes the stable-channel rules.
 
-## Phase 33.1 Validation
+## Preview metadata validation Validation
 
-Milestone 33.1 uses mocked immutable generated installers until milestone 33.2 adds checksum-verified artifact installers.
+Preview metadata validation uses mocked immutable generated installers until installer artifact validation adds checksum-verified artifact installers.
 
 Run dispatcher validation with:
 
@@ -97,7 +97,7 @@ sifr-<version>-<target>.tar.gz.sha256
 
 The archive contains exactly one executable at the archive root: `sifr`.
 
-The Phase 33 target set is:
+The preview-release pipeline target set is:
 
 - `aarch64-apple-darwin`
 - `x86_64-apple-darwin`
@@ -124,7 +124,7 @@ scripts/distribution/build_preview_artifacts.sh \
   --cargo-build
 ```
 
-The production path runs `cargo build --release -p sifr --target <target>` for every Phase 33 target and fails if any target cannot be built. It does not fall back to another binary or another target.
+The production path runs `cargo build --release -p sifr --target <target>` for every preview-release pipeline target and fails if any target cannot be built. It does not fall back to another binary or another target.
 
 ## Immutable Version Installer Generation
 
@@ -143,7 +143,7 @@ The generated installer embeds:
 - target-to-archive mapping,
 - SHA-256 checksums for every target archive,
 - the default GitHub Release asset base URL,
-- platform detection for the Phase 33 targets,
+- platform detection for the preview-release pipeline targets,
 - checksum validation before extraction or replacement,
 - atomic replacement of the installed `sifr` binary after validation,
 - schema-versioned install receipt writing through a temporary file and atomic rename,
@@ -153,7 +153,7 @@ The generated installer embeds:
 
 The generated installer honors `SIFR_ARTIFACT_BASE_URL`, `SIFR_TARGET`, `SIFR_INSTALL_DIR`, and `SIFR_NO_MODIFY_PATH` for local validation.
 
-## Self-Update Receipt Contract
+## Self-Update Receipt Rules
 
 Official standalone installers write a schema-versioned `install.json` receipt:
 
@@ -195,7 +195,7 @@ Production installer downloads use normal TLS certificate verification. Test-onl
 
 Before invoking an immutable installer, `sifr self update` acquires `<install_dir>/.sifr-update.lock`, passes receipt-derived install environment, and marks the internal handoff with `SIFR_INSTALL_LOCK_HELD=1`. Generated immutable installers still acquire the same lock for manual runs, but they do not reacquire or release it when that internal handoff marker is present.
 
-## Phase 33.2 Validation
+## Installer artifact validation Validation
 
 Run artifact and installer validation with:
 
@@ -203,7 +203,7 @@ Run artifact and installer validation with:
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full
 ```
 
-The milestone 33.2-specific checks are:
+The installer artifact-specific checks are:
 
 ```bash
 verification/areas/distribution_release/cases/artifact_generated_installer_all_preview_targets.sh
@@ -260,9 +260,9 @@ Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, 
 
 The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
 
-## Phase 33.3 Validation
+## Preview lifecycle validation Validation
 
-The milestone 33.3-specific checks are:
+The preview lifecycle-specific checks are:
 
 ```bash
 verification/areas/distribution_release/cases/create_new_version_alpha_dry_run.sh

@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "runtime_platform",
   "owner": "runtime/platform",
-  "description": "Runtime platform contracts and executable platform golden fixtures.",
+  "description": "Runtime platform rules and executable platform golden fixtures.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local",
@@ -24,13 +24,13 @@
       ]
     },
     {
-      "name": "platform-contract",
+      "name": "platform-rules",
       "kind": "manifest",
       "cases": [
         {
-          "id": "platform-contract",
-          "entry": "verification/areas/runtime_platform/platform_contract.json",
-          "command": "platform-contract-validate",
+          "id": "platform-rules",
+          "entry": "verification/areas/runtime_platform/platform_rules.json",
+          "command": "platform-rules-validate",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
@@ -99,7 +99,7 @@
     "allowed": false,
     "requires_reason": true
   },
-  "baseline_metadata_contract": {
+  "baseline_metadata_rules": {
     "required": false,
     "source": "not-applicable"
   }

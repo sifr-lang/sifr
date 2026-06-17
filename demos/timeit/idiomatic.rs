@@ -70,5 +70,5 @@ fn main() {
 
     let expected = vec![true, true, true, true, true, true, true];
     assert_eq!(actual, expected);
-    println!("m30_1f timeit parity demo: pass");
+    println!("timeit timeit parity demo: pass");
 }

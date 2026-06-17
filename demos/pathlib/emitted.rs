@@ -606,7 +606,7 @@ fn collect_path_helpers_actual() -> Vec<bool> {
 
 fn collect_path_class_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let base: String = format!("{}{}", "/tmp/sifr_m30_1e_pathlib_demo_".to_string(), format!("{}", std::process::id() as i64));
+    let base: String = format!("{}{}", "/tmp/sifr_pathlib_pathlib_demo_".to_string(), format!("{}", std::process::id() as i64));
     let mut filep: Path = Path::new(format!("{}{}", base, "/demo.txt".to_string()));
     let mut dirp: Path = Path::new(format!("{}{}", base, "".to_string()));
     let mut path_flow_ok: bool = false;
@@ -639,7 +639,7 @@ fn collect_missing_path_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let mut missing_rejected: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let _bad: String = Path::new("/tmp/sifr_m30_1e_pathlib_demo_missing.txt".to_string()).read_text()?;
+    let _bad: String = Path::new("/tmp/sifr_pathlib_pathlib_demo_missing.txt".to_string()).read_text()?;
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -664,5 +664,5 @@ fn main() {
     append_all(&mut actual, &collect_path_class_actual());
     append_all(&mut actual, &collect_missing_path_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1e pathlib parity demo: pass");
+    println!("pathlib pathlib parity demo: pass");
 }

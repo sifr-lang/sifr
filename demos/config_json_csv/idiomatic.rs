@@ -259,11 +259,11 @@ fn main() {
     let decoder = JSONDecoder;
 
     let payload = from_object(vec![
-        ("module", from_str("wave1")),
+        ("module", from_str("config_json_csv")),
         ("version", from_int(1)),
     ]);
     let encoded = encoder.encode(&payload);
-    assert_eq!(encoded, "{\"module\":\"wave1\",\"version\":1}");
+    assert_eq!(encoded, "{\"module\":\"config_json_csv\",\"version\":1}");
 
     let decoded_ok = decoder
         .decode(&encoded)

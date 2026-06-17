@@ -37,7 +37,7 @@ fn main() {
     let contains_ok = contains_byte(payload, 102) && !contains_byte(payload, 512);
     let to_ints_ok = ints_string(payload) == "[102, 102, 105, 45, 114, 101, 97, 100, 121]";
 
-    let path = Path::new("/tmp/sifr_ad_hoc_bytes_wave5_demo.bin");
+    let path = Path::new("/tmp/sifr_bytes_readonly_bytes.bin");
     let io_ok = match fs::write(path, payload).and_then(|()| fs::read(path)) {
         Ok(loaded) => {
             loaded == payload

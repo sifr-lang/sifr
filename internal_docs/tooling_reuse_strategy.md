@@ -6,7 +6,7 @@ status: planning-approved
 
 Use as much of the existing Sifr Ruff fork and ty/Ruff tooling architecture as is actually cheaper and more maintainable than rebuilding it, while preserving one Sifr semantic authority.
 
-This document records the Phase 35/36 reuse audit. It replaces a future open-ended audit milestone: Phase 36 implementation must follow this strategy unless a reviewed PR updates this file first.
+This document records the frontend query architecture reuse audit. It replaces an open-ended future audit: developer tooling surface implementation must follow this strategy unless a reviewed PR updates this file first.
 
 ## Sources Reviewed
 
@@ -33,7 +33,7 @@ Local fork code reviewed:
 - `third_party/ruff/crates/ruff_source_file/`
 - `third_party/ruff/crates/ruff_text_size/`
 
-Additional local LSP implementation files reviewed for the final Phase 35/36 contract:
+Additional local LSP implementation files reviewed for the final frontend query architecture rules:
 
 - `third_party/ruff/crates/ty_server/src/capabilities.rs`
 - `third_party/ruff/crates/ty_server/src/server/main_loop.rs`
@@ -58,7 +58,7 @@ Current Sifr code reviewed:
 
 - `crates/sifr_diagnostics/`
 - root `Cargo.toml`
-- Phase 35 and Phase 36 planning docs
+- frontend query architecture and developer tooling surface planning docs
 
 ## Non-Negotiable Boundary
 
@@ -116,7 +116,7 @@ The smart path is not to fork ty wholesale. The smart path is to reuse the gener
 | `ty_server` diagnostics publication lifecycle | adapt | Pull and push diagnostics, document-version tagging, dynamic registration, related information support, and settings diagnostics are good patterns. Diagnostic payloads must be generated from `sifr_diagnostics`. |
 | `ty_server` settings model | reference-only | Useful split between global/workspace/editor settings, unknown-option diagnostics, and dynamic updates. Current implementation imports Python versions, Python extension environment, and `ty_project` options. |
 | `ty_ide` public query surface | reference-only | The surface is a strong checklist: completion, hover, goto, references, document symbols, workspace symbols, semantic tokens, inlay hints, signature help, document highlights, folding, rename, code actions. Direct code is coupled to Python AST, Python semantic model, and Python module resolver. |
-| `ty_ide` selection range | adapt pattern | Mostly syntax-ancestry driven and useful for Sifr. Must be implemented through `sifr_syntax`/Phase 35 syntax views, not raw Ruff AST traversal in LSP handlers. |
+| `ty_ide` selection range | adapt pattern | Mostly syntax-ancestry driven and useful for Sifr. Must be implemented through `sifr_syntax`/frontend query architecture syntax views, not raw Ruff AST traversal in LSP handlers. |
 | `ty_ide` type hierarchy | reference-only | Useful protocol and UX target. Direct code depends on `ty_python_semantic`, Python class hierarchy, `object`, typeshed, and Python reachability; Sifr must implement hierarchy from Sifr-owned type relationships only. |
 | `ty_ide` completion ranking/evaluation | adapt pattern | Completion ranking and `ty_completion_eval` mean-reciprocal-rank evaluation are useful for Sifr completion quality gates. The semantic candidates must be Sifr-native. |
 | `ty_ide` semantic-token categories | reference-only | Useful LSP category benchmark. Sifr token meanings differ because of ownership, mutability, Result/Option, and Rust-codegen concepts. |
@@ -125,10 +125,10 @@ The smart path is not to fork ty wholesale. The smart path is to reuse the gener
 | `ty_project` file watcher/change classification | reference-only | Useful architecture, but tied to Python config and project database. Sifr should build watcher integration over `sifr_frontend` revisions. |
 | `ty_python_semantic::lint` rule metadata and severity model | adapt concept, reject dependency | Rule metadata, default levels, status, docs URL, and `ignore`/`warn`/`error` levels are valuable. Production Sifr must define `sifr_diagnostics`-owned rules because ty lints are Python semantic rules. |
 | `ty_python_semantic::suppression` parser | adapt concept, possible code extraction | The parser for `ty: ignore[...]` and unused suppression diagnostics is useful. Sifr should design `sifr: ignore[...]` or `sifr: allow[...]`, using Sifr rule ids and forbidding suppression of hard correctness errors. Direct dependency on `ty_python_semantic` is rejected. |
-| `ruff_db::diagnostic` | reference-only | Strong diagnostic shape: annotations, subdiagnostics, concise messages, fixes, docs URLs, secondary codes, renderers. Sifr already has `sifr_diagnostics`; replacing it would break schema and renderer contracts. Adopt missing concepts selectively. |
+| `ruff_db::diagnostic` | reference-only | Strong diagnostic shape: annotations, subdiagnostics, concise messages, fixes, docs URLs, secondary codes, renderers. Sifr already has `sifr_diagnostics`; replacing it would break schema and renderer rules. Adopt missing concepts selectively. |
 | `ruff_diagnostics` fixes/edits | reference-only | Sifr already has structured suggestions. Compare edit/applicability behavior before adding code-action plumbing. |
 | `ruff_server` architecture | reference-only or adapt selected shell | Its contributing guide explicitly supports `lsp-server`/`lsp-types`, sync/background tasks, and Arc snapshots. Useful for architecture. Ruff diagnostics/formatting are not Sifr semantic authority. |
-| Ruff parser/AST/trivia/text crates | reuse-direct through `sifr_syntax` | Already Sifr's syntax substrate. Phase 35 must wrap them behind Sifr-owned API. |
+| Ruff parser/AST/trivia/text crates | reuse-direct through `sifr_syntax` | Already Sifr's syntax substrate. frontend query architecture must wrap them behind Sifr-owned API. |
 
 ## Diagnostic Strategy
 
@@ -139,7 +139,7 @@ Reasons:
 - Sifr already has stable diagnostic codes such as `SIFR-TYPE-*`, `SIFR-OWN-*`, `SIFR-RESULT-*`, and `SIFR-WORKSPACE-*`.
 - Sifr's rendered JSON envelope is schema-checked and used as the canonical renderer source.
 - Sifr already has severities, child notes/help, source spans, structured args, docs URLs, suggestions, edit applicability, deterministic ordering, and renderer parity.
-- Phase 27 requires stable diagnostic schema, codes, severities, spans, URLs, suggestions, renderer views, and exit-code behavior.
+- diagnostic architecture requires stable diagnostic schema, codes, severities, spans, URLs, suggestions, renderer views, and exit-code behavior.
 
 Adopt from ty/Ruff diagnostics:
 
@@ -201,7 +201,7 @@ value = legacy_call()  # sifr: ignore[unused-import]
 Rules:
 
 - Require explicit rule ids for Sifr suppression comments.
-- No bare `sifr: ignore` in production code unless a reviewed phase explicitly permits it.
+- No bare `sifr: ignore` in production code unless a reviewed policy explicitly permits it.
 - `sifr: ignore[...]` can suppress only policy rules.
 - Unknown rule ids produce a warning or error according to the policy-rule configuration.
 - Unused suppression comments are reported by a policy rule similar to ty's `unused-ignore-comment`.
@@ -229,7 +229,7 @@ ty's language-server docs show the target class of editor experience Sifr should
 - folding
 - fine-grained incrementality
 
-Phase 36's production target is the full current-workspace editor experience, not a reduced protocol slice. The required Sifr LSP/editor feature set includes:
+developer tooling surface's production target is the full current-workspace editor experience, not a reduced protocol slice. The required Sifr LSP/editor feature set includes:
 
 - initialize/shutdown/exit
 - workspace configuration and workspace commands
@@ -255,15 +255,15 @@ Phase 36's production target is the full current-workspace editor experience, no
 - explain diagnostic command
 - test discovery, test commands, and editor test explorer metadata backed by Sifr CLI metadata
 
-The only feature classes intentionally outside Phase 36 are:
+The only feature classes intentionally outside developer tooling surface are:
 
 - notebook support, because Sifr does not currently define notebooks as a production editor surface
-- package-registry and lockfile-aware external dependency intelligence, which belongs after Phase 37 package management
-- marketplace upload operations requiring credentials or release approvals, which belong to release governance once Phase 36 has produced packageable artifacts
+- package-registry and lockfile-aware external dependency intelligence, which belongs after package-management architecture package management
+- marketplace upload operations requiring credentials or release approvals, which belong to release governance once developer tooling surface has produced packageable artifacts
 
 ## Accepted Dependency Graph
 
-Production Phase 36 may depend on:
+Production developer tooling surface may depend on:
 
 - `lsp-server`
 - `lsp-types`
@@ -271,7 +271,7 @@ Production Phase 36 may depend on:
 - Sifr-owned crates: `sifr_syntax`, `sifr_frontend`, `sifr_analysis`, `sifr_diagnostics`, plus reviewed Sifr-owned formatter and policy-rule modules
 - selected copied/adapted modules from `ty_server`, `ruff_server`, or `ty_project` after they are moved behind Sifr-owned APIs and cleaned of Python assumptions
 
-Production Phase 36 must not depend on:
+Production developer tooling surface must not depend on:
 
 - `ty_python_semantic`
 - `ty_project` as a whole
@@ -284,14 +284,14 @@ Production Phase 36 must not depend on:
 
 ## Implementation Guidance
 
-Phase 35:
+frontend query architecture:
 
 - Create `sifr_syntax` as planned and keep Ruff parser/AST dependencies isolated there.
 - Create `sifr_frontend` as planned and keep Sifr diagnostics canonical.
-- Make split-brain guardrails configurable enough for Phase 36 to forbid Python semantic dependencies.
+- Make split-brain guardrails configurable enough for developer tooling surface to forbid Python semantic dependencies.
 - Add or reserve diagnostic-rule metadata fields only if needed without destabilizing the existing schema.
 
-Phase 36:
+developer tooling surface:
 
 - Do not start with a blank LSP server or a semantics-bearing editor plugin.
 - Start from the selected protocol shell patterns in `ty_server` and `ruff_server`.
@@ -304,16 +304,16 @@ Phase 36:
 - Implement LSP handlers as protocol adapters over `sifr_analysis`.
 - Build dependency guardrails before the first production LSP merge.
 - Add completion quality evaluation inspired by `ty_completion_eval` once Sifr completion ranking exists.
-- Implement formatter, policy-rule, suppression, exclusion, generated-Rust preview, test commands, VS Code Test Explorer integration, VS Code packaging, and multi-editor asset validation as Phase 36 requirements, not as follow-up work.
+- Implement formatter, policy-rule, suppression, exclusion, generated-Rust preview, test commands, VS Code Test Explorer integration, VS Code packaging, and multi-editor asset validation as developer tooling surface requirements, not as vague future work.
 
 ## Verification Requirements
 
-The planning decision is complete only when these are reflected in Phase 35/36:
+The planning decision is complete only when these are reflected in frontend query architecture:
 
 - `internal_docs/tooling_reuse_strategy.md` is a source-of-truth planning input, not a future artifact.
-- Phase 36 no longer defers the reuse audit as an open-ended milestone.
-- Phase 36 requires implementation to follow this decision matrix or update it by reviewed PR.
+- developer tooling surface no longer defers the reuse audit as an open-ended task.
+- developer tooling surface requires implementation to follow this decision matrix or update it by reviewed PR.
 - Tooling guardrails reject forbidden Python semantic dependencies.
 - Diagnostics planning explicitly keeps `sifr_diagnostics` canonical and adopts only selected ty/Ruff concepts.
 - Rule/suppression/exclusion planning distinguishes hard correctness diagnostics from configurable policy rules.
-- Phase 36 remains production-grade for the current workspace/project model while leaving package-registry intelligence to Phase 37.
+- developer tooling surface remains production-grade for the current workspace/project model while leaving package-registry intelligence to package-management architecture.

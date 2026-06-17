@@ -1,5 +1,4 @@
-# Reference: phase31
-# Source issue: phase31-m31a-canonical-word-ladder-execution.md
+# Reference: typed_queues
 # Typed queues should support simple pop-front and append flows.
 
 def drain_queue(mut queue: list[str]) -> list[str]:

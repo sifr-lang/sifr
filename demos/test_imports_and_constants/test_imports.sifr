@@ -1,6 +1,5 @@
-# Reference: m17_3
-# Source issue: phase17-import-and-externals-correctness-execution.md
-# milestone_17_3 demo test module
+# Reference: test_imports_and_constants
+# import-constants-sample demo test module
 from helper import BASE, plus_one
 
 def test_import_parity():

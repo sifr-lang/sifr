@@ -8,7 +8,7 @@ Add data science and ML capabilities after the web framework phase, while preser
 ## Depends on
 - Phase 41
 
-## Milestones
+## Capability Targets
 
 ### milestone_42_1: Data Processing
 - Scope:
@@ -26,12 +26,12 @@ Add data science and ML capabilities after the web framework phase, while preser
 
 ## Quality Contract
 - Entry criteria: Phase 41 is completed and prior reliability/diagnostics guarantees remain green.
-- DataFrame, Arrow/Parquet, tensor, and array integer dtype work must satisfy the integer dtype contract in `verification/areas/core_language/data/integer_dtype_contract.md`: fixed-width external integer columns map to matching Sifr dtypes, compact storage from `list[int]` requires an explicit dtype, fixed-width dtype arithmetic is fallible and dtype-preserving by default, and explicit checked/wrapping/saturating/overflowing/widen APIs are required.
+- DataFrame, Arrow/Parquet, tensor, and array integer dtype work must satisfy the integer dtype rules in `verification/areas/core_language/data/integer_dtype_rules.md`: fixed-width external integer columns map to matching Sifr dtypes, compact storage from `list[int]` requires an explicit dtype, fixed-width dtype arithmetic is fallible and dtype-preserving by default, and explicit checked/wrapping/saturating/overflowing/widen APIs are required.
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
 - Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 - Exit criteria: Data and ML workflows are usable end-to-end without regressing prior phase guarantees.
-- Milestone quality checks:
+- Capability quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
   - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
   - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.

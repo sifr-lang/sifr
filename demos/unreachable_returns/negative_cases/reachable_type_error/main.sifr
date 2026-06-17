@@ -1,6 +1,5 @@
-# Reference: m25_4
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_4 negative case
+# Reference: unreachable_returns
+# unreachable_returns negative case
 # Reachable frontend diagnostics should remain deterministic and strict.
 
 def inferred(flag: bool) -> int:

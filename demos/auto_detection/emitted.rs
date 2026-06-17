@@ -131,6 +131,6 @@ impl std::error::Error for RegexError {
 }
 
 fn main() {
-    println!("m18_2 auto-detection demo:");
+    println!("auto_detection auto-detection demo:");
     println!("{}", (3.9 as f64).floor() as i64);
 }

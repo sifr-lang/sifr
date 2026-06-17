@@ -1,7 +1,6 @@
-# Reference: m18_3
-# Source issue: phase18-project-and-cli-semantics-execution.md
-# milestone_18_3 demo
-# CLI contract is regression-protected by resolver tests in crates/sifr/src/main.rs.
+# Reference: cli_modes
+# cli-modes-sample demo
+# CLI rules is regression-protected by resolver tests in crates/sifr/src/main.rs.
 
 def main():
-    print("m18_3 cli contract and regression suite demo")
+    print("cli_modes cli rules and regression suite demo")

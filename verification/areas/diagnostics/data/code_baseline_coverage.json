@@ -71,7 +71,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-BUILD-0002",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -81,7 +81,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-BUILD-0003",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -91,7 +91,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-BUILD-0004",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -101,7 +101,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-BUILD-0005",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -111,7 +111,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-BUILD-0006",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -597,7 +597,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "presentation_contract_cases",
+      "baseline_fixture_id": "presentation_rules_cases",
       "code": "SIFR-INTERNAL-0001",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -955,7 +955,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0001",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -985,7 +985,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0101",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1005,7 +1005,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0103",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1015,7 +1015,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0104",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1065,7 +1065,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0204",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1105,7 +1105,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0402",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1125,7 +1125,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0404",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1165,7 +1165,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0603",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1175,7 +1175,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_library_diagnostic_contract_cases",
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0604",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1501,7 +1501,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-STDLIB-0003",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1511,7 +1511,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-STDLIB-0004",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1530,7 +1530,7 @@
         "json",
         "compact"
       ],
-      "suggestion_rendering_fixture": "presentation_contract_cases"
+      "suggestion_rendering_fixture": "presentation_rules_cases"
     },
     {
       "baseline_fixture_id": "e2e_ternary_type_mismatch",
@@ -1693,7 +1693,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-WORKSPACE-0101",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1703,7 +1703,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-WORKSPACE-0102",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1713,7 +1713,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-WORKSPACE-0103",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1723,7 +1723,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-WORKSPACE-0104",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1734,6 +1734,6 @@
     }
   ],
   "merge_requirement": "stable active codes require rendered baseline coverage or documented diagnostic-baseline deferral",
-  "nightly_release_requirement": "all stable renderers per stable active code by diagnostic-baseline closeout",
+  "nightly_release_requirement": "all stable renderers per stable active code by diagnostic-baseline readiness",
   "schema_version": 1
 }

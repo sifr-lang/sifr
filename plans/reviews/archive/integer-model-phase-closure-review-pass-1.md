@@ -56,7 +56,7 @@ No hidden work. No abandoned surface.
 
 **Status: Explicit and acceptable.**
 
-INT-5 locked the boundary contracts in `verification/integer_model_serialization_boundary_contract.md`. The schema, OpenAPI, TypeScript, and generated-serde surfaces are owned by Phase 40 (Typed Data Model) and Phase 41 (Web Framework). INT-5's `dumps_exact`/`dumps_web`/`dumps_string_ints` wrappers are live stdlib surfaces that Phase 40/41 will consume, not invent.
+INT-5 locked the boundary contracts in `verification/integer_model_serialization_boundary_rules.md`. The schema, OpenAPI, TypeScript, and generated-serde surfaces are owned by Phase 40 (Typed Data Model) and Phase 41 (Web Framework). INT-5's `dumps_exact`/`dumps_web`/`dumps_string_ints` wrappers are live stdlib surfaces that Phase 40/41 will consume, not invent.
 
 `SIFR-INT-0009` is reserved but non-emittable until those owning surfaces exist.
 

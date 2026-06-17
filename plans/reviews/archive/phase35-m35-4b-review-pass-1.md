@@ -43,8 +43,8 @@ The m35.4b milestone removes duplicate frontend semantics from `sifr_driver` and
 | `cargo test -p sifr_driver project_build_check` | 16/16 PASS |
 | `python3 verification/performance/check_split_brain_guardrail.py` | PASS |
 | `python3 verification/performance/check_split_brain_guardrail.py --self-test` | PASS |
-| `python3 verification/performance/check_frontend_cache_contract.py` | PASS |
-| `python3 verification/performance/check_ruff_fork_update_contract.py` | PASS |
+| `python3 verification/performance/check_frontend_cache_rules.py` | PASS |
+| `python3 verification/performance/check_ruff_fork_update_rules.py` | PASS |
 | `python3 verification/performance/run_benchmarks.py --validate-only` | 45 cases |
 | `python3 verification/performance/run_benchmarks.py --self-test` | PASS |
 | `python3 verification/performance/check_budgets.py` | PASS |

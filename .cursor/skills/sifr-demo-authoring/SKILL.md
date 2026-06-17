@@ -57,7 +57,7 @@ Use this browsing test:
 When cleaning up an existing demo:
 
 1. Identify the actual feature being demonstrated.
-2. Remove process, planning, milestone, or problem framing from names and comments.
+2. Remove process, phase, milestone, wave, or problem framing from names and comments.
 3. Replace large fixtures with small assert-driven inputs.
 4. Keep the history via `# Reference:` and `# Source issue:`.
 5. Move non-demo artifacts to `verification/` or `internal_docs/`.

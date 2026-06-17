@@ -25,11 +25,11 @@ Add to the Verification Contract section or the M1 list:
 **2. Execution tracker, Validation Log — add a forward reference for the tool's future existence**
 
 The M1 validation entry says:
-> M1 validation must include `python3 verification/tooling/check_diagnostic_presentation_contract.py`, ...
+> M1 validation must include `python3 verification/tooling/check_diagnostic_presentation_rules.py`, ...
 
 This is correct but doesn't record that the tool does not yet exist and is part of M1's deliverable. Add to the Validation Log:
 
-> The `check_diagnostic_presentation_contract.py` tool does not exist yet. It is a M1 deliverable, not a pre-existing guardrail. M1 must author the tool, prove it fails in its initial state, and then wire it into the quick lane.
+> The `check_diagnostic_presentation_rules.py` tool does not exist yet. It is a M1 deliverable, not a pre-existing guardrail. M1 must author the tool, prove it fails in its initial state, and then wire it into the quick lane.
 
 ---
 

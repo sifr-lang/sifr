@@ -21,7 +21,7 @@ Based on my comprehensive review of the implementation against the phase contrac
 - SATISFIED. `RenderedDiagnostic` schema preserved with all required fields: `code`, `severity`, `message`, `message_template`, `args`, `url`, `spans`, `children`, `help`, `suggestions`.
 
 **Verification Gate (W-13)**
-- SATISFIED. `check_diagnostic_presentation_contract.py` exists, passes, has `--self-test` with meaningful negative tests (missing fixture, missing schema field, missing run-all wiring, old compact grouping), and is wired into `scripts/run_all_tests.sh:124-125`.
+- SATISFIED. `check_diagnostic_presentation_rules.py` exists, passes, has `--self-test` with meaningful negative tests (missing fixture, missing schema field, missing run-all wiring, old compact grouping), and is wired into `scripts/run_all_tests.sh:124-125`.
 
 **Regression Coverage (W-9)**
 - SATISFIED. `test_format_selection_regression_check_build_run_emit_commands` in `diagnostics_and_packages_tests.rs:545-560` covers all four commands.
@@ -63,10 +63,10 @@ The baseline was generated with incorrect source position data. The fix is to up
 ### Validation Evidence
 
 ```
-✓ python3 verification/tooling/check_diagnostic_presentation_contract.py
+✓ python3 verification/tooling/check_diagnostic_presentation_rules.py
 diagnostic presentation contract: PASS
 
-✓ python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test
+✓ python3 verification/tooling/check_diagnostic_presentation_rules.py --self-test
 diagnostic presentation contract self-test: PASS
 
 ✓ cargo test -p sifr_diagnostics

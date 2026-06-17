@@ -1,4 +1,3 @@
-# Reference: m22_1
-# Source issue: phase22-frontend-mode-parity-hardening-execution.md
+# Reference: project_entrypoint
 def adjusted(value: int) -> int:
     return 'bad'

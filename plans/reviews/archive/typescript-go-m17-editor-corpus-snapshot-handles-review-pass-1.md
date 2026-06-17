@@ -17,7 +17,7 @@ The M17 scope is covered correctly and closeout fit is solid:
 - Ran `sifr check` on both fixtures live:
   - `package_ambiguous_import_canonical` emits only `SIFR-IMPORT-0005` with `candidate_paths`, `written_module_path`, `package_import_origin`, `resolution_scope=package`, and primary span on `helper` in `from helper import value`. No `SIFR-PACKAGE-*`.
   - `package_fatal_source_map_no_import_ambiguity` emits only `SIFR-PACKAGE-0713` with `origin_kind=sifr_manifest`, `manifest_key=__init__.sifr`, `manifest_path`. No `SIFR-IMPORT-*`.
-- `check_diagnostic_source_canonicalization_contract.py:347,374` adds `forbidden_prefixes` to both directions, and the M1 guardrails (`check_typescript_go_m1_guardrails.py:524`) pin both fixture names and both forbidden-prefix asserts into the contract file.
+- `check_diagnostic_source_canonicalization_rules.py:347,374` adds `forbidden_prefixes` to both directions, and the M1 guardrails (`check_typescript_go_m1_guardrails.py:524`) pin both fixture names and both forbidden-prefix asserts into the contract file.
 
 **Doc/tracker fit**
 - `internal_docs/architecture.md` M17 line added; `internal_docs/frontend_query_architecture.md` M17 note added; `internal_docs/typescript_go_architecture_transfer_m1_guardrails.md` adds the M17 caveat plus future-obligation row; new `internal_docs/typescript_go_architecture_transfer_m17_editor_corpus_snapshot_handles.md` records corpus/handle/package-diagnostic contract.

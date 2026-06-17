@@ -595,5 +595,5 @@ fn main() {
     assert!(format!("{:?}", permutations(&(vec![1 as i64, 2 as i64, 3 as i64]).into_iter().collect::<Vec<_>>(), Some(2 as i64)).collect::<Vec<_>>()) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]".to_string());
     assert!(format!("{:?}", combinations(&(vec![1 as i64, 2 as i64, 3 as i64]).into_iter().collect::<Vec<_>>(), 2 as i64).collect::<Vec<_>>()) == "[[1, 2], [1, 3], [2, 3]]".to_string());
     assert!(format!("{:?}", combinations_with_replacement(&(vec![1 as i64, 2 as i64]).into_iter().collect::<Vec<_>>(), 2 as i64).collect::<Vec<_>>()) == "[[1, 1], [1, 2], [2, 2]]".to_string());
-    println!("ad_hoc_parity_ext_wave2_itertools_lazy_surface_demo: ok");
+    println!("parity_ext_extended_itertools_lazy_surface_demo: ok");
 }

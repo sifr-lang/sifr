@@ -1,5 +1,4 @@
-# Reference: phase31_m31l
-# Source issue: phase31-m31l-tree-local-state-closure-execution.md
+# Reference: nested_recursive_helpersl
 # Nested recursive helpers can update local state without exposing it.
 
 class Entry:

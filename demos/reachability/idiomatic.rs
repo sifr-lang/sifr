@@ -27,7 +27,7 @@ fn classify(flag: bool) -> i64 {
 }
 
 fn main() {
-    println!("m25_3 canonical flow truth queries demo:");
+    println!("reachability canonical flow truth queries demo:");
     println!("{}", classify(true));
     println!("{}", classify(false));
 }

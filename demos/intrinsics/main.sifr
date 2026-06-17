@@ -1,6 +1,6 @@
-# Reference: milestone_intrinsics
-# Source issue: milestone_intrinsics.md
-# milestone_intrinsics Demo
+# Reference: intrinsics
+# Source issue: intrinsics.md
+# intrinsics Demo
 #
 # This demo showcases the three-tier hybrid stdlib architecture:
 # 1. sifr.test is resolved from lib/sifr/test.sifr (a .sifr stdlib file)
@@ -21,6 +21,6 @@ def main():
     assert_true(result == 4.0)
     assert_true(pi > 3.14)
 
-    print("milestone_intrinsics demo: all checks passed!")
-    assert str("milestone_intrinsics demo: all checks passed!") == "milestone_intrinsics demo: all checks passed!"
+    print("intrinsics demo: all checks passed!")
+    assert str("intrinsics demo: all checks passed!") == "intrinsics demo: all checks passed!"
 

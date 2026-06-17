@@ -1,9 +1,9 @@
-# Reference: ad_hoc_iter_fix_wave0
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
+# Reference: iter_fix_lazy_iterators_basics
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
 from sifr.itertools import chain, count
 
-# Wave 0 contract-lock demo for canonical iteration continuation.
-# This demo anchors supported lazy/eager behavior while wave-1+ closes
+# Behavior Group 0 lock demo for canonical iteration continuation.
+# This demo anchors supported lazy/eager behavior while iterator continuation support closes
 # backend capability fractures documented in the execution ledger.
 
 
@@ -31,4 +31,4 @@ def main() -> None:
     assert next(ticker) == 5
     assert next(ticker) == 7
 
-    print("ad_hoc_iter_fix_wave0_contract_lock_demo: ok")
+    print("iter_fix_lazy_iterators_basics_lock_demo: ok")

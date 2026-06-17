@@ -1,5 +1,4 @@
-# Reference: phase31
-# Source issue: phase31-m31a-canonical-coin-change-execution.md
+# Reference: indexed_tables
 # Pre-sized tables should support direct indexed writes.
 
 def write_indices(size: int) -> list[int]:

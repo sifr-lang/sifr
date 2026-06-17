@@ -14,7 +14,7 @@ impl Scheduler {
         match method {
             "textDocument/formatting" | "textDocument/rangeFormatting" => WorkLane::Formatting,
             "workspace/symbol" | "workspace/diagnostic" => WorkLane::Workspace,
-            // Internal lane sentinel for scheduler/background-index tests. the scheduler contract wires
+            // Internal lane sentinel for scheduler/background-index tests. the scheduler rules wires
             // real background worker entrypoints.
             "sifr/backgroundIndex" => WorkLane::Background,
             _ => WorkLane::LatencySensitive,

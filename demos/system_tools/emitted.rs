@@ -2670,7 +2670,7 @@ fn workload() {
 fn main() {
     let __sifr_try_res: Result<(), IOError> = (|| {
     let shell_out: String = ({
-    let __cmd = "echo wave_psp_d2".to_string();
+    let __cmd = "echo system-tools-sample".to_string();
     let __output = std::process::Command::new("sh".to_string()).arg("-c".to_string()).arg(&__cmd).output().map_err(__io_err)?;
     Ok(String::from_utf8_lossy(&__output.stdout).trim().to_string())
 })?;
@@ -2699,14 +2699,14 @@ fn main() {
     __sifr_concat
 });
     }
-    setenv(&"SIFR_WAVE_D2_DEMO".to_string(), &"ok".to_string());
+    setenv(&"SIFR_SYSTEM_TOOLS_DEMO".to_string(), &"ok".to_string());
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
     __sifr_concat.push_str("env getenv = ");
-    __sifr_concat.push_str((getenv(&"SIFR_WAVE_D2_DEMO".to_string(), &"fallback".to_string())).as_str());
+    __sifr_concat.push_str((getenv(&"SIFR_SYSTEM_TOOLS_DEMO".to_string(), &"fallback".to_string())).as_str());
     __sifr_concat
 });
-    unsetenv(&"SIFR_WAVE_D2_DEMO".to_string());
+    unsetenv(&"SIFR_SYSTEM_TOOLS_DEMO".to_string());
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
     __sifr_concat.push_str("sys.argv len = ");
@@ -2725,7 +2725,7 @@ fn main() {
     __sifr_concat.push_str((platform()).as_str());
     __sifr_concat
 });
-    let mut logger: Logger = getLogger(&"wave_psp_d2_demo".to_string());
+    let mut logger: Logger = getLogger(&"system-tools-sample_demo".to_string());
     logger.set_level(INFO);
     logger.info(&"logging demo line".to_string());
     println!("{}", {

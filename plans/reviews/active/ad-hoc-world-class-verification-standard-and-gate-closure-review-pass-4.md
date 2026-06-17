@@ -35,7 +35,7 @@ Sub-PR list at lines 537–543 enumerates 5.1 HIR through 5.7 crash/ICE. The tas
 
 **3. Several `cargo metadata` targets are tagged "phase decision required" in discovery but never resolved in §Resolved Decisions.**
 Lines 226–244 mark these as needing a phase decision but don't get one:
-- `sifr_driver/diagnostic_contract_harness` bin classification (shipped/internal/tooling)
+- `sifr_driver/diagnostic_rendering_harness` bin classification (shipped/internal/tooling)
 - `sifr_diagnostics/gen-diagnostic-schema` and `gen-error-docs` bins (tool vs shipped)
 - `sifr_frontend/frontend_query_bench` bin (perf vs tooling)
 - `sifr_stdlib/__test_fixture` feature + fixture bin profile assignment

@@ -57,7 +57,7 @@ fn json_dumps<T: std::fmt::Display>(value: T) -> String {
 }
 
 fn main() {
-    println!("m28_3 conversion and boundary contracts demo");
+    println!("decimal_conversions conversion and boundary rules demo");
 
     let d = dec("-1.9");
     let bd = big("-1.9");

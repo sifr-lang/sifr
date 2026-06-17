@@ -3,7 +3,7 @@ from sifr.sync import Channel, ChannelReceiver, ChannelSender, ClosedError
 
 async def main() -> Result[None, ClosedError]:
     # Surface validation only: direct endpoint construction, async send/receive
-    # signatures, and Result types. Shared queue factories are a follow-up slice.
+    # signatures, and Result types. Shared queue factories are deferred capabilities.
     sender: ChannelSender[int] = ChannelSender(Channel([], -1))
     sent: Result[None, ClosedError] = await sender.send(42)
     receiver: ChannelReceiver[int] = ChannelReceiver(Channel([42], -1))

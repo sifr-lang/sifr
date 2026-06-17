@@ -1,5 +1,5 @@
 # CPython test_heapq.py — ported assertions for sifr.heapq
-# Updated to use the in-place mut-parameter API (borrow-by-default milestone)
+# Updated to use the in-place mut-parameter API (borrow-by-default behavior)
 from sifr.test import assert_eq
 from sifr.heapq import heapify, heappush, heappop, heappop_rest, nsmallest, nlargest, heappushpop, heapreplace, merge
 

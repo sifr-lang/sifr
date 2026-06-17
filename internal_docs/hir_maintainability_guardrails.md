@@ -1,7 +1,7 @@
 # Lowering Maintainability Guardrails
 
 This document defines anti-regrowth guardrails for the producer-side lowering decomposition work.
-The stdlib host contract and intrinsic registry now live in `sifr_stdlib`; this
+The stdlib host rules and intrinsic registry now live in `sifr_stdlib`; this
 guardrail is limited to lowering implementation boundaries.
 
 ## File Boundaries

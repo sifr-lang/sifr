@@ -7,6 +7,6 @@
 //! This fixture exists to preserve the list-variance diagnostic for mutable
 //! container types. The Rust-side analogue is the same invariance pressure around
 //! `Vec<T>`, but the user-facing wording is owned by Sifr's checker, so this file
-//! stays as a contract scaffold.
+//! stays as a rules scaffold.
 
 fn main() {}

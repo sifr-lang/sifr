@@ -1,5 +1,4 @@
-# Reference: hir_analysis_contract
-# Source issue: phase24-hir-analysis-consolidation-execution.md
+# Reference: hir_analysis_behavior
 from helper import evaluate
 
 def test_evaluate_paths():

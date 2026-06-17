@@ -1,6 +1,6 @@
-# Phase 30 Complexity and Resource Matrix
+# Capability 30 Complexity and Resource Matrix
 
-This file is the canonical milestone_30_2 artifact for API-level complexity and resource parity.
+This file is the canonical API resource-complexity evidence for API-level complexity and resource parity.
 
 Primary machine-readable source:
 - `verification/areas/stdlib_parity/data/stdlib_complexity_resource_inventory.json`
@@ -26,13 +26,13 @@ Validator:
 | `ordered_insert_search` | `bisect`, `heapq` |
 | `host_io_bound` | `io`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`, `logging` |
 
-All 28 Phase 30 modules are covered in the inventory and mapped to a complexity/resource check pattern.
+All 28 Capability 30 modules are covered in the inventory and mapped to a complexity/resource check pattern.
 
 ## Asymptotic Comparison Status
 
 Inventory status summary (from `stdlib_complexity_resource_inventory.json`):
 - `28/28` modules have explicit expected and observed asymptotic classifications.
-- All entries are aligned with approved Phase 30 API scope.
+- All entries are aligned with approved Capability 30 API scope.
 - No unresolved asymptotic mismatch remains open.
 
 ## Constant-Factor Delta and Waiver Inventory
@@ -52,7 +52,7 @@ Accepted constant-factor waivers (host-variant behavior with owner/rationale/rev
 
 Non-waived modules use explicit delta bands (`within_2x`, `within_5x`, or `within_10x`) in the inventory.
 
-## Governance Contract
+## Governance Rules
 
 - Every inventory entry has:
   - module identifier

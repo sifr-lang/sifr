@@ -1,7 +1,6 @@
-# Reference: m28_2
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_arithmetic
 def main():
-    print("m28_2 deterministic arithmetic and context demo")
+    print("decimal_arithmetic deterministic arithmetic and context demo")
 
     cash: decimal = Decimal("10.00")
     fee: decimal = Decimal("3.00")

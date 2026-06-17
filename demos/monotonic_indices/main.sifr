@@ -1,5 +1,4 @@
-# Reference: phase31
-# Source issue: phase31-m31a-sliding-window-left-pointer-execution.md
+# Reference: monotonic_indices
 # `range(len(seq))` loops should keep indexed access definite.
 
 def active_indices(flags: list[bool]) -> list[int]:

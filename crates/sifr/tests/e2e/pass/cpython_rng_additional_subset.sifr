@@ -1,4 +1,4 @@
-# Additional CPython-derived parity coverage for ad-hoc RNG/crypto/polish phase.
+# Additional CPython-derived parity coverage for RNG/crypto/polish surface.
 from sifr.hashlib import HashObject, copy_hash, new, new_bytes, sha1_obj, sha512_obj
 from sifr.html import escape, unescape
 from sifr.random import Random, RandomState, choices, getstate, seed, setstate

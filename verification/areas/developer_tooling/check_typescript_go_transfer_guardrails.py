@@ -35,7 +35,7 @@ ANALYSIS_EDITOR_QUERY_CORPUS_TESTS = REPO_ROOT / "crates" / "sifr_analysis" / "s
 TRACE_CLI = REPO_ROOT / "crates" / "sifr" / "src" / "trace_cli.rs"
 EDITOR_QUERY_CORPUS = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "editor_query_corpus" / "multi_file"
 DIAGNOSTIC_CANONICALIZATION = (
-    REPO_ROOT / "verification" / "areas" / "developer_tooling" / "check_diagnostic_source_canonicalization_contract.py"
+    REPO_ROOT / "verification" / "areas" / "developer_tooling" / "check_diagnostic_source_canonicalization_rules.py"
 )
 PERF_MANIFEST = REPO_ROOT / "verification" / "areas" / "performance" / "data" / "benchmark_manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
@@ -524,7 +524,7 @@ def validate_trace_status_state(failures: list[str]) -> None:
 def validate_editor_corpus_and_handles(failures: list[str]) -> None:
     handles = ANALYSIS_HANDLES.read_text(encoding="utf-8")
     editor_query_corpus_tests = ANALYSIS_EDITOR_QUERY_CORPUS_TESTS.read_text(encoding="utf-8")
-    diagnostic_contract = DIAGNOSTIC_CANONICALIZATION.read_text(encoding="utf-8")
+    diagnostic_rules = DIAGNOSTIC_CANONICALIZATION.read_text(encoding="utf-8")
     main_fixture = EDITOR_QUERY_CORPUS / "main.sifr"
     helper_fixture = EDITOR_QUERY_CORPUS / "helper.sifr"
     require(
@@ -563,10 +563,10 @@ def validate_editor_corpus_and_handles(failures: list[str]) -> None:
         failures,
     )
     require(
-        "package_ambiguous_import_canonical" in diagnostic_contract
-        and "package_fatal_source_map_no_import_ambiguity" in diagnostic_contract
-        and 'forbidden_prefixes=("SIFR-PACKAGE-",)' in diagnostic_contract
-        and 'forbidden_prefixes=("SIFR-IMPORT-",)' in diagnostic_contract,
+        "package_ambiguous_import_canonical" in diagnostic_rules
+        and "package_fatal_source_map_no_import_ambiguity" in diagnostic_rules
+        and 'forbidden_prefixes=("SIFR-PACKAGE-",)' in diagnostic_rules
+        and 'forbidden_prefixes=("SIFR-IMPORT-",)' in diagnostic_rules,
         "editor corpus guard requires runtime package fixtures proving import/package diagnostic non-duplication",
         failures,
     )

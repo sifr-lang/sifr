@@ -1,7 +1,7 @@
 # Self-Update Demo Transcript
 
-This transcript records the local fixture flow used for the ad hoc self-update
-phase. It uses a copied development `sifr` binary, a synthetic standalone
+This transcript records the local fixture flow used for the self-update
+capability. It uses a copied development `sifr` binary, a synthetic standalone
 receipt, and a fake `curl` that serves local immutable installer scripts. The
 real CLI path still validates the receipt, resolves preview versions, downloads
 and validates an installer script, acquires the install lock, and delegates to

@@ -1,8 +1,8 @@
 # Regression Corpus Policy (`fixedbugs` + `crashes`)
 
-This policy defines the canonical regression corpus contract for verification hardening.
+This policy defines the canonical regression corpus rules for verification hardening.
 
-## `fixedbugs` Contract
+## `fixedbugs` Rules
 
 Source of truth:
 - `verification/areas/regression/data/fixedbugs.json`
@@ -16,12 +16,12 @@ Each fixedbug entry must include:
 - `expect_exit_code`
 - `note` (short context when name alone is insufficient)
 
-Execution contract:
+Execution rules:
 - Every fixedbug entry is executed by `uv run --project verification --locked python -m sifr_verify.hardening`.
-- Exit-code contract is enforced for each entry.
+- Exit-code rules is enforced for each entry.
 - Missing metadata fields fail the hardening gate.
 
-## `crashes` Sentinel Contract
+## `crashes` Sentinel Rules
 
 Source of truth:
 - `verification/areas/regression/data/crashes.json`
@@ -37,7 +37,7 @@ Each crash sentinel entry must include:
 - `promotion_target_suite` (currently `fixedbugs`)
 - `note`
 
-Execution contract:
+Execution rules:
 - Crash sentinels are machine-validated by `uv run --project verification --locked python -m sifr_verify.hardening`.
 - Invalid metadata or missing `source_reference`/`reproducer_fixture` paths fail the hardening gate.
 - Unresolved sentinels remain visible and blocking until resolved or explicitly promoted.

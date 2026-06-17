@@ -1,7 +1,7 @@
-# Reference: wave_psp_a1
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
-# wave_psp_a1 Builtin Constructors and Callable Surface Demo
-# Shows the Python-shaped source forms closed in milestone_psp_1 / wave_psp_a1.
+# Reference: source_parity_builtin_callables
+# Reference: python-source-parity-and-builtin-stdlib-surface
+# Builtin constructors and callable surface demo
+# Shows Python-shaped source forms for builtin callable lowering.
 
 from sifr.test import assert_ok, assert_err
 

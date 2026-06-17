@@ -48,7 +48,7 @@ The manifest schema (lines 314-322) and validation requirements (lines 324-330) 
 
 - `schema`, `ruff_check_sources`, `sifr_cli_sources`, `surfaces`, `output_formats`, `exit_codes`, `rejected_surfaces` — all present.
 - Validation proofs cover: every Ruff surface appears exactly once, every implemented surface has an allowed disposition, rejected/future-phase surfaces are absent, conflict pairs are enforced, and every output format/exit code has a fixture.
-- The enforcement mechanism (`check_linter_reuse_contract.py` or a dedicated CLI contract checker) is specified. The manifest is encoded in M1.
+- The enforcement mechanism (`check_linter_reuse_rules.py` or a dedicated CLI contract checker) is specified. The manifest is encoded in M1.
 
 **The manifest is implementation-ready.** One minor precision note: the schema says `surfaces[].disposition` but the table uses `adapted` as the disposition value. The pass-1 review used `adapt` as the table disposition and `adapted` in the schema. These are the same intent but slightly different spelling. For M1 manifest encoding, the implementer should pick one spelling and use it consistently — I'll flag this as a non-blocking M1 encoding detail.
 

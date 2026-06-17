@@ -1,6 +1,5 @@
-# Reference: m30_1a
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
-# m30_1a hashlib parity demo
+# Reference: hashlib
+# hashlib hashlib parity demo
 from sifr.hashlib import (
     sha256, md5,
     sha256_obj, md5_obj, copy_hash,
@@ -60,7 +59,7 @@ def main():
         "5d41402abc4b2a76b9719d911017c592",
         "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57",
     ]
-    tmp_path: str = "tmp_m30_1a_hashlib_demo.txt"
+    tmp_path: str = "tmp_hashlib_hashlib_demo.txt"
     _ = write_text(tmp_path, "file-data")
 
     actual: list[str] = collect_positive_actual(tmp_path)
@@ -70,4 +69,4 @@ def main():
     actual_ok: list[bool] = collect_negative_actual_ok()
     assert_bool_vector_eq(actual_ok, expected_ok)
 
-    print("m30_1a hashlib parity demo: pass")
+    print("hashlib hashlib parity demo: pass")

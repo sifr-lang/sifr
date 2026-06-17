@@ -13,6 +13,6 @@ mod a_consumer {
 }
 
 fn main() {
-    println!("m23_2 deterministic module graph and cycle diagnostics demo:");
+    println!("module_cycle_diagnostics deterministic module graph and cycle diagnostics demo:");
     println!("{}", a_consumer::fetch());
 }

@@ -1,4 +1,4 @@
-# CLI Command Semantics Contract
+# CLI Command Semantics Rules
 
 This document defines stable command-mode behavior for `sifr` CLI commands.
 
@@ -58,12 +58,12 @@ Standalone self-update commands are documented in [`self_update.md`](./self_upda
 schema-versioned receipt. It resolves `alpha`/`beta` preview metadata, derives
 the immutable installer URL from Sifr's trusted install base, and delegates
 checksum validation and artifact replacement to the generated installer.
-Stable-channel self-update remains gated until Phase 39.
+Stable-channel self-update remains gated until the stable release channel is enabled.
 
 ## Build And Run Output
 
 Successful `sifr build` in the default human diagnostic format writes a
-phase-aware summary to stderr. The summary reports the input, mode, release
+stage-aware summary to stderr. The summary reports the input, mode, release
 native target, measured build stages, total elapsed time, binary path, and a
 best-effort binary size when the final artifact can be read. Human progress
 output is intentionally not a stable scripting API.

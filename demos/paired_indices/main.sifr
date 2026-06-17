@@ -1,5 +1,4 @@
-# Reference: phase31
-# Source issue: phase31-m31a-two-pointer-while-guard-execution.md
+# Reference: paired_indices
 # Two index variables should safely read from both ends of one sequence.
 
 def edge_pairs_text(text: str) -> str:

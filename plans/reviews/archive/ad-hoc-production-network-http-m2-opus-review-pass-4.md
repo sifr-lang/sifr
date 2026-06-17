@@ -12,9 +12,9 @@ None.
 
 The follow-up commit `d4e2feb1f` touches exactly three files and each change is harmless:
 
-- `crates/sifr/tests/e2e_support/harness_contract_tests.rs:519-523` — adds `"net"` to the asserted tokio feature list. This is a contract sync: the e2e harness already emits the `"net"` feature unconditionally via `tokio_dependency_spec()` at `crates/sifr/tests/e2e_support/fixture_dependency_paths.rs:46-49`, and `generate_cargo_toml`'s `"tokio"` branch at `crates/sifr/tests/e2e_support/fixture_compilation.rs:432-434` delegates to that function. The asserted string now matches the rendered string verbatim. The pass-3 ledger had already accepted the hardcoded `"net"` as non-blocking; this commit just lifts that into the harness contract test. There is no divergence from the stdlib's conditional `tokio_dependency_spec` at `crates/sifr_stdlib/src/features.rs:649-656`, because user code never goes through the e2e harness function.
+- `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:519-523` — adds `"net"` to the asserted tokio feature list. This is a contract sync: the e2e harness already emits the `"net"` feature unconditionally via `tokio_dependency_spec()` at `crates/sifr/tests/e2e_support/fixture_dependency_paths.rs:46-49`, and `generate_cargo_toml`'s `"tokio"` branch at `crates/sifr/tests/e2e_support/fixture_compilation.rs:432-434` delegates to that function. The asserted string now matches the rendered string verbatim. The pass-3 ledger had already accepted the hardcoded `"net"` as non-blocking; this commit just lifts that into the harness contract test. There is no divergence from the stdlib's conditional `tokio_dependency_spec` at `crates/sifr_stdlib/src/features.rs:649-656`, because user code never goes through the e2e harness function.
 - `verification/performance/run_benchmarks.py:38-58, 347, 432-445, 448-460, 463-466` — replaces module-constant binary paths with `cargo_debug_dir()` / `frontend_bench_binary()` / `sifr_binary()` helpers that honor `CARGO_TARGET_DIR`. Pure refactor; no functional change for default `target/debug` runs, and the M2 reviewer's `CARGO_TARGET_DIR=target/codex-clippy` workflow is preserved.
-- `verification/tooling/check_diagnostic_source_canonicalization_contract.py:166-174, 192, 212` — adds the same `cargo_debug_dir()` helper and routes the two `sifr_binary()` / `diagnostic_contract_harness_binary()` lookups through it. Same refactor profile; the relative path is normalized against `REPO_ROOT` exactly as the benchmark runner does. No security or correctness impact.
+- `verification/tooling/check_diagnostic_source_canonicalization_rules.py:166-174, 192, 212` — adds the same `cargo_debug_dir()` helper and routes the two `sifr_binary()` / `diagnostic_rendering_harness_binary()` lookups through it. Same refactor profile; the relative path is normalized against `REPO_ROOT` exactly as the benchmark runner does. No security or correctness impact.
 
 I also re-verified the M2 TLS runtime surface against the pass-3 acceptance:
 
@@ -45,9 +45,9 @@ The validation set quoted in the prompt is sufficient for the M2 merge gate:
 
 The follow-up commit is also covered indirectly:
 
-- The harness-contract test it edits (`test_generate_cargo_toml_required_tokio_uses_runtime_features` at `crates/sifr/tests/e2e_support/harness_contract_tests.rs:516`) is included in `cargo test -p sifr` and ran inside the merge gate.
+- The harness-contract test it edits (`test_generate_cargo_toml_required_tokio_uses_runtime_features` at `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:516`) is included in `cargo test -p sifr` and ran inside the merge gate.
 - `verification/performance/run_benchmarks.py` is exercised by `scripts/run_all_tests.sh` (merge profile includes the performance lane); the merge run passed.
-- `verification/tooling/check_diagnostic_source_canonicalization_contract.py` is invoked from `scripts/run_all_tests.sh`; the merge run passed.
+- `verification/tooling/check_diagnostic_source_canonicalization_rules.py` is invoked from `scripts/run_all_tests.sh`; the merge run passed.
 
 ## 5. Acceptability
 

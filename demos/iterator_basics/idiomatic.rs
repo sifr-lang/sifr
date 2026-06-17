@@ -86,5 +86,5 @@ fn main() {
     let products = product_repeat_two(&[1, 2]);
     assert_eq!(format!("{products:?}"), "[[1, 1], [1, 2], [2, 1], [2, 2]]");
 
-    println!("ad_hoc_iter_wave6_parity_closure_demo: ok");
+    println!("iter_iterator_basics_closure_demo: ok");
 }

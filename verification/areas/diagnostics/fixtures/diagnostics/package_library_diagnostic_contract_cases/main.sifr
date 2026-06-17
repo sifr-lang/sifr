@@ -1,3 +1,0 @@
-# verification diagnostics fixture: synthetic package diagnostic contract baselines.
-def subject():
-    value: int = 1

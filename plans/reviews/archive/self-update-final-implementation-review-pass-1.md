@@ -11,7 +11,7 @@ Done reviewing. Producing the verdict now.
 - Read `cli_model_and_entrypoint.rs` wiring (854 lines — under 900-line guardrail).
 - Read diagnostic registration in `crates/sifr_diagnostics/src/codes/registry.rs`.
 - Read installer/dispatcher generators (`generate_version_installer.sh`, `generate_dispatchers.sh`), drift validator (`validate_self_update_metadata.sh`), and release flow (`create_new_version.sh`).
-- Read verification fixtures (`channel_metadata_*.sh`, `artifact_self_update_receipt_contract.sh`), receipt schema, and `common.sh` helpers.
+- Read verification fixtures (`channel_metadata_*.sh`, `artifact_self_update_receipt_rules.sh`), receipt schema, and `common.sh` helpers.
 - Read public docs (`docs/self_update.md`, `docs/cli_command_semantics.md`, `README.md`), internal docs (`internal_docs/distribution_pipeline.md` self-update sections), and `demos/self_update_demo/README.md`.
 
 The user-provided paths under `crates/sifr/src/commands/self_update/**` do not exist; actual modules live at `crates/sifr/src/self_update_*.rs`. Review covers the actual layout.
@@ -87,7 +87,7 @@ Concurrent serialization is contract-compliant — and the verification fixtures
 - **Receipt-derived environment**: `SIFR_INSTALL_DIR`, `SIFR_INSTALL_LOCK_HELD=1`, `SIFR_NO_MODIFY_PATH` (only when receipt says so), `SIFR_INSTALL_MANIFEST_DIR` (only when receipt path diverges from default), `--force` (only when requested). Manifest override defaults to `~/.sifr/install.json` for the default `~/.sifr/bin` install. Confirmed by `runs_passes_receipt_environment_force_and_manifest_override_to_installer` and `omits_manifest_override_for_default_home_manifest`.
 - **Distribution drift guards**: `generate_dispatchers.sh:80-90` writes `metadata/channels.json` next to dispatchers from the same alpha+beta inputs; `validate_self_update_metadata.sh` extracts metadata, dispatcher `ALPHA_VERSION`/`BETA_VERSION`, and immutable installer `APP_VERSION`, and fails on any drift. Stable + rc channels rejected in metadata. `create_new_version.sh` real-run sequences `generate_version_installer.sh` → `generate_dispatchers.sh` from a single SHA-256-pinned plan.
 - **File-size guardrail**: `cli_model_and_entrypoint.rs` is 854 lines; the self-update code lives in four sibling modules (510/532/618/652). The entrypoint receives only `SelfCommand(SelfArgs)` and `cmd_self` dispatch.
-- **Generated installer receipt**: writes through `mktemp + mv` atomic rename, derives `APP_CHANNEL` from semver prerelease label, and records canonicalized `binary_path`; verified end-to-end by `artifact_self_update_receipt_contract.sh`.
+- **Generated installer receipt**: writes through `mktemp + mv` atomic rename, derives `APP_CHANNEL` from semver prerelease label, and records canonicalized `binary_path`; verified end-to-end by `artifact_self_update_receipt_rules.sh`.
 - **Docs**: `docs/self_update.md`, `docs/cli_command_semantics.md:55-61`, `README.md:116-126`, `internal_docs/distribution_pipeline.md:156-196`, and `demos/self_update_demo/README.md` all match the implemented contract.
 
 ## Verdict

@@ -1,6 +1,6 @@
 # stdlib_parity_runtime_3 CPython Traceability Matrix
 
-Wave: `stdlib_parity_runtime_3`
+Capability: `stdlib_parity_runtime_3`
 Scope: `logging`, `time`, and `timeit` object-surface expansion
 
 ## CPython Harvest Inputs
@@ -9,7 +9,7 @@ Scope: `logging`, `time`, and `timeit` object-surface expansion
 - `Lib/test/test_time.py` (`struct_time`, `gmtime/localtime`, `mktime`, timezone constants)
 - `Lib/test/test_timeit.py` (`default_timer`, callable statement timing, repeat/timer object behavior)
 
-## Adopt / Adapt / Waive (Wave 3)
+## Adopt / Adapt / Waive (Capability 3)
 
 | CPython family | Sifr surface direction | State | Local anchor |
 | --- | --- | --- | --- |
@@ -17,11 +17,11 @@ Scope: `logging`, `time`, and `timeit` object-surface expansion
 | `test_logging` handler classes (`Handler`, `StreamHandler`, `FileHandler`, `NullHandler`, `Formatter`) | ship class surfaces and deterministic handler gating under synchronous host model | `adapted` | `crates/sifr/tests/e2e/pass/cpython_logging_subset.sifr`, `demos/logging_and_timers/main.sifr` |
 | `test_time` structured clock objects (`struct_time`, `mktime`, timezone constants) | ship immutable `struct_time` and explicit struct wrappers (`gmtime_struct`, `localtime_struct`) over intrinsic ISO clock strings | `adapted` | `crates/sifr/tests/e2e/pass/cpython_time_subset.sifr`, `crates/sifr/tests/e2e/pass/stdlib_time_consolidated.sifr` |
 | `test_timeit` callable timing API (`default_timer`, `timeit`, `repeat`, `Timer`) | ship callable-only timer model including `Timer.timeit`, `Timer.repeat`, and `Timer.__call__` | `adapted` | `crates/sifr/tests/e2e/pass/cpython_timeit_subset.sifr`, `crates/sifr/tests/e2e/pass/stdlib_timeit_consolidated.sifr` |
-| logging graph configuration (`dictConfig`, `LoggerAdapter`) | keep explicitly unsupported (locked from wave 0) | `unsupported` | `crates/sifr/tests/e2e/fail/logging_dictconfig_unsupported.sifr`, `crates/sifr/tests/e2e/fail/logging_loggeradapter_unsupported.sifr` |
+| logging graph configuration (`dictConfig`, `LoggerAdapter`) | keep explicitly unsupported (locked from baseline capability) | `unsupported` | `crates/sifr/tests/e2e/fail/logging_dictconfig_unsupported.sifr`, `crates/sifr/tests/e2e/fail/logging_loggeradapter_unsupported.sifr` |
 | timeit string-eval statements | keep explicitly unsupported; callable-only execution model remains enforced | `unsupported` | `crates/sifr/tests/e2e/fail/timeit_string_eval_unsupported.sifr` |
 | timezone mutation helpers (`tzset`, mutable timezone env surfaces) | keep explicitly unsupported; stable constants only | `unsupported` | `crates/sifr/tests/e2e/fail/timezone_mutation_unsupported.sifr` |
 
-## Explicit Waivers / Boundaries (Wave 3)
+## Explicit Waivers / Boundaries (Capability 3)
 
 - Logging remains deterministic single-process/synchronous and does not claim thread-order parity.
 - Logger handler wiring intentionally keeps one active sink mode at a time (`file`, `stream`, or `null`) to preserve deterministic host behavior.
@@ -30,7 +30,7 @@ Scope: `logging`, `time`, and `timeit` object-surface expansion
 - `timeit` remains callable-only and rejects CPython string-eval execution.
 - Timezone mutation helpers remain out-of-scope and explicitly rejected by fail fixtures.
 
-## Local Fixture Anchors (Wave 3)
+## Local Fixture Anchors (Capability 3)
 
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/logging_time_and_timers.sifr`

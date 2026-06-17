@@ -1,6 +1,5 @@
-# Reference: m27_1
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
-# m27_1 remove data-dependent unwrap/expect demo
+# Reference: optional_indexing
+# optional_indexing remove data-dependent unwrap/expect demo
 #
 # Positive path: safe indexing remains Option-based and does not rely on
 # generated data-dependent unwrap/expect in user-facing paths.
@@ -9,8 +8,8 @@ def main():
     items: list[int] = [10, 20, 30]
     value: int | None = items[1]
     if value is not None:
-        print("m27_1 remove data-dependent unwrap/expect demo:")
+        print("optional_indexing remove data-dependent unwrap/expect demo:")
         print(value)
     else:
-        print("m27_1 remove data-dependent unwrap/expect demo:")
+        print("optional_indexing remove data-dependent unwrap/expect demo:")
         print("missing")

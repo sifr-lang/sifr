@@ -1,25 +1,25 @@
-# Reference: ad_hoc_bytes_wave3
-# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
+# Reference: bytes_bytes_file_io
+# Reference: first-class-bytes-and-binary-surface-foundation
 from sifr.io import exists
 from sifr.os import remove_file
 
 
 def main():
-    path: str = "/tmp/sifr_ad_hoc_bytes_wave3_demo.bin"
+    path: str = "/tmp/sifr_bytes_bytes_file_io.bin"
     loaded_ok: bool = False
     ints_ok: bool = False
     cleanup_ok: bool = False
 
     try:
         writer = open(path, "wb")
-        _w: None = writer.write_bytes(b"wave3")
+        _w: None = writer.write_bytes(b"bytes_file_io")
         writer.close()
 
         reader = open(path, "rb")
         loaded: bytes = reader.read_bytes()
         reader.close()
-        loaded_ok = loaded == b"wave3"
-        ints_ok = str(loaded.to_ints()) == "[119, 97, 118, 101, 51]"
+        loaded_ok = loaded == b"bytes_file_io"
+        ints_ok = str(loaded.to_ints()) == "[98, 121, 116, 101, 115, 95, 102, 105, 108, 101, 95, 105, 111]"
     except IOError as e:
         _ = str(e.message)
 

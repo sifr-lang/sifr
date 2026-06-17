@@ -1,5 +1,5 @@
-// Reference: milestone_protocols
-// Source issue: milestone-protocols-epic.md
+// Reference: protocols
+// Reference: protocols
 #[derive(Debug, Clone)]
 enum CircleOrSquare {
     Circle(Circle),

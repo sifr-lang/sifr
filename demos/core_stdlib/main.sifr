@@ -1,7 +1,7 @@
-# Reference: milestone_core_stdlib
-# Source issue: milestone-core-stdlib-epic.md
+# Reference: core_stdlib
+# Reference: core-stdlib
 # ============================================================
-# Milestone: Core Standard Library Demo
+# Feature Demo: Core Standard Library Demo
 # ============================================================
 # Demonstrates the stdlib infrastructure and all 5 core modules:
 #   sifr.io    — File I/O

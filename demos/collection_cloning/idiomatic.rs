@@ -19,5 +19,5 @@ fn main() {
     println!("{filtered:?}");
     println!("{first}");
     println!("{rest:?}");
-    println!("ad_hoc_clone_wave0_architecture_lock_demo: pass");
+    println!("clone_collection_cloning_lock_demo: pass");
 }

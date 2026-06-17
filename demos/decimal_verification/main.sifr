@@ -1,9 +1,8 @@
-# Reference: m28_5
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_verification
 from sifr.json import json_dumps
 
 def main():
-    print("m28_5 verification corpus and determinism gates demo")
+    print("decimal_verification verification corpus and determinism gates demo")
 
     d: decimal = Decimal("-7.5")
     bd: bigdecimal = BigDecimal("-7.5")

@@ -26,7 +26,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 
 ### Required Implementation Work
 
-| ID | Work item | Required closeout |
+| ID | Requirement | Required closeout |
 | --- | --- | --- |
 | W-1 | `sifr_lint` uses line-only suppression attachment. | Milestone 3 implements parser-aware statement/range suppression before syntax, HIR, or workspace rules ship. |
 | W-2 | `sifr_lint` file discovery uses simple string/path matching. | Milestone 2 adapts Ruff-style glob/gitignore file discovery with Sifr defaults. |
@@ -34,7 +34,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 | W-4 | The lint runner is not phase-gated. | Milestone 4 implements Ruff-inspired phase gating behind Sifr APIs. |
 | W-5 | LSP code-action gating can drift if it relies on diagnostic-code strings. | Milestone 6 adds typed hard-vs-policy diagnostic class and policy-only action gates. |
 | W-6 | Fix-capable policy rules lack a production fix engine. | Milestone 6 adds applicability, edit isolation, conflict resolution, source-map tracking, and idempotence checks. |
-| W-7 | The Ruff/Python lint reuse contract is not machine-enforced yet. | Milestone 1 adds `verification/tooling/check_linter_reuse_contract.py` with positive and negative self-tests. |
+| W-7 | The Ruff/Python lint reuse contract is not machine-enforced yet. | Milestone 1 adds `verification/tooling/check_linter_reuse_rules.py` with positive and negative self-tests. |
 | W-8 | The parser-aware suppression gate is advisory until made mechanical. | Milestone 1 creates the gate manifest; Milestone 3 enables it; Milestone 5 cannot add non-physical-line rules unless the gate is closed. |
 | W-9 | Ruff has many existing Python rule families and config keys; leaving their disposition to implementation would invite accidental porting. | Planning locks a full Ruff rule-family/config audit; Milestone 1 encodes it in `ruff_rule_config_audit.json`; Milestone 5 may only add rules/config from approved rows. |
 | W-10 | `sifr lint` currently has a placeholder single-path CLI while Ruff's lint command has a production command surface. | Planning locks a Ruff-compatible `sifr lint [OPTIONS] [FILES]...` contract; Milestone 1 encodes it in `lint_cli_parity.json`; M2 and M6 implement the non-fix and fix portions. |
@@ -63,7 +63,7 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - `2026-05-26`: Claude review pass 2 confirmed the revised strategy is sound if parser-aware suppression is a documented gate before syntax/HIR/workspace rules.
 - `2026-05-26`: Claude review pass 3 cross-checked current code and confirmed the reuse boundary is clean, with parser-aware suppression as the known prerequisite gate.
 - `2026-05-26`: Claude subsystem reviews covered Ruff config, registry/rules, lint engine, suppression/fixes, file discovery/cache/path utilities, and LSP/editor integration. Findings are incorporated in the phase reuse matrix and milestones.
-- `2026-05-26`: Claude phase review pass 1 found two planning blockers: the forbidden Ruff/Python lint dependency check needed a named enforceable guardrail, and the parser-aware suppression prerequisite needed a mechanical gate before syntax/HIR/workspace rules. The phase was updated to require `check_linter_reuse_contract.py`, a suppression-gate manifest, and rule-family enforcement.
+- `2026-05-26`: Claude phase review pass 1 found two planning blockers: the forbidden Ruff/Python lint dependency check needed a named enforceable guardrail, and the parser-aware suppression prerequisite needed a mechanical gate before syntax/HIR/workspace rules. The phase was updated to require `check_linter_reuse_rules.py`, a suppression-gate manifest, and rule-family enforcement.
 - `2026-05-26`: Claude phase review pass 2 found the suppression-gate manifest and M3-to-M5 enforcement path were still underspecified. The phase was updated to define `verification/tooling/linter_manifests/suppression_gate.json`, its schema, the `physical_line_only` to `parser_aware` transition, and a single compile-time parser-aware suppression API dependency for non-physical-line rules.
 - `2026-05-26`: Claude phase review pass 3 confirmed all pass-2 blockers are resolved and the phase is implementation-ready with no remaining blockers.
 - `2026-05-26`: User review required Ruff rule/config decisions to be made during planning, not implementation. The phase was updated with a full Ruff rule-family audit, a config-surface audit, and a required `ruff_rule_config_audit.json` enforcement manifest.
@@ -91,8 +91,8 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
 - Validation evidence will be recorded per implementation milestone.
 - Planning PR validation starts with `git diff --check` and docs/review artifact checks.
 - `2026-05-27` M1 local checks:
-  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passed.
   - `cargo test -p sifr_lint` passed: 3 unit tests and 0 doctests.
   - `git diff --check` passed.
   - `python3 scripts/check_file_size_guardrails.py` passed.
@@ -103,8 +103,8 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `cargo clippy -p sifr_lint -p sifr -- -D warnings` is blocked by pre-existing `clippy::too_many_arguments` in `crates/sifr/src/diagnostic_rendering_and_run.rs:219`, outside the M2 diff.
   - `cargo test -p sifr_lint` passed: 6 unit tests and 0 doctests.
   - `cargo test -p sifr -- --skip test_e2e_pass` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passed.
   - CLI smoke fixtures passed for concise diagnostics, stdin JSON diagnostics, config severity ignore, `--show-files`, `--show-settings`, `--exit-zero`, and rejected Ruff/Python flag handling.
   - `git diff --check` passed.
   - `python3 scripts/check_file_size_guardrails.py` passed.
@@ -114,8 +114,8 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `cargo test -p sifr_lint` passed: 8 unit tests and 0 doctests.
   - `cargo test -p sifr -- --skip test_e2e_pass` passed.
   - `cargo clippy -p sifr_lint -- -D warnings` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passed.
   - CLI smoke fixture passed for `--ignore-suppressions`.
   - `python3 scripts/check_file_size_guardrails.py` passed.
 - `2026-05-27` M4 pre-review local checks:
@@ -124,8 +124,8 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `cargo test -p sifr_lint` passed: 15 unit tests and 0 doctests.
   - `cargo test -p sifr -- --skip test_e2e_pass` passed.
   - `cargo clippy -p sifr_lint -- -D warnings` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passed.
   - `python3 scripts/check_file_size_guardrails.py` passed.
   - `git diff --check` passed.
 - `2026-05-27` M5 pre-review local checks:
@@ -136,14 +136,14 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `cargo test -p sifr -- --skip test_e2e_pass` passed.
   - `cargo clippy -p sifr_diagnostics -p sifr_lint -p sifr_analysis -- -D warnings` passed.
   - `cargo clippy -p sifr -- -D warnings` remains blocked only by the pre-existing `clippy::too_many_arguments` in `crates/sifr/src/diagnostic_rendering_and_run.rs:219`, outside the M5 diff.
-  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passed.
   - `python3 scripts/check_file_size_guardrails.py` passed.
   - CLI smoke fixture passed for deterministic `--statistics` output and exit status.
   - `git diff --check` passed.
 - `2026-05-27` M5 post-fix local checks:
-  - `python3 verification/tooling/check_rule_suppression_contract.py` passed.
-  - `python3 verification/tooling/check_rule_suppression_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_rule_suppression_rules.py` passed.
+  - `python3 verification/tooling/check_rule_suppression_rules.py --self-test` passed.
   - `scripts/run_all_tests.sh --profile quick` passed after the split-brain and rule/suppression contract fixes. The lane reported wall-time budget advisories only, with no validation failures.
 - `2026-05-27` M6 pre-review local checks:
   - `cargo check -p sifr_lint -p sifr_analysis -p sifr_lsp -p sifr` passed.
@@ -153,8 +153,8 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `cargo test -p sifr -- --skip test_e2e_pass` passed.
   - `cargo clippy -p sifr_lint -p sifr_analysis -p sifr_lsp -- -D warnings` passed.
   - `cargo clippy -p sifr -- -D warnings` remains blocked only by the pre-existing `clippy::too_many_arguments` in `crates/sifr/src/diagnostic_rendering_and_run.rs:219`, outside the M6 diff.
-  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passed.
   - `python3 verification/tooling/check_linter_diagnostic_class.py` passed.
   - `python3 verification/tooling/check_linter_diagnostic_class.py --self-test` passed.
   - `python3 verification/tooling/lsp_protocol_smoke.py` passed.
@@ -166,16 +166,16 @@ This phase locks the lint/Ruff reuse decisions before implementation starts. Cha
   - `git diff --check` passed.
   - `scripts/run_all_tests.sh --profile quick` passed. The lane reported warm wall-time and batching-skew advisories only, with no validation failures.
 - `2026-05-27` M7 closeout local checks:
-  - `python3 verification/tooling/check_tooling_contract_lock.py` passed.
-  - `python3 verification/tooling/check_tooling_contract_lock.py --self-test` passed.
-  - `python3 verification/tooling/check_vscode_extension_contract.py` passed.
-  - `python3 verification/tooling/check_vscode_extension_contract.py --self-test` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py` passed.
-  - `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_tooling_rules_lock.py` passed.
+  - `python3 verification/tooling/check_tooling_rules_lock.py --self-test` passed.
+  - `python3 verification/tooling/check_vscode_extension_rules.py` passed.
+  - `python3 verification/tooling/check_vscode_extension_rules.py --self-test` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py` passed.
+  - `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passed.
   - `python3 verification/tooling/check_linter_diagnostic_class.py` passed.
   - `python3 verification/tooling/check_linter_diagnostic_class.py --self-test` passed.
-  - `python3 verification/tooling/check_rule_suppression_contract.py` passed.
-  - `python3 verification/tooling/check_rule_suppression_contract.py --self-test` passed.
+  - `python3 verification/tooling/check_rule_suppression_rules.py` passed.
+  - `python3 verification/tooling/check_rule_suppression_rules.py --self-test` passed.
   - `python3 verification/tooling/check_editor_assets.py` passed.
   - `python3 verification/tooling/check_editor_assets.py --self-test` passed.
   - `python3 verification/tooling/lsp_protocol_smoke.py` passed.

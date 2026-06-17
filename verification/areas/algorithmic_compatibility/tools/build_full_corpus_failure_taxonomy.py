@@ -30,7 +30,7 @@ HEURISTIC_RULES: list[tuple[str, list[str]]] = [
         ],
     ),
     (
-        "return_path_and_function_contract_gap",
+        "return_path_and_function_rules_gap",
         ["must return on all control-flow paths", "undefined variable"],
     ),
     (
@@ -102,7 +102,7 @@ HEURISTIC_RULES: list[tuple[str, list[str]]] = [
         ["is missing a type annotation", "missing type annotation"],
     ),
     (
-        "callable_argument_contract_mismatch",
+        "callable_argument_rules_mismatch",
         ["argument 2 of callable 'Path': expected 'int', got 'float'"],
     ),
 ]

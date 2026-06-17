@@ -1,10 +1,9 @@
-# Reference: m22_2
-# Source issue: phase22-frontend-mode-parity-hardening-execution.md
-# m22_2 project-aware check parity demo
+# Reference: project_check
+# project_check project-aware check parity demo
 # Valid local imports in a multi-file project should pass in `sifr check` and `sifr run`.
 
 from helper import area_like
 
 def main():
-    print('m22_2 project-aware check parity demo:')
+    print('project_check project-aware check parity demo:')
     print(area_like(3.0))

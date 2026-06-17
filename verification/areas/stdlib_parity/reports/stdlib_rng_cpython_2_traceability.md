@@ -1,6 +1,6 @@
 # stdlib_parity_rng_2 CPython Traceability Matrix
 
-Wave: `stdlib_parity_rng_2`
+Capability: `stdlib_parity_rng_2`
 Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.base64`
 
 ## CPython Harvest Inputs
@@ -8,7 +8,7 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 - `Lib/test/test_hashlib.py`
 - `Lib/test/test_base64.py`
 
-## Adopt / Adapt / Waive (Wave 2)
+## Adopt / Adapt / Waive (Capability 2)
 
 | CPython family | Sifr surface direction | State | Local anchor |
 | --- | --- | --- | --- |
@@ -16,19 +16,19 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 | `test_hashlib` str-facing compatibility | preserve existing string constructor/update/hexdigest behavior on top of bytes-native state ownership | `adapted` (shipped) | `lib/sifr/hashlib.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr`, `crates/sifr/tests/e2e/pass/datetime_regex_math_and_hashing.sifr` |
 | `test_base64` binary-oriented API behavior | add bytes-native base64 encode/decode (`b64encode_bytes`, `b64decode_bytes`, standard/urlsafe bytes variants) while retaining text helpers | `adapted` (shipped) | `lib/sifr/base64.sifr`, `crates/sifr/tests/e2e/pass/bytes_hashing_and_base64.sifr`, `demos/binary_hashing/main.sifr` |
 | `test_base64` invalid-bytes decode boundaries | typed decode failures on invalid base64 bytes payloads remain explicit `ParseError` boundaries for both standard and urlsafe bytes decode paths | `adapted` (shipped) | `crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr`, `crates/sifr/tests/e2e/pass/bytes_hashing_and_base64.sifr` |
-| `test_hashlib` SHA3/SHAKE constructor families | keep SHA3/SHAKE object constructors unsupported in this wave pending explicit dependency/surface expansion | `unsupported` | `lib/sifr/hashlib.sifr`, `crates/sifr/tests/e2e/fail/sha3_object_model_unsupported.sifr` |
+| `test_hashlib` SHA3/SHAKE constructor families | keep SHA3/SHAKE object constructors unsupported in this implementation pass pending explicit dependency/surface expansion | `unsupported` | `lib/sifr/hashlib.sifr`, `crates/sifr/tests/e2e/fail/sha3_object_model_unsupported.sifr` |
 
-## Dependency Audit Note (Wave 2)
+## Dependency Audit Note (Capability 2)
 
-- Active generated-runtime hash dependencies in this wave are pinned to:
+- Active generated-runtime hash dependencies in this implementation pass are pinned to:
   - `sha2 = "0.11.0"`
   - `md5 = "0.8.0"`
   - `sha1 = "0.11.0"`
   - `blake2 = "0.10.6"`
-- No SHA3/SHAKE dependency is currently registered for generated runtime crates in this wave.
+- No SHA3/SHAKE dependency is currently registered for generated runtime crates in this implementation pass.
 - Outcome: SHA3/SHAKE remains explicitly unsupported and guarded by typed boundaries.
 
-## CPython `test_hashlib.py` / `test_base64.py` Case Mapping (Wave 2)
+## CPython `test_hashlib.py` / `test_base64.py` Case Mapping (Capability 2)
 
 | CPython test case | Sifr adaptation direction | Local anchor(s) | Coverage status |
 | --- | --- | --- | --- |
@@ -40,19 +40,19 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 | `TestBase64.test_b64decode_invalid_chars` / strict validate families | invalid payloads remain typed `ParseError` boundaries for standard and urlsafe decode paths | `crates/sifr/tests/e2e/pass/cpython_base64_strictness_subset.sifr`, `crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr` | covered |
 | `TestBase64.test_b32decode_casefold` | lowercase Base32 payloads decode through current intrinsic behavior (casefold-style acceptance) | `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr`, `lib/sifr/base64.sifr` | covered |
 
-## Explicit Waivers / Boundaries After Wave 2
+## Explicit Waivers / Boundaries After Capability 2
 
 - SHA3/SHAKE constructor families remain explicitly unsupported (`sha3_256_obj`, `sha3_512_obj`, `shake_128_obj`, `shake_256_obj`).
-- Weighted `random.choices(weights=...)` and `SystemRandom.getstate/setstate` remain outside wave-2 scope (tracked by wave-1 governance).
-- Key-derivation helpers `pbkdf2_hmac` and `scrypt` remain explicitly unsupported in this wave.
+- Weighted `random.choices(weights=...)` and `SystemRandom.getstate/setstate` remain outside capability-set-2 scope (tracked by capability-set-1 governance).
+- Key-derivation helpers `pbkdf2_hmac` and `scrypt` remain explicitly unsupported in this implementation pass.
 - ASCII85/Base85/Z85 codec families (`a85*`, `b85*`, `z85*`) remain explicitly unsupported.
 
-## Local Fixture Anchors (Wave 2)
+## Local Fixture Anchors (Capability 2)
 
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr`
   - `crates/sifr/tests/e2e/pass/bytes_hashing_and_base64.sifr`
-  - `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` (post-closure hashlib case/vector adaptation)
+  - `crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr` (post-readiness hashlib case/vector adaptation)
 - Demo:
   - `demos/binary_hashing/main.sifr`
 - Negative fixtures:

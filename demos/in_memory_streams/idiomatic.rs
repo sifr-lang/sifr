@@ -130,12 +130,12 @@ fn cleanup(path: &Path) -> bool {
 }
 
 fn main() {
-    let path = PathBuf::from("/tmp/sifr_runtime_wave1_demo.bin");
+    let path = PathBuf::from("/tmp/sifr_runtime_in_memory_streams.bin");
 
-    let mut stringio = StringIO::new("wave");
+    let mut stringio = StringIO::new("sample");
     let stringio_ok = stringio.write("1").is_ok()
         && stringio.seek(0).ok() == Some(0)
-        && stringio.read().ok().as_deref() == Some("1ave");
+        && stringio.read().ok().as_deref() == Some("1ample");
     let stringio_negative_seek_ok = stringio.seek(-1).is_err();
 
     let mut bytesio = BytesIO::new(b"abc");
@@ -147,12 +147,12 @@ fn main() {
 
     let mut binary_file_ok = false;
     if let Ok(mut writer) = BinaryFileHandle::open(&path, "wb") {
-        if writer.write_bytes(b"runtime-wave1").is_ok() {
+        if writer.write_bytes(b"runtime-in_memory_streams").is_ok() {
             writer.close();
             if let Ok(mut reader) = BinaryFileHandle::open(&path, "rb") {
                 binary_file_ok = reader
                     .read_bytes()
-                    .is_ok_and(|loaded| loaded == b"runtime-wave1");
+                    .is_ok_and(|loaded| loaded == b"runtime-in_memory_streams");
                 reader.close();
             }
         }
@@ -166,5 +166,5 @@ fn main() {
     assert!(bytesio_negative_seek_ok);
     assert!(binary_file_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave1_io_in_memory_hierarchy_demo: ok");
+    println!("runtime_in_memory_streams_in_memory_hierarchy_demo: ok");
 }

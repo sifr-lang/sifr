@@ -202,7 +202,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })()?;
 
     let base = PathBuf::from(format!(
-        "/tmp/sifr_phase_psp_ext_3_demo_{}",
+        "/tmp/sifr_regex_filesystem_demo_{}",
         std::process::id()
     ));
     let fs_result = (|| -> Result<(), IOError> {
@@ -236,6 +236,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     fs_result?;
-    println!("ad_hoc_parity_ext_wave3_regex_filesystem_iterators_demo: ok");
+    println!("parity_ext_regex_and_filesystem_filesystem_iterators_demo: ok");
     Ok(())
 }

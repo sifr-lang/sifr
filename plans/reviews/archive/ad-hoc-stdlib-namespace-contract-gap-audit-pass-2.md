@@ -13,7 +13,7 @@ All pass 1 blockers are now locked. Spot-checked each decision against the code 
 | §5 probe-then-diagnose | "Bare module names ... are rejected ... only after normal top-level user/package resolution fails" + project mode probes workspace candidates first | Matches existing `Unresolved` path |
 | §6 tail matching | Exact-tail-first then leading-root, with concrete `is_bare_stdlib_tail` helper and three worked examples | Implementable from `STDLIB_SOURCES` |
 | §7 today-state framing | "Current bare stdlib import diagnostics are inconsistent" table in Context | Matches actual emission sites |
-| §8 M1 test scope | M1 enumerates project/package/single-file × `Import`/`ImportFrom`, plus harness arg registration | Matches `diagnostic_contract_harness.rs:30-75` shape |
+| §8 M1 test scope | M1 enumerates project/package/single-file × `Import`/`ImportFrom`, plus harness arg registration | Matches `diagnostic_rendering_harness.rs:30-75` shape |
 | §9 cross-layer sequencing | M1 explicitly owns discovery+package+lowering+frontend rendering | Single milestone, no orphan |
 | §10 smaller items | `explicit_defaultdict_bindings` named, M4 grep extended to `sifr_type_system`, deque/Counter transition stated | All present |
 

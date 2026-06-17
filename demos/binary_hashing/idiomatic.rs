@@ -6,7 +6,7 @@ fn hex_string(bytes: &[u8]) -> String {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let data = b"wave2-bytes-demo";
+    let data = b"binary_hashing-bytes-demo";
     let digest = Sha256::digest(data);
 
     assert_eq!(digest.len(), 32);

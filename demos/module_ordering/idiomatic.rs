@@ -13,6 +13,6 @@ mod consumer {
 }
 
 fn main() {
-    println!("m19_1 dependency-safe module ordering demo:");
+    println!("module_ordering dependency-safe module ordering demo:");
     println!("{}", consumer::value());
 }

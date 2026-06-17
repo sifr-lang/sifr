@@ -15,13 +15,13 @@ fn isleap(year: i64) -> bool {
 fn weekday(year: i64, month: i64, day: i64) -> i64 {
     {
         let __y0 = year;
-        let __m0 = month;
+        let __additional_modules = month;
         let __d0 = day;
         {
             let __t = vec![0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
-            let __y = if __m0 < 3 { __y0 - 1 } else { __y0 };
+            let __y = if __additional_modules < 3 { __y0 - 1 } else { __y0 };
             let __wd_raw = ((((((__y + (__y / 4)) - (__y / 100)) + (__y / 400))
-                + __t[(__m0 - 1) as usize]) + __d0) % 7) + 6;
+                + __t[(__additional_modules - 1) as usize]) + __d0) % 7) + 6;
             __wd_raw % 7
         }
     }
@@ -3184,7 +3184,7 @@ fn _zip_unimplemented_error(feature: &String) -> String {
         );
         __sifr_concat.push_str("zipfile ");
         __sifr_concat.push_str((feature).as_str());
-        __sifr_concat.push_str(" is not implemented in this wave");
+        __sifr_concat.push_str(" is not implemented in this compatibility surface");
         __sifr_concat
     }
 }

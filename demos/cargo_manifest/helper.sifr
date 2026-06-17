@@ -1,7 +1,6 @@
-# Reference: m_adhoc_3
-# Source issue: ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md
+# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
 def render() -> str:
     value: int = 42
     if str(value) == "42":
-        return "adhoc milestone 3 manifest unification demo: pass"
-    return "adhoc milestone 3 manifest unification demo: fail"
+        return "manifest unification demo: pass"
+    return "manifest unification demo: fail"

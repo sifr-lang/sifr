@@ -15,7 +15,7 @@ Implementation is **shippable** with one recommended doc-fix before merge. The d
 
 ### Testing gaps (not blockers)
 
-- **No end-to-end CLI test for project mode** (only the in-crate `build_output.rs:150` unit test exercises `Parsing import closure (N modules)` / `Analyzing N modules`). `build_output_contracts.rs:67` is single-file only. Add a CLI test that writes `main.sifr` + `helper.sifr`.
+- **No end-to-end CLI test for project mode** (only the in-crate `build_output.rs:150` unit test exercises `Parsing import closure (N modules)` / `Analyzing N modules`). `build_output_behavior.rs:67` is single-file only. Add a CLI test that writes `main.sifr` + `helper.sifr`.
 - **No invalid-input-path failure test** (Wave 3 lists "invalid input path or entrypoint resolution"). Today `read_source` (`cli_model_and_entrypoint.rs:750-764`) calls `process::exit(EXIT_USAGE_OR_CONFIG)` directly, bypassing the diagnostic-format renderer — JSON/compact callers still get a human `error:` line. Pre-existing but in Wave 3 scope.
 - **Machine-format suppression test uses warning-free input.** `emit_project_frontend_diagnostics` (`crates/sifr_driver/src/project/frontend.rs:242-269`) writes human-shaped warning lines to stderr unconditionally. Successful builds with warnings under `--diagnostic-format json|compact` would leak human text on stderr. Pre-existing, but a fixture that emits a warning would catch a regression on top of the new contract.
 

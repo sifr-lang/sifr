@@ -602,6 +602,106 @@
     },
     {
       "baseline": {
+        "coefficient_variation": 0.005931,
+        "median_ms": 1227.674,
+        "p95_ms": 1238.76,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-001-human-success-exit",
+      "budget_id": "perf.diagnostic.human_success_exit",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1350.441,
+        "p95_ms": 1424.574,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.026421,
+        "median_ms": 1214.504,
+        "p95_ms": 1293.217,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "budget_id": "perf.diagnostic.json_diagnostic_schema",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1335.954,
+        "p95_ms": 1487.2,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.015743,
+        "median_ms": 1227.41,
+        "p95_ms": 1272.689,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-003-compact-diagnostic-schema",
+      "budget_id": "perf.diagnostic.compact_diagnostic_schema",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1350.151,
+        "p95_ms": 1463.592,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.015609,
+        "median_ms": 1231.518,
+        "p95_ms": 1259.924,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-004-recovery-limit",
+      "budget_id": "perf.diagnostic.recovery_limit",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1354.67,
+        "p95_ms": 1448.913,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.002534,
+        "median_ms": 1217.324,
+        "p95_ms": 1221.378,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-005-project-error-exit",
+      "budget_id": "perf.diagnostic.project_error_exit",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1339.056,
+        "p95_ms": 1404.585,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
         "coefficient_variation": 0.017141,
         "median_ms": 1005.131,
         "p95_ms": 1031.088,
@@ -1203,106 +1303,6 @@
         "median_ms": 5.737,
         "p95_ms": 10.754,
         "peak_rss_bytes": 67108864,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.005931,
-        "median_ms": 1227.674,
-        "p95_ms": 1238.76,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-001-human-success-exit",
-      "budget_id": "perf.phase27.human_success_exit",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1350.441,
-        "p95_ms": 1424.574,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.026421,
-        "median_ms": 1214.504,
-        "p95_ms": 1293.217,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-002-json-diagnostic-schema",
-      "budget_id": "perf.phase27.json_diagnostic_schema",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1335.954,
-        "p95_ms": 1487.2,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.015743,
-        "median_ms": 1227.41,
-        "p95_ms": 1272.689,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-003-compact-diagnostic-schema",
-      "budget_id": "perf.phase27.compact_diagnostic_schema",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1350.151,
-        "p95_ms": 1463.592,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.015609,
-        "median_ms": 1231.518,
-        "p95_ms": 1259.924,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-004-recovery-limit",
-      "budget_id": "perf.phase27.recovery_limit",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1354.67,
-        "p95_ms": 1448.913,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.002534,
-        "median_ms": 1217.324,
-        "p95_ms": 1221.378,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-005-project-error-exit",
-      "budget_id": "perf.phase27.project_error_exit",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1339.056,
-        "p95_ms": 1404.585,
-        "peak_rss_bytes": 342556672,
         "timeout_ms": 60000
       }
     }

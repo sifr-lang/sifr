@@ -15,7 +15,7 @@ status: completed
 - Phase 36 is completed as of 2026-05-17.
 - Final crate/module names are locked as `sifr_analysis`, `sifr_format`, `sifr_lint`, and `sifr_lsp`.
 - VS Code extension boundary is locked to a separate `sifr-lang/sifr-vscode` repository, validated from the `editor_integrations/vscode` submodule, `SIFR_VSCODE_REPO`, or sibling `../sifr-vscode`.
-- m36.1 contract artifacts live in `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, `internal_docs/tooling_verification.md`, `verification/areas/developer_tooling/lsp_protocol_matrix.json`, and `verification/areas/developer_tooling/vscode_extension_contract.json`.
+- m36.1 contract artifacts live in `internal_docs/tooling_analysis.md`, `internal_docs/lsp_server.md`, `internal_docs/vscode_extension.md`, `internal_docs/editor_integrations.md`, `internal_docs/tooling_verification.md`, `verification/areas/developer_tooling/lsp_protocol_matrix.json`, and `verification/areas/developer_tooling/vscode_extension_rules.json`.
 - Developer tooling contract checks are wired into `scripts/run_all_tests.sh`.
 - m36.2 added `sifr_format`, `sifr_lint`, `sifr fmt [--check]`, `sifr lint`, generated `FMT`/`LINT` diagnostic docs, and formatter/rule-suppression contract checks. The follow-on production-grade formatter phase replaces the m36.2 whitespace foundation with the Ruff-backed `sifr fmt [OPTIONS] [FILES]...` surface while preserving the same CLI/analysis/LSP ownership boundary.
 - m36.3 adds `sifr_analysis`, `AnalysisHost`, analysis snapshots, workspace symbol indexing, editor query API plumbing, completion ranking/evaluation infrastructure, and analysis split-brain/snapshot guardrails.
@@ -504,14 +504,14 @@ Required files:
 - `verification/areas/developer_tooling/check_analysis_snapshot_coherence.py` - verifies `sifr_analysis` snapshots cannot publish stale `sifr_frontend` query results, reject stale revision publications, and preserve the `InvalidationReport` boundary between `sifr_frontend` and `sifr_analysis`.
 - `verification/areas/developer_tooling/check_lsp_split_brain.py` - verifies LSP handlers do not import or traverse forbidden semantic internals directly, including `ty_python_semantic`, `ty_project` Python semantics, `ruff_server` diagnostics as Sifr behavior, Python module-resolution paths, and direct HIR traversal for semantic answers.
 - `verification/areas/developer_tooling/check_tooling_dependency_boundaries.py` - verifies forbidden ty/Ruff/Python semantic dependencies are not introduced.
-- `verification/areas/developer_tooling/check_formatter_contract.py` - verifies idempotence, range-formatting, parser round trips, and formatter/LSP equivalence.
-- `verification/areas/developer_tooling/check_rule_suppression_contract.py` - verifies hard-vs-policy diagnostics, suppression, unknown suppression, unused suppression, severity config, and exclusions.
+- `verification/areas/developer_tooling/check_formatter_rules.py` - verifies idempotence, range-formatting, parser round trips, and formatter/LSP equivalence.
+- `verification/areas/developer_tooling/check_rule_suppression_rules.py` - verifies hard-vs-policy diagnostics, suppression, unknown suppression, unused suppression, severity config, and exclusions.
 - `verification/areas/developer_tooling/check_editor_assets.py` - verifies syntax assets, extension metadata, editor configs, and drift checks.
-- `verification/areas/developer_tooling/check_vscode_extension_contract.py` - main-repo cross-repo contract validator that reads `vscode_extension_contract.json`, locates `sifr-lang/sifr-vscode` through `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or a sibling checkout, fails if the extension repo is missing, and validates language id, extension id, launch command, required settings, required commands, package/test commands, and forbidden semantics-bearing extension behavior.
+- `verification/areas/developer_tooling/check_vscode_extension_rules.py` - main-repo cross-repo contract validator that reads `vscode_extension_rules.json`, locates `sifr-lang/sifr-vscode` through `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or a sibling checkout, fails if the extension repo is missing, and validates language id, extension id, launch command, required settings, required commands, package/test commands, and forbidden semantics-bearing extension behavior.
 - `verification/areas/developer_tooling/check_vscode_extension.py` - verifies extension build/test/package behavior for the located extension repo.
 - `verification/areas/developer_tooling/completion_quality/` - completion ranking/evaluation fixtures inspired by `ty_completion_eval`, including `truth/` Sifr fixtures with cursor/expected-answer directives, per-task completion settings, mean reciprocal rank output, per-task rank CSV output, and thresholds for locals, functions, types, modules, imports, member access, and current-workspace auto-import candidates.
 - `verification/areas/developer_tooling/editor_query_snapshots/` - checked-in deterministic expected results for editor queries.
-- `verification/areas/developer_tooling/vscode_extension_contract.json` - extension settings, language id, command, and repository-boundary contract.
+- `verification/areas/developer_tooling/vscode_extension_rules.json` - extension settings, language id, command, and repository-boundary contract.
 
 The LSP protocol matrix must include positive and negative coverage for:
 
@@ -629,7 +629,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - Implement include/exclude discovery behavior and editor diagnostics modes: `off`, `open-files`, and `workspace`.
   - Implement formatter foundation over `sifr_syntax`, including document formatting, range formatting, idempotence checks, parser round trips, and `sifr fmt --check`.
   - Implement `sifr lint` or the final reviewed policy-rule CLI surface.
-  - Add `check_formatter_contract.py` and `check_rule_suppression_contract.py`.
+  - Add `check_formatter_rules.py` and `check_rule_suppression_rules.py`.
 - Definition of done:
   - Hard correctness diagnostics cannot be suppressed or downgraded.
   - Policy diagnostics are configurable, suppressible only with explicit rule ids, and rendered through `sifr_diagnostics`.
@@ -696,7 +696,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
 - Scope:
   - Implement the VS Code extension in the chosen repository boundary after the shared syntax assets are validated, following `plans/issues/archive/phase36-vscode-extension-production-execution.md`.
   - Add language id, file extension, grammar, language configuration, LSP launcher, settings, commands, trace/logging, binary discovery, generated Rust preview, explain diagnostic, check/test commands, VS Code Test Explorer integration, format command, restart server, and server log access.
-  - Add `.vsix` packaging, extension integration tests, and `vscode_extension_contract.json`.
+  - Add `.vsix` packaging, extension integration tests, and `vscode_extension_rules.json`.
   - Ensure extension tests can launch the locally built `sifr lsp --stdio`.
 - Definition of done:
   - The extension builds, tests, and packages locally.
@@ -793,9 +793,9 @@ Tooling checks must run in `scripts/run_all_tests.sh --profile merge` under a cl
 - `verification/areas/developer_tooling/check_analysis_snapshot_coherence.py` passes and fails on seeded stale snapshot/revision-boundary violations.
 - `verification/areas/developer_tooling/lsp_protocol_smoke.py` and `verification/areas/developer_tooling/lsp_protocol_stress.py` pass and fail on seeded protocol failures.
 - `verification/areas/developer_tooling/check_lsp_split_brain.py` and `check_tooling_dependency_boundaries.py` pass and fail on seeded split-brain violations.
-- `verification/areas/developer_tooling/check_formatter_contract.py` passes and fails on seeded formatting drift.
-- `verification/areas/developer_tooling/check_rule_suppression_contract.py` passes and fails on seeded rule/suppression/exclusion drift.
-- `verification/areas/developer_tooling/check_editor_assets.py`, `check_vscode_extension_contract.py`, and `check_vscode_extension.py` pass and fail on seeded extension/editor asset drift.
+- `verification/areas/developer_tooling/check_formatter_rules.py` passes and fails on seeded formatting drift.
+- `verification/areas/developer_tooling/check_rule_suppression_rules.py` passes and fails on seeded rule/suppression/exclusion drift.
+- `verification/areas/developer_tooling/check_editor_assets.py`, `check_vscode_extension_rules.py`, and `check_vscode_extension.py` pass and fail on seeded extension/editor asset drift.
 - Main-repo create-pr/merge validation runs the VS Code extension contract check against the `editor_integrations/vscode` submodule, `SIFR_VSCODE_REPO`, or a sibling `../sifr-vscode` checkout; it fails with actionable setup instructions if Phase 36 extension validation is required and no extension checkout is available.
 - Completion quality fixtures pass configured ranking thresholds and fail on seeded regressions.
 - `scripts/run_all_tests.sh --profile create-pr` passes.

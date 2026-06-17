@@ -61,7 +61,7 @@ def main() -> None:
 
         writer: ZipFile = ZipFile(zip_path + "", "w", ZIP_STORED)
         _create: None = writer.create()
-        _write_text: None = writer.write("hello.txt", "hello-wave2")
+        _write_text: None = writer.write("hello.txt", "hello-archive-sample")
         _write_bytes: None = writer.write_bytes("bin/data.bin", b"xyz")
 
         names: list[str] = writer.namelist()

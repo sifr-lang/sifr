@@ -1,6 +1,6 @@
 # stdlib_parity_runtime_0 CPython Traceability Matrix
 
-Wave: `stdlib_parity_runtime_0`
+Capability: `stdlib_parity_runtime_0`
 Scope: architecture lock for runtime/file-object parity expansion
 
 ## CPython Harvest Inputs
@@ -13,9 +13,9 @@ Scope: architecture lock for runtime/file-object parity expansion
 - `Lib/test/test_timeit.py`
 - `Lib/test/test_subprocess.py`
 
-## Adopt / Adapt / Waive (Wave 0 Lock)
+## Adopt / Adapt / Waive (Capability 0 Lock)
 
-| CPython family | Sifr surface direction | State | Owning wave |
+| CPython family | Sifr surface direction | State | Owning capability |
 | --- | --- | --- | --- |
 | `test_io` sealed stream hierarchy, text/binary handles, in-memory stream object families | ship adapted sealed hierarchy (`IOBase`/`TextIOBase`/`BinaryIOBase`, `FileHandle`, `BinaryFileHandle`, `BytesIO`, `StringIO`) | `adapted` (planned) | `stdlib_parity_runtime_1` |
 | `test_tempfile` object wrappers and cleanup semantics | ship deterministic ownership wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit cleanup rules | `adapted` (planned) | `stdlib_parity_runtime_2` |
@@ -25,18 +25,18 @@ Scope: architecture lock for runtime/file-object parity expansion
 | `test_timeit` callable timing APIs | ship callable-only timing model; reject string-eval execution | `adapted` (planned) | `stdlib_parity_runtime_3` |
 | `test_subprocess` sync process boundary and option matrix | expand synchronous option matrix; keep async process lifecycle waived | `adapted` (planned) | `stdlib_parity_runtime_4` |
 
-## Explicit Waivers Locked in Wave 0
+## Explicit Waivers Locked in Capability 0
 
-- Full `_pyio` inheritance parity remains `unsupported` in this phase.
+- Full `_pyio` inheritance parity remains `unsupported` in this capability.
 - Async `subprocess.Popen` lifecycle remains `unsupported`.
 - `logging.dictConfig` and dynamic handler graph mutation remain `unsupported`.
 - Thread-aware logging ordering guarantees remain `unsupported`.
-- Logging file-sink IO failures are currently `fail-soft` (suppressed rather than surfaced) as a wave-0 host-limited baseline; wave 3 owns final logging error-policy closure.
+- Logging file-sink IO failures are currently `fail-soft` (suppressed rather than surfaced) as a capability-set-0 host-limited baseline; locale-formatting capability owns final logging error-policy readiness.
 - `SpooledTemporaryFile` remains `unsupported`.
 - String-eval `timeit` execution remains `unsupported`.
 - Timezone mutation helpers remain `unsupported`.
 
-## Local Fixture Anchors (Wave 0)
+## Local Fixture Anchors (Capability 0)
 
 - Positive lock fixture: `crates/sifr/tests/e2e/pass/runtime_file_basics.sifr`
 - Demos:

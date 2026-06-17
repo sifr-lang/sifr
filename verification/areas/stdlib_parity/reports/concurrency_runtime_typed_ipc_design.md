@@ -1,12 +1,12 @@
-# Concurrency Runtime M6 Typed IPC Design
+# Concurrency Runtime typed-IPC capability Typed IPC Design
 
-Milestone: `milestone_concurrency_runtime_6`
+Capability: `concurrency-runtime typed IPC`
 
-Status: Closed for M6 DoD. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers encode/decode/read/write length-prefixed Postcard envelopes, track request IDs and bounded in-flight windows, validate bootstrap/established-frame connection state, validate host-independent payload eligibility with unsupported-payload evidence, enforce representative compile-time payload diagnostics for concrete `require_serializable(...)` marker calls, extract compiler-internal schema shapes for the initial payload families, prove a compiler-extracted schema identity can drive Unix fixture-worker bootstrap/request/shutdown, and exercise Unix child-process stdin/stdout pipes for bootstrap, completion, cancellation, shutdown close, backpressure, malformed-frame, and unsupported-payload evidence. Public worker-pool APIs and generated worker integration remain `deferred-to-phase-X`; Windows child-process fixture evidence remains host-limited future work.
+Status: Closed for typed-IPC capability DoD. The design gate is approved, dependency metadata is wired, `ipc_value_model_basic` validates the host-independent schema/frame/backpressure value model, and internal `sifr_stdlib` helpers encode/decode/read/write length-prefixed Postcard envelopes, track request IDs and bounded in-flight windows, validate bootstrap/established-frame connection state, validate host-independent payload eligibility with unsupported-payload evidence, enforce representative compile-time payload diagnostics for concrete `require_serializable(...)` marker calls, extract compiler-internal schema shapes for the initial payload families, prove a compiler-extracted schema identity can drive Unix fixture-worker bootstrap/request/shutdown, and exercise Unix child-process stdin/stdout pipes for bootstrap, completion, cancellation, shutdown close, backpressure, malformed-frame, and unsupported-payload evidence. Public worker-pool APIs and generated worker integration remain `deferred-to-future-capability`; Windows child-process fixture evidence remains host-limited future work.
 
 ## Scope
 
-M6 defines typed IPC as production substrate for future Sifr-native supervised process workers. It is not a public CPython multiprocessing adapter, does not replace same-process channels, and does not replace raw process pipes for byte/text subprocess workflows.
+typed-IPC capability defines typed IPC as production substrate for future Sifr-native supervised process workers. It is not a public CPython multiprocessing adapter, does not replace same-process channels, and does not replace raw process pipes for byte/text subprocess workflows.
 
 The accepted substrate is:
 
@@ -17,7 +17,7 @@ The accepted substrate is:
 - typed backpressure, close, cancellation, and malformed-frame evidence,
 - stable diagnostics for unsupported CPython-shaped process-pool and multiprocessing APIs.
 
-This design does not ship a public process-worker pool. A future worker API remains `deferred-to-phase-X` and must be built on `sifr.process` plus this `sifr.ipc` substrate.
+This design does not ship a public process-worker pool. A future worker API remains `deferred-to-future-capability` and must be built on `sifr.process` plus this `sifr.ipc` substrate.
 
 ## Current Evidence
 
@@ -27,21 +27,21 @@ This design does not ship a public process-worker pool. A future worker API rema
 | `sifr.ipc.ProtocolVersion` / `protocol_version(...)` | `ipc_value_model_basic` | Host-independent value model for negotiated protocol version bounds. |
 | `sifr.ipc.FrameKind` and frame-family constants | `ipc_value_model_basic` | Covers bootstrap, work, control, health, and protocol-error frame names as values. It does not encode or decode wire frames yet. |
 | `sifr.ipc.BackpressurePolicy` / `default_backpressure()` | `ipc_value_model_basic` | Pins the default in-flight request window (`64`) and default max frame bytes (`16777216`) from the design. Runtime backpressure behavior is covered by the request-tracker and process-pipe rows below. |
-| Internal schema descriptor and hash v1 | `cargo test -p sifr_stdlib ipc_schema -- --nocapture` | `sifr_stdlib::ipc_schema` renders canonical schema descriptors and stable FNV-1a-128 schema hashes without adding a new hash dependency. Compiler-internal type extraction and fixture-worker composition are tracked separately; generated worker integration remains `deferred-to-phase-X`. |
-| Internal length-prefixed Postcard frame codec | `cargo test -p sifr_stdlib ipc_frame -- --nocapture` | `sifr_stdlib::ipc_frame` encodes and decodes the M6 envelope families with a `u32` little-endian payload length prefix, the default 16 MiB maximum, typed malformed-frame errors for truncated prefixes/payloads, oversize frames, decode failures, and trailing bytes, and no data-dependent unwrap/expect path. Process-pipe transport and connection-state behavior are covered by later rows. |
+| Internal schema descriptor and hash v1 | `cargo test -p sifr_stdlib ipc_schema -- --nocapture` | `sifr_stdlib::ipc_schema` renders canonical schema descriptors and stable FNV-1a-128 schema hashes without adding a new hash dependency. Compiler-internal type extraction and fixture-worker composition are tracked separately; generated worker integration remains `deferred-to-future-capability`. |
+| Internal length-prefixed Postcard frame codec | `cargo test -p sifr_stdlib ipc_frame -- --nocapture` | `sifr_stdlib::ipc_frame` encodes and decodes the typed-IPC capability envelope families with a `u32` little-endian payload length prefix, the default 16 MiB maximum, typed malformed-frame errors for truncated prefixes/payloads, oversize frames, decode failures, and trailing bytes, and no data-dependent unwrap/expect path. Process-pipe transport and connection-state behavior are covered by later rows. |
 | Internal stream read/write helpers | `cargo test -p sifr_stdlib ipc_transport -- --nocapture` | `sifr_stdlib::ipc_transport` writes and reads the length-prefixed Postcard envelope over `std::io::Write`/`Read` pipe-shaped byte streams, treats clean EOF before a prefix as close evidence, maps partial prefixes/payloads and oversize lengths to typed errors, and drops raw I/O error details so payload bytes and host paths are not rendered. Child-process fixtures and connection-state behavior are covered by later rows. |
-| Internal request tracker and bounded in-flight window | `cargo test -p sifr_stdlib ipc_request_tracker -- --nocapture` | `sifr_stdlib::ipc_request_tracker` validates duplicate request IDs, unknown terminal/cancel IDs, bounded in-flight capacity, completion/failure capacity release, shutdown drain/cancel-in-flight transitions, and terminating-frame close evidence without rendering payload bytes. Child-process fixtures and full connection negotiation are covered separately; generated worker integration remains `deferred-to-phase-X`. |
-| Internal connection state and bootstrap negotiation | `cargo test -p sifr_stdlib ipc_connection -- --nocapture` | `sifr_stdlib::ipc_connection` validates parent `Hello`, worker `Ready`/`Reject`, protocol overlap selection, exact schema identity/range checks, negotiated max-frame limits, established-frame phase gating, request-tracker integration, shutdown drain transition, protocol-error close, and terminating close without rendering payload bytes. Process-pipe fixtures, payload eligibility validation, and compiler diagnostics are covered separately; generated worker integration remains `deferred-to-phase-X`. |
+| Internal request tracker and bounded in-flight window | `cargo test -p sifr_stdlib ipc_request_tracker -- --nocapture` | `sifr_stdlib::ipc_request_tracker` validates duplicate request IDs, unknown terminal/cancel IDs, bounded in-flight capacity, completion/failure capacity release, shutdown drain/cancel-in-flight transitions, and terminating-frame close evidence without rendering payload bytes. Child-process fixtures and full connection negotiation are covered separately; generated worker integration remains `deferred-to-future-capability`. |
+| Internal connection state and bootstrap negotiation | `cargo test -p sifr_stdlib ipc_connection -- --nocapture` | `sifr_stdlib::ipc_connection` validates parent `Hello`, worker `Ready`/`Reject`, protocol overlap selection, exact schema identity/range checks, negotiated max-frame limits, established-frame capability gating, request-tracker integration, shutdown drain transition, protocol-error close, and terminating close without rendering payload bytes. Process-pipe fixtures, payload eligibility validation, and compiler diagnostics are covered separately; generated worker integration remains `deferred-to-future-capability`. |
 | Internal payload eligibility validator | `cargo test -p sifr_stdlib ipc_payload -- --nocapture` | `sifr_stdlib::ipc_payload` recursively validates the initially accepted `IpcSerializable` schema families and returns typed `UnsupportedPayload` evidence for unsupported process/task/resource-like shapes without rendering payload values. Compiler-internal type extraction and process-pipe unsupported-payload evidence are tracked separately. |
-| Compile-time payload eligibility diagnostics | `ipc_payload_require_serializable_basic`; `ipc_payload_process_resource_rejected`; `ipc_payload_sync_endpoint_rejected`; `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` | `sifr.ipc.require_serializable(...)` is a compiler-erased marker that accepts representative primitive/container/record payloads and emits `SIFR-OWN-0013` for concrete process-local resources and synchronization endpoints. This is diagnostic evidence only; compiler-internal schema extraction is tracked separately, and public worker/connection APIs remain `deferred-to-phase-X`. |
-| Compiler-internal payload schema extraction | `cargo test -p sifr_lowering ipc_schema_extraction -- --nocapture` | `sifr_lowering::lower::ipc_schema_extraction` maps accepted concrete payload type graphs to `sifr_stdlib::IpcSchemaType` records, enums, options, results, tuples, lists, and `dict[str, T]`, and preserves rejected type evidence as `Unsupported`. This does not claim generated worker integration, public connection/worker APIs, or runtime peer schema exchange; those remain `deferred-to-phase-X`. |
-| Compiler-extracted schema worker-boundary composition | `cargo test -p sifr_lowering generated_schema_drives_unix_fixture_worker_bootstrap_and_round_trip -- --nocapture` | The lowering-owned schema extractor feeds an internal `IpcSchemaDescriptor` into the stable schema hash, passes that identity to the Unix fixture worker, completes `Hello`/`Ready` bootstrap over child stdin/stdout, round-trips `Run`/`Completed`, and closes with `Shutdown`/`Terminating`. This is internal compose evidence only; no public worker pool or public `ipc.Connection` API ships in M6. |
-| Unix child-process pipe fixture transport | `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` | A fixture worker binary behind the internal `__test_fixture` feature validates real child-process stdin/stdout frame transport on Unix hosts for bootstrap, request completion, in-flight cancellation, shutdown/terminating close, bounded backpressure, malformed-frame reporting, and unsupported-payload evidence. Windows fixtures remain host-limited future work, and generated worker integration remains `deferred-to-phase-X`. |
+| Compile-time payload eligibility diagnostics | `ipc_payload_require_serializable_basic`; `ipc_payload_process_resource_rejected`; `ipc_payload_sync_endpoint_rejected`; `cargo test -p sifr_lowering ipc_payload_calls -- --nocapture` | `sifr.ipc.require_serializable(...)` is a compiler-erased marker that accepts representative primitive/container/record payloads and emits `SIFR-OWN-0013` for concrete process-local resources and synchronization endpoints. This is diagnostic evidence only; compiler-internal schema extraction is tracked separately, and public worker/connection APIs remain `deferred-to-future-capability`. |
+| Compiler-internal payload schema extraction | `cargo test -p sifr_lowering ipc_schema_extraction -- --nocapture` | `sifr_lowering::lower::ipc_schema_extraction` maps accepted concrete payload type graphs to `sifr_stdlib::IpcSchemaType` records, enums, options, results, tuples, lists, and `dict[str, T]`, and preserves rejected type evidence as `Unsupported`. This does not claim generated worker integration, public connection/worker APIs, or runtime peer schema exchange; those remain `deferred-to-future-capability`. |
+| Compiler-extracted schema worker-boundary composition | `cargo test -p sifr_lowering generated_schema_drives_unix_fixture_worker_bootstrap_and_round_trip -- --nocapture` | The lowering-owned schema extractor feeds an internal `IpcSchemaDescriptor` into the stable schema hash, passes that identity to the Unix fixture worker, completes `Hello`/`Ready` bootstrap over child stdin/stdout, round-trips `Run`/`Completed`, and closes with `Shutdown`/`Terminating`. This is internal compose evidence only; no public worker pool or public `ipc.Connection` API ships in typed-IPC capability. |
+| Unix child-process pipe fixture transport | `cargo test -p sifr_stdlib --test ipc_process_pipe_fixture -- --nocapture` | A fixture worker binary behind the internal `__test_fixture` feature validates real child-process stdin/stdout frame transport on Unix hosts for bootstrap, request completion, in-flight cancellation, shutdown/terminating close, bounded backpressure, malformed-frame reporting, and unsupported-payload evidence. Windows fixtures remain host-limited future work, and generated worker integration remains `deferred-to-future-capability`. |
 | CPython-shaped process-pool and multiprocessing names under `sifr.ipc` | `ipc_process_pool_executor_unsupported`; `ipc_multiprocessing_process_unsupported`; `ipc_multiprocessing_queue_unsupported`; `ipc_multiprocessing_pipe_unsupported`; `ipc_multiprocessing_pool_unsupported`; `ipc_multiprocessing_fork_unsupported`; `ipc_multiprocessing_forkserver_unsupported`; `ipc_multiprocessing_shared_memory_unsupported` | Missing-member diagnostics keep CPython-shaped process-pool and multiprocessing names out of the native IPC module. |
 
 ## Transport Boundary
 
-The first accepted transport is M4-owned child process pipes. A Sifr-generated parent process owns the child stdin/stdout pipe pair for IPC frames:
+The first accepted transport is child process pipes owned by `sifr.process`. A Sifr-generated parent process owns the child stdin/stdout pipe pair for IPC frames:
 
 - parent-to-child control and work frames are written to child stdin,
 - child-to-parent bootstrap, status, result, and error frames are read from child stdout,
@@ -59,7 +59,7 @@ Each wire frame is length-delimited followed by a Postcard-encoded envelope:
 
 The default maximum frame payload is 16 MiB. Generated peers may negotiate a lower limit during bootstrap. A payload length above the negotiated limit is `MalformedFrame(kind="oversize")`; the receiver reports the typed protocol error and closes the connection without panicking.
 
-Postcard is used only for typed IPC payload frames after this design gate. It is not a general Sifr serialization baseline, and `serde_json` / `bincode` remain rejected for IPC payload frames in this phase.
+Postcard is used only for typed IPC payload frames after this design gate. It is not a general Sifr serialization baseline, and `serde_json` / `bincode` remain rejected for IPC payload frames in this capability.
 
 ## Schema Identity
 
@@ -86,7 +86,7 @@ Until Sifr grows user-facing schema evolution annotations, generated schemas are
 
 ## Frame Families
 
-Minimum frame families are fixed for M6.
+Minimum frame families are fixed for typed-IPC capability.
 
 Bootstrap:
 
@@ -164,7 +164,7 @@ Cancellation is a typed protocol message, not a local drop shortcut.
 - `Started` may race with `Cancel`.
 - `Completed` or `Failed` may race with `Cancel`; terminal work evidence wins.
 - If the protocol is still live, parent cancellation sends `Cancel` before process termination escalation.
-- If the protocol is no longer live, process supervision returns typed process evidence from M4.
+- If the protocol is no longer live, process supervision returns typed process evidence.
 
 `Shutdown` stops new `Run` frames, allows in-flight requests to finish or be cancelled according to mode, then returns `Terminating`. EOF before `Terminating` is `IpcCloseError::UnexpectedEof`.
 
@@ -206,18 +206,18 @@ Rejected payload families:
 - subprocess `Child`, `AsyncChild`, `ProcessHandle`, pipe readers, and pipe writers,
 - task handles, join sets, cancellation scopes, and task groups,
 - locks, semaphores, barriers, once cells, guards, and channel endpoints,
-- closures, functions, bound methods, generators, iterators, and dynamic objects,
+- readiness, functions, bound methods, generators, iterators, and dynamic objects,
 - borrowed references that could outlive their lexical scope,
 - raw pointers, host handles, and foreign objects,
 - arbitrary pickle-like object graphs.
 
-Unsupported payloads are compile-time diagnostics where the compiler sees the concrete type. Runtime `UnsupportedPayload` is reserved for foreign peers, stale generated peers, or erased boundaries that cannot be proven statically. The internal `ipc_payload` helper validates the host-independent schema shape used by generated peers, `sifr.ipc.require_serializable(...)` provides representative compiler-erased payload diagnostics for concrete values, and the compiler-internal schema extractor maps accepted concrete payload type graphs into `IpcSchemaType` descriptors that are proven to compose with Unix fixture-worker bootstrap and request exchange. Generated worker integration remains `deferred-to-phase-X`.
+Unsupported payloads are compile-time diagnostics where the compiler sees the concrete type. Runtime `UnsupportedPayload` is reserved for foreign peers, stale generated peers, or erased boundaries that cannot be proven statically. The internal `ipc_payload` helper validates the host-independent schema shape used by generated peers, `sifr.ipc.require_serializable(...)` provides representative compiler-erased payload diagnostics for concrete values, and the compiler-internal schema extractor maps accepted concrete payload type graphs into `IpcSchemaType` descriptors that are proven to compose with Unix fixture-worker bootstrap and request exchange. Generated worker integration remains `deferred-to-future-capability`.
 
 The canonical schema descriptor may render `unsupported(<type_name>)` only as rejected-type evidence so generated peers and tests can preserve diagnostics without panicking. Payload eligibility validation must reject any schema graph containing that sentinel before a payload is encoded or treated as wire-compatible.
 
 ## CPython-Shaped API Classification
 
-M6 keeps CPython multiprocessing and process-pool families as evidence sources only:
+typed-IPC capability keeps CPython multiprocessing and process-pool families as evidence sources only:
 
 - `concurrent.futures.ProcessPoolExecutor`: `rejected`; Sifr CPU parallelism is `sifr.parallel`, and future process workers must use typed IPC.
 - `multiprocessing.Process`: `unsupported-with-diagnostic`; native process spawning is `sifr.process`.
@@ -241,9 +241,9 @@ IPC observability uses the shared platform fields and must redact payloads. Allo
 
 Payload bytes, decoded payload values, command lines, environment variables, and stderr contents are not metric labels or diagnostic messages unless an explicit redaction policy exists for that field.
 
-## Implementation Waves After Approval
+## Implementation Sequence After Approval
 
-M6 implementation proceeded in small PRs:
+Typed IPC implementation proceeded in small PRs:
 
 1. Add typed IPC feature metadata and locked Serde/Postcard dependency wiring only for generated code that uses `sifr.ipc`.
 2. Add compiler-known `sifr.ipc` value model and diagnostics for unsupported CPython-shaped process-pool and multiprocessing APIs.
@@ -251,7 +251,7 @@ M6 implementation proceeded in small PRs:
 4. Add frame encode/decode helpers with malformed-frame tests and no data-dependent panics.
 5. Add internal connection-state and bootstrap negotiation helpers with state-machine tests.
 6. Add process-pipe fixture coverage for bootstrap, request completion, cancellation, close, backpressure, malformed frame, and unsupported payload diagnostics.
-7. Keep Windows process-pipe fixture evidence host-limited until a deterministic Windows fixture is accepted, and keep public generated worker boundaries `deferred-to-phase-X` until a future Sifr-native worker API is accepted.
+7. Keep Windows process-pipe fixture evidence host-limited until a deterministic Windows fixture is accepted, and keep public generated worker boundaries `deferred-to-future-capability` until a future Sifr-native worker API is accepted.
 8. Update CPython evidence matrices, host matrix, and execution ledger after each merged PR.
 
-M6 closes when the definition of done in the phase issue is met. A public process-worker pool is not part of M6 closure.
+Typed IPC readiness closes when the definition of done in the capability issue is met. A public process-worker pool is not part of typed IPC readiness.

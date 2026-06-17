@@ -353,7 +353,7 @@ fn _closed_stream_error() -> String {
 }
 fn _zip_unimplemented_error(feature: &String) -> String {
     return format!(
-        "{}{}{}", "zipfile ".to_string(), feature, " is not implemented in this wave"
+        "{}{}{}", "zipfile ".to_string(), feature, " is not implemented in this compatibility surface"
         .to_string()
     );
 }
@@ -498,8 +498,8 @@ fn main() {
     let mut zip_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let temp_file_created: String = mkstemp(&"sifr_runtime_wave0_".to_string())?;
-    let temp_dir_created: String = mkdtemp(&"sifr_runtime_wave0_dir_".to_string())?;
+    let temp_file_created: String = mkstemp(&"sifr_runtime_tempfiles_and_zip_".to_string())?;
+    let temp_dir_created: String = mkdtemp(&"sifr_runtime_tempfiles_and_zip_".to_string())?;
     temp_file = format!("{}{}", temp_file_created, "".to_string());
     temp_dir = format!("{}{}", temp_dir_created, "".to_string());
     tempfile_ok = ((std::path::Path::new(&temp_file).exists()) && (std::path::Path::new(&temp_dir).exists()));
@@ -542,5 +542,5 @@ fn main() {
     assert!(tempfile_ok);
     assert!(zip_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave0_tempfile_zip_lifecycle_demo: ok");
+    println!("runtime_tempfiles_and_zip_zip_lifecycle_demo: ok");
 }

@@ -1,5 +1,5 @@
 # Reference: narrowing_numeric_sentinel_domain_normalization
-# Narrowing regression slice 4
+# Narrowing regression: numeric sentinels
 # Proves canonical float("inf") sentinels normalize onto the integer domain
 # for algorithmic accumulators without changing ordinary float(str) parsing.
 

@@ -1,5 +1,5 @@
 # CPython test_collections.py — ported assertions for sifr.collections
-# Updated to use native dict[str, int] Counter class (borrow-by-default milestone)
+# Updated to use native dict[str, int] Counter class (borrow-by-default behavior)
 from sifr.test import assert_bool_vector_eq
 from sifr.collections import (
     Counter, deque, from_list,

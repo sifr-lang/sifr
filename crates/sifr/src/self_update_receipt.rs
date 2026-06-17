@@ -65,7 +65,7 @@ pub(crate) fn discover_install_receipt(
     let receipt_path = discover_receipt_path(env)?;
     let input = fs::read_to_string(&receipt_path).map_err(|error| {
         unmanaged_receipt_diagnostic(format!(
-            "standalone install receipt {} could not be read: {error}; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract",
+            "standalone install receipt {} could not be read: {error}; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed install rules",
             receipt_path.display()
         ))
     })?;
@@ -109,7 +109,7 @@ fn discover_receipt_path(env: &ReceiptDiscoveryEnv) -> Result<PathBuf, Box<Rende
     }
 
     Err(missing_receipt_diagnostic(
-        "standalone install receipt is missing; use your package manager for package-managed installs or re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract",
+        "standalone install receipt is missing; use your package manager for package-managed installs or re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed install rules",
     ))
 }
 
@@ -223,12 +223,12 @@ pub(crate) fn parse_install_receipt_json(
 ) -> Result<InstallReceipt, Box<RenderedDiagnostic>> {
     let value = serde_json::from_str::<Value>(input).map_err(|error| {
         unmanaged_receipt_diagnostic(format!(
-            "standalone install receipt is not valid JSON: {error}; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install contract"
+            "standalone install receipt is not valid JSON: {error}; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install rules"
         ))
     })?;
     let object = value.as_object().ok_or_else(|| {
         unmanaged_receipt_diagnostic(
-            "standalone install receipt must be a JSON object; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install contract",
+            "standalone install receipt must be a JSON object; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install rules",
         )
     })?;
 
@@ -236,7 +236,7 @@ pub(crate) fn parse_install_receipt_json(
     let actual = object.keys().map(String::as_str).collect::<BTreeSet<_>>();
     if actual != expected {
         return Err(unmanaged_receipt_diagnostic(
-            "standalone install receipt predates or diverges from the schema-versioned self-update contract; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract",
+            "standalone install receipt predates or diverges from the schema-versioned self-update rules; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed install rules",
         ));
     }
 
@@ -246,7 +246,7 @@ pub(crate) fn parse_install_receipt_json(
         .ok_or_else(|| malformed_field("schema_version"))?;
     if schema_version != 1 {
         return Err(unmanaged_receipt_diagnostic(format!(
-            "standalone install receipt schema_version {schema_version} is unsupported; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed contract"
+            "standalone install receipt schema_version {schema_version} is unsupported; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed install rules"
         )));
     }
 
@@ -285,7 +285,7 @@ fn string_field<'a>(
 
 fn malformed_field(field: &str) -> Box<RenderedDiagnostic> {
     unmanaged_receipt_diagnostic(format!(
-        "standalone install receipt field `{field}` is missing or malformed; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install contract"
+        "standalone install receipt field `{field}` is missing or malformed; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the self-update-managed install rules"
     ))
 }
 

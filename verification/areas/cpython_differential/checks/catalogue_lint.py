@@ -107,7 +107,7 @@ def lint() -> list[str]:
     if "requires-python" not in policy_text:
         failures.append("policy must state that CPython follows verification/pyproject.toml requires-python")
     if "exactly one JSON line" not in policy_text:
-        failures.append("policy must state the exactly-one-JSON-line serializer contract")
+        failures.append("policy must state the exactly-one-JSON-line serializer rules")
     return failures
 
 
@@ -120,8 +120,8 @@ def validate_generated_manifest(
     declared = set(declared_ids)
     if generated.get("schema_version") != 1:
         failures.append("generated seed manifest schema_version must be 1")
-    if generated.get("generator_contract_version") != 1:
-        failures.append("generated seed manifest generator_contract_version must be 1")
+    if generated.get("generator_rules_version") != 1:
+        failures.append("generated seed manifest generator_rules_version must be 1")
     release = generated.get("release_binary")
     if not isinstance(release, dict):
         failures.append("generated seed manifest release_binary must be an object")

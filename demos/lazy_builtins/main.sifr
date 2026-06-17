@@ -1,6 +1,6 @@
-# Reference: ad_hoc_iter_wave4
-# Source issue: ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md
-# Ad-hoc iterator wave 4 demo: reversed/enumerate/zip now return Iterator[T].
+# Reference: iter_lazy_builtins
+# Reference: first-class-lazy-iterators-and-python-iterable-protocol
+# iterator Iterator behavior demo: reversed/enumerate/zip now return Iterator[T].
 # Explicit list(...) materialization remains the eager boundary.
 
 def main():

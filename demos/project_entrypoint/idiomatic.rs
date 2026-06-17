@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m22_1 canonical frontend entry path demo:");
+    println!("project_entrypoint canonical frontend entry path demo:");
     println!("{}", helper::adjusted(5));
 }

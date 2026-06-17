@@ -1,6 +1,6 @@
-# Reference: milestone_io_safety
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_io_safety
+# Reference: io_safety
+# Reference: compiler-feature-history
+# Demo: io_safety
 # File I/O operations now return Result[T, IOError] instead of panicking.
 # All error paths are handled via try/except with proper IOError types.
 

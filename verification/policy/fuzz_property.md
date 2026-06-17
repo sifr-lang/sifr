@@ -13,13 +13,13 @@ Canonical runner:
 - `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite fuzz-smoke`
 - Merge profile runs the deterministic `fuzz-smoke` suite; `property` remains part of the broader local/nightly/release hardening command above.
 
-Contracts:
+Ruless:
 - deterministic seeds and deterministic mutation stream
 - reproducible local results (same inputs -> same outcome)
 - no internal compiler panic signals in stderr/stdout
 - machine-readable result artifacts emitted through `target/verification/areas/fuzz-property-results.json`
 - mutation operators include import lines, string/numeric literals, and function signature shapes in addition to line-level edits
-- `fuzz_smoke_manifest.json` carries the versioned target contract. The runner rejects missing or duplicate target ids, missing seed files, malformed reproduction/minimization commands, and unknown target references from `property_manifest.json`.
+- `fuzz_smoke_manifest.json` carries the versioned target rules. The runner rejects missing or duplicate target ids, missing seed files, malformed reproduction/minimization commands, and unknown target references from `property_manifest.json`.
 - The deterministic fuzz-smoke runner dispatches by target id. Source mutation targets run their own seed corpus, command, diagnostic format, exit-code policy, and uniqueness budget. Codegen smoke runs valid source seeds through the generated-binary path. Structured diagnostic and project/package targets execute their declared reproduction commands and enforce exit-code and panic-signal checks.
 - Required first-party hardening target ids are:
   - `parse_check_entrypoint`
@@ -55,7 +55,7 @@ The diagnostic renderer fuzz target operates on the rendered diagnostic envelope
 - `args`: JSON object containing strings, integers, booleans, arrays, objects, or null
 - `children` and `suggestions`: optional arrays using the same bounded JSON value rules
 
-The deterministic smoke path for this target is `cargo run --locked -q -p sifr_driver --bin diagnostic_contract_harness -- --target diagnostic_renderer_entrypoint --seed <fixture>`, which renders the named structured diagnostic through JSON, human, and compact renderers. Sustained fuzzing must mutate the structured envelope directly before rendering.
+The deterministic smoke path for this target is `cargo run --locked -q -p sifr_driver --bin diagnostic_rendering_harness -- --target diagnostic_renderer_entrypoint --seed <fixture>`, which renders the named structured diagnostic through JSON, human, and compact renderers. Sustained fuzzing must mutate the structured envelope directly before rendering.
 
 ## Triage and Minimization Workflow
 
@@ -71,11 +71,11 @@ Checked-in minimization commands:
 - `python3 verification/areas/fuzz_property/checks/minimize_diagnostic_json.py --target diagnostic_renderer_entrypoint <failing-rendered-diagnostic-json>`
 - `python3 verification/areas/fuzz_property/checks/minimize_project_tree.py --target package_project_manifest_entrypoint <failing-project-dir>`
 
-Fuzz reports must include the target id, seed or source hash, minimized candidate path, and exact reproduction command from the target contract.
+Fuzz reports must include the target id, seed or source hash, minimized candidate path, and exact reproduction command from the target rules.
 
 ## Sustained Fuzzing Signal (Non-blocking)
 
 Long-running fuzzing is separate from local blocking smoke gates:
 - definition: `verification/areas/fuzz_property/sustained_lane.md`
-- status is signal-only and backlog-generating, not merge-blocking.
+- status is signal-only and signal-queue-generating, not merge-blocking.
 - nightly/release sustained lanes use the same target ids and promotion workflow as local smoke; broad coverage never bypasses minimization before becoming a merge-blocking regression.

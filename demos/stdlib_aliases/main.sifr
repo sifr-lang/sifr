@@ -1,6 +1,6 @@
-# Reference: milestone_stdlib_naming
-# Source issue: revised_phase_roadmap_698c629c.md
-# Milestone: API Naming Alignment with CPython
+# Reference: stdlib_naming
+# Reference: compiler-feature-history
+# Feature Demo: API Naming Alignment with CPython
 #
 # Demonstrates that Sifr stdlib functions now have CPython-compatible names
 # while keeping the old names as aliases for backward compatibility.

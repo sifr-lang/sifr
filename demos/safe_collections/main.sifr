@@ -1,9 +1,9 @@
-# Reference: milestone_collection_safety
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: collection_safety
+# Reference: compiler-feature-history
 # =============================================================
-# Sifr Milestone: Collection Safety Demo
+# Sifr Feature Demo: Collection Safety Demo
 # =============================================================
-# This milestone eliminates all panic paths in collection
+# This feature set eliminates all panic paths in collection
 # operations, math functions, and built-in functions.
 #
 # Features demonstrated:

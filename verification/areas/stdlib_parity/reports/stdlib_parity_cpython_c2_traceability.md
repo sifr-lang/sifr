@@ -1,6 +1,6 @@
 # stdlib_parity_c2 CPython Traceability Matrix
 
-Wave: `stdlib_parity_c2`
+Capability: `stdlib_parity_c2`
 Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 
 ## CPython Harvest Inputs
@@ -32,17 +32,17 @@ Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 
 ## Explicit Waivers
 
-- `string.Formatter` advanced CPython capabilities (`auto-numbering`, conversion specifiers, attribute/index lookup, format-spec mini-language) are waived for this wave and kept as `adapted` map-only formatting.
-- Historical note: residual `textwrap.TextWrapper` formatter ecosystem options (`fix_sentence_endings`, `max_lines`, `placeholder`) were carried from this wave and are closed by `stdlib_parity_rng_3`.
+- `string.Formatter` advanced CPython capabilities (`auto-numbering`, conversion specifiers, attribute/index lookup, format-spec mini-language) are waived for this implementation pass and kept as `adapted` map-only formatting.
+- Historical note: residual `textwrap.TextWrapper` formatter ecosystem options (`fix_sentence_endings`, `max_lines`, `placeholder`) were carried from this implementation pass and are closed by `stdlib_parity_rng_3`.
 - `fnmatch` character-class and platform path-normalization semantics (`[]`, ranges, normcase behavior) remain waived and tracked as `adapted`.
 - `difflib` advanced class families (`Differ`, `HtmlDiff`, full opcode/group APIs) remain waived and tracked as `adapted`.
-- `difflib.SequenceMatcher` keeps a simplified constructor surface (`SequenceMatcher(a, b)` only) and does not expose CPython's `isjunk` / `autojunk` parameter matrix; this wave intentionally uses deterministic non-junk matching semantics and guards the unsupported call shape via `difflib_sequence_matcher_isjunk_unsupported.sifr`.
-- `calendar` full rendering family and locale/platform formatting behavior remain waived; this wave closes constants/helper and core class entry surfaces only.
+- `difflib.SequenceMatcher` keeps a simplified constructor surface (`SequenceMatcher(a, b)` only) and does not expose CPython's `isjunk` / `autojunk` parameter matrix; this implementation pass intentionally uses deterministic non-junk matching semantics and guards the unsupported call shape via `difflib_sequence_matcher_isjunk_unsupported.sifr`.
+- `calendar` full rendering family and locale/platform formatting behavior remain waived; this implementation pass closes constants/helper and core class entry surfaces only.
 
-## Structured/Class-Surface Continuation Closure (2026-03-18)
+## Structured/Class-Surface Continuation Readiness (2026-03-18)
 
-- Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
-- Wave ownership: `stdlib_parity_struct_4` closed adjacent `textwrap` and top-level `html` polish surfaces (completed).
+- Continuation capability: `structured-data-and-class-surface-parity-expansion record`
+- Capability ownership: `stdlib_parity_struct_4` closed adjacent `textwrap` and top-level `html` polish surfaces (completed).
 - Closed in continuation:
   - `TextWrapper` adjacent option fields (`expand_tabs`, `tabsize`, `replace_whitespace`, `drop_whitespace`, `break_on_hyphens`) under bounded deterministic behavior.
   - `html.escape(s, quote: bool = True)` top-level polish with explicit `quote=False` behavior.
@@ -50,6 +50,6 @@ Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 - Locked permanent diffs carried into continuation:
   - package-wide `html` expansion (`html.parser` families) remains `unsupported`,
   - broader formatter ecosystem redesign remains out of scope.
-- Successor follow-up owner:
-  - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` (`stdlib_parity_rng_3`) for residual-waiver triage/closure without broad parser redesign (completed for `textwrap` formatter options; `html.parser` family remains unsupported).
+- Successor capability owner:
+  - `stateful-rng-crypto-and-polish-parity-expansion record` (`stdlib_parity_rng_3`) for residual-waiver triage/readiness without broad parser redesign (completed for `textwrap` formatter options; `html.parser` family remains unsupported).
 - Enforcement fixture: `crates/sifr/tests/e2e/fail/html_package_parser_unsupported.sifr`

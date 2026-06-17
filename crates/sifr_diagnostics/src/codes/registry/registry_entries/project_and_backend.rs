@@ -187,7 +187,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
             "SIFR-BUILD-0901",
             "BUILD",
-            "Standalone install receipt is missing or outside the self-update contract.",
+            "Standalone install receipt is missing or outside the self-update install rules.",
             Severity::Error,
             "crates/sifr/src/self_update_receipt.rs",
             "{message}",

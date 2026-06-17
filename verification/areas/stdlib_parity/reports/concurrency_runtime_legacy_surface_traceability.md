@@ -1,6 +1,6 @@
-# Concurrency Runtime M0a Legacy Surface Traceability
+# Concurrency Runtime Legacy Surface Traceability
 
-M0a removes CPython-shaped runtime/concurrency/process modules from the public embedded stdlib surface. These names are evidence sources only and now emit `SIFR-IMPORT-0009` with a Sifr-native replacement namespace.
+legacy-subprocess rejection capability removes CPython-shaped runtime/concurrency/process modules from the public embedded stdlib surface. These names are evidence sources only and now emit `SIFR-IMPORT-0009` with a Sifr-native replacement namespace.
 
 | Legacy import | Terminal state | Native direction | Regression fixture |
 | --- | --- | --- | --- |

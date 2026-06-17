@@ -1,8 +1,8 @@
-# Text/I18n M3 Traceability
+# Text/I18n locale-formatting capability Traceability
 
-Milestone: `milestone_text_i18n_3`
+Capability: `text/i18n locale formatting`
 
-| Backlog item | Required fixture/evidence |
+| Pending capability | Required fixture/evidence |
 | --- | --- |
 | `LocaleId` parsing/canonicalization | `crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr` covers `parse_locale("EN-US") -> "en-US"` and invalid locale typed errors; `crates/sifr_runtime/src/i18n.rs` unit tests cover the same runtime path. |
 | Likely-subtag behavior | `text_i18n_locale_formatting.sifr` and runtime unit tests cover `maximize_locale("zh-CN") -> "zh-Hans-CN"` and `minimize_locale("zh-Hans-CN") -> "zh"` through ICU4X `LocaleExpander::new_extended`. |

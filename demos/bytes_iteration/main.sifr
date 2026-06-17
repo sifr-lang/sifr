@@ -1,6 +1,6 @@
-# Reference: ad_hoc_bytes_wave1
-# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
-# wave_psp_bytes_1 demo: iteration, equality, and index semantics
+# Reference: bytes_bytes_iteration
+# Reference: first-class-bytes-and-binary-surface-foundation
+# bytes-surface-sample demo: iteration, equality, and index semantics
 
 def main() -> None:
     a: bytes = b"\x01\x02\x03"

@@ -1,18 +1,18 @@
 # stdlib_parity_iter_fix_7 CPython Traceability
 
-Phase: `ad-hoc-canonical-iteration-model-and-lazy-parity-closure`
-Wave: `stdlib_parity_iter_fix_7` (user-defined iterable protocol participation)
+Capability: `canonical-iteration-model-and-lazy-parity-readiness`
+Capability: `stdlib_parity_iter_fix_7` (user-defined iterable protocol participation)
 
-## Scope Closure
+## Scope Readiness
 
-This wave enables user-defined classes to participate in canonical iterable semantics through
+This implementation pass enables user-defined classes to participate in canonical iterable semantics through
 protocol-shaped methods:
 
 - `__iter__`
 - `__next__`
 - `__reversed__`
 
-Implemented closure in compiler layers:
+Implemented readiness in compiler layers:
 
 - type-system iterable/iterator/reversible inference from user-class protocol methods
 - HIR `next(...)` typing support for user-defined iterator classes
@@ -26,7 +26,7 @@ Primary references:
 - `Lib/test/test_iter.py`
 - `Lib/test/test_generators.py` (iterator next semantics)
 
-Mapped behavior assertions in wave fixtures:
+Mapped behavior assertions in implementation pass fixtures:
 
 - user-defined iterable class composes with `list(...)` and `for` iteration
 - user-defined reversible class composes with `reversed(...)`

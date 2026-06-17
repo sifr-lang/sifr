@@ -19,4 +19,4 @@ mod iteration_and_protocols;
 mod minmax_sorted_sum;
 mod ownership_and_async;
 mod support;
-mod task_runtime_contract_tests;
+mod task_runtime_rules_tests;

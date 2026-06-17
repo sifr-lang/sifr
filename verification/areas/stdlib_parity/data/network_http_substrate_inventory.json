@@ -5,32 +5,32 @@
     "path": "../cpython",
     "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6"
   },
-  "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
+  "platform_rules": "verification/areas/runtime_platform/platform_rules.json",
   "production_surfaces": [
     {
       "surface": "sifr.net",
-      "owner_contract": "network_http_async_network",
+      "owner_capability": "network_http_async_network",
       "terminal_state": "production-public",
       "stability": "stable-public-api",
       "notes": "Async TCP, DNS/address resolution, stream ownership, split halves, half-close, close, limits, typed errors."
     },
     {
       "surface": "sifr.tls",
-      "owner_contract": "network_http_tls",
+      "owner_capability": "network_http_tls",
       "terminal_state": "production-public",
       "stability": "stable-public-api",
       "notes": "Rustls-backed TLS configs and async streams with safe verification defaults, mTLS, SNI, ALPN, and typed errors."
     },
     {
       "surface": "sifr.url",
-      "owner_contract": "network_http_url_header_cookie",
+      "owner_capability": "network_http_url_header_cookie",
       "terminal_state": "production-public",
       "stability": "stable-public-api",
-      "notes": "Typed URL/query/percent primitives; non-UTF-8 and Unicode/IDNA behavior blocked on text/i18n provider contracts."
+      "notes": "Typed URL/query/percent primitives; non-UTF-8 and Unicode/IDNA behavior blocked on text/i18n provider ruless."
     },
     {
       "surface": "sifr.http protocol substrate",
-      "owner_contract": "network_http_url_header_cookie/network_http_http_transport",
+      "owner_capability": "network_http_url_header_cookie/network_http_http_transport",
       "terminal_state": "production-substrate",
       "stability": "stable-production-substrate",
       "notes": "Method, status, version, headers, request/response heads, body streams, typed HTTP errors, and transport substrate."
@@ -39,9 +39,9 @@
   "deferred_or_rejected_surfaces": [
     {
       "surface": "sifr.net.UdpSocket",
-      "terminal_state": "deferred-to-future-contract",
+      "terminal_state": "deferred-to-future-capability",
       "replacement": "TCP/TLS/HTTP loopback substrate",
-      "rationale": "No named near-term production datagram consumer plus fixture-insufficiency rationale was recorded in the baseline contract.",
+      "rationale": "No named near-term production datagram consumer plus fixture-insufficiency rationale was recorded in the baseline decision.",
       "revisit_rule": "A future issue must name the production consumer and prove TCP/TLS/HTTP fixtures are insufficient."
     },
     {
@@ -69,7 +69,7 @@
       "surface": "sifr.urllib.*",
       "terminal_state": "unsupported-with-diagnostic",
       "replacement": "sifr.url",
-      "rationale": "URL parsing/building is typed; opener/request policy belongs to the future HTTP client contract.",
+      "rationale": "URL parsing/building is typed; opener/request policy belongs to the future HTTP client capability.",
       "revisit_rule": "Future client APIs must be Sifr-native."
     },
     {
@@ -77,12 +77,12 @@
       "terminal_state": "unsupported-with-diagnostic",
       "replacement": "sifr.http substrate plus future HTTP product/future client",
       "rationale": "CPython-shaped client/server products are not substrate and handler subclasses are rejected.",
-      "revisit_rule": "future HTTP product and the future HTTP client contract own public product APIs."
+      "revisit_rule": "future HTTP product and the future HTTP client capability own public product APIs."
     },
     {
       "surface": "HTTP/3/QUIC",
-      "terminal_state": "deferred-to-future-contract",
-      "replacement": "future transport contract",
+      "terminal_state": "deferred-to-future-capability",
+      "replacement": "future transport capability",
       "rationale": "QUIC runtime/security strategy is outside this substrate.",
       "revisit_rule": "Open a transport issue after HTTP/2 substrate closes."
     }
@@ -90,12 +90,12 @@
   "baseline_decisions": [
     {
       "decision": "serving_scale",
-      "outcome": "single-runtime-worker per process for this contract; multi-core throughput follow-up owns scale strategy",
-      "evidence": "issues/ad-hoc-network-http-serving-scale-follow-up.md"
+      "outcome": "single-runtime-worker per process for this capability; multi-core throughput capability owns scale strategy",
+      "evidence": "issues/network-http-serving-scale-capability.md"
     },
     {
       "decision": "udp",
-      "outcome": "deferred-to-future-contract",
+      "outcome": "deferred-to-future-capability",
       "evidence": "No named production consumer and insufficiency rationale recorded."
     },
     {
@@ -120,8 +120,8 @@
     },
     {
       "decision": "so_reuseport",
-      "outcome": "deferred from public API until serving-scale follow-up closes",
-      "evidence": "issues/ad-hoc-network-http-serving-scale-follow-up.md"
+      "outcome": "deferred from public API until serving-scale capability closes",
+      "evidence": "issues/network-http-serving-scale-capability.md"
     }
   ],
   "http_type_table": [
@@ -247,7 +247,7 @@
   "workload_database": "verification/areas/stdlib_parity/reports/network_http_workload_database.md",
   "dependency_snapshots": "verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json",
   "dependency_audit": "verification/areas/stdlib_parity/reports/network_http_dependency_audit.md",
-  "contract_backlog": [
+  "capability_queue": [
     "verification/areas/stdlib_parity/reports/network_http_async_network_traceability.md",
     "verification/areas/stdlib_parity/reports/network_http_tls_traceability.md",
     "verification/areas/stdlib_parity/reports/network_http_url_header_cookie_traceability.md",

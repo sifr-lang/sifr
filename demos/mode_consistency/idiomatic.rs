@@ -7,6 +7,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m22_4 parity regression matrix demo:");
+    println!("mode_consistency parity regression matrix demo:");
     println!("{}", helper::value(1));
 }

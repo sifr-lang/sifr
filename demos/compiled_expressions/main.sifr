@@ -1,6 +1,5 @@
-# Reference: m20_1
-# Source issue: phase20-hir-decomposition-and-maintainability-hardening-execution.md
-# milestone_20_1 demo
+# Reference: compiled_expressions
+# compiled-expressions-sample demo
 # Exercises representative lowering paths after lower.rs decomposition.
 
 from sifr.math import floor
@@ -11,6 +10,6 @@ def add(a: int, b: int) -> int:
 def main():
     total: int = add(10, 11)
     if total > 20:
-        print("m20_1 lower decomposition demo:")
+        print("compiled_expressions lower decomposition demo:")
     print(total)
     print(floor(3.9))

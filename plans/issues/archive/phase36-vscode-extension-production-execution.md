@@ -30,7 +30,7 @@ sifr-lang/sifr-vscode
   .vsix packaging
 ```
 
-`milestone_36_1` locked the separate-repository boundary. The main repository records the contract in `verification/tooling/vscode_extension_contract.json`; validation locates the extension repository through `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or sibling checkout `../sifr-vscode`. The extension remains separate because VS Code extensions have their own Node/TypeScript dependency graph, `.vsix` packaging, marketplace metadata, extension tests, and release cadence.
+`milestone_36_1` locked the separate-repository boundary. The main repository records the contract in `verification/tooling/vscode_extension_rules.json`; validation locates the extension repository through `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or sibling checkout `../sifr-vscode`. The extension remains separate because VS Code extensions have their own Node/TypeScript dependency graph, `.vsix` packaging, marketplace metadata, extension tests, and release cadence.
 
 ## Non-Negotiable Boundary
 
@@ -203,8 +203,8 @@ All commands must call Sifr LSP/CLI surfaces. No command may compute Sifr semant
 
 Main `sifr-lang/sifr` repository must own or pin enough validation to prevent extension drift:
 
-- [x] `verification/tooling/vscode_extension_contract.json` records language id, extension id, settings, commands, launch command, and repository boundary.
-- [x] `verification/tooling/check_vscode_extension_contract.py` validates the main-repo contract against the extension repo.
+- [x] `verification/tooling/vscode_extension_rules.json` records language id, extension id, settings, commands, launch command, and repository boundary.
+- [x] `verification/tooling/check_vscode_extension_rules.py` validates the main-repo contract against the extension repo.
 - [x] `verification/tooling/check_vscode_extension.py` validates extension build/test/package behavior for the located extension repo.
 - [x] Main-repo validation locates the extension repo by checking `SIFR_VSCODE_REPO`, then the `editor_integrations/vscode` submodule, then a sibling `../sifr-vscode` checkout relative to the main repo root.
 - [x] Main-repo validation fails with an actionable message if the extension repo cannot be found; it must not silently skip once Phase 36 extension validation is active.
@@ -233,7 +233,7 @@ All work stays sequential. Do not begin the next PR until the current PR is merg
 4. [x] Extension repo PR (`milestone_36_7`): editor feature wiring for LSP diagnostics, completion, hover, navigation, symbols, semantic tokens, inlay hints, folding, highlights, code actions, formatting, and rename. Merged PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>.
 5. [x] Extension repo PR (`milestone_36_7`): generated Rust preview and explain diagnostic commands. Merged PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>.
 6. [x] Extension repo PR (`milestone_36_7`): VS Code Test Explorer integration. Merged PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>.
-7. [x] Main repo PR (`milestone_36_7` -> `milestone_36_8` handoff): `verification/tooling/check_vscode_extension_contract.py`, `verification/tooling/check_vscode_extension.py`, documentation, and validation evidence. Merged PR: <https://github.com/sifr-lang/sifr/pull/2135>.
+7. [x] Main repo PR (`milestone_36_7` -> `milestone_36_8` handoff): `verification/tooling/check_vscode_extension_rules.py`, `verification/tooling/check_vscode_extension.py`, documentation, and validation evidence. Merged PR: <https://github.com/sifr-lang/sifr/pull/2135>.
 8. [x] Phase 36 closeout PR (`milestone_36_8`): package evidence, validation evidence, publication checklist, and reviewer approval. Merged PR: <https://github.com/sifr-lang/sifr/pull/2136>.
 
 PR-to-milestone mapping:

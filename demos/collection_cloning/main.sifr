@@ -1,5 +1,5 @@
-# Reference: ad_hoc_clone_wave0
-# Source issue: ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md
+# Reference: clone_collection_cloning
+# Reference: ownership-aware-collection-lowering-and-clone-elision
 def double(n: int) -> int:
     return n * 2
 
@@ -22,4 +22,4 @@ def main() -> None:
     print(str(filtered))
     print(str(first))
     print(str(rest))
-    print("ad_hoc_clone_wave0_architecture_lock_demo: pass")
+    print("clone_collection_cloning_lock_demo: pass")

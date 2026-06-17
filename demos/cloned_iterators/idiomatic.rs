@@ -17,5 +17,5 @@ fn main() {
     let temporary: Vec<i64> = [9_i64, 10, 11].into_iter().map(|x| x - 1).collect();
     println!("{temporary:?}");
 
-    println!("ad_hoc_clone_wave1_iterator_comprehension_demo: pass");
+    println!("clone_cloned_iterators_comprehension_demo: pass");
 }

@@ -1,5 +1,4 @@
-# Reference: m30_1f
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: logging
 from sifr.logging import getLogger, basicConfig, FileHandler, Formatter
 from sifr.logging import Logger, INFO, WARNING
 from sifr.io import write_text, read_text, exists
@@ -95,7 +94,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 def main():
     expected: list[bool] = [True, True, True, True, True, True]
     actual: list[bool] = []
-    base: str = mktemp_path("sifr_m30_1f_logging_demo_")
+    base: str = mktemp_path("sifr_logging_logging_demo_")
     try:
         _mk: str = run_command("mkdir -p " + base)
     except IOError as e:
@@ -107,4 +106,4 @@ def main():
     append_all(actual, collect_cleanup_actual(base))
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1f logging parity demo: pass")
+    print("logging logging parity demo: pass")

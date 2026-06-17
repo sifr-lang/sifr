@@ -1257,7 +1257,7 @@ fn main() {
         let _: String = format!("{}", e.message);
         assert!(false);
     }
-    let base: String = format!("{}{}", "/tmp/sifr_phase_psp_ext_3_demo_".to_string(), format!("{}", std::process::id() as i64));
+    let base: String = format!("{}{}", "/tmp/sifr_regex_filesystem_demo_".to_string(), format!("{}", std::process::id() as i64));
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _mk: String = ({
     let __cmd = format!("{}{}", format!("{}{}", "mkdir -p ".to_string(), base), "/sub".to_string());
@@ -1284,5 +1284,5 @@ fn main() {
         let _: String = format!("{}", e.message);
         assert!(false);
     }
-    println!("ad_hoc_parity_ext_wave3_regex_filesystem_iterators_demo: ok");
+    println!("parity_ext_regex_and_filesystem_filesystem_iterators_demo: ok");
 }

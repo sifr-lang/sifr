@@ -1,5 +1,3 @@
-# Reference: m_driver_2
-# Source issue: phase31-sifr-driver-decomposition-and-boundary-hardening-execution.md
 from sifr.math import pi
 
 

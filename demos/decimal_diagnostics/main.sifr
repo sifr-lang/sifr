@@ -1,7 +1,6 @@
-# Reference: m28_4
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_diagnostics
 def main():
-    print("m28_4 decimal diagnostics contract demo")
+    print("decimal_diagnostics decimal diagnostics behavior demo")
 
     d: decimal = Decimal("10.5000")
     b: bigdecimal = BigDecimal("20.7500")

@@ -185,7 +185,7 @@ fn main() {
         Err(error) => println!("statistics error: {}", error.message),
     }
 
-    match new("sha256", "wave_psp_e1") {
+    match new("sha256", "hashlib-sample") {
         Ok(hash) => println!("hashlib.sha256 len = {}", hash.hexdigest().len()),
         Err(error) => println!("hashlib error: {}", error.message),
     }

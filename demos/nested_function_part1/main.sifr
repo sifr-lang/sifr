@@ -1,6 +1,6 @@
-# Reference: ad_hoc_nested_function_part1
-# Source issue: ad-hoc-full-nested-function-pipeline-part1-execution.md
-# Ad hoc nested-function pipeline part 1 demo
+# Reference: nested_function_part1
+# Reference: full-nested-function-pipeline-part1
+# Nested-function pipeline part 1 demo
 # Proves nested helpers are registered as typed local callables and can be
 # passed through supported higher-order call sites.
 

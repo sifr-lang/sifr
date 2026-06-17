@@ -1,5 +1,5 @@
-# Reference: ad_hoc_iter_fix_wave8
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
+# Reference: iter_fix_iterator_integration
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
 from sifr.re import finditer, Match
 from sifr.pathlib import Path
 from sifr.io import write_text
@@ -37,7 +37,7 @@ def main():
     except RegexError as e:
         print(e.message)
 
-    base: str = "/tmp/sifr_wave_psp_iter_fix_8_demo_" + str(getpid())
+    base: str = "/tmp/sifr_iterator_integration" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/nested")
         _w1: None = write_text(base + "/a.txt", "a")

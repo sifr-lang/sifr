@@ -13,6 +13,6 @@ fn compute(limit: i64) -> i64 {
 }
 
 fn main() {
-    println!("m25_2 cfg validity invariants demo:");
+    println!("valid_control_flow cfg validity invariants demo:");
     println!("{}", compute(8));
 }

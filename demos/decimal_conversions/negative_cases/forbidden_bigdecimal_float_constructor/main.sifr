@@ -1,4 +1,3 @@
-# Reference: m28_3
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_conversions
 def main():
     x: bigdecimal = BigDecimal(1.25)

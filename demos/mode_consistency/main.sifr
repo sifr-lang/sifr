@@ -1,10 +1,9 @@
-# Reference: m22_4
-# Source issue: phase22-frontend-mode-parity-hardening-execution.md
-# m22_4 parity regression matrix demo
+# Reference: mode_consistency
+# mode_consistency parity regression matrix demo
 # Primary positive fixture used by the parity matrix across check/build/run/test.
 
 from helper import value
 
 def main():
-    print('m22_4 parity regression matrix demo:')
+    print('mode_consistency parity regression matrix demo:')
     print(value(1))

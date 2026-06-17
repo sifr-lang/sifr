@@ -1,5 +1,4 @@
-# Reference: m19_2
-# Source issue: phase19-module-graph-safety-determinism-cache-execution.md
+# Reference: module_assembly
 from z_provider import z
 from a_provider import a
 

@@ -1,5 +1,5 @@
-# Reference: ad_hoc_clone_wave1
-# Source issue: ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md
+# Reference: clone_cloned_iterators
+# Reference: ownership-aware-collection-lowering-and-clone-elision
 def main():
     nums: list[int] = [2, 4, 6, 8]
 
@@ -19,4 +19,4 @@ def main():
     # Temporary source path should not need source.clone().into_iter().
     print(list(map(lambda x: x - 1, [9, 10, 11])))
 
-    print("ad_hoc_clone_wave1_iterator_comprehension_demo: pass")
+    print("clone_cloned_iterators_comprehension_demo: pass")

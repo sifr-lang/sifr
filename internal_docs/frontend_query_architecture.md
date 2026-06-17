@@ -19,51 +19,51 @@ status: active
 
 `sifr_frontend` consumes `sifr_syntax` for parsing and `sifr_lowering` for lowering and semantic diagnostics. It does not invoke codegen, rustc, cargo, CLI policy, or build artifact creation.
 
-TypeScript-Go architecture transfer M1 note: the `FrontendContext` API described
-here is the pre-session, process-local query facade. M3/M4 own re-expressing
+TypeScript-Go architecture transfer task runtime note: the `FrontendContext` API described
+here is the pre-session, process-local query facade. blocking and CPU offload/process runtime own re-expressing
 this surface around `WorkspaceSession` and immutable `WorkspaceSnapshot`
-handles; M2 owns moving semantic file reads behind `SourceProvider` first.
+handles; synchronization primitives owns moving semantic file reads behind `SourceProvider` first.
 
-TypeScript-Go architecture transfer M2 note: `sifr_frontend` now exposes the
+TypeScript-Go architecture transfer synchronization primitives note: `sifr_frontend` now exposes the
 source-provider boundary. `FrontendContext::load_project_with_provider` accepts
 any `SourceProvider`, `load_project_tracked` returns dependency reads captured
 by `TrackingSourceProvider`, and `OverlaySourceProvider` can substitute unsaved
 buffer text for disk files without mutating disk state. The overlay record owns
 URI, path, document version, source hash, source text/line map, and disk-match
-state; M3 will move overlay lifecycle ownership into `WorkspaceSession`.
+state; blocking and CPU offload will move overlay lifecycle ownership into `WorkspaceSession`.
 
-TypeScript-Go architecture transfer M3 note: `WorkspaceSession` now owns the
+TypeScript-Go architecture transfer blocking and CPU offload note: `WorkspaceSession` now owns the
 overlay table, last loaded `FrontendContext`, tracked provider dependencies,
 workspace revision, snapshot ids, compiler options, package/config identity, and
 cache registry generation handles. `WorkspaceSnapshot` freezes inspectable
 source-map and module-graph views, but analysis queries still use the existing
-`AnalysisHost` revision-token snapshot until M4 migrates them.
+`AnalysisHost` revision-token snapshot until process runtime migrates them.
 
-TypeScript-Go architecture transfer M4 note: `sifr_analysis::AnalysisHost` now
+TypeScript-Go architecture transfer process runtime note: `sifr_analysis::AnalysisHost` now
 owns a `WorkspaceSession`, and `AnalysisSnapshot` carries a frozen
 `WorkspaceSnapshot` handle plus the analysis graph/source revision. LSP request
 handlers capture an `AnalysisSnapshot` at the document-store boundary and route
 diagnostics, symbols, formatting, generated Rust preview, and editor/navigation
 queries through snapshot methods while execution remains serialized.
 
-TypeScript-Go architecture transfer M9 note: `sifr_frontend::cache_keys`
+TypeScript-Go architecture transfer cache-key identity note: `sifr_frontend::cache_keys`
 defines the deterministic identity layer for future snapshot reuse. Query/cache
 families now have typed key structures that include source content, compiler,
-workspace, package/config, and policy fingerprints before M10 adds reusable
+workspace, package/config, and policy fingerprints before snapshot reuse adds reusable
 cache storage.
 
-TypeScript-Go architecture transfer M10 note: `FrontendContext` now owns
+TypeScript-Go architecture transfer snapshot reuse note: `FrontendContext` now owns
 ref-counted cache storage for parse trees, source-map file views, lowered HIR,
-module diagnostics, and module symbol indexes. The storage uses the M9 typed key
+module diagnostics, and module symbol indexes. The storage uses the cache-key identity typed key
 families plus a semantic graph fingerprint for HIR and downstream entries, so
 unchanged dependents do not observe stale imported signatures. Changed modules
 drop their parse entries, while unchanged reverse dependents retain content-valid
 parse entries across semantic invalidation. `WorkspaceSnapshot` freezes reusable
 `Arc` payloads for overlays, dependency records, source maps, module graphs,
 compiler options, and package/config identity; per-module parse/HIR/diagnostic
-entries remain retained by active frontend query state in M10.
+entries remain retained by active frontend query state in snapshot reuse.
 
-TypeScript-Go architecture transfer M14 note: editor-facing symbol/import
+TypeScript-Go architecture transfer bucketed index note: editor-facing symbol/import
 queries now retain bucket readiness in `sifr_analysis::SymbolIndex`. Existing
 indices refresh only invalidated module buckets after document updates, while
 workspace/package/stdlib aggregate readiness remains deterministic for
@@ -71,23 +71,23 @@ completion and import suggestions. Package and stdlib buckets are explicit
 `Unavailable` states until frontend graph views carry those identities. Future
 worker execution is constrained to `ApprovedWorkerLane`; type identity,
 ownership mutation, package graph mutation, and codegen state remain listed as
-single-owner phases.
+single-owner compiler stages.
 
-TypeScript-Go architecture transfer M15 note: `WorkspaceSession` snapshots now
+TypeScript-Go architecture transfer project residency note: `WorkspaceSession` snapshots now
 carry project residency, config registry, watcher registration, and verified
 build-info state. `.sifrbuildinfo` candidates are rejected unless the current
 source hashes, package/config identity, and compiler fingerprint match the
 active workspace, so metadata never becomes correctness authority.
 
-TypeScript-Go architecture transfer M16 note: `WorkspaceSession` snapshots now
+TypeScript-Go architecture transfer trace and status note: `WorkspaceSession` snapshots now
 carry bounded `WorkspaceDebugSnapshot` trace/status output. `WorkspaceTracePhase`
-normalizes compiler-service source-update, compiler phase, cache, invalidation,
+normalizes compiler-service source-update, compiler-stage, cache, invalidation,
 stale-rejection, and LSP timing events. LSP scheduler/cancellation/stale/timing
 events are available through `sifr/debugTrace`; `AnalysisHost::debug_snapshot`
 enriches status with side-effect-free symbol bucket readiness, and `sifr trace`
 exposes a local CLI snapshot for bug reports.
 
-TypeScript-Go architecture transfer M17 note: marker-based multi-file editor
+TypeScript-Go architecture transfer editor corpus and snapshot handle note: marker-based multi-file editor
 fixtures in `verification/areas/developer_tooling/editor_query_corpus` exercise query behavior
 through `AnalysisHost`, not duplicated protocol semantics. Internal snapshot
 handles for symbols, types, signatures, diagnostics, and source spans store
@@ -96,7 +96,7 @@ resolution; they remain private preparation for future compiler API work.
 
 ## Driver Consumption
 
-Phase 35 m35.4b routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.
+frontend query architecture frontend query routing routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.
 
 The deleted driver migration shims were:
 
@@ -108,4 +108,4 @@ The deleted driver migration shims were:
 
 ## Extension Boundary
 
-Phase 36 editor analysis must consume `sifr_frontend` query results. LSP and editor adapters must not parse, lower, type-check, derive semantic diagnostics, or inspect HIR directly for semantic answers.
+developer tooling surface editor analysis must consume `sifr_frontend` query results. LSP and editor adapters must not parse, lower, type-check, derive semantic diagnostics, or inspect HIR directly for semantic answers.

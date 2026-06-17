@@ -20,7 +20,7 @@ pub(crate) use query_diagnostic_rendering::{
 mod query_diagnostics;
 pub use query_diagnostics::*;
 #[cfg(test)]
-mod query_diagnostics_contract_tests;
+mod query_diagnostics_behavior_tests;
 #[cfg(test)]
 mod query_diagnostics_equivalence_tests;
 mod source_provider;

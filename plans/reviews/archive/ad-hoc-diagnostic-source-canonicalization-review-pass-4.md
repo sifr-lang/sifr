@@ -54,7 +54,7 @@ Row 11: registry/docs tests proving new codes exist and old workspace import cod
 
 ### Contract Guardrail (Verification Matrix row 12)
 
-Row 12 requires a source-canonicalization contract checker wired into `scripts/run_all_tests.sh --profile quick` with negative self-tests. M1 line 418 proposes "extend or add a sibling contract checker." Line 539 adds the specific negative categories. **Structural gap:** M1 (lines 406–428) describes a contract checker to be built, but there is no explicit milestone task that wires it into the quick profile. The M6 closeout script references the presentation contract (`check_diagnostic_presentation_contract.py`) but does not mention a source-canonicalization equivalent. **Action item:** either add a line to M6's closeout script calling the new contract checker, or add an M1 sub-task explicitly requiring the wiring into `run_all_tests.sh --profile quick`.
+Row 12 requires a source-canonicalization contract checker wired into `scripts/run_all_tests.sh --profile quick` with negative self-tests. M1 line 418 proposes "extend or add a sibling contract checker." Line 539 adds the specific negative categories. **Structural gap:** M1 (lines 406–428) describes a contract checker to be built, but there is no explicit milestone task that wires it into the quick profile. The M6 closeout script references the presentation contract (`check_diagnostic_presentation_rules.py`) but does not mention a source-canonicalization equivalent. **Action item:** either add a line to M6's closeout script calling the new contract checker, or add an M1 sub-task explicitly requiring the wiring into `run_all_tests.sh --profile quick`.
 
 **Severity:** moderate — without the mechanic gating the quick profile, the coverage gap categories in row 12 would not be caught by the development loop. Worth explicit placement.
 
@@ -93,7 +93,7 @@ The verification matrix adds ~20 lines of table rows and M1/M2 gains ~10 lines o
 
 ## Findings Ordered by Severity
 
-1. **Moderate — Contract guardrail wiring gap (row 12):** The verification matrix requires wiring a source-canonicalization contract checker into `run_all_tests.sh --profile quick` with negative self-tests, but neither M1 sub-task, M6 closeout script, nor any closeout step explicitly mentions building or wiring this checker. Recommend: add a line to M6's closeout script calling the new contract checker (e.g., `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py`).
+1. **Moderate — Contract guardrail wiring gap (row 12):** The verification matrix requires wiring a source-canonicalization contract checker into `run_all_tests.sh --profile quick` with negative self-tests, but neither M1 sub-task, M6 closeout script, nor any closeout step explicitly mentions building or wiring this checker. Recommend: add a line to M6's closeout script calling the new contract checker (e.g., `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py`).
 
 2. **Minor — M2 edge case list partial alignment (row 3):** Row 3 of the verification matrix explicitly names CRLF source text and non-ASCII text before errors as edge cases. M2 line 436 lists zero-length EOF ranges, invalid out-of-bounds ranges, and unsupported syntax diagnostics — but does not explicitly name CRLF and non-ASCII. Recommend: expand M2 line 436 to explicitly include the CRLF and non-ASCII cases to match the matrix.
 

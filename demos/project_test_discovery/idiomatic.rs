@@ -11,6 +11,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m23_3 project/test discovery parity contract demo:");
+    println!("project_test_discovery project/test discovery parity behavior demo:");
     println!("{}", helper::value());
 }

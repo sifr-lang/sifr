@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "project_workspace",
   "owner": "compiler/frontend",
-  "description": "Project workspace import, manifest, and multi-module baseline contracts.",
+  "description": "Project workspace import, manifest, and multi-module baseline ruless.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local"
@@ -15,8 +15,8 @@
       "cases": [
         {
           "id": "frontend_mode_parity",
-          "entry": "verification/areas/project_workspace/data/validation_contracts/manifest.json",
-          "command": "contract-matrix",
+          "entry": "verification/areas/project_workspace/data/validation_suites/manifest.json",
+          "command": "validation-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
@@ -28,8 +28,8 @@
       "cases": [
         {
           "id": "project_graph_isolation",
-          "entry": "verification/areas/project_workspace/data/validation_contracts/manifest.json",
-          "command": "contract-matrix",
+          "entry": "verification/areas/project_workspace/data/validation_suites/manifest.json",
+          "command": "validation-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
@@ -134,7 +134,7 @@
     "allowed": false,
     "requires_reason": true
   },
-  "baseline_metadata_contract": {
+  "baseline_metadata_rules": {
     "required": false,
     "source": "not-applicable"
   }

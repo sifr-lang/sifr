@@ -121,6 +121,6 @@ fn main() -> Result<(), ValueError> {
     let replay_second_module_int = randint(0, 100000)?;
     assert_eq!(second_module_int, replay_second_module_int);
 
-    println!("ad_hoc_rng_wave1_stateful_object_model_demo: pass");
+    println!("rng_random_state_object_model_demo: pass");
     Ok(())
 }

@@ -1,8 +1,8 @@
 # Formatter showcase input.
 #
 # This file intentionally does not use the `.sifr` extension. During the
-# production formatter contract, copy it to a temporary `.sifr` file, run
-# `sifr fmt`, and record the before/after output in the contract evidence.
+# production formatter rules, copy it to a temporary `.sifr` file, run
+# `sifr fmt`, and record the before/after output in the rules evidence.
 
 
 def normalize_scores(own mut scores: list[int], bonus: int) -> list[int]:

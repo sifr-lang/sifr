@@ -3,12 +3,12 @@
   "description": "Profile-assignment table derived from compiler surface ownership decisions. Tokens with area:suite syntax must be selected by the named profile.",
   "rows": [
     {
-      "surface_id": "coverage_matrix_closeout",
+      "surface_id": "coverage_matrix_readiness",
       "profiles": {
-        "create-pr": ["coverage_matrix:closeout"],
-        "merge": ["coverage_matrix:closeout"],
-        "nightly": ["coverage_matrix:closeout"],
-        "release": ["coverage_matrix:closeout"]
+        "create-pr": ["coverage_matrix:readiness"],
+        "merge": ["coverage_matrix:readiness"],
+        "nightly": ["coverage_matrix:readiness"],
+        "release": ["coverage_matrix:readiness"]
       }
     },
     {
@@ -24,9 +24,9 @@
       "surface_id": "core_hir_cfg_lowering",
       "profiles": {
         "create-pr": [],
-        "merge": ["core_language:hir_analysis_contracts", "core_language:cfg_flow_contracts"],
-        "nightly": ["core_language:hir_analysis_contracts", "core_language:cfg_flow_contracts"],
-        "release": ["core_language:hir_analysis_contracts", "core_language:cfg_flow_contracts"]
+        "merge": ["core_language:hir_analysis_behaviors", "core_language:cfg_flow_behaviors"],
+        "nightly": ["core_language:hir_analysis_behaviors", "core_language:cfg_flow_behaviors"],
+        "release": ["core_language:hir_analysis_behaviors", "core_language:cfg_flow_behaviors"]
       }
     },
     {
@@ -41,10 +41,10 @@
     {
       "surface_id": "diagnostics",
       "profiles": {
-        "create-pr": ["diagnostics:contracts"],
-        "merge": ["diagnostics:contracts", "diagnostics:baselines"],
-        "nightly": ["diagnostics:contracts", "diagnostics:baselines"],
-        "release": ["diagnostics:contracts", "diagnostics:baselines"]
+        "create-pr": ["diagnostics:rules"],
+        "merge": ["diagnostics:rules", "diagnostics:baselines"],
+        "nightly": ["diagnostics:rules", "diagnostics:baselines"],
+        "release": ["diagnostics:rules", "diagnostics:baselines"]
       }
     },
     {

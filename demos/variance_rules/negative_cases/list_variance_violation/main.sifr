@@ -1,5 +1,4 @@
-# Reference: m26_2
-# Source issue: phase26-type-system-soundness-execution.md
+# Reference: variance_rules
 def accepts_mixed(values: list[int | str]) -> int:
     return len(values)
 

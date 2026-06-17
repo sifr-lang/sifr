@@ -1,7 +1,7 @@
-# Reference: milestone_narrowing_v3
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: union-narrowing-surface
+# Reference: compiler-feature-history
 # ============================================================
-# Milestone 13: Narrowing V3 Demo
+# compiler feature: Narrowing V3 Demo
 # ============================================================
 # Demonstrates:
 # 1. Equality narrowing in elif chains (no over-narrowing to Never)

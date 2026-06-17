@@ -2054,5 +2054,5 @@ fn main() {
     let mut cd = from_list(&vec!["a".to_string(), "a".to_string(), "b".to_string()]);
     cd.subtract(&from_list(&vec!["a".to_string()]));
     println!("{}", format!("{}{}", "counter_sub a = ".to_string(), format!("{}", cd.get(&"a".to_string(), 0 as i64))));
-    println!("=== milestone_stdlib_pure_expansion: all features demonstrated ===");
+    println!("=== stdlib_pure_expansion: all features demonstrated ===");
 }

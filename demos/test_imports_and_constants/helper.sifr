@@ -1,5 +1,4 @@
-# Reference: m17_3
-# Source issue: phase17-import-and-externals-correctness-execution.md
+# Reference: test_imports_and_constants
 # support module imported by tests
 BASE: int = 9
 

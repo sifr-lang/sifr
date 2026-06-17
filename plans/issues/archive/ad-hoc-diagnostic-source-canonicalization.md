@@ -28,7 +28,7 @@ This phase is based on:
 - Package diagnostic model in `crates/sifr_package/src/diag/`
 - Package diagnostic conversion in `crates/sifr/src/cli_model_and_entrypoint.rs`
 - Driver package diagnostic conversion in `crates/sifr_driver/src/project/discovery.rs`
-- Existing diagnostic renderer and contract tests in `crates/sifr_diagnostics` and `verification/tooling/check_diagnostic_presentation_contract.py`
+- Existing diagnostic renderer and contract tests in `crates/sifr_diagnostics` and `verification/tooling/check_diagnostic_presentation_rules.py`
 
 ## Current Findings
 
@@ -417,7 +417,7 @@ Any existing tests or docs that assert old workspace codes for source-level impo
   - `crates/sifr/tests/verification/package/package_missing_import_canonical`
   - `crates/sifr/tests/verification/package/package_ambiguous_import_canonical`
   - `crates/sifr/tests/verification/package/package_diagnostic_help_preserved`
-- Extend `verification/tooling/check_diagnostic_presentation_contract.py` or add a sibling `check_diagnostic_source_canonicalization_contract.py`.
+- Extend `verification/tooling/check_diagnostic_presentation_rules.py` or add a sibling `check_diagnostic_source_canonicalization_rules.py`.
 - The contract must initially fail against the current implementation.
 - Lock expected target behavior for `human`, `compact`, and `json`.
 - Record code migration decisions for `SIFR-WORKSPACE-0101`, `SIFR-WORKSPACE-0102`, `SIFR-WORKSPACE-0103`, and `SIFR-WORKSPACE-0104`.
@@ -494,10 +494,10 @@ Any existing tests or docs that assert old workspace codes for source-level impo
 - Run:
 
 ```bash
-python3 verification/tooling/check_diagnostic_presentation_contract.py
-python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test
-python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py
-python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test
+python3 verification/tooling/check_diagnostic_presentation_rules.py
+python3 verification/tooling/check_diagnostic_presentation_rules.py --self-test
+python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py
+python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py --self-test
 cargo test -p sifr -- diagnostics
 cargo test -p sifr_driver -- diagnostics
 cargo test -p sifr_driver -- project
@@ -549,25 +549,25 @@ This phase must add explicit verification for the aspects found by fuzzing and c
 
 ## Phase-Owned Contract Matrix
 
-M1 introduced `verification/tooling/check_diagnostic_source_canonicalization_contract.py`.
+M1 introduced `verification/tooling/check_diagnostic_source_canonicalization_rules.py`.
 The checker owns the mechanical phase gate until the producer changes are complete.
 
 | Gap | Fixture | Expected code | Primary span requirement | Human/compact/JSON assertions | Test owner |
 | --- | --- | --- | --- | --- | --- |
-| Parser bad indentation | `crates/sifr/tests/verification/diagnostics/parser_bad_indent/main.sifr` | `SIFR-PARSE-0002` | primary source span from `ParseError.location` | no `<unknown>`; human source arrow; compact `E code file:line:col`; JSON span completeness | `check_diagnostic_source_canonicalization_contract.py`, M2 parser unit tests |
-| Parser unterminated string | `crates/sifr/tests/verification/diagnostics/parser_unterminated_string/main.sifr` | `SIFR-PARSE-0003` | primary lexical/string span | same parser output contract | `check_diagnostic_source_canonicalization_contract.py`, M2 parser unit tests |
-| Parser invalid call ordering | `crates/sifr/tests/verification/diagnostics/parser_invalid_call_order/main.sifr` | `SIFR-PARSE-0006` | primary invalid argument span | same parser output contract | `check_diagnostic_source_canonicalization_contract.py`, M2 parser unit tests |
-| Parser empty declaration list | `crates/sifr/tests/verification/diagnostics/parser_empty_declaration/main.sifr` | `SIFR-PARSE-0007` | primary declaration keyword/list span | same parser output contract | `check_diagnostic_source_canonicalization_contract.py`, M2 parser unit tests |
-| Parser malformed declaration list recovery | `crates/sifr/tests/verification/diagnostics/parser_invalid_declaration/main.sifr` | `SIFR-PARSE-0002` | primary parser-recovery span | same parser output contract | `check_diagnostic_source_canonicalization_contract.py`, M2 parser unit tests |
-| Parser invalid match pattern | `crates/sifr/tests/verification/diagnostics/parser_invalid_match_pattern/main.sifr` | `SIFR-PARSE-0008` | primary invalid pattern span | same parser output contract | `check_diagnostic_source_canonicalization_contract.py`, M2 parser unit tests |
-| Parser unsupported syntax | `crates/sifr/tests/verification/diagnostics/parser_unsupported_syntax/main.sifr` | `SIFR-PARSE-0009` | primary unsupported syntax span when Ruff supplies a range | same parser output contract | `check_diagnostic_source_canonicalization_contract.py`, M2 parser unit tests |
-| Workspace missing import | `crates/sifr/tests/verification/project/workspace_missing_import_canonical/main.sifr` | `SIFR-IMPORT-0002` | primary span on written import target | no retired workspace code; JSON `resolution_scope` and `tried_paths` | `check_diagnostic_source_canonicalization_contract.py`, M3 integration tests |
-| Workspace ambiguous import | `crates/sifr/tests/verification/project/workspace_ambiguous_import_canonical/main.sifr` | `SIFR-IMPORT-0005` | primary span on written import target | no `SIFR-WORKSPACE-0102`; JSON `candidate_paths` and `resolution_scope` | `check_diagnostic_source_canonicalization_contract.py`, M3 integration tests |
-| Workspace namespace collision | `crates/sifr/tests/verification/project/workspace_namespace_collision_canonical/main.sifr` | `SIFR-IMPORT-0006` | primary span on written import target | no `SIFR-WORKSPACE-0103`; JSON `resolved_path` and `parent_path` | `check_diagnostic_source_canonicalization_contract.py`, M3 integration tests |
-| Import cycle | `crates/sifr/tests/verification/project/import_cycle_source_spans/main.sifr` | `SIFR-IMPORT-0007` | primary span on one cycle-causing import edge | no `SIFR-WORKSPACE-0104`; JSON `cycle` and `cycle_edges` | `check_diagnostic_source_canonicalization_contract.py`, M4 graph tests |
-| Package missing import | `crates/sifr/tests/verification/package/package_missing_import_canonical/src/main.sifr` | `SIFR-IMPORT-0002` | primary span on written import target | no retired workspace code; JSON written path and package origin context | `check_diagnostic_source_canonicalization_contract.py`, M3 package tests |
-| Package ambiguous import | `crates/sifr/tests/verification/package/package_ambiguous_import_canonical/src_a/main.sifr` | deferred: package source-map duplicate modules are rejected as manifest/source-root config diagnostics before a source import can be ambiguous | n/a | static fixture retained to prevent silent scope loss; runtime package ambiguity remains a future package source-map design issue, not a source-import producer bug | `check_diagnostic_source_canonicalization_contract.py` static checks |
-| Package help preservation | `crates/sifr/tests/verification/package/package_diagnostic_help_preserved/sifr.toml` | `SIFR-PACKAGE-0701` | spanless is allowed until manifest-key location is honest | JSON `help`, `origin_kind`, `manifest_path`, and `manifest_key` survive conversion | `check_diagnostic_source_canonicalization_contract.py`, M5 conversion tests |
+| Parser bad indentation | `crates/sifr/tests/verification/diagnostics/parser_bad_indent/main.sifr` | `SIFR-PARSE-0002` | primary source span from `ParseError.location` | no `<unknown>`; human source arrow; compact `E code file:line:col`; JSON span completeness | `check_diagnostic_source_canonicalization_rules.py`, M2 parser unit tests |
+| Parser unterminated string | `crates/sifr/tests/verification/diagnostics/parser_unterminated_string/main.sifr` | `SIFR-PARSE-0003` | primary lexical/string span | same parser output contract | `check_diagnostic_source_canonicalization_rules.py`, M2 parser unit tests |
+| Parser invalid call ordering | `crates/sifr/tests/verification/diagnostics/parser_invalid_call_order/main.sifr` | `SIFR-PARSE-0006` | primary invalid argument span | same parser output contract | `check_diagnostic_source_canonicalization_rules.py`, M2 parser unit tests |
+| Parser empty declaration list | `crates/sifr/tests/verification/diagnostics/parser_empty_declaration/main.sifr` | `SIFR-PARSE-0007` | primary declaration keyword/list span | same parser output contract | `check_diagnostic_source_canonicalization_rules.py`, M2 parser unit tests |
+| Parser malformed declaration list recovery | `crates/sifr/tests/verification/diagnostics/parser_invalid_declaration/main.sifr` | `SIFR-PARSE-0002` | primary parser-recovery span | same parser output contract | `check_diagnostic_source_canonicalization_rules.py`, M2 parser unit tests |
+| Parser invalid match pattern | `crates/sifr/tests/verification/diagnostics/parser_invalid_match_pattern/main.sifr` | `SIFR-PARSE-0008` | primary invalid pattern span | same parser output contract | `check_diagnostic_source_canonicalization_rules.py`, M2 parser unit tests |
+| Parser unsupported syntax | `crates/sifr/tests/verification/diagnostics/parser_unsupported_syntax/main.sifr` | `SIFR-PARSE-0009` | primary unsupported syntax span when Ruff supplies a range | same parser output contract | `check_diagnostic_source_canonicalization_rules.py`, M2 parser unit tests |
+| Workspace missing import | `crates/sifr/tests/verification/project/workspace_missing_import_canonical/main.sifr` | `SIFR-IMPORT-0002` | primary span on written import target | no retired workspace code; JSON `resolution_scope` and `tried_paths` | `check_diagnostic_source_canonicalization_rules.py`, M3 integration tests |
+| Workspace ambiguous import | `crates/sifr/tests/verification/project/workspace_ambiguous_import_canonical/main.sifr` | `SIFR-IMPORT-0005` | primary span on written import target | no `SIFR-WORKSPACE-0102`; JSON `candidate_paths` and `resolution_scope` | `check_diagnostic_source_canonicalization_rules.py`, M3 integration tests |
+| Workspace namespace collision | `crates/sifr/tests/verification/project/workspace_namespace_collision_canonical/main.sifr` | `SIFR-IMPORT-0006` | primary span on written import target | no `SIFR-WORKSPACE-0103`; JSON `resolved_path` and `parent_path` | `check_diagnostic_source_canonicalization_rules.py`, M3 integration tests |
+| Import cycle | `crates/sifr/tests/verification/project/import_cycle_source_spans/main.sifr` | `SIFR-IMPORT-0007` | primary span on one cycle-causing import edge | no `SIFR-WORKSPACE-0104`; JSON `cycle` and `cycle_edges` | `check_diagnostic_source_canonicalization_rules.py`, M4 graph tests |
+| Package missing import | `crates/sifr/tests/verification/package/package_missing_import_canonical/src/main.sifr` | `SIFR-IMPORT-0002` | primary span on written import target | no retired workspace code; JSON written path and package origin context | `check_diagnostic_source_canonicalization_rules.py`, M3 package tests |
+| Package ambiguous import | `crates/sifr/tests/verification/package/package_ambiguous_import_canonical/src_a/main.sifr` | deferred: package source-map duplicate modules are rejected as manifest/source-root config diagnostics before a source import can be ambiguous | n/a | static fixture retained to prevent silent scope loss; runtime package ambiguity remains a future package source-map design issue, not a source-import producer bug | `check_diagnostic_source_canonicalization_rules.py` static checks |
+| Package help preservation | `crates/sifr/tests/verification/package/package_diagnostic_help_preserved/sifr.toml` | `SIFR-PACKAGE-0701` | spanless is allowed until manifest-key location is honest | JSON `help`, `origin_kind`, `manifest_path`, and `manifest_key` survive conversion | `check_diagnostic_source_canonicalization_rules.py`, M5 conversion tests |
 
 M1 validation status:
 
@@ -583,14 +583,14 @@ M2-M5 implementation status:
 - Package discovery now emits `SIFR-IMPORT-0002` for own-package missing source imports with the written import span and package-origin context. Undeclared external/transitive package imports remain package policy diagnostics.
 - Import-cycle ordering now has a source-aware path that emits `SIFR-IMPORT-0007` with a primary import-edge span, related edge spans, and `cycle`/`cycle_edges` args.
 - Package diagnostic conversion now goes through `sifr_driver::diagnostics::render_package_diagnostic`, preserving `PackageDiagnostic.help` and useful `PackageDiagnosticOrigin` args for CLI and driver paths.
-- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py` and `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test` pass locally on 2026-05-29.
+- `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py` and `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py --self-test` pass locally on 2026-05-29.
 
 M6 closeout status:
 
 - Merged implementation PR: https://github.com/sifr-lang/sifr/pull/2197 (`71730845b5e0f86a91360fa368257e1881e277fb`).
 - `cargo fmt --check` passed locally on 2026-05-29.
-- `python3 verification/tooling/check_diagnostic_presentation_contract.py` and `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test` passed locally on 2026-05-29.
-- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py` and `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test` passed locally on 2026-05-29.
+- `python3 verification/tooling/check_diagnostic_presentation_rules.py` and `python3 verification/tooling/check_diagnostic_presentation_rules.py --self-test` passed locally on 2026-05-29.
+- `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py` and `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py --self-test` passed locally on 2026-05-29.
 - `bash scripts/run_validation_contract_matrix.sh --suite phase23_graph_isolation` passed locally on 2026-05-29 after updating the cycle stability contract to the canonical `SIFR-IMPORT-0007` message.
 - `cargo test -p sifr -- diagnostics`, `cargo test -p sifr_driver -- diagnostics project`, `cargo test -p sifr_driver --lib`, `cargo test -p sifr_package`, and `cargo test -p sifr_syntax` passed locally on 2026-05-29.
 - `scripts/run_all_tests.sh --profile quick` passed locally on 2026-05-29. The final validation lane report recorded `wall_time=624.67s` and advisories for warm wall-time budget and e2e group skew; these are performance advisories, not validation failures.

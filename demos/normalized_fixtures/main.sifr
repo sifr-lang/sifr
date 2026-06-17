@@ -1,6 +1,5 @@
-# Reference: phase31_m31k
-# Source issue: phase31-m31k-canonical-sifr-fixture-normalization-execution.md
-# Phase 31 m31_k Demo: Canonical Sifr Fixture Normalization (0043)
+# Reference: normalized_fixturesk
+# driver/package architecture normalized_fixtures Demo: Canonical Sifr Fixture Normalization (0043)
 
 def parseDigit(ch: str) -> int:
     if ch == "0":

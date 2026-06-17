@@ -161,8 +161,8 @@ fn main() {
     let mut tempfile_ok = false;
     let mut zip_ok = false;
 
-    if let Ok(created_file) = mkstemp("sifr_runtime_wave0_") {
-        if let Ok(created_dir) = mkdtemp("sifr_runtime_wave0_dir_") {
+    if let Ok(created_file) = mkstemp("sifr_runtime_tempfiles_and_zip_") {
+        if let Ok(created_dir) = mkdtemp("sifr_runtime_tempfiles_and_zip_") {
             temp_file = created_file;
             temp_dir = created_dir;
             tempfile_ok = temp_file.exists() && temp_dir.exists();
@@ -191,5 +191,5 @@ fn main() {
     assert!(tempfile_ok);
     assert!(zip_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave0_tempfile_zip_lifecycle_demo: ok");
+    println!("runtime_tempfiles_and_zip_zip_lifecycle_demo: ok");
 }

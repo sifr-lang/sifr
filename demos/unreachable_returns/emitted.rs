@@ -10,7 +10,7 @@ fn consume(n: i64) -> i64 {
 }
 
 fn main() {
-    println!("m25_4 diagnostics and consumer integration demo:");
+    println!("unreachable_returns diagnostics and consumer integration demo:");
     println!("{}", consume(inferred(true)));
     println!("{}", consume(inferred(false)));
 }

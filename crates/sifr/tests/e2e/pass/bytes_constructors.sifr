@@ -39,9 +39,9 @@ def main() -> None:
 
     encode_ok: bool = False
     try:
-        encoded: bytes = "bytes-wave2".encode("utf-8")
+        encoded: bytes = "bytes-constructor-sample".encode("utf-8")
         decoded: str = encoded.decode("utf-8")
-        assert decoded == "bytes-wave2"
+        assert decoded == "bytes-constructor-sample"
         encode_ok = True
     except ParseError as e:
         _ = str(e.message)

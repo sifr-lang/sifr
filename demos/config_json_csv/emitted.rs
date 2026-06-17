@@ -3023,9 +3023,9 @@ fn __sifr_next_file_handle_id() -> i64 {
 fn main() {
     let mut encoder: JSONEncoder = JSONEncoder::new(Some(2 as i64), false, true);
     let mut decoder: JSONDecoder = JSONDecoder::new();
-    let payload: JsonValue = from_object(&vec![("module".to_string(), from_str(&"wave1".to_string())), ("version".to_string(), from_int(1 as i64))]);
+    let payload: JsonValue = from_object(&vec![("module".to_string(), from_str(&"config_json_csv".to_string())), ("version".to_string(), from_int(1 as i64))]);
     let encoded: String = encoder.encode(&payload);
-    assert!(encoded == "{\"module\":\"wave1\",\"version\":1}".to_string());
+    assert!(encoded == "{\"module\":\"config_json_csv\",\"version\":1}".to_string());
     let mut decoded_ok: bool = false;
     let __sifr_try_res: Result<(), Error> = (|| {
     let decoded_value: JsonValue = (decoder.decode(&encoded)).map_err(|__e| Error::new(__e.to_string()))?;

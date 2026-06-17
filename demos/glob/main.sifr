@@ -1,5 +1,4 @@
-# Reference: m30_1e
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: glob
 from sifr.glob import glob
 from sifr.io import write_text
 from sifr.os import run_command, getpid
@@ -8,7 +7,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_glob_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_m30_1e_glob_demo_" + str(getpid())
+    base: str = "/tmp/sifr_glob_glob_demo_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base)
         _w1: None = write_text(base + "/a.txt", "a")
@@ -49,4 +48,4 @@ def main():
     actual: list[bool] = collect_glob_actual()
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1e glob parity demo: pass")
+    print("glob glob parity demo: pass")

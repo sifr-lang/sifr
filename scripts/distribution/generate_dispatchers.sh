@@ -129,7 +129,7 @@ normalize_channel() {
       echo "\$1"
       ;;
     stable)
-      fail "stable channel installs are disabled until Phase 39"
+      fail "stable channel installs are disabled until a stable channel is supported"
       ;;
     "")
       fail "channel must not be empty"

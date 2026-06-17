@@ -9,5 +9,5 @@
     "exclude", "extend-exclude", "respect-gitignore", "force-exclude", "rules",
     "per-file-ignores"
   ],
-  "notes": "The lint config contract implements the non-fix Sifr-owned lint config schema. Fix-related keys remain reserved until the lint-fix contract."
+  "notes": "The lint config rules implements the non-fix Sifr-owned lint config schema. Fix-related keys remain reserved until the lint-fix rules."
 }

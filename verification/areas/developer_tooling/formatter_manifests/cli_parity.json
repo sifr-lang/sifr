@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "source": "plans/issues/archive/ad-hoc-production-grade-sifr-formatter-execution.md#formatter-cli-parity-contract",
+  "source": "plans/issues/archive/production-grade-sifr-formatter-execution.md#formatter-cli-parity-rules",
   "command": "sifr fmt [OPTIONS] [FILES]...",
   "ruff_command": "ruff format [FILES]...",
   "allowed_classifications": ["supported", "adapted", "not-applicable", "not-exposed"],

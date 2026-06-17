@@ -120,7 +120,7 @@ fn main() {
     let __encoding = "utf-8".to_string();
     let __encoding_lower = __encoding.to_ascii_lowercase();
     if (__encoding_lower != "utf-8".to_string()) && (__encoding_lower != "utf8".to_string()) { Err(ParseError { message: format!("{} currently supports only UTF-8 encoding, got {}", "str.encode()".to_string(), __encoding) }) } else { Ok({
-    let __s = "wave2-demo".to_string();
+    let __s = "bytes_constructors-demo".to_string();
     __s.as_bytes().to_vec()
 }) }
 })?;
@@ -129,7 +129,7 @@ fn main() {
     let __encoding_lower = __encoding.to_ascii_lowercase();
     if (__encoding_lower != "utf-8".to_string()) && (__encoding_lower != "utf8".to_string()) { Err(ParseError { message: format!("{} currently supports only UTF-8 encoding, got {}", "bytes.decode()".to_string(), __encoding) }) } else { String::from_utf8(encoded.iter().copied().collect::<Vec<u8>>()).map_err(|e| ParseError { message: e.to_string() }) }
 })?;
-    assert!(decoded == "wave2-demo".to_string());
+    assert!(decoded == "bytes_constructors-demo".to_string());
     encode_ok = true;
     return Ok(());
 })();
@@ -138,5 +138,5 @@ fn main() {
         println!("{}", format!("{}{}", "unexpected ParseError: ".to_string(), e.message));
     }
     assert!(encode_ok);
-    println!("ad_hoc_bytes_wave2_conversion_surface_demo: ok");
+    println!("bytes_bytes_constructors_surface_demo: ok");
 }

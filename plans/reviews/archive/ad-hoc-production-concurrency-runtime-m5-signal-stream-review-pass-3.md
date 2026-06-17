@@ -10,7 +10,7 @@ The single previously-blocking class of finding (Tokio `signal` feature added in
 
 - `crates/sifr_stdlib/src/features.rs:189` (`TOKIO_DEPS`)
 - `crates/sifr/tests/e2e_support/fixture_compilation.rs:481` (`tokio_dependency_spec()` used by the grouped e2e harness)
-- `crates/sifr/tests/e2e_support/harness_contract_tests.rs:522` (harness drift assertion)
+- `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:522` (harness drift assertion)
 - `crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:165` (`test_generate_project_emits_tokio_dependency_when_required`)
 
 No regression after rebase.

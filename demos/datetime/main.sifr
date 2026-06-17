@@ -1,5 +1,4 @@
-# Reference: m30_1d
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: datetime
 from sifr.datetime import timedelta, datetime, now, from_timestamp, timezone
 from sifr.test import assert_bool_vector_eq
 
@@ -49,4 +48,4 @@ def main():
     append_all(actual, collect_negative_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1d datetime parity demo: pass")
+    print("datetime datetime parity demo: pass")

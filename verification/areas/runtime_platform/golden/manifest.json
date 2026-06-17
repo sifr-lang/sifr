@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "closed_contracts_env": "SIFR_PLATFORM_CLOSED_CONTRACTS",
+  "closed_capabilities_env": "SIFR_PLATFORM_CLOSED_CAPABILITIES",
   "entries": [
     {
-      "program": "binary_file_io_contract.sifr",
-      "command": "cargo run -q -p sifr -- run --isolated verification/areas/runtime_platform/golden/binary_file_io_contract.sifr",
+      "program": "binary_file_io_capability.sifr",
+      "command": "cargo run -q -p sifr -- run --isolated verification/areas/runtime_platform/golden/binary_file_io_capability.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: binary-file-io pass"
@@ -14,7 +14,7 @@
       "must_not_depend_on": [
         "text_i18n_core_unicode"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "binary open",
         "byte-preserving round trip",
@@ -34,7 +34,7 @@
         "text_i18n_import_boundary"
       ],
       "must_not_depend_on": [],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "bare CPython text import diagnostic",
         "Sifr-native namespace suggestion"
@@ -53,7 +53,7 @@
         "concurrency_runtime_import_boundary"
       ],
       "must_not_depend_on": [],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "bare CPython concurrency import diagnostics",
         "Sifr-native runtime namespace suggestions"
@@ -74,7 +74,7 @@
       "must_not_depend_on": [
         "sifr.socket"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "bare CPython network import diagnostic",
         "Sifr-native network namespace suggestion"
@@ -95,7 +95,7 @@
       "must_not_depend_on": [
         "sifr.ssl"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "bare CPython TLS import diagnostic",
         "Sifr-native TLS namespace suggestion"
@@ -116,7 +116,7 @@
       "must_not_depend_on": [
         "sifr.urllib"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "bare CPython URL import diagnostic",
         "Sifr-native URL namespace suggestion"
@@ -137,7 +137,7 @@
       "must_not_depend_on": [
         "sifr.http.client"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "bare CPython HTTP import diagnostic",
         "Sifr-native HTTP substrate namespace suggestion"
@@ -158,7 +158,7 @@
       "must_not_depend_on": [
         "sifr.selectors"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "bare CPython readiness import diagnostic",
         "Sifr-native async network namespace suggestion"
@@ -186,9 +186,9 @@
         "sifr.subprocess",
         "sifr.concurrent"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
-        "legacy CPython-shaped Sifr runtime surfaces removed or diagnosed before structured-tasks contract"
+        "legacy CPython-shaped Sifr runtime surfaces removed or diagnosed before structured-tasks capability"
       ]
     },
     {
@@ -204,7 +204,7 @@
         "network_http_async_network"
       ],
       "must_not_depend_on": [],
-      "blocked_until_contracts": [
+      "blocked_until_capabilities": [
         "text_i18n_core_unicode",
         "network_http_async_network"
       ],
@@ -225,7 +225,7 @@
         "concurrency_runtime_process"
       ],
       "must_not_depend_on": [],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "subprocess text mode consumes explicit encoding substrate"
       ]
@@ -244,7 +244,7 @@
       "must_not_depend_on": [
         "text_i18n_core_unicode"
       ],
-      "blocked_until_contracts": [],
+      "blocked_until_capabilities": [],
       "checks": [
         "explicit locale formatting",
         "host-limited locale discovery",

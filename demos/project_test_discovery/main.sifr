@@ -1,10 +1,9 @@
-# Reference: m23_3
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
-# m23_3 project/test discovery parity contract demo
+# Reference: project_test_discovery
+# project_test_discovery project/test discovery parity behavior demo
 # Project and test discovery should include the same support modules for equivalent roots.
 
 from helper import value
 
 def main():
-    print('m23_3 project/test discovery parity contract demo:')
+    print('project_test_discovery project/test discovery parity behavior demo:')
     print(value())

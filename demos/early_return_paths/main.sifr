@@ -1,6 +1,5 @@
-# Reference: m25_1
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_1 cfg integration contract demo
+# Reference: early_return_paths
+# early_return_paths cfg integration behavior demo
 # Validates that CFG-backed always-exits detection is active in lowering.
 
 def pick_value(maybe: int | None) -> int:
@@ -12,6 +11,6 @@ def pick_value(maybe: int | None) -> int:
     return maybe
 
 def main():
-    print('m25_1 cfg integration contract demo:')
+    print('early_return_paths cfg integration behavior demo:')
     print(pick_value(41))
     print(pick_value(None))

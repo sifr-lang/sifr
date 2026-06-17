@@ -36,9 +36,9 @@ acquiring the install lock. `--format json` is available only with `--dry-run`.
 ## Preview Limits
 
 Self-update currently accepts only `alpha` and `beta` preview channels.
-`stable` channels and stable-looking version pins remain gated until Phase 39
+`stable` channels and stable-looking version pins remain gated until the stable release channel is enabled
 stable-channel promotion. Release-candidate channels and `-rc.N` pins are also
-rejected before Phase 39.
+rejected before the stable release channel is enabled.
 
 Same-version reinstalls, downgrades, and channel switches require `--force`:
 
@@ -58,8 +58,8 @@ package manager, or a source build, update through that tool instead. Use
 `sifr --version` for the raw binary version in unmanaged installs.
 
 If the diagnostic says the receipt is missing, malformed, or predates the
-self-update contract, rerun the standalone installer to enter the managed
-contract:
+self-update rules, rerun the standalone installer to enter the managed
+rules:
 
 ```bash
 curl -fsSL https://sifr.sh/install | sh

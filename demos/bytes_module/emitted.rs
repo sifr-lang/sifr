@@ -393,7 +393,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
 
 fn main() {
     let payload: Vec<u8> = {
-    let __s = "bytes-phase30".to_string();
+    let __s = "bytes-bytes_module".to_string();
     __s.as_bytes().to_vec()
 };
     let expected: Vec<String> = vec!["2".to_string(), "5".to_string(), "true".to_string(), "true".to_string()];
@@ -411,5 +411,5 @@ fn main() {
     let invalid_expected_ok: Vec<bool> = vec![false, false];
     let invalid_actual_ok: Vec<bool> = collect_invalid_actual_ok();
     assert_bool_vector_eq(&invalid_actual_ok, &invalid_expected_ok);
-    println!("m30_1a bytes parity demo: pass");
+    println!("bytes_module bytes parity demo: pass");
 }

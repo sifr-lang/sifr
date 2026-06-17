@@ -16,7 +16,7 @@
   "rows": [
     {
       "surface_id": "parser_acceptance_rejection",
-      "guarantee_id": "parser-syntax-contract",
+      "guarantee_id": "parser-syntax-rule",
       "support_status": "stable",
       "owner": "compiler/core-language",
       "status": "blocking",
@@ -27,7 +27,7 @@
     },
     {
       "surface_id": "parser_fuzz_hardening",
-      "guarantee_id": "parser-syntax-contract",
+      "guarantee_id": "parser-syntax-rule",
       "support_status": "stable",
       "owner": "compiler/hardening",
       "status": "blocking",
@@ -37,8 +37,8 @@
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite fuzz-smoke"
     },
     {
-      "surface_id": "compiler_crash_ice_contract",
-      "guarantee_id": "compiler-crash-ice-contract",
+      "surface_id": "compiler_crash_ice_rule",
+      "guarantee_id": "compiler-crash-ice-rule",
       "support_status": "stable",
       "owner": "compiler/hardening",
       "status": "blocking",
@@ -49,7 +49,7 @@
     },
     {
       "surface_id": "compiler_crash_stress",
-      "guarantee_id": "compiler-crash-ice-contract",
+      "guarantee_id": "compiler-crash-ice-rule",
       "support_status": "stable",
       "owner": "compiler/hardening",
       "status": "blocking",
@@ -59,19 +59,19 @@
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area regression --suite crashes"
     },
     {
-      "surface_id": "diagnostics_contracts",
-      "guarantee_id": "diagnostic-contract",
+      "surface_id": "diagnostics_rules",
+      "guarantee_id": "diagnostic-rule",
       "support_status": "stable",
       "owner": "compiler/diagnostics",
       "status": "blocking",
-      "merge_suite": "diagnostics:contracts",
-      "nightly_release_suite": "diagnostics:contracts",
+      "merge_suite": "diagnostics:rules",
+      "nightly_release_suite": "diagnostics:rules",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite rules"
     },
     {
       "surface_id": "diagnostic_renderer_baselines",
-      "guarantee_id": "diagnostic-contract",
+      "guarantee_id": "diagnostic-rule",
       "support_status": "stable",
       "owner": "compiler/diagnostics",
       "status": "blocking",
@@ -82,7 +82,7 @@
     },
     {
       "surface_id": "diagnostic_recovery",
-      "guarantee_id": "diagnostic-contract",
+      "guarantee_id": "diagnostic-rule",
       "support_status": "stable",
       "owner": "compiler/diagnostics",
       "status": "blocking",
@@ -92,19 +92,19 @@
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines"
     },
     {
-      "surface_id": "hir_name_type_flow_contracts",
-      "guarantee_id": "hir-name-type-flow-contract",
+      "surface_id": "hir_name_type_flow_rules",
+      "guarantee_id": "hir-name-type-flow-rule",
       "support_status": "stable",
       "owner": "compiler/core-language",
       "status": "blocking",
-      "merge_suite": "core_language:hir_analysis_contracts,core_language:cfg_flow_contracts",
-      "nightly_release_suite": "core_language:hir_analysis_contracts,core_language:cfg_flow_contracts",
+      "merge_suite": "core_language:hir_analysis_behaviors,core_language:cfg_flow_behaviors",
+      "nightly_release_suite": "core_language:hir_analysis_behaviors,core_language:cfg_flow_behaviors",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite hir_analysis_contracts --suite cfg_flow_contracts"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite hir_analysis_behaviors --suite cfg_flow_behaviors"
     },
     {
       "surface_id": "lowering_layer_snapshots",
-      "guarantee_id": "hir-name-type-flow-contract",
+      "guarantee_id": "hir-name-type-flow-rule",
       "support_status": "stable",
       "owner": "compiler/core-language",
       "status": "blocking",
@@ -115,7 +115,7 @@
     },
     {
       "surface_id": "codegen_merge_blocking",
-      "guarantee_id": "codegen-generated-rust-contract",
+      "guarantee_id": "codegen-generated-rust-rule",
       "support_status": "stable",
       "owner": "compiler/codegen",
       "status": "blocking",
@@ -126,7 +126,7 @@
     },
     {
       "surface_id": "generated_rust_toolchain_survival",
-      "guarantee_id": "codegen-generated-rust-contract",
+      "guarantee_id": "codegen-generated-rust-rule",
       "support_status": "stable",
       "owner": "compiler/codegen",
       "status": "blocking",
@@ -137,7 +137,7 @@
     },
     {
       "surface_id": "codegen_snapshots",
-      "guarantee_id": "codegen-generated-rust-contract",
+      "guarantee_id": "codegen-generated-rust-rule",
       "support_status": "stable",
       "owner": "compiler/codegen",
       "status": "blocking",
@@ -148,18 +148,18 @@
     },
     {
       "surface_id": "runtime_platform_golden",
-      "guarantee_id": "runtime-platform-contract",
+      "guarantee_id": "runtime-platform-rules",
       "support_status": "stable",
       "owner": "runtime/platform",
       "status": "blocking",
       "merge_suite": "runtime_platform:platform-golden",
-      "nightly_release_suite": "runtime_platform:platform-contract",
+      "nightly_release_suite": "runtime_platform:platform-rules",
       "regression_suite": "regression:fixedbugs",
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-golden"
     },
     {
       "surface_id": "runtime_supported_platforms",
-      "guarantee_id": "runtime-platform-contract",
+      "guarantee_id": "runtime-platform-rules",
       "support_status": "stable",
       "owner": "runtime/platform",
       "status": "blocking",
@@ -169,8 +169,8 @@
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-support-matrix --suite platform-evidence"
     },
     {
-      "surface_id": "project_workspace_contracts",
-      "guarantee_id": "project-workspace-package-contract",
+      "surface_id": "project_workspace_behaviors",
+      "guarantee_id": "project-workspace-package-rule",
       "support_status": "stable",
       "owner": "compiler/frontend",
       "status": "blocking",
@@ -181,7 +181,7 @@
     },
     {
       "surface_id": "package_management_integration",
-      "guarantee_id": "project-workspace-package-contract",
+      "guarantee_id": "project-workspace-package-rule",
       "support_status": "stable",
       "owner": "compiler/package-management",
       "status": "blocking",
@@ -192,18 +192,18 @@
     },
     {
       "surface_id": "cli_exit_codes",
-      "guarantee_id": "cli-exit-code-contract",
+      "guarantee_id": "cli-exit-code-rule",
       "support_status": "stable",
       "owner": "developer-tooling",
       "status": "blocking",
-      "merge_suite": "sifr:validation_contracts",
-      "nightly_release_suite": "sifr:validation_contracts",
+      "merge_suite": "sifr:validation_suites",
+      "nightly_release_suite": "sifr:validation_suites",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "cargo test -p sifr --test validation_contracts"
+      "reproduction_command": "cargo test -p sifr --test validation_suites"
     },
     {
       "surface_id": "lsp_marker_corpus",
-      "guarantee_id": "tooling-lsp-contract",
+      "guarantee_id": "tooling-lsp-rule",
       "support_status": "stable",
       "owner": "compiler/tooling",
       "status": "blocking",
@@ -214,7 +214,7 @@
     },
     {
       "surface_id": "lsp_transcript_replay",
-      "guarantee_id": "tooling-lsp-contract",
+      "guarantee_id": "tooling-lsp-rule",
       "support_status": "stable",
       "owner": "compiler/tooling",
       "status": "blocking",
@@ -225,7 +225,7 @@
     },
     {
       "surface_id": "performance_budgets",
-      "guarantee_id": "performance-determinism-contract",
+      "guarantee_id": "performance-determinism-rule",
       "support_status": "stable",
       "owner": "compiler/performance",
       "status": "blocking",
@@ -236,7 +236,7 @@
     },
     {
       "surface_id": "performance_trends",
-      "guarantee_id": "performance-determinism-contract",
+      "guarantee_id": "performance-determinism-rule",
       "support_status": "stable",
       "owner": "compiler/performance",
       "status": "blocking",
@@ -247,7 +247,7 @@
     },
     {
       "surface_id": "incremental_determinism_equivalence",
-      "guarantee_id": "performance-determinism-contract",
+      "guarantee_id": "performance-determinism-rule",
       "support_status": "stable",
       "owner": "compiler/performance",
       "status": "blocking",
@@ -258,7 +258,7 @@
     },
     {
       "surface_id": "fuzz_property_smoke",
-      "guarantee_id": "hardening-oracle-contract",
+      "guarantee_id": "hardening-oracle-rule",
       "support_status": "stable",
       "owner": "compiler/hardening",
       "status": "blocking",
@@ -269,7 +269,7 @@
     },
     {
       "surface_id": "cpython_hand_seeded_differential",
-      "guarantee_id": "hardening-oracle-contract",
+      "guarantee_id": "hardening-oracle-rule",
       "support_status": "stable",
       "owner": "compiler/core-language",
       "status": "blocking",
@@ -280,7 +280,7 @@
     },
     {
       "surface_id": "cpython_generated_differential",
-      "guarantee_id": "hardening-oracle-contract",
+      "guarantee_id": "hardening-oracle-rule",
       "support_status": "stable",
       "owner": "compiler/core-language",
       "status": "blocking",
@@ -291,7 +291,7 @@
     },
     {
       "surface_id": "sanitizer_hardening",
-      "guarantee_id": "hardening-oracle-contract",
+      "guarantee_id": "hardening-oracle-rule",
       "support_status": "stable",
       "owner": "runtime/platform",
       "status": "blocking",
@@ -302,7 +302,7 @@
     },
     {
       "surface_id": "ecosystem_curated",
-      "guarantee_id": "ecosystem-stdlib-algorithm-contract",
+      "guarantee_id": "ecosystem-stdlib-algorithm-rule",
       "support_status": "stable",
       "owner": "compiler/verification",
       "status": "blocking",
@@ -313,7 +313,7 @@
     },
     {
       "surface_id": "stdlib_parity_profile",
-      "guarantee_id": "ecosystem-stdlib-algorithm-contract",
+      "guarantee_id": "ecosystem-stdlib-algorithm-rule",
       "support_status": "stable",
       "owner": "stdlib/parity",
       "status": "blocking",
@@ -324,7 +324,7 @@
     },
     {
       "surface_id": "algorithmic_compatibility_profile",
-      "guarantee_id": "ecosystem-stdlib-algorithm-contract",
+      "guarantee_id": "ecosystem-stdlib-algorithm-rule",
       "support_status": "stable",
       "owner": "algorithmic/compatibility",
       "status": "blocking",
@@ -335,7 +335,7 @@
     },
     {
       "surface_id": "distribution_release_representative",
-      "guarantee_id": "distribution-release-contract",
+      "guarantee_id": "distribution-release-rule",
       "support_status": "stable",
       "owner": "release/distribution",
       "status": "blocking",
@@ -346,7 +346,7 @@
     },
     {
       "surface_id": "distribution_release_full",
-      "guarantee_id": "distribution-release-contract",
+      "guarantee_id": "distribution-release-rule",
       "support_status": "stable",
       "owner": "release/distribution",
       "status": "blocking",
@@ -357,7 +357,7 @@
     },
     {
       "surface_id": "first_party_crate_tests",
-      "guarantee_id": "project-workspace-package-contract",
+      "guarantee_id": "project-workspace-package-rule",
       "support_status": "stable",
       "owner": "compiler-verification",
       "status": "blocking",
@@ -368,7 +368,7 @@
     },
     {
       "surface_id": "cargo_features_targets",
-      "guarantee_id": "project-workspace-package-contract",
+      "guarantee_id": "project-workspace-package-rule",
       "support_status": "stable",
       "owner": "compiler-verification",
       "status": "blocking",

@@ -1,5 +1,5 @@
-# Reference: ad_hoc_iter_fix_wave3
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
+# Reference: iter_fix_iterator_codegen
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
 def greater_than_two(x: int) -> bool:
     return x > 2
 

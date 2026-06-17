@@ -1,5 +1,4 @@
-# Reference: phase31_m31i
-# Source issue: phase31-m31i-corpus-fixture-canonicalization-execution.md
+# Reference: mut_sorti
 # `mut` parameters should support in-place list sorting.
 
 def sort_values(own mut values: list[int]) -> list[int]:

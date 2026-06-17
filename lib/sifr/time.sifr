@@ -4,7 +4,7 @@ from _sifr.time import strptime as _strptime_intrinsic
 from _sifr.time import gmtime as _gmtime_intrinsic
 from _sifr.time import localtime as _localtime_intrinsic
 
-# Stable timezone constants (no timezone mutation surface in this phase).
+# Stable timezone constants (no timezone mutation surface in this implementation).
 TIMEZONE: int = 0
 ALTZONE: int = 0
 DAYLIGHT: int = 0

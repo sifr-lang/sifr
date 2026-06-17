@@ -1,5 +1,5 @@
-# Reference: wave_psp_e2
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: utility-classes-sample
+# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.argparse import ArgumentParser
 from sifr.ipaddress import ip_address, IPv4Address, AddressValueError
 from sifr.uuid import uuid4_obj, uuid_from_hex, UUID
@@ -7,7 +7,7 @@ from sifr.graphlib import TopologicalSorter, CycleError
 
 
 def main():
-    parser: ArgumentParser = ArgumentParser("wave-e2-demo")
+    parser: ArgumentParser = ArgumentParser("e2-demo")
     parser.add_argument("--strict", "strict", "store_true")
     parser.add_argument("--mode", "mode", "store", "safe")
     parser.add_argument("entry", "entry", "store", "demo.sifr")

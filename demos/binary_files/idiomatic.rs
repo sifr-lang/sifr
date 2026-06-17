@@ -20,14 +20,14 @@ fn cleanup(path: &Path) -> io::Result<()> {
 }
 
 fn main() {
-    let path = Path::new("/tmp/sifr_runtime_wave0_bytes_demo.bin");
+    let path = Path::new("/tmp/sifr_runtime_binary_files_demo.bin");
 
     let (payload_ok, ints_ok) =
-        match fs::write(path, b"runtime-wave0").and_then(|()| fs::read(path)) {
+        match fs::write(path, b"runtime-binary_files").and_then(|()| fs::read(path)) {
             Ok(loaded) => (
-                loaded == b"runtime-wave0",
+                loaded == b"runtime-binary_files",
                 ints_string(&loaded)
-                    == "[114, 117, 110, 116, 105, 109, 101, 45, 119, 97, 118, 101, 48]",
+                    == "[114, 117, 110, 116, 105, 109, 101, 45, 98, 105, 110, 97, 114, 121, 95, 102, 105, 108, 101, 115]",
             ),
             Err(_) => (false, false),
         };
@@ -37,5 +37,5 @@ fn main() {
     assert!(payload_ok);
     assert!(ints_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave0_bytes_binary_io_contract_demo: ok");
+    println!("runtime_binary_files_binary_io_demo: ok");
 }

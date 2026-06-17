@@ -1,6 +1,6 @@
-# Reference: milestone_stdlib_generic_rewrite
-# Source issue: 197-milestone_stdlib_generic_rewrite.md
-# Demo: milestone_stdlib_generic_rewrite
+# Reference: stdlib_generic_rewrite
+# Source issue: 197-stdlib_generic_rewrite.md
+# Demo: stdlib_generic_rewrite
 # Showcases generic stdlib functions working with multiple types,
 # predicate-based itertools, generic Counter[T] with operator overloads,
 # generic deque[T], generic heapq with Comparable bounds, and exact int support.

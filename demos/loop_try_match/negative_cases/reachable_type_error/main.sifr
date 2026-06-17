@@ -1,6 +1,5 @@
-# Reference: m24_1
-# Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_1 negative case
+# Reference: loop_try_match
+# loop_try_match negative case
 # Reachable type mismatch in a nested branch should fail frontend validation.
 
 def broken(flag: bool) -> int:

@@ -25,7 +25,7 @@ All listed validations were run locally and passed per the execution tracker (li
 - ✓ `cargo test -p ruff_python_formatter --test fixtures sifr_extensions --quiet` in third_party/ruff
 - ✓ `cargo test -p ruff_python_formatter --lib --quiet` in third_party/ruff
 - ✓ `git -C third_party/ruff diff --check`
-- ✓ `python3 verification/performance/check_ruff_fork_update_contract.py`
+- ✓ `python3 verification/performance/check_ruff_fork_update_rules.py`
 - ✓ `python3 verification/tooling/check_formatter_phase_manifests.py`
 - ✓ `cargo test -p sifr_syntax`
 - ✓ `git diff --check`

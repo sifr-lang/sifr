@@ -1,8 +1,8 @@
-# Reference: ad_hoc_iter_wave6
-# Source issue: ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md
+# Reference: iter_iterator_basics
+# Reference: first-class-lazy-iterators-and-python-iterable-protocol
 from sifr.itertools import chain, repeat, islice, count, combinations, product
 
-# Ad-hoc iterator wave 6 demo: phase-closure behavior snapshot.
+# iterator Iterator behavior demo: closure behavior snapshot.
 # Covers protocol entry (`iter`/`next`/`for`), generator laziness,
 # lazy builtin + itertools subset parity, and explicit retained eager families.
 
@@ -40,7 +40,7 @@ def main():
     assert str(list(enumerate(["x", "y"], 4))) == "[(4, \"x\"), (5, \"y\")]"
     assert str(list(reversed([9, 8, 7]))) == "[7, 8, 9]"
 
-    # Wave-5 itertools lazy subset.
+    # Conversion-Set-5 itertools lazy subset.
     assert str(list(chain([1, 2], [3]))) == "[1, 2, 3]"
     assert str(list(repeat(5, 3))) == "[5, 5, 5]"
     assert str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))) == "[20, 40]"
@@ -56,4 +56,4 @@ def main():
     prods: list[list[int]] = list(product([1, 2], repeat=2))
     assert str(prods) == "[[1, 1], [1, 2], [2, 1], [2, 2]]"
 
-    print("ad_hoc_iter_wave6_parity_closure_demo: ok")
+    print("iter_iterator_basics_closure_demo: ok")

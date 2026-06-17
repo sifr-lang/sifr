@@ -94,11 +94,11 @@ fn main() {
     };
     assert!(from_hex_ok);
 
-    let encode_ok = match decode_utf8(encode_utf8("wave2-demo")) {
-        Ok(text) => text == "wave2-demo",
+    let encode_ok = match decode_utf8(encode_utf8("bytes_constructors-demo")) {
+        Ok(text) => text == "bytes_constructors-demo",
         Err(_) => false,
     };
     assert!(encode_ok);
 
-    println!("ad_hoc_bytes_wave2_conversion_surface_demo: ok");
+    println!("bytes_bytes_constructors_surface_demo: ok");
 }

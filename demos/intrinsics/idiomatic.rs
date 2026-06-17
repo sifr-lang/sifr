@@ -15,10 +15,10 @@ fn main() {
     assert_true(result == 4.0);
     assert_true(std::f64::consts::PI > 3.14);
 
-    let line = "milestone_intrinsics demo: all checks passed!".to_string();
+    let line = "intrinsics demo: all checks passed!".to_string();
     println!("{line}");
     assert_eq_value(
         line,
-        "milestone_intrinsics demo: all checks passed!".to_string(),
+        "intrinsics demo: all checks passed!".to_string(),
     );
 }

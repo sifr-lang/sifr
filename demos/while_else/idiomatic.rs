@@ -7,7 +7,7 @@ fn classify(items: &[i64]) -> &'static str {
 }
 
 fn main() {
-    println!("m21_2 while-else structured support demo:");
+    println!("while_else while-else structured support demo:");
     println!("{}", classify(&[]));
     println!("{}", classify(&[1]));
 }

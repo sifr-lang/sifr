@@ -23,8 +23,8 @@ The test failures in the full validation run are **transient/harness artifacts**
 4. The exported API in `project/mod.rs` exposes only `parse_package_import_closure_source_modules`.
 
 **Remaining Validation:** All mechanical gates passed:
-- `check_diagnostic_source_canonicalization_contract.py` → PASS
-- `check_diagnostic_source_canonicalization_contract.py --self-test` → PASS
+- `check_diagnostic_source_canonicalization_rules.py` → PASS
+- `check_diagnostic_source_canonicalization_rules.py --self-test` → PASS
 - `cargo test -p sifr -- --skip test_e2e_pass -- diagnostics` → 27 passed
 - `cargo test -p sifr_driver -- diagnostics project` → 66 passed
 - `cargo test -p sifr_package` → All passed

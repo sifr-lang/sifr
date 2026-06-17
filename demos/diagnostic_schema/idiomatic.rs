@@ -1,3 +1,3 @@
 fn main() {
-    println!("m27_4 diagnostic schema quality demo");
+    println!("diagnostic_schema diagnostic schema quality demo");
 }

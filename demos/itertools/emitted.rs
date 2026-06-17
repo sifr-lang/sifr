@@ -228,5 +228,5 @@ fn main() {
     append_all(&mut actual, &collect_core_actual());
     append_all(&mut actual, &collect_negative_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1d itertools parity demo: pass");
+    println!("itertools itertools parity demo: pass");
 }

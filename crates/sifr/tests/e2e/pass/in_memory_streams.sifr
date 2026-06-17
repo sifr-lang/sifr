@@ -73,13 +73,13 @@ def main() -> None:
     try:
         _seed: None = write_text(path, "")
         writer: BinaryFileHandle = open_binary(path, "wb")
-        _w_file: None = writer.write_bytes(b"wave1")
+        _w_file: None = writer.write_bytes(b"memory-stream-sample")
         writer.close()
 
         reader: BinaryFileHandle = open_binary(path, "rb")
         loaded: bytes = reader.read_bytes()
         reader.close()
-        binary_file_ok = loaded == b"wave1"
+        binary_file_ok = loaded == b"memory-stream-sample"
     except IOError as e:
         _ = str(e.message)
 

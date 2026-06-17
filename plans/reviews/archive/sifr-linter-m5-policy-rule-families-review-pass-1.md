@@ -24,7 +24,7 @@ No rule imports `ruff_linter::rules`, `ruff_python_semantic`, or Python project 
 - `duplicate_import.rs:1` imports `ParserAwareSuppressions`.
 - `todo_comment.rs` uses physical-line suppression; `ParserAwareSuppressions` is passed but not used for suppression marking (line 44 confirms `SuppressionComplexity::PhysicalLine`).
 
-Suppression gate manifest is `parser_aware` with all families allowed. `check_linter_reuse_contract.py` validates that non-physical rules import the parser-aware API. **SATISFIED.**
+Suppression gate manifest is `parser_aware` with all families allowed. `check_linter_reuse_rules.py` validates that non-physical rules import the parser-aware API. **SATISFIED.**
 
 #### Phase-Gated Runner Dispatch (Review Item 3)
 
@@ -52,8 +52,8 @@ Suppression gate manifest is `parser_aware` with all families allowed. `check_li
 
 #### Contract Enforcement
 
-- `check_linter_reuse_contract.py`: **PASS** (no forbidden dependencies, no rejected feature exposure, suppression gate validated, rule metadata matches Rust RULES slice).
-- `check_linter_reuse_contract.py --self-test`: **PASS** (self-test validates gate and forbidden-dep checks).
+- `check_linter_reuse_rules.py`: **PASS** (no forbidden dependencies, no rejected feature exposure, suppression gate validated, rule metadata matches Rust RULES slice).
+- `check_linter_reuse_rules.py --self-test`: **PASS** (self-test validates gate and forbidden-dep checks).
 - 20 `sifr_lint` tests: **PASS**.
 - 10 `sifr_analysis` tests: **PASS**.
 - `cargo clippy -p sifr_lint -p sifr_analysis -p sifr_diagnostics -- -D warnings`: **PASS** (no warnings).

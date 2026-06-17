@@ -1,11 +1,11 @@
 # stdlib_parity_iter_fix_6 CPython Traceability
 
-Phase: `ad-hoc-canonical-iteration-model-and-lazy-parity-closure`
-Wave: `stdlib_parity_iter_fix_6` (`sifr.itertools` + iterator-returning stdlib closure)
+Capability: `canonical-iteration-model-and-lazy-parity-readiness`
+Capability: `stdlib_parity_iter_fix_6` (`sifr.itertools` + iterator-returning stdlib readiness)
 
-## Scope Closure
+## Scope Readiness
 
-This wave closes list-only assumptions in iterator-focused `sifr.itertools` helpers by allowing
+This implementation pass closes list-only assumptions in iterator-focused `sifr.itertools` helpers by allowing
 `Iterable[T]` inputs where semantics are naturally iterable-driven.
 
 Implemented iterable-first surfaces in `lib/sifr/itertools.sifr`:
@@ -29,7 +29,7 @@ Implemented iterable-first surfaces in `lib/sifr/itertools.sifr`:
 
 Notes:
 
-- `chain` and `product` remain list-vararg entry points in this wave due current vararg list-invariance constraints in generic call checking. They still preserve lazy/eager behavior as previously defined.
+- `chain` and `product` remain list-vararg entry points in this implementation pass due current vararg list-invariance constraints in generic call checking. They still preserve lazy/eager behavior as previously defined.
 - Buffered combinatoric helpers continue to materialize internally by design.
 
 ## CPython Family Mapping
@@ -39,7 +39,7 @@ Primary references:
 - `Lib/test/test_itertools.py`
 - `Lib/test/test_iter.py`
 
-Mapped behavior assertions in wave fixtures:
+Mapped behavior assertions in implementation pass fixtures:
 
 - iterator input accepted by adapter helpers (`islice`, `accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`)
 - iterator input accepted by iterable-first helpers (`pairwise`, `batched`, `cycle`)
@@ -57,16 +57,16 @@ This is validated in `iterable_stdlib.sifr`.
 
 Cross-check:
 
-- `demos/itertools/main.sifr` exercises `pairwise` and is expected to compile/run with this wave after the iterable-`pairwise` Option-state fix.
+- `demos/itertools/main.sifr` exercises `pairwise` and is expected to compile/run with this implementation pass after the iterable-`pairwise` Option-state fix.
 
-## Post-Closure Add-On (2026-03-20)
+## Post-Readiness Add-On (2026-03-20)
 
 Expanded CPython `test_itertools` parity-port coverage for all shipped `sifr.itertools` helpers
 was landed in:
 
 - `crates/sifr/tests/e2e/pass/cpython_itertools.sifr`
 
-Ported CPython families (adapted to Sifr contracts where intentional diffs are documented):
+Ported CPython families (adapted to Sifr ruless where intentional diffs are documented):
 
 - `TestBasicOps.test_chain`
 - `TestBasicOps.test_repeat` / `test_repeat_with_negative_times`

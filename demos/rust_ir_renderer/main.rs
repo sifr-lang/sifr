@@ -1,8 +1,8 @@
-// Reference: milestone_rust_ir_renderer
-// Source issue: revised_phase_roadmap_698c629c.md
-// Milestone 14.2 demo: Rust IR renderer.
+// Reference: rust_ir_renderer
+// Reference: compiler-feature-history
+// compiler feature demo: Rust IR renderer.
 //
-// This milestone adds `crates/sifr_codegen/src/render.rs`, which pretty-prints
+// This feature set adds `crates/sifr_codegen/src/render.rs`, which pretty-prints
 // structured IR nodes into Rust source strings.
 //
 // Demo validation commands:

@@ -994,7 +994,7 @@ M6 typed IPC dependency metadata targeted local validation:
 - `cargo test -p sifr_stdlib ipc_feature_renders_locked_postcard_specs_without_json -- --nocapture` -> PASS.
 - `cargo test -p sifr --test e2e test_generate_cargo_toml_ipc_uses_locked_postcard_specs -- --nocapture` -> PASS.
 - `cargo fmt --check`, `git diff --check`, and `python3 scripts/check_file_size_guardrails.py` -> PASS; file-size guardrail reported `2246 files` and the `900` line limit.
-- Touched file line counts after formatting: `crates/sifr_stdlib/src/features.rs` `894`, `crates/sifr/tests/e2e_support/fixture_compilation.rs` `900`, `crates/sifr/tests/e2e_support/harness_model.rs` `790`, and `crates/sifr/tests/e2e_support/harness_contract_tests.rs` `872`.
+- Touched file line counts after formatting: `crates/sifr_stdlib/src/features.rs` `894`, `crates/sifr/tests/e2e_support/fixture_compilation.rs` `900`, `crates/sifr/tests/e2e_support/harness_model.rs` `790`, and `crates/sifr/tests/e2e_support/harness_behavior_tests.rs` `872`.
 
 M6 typed IPC dependency metadata review loop:
 

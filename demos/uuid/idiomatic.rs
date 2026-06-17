@@ -174,5 +174,5 @@ fn main() {
             true, true, true, true, true, true, true, true, true, true, true,
         ],
     );
-    println!("m30_1f uuid parity demo: pass");
+    println!("uuid uuid parity demo: pass");
 }

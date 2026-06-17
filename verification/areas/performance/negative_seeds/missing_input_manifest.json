@@ -13,7 +13,9 @@
       "timeout_ms": 60000,
       "budget_id": "perf.negative.missing_input",
       "evidence_category": "negative",
-      "expected_exit_codes": [0]
+      "expected_exit_codes": [
+        0
+      ]
     }
   ],
   "required_groups": {}

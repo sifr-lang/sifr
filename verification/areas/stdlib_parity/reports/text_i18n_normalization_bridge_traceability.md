@@ -1,8 +1,8 @@
-# Text/I18n M2.5 Traceability
+# Text/I18n Unicode segmentation capability Traceability
 
-Milestone: `milestone_text_i18n_2_5`
+Capability: `text/i18n Unicode segmentation`
 
-| Backlog item | Required fixture/evidence |
+| Pending capability | Required fixture/evidence |
 | --- | --- |
 | Grapheme iterator | Combining marks, emoji sequences, regional indicators, and mixed-script fixtures. |
 | Grapheme indices | Boundary-safe byte index evidence; no invalid Rust string slicing. |

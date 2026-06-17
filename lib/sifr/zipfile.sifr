@@ -18,7 +18,7 @@ def _closed_stream_error() -> str:
 
 
 def _zip_unimplemented_error(feature: str) -> str:
-    return "zipfile " + feature + " is not implemented in this wave"
+    return "zipfile " + feature + " is not implemented in this compatibility surface"
 
 
 def is_zipfile(path: str) -> bool:

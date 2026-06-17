@@ -1688,8 +1688,8 @@ fn main() {
     let mut formatter: Formatter = Formatter::new();
     let mut rendered_fmt_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let rendered_fmt: String = formatter.format(&"Wave {wave}: {status}".to_string(), &HashMap::from([("wave".to_string(), "c2".to_string()), ("status".to_string(), "ok".to_string())]))?;
-    rendered_fmt_ok = rendered_fmt == "Wave c2: ok".to_string();
+    let rendered_fmt: String = formatter.format(&"Status {label}: {status}".to_string(), &HashMap::from([("label".to_string(), "c2".to_string()), ("status".to_string(), "ok".to_string())]))?;
+    rendered_fmt_ok = rendered_fmt == "Status c2: ok".to_string();
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {

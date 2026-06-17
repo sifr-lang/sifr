@@ -1,4 +1,4 @@
-"""Validate Wave 5 lowering-layer snapshot inventory rows."""
+"""Validate lowering-layer snapshot inventory rows."""
 
 from __future__ import annotations
 
@@ -75,7 +75,7 @@ REQUIRED_FIELDS = {
     "id",
     "compiler_layer",
     "owner",
-    "contract_id",
+    "id",
     "source_fixture",
     "snapshot_id",
     "snapshot_kind",
@@ -111,7 +111,7 @@ def validate_inventory() -> list[str]:
         return failures
 
     seen_ids: set[str] = set()
-    seen_contracts: set[str] = set()
+    seen_rules: set[str] = set()
     seen_snapshots: set[str] = set()
     for index, row in enumerate(layers):
         if not isinstance(row, dict):
@@ -122,7 +122,7 @@ def validate_inventory() -> list[str]:
         if missing:
             failures.append(f"{row_id} missing required fields: {', '.join(missing)}")
         validate_unique_string(row, "id", seen_ids, failures, row_id)
-        validate_unique_string(row, "contract_id", seen_contracts, failures, row_id)
+        validate_unique_string(row, "id", seen_rules, failures, row_id)
         validate_unique_string(row, "snapshot_id", seen_snapshots, failures, row_id)
         validate_required_string(row, "owner", failures, row_id)
         validate_required_string(row, "snapshot_kind", failures, row_id)

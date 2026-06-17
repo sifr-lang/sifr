@@ -1,6 +1,5 @@
-# Reference: m26_4
-# Source issue: phase26-type-system-soundness-execution.md
-# m26_4 protocol-bound strictness closure demo
+# Reference: protocol_bounds
+# protocol_bounds protocol-bound strictness closure demo
 # Demonstrates strict protocol-bound validation when forwarding TypeVars.
 
 def keep_comparable[T: Comparable](x: T) -> T:
@@ -10,6 +9,6 @@ def relay_comparable[U: Comparable](x: U) -> U:
     return keep_comparable(x)
 
 def main():
-    print('m26_4 protocol bound strictness closure demo:')
+    print('protocol_bounds protocol bound strictness closure demo:')
     print(relay_comparable(9))
     print(relay_comparable("ok"))

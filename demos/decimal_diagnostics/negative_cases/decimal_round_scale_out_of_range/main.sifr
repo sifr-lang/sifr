@@ -1,5 +1,4 @@
-# Reference: m28_4
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_diagnostics
 def main():
     d: decimal = Decimal("1.2345")
     x: decimal = d.round(29)

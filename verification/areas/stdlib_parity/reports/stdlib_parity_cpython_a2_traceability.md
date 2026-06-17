@@ -20,10 +20,10 @@
 ## Executable CPython-Derived Subset Fixture
 
 - `crates/sifr/tests/e2e/pass/cpython_core_object_model_subset.sifr`
-  - Consolidates CPython-derived method/object-model assertions for `list`, `dict`, `set`, `tuple`, and `str` surfaces closed in this wave.
+  - Consolidates CPython-derived method/object-model assertions for `list`, `dict`, `set`, `tuple`, and `str` surfaces closed in this implementation pass.
 
 ## Classified waivers
 
 | Surface | State | Rationale |
 | --- | --- | --- |
-| CPython `bytes` / `bytearray` object model families from `Lib/test/test_bytes.py` | `unsupported` | Historical wave-`a2` status: first-class `bytes` had not landed yet. As of `stdlib_parity_bytes_2` and `stdlib_parity_bytes_3`, immutable first-class `bytes` is shipped and downstream binary contracts use `bytes`; remaining waivers are now narrowed to `bytearray`/`memoryview`/buffer-protocol families and tracked in `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_3_cpython_traceability.md`. |
+| CPython `bytes` / `bytearray` object model families from `Lib/test/test_bytes.py` | `unsupported` | Historical implementation pass-`a2` status: first-class `bytes` had not landed yet. As of `stdlib_parity_bytes_2` and `stdlib_parity_bytes_3`, immutable first-class `bytes` is shipped and downstream binary ruless use `bytes`; remaining waivers are now narrowed to `bytearray`/`memoryview`/buffer-protocol families and tracked in `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_3_cpython_traceability.md`. |

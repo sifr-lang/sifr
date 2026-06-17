@@ -2002,7 +2002,7 @@ impl std::error::Error for ValueError {
 }
 
 fn main() {
-    let mut parser: ArgumentParser = ArgumentParser::new("wave-e2-demo".to_string());
+    let mut parser: ArgumentParser = ArgumentParser::new("e2-demo".to_string());
     parser.add_argument(&"--strict".to_string(), &"strict".to_string(), &"store_true".to_string(), &"".to_string());
     parser.add_argument(&"--mode".to_string(), &"mode".to_string(), &"store".to_string(), &"safe".to_string());
     parser.add_argument(&"entry".to_string(), &"entry".to_string(), &"store".to_string(), &"demo.sifr".to_string());

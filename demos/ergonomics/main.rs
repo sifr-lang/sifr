@@ -1,5 +1,5 @@
-// Reference: milestone_ergonomics
-// Source issue: milestone-ergonomics-epic.md
+// Reference: ergonomics
+// Reference: ergonomics
 use std::collections::HashMap;
 
 fn demo_augmented_assign() {
@@ -166,5 +166,5 @@ fn main() {
     demo_walrus();
     placeholder();
     demo_builtins();
-    println!("{}", "All milestone_ergonomics features working!");
+    println!("{}", "All ergonomics features working!");
 }

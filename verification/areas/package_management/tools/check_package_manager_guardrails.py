@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce package-management contract package-manager maintainability boundaries."""
+"""Enforce package-management package-manager maintainability boundaries."""
 
 from __future__ import annotations
 
@@ -89,7 +89,7 @@ def count_lines(path: Path) -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Enforce package-management contract package-manager guardrails."
+        description="Enforce package-management package-manager guardrails."
     )
     parser.add_argument(
         "--max-lines-override",
@@ -127,7 +127,7 @@ def load_toml(path: Path, failures: List[str]) -> dict[str, Any]:
 def load_gitmodules(root: Path, failures: List[str]) -> dict[str, dict[str, str]]:
     gitmodules_path = root / ".gitmodules"
     if not gitmodules_path.exists():
-        failures.append("missing .gitmodules for package-management contract demo subrepos")
+        failures.append("missing .gitmodules for package-management behavior demo subrepos")
         return {}
     parser = configparser.ConfigParser()
     try:
@@ -193,75 +193,75 @@ def check_demo_repositories(root: Path, failures: List[str]) -> None:
 
     manifest = load_json(manifest_path, failures)
     if manifest.get("checkout_model") != "git_submodule":
-        failures.append("package-management contract demo manifest checkout_model must be git_submodule")
+        failures.append("package-management behavior demo manifest checkout_model must be git_submodule")
     repository_root_value = manifest.get("repository_root")
     if not isinstance(repository_root_value, str) or not repository_root_value:
-        failures.append("package-management contract demo manifest is missing repository_root")
+        failures.append("package-management behavior demo manifest is missing repository_root")
         return
     repository_root = root / repository_root_value
     if not repository_root.exists():
-        failures.append(f"package-management contract demo repository root does not exist: {repository_root_value}")
+        failures.append(f"package-management behavior demo repository root does not exist: {repository_root_value}")
         return
     submodules = load_gitmodules(root, failures)
 
     validations = manifest.get("required_validations")
     if not isinstance(validations, list):
-        failures.append("package-management contract demo manifest required_validations must be a list")
+        failures.append("package-management behavior demo manifest required_validations must be a list")
     else:
         missing_validations = REQUIRED_DEMO_VALIDATIONS - set(validations)
         if missing_validations:
             failures.append(
-                "package-management contract demo manifest is missing validations: "
+                "package-management behavior demo manifest is missing validations: "
                 + ", ".join(sorted(missing_validations))
             )
 
     repositories = manifest.get("repositories", [])
     if not isinstance(repositories, list):
-        failures.append("package-management contract demo manifest repositories must be a list")
+        failures.append("package-management behavior demo manifest repositories must be a list")
         return
 
     seen_ids = set()
     for repo in repositories:
         if not isinstance(repo, dict):
-            failures.append("package-management contract demo repository entries must be JSON objects")
+            failures.append("package-management behavior demo repository entries must be JSON objects")
             continue
         repo_id = repo.get("id")
         repo_root = repo.get("root")
         required_paths = repo.get("required_paths")
         repo_validations = repo.get("validations")
         if not isinstance(repo_id, str) or not repo_id:
-            failures.append("package-management contract demo repository entry is missing id")
+            failures.append("package-management behavior demo repository entry is missing id")
             continue
         seen_ids.add(repo_id)
         if not isinstance(repo_root, str) or not repo_root:
-            failures.append(f"package-management contract demo repository `{repo_id}` is missing root")
+            failures.append(f"package-management behavior demo repository `{repo_id}` is missing root")
             continue
         repo_path = repository_root / repo_root
         if not repo_path.exists():
-            failures.append(f"package-management contract demo repository `{repo_id}` root is missing")
+            failures.append(f"package-management behavior demo repository `{repo_id}` root is missing")
             continue
         repo_rel_path = f"{repository_root_value}/{repo_root}"
         check_demo_submodule(repo_id, repo_rel_path, repo.get("url"), submodules, failures)
         if not isinstance(required_paths, list):
-            failures.append(f"package-management contract demo repository `{repo_id}` required_paths must be a list")
+            failures.append(f"package-management behavior demo repository `{repo_id}` required_paths must be a list")
             continue
         for rel_path in required_paths:
             if not isinstance(rel_path, str) or not rel_path:
-                failures.append(f"package-management contract demo repository `{repo_id}` has invalid required path")
+                failures.append(f"package-management behavior demo repository `{repo_id}` has invalid required path")
                 continue
             if not (repo_path / rel_path).exists():
                 failures.append(
-                    f"package-management contract demo repository `{repo_id}` is missing required path {rel_path}"
+                    f"package-management behavior demo repository `{repo_id}` is missing required path {rel_path}"
                 )
         if not isinstance(repo_validations, list) or not repo_validations:
-            failures.append(f"package-management contract demo repository `{repo_id}` has no validations")
+            failures.append(f"package-management behavior demo repository `{repo_id}` has no validations")
 
         check_demo_repository_shape(repo_id, repo_path, failures)
 
     missing_repos = REQUIRED_DEMO_REPOS - seen_ids
     if missing_repos:
         failures.append(
-            "package-management contract demo manifest is missing repositories: "
+            "package-management behavior demo manifest is missing repositories: "
             + ", ".join(sorted(missing_repos))
         )
 
@@ -275,18 +275,18 @@ def check_demo_submodule(
 ) -> None:
     entry = submodules.get(repo_rel_path)
     if entry is None:
-        failures.append(f"package-management contract demo repository `{repo_id}` is missing from .gitmodules")
+        failures.append(f"package-management behavior demo repository `{repo_id}` is missing from .gitmodules")
         return
     if not isinstance(repo_url, str) or not repo_url:
-        failures.append(f"package-management contract demo repository `{repo_id}` is missing url")
+        failures.append(f"package-management behavior demo repository `{repo_id}` is missing url")
         return
     expected_urls = {repo_url, f"{repo_url}.git"}
     if entry.get("url") not in expected_urls:
         failures.append(
-            f"package-management contract demo repository `{repo_id}` has unexpected submodule URL {entry.get('url')}"
+            f"package-management behavior demo repository `{repo_id}` has unexpected submodule URL {entry.get('url')}"
         )
     if entry.get("branch") != "main":
-        failures.append(f"package-management contract demo repository `{repo_id}` submodule must track main")
+        failures.append(f"package-management behavior demo repository `{repo_id}` submodule must track main")
 
 
 def check_demo_repository_shape(repo_id: str, repo_path: Path, failures: List[str]) -> None:
@@ -301,9 +301,9 @@ def check_demo_repository_shape(repo_id: str, repo_path: Path, failures: List[st
             .get("manifest")
         )
         if manifest != "sifr.toml":
-            failures.append(f"package-management contract demo repository `{repo_id}` must link sifr.toml")
+            failures.append(f"package-management behavior demo repository `{repo_id}` must link sifr.toml")
         if not sifr_toml_path.exists():
-            failures.append(f"package-management contract demo repository `{repo_id}` is missing sifr.toml")
+            failures.append(f"package-management behavior demo repository `{repo_id}` is missing sifr.toml")
         else:
             check_production_sifr_manifest(repo_id, sifr_toml_path, failures)
         check_cargo_projection_markers(repo_id, repo_path / "Cargo.toml", failures)
@@ -360,10 +360,10 @@ def check_src_layout(repo_id: str, repo_path: Path, failures: List[str]) -> None
 def check_pure_marker(repo_id: str, marker_path: Path, failures: List[str]) -> None:
     marker = marker_path.read_text(encoding="utf-8")
     if "Pure Sifr package marker" not in marker:
-        failures.append(f"package-management contract demo repository `{repo_id}` is missing the pure marker")
+        failures.append(f"package-management behavior demo repository `{repo_id}` is missing the pure marker")
     for forbidden in ["pub fn", "pub mod", "use ", "macro_rules!"]:
         if forbidden in marker:
-            failures.append(f"package-management contract demo repository `{repo_id}` marker contains Rust code")
+            failures.append(f"package-management behavior demo repository `{repo_id}` marker contains Rust code")
 
 
 def check_rust_backed_http_template(repo_path: Path, failures: List[str]) -> None:

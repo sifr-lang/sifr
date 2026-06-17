@@ -1,5 +1,4 @@
-# Reference: m30_1e
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: pathlib
 from sifr.pathlib import basename, join_path, Path
 from sifr.os import getpid
 from sifr.test import assert_bool_vector_eq
@@ -14,7 +13,7 @@ def collect_path_helpers_actual() -> list[bool]:
 
 def collect_path_class_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_m30_1e_pathlib_demo_" + str(getpid())
+    base: str = "/tmp/sifr_pathlib_pathlib_demo_" + str(getpid())
     filep: Path = Path(base + "/demo.txt")
     dirp: Path = Path(base + "")
     path_flow_ok: bool = False
@@ -46,7 +45,7 @@ def collect_missing_path_actual() -> list[bool]:
     actual: list[bool] = []
     missing_rejected: bool = False
     try:
-        _bad: str = Path("/tmp/sifr_m30_1e_pathlib_demo_missing.txt").read_text()
+        _bad: str = Path("/tmp/sifr_pathlib_pathlib_demo_missing.txt").read_text()
     except IOError as e:
         _ = str(e.message)
         missing_rejected = True
@@ -67,4 +66,4 @@ def main():
     append_all(actual, collect_missing_path_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1e pathlib parity demo: pass")
+    print("pathlib pathlib parity demo: pass")

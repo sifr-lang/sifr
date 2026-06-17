@@ -1,6 +1,6 @@
-# Reference: ad_hoc_recursive_type_part6
-# Source issue: ad-hoc-full-recursive-type-feature-part6-execution.md
-# Ad hoc recursive type feature, part 6:
+# Reference: recursive_type_part6
+# Reference: full-recursive-type-feature-part6
+# Recursive type feature, part 6:
 # the full regression matrix closes with runnable recursive classes and aliases.
 
 class TreeNode:

@@ -47,7 +47,7 @@ fn open(path: &str, mode: &str) -> Result<FileHandle, IOError> {
 }
 
 fn collect_io_roundtrip_actual() -> Vec<bool> {
-    let path = "/tmp/sifr_m30_1e_io_demo.txt";
+    let path = "/tmp/sifr_io_io_demo.txt";
 
     let text_roundtrip_ok = (|| -> Result<bool, IOError> {
         write_text(path, "hello")?;
@@ -60,7 +60,7 @@ fn collect_io_roundtrip_actual() -> Vec<bool> {
 }
 
 fn collect_open_actual() -> Vec<bool> {
-    let path = "/tmp/sifr_m30_1e_io_demo.txt";
+    let path = "/tmp/sifr_io_io_demo.txt";
 
     let (first_ok, second_ok, eof_ok) = (|| -> Result<(bool, bool, bool), IOError> {
         let mut file = open(path, "r")?;
@@ -77,7 +77,7 @@ fn collect_open_actual() -> Vec<bool> {
     })()
     .unwrap_or((false, false, false));
 
-    let missing_rejected = open("/tmp/sifr_m30_1e_io_demo_missing.txt", "r").is_err();
+    let missing_rejected = open("/tmp/sifr_io_io_demo_missing.txt", "r").is_err();
 
     vec![first_ok, second_ok, eof_ok, missing_rejected]
 }
@@ -88,5 +88,5 @@ fn main() {
     actual.extend(collect_open_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true]);
-    println!("m30_1e io parity demo: pass");
+    println!("io io parity demo: pass");
 }

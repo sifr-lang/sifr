@@ -21,7 +21,7 @@ Both pass-1 required precision edits have been applied and verified:
 
 **Precision edit 2 — tool's future existence documented in execution tracker:**
 
-- Line 64: "`check_diagnostic_presentation_contract.py` does not exist yet. It is an M1 deliverable, not a pre-existing guardrail; M1 must author the tool, prove it fails against missing obligations in negative self-tests, and then wire it into the quick lane."
+- Line 64: "`check_diagnostic_presentation_rules.py` does not exist yet. It is an M1 deliverable, not a pre-existing guardrail; M1 must author the tool, prove it fails against missing obligations in negative self-tests, and then wire it into the quick lane."
 
 ---
 
@@ -29,7 +29,7 @@ Both pass-1 required precision edits have been applied and verified:
 
 The verification contract is fully specified and both precision-edit clarifications are in place:
 
-1. **Implementation readiness is sound**: The phase correctly distinguishes between existing infrastructure (the `decimal_invalid_literal` fixture with its three-mode baselines) and M1 deliverables (the new multiline fixture, JSON schema-lock fixture, and the `check_diagnostic_presentation_contract.py` tool itself). An implementer reading the Verification Contract section can immediately tell what exists vs. what must be created.
+1. **Implementation readiness is sound**: The phase correctly distinguishes between existing infrastructure (the `decimal_invalid_literal` fixture with its three-mode baselines) and M1 deliverables (the new multiline fixture, JSON schema-lock fixture, and the `check_diagnostic_presentation_rules.py` tool itself). An implementer reading the Verification Contract section can immediately tell what exists vs. what must be created.
 
 2. **Verification gate is concrete**: The exact commands, required checks, and negative self-test expectation are enumerated without ambiguity. The gate covers all important contracts: fixture existence, per-mode baseline coverage, JSON field enumeration, human/compact contract specifics, CLI regression coverage, and phase-docs linkage.
 

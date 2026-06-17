@@ -1,5 +1,5 @@
-# Reference: wave_psp_a2
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: container-methods-sample
+# Reference: python-source-parity-and-builtin-stdlib-surface
 def main():
     words: list[str] = ["core"]
     words.extend("xy")

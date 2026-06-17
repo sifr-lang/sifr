@@ -748,7 +748,7 @@ fn main() {
     println!("{:?}", accumulate(&Box::new((nums).iter().copied()).collect::<Vec<_>>(), None).collect::<Vec<_>>());
     println!("{:?}", compress(&Box::new((nums).iter().copied()).collect::<Vec<_>>(), &Box::new((vec![true, false, true, false]).into_iter()).collect::<Vec<_>>()).collect::<Vec<_>>());
     println!("{:?}", takewhile(|__arg0| lt3((__arg0).clone()), &Box::new((nums).iter().copied()).collect::<Vec<_>>()).collect::<Vec<_>>());
-    let base: String = format!("{}{}", "/tmp/sifr_wave_psp_iter_fix_6_demo_".to_string(), format!("{}", std::process::id() as i64));
+    let base: String = format!("{}{}", "/tmp/sifr_itertools_iterables".to_string(), format!("{}", std::process::id() as i64));
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _mk: String = ({
     let __cmd = format!("{}{}", "mkdir -p ".to_string(), base);

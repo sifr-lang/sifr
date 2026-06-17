@@ -206,9 +206,9 @@ impl ConfigParser {
 }
 
 fn main() {
-    println!("wave_psp_c1 structured parsing and serialization demo");
+    println!("structured-parsing-sample structured parsing and serialization demo");
 
-    let json_path = "/tmp/sifr_wave_psp_c1_demo.json";
+    let json_path = "/tmp/sifr_structured_parsing_serialization.json";
     let json_text = r#"{"name":"sifr","items":[1,true]}"#;
     let _ = write_text(json_path, json_text);
     if let Ok(json_value) = load(json_path) {

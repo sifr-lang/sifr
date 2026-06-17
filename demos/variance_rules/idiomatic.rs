@@ -66,7 +66,7 @@ fn sum_items(values: &[i64]) -> i64 {
 }
 
 fn main() {
-    println!("m26_2 inheritance and variance corrections demo:");
+    println!("variance_rules inheritance and variance corrections demo:");
     let emp: Employee = Employee::new(11 as i64, "Lin".to_string(), 4 as i64);
     println!("{}", emp.person.name);
     println!("{}", sum_items(&[1 as i64, 2 as i64, 3 as i64]));

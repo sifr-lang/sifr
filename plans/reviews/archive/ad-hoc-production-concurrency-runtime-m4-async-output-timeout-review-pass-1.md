@@ -54,7 +54,7 @@ Required because the new helper imports `tokio::io::AsyncReadExt` and calls `rea
 - Grouped e2e harness — `crates/sifr/tests/e2e_support/fixture_compilation.rs:481` (`tokio_dependency_spec`).
 
 Contract tests updated to match:
-- `crates/sifr/tests/e2e_support/harness_contract_tests.rs:521` (`test_generate_cargo_toml_required_tokio_uses_runtime_features`).
+- `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:521` (`test_generate_cargo_toml_required_tokio_uses_runtime_features`).
 - `crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:164` (`test_generate_project_emits_tokio_dependency_when_required`).
 
 Feature ordering is consistent across all four sites.

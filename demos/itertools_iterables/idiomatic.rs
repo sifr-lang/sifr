@@ -85,7 +85,7 @@ fn main() {
     );
     println!("{:?}", takewhile(lt3, nums.iter().copied()));
 
-    let base = format!("/tmp/sifr_wave_psp_iter_fix_6_demo_{}", getpid());
+    let base = format!("/tmp/sifr_itertools_iterables{}", getpid());
     let _ = run_command(&format!("mkdir -p {base}"));
     let result = (|| -> std::io::Result<usize> {
         write_text(&format!("{base}/a.txt"), "demo")?;

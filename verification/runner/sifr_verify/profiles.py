@@ -247,7 +247,7 @@ def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
         "COLD_TARGET_MINUTES": budgets["cold_wall_time_minutes"],
         "THERMAL_POLICY": legacy["thermal_policy"],
         "MEMORY_POLICY": legacy["memory_policy"],
-        "CONTRACT_SUITES": ",".join(matrix_suites),
+        "VALIDATION_SUITES": ",".join(matrix_suites),
         "TOOLING_SUITES": ",".join(tooling_suites),
         "DISTRIBUTION_MODE": legacy["distribution"],
         "GENERATED_CODE_QUALITY_MODE": legacy["generated_code_quality"],

@@ -8,4 +8,4 @@ No blocking implementation-readiness gaps remain. All three documents are intern
 
 **Non-blocking notes:**
 1. LSP query budget defaults (Phase 36, lines 414-431) are phase-start values requiring baseline evidence before enforcement - by design.
-2. `verification/tooling/vscode_extension_contract.json` is referenced across multiple documents (Phase 36 verification infra, issue cross-repo validation, issue PR sequence) - confirm the file name is stable when `milestone_36_1` locks the contract.
+2. `verification/tooling/vscode_extension_rules.json` is referenced across multiple documents (Phase 36 verification infra, issue cross-repo validation, issue PR sequence) - confirm the file name is stable when `milestone_36_1` locks the contract.

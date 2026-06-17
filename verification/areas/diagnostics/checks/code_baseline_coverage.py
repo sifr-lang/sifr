@@ -224,7 +224,7 @@ def validate_coverage(
             if not isinstance(deferral, dict):
                 errors.append(f"{code}: missing rendered baseline requires documented deferral")
             else:
-                for field in ("owner", "reason", "issue", "expires_in_wave"):
+                for field in ("owner", "reason", "issue", "removal_target"):
                     if not deferral.get(field):
                         errors.append(f"{code}: deferral missing {field}")
         else:

@@ -10,11 +10,11 @@
         "thermal_policy"
       ],
       "owner": "compiler/performance",
-      "rationale": "The first performance trend artifact is derived from the existing checked-in baseline, which predates the extended environment metadata contract. New baseline captures record these fields in run_benchmarks.py, and the next approved reference baseline must carry them directly.",
+      "rationale": "The first performance trend artifact is derived from the existing checked-in baseline, which predates the extended environment metadata rules. New baseline captures record these fields in run_benchmarks.py, and the next approved reference baseline must carry them directly.",
       "reviewed_at": "2026-06-16"
     }
   ],
-  "manifest_sha256": "2b50c1d2e33db9deb99cee881f3a34d37fdcbf0c5f83cb8ab60eea20b99b2e8d",
+  "manifest_sha256": "eea929db7f430acfd1215db30520a380fb4fa292d02ad3733df84bc57cd731dd",
   "metadata": {
     "architecture": "arm64",
     "captured_at_unix": 1778968823,
@@ -805,6 +805,136 @@
         1221.1476660013432,
         1210.138416994596,
         1212.0358340034727
+      ]
+    },
+    {
+      "baseline_captured_at_unix": 1778968823,
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "id": "diagnostic-non-regression-001-human-success-exit",
+      "metrics": {
+        "coefficient_variation": 0.005931,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "mad_ms": 7.138,
+        "median_ms": 1227.674,
+        "p95_ms": 1238.76,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1227.6736250059912,
+        1230.6176249985583,
+        1220.5352919991128,
+        1218.5453749989392,
+        1238.7603749957634
+      ]
+    },
+    {
+      "baseline_captured_at_unix": 1778968823,
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "metrics": {
+        "coefficient_variation": 0.026421,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "mad_ms": 5.592,
+        "median_ms": 1214.504,
+        "p95_ms": 1293.217,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1253.8687500054948,
+        1212.5427079881774,
+        1208.9117909927154,
+        1214.5042089978233,
+        1293.216542006121
+      ]
+    },
+    {
+      "baseline_captured_at_unix": 1778968823,
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "id": "diagnostic-non-regression-003-compact-diagnostic-schema",
+      "metrics": {
+        "coefficient_variation": 0.015743,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "mad_ms": 6.942,
+        "median_ms": 1227.41,
+        "p95_ms": 1272.689,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1227.4097909976263,
+        1220.4674579988932,
+        1239.5988339994801,
+        1272.6888329925714,
+        1221.1634999985108
+      ]
+    },
+    {
+      "baseline_captured_at_unix": 1778968823,
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "id": "diagnostic-non-regression-004-recovery-limit",
+      "metrics": {
+        "coefficient_variation": 0.015609,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "mad_ms": 20.109,
+        "median_ms": 1231.518,
+        "p95_ms": 1259.924,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1259.9240830022609,
+        1236.7285410000477,
+        1231.517583000823,
+        1211.4089579990832,
+        1206.436250009574
+      ]
+    },
+    {
+      "baseline_captured_at_unix": 1778968823,
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "id": "diagnostic-non-regression-005-project-error-exit",
+      "metrics": {
+        "coefficient_variation": 0.002534,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "mad_ms": 3.64,
+        "median_ms": 1217.324,
+        "p95_ms": 1221.378,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1213.684458998614,
+        1221.3782500039088,
+        1213.377167005092,
+        1219.0436660021078,
+        1217.3239999974612
       ]
     },
     {
@@ -1975,136 +2105,6 @@
         0.729550002142787,
         0.7235166849568486,
         0.7186666131019592
-      ]
-    },
-    {
-      "baseline_captured_at_unix": 1778968823,
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "id": "phase27-non-regression-001-human-success-exit",
-      "metrics": {
-        "coefficient_variation": 0.005931,
-        "emitted_rust_bytes": null,
-        "emitted_rust_lines": null,
-        "generated_binary_bytes": null,
-        "mad_ms": 7.138,
-        "median_ms": 1227.674,
-        "p95_ms": 1238.76,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1227.6736250059912,
-        1230.6176249985583,
-        1220.5352919991128,
-        1218.5453749989392,
-        1238.7603749957634
-      ]
-    },
-    {
-      "baseline_captured_at_unix": 1778968823,
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "id": "phase27-non-regression-002-json-diagnostic-schema",
-      "metrics": {
-        "coefficient_variation": 0.026421,
-        "emitted_rust_bytes": null,
-        "emitted_rust_lines": null,
-        "generated_binary_bytes": null,
-        "mad_ms": 5.592,
-        "median_ms": 1214.504,
-        "p95_ms": 1293.217,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1253.8687500054948,
-        1212.5427079881774,
-        1208.9117909927154,
-        1214.5042089978233,
-        1293.216542006121
-      ]
-    },
-    {
-      "baseline_captured_at_unix": 1778968823,
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "id": "phase27-non-regression-003-compact-diagnostic-schema",
-      "metrics": {
-        "coefficient_variation": 0.015743,
-        "emitted_rust_bytes": null,
-        "emitted_rust_lines": null,
-        "generated_binary_bytes": null,
-        "mad_ms": 6.942,
-        "median_ms": 1227.41,
-        "p95_ms": 1272.689,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1227.4097909976263,
-        1220.4674579988932,
-        1239.5988339994801,
-        1272.6888329925714,
-        1221.1634999985108
-      ]
-    },
-    {
-      "baseline_captured_at_unix": 1778968823,
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "id": "phase27-non-regression-004-recovery-limit",
-      "metrics": {
-        "coefficient_variation": 0.015609,
-        "emitted_rust_bytes": null,
-        "emitted_rust_lines": null,
-        "generated_binary_bytes": null,
-        "mad_ms": 20.109,
-        "median_ms": 1231.518,
-        "p95_ms": 1259.924,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1259.9240830022609,
-        1236.7285410000477,
-        1231.517583000823,
-        1211.4089579990832,
-        1206.436250009574
-      ]
-    },
-    {
-      "baseline_captured_at_unix": 1778968823,
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "id": "phase27-non-regression-005-project-error-exit",
-      "metrics": {
-        "coefficient_variation": 0.002534,
-        "emitted_rust_bytes": null,
-        "emitted_rust_lines": null,
-        "generated_binary_bytes": null,
-        "mad_ms": 3.64,
-        "median_ms": 1217.324,
-        "p95_ms": 1221.378,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1213.684458998614,
-        1221.3782500039088,
-        1213.377167005092,
-        1219.0436660021078,
-        1217.3239999974612
       ]
     }
   ],

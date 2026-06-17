@@ -1,5 +1,5 @@
-# Reference: ad_hoc_runtime_wave3
-# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
+# Reference: runtime_logging_and_timers
+# Reference: runtime-and-file-object-parity-expansion
 from sifr.logging import getLogger, Logger, FileHandler, Formatter, INFO
 from sifr.time import gmtime_struct, mktime, struct_time, TIMEZONE, TZNAME
 from sifr.timeit import Timer
@@ -17,11 +17,11 @@ def workload() -> None:
 
 def main() -> None:
     demo_ok: bool = False
-    log_path: str = "/tmp/sifr_runtime_wave3_demo.log"
+    log_path: str = "/tmp/sifr_runtime_logging_and_timers.log"
 
     try:
         _w: None = write_text(log_path, "")
-        logger: Logger = getLogger("wave3-demo")
+        logger: Logger = getLogger("logging_and_timers-demo")
         logger.set_file(log_path)
         fh: FileHandler = FileHandler(log_path + "", INFO)
         logger.add_handler(fh)
@@ -36,7 +36,7 @@ def main() -> None:
         elapsed: float = timer(workload, 4)
 
         content: str = read_text(log_path)
-        demo_ok = content == "INFO:wave3-demo:hello\n" and gmt.tm_year == 1970 and epoch_ok and elapsed >= 0.0 and TIMEZONE == 0 and TZNAME[0] == "UTC"
+        demo_ok = content == "INFO:logging_and_timers-demo:hello\n" and gmt.tm_year == 1970 and epoch_ok and elapsed >= 0.0 and TIMEZONE == 0 and TZNAME[0] == "UTC"
     except IOError as e:
         _ = e.message
 
@@ -47,4 +47,4 @@ def main() -> None:
         _ = e.message
 
     assert demo_ok
-    print("ad_hoc_runtime_wave3_logging_time_timeit_object_surface_demo: ok")
+    print("runtime_logging_and_timers_time_timeit_object_surface_demo: ok")

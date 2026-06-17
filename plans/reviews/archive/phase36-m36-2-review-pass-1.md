@@ -18,7 +18,7 @@ Working tree changes only (staged + unstaged), across:
 - Diagnostics: `crates/sifr_diagnostics/src/codes.rs` (FMT/LINT families)
 - Generated docs: `docs/errors/SIFR-FMT-0001.md`, `docs/errors/SIFR-LINT-0001..4.md`
 - Internal docs: `internal_docs/diagnostic_codes.md`
-- Validation scripts: `verification/tooling/check_formatter_contract.py`, `verification/tooling/check_rule_suppression_contract.py`
+- Validation scripts: `verification/tooling/check_formatter_rules.py`, `verification/tooling/check_rule_suppression_rules.py`
 - Test wiring: `crates/sifr_driver/src/tests/diagnostics.rs` (LINT labels)
 - Script wiring: `scripts/run_all_tests.sh`
 
@@ -48,10 +48,10 @@ Working tree changes only (staged + unstaged), across:
 - Generated docs (`docs/errors/SIFR-*.md`) are consistent with registry entries (matching codes, severities, owners, templates).
 
 **Validation scripts**
-- `check_formatter_contract.py` positive path: builds, runs `fmt --check` on unformatted source (expects exit 1 with `SIFR-FMT-0001`), runs `fmt` to fix, verifies string contents preserved, runs `fmt --check` again (expects exit 0), verifies idempotence. Correct.
-- `check_formatter_contract.py` self-test: invalid syntax file correctly produces `SIFR-PARSE-*` error (not silently formatted). Correct.
-- `check_rule_suppression_contract.py` positive path: unknown rule + trailing whitespace correctly reported. Explicit suppression correctly applied. Correct.
-- `check_rule_suppression_contract.py` self-test: blanket suppression correctly produces `SIFR-LINT-0003`. Correct.
+- `check_formatter_rules.py` positive path: builds, runs `fmt --check` on unformatted source (expects exit 1 with `SIFR-FMT-0001`), runs `fmt` to fix, verifies string contents preserved, runs `fmt --check` again (expects exit 0), verifies idempotence. Correct.
+- `check_formatter_rules.py` self-test: invalid syntax file correctly produces `SIFR-PARSE-*` error (not silently formatted). Correct.
+- `check_rule_suppression_rules.py` positive path: unknown rule + trailing whitespace correctly reported. Explicit suppression correctly applied. Correct.
+- `check_rule_suppression_rules.py` self-test: blanket suppression correctly produces `SIFR-LINT-0003`. Correct.
 
 **Script wiring**
 - `run_all_tests.sh` runs all m36.2 contract checks alongside m36.1 checks under the "Developer Tooling Checks" step. Both positive and self-test invocations are included. Correct.
@@ -76,7 +76,7 @@ Working tree changes only (staged + unstaged), across:
 | Sifr-owned FMT and LINT diagnostic families + generated docs | Done |
 | Conservative syntax-validated formatter foundation over `sifr_syntax` | Done |
 | Policy metadata, explicit suppressions, unknown/unused/blanket suppression diagnostics | Done |
-| `check_formatter_contract.py` and `check_rule_suppression_contract.py` with negative self-tests | Done |
+| `check_formatter_rules.py` and `check_rule_suppression_rules.py` with negative self-tests | Done |
 | m36.2 checks wired into `scripts/run_all_tests.sh` | Done |
 | Local validation (`scripts/run_all_tests.sh --profile quick`) | PASS |
 | Diagnostic/code/docs/schema guardrails | PASS |

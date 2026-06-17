@@ -1,7 +1,7 @@
-# Reference: milestone_phase_fixes
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: fixes
+# Reference: compiler-feature-history
 # ============================================================
-# Milestone 18: Phase Bug Fixes and Polish Demo
+# compiler feature: bug-fix and polish demo
 # ============================================================
 # This demo showcases:
 # 1. Module-level constants accessible from functions

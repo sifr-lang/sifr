@@ -218,10 +218,10 @@ fn is_zipfile(path: &str) -> bool {
 }
 
 fn main() {
-    let zip_path = PathBuf::from("/tmp/sifr_runtime_wave2_demo.zip");
+    let zip_path = PathBuf::from("/tmp/sifr_runtime_zipfile_io.zip");
 
     let demo_ok = (|| -> io::Result<bool> {
-        let mut temp_file = NamedTemporaryFile::new("wb", false, "sifr_runtime_wave2_demo_")?;
+        let mut temp_file = NamedTemporaryFile::new("wb", false, "sifr_runtime_zipfile_io_")?;
         let tmp_path = temp_file.name();
         temp_file.close()?;
         temp_file.cleanup()?;
@@ -233,7 +233,7 @@ fn main() {
 
         let writer = ZipFile::new(&zip_path.display().to_string(), "w", ZIP_STORED);
         writer.create()?;
-        writer.write("note.txt", "runtime-wave2")?;
+        writer.write("note.txt", "runtime-zipfile_io")?;
         writer.write_bytes("bin/raw.bin", b"\x00\x01\x02")?;
 
         let reader = ZipFile::new(&zip_path.display().to_string(), "r", ZIP_STORED);
@@ -261,5 +261,5 @@ fn main() {
     }
 
     assert!(demo_ok);
-    println!("ad_hoc_runtime_wave2_tempfile_zipfile_lifecycle_demo: ok");
+    println!("runtime_zipfile_io_zipfile_lifecycle_demo: ok");
 }

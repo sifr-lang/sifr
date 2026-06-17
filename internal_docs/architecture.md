@@ -1,40 +1,40 @@
 # Sifr Compiler -- Architecture
 
-## Execution Plan Source of Truth
+## Planning Source of Truth
 
-- Authoritative phase sequencing for current execution is tracked in [`plans/roadmap.md`](../plans/roadmap.md), starting at **Phase 15** through **Phase 41**.
-- Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in [`plans/phases/`](../plans/phases/) files `15`-`41` under `## Quality Contract`.
-- Iterator architecture execution has two closed stages:
-  - stage 1 (closed): `plans/issues/archive/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `plans/issues/archive/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
-  - stage 2 (closed corrective continuation): `plans/issues/archive/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `plans/issues/archive/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
-  - stage-2 iterator closure contracts are merged and review-closed (including post-closure CPython `itertools` parity sweep/remediation passes)
-  - stage-2 contract lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
-- RNG/crypto continuation is production-grade closed:
-  - phase docs: `plans/issues/archive/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `plans/issues/archive/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
-  - RNG closure contracts merged with external production-grade review artifacts and closure pass-2 approval
-- Ownership-aware collection lowering continuation is in closure review:
-  - phase docs: `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `plans/issues/archive/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
-  - completed waves:
+- Current sequencing for compiler execution lives in the project planning index, from the production compiler plan through the web-framework architecture.
+- Entry/exit criteria, future-work quality checks, and mandatory local validation commands live in staged planning files under `## Quality Rules`.
+- Iterator architecture execution has two completed stages:
+  - stage 1: `first-class-lazy-iterators-and-python-iterable-protocol record` and `first-class-lazy-iterators-and-python-iterable-protocol-execution record`
+  - stage 2 corrective continuation: `canonical-iteration-model-and-lazy-parity record` and `canonical-iteration-model-and-lazy-parity-execution record`
+  - stage-2 iterator behavior rules are merged and reviewed, including CPython `itertools` parity sweep/remediation passes.
+  - stage-2 rules lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
+- RNG/crypto continuation is production-grade complete:
+  - planning docs: `stateful-rng-crypto-and-polish-parity-expansion record` and `stateful-rng-crypto-and-polish-parity-expansion-execution record`
+  - RNG behavior rules merged with external production-grade review artifacts and second-pass approval
+- Ownership-aware collection lowering continuation is in readiness review:
+  - planning docs: `ownership-aware-collection-lowering-and-clone-elision record` and `ownership-aware-collection-lowering-and-clone-elision-execution record`
+  - completed artifacts:
     - lock/baseline artifact: `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
     - iterator/comprehension ownership correction artifact: `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
     - indexing/slicing/star-unpack ownership correction artifact: `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
     - generic hardening/regression lock artifact: `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
-  - active closure stage: external review/closure cycles after wave-level implementation completion
-  - locked planner contract for implementation waves:
+  - active readiness stage: external review cycles after implementation completion
+  - locked planner rules for implementation passes:
     - value category: `Place | Temporary`
     - source access mode: `Preserve | Consume`
     - yield mode: `Copy | Clone | Move | Borrow`
     - conservative generic handling remains mandatory for `TypeVar`/`Any`/move unions
   - canonical ownership-aware collection lowering rule:
     - classify source expression as `ValueCategory::Place` or `ValueCategory::Temporary`
-    - derive source access contract as `SourceAccessMode::Preserve` or `SourceAccessMode::Consume`
+    - derive source access rules as `SourceAccessMode::Preserve` or `SourceAccessMode::Consume`
     - resolve element ownership as `Some(Copy | Move)` or `None` when ownership is conservative/unknown
-    - choose `YieldMode` from planner contract:
+    - choose `YieldMode` from planner rules:
       - `Preserve + Some(Copy)` -> `Copy` (`.iter().copied()` or equivalent copy-out)
       - `Preserve + Some(Move)` -> `Clone` (`.iter().cloned()` where owned element materialization is required)
       - `Preserve + None` -> `Borrow` (no forced copy/clone lowering)
       - `Consume` (or iterator source) -> `Move` (consume source directly, no pre-clone shim)
-    - emit Rust lowering from this plan only; do not bypass planner with ad hoc clone heuristics
+    - emit Rust lowering from this plan only; do not bypass planner with one-off clone heuristics
   - residual boundary lock:
     - this continuation removes unnecessary clone-heavy lowering patterns for targeted surfaces
     - it does not claim full CPython parity for move-heavy runtime representations that depend on broader runtime/model changes
@@ -44,12 +44,12 @@
     - `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
     - `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
 - Integer model amendment source of truth:
-  - `internal_docs/integer_model.md` defines the canonical semantic contract and replaces the historical machine-integer/separate user-facing `bigint` design before production.
-  - `plans/issues/archive/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` tracks the implementation phase and milestone breakdown for that contract.
+  - `internal_docs/integer_model.md` defines the canonical semantic rules and replaces the historical machine-integer/separate user-facing `bigint` design before production.
+  - `integer-model-and-fixed-width-numeric-rules record` tracks the implementation work breakdown for that semantic rules.
   - Target source semantics: `int` is an exact signed arbitrary-precision value-semantic scalar backed by inline-small `SifrInt`; explicit fixed-width `int8`/`int16`/`int32`/`int64` and `uint8`/`uint16`/`uint32`/`uint64` are for storage, dtypes, binary formats, and FFI.
   - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
-- Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
-- When phase-number conflicts exist, follow [`plans/roadmap.md`](../plans/roadmap.md) and the matching files under [`plans/phases/`](../plans/phases/).
+- Historical references in this architecture document may mention legacy sequencing from earlier planning versions.
+- When numbered-record conflicts exist, follow the project planning index and the matching staged planning files.
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
 
 ## Vision
@@ -62,10 +62,10 @@ The end goal is a language capable of building web applications and general-purp
 
 ## Safety Philosophy
 
-Sifr's core guarantee: **if it compiles, it works.** The language is designed so that a successfully compiled program will not crash at runtime under normal conditions. This guarantee is **fully enforced from milestone_safe_indexing onward** -- earlier milestones use panic-based indexing as a bootstrap mechanism until `Option`/`Result` types are available. The principles are:
+Sifr's core guarantee: **if it compiles, it works.** The language is designed so that a successfully compiled program will not crash at runtime under normal conditions. This guarantee is **fully enforced from safe indexing onward** -- earlier bootstrap work uses panic-based indexing as a bootstrap mechanism until `Option`/`Result` types are available. The principles are:
 
 - **No panics in user code.** Sifr programs never panic during normal execution. Every operation that can fail returns `Result[T, E]` or `Option[T]`, forcing the caller to handle the failure case at compile time.
-- **Mandatory error handling.** `Result` and `Option` values are `#[must_use]`. Ignoring a `Result` returned by a function is a **compile-time error**. The programmer must either handle the error (`try`/`except`) or explicitly discard it (`_ = ...`). There is no user-facing `?` operator -- the compiler handles error propagation internally via `try`/`except` auto-unwrap (see contract #3).
+- **Mandatory error handling.** `Result` and `Option` values are `#[must_use]`. Ignoring a `Result` returned by a function is a **compile-time error**. The programmer must either handle the error (`try`/`except`) or explicitly discard it (`_ = ...`). There is no user-facing `?` operator -- the compiler handles error propagation internally via `try`/`except` auto-unwrap (see rules #3).
 - **All fallible operations return `Result` or `Option`.** This includes:
   - Indexing (`x[i]` returns `Option[T]`)
   - Division (`a / b` returns `Result[T, DivisionError]` when the divisor is not provably non-zero)
@@ -74,7 +74,7 @@ Sifr's core guarantee: **if it compiles, it works.** The language is designed so
   - Fixed-width integer narrowing and representation-preserving fixed-width arithmetic (`int` itself is exact; overflow policy is explicit at fixed-width/storage boundaries)
 - `**assert` is the only panic.** The `assert` statement is a programmer invariant check -- it generates `panic!()` and is intentionally unrecoverable. It exists to catch programmer bugs (violated assumptions), not to handle runtime errors. It is the one escape hatch from the no-panic guarantee.
 - **Panic = unrecoverable system failure.** Beyond `assert`, panics only occur from truly unrecoverable situations: stack overflow, double panic, or hardware failure. These are never part of normal control flow.
-- **Generated runtime panic-shape gate is enforced.** Phase 27 requires an emitted-code sweep across pass fixtures to ensure generated Rust contains no `.unwrap(` or `.expect(` in user-facing runtime paths.
+- **Generated runtime panic-shape gate is enforced.** diagnostic architecture requires an emitted-code sweep across pass fixtures to ensure generated Rust contains no `.unwrap(` or `.expect(` in user-facing runtime paths.
 - **Exceptions are not errors.** Sifr does not use Python's exception model. There is no stack unwinding, no exception propagation. The `try`/`except` syntax is reinterpreted as pattern matching on `Result` values with **compiler-enforced exhaustiveness checking** on error types. `raise` is syntax sugar for returning `Err(...)`. `return value` in a `Result`-returning function auto-wraps in `Ok(...)`.
 
 This philosophy means that a Sifr programmer who handles all `Result` and `Option` values (which the compiler enforces) can be confident their program will not crash at runtime.
@@ -118,22 +118,22 @@ When adapting CPython behavior to Sifr, apply these rules:
 3. **Where CPython raises `KeyError`, Sifr returns `Option[V]`.** Example: `dict["missing"]` raises `KeyError` in CPython; in Sifr it returns `None`.
 4. **Where CPython uses arbitrary-precision integers, Sifr uses exact `int`.** Source-level `int` is signed, arbitrary precision, and value-semantic. Fixed-width integer families are explicit for storage, binary protocols, dataframes/tensors, and FFI. Narrowing from `int` to a fixed-width type is explicit and fallible unless the compiler proves a constant fits.
 5. **Where CPython allows mutation on immutable types at runtime, Sifr rejects at compile time.** Example: `tuple[0] = 1` raises `TypeError` at runtime in CPython; in Sifr it is a compile-time error.
-6. **Where CPython behavior is undefined or platform-dependent, Sifr defines explicit behavior.** Document any deviations from CPython in the milestone's notes.
+6. **Where CPython behavior is undefined or platform-dependent, Sifr defines explicit behavior.** Document any deviations from CPython in the codebase work notes.
 
-### Safety Testing Contract
+### Safety Testing Rules
 
-Every milestone that implements built-in functions, data structure methods, or stdlib modules must include a **safety test layer** that verifies:
+Every workstream that implements built-in functions, data structure methods, or stdlib modules must include a **safety test layer** that verifies:
 
 1. **Behavioral parity with CPython:** for each function/method, write tests that match CPython's expected output for valid inputs. Use `Lib/test/test_<module>.py` as the specification.
 2. **Safe error handling:** for each CPython operation that raises an exception, verify that Sifr returns the correct `Result::Err` or `Option::None` instead.
 3. **No panics on any input:** fuzz or property-test each function/method to ensure it never panics, regardless of input. The only acceptable panic is from `assert` statements.
 4. **Compile-time rejection of unsafe patterns:** verify that operations CPython rejects at runtime (e.g., mutating a tuple, unhashable dict key) are caught at compile time in Sifr.
 
-This safety test layer is tracked in each milestone's Definition of Done as: **"CPython parity tests pass with safe error handling (no panics, Result/Option where CPython raises)"**.
+This safety test layer is tracked in each codebase implementation record as: **"CPython parity tests pass with safe error handling (no panics, Result/Option where CPython raises)"**.
 
-### Phase 31.5 Governance Artifact
+### Python source parity Governance Artifact
 
-For the ad-hoc Python source parity closure track (roadmap phase `31.5`), the canonical parity governance source is:
+For the Python source parity governance track, the canonical parity governance source is:
 
 - `verification/areas/stdlib_parity/reports/stdlib_parity_governance_inventory.md`
 
@@ -141,11 +141,11 @@ It is the single consolidated inventory for builtin parity status, core object-m
 
 ## Python Divergences
 
-Sifr intentionally diverges from CPython in several areas to achieve compile-time safety. This table documents each divergence, its rationale, and the milestone where it is introduced.
+Sifr intentionally diverges from CPython in several areas to achieve compile-time safety. This table documents each divergence, its rationale, and the implementation record where it is introduced.
 
-### Standard Library Namespace Contract
+### Standard Library Namespace Rules
 
-Sifr is Python-syntax and CPython-behavior-informed, but it is not Python-source-compatible. The standard library import contract is explicit:
+Sifr is Python-syntax and CPython-behavior-informed, but it is not Python-source-compatible. The standard library import rules is explicit:
 
 | Import root | Owner | Resolution |
 | --- | --- | --- |
@@ -170,36 +170,36 @@ import collections
 ```
 
 
-| Python Behavior                                        | Sifr Behavior                                                                                                        | Rationale                                                                                 | Milestone                                      |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` with compiler-enforced exhaustiveness checking on error types; no `?` operator in user code; `raise` maps to `Err(...)`, `return` auto-wraps in `Ok(...)` | Compile-time error handling eliminates unhandled exceptions at runtime; exhaustiveness checking ensures all error types are covered | milestone_error_handling, milestone_error_exhaustiveness |
-| `IndexError` on out-of-bounds access                   | `x[i]` returns `Option[T]` (no panic)                                                                                | Safe indexing -- no runtime crashes from bad indices                                      | milestone_safe_indexing                        |
-| `KeyError` on missing dict key                         | `d[key]` returns `Option[V]` (no panic)                                                                              | Safe access -- caller must handle missing keys                                            | milestone_safe_indexing                        |
-| Arbitrary-precision integers                           | `int` is exact and arbitrary precision; fixed-width integer families are explicit for storage, dtypes, binary formats, and FFI | Python-simple default arithmetic without overflow; widths are visible only where representation matters | ad-hoc-integer-model-and-fixed-width-numeric-contract |
-| Import-time side effects (`__init__.py` runs code)     | `__init__.sifr` defines exported API only; no side effects on import                                                 | Deterministic, safe module loading                                                        | milestone_imports                              |
-| Mutable default arguments (`def f(x=[])`)              | Default values are evaluated fresh each call (no shared mutable state)                                               | Eliminates a common Python footgun                                                        | milestone_ergonomics                           |
-| Parameter reassignment is implicit (`def f(x): x = ...`) | Rebinding or mutating a parameter requires explicit `mut` / `own mut`; bare parameters are immutable by default | Keeps ownership and mutability explicit; avoids hidden local mutation that conflicts with borrow-by-default semantics | milestone_borrow_default, ad-hoc-own-mut-parameter-convention |
-| Augmented assignment on immutables                     | Augmented assignment (`+=`) on immutable types (tuple, frozenset) is a compile-time error                            | Compile-time enforcement of immutability                                                  | milestone_ergonomics                           |
-| `global` / `nonlocal` keywords                         | Not supported; use closures (milestone_generics) or pass values explicitly                                           | Encourages explicit data flow; avoids hidden state mutation                               | --                                             |
-| Metaclasses (`type()`, `__metaclass__`)                | Not supported; use decorators (milestone_metaprogramming) and protocols (milestone_protocols) instead                | Simplification -- metaclasses add complexity with limited benefit in a compiled language  | --                                             |
-| `__slots__`                                            | Not needed; all classes compile to Rust structs (already memory-efficient)                                           | Rust structs are fixed-layout by default                                                  | --                                             |
-| Runtime duck typing                                    | Structural typing via Protocols (compile-time checked)                                                               | Same flexibility as duck typing but errors caught at compile time                         | milestone_protocols                            |
-| `finally` for cleanup                                  | Supported in milestone_error_handling; prefer `with` statement (milestone_generators) which maps to Rust `Drop`      | Scope-based cleanup is more idiomatic and less error-prone                                | milestone_error_handling, milestone_generators |
-| `del x` (name unbinding)                               | Not supported; variables are dropped at scope end (Rust RAII)                                                        | Explicit lifetime management is handled by the compiler; manual unbinding adds complexity | --                                             |
-| `getattr`/`setattr`/`hasattr`/`delattr` (reflection)   | Not supported; use protocols (milestone_protocols) for dynamic dispatch, pattern matching for type inspection        | Compile-time type safety; runtime reflection undermines static guarantees                 | --                                             |
-| `type()` for runtime type creation                     | Not supported; use class definitions (compile-time only)                                                             | All types must be known at compile time for Rust codegen                                  | --                                             |
-| Positional-only parameters (`def f(x, /, y)`)          | Deferred to milestone_metaprogramming (metaprogramming); not commonly needed in user code                            | Low priority; most APIs use keyword arguments                                             | milestone_metaprogramming                      |
-| Math domain errors (`sqrt(-1)`, `log(0)`, etc.) raise `ValueError` | Sifr follows Rust's IEEE 754 behavior: returns `NaN` / `inf` silently (no exception, no Result) | Consistent with Rust semantics; avoidance of panic; user can check with `isnan()`/`isinf()` | milestone_collection_safety |
-| `list.remove(x)` raises `ValueError` if x not in list | `list.remove(x)` is a no-op if x is not found (no exception, no panic) | Safe by default; callers don't need to pre-check membership | milestone_collection_safety |
-| `list.index(x)` raises `ValueError` if x not in list | `list.index(x)` returns `int \| None` (Option); `None` if not found | Safe by default; callers handle absence via pattern matching | milestone_collection_safety |
-| `min([])`/`max([])` raise `ValueError` on empty | `min(list)`/`max(list)` return `T \| None`; `None` on empty list | Safe by default; absence is a value, not an error | milestone_collection_safety |
-| `set.pop()` raises `KeyError` on empty set | `set.pop()` returns `T \| None`; `None` on empty set | Consistent with safe collection semantics | milestone_collection_safety |
-| Error subclass fields | Only `message` via `str(e)` | `message: str` + typed fields (`line`, `column`, `detail`) | Structured error data without string parsing | milestone_error_subclasses |
-| `@dataclass` for auto-generated methods | `@dataclass` decorator | Auto-generated `__init__`, `__eq__`, `__str__` from field declarations (no decorator needed); `@dataclass` adds advanced features (ordering, frozen, field config) | Eliminates the most common boilerplate; every class with typed fields gets a constructor automatically | milestone_auto_init, milestone_metaprogramming |
-| `match`/`case` with soft keywords | `match`/`case` are soft keywords (context-dependent) | `match`/`case` are hard keywords (always reserved) | No backward compatibility concern; avoids parser ambiguity; `match` is already reserved as a Rust keyword | milestone_pattern_matching |
-| `enum.Enum` class-based syntax | `class Color(Enum): RED = auto()` | `enum Color: RED, GREEN, BLUE` (dedicated syntax, no class inheritance) | Cleaner syntax; direct mapping to Rust enums; no metaclass machinery | milestone_enums |
-| No enum associated data | `enum` variants can hold data via class-based pattern | Union types + classes for data-carrying variants; enums are simple constants only | One obvious way: classes + unions for data, enums for constants. Avoids duplicating algebraic data types. | milestone_enums |
-| Dict insertion order guaranteed (Python 3.7+) | Dict order is unspecified (`HashMap`); use `collections.OrderedDict` if order matters | `dict` maps to Rust `HashMap` which does not guarantee insertion order | Performance: `HashMap` is faster than ordered alternatives; `IndexMap` may be considered in a future milestone | -- |
+| Python Behavior | Sifr Behavior | Rationale |
+| --- | --- | --- |
+| Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` with compiler-enforced exhaustiveness checking on error types; no `?` operator in user code; `raise` maps to `Err(...)`, `return` auto-wraps in `Ok(...)` | Compile-time error handling eliminates unhandled exceptions at runtime; exhaustiveness checking ensures all error types are covered |
+| `IndexError` on out-of-bounds access | `x[i]` returns `Option[T]` (no panic) | Safe indexing: no runtime crashes from bad indices |
+| `KeyError` on missing dict key | `d[key]` returns `Option[V]` (no panic) | Safe access: caller must handle missing keys |
+| Arbitrary-precision integers | `int` is exact and arbitrary precision; fixed-width integer families are explicit for storage, dtypes, binary formats, and FFI | Python-simple default arithmetic without overflow; widths are visible only where representation matters |
+| Import-time side effects (`__init__.py` runs code) | `__init__.sifr` defines exported API only; no side effects on import | Deterministic, safe module loading |
+| Mutable default arguments (`def f(x=[])`) | Default values are evaluated fresh each call (no shared mutable state) | Eliminates a common Python footgun |
+| Parameter reassignment is implicit (`def f(x): x = ...`) | Rebinding or mutating a parameter requires explicit `mut` / `own mut`; bare parameters are immutable by default | Keeps ownership and mutability explicit; avoids hidden local mutation that conflicts with borrow-by-default semantics |
+| Augmented assignment on immutables | Augmented assignment (`+=`) on immutable types (tuple, frozenset) is a compile-time error | Compile-time enforcement of immutability |
+| `global` / `nonlocal` keywords | Not supported; use closures or pass values explicitly | Encourages explicit data flow; avoids hidden state mutation |
+| Metaclasses (`type()`, `__metaclass__`) | Not supported; use decorators and protocols instead | Simplification: metaclasses add complexity with limited benefit in a compiled language |
+| `__slots__` | Not needed; all classes compile to Rust structs | Rust structs are fixed-layout by default |
+| Runtime duck typing | Structural typing via protocols (compile-time checked) | Same flexibility as duck typing but errors are caught at compile time |
+| `finally` for cleanup | Supported for error handling; prefer `with` statements, which map to Rust `Drop` | Scope-based cleanup is more idiomatic and less error-prone |
+| `del x` (name unbinding) | Not supported; variables are dropped at scope end (Rust RAII) | Explicit lifetime management is handled by the compiler; manual unbinding adds complexity |
+| `getattr`/`setattr`/`hasattr`/`delattr` (reflection) | Not supported; use protocols for dynamic dispatch and pattern matching for type inspection | Compile-time type safety; runtime reflection undermines static guarantees |
+| `type()` for runtime type creation | Not supported; use class definitions | All types must be known at compile time for Rust codegen |
+| Positional-only parameters (`def f(x, /, y)`) | Deferred to metaprogramming; not commonly needed in user code | Low priority; most APIs use keyword arguments |
+| Math domain errors (`sqrt(-1)`, `log(0)`, etc.) raise `ValueError` | Sifr follows Rust's IEEE 754 behavior: returns `NaN` / `inf` silently | Consistent with Rust semantics; avoids panic; user can check with `isnan()`/`isinf()` |
+| `list.remove(x)` raises `ValueError` if x not in list | `list.remove(x)` is a no-op if x is not found | Safe by default; callers do not need to pre-check membership |
+| `list.index(x)` raises `ValueError` if x not in list | `list.index(x)` returns `int \| None`; `None` if not found | Safe by default; callers handle absence via pattern matching |
+| `min([])`/`max([])` raise `ValueError` on empty | `min(list)`/`max(list)` return `T \| None`; `None` on empty list | Safe by default; absence is a value, not an error |
+| `set.pop()` raises `KeyError` on empty set | `set.pop()` returns `T \| None`; `None` on empty set | Consistent with safe collection semantics |
+| Error subclass fields | Typed fields such as `message`, `line`, `column`, and `detail` | Structured error data avoids string parsing |
+| `@dataclass` for auto-generated methods | Constructor and common methods are generated from typed field declarations; `@dataclass` remains reserved for advanced options | Eliminates boilerplate while keeping field shapes explicit |
+| `match`/`case` with soft keywords | `match`/`case` are hard keywords | Avoids parser ambiguity; `match` is already reserved as a Rust keyword |
+| `enum.Enum` class-based syntax | Dedicated `enum Color: RED, GREEN, BLUE` syntax, no class inheritance | Cleaner syntax; direct mapping to Rust enums; no metaclass machinery |
+| No enum associated data | Union types plus classes model data-carrying variants; enums are simple constants only | One obvious model: classes and unions for data, enums for constants |
+| Dict insertion order guaranteed (Python 3.7+) | Dict order is unspecified (`HashMap`); use `collections.OrderedDict` if order matters | `HashMap` is faster than ordered alternatives; `IndexMap` may be considered later |
 
 
 **Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
@@ -221,11 +221,11 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.os.remove_file` | `os.remove` | `remove` is used as a method name on collections; `remove_file` avoids ambiguity |
 | `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |
 | `sifr.operator.mod_val` | `operator.mod` | `mod` is a Rust keyword |
-| `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword (also a Sifr keyword from milestone_pattern_matching) |
+| `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword (also a Sifr keyword from pattern-matching work) |
 | `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from an `Iterable[T]`. Kept for ergonomics. |
 | `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens `Iterable[Iterable[T]]`. Simpler API than CPython's `chain.from_iterable`. |
 
-**Removed type-specific duplicates (Phase 13 — stdlib generic rewrite):** `chain_str`, `chain_float`, `accumulate_float`, `accumulate_str`, `counter_add`, `counter_sub`, and other monomorphic variants have been deleted. All stdlib functions are now generic — e.g., `chain[T]`, `accumulate[T: Addable]`, `Counter[T: Hashable]`, `deque[T]`, `heapq` functions with `[T: Comparable]` bounds, `reduce[T, U]`, `shuffle[T]`, `sample[T]`.
+**Removed type-specific duplicates (type-system architecture — stdlib generic rewrite):** `chain_str`, `chain_float`, `accumulate_float`, `accumulate_str`, `counter_add`, `counter_sub`, and other monomorphic variants have been deleted. All stdlib functions are now generic — e.g., `chain[T]`, `accumulate[T: Addable]`, `Counter[T: Hashable]`, `deque[T]`, `heapq` functions with `[T: Comparable]` bounds, `reduce[T, U]`, `shuffle[T]`, `sample[T]`.
 
 ## Compiler Pipeline
 
@@ -267,7 +267,7 @@ sifr/
     sifr_source/            (canonical source text, line-map, file metadata, and UTF-8/UTF-16/UTF-32 position conversion primitives)
     sifr_frontend/          (canonical parse/lower/type-check/diagnostics query facade shared by CLI and tooling)
     sifr_diagnostics/       (canonical diagnostic codes, source-map spans, model, render schema, and sink)
-    sifr_ir/                (High-level IR data contracts, public lowered views, CFG/flow graph data)
+    sifr_ir/                (High-level IR data rules, public lowered views, CFG/flow graph data)
     sifr_lowering/          (AST-to-IR lowering, name/type/ownership/async analysis, lowering diagnostics)
     sifr_stdlib/            (compiler-host stdlib source inventory, intrinsic signatures, generated dependency feature specs)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
@@ -293,32 +293,32 @@ sifr/
         ruff_python_formatter/ (Sifr-aware formatter wrapper consumed by sifr_format)
 ```
 
-New crates added per milestone as needed:
+New crates added as compiler and runtime needs grow:
 
-- milestone_core_stdlib/milestone_ext_collections: `sifr_std` (standard library wrappers, extended collections)
-- Ad-hoc semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
-- TypeScript-Go architecture transfer M0: `sifr_source` (bottom-of-graph source text, line-map, source-file metadata, and editor position conversion authority)
-- TypeScript-Go architecture transfer guardrails: `internal_docs/typescript_go_architecture_transfer_guardrails.md` records the pre-session direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation before behavior migration.
-- TypeScript-Go architecture transfer M2: `sifr_frontend::SourceProvider` is the typed semantic filesystem boundary. `internal_docs/typescript_go_architecture_transfer_m2_source_provider.md` records how `DiskSourceProvider`, `OverlaySourceProvider`, and `TrackingSourceProvider` cover disk reads, unsaved editor buffers, read/probe/canonicalization dependency records, failed lookup records, and package import ambiguity before `WorkspaceSession` owns overlay lifecycle in M3.
-- TypeScript-Go architecture transfer M3: `sifr_frontend::WorkspaceSession` owns serialized compiler-service workspace state and can freeze inspectable `WorkspaceSnapshot` values. `internal_docs/typescript_go_architecture_transfer_m3_workspace_session.md` records the pre-analysis-migration session/snapshot state.
-- TypeScript-Go architecture transfer M4: `sifr_analysis::AnalysisSnapshot` is now an analysis-facing handle to a captured `WorkspaceSnapshot`, and LSP request handling routes editor queries through snapshot methods while staying serialized. `internal_docs/typescript_go_architecture_transfer_m4_analysis_snapshot.md` records query metadata snapshot ids, stale-result identity, and the conservative dirty-scope report slot before persistent LSP sessions and precise dirty scopes land in M5/M6.
-- TypeScript-Go architecture transfer M5: `sifr_lsp::Session` owns persistent analysis handles that wrap `WorkspaceSession`, while `DocumentStore` keeps only protocol document state. `internal_docs/typescript_go_architecture_transfer_m5_lsp_persistent_session.md` records overlay-fed open/change/save handling and document-version stale-result checks before M6 dirty scopes.
-- TypeScript-Go architecture transfer M6: `sifr_lsp` compacts batched editor edits and watcher notifications before updating analysis, while `sifr_frontend::WorkspaceSession` records dirty-scope reports with explicit reasons, merge priority, and conservative degradation. `internal_docs/typescript_go_architecture_transfer_m6_event_compaction_dirty_scope.md` records the precise invalidation vocabulary before M7 dependency-sensitive signatures.
-- TypeScript-Go architecture transfer M7: `sifr_frontend::FrontendContext` records import/export/module signatures and reverse dependency edges so private body edits invalidate only the changed module when public/import signatures are unchanged, while public API or import graph changes invalidate reverse dependents. `internal_docs/typescript_go_architecture_transfer_m7_module_signatures_dependency_invalidation.md` records the first dependency-sensitive invalidation policy.
-- TypeScript-Go architecture transfer M8: `sifr_lowering::flow_graph` provides first-class data-flow nodes, edges, and effects for definitions, assignments, conditions, branches, loops, calls, mutations, moves, borrows, joins, unreachable statements, and exits. `LoweringResult` now carries a snapshot-scoped `FlowGraph`, and `FlowFacts` exposes graph fingerprints and debug traces. `internal_docs/typescript_go_architecture_transfer_m8_first_class_flow_graph.md` records the initial graph-backed narrowing and ownership-effect surface.
-- TypeScript-Go architecture transfer M9: `sifr_frontend::cache_keys` defines deterministic `CompilerFingerprint`, `CacheKeyFingerprint`, common workspace/package/query-policy context fingerprints, and typed cache-key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph cache families. `internal_docs/typescript_go_architecture_transfer_m9_fingerprints_cache_keys.md` records the identity contract before M10 introduces cache reuse.
-- TypeScript-Go architecture transfer M10: `sifr_frontend` adds ref-counted, M9-keyed reuse storage for parse trees, source-map file views, lowered HIR, module diagnostics, and module symbol indexes. `WorkspaceSnapshot` stores immutable snapshot payloads behind `Arc`, and `FrontendContext::can_replace_module_in_project` gates safe one-module replacement on unchanged import/export signatures. `internal_docs/typescript_go_architecture_transfer_m10_snapshot_reuse.md` records the initial reuse contract.
-- TypeScript-Go architecture transfer M11: `sifr_lsp::RequestQueue` routes latency-sensitive, formatting, workspace, and background requests through explicit priority lanes with bounded fairness, while diagnostic jobs preserve captured document versions. `internal_docs/typescript_go_architecture_transfer_m11_lsp_scheduler.md` records the serialized scheduler contract before worker execution expands.
-- TypeScript-Go architecture transfer M12: protocol-level LSP performance coverage is split into per-request `perf.lsp.*` budget ids, leaving `perf.lsp.request_families` as aggregate smoke only. `internal_docs/typescript_go_architecture_transfer_m12_lsp_latency_budgets.md` records the request-family budget taxonomy and Phase 35 relationship.
-- TypeScript-Go architecture transfer M13: LSP cancellation state, delayed workspace-diagnostic progress, and parent-process watchdog behavior are explicit server surfaces. `internal_docs/typescript_go_architecture_transfer_m13_lsp_cancellation_progress_watchdog.md` records the serialized cancellation/progress/watchdog contract.
-- TypeScript-Go architecture transfer M14: `sifr_analysis::SymbolIndex` now exposes workspace/package/stdlib bucket readiness states, import-entry counts, and dirty-module refresh for editor symbol/import queries. Package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. `sifr_analysis::ApprovedWorkerLane` records phases eligible for future parallel execution while `SingleOwnerCompilerPhase` keeps type identity, ownership mutation, package graph mutation, and codegen state serialized. `internal_docs/typescript_go_architecture_transfer_m14_bucketed_indexes.md` records the bucket and worker-lane contract.
-- TypeScript-Go architecture transfer M15: `sifr_frontend::WorkspaceSession` snapshots now include `WorkspaceResidencySnapshot` for project residency, config registry entries, deduped watch registrations, and verified non-authoritative `.sifrbuildinfo` metadata. Build info is retained only after current compiler, package/config, and source hashes match. `internal_docs/typescript_go_architecture_transfer_m15_project_residency.md` records the residency contract.
-- TypeScript-Go architecture transfer M16: `WorkspaceSnapshot` carries bounded `WorkspaceDebugSnapshot` trace/status output with normalized `WorkspaceTracePhase` events for source update, parse, lower, type check, ownership, flow, cache, invalidation, stale rejection, and LSP timing. LSP scheduler/cancellation/stale/timing events are exposed through `sifr/debugTrace`; `AnalysisHost::debug_snapshot` adds side-effect-free index readiness, and `sifr trace` prints representative CLI snapshots. `internal_docs/typescript_go_architecture_transfer_m16_trace_status.md` records the trace/status contract.
-- TypeScript-Go architecture transfer M17: marker-based multi-file editor corpus fixtures now cover the analysis query families and stale-snapshot behavior, while internal-only `SnapshotHandleKind` handles for symbols, types, signatures, diagnostics, and source spans reject wrong-snapshot resolution. Runtime package fixtures also lock `SIFR-IMPORT-0005` ambiguity and fatal `SIFR-PACKAGE-*` non-duplication. `internal_docs/typescript_go_architecture_transfer_m17_editor_corpus_snapshot_handles.md` records the corpus/handle contract.
-- milestone_ffi: FFI codegen extensions in `sifr_codegen`
-- Phase 35 shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
-- milestone_dev_tooling: `sifr_lsp` (language server), `sifr_format` (formatter), `sifr_lint` (linter)
-- milestone_ecosystem: `sifr_registry` (package registry client)
+- core_stdlib/ext_collections: `sifr_std` (standard library wrappers, extended collections)
+- semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
+- `sifr_source`: bottom-of-graph source text, line maps, source-file metadata, and editor position conversion authority.
+- Architecture-transfer guardrails: `internal_docs/typescript_go_architecture_transfer_guardrails.md` records the direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation for behavior migration.
+- `sifr_frontend::SourceProvider`: typed semantic filesystem boundary. `internal_docs/typescript_go_architecture_transfer_source_provider.md` records how `DiskSourceProvider`, `OverlaySourceProvider`, and `TrackingSourceProvider` cover disk reads, unsaved editor buffers, read/probe/canonicalization dependency records, failed lookup records, package import ambiguity, and overlay lifecycle requirements.
+- `sifr_frontend::WorkspaceSession`: serialized compiler-service workspace state and inspectable `WorkspaceSnapshot` creation. `internal_docs/typescript_go_architecture_transfer_workspace_session.md` records the session/snapshot state.
+- `sifr_analysis::AnalysisSnapshot`: analysis-facing handle to a captured `WorkspaceSnapshot`. LSP request handling routes editor queries through snapshot methods while staying serialized. `internal_docs/typescript_go_architecture_transfer_analysis_snapshot.md` records query metadata snapshot ids, stale-result identity, and the conservative dirty-scope report slot.
+- `sifr_lsp::Session`: persistent analysis handles that wrap `WorkspaceSession`; `DocumentStore` keeps protocol document state. `internal_docs/typescript_go_architecture_transfer_lsp_persistent_session.md` records overlay-fed open/change/save handling and document-version stale-result checks.
+- LSP event compaction and dirty-scope reporting: `sifr_lsp` compacts batched editor edits and watcher notifications before updating analysis, while `sifr_frontend::WorkspaceSession` records dirty-scope reports with explicit reasons, merge priority, and conservative degradation. `internal_docs/typescript_go_architecture_transfer_event_compaction_dirty_scope.md` records the precise invalidation vocabulary.
+- Dependency-sensitive invalidation: `sifr_frontend::FrontendContext` records import/export/module signatures and reverse dependency edges so private body edits invalidate only the changed module when public/import signatures are unchanged, while public API or import graph changes invalidate reverse dependents. `internal_docs/typescript_go_architecture_transfer_module_signatures_dependency_invalidation.md` records the invalidation policy.
+- `sifr_lowering::flow_graph`: first-class data-flow nodes, edges, and effects for definitions, assignments, conditions, branches, loops, calls, mutations, moves, borrows, joins, unreachable statements, and exits. `LoweringResult` carries a snapshot-scoped `FlowGraph`, and `FlowFacts` exposes graph fingerprints and debug traces. `internal_docs/typescript_go_architecture_transfer_first_class_flow_graph.md` records graph-backed narrowing and ownership-effect behavior.
+- `sifr_frontend::cache_keys`: deterministic `CompilerFingerprint`, `CacheKeyFingerprint`, common workspace/package/query-policy context fingerprints, and typed cache-key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph cache families. `internal_docs/typescript_go_architecture_transfer_fingerprints_cache_keys.md` records cache-key identity requirements.
+- Snapshot reuse: `sifr_frontend` adds ref-counted, cache-key identity-keyed reuse storage for parse trees, source-map file views, lowered HIR, module diagnostics, and module symbol indexes. `WorkspaceSnapshot` stores immutable snapshot payloads behind `Arc`, and `FrontendContext::can_replace_module_in_project` gates safe one-module replacement on unchanged import/export signatures. `internal_docs/typescript_go_architecture_transfer_snapshot_reuse.md` records reuse requirements.
+- `sifr_lsp::RequestQueue`: latency-sensitive, formatting, workspace, and background requests route through explicit priority lanes with bounded fairness, while diagnostic jobs preserve captured document versions. `internal_docs/typescript_go_architecture_transfer_lsp_scheduler.md` records scheduler behavior.
+- LSP latency budgets: protocol-level LSP performance coverage is split into per-request `perf.lsp.*` budget ids, leaving `perf.lsp.request_families` as aggregate smoke only. `internal_docs/typescript_go_architecture_transfer_lsp_latency_budgets.md` records the request-family budget taxonomy and frontend query architecture relationship.
+- LSP cancellation, progress, and watchdog: LSP cancellation state, delayed workspace-diagnostic progress, and parent-process watchdog behavior are explicit server behaviors. `internal_docs/typescript_go_architecture_transfer_lsp_cancellation_progress_watchdog.md` records cancellation/progress/watchdog semantics.
+- Bucketed symbol index: `sifr_analysis::SymbolIndex` exposes workspace/package/stdlib bucket readiness states, import-entry counts, and dirty-module refresh for editor symbol/import queries. Package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. `sifr_analysis::ApprovedWorkerLane` records compiler operations eligible for future parallel execution while `SingleOwnerCompilerPhase` keeps type identity, ownership mutation, package graph mutation, and codegen state serialized. `internal_docs/typescript_go_architecture_transfer_bucketed_indexes.md` records bucket and worker-lane behavior.
+- Project residency: `sifr_frontend::WorkspaceSession` snapshots include `WorkspaceResidencySnapshot` for project residency, config registry entries, deduped watch registrations, and verified non-authoritative `.sifrbuildinfo` metadata. Build info is retained only after current compiler, package/config, and source hashes match. `internal_docs/typescript_go_architecture_transfer_project_residency.md` records residency behavior.
+- Trace and status: `WorkspaceSnapshot` carries bounded `WorkspaceDebugSnapshot` trace/status output with normalized `WorkspaceTracePhase` events for source update, parse, lower, type check, ownership, flow, cache, invalidation, stale rejection, and LSP timing. LSP scheduler/cancellation/stale/timing events are exposed through `sifr/debugTrace`; `AnalysisHost::debug_snapshot` adds side-effect-free index readiness, and `sifr trace` prints representative CLI snapshots. `internal_docs/typescript_go_architecture_transfer_trace_status.md` records trace/status behavior.
+- Editor corpus and snapshot handles: marker-based multi-file editor corpus fixtures cover the analysis query families and stale-snapshot behavior, while internal-only `SnapshotHandleKind` handles for symbols, types, signatures, diagnostics, and source spans reject wrong-snapshot resolution. Runtime package fixtures also lock `SIFR-IMPORT-0005` ambiguity and fatal `SIFR-PACKAGE-*` non-duplication. `internal_docs/typescript_go_architecture_transfer_editor_corpus_snapshot_handles.md` records corpus/handle behavior.
+- ffi: FFI codegen extensions in `sifr_codegen`
+- frontend query architecture shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
+- developer-tooling work: `sifr_lsp` (language server), `sifr_format` (formatter), `sifr_lint` (linter)
+- ecosystem: `sifr_registry` (package registry client)
 
 ## Formatter Architecture
 
@@ -365,7 +365,7 @@ large-file check and a representative project check.
 
 This keeps CLI mode resolution as the boundary that selects the rooted entrypoint shape while preserving one internal build architecture.
 
-Phase 31 decomposed `sifr_driver` into the following stable internal boundaries:
+driver/package architecture decomposed `sifr_driver` into the following stable internal boundaries:
 
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
@@ -376,7 +376,7 @@ Phase 31 decomposed `sifr_driver` into the following stable internal boundaries:
 
 ### Generated Artifact Cache Boundary
 
-Phase ad-hoc test strategy milestone 4 moved `run`/`test` away from invocation-scoped temp directories as the default cache boundary.
+Generated artifact cache work moved `run`/`test` away from invocation-scoped temp directories as the default cache boundary.
 
 - `sifr build` still materializes into the caller-provided output directory and does not reuse a hidden cache.
 - `sifr run` now lowers/codegens on each invocation but materializes the generated Cargo project into a content-addressed cache rooted under the system temp directory. The cache key includes:
@@ -393,23 +393,23 @@ Phase ad-hoc test strategy milestone 4 moved `run`/`test` away from invocation-s
 
 ---
 
-## Cross-cutting Contracts
+## Cross-cutting Rules
 
-These are design decisions that span multiple milestones. They must be resolved early to prevent milestones from diverging and breaking each other.
+These are design decisions that span multiple future capabilities. They must be resolved early to prevent those capabilities from diverging and breaking each other.
 
 ### 1. Runtime Type Representation
 
-Union types, `Unknown`, and class instances all need a coherent runtime representation in generated Rust code. This contract ensures milestone_type_system/milestone_classes/milestone_protocols/milestone_generics produce compatible code.
+Union types, `Unknown`, and class instances all need a coherent runtime representation in generated Rust code. This rules ensures type_system/classes/protocols/generics produce compatible code.
 
-**Contract:**
+**Rules:**
 
 - **Primitive unions** (`int | str`): generate Rust `enum` with one variant per member type. The enum name is deterministic from the sorted member types (e.g., `IntOrStr`). Narrowing via `isinstance` generates `match` arms.
 - **Optional types** (`T | None`): generate Rust `Option<T>`. Narrowing via `is not None` generates `if let Some(x) = x`.
-- **Class unions** (`Circle | Square`, milestone_classes/milestone_protocols): generate Rust `enum` with one variant per class. Discriminated union narrowing via tag field generates `match` on the tag.
+- **Class unions** (`Circle | Square`, classes/protocols): generate Rust `enum` with one variant per class. Discriminated union narrowing via tag field generates `match` on the tag.
 - `**Unknown` type**: generates `Box<dyn std::any::Any>` in Rust. The compiler enforces that every use site is guarded by a narrowing check (`isinstance`, equality, etc.) before any operation. At runtime, `downcast_ref::<T>()` is used after narrowing. This is the only type that requires runtime type information (RTTI).
 - `**Any` type**: generates the same `Box<dyn Any>` but the compiler does NOT enforce narrowing. This is the escape hatch.
-- **Generics** (milestone_generics): monomorphized at compile time (like Rust). No runtime type erasure for generic types. Under the integer-model amendment, `list[int]` generates storage over the canonical `SifrInt` representation, while fixed-width lists use the corresponding Rust primitive storage.
-- **Protocol/trait objects** (milestone_protocols): when a protocol is used as a type (not just a bound), generate `Box<dyn Trait>` with vtable dispatch. This is the only case of dynamic dispatch besides `Unknown`/`Any`.
+- **Generics** (generics): monomorphized at compile time (like Rust). No runtime type erasure for generic types. Under the integer-model amendment, `list[int]` generates storage over the canonical `SifrInt` representation, while fixed-width lists use the corresponding Rust primitive storage.
+- **Protocol/trait objects** (protocols): when a protocol is used as a type (not just a bound), generate `Box<dyn Trait>` with vtable dispatch. This is the only case of dynamic dispatch besides `Unknown`/`Any`.
 
 **Invariant:** Every `Type` variant must have exactly one Rust representation. The `rust_type()` method on `Type` is the single source of truth for this mapping.
 
@@ -417,7 +417,7 @@ Union types, `Unknown`, and class instances all need a coherent runtime represen
 
 Sifr uses **borrow-by-default** semantics for function parameters. Move-type arguments are immutably borrowed (`&T`) unless the programmer opts in to mutable borrowing (`mut`), ownership transfer (`own`), or owned mutable parameters (`own mut`). Scalar value-semantic primitives (`int`, fixed-width integers, `float`, `bool`) do not expose use-after-move friction at the source level; under the integer-model amendment, `int` is not Rust `Copy`, but codegen owns the borrow/clone/primitive-local optimization needed to preserve scalar source semantics.
 
-**Contract:**
+**Rules:**
 
 - **Function arguments:** borrow by default (immutable). The compiler models parameter passing along two axes:
   - ownership:
@@ -437,46 +437,46 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
   - If the method mutates `self` fields: `&mut self`
   - If the method consumes `self` (e.g., builder pattern): `self` (move)
   - Self inference is unchanged by borrow-by-default (it already uses body analysis)
-- **Closure captures (milestone_generics):** inferred from usage inside the closure body:
+- **Closure captures (generics):** inferred from usage inside the closure body:
   - Read-only access: capture by `&T`
   - Mutation: capture by `&mut T`
   - Move into closure: capture by value (when the closure outlives the variable's scope, or when explicitly requested with `move` keyword)
 - **Temporary lifetimes:** temporaries created in expressions live until the end of the enclosing statement. Method chains like `x.upper().split(",")` work without explicit borrows.
 - **Escape analysis:** the compiler tracks whether a reference escapes its scope. If it does, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: clone explicitly, or restructure to avoid the escape.
 - **No lifetime annotations in user code:** Sifr does not expose Rust's `'a` lifetime syntax. The compiler infers lifetimes using the rules above. If inference fails, the compiler emits a clear error suggesting `.clone()` or restructuring.
-- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-milestone_protocols). Default behavior is borrow-by-default with explicit `mut`, `own`, and `own mut` parameter contracts rather than hidden runtime borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
+- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-protocols). Default behavior is borrow-by-default with explicit `mut`, `own`, and `own mut` parameter rules rather than hidden runtime borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
 - **Return semantics follow ownership, not mutability:** returning a Move-type parameter by value is only valid when the callee owns that parameter (`own` / `own mut`). Borrowed parameters, including `mut` borrows, cannot escape by return or store unless the programmer clones explicitly.
 
-**Milestone responsibilities:**
+**Implementation responsibilities:**
 
-- milestone_classes: implement method receiver inference (`&self` / `&mut self` / `self`)
-- milestone_borrow_default: implement borrow-by-default parameter conventions and codegen
-- milestone_borrow_hardening: implement exclusivity checking and error diagnostics
-- ad-hoc-own-mut-parameter-convention: extend parameter conventions so owned mutable parameters are first-class and lower canonically to Rust `mut x: T`
-- milestone_generics: implement closure capture inference
-- milestone_async_4: implement task/thread boundary ownership and Send/Sync capture rules.
-- Post-milestone_protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
+- classes: implement method receiver inference (`&self` / `&mut self` / `self`)
+- borrow_default: implement borrow-by-default parameter conventions and codegen
+- borrow_hardening: implement exclusivity checking and error diagnostics
+- own-mut-parameter-convention: extend parameter conventions so owned mutable parameters are first-class and lower canonically to Rust `mut x: T`
+- generics: implement closure capture inference
+- task/thread boundary ownership: implement task/thread boundary ownership and Send/Sync capture rules.
+- Post-protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
 
 ### 3. Error Semantics
 
-Sifr replaces Python's exception model with Rust's `Result`/`Option` model (milestone_error_handling). **All fallible operations return `Result` or `Option`; the compiler enforces handling via `#[must_use]`.** The only user-facing error handling mechanism is `try`/`except` -- there is no user-facing `?` operator. The compiler uses `?` internally (as an HIR node) when auto-unwrapping `Result` values inside `try` blocks.
+Sifr replaces Python's exception model with Rust's `Result`/`Option` model (error_handling). **All fallible operations return `Result` or `Option`; the compiler enforces handling via `#[must_use]`.** The only user-facing error handling mechanism is `try`/`except` -- there is no user-facing `?` operator. The compiler uses `?` internally (as an HIR node) when auto-unwrapping `Result` values inside `try` blocks.
 
-**Contract:**
+**Rules:**
 
 **Error mechanism matrix:**
 
 | Context                          | Error mechanism                   | Handling                                                    | Codegen                                                    |
 | -------------------------------- | --------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | Sync function                    | `Result[T, E]` return             | `try`/`except` with exhaustiveness checking                 | `Result<T, E>`                                             |
-| Async function (milestone_async_1/milestone_async_2) | `Result[T, E]` return             | `try`/`except` works across same-task `.await`; spawned task observation returns `TaskResult[T, E]` | `Result<T, E>` inside the task; task handles observe `TaskResult<T, E>` |
+| Async function (async HIR/type substrate/async call semantics) | `Result[T, E]` return             | `try`/`except` works across same-task `.await`; spawned task observation returns `TaskResult[T, E]` | `Result<T, E>` inside the task; task handles observe `TaskResult<T, E>` |
 | `try`/`except` block             | Pattern match on `Result`         | `except` arms match error types; compiler checks coverage   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
 | Indexing                         | `Option[T]` return                | Type narrowing (`if val is not None`)                       | `.get(i).cloned()` / `.chars().nth(i)`                     |
 | Division                         | `Result[T, DivisionError]`        | `try`/`except`                                              | Checked division with zero-check                           |
 | Exact integer arithmetic (`int`) | Exact value-semantic arithmetic; explosive operations such as exponentiation/large shifts are budgeted and fallible when needed | Use fixed-width integer APIs only when representation matters; no silent wrap/panic in normal `int` arithmetic | `SifrInt` inline-small runtime type; fixed-width types map to Rust primitives |
 | Type conversion                  | `Result[T, ParseError]`           | `try`/`except`                                              | `.parse::<T>()`                                            |
 | Unused `Result`                  | **Compile-time error**            | Must handle via `try`/`except` or discard with `_ = ...`    | `#[must_use]` attribute on `Result`                        |
-| Rust FFI (milestone_ffi)         | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points                     | Panic -> `Result::Err` conversion                          |
-| C FFI (milestone_ffi)            | Crashes are non-recoverable       | Safe wrappers validate inputs                               | Process terminates on segfault/abort                       |
+| Rust FFI (ffi)         | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points                     | Panic -> `Result::Err` conversion                          |
+| C FFI (ffi)            | Crashes are non-recoverable       | Safe wrappers validate inputs                               | Process terminates on segfault/abort                       |
 | `assert` statement               | Panic (programmer invariant only) | Not catchable                                               | `assert!()` or `panic!()`                                  |
 | Main function                    | `Result` printed as exit code     | Non-zero exit on `Err`                                      | `fn main() -> Result<(), Box<dyn Error>>`                  |
 
@@ -575,7 +575,7 @@ def pipeline(path: str) -> Result[str, PipelineError]:
         raise PipelineError(f"other: {e}")          # covers TOMLDecodeError, ValidationError
 ```
 
-**Typed error hierarchies:** All ordinary error types are classes that extend `Error`. The `raise` keyword maps to `Err(ErrorInstance)`. `return value` in a `Result`-returning function auto-wraps in `Ok(value)`. Using a non-`Error` type (e.g., `str`, `int`) as the `E` in `Result[T, E]` is a compile-time error. Task cancellation is handled by the async cancellation contract rather than ordinary catch-all matching.
+**Typed error hierarchies:** All ordinary error types are classes that extend `Error`. The `raise` keyword maps to `Err(ErrorInstance)`. `return value` in a `Result`-returning function auto-wraps in `Ok(value)`. Using a non-`Error` type (e.g., `str`, `int`) as the `E` in `Result[T, E]` is a compile-time error. Task cancellation is handled by the async cancellation rules rather than ordinary catch-all matching.
 
 **Built-in error classes:** Sifr provides a standard set of error classes for common failure modes (e.g., I/O, parsing, validation). These are used by the stdlib and available to user code.
 
@@ -687,11 +687,11 @@ except DbError as e:
 - **Library code:** define a domain error class (e.g., `class ConfigError(Error)`) and wrap internal errors at API boundaries. Callers only see the domain error type.
 - **Stdlib functions:** return `Result[T, SpecificError]` using the built-in error classes. For example, `read_text(path)` returns `Result[str, IOError]`, `int(s)` returns `Result[int, ParseError]`.
 
-### 4. Package Resolver and Reproducibility (milestone_imports/milestone_cli_semantics/milestone_package_mgmt)
+### 4. Package Resolver and Reproducibility (import semantics work/CLI semantics work/package-management work)
 
-This contract is split across three milestones: milestone_imports (multi-file compilation and import semantics), milestone_cli_semantics (CLI project-mode activation semantics), and milestone_package_mgmt (package management with dependency resolution). milestone_imports maps to Phase 17 (Import and Externals Correctness), milestone_cli_semantics maps to Phase 18 (Project and CLI Semantics Correctness), and milestone_package_mgmt lands in Phase 31 (Package Management).
+This rules is split across three workstreams: import semantics work (multi-file compilation and import semantics), CLI semantics work (CLI project-mode activation semantics), and package-management work (package management with dependency resolution). Import semantics work maps to import semantics architecture (Import and Externals Correctness), CLI semantics work maps to CLI semantics architecture (Project and CLI Semantics Correctness), and package-management work lands in driver/package architecture (Package Management).
 
-**Contract (milestone_imports -- imports and modules):**
+**Rules (import semantics work -- imports and modules):**
 
 - **Import cycle detection:** the compiler builds a dependency graph of modules during compilation. Cycles are a compile-time error with a clear diagnostic showing the cycle path.
 - `**__init__.sifr` semantics:** defines the public API of a package. Symbols not re-exported from `__init__.sifr` are private to the package. No side effects on import (unlike Python's `__init__.py`).
@@ -699,25 +699,25 @@ This contract is split across three milestones: milestone_imports (multi-file co
 - **Import caching:** each module is compiled exactly once per compilation. The driver maintains a module cache keyed by canonical path.
 - **Multi-file diagnostics:** error messages show correct source file and line numbers across module boundaries.
 
-**Contract (milestone_cli_semantics -- CLI project-mode activation):**
+**Rules (CLI semantics work -- CLI project-mode activation):**
 
 - **Resolver trigger matrix:** project-mode activation rules are explicit for `from` imports, relative import levels, bare relative imports, and regular `import` statements.
 - **Run/build equivalence:** `run` and `build` use the same resolver and produce equivalent mode selection and error-class outcomes for identical inputs.
-- **Contract synchronization:** resolver behavior, regression tests, and CLI semantics documentation must remain aligned.
+- **Rules synchronization:** resolver behavior, regression tests, and CLI semantics documentation must remain aligned.
 
-**Contract (milestone_package_mgmt -- package management, Phase 37):**
+**Rules (package-management work -- package management, package-management architecture):**
 
 - **Cargo-backed package substrate:** `Cargo.toml` and `Cargo.lock` own external dependency resolution, lockfile behavior, registries, Git/path sources, workspaces, publishing, vendoring, and backend Rust/native dependencies.
 - **Sifr compiler metadata:** `sifr.toml` owns Sifr package name, edition, compiler requirement, source roots, exports, privacy, aliases, and native trust policy. It does not own external dependency resolution or registry credentials.
 - **Package graph:** `crates/sifr_package` consumes `cargo metadata --format-version 1`, normalizes Cargo packages and resolved dependency edges, and derives `SifrPackageGraph` plus `PackageSourceMap` for the normal frontend/lowering/codegen pipeline. Package source-map construction uses the SourceProvider boundary for source-root traversal and `__init__.sifr` API reads, and preserves otherwise legal ambiguous module candidates for import-site `SIFR-IMPORT-0005` diagnostics instead of failing construction as `SIFR-PACKAGE-*`.
 - **Package identity:** package instance identity includes Cargo package id, version, and source identity. Multiple Cargo-selected versions are allowed when each package's direct dependency scope remains unambiguous.
 - **Distribution:** a Sifr package is a valid Cargo package carrying `.sifr` source and `[package.metadata.sifr] manifest = "sifr.toml"`. Pure Sifr packages include only the canonical Rust marker target; Rust-backed packages must declare and pass backend trust validation.
-- **No Sifr-native lockfile in Phase 37:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.
+- **No Sifr-native lockfile in package-management architecture:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.
 - **Python interop deferred:** `pyproject.toml`, `uv.lock`, uv, and Python package distribution are future interop surfaces. They must lower into the same Cargo-backed package graph and import semantics instead of forking package resolution.
 
 ### 5. CI Quality Gates
 
-**Contract for every PR:**
+**Rules for every PR:**
 
 - `cargo test` passes (all layers: unit, snapshot, E2E, corpus)
 - `cargo clippy -- -D warnings` passes
@@ -725,32 +725,32 @@ This contract is split across three milestones: milestone_imports (multi-file co
 - E2E pass tests compile generated Rust and verify runtime stdout
 - E2E fail tests verify expected diagnostics
 
-**Milestone-specific gates (added as milestones land):**
+**Feature-specific gates (added as features land):**
 
-- milestone_ergonomics+: CPython parity tests -- verify behavioral match with CPython (`/Users/yaseralnajjar/work/sifr/cpython`) for all built-in functions, data structure methods, and stdlib modules, with safe error handling (no panics, `Result`/`Option` where CPython raises exceptions)
-- milestone_generics+: benchmark suite with regression thresholds (compile time, binary size)
-- milestone_core_stdlib+: stdlib wrapper tests (each module has integration tests against the underlying Rust crate)
-- milestone_ecosystem: fuzz testing for parser and type checker (cargo-fuzz or afl)
+- ergonomics+: CPython parity tests -- verify behavioral match with CPython (`/Users/yaseralnajjar/work/sifr/cpython`) for all built-in functions, data structure methods, and stdlib modules, with safe error handling (no panics, `Result`/`Option` where CPython raises exceptions)
+- generics+: benchmark suite with regression thresholds (compile time, binary size)
+- core_stdlib+: stdlib wrapper tests (each module has integration tests against the underlying Rust crate)
+- ecosystem: fuzz testing for parser and type checker (cargo-fuzz or afl)
 
 ### 6. Slice and Collection Semantics
 
 Sifr uses Python-like slicing syntax, but must define whether slicing copies or creates a view. This affects performance expectations and ownership behavior.
 
-**Contract:**
+**Rules:**
 
 - **List slicing copies:** `list[a:b]` produces a new `list` (deep copy of elements). This matches Python semantics and avoids borrow complexity. Codegen: `vec[a..b].to_vec()`.
 - **String slicing copies:** `str[a:b]` produces a new `str`. Indices are character positions (not byte offsets). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
-- **Dict:** not sliceable. **Tuple:** compile-time slicing supported (milestone_ergonomics) -- the compiler can statically verify tuple slice bounds and produce a new tuple type.
-- **Views deferred:** an explicit view API (e.g., `list.view(a, b)` mapping to `&[T]`) may be added in a later milestone for performance-critical paths. Not part of MVP.
+- **Dict:** not sliceable. **Tuple:** compile-time slicing supported (ergonomics) -- the compiler can statically verify tuple slice bounds and produce a new tuple type.
+- **Views deferred:** an explicit view API (e.g., `list.view(a, b)` mapping to `&[T]`) may be added later for performance-critical paths. Not part of MVP.
 - **`for` loop protocol entry:** `for item in collection` lowers through `iter(collection)` first, then iterates the resulting iterator. Collection-backed iterables (list/set/dict/string/range/iterable wrappers) are converted to iterator objects without consuming the original collection. This preserves reusable collection behavior while making the protocol boundary explicit in HIR.
-- **For-loop element semantics (milestone_borrow_hardening):** Loop elements are independent copies (deep-copy on assignment via `.cloned()`). This matches Python's loop semantics and avoids exposing Rust's borrow/lifetime complexity to Sifr users. The practical consequence: `for x in items: x = transform(x)` does not mutate `items`. Codegen rationale: `.iter().cloned()` copies elements one-at-a-time (like Python), avoids lifetime issues with borrowed elements escaping the loop, and keeps the Sifr ownership model simple for users.
-- **Iterator mutation safety in loops (wave_iter_2):** mutating a collection while iterating over it in the same `for` body is rejected at compile time (`cannot mutate '<name>' while iterating over it in a for loop`). No eager fallback or implicit snapshot is inserted.
+- **For-loop element semantics (borrow_hardening):** Loop elements are independent copies (deep-copy on assignment via `.cloned()`). This matches Python's loop semantics and avoids exposing Rust's borrow/lifetime complexity to Sifr users. The practical consequence: `for x in items: x = transform(x)` does not mutate `items`. Codegen rationale: `.iter().cloned()` copies elements one-at-a-time (like Python), avoids lifetime issues with borrowed elements escaping the loop, and keeps the Sifr ownership model simple for users.
+- **Iterator mutation safety in loops (iterator mutation-safety work):** mutating a collection while iterating over it in the same `for` body is rejected at compile time (`cannot mutate '<name>' while iterating over it in a for loop`). No eager fallback or implicit snapshot is inserted.
 
 ### 7. String Semantics (UTF-8)
 
 Sifr's `str` maps to Rust `String` (UTF-8). String indexing and length must be defined carefully because UTF-8 is variable-width.
 
-**Contract (safe indexing -- no panics):**
+**Rules (safe indexing -- no panics):**
 
 - `**s[i]`:** returns `Option[str]` -- the i-th character (Unicode code point) as a single-character `str`, or `None` if out-of-bounds. Codegen: `s.chars().nth(i).map(|c| c.to_string())`. This is O(n), not O(1).
 - `**list[i]`:** returns `Option[T]` -- the i-th element, or `None` if out-of-bounds. Codegen: `vec.get(i).cloned()`. This is O(1).
@@ -759,12 +759,12 @@ Sifr's `str` maps to Rust `String` (UTF-8). String indexing and length must be d
 - `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`. Returns empty string if indices are out of range.
 - **String literals:** type is `str`, stored as `String` in generated Rust.
 - **Complexity documentation:** the compiler should emit a note when string indexing is used in a loop, suggesting `.chars()` iteration instead for performance.
-- **Global indexing contract:** all indexable types (`str`, `list`, `dict`) use safe indexing. `x[i]` returns `Option[T]`, never panics. This is enforced uniformly across the language.
+- **Global indexing rules:** all indexable types (`str`, `list`, `dict`) use safe indexing. `x[i]` returns `Option[T]`, never panics. This is enforced uniformly across the language.
 
 ### 7.1 Text, Encoding, Unicode, And I18n Substrate
 
 Sifr's production text substrate is owned by `sifr.encoding`, `sifr.io`, `sifr.unicode`, and `sifr.i18n`.
-The focused closeout note lives in [text_i18n_architecture.md](./text_i18n_architecture.md).
+The focused readiness note lives in [text_i18n_architecture.md](./text_i18n_architecture.md).
 
 **Valid text invariant:**
 
@@ -799,15 +799,15 @@ The focused closeout note lives in [text_i18n_architecture.md](./text_i18n_archi
 
 ### 8. Concurrency Safety
 
-Sifr must define which types can cross thread/task boundaries. Phase 32 planning follows `internal_docs/async_concurrency_model.md`; this section records the high-level contract that implementation milestones must preserve.
+Sifr must define which types can cross thread/task boundaries. async/runtime architecture planning follows `internal_docs/async_concurrency_model.md`; this section records the high-level rules that implementation requirements must preserve.
 
-**Contract:**
+**Rules:**
 
 - **Auto-derived Send/Sync:** Sifr types are `Send` and `Sync` when all their fields are `Send` and `Sync` (matches Rust's auto-derivation). The compiler tracks this automatically.
 - **Spawn boundaries are checked:** when a value is sent to a spawned task (`scope.spawn`) or thread, the compiler verifies the value satisfies the task/thread boundary rules. If not, it emits a clear error explaining which captured value or field is not sendable/share-safe.
 - **No silent upgrades:** the compiler does NOT auto-upgrade `Rc` to `Arc` or `RefCell` to `Mutex`. If a non-sendable type is used across a task boundary, the programmer must fix it explicitly.
 - **Shared mutable state across tasks:** requires explicit primitives from the async/concurrency model (`sifr.sync.Lock`, `sifr.sync.RwLock`, or `sifr.sync.Channel`). The compiler rejects sharing mutable references across task boundaries without synchronization.
-- **Shared immutable state is deep-safe:** `sifr.sync.Shared[T]` requires `T` to satisfy the Phase 32 `ShareSafe` capability (`Send + Sync` and no unsynchronized interior mutability).
+- **Shared immutable state is deep-safe:** `sifr.sync.Shared[T]` requires `T` to satisfy the async/runtime architecture `ShareSafe` capability (`Send + Sync` and no unsynchronized interior mutability).
 - **Lock and channel safety:** `sifr.sync.Lock` is synchronous in v1 and may block an async runtime worker under contention, so it is for short critical sections only. Channels use explicit sender/receiver endpoints; send and receive are async and direct `receive` reports closed-and-drained with `ClosedError`; channel-backed `async for` maps closed-and-drained to `Ok(None)`. Channel endpoint lifetime rules: dropping last sender closes after buffered drain; dropping receiver closes immediately to senders; `close()` on any sender closes entire channel; buffered messages remain receivable; FIFO delivery order.
 - **Async callables are distinct:** `AsyncFunction` is not a subtype of sync `Function`/`Callable`; async functions cannot be stored, passed, or invoked through a sync callable path.
 - **Coroutine/task/result ladder:** calling an async function returns a linear `Coroutine[T, E]`. Awaiting that coroutine in the same task yields the async function's surface return type. Spawning it with `scope.spawn` consumes the coroutine and returns `Task[T, E]`.
@@ -823,23 +823,23 @@ Sifr must define which types can cross thread/task boundaries. Phase 32 planning
 - **Task composition semantics:** `task.timeout` accepts task handles in v1, returns the inner result when the inner task completes before the deadline, timeout expiry cancels and awaits inner cleanup, same-tick completion wins over timeout, and outer cancellation cancels the inner task. `task.gather` is fail-fast with deterministic success ordering; first observed failure cancels unfinished children and cleanup/sibling failures become secondary evidence. `task.select` and `task.race` consume their input handles and cancel losing tasks by default. `BlockingTask[T, E]` is separate from cooperative `Task[T, E]` because blocking cancellation may only abandon the result.
 - **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
 
-**Milestone responsibilities:**
+**Implementation responsibilities:**
 
-- `milestone_async_0`: copy the complete async/concurrency type, task, cancellation, and runtime contracts from `internal_docs/async_concurrency_model.md` into the architecture contract.
-- `milestone_async_1`: add async HIR/type substrate (`Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `await`, async calls).
-- `milestone_async_4`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
-- `milestone_async_5`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
-- `milestone_async_6` (completed): provide workload annotations and async-context diagnostics, explicit blocking offload through `task.spawn_blocking`, and `BlockingTask[T, E]` result-abandonment cancellation semantics. The later production concurrency/runtime substrate removed public `sifr.concurrent` and `sifr.threading` compatibility surfaces in favor of native `sifr.task`, `sifr.sync`, `sifr.runtime`, and `sifr.parallel` APIs.
-- `milestone_async_7a`: implement user-defined async context managers, `AsyncIterator[T, E]`, and `async for` over protocol-conforming streams.
-- `milestone_async_7b`: implement `AsyncGenerator[T, E]`, async generator lifecycle/cleanup, and list/set/dict async comprehensions.
+- `async architecture import`: copy the complete async/concurrency type, task, cancellation, and runtime rules from `internal_docs/async_concurrency_model.md` into the architecture rules.
+- `async HIR/type substrate`: add async HIR/type substrate (`Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `await`, async calls).
+- `task/thread boundary ownership`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
+- `shared synchronization primitives`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
+- `blocking offload diagnostics` (completed): provide workload annotations and async-context diagnostics, explicit blocking offload through `task.spawn_blocking`, and `BlockingTask[T, E]` result-abandonment cancellation semantics. The later production concurrency/runtime substrate removed public `sifr.concurrent` and `sifr.threading` compatibility surfaces in favor of native `sifr.task`, `sifr.sync`, `sifr.runtime`, and `sifr.parallel` APIs.
+- `async context-manager and iterator surface`: implement user-defined async context managers, `AsyncIterator[T, E]`, and `async for` over protocol-conforming streams.
+- `async generator surface`: implement `AsyncGenerator[T, E]`, async generator lifecycle/cleanup, and list/set/dict async comprehensions.
 
-**M7 production runtime closeout:** the terminal architecture audit for the production concurrency/runtime substrate lives in [structured_runtime_work_model.md](./structured_runtime_work_model.md#m7-production-closure-audit). It locks the task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability rules, task/request context model, diagnostics/signal global-state policy, and rejected CPython-shaped surface index without reopening the Phase 32 async syntax contract.
+**production runtime readiness:** the terminal architecture audit for the production concurrency/runtime substrate lives in [structured_runtime_work_model.md](./structured_runtime_work_model.md#runtime-substrate-audit). It locks the task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability rules, task/request context model, diagnostics/signal global-state policy, and rejected CPython-shaped surface index without reopening the async/runtime architecture async syntax rules.
 
 ### 9. Destruction and Cleanup Semantics
 
-Sifr compiles to Rust, which has deterministic destruction (RAII). This contract defines when and how values are cleaned up.
+Sifr compiles to Rust, which has deterministic destruction (RAII). This rules defines when and how values are cleaned up.
 
-**Contract:**
+**Rules:**
 
 - **Scope-end destruction:** values are dropped at the end of their enclosing scope, in reverse declaration order. This matches Rust's `Drop` semantics and is deterministic (unlike Python's GC).
 - **Move invalidates source:** when a value is moved (assigned to another variable, or passed to a function via `own` parameter), the source is invalidated. Accessing it after move is a compile-time error. Note: default function parameters borrow (`&T`), so passing a value to a function does NOT move it unless the parameter is marked `own`.
@@ -848,18 +848,18 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This contract
 - **Explicit cleanup via `with`:** for resource management (files, connections), use `with` blocks that map to Rust's scoped resource patterns. The resource is cleaned up when the `with` block exits. The `with` statement calls `__enter__()` at scope start and `__exit__()` at scope end, with compile-time enforcement of the `ContextManager` protocol.
 - **Destructor failure:** auto-generated destructors do not fail. If an underlying Rust `Drop` implementation panics (only possible via FFI-wrapped types), the program aborts. This is a system-level failure, not a Sifr-level concern -- Sifr user code cannot trigger destructor panics.
 
-**Milestone responsibilities:**
+**Implementation responsibilities:**
 
-- milestone_generators: define initial `with` block syntax (scoped block desugaring)
-- milestone_compiler_hardening (Phase 7: Stdlib Parity): complete the `with` statement with full `ContextManager` protocol enforcement (`__enter__`/`__exit__` calls, multiple context managers, compile-time protocol checking)
-- milestone_classes: implement scope-end destruction for class instances
-- milestone_core_stdlib: implement `with` blocks for file handles and other stdlib resources
+- generators: define initial `with` block syntax (scoped block desugaring)
+- compiler hardening work (stdlib parity architecture: Stdlib Parity): complete the `with` statement with full `ContextManager` protocol enforcement (`__enter__`/`__exit__` calls, multiple context managers, compile-time protocol checking)
+- classes: implement scope-end destruction for class instances
+- core_stdlib: implement `with` blocks for file handles and other stdlib resources
 
 ### 10. Auto-Derived Traits
 
-Sifr auto-derives common Rust traits for all user-defined types. This is a language contract, not an implementation detail.
+Sifr auto-derives common Rust traits for all user-defined types. This is a language rules, not an implementation detail.
 
-**Contract:**
+**Rules:**
 
 - **Always derived (when valid):**
   - `Debug` -- enables `print()` and `repr()` for all types. Derived for all structs and enums.
@@ -872,18 +872,18 @@ Sifr auto-derives common Rust traits for all user-defined types. This is a langu
   - `Ord` / `PartialOrd` -- comparison ordering requires explicit definition via `__lt__`, `__le__`, etc.
   - `Copy` -- only Rust-copy scalar primitives such as fixed-width integers, `float`, and `bool` are `Copy`. Source-level `int` is value-semantic but lowers to `SifrInt` and is not Rust `Copy`.
 - **Codegen:** the compiler emits `#[derive(Debug, Clone, PartialEq)]` (and conditionally `Eq`, `Hash`) on all generated structs and enums.
-- **Enum types (milestone_enums):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
-- **Auto-init (milestone_auto_init):** when a class has no explicit `__init__`, the compiler auto-generates `__init__`, `__eq__` (if all fields are `PartialEq`), and `__str__` (via `Debug`-style formatting). Explicit definitions always take precedence.
+- **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
+- **Auto-init (auto_init):** when a class has no explicit `__init__`, the compiler auto-generates `__init__`, `__eq__` (if all fields are `PartialEq`), and `__str__` (via `Debug`-style formatting). Explicit definitions always take precedence.
 - **Dict key constraint:** types used as `dict` keys must be `Hash + Eq`. The compiler enforces this at the call site and emits a clear error if the type is not hashable.
 
 ### 11. Diagnostic Mapping
 
-Sifr compiles to Rust source code, which is then compiled by `rustc`. This creates a two-stage compilation where errors can originate from either the Sifr compiler or `rustc`. This contract defines how diagnostics are attributed, mapped, and rendered. The corrective ad-hoc semantic diagnostic taxonomy phase amends the original Phase 27 contract and moves public diagnostic ownership into `crates/sifr_diagnostics`.
+Sifr compiles to Rust source code, which is then compiled by `rustc`. This creates a two-stage compilation where errors can originate from either the Sifr compiler or `rustc`. This rules defines how diagnostics are attributed, mapped, and rendered. The corrective semantic diagnostic taxonomy work amends the original diagnostic architecture rules and moves public diagnostic ownership into `crates/sifr_diagnostics`.
 
-**Contract:**
+**Rules:**
 
-- **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable family-local code of the form `SIFR-<FAMILY>-dddd`, for example `SIFR-NAME-0001`. Families identify the semantic domain, not merely the compiler phase. Historical `E####`/`W####` and message-embedded pseudo-codes are removed before public stability.
-- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.sh/docs/errors/<CODE>"`. This URL is part of the stable contract and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future reviewed verbose compact flag is added.
+- **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable family-local code of the form `SIFR-<FAMILY>-dddd`, for example `SIFR-NAME-0001`. Families identify the semantic domain, not merely the compiler stage. Historical `E####`/`W####` and message-embedded pseudo-codes are removed before public stability.
+- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.sh/docs/errors/<CODE>"`. This URL is part of the stable rules and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future reviewed verbose compact flag is added.
 - **Canonical severity enum:** the shared diagnostic model uses exactly three top-level severities:
   - `Error` -- blocks compilation or the active command
   - `Warning` -- non-blocking but actionable
@@ -892,19 +892,19 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - **Canonical diagnostic object:** target migrated parser, lowering, type checking, borrow checking, and codegen paths must emit `SifrDiagnostic` values from `sifr_diagnostics`. Source diagnostics require a `SourceSpan`; internal diagnostics are reserved for compiler failures without source mapping.
 - **Canonical suggestion model:** suggestion payloads are structured logical suggestions with one or more text replacement edits plus applicability (`MachineApplicable`, `MaybeIncorrect`, `HasPlaceholders`, or `Unspecified`). Replacement text lives in suggestion edits, not duplicated help children.
 - **Span mapping:** semantic diagnostics preserve byte ranges as `SourceSpan` values before rendering. `sifr_source` owns source text, line maps, and UTF-8/UTF-16/UTF-32 position conversion primitives. Renderers derive display paths, byte offsets, 1-based UTF-8 character line/column positions, source snippets, and related spans at the source-map boundary without defining a separate line-map authority. Codegen/rustc diagnostics use `.sifr` source mapping where available; unmapped compiler failures use `SIFR-INTERNAL-*`.
-- **Producer/presentation boundary:** producers own canonical diagnostic identity, source spans, related spans, and structured context before a diagnostic reaches output formatting. `sifr_diagnostics` owns source-map rendering and the `human`, `json`, and `compact` presentation once producers have supplied canonical diagnostic data. Workspace and package discovery must attach resolver details as args/children on source-level import diagnostics instead of replacing source problems with phase-specific workspace codes.
+- **Producer/presentation boundary:** producers own canonical diagnostic identity, source spans, related spans, and structured context before a diagnostic reaches output formatting. `sifr_diagnostics` owns source-map rendering and the `human`, `json`, and `compact` presentation once producers have supplied canonical diagnostic data. Workspace and package discovery must attach resolver details as args/children on source-level import diagnostics instead of replacing source problems with workspace-discovery-specific codes.
 - **Package diagnostic conversion:** `sifr_driver::diagnostics::render_package_diagnostic` is the shared package-to-rendered conversion path. It preserves `PackageDiagnostic.help` and useful `PackageDiagnosticOrigin` fields as JSON args while leaving diagnostics spanless when no honest source/config byte range is available.
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
-- **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
-- **JSON renderer contract:** CLI `json` output preserves the existing `RenderedDiagnostic[]` transport and must preserve the shared diagnostic model fields without human-only lossy reformatting. The checked-in schema is generated from `sifr_diagnostics`.
-- **CLI diagnostic-format contract:** the stable renderer flag surface is `--diagnostic-format human|json|compact`. Unknown values fail fast with exit code `2` before semantic compilation work starts.
-- **CLI exit-code contract:** compiler commands return exactly:
+- **Generation vs rendering separation:** semantic compiler layers construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
+- **JSON renderer rules:** CLI `json` output preserves the existing `RenderedDiagnostic[]` transport and must preserve the shared diagnostic model fields without human-only lossy reformatting. The checked-in schema is generated from `sifr_diagnostics`.
+- **CLI diagnostic-format rules:** the stable renderer flag surface is `--diagnostic-format human|json|compact`. Unknown values fail fast with exit code `2` before semantic compilation work starts.
+- **CLI exit-code rules:** compiler commands return exactly:
   - `0` success (including warning-only outcomes)
   - `1` user-facing compile/check/test diagnostics
   - `2` CLI usage/configuration error
   - `3` internal compiler failure after panic/error boundary handling
-- **Human renderer contract:** default `human` output is source-aware. It prints severity, code, message, primary file/line/column, source snippets, caret highlights derived from `DiagnosticSpanLine`, related spans, child notes/help, suggestions, and documentation URLs. Spanless internal diagnostics use an explicit no-source fallback.
-- **Compact renderer contract:** `compact` is a stable line-oriented summary format for agents, CI summaries, and quick terminal scanning. It must:
+- **Human renderer rules:** default `human` output is source-aware. It prints severity, code, message, primary file/line/column, source snippets, caret highlights derived from `DiagnosticSpanLine`, related spans, child notes/help, suggestions, and documentation URLs. Spanless internal diagnostics use an explicit no-source fallback.
+- **Compact renderer rules:** `compact` is a stable line-oriented summary format for agents, CI summaries, and quick terminal scanning. It must:
   - show one severity-only summary line first
   - render one physical line per retained diagnostic after recovery limiting
   - keep the first four fields stable: severity abbreviation, code, location or `<unknown>`, and message
@@ -914,65 +914,65 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - **Multi-file rendering:** errors that span multiple `.sifr` files show each file's relevant snippet with labeled spans. Uses `miette` or `ariadne` for rich terminal rendering with colors, underlines, and related notes.
 - **Diagnostic ownership:** the Sifr compiler should catch as many errors as possible before invoking `rustc`. Over time, the set of errors that reach `rustc` should shrink to near-zero as the type checker and borrow checker mature.
 - **No split-brain rule:** `sifr_driver`, future editor integrations, and automation-facing adapters must consume diagnostics through the canonical frontend API. They may render or transport diagnostics differently, but they may not reimplement parse/lower/type-check logic or semantic diagnostic derivation.
-- **Canonical frontend API minimum surface:** the shared frontend/query API established in Phase 35 must expose one canonical project/context handle plus reusable entrypoints for: parse, lower, type-check, collect diagnostics, inspect project/module graph state, and request per-module/per-project analysis results. CLI, editor, and automation adapters may wrap this API, but they must not bypass it for semantic analysis.
+- **Canonical frontend API minimum surface:** the shared frontend/query API established in frontend query architecture must expose one canonical project/context handle plus reusable entrypoints for: parse, lower, type-check, collect diagnostics, inspect project/module graph state, and request per-module/per-project analysis results. CLI, editor, and automation adapters may wrap this API, but they must not bypass it for semantic analysis.
 
-**Milestone responsibilities:**
+**Implementation responsibilities:**
 
-- milestone_core_language-milestone_type_system: basic span tracking (single-file, Sifr-native errors only)
-- milestone_imports: multi-file span tracking (import errors reference both files)
-- Phase 27 diagnostics contract: structured diagnostic schema, stable renderers, and recovery policy
-- Phase 35 shared analysis/query architecture: canonical query/database-backed frontend API consumed by CLI and future tooling
-- milestone_ffi: FFI-related `rustc` error translation (extern crate mismatches)
-- milestone_dev_tooling (Phase 36): editor/LSP parity validation and thin tooling adapter boundaries on top of `sifr_frontend`
+- core_language-type_system: basic span tracking (single-file, Sifr-native errors only)
+- import semantics work: multi-file span tracking (import errors reference both files)
+- diagnostic architecture diagnostics rules: structured diagnostic schema, stable renderers, and recovery policy
+- frontend query architecture shared analysis/query architecture: canonical query/database-backed frontend API consumed by CLI and future tooling
+- ffi: FFI-related `rustc` error translation (extern crate mismatches)
+- developer-tooling work (developer tooling surface): editor/LSP parity validation and thin tooling adapter boundaries on top of `sifr_frontend`
 
 ### 12. Standard Protocol Primitives
 
-Sifr defines a set of built-in protocols (traits) that are used across multiple milestones. This contract formalizes when each becomes available and what it maps to in Rust.
+Sifr defines a set of built-in protocols (traits) that are used across multiple future capabilities. This section records when each becomes available and what it maps to in Rust.
 
-**Contract:**
+**Rules:**
 
 
 | Protocol         | Rust Trait                                      | Available From                                                                      | Purpose                                                       |
 | ---------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `Comparable`     | `Ord` (+ `PartialOrd`, `Eq`, `PartialEq`)       | milestone_protocols (defined), milestone_generics (usable as bound)                 | Ordering for `sort()`, `min()`, `max()`, comparison operators |
-| `Addable`        | `Add` (+ `Sum` for `sum()`)                     | milestone_protocols (defined), milestone_generics (usable as bound)                 | Arithmetic `+` operator, `sum()` built-in                     |
-| `Display`        | `std::fmt::Display`                             | milestone_classes (auto-derived for `__str__`), milestone_protocols (explicit impl) | String representation via `str()`, f-strings, `print()`       |
-| `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (syntax), milestone_compiler_hardening (protocol enforcement)  | `with` statement resource management                          |
-| `Iterable`       | `IntoIterator` / iterable protocol             | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+) | `iter(x)` entry boundary and protocol typing                 |
-| `Iterator`       | `Box<dyn Iterator<Item = T>>` runtime surface  | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+, builtin lowering in wave 2) | `next(it)`, single-pass stateful iteration, lazy pipelines  |
-| `Reversible`     | `DoubleEndedIterator` capability contract      | ad-hoc phase `canonical-iteration-model-and-lazy-parity-closure` (wave 0 lock, wave 1+ implementation) | capability-gated `reversed(...)` semantics                    |
-| `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
+| `Comparable`     | `Ord` (+ `PartialOrd`, `Eq`, `PartialEq`)       | Protocol definitions, then generic bounds                       | Ordering for `sort()`, `min()`, `max()`, comparison operators |
+| `Addable`        | `Add` (+ `Sum` for `sum()`)                     | Protocol definitions, then generic bounds                       | Arithmetic `+` operator, `sum()` built-in                     |
+| `Display`        | `std::fmt::Display`                             | Class auto-derivation for `__str__`, plus explicit protocol impls | String representation via `str()`, f-strings, `print()`       |
+| `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | Syntax support plus compiler-enforced protocol rules            | `with` statement resource management                          |
+| `Iterable`       | `IntoIterator` / iterable protocol             | codebase issue `first-class-lazy-iterators-and-python-iterable-protocol` (task runtime) | `iter(x)` entry boundary and protocol typing                 |
+| `Iterator`       | `Box<dyn Iterator<Item = T>>` runtime surface  | codebase issue `first-class-lazy-iterators-and-python-iterable-protocol` (task runtime, builtin lowering in synchronization primitives) | `next(it)`, single-pass stateful iteration, lazy pipelines  |
+| `Reversible`     | `DoubleEndedIterator` capability rule      | codebase issue `canonical-iteration-model-and-lazy-parity-readiness` (runtime architecture lock, task runtime implementation) | capability-gated `reversed(...)` semantics                    |
+| `Hashable`       | `Hash` (+ `Eq`)                                 | classes (auto-derived)                                                    | Dict keys, set membership                                     |
 
 
 **Semantics:**
 
-- **Auto-derived protocols:** `Display`, `Hashable`, `Comparable` are auto-derived for classes where all fields implement the corresponding Rust trait (see contract #10: Auto-Derived Traits). Users can override with explicit `__str__`, `__hash__`, `__lt__` etc.
-- **Pre-generics usage:** Before milestone_generics, protocols are used for operator overloading and dynamic dispatch (`&dyn Trait`). After milestone_generics, they become usable as generic bounds (`T: Comparable`).
-- **Primitive types:** `int`, fixed-width integer types, `float`, `str`, and `bool` implement applicable protocols from the start. Under the integer-model amendment, `Addable` must model the operator output type; fixed-width scalar `+` returns exact `int`, so fixed-width types do not satisfy a generic `T + T -> T` contract through ordinary arithmetic. `float` does NOT implement `Comparable` (because `NaN` violates total ordering) -- this is a compile-time error, matching Rust's `f64` not implementing `Ord`.
-- **Protocol composition:** a function can require multiple protocols via intersection bounds (milestone_generics): `def process[T: Comparable & Display](item: T)`.
+- **Auto-derived protocols:** `Display`, `Hashable`, `Comparable` are auto-derived for classes where all fields implement the corresponding Rust trait (see rules #10: Auto-Derived Traits). Users can override with explicit `__str__`, `__hash__`, `__lt__` etc.
+- **Pre-generics usage:** Before generics, protocols are used for operator overloading and dynamic dispatch (`&dyn Trait`). After generics, they become usable as generic bounds (`T: Comparable`).
+- **Primitive types:** `int`, fixed-width integer types, `float`, `str`, and `bool` implement applicable protocols from the start. Under the integer-model amendment, `Addable` must model the operator output type; fixed-width scalar `+` returns exact `int`, so fixed-width types do not satisfy a generic `T + T -> T` rules through ordinary arithmetic. `float` does NOT implement `Comparable` (because `NaN` violates total ordering) -- this is a compile-time error, matching Rust's `f64` not implementing `Ord`.
+- **Protocol composition:** a function can require multiple protocols via intersection bounds (generics): `def process[T: Comparable & Display](item: T)`.
 
-**Milestone responsibilities:**
+**Implementation responsibilities:**
 
-- milestone_classes: auto-derive `Display` and `Hashable` for classes with eligible fields
-- milestone_protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
-- milestone_generics: enable protocols as generic bounds (`T: Comparable`)
-- milestone_generators: define initial `with` block syntax (scoped block desugaring)
-- ad-hoc first-class lazy iterator phase: introduces first-class `Iterable[T]` / `Iterator[T]` typing and protocol execution plan (`iter`, `next`, generator rewrite, lazy builtin conversion)
-- ad-hoc parity-extension waiver-reduction phase: re-closes iterator-returning builtin/stdlib surfaces (`map` parity, approved `itertools` combinators, `re.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) and retires broad lazy-waiver claims to narrow residual governance entries
-- ad-hoc canonical iteration continuation phase: freezes/implements capability-aware canonical iteration semantics across type system, HIR, codegen, generators, builtins, and stdlib adapters
-- ad-hoc structured-data/class-surface parity-expansion phase: locks bounded contracts for `json`, `configparser`, `csv`, `collections`, `argparse`, `uuid`, `datetime`, `textwrap`, and `html` while keeping explicit permanent diffs (`json` dynamic hooks, timezone-db/tzinfo ecosystems, `Counter(**kwargs)`, dynamic csv registry mutation, argparse formatter ecosystems, package-wide html expansion)
-- milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
-- milestone_generics_v2 (Phase 13: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)
-- milestone_pattern_matching (Phase 13: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
-- milestone_enums (Phase 13: Type System Completion): simple enum types with exhaustive pattern matching; enum values implement `Eq`, `Hash`, `Clone`, `Debug`
+- classes: auto-derive `Display` and `Hashable` for classes with eligible fields
+- protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
+- generics: enable protocols as generic bounds (`T: Comparable`)
+- generators: define initial `with` block syntax (scoped block desugaring)
+- first-class lazy iterator work: introduces first-class `Iterable[T]` / `Iterator[T]` typing and protocol execution plan (`iter`, `next`, generator rewrite, lazy builtin conversion)
+- parity-extension waiver-reduction work: finalizes iterator-returning builtin/stdlib surfaces (`map` parity, approved `itertools` combinators, `re.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) and retires broad lazy-waiver claims to narrow residual governance entries
+- canonical iteration continuation work: freezes/implements capability-aware canonical iteration semantics across type system, HIR, codegen, generators, builtins, and stdlib adapters
+- structured-data/class-surface parity-expansion work: locks bounded rules for `json`, `configparser`, `csv`, `collections`, `argparse`, `uuid`, `datetime`, `textwrap`, and `html` while keeping explicit permanent diffs (`json` dynamic hooks, timezone-db/tzinfo ecosystems, `Counter(**kwargs)`, dynamic csv registry mutation, argparse formatter ecosystems, package-wide html expansion)
+- compiler hardening work (stdlib parity architecture: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
+- generic type-system work (type-system architecture: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)
+- pattern-matching work (type-system architecture: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
+- enum type-system work (type-system architecture: Type System Completion): simple enum types with exhaustive pattern matching; enum values implement `Eq`, `Hash`, `Clone`, `Debug`
 
 ### Ecosystem Strategy
 
 Sifr's standard library follows a **thin wrapper + FFI** strategy:
 
-- **Thin wrappers (milestone_protocols-milestone_data_processing):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
-- **Rust FFI (milestone_ffi):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives Sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
-- **Package ecosystem (milestone_ecosystem):** A package registry (`sifr.sh`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
+- **Thin wrappers (protocols-data_processing):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
+- **Rust FFI (ffi):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives Sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
+- **Package ecosystem (ecosystem):** A package registry (`sifr.sh`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
 - **No reinventing:** Sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
 
 ---
@@ -1010,22 +1010,22 @@ enum Type {
     Tuple(Vec<Type>),
     Set(Box<Type>),
 
-    // Literal types -- specific values as types (milestone_type_system)
+    // Literal types -- specific values as types (type_system)
     LiteralInt(SifrIntLiteral),
     LiteralStr(String),
     LiteralBool(bool),
 
-    // Union / Intersection (milestone_type_system)
+    // Union / Intersection (type_system)
     Union(Vec<Type>),           // int | str -- flattened, deduplicated
     Intersection(Vec<Type>),    // internal only, for narrowing engine
 
-    // Type alias (milestone_type_system)
+    // Type alias (type_system)
     Alias(String, Box<Type>),   // type HttpMethod = "GET" | "POST"
 
     // Function
     Function(FunctionType),
 
-    // Async/concurrency model (Phase 32)
+    // Async/concurrency model (async/runtime architecture)
     Coroutine(Box<Type>, Box<Type>),  // Coroutine[T, E] -- linear async computation, consumed by await or spawn
     Task(Box<Type>, Box<Type>),       // Task[T, E] -- awaitable task handle, yields TaskResult[T, E]
     TaskResult(Box<Type>, Box<Type>), // TaskResult[T, E] -- Ok(T), Err(Failure[E]), Cancelled(Failure[CancellationError])
@@ -1035,27 +1035,27 @@ enum Type {
     AsyncIterator(Box<Type>, Box<Type>), // AsyncIterator[T, E] -- anext() yields Result[Option[T], E]
     AsyncGenerator(Box<Type>, Box<Type>), // AsyncGenerator[T, E] -- async def with yield
 
-    // Class instance (milestone_classes)
+    // Class instance (classes)
     Instance(ClassId),
 
-    // Generics (milestone_generics)
+    // Generics (generics)
     TypeVar(TypeVarId),
     GenericInstance(ClassId, Vec<Type>),
 
-    // Result / Option (milestone_error_handling)
+    // Result / Option (error_handling)
     Result(Box<Type>, Box<Type>),
 
-    // Enum (milestone_enums)
+    // Enum (enum type-system work)
     Enum(EnumId),
 
-    // Range (milestone_control_flow)
+    // Range (control_flow)
     Range,
 
-    // Protocol iteration model (ad-hoc first-class lazy iterator phase)
+    // Protocol iteration model (first-class lazy iterator work)
     Iterable(Box<Type>),
     Iterator(Box<Type>),
 
-    // Safe top type: must be narrowed before use (milestone_type_system)
+    // Safe top type: must be narrowed before use (type_system)
     Unknown,
 
     // Escape hatch: opts out of type checking
@@ -1091,7 +1091,7 @@ Key behaviors:
 - **Subtyping:** `A` is assignable to `A | B`; `A | B` is assignable to `C` only if both `A` and `C` and `B` and `C` are assignable
 - **Codegen:** `int | str` generates a Rust enum with one variant per runtime representation, e.g. `enum IntOrStr { Int(SifrInt), Str(String) }` under the integer-model amendment.
 
-### Type Narrowing (TypeScript-inspired, milestone_type_system)
+### Type Narrowing (TypeScript-inspired, type_system)
 
 Narrowing refines a variable's type within a control flow branch:
 
@@ -1118,7 +1118,7 @@ Narrowing refines a variable's type within a control flow branch:
 
 - **Initializer inference:** `x = 42` infers `x: int` (literal widens to base type)
 - **Return type inference:** analyze all return paths
-- **Contextual typing (milestone_generics):** lambda/callback parameter types inferred from call-site context. E.g., `map_list(numbers, lambda x: x * 2)` infers `x: int` from the `list[int]` argument. Inspired by TypeScript's contextual typing which looks upward in the tree for type annotations.
+- **Contextual typing (generics):** lambda/callback parameter types inferred from call-site context. E.g., `map_list(numbers, lambda x: x * 2)` infers `x: int` from the `list[int]` argument. Inspired by TypeScript's contextual typing which looks upward in the tree for type annotations.
 - **Enforced annotations:** function parameters MUST have types (or be inferable from defaults)
 - **Literal preservation:** `x: "GET" = "GET"` preserves the literal type; `x = "GET"` widens to `str`
 - **Empty collection inference:** `x = []` and `x = {}` are compile-time errors -- the element type cannot be inferred. Users must annotate: `x: list[int] = []`, `x: dict[str, int] = {}`. This prevents accidental `list[Unknown]` and matches Rust's requirement for explicit types on empty collections.
@@ -1127,11 +1127,11 @@ Narrowing refines a variable's type within a control flow branch:
 
 ## Test Suite Architecture
 
-This compiler is built entirely by AI agents. The test suite is the contract that ensures correctness across all agents working on different parts of the compiler. It must be:
+This compiler is built entirely by AI agents. The test suite is the rules that ensures correctness across all agents working on different parts of the compiler. It must be:
 
 - **Deterministic:** same input always produces same output
 - **Self-documenting:** test files are readable specifications of language behavior
-- **Layered:** each compiler phase has its own test layer
+- **Layered:** each compiler stage has its own test layer
 - **Easy to extend:** adding a new language feature means adding test files, not modifying test infrastructure
 - **Fast to run:** `cargo test` completes in seconds for the full suite
 
@@ -1161,12 +1161,12 @@ flowchart TD
     subgraph layer5 [Layer 5: Corpus Tests]
         Corpus["Corpus tests\n(no panics on large inputs)"]
     end
-    subgraph layer6 [Layer 6: Fuzz + Property Tests - milestone_generics plus]
+    subgraph layer6 [Layer 6: Fuzz + Property Tests - generics plus]
         FuzzParser["Parser fuzz\n(cargo-fuzz)"]
         FuzzChecker["Type checker fuzz\n(random ASTs)"]
         PropTests["Property tests\n(algebraic invariants)"]
     end
-    subgraph layer7 [Layer 7: Performance Tests - milestone_generics plus]
+    subgraph layer7 [Layer 7: Performance Tests - generics plus]
         CompileBench["Compile-time benchmarks\n(criterion)"]
         BinarySizeBench["Binary-size benchmarks"]
     end
@@ -1268,7 +1268,7 @@ def main():
     x: int = "hello"  # expected to fail at compile-time
 ```
 
-### Layer 4: CPython Parity and Safety Tests (milestone_ergonomics+)
+### Layer 4: CPython Parity and Safety Tests (ergonomics+)
 
 Verify that Sifr's built-in functions, data structure methods, and stdlib modules match CPython's behavior -- but with safe error handling.
 
@@ -1278,17 +1278,17 @@ Verify that Sifr's built-in functions, data structure methods, and stdlib module
 
 Run the parser and type checker on a large body of Python source code to catch panics, infinite loops, and crashes. These tests don't check correctness -- only that the compiler doesn't blow up.
 
-### Layer 6: Fuzz and Property Tests (milestone_generics+)
+### Layer 6: Fuzz and Property Tests (generics+)
 
 Discover edge cases and crashes that hand-written tests miss. Use `cargo-fuzz` or `afl` for parser/type checker fuzzing. Property tests verify algebraic invariants (union normalization idempotent, subtyping reflexive/transitive, narrowing preserves subtyping).
 
-### Layer 7: Performance Regression Tests (milestone_generics+)
+### Layer 7: Performance Regression Tests (generics+)
 
 Prevent compile-time and binary-size regressions. Use `criterion` for statistical benchmarking. Regressions beyond threshold block PRs.
 
 ### Parser Fixture Migration Plan
 
-The parser snapshot tests currently use `.py` fixtures inherited from ruff. These should be incrementally migrated to `.sifr` fixtures as the language diverges from Python. Start in milestone_error_handling when the first non-Python syntax is introduced. Complete by milestone_generics.
+The parser snapshot tests currently use `.py` fixtures inherited from ruff. These should be incrementally migrated to `.sifr` fixtures as the language diverges from Python. Start in error_handling when the first non-Python syntax is introduced. Complete by generics.
 
 ### Test Infrastructure Crate: `sifr_test_utils`
 
@@ -1312,13 +1312,13 @@ cargo test -p sifr_codegen                    # Codegen snapshots
 cargo test --test e2e                         # End-to-end tests
 cargo insta review                            # Update snapshots after intentional changes
 cargo test -- corpus --ignored                # Run corpus tests (slower, layer 4)
-cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, milestone_generics+)
-cargo bench                                   # Run benchmarks (layer 6, milestone_generics+)
+cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, generics+)
+cargo bench                                   # Run benchmarks (layer 6, generics+)
 ```
 
-Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release}.json` and executed by `verification/runner/sifr_verify/profile_runner.py` through `uv run --project verification python -m sifr_verify profiles run --profile <profile>`. `scripts/run_all_tests.sh` is only the stable public facade over that runner. Verification areas are owned by schema-version-2 `verification/areas/*/manifest.json` files and executed through `uv run --project verification python -m sifr_verify areas run`. Stable-surface manifests declare owner, offline network mode, pinned-corpus policy, skip policy, and baseline metadata policy. Representative `create-pr` and full-corpus `merge` e2e coverage are selected through profile data rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in area-owned validation contract manifests under `verification/areas/{core_language,project_workspace}/data/validation_contracts/`; profiles select the individual contract suite names, and the area adapter invokes the Rust-native `tests/validation_contracts.rs` harness with that exact suite filter. Fixed bug locks and unresolved crash sentinels live under `verification/areas/regression/`.
+Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release}.json` and executed by `verification/runner/sifr_verify/profile_runner.py` through `uv run --project verification python -m sifr_verify profiles run --profile <profile>`. `scripts/run_all_tests.sh` is only the stable public facade over that runner. Verification areas are owned by schema-version-2 `verification/areas/*/manifest.json` files and executed through `uv run --project verification python -m sifr_verify areas run`. Stable-surface manifests declare owner, offline network mode, pinned-corpus policy, skip policy, and baseline metadata policy. Representative `create-pr` and full-corpus `merge` e2e coverage are selected through profile data rather than hard-coded shell assumptions. Declarative validation-suite coverage lives in area-owned validation suite manifests under `verification/areas/{core_language,project_workspace}/data/validation_suites/`; profiles select the individual suite names, and the area adapter invokes the Rust-native `tests/validation_suites.rs` harness with that exact suite filter. Fixed bug locks and unresolved crash sentinels live under `verification/areas/regression/`.
 
-The closeout coverage matrix is the executable registry for shipped guarantees, compiler surfaces, owners, profile assignments, and Cargo package/target/feature classification. `coverage_matrix:closeout` is selected by create-pr, merge, nightly, and release. It runs strict mode, rejects temporary statuses such as `expected-missing`, `tests:none`, and `red-blocker`, validates local-first profile policy, checks profile assignments against `profile_assignment_matrix.json`, and runs negative self-tests for the closeout enforcement claims. CI may run broader profiles, but local-vs-CI plan equivalence is checked by comparing emitted profile plans with `sifr_verify profiles compare-plans`.
+The readiness coverage matrix is the executable registry for shipped guarantees, compiler surfaces, owners, profile assignments, and Cargo package/target/feature classification. `coverage_matrix:readiness` is selected by create-pr, merge, nightly, and release. It runs strict mode, rejects temporary statuses such as `expected-missing`, `tests:none`, and `red-blocker`, validates local-first profile policy, checks profile assignments against `profile_assignment_matrix.json`, and runs negative self-tests for the readiness enforcement claims. CI may run broader profiles, but local-vs-CI plan equivalence is checked by comparing emitted profile plans with `sifr_verify profiles compare-plans`.
 
 `profile_runner.py` emits a per-profile runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-profile RSS regressions.
 

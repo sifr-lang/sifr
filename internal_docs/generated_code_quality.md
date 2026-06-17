@@ -1,6 +1,6 @@
 # Generated Code Quality
 
-Phase 34 treats generated Rust as a product artifact. The generated-code quality
+generated-code quality gate treats generated Rust as a product artifact. The generated-code quality
 corpus is defined by
 `verification/areas/generated_code_quality/data/corpus_manifest.json` and run
 through the `generated_code_quality` verification area at
@@ -28,7 +28,7 @@ through the `generated_code_quality` verification area at
   verifies byte-stable repeated `emit` output for every positive manifest entry
   and proves a seeded mismatch fails.
 - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite demos`
-  runs the required Phase 34 demo entries.
+  runs the required generated-code quality gate demo entries.
 
 Successful runs write evidence JSON to
 `target/sifr_generated_code_quality/evidence/`. Failed runs preserve their
@@ -41,9 +41,9 @@ transient generated project roots for inspection.
 checks through `sifr_verify areas run --area generated_code_quality --suite
 representative`. The same area runner is used locally and in CI.
 
-## Phase 34 Closure Evidence
+## Generated-Code Quality Gate Evidence
 
-Latest local evidence recorded during closure:
+Latest local evidence recorded during readiness:
 
 - Corpus: `target/sifr_generated_code_quality/evidence/corpus-1778726430-5910.json`
 - Panic scan: `target/sifr_generated_code_quality/evidence/panic-scan-1778726771-44667.json`
@@ -52,9 +52,9 @@ Latest local evidence recorded during closure:
 - Determinism: `target/sifr_generated_code_quality/evidence/determinism-1778727645-43530.json`
 - Demos: `target/sifr_generated_code_quality/evidence/corpus-1778727829-54351.json`
 
-## Post-Closure Full Corpus Audit (2026-05-14)
+## Full Corpus Audit (2026-05-14)
 
-The follow-up emitted-code audit checked all non-negative demos and all LeetCode
+The emitted-code audit checked all non-negative demos and all LeetCode
 fixtures one by one with generated Rust build, forbidden construct scan, official
 `cargo fmt`, `cargo fmt --check`, and the generated-code clippy profile.
 
@@ -73,15 +73,15 @@ Result:
 
 - Demos: 257 entries currently reach generated Rust and pass the emitted-code
   quality gates. The 15 remaining failures stop before emitted-code quality due
-  to frontend/type/demo-contract gaps.
+  to frontend/type/demo-rules gaps.
 - LeetCode: 363 entries currently reach generated Rust and pass the emitted-code
   quality gates. The 48 remaining failures stop before emitted-code quality due
   to frontend/type/lowering compatibility gaps.
 - Review rounds completed with generated-code audit findings resolved.
 
-## Post-Closure Audit Wave 2 (2026-05-14)
+## Post-Readiness Audit Behavior Group 2 (2026-05-14)
 
-The second emitted-code audit wave rechecked all non-negative demos and all
+The second emitted-code audit pass rechecked all non-negative demos and all
 top-level LeetCode fixtures after removing additional generated-code artifacts:
 
 - `while true` now optimizes to `loop`.
@@ -96,30 +96,30 @@ top-level LeetCode fixtures after removing additional generated-code artifacts:
 Evidence:
 
 - Demos post-patch sweep:
-  `target/full_emitted_quality/demos-wave2-postpatch-1778765101/report.jsonl`.
+  `target/full_emitted_quality/demos-audit-set-two-postpatch-1778765101/report.jsonl`.
 - Demos failed-subset recheck after `pure_stdlib` demo cleanup:
-  `target/full_emitted_quality/demos-wave2-failed-subset-after-pure-1778768309/report.jsonl`.
+  `target/full_emitted_quality/demos-audit-set-two-failed-subset-after-pure-1778768309/report.jsonl`.
 - Demos failed-subset recheck after bytes constructor typing:
-  `target/full_emitted_quality/demos-wave2-failed-subset-after-bytes-1778769453/report.jsonl`.
+  `target/full_emitted_quality/demos-audit-set-two-failed-subset-after-bytes-1778769453/report.jsonl`.
 - LeetCode post-patch sweep:
-  `target/full_emitted_quality/leetcode-wave2-postpatch-1778766274/report.jsonl`.
+  `target/full_emitted_quality/leetcode-audit-set-two-postpatch-1778766274/report.jsonl`.
 - Reduced-allowlist generated clippy gate:
   `target/sifr_generated_code_quality/evidence/clippy-1778769689-83126.json`.
-- Review rounds completed with wave 2 generated-code audit findings resolved.
+- Review rounds completed with behavior group 2 generated-code audit findings resolved.
 
 Result:
 
 - Demos: 259 entries reach generated Rust and pass build, forbidden scan,
   `cargo fmt`, `cargo fmt --check`, and generated clippy. The remaining 13
-  entries fail before emitted-code quality due to frontend/type/demo-contract
+  entries fail before emitted-code quality due to frontend/type/demo-rules
   gaps.
 - LeetCode: 377 entries reach generated Rust and pass the emitted-code quality
   gates. The remaining 34 fail before emitted-code quality due to
   frontend/type/lowering compatibility gaps.
 
-## Post-Closure Audit Wave 3 (2026-05-14)
+## Post-Readiness Audit Behavior Group 3 (2026-05-14)
 
-The third emitted-code audit wave expanded the demo sweep to every
+The third emitted-code audit pass expanded the demo sweep to every
 `demos/**/main.sifr` entry, including negative demo cases, and rechecked all
 top-level LeetCode fixtures. It removed two additional generated Rust artifacts:
 
@@ -133,13 +133,13 @@ top-level LeetCode fixtures. It removed two additional generated Rust artifacts:
 Evidence:
 
 - All-demo pre-patch sweep:
-  `target/full_emitted_quality/demos-wave3-all-1778776830/report.jsonl`.
+  `target/full_emitted_quality/demos-audit-set-three-all-1778776830/report.jsonl`.
 - Demo failed-subset recheck after optimizer cleanup:
-  `target/full_emitted_quality/demos-wave3-failed-subset-post-bool-map-1778779394/report.jsonl`.
+  `target/full_emitted_quality/demos-audit-set-three-failed-subset-post-bool-map-1778779394/report.jsonl`.
 - LeetCode full sweep:
-  `target/full_emitted_quality/leetcode-wave3-all-1778778208/report.jsonl`.
+  `target/full_emitted_quality/leetcode-audit-set-three-all-1778778208/report.jsonl`.
 - LeetCode boolean-comparison subset recheck:
-  `target/full_emitted_quality/leetcode-wave3-bool-subset-post-bool-map-1778779466/report.jsonl`.
+  `target/full_emitted_quality/leetcode-audit-set-three-bool-subset-post-bool-map-1778779466/report.jsonl`.
 - Reduced-allowlist generated clippy gate:
   `target/sifr_generated_code_quality/evidence/clippy-1778780702-5147.json`.
 
@@ -148,13 +148,13 @@ Result:
 - Demos: 261 entries reach generated Rust and pass build, forbidden scan,
   `cargo fmt`, `cargo fmt --check`, and generated clippy. The remaining 49
   entries fail before emitted-code quality due to expected negative demo
-  diagnostics or frontend/type/demo-contract gaps.
+  diagnostics or frontend/type/demo-rules gaps.
 - LeetCode: 377 entries reach generated Rust and pass the emitted-code quality
   gates. The 29 fixtures that previously emitted boolean literal comparisons
   were rechecked after the optimizer cleanup and now pass with zero remaining
   `== true`, `== false`, `!= true`, or `!= false` occurrences.
 
-## NeetCode Group Audit Wave
+## NeetCode Group Audit Surface record
 
 The NeetCode-oriented audit reviewed fixtures by README problem group, then
 reran the full demo and LeetCode emitted-code corpora. One generated Rust
@@ -185,7 +185,7 @@ Result:
   forbidden scan, `cargo fmt`, `cargo fmt --check`, generated clippy, and
   fixed-pattern regression scans.
 - Demos: 261 entries pass the emitted-code gate; 49 fail before emitted Rust
-  quality due to expected negative diagnostics or frontend/type/demo-contract
+  quality due to expected negative diagnostics or frontend/type/demo-rules
   gaps.
 - LeetCode: 378 fixtures pass the emitted-code gate; 33 remain pre-emission
   frontend/type/lowering failures.

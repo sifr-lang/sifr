@@ -1,6 +1,6 @@
-# Reference: milestone_parse_safety
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_parse_safety
+# Reference: parse_safety
+# Reference: compiler-feature-history
+# Demo: parse_safety
 # All parse/decode intrinsics now return Result[T, E] instead of panicking.
 # Invalid input is caught via try/except with specific error types:
 #   - JSONDecodeError for json_loads

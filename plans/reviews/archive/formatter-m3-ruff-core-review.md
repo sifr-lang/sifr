@@ -45,7 +45,7 @@ The Phase 36 whitespace-only formatter path is completely removed:
 - `sifr_format/Cargo.toml` uses `{ workspace = true }` for both
 - Consistent with existing submodule/workspace strategy (no external crates.io additions)
 
-**6. check_formatter_contract.py update** ✅
+**6. check_formatter_rules.py update** ✅
 
 Self-test updated to check for `SIFR-FMT-0001` and `"formatter could not parse Sifr source"` — aligned with the new fail-closed Ruff-backed diagnostic surface. Both `run_positive()` and `run_self_test()` pass.
 
@@ -53,11 +53,11 @@ Self-test updated to check for `SIFR-FMT-0001` and `"formatter could not parse S
 
 All changed files pass validation:
 - `cargo test -p sifr_format` — 6/6 pass
-- `python3 verification/tooling/check_formatter_contract.py` — PASS
-- `python3 verification/tooling/check_formatter_contract.py --self-test` — PASS
+- `python3 verification/tooling/check_formatter_rules.py` — PASS
+- `python3 verification/tooling/check_formatter_rules.py --self-test` — PASS
 - `git diff --check` — clean
 
-Changed files: `Cargo.toml`, `crates/sifr_format/Cargo.toml`, `crates/sifr_format/src/lib.rs`, `verification/tooling/check_formatter_contract.py`, `issues/ad-hoc-production-grade-sifr-formatter-execution.md` (execution log update).
+Changed files: `Cargo.toml`, `crates/sifr_format/Cargo.toml`, `crates/sifr_format/src/lib.rs`, `verification/tooling/check_formatter_rules.py`, `issues/ad-hoc-production-grade-sifr-formatter-execution.md` (execution log update).
 
 ---
 

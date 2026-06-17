@@ -224,7 +224,7 @@ Disposition values:
 | `ruff` | sifr-native | Ruff's own meta/text rules may be used as reference only; each shipped rule must be Sifr-owned. |
 | `tryceratops` | reject | Python exception rules do not apply. |
 
-Milestone 1 must encode this table in `verification/tooling/linter_manifests/ruff_rule_config_audit.json`. `check_linter_reuse_contract.py` must fail if a Ruff rule-family directory exists in the fork but is missing from the manifest. The manifest is pinned to the Ruff fork state at phase planning time, and the check must compare the manifest against the actual filesystem directories under the pinned fork. Any filesystem directory not present in the manifest is a failure. Milestone 5 must fail if a new Sifr rule references a row whose disposition is `reject`, `formatter-owned`, or `future-phase` without a reviewed phase update.
+Milestone 1 must encode this table in `verification/tooling/linter_manifests/ruff_rule_config_audit.json`. `check_linter_reuse_rules.py` must fail if a Ruff rule-family directory exists in the fork but is missing from the manifest. The manifest is pinned to the Ruff fork state at phase planning time, and the check must compare the manifest against the actual filesystem directories under the pinned fork. Any filesystem directory not present in the manifest is a failure. Milestone 5 must fail if a new Sifr rule references a row whose disposition is `reject`, `formatter-owned`, or `future-phase` without a reviewed phase update.
 
 ### Config surface audit
 
@@ -260,7 +260,7 @@ Scan sources: Ruff docs `docs/linter.md`, `docs/configuration.md`, `crates/ruff_
 | `isolated` | adapt | Support no-config lint mode for CI/editor troubleshooting. |
 | `watch`, daemon/server-specific settings | future-phase | Editor/LSP behavior is owned by `sifr_lsp`, not Ruff server. |
 
-Milestone 1 must include these config decisions in the same `ruff_rule_config_audit.json` manifest. `check_linter_reuse_contract.py` must fail on accepted config keys that are absent from this audit, and on Ruff/Python config keys accepted without a `sifr-native` or `adapt` disposition.
+Milestone 1 must include these config decisions in the same `ruff_rule_config_audit.json` manifest. `check_linter_reuse_rules.py` must fail on accepted config keys that are absent from this audit, and on Ruff/Python config keys accepted without a `sifr-native` or `adapt` disposition.
 
 The audit manifest schema is:
 
@@ -310,7 +310,7 @@ Exit status contract:
 | `2` | invalid CLI arguments, invalid lint config, invalid rule selectors, invalid output format, or file discovery/config errors |
 | `3` | internal compiler/linter failure caught by the panic boundary |
 
-The lint CLI parity manifest is locked. Milestone 1 must encode this table in `verification/tooling/linter_manifests/lint_cli_parity.json`. `check_linter_reuse_contract.py` or a dedicated `check_linter_cli_contract.py` must verify the manifest against the implemented `sifr lint` clap surface and must fail if a Ruff lint CLI surface is unclassified.
+The lint CLI parity manifest is locked. Milestone 1 must encode this table in `verification/tooling/linter_manifests/lint_cli_parity.json`. `check_linter_reuse_rules.py` or a dedicated `check_linter_cli_contract.py` must verify the manifest against the implemented `sifr lint` clap surface and must fail if a Ruff lint CLI surface is unclassified.
 
 The lint CLI parity manifest schema is:
 
@@ -546,8 +546,8 @@ Scope:
 - create `verification/tooling/linter_manifests/ruff_rule_config_audit.json` matching the Ruff rule-family and config-surface audit in this document
 - create `verification/tooling/linter_manifests/lint_cli_parity.json` matching the linter CLI parity contract in this document
 - create a lint rule metadata manifest
-- create `verification/tooling/check_linter_reuse_contract.py`
-- make `check_linter_reuse_contract.py` verify:
+- create `verification/tooling/check_linter_reuse_rules.py`
+- make `check_linter_reuse_rules.py` verify:
   - `crates/sifr_lint/Cargo.toml` does not depend on forbidden Ruff/Python lint crates
   - `cargo tree -p sifr_lint` does not contain `ruff_linter`, `ruff_python_semantic`, Python project/runtime crates, or Ruff Server semantic behavior
   - production Sifr crates do not import `ruff_linter::rules`, `ruff_linter::registry`, `ruff_linter::linter`, `ruff_linter::noqa`, Python `Rule` IDs, or `ruff_python_semantic`
@@ -566,8 +566,8 @@ Scope:
   - `parser_aware_api`: Rust path that non-physical-line rule modules must depend on
   - `updated_by_milestone`: string milestone identifier that last changed the gate, such as `"m1"` or `"m3"`
 - initialize the suppression-gate manifest with `gate_state = "physical_line_only"` and `allowed_rule_families = ["physical-line"]`
-- make `check_linter_reuse_contract.py` validate the suppression-gate manifest path, schema, and state
-- make `check_linter_reuse_contract.py` verify that any Sifr rule module whose `suppression_complexity` is not `physical-line` imports or depends on the manifest's `parser_aware_api` path, initially `sifr_lint::suppression::ParserAwareSuppressions`
+- make `check_linter_reuse_rules.py` validate the suppression-gate manifest path, schema, and state
+- make `check_linter_reuse_rules.py` verify that any Sifr rule module whose `suppression_complexity` is not `physical-line` imports or depends on the manifest's `parser_aware_api` path, initially `sifr_lint::suppression::ParserAwareSuppressions`
 - update internal docs to link this phase and the reuse audit artifacts
 
 Validation:
@@ -576,8 +576,8 @@ Validation:
 - Ruff rule/config audit manifest self-test
 - lint CLI parity manifest self-test
 - forbidden dependency guardrail and self-test
-- `python3 verification/tooling/check_linter_reuse_contract.py`
-- `python3 verification/tooling/check_linter_reuse_contract.py --self-test`
+- `python3 verification/tooling/check_linter_reuse_rules.py`
+- `python3 verification/tooling/check_linter_reuse_rules.py --self-test`
 - suppression-gate manifest schema validation
 - `git diff --check`
 
@@ -625,14 +625,14 @@ Scope:
 - report unknown and unused suppressions deterministically
 - add multi-line suppression fixtures for calls, functions, classes, match/case, ownership/type constructs, and HIR diagnostics
 - update `verification/tooling/linter_manifests/suppression_gate.json` to `gate_state = "parser_aware"` and `allowed_rule_families = ["physical-line", "single-node", "statement-range", "symbol-workspace"]`
-- update `check_linter_reuse_contract.py` so any syntax, HIR, or workspace rule module that bypasses `ParserAwareSuppressions` fails validation
+- update `check_linter_reuse_rules.py` so any syntax, HIR, or workspace rule module that bypasses `ParserAwareSuppressions` fails validation
 
 Validation:
 
 - `cargo test -p sifr_lint`
 - suppression contract checks and self-tests
 - guardrail proving syntax/HIR/workspace rules fail validation if they bypass the parser-aware suppression API
-- `python3 verification/tooling/check_linter_reuse_contract.py`
+- `python3 verification/tooling/check_linter_reuse_rules.py`
 - suppression-gate manifest state transition check
 
 Review gate:
@@ -749,10 +749,10 @@ cargo test -p sifr_lint
 cargo test -p sifr_analysis
 cargo test -p sifr_lsp
 cargo test -p sifr
-python3 verification/tooling/check_linter_reuse_contract.py
-python3 verification/tooling/check_linter_reuse_contract.py --self-test
-python3 verification/tooling/check_rule_suppression_contract.py
-python3 verification/tooling/check_rule_suppression_contract.py --self-test
+python3 verification/tooling/check_linter_reuse_rules.py
+python3 verification/tooling/check_linter_reuse_rules.py --self-test
+python3 verification/tooling/check_rule_suppression_rules.py
+python3 verification/tooling/check_rule_suppression_rules.py --self-test
 python3 verification/tooling/check_tooling_dependency_boundaries.py
 python3 verification/tooling/check_lsp_split_brain.py
 scripts/run_all_tests.sh --profile quick

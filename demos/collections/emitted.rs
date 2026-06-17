@@ -715,5 +715,5 @@ fn main() {
     append_all(&mut actual, &collect_set_and_counter_actual());
     append_all(&mut actual, &collect_deque_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1d collections parity demo: pass");
+    println!("collections collections parity demo: pass");
 }

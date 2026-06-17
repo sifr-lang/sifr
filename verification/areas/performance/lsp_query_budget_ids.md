@@ -1,6 +1,6 @@
 # LSP Query Budget IDs
 
-The performance contract reserves the protocol-level budget id namespace below so LSP query budgets can add benchmarks without changing the performance policy model.
+The performance rules reserves the protocol-level budget id namespace below so LSP query budgets can add benchmarks without changing the performance policy model.
 
 Rules:
 
@@ -49,7 +49,7 @@ Reserved ids:
   inlay hints, folding ranges, code actions, formatting, and pull diagnostics
   through one deterministic stdio LSP session.
 
-## Closeout Coverage
+## Readiness Coverage
 
 The LSP protocol matrix keeps user-facing budget labels on individual LSP
 request families. Before per-family LSP budgets those labels were covered by the aggregate
@@ -80,7 +80,7 @@ coverage only:
 
 ## Per-Family LSP Budget Evidence
 
-The per-family LSP budget contract splits the aggregate LSP benchmark into per-family performance manifest
+The per-family LSP budget rules splits the aggregate LSP benchmark into per-family performance manifest
 cases. `perf.lsp.request_families` remains as aggregate smoke coverage only.
 The enforced request-family mappings are:
 
@@ -108,4 +108,4 @@ Reserved ids not listed in the implemented evidence table are intentionally
 deferred. They keep the LSP budget namespace stable for later auto-import,
 delta-token, document-symbol, folding-range, rename-prepare, document-highlight,
 workspace-symbol, didChange, recovery, transport initialize, and shutdown cases,
-but the LSP budget contract does not claim enforcement for them until a manifest case maps to the id.
+but the LSP budget rules does not claim enforcement for them until a manifest case maps to the id.

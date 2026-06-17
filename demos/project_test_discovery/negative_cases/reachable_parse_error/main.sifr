@@ -1,5 +1,4 @@
-# Reference: m23_3
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: project_test_discovery
 # negative path: reachable parse errors should fail in both project and test discovery.
 
 from helper import value

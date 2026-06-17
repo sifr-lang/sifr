@@ -1,10 +1,9 @@
-# Reference: m23_2
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
-# m23_2 deterministic module graph and cycle diagnostics demo
+# Reference: module_cycle_diagnostics
+# module_cycle_diagnostics deterministic module graph and cycle diagnostics demo
 # Deterministic dependency ordering must produce stable project compilation.
 
 from a_consumer import fetch
 
 def main():
-    print('m23_2 deterministic module graph and cycle diagnostics demo:')
+    print('module_cycle_diagnostics deterministic module graph and cycle diagnostics demo:')
     print(fetch())

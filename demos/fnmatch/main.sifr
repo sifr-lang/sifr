@@ -1,5 +1,4 @@
-# Reference: m30_1c
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: fnmatch
 from sifr.fnmatch import fnmatch, fnmatchcase, fnmatch_filter
 from sifr.test import assert_bool_vector_eq
 
@@ -31,4 +30,4 @@ def main():
     append_all(actual, collect_filter_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1c fnmatch parity demo: pass")
+    print("fnmatch fnmatch parity demo: pass")

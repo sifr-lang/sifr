@@ -32,6 +32,6 @@ fn main() {
             let _ = items.remove(__idx_norm as usize);
         }
     }
-    println!("m27_2 indexing and semantics parity fixes demo:");
+    println!("indexing_rules indexing and semantics parity fixes demo:");
     println!("{:?}", items);
 }

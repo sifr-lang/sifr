@@ -367,7 +367,7 @@ fn _closed_stream_error() -> String {
 }
 fn _zip_unimplemented_error(feature: &String) -> String {
     return format!(
-        "{}{}{}", "zipfile ".to_string(), feature, " is not implemented in this wave"
+        "{}{}{}", "zipfile ".to_string(), feature, " is not implemented in this compatibility surface"
         .to_string()
     );
 }
@@ -533,10 +533,10 @@ impl std::error::Error for RegexError {
 }
 
 fn main() {
-    let zip_path: String = "/tmp/sifr_runtime_wave2_demo.zip".to_string();
+    let zip_path: String = "/tmp/sifr_runtime_zipfile_io.zip".to_string();
     let mut demo_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let mut temp_file: NamedTemporaryFile = NamedTemporaryFile::new("wb".to_string(), false, "sifr_runtime_wave2_demo_".to_string());
+    let mut temp_file: NamedTemporaryFile = NamedTemporaryFile::new("wb".to_string(), false, "sifr_runtime_zipfile_io_".to_string());
     let tmp_path: String = temp_file.name();
     let _close_tmp: () = temp_file.close()?;
     let _cleanup_tmp: () = temp_file.cleanup()?;
@@ -546,7 +546,7 @@ fn main() {
     }
     let mut writer: ZipFile = ZipFile::new(format!("{}{}", zip_path, "".to_string()), "w".to_string(), ZIP_STORED);
     let _create: () = writer.create()?;
-    let _write_text: () = writer.write(&"note.txt".to_string(), &"runtime-wave2".to_string())?;
+    let _write_text: () = writer.write(&"note.txt".to_string(), &"runtime-zipfile_io".to_string())?;
     let _write_bytes: () = writer.write_bytes(&"bin/raw.bin".to_string(), &vec![(0 as i64) as u8, (1 as i64) as u8, (2 as i64) as u8])?;
     let mut reader: ZipFile = ZipFile::new(format!("{}{}", zip_path, "".to_string()), "r".to_string(), ZIP_STORED);
     let payload: Vec<u8> = reader.read_bytes(&"bin/raw.bin".to_string())?;
@@ -594,5 +594,5 @@ fn main() {
         let _: String = e.message;
     }
     assert!(demo_ok);
-    println!("ad_hoc_runtime_wave2_tempfile_zipfile_lifecycle_demo: ok");
+    println!("runtime_zipfile_io_zipfile_lifecycle_demo: ok");
 }

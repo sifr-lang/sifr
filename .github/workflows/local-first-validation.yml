@@ -19,7 +19,7 @@ jobs:
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
-      # Advisory until legacy workspace lint debt is burned down in follow-up phases.
+      # Advisory until legacy workspace lint debt is burned down by a dedicated cleanup.
       - name: Rustfmt check (advisory)
         continue-on-error: true
         run: cargo fmt --check

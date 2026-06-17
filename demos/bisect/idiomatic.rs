@@ -48,5 +48,5 @@ fn collect_actual() -> Vec<bool> {
 fn main() {
     let actual = collect_actual();
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true, true, true]);
-    println!("m30_1b bisect parity demo: pass");
+    println!("bisect bisect parity demo: pass");
 }

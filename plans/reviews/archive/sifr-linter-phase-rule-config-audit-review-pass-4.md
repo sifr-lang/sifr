@@ -44,7 +44,7 @@ All major lint surfaces (rule selection, fixes, suppression, discovery, output, 
 
 Every `sifr-native` row gives a non-empty rationale that constrains implementation: it tells an implementer *what* must be proven before the rule ships (e.g., "equivalent Sifr AST/HIR semantics," "Sifr debug API names," "HIR control-flow support"). No row reads "figure it out later."
 
-The manifest (`ruff_rule_config_audit.json`) enforces this: `check_linter_reuse_contract.py` must fail on any Sifr rule that references a row whose disposition is `reject`, `formatter-owned`, or `future-phase` without a reviewed update. This is a strong gate.
+The manifest (`ruff_rule_config_audit.json`) enforces this: `check_linter_reuse_rules.py` must fail on any Sifr rule that references a row whose disposition is `reject`, `formatter-owned`, or `future-phase` without a reviewed update. This is a strong gate.
 
 **One gap in the enforcement narrative:** The Phase contract references `ruff_rule_config_audit.json` enforcement twice (in the rule-family audit and config-surface audit sections), but the manifest schema is not described in the phase itself — only in M1's scope. If the manifest structure is underspecified, M5 implementers might ship `sifr-native` rules without proof of the equivalent-semantics claim. The fix: describe the manifest schema in the phase (not just M1).
 
@@ -55,14 +55,14 @@ The manifest (`ruff_rule_config_audit.json`) enforces this: `check_linter_reuse_
 **Mostly strong, with one structural gap.**
 
 The enforcement requirements in the phase are:
-1. `check_linter_reuse_contract.py` must fail if a Ruff rule-family directory exists but is missing from the manifest.
+1. `check_linter_reuse_rules.py` must fail if a Ruff rule-family directory exists but is missing from the manifest.
 2. M5 must fail if a new Sifr rule references a `reject`/`formatter-owned`/`future-phase` row.
-3. `check_linter_reuse_contract.py` must fail on accepted config keys absent from the audit, and on Ruff/Python config keys accepted without `sifr-native` or `adapt`.
+3. `check_linter_reuse_rules.py` must fail on accepted config keys absent from the audit, and on Ruff/Python config keys accepted without `sifr-native` or `adapt`.
 
 These are the right checks. However, item1 depends on the manifest listing every directory that exists *at the time M1 is implemented*. If a future PR adds a new rule family to the Ruff fork (unlikely, but possible), the manifest goes stale silently unless the phase adds:
 
 **Recommended addendum to the phase, in the rule-family audit section:**
-> "The manifest is pinned to the Ruff fork state at phase planning time. `check_linter_reuse_contract.py` must verify the manifest's listed families against the actual filesystem directories. Any filesystem directory not in the manifest causes a failure."
+> "The manifest is pinned to the Ruff fork state at phase planning time. `check_linter_reuse_rules.py` must verify the manifest's listed families against the actual filesystem directories. Any filesystem directory not in the manifest causes a failure."
 
 This closes the latent gap without changing the enforcement design.
 
@@ -74,7 +74,7 @@ This closes the latent gap without changing the enforcement design.
 
 `flake8_comprehensions` → `sifr-native` — the rationale says "only for Sifr AST constructs with equivalent semantics." Comprehensions (list/dict/set/generator) exist in both languages and have enough structural similarity that Sifr could plausibly ship equivalent simplification rules. This is correct. Same applies to `flake8_simplify`, `flake8_bugbear` (with "no direct rule port" constraint), `flake8_return` (with "HIR control-flow support" constraint), and `flake8_pie` (with "equivalent AST/HIR pattern" constraint). All are properly hedged.
 
-`pylint` → `sifr-native` — the most permissive row. Rationale is "only individual Sifr-equivalent policy ideas." This is correct but creates the most implementation discretion. The M5 `check_linter_reuse_contract.py` gate (rows only from `sifr-native`) is the correct control. No change needed.
+`pylint` → `sifr-native` — the most permissive row. Rationale is "only individual Sifr-equivalent policy ideas." This is correct but creates the most implementation discretion. The M5 `check_linter_reuse_rules.py` gate (rows only from `sifr-native`) is the correct control. No change needed.
 
 No `sifr-native` rows that should be `future-phase`, `formatter-owned`, or `reject`.
 
@@ -103,6 +103,6 @@ Manifest schema (to be encoded in `ruff_rule_config_audit.json` in M1):
 
 **The phase is implementation-ready.**
 
-All three prior pass blockers (`C-1` through `C-2`) are resolved by post-pass-2 phase updates. The rule-family audit is complete (58/58). The config-surface audit covers all active surfaces with one gap (`extend-ignore`, corrected above). The `check_linter_reuse_contract.py` enforcement requirements are strong enough to be enforceable. No `sifr-native` dispositions are wrong. The two recommended improvements are precision additions, not blockers — they improve auditability and prevent future manifest staleness but do not prevent M1 from starting.
+All three prior pass blockers (`C-1` through `C-2`) are resolved by post-pass-2 phase updates. The rule-family audit is complete (58/58). The config-surface audit covers all active surfaces with one gap (`extend-ignore`, corrected above). The `check_linter_reuse_rules.py` enforcement requirements are strong enough to be enforceable. No `sifr-native` dispositions are wrong. The two recommended improvements are precision additions, not blockers — they improve auditability and prevent future manifest staleness but do not prevent M1 from starting.
 
 **The phase is ready for implementation. One explicit update to the phase before M1 closes the only gap: add the manifest schema description and the `extend-ignore` config row.** ###

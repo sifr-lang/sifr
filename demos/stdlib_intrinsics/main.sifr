@@ -1,7 +1,7 @@
-# Reference: milestone_stdlib_intrinsic_expansion
-# Source issue: revised_phase_roadmap_698c629c.md
-# milestone_stdlib_intrinsic_expansion_demo.sifr
-# Demonstrates all new intrinsics added in milestone_stdlib_intrinsic_expansion
+# Reference: stdlib_intrinsic_expansion
+# Reference: compiler-feature-history
+# stdlib_intrinsic_expansion_demo.sifr
+# Demonstrates all new intrinsics added in stdlib_intrinsic_expansion
 
 
 from sifr.math import erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp

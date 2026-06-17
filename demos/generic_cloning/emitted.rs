@@ -11,5 +11,5 @@ fn main() {
         count = count + (1 as i64);
     }
     println!("{}", count);
-    println!("ad_hoc_clone_wave3_generic_hardening_demo: pass");
+    println!("clone_generic_cloning_hardening_demo: pass");
 }

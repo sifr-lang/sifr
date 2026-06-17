@@ -12,7 +12,7 @@ Based on my comprehensive inspection, here is my review:
 
 1. **Phase requirements alignment** — `issues/ad-hoc-diagnostic-source-canonicalization.md` M1 section correctly specifies all required artifacts and the phase file documents the correct status.
 
-2. **Contract checker** — `verification/tooling/check_diagnostic_source_canonicalization_contract.py`:
+2. **Contract checker** — `verification/tooling/check_diagnostic_source_canonicalization_rules.py`:
    - 480 lines, well-structured with clear sections
    - Static checks: run_all wiring, fixture presence, registry/doc coverage, legacy migration docs
    - Runtime checks: parser spans, project import diagnostics (4 fixtures), package import diagnostics (2 fixtures), package help preservation

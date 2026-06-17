@@ -8,6 +8,6 @@ fn rec(n: i64) -> i64 {
 }
 
 fn main() {
-    println!("m21_1 canonical walker coverage demo:");
+    println!("recursive_for_else canonical walker coverage demo:");
     println!("{}", rec(3));
 }

@@ -1,6 +1,6 @@
-# Reference: milestone_protocols
-# Source issue: milestone-protocols-epic.md
-# Milestone: Protocols, Operators, and Discriminated Unions
+# Reference: protocols
+# Reference: protocols
+# Feature Demo: Protocols, Operators, and Discriminated Unions
 # Demonstrates: Protocol (trait), operator overloading, discriminated unions,
 #               newtype pattern, and class Display via __str__
 

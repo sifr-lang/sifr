@@ -6,15 +6,15 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 | suite | purpose | blocking | owner | required artifacts |
 | --- | --- | --- | --- | --- |
-| `coverage_matrix` | Record shipped guarantees, compiler surfaces, owners, profile evidence, and closeout enforcement. | yes | compiler-verification | guarantee registry, surface matrix, profile-assignment matrix, owner registry, profile plan evidence, negative self-tests |
-| `diagnostics` | Lock compiler diagnostics contract (code/message/severity/url/spans/renderer views/exit code). | yes | compiler/diagnostics | fixtures, baselines, machine-readable run summary |
+| `coverage_matrix` | Record shipped guarantees, compiler surfaces, owners, profile evidence, and readiness enforcement. | yes | compiler-verification | guarantee registry, surface matrix, profile-assignment matrix, owner registry, profile plan evidence, negative self-tests |
+| `diagnostics` | Lock compiler diagnostics rules (code/message/severity/url/spans/renderer views/exit code). | yes | compiler/diagnostics | fixtures, baselines, machine-readable run summary |
 | `project_workspace` | Lock multi-file/module project behavior and deterministic project-mode outcomes. | yes | compiler/frontend | fixtures, baselines, machine-readable run summary |
 | `fixedbugs` | Permanent issue-linked regressions for resolved compiler bugs. | yes | compiler/hardening | regression index, issue/root-cause metadata, run summary |
 | `crashes` | Visible sentinel corpus for unresolved crashes/invariant failures. | yes | compiler/hardening | sentinel index, issue linkage, promotion log |
 | `property` | Invariant tests for deterministic/high-value compiler behaviors. | yes | compiler/hardening | property manifest, deterministic run summary |
 | `fuzz-smoke` | Deterministic local fuzz smoke over curated corpora. | yes | compiler/hardening | seed corpus manifest, deterministic run summary |
 | `oss-curated` | Small pinned curated real-world gate that blocks merges. | yes | compiler/verification | corpus manifest, per-project outcomes, run summary |
-| `ecosystem-broader` | Larger non-blocking compatibility suite for signal and backlog generation. | no | compiler/verification | suite manifest, signal report |
+| `ecosystem-broader` | Larger non-blocking compatibility suite for signal and signal queue generation. | no | compiler/verification | suite manifest, signal report |
 | `algorithmic_compatibility` | LeetCode/algorithm corpus compatibility with representative merge subset and full taxonomy deltas. | yes for representative/profile checks | algorithmic/compatibility | profile manifest, taxonomy/result baselines, per-fixture result artifacts |
 | `runtime_platform` | Host/platform executable evidence, support matrix, and sanitizer smoke/full lanes. | yes for host-supported merge suites | runtime/platform | support matrix, platform evidence manifest, structured skips, sanitizer result summary |
 | `package_management` | Offline registry, lockfile determinism, and package graph behavior. | yes for offline merge smoke | compiler/package-management | offline registry fixture, lockfile digest manifest, result summary |
@@ -93,7 +93,7 @@ Every surface listed here must have at least one multi-error fixture in `recover
 ### OSS-Curated and Ecosystem-Broader
 - Manifests live under `verification/areas/ecosystem_compatibility/data/`.
 - `oss-curated` entries must include pinned revision, source checksum, SPDX license, owner, rationale, commands, timeout, and expected class.
-- `ecosystem-broader` entries use the same metadata contract, but remain non-blocking signal unless promoted by profile policy.
+- `ecosystem-broader` entries use the same metadata rules, but remain non-blocking signal unless promoted by profile policy.
 - `ecosystem-broader` is explicitly non-blocking and emits signal-only reports.
 - Operational policy: `verification/policy/ecosystem_compatibility.md`.
 
@@ -106,13 +106,13 @@ Every surface listed here must have at least one multi-error fixture in `recover
 - Decisions-table profile assignments live in
   `verification/areas/coverage_matrix/profile_assignment_matrix.json` and are
   checked against `verification/profiles/*.json` by
-  `coverage_matrix:closeout`.
+  `coverage_matrix:readiness`.
 - Owner ids live in `verification/owners.json`; `unassigned` is invalid.
 - Runner-owned hardening suite data lives under
   `verification/runner/sifr_verify/hardening/data/`.
 - Stable-surface area manifests use schema version 2 and declare owner,
   `network_mode`, pinned-corpus policy, skip policy, and baseline metadata
-  contract. Create-pr and merge stable-surface suites must be offline.
+  rules. Create-pr and merge stable-surface suites must be offline.
 - Suite runners must not hardcode fixture lists outside their owning manifest.
 - Manifest updates are review artifacts and follow normal PR review.
 - Corpus lifecycle and promotion rules: `verification/policy/regression_corpus.md`.

@@ -708,5 +708,5 @@ fn main() {
     append_all(&mut actual, &collect_positive_actual());
     append_all(&mut actual, &collect_negative_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1d datetime parity demo: pass");
+    println!("datetime datetime parity demo: pass");
 }

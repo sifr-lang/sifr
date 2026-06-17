@@ -1,6 +1,6 @@
 # Text/I18n Architecture
 
-This document records the production substrate closed by `milestone_text_i18n_5`.
+This document records the production substrate closed by `text-i18n-unicode-substrate`.
 
 ## Text Invariants
 
@@ -41,10 +41,10 @@ Locale IDs, canonicalization, likely-subtag expansion/minimization, number forma
 
 ## Translation Catalogs
 
-`Bundle`, `Message`, and `Translator` are the stable Sifr translation API. `.mo` loading is accepted only as a backend/import format. The parser validates magic/version/table bounds, decodes declared charsets through the M1 encoding substrate, and parses plural metadata with a constrained parser rather than a general expression engine.
+`Bundle`, `Message`, and `Translator` are the stable Sifr translation API. `.mo` loading is accepted only as a backend/import format. The parser validates magic/version/table bounds, decodes declared charsets through the task runtime encoding substrate, and parses plural metadata with a constrained parser rather than a general expression engine.
 
 Empty translated forms are treated as missing so explicit fallback chains can continue.
 
-## Panic-Free Contract
+## Panic-Free Rules
 
 Generated code quality and runtime reviews scan encoding, Unicode, segmentation, locale, formatting, and translation paths for user-data-dependent `.unwrap(`, `.expect(`, `panic!`, `todo!`, `unimplemented!`, and `unsafe`. Fallible behavior maps to `DecodeError`, `EncodeError`, `UnicodeDataError`, `LocaleIdError`, `FormatError`, `PluralRulesError`, `CatalogError`, or `TranslationError`.

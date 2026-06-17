@@ -1,5 +1,4 @@
-# Reference: m22_1
-# Source issue: phase22-frontend-mode-parity-hardening-execution.md
+# Reference: project_entrypoint
 from sifr.math import floor
 
 def adjusted(value: int) -> int:

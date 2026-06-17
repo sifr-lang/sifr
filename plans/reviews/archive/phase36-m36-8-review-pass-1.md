@@ -17,7 +17,7 @@
 
 ### Finding 1 — `check_analysis_snapshot_coherence.py`: Correct thin-wrapper delegation (Informational)
 
-39-line thin wrapper preserves the phase-contract script name required by the exit contract and delegates to `check_analysis_snapshot_contract.py`. The `--self-test` flag propagates correctly. This is the right design for the coherence gate.
+39-line thin wrapper preserves the phase-contract script name required by the exit contract and delegates to `check_analysis_snapshot_rules.py`. The `--self-test` flag propagates correctly. This is the right design for the coherence gate.
 
 ### Finding 2 — `check_completion_quality.py`: Correct fixture validation with negative seed (Informational)
 
@@ -37,7 +37,7 @@ Four validation layers all correct:
 ### Finding 4 — `scripts/run_all_tests.sh` wiring: Correct (No issues)
 
 All 6 new lines are correctly inserted in the "Developer Tooling Checks" section:
-- `check_analysis_snapshot_coherence.py` and its self-test are interleaved with `check_analysis_snapshot_contract.py` (correct alphabetical placement).
+- `check_analysis_snapshot_coherence.py` and its self-test are interleaved with `check_analysis_snapshot_rules.py` (correct alphabetical placement).
 - `check_completion_quality.py` and its self-test are placed after `run_tooling_parity.py` (correct alphabetical placement).
 - `check_phase36_closeout.py` and its self-test are placed at the end (correct logical grouping).
 
@@ -83,7 +83,7 @@ No changes to `tooling_reuse_strategy.md` in this diff. Phase 36 reuse decisions
 |---|---|
 | Every Phase 36 verification script wired into `scripts/run_all_tests.sh` | PASS — all 16 tooling + 2 performance scripts wired, each with self-test |
 | Completion-quality negative seed test | PASS — self-test seeds `__seeded_bad_completion__` and fails on regression |
-| Snapshot-coherence script name in exit contract | PASS — `check_analysis_snapshot_coherence.py` preserves the contract name; delegating to `check_analysis_snapshot_contract.py` for concrete evidence |
+| Snapshot-coherence script name in exit contract | PASS — `check_analysis_snapshot_coherence.py` preserves the contract name; delegating to `check_analysis_snapshot_rules.py` for concrete evidence |
 | LSP budget coverage / no-waiver evidence | PASS — 18 labels in `lsp_query_budget_ids.md`; waivers.json is empty; check_phase36_closeout.py validates no LSP waiver |
 | Audit consistency with `tooling_reuse_strategy.md` | PASS — doc exists, referenced in closeout gate, reuse decisions locked from Phase 36 planning |
 

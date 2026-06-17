@@ -1,6 +1,5 @@
-# Reference: m_adhoc_5
-# Source issue: ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md
-# Milestone adhoc 5 demo:
+# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
+# Feature demo:
 # dependency closure from a reachable support module must flow into the manifest.
 from helper import render
 

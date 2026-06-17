@@ -18,17 +18,17 @@
   "commands": [
     {
       "name": "run",
-      "status": "partial-session-contract",
+      "status": "partial-session-rules",
       "delegates_to": "cargo run for package app targets; Sifr-owned explicit .sifr and script pre-resolution stay outside Cargo.",
       "aligned_flags": ["--bin", "--locked", "--offline", "--frozen", "--"],
       "intentional_exclusions": ["Feature selection and Cargo common display/config flags pending full delegated-command passthrough."]
     },
     {
       "name": "check",
-      "status": "partial-session-contract",
+      "status": "partial-session-rules",
       "delegates_to": "cargo check when no explicit .sifr file is selected.",
       "aligned_flags": ["--message-format", "--locked", "--offline", "--frozen"],
-      "intentional_exclusions": ["Workspace/package/target/feature selector passthrough is represented in the session model and completed by workspace-selection contracts."]
+      "intentional_exclusions": ["Workspace/package/target/feature selector passthrough is represented in the session model and completed by workspace-selection ruless."]
     },
     {
       "name": "build",
@@ -46,14 +46,14 @@
     },
     {
       "name": "init",
-      "status": "implemented-init-contract",
+      "status": "implemented-init-rules",
       "delegates_to": "Sifr-owned scaffolding, not Cargo templates.",
       "aligned_flags": ["--bin", "--lib", "--name"],
       "intentional_exclusions": ["Cargo template flags are excluded because Sifr owns package layout generation."]
     },
     {
       "name": "fetch",
-      "status": "implemented-session-contract",
+      "status": "implemented-session-rules",
       "delegates_to": "cargo fetch",
       "aligned_flags": ["--locked", "--offline", "--frozen"],
       "intentional_exclusions": ["--target and --manifest-path passthrough are deferred until workspace/package selection is complete."]
@@ -81,31 +81,31 @@
     },
     {
       "name": "tree",
-      "status": "implemented-session-contract",
+      "status": "implemented-session-rules",
       "delegates_to": "cargo tree",
       "aligned_flags": ["--locked", "--offline", "--frozen"],
-      "intentional_exclusions": ["Tree-specific flags are forwarded as Cargo-compatible trailing args by the tree command contract."]
+      "intentional_exclusions": ["Tree-specific flags are forwarded as Cargo-compatible trailing args by the tree command rules."]
     },
     {
       "name": "vendor",
       "status": "substrate",
       "delegates_to": "cargo vendor command plan.",
       "aligned_flags": ["--locked", "--offline", "--frozen"],
-      "intentional_exclusions": ["Public CLI belongs to the packaging/publishing contract."]
+      "intentional_exclusions": ["Public CLI belongs to the packaging/publishing rules."]
     },
     {
       "name": "package",
       "status": "substrate",
       "delegates_to": "cargo package after Sifr archive preflight.",
       "aligned_flags": ["--locked", "--offline", "--frozen"],
-      "intentional_exclusions": ["Public CLI belongs to the packaging/publishing contract; no Sifr --dry-run alias is introduced."]
+      "intentional_exclusions": ["Public CLI belongs to the packaging/publishing rules; no Sifr --dry-run alias is introduced."]
     },
     {
       "name": "publish",
       "status": "substrate",
       "delegates_to": "cargo publish after Sifr publish preflight.",
       "aligned_flags": ["--dry-run", "--locked", "--offline", "--frozen"],
-      "intentional_exclusions": ["Public CLI belongs to the packaging/publishing contract."]
+      "intentional_exclusions": ["Public CLI belongs to the packaging/publishing rules."]
     }
   ]
 }

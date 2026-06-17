@@ -1,6 +1,5 @@
-# Reference: m27_3
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
-# m27_3 defaults and panic-to-diagnostic conversion demo
+# Reference: default_values
+# default_values defaults and panic-to-diagnostic conversion demo
 #
 # Positive path: non-literal defaults (list/dict literals) are preserved and list
 # defaults are evaluated fresh per call.
@@ -18,7 +17,7 @@ def main():
     second: list[int] = append_default()
     payload: Payload = Payload()
 
-    print("m27_3 defaults and panic-to-diagnostic conversion demo:")
+    print("default_values defaults and panic-to-diagnostic conversion demo:")
     print(first)
     print(second)
     print(payload.values)

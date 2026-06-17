@@ -19,6 +19,6 @@ mod consumer {
 }
 
 fn main() {
-    println!("m19_2 deterministic assembly demo:");
+    println!("module_assembly deterministic assembly demo:");
     println!("{}", consumer::joined());
 }

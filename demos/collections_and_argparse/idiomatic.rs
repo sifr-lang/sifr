@@ -211,9 +211,9 @@ fn main() {
     assert_eq!(counter.get("parse"), 2);
 
     let mut attempts = DefaultDict::new(0);
-    let current_attempts = attempts.ensure("wave2");
-    attempts.set("wave2", current_attempts + 1);
-    assert_eq!(attempts.ensure("wave2"), 1);
+    let current_attempts = attempts.ensure("collections_and_argparse");
+    attempts.set("collections_and_argparse", current_attempts + 1);
+    assert_eq!(attempts.ensure("collections_and_argparse"), 1);
 
     let mut parser = ArgumentParser::new("sifr");
     parser.add_subparsers("cmd");

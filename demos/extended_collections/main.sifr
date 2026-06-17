@@ -1,7 +1,7 @@
-# Reference: milestone_ext_collections
-# Source issue: milestone-ext-collections-epic.md
+# Reference: ext_collections
+# Reference: ext-collections
 # ============================================================
-# Milestone: Extended Collections Demo
+# Feature Demo: Extended Collections Demo
 # ============================================================
 # Demonstrates extended collection types and binary data:
 #   sifr.collections — Set, Counter, DefaultDict

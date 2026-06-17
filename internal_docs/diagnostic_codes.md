@@ -35,7 +35,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `PROTO` | `SIFR-PROTO-0000` | Protocol and structural conformance diagnostics. |
 | `CLASS` | `SIFR-CLASS-0000` | Class declaration, constructor, field, and method diagnostics. |
 | `RESULT` | `SIFR-RESULT-0000` | Result, Option, and checked error-flow diagnostics. |
-| `STDLIB` | `SIFR-STDLIB-0000` | Standard-library surface and intrinsic contract diagnostics. |
+| `STDLIB` | `SIFR-STDLIB-0000` | Standard-library surface and intrinsic rule diagnostics. |
 | `WORKSPACE` | `SIFR-WORKSPACE-0000` | Workspace, package, manifest, and project discovery diagnostics. |
 | `PACKAGE` | `SIFR-PACKAGE-0000` | Cargo-backed Sifr package coordination diagnostics. |
 | `CODEGEN` | `SIFR-CODEGEN-0000` | Rust lowering and backend code-generation diagnostics. |

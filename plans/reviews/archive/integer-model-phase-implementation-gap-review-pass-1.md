@@ -71,7 +71,7 @@ These are **generated Rust artifacts** that use `num_bigint::BigInt` internally 
 
 Every deferred surface has:
 - A documented owning phase (Phase 42 for dtype runtime, Phase 35 for performance tooling, Phase 40/41 for web/schema)
-- A contract artifact (`integer_dtype_contract.md`, `integer_model_serialization_boundary_contract.md`, `integer_model_closure_hardening.md`)
+- A contract artifact (`integer_dtype_contract.md`, `integer_model_serialization_boundary_rules.md`, `integer_model_closure_hardening.md`)
 - A validation lane wiring that fails closed
 - A sentinel or fixture that prevents silent regression
 

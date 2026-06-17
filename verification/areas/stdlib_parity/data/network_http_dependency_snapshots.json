@@ -11,7 +11,7 @@
   "production_snapshots": [
     {
       "id": "network-runtime-core",
-      "owner_contracts": [
+      "owner_capabilities": [
         "network_http_async_network"
       ],
       "required_features": [
@@ -40,7 +40,7 @@
     },
     {
       "id": "tls-runtime",
-      "owner_contracts": [
+      "owner_capabilities": [
         "network_http_tls"
       ],
       "required_features": [
@@ -70,7 +70,7 @@
     },
     {
       "id": "url-header-cookie",
-      "owner_contracts": [
+      "owner_capabilities": [
         "network_http_url_header_cookie"
       ],
       "required_features": [
@@ -92,7 +92,7 @@
     },
     {
       "id": "http-transport",
-      "owner_contracts": [
+      "owner_capabilities": [
         "network_http_http_transport"
       ],
       "required_features": [

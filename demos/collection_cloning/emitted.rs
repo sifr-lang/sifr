@@ -22,5 +22,5 @@ fn main() {
     println!("{}", format!("{:?}", filtered));
     println!("{}", format!("{}", first));
     println!("{}", format!("{:?}", rest));
-    println!("ad_hoc_clone_wave0_architecture_lock_demo: pass");
+    println!("clone_collection_cloning_lock_demo: pass");
 }

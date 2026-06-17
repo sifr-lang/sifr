@@ -25,7 +25,7 @@ fn main() {
     let second = append_default(vec![1]);
     let payload = Payload::default();
 
-    println!("m27_3 defaults and panic-to-diagnostic conversion demo:");
+    println!("default_values defaults and panic-to-diagnostic conversion demo:");
     println!("{first:?}");
     println!("{second:?}");
     println!("{:?}", payload.values);

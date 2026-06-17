@@ -2,44 +2,44 @@
 
 status: active
 
-Phase 35 v1 frontend caching is process-local and module-granular.
+frontend query architecture v1 frontend caching is process-local and module-granular.
 
-TypeScript-Go architecture transfer M1 note: this document describes the
-pre-session cache behavior. M6 added session-level dirty-scope vocabulary and
-event compaction. M7 adds import/export/module signatures plus
+TypeScript-Go architecture transfer task runtime note: this document describes the
+pre-session cache behavior. typed IPC added session-level dirty-scope vocabulary and
+event compaction. runtime substrate audit adds import/export/module signatures plus
 reverse-dependency invalidation, while structural replacement and snapshot-scoped
-cache reuse remain M10 work.
+cache reuse remain snapshot reuse work.
 
-TypeScript-Go architecture transfer M2 note: project loading can now record
+TypeScript-Go architecture transfer synchronization primitives note: project loading can now record
 source-provider dependency reads before snapshots exist. The tracked records
 include successful file reads, directory reads, file and directory probes,
 canonicalization, and failed lookups. These records are not yet consumed for
-dependency-sensitive invalidation; M3-M6 wire them into session snapshots and
-M7 consumes them for dependency-sensitive invalidation.
+dependency-sensitive invalidation; blocking and CPU offload-typed IPC wire them into session snapshots and
+runtime substrate audit consumes them for dependency-sensitive invalidation.
 
-TypeScript-Go architecture transfer M3 note: `WorkspaceSession` now owns the
+TypeScript-Go architecture transfer blocking and CPU offload note: `WorkspaceSession` now owns the
 tracked dependency records and freezes them into `WorkspaceSnapshot` alongside
 source maps, module graphs, overlay records, compiler options, package/config
-identity, and cache-registry handles. M6 adds the session-level dirty-scope
-vocabulary and event compaction; M7 consumes module signatures and reverse
+identity, and cache-registry handles. typed IPC adds the session-level dirty-scope
+vocabulary and event compaction; runtime substrate audit consumes module signatures and reverse
 dependencies for dependency-sensitive invalidation.
 
-TypeScript-Go architecture transfer M4 note: `WorkspaceSnapshot` now carries a
+TypeScript-Go architecture transfer process runtime note: `WorkspaceSnapshot` now carries a
 dirty-scope report slot consumed by `AnalysisSnapshot`. The report is
-conservative in M4: reloads, overlay changes, and analysis document updates mark
+conservative in process runtime: reloads, overlay changes, and analysis document updates mark
 workspace scope, while precise event compaction and dependency-sensitive dirty
-scope remain later work. M6 replaces that placeholder with explicit
-session-level dirty-scope reports and event compaction; M7 maps frontend
+scope remain later work. typed IPC replaces that placeholder with explicit
+session-level dirty-scope reports and event compaction; runtime substrate audit maps frontend
 invalidation reports to one-module, reverse-dependency, and graph dirty scopes.
 
-TypeScript-Go architecture transfer M9 note: cache reuse is still deferred to
-M10, but cache identity is now explicit. `sifr_frontend::cache_keys` defines
+TypeScript-Go architecture transfer cache-key identity note: cache reuse is still deferred to
+snapshot reuse, but cache identity is now explicit. `sifr_frontend::cache_keys` defines
 deterministic compiler/cache fingerprints and typed key inputs for parse,
 source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol
 bucket, and flow graph cache families.
 
-TypeScript-Go architecture transfer M10 note: `FrontendContext` now stores
-ref-counted, M9-keyed parse, source-map file, HIR, diagnostics, and symbol-index
+TypeScript-Go architecture transfer snapshot reuse note: `FrontendContext` now stores
+ref-counted, cache-key identity-keyed parse, source-map file, HIR, diagnostics, and symbol-index
 entries. Safe one-module replacement is accepted only when parsing succeeds and
 the changed module's import/export signature is unchanged. These replacements
 preserve graph revision and unchanged module cache identity while rebuilding
@@ -79,4 +79,4 @@ Dependency-sensitive query recomputation lowers local imports before the importi
 
 ## Verification
 
-`verification/areas/performance/check_frontend_cache_contract.py` runs focused Rust tests proving deterministic cached diagnostics and source-update invalidation. `cargo test -p sifr_frontend` also covers project import-edge identity and dependency-export diagnostics through the canonical frontend. The create-pr validation profile invokes the cache contract script before the broader compiler tests.
+`verification/areas/performance/check_frontend_cache_rules.py` runs focused Rust tests proving deterministic cached diagnostics and source-update invalidation. `cargo test -p sifr_frontend` also covers project import-edge identity and dependency-export diagnostics through the canonical frontend. The create-pr validation profile invokes the cache rules script before the broader compiler tests.

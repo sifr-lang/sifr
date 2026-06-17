@@ -59,8 +59,8 @@ interactive-tooling-foundation: 5 >= 5 [PASS]
 
 **Verification Scripts:**
 - `check_split_brain_guardrail.py`: PASS, --self-test PASS
-- `check_frontend_cache_contract.py`: PASS
-- `check_ruff_fork_update_contract.py`: PASS
+- `check_frontend_cache_rules.py`: PASS
+- `check_ruff_fork_update_rules.py`: PASS
 - `check_budgets.py`: PASS, --self-test PASS
 - `run_benchmarks.py --validate-only`: PASS (45 cases), --self-test PASS
 
@@ -106,7 +106,7 @@ cargo test -p sifr_driver -- project_build_check -- --skip cached_project_binary
 | `waivers.json` empty or valid | ✅ | Empty registry, 5 lines |
 | `run_benchmarks.py` passes | ✅ | 45 cases, --validate-only PASS, --self-test PASS |
 | `check_budgets.py` passes | ✅ | Against checked-in baselines, --self-test PASS |
-| `check_frontend_cache_contract.py` passes | ✅ | PASS |
+| `check_frontend_cache_rules.py` passes | ✅ | PASS |
 | `check_split_brain_guardrail.py` passes | ✅ | PASS, --self-test PASS |
 | `scripts/run_all_tests.sh --profile quick` | ✅ | Per execution doc: report signature f808284595f17a99 |
 | `scripts/run_all_tests.sh --profile pr` | ✅ | Per execution doc: report signature 6cd36071cf629b47 |

@@ -1,6 +1,5 @@
-# Reference: m26_1
-# Source issue: phase26-type-system-soundness-execution.md
-# m26_1 TypeVar constraint enforcement demo
+# Reference: constrained_typevars
+# constrained_typevars TypeVar constraint enforcement demo
 # Shows TypeVar constraints/bounds accepting valid concrete instantiations only.
 from typing import TypeVar
 
@@ -16,7 +15,7 @@ def smallest(a: U, b: U) -> U:
     return b
 
 def main():
-    print('m26_1 typevar constraint enforcement demo:')
+    print('constrained_typevars typevar constraint enforcement demo:')
     print(echo(7))
     print(echo("ok"))
     print(smallest(10, 3))

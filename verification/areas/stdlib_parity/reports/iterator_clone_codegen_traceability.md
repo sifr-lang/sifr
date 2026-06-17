@@ -1,10 +1,10 @@
-# `wave_clone_1` Iterator/Comprehension Ownership Traceability
+# `implementation pass_clone_1` Iterator/Comprehension Ownership Traceability
 
-Phase: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
+Capability: `issues/ownership-aware-collection-lowering-and-clone-elision.md`
 
 ## Scope
 
-`wave_clone_1` implements shared ownership-aware iterator planning for:
+`implementation pass_clone_1` implements shared ownership-aware iterator planning for:
 
 - structural `for` / comprehension iterator sources
 - simple-lowering `map` / `filter` / comprehension / generator paths
@@ -79,7 +79,7 @@ Observed shape:
 
 (Previously this path used `(nums).clone().into_iter().enumerate()`.)
 
-## Wave artifacts
+## Capability artifacts
 
 - pass fixture: `crates/sifr/tests/e2e/pass/iterator_pipeline_cloning.sifr`
 - demo: `demos/cloned_iterators/main.sifr`
@@ -90,7 +90,7 @@ Observed shape:
 - `cargo run -q -p sifr -- run demos/cloned_iterators/main.sifr` -> PASS
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS
 
-Residual items intentionally deferred to later waves:
+Residual items intentionally deferred to later implementation passes:
 
-- indexing/safe-indexing/slicing/star-unpack clone-elision (`wave_clone_2`)
-- generic-hardening and conservative parity closure (`wave_clone_3`)
+- indexing/safe-indexing/slicing/star-unpack clone-elision (`implementation pass_clone_2`)
+- generic-hardening and conservative parity readiness (`implementation pass_clone_3`)

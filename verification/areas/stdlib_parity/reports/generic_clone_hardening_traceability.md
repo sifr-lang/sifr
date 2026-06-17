@@ -1,8 +1,8 @@
-# wave_clone_3 Generic Hardening Traceability
+# implementation pass_clone_3 Generic Hardening Traceability
 
 Date: 2026-03-21
-Phase: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
-Wave: `wave_clone_3`
+Capability: `issues/ownership-aware-collection-lowering-and-clone-elision.md`
+Capability: `implementation pass_clone_3`
 
 ## Objective
 
@@ -28,7 +28,7 @@ Observed from `generic_cloning.sifr`:
   - `for _v in anys.iter() { ... }`
   - no `.cloned()` / `.copied()` is emitted for `Vec<Box<dyn Any>>`.
 
-## Root-Cause Closure Notes
+## Root-Cause Readiness Notes
 
 - tuple ownership now reflects element ownership (`Copy` only when all tuple members are `Copy`)
 - planner no longer forces copy/clone yield behavior from element hints when source

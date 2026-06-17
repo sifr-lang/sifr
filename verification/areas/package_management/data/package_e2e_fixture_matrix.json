@@ -1,6 +1,6 @@
 {
-  "contract": "cargo-backed-package-management",
-  "description": "Cargo-backed package-management contract package-management end-to-end fixture matrix. These fixtures exercise Sifr package behavior through Cargo-shaped metadata, package roots, source maps, command plans, diagnostics, archive plans, and checked-out demo repository submodules.",
+  "rules": "cargo-backed-package-management",
+  "description": "Cargo-backed package-management rules package-management end-to-end fixture matrix. These fixtures exercise Sifr package behavior through Cargo-shaped metadata, package roots, source maps, command plans, diagnostics, archive plans, and checked-out demo repository submodules.",
   "required_categories": [
     "pure_sifr_cargo_package",
     "rust_backed_sifr_package",
@@ -104,7 +104,7 @@
   "explicit_non_port_decisions": [
     {
       "cargo_category": "live registry upload, yank, login, and alternate registry authentication",
-      "reason": "package-management contract validates Sifr preflight and delegates upload/yank/login semantics to Cargo command surfaces. Local validation must not require external credentials or live registry mutation.",
+      "reason": "package-management rules validates Sifr preflight and delegates upload/yank/login semantics to Cargo command surfaces. Local validation must not require external credentials or live registry mutation.",
       "coverage": [
         "crates/sifr_package/src/cargo_backend_integration_tests.rs::cargo_failure_mapping_redacts_private_credentials",
         "crates/sifr_package/src/package_publish_archive_tests.rs::publish_and_vendor_plans_delegate_to_cargo_with_redaction_ready_commands"

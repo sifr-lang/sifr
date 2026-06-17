@@ -1,5 +1,4 @@
-# Reference: m30_1e
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: tempfile
 from sifr.tempfile import mktemp_path, mkstemp, mkdtemp
 from sifr.io import exists
 from sifr.os import run_command
@@ -9,10 +8,10 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_tempfile_actual() -> list[bool]:
     actual: list[bool] = []
-    preview_path: str = mktemp_path("sifr_m30_1e_preview_")
+    preview_path: str = mktemp_path("sifr_tempfile_preview_")
     try:
-        file_path: str = mkstemp("sifr_m30_1e_tmp_")
-        dir_path: str = mkdtemp("sifr_m30_1e_tmpd_")
+        file_path: str = mkstemp("sifr_tempfile_tmp_")
+        dir_path: str = mkdtemp("sifr_tempfile_tmpd_")
 
         actual.append(exists(file_path))
         actual.append(exists(dir_path))
@@ -20,13 +19,13 @@ def collect_tempfile_actual() -> list[bool]:
         preview_name: str = basename(preview_path)
         file_name: str = basename(file_path)
         dir_name: str = basename(dir_path)
-        preview_has_prefix: bool = len(preview_name) > len("sifr_m30_1e_preview_") and preview_name[0:len("sifr_m30_1e_preview_")] == "sifr_m30_1e_preview_"
-        file_has_prefix: bool = len(file_name) > len("sifr_m30_1e_tmp_") and file_name[0:len("sifr_m30_1e_tmp_")] == "sifr_m30_1e_tmp_"
-        dir_has_prefix: bool = len(dir_name) > len("sifr_m30_1e_tmpd_") and dir_name[0:len("sifr_m30_1e_tmpd_")] == "sifr_m30_1e_tmpd_"
+        preview_has_prefix: bool = len(preview_name) > len("sifr_tempfile_preview_") and preview_name[0:len("sifr_tempfile_preview_")] == "sifr_tempfile_preview_"
+        file_has_prefix: bool = len(file_name) > len("sifr_tempfile_tmp_") and file_name[0:len("sifr_tempfile_tmp_")] == "sifr_tempfile_tmp_"
+        dir_has_prefix: bool = len(dir_name) > len("sifr_tempfile_tmpd_") and dir_name[0:len("sifr_tempfile_tmpd_")] == "sifr_tempfile_tmpd_"
         actual.append(preview_has_prefix and file_has_prefix and dir_has_prefix)
 
         temp_root: str = dirname(preview_path)
-        missing_parent_name: str = "__sifr_m30_1e_missing_parent__"
+        missing_parent_name: str = "__sifr_tempfile_missing_parent__"
         missing_parent_path: str = temp_root + "/" + missing_parent_name
         missing_prefix: str = missing_parent_name + "/bad_"
         _rm_missing: str = run_command("rm -rf " + missing_parent_path)
@@ -46,7 +45,7 @@ def collect_tempfile_actual() -> list[bool]:
         cleaned: bool = (not exists(file_path)) and (not exists(dir_path))
         actual.append(cleaned)
 
-        next_path: str = mkstemp("sifr_m30_1e_tmp_")
+        next_path: str = mkstemp("sifr_tempfile_tmp_")
         actual.append(next_path != file_path)
         _c4: str = run_command("rm -f " + next_path)
     except IOError as e:
@@ -60,4 +59,4 @@ def main():
     actual: list[bool] = collect_tempfile_actual()
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1e tempfile parity demo: pass")
+    print("tempfile tempfile parity demo: pass")

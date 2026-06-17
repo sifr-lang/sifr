@@ -1,4 +1,4 @@
-I've inspected the changed files, the runner code, the helper scripts, the fuzz_property area runner, the diagnostic_contract_harness binary it points at, the existing area manifest, and the Wave 7 / 7.1 sections of the tracker. Findings below.
+I've inspected the changed files, the runner code, the helper scripts, the fuzz_property area runner, the diagnostic_rendering_harness binary it points at, the existing area manifest, and the Wave 7 / 7.1 sections of the tracker. Findings below.
 
 ## Verdict
 
@@ -16,7 +16,7 @@ I've inspected the changed files, the runner code, the helper scripts, the fuzz_
 
 4. **`reproduction_command` for `codegen_entrypoint` points at the property suite (`--suite property`), not the fuzz-smoke suite.** This is correct (PROP-INT-0001/0002 live there) but means a contributor who runs only `--suite fuzz-smoke` while debugging a codegen-class finding will not actually hit codegen. A one-line note in `verification/areas/fuzz_property/sustained_lane.md` or in the codegen target's note would prevent that confusion.
 
-5. **`diagnostic_renderer_entrypoint` and `package_project_manifest_entrypoint` share the same `reproduction_command` (`cargo run … --bin diagnostic_contract_harness`).** Defensible — `crates/sifr_driver/src/bin/diagnostic_contract_harness.rs:129-220` covers both `check_project`/`check_package_project` fixtures and renderer assertions — but worth a one-line cross-reference in the project-tree target so a reader doesn't think this is a copy-paste mistake.
+5. **`diagnostic_renderer_entrypoint` and `package_project_manifest_entrypoint` share the same `reproduction_command` (`cargo run … --bin diagnostic_rendering_harness`).** Defensible — `crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs:129-220` covers both `check_project`/`check_package_project` fixtures and renderer assertions — but worth a one-line cross-reference in the project-tree target so a reader doesn't think this is a copy-paste mistake.
 
 6. **`required_target_ids` is compared via `set(required_target_ids) != REQUIRED_TARGET_IDS` (`property_and_fuzz.py:510`).** Duplicates in the list are not flagged. Cosmetic — the list is canonical and not user-extended.
 

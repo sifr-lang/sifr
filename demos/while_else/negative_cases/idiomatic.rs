@@ -4,7 +4,7 @@
 //! the `else` arm of a `while` loop must not execute after `break`.
 //!
 //! This fixture exists to preserve the control-flow guard against regressions in
-//! `while`-`else` lowering. The Rust-side analogue is a runtime-behavior contract
+//! `while`-`else` lowering. The Rust-side analogue is a runtime-behavior rules
 //! rather than a compile-fail shape, so this file remains a minimal explanatory
 //! scaffold.
 

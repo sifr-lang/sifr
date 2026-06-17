@@ -20,7 +20,7 @@ fn smallest<U: Comparable>(a: U, b: U) -> U {
 }
 
 fn main() {
-    println!("m26_1 typevar constraint enforcement demo:");
+    println!("constrained_typevars typevar constraint enforcement demo:");
     println!("{}", echo(7_i64));
     println!("{}", echo("ok".to_string()));
     println!("{}", smallest(10_i64, 3_i64));

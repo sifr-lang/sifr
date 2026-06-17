@@ -1,7 +1,6 @@
-# Reference: m19_3
-# Source issue: phase19-module-graph-safety-determinism-cache-execution.md
+# Reference: local_imports
 from sifr.math import floor, pi
 
 def main():
-    print("m19_3 stdlib cache local loops demo:")
+    print("local_imports stdlib cache local loops demo:")
     print(floor(pi))

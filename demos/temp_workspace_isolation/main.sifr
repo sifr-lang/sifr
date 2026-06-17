@@ -1,9 +1,8 @@
-# Reference: m23_4
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
-# m23_4 invocation-scoped temp workspace isolation demo
+# Reference: temp_workspace_isolation
+# temp_workspace_isolation invocation-scoped temp workspace isolation demo
 
 from helper import value
 
 def main():
-    print('m23_4 invocation-scoped temp workspace isolation demo:')
+    print('temp_workspace_isolation invocation-scoped temp workspace isolation demo:')
     print(value())

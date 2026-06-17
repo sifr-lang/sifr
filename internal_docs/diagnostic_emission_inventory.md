@@ -1,6 +1,6 @@
 # Diagnostic Emission Inventory
 
-This inventory is the `milestone_diag_3` handoff into diagnostic registry population. It records the original emission surfaces, the target diagnostic identity for each user-facing category, representative fixtures, and notes that the migration milestones had to preserve.
+This inventory is the `diagnostic emission inventory` handoff into diagnostic registry population. It records the original emission surfaces, the target diagnostic identity for each user-facing category, representative fixtures, and notes that the migration rules had to preserve.
 
 Historical coverage snapshot from April 29, 2026:
 
@@ -9,7 +9,7 @@ Historical coverage snapshot from April 29, 2026:
 - `sifr_type_system::TypeError`, `TypeErrorKind`, and the residual `TypeCheckDiagnostic` adapter have been deleted. Operator helper failures return a direct `(DiagnosticCode, String)` pair, and HIR lowering records it through `error_with_code_at` without a code-less fallback.
 - `rg "# expect-error" crates/sifr/tests/e2e/fail crates/sifr/tests/e2e.rs -g '*.sifr' -g '*.rs'` finds 155 fail-fixture expectations plus harness parser samples.
 
-Closure snapshot from May 3, 2026:
+Readiness snapshot from May 3, 2026:
 
 - `rg -n "ctx\\.error\\(" crates/sifr_lowering/src -g '*.rs'` has no matches.
 - The raw `LowerCtx::error(String)` transport has been deleted; HIR user-facing diagnostics now use explicit diagnostic codes with primary ranges at emission sites.
@@ -52,7 +52,7 @@ Wrong-layer notes:
 
 ## Parser Surface
 
-Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `third_party/ruff/crates/ruff_python_parser/src/error.rs`) and are currently mapped by `sifr_driver::frontend::api` to parser-category diagnostics. The legacy `SIFR-PARSE-0001` catch-all was removed before public stability; parser migration (`milestone_diag_7`) should keep mapping exposed error categories below.
+Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `third_party/ruff/crates/ruff_python_parser/src/error.rs`) and are currently mapped by `sifr_driver::frontend::api` to parser-category diagnostics. The legacy `SIFR-PARSE-0001` catch-all was removed before public stability; parser migration (`parser diagnostic migration`) should keep mapping exposed error categories below.
 
 | Proposed code | Ruff category / examples | Fixture plan |
 | --- | --- | --- |
@@ -103,24 +103,24 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 
 The former test-only `CompileError` construction sites in `crates/sifr_driver/src/tests/diagnostics.rs` now exercise canonical rendered diagnostic recovery-limit behavior. They should be rewritten or deleted with the legacy driver renderer rather than treated as runtime emission sites.
 
-CLI and renderer tests also manually construct canonical `RenderedDiagnostic` values. These are test-only surfaces but must be updated in `milestone_diag_5` when the harness and renderer contracts stop accepting phase-bucket and pseudo-code strings:
+CLI and renderer tests also manually construct canonical `RenderedDiagnostic` values. These are test-only surfaces but must be updated in `diagnostic harness and renderer cleanup` when the harness and renderer rules stop accepting stage-bucket and pseudo-code strings:
 
 | File | Manual `RenderedDiagnostic` sites | Current hard-coded identities | Migration owner |
 | --- | ---: | --- | --- |
-| `crates/sifr/src/main.rs` | 9 | Active `SIFR-*` code strings and `[E2507]`-style message content in compact-renderer tests | `milestone_diag_5` test harness/renderer contract cleanup |
-| `crates/sifr_driver/src/tests/diagnostics.rs` | 2 | Active `SIFR-*` recovery-limit fixtures | `milestone_diag_5` or residual legacy diagnostic cleanup |
+| `crates/sifr/src/main.rs` | 9 | Active `SIFR-*` code strings and `[E2507]`-style message content in compact-renderer tests | `diagnostic harness and renderer cleanup` test harness/renderer rules cleanup |
+| `crates/sifr_driver/src/tests/diagnostics.rs` | 2 | Active `SIFR-*` recovery-limit fixtures | `diagnostic harness and renderer cleanup` or residual legacy diagnostic cleanup |
 
 Current public-code mechanisms to remove:
 
 | Mechanism | Current owner | Current effect | Replacement |
 | --- | --- | --- | --- |
-| Phase-derived `CompilePhase` mapping and display labels | `crates/sifr_driver/src/diagnostics.rs` | removed; diagnostics now carry active code strings, and human labels are code-derived | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
-| Workspace prefix classifier | legacy `CompileError::workspace_diagnostic_code` | removed before `milestone_diag_4b`; workspace identities are explicit at construction | typed workspace/project discovery constructors with structured path/module args |
+| Legacy-derived `CompilePhase` mapping and display labels | `crates/sifr_driver/src/diagnostics.rs` | removed; diagnostics now carry active code strings, and human labels are code-derived | domain helpers construct `SifrDiagnostic` with the canonical code before driver rendering |
+| Workspace prefix classifier | legacy `CompileError::workspace_diagnostic_code` | removed before `workspace diagnostic identity cleanup`; workspace identities are explicit at construction | typed workspace/project discovery constructors with structured path/module args |
 | Type-check code/message forwarding | HIR sites that destructure `(code, message)` and call `ctx.error_with_code(code, message)` | preserves required active code but still lacks declared args and related spans | HIR call site emits the target `TYPE-*` or `DECIMAL-*` diagnostic directly with the AST span and structured args |
-| Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | removed in `milestone_diag_6` slice 1; decimal diagnostics now carry top-level `SIFR-DECIMAL-*` codes with no secondary message code | keep top-level `SIFR-DECIMAL-*` identity and no message-embedded pseudo-code |
-| Test-only hard-coded diagnostics | CLI renderer and driver diagnostics tests | locks renderer behavior to legacy phase buckets and pseudo-code text | renderer/harness tests construct canonical diagnostics through `sifr_diagnostics` fixtures |
+| Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | removed in `decimal diagnostic cleanup` behavior group 1; decimal diagnostics now carry top-level `SIFR-DECIMAL-*` codes with no secondary message code | keep top-level `SIFR-DECIMAL-*` identity and no message-embedded pseudo-code |
+| Test-only hard-coded diagnostics | CLI renderer and driver diagnostics tests | locks renderer behavior to legacy compiler-stage buckets and pseudo-code text | renderer/harness tests construct canonical diagnostics through `sifr_diagnostics` fixtures |
 
-Workspace code review for `milestone_diag_2b`:
+Workspace code review for `diagnostic registry population`:
 
 - Keep `SIFR-WORKSPACE-0001` for malformed `sifr.toml` parsing.
 - Keep `SIFR-WORKSPACE-0002` for `[source].roots` path escaping workspace root.
@@ -133,13 +133,13 @@ Workspace code review for `milestone_diag_2b`:
 
 ## E2E Expectation And Baseline Surface
 
-Current harness behavior in `crates/sifr/tests/e2e.rs` validates `# expect-error:` markers as active registry-backed `SIFR-<FAMILY>-dddd` codes. `milestone_diag_5` slice 1 removes message-substring matching, `[Edddd]` pseudo-code acceptance, and secondary-code extraction from diagnostic messages; fail-fixture expectations are code-only and duplicate-code expectations consume distinct emitted failures. The accepted grammar is `expect-error: SIFR-<FAMILY>-dddd`, plus `expect-error[col=<1-based-column>]: SIFR-<FAMILY>-dddd` for span-backed disambiguation when one source line intentionally expects multiple diagnostics.
+Current harness behavior in `crates/sifr/tests/e2e.rs` validates `# expect-error:` markers as active registry-backed `SIFR-<FAMILY>-dddd` codes. `diagnostic harness and renderer cleanup` behavior group 1 removes message-substring matching, `[Edddd]` pseudo-code acceptance, and secondary-code extraction from diagnostic messages; fail-fixture expectations are code-only and duplicate-code expectations consume distinct emitted failures. The accepted grammar is `expect-error: SIFR-<FAMILY>-dddd`, plus `expect-error[col=<1-based-column>]: SIFR-<FAMILY>-dddd` for span-backed disambiguation when one source line intentionally expects multiple diagnostics.
 
 Original fail-fixture and harness-sample pseudo-code markers:
 
 | Marker | Count | Migration action |
 | --- | ---: | --- |
-| `SIFR-TYPE-0001` | 95 original inventory count | Removed catch-all. Replace with category-specific codes during family migration milestones. |
+| `SIFR-TYPE-0001` | 95 original inventory count | Removed catch-all. Replace with category-specific codes during family migration rules. |
 | `SIFR-PARSE-0001` | 2 original harness samples | Removed; harness samples now use active parser codes. |
 | `[E2501]` | 1 | `SIFR-DECIMAL-0001`. |
 | `[E2502]` | 2 | `SIFR-DECIMAL-0002`. |
@@ -150,7 +150,7 @@ Original fail-fixture and harness-sample pseudo-code markers:
 | `[E2507]` | 5 | `SIFR-DECIMAL-0007`. |
 | `[E2508]` | 2 | `SIFR-DECIMAL-0008`. |
 
-Unannotated fail fixtures are also part of the migration surface. There are 86 fail fixtures with no `# expect-error` today; they currently assert only "compilation must fail". They should gain code assertions in the milestone that migrates the owning family, using the target-family grouping below.
+Unannotated fail fixtures are also part of the migration surface. There are 86 fail fixtures with no `# expect-error` today; they currently assert only "compilation must fail". They should gain code assertions in the feature set that migrates the owning family, using the target-family grouping below.
 
 | Group | Files | Target family/code plan |
 | --- | --- | --- |
@@ -252,11 +252,11 @@ zipfile_write_non_string_content.sifr
 
 ## Verification Baseline Surface
 
-Checked-in verification baselines are area-owned under `verification/areas/diagnostics/fixtures/` and `verification/areas/project_workspace/fixtures/`. They should be regenerated in the milestone that changes the corresponding renderer/harness behavior.
+Checked-in verification baselines are area-owned under `verification/areas/diagnostics/fixtures/` and `verification/areas/project_workspace/fixtures/`. They should be regenerated in the feature set that changes the corresponding renderer/harness behavior.
 
 | Verification case | Current baseline markers | Target / owner |
 | --- | --- | --- |
-| `diagnostics/decimal_invalid_literal` | `SIFR-DECIMAL-0001` in compact/json/human output with no message-embedded pseudo-code | Done in `milestone_diag_6` slice 1; keep as decimal renderer regression coverage |
+| `diagnostics/decimal_invalid_literal` | `SIFR-DECIMAL-0001` in compact/json/human output with no message-embedded pseudo-code | Done in `decimal diagnostic cleanup` behavior group 1; keep as decimal renderer regression coverage |
 | `project/missing_import_reports_error` | `SIFR-WORKSPACE-0101` in compact/json output | keep `SIFR-WORKSPACE-0101`; renderer integration regenerates schema shape only |
 | `project/workspace_unresolved_import` | `SIFR-WORKSPACE-0101` in compact/json output | keep `SIFR-WORKSPACE-0101`; add related searched paths |
 | `project/workspace_ambiguous_import` | `SIFR-WORKSPACE-0102` in compact/json output | keep `SIFR-WORKSPACE-0102`; add related candidate paths |
@@ -278,7 +278,7 @@ Warnings and notes are part of the same diagnostic stream and cannot remain unco
 
 ## Target Code And Fixture Plan
 
-These entries are the proposed active registry population for `milestone_diag_2b`. The exact templates and declared args can be adjusted during population, but every migrated category must keep a specific code and representative fixture.
+These entries are the proposed active registry population for `diagnostic registry population`. The exact templates and declared args can be adjusted during population, but every migrated category must keep a specific code and representative fixture.
 
 | Code | Category | Owner module | Representative fixture / proof |
 | --- | --- | --- | --- |
@@ -345,15 +345,15 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-RESULT-0002` | invalid `Result` error type | result/error type lowering | `crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr` |
 | `SIFR-RESULT-0003` | invalid `raise` expression | statement lowering | `crates/sifr/tests/e2e/fail/error_raise_bare.sifr`, `crates/sifr/tests/e2e/fail/error_raise_non_error.sifr`, `crates/sifr/tests/e2e/fail/error_raise_str.sifr` |
 | `SIFR-STDLIB-0001` | unsupported stdlib constructor/method surface | stdlib/builtin lowering | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` |
-| `SIFR-STDLIB-0002` | removed in `milestone_diag_11` guardrail audit; no compiler emission path | n/a | n/a |
+| `SIFR-STDLIB-0002` | removed in `diagnostic guardrail audit` guardrail audit; no compiler emission path | n/a | n/a |
 | `SIFR-WORKSPACE-0001..0104` | workspace manifest/source-root/import graph diagnostics | `sifr_driver::workspace` and project discovery | existing driver workspace tests |
-| `SIFR-CODEGEN-0002` | removed in `milestone_diag_11` guardrail audit; no compiler emission path | n/a | n/a |
+| `SIFR-CODEGEN-0002` | removed in `diagnostic guardrail audit` guardrail audit; no compiler emission path | n/a | n/a |
 | `SIFR-BUILD-0002..0006` | build workspace/materialization/cargo/rustc/test harness failures | driver build/test runner | driver build tests |
 | `SIFR-INTERNAL-0001` | unclassified compiler panic after panic boundary | panic boundary | panic boundary tests |
 
 ## Recovery Expectations By Category
 
-These expectations are not implemented until `milestone_diag_10`, but the code assignments above should preserve enough structured args to make them possible.
+These expectations are not implemented until `diagnostic recovery deduplication`, but the code assignments above should preserve enough structured args to make them possible.
 
 | Category / codes | Recovery expectation | Dedupe key sketch |
 | --- | --- | --- |
@@ -378,4 +378,4 @@ These expectations are not implemented until `milestone_diag_10`, but the code a
 - Every HIR source diagnostic should use the AST node span that caused the semantic failure. Existing raw messages usually have the expression/statement node available at the emission site; the migration should not introduce spanless HIR diagnostics for those paths.
 - Type-check helper failure sites preserve active code identity, but they still do not carry source spans, expected/actual/operator args, or related spans. The final migrated helper should be called at the HIR site that knows the AST node span and should pass expected/actual/operator/name args explicitly.
 - Import and workspace diagnostics need related spans/paths for "searched here", "ambiguous candidate", and "import requested here" notes. Do not encode those in message strings.
-- Recovery deduplication remains `milestone_diag_10`. Until then, repeated type errors keep the existing recovery behavior but must share `message_template` and explicit dedupe args once migrated.
+- Recovery deduplication remains `diagnostic recovery deduplication`. Until then, repeated type errors keep the existing recovery behavior but must share `message_template` and explicit dedupe args once migrated.

@@ -1,6 +1,6 @@
 # sifr_package Traceability
 
-package-management contract reuses Cargo behavior where Cargo already owns dependency resolution, source materialization, lockfiles, workspaces, publishing, and vendoring. Sifr adapts those facts into compiler-facing package metadata and validates Sifr-specific semantics.
+package-management rules reuses Cargo behavior where Cargo already owns dependency resolution, source materialization, lockfiles, workspaces, publishing, and vendoring. Sifr adapts those facts into compiler-facing package metadata and validates Sifr-specific semantics.
 
 Status values:
 
@@ -10,7 +10,7 @@ Status values:
 
 ## Behavior Matrix
 
-| Cargo behavior category | Status | Contract area | Sifr coverage |
+| Cargo behavior category | Status | Rules area | Sifr coverage |
 | --- | --- | --- | --- |
 | metadata package ordering | adapted | metadata adapter | `tests::shuffled_cargo_metadata_has_stable_digest` |
 | package metadata discovery | adapted | metadata adapter | `tests::pure_sifr_package_graph_derives_from_cargo_metadata` |
@@ -45,7 +45,7 @@ Status values:
 | archive traversal rejection | adapted | publish and archive | `archive_traversal_reports_0402` |
 | package dry-run delegation | adapted | publish and archive | `package_dry_run_includes_cargo_package_and_publish_dry_run_commands` |
 | publish/vendor command delegation | adapted | publish and archive | `publish_and_vendor_plans_delegate_to_cargo_with_redaction_ready_commands` |
-| package-management contract fixture category coverage | ported | verification matrix | `verification/areas/package_management/data/package_e2e_fixture_matrix.json`; `verification/areas/package_management/tools/check_package_manager_guardrails.py` |
+| package-management rules fixture category coverage | ported | verification matrix | `verification/areas/package_management/data/package_e2e_fixture_matrix.json`; `verification/areas/package_management/tools/check_package_manager_guardrails.py` |
 | organization demo repository subrepos | ported | demo repository corpus | `verification/areas/package_management/data/package_demo_repositories.json`; `verification/areas/package_management/corpora/demo_repositories/`; `package_demo_subrepos_cover_required_org_repos` |
 
 ## Explicit Non-Port Decisions
@@ -53,13 +53,13 @@ Status values:
 | Cargo behavior category | Status | Reason | Sifr coverage |
 | --- | --- | --- | --- |
 | live registry publish/upload | non-port | Local validation must not mutate external registries or require credentials. Sifr validates package preflight and delegates upload to Cargo. | publish command plans; credential redaction tests |
-| yanking live registry versions | non-port | Yank is Cargo registry behavior and requires live registry state. package-management contract records delegation only. | Cargo command surface audit |
+| yanking live registry versions | non-port | Yank is Cargo registry behavior and requires live registry state. package-management requirements record delegation only. | Cargo command surface audit |
 | login/logout credential storage | non-port | Credential storage belongs to Cargo. Sifr must avoid logging credentials and must redact Cargo failures. | `cargo_failure_mapping_redacts_private_credentials` |
 | alternate/private registry protocol tests | non-port | Protocol compatibility is Cargo-owned. Sifr consumes source ids opaquely and reports unsupported/unknown metadata explicitly. | source classification and credential diagnostics |
 | Cargo registry/Git cache layout walking | non-port | Sifr must not rely on Cargo cache internals. | package-manager guardrail and dependency audit |
 
-## Closeout Evidence
+## Readiness Evidence
 
-The package-management contract closeout matrix is `verification/areas/package_management/data/package_e2e_fixture_matrix.json`. It maps pure Sifr packages, Rust-backed packages, workspaces, path/Git/registry sources, multiple-version graphs, aliases, and publishing to concrete Sifr tests or explicit non-port decisions.
+The package-management readiness matrix is `verification/areas/package_management/data/package_e2e_fixture_matrix.json`. It maps pure Sifr packages, Rust-backed packages, workspaces, path/Git/registry sources, multiple-version graphs, aliases, and publishing to concrete Sifr tests or explicit non-port decisions.
 
 The organization demo repositories are `sifr-lang/sifr-demo-*` git submodules under `verification/areas/package_management/corpora/demo_repositories/` and are indexed by `verification/areas/package_management/data/package_demo_repositories.json`. They preserve the required package shapes locally while exercising the same subrepo workflow used by the rest of Sifr.

@@ -1,7 +1,7 @@
-# Reference: ad_hoc_iter_fix_wave1
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
-# ad-hoc canonical-iteration wave 1 demo
-# Verifies capability-aware reversible typing and homogeneous tuple iteration closure.
+# Reference: iter_fix_reversible_iterables
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
+# canonical-iteration Iterator behavior demo
+# Verifies capability-aware reversible typing and homogeneous tuple iteration readiness.
 
 
 def tail_first(values: Reversible[int]) -> int:

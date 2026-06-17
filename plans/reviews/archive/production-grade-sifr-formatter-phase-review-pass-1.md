@@ -98,7 +98,7 @@ But there's no Sifr config parsing, no `sifr.toml` schema definition, and no `ru
 
 **Issue**: AC-14 requires "a guardrail fails when a new Sifr AST syntax extension has no formatter coverage." The Phase 36 tooling verification framework in `tooling_verification.md` exists, but:
 
-- `check_formatter_contract.py` currently tests idempotence and round-trip, not AST coverage
+- `check_formatter_rules.py` currently tests idempotence and round-trip, not AST coverage
 - There's no existing guardrail that validates formatter coverage for new parser extensions
 - The phase plan doesn't specify what the guardrail actually checks (AST enumeration? Missing formatter rule detection?)
 

@@ -1,5 +1,5 @@
-# Reference: ad_hoc_rng_wave1
-# Source issue: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md
+# Reference: rng_random_state
+# Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.random import Random, RandomState, getstate, randint, random, seed, setstate
 
 
@@ -29,6 +29,6 @@ def main():
         replay_second_module_int: int = randint(0, 100000)
         assert second_module_int == replay_second_module_int
     except ValueError as e:
-        assert str("unexpected random error: " + e.message) == "ad_hoc_rng_wave1_stateful_object_model_demo: pass"
+        assert str("unexpected random error: " + e.message) == "rng_random_state_object_model_demo: pass"
 
-    assert str("ad_hoc_rng_wave1_stateful_object_model_demo: pass") == "ad_hoc_rng_wave1_stateful_object_model_demo: pass"
+    assert str("rng_random_state_object_model_demo: pass") == "rng_random_state_object_model_demo: pass"

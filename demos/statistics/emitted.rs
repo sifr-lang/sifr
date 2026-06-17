@@ -1071,5 +1071,5 @@ fn main() {
     let expected_ok: Vec<bool> = vec![false, false];
     let actual_ok: Vec<bool> = collect_error_actual_ok();
     assert_bool_vector_eq(&actual_ok, &expected_ok);
-    println!("m30_1b statistics parity demo: pass");
+    println!("statistics parity demo: pass");
 }

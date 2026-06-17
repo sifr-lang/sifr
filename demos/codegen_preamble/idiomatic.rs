@@ -32,7 +32,7 @@ fn write_text(path: &str, contents: &str) -> io::Result<()> {
 }
 
 fn main() {
-    let path = "/tmp/sifr_m14_preamble_demo.txt";
+    let path = "/tmp/sifr_codegen_preamble_demo.txt";
 
     match (|| -> io::Result<String> {
         write_text(path, "m14 preamble")?;

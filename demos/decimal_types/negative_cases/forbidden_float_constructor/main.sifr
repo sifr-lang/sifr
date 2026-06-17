@@ -1,5 +1,4 @@
-# Reference: m28_1
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_types
 # expect-error: SIFR-DECIMAL-0005
 def main():
     x: decimal = Decimal(1.5)

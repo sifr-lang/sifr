@@ -1,3 +1,3 @@
 fn main() {
-    println!("driver milestone 1 api spine demo: 42");
+    println!("driver compiler api spine demo: 42");
 }

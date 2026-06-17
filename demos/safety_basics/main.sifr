@@ -1,6 +1,6 @@
 # Reference: m0
-# Source issue: 1-demo-ticket.md
-# Milestone 0 demo: parity foundation safety + harness baseline
+# Reference: safety-basics-history
+# Safety basics demo: parity foundation safety + harness baseline
 from sifr.bytes import decode_utf8
 from sifr.base64 import b64encode
 from sifr.test import assert_vector_eq

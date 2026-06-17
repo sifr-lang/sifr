@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "contract": "stdlib_complexity_resource",
-    "source_contract": "stdlib_complexity_resource_budget",
+    "rules": "stdlib_complexity_resource",
+    "source_rules": "stdlib_complexity_resource_budget",
     "generated_on": "2026-03-09",
     "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
     "delta_bands": [
@@ -153,7 +153,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "panic-free adapter over regex engine",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "regex engine complexity depends on pattern class; constant-factor measurements are workload-sensitive and not stable across hosts",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "replace waiver when deterministic regex workload corpus and host-normalized runner are introduced"
@@ -208,7 +208,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "stream-bound allocation proportional to payload",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "filesystem latency and kernel buffering dominate constant-factor comparisons",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "replace waiver after host-normalized tmpfs benchmark lane is available"
@@ -233,7 +233,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "syscall-bound; no unbounded user-space buffering",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "syscall and filesystem metadata latency dominate constant-factor behavior",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "revisit when syscall benchmarking harness with controlled FS fixtures is landed"
@@ -248,7 +248,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "path list allocation proportional to matches",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "directory topology and filesystem cache state produce high constant-factor variance",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "revisit with deterministic fixture-backed directory benchmark suite"
@@ -263,7 +263,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "match list allocation bounded by discovered entries",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "filesystem walk cost and hidden-file filtering vary strongly by host storage characteristics",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "replace waiver when synthetic directory benchmark corpus is integrated"
@@ -278,7 +278,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "bounded retry attempts; path string allocation only",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "OS temp directory policy and collision probability dominate constant-factor behavior",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "revisit when deterministic tmpdir sandbox and collision-seed fixtures are available"
@@ -293,7 +293,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "bounded per-file buffers with recursive traversal proportional to file count",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "filesystem/device characteristics dominate copy/remove constant factors",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "replace waiver after fixture-backed cross-device benchmark lane is introduced"
@@ -308,7 +308,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "message formatting plus optional file write",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "stdout/file sink latency dominates constant factors and varies by runtime host",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "revisit when sink-isolated benchmark adapters are available"
@@ -323,7 +323,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "scalar wrapper calls only",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "clock source precision and host timer implementation introduce unstable constant-factor comparisons",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "revisit after monotonic timer backend parity expansion lands"
@@ -338,7 +338,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "loop counter state only",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "timer backend differences dominate constant-factor comparison even when asymptotic loop growth matches",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "replace waiver when high-resolution monotonic backend is available in Sifr"
@@ -353,7 +353,7 @@
       "constant_factor_delta_band": "waived",
       "resource_budget": "small string wrappers over host metadata",
       "waiver": {
-        "owner": "stdlib complexity-resource contract",
+        "owner": "stdlib complexity-resource rules",
         "rationale": "host command and environment fallback paths make constant-factor comparison non-deterministic",
         "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
         "revisit_rule": "revisit after pure-intrinsic host metadata path replaces shell fallback"

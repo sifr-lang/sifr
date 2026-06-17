@@ -1,5 +1,5 @@
-# Reference: ad_hoc_rng_wave2
-# Source issue: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md
+# Reference: rng_binary_hashing
+# Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.base64 import b64decode_bytes, b64encode_bytes
 from sifr.bytes import encode_utf8
 from sifr.hashlib import HashObject, new_bytes
@@ -7,7 +7,7 @@ from sifr.hashlib import HashObject, new_bytes
 
 def main() -> None:
     try:
-        data: bytes = encode_utf8("wave2-bytes-demo")
+        data: bytes = encode_utf8("binary_hashing-bytes-demo")
         h: HashObject = new_bytes("sha256", data)
         assert len(h.digest()) == 32
         assert len(h.hexdigest()) == 64
@@ -16,8 +16,8 @@ def main() -> None:
         dec: bytes = b64decode_bytes(enc)
         assert dec == data
     except ValueError as e:
-        assert str("unexpected value error: " + e.message) == "ad_hoc_rng_wave2_hashlib_base64_bytes_demo: pass"
+        assert str("unexpected value error: " + e.message) == "rng_binary_hashing_base64_bytes_demo: pass"
     except ParseError as e:
-        assert str("unexpected parse error: " + e.message) == "ad_hoc_rng_wave2_hashlib_base64_bytes_demo: pass"
+        assert str("unexpected parse error: " + e.message) == "rng_binary_hashing_base64_bytes_demo: pass"
 
-    assert str("ad_hoc_rng_wave2_hashlib_base64_bytes_demo: pass") == "ad_hoc_rng_wave2_hashlib_base64_bytes_demo: pass"
+    assert str("rng_binary_hashing_base64_bytes_demo: pass") == "rng_binary_hashing_base64_bytes_demo: pass"

@@ -16,8 +16,8 @@ Execution tracker: `issues/ad-hoc-production-grade-sifr-linter-execution.md`
 
 Validation evidence checked:
 - `cargo test -p sifr_lint`: 15 tests passed (0 failed, 0 doctests)
-- `python3 verification/tooling/check_linter_reuse_contract.py`: PASS
-- `python3 verification/tooling/check_linter_reuse_contract.py --self-test`: PASS
+- `python3 verification/tooling/check_linter_reuse_rules.py`: PASS
+- `python3 verification/tooling/check_linter_reuse_rules.py --self-test`: PASS
 - `python3 scripts/check_file_size_guardrails.py`: PASS (all sifr_lint modules under 900 lines)
 - `git diff --check`: passed
 - `cargo clippy -p sifr_lint -- -D warnings`: passed
@@ -90,7 +90,7 @@ fn phase_has_enabled_rules(&self, phase: LintPhase, file: Option<&Path>) -> bool
 
 **Evidence**:
 - `grep -E "(ruff_linter|ruff_python_semantic|ruff_server|ruff_python)" crates/sifr_lint/Cargo.toml`: no forbidden dependencies
-- `python3 verification/tooling/check_linter_reuse_contract.py`: PASS, with self-test PASS
+- `python3 verification/tooling/check_linter_reuse_rules.py`: PASS, with self-test PASS
 - `engine.rs`: only imports `sifr_diagnostics`, `std::fs`, `std::path`, and `crate` (internal sifr_lint)
 - `lib.rs`: no Ruff Python checker imports — physical line rules are hand-written string scanning (`line_has_trailing_whitespace`)
 
@@ -136,7 +136,7 @@ fn phase_has_enabled_rules(&self, phase: LintPhase, file: Option<&Path>) -> bool
 ## Review Artifacts
 
 - Review file: this document
-- Linter reuse contract check: `verification/tooling/check_linter_reuse_contract.py` — used as enforcement
+- Linter reuse contract check: `verification/tooling/check_linter_reuse_rules.py` — used as enforcement
 - Suppression gate manifest: `verification/tooling/linter_manifests/suppression_gate.json` — state: `parser_aware`
 - Lint CLI parity manifest: `verification/tooling/linter_manifests/lint_cli_parity.json` — enforcement for M2 surface
 - Ruff rule/config audit manifest: `verification/tooling/linter_manifests/ruff_rule_config_audit.json` — enforcement for M5+ future rules

@@ -396,7 +396,7 @@ mod tests {
     }
 
     #[test]
-    fn readiness_state_availability_matches_bucket_query_contract() {
+    fn readiness_state_availability_matches_bucket_query_rules() {
         assert!(SymbolBucketReadinessState::Exact.is_available());
         assert!(SymbolBucketReadinessState::StaleButUsable.is_available());
         assert!(!SymbolBucketReadinessState::NeedsBackgroundRefresh.is_available());

@@ -1,6 +1,6 @@
-# Reference: ad_hoc_iter_wave1
-# Source issue: ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md
-# ad-hoc iterator wave 1 demo
+# Reference: iter_iterator_types
+# Reference: first-class-lazy-iterators-and-python-iterable-protocol
+# iterator Iterator behavior demo
 # Verifies first-class type-system support for Iterable[T] / Iterator[T].
 
 
@@ -12,7 +12,7 @@ def sum_iterable(values: Iterable[int]) -> int:
 
 
 def passthrough(own it: Iterator[int]) -> Iterator[int]:
-    # Wave 1 is type-system/protocol contract only; runtime iter()/next() lands in wave 2.
+    # Behavior Group 1 is type-system/protocol rules only; runtime iter()/next() lands in behavior group 2.
     return it
 
 

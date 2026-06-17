@@ -5,9 +5,9 @@
 //! default is rejected, the later `pick()` call also surfaces the deterministic
 //! follow-on diagnostic that `x` is still required.
 //!
-//! This fixture exists to preserve the phase-27 default-argument restriction and
+//! This fixture exists to preserve the default-argument default-argument restriction and
 //! its missing-argument follow-on behavior. The Rust-side analogue is frontend
 //! policy rather than a direct Rust compile error, so this file records the
-//! contract instead of inventing a synthetic sample.
+//! rules instead of inventing a synthetic sample.
 
 fn main() {}

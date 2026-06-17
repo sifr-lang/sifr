@@ -1,5 +1,5 @@
-# Reference: wave_psp_e1
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: hashlib-sample
+# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.datetime import datetime, from_timestamp
 from sifr.re import search
 from sifr.math import comb, isclose
@@ -32,7 +32,7 @@ def main():
         print("statistics error: " + e.message)
 
     try:
-        h: HashObject = new("sha256", "wave_psp_e1")
+        h: HashObject = new("sha256", "hashlib-sample")
         print("hashlib.sha256 len = " + str(len(h.hexdigest())))
     except ValueError as e:
         print("hashlib error: " + e.message)

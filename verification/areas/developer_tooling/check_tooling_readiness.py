@@ -21,15 +21,15 @@ PERF_DATA = PERF_ROOT / "data"
 PERF_MANIFEST = PERF_ROOT / "manifest.json"
 
 REQUIRED_TOOLING_CHECKS = [
-    "check_tooling_contract_lock.py",
+    "check_tooling_rules_lock.py",
     "check_tooling_dependency_boundaries.py",
     "check_lsp_split_brain.py",
     "check_linter_diagnostic_class.py",
-    "check_vscode_extension_contract.py",
+    "check_vscode_extension_rules.py",
     "check_vscode_extension.py",
-    "check_formatter_contract.py",
-    "check_rule_suppression_contract.py",
-    "check_analysis_snapshot_contract.py",
+    "check_formatter_rules.py",
+    "check_rule_suppression_rules.py",
+    "check_analysis_snapshot_rules.py",
     "check_analysis_snapshot_coherence.py",
     "check_analysis_split_brain.py",
     "run_tooling_parity.py",
@@ -48,11 +48,11 @@ REQUIRED_PERFORMANCE_CHECKS = [
 def load_json(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise CloseoutError(f"expected JSON object at {path.relative_to(REPO_ROOT)}")
+        raise ReadinessError(f"expected JSON object at {path.relative_to(REPO_ROOT)}")
     return payload
 
 
-class CloseoutError(Exception):
+class ReadinessError(Exception):
     pass
 
 
@@ -60,7 +60,7 @@ def validate_profile_runner_wiring(runner_text: str) -> list[str]:
     failures: list[str] = []
     for suite_name in [
         "typescript-go-transfer",
-        "diagnostic-contracts",
+        "diagnostic-rules",
     ]:
         if suite_name not in runner_text:
             failures.append(f"developer_tooling suite {suite_name} is not wired into profile_runner.py")
@@ -102,7 +102,7 @@ def validate_required_files() -> list[str]:
             failures.append(f"required performance check missing: {path.relative_to(REPO_ROOT)}")
     for path in [TOOLING_VERIFICATION_DOC, REUSE_DOC]:
         if not path.is_file():
-            failures.append(f"required tooling contract doc missing: {path.relative_to(REPO_ROOT)}")
+            failures.append(f"required tooling rules doc missing: {path.relative_to(REPO_ROOT)}")
     return failures
 
 

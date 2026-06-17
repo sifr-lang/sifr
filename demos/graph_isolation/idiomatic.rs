@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m23_5 graph and isolation regression matrix demo:");
+    println!("graph_isolation graph and isolation regression matrix demo:");
     println!("{}", helper::value());
 }

@@ -1,6 +1,5 @@
-# Reference: m25_1
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_1 negative case
+# Reference: early_return_paths
+# early_return_paths negative case
 # Reachable non-exiting branch must still fail narrowing-sensitive return checks.
 
 def pick_value(maybe: int | None) -> int:

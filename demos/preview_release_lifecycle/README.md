@@ -1,6 +1,6 @@
 # Preview Release Lifecycle Demo
 
-This demo captures the local Phase 33.3 release lifecycle using the same planner as production and `--mutation-mode local` to avoid publishing GitHub assets.
+This demo captures the local .3 release lifecycle using the same planner as production and `--mutation-mode local` to avoid publishing GitHub assets.
 
 ## Dry Run
 

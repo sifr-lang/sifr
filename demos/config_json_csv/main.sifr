@@ -1,5 +1,5 @@
-# Reference: ad_hoc_struct_wave1
-# Source issue: ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md
+# Reference: struct_config_json_csv
+# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.json import JSONEncoder, JSONDecoder, JsonValue, from_int, from_object, from_str
 from sifr.configparser import ConfigParser, ParsingError
 from sifr.csv import Dialect, DialectRegistry, dialect_registry, reader
@@ -9,9 +9,9 @@ def main() -> None:
     encoder: JSONEncoder = JSONEncoder(indent=2)
     decoder: JSONDecoder = JSONDecoder()
 
-    payload = from_object([("module", from_str("wave1")), ("version", from_int(1))])
+    payload = from_object([("module", from_str("config_json_csv")), ("version", from_int(1))])
     encoded: str = encoder.encode(payload)
-    assert encoded == "{\"module\":\"wave1\",\"version\":1}"
+    assert encoded == "{\"module\":\"config_json_csv\",\"version\":1}"
 
     decoded_ok: bool = False
     try:

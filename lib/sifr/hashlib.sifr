@@ -137,7 +137,7 @@ def file_digest(path: str, name: str) -> Result[str, HashlibError]:
         raise HashlibError(e.message)
 
 
-# SHA3/SHAKE constructor placeholders for wave-level dependency-audit gating.
+# SHA3/SHAKE constructor placeholders for dependency-audit gating.
 def sha3_256_obj(data: str = "") -> Result[HashObject, ValueError]:
     raise ValueError("sha3_256 is not yet supported")
 

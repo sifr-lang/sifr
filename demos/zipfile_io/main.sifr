@@ -1,5 +1,5 @@
-# Reference: ad_hoc_runtime_wave2
-# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
+# Reference: runtime_zipfile_io
+# Reference: runtime-and-file-object-parity-expansion
 from sifr.tempfile import NamedTemporaryFile
 from sifr.zipfile import ZipFile, ZipReadHandle, is_zipfile, ZIP_STORED
 from sifr.io import exists
@@ -7,11 +7,11 @@ from sifr.os import remove_file
 
 
 def main() -> None:
-    zip_path: str = "/tmp/sifr_runtime_wave2_demo.zip"
+    zip_path: str = "/tmp/sifr_runtime_zipfile_io.zip"
     demo_ok: bool = False
 
     try:
-        temp_file: NamedTemporaryFile = NamedTemporaryFile("wb", False, "sifr_runtime_wave2_demo_")
+        temp_file: NamedTemporaryFile = NamedTemporaryFile("wb", False, "sifr_runtime_zipfile_io_")
         tmp_path: str = temp_file.name()
         _close_tmp: None = temp_file.close()
         _cleanup_tmp: None = temp_file.cleanup()
@@ -22,7 +22,7 @@ def main() -> None:
 
         writer: ZipFile = ZipFile(zip_path + "", "w", ZIP_STORED)
         _create: None = writer.create()
-        _write_text: None = writer.write("note.txt", "runtime-wave2")
+        _write_text: None = writer.write("note.txt", "runtime-zipfile_io")
         _write_bytes: None = writer.write_bytes("bin/raw.bin", b"\x00\x01\x02")
 
         reader: ZipFile = ZipFile(zip_path + "", "r", ZIP_STORED)
@@ -60,4 +60,4 @@ def main() -> None:
         _ = e.message
 
     assert demo_ok
-    print("ad_hoc_runtime_wave2_tempfile_zipfile_lifecycle_demo: ok")
+    print("runtime_zipfile_io_zipfile_lifecycle_demo: ok")

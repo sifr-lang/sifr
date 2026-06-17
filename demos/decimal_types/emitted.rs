@@ -10,7 +10,7 @@ fn main() {
     let b_plus: BigDecimal = bigdecimal::Context::default().with_rounding_mode(bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| bigdecimal::Context::default().with_rounding_mode(bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(b.clone() + BigDecimal::from(4 as i64)));
     assert!((d_plus == Decimal::from_str_exact(("14.50".to_string()).as_str()).unwrap_or_else(|__e| unreachable!())));
     assert!((b_plus == ("7.25".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!())));
-    println!("m28_1 type-system/parser/HIR integration demo");
+    println!("decimal_types type-system/parser/HIR integration demo");
     println!("{}", format!("{}", d_plus));
     println!("{}", format!("{}", b_plus));
 }

@@ -1,7 +1,7 @@
-# Reference: milestone_decorators
-# Source issue: milestone-decorators-epic.md
+# Reference: decorators
+# Reference: decorators
 # =============================================================
-# Sifr Milestone: Decorators & Variadics Demo
+# Sifr Feature Demo: Decorators & Variadics Demo
 # =============================================================
 # Features demonstrated:
 # 1. User-defined decorators (pass-through with metadata)

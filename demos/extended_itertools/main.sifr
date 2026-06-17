@@ -1,5 +1,5 @@
-# Reference: ad_hoc_parity_ext_wave2
-# Source issue: ad-hoc-python-source-parity-extension-waiver-reduction-execution.md
+# Reference: parity_ext_extended_itertools
+# Reference: python-source-parity-extension-waiver-reduction
 from sifr.itertools import (
     accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, cycle,
     starmap, product, permutations, combinations, combinations_with_replacement
@@ -36,4 +36,4 @@ def main():
     assert str(list(combinations([1, 2, 3], 2))) == "[[1, 2], [1, 3], [2, 3]]"
     assert str(list(combinations_with_replacement([1, 2], 2))) == "[[1, 1], [1, 2], [2, 2]]"
 
-    print("ad_hoc_parity_ext_wave2_itertools_lazy_surface_demo: ok")
+    print("parity_ext_extended_itertools_lazy_surface_demo: ok")

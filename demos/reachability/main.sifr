@@ -1,6 +1,5 @@
-# Reference: m25_3
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_3 canonical flow truth queries demo
+# Reference: reachability
+# reachability canonical flow truth queries demo
 # Exercises CFG-backed always-exits and reachability truth in canonical query consumers.
 
 def classify(flag: bool) -> int:
@@ -13,6 +12,6 @@ def classify(flag: bool) -> int:
         return 77
 
 def main():
-    print('m25_3 canonical flow truth queries demo:')
+    print('reachability canonical flow truth queries demo:')
     print(classify(True))
     print(classify(False))

@@ -1141,7 +1141,7 @@ fn main() {
         let _: String = format!("{}", e.message);
     }
     assert!(range_ok);
-    let payload: String = "phase-rng-wave0".to_string();
+    let payload: String = "random_hashing_seed".to_string();
     let encoded: String = b64encode(&payload);
     let mut decode_ok: bool = false;
     let __sifr_try_res: Result<(), ParseError> = (|| {
@@ -1157,5 +1157,5 @@ fn main() {
     let mut h: HashObject = sha256_obj(&payload);
     let digest: String = h.hexdigest();
     assert!((digest.len() as i64) == (64 as i64));
-    println!("ad_hoc_rng_wave0_architecture_lock_demo: pass");
+    println!("rng_random_hashing_lock_demo: pass");
 }

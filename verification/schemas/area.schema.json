@@ -80,7 +80,7 @@
         }
       }
     },
-    "baseline_metadata_contract": {
+    "baseline_metadata_rules": {
       "type": "object",
       "required": ["required", "source"],
       "additionalProperties": false,

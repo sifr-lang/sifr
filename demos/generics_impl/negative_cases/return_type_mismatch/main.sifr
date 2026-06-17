@@ -1,5 +1,5 @@
-# Reference: milestone_generics_impl
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: generics_impl
+# Reference: compiler-feature-history
 # negative path: safe indexing returns T | None, so a generic helper that
 # promises T must fail type checking.
 

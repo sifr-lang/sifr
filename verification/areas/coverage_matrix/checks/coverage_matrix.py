@@ -1,4 +1,4 @@
-"""Validate the coverage matrix introduced for gate closure."""
+"""Validate the coverage matrix that backs local readiness gates."""
 
 from __future__ import annotations
 
@@ -17,8 +17,8 @@ AREA_ROOT = REPO_ROOT / "verification" / "areas" / "coverage_matrix"
 OWNERS_PATH = REPO_ROOT / "verification" / "owners.json"
 GUARANTEES_PATH = AREA_ROOT / "shipped_guarantees.json"
 SURFACES_PATH = AREA_ROOT / "compiler_surface_matrix.json"
-CLI_CONTRACTS_PATH = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "data" / "cli_exit_code_contracts.json"
-WORKSPACE_CONTRACTS_PATH = REPO_ROOT / "verification" / "areas" / "project_workspace" / "data" / "workspace_contracts.json"
+CLI_RULES_PATH = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "data" / "cli_exit_code_rules.json"
+WORKSPACE_SUITES_PATH = REPO_ROOT / "verification" / "areas" / "project_workspace" / "data" / "workspace_validation_suites.json"
 CARGO_CLASSIFICATION_PATH = AREA_ROOT / "data" / "cargo_metadata_classification.json"
 PROFILES_DIR = REPO_ROOT / "verification" / "profiles"
 AREAS_DIR = REPO_ROOT / "verification" / "areas"
@@ -56,7 +56,7 @@ VALID_PROFILE_ASSIGNMENTS = {
     "unsupported",
 }
 TEMPORARY_STATUSES = {"expected-missing", "tests:none", "red-blocker", "quarantined"}
-NON_CLOSEOUT_STATUSES = {"expected-missing", "tests:none", "red-blocker"}
+NON_READINESS_STATUSES = {"expected-missing", "tests:none", "red-blocker"}
 ALLOWED_RESOLUTION_GATES = {str(value) for value in range(1, 10)}
 ALLOWED_SLICES_BY_GATE = {
     "2": {"final"},
@@ -77,11 +77,11 @@ def main() -> int:
     validate_guarantees(guarantees, surfaces, owners, errors)
     validate_surfaces(surfaces, guarantees, owners, strict, errors)
     validate_owner_registry_covers_area_manifests(owners, errors)
-    validate_contract_inventory(CLI_CONTRACTS_PATH, "contracts", "profile_surface", errors)
-    validate_contract_inventory(WORKSPACE_CONTRACTS_PATH, "contracts", "profile_surface", errors)
+    validate_rules_inventory(CLI_RULES_PATH, "rules", "profile_surface", errors)
+    validate_rules_inventory(WORKSPACE_SUITES_PATH, "suites", "profile_surface", errors)
     validate_profile_policy(errors)
     validate_cargo_metadata_classification(errors)
-    validate_closeout_area_manifest_policy(surfaces, strict, errors)
+    validate_readiness_area_manifest_policy(surfaces, strict, errors)
 
     if errors:
         for error in errors:
@@ -216,8 +216,8 @@ def validate_surfaces(
         status = require_string(row, "status", location, errors)
         if status and status not in VALID_MATRIX_STATUSES:
             errors.append(f"{location}: invalid status {status}")
-        if strict and status in NON_CLOSEOUT_STATUSES:
-            errors.append(f"{location}: status {status} is illegal in strict closeout mode")
+        if strict and status in NON_READINESS_STATUSES:
+            errors.append(f"{location}: status {status} is illegal in strict readiness mode")
         if guarantee_status.get(guarantee_id) == "stable" and status == "broad-only":
             errors.append(f"{location}: stable guarantees may not be broad-only")
         for key in ("merge_suite", "nightly_release_suite", "regression_suite", "reproduction_command"):
@@ -272,23 +272,23 @@ def validate_owner_registry_covers_area_manifests(owners: set[str], errors: list
         validate_owner(payload.get("owner"), owners, f"{repo_path(manifest)}.owner", errors)
 
 
-def validate_contract_inventory(path: Path, array_key: str, surface_key: str, errors: list[str]) -> None:
+def validate_rules_inventory(path: Path, array_key: str, surface_key: str, errors: list[str]) -> None:
     payload = load_json_object(path, errors)
-    contracts = payload.get(array_key)
-    if not isinstance(contracts, list) or not contracts:
+    rules = payload.get(array_key)
+    if not isinstance(rules, list) or not rules:
         errors.append(f"{repo_path(path)} must define a non-empty {array_key} array")
         return
     seen: set[str] = set()
-    for index, contract in enumerate(contracts):
-        if not isinstance(contract, dict):
+    for index, rule in enumerate(rules):
+        if not isinstance(rule, dict):
             errors.append(f"{repo_path(path)} {array_key}[{index}] must be an object")
             continue
-        contract_id = require_string(contract, "id", f"{repo_path(path)}[{index}]", errors)
-        if contract_id:
-            if contract_id in seen:
-                errors.append(f"{repo_path(path)} duplicate contract id: {contract_id}")
-            seen.add(contract_id)
-        require_string(contract, surface_key, str(contract_id), errors)
+        rule_id = require_string(rule, "id", f"{repo_path(path)}[{index}]", errors)
+        if rule_id:
+            if rule_id in seen:
+                errors.append(f"{repo_path(path)} duplicate rule id: {rule_id}")
+            seen.add(rule_id)
+        require_string(rule, surface_key, str(rule_id), errors)
 
 
 def validate_profile_policy(errors: list[str]) -> None:
@@ -313,10 +313,10 @@ def validate_profile_policy(errors: list[str]) -> None:
         profile = profiles.get(profile_name)
         if profile is None:
             continue
-        validate_profile_closeout_contract(profile_name, profile, errors)
+        validate_profile_readiness_policy(profile_name, profile, errors)
 
 
-def validate_profile_closeout_contract(
+def validate_profile_readiness_policy(
     profile_name: str,
     profile: dict[str, Any],
     errors: list[str],
@@ -337,16 +337,16 @@ def validate_profile_closeout_contract(
     if not any(
         isinstance(item, dict)
         and item.get("area") == "coverage_matrix"
-        and "closeout" in item.get("suites", [])
+        and "readiness" in item.get("suites", [])
         for item in selected
     ):
-        errors.append(f"{profile_name}: coverage_matrix closeout suite must be selected")
+        errors.append(f"{profile_name}: coverage_matrix readiness suite must be selected")
     profile_plan = profile.get("profile_plan")
     if not isinstance(profile_plan, dict) or not profile_plan.get("emit_command"):
         errors.append(f"{profile_name}: missing profile plan emission command")
 
 
-def validate_closeout_area_manifest_policy(surfaces: Any, strict: bool, errors: list[str]) -> None:
+def validate_readiness_area_manifest_policy(surfaces: Any, strict: bool, errors: list[str]) -> None:
     if not strict or not isinstance(surfaces, list):
         return
     required_areas = matrix_referenced_areas(surfaces)
@@ -361,7 +361,7 @@ def validate_closeout_area_manifest_policy(surfaces: Any, strict: bool, errors: 
             errors.append(f"{repo_path(manifest)}: stable-surface area manifest must declare network_mode=offline")
         pinned = payload.get("pinned_corpus")
         if not isinstance(pinned, dict):
-            errors.append(f"{repo_path(manifest)}: missing pinned_corpus closeout policy")
+            errors.append(f"{repo_path(manifest)}: missing pinned_corpus readiness policy")
             continue
         if not isinstance(pinned.get("required"), bool):
             errors.append(f"{repo_path(manifest)}: pinned_corpus.required must be boolean")

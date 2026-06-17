@@ -1,5 +1,4 @@
-# Reference: cfg_flow_contract
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
+# Reference: cfg_flow_behavior
 # cfg flow negative case
 # Reachable type mismatch must fail with stable diagnostics across modes.
 

@@ -1,8 +1,7 @@
-# Reference: m29_3
-# Source issue: phase29-verification-hardening-execution.md
-# m29_3 demo: fuzz and property operationalization contracts.
+# Reference: property_and_fuzzing
+# property_and_fuzzing demo: fuzz and property operationalization rules.
 
 def main():
-    print("m29_3 fuzz and property operationalization demo")
+    print("property_and_fuzzing fuzz and property operationalization demo")
     print("property suite enforces deterministic repeated compiler outcomes")
     print("fuzz-smoke suite runs deterministic seeded mutations with panic-signal checks")

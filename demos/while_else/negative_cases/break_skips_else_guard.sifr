@@ -1,5 +1,4 @@
-# Reference: m21_2
-# Source issue: phase21-traversal-completeness-and-control-flow-correctness-execution.md
+# Reference: while_else
 # negative guard: else branch must not execute after break
 
 def main():

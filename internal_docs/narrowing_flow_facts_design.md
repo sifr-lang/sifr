@@ -1,7 +1,6 @@
 # Narrowing Flow Facts And Invalidation
 
-Status: accepted for WS1 D0
-Phase: `plans/issues/archive/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
+Status: accepted for divergence readiness record 2026-04-24
 
 ## Goal
 
@@ -54,7 +53,7 @@ The checker must clear dependent facts when any dependency changes:
 
 Monotonic collection mutations such as `append` may preserve existing index bounds only when the implementation can prove they do not invalidate the specific fact. Until then, invalidation may be conservative.
 
-## Diagnostics Contract
+## Diagnostics Rules
 
 When a proof cannot be maintained, the resulting type error should explain the missing proof instead of implying implicit unwrapping:
 
@@ -62,7 +61,7 @@ When a proof cannot be maintained, the resulting type error should explain the m
 - Sequence index access: "index access returns `T | None`; prove the index is in bounds after the last mutation/rebinding."
 - Dict lookup access: "dict lookup returns `V | None`; prove the key exists after the last dict mutation/rebinding."
 
-If the checker has tracked an invalidating operation, diagnostics should include the invalidator category and target, for example "previous index proof for `values[i]` was invalidated by rebinding `values`". The first implementation may use existing type mismatch diagnostics while preserving safety; richer invalidator spans are a follow-up requirement for WS1 diagnostics work.
+If the checker has tracked an invalidating operation, diagnostics should include the invalidator category and target, for example "previous index proof for `values[i]` was invalidated by rebinding `values`". The first implementation may use existing type mismatch diagnostics while preserving safety; richer invalidator spans are a deferred requirement for WS1 diagnostics work.
 
 ## Initial Guardrail
 
@@ -73,4 +72,3 @@ WS1 D0 introduces the shared invalidation primitive for existing facts:
 - facts for a collection path are cleared after collection methods that may remove entries.
 
 This closes known unsound D0 holes before adding broader N1/I1/I2/N2-N4 narrowing rules.
-

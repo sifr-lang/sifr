@@ -14,7 +14,7 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-CONTRACT_PATH = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "vscode_extension_contract.json"
+RULES_PATH = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "vscode_extension_rules.json"
 
 REQUIRED_SCRIPTS = ["lint", "typecheck", "test", "test:extension", "package"]
 REQUIRED_COMMANDS = {
@@ -47,8 +47,8 @@ def read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def extension_repo_path(contract: dict[str, Any]) -> Path | None:
-    repo = contract["repository"]
+def extension_repo_path(rules: dict[str, Any]) -> Path | None:
+    repo = rules["repository"]
     if env_value := os.environ.get(repo["location_env"]):
         return Path(env_value)
     submodule = (REPO_ROOT / repo["submodule_checkout"]).resolve()
@@ -117,8 +117,8 @@ def run_command(repo_path: Path, command: list[str]) -> str | None:
 
 
 def validate(require_commands: bool = True) -> list[str]:
-    contract = read_json(CONTRACT_PATH)
-    repo_path = extension_repo_path(contract)
+    rules = read_json(RULES_PATH)
+    repo_path = extension_repo_path(rules)
     if repo_path is None:
         return [
             "VS Code extension repo missing; run scripts/clone_subrepos.sh, set SIFR_VSCODE_REPO, "

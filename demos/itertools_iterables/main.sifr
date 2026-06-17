@@ -1,5 +1,5 @@
-# Reference: ad_hoc_iter_fix_wave6
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
+# Reference: iter_fix_itertools_iterables
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
 from sifr.itertools import islice, accumulate, compress, takewhile
 from sifr.pathlib import Path
 from sifr.io import write_text
@@ -17,7 +17,7 @@ def main():
     print(list(compress(iter(nums), iter([True, False, True, False]))))
     print(list(takewhile(lt3, iter(nums))))
 
-    base: str = "/tmp/sifr_wave_psp_iter_fix_6_demo_" + str(getpid())
+    base: str = "/tmp/sifr_itertools_iterables" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base)
         _w: None = write_text(base + "/a.txt", "demo")

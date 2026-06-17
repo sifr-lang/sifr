@@ -7,7 +7,7 @@ fn cleanup(path: &Path) -> bool {
 }
 
 fn main() {
-    let path = Path::new("/tmp/sifr_runtime_wave0_stream_demo.txt");
+    let path = Path::new("/tmp/sifr_runtime_file_streams_demo.txt");
 
     let mut text_ok = false;
     let mut binary_ok = false;
@@ -33,5 +33,5 @@ fn main() {
     assert!(text_ok);
     assert!(binary_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave0_stream_hierarchy_contract_demo: ok");
+    println!("runtime_file_streams_hierarchy_demo: ok");
 }

@@ -1,5 +1,5 @@
-# Reference: ad_hoc_parity_ext_wave3
-# Source issue: ad-hoc-python-source-parity-extension-waiver-reduction-execution.md
+# Reference: parity_ext_regex_and_filesystem
+# Reference: python-source-parity-extension-waiver-reduction
 from sifr.re import finditer, compile, Match
 from sifr.glob import iglob
 from sifr.pathlib import Path
@@ -28,7 +28,7 @@ def main():
         _ = str(e.message)
         assert False
 
-    base: str = "/tmp/sifr_phase_psp_ext_3_demo_" + str(getpid())
+    base: str = "/tmp/sifr_regex_filesystem_demo_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")
         _w1: None = write_text(base + "/a.txt", "a")
@@ -54,4 +54,4 @@ def main():
     except IOError as e:
         _ = str(e.message)
 
-    print("ad_hoc_parity_ext_wave3_regex_filesystem_iterators_demo: ok")
+    print("parity_ext_regex_and_filesystem_filesystem_iterators_demo: ok")

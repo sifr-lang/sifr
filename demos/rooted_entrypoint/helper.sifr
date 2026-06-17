@@ -1,7 +1,6 @@
-# Reference: m_adhoc_1
-# Source issue: ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md
-from shared import phase_label
+# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
+from shared import label
 
 
 def render() -> str:
-    return phase_label()
+    return label()

@@ -201,5 +201,5 @@ fn main() {
         "[[1, 1], [1, 2], [2, 2]]"
     );
 
-    println!("ad_hoc_parity_ext_wave2_itertools_lazy_surface_demo: ok");
+    println!("parity_ext_extended_itertools_lazy_surface_demo: ok");
 }

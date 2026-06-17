@@ -93,7 +93,7 @@ Validation:
 - `cargo clippy -p sifr -- -D warnings` -> PASS.
 - `cargo run -q -p sifr -- check demos/mode_consistency/main.sifr` -> PASS.
 - `cargo test -p sifr --test validation_contracts test_validation_contract_matrix -- --ignored --exact` -> PASS.
-- `python3 verification/tooling/check_formatter_contract.py` -> PASS.
+- `python3 verification/tooling/check_formatter_rules.py` -> PASS.
 - `python3 scripts/check_package_manager_guardrails.py` -> PASS.
 - `python3 scripts/check_diagnostic_docs_sync.py` -> PASS.
 - `python3 scripts/check_diagnostic_code_coverage.py` -> PASS.

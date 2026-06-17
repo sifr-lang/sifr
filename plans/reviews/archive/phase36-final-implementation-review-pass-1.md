@@ -47,9 +47,9 @@ None.
 | `check_analysis_snapshot_coherence.py` wired | Passes; thin-wrapper preserves contract name | **PASS** |
 | `lsp_protocol_smoke.py` / `lsp_protocol_stress.py` wired | Pass with negative self-tests | **PASS** |
 | `check_lsp_split_brain.py` / `check_tooling_dependency_boundaries.py` wired | Pass with negative self-tests | **PASS** |
-| `check_formatter_contract.py` wired | Pass with negative self-test | **PASS** |
-| `check_rule_suppression_contract.py` wired | Pass with negative self-test | **PASS** |
-| `check_editor_assets.py`, `check_vscode_extension_contract.py`, `check_vscode_extension.py` wired | All pass | **PASS** |
+| `check_formatter_rules.py` wired | Pass with negative self-test | **PASS** |
+| `check_rule_suppression_rules.py` wired | Pass with negative self-test | **PASS** |
+| `check_editor_assets.py`, `check_vscode_extension_rules.py`, `check_vscode_extension.py` wired | All pass | **PASS** |
 | Completion quality fixtures pass thresholds | 100% pass rate on `m36_4_completion_quality.json`; negative seed fails | **PASS** |
 | `scripts/run_all_tests.sh --profile quick` passes | Report: `quick.latest.json`, `wall_time=1201.85s`, cache hits=12/12 | **PASS** |
 | `scripts/run_all_tests.sh --profile pr` passes | Report: `pr.latest.json`, `wall_time=2645.85s`, hardening variants=28, failures=0 | **PASS** |

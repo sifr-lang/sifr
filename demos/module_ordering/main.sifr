@@ -1,7 +1,6 @@
-# Reference: m19_1
-# Source issue: phase19-module-graph-safety-determinism-cache-execution.md
+# Reference: module_ordering
 from consumer import value
 
 def main():
-    print("m19_1 dependency-safe module ordering demo:")
+    print("module_ordering dependency-safe module ordering demo:")
     print(value())

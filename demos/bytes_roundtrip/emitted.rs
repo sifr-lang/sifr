@@ -223,21 +223,21 @@ impl std::error::Error for RegexError {
 }
 
 fn main() {
-    let contract_payload: Vec<u8> = {
-    let __s = "binary-contract".to_string();
+    let payload: Vec<u8> = {
+    let __s = "binary-sample".to_string();
     __s.as_bytes().to_vec()
 };
-    assert!(starts_with(&contract_payload, &({
+    assert!(starts_with(&payload, &({
     let __s = "binary".to_string();
     __s.as_bytes().to_vec()
 })));
-    assert!(ends_with(&contract_payload, &({
-    let __s = "contract".to_string();
+    assert!(ends_with(&payload, &({
+    let __s = "sample".to_string();
     __s.as_bytes().to_vec()
 })));
     let mut conversion_ok: bool = false;
     let __sifr_try_res: Result<(), ParseError> = (|| {
-    let as_hex: String = Ok(contract_payload.iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join(""))?;
+    let as_hex: String = Ok(payload.iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join(""))?;
     let restored: Vec<u8> = ({
     let s: String = as_hex.to_string();
     let mut cleaned = String::new();
@@ -261,7 +261,7 @@ fn main() {
     Ok(result)
 })?;
     let text: String = String::from_utf8(restored.iter().copied().collect::<Vec<u8>>()).map_err(|e| ParseError { message: e.to_string() })?;
-    conversion_ok = text == "binary-contract".to_string();
+    conversion_ok = text == "binary-sample".to_string();
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {

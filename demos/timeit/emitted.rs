@@ -267,5 +267,5 @@ fn main() {
     append_all(&mut actual, &collect_repeat_actual());
     append_all(&mut actual, &collect_edge_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1f timeit parity demo: pass");
+    println!("timeit timeit parity demo: pass");
 }

@@ -5,7 +5,7 @@
 //!
 //! This fixture exists to preserve deterministic invalid-index diagnostics. The
 //! Rust-side analogue is still an index-type mismatch, but the exact user-facing
-//! contract belongs to Sifr's checker, so this file remains an explanatory
+//! rules belongs to Sifr's checker, so this file remains an explanatory
 //! scaffold instead of a synthetic Rust compile-fail.
 
 fn main() {}

@@ -1,5 +1,4 @@
-# Reference: m30_1d
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: collections
 from sifr.collections import Counter, from_list, deque, set_from_list, set_union, set_intersection, set_len
 from sifr.test import assert_bool_vector_eq
 
@@ -38,4 +37,4 @@ def main():
     append_all(actual, collect_deque_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1d collections parity demo: pass")
+    print("collections collections parity demo: pass")

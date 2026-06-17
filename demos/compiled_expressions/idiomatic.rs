@@ -9,7 +9,7 @@ fn floor(n: f64) -> i64 {
 fn main() {
     let total = add(10, 11);
     if total > 20 {
-        println!("m20_1 lower decomposition demo:");
+        println!("compiled_expressions lower decomposition demo:");
     }
     println!("{total}");
     println!("{}", floor(3.9));

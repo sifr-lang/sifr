@@ -22,5 +22,5 @@ fn main() {
 
     println!("{:?}", nums.iter().step_by(2).copied().collect::<Vec<_>>());
     println!("{}", nums.len());
-    println!("ad_hoc_clone_wave2_index_slice_unpack_demo: pass");
+    println!("clone_slice_unpacking_slice_unpack_demo: pass");
 }

@@ -1,6 +1,6 @@
 # stdlib_parity_rng_0 CPython Traceability Matrix
 
-Wave: `stdlib_parity_rng_0`
+Capability: `stdlib_parity_rng_0`
 Scope: architecture lock and governance freeze for stateful RNG, bytes-native crypto, and residual polish ownership
 
 ## CPython Harvest Inputs
@@ -12,9 +12,9 @@ Scope: architecture lock and governance freeze for stateful RNG, bytes-native cr
 - `Lib/test/test_textwrap.py`
 - `Lib/test/test_html.py`
 
-## Adopt / Adapt / Waive (Wave 0 Lock)
+## Adopt / Adapt / Waive (Capability 0 Lock)
 
-| CPython family | Sifr surface direction | State | Owning wave |
+| CPython family | Sifr surface direction | State | Owning capability |
 | --- | --- | --- | --- |
 | `test_random` deterministic object/state semantics (`seed`, `getstate`, `setstate`, `Random`, `SystemRandom`) | replace current stateless host-random wrappers with typed deterministic state model (`RandomState`) + module-global delegation | `adapted` (planned) | `stdlib_parity_rng_1` |
 | `test_random` bytes generation (`randbytes`) | ship bytes-native random byte generation on first-class raw-byte-backed `bytes` | `adapted` (planned) | `stdlib_parity_rng_1` |
@@ -25,14 +25,14 @@ Scope: architecture lock and governance freeze for stateful RNG, bytes-native cr
 | `test_textwrap` residual formatter options | close only explicit residual waived options if low risk | `adapted` (planned) | `stdlib_parity_rng_3` |
 | `test_html` residual top-level polish | keep package parser ecosystem out of scope; close only explicit residual top-level gaps | `adapted` (planned) | `stdlib_parity_rng_3` |
 
-## Explicit Waivers / Boundaries Locked in Wave 0
+## Explicit Waivers / Boundaries Locked in Capability 0
 
-- Full CPython buffer protocol, `memoryview`, and mutable `bytearray` ecosystem parity remain `unsupported` for this phase.
+- Full CPython buffer protocol, `memoryview`, and mutable `bytearray` ecosystem parity remain `unsupported` for this capability.
 - `SystemRandom` state export/import parity remains `unsupported`.
 - Decimal/Fraction/context-sensitive `statistics` semantics remain `unsupported`.
 - Package-wide `html.parser` ecosystem remains `unsupported`.
 
-## Local Fixture Anchors (Wave 0)
+## Local Fixture Anchors (Capability 0)
 
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/random_hashing_and_text.sifr`

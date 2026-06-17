@@ -718,5 +718,5 @@ fn main() {
     append_all(&mut actual, &collect_parse_actual());
     append_all(&mut actual, &collect_negative_and_class_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1f uuid parity demo: pass");
+    println!("uuid uuid parity demo: pass");
 }

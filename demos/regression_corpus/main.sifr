@@ -1,8 +1,7 @@
-# Reference: m29_2
-# Source issue: phase29-verification-hardening-execution.md
-# m29_2 demo: fixedbugs and crashes corpus contracts.
+# Reference: regression_corpus
+# regression_corpus demo: fixedbugs and crashes corpus rules.
 
 def main():
-    print("m29_2 fixedbugs and crashes corpus demo")
+    print("regression_corpus fixedbugs and crashes corpus demo")
     print("fixedbugs index links issue -> root cause -> executable regression")
     print("crashes index keeps unresolved sentinels visible until promotion")

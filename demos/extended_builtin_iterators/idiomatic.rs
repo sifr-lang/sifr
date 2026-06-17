@@ -33,7 +33,7 @@ fn main() {
     assert_eq!(format!("{:?}", mapped_it.collect::<Vec<_>>()), "[7, 9]");
 
     assert_eq!(
-        "ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok",
-        "ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok"
+        "parity_ext_extended_builtin_iterators_iterator_reclosure_demo: ok",
+        "parity_ext_extended_builtin_iterators_iterator_reclosure_demo: ok"
     );
 }

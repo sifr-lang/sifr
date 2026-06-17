@@ -1,6 +1,5 @@
-# Reference: phase31
-# Source issue: phase31-m31a-guarded-sequence-index-narrowing-execution.md
-# Phase 31 / m31_a slice 1 demo: guarded sequence indexes narrow to definite values
+# Reference: guarded_sequence_index
+# driver/package architecture / guarded_sequence_index behavior group 1 demo: guarded sequence indexes narrow to definite values
 
 def collect_vowels(text: str) -> str:
     result: str = ""

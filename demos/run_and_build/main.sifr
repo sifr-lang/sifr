@@ -1,7 +1,6 @@
-# Reference: m18_1
-# Source issue: phase18-project-and-cli-semantics-execution.md
+# Reference: run_and_build
 from helper import msg
 
 def main():
-    print("m18_1 run/build alignment demo:")
+    print("run_and_build run/build alignment demo:")
     print(msg())

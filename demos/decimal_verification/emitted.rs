@@ -1083,7 +1083,7 @@ fn __sifr_next_file_handle_id() -> i64 {
 }
 
 fn main() {
-    println!("m28_5 verification corpus and determinism gates demo");
+    println!("decimal_verification verification corpus and determinism gates demo");
     let d: Decimal = Decimal::from_str_exact(("-7.5".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
     let bd: BigDecimal = ("-7.5".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!());
     println!("{}", {

@@ -482,7 +482,7 @@ pub(super) fn test_frontend_error_messages_match_across_check_build_and_run_path
 }
 
 #[test]
-pub(super) fn test_diagnostic_exit_code_contract_user_vs_internal() {
+pub(super) fn test_diagnostic_exit_code_rules_user_vs_internal() {
     let user_error = diagnostic_with_code("type mismatch", DiagnosticCode::TYPE_MISMATCH);
     assert_eq!(diagnostic_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
 

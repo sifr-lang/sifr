@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_6_itertools_iterable_stdlib_closure
+# Reference: stdlib_parity_iter_fix_6_itertools_iterable_stdlib_readiness
 from sifr.itertools import islice, accumulate, compress, dropwhile, takewhile, filterfalse, pairwise, batched, cycle
 from sifr.pathlib import Path
 from sifr.io import write_text

@@ -17,8 +17,8 @@ Now I have completed a thorough review. Let me compile my findings.
 - `README.md`, `CHANGELOG.md`, `LICENSE`, `.vscodeignore`, `.gitignore`, `assets/icon.png`
 
 **Inspected main repo**:
-- `verification/tooling/vscode_extension_contract.json`
-- `verification/tooling/check_vscode_extension_contract.py`
+- `verification/tooling/vscode_extension_rules.json`
+- `verification/tooling/check_vscode_extension_rules.py`
 - `verification/tooling/check_vscode_extension.py`
 - `scripts/run_all_tests.sh` (lines 123–133)
 - `internal_docs/vscode_extension.md`
@@ -34,8 +34,8 @@ All stated validations confirmed passing:
 
 | Check | Result |
 |-------|--------|
-| `python3 verification/tooling/check_vscode_extension_contract.py --require-extension-repo` | PASS |
-| `python3 verification/tooling/check_vscode_extension_contract.py --self-test` | PASS |
+| `python3 verification/tooling/check_vscode_extension_rules.py --require-extension-repo` | PASS |
+| `python3 verification/tooling/check_vscode_extension_rules.py --self-test` | PASS |
 | `python3 verification/tooling/check_vscode_extension.py --metadata-only` | PASS |
 | `python3 verification/tooling/check_vscode_extension.py --self-test` | PASS |
 | Extension: `npm ci` | PASS, 0 vulnerabilities |
@@ -53,7 +53,7 @@ All stated validations confirmed passing:
 
 **2. LSP launcher** — `src/lsp.ts` and `src/config.ts` correctly default to command `sifr` and args `["lsp", "--stdio"]`. The `sifr.lsp.path` setting overrides `binaryPath`. No Python/Ruff/ty fallback paths exist anywhere. The launch error message is actionable. The contract's `default_command` and `default_args` are honored.
 
-**3. Forbidden extension behavior** — `scripts/lint.js` enforces a 9-term forbidden marker list. `check_vscode_extension_contract.py` and `check_vscode_extension.py` both enforce the same list. None of `pyright`, `pylsp`, `ruff server`, `ruffServer`, `tyServer`, `parseSifr`, `typeCheckSifr`, `formatSifrInExtension`, `lintSifrInExtension`, or `generateRustInExtension` appear anywhere in the authored source.
+**3. Forbidden extension behavior** — `scripts/lint.js` enforces a 9-term forbidden marker list. `check_vscode_extension_rules.py` and `check_vscode_extension.py` both enforce the same list. None of `pyright`, `pylsp`, `ruff server`, `ruffServer`, `tyServer`, `parseSifr`, `typeCheckSifr`, `formatSifrInExtension`, `lintSifrInExtension`, or `generateRustInExtension` appear anywhere in the authored source.
 
 **4. All 10 required commands** — Both `package.json` and `src/commands.ts` declare all 10 commands with correct Sifr backend routing:
 - `sifr.restartLanguageServer` → `lsp.restart()`
@@ -79,7 +79,7 @@ No command computes Sifr semantics in the extension. All delegate.
 
 **9. CI** — `.github/workflows/ci.yml` runs on `ubuntu-latest`, Node 22, and executes `npm ci`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:extension`, `npm run package` on push to `main` and on all PRs.
 
-**10. Validation wiring** — `scripts/run_all_tests.sh` runs both validators (`check_vscode_extension_contract.py` with `--self-test` and the package check with `--self-test`) under "Developer Tooling Checks" at lines 130–133. The extension repo is located via `SIFR_VSCODE_REPO` or sibling `../sifr-vscode` from the main repo root. When `--require-extension-repo` is used, it fails with an actionable message if the repo is absent.
+**10. Validation wiring** — `scripts/run_all_tests.sh` runs both validators (`check_vscode_extension_rules.py` with `--self-test` and the package check with `--self-test`) under "Developer Tooling Checks" at lines 130–133. The extension repo is located via `SIFR_VSCODE_REPO` or sibling `../sifr-vscode` from the main repo root. When `--require-extension-repo` is used, it fails with an actionable message if the repo is absent.
 
 **11. Versioning covenant** — `README.md` documents the version-independence policy during Phase 36, with a commitment to state a supported Sifr version range before marketplace publication. `package.json` version is `0.0.0`.
 

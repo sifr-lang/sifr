@@ -1,5 +1,4 @@
-# Reference: m22_3
-# Source issue: phase22-frontend-mode-parity-hardening-execution.md
+# Reference: diagnostic_exit_codes
 # negative path: equivalent frontend failure should render equivalently in check/build/run.
 
 from helper import doubled

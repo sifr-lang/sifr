@@ -1,5 +1,5 @@
-# Reference: wave_psp_d2
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: system-tools-sample
+# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.os import run_command, getcwd
 from sifr.env import getenv, setenv, unsetenv
 from sifr.sys import argv, version, platform
@@ -19,22 +19,22 @@ def workload():
 
 def main():
     try:
-        shell_out: str = run_command("echo wave_psp_d2")
+        shell_out: str = run_command("echo system-tools-sample")
         cwd: str = getcwd()
         print("os.run_command = " + shell_out)
         print("os.getcwd len > 0 = " + str(len(cwd) > 0))
     except IOError as e:
         print("os error: " + e.message)
 
-    setenv("SIFR_WAVE_D2_DEMO", "ok")
-    print("env getenv = " + getenv("SIFR_WAVE_D2_DEMO", "fallback"))
-    unsetenv("SIFR_WAVE_D2_DEMO")
+    setenv("SIFR_SYSTEM_TOOLS_DEMO", "ok")
+    print("env getenv = " + getenv("SIFR_SYSTEM_TOOLS_DEMO", "fallback"))
+    unsetenv("SIFR_SYSTEM_TOOLS_DEMO")
 
     print("sys.argv len = " + str(len(argv())))
     print("sys.version = " + version())
     print("sys.platform = " + platform())
 
-    logger: Logger = getLogger("wave_psp_d2_demo")
+    logger: Logger = getLogger("system-tools-sample_demo")
     logger.set_level(INFO)
     logger.info("logging demo line")
 

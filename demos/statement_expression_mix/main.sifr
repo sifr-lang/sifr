@@ -1,5 +1,5 @@
-# Reference: milestone_codegen_stmt_expr_ratio_gate
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: codegen_stmt_expr_ratio_gate
+# Reference: compiler-feature-history
 # Demo: stmt/expr structured-lowering ratio gate corpus
 # This mirrors the curated gate fixture used by the e2e ratio test.
 

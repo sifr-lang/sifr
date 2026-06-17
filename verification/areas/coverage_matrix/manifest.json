@@ -18,7 +18,7 @@
     "allowed": false,
     "requires_reason": true
   },
-  "baseline_metadata_contract": {
+  "baseline_metadata_rules": {
     "required": false,
     "source": "not-applicable"
   },
@@ -44,12 +44,12 @@
       ]
     },
     {
-      "name": "closeout",
+      "name": "readiness",
       "kind": "adapter",
       "cases": [
         {
-          "id": "coverage_matrix_closeout",
-          "entry": "verification/areas/coverage_matrix/checks/coverage_matrix_closeout.py",
+          "id": "coverage_matrix_readiness",
+          "entry": "verification/areas/coverage_matrix/checks/coverage_matrix_readiness.py",
           "command": "area-check",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -63,7 +63,7 @@
         },
         {
           "id": "coverage_matrix_negative_self_tests",
-          "entry": "verification/areas/coverage_matrix/checks/coverage_matrix_self_test.py",
+          "entry": "verification/areas/coverage_matrix/checks/coverage_matrix_readiness_self_test.py",
           "command": "area-check",
           "expect_exit_code": 0,
           "diagnostic_formats": []

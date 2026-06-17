@@ -1,5 +1,4 @@
-# Reference: phase31_m31j
-# Source issue: phase31-m31j-own-mut-closure-execution.md
+# Reference: own_mut_updatesj
 # `own mut` parameters can be consumed, updated in place, and returned safely.
 
 def increment_all(own mut values: list[int]) -> list[int]:

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "closeout-contract-pending-pr",
+  "status": "readiness-pending-pr",
   "source": "sifr_stdlib::generated_cargo_dependencies",
   "runtime_path_placeholder": "<sifr_runtime_path>",
   "snapshots": [

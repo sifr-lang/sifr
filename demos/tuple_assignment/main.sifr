@@ -1,5 +1,4 @@
-# Reference: phase31_m31b
-# Source issue: phase31-m31b-tuple-attribute-and-canonical-closure-execution.md
+# Reference: tuple_assignmentb
 # Tuple assignment should work for locals, attributes, and simple running state.
 
 class Pair:

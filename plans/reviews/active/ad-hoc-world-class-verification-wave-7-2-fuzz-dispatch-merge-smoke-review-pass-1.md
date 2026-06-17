@@ -6,9 +6,9 @@ I have enough to write a thorough review. Let me synthesize the findings.
 
 **B1. `diagnostic_renderer_entrypoint` and `package_project_manifest_entrypoint` execute identical commands; the harness has no per-target dispatch.**
 
-- `verification/areas/fuzz_property/fuzz_smoke_manifest.json:167-175` and `:198-206` both set `reproduction_command` to `["cargo", "run", "-q", "-p", "sifr_driver", "--bin", "diagnostic_contract_harness"]` with no positional args.
+- `verification/areas/fuzz_property/fuzz_smoke_manifest.json:167-175` and `:198-206` both set `reproduction_command` to `["cargo", "run", "-q", "-p", "sifr_driver", "--bin", "diagnostic_rendering_harness"]` with no positional args.
 - `verification/runner/sifr_verify/hardening/property_and_fuzz.py:484` calls `argv = list(target["reproduction_command"])` and never appends seed files or a target id.
-- `crates/sifr_driver/src/bin/diagnostic_contract_harness.rs:118-133` ignores `env::args` and runs a hard-coded sweep of `PARSER_FIXTURES`, `PROJECT_FIXTURES`, `CYCLE_FIXTURES`, and `PACKAGE_FIXTURES` on every invocation.
+- `crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs:118-133` ignores `env::args` and runs a hard-coded sweep of `PARSER_FIXTURES`, `PROJECT_FIXTURES`, `CYCLE_FIXTURES`, and `PACKAGE_FIXTURES` on every invocation.
 - Effect: the two targets are not differentiated at execution time. The same set of fixtures is exercised twice, and `seed_files` in the manifest are not consumed by the harness — they exist only as decoration the validator file-existence-checks. This is exactly the "metadata-only claim" the user asked to guard against (focus item 3) and undercuts the per-target dispatch the slice claims (focus items 1 and 2). Fix options: (a) make the harness accept a `--target` flag and split its hard-coded fixture lists by target id, or (b) route the package/project target through `sifr check` of the declared seed and reserve the harness for the renderer target only.
 
 **B2. Nightly and release will now double-execute `fuzz-smoke` and `property`.**
@@ -27,7 +27,7 @@ I have enough to write a thorough review. Let me synthesize the findings.
 
 **M1. `run_reproduction_command_target` invokes Cargo without `--locked`.**
 
-- `verification/runner/sifr_verify/hardening/property_and_fuzz.py:484-498` shells out the manifest's verbatim `reproduction_command` via `subprocess.run`. The manifest's command (`fuzz_smoke_manifest.json:168-175`, `:199-206`) is `["cargo", "run", "-q", "-p", "sifr_driver", "--bin", "diagnostic_contract_harness"]` — no `--locked`. CLAUDE.md/AGENTS.md mandate `--locked` for Cargo commands in create-pr/merge. Add `--locked` either to the manifest entry or unconditionally in the runner before exec.
+- `verification/runner/sifr_verify/hardening/property_and_fuzz.py:484-498` shells out the manifest's verbatim `reproduction_command` via `subprocess.run`. The manifest's command (`fuzz_smoke_manifest.json:168-175`, `:199-206`) is `["cargo", "run", "-q", "-p", "sifr_driver", "--bin", "diagnostic_rendering_harness"]` — no `--locked`. CLAUDE.md/AGENTS.md mandate `--locked` for Cargo commands in create-pr/merge. Add `--locked` either to the manifest entry or unconditionally in the runner before exec.
 
 **M2. Validation accepts targets whose `seed_files` are not actually consumed.**
 

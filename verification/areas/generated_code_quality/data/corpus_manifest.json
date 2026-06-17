@@ -1,107 +1,678 @@
 {
   "version": 1,
-  "description": "Phase 34 generated-code quality corpus. Entries are processed lexicographically by id.",
+  "description": "Generated-code quality corpus. Entries are processed lexicographically by id.",
   "entries": [
-    {"id": "demo-001-codegen-output", "group": "demos-required", "source_path": "demos/codegen_output/main.sifr", "expected_command": "build", "evidence_category": "demo-codegen"},
-    {"id": "demo-002-codegen-structural-passes", "group": "demos-required", "source_path": "demos/codegen_structural_passes/main.sifr", "expected_command": "build", "evidence_category": "demo-codegen"},
-    {"id": "demo-003-cargo-manifest", "group": "demos-required", "source_path": "demos/cargo_manifest/main.sifr", "expected_command": "build", "evidence_category": "demo-manifest"},
-    {"id": "demo-004-dependency-manifest", "group": "demos-required", "source_path": "demos/dependency_manifest/main.sifr", "expected_command": "build", "evidence_category": "demo-manifest"},
-    {"id": "demo-005-additional-modules", "group": "demos-required", "source_path": "demos/additional_modules/main.sifr", "expected_command": "build", "evidence_category": "demo-project"},
-    {"id": "demo-006-async-generator-comprehension", "group": "demos-required", "source_path": "demos/async_generator_comprehension_demo/main.sifr", "expected_command": "build", "evidence_category": "demo-async"},
-    {"id": "demo-007-text-i18n", "group": "demos-required", "source_path": "demos/text_i18n/main.sifr", "expected_command": "build", "evidence_category": "text-i18n"},
-    {"id": "demo-008-network-tcp-echo", "group": "demos-required", "source_path": "demos/network_tcp_echo/main.sifr", "expected_command": "build", "evidence_category": "network-http-tcp"},
-    {"id": "demo-009-network-tls-loopback", "group": "demos-required", "source_path": "demos/network_tls_loopback/main.sifr", "expected_command": "build", "evidence_category": "network-http-tls"},
-    {"id": "demo-010-network-http-substrate", "group": "demos-required", "source_path": "demos/network_http_substrate/main.sifr", "expected_command": "build", "evidence_category": "network-http-http-primitives"},
-
-    {"id": "e2e-001-async-for-stream-result", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/async_for_stream_result.sifr", "expected_command": "build", "evidence_category": "async-concurrency"},
-    {"id": "e2e-002-await-without-live-borrow", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/await_without_live_borrow.sifr", "expected_command": "build", "evidence_category": "ownership-borrowing"},
-    {"id": "e2e-003-bigint-arithmetic", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/bigint_arithmetic.sifr", "expected_command": "build", "evidence_category": "decimal-integer"},
-    {"id": "e2e-004-break-continue", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/break_continue.sifr", "expected_command": "build", "evidence_category": "control-flow"},
-    {"id": "e2e-005-builtin-any-all", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/builtin_any_all.sifr", "expected_command": "build", "evidence_category": "builtins"},
-    {"id": "e2e-006-builtin-enumerate-zip", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/builtin_enumerate_zip.sifr", "expected_command": "build", "evidence_category": "collections"},
-    {"id": "e2e-007-bytes-constructors", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/bytes_constructors.sifr", "expected_command": "build", "evidence_category": "bytes"},
-    {"id": "e2e-008-cancellation-cleanup-runs", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cancellation_cleanup_runs.sifr", "expected_command": "build", "evidence_category": "async-concurrency"},
-    {"id": "e2e-009-channel-cancel-receive-no-loss", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/channel_cancel_receive_no_loss.sifr", "expected_command": "build", "evidence_category": "async-concurrency"},
-    {"id": "e2e-010-class-methods", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/class_methods.sifr", "expected_command": "build", "evidence_category": "classes"},
-    {"id": "e2e-011-collection-len", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/collection_len.sifr", "expected_command": "build", "evidence_category": "collections"},
-    {"id": "e2e-012-comp-set", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/comp_set.sifr", "expected_command": "build", "evidence_category": "collections"},
-    {"id": "e2e-013-cpython-calendar-subset", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-014-cpython-collections", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_collections.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-015-cpython-datetime-subset", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-016-cpython-gzip-subset", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_gzip_subset.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-017-cpython-itertools", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_itertools.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-018-cpython-math-semantic-corrections", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-019-cpython-os-subset", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_os_subset.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-020-cpython-pathlib", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_pathlib.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-021-cpython-re", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_re.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-022-cpython-textwrap-textwrapper", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_textwrap_textwrapper_subset.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-023-cpython-zipfile-subset", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr", "expected_command": "build", "evidence_category": "stdlib"},
-    {"id": "e2e-024-decimal-conversions", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/decimal_conversions.sifr", "expected_command": "build", "evidence_category": "decimal-integer"},
-    {"id": "e2e-025-dict-get-option", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/dict_get_option.sifr", "expected_command": "build", "evidence_category": "collections"},
-    {"id": "e2e-026-dict-lookup-methods-registry", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/dict_lookup_methods_registry.sifr", "expected_command": "build", "evidence_category": "collections"},
-    {"id": "e2e-027-error-mixed-builtin-stdlib", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/error_mixed_builtin_stdlib.sifr", "expected_command": "build", "evidence_category": "result-option"},
-    {"id": "e2e-028-fixed-width-scalar-arithmetic", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/fixed_width_scalar_arithmetic_promotion.sifr", "expected_command": "build", "evidence_category": "decimal-integer"},
-    {"id": "e2e-029-forward-ref-basic", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/forward_ref_basic.sifr", "expected_command": "build", "evidence_category": "classes"},
-    {"id": "e2e-030-generator-basic", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/generator_basic.sifr", "expected_command": "build", "evidence_category": "generators"},
-    {"id": "e2e-031-generator-expr", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/generator_expr.sifr", "expected_command": "build", "evidence_category": "generators"},
-    {"id": "e2e-032-generic-class-field-access", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/generic_class_field_access.sifr", "expected_command": "build", "evidence_category": "generics"},
-    {"id": "e2e-033-generic-identity", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/generic_identity.sifr", "expected_command": "build", "evidence_category": "generics"},
-    {"id": "e2e-034-guarded-index-narrowing", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/guarded_index_narrowing.sifr", "expected_command": "build", "evidence_category": "diagnostics-adjacent"},
-    {"id": "e2e-035-indexing-and-unpacking-cloning", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/indexing_and_unpacking_cloning.sifr", "expected_command": "build", "evidence_category": "ownership-borrowing"},
-    {"id": "e2e-036-isinstance-narrowing", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/isinstance_narrowing.sifr", "expected_command": "build", "evidence_category": "diagnostics-adjacent"},
-    {"id": "e2e-037-list-core-methods-registry", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/list_core_methods_registry.sifr", "expected_command": "build", "evidence_category": "collections"},
-    {"id": "e2e-038-list-methods-concrete", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/list_methods_concrete.sifr", "expected_command": "build", "evidence_category": "collections"},
-    {"id": "e2e-039-match-guard", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/match_guard.sifr", "expected_command": "build", "evidence_category": "control-flow"},
-    {"id": "e2e-040-mut-param", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/mut_param.sifr", "expected_command": "build", "evidence_category": "ownership-borrowing"},
-    {"id": "e2e-041-narrowing-and-compound", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/narrowing_and_compound.sifr", "expected_command": "build", "evidence_category": "diagnostics-adjacent"},
-    {"id": "e2e-042-nested-function-dfs", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/nested_function_dfs.sifr", "expected_command": "build", "evidence_category": "functions"},
-    {"id": "e2e-043-open-write", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/open_write.sifr", "expected_command": "build", "evidence_category": "stdlib-io"},
-    {"id": "e2e-044-optional-arithmetic-narrowing", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/optional_arithmetic_narrowing_complex_flow.sifr", "expected_command": "build", "evidence_category": "result-option"},
-    {"id": "e2e-045-pep695-generic-class", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/pep695_generic_class.sifr", "expected_command": "build", "evidence_category": "generics"},
-    {"id": "e2e-046-pep695-generic-function", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/pep695_generic_function.sifr", "expected_command": "build", "evidence_category": "generics"},
-    {"id": "e2e-047-protocol-dispatch", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/protocol_dispatch.sifr", "expected_command": "build", "evidence_category": "classes"},
-    {"id": "e2e-048-recursive-linked-node", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/recursive_linked_node.sifr", "expected_command": "build", "evidence_category": "classes"},
-    {"id": "e2e-049-runtime-file-basics", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/runtime_file_basics.sifr", "expected_command": "build", "evidence_category": "stdlib-io"},
-    {"id": "e2e-050-scope-spawn-join", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/scope_spawn_join.sifr", "expected_command": "build", "evidence_category": "async-concurrency"},
-    {"id": "e2e-051-text-i18n-encoding-io", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr", "expected_command": "build", "evidence_category": "text-i18n-encoding"},
-    {"id": "e2e-052-text-i18n-unicode-core", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_unicode_core.sifr", "expected_command": "build", "evidence_category": "text-i18n-unicode"},
-    {"id": "e2e-053-text-i18n-unicode-segmentation", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_unicode_segmentation.sifr", "expected_command": "build", "evidence_category": "text-i18n-segmentation"},
-    {"id": "e2e-054-text-i18n-locale-formatting", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr", "expected_command": "build", "evidence_category": "text-i18n-locale"},
-    {"id": "e2e-055-text-i18n-translation-bundles", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/text_i18n_translation_bundles.sifr", "expected_command": "build", "evidence_category": "text-i18n-translation"},
-    {"id": "e2e-056-network-http-m1-tcp-loopback", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/network_http_tcp_loopback_split.sifr", "expected_command": "build", "evidence_category": "network-http-tcp"},
-    {"id": "e2e-057-network-http-m2-tls-loopback", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/network_http_tls_loopback_split.sifr", "expected_command": "build", "evidence_category": "network-http-tls"},
-    {"id": "e2e-058-network-http-m3-url-query", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/network_http_url_query_percent.sifr", "expected_command": "build", "evidence_category": "network-http-url"},
-    {"id": "e2e-059-network-http-m3-header-cookie", "group": "e2e-pass-representative", "source_path": "crates/sifr/tests/e2e/pass/network_http_header_cookie.sifr", "expected_command": "build", "evidence_category": "network-http-http-primitives"},
-
-    {"id": "m7-001-async-subprocess-pipeline-demo", "group": "concurrency-runtime-m7", "source_path": "demos/async_subprocess_pipeline_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-process"},
-    {"id": "m7-002-blocking-offload-demo", "group": "concurrency-runtime-m7", "source_path": "demos/blocking_offload_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-offload"},
-    {"id": "m7-003-cancellation-cleanup-demo", "group": "concurrency-runtime-m7", "source_path": "demos/cancellation_cleanup_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-cleanup"},
-    {"id": "m7-004-parallel-map-demo", "group": "concurrency-runtime-m7", "source_path": "demos/parallel_map_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-parallel"},
-    {"id": "m7-005-structured-concurrency-demo", "group": "concurrency-runtime-m7", "source_path": "demos/structured_concurrency_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-task"},
-    {"id": "m7-006-structured-shutdown-demo", "group": "concurrency-runtime-m7", "source_path": "demos/structured_shutdown_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-signal"},
-    {"id": "m7-007-sync-channel-demo", "group": "concurrency-runtime-m7", "source_path": "demos/sync_channel_demo/main.sifr", "expected_command": "build", "evidence_category": "concurrency-sync"},
-
-    {"id": "multi-001-additional-modules", "group": "multi-module-projects", "source_path": "demos/additional_modules/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},
-    {"id": "multi-002-branch-paths", "group": "multi-module-projects", "source_path": "demos/branch_paths/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},
-    {"id": "multi-003-cargo-manifest", "group": "multi-module-projects", "source_path": "demos/cargo_manifest/main.sifr", "expected_command": "build", "evidence_category": "project-manifest"},
-    {"id": "multi-004-dependency-manifest", "group": "multi-module-projects", "source_path": "demos/dependency_manifest/main.sifr", "expected_command": "build", "evidence_category": "project-manifest"},
-    {"id": "multi-005-project-graph", "group": "multi-module-projects", "source_path": "demos/project_graph/main.sifr", "expected_command": "build", "evidence_category": "project-imports"},
-
-    {"id": "negative-001-forbidden-unwrap", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/forbidden_unwrap.rs", "expected_command": "scan-fail", "evidence_category": "panic-scan-negative"},
-    {"id": "negative-002-format-violation", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/format_violation.rs", "expected_command": "rustfmt-fail", "evidence_category": "rustfmt-negative"},
-    {"id": "negative-003-clippy-warning", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/clippy_warning.rs", "expected_command": "clippy-fail", "evidence_category": "clippy-negative"},
-    {"id": "negative-004-determinism-mismatch-a", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/determinism_a.rs", "expected_command": "determinism-fail", "evidence_category": "determinism-negative"},
-    {"id": "negative-005-determinism-mismatch-b", "group": "negative-seeds", "source_path": "verification/areas/generated_code_quality/negative_seeds/determinism_b.rs", "expected_command": "determinism-fail", "evidence_category": "determinism-negative"},
-
-    {"id": "stdlib-001-json", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_json_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-json"},
-    {"id": "stdlib-002-io", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-io"},
-    {"id": "stdlib-003-collections", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_collections_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-collections"},
-    {"id": "stdlib-004-itertools", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_itertools_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-itertools"},
-    {"id": "stdlib-005-os", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_os_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-os"},
-    {"id": "stdlib-006-time", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_time_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-time"},
-    {"id": "stdlib-007-math", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_math_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-math"},
-    {"id": "stdlib-008-env", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_env_extended.sifr", "expected_command": "build", "evidence_category": "stdlib-env"},
-    {"id": "stdlib-009-glob", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_glob_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-glob"},
-    {"id": "stdlib-010-tempfile", "group": "stdlib-flows", "source_path": "crates/sifr/tests/e2e/pass/stdlib_tempfile_consolidated.sifr", "expected_command": "build", "evidence_category": "stdlib-tempfile"}
+    {
+      "id": "concurrency-001-async-subprocess-pipeline-demo",
+      "group": "concurrency-runtime-readiness",
+      "source_path": "demos/async_subprocess_pipeline_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "concurrency-process"
+    },
+    {
+      "id": "concurrency-002-blocking-offload-demo",
+      "group": "concurrency-runtime-readiness",
+      "source_path": "demos/blocking_offload_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "concurrency-offload"
+    },
+    {
+      "id": "concurrency-003-cancellation-cleanup-demo",
+      "group": "concurrency-runtime-readiness",
+      "source_path": "demos/cancellation_cleanup_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "concurrency-cleanup"
+    },
+    {
+      "id": "concurrency-004-parallel-map-demo",
+      "group": "concurrency-runtime-readiness",
+      "source_path": "demos/parallel_map_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "concurrency-parallel"
+    },
+    {
+      "id": "concurrency-005-structured-concurrency-demo",
+      "group": "concurrency-runtime-readiness",
+      "source_path": "demos/structured_concurrency_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "concurrency-task"
+    },
+    {
+      "id": "concurrency-006-structured-shutdown-demo",
+      "group": "concurrency-runtime-readiness",
+      "source_path": "demos/structured_shutdown_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "concurrency-signal"
+    },
+    {
+      "id": "concurrency-007-sync-channel-demo",
+      "group": "concurrency-runtime-readiness",
+      "source_path": "demos/sync_channel_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "concurrency-sync"
+    },
+    {
+      "id": "demo-001-codegen-output",
+      "group": "demos-required",
+      "source_path": "demos/codegen_output/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "demo-codegen"
+    },
+    {
+      "id": "demo-002-codegen-structural-passes",
+      "group": "demos-required",
+      "source_path": "demos/codegen_structural_passes/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "demo-codegen"
+    },
+    {
+      "id": "demo-003-cargo-manifest",
+      "group": "demos-required",
+      "source_path": "demos/cargo_manifest/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "demo-manifest"
+    },
+    {
+      "id": "demo-004-dependency-manifest",
+      "group": "demos-required",
+      "source_path": "demos/dependency_manifest/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "demo-manifest"
+    },
+    {
+      "id": "demo-005-additional-modules",
+      "group": "demos-required",
+      "source_path": "demos/additional_modules/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "demo-project"
+    },
+    {
+      "id": "demo-006-async-generator-comprehension",
+      "group": "demos-required",
+      "source_path": "demos/async_generator_comprehension_demo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "demo-async"
+    },
+    {
+      "id": "demo-007-text-i18n",
+      "group": "demos-required",
+      "source_path": "demos/text_i18n/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "text-i18n"
+    },
+    {
+      "id": "demo-008-network-tcp-echo",
+      "group": "demos-required",
+      "source_path": "demos/network_tcp_echo/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "network-http-tcp"
+    },
+    {
+      "id": "demo-009-network-tls-loopback",
+      "group": "demos-required",
+      "source_path": "demos/network_tls_loopback/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "network-http-tls"
+    },
+    {
+      "id": "demo-010-network-http-substrate",
+      "group": "demos-required",
+      "source_path": "demos/network_http_substrate/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "network-http-http-primitives"
+    },
+    {
+      "id": "e2e-001-async-for-stream-result",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/async_for_stream_result.sifr",
+      "expected_command": "build",
+      "evidence_category": "async-concurrency"
+    },
+    {
+      "id": "e2e-002-await-without-live-borrow",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/await_without_live_borrow.sifr",
+      "expected_command": "build",
+      "evidence_category": "ownership-borrowing"
+    },
+    {
+      "id": "e2e-003-bigint-arithmetic",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/bigint_arithmetic.sifr",
+      "expected_command": "build",
+      "evidence_category": "decimal-integer"
+    },
+    {
+      "id": "e2e-004-break-continue",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/break_continue.sifr",
+      "expected_command": "build",
+      "evidence_category": "control-flow"
+    },
+    {
+      "id": "e2e-005-builtin-any-all",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/builtin_any_all.sifr",
+      "expected_command": "build",
+      "evidence_category": "builtins"
+    },
+    {
+      "id": "e2e-006-builtin-enumerate-zip",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/builtin_enumerate_zip.sifr",
+      "expected_command": "build",
+      "evidence_category": "collections"
+    },
+    {
+      "id": "e2e-007-bytes-constructors",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/bytes_constructors.sifr",
+      "expected_command": "build",
+      "evidence_category": "bytes"
+    },
+    {
+      "id": "e2e-008-cancellation-cleanup-runs",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cancellation_cleanup_runs.sifr",
+      "expected_command": "build",
+      "evidence_category": "async-concurrency"
+    },
+    {
+      "id": "e2e-009-channel-cancel-receive-no-loss",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/channel_cancel_receive_no_loss.sifr",
+      "expected_command": "build",
+      "evidence_category": "async-concurrency"
+    },
+    {
+      "id": "e2e-010-class-methods",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/class_methods.sifr",
+      "expected_command": "build",
+      "evidence_category": "classes"
+    },
+    {
+      "id": "e2e-011-collection-len",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/collection_len.sifr",
+      "expected_command": "build",
+      "evidence_category": "collections"
+    },
+    {
+      "id": "e2e-012-comp-set",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/comp_set.sifr",
+      "expected_command": "build",
+      "evidence_category": "collections"
+    },
+    {
+      "id": "e2e-013-cpython-calendar-subset",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-014-cpython-collections",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_collections.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-015-cpython-datetime-subset",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-016-cpython-gzip-subset",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_gzip_subset.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-017-cpython-itertools",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_itertools.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-018-cpython-math-semantic-corrections",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-019-cpython-os-subset",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_os_subset.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-020-cpython-pathlib",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_pathlib.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-021-cpython-re",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_re.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-022-cpython-textwrap-textwrapper",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_textwrap_textwrapper_subset.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-023-cpython-zipfile-subset",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib"
+    },
+    {
+      "id": "e2e-024-decimal-conversions",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/decimal_conversions.sifr",
+      "expected_command": "build",
+      "evidence_category": "decimal-integer"
+    },
+    {
+      "id": "e2e-025-dict-get-option",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/dict_get_option.sifr",
+      "expected_command": "build",
+      "evidence_category": "collections"
+    },
+    {
+      "id": "e2e-026-dict-lookup-methods-registry",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/dict_lookup_methods_registry.sifr",
+      "expected_command": "build",
+      "evidence_category": "collections"
+    },
+    {
+      "id": "e2e-027-error-mixed-builtin-stdlib",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/error_mixed_builtin_stdlib.sifr",
+      "expected_command": "build",
+      "evidence_category": "result-option"
+    },
+    {
+      "id": "e2e-028-fixed-width-scalar-arithmetic",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/fixed_width_scalar_arithmetic_promotion.sifr",
+      "expected_command": "build",
+      "evidence_category": "decimal-integer"
+    },
+    {
+      "id": "e2e-029-forward-ref-basic",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/forward_ref_basic.sifr",
+      "expected_command": "build",
+      "evidence_category": "classes"
+    },
+    {
+      "id": "e2e-030-generator-basic",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/generator_basic.sifr",
+      "expected_command": "build",
+      "evidence_category": "generators"
+    },
+    {
+      "id": "e2e-031-generator-expr",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/generator_expr.sifr",
+      "expected_command": "build",
+      "evidence_category": "generators"
+    },
+    {
+      "id": "e2e-032-generic-class-field-access",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/generic_class_field_access.sifr",
+      "expected_command": "build",
+      "evidence_category": "generics"
+    },
+    {
+      "id": "e2e-033-generic-identity",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/generic_identity.sifr",
+      "expected_command": "build",
+      "evidence_category": "generics"
+    },
+    {
+      "id": "e2e-034-guarded-index-narrowing",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/guarded_index_narrowing.sifr",
+      "expected_command": "build",
+      "evidence_category": "diagnostics-adjacent"
+    },
+    {
+      "id": "e2e-035-indexing-and-unpacking-cloning",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/indexing_and_unpacking_cloning.sifr",
+      "expected_command": "build",
+      "evidence_category": "ownership-borrowing"
+    },
+    {
+      "id": "e2e-036-isinstance-narrowing",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/isinstance_narrowing.sifr",
+      "expected_command": "build",
+      "evidence_category": "diagnostics-adjacent"
+    },
+    {
+      "id": "e2e-037-list-core-methods-registry",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/list_core_methods_registry.sifr",
+      "expected_command": "build",
+      "evidence_category": "collections"
+    },
+    {
+      "id": "e2e-038-list-methods-concrete",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/list_methods_concrete.sifr",
+      "expected_command": "build",
+      "evidence_category": "collections"
+    },
+    {
+      "id": "e2e-039-match-guard",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/match_guard.sifr",
+      "expected_command": "build",
+      "evidence_category": "control-flow"
+    },
+    {
+      "id": "e2e-040-mut-param",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/mut_param.sifr",
+      "expected_command": "build",
+      "evidence_category": "ownership-borrowing"
+    },
+    {
+      "id": "e2e-041-narrowing-and-compound",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/narrowing_and_compound.sifr",
+      "expected_command": "build",
+      "evidence_category": "diagnostics-adjacent"
+    },
+    {
+      "id": "e2e-042-nested-function-dfs",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/nested_function_dfs.sifr",
+      "expected_command": "build",
+      "evidence_category": "functions"
+    },
+    {
+      "id": "e2e-043-open-write",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/open_write.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-io"
+    },
+    {
+      "id": "e2e-044-optional-arithmetic-narrowing",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/optional_arithmetic_narrowing_complex_flow.sifr",
+      "expected_command": "build",
+      "evidence_category": "result-option"
+    },
+    {
+      "id": "e2e-045-pep695-generic-class",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/pep695_generic_class.sifr",
+      "expected_command": "build",
+      "evidence_category": "generics"
+    },
+    {
+      "id": "e2e-046-pep695-generic-function",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/pep695_generic_function.sifr",
+      "expected_command": "build",
+      "evidence_category": "generics"
+    },
+    {
+      "id": "e2e-047-protocol-dispatch",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/protocol_dispatch.sifr",
+      "expected_command": "build",
+      "evidence_category": "classes"
+    },
+    {
+      "id": "e2e-048-recursive-linked-node",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/recursive_linked_node.sifr",
+      "expected_command": "build",
+      "evidence_category": "classes"
+    },
+    {
+      "id": "e2e-049-runtime-file-basics",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/runtime_file_basics.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-io"
+    },
+    {
+      "id": "e2e-050-scope-spawn-join",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/scope_spawn_join.sifr",
+      "expected_command": "build",
+      "evidence_category": "async-concurrency"
+    },
+    {
+      "id": "e2e-051-text-i18n-encoding-io",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/text_i18n_encoding_io.sifr",
+      "expected_command": "build",
+      "evidence_category": "text-i18n-encoding"
+    },
+    {
+      "id": "e2e-052-text-i18n-unicode-core",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/text_i18n_unicode_core.sifr",
+      "expected_command": "build",
+      "evidence_category": "text-i18n-unicode"
+    },
+    {
+      "id": "e2e-053-text-i18n-unicode-segmentation",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/text_i18n_unicode_segmentation.sifr",
+      "expected_command": "build",
+      "evidence_category": "text-i18n-segmentation"
+    },
+    {
+      "id": "e2e-054-text-i18n-locale-formatting",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/text_i18n_locale_formatting.sifr",
+      "expected_command": "build",
+      "evidence_category": "text-i18n-locale"
+    },
+    {
+      "id": "e2e-055-text-i18n-translation-bundles",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/text_i18n_translation_bundles.sifr",
+      "expected_command": "build",
+      "evidence_category": "text-i18n-translation"
+    },
+    {
+      "id": "e2e-056-network-http-tcp-loopback",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/network_http_tcp_loopback_split.sifr",
+      "expected_command": "build",
+      "evidence_category": "network-http-tcp"
+    },
+    {
+      "id": "e2e-057-network-http-tls-loopback",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/network_http_tls_loopback_split.sifr",
+      "expected_command": "build",
+      "evidence_category": "network-http-tls"
+    },
+    {
+      "id": "e2e-058-network-http-url-query",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/network_http_url_query_percent.sifr",
+      "expected_command": "build",
+      "evidence_category": "network-http-url"
+    },
+    {
+      "id": "e2e-059-network-http-header-cookie",
+      "group": "e2e-pass-representative",
+      "source_path": "crates/sifr/tests/e2e/pass/network_http_header_cookie.sifr",
+      "expected_command": "build",
+      "evidence_category": "network-http-http-primitives"
+    },
+    {
+      "id": "multi-001-additional-modules",
+      "group": "multi-module-projects",
+      "source_path": "demos/additional_modules/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "project-imports"
+    },
+    {
+      "id": "multi-002-branch-paths",
+      "group": "multi-module-projects",
+      "source_path": "demos/branch_paths/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "project-imports"
+    },
+    {
+      "id": "multi-003-cargo-manifest",
+      "group": "multi-module-projects",
+      "source_path": "demos/cargo_manifest/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "project-manifest"
+    },
+    {
+      "id": "multi-004-dependency-manifest",
+      "group": "multi-module-projects",
+      "source_path": "demos/dependency_manifest/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "project-manifest"
+    },
+    {
+      "id": "multi-005-project-graph",
+      "group": "multi-module-projects",
+      "source_path": "demos/project_graph/main.sifr",
+      "expected_command": "build",
+      "evidence_category": "project-imports"
+    },
+    {
+      "id": "negative-001-forbidden-unwrap",
+      "group": "negative-seeds",
+      "source_path": "verification/areas/generated_code_quality/negative_seeds/forbidden_unwrap.rs",
+      "expected_command": "scan-fail",
+      "evidence_category": "panic-scan-negative"
+    },
+    {
+      "id": "negative-002-format-violation",
+      "group": "negative-seeds",
+      "source_path": "verification/areas/generated_code_quality/negative_seeds/format_violation.rs",
+      "expected_command": "rustfmt-fail",
+      "evidence_category": "rustfmt-negative"
+    },
+    {
+      "id": "negative-003-clippy-warning",
+      "group": "negative-seeds",
+      "source_path": "verification/areas/generated_code_quality/negative_seeds/clippy_warning.rs",
+      "expected_command": "clippy-fail",
+      "evidence_category": "clippy-negative"
+    },
+    {
+      "id": "negative-004-determinism-mismatch-a",
+      "group": "negative-seeds",
+      "source_path": "verification/areas/generated_code_quality/negative_seeds/determinism_a.rs",
+      "expected_command": "determinism-fail",
+      "evidence_category": "determinism-negative"
+    },
+    {
+      "id": "negative-005-determinism-mismatch-b",
+      "group": "negative-seeds",
+      "source_path": "verification/areas/generated_code_quality/negative_seeds/determinism_b.rs",
+      "expected_command": "determinism-fail",
+      "evidence_category": "determinism-negative"
+    },
+    {
+      "id": "stdlib-001-json",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_json_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-json"
+    },
+    {
+      "id": "stdlib-002-io",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-io"
+    },
+    {
+      "id": "stdlib-003-collections",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_collections_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-collections"
+    },
+    {
+      "id": "stdlib-004-itertools",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_itertools_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-itertools"
+    },
+    {
+      "id": "stdlib-005-os",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_os_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-os"
+    },
+    {
+      "id": "stdlib-006-time",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_time_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-time"
+    },
+    {
+      "id": "stdlib-007-math",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_math_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-math"
+    },
+    {
+      "id": "stdlib-008-env",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_env_extended.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-env"
+    },
+    {
+      "id": "stdlib-009-glob",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_glob_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-glob"
+    },
+    {
+      "id": "stdlib-010-tempfile",
+      "group": "stdlib-flows",
+      "source_path": "crates/sifr/tests/e2e/pass/stdlib_tempfile_consolidated.sifr",
+      "expected_command": "build",
+      "evidence_category": "stdlib-tempfile"
+    }
   ]
 }

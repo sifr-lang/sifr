@@ -41,7 +41,7 @@ Record local validation for each milestone before opening the corresponding PR.
   - `cargo test -p sifr_lowering bare_stdlib -- --nocapture`
   - `cargo test -p sifr_driver bare_stdlib`
   - `cargo test -p sifr --test e2e test_e2e_fail -- --nocapture`
-  - `cargo run -q -p sifr_driver --bin diagnostic_contract_harness`
+  - `cargo run -q -p sifr_driver --bin diagnostic_rendering_harness`
   - `python3 scripts/run_verification_hardening.py --suite project`
   - `scripts/run_all_tests.sh --profile create-pr`
   - PR: https://github.com/sifr-lang/sifr/pull/2291

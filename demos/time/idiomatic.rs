@@ -196,5 +196,5 @@ fn main() {
 
     let expected = vec![true, true, true, true, true, true, true, true, true];
     assert_eq!(actual, expected);
-    println!("m30_1f time parity demo: pass");
+    println!("time time parity demo: pass");
 }

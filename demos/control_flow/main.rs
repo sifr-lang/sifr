@@ -1,5 +1,5 @@
-// Reference: milestone_control_flow
-// Source issue: revised_phase_roadmap_698c629c.md
+// Reference: control_flow
+// Reference: compiler-feature-history
 use std::collections::HashMap;
 
 fn sum_range(n: i64) -> i64 {

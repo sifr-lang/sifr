@@ -1,6 +1,6 @@
-# Reference: ad_hoc_nested_function_part3
-# Source issue: ad-hoc-full-nested-function-pipeline-part3-execution.md
-# Ad hoc nested functions phase, part 3 demo: typed captures and nonlocal updates.
+# Reference: nested_function_part3
+# Reference: full-nested-function-pipeline-part3
+# Nested functions part 3 demo: typed captures and nonlocal updates.
 
 def accumulate(values: list[int]) -> int:
     total = 0

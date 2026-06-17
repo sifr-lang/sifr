@@ -1,0 +1,482 @@
+{
+  "schema_version": 1,
+  "suites": [
+    {
+      "name": "integer_dtype_rules",
+      "label": "Integer dtype rules sentinel checks",
+      "rows": [
+        {
+          "id": "rule_sentinels",
+          "commands": [
+            {
+              "id": "check_integer_dtype_rules",
+              "argv": [
+                "python3",
+                "verification/areas/core_language/checks/integer_dtype_rules.py"
+              ],
+              "expected_exit": 0
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "contains",
+              "command_id": "check_integer_dtype_rules",
+              "stream": "stdout",
+              "text": "integer dtype rules sentinels ok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "hir_analysis_behaviors",
+      "label": "HIR analysis consolidation regression matrix",
+      "rows": [
+        {
+          "id": "matrix_fixture_full_modes",
+          "commands": [
+            {
+              "id": "hir_analysis_check",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/branch_paths/main.sifr"
+              ],
+              "expected_exit": 0
+            },
+            {
+              "id": "hir_analysis_build",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "build",
+                "demos/branch_paths/main.sifr",
+                "--output",
+                "<TMP>/hir_analysis_build"
+              ],
+              "expected_exit": 0
+            },
+            {
+              "id": "hir_analysis_run",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "run",
+                "demos/branch_paths/main.sifr"
+              ],
+              "expected_exit": 0
+            },
+            {
+              "id": "hir_analysis_test",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "test",
+                "demos/branch_paths"
+              ],
+              "expected_exit": 0
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "contains",
+              "command_id": "hir_analysis_run",
+              "stream": "stdout",
+              "text": "hir analysis consolidation regression matrix demo:"
+            },
+            {
+              "kind": "contains",
+              "command_id": "hir_analysis_run",
+              "stream": "stdout",
+              "text": "20"
+            },
+            {
+              "kind": "contains",
+              "command_id": "hir_analysis_run",
+              "stream": "stdout",
+              "text": "45"
+            }
+          ]
+        },
+        {
+          "id": "negative_mixed_block_parity",
+          "commands": [
+            {
+              "id": "hir_analysis_neg_check",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            },
+            {
+              "id": "hir_analysis_neg_build",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "build",
+                "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr",
+                "--output",
+                "<TMP>/hir_analysis_neg_build"
+              ],
+              "expected_exit": 1
+            },
+            {
+              "id": "hir_analysis_neg_run",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "run",
+                "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "equal_streams",
+              "left_command_id": "hir_analysis_neg_check",
+              "right_command_id": "hir_analysis_neg_build",
+              "stream": "stderr"
+            },
+            {
+              "kind": "equal_streams",
+              "left_command_id": "hir_analysis_neg_check",
+              "right_command_id": "hir_analysis_neg_run",
+              "stream": "stderr"
+            },
+            {
+              "kind": "contains",
+              "command_id": "hir_analysis_neg_check",
+              "stream": "stderr",
+              "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
+            }
+          ]
+        },
+        {
+          "id": "negative_diagnostic_stability",
+          "commands": [
+            {
+              "id": "hir_analysis_neg_check_first",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            },
+            {
+              "id": "hir_analysis_neg_check_second",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "equal_streams",
+              "left_command_id": "hir_analysis_neg_check_first",
+              "right_command_id": "hir_analysis_neg_check_second",
+              "stream": "stderr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cfg_flow_behaviors",
+      "label": "CFG/flow activation regression matrix",
+      "rows": [
+        {
+          "id": "matrix_fixture_full_modes",
+          "commands": [
+            {
+              "id": "cfg_flow_check",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/control_flow_paths/main.sifr"
+              ],
+              "expected_exit": 0
+            },
+            {
+              "id": "cfg_flow_build",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "build",
+                "demos/control_flow_paths/main.sifr",
+                "--output",
+                "<TMP>/cfg_flow_build"
+              ],
+              "expected_exit": 0
+            },
+            {
+              "id": "cfg_flow_run",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "run",
+                "demos/control_flow_paths/main.sifr"
+              ],
+              "expected_exit": 0
+            },
+            {
+              "id": "cfg_flow_test",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "test",
+                "demos/control_flow_paths"
+              ],
+              "expected_exit": 0
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "contains",
+              "command_id": "cfg_flow_run",
+              "stream": "stdout",
+              "text": "cfg flow activation regression matrix demo:"
+            },
+            {
+              "kind": "contains",
+              "command_id": "cfg_flow_run",
+              "stream": "stdout",
+              "text": "8"
+            },
+            {
+              "kind": "contains",
+              "command_id": "cfg_flow_run",
+              "stream": "stdout",
+              "text": "42"
+            },
+            {
+              "kind": "contains",
+              "command_id": "cfg_flow_run",
+              "stream": "stdout",
+              "text": "9"
+            }
+          ]
+        },
+        {
+          "id": "cfg_shape_and_query_repeat_determinism",
+          "commands": [
+            {
+              "id": "cfg_flow_repeat",
+              "argv": [
+                "cargo",
+                "test",
+                "-q",
+                "-p",
+                "sifr_lowering",
+                "cfg::tests::cfg_repeat_run_matrix_is_deterministic",
+                "--",
+                "--nocapture"
+              ],
+              "expected_exit": 0
+            }
+          ],
+          "assertions": []
+        },
+        {
+          "id": "negative_reachable_type_error_parity",
+          "commands": [
+            {
+              "id": "cfg_flow_neg_check",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            },
+            {
+              "id": "cfg_flow_neg_build",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "build",
+                "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr",
+                "--output",
+                "<TMP>/cfg_flow_neg_build"
+              ],
+              "expected_exit": 1
+            },
+            {
+              "id": "cfg_flow_neg_run",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "run",
+                "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "equal_streams",
+              "left_command_id": "cfg_flow_neg_check",
+              "right_command_id": "cfg_flow_neg_build",
+              "stream": "stderr"
+            },
+            {
+              "kind": "equal_streams",
+              "left_command_id": "cfg_flow_neg_check",
+              "right_command_id": "cfg_flow_neg_run",
+              "stream": "stderr"
+            },
+            {
+              "kind": "contains",
+              "command_id": "cfg_flow_neg_check",
+              "stream": "stderr",
+              "text": "error[SIFR-TYPE-0002]: return type mismatch: expected 'int', got 'str'"
+            }
+          ]
+        },
+        {
+          "id": "negative_diagnostic_stability",
+          "commands": [
+            {
+              "id": "cfg_flow_neg_check_first",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            },
+            {
+              "id": "cfg_flow_neg_check_second",
+              "argv": [
+                "cargo",
+                "run",
+                "-q",
+                "-p",
+                "sifr",
+                "--",
+                "check",
+                "demos/control_flow_paths/negative_cases/reachable_type_error/main.sifr"
+              ],
+              "expected_exit": 1
+            }
+          ],
+          "assertions": [
+            {
+              "kind": "equal_streams",
+              "left_command_id": "cfg_flow_neg_check_first",
+              "right_command_id": "cfg_flow_neg_check_second",
+              "stream": "stderr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "syntax_parser_lexer_matrix",
+      "label": "Syntax parser and lexer coverage matrix",
+      "rows": [
+        {
+          "id": "matrix_backed_parser_and_lexer_ruless",
+          "commands": [
+            {
+              "id": "syntax_matrix_tests",
+              "argv": [
+                "cargo",
+                "test",
+                "-q",
+                "-p",
+                "sifr_syntax",
+                "syntax_matrix_tests::",
+                "--",
+                "--nocapture"
+              ],
+              "expected_exit": 0
+            }
+          ],
+          "assertions": []
+        }
+      ]
+    }
+  ]
+}

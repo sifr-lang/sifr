@@ -1,4 +1,3 @@
-# Reference: m23_2
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: module_cycle_diagnostics
 def value() -> int:
     return 41

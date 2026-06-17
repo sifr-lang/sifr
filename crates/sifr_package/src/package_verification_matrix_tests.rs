@@ -47,7 +47,7 @@ fn package_fixture_matrix_covers_required_categories() {
 }
 
 #[test]
-fn closeout_docs_lock_cargo_backed_boundary_and_future_uv_interop() {
+fn readiness_docs_lock_cargo_backed_boundary_and_future_uv_interop() {
     let root = repo_root();
     let package_docs =
         std::fs::read_to_string(root.join("docs/package_management.md")).expect("read docs");

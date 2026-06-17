@@ -1,6 +1,6 @@
-# Reference: milestone_builtins_v2
-# Source issue: revised_phase_roadmap_698c629c.md
-# milestone_builtins_v2 Demo
+# Reference: builtin-functions-surface
+# Reference: compiler-feature-history
+# builtin-functions-surface Demo
 
 def main():
     print(f"max(3, 7) = {max(3, 7)}")

@@ -31,7 +31,7 @@ Phase 36's exit gate says: "`scripts/run_all_tests.sh --profile quick` passes in
 
 The main repo's quick/PR validation has no hook to validate the extension repo unless `check_vscode_extension.py` is run from the main repo against a sibling/pinned checkout. The issue doc says main-repo validation "can locate" a sibling checkout, but doesn't specify how or what happens when it can't find it (error vs skip).
 
-**Fix:** In `verification/tooling/check_vscode_extension.py` and `vscode_extension_contract.json`, add:
+**Fix:** In `verification/tooling/check_vscode_extension.py` and `vscode_extension_rules.json`, add:
 ```python
 # Detect extension repo: 
 # 1. Try sibling `../sifr-vscode` relative to repo root
@@ -51,15 +51,15 @@ The main repo's quick/PR validation has no hook to validate the extension repo u
 
 Phase 36 also lists `check_vscode_extension.py` in its exit criteria, but the issue doc's PR sequence item 7 says "main repo PR: cross-repo contract check, documentation, and validation evidence" without naming the script. This mismatch means the exit gate references a script the PR sequence doesn't define, and Phase 36's verification infrastructure list never includes a cross-repo contract script for the extension (it only includes `check_vscode_extension.py` which runs in the extension repo).
 
-**Fix:** Phase 36 should add `verification/tooling/check_vscode_extension_contract.py` to its `verification/tooling/` list, consuming `vscode_extension_contract.json` from the main repo and validating against the extension repo at `SIFR_VSCODE_REPO`. The issue doc's PR sequence item 7 should name this script explicitly.
+**Fix:** Phase 36 should add `verification/tooling/check_vscode_extension_rules.py` to its `verification/tooling/` list, consuming `vscode_extension_rules.json` from the main repo and validating against the extension repo at `SIFR_VSCODE_REPO`. The issue doc's PR sequence item 7 should name this script explicitly.
 
 ---
 
 ### B5: Phase 36 `verification/tooling/` List Missing Cross-Repo Contract Script
 Phase 36's required verification files include `check_vscode_extension.py` but not the main-repo-side cross-repo contract validator. The `check_vscode_extension.py` runs in the extension repo; the main repo needs its own validator to enforce the contract as part of `scripts/run_all_tests.sh --profile pr`.
 
-**Fix:** Add `verification/tooling/check_vscode_extension_contract.py` to Phase 36's required files list, with scope:
-- Read `vscode_extension_contract.json`
+**Fix:** Add `verification/tooling/check_vscode_extension_rules.py` to Phase 36's required files list, with scope:
+- Read `vscode_extension_rules.json`
 - Locate extension repo via `SIFR_VSCODE_REPO` or sibling path
 - Validate: extension id, language id, launch command, required settings, required commands, no forbidden semantic dependencies in `package.json`
 - Fail if extension declares a type-checker, parser, formatter, or linter setting
@@ -90,7 +90,7 @@ Phase 35 reserves `lsp-query` budget IDs for Phase 36 (Phase 35 exit criteria an
 
 ### N3: Phase 36 Exit Gate Should Clarify That Extension Validation Is Part of Main Repo Quick/PR
 The current exit gate says "`scripts/run_all_tests.sh --profile quick` passes in the main repo." An implementer could reasonably conclude this doesn't cover the extension. Clarify:
-> `scripts/run_all_tests.sh --profile quick` passes in the main repo, including `verification/tooling/check_vscode_extension_contract.py` when `SIFR_VSCODE_REPO` is set.
+> `scripts/run_all_tests.sh --profile quick` passes in the main repo, including `verification/tooling/check_vscode_extension_rules.py` when `SIFR_VSCODE_REPO` is set.
 
 ### N4: Phase 36 LSP Budget Defaults Are Not in `verification/performance/budgets.json`
 Phase 36 lists 15 `lsp-query` budget defaults (cold start <=1000ms, diagnostics <=500ms, etc.) but these are "phase-start defaults" that must be recorded in `verification/performance/budgets.json` after baseline capture. This is by design but worth noting: the budgets section of Phase 36 is not actionable until Phase 35's `budgets.json` exists and Phase 36 adds its IDs.
@@ -107,7 +107,7 @@ Phase 36 says "minimum VS Code engine version" but doesn't specify which engine 
 | **Blocking** | B1: Complete Phase 35 fully before Phase 36 | Phase 35 exit gate |
 | **Blocking** | B2: Create `sifr-lang/sifr-vscode` empty repo | External (GitHub) |
 | **Blocking** | B3: Add `SIFR_VSCODE_REPO` detection to contract check (fail, don't skip) | Phase 36 verification infra + issue doc |
-| **Blocking** | B4: Add `check_vscode_extension_contract.py` to Phase 36's required files | Phase 36 verification infra |
+| **Blocking** | B4: Add `check_vscode_extension_rules.py` to Phase 36's required files | Phase 36 verification infra |
 | **Blocking** | B5: Add main-repo cross-repo contract validator to Phase 36 | Phase 36 verification infra |
 | **Blocking** | B6: Expand `check_lsp_split_brain.py` description to include all forbidden paths | Phase 36 verification infra |
 | Nit | N1: Add footnote mapping issue PR sequence to Phase 36 milestones | Issue doc |

@@ -1,7 +1,7 @@
-# Reference: milestone_subscript_v2
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: subscript-assignment-surface
+# Reference: compiler-feature-history
 # ============================================================
-# Milestone 15: Subscript V2 Demo
+# compiler feature: Subscript V2 Demo
 # ============================================================
 # Demonstrates:
 # 1. Nested subscript assignment (matrix[i][j] = val)

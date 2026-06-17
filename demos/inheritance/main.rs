@@ -1,7 +1,7 @@
-// Reference: milestone_inheritance
-// Source issue: milestone-inheritance-epic.md
+// Reference: inheritance
+// Reference: inheritance
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
-     Running `target/debug/sifr emit demos/milestone_inheritance_demo.sifr`
+     Running `target/debug/sifr emit demos/inheritance_demo.sifr`
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Shape {
     name: String,

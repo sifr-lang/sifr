@@ -1,6 +1,5 @@
-# Reference: m24_1
-# Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_1 canonical traversal layer contract demo
+# Reference: loop_try_match
+# loop_try_match canonical traversal layer behavior demo
 # Exercises loop-else, try/except, and match arms in one executable flow.
 
 def normalize(n: int) -> int:
@@ -22,5 +21,5 @@ def compute(values: list[int]) -> int:
     return total
 
 def main():
-    print('m24_1 canonical traversal layer contract demo:')
+    print('loop_try_match canonical traversal layer behavior demo:')
     print(compute([3, 2, -1]))

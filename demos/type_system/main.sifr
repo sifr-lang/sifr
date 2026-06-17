@@ -1,9 +1,9 @@
-# Reference: milestone_type_system
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: type_system
+# Reference: compiler-feature-history
 # ============================================================
-# M3 Demo: Advanced Type System
+# blocking and CPU offload Demo: Advanced Type System
 # ============================================================
-# This demo showcases the M3 milestone features:
+# This demo showcases the blocking and CPU offload feature-set behavior:
 # - Type aliases (type X = ...)
 # - Optional types (str | None) -> Option<T>
 # - Type narrowing via is/is not None

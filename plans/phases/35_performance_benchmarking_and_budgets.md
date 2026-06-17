@@ -454,9 +454,9 @@ Required files:
 - `verification/areas/performance/run_benchmarks.py` - local benchmark runner that emits machine-readable results under `target/performance/`.
 - `verification/areas/performance/check_budgets.py` - compares benchmark results to budgets and validates waivers.
 - `verification/areas/performance/lsp_query_budget_ids.md` - reserved Phase 36 LSP-query budget ids and naming rules so Phase 36 adds protocol benchmarks without inventing incompatible budget identifiers.
-- `verification/areas/performance/check_frontend_cache_contract.py` - focused contract checks for cache invalidation, stale-result rejection, deterministic graph revision behavior, and query ordering.
+- `verification/areas/performance/check_frontend_cache_rules.py` - focused contract checks for cache invalidation, stale-result rejection, deterministic graph revision behavior, and query ordering.
 - `verification/areas/performance/check_split_brain_guardrail.py` - rejects new parser/lowering/type-check/semantic diagnostic entrypoints outside approved syntax/frontend/HIR boundaries.
-- `verification/areas/performance/check_ruff_fork_update_contract.py` - rejects Sifr Ruff fork dependency-pin/version/hash updates without reviewed `sifr_syntax` fixture revalidation evidence and recorded migration rationale.
+- `verification/areas/performance/check_ruff_fork_update_rules.py` - rejects Sifr Ruff fork dependency-pin/version/hash updates without reviewed `sifr_syntax` fixture revalidation evidence and recorded migration rationale.
 - `verification/areas/performance/sifr_syntax_token_fixtures/` - checked-in representative token/trivia fixtures produced through `sifr_syntax` and consumed by Phase 36 syntax-asset drift checks.
 - `verification/areas/performance/negative_seeds/` - seed inputs or result fixtures proving budget and waiver gates fail when expected.
 
@@ -627,7 +627,7 @@ flowchart TD
 - Scope:
   - Make compiler CLI modes consume the `sifr_frontend` analysis/query ownership model for `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows.
   - Remove temporary duplicate frontend semantics from `sifr_driver`.
-  - Add `verification/areas/performance/check_frontend_cache_contract.py` and Rust tests proving no split-brain frontend path remains.
+  - Add `verification/areas/performance/check_frontend_cache_rules.py` and Rust tests proving no split-brain frontend path remains.
   - Add a reviewed split-brain guardrail. Prefer a code-level constraint when practical; otherwise use a focused script-level guardrail that fails on new parser/lowering/type-check/semantic diagnostic entrypoints outside `sifr_frontend` and approved `sifr_lowering` internals.
   - Document final architecture in `internal_docs/frontend_query_architecture.md` and `internal_docs/frontend_cache_invalidation.md`.
   - Document final syntax wrapper architecture in `internal_docs/syntax_architecture.md`.
@@ -696,7 +696,7 @@ Performance budget checks must run in `scripts/run_all_tests.sh --profile merge`
 - `verification/areas/performance/data/waivers.json` is either empty or contains only active, owner-assigned, issue-linked, time-bounded waivers.
 - `verification/areas/performance/run_benchmarks.py` passes on the required corpus.
 - `verification/areas/performance/check_budgets.py` passes and fails on seeded regressions.
-- `verification/areas/performance/check_frontend_cache_contract.py` passes and fails on seeded stale-result or invalidation violations.
+- `verification/areas/performance/check_frontend_cache_rules.py` passes and fails on seeded stale-result or invalidation violations.
 - `verification/areas/performance/check_split_brain_guardrail.py` passes and fails on seeded split-brain entrypoints.
 - `scripts/run_all_tests.sh --profile create-pr` passes.
 - `scripts/run_all_tests.sh --profile merge` passes.

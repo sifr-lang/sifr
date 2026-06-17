@@ -1,10 +1,10 @@
-# `wave_clone_2` Index/Slice/Star-Unpack Ownership Traceability
+# `implementation pass_clone_2` Index/Slice/Star-Unpack Ownership Traceability
 
-Phase: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
+Capability: `issues/ownership-aware-collection-lowering-and-clone-elision.md`
 
 ## Scope
 
-`wave_clone_2` applies ownership-aware copy/clone extraction decisions to:
+`implementation pass_clone_2` applies ownership-aware copy/clone extraction decisions to:
 
 - list/dict safe indexing (`Option` paths)
 - non-optional list/dict index extraction in structured/simple lowering
@@ -48,7 +48,7 @@ Observed shape:
   - `_result.push(*_el);`
   - no `_result.push(_el.clone());` for the `list[int]` stepped-slice path
 
-## Wave artifacts
+## Capability artifacts
 
 - pass fixture: `crates/sifr/tests/e2e/pass/indexing_and_unpacking_cloning.sifr`
 - demo: `demos/slice_unpacking/main.sifr`
@@ -58,7 +58,7 @@ Observed shape:
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/indexing_and_unpacking_cloning.sifr` -> PASS
 - `cargo run -q -p sifr -- run demos/slice_unpacking/main.sifr` -> PASS
 
-Residual items intentionally deferred to later waves:
+Residual items intentionally deferred to later implementation passes:
 
-- conservative generic/index extraction hardening (`TypeVar` / `Any`) in `wave_clone_3`
-- broader generated-code normalization polish (`.copied().collect()` redundancy) in `wave_clone_3`
+- conservative generic/index extraction hardening (`TypeVar` / `Any`) in `implementation pass_clone_3`
+- broader generated-code normalization polish (`.copied().collect()` redundancy) in `implementation pass_clone_3`

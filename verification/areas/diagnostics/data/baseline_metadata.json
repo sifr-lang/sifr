@@ -553,9 +553,9 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reason": "Synthetic renderer rules baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
       "bless_reference": "diagnostic-baseline-catalog-pr",
-      "fixture_id": "presentation_contract_cases",
+      "fixture_id": "presentation_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -569,9 +569,9 @@
       "synthetic": true
     },
     {
-      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reason": "Synthetic renderer rules baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
       "bless_reference": "diagnostic-baseline-catalog-pr",
-      "fixture_id": "presentation_contract_cases",
+      "fixture_id": "presentation_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -586,9 +586,9 @@
       "synthetic": true
     },
     {
-      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reason": "Synthetic renderer rules baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
       "bless_reference": "diagnostic-baseline-catalog-pr",
-      "fixture_id": "presentation_contract_cases",
+      "fixture_id": "presentation_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -604,7 +604,7 @@
     {
       "bless_reason": "Synthetic compact diagnostic baseline coverage for stable package diagnostics that are library-level or Cargo-environment dependent rather than deterministic public CLI fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2615",
-      "fixture_id": "package_library_diagnostic_contract_cases",
+      "fixture_id": "package_library_diagnostic_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -613,14 +613,14 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:aa2229e7c6b1f24cc8ee802bfa7607c69c8fafe0f68134dfcd31b64bef60df96",
+      "source_hash": "sha256:1868f4a5a08651be194e08f28ecb22c6880d6ed09a28e20551f4b7247c10e95f",
       "suite": "synthetic_baselines",
       "synthetic": true
     },
     {
       "bless_reason": "Synthetic compact diagnostic baseline coverage for active frontend build, stdlib, and legacy workspace diagnostics that require internal fault injection or retired public renderer paths.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2619",
-      "fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "fixture_id": "frontend_internal_diagnostic_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -629,7 +629,7 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:549962e33a8eb6c199dbe186a23cee41746582b1e279a7de30a91a4e92dabd9b",
+      "source_hash": "sha256:fa5bebb127e7e35a1b05407c196086b7e0c88e5d56cc457f36f9f649b41b07b0",
       "suite": "synthetic_baselines",
       "synthetic": true
     },

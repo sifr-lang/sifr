@@ -103,5 +103,5 @@ fn main() {
 
     let expected = vec![true, true, true, true, true, true];
     assert_eq!(actual, expected);
-    println!("m30_1d datetime parity demo: pass");
+    println!("datetime datetime parity demo: pass");
 }

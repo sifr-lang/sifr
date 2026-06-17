@@ -1,5 +1,4 @@
-# Reference: m19_1
-# Source issue: phase19-module-graph-safety-determinism-cache-execution.md
+# Reference: module_ordering
 from a import value_a
 
 def main():

@@ -66,7 +66,7 @@
     {
       "area": "coverage_matrix",
       "suites": [
-        "closeout"
+        "readiness"
       ],
       "resource_classes": [
         "default-local"
@@ -75,9 +75,9 @@
     {
       "area": "core_language",
       "suites": [
-        "integer_dtype_contract",
-        "hir_analysis_contracts",
-        "cfg_flow_contracts",
+        "integer_dtype_rules",
+        "hir_analysis_behaviors",
+        "cfg_flow_behaviors",
         "syntax_parser_lexer_matrix"
       ],
       "resource_classes": [
@@ -87,7 +87,7 @@
     {
       "area": "diagnostics",
       "suites": [
-        "contracts",
+        "rules",
         "baselines"
       ],
       "resource_classes": [
@@ -279,9 +279,9 @@
     "matrix_suites": [
       "frontend_mode_parity",
       "project_graph_isolation",
-      "integer_dtype_contract",
-      "hir_analysis_contracts",
-      "cfg_flow_contracts",
+      "integer_dtype_rules",
+      "hir_analysis_behaviors",
+      "cfg_flow_behaviors",
       "syntax_parser_lexer_matrix"
     ],
     "tooling_suites": [

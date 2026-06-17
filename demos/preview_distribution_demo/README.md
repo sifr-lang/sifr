@@ -1,6 +1,6 @@
 # Preview Distribution Demo
 
-This demo records the local milestone 33.2 checksum-verified installer walkthrough.
+This demo records the local installer artifact checksum-verified installer walkthrough.
 
 ## Build Mock Preview Artifacts
 

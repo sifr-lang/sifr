@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "owner": "compiler/frontend",
+  "suites": [
+    {
+      "id": "frontend-mode-parity",
+      "suite": "project_workspace:frontend_mode_parity",
+      "manifest": "verification/areas/project_workspace/data/validation_suites/manifest.json",
+      "profile_surface": "project_workspace_behaviors",
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite frontend_mode_parity"
+    },
+    {
+      "id": "project-graph-isolation",
+      "suite": "project_workspace:project_graph_isolation",
+      "manifest": "verification/areas/project_workspace/data/validation_suites/manifest.json",
+      "profile_surface": "project_workspace_behaviors",
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite project_graph_isolation"
+    },
+    {
+      "id": "project-baseline-fixtures",
+      "suite": "project_workspace:baselines",
+      "manifest": "verification/areas/project_workspace/manifest.json",
+      "profile_surface": "project_workspace_behaviors",
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite baselines"
+    }
+  ]
+}

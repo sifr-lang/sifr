@@ -1,8 +1,7 @@
-# Reference: m29_4
-# Source issue: phase29-verification-hardening-execution.md
-# m29_4 demo: curated OSS gate and broader ecosystem lane contracts.
+# Reference: ecosystem_validation
+# ecosystem_validation demo: curated OSS gate and broader ecosystem lane rules.
 
 def main():
-    print("m29_4 curated oss gate and ecosystem lane demo")
+    print("ecosystem_validation curated oss gate and ecosystem lane demo")
     print("oss-curated suite is blocking and pinned")
     print("ecosystem-broader suite is non-blocking signal-only")

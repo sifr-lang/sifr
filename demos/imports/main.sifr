@@ -1,6 +1,6 @@
-# Reference: milestone_imports
-# Source issue: milestone-imports-epic.md
-# milestone_imports demo
+# Reference: import semantics work
+# Reference: imports
+# import semantics work demo
 # Multi-file project with imports
 
 from models import User, Product

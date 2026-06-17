@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "FUZZ-SMOKE-LOCAL-0001",
-  "target_contract_version": 1,
+  "target_rules_version": 1,
   "required_target_ids": [
     "parse_check_entrypoint",
     "hir_type_ownership_entrypoint",
@@ -156,7 +156,7 @@
       "entrypoint": "structured RenderedDiagnostic JSON/human/compact rendering",
       "program_class": "structured-diagnostics",
       "input_grammar": "rendered-diagnostic-json-v1",
-      "coverage_mode": "diagnostic-contract-smoke",
+      "coverage_mode": "diagnostic-rules-smoke",
       "corpus_dir": "verification/areas/diagnostics/fixtures/diagnostics",
       "seed_files": [
         "verification/areas/diagnostics/fixtures/diagnostics/parser_bad_indent/main.sifr"
@@ -172,7 +172,7 @@
         "-p",
         "sifr_driver",
         "--bin",
-        "diagnostic_contract_harness",
+        "diagnostic_rendering_harness",
         "--",
         "--target",
         "diagnostic_renderer_entrypoint",
@@ -193,7 +193,7 @@
       "entrypoint": "package/project manifest and import-resolution diagnostics",
       "program_class": "mixed-valid-invalid",
       "input_grammar": "sifr-project-tree",
-      "coverage_mode": "diagnostic-contract-smoke",
+      "coverage_mode": "diagnostic-rules-smoke",
       "corpus_dir": "verification/areas/project_workspace/fixtures/project",
       "seed_files": [
         "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/main.sifr"
@@ -209,7 +209,7 @@
         "-p",
         "sifr_driver",
         "--bin",
-        "diagnostic_contract_harness",
+        "diagnostic_rendering_harness",
         "--",
         "--target",
         "package_project_manifest_entrypoint",

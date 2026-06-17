@@ -218,5 +218,5 @@ fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
     let actual: Vec<bool> = collect_primary_actual();
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1c re parity demo: pass");
+    println!("regex re parity demo: pass");
 }

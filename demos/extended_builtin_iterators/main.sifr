@@ -1,6 +1,6 @@
-# Reference: ad_hoc_parity_ext_wave1
-# Source issue: ad-hoc-python-source-parity-extension-waiver-reduction-execution.md
-# ad_hoc parity extension wave 1 demo
+# Reference: parity_ext_extended_builtin_iterators
+# Reference: python-source-parity-extension-waiver-reduction
+# Iterator behavior demo for parity extension APIs.
 # Builtin iterator re-closure: reversed/enumerate/zip/map all return Iterator[...] with explicit list(...) materialization.
 
 
@@ -23,4 +23,4 @@ def main():
     assert next(mapped_it) == 5
     assert str(list(mapped_it)) == "[7, 9]"
 
-    assert str("ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok") == "ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok"
+    assert str("parity_ext_extended_builtin_iterators_iterator_reclosure_demo: ok") == "parity_ext_extended_builtin_iterators_iterator_reclosure_demo: ok"

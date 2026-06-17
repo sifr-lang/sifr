@@ -1,21 +1,20 @@
-# Reference: m30_1a
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
-# m30_1a env parity demo
+# Reference: env
+# env env parity demo
 from sifr.env import env_get, env_set, env_unset, getenv, getenv_opt
 from sifr.test import assert_bool_vector_eq
 
 def main():
-    env_unset("SIFR_M30_ENV_DEMO")
-    env_set("SIFR_M30_ENV_DEMO", "phase30")
+    env_unset("SIFR_ENV_SAMPLE")
+    env_set("SIFR_ENV_SAMPLE", "env")
 
-    with_default: str = getenv("SIFR_M30_ENV_DEMO", "fallback")
+    with_default: str = getenv("SIFR_ENV_SAMPLE", "fallback")
     print(with_default)
-    assert str(with_default) == "phase30"
+    assert str(with_default) == "env"
 
-    env_unset("SIFR_M30_ENV_DEMO")
-    without_default: str | None = getenv_opt("SIFR_M30_ENV_DEMO")
+    env_unset("SIFR_ENV_SAMPLE")
+    without_default: str | None = getenv_opt("SIFR_ENV_SAMPLE")
     assert str(without_default is None) == "true"
-    assert str(getenv("SIFR_M30_ENV_DEMO", "fallback")) == "fallback"
+    assert str(getenv("SIFR_ENV_SAMPLE", "fallback")) == "fallback"
 
     invalid_expected_lookup_found: list[bool] = [False, False]
     invalid_actual_lookup_found: list[bool] = []
@@ -25,4 +24,4 @@ def main():
     invalid_actual_lookup_found.append(env_get("A=B") is not None)
     assert_bool_vector_eq(invalid_actual_lookup_found, invalid_expected_lookup_found)
 
-    print("m30_1a env parity demo: pass")
+    print("env env parity demo: pass")

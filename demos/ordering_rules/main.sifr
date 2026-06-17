@@ -1,7 +1,7 @@
-# Reference: milestone_ordering_remediation
-# Source issue: revised_phase_roadmap_698c629c.md
-# Milestone: Ordering Remediation Demo
-# Fixes three gaps caused by out-of-order milestone execution in Phase 7.
+# Reference: ordering_remediation
+# Reference: compiler-feature-history
+# Feature Demo: Ordering Remediation Demo
+# Fixes three gaps caused by out-of-order feature-set sequencing in stdlib parity architecture.
 
 from typing import Callable
 from sifr.itertools import repeat, chain, take

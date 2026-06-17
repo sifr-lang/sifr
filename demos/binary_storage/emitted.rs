@@ -325,22 +325,22 @@ fn sum_bytes(data: &Vec<u8>) -> i64 {
 }
 
 fn main() {
-    let payload: Vec<u8> = vec![(119 as i64) as u8, (97 as i64) as u8, (118 as i64) as u8, (101 as i64) as u8, (52 as i64) as u8];
+    let payload: Vec<u8> = vec![(98 as i64) as u8, (105 as i64) as u8, (110 as i64) as u8, (97 as i64) as u8, (114 as i64) as u8, (121 as i64) as u8, (95 as i64) as u8, (115 as i64) as u8, (116 as i64) as u8, (111 as i64) as u8, (114 as i64) as u8, (97 as i64) as u8, (103 as i64) as u8, (101 as i64) as u8];
     let second: Option<i64> = payload.get((1 as i64) as usize).map(|__byte| *__byte as i64);
     let mut second_ok: bool = false;
     if let Some(second) = second {
-        second_ok = second == (97 as i64);
+        second_ok = second == (105 as i64);
     }
-    let iter_ok: bool = sum_bytes(&payload) == (487 as i64);
+    let iter_ok: bool = sum_bytes(&payload) == (1497 as i64);
     let contains_ok: bool = (({
-    let __needle = 119 as i64;
+    let __needle = 98 as i64;
     if (__needle < 0) || (__needle > 255) { false } else { payload.contains(&(__needle as u8)) }
 }) && (!({
     let __needle = 512 as i64;
     if (__needle < 0) || (__needle > 255) { false } else { payload.contains(&(__needle as u8)) }
 })));
     let count_ok: bool = ((({
-    let __needle = 119 as i64;
+    let __needle = 98 as i64;
     if (__needle < 0) || (__needle > 255) { 0 } else { payload.iter().filter(|__x| **__x == (__needle as u8)).count() as i64 }
 }) == (1 as i64)) && (({
     let __needle = 512 as i64;
@@ -378,7 +378,7 @@ fn main() {
         let e = __sifr_try_err.clone();
         let _: String = format!("{}", e.message);
     }
-    let path: String = "/tmp/sifr_ad_hoc_bytes_wave4_demo.bin".to_string();
+    let path: String = "/tmp/sifr_bytes_binary_storage.bin".to_string();
     let mut io_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
@@ -478,7 +478,7 @@ fn main() {
 })()?;
     let loaded: Vec<u8> = reader.read_bytes()?;
     reader.close();
-    io_ok = ((loaded == payload) && (format!("{:?}", loaded.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>()) == "[119, 97, 118, 101, 52]".to_string()));
+    io_ok = ((loaded == payload) && (format!("{:?}", loaded.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>()) == "[98, 105, 110, 97, 114, 121, 95, 115, 116, 111, 114, 97, 103, 101]".to_string()));
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {

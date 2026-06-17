@@ -276,7 +276,7 @@ impl FileHandle {
 }
 
 fn main() {
-    let path: String = "/tmp/sifr_runtime_wave0_stream_demo.txt".to_string();
+    let path: String = "/tmp/sifr_runtime_file_streams_demo.txt".to_string();
     let mut text_ok: bool = false;
     let mut binary_ok: bool = false;
     let mut cleanup_ok: bool = false;
@@ -450,5 +450,5 @@ fn main() {
     assert!(text_ok);
     assert!(binary_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave0_stream_hierarchy_contract_demo: ok");
+    println!("runtime_file_streams_hierarchy_demo: ok");
 }

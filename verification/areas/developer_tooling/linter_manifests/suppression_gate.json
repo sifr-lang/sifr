@@ -3,5 +3,5 @@
   "gate_state": "parser_aware",
   "allowed_rule_families": ["physical-line", "single-node", "statement-range", "symbol-workspace"],
   "parser_aware_api": "sifr_lint::suppression::ParserAwareSuppressions",
-  "updated_by_contract": "lint-suppression"
+  "updated_by_rules": "lint-suppression"
 }

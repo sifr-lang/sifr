@@ -1,12 +1,12 @@
 # Sifr Workspace Design
 
-Source phase: `plans/issues/archive/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
+Source record: `sifr-workspace-sifr-toml-import-resolution-2026-04-25`
 
 ## Scope
 
 Sifr workspaces are discovered from the nearest ancestor `sifr.toml`. The manifest defines the stable workspace root for user module resolution without adding user helpers to the embedded `sifr.*` stdlib registry.
 
-This slice implements native `sifr.toml` only. Future `pyproject.toml` / `[tool.sifr]` compatibility, if approved, must parse into the same internal manifest model and must not fork resolver behavior.
+This capability implements native `sifr.toml` only. Future `pyproject.toml` / `[tool.sifr]` compatibility, if approved, must parse into the same internal manifest model and must not fork resolver behavior.
 
 ## Manifest Shape
 
@@ -35,7 +35,7 @@ path = "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0021_m
 # Reserved for future build/profile behavior.
 ```
 
-Implemented semantics in this slice:
+Implemented semantics in this capability:
 
 - Missing `[source]` or `[source].roots` defaults to `roots = ["."]`.
 - Missing `[package]` is valid.
@@ -53,7 +53,7 @@ The resolver keeps embedded stdlib resolution separate and highest priority. For
 
 The entry parent is an unconditional winner. Workspace-root matches are checked for ambiguity, and ambiguous modules fail with `SIFR-WORKSPACE-0102`. Unresolved workspace imports fail with `SIFR-WORKSPACE-0101` and list every attempted path. Dotted modules such as `helpers.nodes` map to `helpers/nodes.sifr`.
 
-Package directories are not implemented in this phase. A graph containing both `helpers.sifr` and `helpers/nodes.sifr` fails with `SIFR-WORKSPACE-0103`.
+Package directories are not implemented in this capability. A graph containing both `helpers.sifr` and `helpers/nodes.sifr` fails with `SIFR-WORKSPACE-0103`.
 
 ## Rust Layout
 
@@ -68,5 +68,5 @@ This keeps HIR and codegen keyed by the canonical dotted module name while produ
 ## Deferred Work
 
 - `sifr test` workspace discovery remains out of scope.
-- Package directories, `__init__.sifr`, re-exports, wildcard imports, package members, dependency fetching, lockfiles, and build profiles remain reserved for later phases.
-- No CLI workspace override flag is implemented in this slice.
+- Package directories, `__init__.sifr`, re-exports, wildcard imports, package members, dependency fetching, lockfiles, and build profiles remain reserved for future capabilities.
+- No CLI workspace override flag is implemented in this capability.

@@ -7,7 +7,7 @@ This policy defines the curated blocking OSS gate and broader non-blocking ecosy
 Manifest:
 - `verification/areas/ecosystem_compatibility/data/curated_manifest.json`
 
-Contract per entry:
+Rules per entry:
 - pinned revision
 - source checksum (`source_checksum_sha256`)
 - license (`license`, SPDX identifier)
@@ -17,20 +17,20 @@ Contract per entry:
 - timeout policy
 - expected result classification
 
-Pinned revision contract:
+Pinned revision rules:
 - format must be `local-main@<git-sha-prefix>`
 - `<git-sha-prefix>` must match a commit in the followed history of tracked files under `project_root`
 - path-only moves do not require repinning when the underlying fixture content is unchanged
 - mismatches fail fast in the suite as `pinned_revision_mismatch`
 
-Source checksum contract:
+Source checksum rules:
 - checksum algorithm is SHA-256
 - the runner hashes every git-tracked file under `project_root` in sorted project-relative order
 - each file contributes its path, a NUL separator, bytes, and a trailing NUL separator
 - checksum mismatches fail as `source_checksum_mismatch` before commands execute
 - any source file change requires a manifest checksum update in the same PR
 
-License contract:
+License rules:
 - each entry must carry an SPDX license identifier
 - local first-party fixtures use `MIT`
 - imported third-party corpora must preserve upstream license metadata and use the upstream SPDX identifier
@@ -48,7 +48,7 @@ Manifest:
 
 Purpose:
 - compatibility signal collection
-- backlog generation and prioritization
+- signal queue generation and prioritization
 - non-blocking execution with machine-readable output
 
 Execution:

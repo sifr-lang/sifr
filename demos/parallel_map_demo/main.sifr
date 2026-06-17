@@ -29,7 +29,7 @@ def main() -> Result[None, Error]:
     labels: Result[list[str], WorkerError] = try_map([4, 5], stringify)
     assert str(labels) == "Ok([\"4\", \"5\"])"
 
-    # Configured pools use the same ordered result contract.
+    # Configured pools use the same ordered result rules.
     pool: Pool = Pool(PoolConfig(2))
     tripled: Result[list[int], WorkerRuntimeError] = pool.map([2, 3], triple)
     assert str(tripled) == "Ok([6, 9])"

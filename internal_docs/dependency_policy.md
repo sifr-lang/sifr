@@ -2,11 +2,11 @@
 
 Sifr is a programming language and compiler, not a single Rust application. Dependencies must be classified by where they are allowed to appear, which Sifr feature activates them, and whether they can affect generated user projects.
 
-The default rule is dependency-minimal and ecosystem-first: use mature Rust crates where they are the right production substrate, but keep crate types behind Sifr APIs and do not add adjacent crates for convenience. If a dependency cannot satisfy Sifr's ownership, typed-error, cancellation, panic, host, and testing contracts, defer the Sifr surface instead of adding a bespoke replacement or fallback path.
+The default rule is dependency-minimal and ecosystem-first: use mature Rust crates where they are the right production substrate, but keep crate types behind Sifr APIs and do not add adjacent crates for convenience. If a dependency cannot satisfy Sifr's ownership, typed-error, cancellation, panic, host, and testing rules, defer the Sifr surface instead of adding a bespoke replacement or fallback path.
 
 ## Workspace Lockfile
 
-Sifr tracks the root `Cargo.lock`. This repository builds a compiler, CLI, runtime crates, release tools, and verification harnesses as one Rust workspace, so the lockfile is part of the build and validation contract rather than an application-local convenience.
+Sifr tracks the root `Cargo.lock`. This repository builds a compiler, CLI, runtime crates, release tools, and verification harnesses as one Rust workspace, so the lockfile is part of the build and validation rules rather than an application-local convenience.
 
 Local validation and CI both start from the committed lockfile. The main validation profile runs the same `scripts/run_all_tests.sh` facade locally and in CI, keeping contributor machines and GitHub Actions on the same dependency graph unless a PR intentionally changes it.
 
@@ -28,7 +28,7 @@ Examples:
 - `proptest`
 - local verification helpers
 
-`anyhow` and `eyre` are acceptable only when contained to compiler/tooling implementation paths that do not replace structured diagnostics, typed compiler errors, generated runtime errors, or Sifr language-level `Result`/diagnostic contracts.
+`anyhow` and `eyre` are acceptable only when contained to compiler/tooling implementation paths that do not replace structured diagnostics, typed compiler errors, generated runtime errors, or Sifr language-level `Result`/diagnostic rules.
 
 ### Ring 2: Generated Runtime Core
 
@@ -64,7 +64,7 @@ Protocol/data dependencies are scoped to one accepted feature family. They must 
 Examples:
 
 - `serde` for generated typed schemas where the Sifr compiler owns eligibility rules
-- `postcard` for M6 typed local IPC frames
+- `postcard` for typed IPC typed local IPC frames
 
 For typed IPC, Sifr owns `IpcSerializable`, schema identity, version negotiation, compatibility policy, cancellation frames, and malformed-frame diagnostics. `postcard` is only the binary encoding backend. `serde`/`postcard` must appear in generated projects only when the user uses an accepted IPC or serialization feature.
 
@@ -81,9 +81,9 @@ Examples:
 
 ### Ring 6: Rejected Direct Dependencies
 
-Rejected direct dependencies are not used directly by first-party Sifr code for the given phase or surface. They may appear transitively through accepted dependencies, but Sifr must not build public/runtime semantics around them.
+Rejected direct dependencies are not used directly by first-party Sifr code for the given feature surface. They may appear transitively through accepted dependencies, but Sifr must not build public/runtime semantics around them.
 
-Examples for current runtime/platform phases:
+Examples for the current runtime/platform scope:
 
 - extra channel stacks such as `flume`, `async-channel`, and `futures-channel`
 - direct `parking_lot` for runtime locks
@@ -95,11 +95,11 @@ Examples for current runtime/platform phases:
 - direct `mio`, `bytes`, or `dashmap` unless a later design proves a narrow production need
 - `anyhow`/`eyre` for runtime or language-facing errors
 
-`bincode` is not rejected because it is pickle-like. It is rejected for the typed IPC phase because Sifr chooses one compact binary Serde codec, and multiple production IPC codecs would complicate schema/version compatibility. Pickle-like arbitrary object transport is rejected separately.
+`bincode` is not rejected because it is pickle-like. It is rejected for the typed IPC work because Sifr chooses one compact binary Serde codec, and multiple production IPC codecs would complicate schema/version compatibility. Pickle-like arbitrary object transport is rejected separately.
 
 ## Acceptance Checklist
 
-Before a dependency is accepted outside Ring 1 or Ring 5, the phase or issue must record:
+Before a dependency is accepted outside Ring 1 or Ring 5, the surface or issue must record:
 
 - dependency ring
 - accepted crate, version, and exact feature flags
@@ -120,7 +120,7 @@ Before a dependency is accepted outside Ring 1 or Ring 5, the phase or issue mus
 
 Generated user projects must include only the dependencies required by the Sifr features the program uses. Compiler/tooling dependencies do not imply generated runtime dependencies.
 
-Every generated-project dependency must be represented by a stable Sifr feature decision, not by incidental compiler implementation. Feature selection must be narrow; broad feature flags such as `full` are rejected unless a phase explicitly justifies them.
+Every generated-project dependency must be represented by a stable Sifr feature decision, not by incidental compiler implementation. Feature selection must be narrow; broad feature flags such as `full` are rejected unless a feature decision explicitly justifies them.
 
 ## Public API Boundary
 
@@ -130,4 +130,4 @@ Public Sifr APIs must not expose Rust implementation crate types, configuration 
 
 ## Change Control
 
-Accepted or rejected dependency decisions are implementation inputs. Implementation PRs must not perform crate-family discovery or swap adjacent crates. Changing a dependency decision requires a new issue or explicit phase amendment before implementation starts.
+Accepted or rejected dependency decisions are implementation inputs. Implementation PRs must not perform crate-family discovery or swap adjacent crates. Changing a dependency decision requires a new issue or explicit policy amendment before implementation starts.

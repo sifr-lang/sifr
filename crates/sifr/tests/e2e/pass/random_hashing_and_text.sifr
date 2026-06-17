@@ -26,10 +26,10 @@ def main() -> None:
     assert hash_ok
 
     codec_ok: bool = False
-    encoded: str = b64encode("rng-wave0")
+    encoded: str = b64encode("rng-stream-sample")
     try:
         decoded: str = b64decode(encoded)
-        codec_ok = decoded == "rng-wave0"
+        codec_ok = decoded == "rng-stream-sample"
     except ParseError as e:
         _ = str(e.message)
     assert codec_ok

@@ -1,6 +1,5 @@
-# Reference: m24_3
-# Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_3 control-flow effect query unification demo
+# Reference: return_and_raise_paths
+# return_and_raise_paths control-flow effect query unification demo
 # Exercises unified always-exit analysis across try/except and branch exits.
 
 def classify(n: int) -> int:
@@ -13,6 +12,6 @@ def classify(n: int) -> int:
         return 99
 
 def main():
-    print('m24_3 control-flow effect query unification demo:')
+    print('return_and_raise_paths control-flow effect query unification demo:')
     print(classify(7))
     print(classify(0))

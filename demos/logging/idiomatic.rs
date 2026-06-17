@@ -216,7 +216,7 @@ fn collect_cleanup_actual(base: &Path) -> Vec<bool> {
 }
 
 fn main() {
-    let base = mktemp_path("sifr_m30_1f_logging_demo_");
+    let base = mktemp_path("sifr_logging_logging_demo_");
     let _ = fs::create_dir_all(&base);
 
     let mut actual = Vec::new();
@@ -227,5 +227,5 @@ fn main() {
 
     let expected = vec![true, true, true, true, true, true];
     assert_eq!(actual, expected);
-    println!("m30_1f logging parity demo: pass");
+    println!("logging logging parity demo: pass");
 }
