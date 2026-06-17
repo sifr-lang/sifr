@@ -1,5 +1,5 @@
-# Reference: wave_psp_d1
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: filesystem_archive_surface
+# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.io import read_text, write_text
 from sifr.pathlib import Path
 from sifr.glob import glob
@@ -11,7 +11,7 @@ from sifr.os import getpid, run_command
 
 
 def main():
-    base: str = "/tmp/sifr_wave_psp_d1_demo_" + str(getpid())
+    base: str = "/tmp/sifr_filesystem_archive_surface_demo_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base)
         source: str = base + "/note.txt"
@@ -32,8 +32,8 @@ def main():
         _mv: None = move_file(copied, moved)
         print("shutil.move_file exists = " + str(Path(moved).exists()))
 
-        temp_file: str = mkstemp("sifr_wave_psp_d1_demo_")
-        temp_dir: str = mkdtemp("sifr_wave_psp_d1_demo_")
+        temp_file: str = mkstemp("sifr_filesystem_archive_surface_demo_")
+        temp_dir: str = mkdtemp("sifr_filesystem_archive_surface_demo_")
         print("tempfile.mkstemp = " + temp_file)
         print("tempfile.mkdtemp = " + temp_dir)
 
@@ -58,9 +58,9 @@ def main():
         _rm_temp_file: str = run_command("rm -f " + temp_file)
         _rm_temp_dir: None = rmtree(temp_dir)
     except IOError as e:
-        print("wave_psp_d1 demo error: " + e.message)
+        print("filesystem_archive_surface demo error: " + e.message)
 
     try:
         _cleanup: str = run_command("rm -rf " + base)
     except IOError as e:
-        print("wave_psp_d1 cleanup error: " + e.message)
+        print("filesystem_archive_surface cleanup error: " + e.message)

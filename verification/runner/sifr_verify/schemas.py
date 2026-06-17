@@ -34,7 +34,7 @@ def load_schema(name: str) -> dict[str, Any]:
     payload = load_json(path)
     if not isinstance(payload, dict):
         raise SchemaError(f"schema must be a JSON object: {path}")
-    validate_schema_contract(payload, path)
+    validate_schema_requirement(payload, path)
     return payload
 
 
@@ -44,12 +44,12 @@ def validate_all_committed_schemas(schema_dir: Path = SCHEMAS_DIR) -> list[str]:
         payload = load_json(path)
         if not isinstance(payload, dict):
             raise SchemaError(f"schema must be a JSON object: {path}")
-        validate_schema_contract(payload, path)
+        validate_schema_requirement(payload, path)
         checked.append(str(path.relative_to(REPO_ROOT)))
     return checked
 
 
-def validate_schema_contract(schema: dict[str, Any], path: Path) -> None:
+def validate_schema_requirement(schema: dict[str, Any], path: Path) -> None:
     _validate_schema_node(schema, path, "$")
 
 

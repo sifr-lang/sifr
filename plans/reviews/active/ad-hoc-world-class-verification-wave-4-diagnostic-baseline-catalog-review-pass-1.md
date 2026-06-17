@@ -10,7 +10,7 @@ None. The slice is internally consistent and the wiring matches the stated inten
 
 - `code_baseline_coverage.py` enforces the Wave 4 plan requirements: registry parity, catalog metadata, ownership, stale/missing files, source hash, and recovery coverage.
 - Active `SIFR-PARSE-0002` through `SIFR-PARSE-0009` codes have non-deferred baseline entries with `human`, `json`, and `compact` renderers.
-- `presentation_contract_cases` is correctly metadata-owned through synthetic baseline metadata and stays out of the executable manifest.
+- `presentation_rules_cases` is correctly metadata-owned through synthetic baseline metadata and stays out of the executable manifest.
 - Every remaining active code carries an owner, reason, issue, and `expires_in_wave` deferral.
 - The recovery surface catalog lists parser, HIR mixed recovery, and repeated type recovery fixtures.
 - The phase plan correctly frames this as the first diagnostics-baseline slice, not final Wave 4 closeout.

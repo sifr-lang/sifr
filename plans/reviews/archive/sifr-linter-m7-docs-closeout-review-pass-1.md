@@ -44,7 +44,7 @@ Phases36.x contract: `issues/ad-hoc-production-grade-sifr-linter.md`
 | AC-10 | Guardrails rejecting Python/Ruff dependencies | ✅ SATISFIED | `internal_docs/tooling_analysis.md` § Forbidden dependencies explicitly forbids `ruff_linter`, Python semantic/project/runtime crates, and Ruff Server semantic behavior; LSP server docs confine `sifr_lsp` to protocol-only |
 | AC-11 | Docs cover lint config, rules, suppressions, editor behavior | ✅ SATISFIED | `docs/linter.md` is complete; `internal_docs/editor_integrations.md` documents editor integration split-brain rule; `internal_docs/vscode_extension.md` documents forbidden VS Code extension responsibilities; `internal_docs/tooling_verification.md` documents M7 linter closeout checks |
 | AC-12 | Full local validation before phase closure | ⚠️ OPEN | Exposed below as a minor residual |
-| AC-13 | Mechanical suppression gate before non-line rules | ✅ SATISFIED | `internal_docs/tooling_verification.md` and `internal_docs/tooling_analysis.md` document the gate; `check_linter_reuse_contract.py` mechanically enforces the `ParserAwareSuppressions` dependency |
+| AC-13 | Mechanical suppression gate before non-line rules | ✅ SATISFIED | `internal_docs/tooling_verification.md` and `internal_docs/tooling_analysis.md` document the gate; `check_linter_reuse_rules.py` mechanically enforces the `ParserAwareSuppressions` dependency |
 | AC-14 | Unsafe fixes not applied automatically | ✅ SATISFIED | `docs/linter.md` § Fixes documents `--unsafe-fixes` and `--no-unsafe-fixes` as explicit opt-in |
 | AC-15 | Every Ruff rule family and config surface has locked disposition | ✅ SATISFIED | `ad-hoc-production-grade-sifr-linter.md` § Ruff Rule And Config Planning Decisions contains full locked audit table; `tooling_analysis.md` references audited manifests |
 | AC-16 | `sifr lint` implements locked Ruff-compatible CLI contract | ✅ SATISFIED | `docs/linter.md` documents all M2/M6 CLI surfaces (select, extend-select, ignore, per-file-ignores, output-format, statistics, show-files, show-settings, exit-zero, fix, diff, etc.) |
@@ -74,10 +74,10 @@ Both items are unchecked. The `M7 docs closeout` milestone scope in the phase co
 
 ```bash
 # Required M7 commands per tooling_verification.md and phase contract:
-python3 verification/tooling/check_linter_reuse_contract.py
-python3 verification/tooling/check_linter_reuse_contract.py --self-test
-python3 verification/tooling/check_rule_suppression_contract.py
-python3 verification/tooling/check_rule_suppression_contract.py --self-test
+python3 verification/tooling/check_linter_reuse_rules.py
+python3 verification/tooling/check_linter_reuse_rules.py --self-test
+python3 verification/tooling/check_rule_suppression_rules.py
+python3 verification/tooling/check_rule_suppression_rules.py --self-test
 python3 verification/tooling/check_linter_diagnostic_class.py
 python3 verification/tooling/check_linter_diagnostic_class.py --self-test
 python3 verification/tooling/lsp_protocol_smoke.py

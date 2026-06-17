@@ -1,4 +1,4 @@
-# Consolidated stdlib statistics coverage for milestone_30_4 structure rules
+# Consolidated stdlib statistics coverage for stdlib_consolidation structure rules
 from sifr.statistics import (
     mean, median, mode, fmean, harmonic_mean, median_low, median_high,
     multimode, quantiles, covariance, correlation, linear_regression,

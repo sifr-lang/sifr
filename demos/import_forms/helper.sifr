@@ -1,4 +1,3 @@
-# Reference: m17_4
-# Source issue: phase17-import-and-externals-correctness-execution.md
+# Reference: import_forms
 def value() -> int:
     return 17

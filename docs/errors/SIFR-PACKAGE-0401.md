@@ -11,6 +11,6 @@ Cargo package archive is missing required Sifr source.
 | Severity | Error |
 | Owner | `sifr_package::cargo::package` |
 | Message template | `package '{package_id}' archive contains no .sifr source files` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_sifr_source_reports_0401` |
+| Representative fixture | `crates/sifr_package/src/package_publish_archive_tests.rs::archive_missing_sifr_source_reports_0401` |
 | Declared args | `cargo_package_id (json-only)`, `package_id (message+json)` |
 | Dedupe args | `cargo_package_id`, `package_id` |

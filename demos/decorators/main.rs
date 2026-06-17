@@ -1,7 +1,7 @@
-// Reference: milestone_decorators
-// Source issue: milestone-decorators-epic.md
+// Reference: decorators
+// Reference: decorators
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
-     Running `target/debug/sifr emit demos/milestone_decorators_demo.sifr`
+     Running `target/debug/sifr emit demos/decorators_demo.sifr`
 // @log
 fn greet(name: String) -> String {
     return format!("{}{}{}", "Hello, ".to_string(), name, "!".to_string());

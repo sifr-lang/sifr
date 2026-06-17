@@ -1,5 +1,5 @@
-// Reference: milestone_error_handling
-// Source issue: milestone-error-handling-epic.md
+// Reference: error_handling
+// Reference: error-handling
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValidationError {
     message: String,

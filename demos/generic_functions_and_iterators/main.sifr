@@ -1,8 +1,8 @@
-# Reference: milestone_audit_fixup
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: audit_fixup
+# Reference: compiler-feature-history
 # ============================================================
-# Milestone M19: Audit Fix-Up Demo
-# Showcases all features delivered in this milestone
+# Feature audit fix-up: Audit Fix-Up Demo
+# Showcases all features delivered in this future capability
 # ============================================================
 
 # --- 1. PEP 695 Inline Generic Functions ---

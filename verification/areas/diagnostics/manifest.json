@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "diagnostics",
   "owner": "compiler/diagnostics",
-  "description": "Diagnostic code registry, renderer, docs/schema sync, and presentation baseline contracts.",
+  "description": "Diagnostic code registry, renderer, docs/schema sync, and presentation baseline ruless.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local"
@@ -10,7 +10,7 @@
   "timeout_seconds": 300,
   "suites": [
     {
-      "name": "contracts",
+      "name": "rules",
       "kind": "adapter",
       "cases": [
         {
@@ -1409,7 +1409,7 @@
     "allowed": false,
     "requires_reason": true
   },
-  "baseline_metadata_contract": {
+  "baseline_metadata_rules": {
     "required": false,
     "source": "not-applicable"
   }

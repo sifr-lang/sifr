@@ -22,7 +22,7 @@ fn json_string(value: &str) -> String {
 }
 
 fn main() {
-    println!("m28_5 verification corpus and determinism gates demo");
+    println!("decimal_verification verification corpus and determinism gates demo");
 
     let decimal = Decimal::from_str_exact("-7.5").unwrap_or_else(|_| unreachable!());
     let decimal_two = Decimal::from_str_exact("2").unwrap_or_else(|_| unreachable!());

@@ -1,5 +1,4 @@
-# Reference: m23_2
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: module_cycle_diagnostics
 from c import value_c
 
 def value_b() -> int:

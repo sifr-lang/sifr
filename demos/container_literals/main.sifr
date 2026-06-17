@@ -1,6 +1,5 @@
-# Reference: m31_g
-# Source issue: phase31-algorithmic-compatibility-execution.md
-# Milestone m31_g demo: empty dict literal specialization from typed writes/reads.
+# Reference: container_literals
+# Feature demo: empty dict literal specialization from typed writes/reads.
 
 def frequency_score(nums: list[int]) -> int:
     counts = {}

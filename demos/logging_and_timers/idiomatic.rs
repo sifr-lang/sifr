@@ -198,11 +198,11 @@ fn workload() {
 
 fn main() {
     let mut demo_ok = false;
-    let log_path = "/tmp/sifr_runtime_wave3_demo.log";
+    let log_path = "/tmp/sifr_runtime_logging_and_timers.log";
     let _formatter = Formatter;
 
     if let Ok(()) = write_text(log_path, "") {
-        let mut logger = get_logger("wave3-demo");
+        let mut logger = get_logger("logging_and_timers-demo");
         logger.set_file(log_path);
         let file_handler = FileHandler::new(log_path, INFO);
         logger.add_handler(file_handler);
@@ -225,7 +225,7 @@ fn main() {
             let elapsed = Timer.call(workload, 4);
 
             if let Ok(content) = read_text(log_path) {
-                demo_ok = content == "INFO:wave3-demo:hello\n"
+                demo_ok = content == "INFO:logging_and_timers-demo:hello\n"
                     && gmt.tm_year == 1970
                     && epoch_ok
                     && elapsed >= 0.0
@@ -240,5 +240,5 @@ fn main() {
     }
 
     assert!(demo_ok);
-    println!("ad_hoc_runtime_wave3_logging_time_timeit_object_surface_demo: ok");
+    println!("runtime_logging_and_timers_time_timeit_object_surface_demo: ok");
 }

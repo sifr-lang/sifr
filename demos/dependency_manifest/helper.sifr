@@ -1,15 +1,14 @@
-# Reference: m_adhoc_5
-# Source issue: ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md
+# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
 from sifr.tomllib import TomlValue, loads
 
 
 def render() -> str:
     try:
-        parsed: TomlValue = loads("name = \"phase-five\"\nvalue = 5")
+        parsed: TomlValue = loads("name = \"five\"\nvalue = 5")
         name_value: TomlValue | None = parsed.get("name")
         value_value: TomlValue | None = parsed.get("value")
         if name_value is not None and value_value is not None:
-            return "adhoc milestone 5 dependency closure demo: pass"
-        return "adhoc milestone 5 dependency closure demo: empty"
+            return "dependency closure demo: pass"
+        return "dependency closure demo: empty"
     except TOMLDecodeError as e:
         return e.message

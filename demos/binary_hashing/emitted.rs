@@ -356,7 +356,7 @@ impl std::error::Error for RegexError {
 fn main() {
     let __sifr_try_res: Result<(), ValueError> = (|| {
     let data: Vec<u8> = {
-    let __s = "wave2-bytes-demo".to_string();
+    let __s = "binary_hashing-bytes-demo".to_string();
     __s.as_bytes().to_vec()
 };
     let mut h: HashObject = new_bytes(&"sha256".to_string(), &data)?;
@@ -369,7 +369,7 @@ fn main() {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        assert!(format!("{}", format!("{}{}", "unexpected value error: ".to_string(), e.message)) == "ad_hoc_rng_wave2_hashlib_base64_bytes_demo: pass".to_string());
+        assert!(format!("{}", format!("{}{}", "unexpected value error: ".to_string(), e.message)) == "rng_binary_hashing_base64_bytes_demo: pass".to_string());
     }
-    assert!(format!("{}", "ad_hoc_rng_wave2_hashlib_base64_bytes_demo: pass".to_string()) == "ad_hoc_rng_wave2_hashlib_base64_bytes_demo: pass".to_string());
+    assert!(format!("{}", "rng_binary_hashing_base64_bytes_demo: pass".to_string()) == "rng_binary_hashing_base64_bytes_demo: pass".to_string());
 }

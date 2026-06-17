@@ -1,5 +1,4 @@
-# Reference: m28_1
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_types
 def main():
     d: decimal = Decimal("12.50")
     b: bigdecimal = BigDecimal("3.25")
@@ -10,6 +9,6 @@ def main():
     assert d_plus == Decimal("14.50")
     assert b_plus == BigDecimal("7.25")
 
-    print("m28_1 type-system/parser/HIR integration demo")
+    print("decimal_types type-system/parser/HIR integration demo")
     print(str(d_plus))
     print(str(b_plus))

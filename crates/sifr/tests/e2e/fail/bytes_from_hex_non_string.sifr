@@ -1,3 +1,3 @@
-# Reference: phase_psp_bytes_2_from_hex_non_string
+# Reference: stdlib_parity_bytes_2_from_hex_non_string
 def main() -> None:
     _bad: bytes = bytes.from_hex(123)

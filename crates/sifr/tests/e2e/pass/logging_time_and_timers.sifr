@@ -1,4 +1,4 @@
-# Reference: phase_psp_runtime_3_logging_time_timeit_object_surface
+# Reference: stdlib_parity_runtime_3_logging_time_timeit_object_surface
 from sifr.logging import getLogger, Logger, Handler, StreamHandler, FileHandler, NullHandler, Formatter
 from sifr.logging import DEBUG, INFO, ERROR
 from sifr.time import gmtime_struct, localtime_struct, mktime, struct_time, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME
@@ -48,7 +48,7 @@ def main() -> None:
 
     try:
         _w1: None = write_text(log_path, "")
-        logger: Logger = getLogger("wave3")
+        logger: Logger = getLogger("logging-sample")
         logger.set_level(DEBUG)
         logger.set_file(log_path)
         fh: FileHandler = FileHandler(log_path + "", INFO)
@@ -57,7 +57,7 @@ def main() -> None:
         logger.debug("beta")
         logger.clear_handler()
         content: str = read_text(log_path)
-        file_handler_ok = content == "INFO:wave3:alpha\n"
+        file_handler_ok = content == "INFO:logging-sample:alpha\n"
     except IOError as e:
         _ = e.message
 

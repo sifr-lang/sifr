@@ -1,4 +1,4 @@
-# Reference: phase_psp_d2_os_mkdir_non_string_path
+# Reference: stdlib_parity_d2_os_mkdir_non_string_path
 from sifr.os import mkdir
 
 

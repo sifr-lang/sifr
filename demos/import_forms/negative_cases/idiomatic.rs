@@ -6,11 +6,11 @@
 //! diagnostics include the reachable `undefined variable` or `undefined function`
 //! follow-on error alongside the explicit unsupported-import message.
 //!
-//! This folder exists to preserve the phase-17 import-form diagnostics:
+//! This folder exists to preserve the import-form import-form diagnostics:
 //! unsupported bare relative imports must point users at `from <module> import`,
 //! multi-level relative imports must report the rejected level explicitly, and
 //! plain `import ...` statements must remain unsupported. The Rust-side analogue
 //! is module resolution policy owned by Sifr, so this file documents the
-//! contract instead of inventing a Rust compile-fail sample.
+//! rules instead of inventing a Rust compile-fail sample.
 
 fn main() {}

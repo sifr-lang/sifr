@@ -1,6 +1,5 @@
-# Reference: m25_5
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_5 negative case
+# Reference: cfg_flow_behavior
+# cfg flow negative case
 # Reachable type mismatch must fail with stable diagnostics across modes.
 
 def safe(seed: int) -> int:

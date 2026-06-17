@@ -173,7 +173,7 @@ fn collect_runtime_actual() -> Vec<bool> {
 
 fn collect_filesystem_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let base: String = format!("{}{}", "/tmp/sifr_m30_1e_os_demo_".to_string(), format!("{}", std::process::id() as i64));
+    let base: String = format!("{}{}", "/tmp/sifr_os_os_demo_".to_string(), format!("{}", std::process::id() as i64));
     let file_path: String = format!("{}{}", base, "/demo.txt".to_string());
     let mut os_flow_ok: bool = false;
     let mut list_ok: bool = false;
@@ -207,7 +207,7 @@ fn collect_missing_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let mut missing_rejected: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let _bad: () = std::fs::remove_dir(&"/tmp/sifr_m30_1e_os_demo_missing".to_string()).map(|_| ()).map_err(__io_err)?;
+    let _bad: () = std::fs::remove_dir(&"/tmp/sifr_os_os_demo_missing".to_string()).map(|_| ()).map_err(__io_err)?;
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -232,5 +232,5 @@ fn main() {
     append_all(&mut actual, &collect_filesystem_actual());
     append_all(&mut actual, &collect_missing_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1e os parity demo: pass");
+    println!("os os parity demo: pass");
 }

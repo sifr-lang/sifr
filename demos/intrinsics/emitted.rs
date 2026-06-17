@@ -148,6 +148,6 @@ fn main() {
     let result: f64 = (16.0 as f64).sqrt();
     assert!(result == (4.0 as f64));
     assert!(std::f64::consts::PI > (3.14 as f64));
-    println!("milestone_intrinsics demo: all checks passed!");
-    assert!(format!("{}", "milestone_intrinsics demo: all checks passed!".to_string()) == "milestone_intrinsics demo: all checks passed!".to_string());
+    println!("intrinsics demo: all checks passed!");
+    assert!(format!("{}", "intrinsics demo: all checks passed!".to_string()) == "intrinsics demo: all checks passed!".to_string());
 }

@@ -1,6 +1,6 @@
-# Reference: ad_hoc_recursive_type_part1
-# Source issue: ad-hoc-full-recursive-type-feature-part1-execution.md
-# Ad hoc recursive-type feature part 1 demo.
+# Reference: recursive_type_part1
+# Reference: full-recursive-type-feature-part1
+# Recursive-type feature part 1 demo.
 # Shows that type-alias symbols resolve deterministically before full body lowering.
 
 type Payload = Response

@@ -63,8 +63,8 @@ These directly map to the m36.3 validation planning goals in the phase contract.
 
 ### F9 — Informational: verification scripts are correct
 
-Both `check_analysis_snapshot_contract.py` and `check_analysis_split_brain.py` are correctly implemented:
-- `check_analysis_snapshot_contract.py` runs the full `cargo test -p sifr_analysis` suite and asserts required test names appear in output
+Both `check_analysis_snapshot_rules.py` and `check_analysis_split_brain.py` are correctly implemented:
+- `check_analysis_snapshot_rules.py` runs the full `cargo test -p sifr_analysis` suite and asserts required test names appear in output
 - `check_analysis_split_brain.py` uses line-by-line pattern matching (not regex) to catch forbidden imports/calls, with `sifr_format::format_range` properly allowlisted
 
 Both scripts have negative self-tests that seed forbidden patterns and verify they are caught.
@@ -93,7 +93,7 @@ Both scripts have negative self-tests that seed forbidden patterns and verify th
 |---|---|---|
 | Format/lint | `cargo fmt --check && git diff --check` | PASS |
 | Python compile | `python3 -m py_compile verification/tooling/check_analysis_*.py` | PASS |
-| Snapshot contract | `check_analysis_snapshot_contract.py && --self-test` | PASS |
+| Snapshot contract | `check_analysis_snapshot_rules.py && --self-test` | PASS |
 | Split-brain guard | `check_analysis_split_brain.py && --self-test` | PASS |
 | Cargo check | `cargo check -p sifr_frontend -p sifr_analysis` | PASS |
 | Clippy | `cargo clippy -p sifr_frontend -p sifr_analysis -- -D warnings` | PASS |

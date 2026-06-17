@@ -385,7 +385,7 @@ mod tests {
         let payload = r#"{"quoted":"123456","fraction":12345.25,"exp":12345e2}"#;
 
         validate_json_integer_digit_limits(payload, 4)
-            .expect("only integer number tokens are limited in this phase");
+            .expect("only integer number tokens are limited in this surface");
     }
 
     #[test]

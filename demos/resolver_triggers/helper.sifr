@@ -1,4 +1,3 @@
-# Reference: m18_4
-# Source issue: phase18-project-and-cli-semantics-execution.md
+# Reference: resolver_triggers
 def value() -> int:
     return 18

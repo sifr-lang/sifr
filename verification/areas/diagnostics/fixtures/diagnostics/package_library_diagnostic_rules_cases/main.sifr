@@ -1,0 +1,3 @@
+# verification diagnostics fixture: synthetic package diagnostic rules baselines.
+def subject():
+    value: int = 1

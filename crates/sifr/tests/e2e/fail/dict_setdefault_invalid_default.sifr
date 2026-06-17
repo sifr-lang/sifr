@@ -1,4 +1,4 @@
-# Reference: phase_psp_a2_dict_setdefault_invalid_default
+# Reference: stdlib_parity_a2_dict_setdefault_invalid_default
 def main():
     data: dict[str, int] = {"x": 1}
     data.setdefault("y", "bad")

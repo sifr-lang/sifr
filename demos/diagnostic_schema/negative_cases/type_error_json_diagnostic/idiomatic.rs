@@ -4,7 +4,7 @@
 //! mismatch so the canonical `--diagnostic-format json` schema can be validated.
 //!
 //! A representative Rust-side analogue would also be a plain assignment type
-//! error, but the contract here is the structured JSON payload rather than the
+//! error, but the rules here is the structured JSON payload rather than the
 //! exact surface syntax.
 
 fn main() {}

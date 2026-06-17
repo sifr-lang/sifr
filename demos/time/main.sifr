@@ -1,5 +1,4 @@
-# Reference: m30_1f
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: time
 from sifr.time import time_now, time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time, mktime
 from sifr.test import assert_bool_vector_eq
 
@@ -68,4 +67,4 @@ def main():
     append_all(actual, collect_parse_and_safety_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1f time parity demo: pass")
+    print("time time parity demo: pass")

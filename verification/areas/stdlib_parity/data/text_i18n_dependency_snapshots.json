@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "phase-complete",
+  "status": "readiness-complete",
   "source": "sifr_stdlib::generated_cargo_dependencies",
   "runtime_path_placeholder": "<sifr_runtime_path>",
   "snapshots": [

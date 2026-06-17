@@ -1,8 +1,7 @@
-# Reference: m20_3
-# Source issue: phase20-hir-decomposition-and-maintainability-hardening-execution.md
-# milestone_20_3 demo
+# Reference: guardrails
+# guardrails-sample demo
 # Confirms standard compilation flow remains stable while guardrails are enforced separately.
 
 def main():
-    print("m20_3 guardrails demo:")
+    print("guardrails guardrails demo:")
     print(20)

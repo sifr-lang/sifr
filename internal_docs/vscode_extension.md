@@ -1,6 +1,6 @@
-# Sifr VS Code Extension Contract
+# Sifr VS Code Extension Rules
 
-status: phase36-m36.7-implemented
+status: tooling-VS Code extension layer-implemented
 
 ## Repository Boundary
 
@@ -10,18 +10,18 @@ The VS Code extension lives in a separate repository:
 sifr-lang/sifr-vscode
 ```
 
-The main `sifr-lang/sifr` repository owns compiler, CLI, LSP, formatter, linter, syntax assets, editor contracts, and cross-repository validation. The extension repository owns Node/TypeScript packaging, extension tests, `.vsix` packaging, marketplace metadata, and release artifacts.
+The main `sifr-lang/sifr` repository owns compiler, CLI, LSP, formatter, linter, syntax assets, editor rules, and cross-repository validation. The extension repository owns Node/TypeScript packaging, extension tests, `.vsix` packaging, marketplace metadata, and release artifacts.
 
-The repository is expected at `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or as a sibling checkout `../sifr-vscode`. m36.1 locks the contract. m36.7 makes the extension repository mandatory for package validation.
+The repository is expected at `editor_integrations/vscode`, `SIFR_VSCODE_REPO`, or as a sibling checkout `../sifr-vscode`. tooling lock locks the rules. VS Code extension layer makes the extension repository mandatory for package validation.
 
-m36.7 created `sifr-lang/sifr-vscode` and added the initial production extension
+VS Code extension layer created `sifr-lang/sifr-vscode` and added the initial production extension
 scaffold: TypeScript sources, package manifest, language configuration, TextMate
 grammar, LSP launcher, settings, commands, test controller, local tests, CI, and
 `.vsix` packaging.
 
-## Manifest Contract
+## Manifest Rules
 
-The checked-in contract is `verification/areas/developer_tooling/vscode_extension_contract.json`.
+The checked-in rules is `verification/areas/developer_tooling/vscode_extension_rules.json`.
 
 Required identity:
 
@@ -98,13 +98,13 @@ All commands delegate to Sifr LSP or CLI surfaces.
 
 ## Versioning Covenant
 
-Before m36.7 closes, the extension must document whether its version is coupled to the Sifr compiler version or declares an explicit supported Sifr version range. Extension releases are gated on the main-repo contract check, `sifr lsp --stdio` smoke tests, extension tests, and `.vsix` packaging.
+Before VS Code extension layer closes, the extension must document whether its version is coupled to the Sifr compiler version or declares an explicit supported Sifr version range. Extension releases are gated on the main-repo rules check, `sifr lsp --stdio` smoke tests, extension tests, and `.vsix` packaging.
 
 ## Validation
 
-`verification/areas/developer_tooling/check_vscode_extension_contract.py` validates the main-repo contract and, once extension validation is active, checks the extension repository manifest, commands, settings, launch command, package scripts, and forbidden semantic behavior.
+`verification/areas/developer_tooling/check_vscode_extension_rules.py` validates the main-repo rules and, once extension validation is active, checks the extension repository manifest, commands, settings, launch command, package scripts, and forbidden semantic behavior.
 
-`verification/areas/developer_tooling/check_vscode_extension.py` runs m36.7 build/test/package
+`verification/areas/developer_tooling/check_vscode_extension.py` runs VS Code extension layer build/test/package
 validation against the real extension checkout: `npm ci` when dependencies are
 missing, `npm run lint`, `npm run typecheck`, `npm test`,
 `npm run test:extension`, and `npm run package`.

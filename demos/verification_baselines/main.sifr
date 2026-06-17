@@ -1,8 +1,7 @@
-# Reference: m29_1
-# Source issue: phase29-verification-hardening-execution.md
-# m29_1 demo: suite taxonomy and baseline governance contracts.
+# Reference: verification_baselines
+# verification_baselines demo: suite taxonomy and baseline governance rules.
 
 def main():
-    print("m29_1 suite taxonomy and baseline governance demo")
+    print("verification_baselines suite taxonomy and baseline governance demo")
     print("diagnostics and project suites are baseline-backed")
     print("canonical bless workflow: uv run --project verification --locked python -m sifr_verify.hardening --bless")

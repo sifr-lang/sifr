@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject semantic bypasses in the Phase 36 analysis crate."""
+"""Reject semantic bypasses in the editor tooling analysis crate."""
 
 from __future__ import annotations
 

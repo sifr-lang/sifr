@@ -1,6 +1,6 @@
-# Reference: milestone_error_safety_stdlib_types
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_error_safety_stdlib_types
+# Reference: error_safety_stdlib_types
+# Reference: compiler-feature-history
+# Demo: error_safety_stdlib_types
 # Module-specific error types defined in stdlib .sifr files,
 # imported by user code, and caught with exhaustiveness checking.
 

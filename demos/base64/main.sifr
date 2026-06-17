@@ -1,6 +1,5 @@
-# Reference: m30_1a
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
-# m30_1a base64 parity demo
+# Reference: base64
+# base64 base64 parity demo
 from sifr.base64 import (
     b64encode, b64decode,
     standard_b64encode, standard_b64decode,
@@ -99,4 +98,4 @@ def main():
     actual_ok: list[bool] = collect_decode_actual_ok(decode_inputs)
     assert_bool_vector_eq(actual_ok, expected_ok)
 
-    print("m30_1a base64 parity demo: pass")
+    print("base64 base64 parity demo: pass")

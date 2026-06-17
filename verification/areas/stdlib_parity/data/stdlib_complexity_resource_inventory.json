@@ -1,0 +1,373 @@
+{
+  "metadata": {
+    "rules": "stdlib_complexity_resource",
+    "source_rules": "stdlib_complexity_resource_budget",
+    "generated_on": "2026-03-09",
+    "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+    "delta_bands": [
+      "within_2x",
+      "within_5x",
+      "within_10x",
+      "waived"
+    ],
+    "check_patterns": [
+      {
+        "name": "o1_wrapper",
+        "input_sweep": [1, 8, 64, 512],
+        "acceptance_rule": "wall-time growth ratio <= 1.25 across adjacent sweep points"
+      },
+      {
+        "name": "linear_scan",
+        "input_sweep": [64, 256, 1024, 4096],
+        "acceptance_rule": "adjacent growth ratio bounded by 2.8x"
+      },
+      {
+        "name": "ordered_insert_search",
+        "input_sweep": [128, 512, 2048, 8192],
+        "acceptance_rule": "search paths align with O(log n); insertion paths align with O(n)"
+      },
+      {
+        "name": "host_io_bound",
+        "input_sweep": [1, 10, 100],
+        "acceptance_rule": "non-panic operation and bounded temporary allocation; constant-factor variation may be waived"
+      }
+    ]
+  },
+  "entries": [
+    {
+      "module": "env",
+      "api_class": "o1_wrapper",
+      "representative_apis": ["getenv_opt", "setenv", "unsetenv"],
+      "expected_asymptotic": "O(1)",
+      "observed_asymptotic": "O(1)",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "bounded allocation, panic-free invalid-key adaptation",
+      "waiver": null
+    },
+    {
+      "module": "bytes",
+      "api_class": "linear_scan",
+      "representative_apis": ["from_hex", "to_hex", "decode_utf8"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "linear output allocation only",
+      "waiver": null
+    },
+    {
+      "module": "base64",
+      "api_class": "linear_scan",
+      "representative_apis": ["b64encode", "b64decode", "b32encode"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "linear output allocation and parser state only",
+      "waiver": null
+    },
+    {
+      "module": "hashlib",
+      "api_class": "linear_scan",
+      "representative_apis": ["sha256", "md5", "update"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "digest-state bounded; no unbounded side allocations",
+      "waiver": null
+    },
+    {
+      "module": "math",
+      "api_class": "o1_wrapper",
+      "representative_apis": ["sqrt", "sin", "isfinite"],
+      "expected_asymptotic": "O(1)",
+      "observed_asymptotic": "O(1)",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "scalar compute, no collection growth",
+      "waiver": null
+    },
+    {
+      "module": "statistics",
+      "api_class": "linear_scan",
+      "representative_apis": ["mean", "variance", "mode"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "single-pass or bounded-pass aggregation buffers",
+      "waiver": null
+    },
+    {
+      "module": "bisect",
+      "api_class": "ordered_insert_search",
+      "representative_apis": ["bisect_left", "bisect_right", "insort_right"],
+      "expected_asymptotic": "O(log n) search / O(n) insert",
+      "observed_asymptotic": "O(log n) search / O(n) insert",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "search constant-space, insert in-place shift",
+      "waiver": null
+    },
+    {
+      "module": "heapq",
+      "api_class": "ordered_insert_search",
+      "representative_apis": ["heappush", "heappop", "heapify"],
+      "expected_asymptotic": "O(log n) push/pop / O(n) heapify",
+      "observed_asymptotic": "O(log n) push/pop / O(n) heapify",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "in-place heap operations",
+      "waiver": null
+    },
+    {
+      "module": "string",
+      "api_class": "linear_scan",
+      "representative_apis": ["capwords"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "linear normalized-string allocation",
+      "waiver": null
+    },
+    {
+      "module": "textwrap",
+      "api_class": "linear_scan",
+      "representative_apis": ["wrap", "fill", "shorten"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "line-buffer allocation linear in input",
+      "waiver": null
+    },
+    {
+      "module": "fnmatch",
+      "api_class": "linear_scan",
+      "representative_apis": ["fnmatch", "fnmatch_filter"],
+      "expected_asymptotic": "O(n*m)",
+      "observed_asymptotic": "O(n*m)",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "pattern matching without recursive backtracking",
+      "waiver": null
+    },
+    {
+      "module": "re",
+      "api_class": "linear_scan",
+      "representative_apis": ["search", "sub", "split"],
+      "expected_asymptotic": "input-dependent regex engine behavior",
+      "observed_asymptotic": "input-dependent regex engine behavior",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "panic-free adapter over regex engine",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "regex engine complexity depends on pattern class; constant-factor measurements are workload-sensitive and not stable across hosts",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "replace waiver when deterministic regex workload corpus and host-normalized runner are introduced"
+      }
+    },
+    {
+      "module": "collections",
+      "api_class": "linear_scan",
+      "representative_apis": ["Counter", "from_list", "deque"],
+      "expected_asymptotic": "O(n) construction / O(1) deque end ops",
+      "observed_asymptotic": "O(n) construction / O(1) deque end ops",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "container growth proportional to element count",
+      "waiver": null
+    },
+    {
+      "module": "itertools",
+      "api_class": "linear_scan",
+      "representative_apis": ["chain", "islice", "accumulate"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "list-backed deterministic helper expansion",
+      "waiver": null
+    },
+    {
+      "module": "json",
+      "api_class": "linear_scan",
+      "representative_apis": ["loads", "json_dumps"],
+      "expected_asymptotic": "O(n)",
+      "observed_asymptotic": "O(n)",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "parser state linear in payload size",
+      "waiver": null
+    },
+    {
+      "module": "datetime",
+      "api_class": "o1_wrapper",
+      "representative_apis": ["datetime.now", "from_timestamp", "isoformat"],
+      "expected_asymptotic": "O(1)",
+      "observed_asymptotic": "O(1)",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "fixed-size temporal value construction",
+      "waiver": null
+    },
+    {
+      "module": "io",
+      "api_class": "host_io_bound",
+      "representative_apis": ["read_text", "write_text", "open"],
+      "expected_asymptotic": "O(n bytes)",
+      "observed_asymptotic": "O(n bytes)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "stream-bound allocation proportional to payload",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "filesystem latency and kernel buffering dominate constant-factor comparisons",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "replace waiver after host-normalized tmpfs benchmark lane is available"
+      }
+    },
+    {
+      "module": "csv",
+      "api_class": "linear_scan",
+      "representative_apis": ["reader", "writer", "DictReader"],
+      "expected_asymptotic": "O(n bytes)",
+      "observed_asymptotic": "O(n bytes)",
+      "constant_factor_delta_band": "within_5x",
+      "resource_budget": "row-token buffers linear in row width",
+      "waiver": null
+    },
+    {
+      "module": "os",
+      "api_class": "host_io_bound",
+      "representative_apis": ["listdir", "stat", "disk_usage"],
+      "expected_asymptotic": "host syscall dependent",
+      "observed_asymptotic": "host syscall dependent",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "syscall-bound; no unbounded user-space buffering",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "syscall and filesystem metadata latency dominate constant-factor behavior",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "revisit when syscall benchmarking harness with controlled FS fixtures is landed"
+      }
+    },
+    {
+      "module": "pathlib",
+      "api_class": "host_io_bound",
+      "representative_apis": ["glob", "rglob", "iterdir"],
+      "expected_asymptotic": "O(directory entries)",
+      "observed_asymptotic": "O(directory entries)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "path list allocation proportional to matches",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "directory topology and filesystem cache state produce high constant-factor variance",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "revisit with deterministic fixture-backed directory benchmark suite"
+      }
+    },
+    {
+      "module": "glob",
+      "api_class": "host_io_bound",
+      "representative_apis": ["glob"],
+      "expected_asymptotic": "O(directory entries * pattern length)",
+      "observed_asymptotic": "O(directory entries * pattern length)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "match list allocation bounded by discovered entries",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "filesystem walk cost and hidden-file filtering vary strongly by host storage characteristics",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "replace waiver when synthetic directory benchmark corpus is integrated"
+      }
+    },
+    {
+      "module": "tempfile",
+      "api_class": "host_io_bound",
+      "representative_apis": ["mktemp_path", "mkstemp", "mkdtemp"],
+      "expected_asymptotic": "O(1) expected with bounded retry loop",
+      "observed_asymptotic": "O(1) expected with bounded retry loop",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "bounded retry attempts; path string allocation only",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "OS temp directory policy and collision probability dominate constant-factor behavior",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "revisit when deterministic tmpdir sandbox and collision-seed fixtures are available"
+      }
+    },
+    {
+      "module": "shutil",
+      "api_class": "host_io_bound",
+      "representative_apis": ["copy", "move_file", "rmtree"],
+      "expected_asymptotic": "O(total bytes or files)",
+      "observed_asymptotic": "O(total bytes or files)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "bounded per-file buffers with recursive traversal proportional to file count",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "filesystem/device characteristics dominate copy/remove constant factors",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "replace waiver after fixture-backed cross-device benchmark lane is introduced"
+      }
+    },
+    {
+      "module": "logging",
+      "api_class": "host_io_bound",
+      "representative_apis": ["Logger.log", "FileHandler.emit", "basicConfig"],
+      "expected_asymptotic": "O(message length + handler count)",
+      "observed_asymptotic": "O(message length + handler count)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "message formatting plus optional file write",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "stdout/file sink latency dominates constant factors and varies by runtime host",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "revisit when sink-isolated benchmark adapters are available"
+      }
+    },
+    {
+      "module": "time",
+      "api_class": "o1_wrapper",
+      "representative_apis": ["time_now", "perf_counter", "monotonic"],
+      "expected_asymptotic": "O(1)",
+      "observed_asymptotic": "O(1)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "scalar wrapper calls only",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "clock source precision and host timer implementation introduce unstable constant-factor comparisons",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "revisit after monotonic timer backend parity expansion lands"
+      }
+    },
+    {
+      "module": "timeit",
+      "api_class": "linear_scan",
+      "representative_apis": ["timeit", "repeat"],
+      "expected_asymptotic": "O(iterations)",
+      "observed_asymptotic": "O(iterations)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "loop counter state only",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "timer backend differences dominate constant-factor comparison even when asymptotic loop growth matches",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "replace waiver when high-resolution monotonic backend is available in Sifr"
+      }
+    },
+    {
+      "module": "platform",
+      "api_class": "o1_wrapper",
+      "representative_apis": ["system", "machine", "node"],
+      "expected_asymptotic": "O(1)",
+      "observed_asymptotic": "O(1)",
+      "constant_factor_delta_band": "waived",
+      "resource_budget": "small string wrappers over host metadata",
+      "waiver": {
+        "owner": "stdlib complexity-resource rules",
+        "rationale": "host command and environment fallback paths make constant-factor comparison non-deterministic",
+        "tracking_issue": "issues/stdlib-reliability-parity-and-performance-budgets-execution.md",
+        "revisit_rule": "revisit after pure-intrinsic host metadata path replaces shell fallback"
+      }
+    },
+    {
+      "module": "uuid",
+      "api_class": "o1_wrapper",
+      "representative_apis": ["uuid4", "uuid_from_hex", "UUID.version"],
+      "expected_asymptotic": "O(1) bounded-size parse/format",
+      "observed_asymptotic": "O(1) bounded-size parse/format",
+      "constant_factor_delta_band": "within_2x",
+      "resource_budget": "bounded-size string parsing only",
+      "waiver": null
+    }
+  ]
+}

@@ -633,5 +633,5 @@ fn main() {
     append_all(&mut actual, &collect_format_actual());
     append_all(&mut actual, &collect_parse_and_safety_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1f time parity demo: pass");
+    println!("time time parity demo: pass");
 }

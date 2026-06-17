@@ -1,4 +1,4 @@
-# Consolidated stdlib itertools coverage for milestone_30_4 structure rules
+# Consolidated stdlib itertools coverage for stdlib_consolidation structure rules
 from sifr.itertools import (
     chain, repeat, take, flatten, pairwise, batched, islice,
     accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count, count_from, cycle

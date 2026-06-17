@@ -52,7 +52,7 @@ impl PackageDiagnostic {
                 cargo_package_id: None,
             }),
             help: Some(
-                "inspect Cargo's selected package graph with the Phase 37 metadata adapter"
+                "inspect Cargo's selected package graph with the package-management rules metadata adapter"
                     .to_string(),
             ),
         }

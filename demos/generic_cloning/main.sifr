@@ -1,5 +1,5 @@
-# Reference: ad_hoc_clone_wave3
-# Source issue: ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md
+# Reference: clone_generic_cloning
+# Reference: ownership-aware-collection-lowering-and-clone-elision
 def main():
     pairs: list[tuple[int, int]] = [(2, 5), (4, 7)]
     totals: list[int] = []
@@ -13,4 +13,4 @@ def main():
         count = count + 1
     print(count)
 
-    print("ad_hoc_clone_wave3_generic_hardening_demo: pass")
+    print("clone_generic_cloning_hardening_demo: pass")

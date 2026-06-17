@@ -1,5 +1,5 @@
-# Reference: ad_hoc_runtime_wave4
-# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
+# Reference: runtime_subprocess
+# Reference: runtime-and-file-object-parity-expansion
 from sifr.os import run_command
 
 
@@ -7,10 +7,10 @@ def main() -> None:
     demo_ok: bool = False
 
     try:
-        out: str = run_command("echo runtime_wave4_demo")
-        demo_ok = out == "runtime_wave4_demo"
+        out: str = run_command("echo runtime_subprocess")
+        demo_ok = out == "runtime_subprocess"
     except IOError as e:
         _ = e.message
 
     assert demo_ok
-    print("ad_hoc_runtime_wave4_legacy_subprocess_removed_demo: ok")
+    print("runtime_subprocess_subprocess_removed_demo: ok")

@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_1_subscript_assignment_unsupported
+# Reference: stdlib_parity_bytes_1_subscript_assignment_unsupported
 # expect-error[col=5]: SIFR-OWN-0007
 def main() -> None:
     payload: bytes = b"abc"

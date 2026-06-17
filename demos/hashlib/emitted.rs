@@ -507,12 +507,12 @@ fn collect_negative_actual_ok() -> Vec<bool> {
 
 fn main() {
     let expected: Vec<String> = vec!["true".to_string(), "true".to_string(), "true".to_string(), "true".to_string(), "true".to_string(), "5d41402abc4b2a76b9719d911017c592".to_string(), "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57".to_string()];
-    let tmp_path: String = "tmp_m30_1a_hashlib_demo.txt".to_string();
+    let tmp_path: String = "tmp_hashlib_hashlib_demo.txt".to_string();
     let _: Result<(), IOError> = std::fs::write(&tmp_path, "file-data".to_string().as_bytes()).map(|_| ()).map_err(__io_err);
     let actual: Vec<String> = collect_positive_actual(&tmp_path);
     assert_vector_eq(&actual, &expected);
     let expected_ok: Vec<bool> = vec![false];
     let actual_ok: Vec<bool> = collect_negative_actual_ok();
     assert_bool_vector_eq(&actual_ok, &expected_ok);
-    println!("m30_1a hashlib parity demo: pass");
+    println!("hashlib hashlib parity demo: pass");
 }

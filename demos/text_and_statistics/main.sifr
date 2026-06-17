@@ -1,5 +1,5 @@
-# Reference: ad_hoc_rng_wave3
-# Source issue: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md
+# Reference: rng_text_and_statistics
+# Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.html import escape
 from sifr.statistics import StatisticsError, median_grouped
 from sifr.textwrap import TextWrapper
@@ -11,7 +11,7 @@ def main() -> None:
         grouped_value: float = median_grouped([1.0, 2.0, 2.0, 3.0, 4.0], 1.0)
         grouped = grouped_value
     except StatisticsError:
-        assert str("median_grouped unexpected error") == "ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass"
+        assert str("median_grouped unexpected error") == "rng_text_and_statistics_waiver_reduction_demo: pass"
     assert grouped > 2.2
     assert grouped < 2.3
 
@@ -26,4 +26,4 @@ def main() -> None:
     escaped: str = escape("<a \"x\">", False)
     assert escaped == "&lt;a \"x\"&gt;"
 
-    assert str("ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass") == "ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass"
+    assert str("rng_text_and_statistics_waiver_reduction_demo: pass") == "rng_text_and_statistics_waiver_reduction_demo: pass"

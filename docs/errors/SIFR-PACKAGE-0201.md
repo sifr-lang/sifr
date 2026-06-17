@@ -11,6 +11,6 @@ Direct package import root resolves to multiple package instances.
 | Severity | Error |
 | Owner | `sifr_package::graph::scopes` |
 | Message template | `ambiguous package import root '{import_root}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_2_tests.rs::duplicate_direct_import_root_in_one_scope_reports_0201` |
+| Representative fixture | `crates/sifr_package/src/package_dependency_scope_tests.rs::duplicate_direct_import_root_in_one_scope_reports_0201` |
 | Declared args | `import_root (message+json)`, `cargo_package_id (json-only)`, `candidates (json-only)` |
 | Dedupe args | `cargo_package_id`, `import_root`, `candidates` |

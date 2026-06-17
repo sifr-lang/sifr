@@ -1,6 +1,5 @@
-# Reference: phase31
-# Source issue: phase31-m31a-pop-guard-narrowing-execution.md
-# Phase 31 / m31_a slice 10 demo: non-empty flow narrows list.pop() to T.
+# Reference: pop_narrowing
+# driver/package architecture / pop_narrowing behavior group 10 demo: non-empty flow narrows list.pop() to T.
 
 def drain(mut values: list[int]) -> int:
     total: int = 0

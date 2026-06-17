@@ -72,7 +72,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-project-manifest",
+      "evidence_category": "compiler-project-manifest",
       "group": "build-project",
       "id": "build-project-003-cargo-manifest",
       "kind": "command",
@@ -99,7 +99,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-project-manifest",
+      "evidence_category": "compiler-project-manifest",
       "group": "build-project",
       "id": "build-project-004-dependency-manifest",
       "kind": "command",
@@ -126,7 +126,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-project-imports",
+      "evidence_category": "compiler-project-imports",
       "group": "build-project",
       "id": "build-project-005-project-graph",
       "kind": "command",
@@ -153,7 +153,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-control-flow",
+      "evidence_category": "compiler-control-flow",
       "group": "build-single-file",
       "id": "build-single-file-001-break-continue",
       "kind": "command",
@@ -180,7 +180,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-builtins",
+      "evidence_category": "compiler-builtins",
       "group": "build-single-file",
       "id": "build-single-file-002-builtin-any-all",
       "kind": "command",
@@ -207,7 +207,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-collections",
+      "evidence_category": "compiler-collections",
       "group": "build-single-file",
       "id": "build-single-file-003-builtin-enumerate-zip",
       "kind": "command",
@@ -234,7 +234,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-bytes",
+      "evidence_category": "compiler-bytes",
       "group": "build-single-file",
       "id": "build-single-file-004-bytes-constructors",
       "kind": "command",
@@ -261,7 +261,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-classes",
+      "evidence_category": "compiler-classes",
       "group": "build-single-file",
       "id": "build-single-file-005-class-methods",
       "kind": "command",
@@ -288,7 +288,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-collections",
+      "evidence_category": "compiler-collections",
       "group": "build-single-file",
       "id": "build-single-file-006-collection-len",
       "kind": "command",
@@ -315,7 +315,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-collections",
+      "evidence_category": "compiler-collections",
       "group": "build-single-file",
       "id": "build-single-file-007-comp-set",
       "kind": "command",
@@ -342,7 +342,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-decimal-integer",
+      "evidence_category": "compiler-decimal-integer",
       "group": "build-single-file",
       "id": "build-single-file-008-decimal-conversions",
       "kind": "command",
@@ -369,7 +369,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-result-option",
+      "evidence_category": "compiler-result-option",
       "group": "build-single-file",
       "id": "build-single-file-009-dict-get-option",
       "kind": "command",
@@ -396,7 +396,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-generics",
+      "evidence_category": "compiler-generics",
       "group": "build-single-file",
       "id": "build-single-file-010-generic-identity",
       "kind": "command",
@@ -504,7 +504,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-project-imports",
+      "evidence_category": "compiler-project-imports",
       "group": "check-project",
       "id": "check-project-004-project-graph",
       "kind": "command",
@@ -585,7 +585,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-control-flow",
+      "evidence_category": "compiler-control-flow",
       "group": "check-single-file",
       "id": "check-single-file-002-break-continue",
       "kind": "command",
@@ -612,7 +612,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-builtins",
+      "evidence_category": "compiler-builtins",
       "group": "check-single-file",
       "id": "check-single-file-003-builtin-any-all",
       "kind": "command",
@@ -639,7 +639,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-collections",
+      "evidence_category": "compiler-collections",
       "group": "check-single-file",
       "id": "check-single-file-004-builtin-enumerate-zip",
       "kind": "command",
@@ -666,7 +666,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-bytes",
+      "evidence_category": "compiler-bytes",
       "group": "check-single-file",
       "id": "check-single-file-005-bytes-constructors",
       "kind": "command",
@@ -693,7 +693,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-classes",
+      "evidence_category": "compiler-classes",
       "group": "check-single-file",
       "id": "check-single-file-006-class-methods",
       "kind": "command",
@@ -720,7 +720,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-collections",
+      "evidence_category": "compiler-collections",
       "group": "check-single-file",
       "id": "check-single-file-007-collection-len",
       "kind": "command",
@@ -747,7 +747,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-collections",
+      "evidence_category": "compiler-collections",
       "group": "check-single-file",
       "id": "check-single-file-008-comp-set",
       "kind": "command",
@@ -774,7 +774,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-decimal-integer",
+      "evidence_category": "compiler-decimal-integer",
       "group": "check-single-file",
       "id": "check-single-file-009-decimal-conversions",
       "kind": "command",
@@ -801,7 +801,7 @@
         "hits": 0,
         "misses": 0
       },
-      "evidence_category": "phase34-result-option",
+      "evidence_category": "compiler-result-option",
       "group": "check-single-file",
       "id": "check-single-file-010-dict-get-option",
       "kind": "command",
@@ -819,6 +819,141 @@
         1221.1476660013432,
         1210.138416994596,
         1212.0358340034727
+      ],
+      "timed_out": false
+    },
+    {
+      "budget_id": "perf.diagnostic.human_success_exit",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "evidence_category": "exit-code",
+      "group": "diagnostic-non-regression",
+      "id": "diagnostic-non-regression-001-human-success-exit",
+      "kind": "command",
+      "metrics": {
+        "coefficient_variation": 0.005931,
+        "mad_ms": 7.138,
+        "median_ms": 1227.674,
+        "p95_ms": 1238.76,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1227.6736250059912,
+        1230.6176249985583,
+        1220.5352919991128,
+        1218.5453749989392,
+        1238.7603749957634
+      ],
+      "timed_out": false
+    },
+    {
+      "budget_id": "perf.diagnostic.json_diagnostic_schema",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "evidence_category": "diagnostics-json",
+      "group": "diagnostic-non-regression",
+      "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "kind": "command",
+      "metrics": {
+        "coefficient_variation": 0.026421,
+        "mad_ms": 5.592,
+        "median_ms": 1214.504,
+        "p95_ms": 1293.217,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1253.8687500054948,
+        1212.5427079881774,
+        1208.9117909927154,
+        1214.5042089978233,
+        1293.216542006121
+      ],
+      "timed_out": false
+    },
+    {
+      "budget_id": "perf.diagnostic.compact_diagnostic_schema",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "evidence_category": "diagnostics-compact",
+      "group": "diagnostic-non-regression",
+      "id": "diagnostic-non-regression-003-compact-diagnostic-schema",
+      "kind": "command",
+      "metrics": {
+        "coefficient_variation": 0.015743,
+        "mad_ms": 6.942,
+        "median_ms": 1227.41,
+        "p95_ms": 1272.689,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1227.4097909976263,
+        1220.4674579988932,
+        1239.5988339994801,
+        1272.6888329925714,
+        1221.1634999985108
+      ],
+      "timed_out": false
+    },
+    {
+      "budget_id": "perf.diagnostic.recovery_limit",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "evidence_category": "diagnostic-recovery",
+      "group": "diagnostic-non-regression",
+      "id": "diagnostic-non-regression-004-recovery-limit",
+      "kind": "command",
+      "metrics": {
+        "coefficient_variation": 0.015609,
+        "mad_ms": 20.109,
+        "median_ms": 1231.518,
+        "p95_ms": 1259.924,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1259.9240830022609,
+        1236.7285410000477,
+        1231.517583000823,
+        1211.4089579990832,
+        1206.436250009574
+      ],
+      "timed_out": false
+    },
+    {
+      "budget_id": "perf.diagnostic.project_error_exit",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "evidence_category": "project-diagnostics",
+      "group": "diagnostic-non-regression",
+      "id": "diagnostic-non-regression-005-project-error-exit",
+      "kind": "command",
+      "metrics": {
+        "coefficient_variation": 0.002534,
+        "mad_ms": 3.64,
+        "median_ms": 1217.324,
+        "p95_ms": 1221.378,
+        "peak_rss_bytes": 309002240
+      },
+      "sample_count": 5,
+      "samples_ms": [
+        1213.684458998614,
+        1221.3782500039088,
+        1213.377167005092,
+        1219.0436660021078,
+        1217.3239999974612
       ],
       "timed_out": false
     },
@@ -2047,141 +2182,6 @@
         0.729550002142787,
         0.7235166849568486,
         0.7186666131019592
-      ],
-      "timed_out": false
-    },
-    {
-      "budget_id": "perf.phase27.human_success_exit",
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "evidence_category": "exit-code",
-      "group": "phase27-non-regression",
-      "id": "phase27-non-regression-001-human-success-exit",
-      "kind": "command",
-      "metrics": {
-        "coefficient_variation": 0.005931,
-        "mad_ms": 7.138,
-        "median_ms": 1227.674,
-        "p95_ms": 1238.76,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1227.6736250059912,
-        1230.6176249985583,
-        1220.5352919991128,
-        1218.5453749989392,
-        1238.7603749957634
-      ],
-      "timed_out": false
-    },
-    {
-      "budget_id": "perf.phase27.json_diagnostic_schema",
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "evidence_category": "diagnostics-json",
-      "group": "phase27-non-regression",
-      "id": "phase27-non-regression-002-json-diagnostic-schema",
-      "kind": "command",
-      "metrics": {
-        "coefficient_variation": 0.026421,
-        "mad_ms": 5.592,
-        "median_ms": 1214.504,
-        "p95_ms": 1293.217,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1253.8687500054948,
-        1212.5427079881774,
-        1208.9117909927154,
-        1214.5042089978233,
-        1293.216542006121
-      ],
-      "timed_out": false
-    },
-    {
-      "budget_id": "perf.phase27.compact_diagnostic_schema",
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "evidence_category": "diagnostics-compact",
-      "group": "phase27-non-regression",
-      "id": "phase27-non-regression-003-compact-diagnostic-schema",
-      "kind": "command",
-      "metrics": {
-        "coefficient_variation": 0.015743,
-        "mad_ms": 6.942,
-        "median_ms": 1227.41,
-        "p95_ms": 1272.689,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1227.4097909976263,
-        1220.4674579988932,
-        1239.5988339994801,
-        1272.6888329925714,
-        1221.1634999985108
-      ],
-      "timed_out": false
-    },
-    {
-      "budget_id": "perf.phase27.recovery_limit",
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "evidence_category": "diagnostic-recovery",
-      "group": "phase27-non-regression",
-      "id": "phase27-non-regression-004-recovery-limit",
-      "kind": "command",
-      "metrics": {
-        "coefficient_variation": 0.015609,
-        "mad_ms": 20.109,
-        "median_ms": 1231.518,
-        "p95_ms": 1259.924,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1259.9240830022609,
-        1236.7285410000477,
-        1231.517583000823,
-        1211.4089579990832,
-        1206.436250009574
-      ],
-      "timed_out": false
-    },
-    {
-      "budget_id": "perf.phase27.project_error_exit",
-      "cache": {
-        "hits": 0,
-        "misses": 0
-      },
-      "evidence_category": "project-diagnostics",
-      "group": "phase27-non-regression",
-      "id": "phase27-non-regression-005-project-error-exit",
-      "kind": "command",
-      "metrics": {
-        "coefficient_variation": 0.002534,
-        "mad_ms": 3.64,
-        "median_ms": 1217.324,
-        "p95_ms": 1221.378,
-        "peak_rss_bytes": 309002240
-      },
-      "sample_count": 5,
-      "samples_ms": [
-        1213.684458998614,
-        1221.3782500039088,
-        1213.377167005092,
-        1219.0436660021078,
-        1217.3239999974612
       ],
       "timed_out": false
     }

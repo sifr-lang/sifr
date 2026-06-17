@@ -1,5 +1,4 @@
-# Reference: phase31
-# Source issue: phase31-m31a-sentinel-domain-normalization-execution.md
+# Reference: sentinel_values
 # Sentinel values can pass through loops and collapse back onto plain ints.
 
 def smallest_or_zero(values: list[int]) -> int:

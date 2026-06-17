@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m23_4 invocation-scoped temp workspace isolation demo:");
+    println!("temp_workspace_isolation invocation-scoped temp workspace isolation demo:");
     println!("{}", helper::value());
 }

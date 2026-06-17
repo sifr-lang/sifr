@@ -16,8 +16,8 @@ M1 materially closes. The contract manifests encode all required Ruff/Python exc
 
 | Check | Result | Location |
 |-------|--------|----------|
-| `check_linter_reuse_contract.py` | PASS | `verification/tooling/check_linter_reuse_contract.py:417` |
-| `check_linter_reuse_contract.py --self-test` | PASS | `verification/tooling/check_linter_reuse_contract.py:363` |
+| `check_linter_reuse_rules.py` | PASS | `verification/tooling/check_linter_reuse_rules.py:417` |
+| `check_linter_reuse_rules.py --self-test` | PASS | `verification/tooling/check_linter_reuse_rules.py:363` |
 | `cargo test -p sifr_lint --lib` | PASS (3 unit tests) | `crates/sifr_lint/src/lib.rs:512` |
 | `cargo test -p sifr_lint --doc` | PASS (0 doctests) | `crates/sifr_lint/src/lib.rs:1` |
 | `git diff --check` | PASS | — |
@@ -39,11 +39,11 @@ All phase M1 required deliverables are present and validated:
 | Rule metadata manifest | ✓ | `lint_rule_metadata.json` (4 rules) |
 | Config schema placeholder | ✓ | `lint_config_schema_placeholder.json` |
 | Suppression gate manifest | ✓ | `suppression_gate.json` |
-| Contract enforcement script | ✓ | `check_linter_reuse_contract.py` (418 lines) |
+| Contract enforcement script | ✓ | `check_linter_reuse_rules.py` (418 lines) |
 
 ###2. Ruff/Python Semantic Authority Exclusions
 
-**Strongly blocked.** `check_linter_reuse_contract.py` validates at four layers:
+**Strongly blocked.** `check_linter_reuse_rules.py` validates at four layers:
 
 1. **Manifest layer** (`validate_suppression_gate`, `validate_rule_metadata`): every rule's `suppression_complexity` is validated against the gate state
 2. **Dependency layer** (`validate_forbidden_dependencies`): checks `Cargo.toml` and `cargo tree` for `ruff_linter`, `ruff_python_semantic`, `ty_python_semantic`, `ty_project`, `ty_python_stdlib`, `ruff_server`
@@ -71,13 +71,13 @@ The `rejected_ruff_config_keys` array in `ruff_rule_config_audit.json` is the ma
 }
 ```
 
-`check_linter_reuse_contract.py:239–253` validates the gate:
+`check_linter_reuse_rules.py:239–253` validates the gate:
 - Line 251: `physical_line_only` state may only allow `["physical-line"]`
 - Lines 258–271: any rule with `suppression_complexity != "physical-line"` **must** import or depend on the manifest's `parser_aware_api` path
 
 Current implementation: all 4 rules in `lint_rule_metadata.json` declare `"suppression_complexity": "physical-line"`, so the gate check passes.
 
-###5. Hidden False Negatives/False Positives in `check_linter_reuse_contract.py`
+###5. Hidden False Negatives/False Positives in `check_linter_reuse_rules.py`
 
 **No hidden false negatives found.** The script validates:
 - Schema versions (mandatory, prevents silent schema drift)

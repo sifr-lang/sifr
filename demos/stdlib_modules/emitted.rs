@@ -1089,6 +1089,6 @@ fn __sifr_next_file_handle_id() -> i64 {
 fn main() {
     assert_eq!((std::f64::consts::PI).floor() as i64, 3 as i64);
     let payload: String = serde_json::to_string(&"ok".to_string()).unwrap_or_default();
-    println!("m20_2 stdlib registry split demo:");
+    println!("stdlib_modules stdlib registry split demo:");
     println!("{}", payload);
 }

@@ -1,7 +1,7 @@
-// Reference: milestone_generics
-// Source issue: milestone-generics-epic.md
+// Reference: generics
+// Reference: generics
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
-     Running `target/debug/sifr emit demos/milestone_generics_demo.sifr`
+     Running `target/debug/sifr emit demos/generics_demo.sifr`
 fn main() {
     let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
     let doubled: Vec<i64> = nums.clone().into_iter().map(|x| x * 2_i64).collect::<Vec<_>>();

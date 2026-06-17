@@ -65,7 +65,7 @@ No blocking issues found. All 15 acceptance criteria are implemented or document
 - ✅ **IMPLEMENTED**
 
 ### AC-12: All validation wired
-- `scripts/run_all_tests.sh:140-145` — `check_formatter_contract.py`, `check_formatter_phase_manifests.py`, `check_formatter_ast_coverage.py` (each with self-test) all wired.
+- `scripts/run_all_tests.sh:140-145` — `check_formatter_rules.py`, `check_formatter_phase_manifests.py`, `check_formatter_ast_coverage.py` (each with self-test) all wired.
 - `verification/performance/budgets.json:611,631` — `perf.formatter.corpus.project_check` and `perf.formatter.large_file.check` budgets present.
 - ✅ **WIRED**
 
@@ -181,7 +181,7 @@ The full validation (`scripts/run_all_tests.sh --profile quick` and `scripts/run
 
 1. **`crates/sifr_format/src/lib.rs` is 628 lines and `config.rs` is 312 lines** — Both under the 900-line cap.
 2. **`docs/formatter.md` is new** — No prior version to diff; content verified against execution tracker validation logs and implementation cross-reference.
-3. **`verification/tooling/check_formatter_contract.py` self-test passed** — Corroborated by execution tracker.
+3. **`verification/tooling/check_formatter_rules.py` self-test passed** — Corroborated by execution tracker.
 4. **`perf.formatter.corpus.project_check` and `perf.formatter.large_file.check`** are the two named budget entries per `verification/performance/budgets.json:611,631`.
 
 ---

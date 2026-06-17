@@ -1,7 +1,7 @@
-# Reference: milestone_codegen_quality_v2
-# Source issue: milestone-codegen-quality-v2-epic.md
-# milestone_codegen_quality_v2 Demo
-# Phase 2 Codegen Polish - showcases all 7 quality improvements
+# Reference: codegen-output-surface
+# Reference: codegen-quality-v2
+# codegen-output-surface Demo
+# Codegen Polish - showcases all quality improvements
 
 class Timer:
     label: str

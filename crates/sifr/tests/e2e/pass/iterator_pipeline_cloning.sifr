@@ -1,4 +1,4 @@
-# Reference: wave_clone_1_iterator_comprehension_ownership
+# Reference: ownership_clone_1_iterator_comprehension_ownership
 def main():
     nums: list[int] = [1, 2, 3, 4]
 

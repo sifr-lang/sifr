@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "owner": "compiler/tooling",
-  "description": "Wave 9.1 marker-based LSP corpus. Marker ids are stable anchors for LSP behavior categories; concrete protocol replay and snapshot expansion are tracked in later Wave 9 slices.",
+  "description": "Marker-based LSP corpus. Marker ids are stable anchors for LSP behavior categories; concrete protocol replay and snapshot expansion are tracked in later protocol fixtures.",
   "required_categories": [
     "completion",
     "definition",

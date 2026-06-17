@@ -703,7 +703,7 @@ pub(crate) fn parse_compile_failure_expectations(
     }
 }
 
-pub(crate) fn format_expectation_contract_errors(errors: &[String]) -> String {
+pub(crate) fn format_expectation_rules_errors(errors: &[String]) -> String {
     errors
         .iter()
         .map(|error| format!("FAIL {error}"))
@@ -716,7 +716,7 @@ pub(crate) fn extract_compile_failure_expectations(
     fixture_path: &Path,
 ) -> Vec<CompileFailureExpectation> {
     parse_compile_failure_expectations(source, fixture_path).unwrap_or_else(|errors| {
-        panic!("{}", format_expectation_contract_errors(&errors));
+        panic!("{}", format_expectation_rules_errors(&errors));
     })
 }
 

@@ -43,7 +43,7 @@ This just asserts that the pattern key is a substring of a hard-coded literal. I
 `PERSONAL_PATH_PATTERNS = {"/Users/yaseralnajjar/": …}` only catches regressions of this one user's paths. Fine as a regression block, but a regex like `/Users/[^/]+/work/sifr/` would also protect other contributors. Defensible to keep narrow, just calling it out.
 
 **N4. `ruff_rule_config_audit.json` rule_families list is no longer alphabetized.**
-`fastapi` and `pydoclint` were inserted at the slot vacated by `flake8_trio`. `check_linter_reuse_contract.py:111` sorts before comparing, so this passes; but the file's reader convention is alpha order and a future contributor will likely re-sort with cosmetic churn. A small reorder now avoids that.
+`fastapi` and `pydoclint` were inserted at the slot vacated by `flake8_trio`. `check_linter_reuse_rules.py:111` sorts before comparing, so this passes; but the file's reader convention is alpha order and a future contributor will likely re-sort with cosmetic churn. A small reorder now avoids that.
 
 **N5. Active issue ledger still references `verification/validation_lanes/…`.**
 `plans/issues/active/ad-hoc-repository-architecture-and-verification-surface-cleanup.md` lines 224, 227, 779-780, 850, 855, 967, 1167, 1170 still call out the old path. The boundary check excludes `plans/`, and most of those lines are historical narrative. If the active ledger is meant to reflect post-closeout state, a final pass to mark these as done/migrated would help; if it's an audit trail, leave as-is.

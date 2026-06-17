@@ -1,6 +1,5 @@
-# Reference: m_adhoc_1
-# Source issue: ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md
-# Milestone adhoc 1 demo:
+# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
+# Feature demo:
 # rooted entrypoint compilation still follows the reachable local import closure.
 from helper import render
 

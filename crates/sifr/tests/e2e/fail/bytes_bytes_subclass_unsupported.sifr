@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_0_bytes_subclass_unsupported
+# Reference: stdlib_parity_bytes_0_bytes_subclass_unsupported
 class CustomBytes(bytes):
     pass
 

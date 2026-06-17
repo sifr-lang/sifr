@@ -21,7 +21,7 @@ The `lint_cli_parity.json` manifest should include a row:
 | hidden `--extend-ignore` | none | reject | M1 (manifest self-test only) |
 ```
 
-The Sifr CLI must not implement this flag — but the manifest should prove it was considered and rejected. Without this row, `check_linter_reuse_contract.py` cannot distinguish "intentionally omitted" from "forgot to classify." **Recommended edit** — add to the CLI parity table before M1 closes.
+The Sifr CLI must not implement this flag — but the manifest should prove it was considered and rejected. Without this row, `check_linter_reuse_rules.py` cannot distinguish "intentionally omitted" from "forgot to classify." **Recommended edit** — add to the CLI parity table before M1 closes.
 
 **F2: Hidden `--no-fix` / `--no-unsafe-fixes` / `--no-show-fixes` / `--no-preview` need explicit manifest rows**
 
@@ -111,7 +111,7 @@ Ruff uses `conflicts_with` for these two flags (args.rs:352-361). The plan state
 
 5. **Correct milestone assignments**: M2 for non-fix CLI, M3 for `--ignore-suppressions`, M5 for `--statistics`, M6 for fix flags.
 
-6. **The manifest enforcement design is sound**: `lint_cli_parity.json` encoded in M1, `check_linter_reuse_contract.py` verifying the clap surface against the manifest.
+6. **The manifest enforcement design is sound**: `lint_cli_parity.json` encoded in M1, `check_linter_reuse_rules.py` verifying the clap surface against the manifest.
 
 7. **The formatter precedent is properly followed**: The linter CLI parity contract mirrors the formatter's option-by-option manifest with required fixtures.
 

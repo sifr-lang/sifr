@@ -197,8 +197,8 @@ M17 local validation so far:
 - `cargo test -p sifr_analysis marker_editor_corpus_covers_multifile_queries_and_stale_snapshots -- --nocapture` -> PASS
 - `cargo test -p sifr_analysis snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution -- --nocapture` -> PASS
 - `cargo test -p sifr_analysis` -> PASS, 23 tests
-- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py` -> PASS
-- `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test` -> PASS
+- `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py` -> PASS
+- `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py --self-test` -> PASS
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
 - `cargo test -p sifr -- --skip test_e2e_pass` -> PASS, 57 unit tests and 33 non-pass e2e tests

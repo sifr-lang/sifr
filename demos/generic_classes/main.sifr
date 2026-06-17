@@ -1,6 +1,6 @@
-# Reference: milestone_generics_v2
-# Source issue: 193-milestone_generics_v2.md
-# Demo: milestone_generics_v2
+# Reference: generic type-system work
+# Source issue: 193-generic type-system work.md
+# Demo: generic type-system work
 # Demonstrates generic class improvements:
 # - Generic class with method returning the same generic type
 # - TypeVar fields requiring .clone() for safe field access

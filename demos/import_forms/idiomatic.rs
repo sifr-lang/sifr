@@ -7,6 +7,6 @@ mod helper {
 use helper::value;
 
 fn main() {
-    println!("m17_4 import-form semantics demo:");
+    println!("import_forms import-form semantics demo:");
     println!("{}", value());
 }

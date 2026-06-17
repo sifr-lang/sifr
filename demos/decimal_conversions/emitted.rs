@@ -1200,7 +1200,7 @@ fn __sifr_next_file_handle_id() -> i64 {
 }
 
 fn main() {
-    println!("m28_3 conversion and boundary contracts demo");
+    println!("decimal_conversions conversion and boundary rules demo");
     let d: Decimal = Decimal::from_str_exact(("-1.9".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
     let bd: BigDecimal = ("-1.9".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!());
     let __sifr_try_res: Result<(), DecimalConversionError> = (|| {

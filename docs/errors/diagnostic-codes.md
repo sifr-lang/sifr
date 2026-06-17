@@ -28,7 +28,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `PROTO` | `SIFR-PROTO-0000` | Protocol and structural conformance diagnostics. |
 | `CLASS` | `SIFR-CLASS-0000` | Class declaration, constructor, field, and method diagnostics. |
 | `RESULT` | `SIFR-RESULT-0000` | Result, Option, and checked error-flow diagnostics. |
-| `STDLIB` | `SIFR-STDLIB-0000` | Standard-library surface and intrinsic contract diagnostics. |
+| `STDLIB` | `SIFR-STDLIB-0000` | Standard-library surface and intrinsic rule diagnostics. |
 | `WORKSPACE` | `SIFR-WORKSPACE-0000` | Workspace, package, manifest, and project discovery diagnostics. |
 | `PACKAGE` | `SIFR-PACKAGE-0000` | Cargo-backed Sifr package coordination diagnostics. |
 | `CODEGEN` | `SIFR-CODEGEN-0000` | Rust lowering and backend code-generation diagnostics. |
@@ -163,7 +163,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-BUILD-0004`](SIFR-BUILD-0004.md) | Error | Cargo manifest generation failed. |
 | [`SIFR-BUILD-0005`](SIFR-BUILD-0005.md) | Error | Rustc or Cargo execution failed. |
 | [`SIFR-BUILD-0006`](SIFR-BUILD-0006.md) | Error | Expected build artifact was not produced. |
-| [`SIFR-BUILD-0901`](SIFR-BUILD-0901.md) | Error | Standalone install receipt is missing or outside the self-update contract. |
+| [`SIFR-BUILD-0901`](SIFR-BUILD-0901.md) | Error | Standalone install receipt is missing or outside the self-update install rules. |
 | [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.md) | Error | Unclassified compiler panic after a panic boundary. |
 | [`SIFR-INTERNAL-0002`](SIFR-INTERNAL-0002.md) | Note | Structured recovery-cap omission summary. |
 | [`SIFR-FMT-0001`](SIFR-FMT-0001.md) | Error | Source formatting drift detected by sifr fmt --check. |

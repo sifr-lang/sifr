@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "phase": "36",
-  "milestone": "36.1",
+  "rules": "editor_tooling",
+  "rules_version": "lsp-protocol-current",
   "protocol": {
     "name": "Language Server Protocol",
     "target_version": "3.17",
@@ -84,7 +84,7 @@
     {"method": "textDocument/codeAction", "owner": "sifr_lsp::requests::code_action", "analysis_owner": "AnalysisHost::code_actions", "positive": "policy suppressions, safe fixes, and deferred fix-all actions are emitted from typed policy diagnostics", "negative": "hard diagnostics never offer suppression or lint fixes", "budget_id": "lsp-code-actions"},
     {"method": "codeAction/resolve", "owner": "sifr_lsp::requests::code_action_resolve", "analysis_owner": "AnalysisHost code-action resolve data", "positive": "deferred safe policy fix-all edits resolve deterministically", "negative": "unknown or stale action data is rejected", "budget_id": "lsp-code-actions"},
     {"method": "textDocument/formatting", "owner": "sifr_lsp::requests::formatting", "analysis_owner": "AnalysisHost::format_document", "positive": "edits match sifr fmt using discovered formatter config and LSP options", "negative": "disabled formatter setting rejects document formatting", "budget_id": "lsp-formatting"},
-    {"method": "textDocument/rangeFormatting", "owner": "sifr_lsp::requests::range_formatting", "analysis_owner": "AnalysisHost::format_range", "positive": "range edits match formatter contract using discovered formatter config and LSP options", "negative": "invalid range and disabled formatter setting are rejected", "budget_id": "lsp-formatting"}
+    {"method": "textDocument/rangeFormatting", "owner": "sifr_lsp::requests::range_formatting", "analysis_owner": "AnalysisHost::format_range", "positive": "range edits match formatter rules using discovered formatter config and LSP options", "negative": "invalid range and disabled formatter setting are rejected", "budget_id": "lsp-formatting"}
   ],
   "required_commands": [
     {"command": "sifr.restartServer", "owner": "CommandRegistry", "positive": "server restart request is logged", "negative": "restart during shutdown is rejected"},
@@ -98,10 +98,10 @@
     {"surface": "notebookDocumentSync", "policy": "do not advertise; reject notebook URIs deterministically"},
     {"surface": "textDocument/implementation", "policy": "defer unless Sifr type model exposes implementation relationships"},
     {"surface": "textDocument/linkedEditingRange", "policy": "defer until a paired-edit Sifr surface exists"},
-    {"surface": "textDocument/prepareCallHierarchy", "policy": "defer; references and workspace symbols cover Phase 36"},
+    {"surface": "textDocument/prepareCallHierarchy", "policy": "defer; references and workspace symbols cover editor tooling"},
     {"surface": "textDocument/documentLink", "policy": "defer until package/module UX stabilizes"},
-    {"surface": "textDocument/willSave", "policy": "do not advertise in Phase 36"},
-    {"surface": "textDocument/willSaveWaitUntil", "policy": "do not advertise in Phase 36"},
+    {"surface": "textDocument/willSave", "policy": "do not advertise in editor tooling"},
+    {"surface": "textDocument/willSaveWaitUntil", "policy": "do not advertise in editor tooling"},
     {"surface": "python.importResolution", "policy": "forbidden; Sifr workspace resolution only"},
     {"surface": "python.environmentDiscovery", "policy": "forbidden"}
   ]

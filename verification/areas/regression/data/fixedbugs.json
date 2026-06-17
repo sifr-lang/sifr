@@ -22,7 +22,7 @@
     {
       "id": "FB-0003",
       "issue": "https://github.com/sifr-lang/sifr/pull/913",
-      "root_cause_category": "decimal-literal-validation-contract",
+      "root_cause_category": "decimal-literal-validation-rules",
       "suite_location": "crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr",
       "command": "check",
       "expect_exit_code": 1,

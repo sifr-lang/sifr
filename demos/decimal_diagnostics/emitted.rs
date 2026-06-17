@@ -3,7 +3,7 @@ use rust_decimal::Decimal;
 use bigdecimal::BigDecimal;
 
 fn main() {
-    println!("m28_4 decimal diagnostics contract demo");
+    println!("decimal_diagnostics decimal diagnostics behavior demo");
     let d: Decimal = Decimal::from_str_exact(("10.5000".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
     let b: BigDecimal = ("20.7500".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!());
     assert!(format!("{}", d.round_dp_with_strategy({

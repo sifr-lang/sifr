@@ -1134,7 +1134,7 @@ fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
 fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
     let mut actual: Vec<bool> = vec![];
-    let base: String = mktemp_path(&"sifr_m30_1f_logging_demo_".to_string());
+    let base: String = mktemp_path(&"sifr_logging_logging_demo_".to_string());
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _mk: String = ({
     let __cmd = format!("{}{}", "mkdir -p ".to_string(), base);
@@ -1152,5 +1152,5 @@ fn main() {
     append_all(&mut actual, &collect_safety_actual(&base));
     append_all(&mut actual, &collect_cleanup_actual(&base));
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1f logging parity demo: pass");
+    println!("logging logging parity demo: pass");
 }

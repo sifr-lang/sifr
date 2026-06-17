@@ -2,7 +2,7 @@
   "schema_version": 1,
   "guarantees": [
     {
-      "guarantee_id": "parser-syntax-contract",
+      "guarantee_id": "parser-syntax-rule",
       "support_status": "stable",
       "public_doc_path": "internal_docs/architecture.md",
       "owner": "compiler/core-language",
@@ -12,37 +12,37 @@
       "unsupported_behavior_policy": "Unsupported parser-fork divergence must be recorded in the parser syntax inventory before fixtures are accepted."
     },
     {
-      "guarantee_id": "compiler-crash-ice-contract",
+      "guarantee_id": "compiler-crash-ice-rule",
       "support_status": "stable",
       "public_doc_path": "verification/policy/regression_corpus.md",
       "owner": "compiler/hardening",
-      "merge_surface": "compiler_crash_ice_contract",
+      "merge_surface": "compiler_crash_ice_rule",
       "nightly_release_surface": "compiler_crash_stress",
       "regression_surface": "regression_crashes",
       "unsupported_behavior_policy": "Known crashes are issue-linked sentinels only; unexpected panics fail validation."
     },
     {
-      "guarantee_id": "diagnostic-contract",
+      "guarantee_id": "diagnostic-rule",
       "support_status": "stable",
       "public_doc_path": "verification/policy/suite_taxonomy.md",
       "owner": "compiler/diagnostics",
-      "merge_surface": "diagnostics_contracts",
+      "merge_surface": "diagnostics_rules",
       "nightly_release_surface": "diagnostic_renderer_baselines",
       "regression_surface": "regression_fixedbugs",
       "unsupported_behavior_policy": "Unstable diagnostic codes must be catalogued before renderer baseline requirements are deferred."
     },
     {
-      "guarantee_id": "hir-name-type-flow-contract",
+      "guarantee_id": "hir-name-type-flow-rule",
       "support_status": "stable",
       "public_doc_path": "internal_docs/architecture.md",
       "owner": "compiler/core-language",
-      "merge_surface": "hir_name_type_flow_contracts",
+      "merge_surface": "hir_name_type_flow_rules",
       "nightly_release_surface": "lowering_layer_snapshots",
       "regression_surface": "regression_fixedbugs",
       "unsupported_behavior_policy": "Lowering or analysis behavior without stable semantics is internal until mapped to an inventory row."
     },
     {
-      "guarantee_id": "codegen-generated-rust-contract",
+      "guarantee_id": "codegen-generated-rust-rule",
       "support_status": "stable",
       "public_doc_path": "internal_docs/architecture.md",
       "owner": "compiler/codegen",
@@ -52,9 +52,9 @@
       "unsupported_behavior_policy": "Generated Rust must not rely on nightly-only behavior unless the source surface is experimental or internal."
     },
     {
-      "guarantee_id": "runtime-platform-contract",
+      "guarantee_id": "runtime-platform-rules",
       "support_status": "stable",
-      "public_doc_path": "verification/areas/runtime_platform/platform_contract.md",
+      "public_doc_path": "verification/areas/runtime_platform/platform_rules.md",
       "owner": "runtime/platform",
       "merge_surface": "runtime_platform_golden",
       "nightly_release_surface": "runtime_supported_platforms",
@@ -62,27 +62,27 @@
       "unsupported_behavior_policy": "Host-specific skips require structured reasons and reproduction commands."
     },
     {
-      "guarantee_id": "project-workspace-package-contract",
+      "guarantee_id": "project-workspace-package-rule",
       "support_status": "stable",
       "public_doc_path": "verification/policy/suite_taxonomy.md",
       "owner": "compiler/frontend",
-      "merge_surface": "project_workspace_contracts",
+      "merge_surface": "project_workspace_behaviors",
       "nightly_release_surface": "package_management_integration",
       "regression_surface": "regression_fixedbugs",
       "unsupported_behavior_policy": "Package and workspace merge tests use offline fixtures; live registry checks are nightly or release only."
     },
     {
-      "guarantee_id": "cli-exit-code-contract",
+      "guarantee_id": "cli-exit-code-rule",
       "support_status": "stable",
       "public_doc_path": "docs",
       "owner": "developer-tooling",
       "merge_surface": "cli_exit_codes",
       "nightly_release_surface": "cli_exit_codes",
       "regression_surface": "regression_fixedbugs",
-      "unsupported_behavior_policy": "Every documented CLI exit-code contract requires an integration test or explicit deferral."
+      "unsupported_behavior_policy": "Every documented CLI exit-code rule requires an integration test or explicit deferral."
     },
     {
-      "guarantee_id": "tooling-lsp-contract",
+      "guarantee_id": "tooling-lsp-rule",
       "support_status": "stable",
       "public_doc_path": "verification/policy/suite_taxonomy.md",
       "owner": "compiler/tooling",
@@ -92,7 +92,7 @@
       "unsupported_behavior_policy": "Capabilities advertised by the server must have marker or transcript evidence before being called stable."
     },
     {
-      "guarantee_id": "performance-determinism-contract",
+      "guarantee_id": "performance-determinism-rule",
       "support_status": "stable",
       "public_doc_path": "verification/policy/profile_policy.md",
       "owner": "compiler/performance",
@@ -102,7 +102,7 @@
       "unsupported_behavior_policy": "Noisy local trend deltas do not fail ordinary merge runs; representative budgets remain blocking."
     },
     {
-      "guarantee_id": "hardening-oracle-contract",
+      "guarantee_id": "hardening-oracle-rule",
       "support_status": "stable",
       "public_doc_path": "verification/policy/fuzz_property.md",
       "owner": "compiler/hardening",
@@ -112,7 +112,7 @@
       "unsupported_behavior_policy": "Generated oracle inputs must be excluded by catalogue rules, not filtered after execution."
     },
     {
-      "guarantee_id": "ecosystem-stdlib-algorithm-contract",
+      "guarantee_id": "ecosystem-stdlib-algorithm-rule",
       "support_status": "stable",
       "public_doc_path": "verification/policy/ecosystem_compatibility.md",
       "owner": "compiler/verification",
@@ -122,7 +122,7 @@
       "unsupported_behavior_policy": "Pinned corpora require owner, checksum or revision, command, timeout, and expected classification."
     },
     {
-      "guarantee_id": "distribution-release-contract",
+      "guarantee_id": "distribution-release-rule",
       "support_status": "stable",
       "public_doc_path": "verification/README.md",
       "owner": "release/distribution",

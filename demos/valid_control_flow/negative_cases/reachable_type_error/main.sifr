@@ -1,6 +1,5 @@
-# Reference: m25_2
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_2 negative case
+# Reference: valid_control_flow
+# valid_control_flow negative case
 # Reachable return type mismatch remains a hard failure.
 
 def compute(flag: bool) -> int:

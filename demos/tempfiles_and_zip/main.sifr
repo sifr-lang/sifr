@@ -1,5 +1,5 @@
-# Reference: ad_hoc_runtime_wave0
-# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
+# Reference: runtime_tempfiles_and_zip
+# Reference: runtime-and-file-object-parity-expansion
 from sifr.tempfile import mkstemp, mkdtemp
 from sifr.io import write_text, exists
 from sifr.zipfile import ZipFile
@@ -16,8 +16,8 @@ def main():
     cleanup_ok: bool = False
 
     try:
-        temp_file_created: str = mkstemp("sifr_runtime_wave0_")
-        temp_dir_created: str = mkdtemp("sifr_runtime_wave0_dir_")
+        temp_file_created: str = mkstemp("sifr_runtime_tempfiles_and_zip_")
+        temp_dir_created: str = mkdtemp("sifr_runtime_tempfiles_and_zip_")
         temp_file = temp_file_created + ""
         temp_dir = temp_dir_created + ""
         tempfile_ok = exists(temp_file) and exists(temp_dir)
@@ -47,4 +47,4 @@ def main():
     assert tempfile_ok
     assert zip_ok
     assert cleanup_ok
-    print("ad_hoc_runtime_wave0_tempfile_zip_lifecycle_demo: ok")
+    print("runtime_tempfiles_and_zip_zip_lifecycle_demo: ok")

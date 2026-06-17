@@ -7,6 +7,6 @@
 //! This fixture exists to preserve semantic analysis of recursive paths: the
 //! typo is nested under a reachable `if n > 0` branch and must still resolve as
 //! an undefined-function diagnostic. The Rust-side analogue is ordinary
-//! name-resolution failure, so this file remains a contract scaffold.
+//! name-resolution failure, so this file remains a rules scaffold.
 
 fn main() {}

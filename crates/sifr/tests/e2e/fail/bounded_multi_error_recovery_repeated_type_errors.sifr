@@ -1,5 +1,5 @@
-# Reference: m27_5
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
+# Reference: diagnostic_recovery_rules
+# Source issue: runtime-safety-and-diagnostics-execution.md
 # expect-error: SIFR-TYPE-0002
 # expect-error: SIFR-TYPE-0002
 # expect-error: SIFR-TYPE-0002

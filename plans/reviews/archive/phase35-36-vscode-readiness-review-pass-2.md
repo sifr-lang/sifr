@@ -10,9 +10,9 @@ All blocking issues B3-B6 from pass 1 have been resolved in the patched document
 
 **B3 (resolved):** Phase 36 exit criteria (line 651) now explicitly states that main-repo quick/PR validation runs the contract check when `SIFR_VSCODE_REPO` is set or a sibling checkout exists, and fails with setup instructions when no checkout is available.
 
-**B4 (resolved):** Phase 36 verification infrastructure (line 390) already includes `check_vscode_extension_contract.py`. The issue doc PR sequence item 7 (line 234) names it explicitly. No contradiction.
+**B4 (resolved):** Phase 36 verification infrastructure (line 390) already includes `check_vscode_extension_rules.py`. The issue doc PR sequence item 7 (line 234) names it explicitly. No contradiction.
 
-**B5 (resolved):** Phase 36 verification infrastructure (line 390) includes the main-repo cross-repo contract validator with the required scope: reads `vscode_extension_contract.json`, locates extension via `SIFR_VSCODE_REPO` or sibling path, and fails if missing.
+**B5 (resolved):** Phase 36 verification infrastructure (line 390) includes the main-repo cross-repo contract validator with the required scope: reads `vscode_extension_rules.json`, locates extension via `SIFR_VSCODE_REPO` or sibling path, and fails if missing.
 
 **B6 (resolved):** Phase 36 verification infrastructure (line 385) includes the complete `check_lsp_split_brain.py` description covering all forbidden paths: `ty_python_semantic`, `ty_project` Python semantics, `ruff_server` diagnostics as Sifr behavior, Python module-resolution paths, and direct HIR traversal.
 

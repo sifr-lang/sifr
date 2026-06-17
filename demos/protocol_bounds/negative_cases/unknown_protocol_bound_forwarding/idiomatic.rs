@@ -6,6 +6,6 @@
 //!
 //! This fixture exists to preserve the protocol-bound forwarding diagnostic rather
 //! than a plain parser failure. The Rust-side analogue would be an unsatisfied
-//! trait bound on a generic call, so this file records the Sifr contract directly.
+//! trait bound on a generic call, so this file records the Sifr rules directly.
 
 fn main() {}

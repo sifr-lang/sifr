@@ -308,7 +308,7 @@ fn main() {
     if let Err(__sifr_try_err) = __sifr_try_res {
         let err = __sifr_try_err.clone();
         println!("base64 error: {}", err.message);
-        assert!(format!("{}", format!("base64 error: {}", err.message)) == "milestone_stdlib_migration demo: all checks passed!".to_string());
+        assert!(format!("{}", format!("base64 error: {}", err.message)) == "stdlib_migration demo: all checks passed!".to_string());
     }
-    println!("milestone_stdlib_migration demo: all checks passed!");
+    println!("stdlib_migration demo: all checks passed!");
 }

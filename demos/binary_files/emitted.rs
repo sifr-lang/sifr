@@ -276,7 +276,7 @@ impl FileHandle {
 }
 
 fn main() {
-    let path: String = "/tmp/sifr_runtime_wave0_bytes_demo.bin".to_string();
+    let path: String = "/tmp/sifr_runtime_binary_files_demo.bin".to_string();
     let mut payload_ok: bool = false;
     let mut ints_ok: bool = false;
     let mut cleanup_ok: bool = false;
@@ -327,7 +327,7 @@ fn main() {
         },
     }
 })()?;
-    let _w: () = writer.write_bytes(&vec![(114 as i64) as u8, (117 as i64) as u8, (110 as i64) as u8, (116 as i64) as u8, (105 as i64) as u8, (109 as i64) as u8, (101 as i64) as u8, (45 as i64) as u8, (119 as i64) as u8, (97 as i64) as u8, (118 as i64) as u8, (101 as i64) as u8, (48 as i64) as u8])?;
+    let _w: () = writer.write_bytes(&vec![(114 as i64) as u8, (117 as i64) as u8, (110 as i64) as u8, (116 as i64) as u8, (105 as i64) as u8, (109 as i64) as u8, (101 as i64) as u8, (45 as i64) as u8, (98 as i64) as u8, (105 as i64) as u8, (110 as i64) as u8, (97 as i64) as u8, (114 as i64) as u8, (121 as i64) as u8, (95 as i64) as u8, (102 as i64) as u8, (105 as i64) as u8, (108 as i64) as u8, (101 as i64) as u8, (115 as i64) as u8])?;
     writer.close();
     let mut reader: FileHandle = (|| {
     let __path = path.to_string();
@@ -377,8 +377,8 @@ fn main() {
 })()?;
     let loaded: Vec<u8> = reader.read_bytes()?;
     reader.close();
-    payload_ok = loaded == vec![(114 as i64) as u8, (117 as i64) as u8, (110 as i64) as u8, (116 as i64) as u8, (105 as i64) as u8, (109 as i64) as u8, (101 as i64) as u8, (45 as i64) as u8, (119 as i64) as u8, (97 as i64) as u8, (118 as i64) as u8, (101 as i64) as u8, (48 as i64) as u8];
-    ints_ok = format!("{:?}", loaded.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>()) == "[114, 117, 110, 116, 105, 109, 101, 45, 119, 97, 118, 101, 48]".to_string();
+    payload_ok = loaded == vec![(114 as i64) as u8, (117 as i64) as u8, (110 as i64) as u8, (116 as i64) as u8, (105 as i64) as u8, (109 as i64) as u8, (101 as i64) as u8, (45 as i64) as u8, (98 as i64) as u8, (105 as i64) as u8, (110 as i64) as u8, (97 as i64) as u8, (114 as i64) as u8, (121 as i64) as u8, (95 as i64) as u8, (102 as i64) as u8, (105 as i64) as u8, (108 as i64) as u8, (101 as i64) as u8, (115 as i64) as u8];
+    ints_ok = format!("{:?}", loaded.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>()) == "[114, 117, 110, 116, 105, 109, 101, 45, 98, 105, 110, 97, 114, 121, 95, 102, 105, 108, 101, 115]".to_string();
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -399,5 +399,5 @@ fn main() {
     assert!(payload_ok);
     assert!(ints_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave0_bytes_binary_io_contract_demo: ok");
+    println!("runtime_binary_files_binary_io_demo: ok");
 }

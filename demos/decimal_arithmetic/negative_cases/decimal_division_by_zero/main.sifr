@@ -1,5 +1,4 @@
-# Reference: m28_2
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_arithmetic
 def main():
     x: decimal = Decimal("1")
     y: decimal = Decimal("0")

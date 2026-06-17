@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_7_invalid_next_signature
+# Reference: stdlib_parity_iter_fix_7_invalid_next_signature
 # expect-error[col=9]: SIFR-PROTO-0002
 class BadNext:
     def __iter__(self) -> Iterator[int]:

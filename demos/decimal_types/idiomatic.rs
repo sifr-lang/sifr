@@ -27,7 +27,7 @@ fn main() {
     assert_eq!(d_plus, dec("14.50"));
     assert_eq!(b_plus, big("7.25"));
 
-    println!("m28_1 type-system/parser/HIR integration demo");
+    println!("decimal_types type-system/parser/HIR integration demo");
     println!("{d_plus}");
     println!("{b_plus}");
 }

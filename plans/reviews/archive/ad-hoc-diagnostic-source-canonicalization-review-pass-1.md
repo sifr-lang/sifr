@@ -109,7 +109,7 @@ The fuzz audit (line 22 of `tmp/diagnostic_gap_fuzz/README.md`) identifies names
 
 #### 8. Verification fixtures list is incomplete
 
-**File reference:** `verification/tooling/check_diagnostic_presentation_contract.py:28–32`
+**File reference:** `verification/tooling/check_diagnostic_presentation_rules.py:28–32`
 
 The plan's M1 (lines 335–348) says "Add verification fixtures for parser spans, missing imports, ambiguous imports, import cycles, and package diagnostic help preservation" but does not list the specific fixture directories that must exist.
 

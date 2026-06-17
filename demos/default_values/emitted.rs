@@ -21,7 +21,7 @@ fn main() {
     let first: Vec<i64> = append_default(vec![1 as i64]);
     let second: Vec<i64> = append_default(vec![1 as i64]);
     let payload: Payload = Payload::new(vec![1 as i64, 2 as i64], HashMap::from([("ok".to_string(), 1 as i64)]));
-    println!("m27_3 defaults and panic-to-diagnostic conversion demo:");
+    println!("default_values defaults and panic-to-diagnostic conversion demo:");
     println!("{:?}", first);
     println!("{:?}", second);
     println!("{:?}", payload.values);

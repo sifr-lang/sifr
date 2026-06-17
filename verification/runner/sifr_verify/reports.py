@@ -19,8 +19,8 @@ TIME_USER_RE = re.compile(r"^\s*([0-9.]+)\s+user$")
 TIME_SYS_RE = re.compile(r"^\s*([0-9.]+)\s+sys$")
 TIME_MAX_RSS_RE = re.compile(r"^\s*(\d+)\s+maximum resident set size$")
 TIME_SWAPS_RE = re.compile(r"^\s*(\d+)\s+swaps$")
-CONTRACT_SUITE_RE = re.compile(r"^\s*-\s+([a-z0-9_-]+):\s+(\d+)\s+rows,\s+(\d+)ms$")
-CONTRACT_TOTAL_RE = re.compile(r"^\[validation-contract\]\s+total_rows=(\d+)\s+total_ms=(\d+)$")
+VALIDATION_SUITE_RE = re.compile(r"^\s*-\s+([a-z0-9_-]+):\s+(\d+)\s+rows,\s+(\d+)ms$")
+VALIDATION_TOTAL_RE = re.compile(r"^\[validation-suite\]\s+total_rows=(\d+)\s+total_ms=(\d+)$")
 E2E_TIMING_RE = re.compile(
     r"^\[sifr-e2e\]\s+timing:\s+compile=(\d+)ms\s+plan=(\d+)ms\s+build=(\d+)ms\s+build-sum=(\d+)ms\s+run=(\d+)ms\s+cache_hits=(\d+)/(\d+)$"
 )
@@ -181,7 +181,7 @@ def directory_stats(path: Path) -> dict[str, int | str]:
 
 
 def parse_log(path: Path) -> dict[str, Any]:
-    contract_suites: list[dict[str, int | str]] = []
+    suite_filters: list[dict[str, int | str]] = []
     lane_steps: list[dict[str, int | str]] = []
     case_timings: list[dict[str, int | str]] = []
     artifact_cache: dict[str, dict[str, int]] = {}
@@ -212,8 +212,8 @@ def parse_log(path: Path) -> dict[str, Any]:
                 }
             )
             continue
-        if match := CONTRACT_SUITE_RE.match(line):
-            contract_suites.append(
+        if match := VALIDATION_SUITE_RE.match(line):
+            suite_filters.append(
                 {
                     "suite": match.group(1),
                     "rows": int(match.group(2)),
@@ -221,8 +221,8 @@ def parse_log(path: Path) -> dict[str, Any]:
                 }
             )
             continue
-        if match := CONTRACT_TOTAL_RE.match(line):
-            contract_suites.append(
+        if match := VALIDATION_TOTAL_RE.match(line):
+            suite_filters.append(
                 {
                     "suite": "__total__",
                     "rows": int(match.group(1)),
@@ -279,7 +279,7 @@ def parse_log(path: Path) -> dict[str, Any]:
     return {
         "lane_steps": lane_steps,
         "case_timings": case_timings,
-        "contract_suites": contract_suites,
+        "suite_filters": suite_filters,
         "artifact_cache": artifact_cache,
         "hardening_summary": hardening_summary,
         "e2e_metrics": e2e_metrics,
@@ -354,7 +354,7 @@ def summarize(args: argparse.Namespace) -> int:
         "advisories": advisories,
         "lane_steps": parsed_log["lane_steps"],
         "case_timings": parsed_log["case_timings"],
-        "contract_suites": parsed_log["contract_suites"],
+        "suite_filters": parsed_log["suite_filters"],
         "artifact_cache": parsed_log["artifact_cache"],
         "hardening_summary": parsed_log["hardening_summary"],
         "cache_footprint": {

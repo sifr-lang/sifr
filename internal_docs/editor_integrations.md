@@ -1,6 +1,6 @@
 # Sifr Editor Integrations
 
-status: phase36-m36.6-implemented
+status: tooling-editor asset layer-implemented
 
 ## Shared Rule
 
@@ -29,9 +29,9 @@ CI and hooks is documented in [`../docs/linter.md`](../docs/linter.md).
 
 ## Syntax Asset Source Of Truth
 
-Phase 36 uses parser-validated syntax assets. TextMate and/or Tree-sitter assets are accepted only when drift checks compare them with `sifr_syntax` tokenization fixtures. Basic highlighting must work before the LSP starts; semantic tokens come from `sifr lsp`.
+developer tooling surface uses parser-validated syntax assets. TextMate and/or Tree-sitter assets are accepted only when drift checks compare them with `sifr_syntax` tokenization fixtures. Basic highlighting must work before the LSP starts; semantic tokens come from `sifr lsp`.
 
-m36.6 provides `editor_integrations/syntaxes/sifr.tmLanguage.json` as the
+editor asset layer provides `editor_integrations/syntaxes/sifr.tmLanguage.json` as the
 baseline TextMate grammar and `editor_integrations/syntaxes/sifr-token-scope-map.json`
 as the reviewed mapping from `sifr_syntax` token kinds to syntax scopes. The
 mapping is validated against `verification/areas/performance/sifr_syntax_token_fixtures/`.
@@ -79,8 +79,8 @@ Emacs:
 
 ## Validation
 
-m36.6 adds checked-in editor assets and `verification/areas/developer_tooling/check_editor_assets.py`.
+editor asset layer adds checked-in editor assets and `verification/areas/developer_tooling/check_editor_assets.py`.
 The check is wired into `scripts/run_all_tests.sh` and has a negative self-test
 for bad LSP launch configuration, direct formatter fallback wiring, and syntax
-scope drift. m36.1 locks the validation expectation and split-brain rule so
+scope drift. tooling lock locks the validation expectation and split-brain rule so
 later editor packages cannot add semantics-bearing code.

@@ -12,7 +12,7 @@ pass-2 follow-up landed.
 
 The pass-2 coverage gap (the contract test only exercised the
 `modify_path: false` branch of the generated installer) is now closed.
-`verification/distribution/artifact_self_update_receipt_contract.sh:82-101`
+`verification/distribution/artifact_self_update_receipt_rules.sh:82-101`
 runs the installer a second time with neither `SIFR_NO_MODIFY_PATH` nor
 `--no-modify-path`, using a tmp-scoped `HOME` (`${tmp_dir}/home`), a clean
 `SHELL=/bin/sh`, and a stripped `PATH=/usr/bin:/bin`, then asserts
@@ -57,7 +57,7 @@ Local gates re-run here per the task report:
 ### Low — second installer invocation does not re-assert lock/temp cleanup
 
 The new second invocation at
-`verification/distribution/artifact_self_update_receipt_contract.sh:82-101`
+`verification/distribution/artifact_self_update_receipt_rules.sh:82-101`
 asserts only `receipt["modify_path"] is True`. It does not re-run the
 `compgen -G "${install_dir}/.install.json.*"` temp-file check or the
 `.sifr-update.lock` assertion at lines 72-80 against `${path_install_dir}`.
@@ -108,7 +108,7 @@ owned by milestone 2.
   unknown fields in schema-versioned receipts, and unsupported schema
   versions") remains fully covered. ✓
 - `scripts/run_distribution_validation.sh` continues to discover both
-  `artifact_self_update_receipt_contract.sh` and
+  `artifact_self_update_receipt_rules.sh` and
   `channel_metadata_generated.sh` automatically, so no plumbing
   changes were needed to wire pass-2's fix into CI. ✓
 

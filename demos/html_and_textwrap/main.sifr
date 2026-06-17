@@ -1,5 +1,5 @@
-# Reference: ad_hoc_struct_wave4
-# Source issue: ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md
+# Reference: struct_html_and_textwrap
+# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.textwrap import TextWrapper
 from sifr.html import escape, unescape
 

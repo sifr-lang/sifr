@@ -37,7 +37,7 @@ REPRESENTATIVE_CASES = [
     "incremental-local-loop-001-unchanged-file-update",
     "interactive-tooling-foundation-002-warm-diagnostics-query",
     "lsp-query-003-diagnostics",
-    "phase27-non-regression-002-json-diagnostic-schema",
+    "diagnostic-non-regression-002-json-diagnostic-schema",
 ]
 
 
@@ -126,7 +126,7 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
     variants: list[dict[str, Any]] = []
     if suite_name in {"smoke", "representative", "full"}:
-        variants.extend(run_contract_variants(suite_name))
+        variants.extend(run_rules_variants(suite_name))
         variants.extend(run_profile_variants(suite_name))
         case_id = suite_name
         command = "performance-profile"
@@ -158,7 +158,7 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_contract_variants(suite_name: str) -> list[dict[str, Any]]:
+def run_rules_variants(suite_name: str) -> list[dict[str, Any]]:
     return [
         run_command_variant(
             suite_name,

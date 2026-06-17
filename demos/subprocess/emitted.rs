@@ -218,11 +218,11 @@ fn main() {
     let mut demo_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
     let out: String = ({
-    let __cmd = "echo runtime_wave4_demo".to_string();
+    let __cmd = "echo runtime_subprocess".to_string();
     let __output = std::process::Command::new("sh".to_string()).arg("-c".to_string()).arg(&__cmd).output().map_err(__io_err)?;
     Ok(String::from_utf8_lossy(&__output.stdout).trim().to_string())
 })?;
-    demo_ok = out == "runtime_wave4_demo";
+    demo_ok = out == "runtime_subprocess";
     Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -230,5 +230,5 @@ fn main() {
         let _ = e.message;
     }
     assert!(demo_ok);
-    println!("ad_hoc_runtime_wave4_legacy_subprocess_removed_demo: ok");
+    println!("runtime_subprocess_subprocess_removed_demo: ok");
 }

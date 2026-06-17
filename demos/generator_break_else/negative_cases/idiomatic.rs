@@ -8,6 +8,6 @@
 //! This fixture exists to preserve traversal completeness for reachable
 //! generator branches inside exception handling. The Rust-side analogue would
 //! require both iterator-shape lowering and name-resolution failure, so this
-//! file records the contract instead of manufacturing a misleading Rust error.
+//! file records the rules instead of manufacturing a misleading Rust error.
 
 fn main() {}

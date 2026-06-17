@@ -1,7 +1,7 @@
-# Reference: milestone_inheritance
-# Source issue: milestone-inheritance-epic.md
+# Reference: inheritance
+# Reference: inheritance
 # =============================================================
-# Sifr Milestone: Inheritance & Class Utilities Demo
+# Sifr Feature Demo: Inheritance & Class Utilities Demo
 # =============================================================
 # Features demonstrated:
 # 1. Single inheritance with parent struct embedding

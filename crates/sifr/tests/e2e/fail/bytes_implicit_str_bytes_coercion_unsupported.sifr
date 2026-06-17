@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_0_implicit_str_bytes_coercion_unsupported
+# Reference: stdlib_parity_bytes_0_implicit_str_bytes_coercion_unsupported
 from sifr.bytes import decode_utf8
 
 

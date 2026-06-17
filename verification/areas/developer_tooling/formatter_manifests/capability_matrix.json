@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "source": "plans/issues/archive/ad-hoc-production-grade-sifr-formatter-execution.md#ruff-to-sifr-formatter-capability-matrix",
+  "source": "plans/issues/archive/production-grade-sifr-formatter-execution.md#ruff-to-sifr-formatter-capability-matrix",
   "allowed_classifications": ["supported", "adapted", "not-applicable", "not-exposed"],
   "rows": [
     {"capability": "Whole-file formatting", "classification": "supported", "implementation_requirement": "`sifr_format` calls Ruff formatter library APIs over Sifr AST/source and returns complete formatted source."},
@@ -15,8 +15,8 @@
     {"capability": "CLI `--exclude`", "classification": "supported", "implementation_requirement": "Match Ruff comma-delimited file-pattern override semantics for format file selection."},
     {"capability": "CLI `--line-length`", "classification": "supported", "implementation_requirement": "Match Ruff formatter override semantics and precedence."},
     {"capability": "CLI `--preview` / `--no-preview`", "classification": "supported", "implementation_requirement": "Match Ruff preview toggle behavior while keeping stable style default."},
-    {"capability": "CLI `--target-version`", "classification": "not-exposed", "implementation_requirement": "Do not expose Python target-version semantics. Sifr has no formatter syntax-version flag in this phase; a future language-edition phase may add one explicitly."},
-    {"capability": "CLI `--extension`", "classification": "not-applicable", "implementation_requirement": "Sifr formatter source kind is `.sifr` only in this phase; multiple source-kind mapping requires a later product decision."},
+    {"capability": "CLI `--target-version`", "classification": "not-exposed", "implementation_requirement": "Do not expose Python target-version semantics. Sifr has no formatter syntax-version flag in the current rules; a future language-edition rules may add one explicitly."},
+    {"capability": "CLI `--extension`", "classification": "not-applicable", "implementation_requirement": "Sifr formatter source kind is `.sifr` only in the current rules; multiple source-kind mapping requires a later product decision."},
     {"capability": "Config discovery", "classification": "adapted", "implementation_requirement": "Sifr canonical config is `sifr.toml`; Ruff config files are migration inputs only under the precedence rules below."},
     {"capability": "Exclude/include and VCS ignores", "classification": "adapted", "implementation_requirement": "Sifr file discovery must support formatter include/exclude settings, `.gitignore`, and explicit target overrides."},
     {"capability": "Line length", "classification": "supported", "implementation_requirement": "Map directly to Ruff `PyFormatOptions` line width."},
@@ -36,7 +36,7 @@
     {"capability": "Editor setup and format-on-save", "classification": "adapted", "implementation_requirement": "Neovim, Zed, Helix, Emacs, and VS Code assets/docs must expose formatting through `sifr lsp --stdio` and standard editor LSP formatting hooks."},
     {"capability": "VS Code document formatting provider", "classification": "adapted", "implementation_requirement": "The extension uses the Sifr LSP client document formatting provider and format-on-save settings; extension TypeScript owns no formatter."},
     {"capability": "Formatter ecosystem checks", "classification": "adapted", "implementation_requirement": "Add Sifr corpus checks inspired by Ruff ecosystem checks: idempotence, parser roundtrip, no panics, invalid-source diagnostics, comments/pragmas, config matrix, and performance budgets."},
-    {"capability": "Notebook formatting", "classification": "not-applicable", "implementation_requirement": "Sifr has no notebook product surface in this phase. A later product phase must add this explicitly if needed."},
+    {"capability": "Notebook formatting", "classification": "not-applicable", "implementation_requirement": "Sifr has no notebook product surface in the current rules. A later product rules must add this explicitly if needed."},
     {"capability": "Import sorting", "classification": "not-applicable", "implementation_requirement": "Ruff treats import sorting as lint/fix behavior, not formatting. Sifr format must not reorder imports."}
   ]
 }

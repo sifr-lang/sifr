@@ -202,8 +202,8 @@ fn run_demo(base: &Path) -> io::Result<()> {
     fs::rename(&copied, &moved)?;
     println!("shutil.move_file exists = {}", moved.exists());
 
-    let temp_file = mkstemp("sifr_wave_psp_d1_demo_")?;
-    let temp_dir = mkdtemp("sifr_wave_psp_d1_demo_")?;
+    let temp_file = mkstemp("sifr_filesystem_archive_surface_demo_")?;
+    let temp_dir = mkdtemp("sifr_filesystem_archive_surface_demo_")?;
     println!("tempfile.mkstemp = {}", temp_file.display());
     println!("tempfile.mkdtemp = {}", temp_dir.display());
 
@@ -225,7 +225,7 @@ fn run_demo(base: &Path) -> io::Result<()> {
 }
 
 fn main() -> io::Result<()> {
-    let base = PathBuf::from(format!("/tmp/sifr_wave_psp_d1_demo_{}", std::process::id()));
+    let base = PathBuf::from(format!("/tmp/sifr_filesystem_archive_surface_demo_{}", std::process::id()));
     let result = run_demo(&base);
     let cleanup = remove_path(&base);
     result.and(cleanup)

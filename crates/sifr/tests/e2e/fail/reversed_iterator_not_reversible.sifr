@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_1_reversed_iterator_not_reversible
+# Reference: stdlib_parity_iter_fix_1_reversed_iterator_not_reversible
 # expect-error: SIFR-PROTO-0001
 def main() -> None:
     nums: list[int] = [1, 2, 3]

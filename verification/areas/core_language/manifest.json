@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "core_language",
   "owner": "compiler/core-language",
-  "description": "Core compiler language semantics, contract matrices, and e2e language behavior.",
+  "description": "Core compiler language semantics, rules matrices, and e2e language behavior.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local"
@@ -10,39 +10,39 @@
   "timeout_seconds": 1200,
   "suites": [
     {
-      "name": "integer_dtype_contract",
+      "name": "integer_dtype_rules",
       "kind": "adapter",
       "cases": [
         {
-          "id": "integer_dtype_contract",
-          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
-          "command": "contract-matrix",
+          "id": "integer_dtype_rules",
+          "entry": "verification/areas/core_language/data/validation_suites/manifest.json",
+          "command": "validation-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
       ]
     },
     {
-      "name": "phase24_hir_analysis",
+      "name": "hir_analysis_behaviors",
       "kind": "adapter",
       "cases": [
         {
-          "id": "phase24_hir_analysis",
-          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
-          "command": "contract-matrix",
+          "id": "hir_analysis_behaviors",
+          "entry": "verification/areas/core_language/data/validation_suites/manifest.json",
+          "command": "validation-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
       ]
     },
     {
-      "name": "phase25_cfg_flow",
+      "name": "cfg_flow_behaviors",
       "kind": "adapter",
       "cases": [
         {
-          "id": "phase25_cfg_flow",
-          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
-          "command": "contract-matrix",
+          "id": "cfg_flow_behaviors",
+          "entry": "verification/areas/core_language/data/validation_suites/manifest.json",
+          "command": "validation-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
@@ -54,8 +54,8 @@
       "cases": [
         {
           "id": "syntax_parser_lexer_matrix",
-          "entry": "verification/areas/core_language/data/validation_contracts/manifest.json",
-          "command": "contract-matrix",
+          "entry": "verification/areas/core_language/data/validation_suites/manifest.json",
+          "command": "validation-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
@@ -98,7 +98,7 @@
     "allowed": false,
     "requires_reason": true
   },
-  "baseline_metadata_contract": {
+  "baseline_metadata_rules": {
     "required": false,
     "source": "not-applicable"
   }

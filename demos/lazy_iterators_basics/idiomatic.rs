@@ -70,5 +70,5 @@ fn main() {
     assert_eq!(ticker.next(), Some(5));
     assert_eq!(ticker.next(), Some(7));
 
-    println!("ad_hoc_iter_fix_wave0_contract_lock_demo: ok");
+    println!("iter_fix_lazy_iterators_basics_lock_demo: ok");
 }

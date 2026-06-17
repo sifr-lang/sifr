@@ -1,6 +1,6 @@
-# Reference: milestone_error_safety
-# Source issue: revised_phase_roadmap_698c629c.md
-# milestone_error_safety demo
+# Reference: error_safety
+# Reference: compiler-feature-history
+# error_safety demo
 # Showcases: Built-in error classes, Result[T, E] enforcement,
 #            exhaustiveness checking, raise enforcement, custom errors
 

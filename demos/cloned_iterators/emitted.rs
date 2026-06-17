@@ -23,5 +23,5 @@ fn main() {
         println!("{}", n);
     }
     println!("{:?}", Box::new(vec![9 as i64, 10 as i64, 11 as i64].into_iter().map(|x| x - (1 as i64))).collect::<Vec<_>>());
-    println!("ad_hoc_clone_wave1_iterator_comprehension_demo: pass");
+    println!("clone_cloned_iterators_comprehension_demo: pass");
 }

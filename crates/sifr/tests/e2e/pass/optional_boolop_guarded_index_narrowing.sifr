@@ -1,4 +1,4 @@
-# Reference: phase_optional_wave7_boolop_guarded_index_narrowing
+# Reference: optional_boolop_boolop_guarded_index_narrowing
 # Test: bool short-circuit applies sequence guards to dominated RHS index reads
 
 def first_nonnegative_prefix(values: list[int]) -> int:

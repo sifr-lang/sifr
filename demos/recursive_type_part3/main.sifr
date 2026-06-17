@@ -1,6 +1,6 @@
-# Reference: ad_hoc_recursive_type_part3
-# Source issue: ad-hoc-full-recursive-type-feature-part3-execution.md
-# Ad hoc recursive-type feature part 3 demo.
+# Reference: recursive_type_part3
+# Reference: full-recursive-type-feature-part3
+# Recursive-type feature part 3 demo.
 # Shows that recursive aliases keep alias identity and generic arguments through lowering.
 
 type Json = None | bool | int | float | str | list[Json] | dict[str, Json]

@@ -1389,7 +1389,7 @@ Validation evidence:
 - `python3 scripts/check_scripts_verification_boundary.py && python3 scripts/check_scripts_verification_boundary.py --self-test`
 - `uv run --project verification --locked python -m sifr_verify profiles check`
 - `uv run --project verification --locked python -m sifr_verify areas check`
-- `python3 verification/areas/developer_tooling/check_linter_reuse_contract.py && python3 verification/areas/developer_tooling/check_linter_reuse_contract.py --self-test`
+- `python3 verification/areas/developer_tooling/check_linter_reuse_rules.py && python3 verification/areas/developer_tooling/check_linter_reuse_rules.py --self-test`
 - `python3 verification/areas/stdlib_parity/tools/generate_concurrency_runtime_inventory.py`
 - `python3 -m json.tool` on touched JSON artifacts
 - `scripts/run_all_tests.sh --profile create-pr`: passed with no test

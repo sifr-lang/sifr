@@ -1,6 +1,5 @@
-# Reference: m21_1
-# Source issue: phase21-traversal-completeness-and-control-flow-correctness-execution.md
-# m21_1 canonical walker coverage demo
+# Reference: recursive_for_else
+# recursive_for_else canonical walker coverage demo
 # Demonstrates recursive-call detection through for-else branches.
 
 def main():
@@ -13,5 +12,5 @@ def main():
                 return rec(n - 1)
         return 0
 
-    print('m21_1 canonical walker coverage demo:')
+    print('recursive_for_else canonical walker coverage demo:')
     print(rec(3))

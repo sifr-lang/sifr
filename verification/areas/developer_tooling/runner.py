@@ -17,32 +17,32 @@ RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "developer-tooli
 LSP_CORPUS = AREA_ROOT / "corpora" / "sifr-large-lsp-verification"
 
 SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
-    "typescript-go-m1": [
-        ("typescript-go-m1", [sys.executable, str(AREA_ROOT / "check_typescript_go_m1_guardrails.py")]),
-        ("typescript-go-m1-self-test", [sys.executable, str(AREA_ROOT / "check_typescript_go_m1_guardrails.py"), "--self-test"]),
+    "typescript-go-transfer": [
+        ("typescript-go-transfer", [sys.executable, str(AREA_ROOT / "check_typescript_go_transfer_guardrails.py")]),
+        ("typescript-go-transfer-self-test", [sys.executable, str(AREA_ROOT / "check_typescript_go_transfer_guardrails.py"), "--self-test"]),
     ],
-    "diagnostic-contracts": [
-        ("diagnostic-presentation", [sys.executable, str(AREA_ROOT / "check_diagnostic_presentation_contract.py")]),
+    "diagnostic-rules": [
+        ("diagnostic-presentation", [sys.executable, str(AREA_ROOT / "check_diagnostic_presentation_rules.py")]),
         (
             "diagnostic-presentation-self-test",
-            [sys.executable, str(AREA_ROOT / "check_diagnostic_presentation_contract.py"), "--self-test"],
+            [sys.executable, str(AREA_ROOT / "check_diagnostic_presentation_rules.py"), "--self-test"],
         ),
         (
             "diagnostic-source-canonicalization",
-            [sys.executable, str(AREA_ROOT / "check_diagnostic_source_canonicalization_contract.py")],
+            [sys.executable, str(AREA_ROOT / "check_diagnostic_source_canonicalization_rules.py")],
         ),
         (
             "diagnostic-source-canonicalization-self-test",
             [
                 sys.executable,
-                str(AREA_ROOT / "check_diagnostic_source_canonicalization_contract.py"),
+                str(AREA_ROOT / "check_diagnostic_source_canonicalization_rules.py"),
                 "--self-test",
             ],
         ),
     ],
     "static": [
-        ("tooling-contract-lock", [sys.executable, str(AREA_ROOT / "check_tooling_contract_lock.py")]),
-        ("tooling-contract-lock-self-test", [sys.executable, str(AREA_ROOT / "check_tooling_contract_lock.py"), "--self-test"]),
+        ("tooling-rules-lock", [sys.executable, str(AREA_ROOT / "check_tooling_rules_lock.py")]),
+        ("tooling-rules-lock-self-test", [sys.executable, str(AREA_ROOT / "check_tooling_rules_lock.py"), "--self-test"]),
         ("tooling-dependency-boundaries", [sys.executable, str(AREA_ROOT / "check_tooling_dependency_boundaries.py")]),
         (
             "tooling-dependency-boundaries-self-test",
@@ -55,21 +55,21 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
             "linter-diagnostic-class-self-test",
             [sys.executable, str(AREA_ROOT / "check_linter_diagnostic_class.py"), "--self-test"],
         ),
-        ("rule-suppression-contract", [sys.executable, str(AREA_ROOT / "check_rule_suppression_contract.py")]),
+        ("rule-suppression-rules", [sys.executable, str(AREA_ROOT / "check_rule_suppression_rules.py")]),
         (
-            "rule-suppression-contract-self-test",
-            [sys.executable, str(AREA_ROOT / "check_rule_suppression_contract.py"), "--self-test"],
+            "rule-suppression-rules-self-test",
+            [sys.executable, str(AREA_ROOT / "check_rule_suppression_rules.py"), "--self-test"],
         ),
         ("completion-quality", [sys.executable, str(AREA_ROOT / "check_completion_quality.py")]),
         ("completion-quality-self-test", [sys.executable, str(AREA_ROOT / "check_completion_quality.py"), "--self-test"]),
     ],
     "formatter": [
-        ("formatter-contract", [sys.executable, str(AREA_ROOT / "check_formatter_contract.py")]),
-        ("formatter-contract-self-test", [sys.executable, str(AREA_ROOT / "check_formatter_contract.py"), "--self-test"]),
-        ("formatter-phase-manifests", [sys.executable, str(AREA_ROOT / "check_formatter_phase_manifests.py")]),
+        ("formatter-rules", [sys.executable, str(AREA_ROOT / "check_formatter_rules.py")]),
+        ("formatter-rules-self-test", [sys.executable, str(AREA_ROOT / "check_formatter_rules.py"), "--self-test"]),
+        ("formatter-rules-manifests", [sys.executable, str(AREA_ROOT / "check_formatter_rules_manifests.py")]),
         (
-            "formatter-phase-manifests-self-test",
-            [sys.executable, str(AREA_ROOT / "check_formatter_phase_manifests.py"), "--self-test"],
+            "formatter-rules-manifests-self-test",
+            [sys.executable, str(AREA_ROOT / "check_formatter_rules_manifests.py"), "--self-test"],
         ),
         ("formatter-ast-coverage", [sys.executable, str(AREA_ROOT / "check_formatter_ast_coverage.py")]),
         (
@@ -78,10 +78,10 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
         ),
     ],
     "analysis": [
-        ("analysis-snapshot-contract", [sys.executable, str(AREA_ROOT / "check_analysis_snapshot_contract.py")]),
+        ("analysis-snapshot-rules", [sys.executable, str(AREA_ROOT / "check_analysis_snapshot_rules.py")]),
         (
-            "analysis-snapshot-contract-self-test",
-            [sys.executable, str(AREA_ROOT / "check_analysis_snapshot_contract.py"), "--self-test"],
+            "analysis-snapshot-rules-self-test",
+            [sys.executable, str(AREA_ROOT / "check_analysis_snapshot_rules.py"), "--self-test"],
         ),
         ("analysis-snapshot-coherence", [sys.executable, str(AREA_ROOT / "check_analysis_snapshot_coherence.py")]),
         (
@@ -102,10 +102,10 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
         ("lsp-transcript-replay-self-test", [sys.executable, str(AREA_ROOT / "check_lsp_transcript_replay.py"), "--self-test"]),
     ],
     "editor-release": [
-        ("vscode-extension-contract", [sys.executable, str(AREA_ROOT / "check_vscode_extension_contract.py")]),
+        ("vscode-extension-rules", [sys.executable, str(AREA_ROOT / "check_vscode_extension_rules.py")]),
         (
-            "vscode-extension-contract-self-test",
-            [sys.executable, str(AREA_ROOT / "check_vscode_extension_contract.py"), "--self-test"],
+            "vscode-extension-rules-self-test",
+            [sys.executable, str(AREA_ROOT / "check_vscode_extension_rules.py"), "--self-test"],
         ),
         ("vscode-extension", [sys.executable, str(AREA_ROOT / "check_vscode_extension.py")]),
         ("vscode-extension-self-test", [sys.executable, str(AREA_ROOT / "check_vscode_extension.py"), "--self-test"]),
@@ -126,9 +126,9 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
             [sys.executable, str(AREA_ROOT / "lsp_large_session.py"), "--mode", "smoke", "--require-submodule"],
         ),
     ],
-    "phase-closeout": [
-        ("phase36-closeout", [sys.executable, str(AREA_ROOT / "check_phase36_closeout.py")]),
-        ("phase36-closeout-self-test", [sys.executable, str(AREA_ROOT / "check_phase36_closeout.py"), "--self-test"]),
+    "tooling-readiness": [
+        ("tooling-readiness", [sys.executable, str(AREA_ROOT / "check_tooling_readiness.py")]),
+        ("tooling-readiness-self-test", [sys.executable, str(AREA_ROOT / "check_tooling_readiness.py"), "--self-test"]),
     ],
 }
 
@@ -139,7 +139,7 @@ FULL_SUITES = [
     "lsp-smoke",
     "editor-release",
     "lsp-stress",
-    "phase-closeout",
+    "tooling-readiness",
 ]
 
 

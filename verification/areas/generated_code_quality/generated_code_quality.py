@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 34 generated-code quality gates."""
+"""Generated-code quality gates."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ PRODUCER_FINGERPRINT_INPUTS = [
 PRODUCER_FINGERPRINT_EXTENSIONS = {".lock", ".py", ".rs", ".sifr", ".toml"}
 
 POSITIVE_GROUPS = {
-    "concurrency-runtime-m7",
+    "concurrency-runtime-readiness",
     "demos-required",
     "e2e-pass-representative",
     "multi-module-projects",
@@ -58,7 +58,7 @@ POSITIVE_GROUPS = {
 }
 NEGATIVE_GROUP = "negative-seeds"
 REQUIRED_GROUP_COUNTS = {
-    "concurrency-runtime-m7": 7,
+    "concurrency-runtime-readiness": 7,
     "e2e-pass-representative": 50,
     "stdlib-flows": 10,
     "multi-module-projects": 5,
@@ -76,7 +76,7 @@ ASYNC_DEMOS = {
     "demos/async_generator_comprehension_demo/main.sifr",
     "demos/blocking_offload_demo/main.sifr",
 }
-M7_CONCURRENCY_DEMOS = {
+CONCURRENCY_READINESS_DEMOS = {
     "demos/async_subprocess_pipeline_demo/main.sifr",
     "demos/blocking_offload_demo/main.sifr",
     "demos/cancellation_cleanup_demo/main.sifr",
@@ -342,10 +342,10 @@ def load_manifest(path: Path) -> list[Entry]:
         raise SystemExit(f"missing required generated-code demos: {sorted(missing_demos)}")
     if not demo_paths.intersection(ASYNC_DEMOS):
         raise SystemExit("manifest must include one supported async/concurrency demo")
-    m7_demo_paths = {entry.source_path for entry in entries if entry.group == "concurrency-runtime-m7"}
-    missing_m7_demos = M7_CONCURRENCY_DEMOS - m7_demo_paths
-    if missing_m7_demos:
-        raise SystemExit(f"missing M7 concurrency generated-code demos: {sorted(missing_m7_demos)}")
+    concurrency_demo_paths = {entry.source_path for entry in entries if entry.group == "concurrency-runtime-readiness"}
+    missing_concurrency_demos = CONCURRENCY_READINESS_DEMOS - concurrency_demo_paths
+    if missing_concurrency_demos:
+        raise SystemExit(f"missing concurrency generated-code demos: {sorted(missing_concurrency_demos)}")
 
     return entries
 

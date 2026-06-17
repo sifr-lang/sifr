@@ -15,10 +15,10 @@ All blocking correctness and contract requirements are met. The phase is ready f
 | Gate | Result |
 |------|--------|
 | `bash scripts/run_validation_contract_matrix.sh --suite phase23_graph_isolation` | PASS |
-| `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py` | PASS |
-| `python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test` | PASS |
-| `python3 verification/tooling/check_diagnostic_presentation_contract.py` | PASS |
-| `python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test` | PASS |
+| `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py` | PASS |
+| `python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py --self-test` | PASS |
+| `python3 verification/tooling/check_diagnostic_presentation_rules.py` | PASS |
+| `python3 verification/tooling/check_diagnostic_presentation_rules.py --self-test` | PASS |
 | `cargo test -p sifr_syntax` | PASS |
 | `cargo test -p sifr_package` | PASS |
 | `cargo test -p sifr -- diagnostics` | PASS (0 tests, 34 filtered — test naming convention) |

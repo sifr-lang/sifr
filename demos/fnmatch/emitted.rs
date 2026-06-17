@@ -120,5 +120,5 @@ fn main() {
     append_all(&mut actual, &collect_match_actual());
     append_all(&mut actual, &collect_filter_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1c fnmatch parity demo: pass");
+    println!("fnmatch fnmatch parity demo: pass");
 }

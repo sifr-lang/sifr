@@ -67,24 +67,24 @@ fn has_prefix(path: &Path, prefix: &str) -> bool {
 }
 
 fn collect_tempfile_actual() -> Vec<bool> {
-    let preview_path = mktemp_path("sifr_m30_1e_preview_");
+    let preview_path = mktemp_path("sifr_tempfile_preview_");
 
     let result: io::Result<Vec<bool>> = (|| {
-        let file_path = mkstemp("sifr_m30_1e_tmp_")?;
-        let dir_path = mkdtemp("sifr_m30_1e_tmpd_")?;
+        let file_path = mkstemp("sifr_tempfile_tmp_")?;
+        let dir_path = mkdtemp("sifr_tempfile_tmpd_")?;
 
         let mut actual = vec![file_path.exists(), dir_path.exists()];
         actual.push(
-            has_prefix(&preview_path, "sifr_m30_1e_preview_")
-                && has_prefix(&file_path, "sifr_m30_1e_tmp_")
-                && has_prefix(&dir_path, "sifr_m30_1e_tmpd_"),
+            has_prefix(&preview_path, "sifr_tempfile_preview_")
+                && has_prefix(&file_path, "sifr_tempfile_tmp_")
+                && has_prefix(&dir_path, "sifr_tempfile_tmpd_"),
         );
 
         let temp_root = preview_path
             .parent()
             .map(Path::to_path_buf)
             .unwrap_or_else(std::env::temp_dir);
-        let missing_parent_name = "__sifr_m30_1e_missing_parent__";
+        let missing_parent_name = "__sifr_tempfile_missing_parent__";
         let missing_parent_path = temp_root.join(missing_parent_name);
         remove_path(&missing_parent_path)?;
 
@@ -96,7 +96,7 @@ fn collect_tempfile_actual() -> Vec<bool> {
         remove_path(&missing_parent_path)?;
         actual.push(!file_path.exists() && !dir_path.exists());
 
-        let next_path = mkstemp("sifr_m30_1e_tmp_")?;
+        let next_path = mkstemp("sifr_tempfile_tmp_")?;
         actual.push(next_path != file_path);
         remove_path(&next_path)?;
 
@@ -111,5 +111,5 @@ fn main() {
     let actual = collect_tempfile_actual();
 
     assert_eq!(actual, expected);
-    println!("m30_1e tempfile parity demo: pass");
+    println!("tempfile tempfile parity demo: pass");
 }

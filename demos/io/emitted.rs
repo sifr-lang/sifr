@@ -293,7 +293,7 @@ impl FileHandle {
 
 fn collect_io_roundtrip_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let path: String = "/tmp/sifr_m30_1e_io_demo.txt".to_string();
+    let path: String = "/tmp/sifr_io_io_demo.txt".to_string();
     let mut text_roundtrip_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _w: () = std::fs::write(&path, "hello".to_string().as_bytes()).map(|_| ()).map_err(__io_err)?;
@@ -317,7 +317,7 @@ fn collect_io_roundtrip_actual() -> Vec<bool> {
 
 fn collect_open_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let path: String = "/tmp/sifr_m30_1e_io_demo.txt".to_string();
+    let path: String = "/tmp/sifr_io_io_demo.txt".to_string();
     let mut first_ok: bool = false;
     let mut second_ok: bool = false;
     let mut eof_ok: bool = false;
@@ -384,7 +384,7 @@ fn collect_open_actual() -> Vec<bool> {
     }
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _: FileHandle = (|| {
-    let __path = "/tmp/sifr_m30_1e_io_demo_missing.txt".to_string().to_string();
+    let __path = "/tmp/sifr_io_io_demo_missing.txt".to_string().to_string();
     let __mode = "r".to_string().to_string();
     let __handle_id = __sifr_next_file_handle_id();
     match __mode.as_str() {
@@ -455,5 +455,5 @@ fn main() {
     append_all(&mut actual, &collect_io_roundtrip_actual());
     append_all(&mut actual, &collect_open_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1e io parity demo: pass");
+    println!("io io parity demo: pass");
 }

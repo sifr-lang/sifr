@@ -12,4 +12,4 @@ All six precision items from pass-1 are addressed:
 
 **Item 6 — Execution tracker:** Line 76 records the pass-1 review with its precision edit requests and the fact that the phase was updated accordingly.
 
-**No further discovery needed before starting M1.** All pass-1 precision items are encoded in the phase plan. M1 can proceed immediately with manifest encoding, `check_linter_reuse_contract.py` creation, and the suppression-gate manifest initialization.
+**No further discovery needed before starting M1.** All pass-1 precision items are encoded in the phase plan. M1 can proceed immediately with manifest encoding, `check_linter_reuse_rules.py` creation, and the suppression-gate manifest initialization.

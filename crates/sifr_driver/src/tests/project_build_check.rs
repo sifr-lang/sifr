@@ -429,7 +429,7 @@ fn test_build_project_includes_reachable_support_module_stdlib_crates_in_manifes
     std::fs::write(
         dir.join("helper.sifr"),
         "from sifr.tomllib import TomlValue, loads\n\n\
-def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"phase-five\\\"\\nvalue = 5\")\n        return \"ok\"\n    except TOMLDecodeError as e:\n        return e.message\n",
+def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"fixture-five\\\"\\nvalue = 5\")\n        return \"ok\"\n    except TOMLDecodeError as e:\n        return e.message\n",
     )
     .expect("helper should be written");
 

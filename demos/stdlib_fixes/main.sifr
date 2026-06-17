@@ -1,7 +1,7 @@
-# Reference: milestone_stdlib_remediation
-# Source issue: 191-milestone_stdlib_remediation.md
-# Demo: milestone_stdlib_remediation
-# Demonstrates Phase 12 gap closures:
+# Reference: stdlib_remediation
+# Source issue: 191-stdlib_remediation.md
+# Demo: stdlib_remediation
+# Demonstrates  gap closures:
 # - open() built-in with FileHandle (text + binary modes, context manager)
 # - datetime.time, datetime.timezone, datetime.now() returning object
 # - pathlib.Path.glob / rglob

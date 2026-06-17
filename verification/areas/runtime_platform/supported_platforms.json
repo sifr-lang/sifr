@@ -77,7 +77,7 @@
       "toolchain": "stable",
       "allowed_skips": [
         "symlink privileges are host-policy dependent",
-        "POSIX signal delivery is not a Windows platform contract",
+        "POSIX signal delivery is not a Windows platform rules",
         "Unix subprocess signal status is host-limited"
       ],
       "evidence_suites": [
@@ -95,7 +95,7 @@
       "toolchain": "stable",
       "allowed_skips": [
         "symlink privileges are host-policy dependent",
-        "POSIX signal delivery is not a Windows platform contract",
+        "POSIX signal delivery is not a Windows platform rules",
         "Unix subprocess signal status is host-limited"
       ],
       "evidence_suites": [

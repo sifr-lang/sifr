@@ -2611,9 +2611,9 @@ impl std::error::Error for RegexError {
 }
 
 fn main() {
-    println!("wave_psp_c1 structured parsing and serialization demo");
+    println!("structured-parsing-sample structured parsing and serialization demo");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let json_path: String = "/tmp/sifr_wave_psp_c1_demo.json".to_string();
+    let json_path: String = "/tmp/sifr_structured_parsing_serialization.json".to_string();
     let _: () = std::fs::write(&json_path, "{\"name\":\"sifr\",\"items\":[1,true]}".to_string().as_bytes()).map(|_| ()).map_err(__io_err)?;
     let mut json_value: JsonValue = (load(&json_path)).map_err(|__e| IOError::new(__e.to_string()))?;
     let mut json_items: Option<JsonValue> = json_value.get(&"items".to_string());

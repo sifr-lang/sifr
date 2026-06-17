@@ -23,7 +23,7 @@ fn gen(flag: bool) -> Box<dyn Iterator<Item = i64>> {
 }
 
 fn main() {
-    println!("m21_3 yield/loop-path coverage demo:");
+    println!("generator_break_else yield/loop-path coverage demo:");
     for v in gen(false) {
         println!("{}", v);
     }

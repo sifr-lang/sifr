@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "description": "Active Phase 35 performance waivers. Waivers may cover temporary performance regressions only; correctness, timeout, diagnostics, cache-staleness, split-brain, and panic-safety failures are not waiverable.",
+  "description": "Active performance waivers. Waivers may cover temporary performance regressions only; correctness, timeout, diagnostics, cache-staleness, split-brain, and panic-safety failures are not waiverable.",
   "waivers": []
 }

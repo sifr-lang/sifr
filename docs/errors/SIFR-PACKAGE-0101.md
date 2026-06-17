@@ -11,6 +11,6 @@ Cargo command invocation failed; Sifr reports the redacted Cargo excerpt and saf
 | Severity | Error |
 | Owner | `sifr_package::cargo::errors` |
 | Message template | `cargo {action} failed` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials` |
+| Representative fixture | `crates/sifr_package/src/cargo_backend_integration_tests.rs::cargo_failure_mapping_redacts_private_credentials` |
 | Declared args | `action (message+json)`, `reason (message+json)` |
 | Dedupe args | `action`, `reason` |

@@ -1,5 +1,5 @@
-# Reference: ad_hoc_bytes_wave0
-# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
+# Reference: bytes_text_and_bytes
+# Reference: first-class-bytes-and-binary-surface-foundation
 from sifr.bytes import encode_utf8, decode_utf8, bytes_from_hex
 
 

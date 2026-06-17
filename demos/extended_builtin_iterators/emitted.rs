@@ -17,5 +17,5 @@ fn main() {
 }).into_iter());
     assert!(mapped_it.next() == Some(5 as i64));
     assert!(format!("{:?}", mapped_it.collect::<Vec<_>>()) == "[7, 9]".to_string());
-    assert!(format!("{}", "ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok".to_string()) == "ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok".to_string());
+    assert!(format!("{}", "parity_ext_extended_builtin_iterators_iterator_reclosure_demo: ok".to_string()) == "parity_ext_extended_builtin_iterators_iterator_reclosure_demo: ok".to_string());
 }

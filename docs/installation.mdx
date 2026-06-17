@@ -144,7 +144,7 @@ sifr self version --short   # prints only the version string
 
 ## Troubleshooting
 
-**Receipt missing or malformed.** If `sifr self update` reports that the install receipt is missing, predates the self-update contract, or is malformed, rerun the standalone installer to create a fresh receipt:
+**Receipt missing or malformed.** If `sifr self update` reports that the install receipt is missing, predates the self-update rules, or is malformed, rerun the standalone installer to create a fresh receipt:
 
 ```bash
 curl -fsSL https://sifr.sh/install | sh
@@ -161,5 +161,5 @@ curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
 **Network failure mid-update.** If a metadata or installer download fails, retry after your network recovers. The existing binary is never replaced until the delegated installer validates and installs the target artifact, so a failed update leaves your working install intact.
 
 <Tip>
-  Stable channels and release-candidate channels are not yet available in the self-update command. During the current preview phase, only `alpha` and `beta` channels are accepted.
+  Stable channels and release-candidate channels are not yet available in the self-update command. During the current preview release channel, only `alpha` and `beta` channels are accepted.
 </Tip>

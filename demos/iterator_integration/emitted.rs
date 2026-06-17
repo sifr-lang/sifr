@@ -855,7 +855,7 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!("{}", e.message);
     }
-    let base: String = format!("{}{}", "/tmp/sifr_wave_psp_iter_fix_8_demo_".to_string(), format!("{}", std::process::id() as i64));
+    let base: String = format!("{}{}", "/tmp/sifr_iterator_integration".to_string(), format!("{}", std::process::id() as i64));
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _mk: String = ({
     let __cmd = format!("{}{}", format!("{}{}", "mkdir -p ".to_string(), base), "/nested".to_string());

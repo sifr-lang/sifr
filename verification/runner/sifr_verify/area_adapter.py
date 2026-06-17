@@ -40,7 +40,7 @@ BASELINE_COMMANDS = {
     "package-run-target-admin",
     "self-version",
 }
-CONTRACT_MATRIX_COMMAND = "contract-matrix"
+VALIDATION_SUITE_COMMAND = "validation-suite"
 
 
 @dataclass(frozen=True)
@@ -178,8 +178,8 @@ def run_case(
     command = str(case["command"])
     if command == "area-check":
         return run_area_check_case(config, suite_name, case)
-    if command == CONTRACT_MATRIX_COMMAND:
-        return run_contract_matrix_case(config, suite_name, case)
+    if command == VALIDATION_SUITE_COMMAND:
+        return run_validation_suite_case(config, suite_name, case)
     return run_baseline_case(config, suite_name, case, options)
 
 
@@ -232,17 +232,17 @@ def run_area_check_case(
     )
 
 
-def run_contract_matrix_case(
+def run_validation_suite_case(
     config: AreaAdapterConfig,
     suite_name: str,
     case: dict[str, Any],
 ) -> tuple[dict[str, Any], bool, int]:
     case_id = str(case["id"])
-    contract_suite = case_id
+    suite_filter = case_id
     entry = case_entry_path(config, suite_name, case_id, case)
     if not entry.is_file():
         raise SystemExit(
-            f"{config.area} case '{case_id}' contract manifest does not exist: {entry}"
+            f"{config.area} case '{case_id}' suite manifest does not exist: {entry}"
         )
     expected_exit = int(case["expect_exit_code"])
     argv = [
@@ -252,8 +252,8 @@ def run_contract_matrix_case(
         "-p",
         "sifr",
         "--test",
-        "validation_contracts",
-        "test_validation_contract_matrix",
+        "validation_suites",
+        "test_validation_suite_matrix",
         "--",
         "--ignored",
         "--nocapture",
@@ -263,9 +263,9 @@ def run_contract_matrix_case(
         argv,
         cwd=REPO_ROOT,
         env={
-            **_contract_matrix_env(),
-            "SIFR_VALIDATION_CONTRACT_MANIFEST": str(entry),
-            "SIFR_VALIDATION_CONTRACT_SUITE_FILTER": contract_suite,
+            **_validation_suite_env(),
+            "SIFR_VALIDATION_SUITE_MANIFEST": str(entry),
+            "SIFR_VALIDATION_SUITE_FILTER": suite_filter,
         },
         text=True,
         capture_output=True,
@@ -280,18 +280,18 @@ def run_contract_matrix_case(
     if proc.returncode != expected_exit:
         mismatches.append("unexpected-exit")
     status = "pass" if not mismatches else "fail"
-    emit_case_timing(config.area, suite_name, case_id, CONTRACT_MATRIX_COMMAND, elapsed_ms, status)
+    emit_case_timing(config.area, suite_name, case_id, VALIDATION_SUITE_COMMAND, elapsed_ms, status)
     return (
         {
             "id": case_id,
             "entry": format_repo_relative_path(entry),
-            "command": CONTRACT_MATRIX_COMMAND,
+            "command": VALIDATION_SUITE_COMMAND,
             "variants": [
                 {
-                    "label": CONTRACT_MATRIX_COMMAND,
+                    "label": VALIDATION_SUITE_COMMAND,
                     "diagnostic_format": None,
                     "argv": argv,
-                    "contract_suite": contract_suite,
+                    "suite_filter": suite_filter,
                     "status": status,
                     "mismatches": mismatches,
                     "expected_exit_code": expected_exit,
@@ -416,7 +416,7 @@ def validate_unique_baseline_artifact_paths(
         if not isinstance(case, dict):
             continue
         command = str(case.get("command"))
-        if command in {"area-check", CONTRACT_MATRIX_COMMAND}:
+        if command in {"area-check", VALIDATION_SUITE_COMMAND}:
             continue
         case_id, entry, command_name, formats = baseline_case_metadata(config, suite_name, case)
         for diagnostic_format in formats:
@@ -676,7 +676,7 @@ def timing_token(value: object) -> str:
     return "".join(char if char.isalnum() or char in "_.:/+-" else "_" for char in str(value))
 
 
-def _contract_matrix_env() -> dict[str, str]:
+def _validation_suite_env() -> dict[str, str]:
     env = dict(os.environ)
-    env.pop("SIFR_VALIDATION_CONTRACT_SUITE_FILTER", None)
+    env.pop("SIFR_VALIDATION_SUITE_FILTER", None)
     return env

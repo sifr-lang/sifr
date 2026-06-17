@@ -1,8 +1,8 @@
-# Reference: milestone_stdlib_expansion
-# Source issue: milestone_stdlib_expansion.md
-# milestone_stdlib_expansion Demo
+# Reference: stdlib_expansion
+# Source issue: stdlib_expansion.md
+# stdlib_expansion Demo
 #
-# All stdlib modules added in this milestone.
+# All stdlib modules added in this feature set.
 
 from sifr.string import ascii_lowercase, digits
 from sifr.bisect import bisect_left
@@ -47,7 +47,7 @@ def main():
         assert_true(avg == 4.0)
     except StatisticsError as se:
         print("statistics error: " + se.message)
-        assert str("statistics error: " + se.message) == "milestone_stdlib_expansion demo: all checks passed!"
+        assert str("statistics error: " + se.message) == "stdlib_expansion demo: all checks passed!"
 
     # sifr.heapq — heap operations (in-place mut params)
     heap: list[int] = []
@@ -90,4 +90,4 @@ def main():
     assert_true(fnmatch("test.py", "*.py"))
     assert_true(not fnmatch("test.py", "*.txt"))
 
-    print("milestone_stdlib_expansion demo: all checks passed!")
+    print("stdlib_expansion demo: all checks passed!")

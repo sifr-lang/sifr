@@ -94,5 +94,5 @@ fn main() {
     actual.extend(collect_alias_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true, true]);
-    println!("m30_1f platform parity demo: pass");
+    println!("platform platform parity demo: pass");
 }

@@ -1,4 +1,4 @@
-# Reference: phase31_sliding_window_left_pointer_narrowing
+# Reference: narrowing_sliding_window_left_pointer_narrowing
 # Canonical sliding-window left-pointer narrowing should accept tuple-unpacked
 # zero-based pointers, preserve direct string indexing, and keep generated code
 # on the non-optional path for set.remove/add.

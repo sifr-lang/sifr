@@ -192,8 +192,8 @@ Out of scope:
 
 ### M1: Renderer Contract Lock
 
-- Add `verification/tooling/check_diagnostic_presentation_contract.py` with positive and negative self-tests.
-- Wire `check_diagnostic_presentation_contract.py` and its `--self-test` mode into `scripts/run_all_tests.sh --profile quick`.
+- Add `verification/tooling/check_diagnostic_presentation_rules.py` with positive and negative self-tests.
+- Wire `check_diagnostic_presentation_rules.py` and its `--self-test` mode into `scripts/run_all_tests.sh --profile quick`.
 - Add focused renderer contract tests for current canonical span data.
 - Lock target human and compact output fixtures.
 - Confirm JSON schema remains unchanged.
@@ -216,7 +216,7 @@ Out of scope:
 - Preserve child notes, help, suggestions, and docs URL.
 - Add spanless diagnostic coverage.
 - Regenerate affected verification baselines.
-- Extend `check_diagnostic_presentation_contract.py` to enforce human-mode source location, snippet highlight, related-span, CRLF, suggestion, and spanless-diagnostic fixture coverage.
+- Extend `check_diagnostic_presentation_rules.py` to enforce human-mode source location, snippet highlight, related-span, CRLF, suggestion, and spanless-diagnostic fixture coverage.
 
 ### M3: Compact Stable Output
 
@@ -224,12 +224,12 @@ Out of scope:
 - Preserve deterministic ordering and recovery-limit summaries.
 - Add tests covering paths, unknown locations, repeated diagnostics, and omitted diagnostics.
 - Regenerate affected verification baselines.
-- Extend `check_diagnostic_presentation_contract.py` to enforce compact severity-only summary, one-line-per-retained-diagnostic output, no default URLs/snippets, and no old grouped `CompactKey` behavior.
+- Extend `check_diagnostic_presentation_rules.py` to enforce compact severity-only summary, one-line-per-retained-diagnostic output, no default URLs/snippets, and no old grouped `CompactKey` behavior.
 
 ### M4: Docs And Closeout
 
 - Update public CLI docs and internal diagnostic architecture notes.
-- Close all `check_diagnostic_presentation_contract.py` obligations and keep the guardrail wired into `scripts/run_all_tests.sh`.
+- Close all `check_diagnostic_presentation_rules.py` obligations and keep the guardrail wired into `scripts/run_all_tests.sh`.
 - Run local validation.
 - Record validation evidence in the execution tracker.
 - Complete final review before closure.
@@ -239,8 +239,8 @@ Out of scope:
 This phase owns a new mechanical verification gate:
 
 ```bash
-python3 verification/tooling/check_diagnostic_presentation_contract.py
-python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test
+python3 verification/tooling/check_diagnostic_presentation_rules.py
+python3 verification/tooling/check_diagnostic_presentation_rules.py --self-test
 ```
 
 The gate must be wired into `scripts/run_all_tests.sh --profile quick` in M1 and remain active through phase closure.
@@ -249,7 +249,7 @@ The checker must verify:
 
 - The existing `crates/sifr/tests/verification/diagnostics/decimal_invalid_literal` fixture continues to provide locked single-line span baselines for `human`, `compact`, and `json`.
 - Required verification fixture directories exist for single-line and multiline diagnostics.
-- `crates/sifr/tests/verification/diagnostics/presentation_contract_cases` provides phase-owned synthetic baselines for spanless, related-span, child note/help, suggestion, and CRLF-safe presentation cases.
+- `crates/sifr/tests/verification/diagnostics/presentation_rules_cases` provides phase-owned synthetic baselines for spanless, related-span, child note/help, suggestion, and CRLF-safe presentation cases.
 - Required `human`, `compact`, and `json` baselines exist for each diagnostic-presentation fixture.
 - JSON schema-lock coverage enumerates `RenderedDiagnostic` fields: `code`, `severity`, `message`, `message_template`, `args`, `url`, `spans`, `children`, `help`, and `suggestions`.
 - Human-mode baselines include file/line/column, source snippet, visual highlight marker, docs URL, spanless diagnostic fallback, related-span rendering, child note/help rendering, suggestion rendering, and CRLF-safe output coverage.
@@ -268,7 +268,7 @@ The checker must include negative self-tests that prove it fails when a required
 - Verification baselines prove the three modes have distinct, intentional responsibilities.
 - Verification baselines include both single-line and multiline source-span diagnostics.
 - CLI tests prove `check`, `build`, `run`, and `emit` respect `--diagnostic-format` for diagnostics.
-- `verification/tooling/check_diagnostic_presentation_contract.py` and `--self-test` pass and are wired into `scripts/run_all_tests.sh --profile quick`.
+- `verification/tooling/check_diagnostic_presentation_rules.py` and `--self-test` pass and are wired into `scripts/run_all_tests.sh --profile quick`.
 - No user-facing diagnostic loses code identity, severity, docs URL, or source span data.
 - No fallback renderer path hides source-map rendering failures.
 
@@ -280,8 +280,8 @@ Minimum validation for implementation PRs:
 cargo fmt --check
 cargo test -p sifr_diagnostics
 cargo test -p sifr -- --skip test_e2e_pass
-python3 verification/tooling/check_diagnostic_presentation_contract.py
-python3 verification/tooling/check_diagnostic_presentation_contract.py --self-test
+python3 verification/tooling/check_diagnostic_presentation_rules.py
+python3 verification/tooling/check_diagnostic_presentation_rules.py --self-test
 python3 scripts/check_file_size_guardrails.py
 scripts/run_all_tests.sh --profile quick
 ```

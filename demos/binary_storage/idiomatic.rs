@@ -60,16 +60,16 @@ fn cleanup(path: &Path) -> io::Result<()> {
 }
 
 fn main() {
-    let payload = b"wave4";
-    let second_ok = payload.get(1).copied() == Some(97);
-    let iter_ok = sum_bytes(payload) == 487;
-    let contains_ok = contains_byte(payload, 119) && !contains_byte(payload, 512);
-    let count_ok = count_byte(payload, 119) == 1 && count_byte(payload, 512) == 0;
+    let payload = b"binary_storage";
+    let second_ok = payload.get(1).copied() == Some(105);
+    let iter_ok = sum_bytes(payload) == 1497;
+    let contains_ok = contains_byte(payload, 98) && !contains_byte(payload, 512);
+    let count_ok = count_byte(payload, 98) == 1 && count_byte(payload, 512) == 0;
     let hex_ok = bytes_from_hex(&bytes_to_hex(payload)).as_deref() == Some(payload.as_slice());
 
-    let path = Path::new("/tmp/sifr_ad_hoc_bytes_wave4_demo.bin");
+    let path = Path::new("/tmp/sifr_bytes_binary_storage.bin");
     let io_ok = match fs::write(path, payload).and_then(|()| fs::read(path)) {
-        Ok(loaded) => loaded == payload && ints_string(&loaded) == "[119, 97, 118, 101, 52]",
+        Ok(loaded) => loaded == payload && ints_string(&loaded) == "[98, 105, 110, 97, 114, 121, 95, 115, 116, 111, 114, 97, 103, 101]",
         Err(_) => false,
     };
     let cleanup_ok = cleanup(path).is_ok() && !path.exists();

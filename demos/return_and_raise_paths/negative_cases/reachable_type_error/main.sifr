@@ -1,6 +1,5 @@
-# Reference: m24_3
-# Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_3 negative case
+# Reference: return_and_raise_paths
+# return_and_raise_paths negative case
 # Reachable branch return mismatch should still be rejected.
 
 def classify(flag: bool) -> int:

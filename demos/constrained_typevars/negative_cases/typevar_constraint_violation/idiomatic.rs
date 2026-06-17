@@ -5,7 +5,7 @@
 //!
 //! This fixture exists to preserve the constrained-typevar diagnostic for an
 //! unsatisfied argument type. The Rust-side analogue is a trait-bound or enum-like
-//! constraint failure, but the exact user-facing contract is specific to Sifr's
-//! type-parameter checker, so this file remains a contract scaffold.
+//! constraint failure, but the exact user-facing rules is specific to Sifr's
+//! type-parameter checker, so this file remains a rules scaffold.
 
 fn main() {}

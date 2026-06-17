@@ -1,5 +1,4 @@
-# Reference: m27_2
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
+# Reference: indexing_rules
 # negative path: invalid index type must fail with a deterministic diagnostic.
 
 def main():

@@ -1,6 +1,5 @@
-# Reference: m25_4
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_4 diagnostics and consumer integration demo
+# Reference: unreachable_returns
+# unreachable_returns diagnostics and consumer integration demo
 # Reachability-aware return inference should ignore unreachable return tails.
 
 def inferred(flag: bool):
@@ -13,6 +12,6 @@ def consume(n: int) -> int:
     return n + 1
 
 def main():
-    print('m25_4 diagnostics and consumer integration demo:')
+    print('unreachable_returns diagnostics and consumer integration demo:')
     print(consume(inferred(True)))
     print(consume(inferred(False)))

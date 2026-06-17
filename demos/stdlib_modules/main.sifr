@@ -1,6 +1,5 @@
-# Reference: m20_2
-# Source issue: phase20-hir-decomposition-and-maintainability-hardening-execution.md
-# milestone_20_2 demo
+# Reference: stdlib_modules
+# stdlib-modules-sample demo
 # Validates stdlib intrinsic registry behavior after stdlib.rs decomposition.
 
 from sifr.math import floor, pi
@@ -10,5 +9,5 @@ from sifr.test import assert_eq
 def main():
     assert_eq(floor(pi), 3)
     payload: str = json_dumps("ok")
-    print("m20_2 stdlib registry split demo:")
+    print("stdlib_modules stdlib registry split demo:")
     print(payload)

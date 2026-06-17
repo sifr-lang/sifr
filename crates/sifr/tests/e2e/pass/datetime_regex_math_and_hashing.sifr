@@ -1,4 +1,4 @@
-# Reference: phase_psp_e1_core_modules_numeric_patterns_crypto
+# Reference: stdlib_parity_e1_core_modules_numeric_patterns_crypto
 from sifr.datetime import datetime, timedelta, from_timestamp
 from sifr.re import search, findall
 from sifr.math import comb, perm, isclose

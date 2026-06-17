@@ -1,6 +1,6 @@
-# Phase 36 LSP Query Budget IDs
+# LSP Query Budget IDs
 
-Phase 35 reserves the protocol-level budget id namespace below so Phase 36 can add LSP benchmarks without changing the performance policy model.
+The performance rules reserves the protocol-level budget id namespace below so LSP query budgets can add benchmarks without changing the performance policy model.
 
 Rules:
 
@@ -41,7 +41,7 @@ Reserved ids:
 - `perf.lsp.transport.shutdown`
 - `perf.lsp.request_families`
 
-## m36.5 Implemented Evidence
+## Implemented Evidence
 
 - `perf.lsp.request_families` maps to `verification/areas/performance/data/benchmark_manifest.json` case
   `lsp-query-001-request-families` and covers document sync plus document symbols,
@@ -49,11 +49,11 @@ Reserved ids:
   inlay hints, folding ranges, code actions, formatting, and pull diagnostics
   through one deterministic stdio LSP session.
 
-## m36.8 Closeout Coverage
+## Readiness Coverage
 
-The Phase 36 protocol matrix keeps user-facing budget labels on individual LSP
-request families. Before M12 those labels were covered by the aggregate
-stdio-session budget `perf.lsp.request_families`; after M12, the labels map to
+The LSP protocol matrix keeps user-facing budget labels on individual LSP
+request families. Before per-family LSP budgets those labels were covered by the aggregate
+stdio-session budget `perf.lsp.request_families`; after the per-family LSP split, the labels map to
 the concrete per-family budgets recorded below while the aggregate remains smoke
 coverage only:
 
@@ -78,9 +78,9 @@ coverage only:
 - `lsp-workspace-diagnostics`
 - `lsp-workspace-symbols`
 
-## TypeScript-Go Transfer M12 Implemented Evidence
+## Per-Family LSP Budget Evidence
 
-M12 splits the aggregate LSP benchmark into per-family performance manifest
+The per-family LSP budget rules splits the aggregate LSP benchmark into per-family performance manifest
 cases. `perf.lsp.request_families` remains as aggregate smoke coverage only.
 The enforced request-family mappings are:
 
@@ -105,7 +105,7 @@ The enforced request-family mappings are:
 | generated Rust preview command | `perf.lsp.generated_rust_preview.document` | `lsp-query-017-generated-rust-preview` |
 
 Reserved ids not listed in the implemented evidence table are intentionally
-deferred. They keep the Phase 36 budget namespace stable for later auto-import,
+deferred. They keep the LSP budget namespace stable for later auto-import,
 delta-token, document-symbol, folding-range, rename-prepare, document-highlight,
 workspace-symbol, didChange, recovery, transport initialize, and shutdown cases,
-but M12 does not claim enforcement for them until a manifest case maps to the id.
+but the LSP budget rules does not claim enforcement for them until a manifest case maps to the id.

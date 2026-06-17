@@ -1,4 +1,4 @@
-# Reference: phase_psp_runtime_0_logging_loggeradapter_unsupported
+# Reference: stdlib_parity_runtime_0_logging_loggeradapter_unsupported
 from sifr.logging import LoggerAdapter
 
 

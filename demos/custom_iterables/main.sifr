@@ -1,5 +1,5 @@
-# Reference: ad_hoc_iter_fix_wave7
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
+# Reference: iter_fix_custom_iterables
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
 class CountdownIter:
     current: int
 

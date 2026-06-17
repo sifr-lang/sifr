@@ -1,8 +1,7 @@
-# Reference: m18_2
-# Source issue: phase18-project-and-cli-semantics-execution.md
+# Reference: auto_detection
 # no local imports: should stay in single-file mode
 from sifr.math import floor
 
 def main():
-    print("m18_2 auto-detection demo:")
+    print("auto_detection auto-detection demo:")
     print(floor(3.9))

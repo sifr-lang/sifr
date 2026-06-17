@@ -131,7 +131,7 @@ pub(super) fn validate_compiler_requirement(
             manifest_path.to_path_buf(),
             "package.sifr-version",
             format!(
-                "compiler requirement `{}` does not match this milestone compiler compatibility window",
+                "compiler requirement `{}` does not match this compiler compatibility window",
                 requirement.0
             ),
         ))

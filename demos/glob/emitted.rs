@@ -361,7 +361,7 @@ impl std::error::Error for RegexError {
 
 fn collect_glob_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let base: String = format!("{}{}", "/tmp/sifr_m30_1e_glob_demo_".to_string(), format!("{}", std::process::id() as i64));
+    let base: String = format!("{}{}", "/tmp/sifr_glob_glob_demo_".to_string(), format!("{}", std::process::id() as i64));
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _mk: String = ({
     let __cmd = format!("{}{}", "mkdir -p ".to_string(), base);
@@ -423,5 +423,5 @@ fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true];
     let actual: Vec<bool> = collect_glob_actual();
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1e glob parity demo: pass");
+    println!("glob glob parity demo: pass");
 }

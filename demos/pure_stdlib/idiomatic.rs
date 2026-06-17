@@ -306,7 +306,7 @@ fn main() {
     let mut cd = Counter::from_list(&["a", "a", "b"]);
     cd.subtract(&Counter::from_list(&["a"]));
     println!("counter_sub a = {}", cd.get("a"));
-    println!("=== milestone_stdlib_pure_expansion: all features demonstrated ===");
+    println!("=== stdlib_pure_expansion: all features demonstrated ===");
 }
 
 trait ResultExt<T> {

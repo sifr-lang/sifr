@@ -41,7 +41,7 @@ fn mod_big(lhs: &BigDecimal, rhs: &BigDecimal) -> BigDecimal {
 }
 
 fn main() {
-    println!("m28_2 deterministic arithmetic and context demo");
+    println!("decimal_arithmetic deterministic arithmetic and context demo");
 
     let cash = dec("10.00");
     let fee = dec("3.00");

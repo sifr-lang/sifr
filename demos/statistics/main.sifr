@@ -1,6 +1,5 @@
-# Reference: m30_1b
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
-# m30_1b statistics parity demo
+# Reference: statistics
+# statistics parity demo
 from sifr.statistics import (
     mean, median, variance, stdev,
     mode, multimode, quantiles, covariance, correlation, linear_regression,
@@ -168,4 +167,4 @@ def main():
     actual_ok: list[bool] = collect_error_actual_ok()
     assert_bool_vector_eq(actual_ok, expected_ok)
 
-    print("m30_1b statistics parity demo: pass")
+    print("statistics parity demo: pass")

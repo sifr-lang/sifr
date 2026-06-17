@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m18_4 resolver trigger matrix demo:");
+    println!("resolver_triggers resolver trigger matrix demo:");
     println!("{}", helper::value());
 }

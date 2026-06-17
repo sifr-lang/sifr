@@ -134,7 +134,7 @@ class ProfileRunner:
         steps: list[tuple[str, Callable[[], None]]] = [
             ("coverage_matrix_checks", self.run_coverage_matrix_checks),
             ("core_guardrails", self.run_core_guardrails),
-            ("diagnostic_contracts", self.run_diagnostic_contracts),
+            ("diagnostic_rules", self.run_diagnostic_rules),
             ("cpython_differential", self.run_cpython_differential_suites),
             ("frontend_syntax_guardrails", self.run_frontend_syntax_guardrails),
             ("developer_tooling_checks", self.run_developer_tooling_checks),
@@ -150,7 +150,7 @@ class ProfileRunner:
         steps.extend(
             [
                 ("crate_tests", self.run_crate_tests),
-                ("validation_contract_matrix", self.run_validation_contract_suites),
+                ("validation_suite_matrix", self.run_validation_suites),
                 ("runtime_platform_suites", self.run_runtime_platform_suites),
                 ("e2e_pass_suite", self.run_e2e_pass_suite),
                 ("verification_hardening_suites", self.run_hardening_suites),
@@ -259,8 +259,8 @@ class ProfileRunner:
         run_command(uv_area_command("--area", "project_workspace", "--suite", "audit-fixtures"))
         run_command(uv_area_command("--area", "stdlib_parity", "--suite", "audit-fixtures"))
 
-        print("Running TypeScript-Go architecture transfer M1 guardrails")
-        run_command(uv_area_command("--area", "developer_tooling", "--suite", "typescript-go-m1"))
+        print("Running TypeScript-Go architecture transfer guardrails")
+        run_command(uv_area_command("--area", "developer_tooling", "--suite", "typescript-go-transfer"))
 
         print("Running sifr_driver maintainability guardrails")
         run_python("scripts/check_sifr_driver_maintainability_guardrails.py")
@@ -291,12 +291,12 @@ class ProfileRunner:
             print(f"Running stdlib parity suite {suite}")
             run_command(uv_area_command("--area", "stdlib_parity", "--suite", suite))
 
-    def run_diagnostic_contracts(self) -> None:
-        print("Running diagnostics area contract checks")
-        run_command(uv_area_command("--area", "diagnostics", "--suite", "contracts"))
+    def run_diagnostic_rules(self) -> None:
+        print("Running diagnostics area rules checks")
+        run_command(uv_area_command("--area", "diagnostics", "--suite", "rules"))
 
-        print("Running diagnostic presentation contract check")
-        run_command(uv_area_command("--area", "developer_tooling", "--suite", "diagnostic-contracts"))
+        print("Running diagnostic presentation rules check")
+        run_command(uv_area_command("--area", "developer_tooling", "--suite", "diagnostic-rules"))
 
     def run_cpython_differential_suites(self) -> None:
         suites = self.selected_suites_for_area("cpython_differential")
@@ -310,7 +310,7 @@ class ProfileRunner:
         run_command(uv_area_command(*args))
 
     def run_frontend_syntax_guardrails(self) -> None:
-        print("Running Phase 35 frontend and syntax guardrails")
+        print("Running frontend and syntax guardrails")
         run_command(uv_area_command("--area", "performance", "--suite", "frontend-syntax-guardrails"))
 
     def run_developer_tooling_checks(self) -> None:
@@ -419,17 +419,17 @@ class ProfileRunner:
             print(f"Running crate test suite {suite_id}")
             run_command(cargo_command(*command))
 
-    def run_validation_contract_suites(self) -> None:
+    def run_validation_suites(self) -> None:
         if not self.matrix_suites:
             return
-        print("Running validation contract area suites")
+        print("Running validation suite area checks")
         core_language = {
-            "integer_dtype_contract",
-            "phase24_hir_analysis",
-            "phase25_cfg_flow",
+            "integer_dtype_rules",
+            "hir_analysis_behaviors",
+            "cfg_flow_behaviors",
             "syntax_parser_lexer_matrix",
         }
-        project_workspace = {"frontend_mode_parity", "phase23_graph_isolation"}
+        project_workspace = {"frontend_mode_parity", "project_graph_isolation"}
         core_args: list[str] = []
         project_args: list[str] = []
         for suite in self.matrix_suites:
@@ -438,7 +438,7 @@ class ProfileRunner:
             elif suite in project_workspace:
                 project_args.extend(["--suite", suite])
             else:
-                raise ProfileRunnerError(f"unknown validation contract suite: {suite}")
+                raise ProfileRunnerError(f"unknown validation suite: {suite}")
         if core_args:
             run_command(uv_area_command("--area", "core_language", *core_args))
         if project_args:
@@ -482,7 +482,7 @@ class ProfileRunner:
     def run_hardening_suites(self) -> None:
         if not self.hardening_suites:
             return
-        print("Running phase 29 verification hardening suites")
+        print("Running verification hardening suites")
         diagnostics = False
         project_workspace = False
         regression_args: list[str] = []

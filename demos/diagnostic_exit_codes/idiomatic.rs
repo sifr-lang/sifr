@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m22_3 cross-mode diagnostic and exit contract demo:");
+    println!("diagnostic_exit_codes cross-mode diagnostic and exit behavior demo:");
     println!("{}", helper::doubled(21));
 }

@@ -1,6 +1,6 @@
-# Reference: ad_hoc_iter_fix_wave2
-# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
-# ad-hoc canonical-iteration wave 2 demo
+# Reference: iter_fix_iterator_lowering
+# Reference: canonical-iteration-model-and-lazy-parity-readiness
+# canonical-iteration Iterator behavior demo
 # Verifies canonical iterator HIR lowering for builtins, comprehensions, and generator expressions.
 
 

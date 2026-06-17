@@ -1,8 +1,8 @@
 {
   "baselines": [
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "decimal_invalid_literal",
       "normalizers": [
         "workspace-path",
@@ -16,8 +16,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "decimal_invalid_literal",
       "normalizers": [
         "workspace-path",
@@ -32,8 +32,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "decimal_invalid_literal",
       "normalizers": [
         "workspace-path",
@@ -47,8 +47,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "multiline_span_rendering",
       "normalizers": [
         "workspace-path",
@@ -62,8 +62,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "multiline_span_rendering",
       "normalizers": [
         "workspace-path",
@@ -78,8 +78,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "multiline_span_rendering",
       "normalizers": [
         "workspace-path",
@@ -93,8 +93,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_bad_indent",
       "normalizers": [
         "workspace-path",
@@ -108,8 +108,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_bad_indent",
       "normalizers": [
         "workspace-path",
@@ -124,8 +124,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_bad_indent",
       "normalizers": [
         "workspace-path",
@@ -139,8 +139,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_empty_declaration",
       "normalizers": [
         "workspace-path",
@@ -154,8 +154,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_empty_declaration",
       "normalizers": [
         "workspace-path",
@@ -170,8 +170,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_empty_declaration",
       "normalizers": [
         "workspace-path",
@@ -185,8 +185,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_call_order",
       "normalizers": [
         "workspace-path",
@@ -200,8 +200,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_call_order",
       "normalizers": [
         "workspace-path",
@@ -216,8 +216,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_call_order",
       "normalizers": [
         "workspace-path",
@@ -231,8 +231,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_declaration",
       "normalizers": [
         "workspace-path",
@@ -246,8 +246,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_declaration",
       "normalizers": [
         "workspace-path",
@@ -262,8 +262,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_declaration",
       "normalizers": [
         "workspace-path",
@@ -277,8 +277,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -292,8 +292,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -308,8 +308,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -323,8 +323,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_match_pattern",
       "normalizers": [
         "workspace-path",
@@ -338,8 +338,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_match_pattern",
       "normalizers": [
         "workspace-path",
@@ -354,8 +354,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_match_pattern",
       "normalizers": [
         "workspace-path",
@@ -369,8 +369,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_target",
       "normalizers": [
         "workspace-path",
@@ -384,8 +384,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_target",
       "normalizers": [
         "workspace-path",
@@ -400,8 +400,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_invalid_target",
       "normalizers": [
         "workspace-path",
@@ -415,8 +415,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -430,8 +430,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -446,8 +446,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -461,8 +461,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_unsupported_syntax",
       "normalizers": [
         "workspace-path",
@@ -476,8 +476,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_unsupported_syntax",
       "normalizers": [
         "workspace-path",
@@ -492,8 +492,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_unsupported_syntax",
       "normalizers": [
         "workspace-path",
@@ -507,8 +507,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_unterminated_string",
       "normalizers": [
         "workspace-path",
@@ -522,8 +522,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_unterminated_string",
       "normalizers": [
         "workspace-path",
@@ -538,8 +538,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
+      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "parser_unterminated_string",
       "normalizers": [
         "workspace-path",
@@ -553,9 +553,9 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
-      "fixture_id": "presentation_contract_cases",
+      "bless_reason": "Synthetic renderer rules baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "fixture_id": "presentation_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -569,9 +569,9 @@
       "synthetic": true
     },
     {
-      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
-      "fixture_id": "presentation_contract_cases",
+      "bless_reason": "Synthetic renderer rules baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "fixture_id": "presentation_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -586,9 +586,9 @@
       "synthetic": true
     },
     {
-      "bless_reason": "Synthetic renderer contract baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
-      "bless_reference": "wave-4-diagnostic-baseline-catalog-pr",
-      "fixture_id": "presentation_contract_cases",
+      "bless_reason": "Synthetic renderer rules baseline for child notes, help, suggestions, spanless internal diagnostics, and CRLF normalization.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "fixture_id": "presentation_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -602,9 +602,9 @@
       "synthetic": true
     },
     {
-      "bless_reason": "Wave 4 synthetic compact diagnostic baseline coverage for stable package diagnostics that are library-level or Cargo-environment dependent rather than deterministic public CLI fixtures.",
+      "bless_reason": "Synthetic compact diagnostic baseline coverage for stable package diagnostics that are library-level or Cargo-environment dependent rather than deterministic public CLI fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2615",
-      "fixture_id": "package_library_diagnostic_contract_cases",
+      "fixture_id": "package_library_diagnostic_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -613,14 +613,14 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:aa2229e7c6b1f24cc8ee802bfa7607c69c8fafe0f68134dfcd31b64bef60df96",
+      "source_hash": "sha256:1868f4a5a08651be194e08f28ecb22c6880d6ed09a28e20551f4b7247c10e95f",
       "suite": "synthetic_baselines",
       "synthetic": true
     },
     {
-      "bless_reason": "Wave 4 synthetic compact diagnostic baseline coverage for active frontend build, stdlib, and legacy workspace diagnostics that require internal fault injection or retired public renderer paths.",
+      "bless_reason": "Synthetic compact diagnostic baseline coverage for active frontend build, stdlib, and legacy workspace diagnostics that require internal fault injection or retired public renderer paths.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2619",
-      "fixture_id": "frontend_internal_diagnostic_contract_cases",
+      "fixture_id": "frontend_internal_diagnostic_rules_cases",
       "normalizers": [
         "workspace-path",
         "tmp-path",
@@ -629,13 +629,13 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:549962e33a8eb6c199dbe186a23cee41746582b1e279a7de30a91a4e92dabd9b",
+      "source_hash": "sha256:fa5bebb127e7e35a1b05407c196086b7e0c88e5d56cc457f36f9f649b41b07b0",
       "suite": "synthetic_baselines",
       "synthetic": true
     },
     {
-      "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
-      "bless_reference": "wave-4-hir-recovery-baseline-pr",
+      "bless_reason": "Rendered HIR diagnostic baseline coverage and recovery lock.",
+      "bless_reference": "hir-recovery-baseline-pr",
       "fixture_id": "hir_mixed_semantic_recovery",
       "normalizers": [
         "workspace-path",
@@ -649,8 +649,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
-      "bless_reference": "wave-4-hir-recovery-baseline-pr",
+      "bless_reason": "Rendered HIR diagnostic baseline coverage and recovery lock.",
+      "bless_reference": "hir-recovery-baseline-pr",
       "fixture_id": "hir_mixed_semantic_recovery",
       "normalizers": [
         "workspace-path",
@@ -665,8 +665,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
-      "bless_reference": "wave-4-hir-recovery-baseline-pr",
+      "bless_reason": "Rendered HIR diagnostic baseline coverage and recovery lock.",
+      "bless_reference": "hir-recovery-baseline-pr",
       "fixture_id": "hir_mixed_semantic_recovery",
       "normalizers": [
         "workspace-path",
@@ -680,8 +680,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
-      "bless_reference": "wave-4-hir-recovery-baseline-pr",
+      "bless_reason": "Rendered HIR diagnostic baseline coverage and recovery lock.",
+      "bless_reference": "hir-recovery-baseline-pr",
       "fixture_id": "hir_repeated_type_recovery",
       "normalizers": [
         "workspace-path",
@@ -695,8 +695,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
-      "bless_reference": "wave-4-hir-recovery-baseline-pr",
+      "bless_reason": "Rendered HIR diagnostic baseline coverage and recovery lock.",
+      "bless_reference": "hir-recovery-baseline-pr",
       "fixture_id": "hir_repeated_type_recovery",
       "normalizers": [
         "workspace-path",
@@ -711,8 +711,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 rendered HIR diagnostic baseline coverage and recovery lock.",
-      "bless_reference": "wave-4-hir-recovery-baseline-pr",
+      "bless_reason": "Rendered HIR diagnostic baseline coverage and recovery lock.",
+      "bless_reference": "hir-recovery-baseline-pr",
       "fixture_id": "hir_repeated_type_recovery",
       "normalizers": [
         "workspace-path",
@@ -726,7 +726,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_annotated_variable_requires_initializer",
       "normalizers": [
@@ -741,7 +741,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_comprehension_await_filter_deferred",
       "normalizers": [
@@ -756,7 +756,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_for_non_async_iterable_rejected",
       "normalizers": [
@@ -771,7 +771,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_generator_aclose_wrong_arity",
       "normalizers": [
@@ -786,7 +786,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_generator_mut_borrow_across_yield_rejected",
       "normalizers": [
@@ -801,7 +801,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_generator_non_send_boundary_rejected",
       "normalizers": [
@@ -816,7 +816,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_no_suspend_rejected",
       "normalizers": [
@@ -831,7 +831,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_popen_unsupported",
       "normalizers": [
@@ -846,7 +846,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_async_transitive_no_suspend_await_rejected",
       "normalizers": [
@@ -861,7 +861,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_auto_init_inheritance_missing_super",
       "normalizers": [
@@ -876,7 +876,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_auto_init_required_after_default",
       "normalizers": [
@@ -891,7 +891,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bare_cpython_asyncio_import",
       "normalizers": [
@@ -906,7 +906,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bare_defaultdict_constructor_rejected",
       "normalizers": [
@@ -921,7 +921,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for a purpose-built stdlib unsupported-surface fixture.",
+      "bless_reason": "Compact diagnostic baseline coverage for a purpose-built stdlib unsupported-surface fixture.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2586",
       "fixture_id": "e2e_stdlib_defaultdict_keyword_constructor",
       "normalizers": [
@@ -936,7 +936,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package manifest public API diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package manifest public API diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2590",
       "fixture_id": "package_duplicate_public_api_symbol",
       "normalizers": [
@@ -951,7 +951,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package explicit-file source-root diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package explicit-file source-root diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2592",
       "fixture_id": "package_explicit_file_outside_source_root",
       "normalizers": [
@@ -966,7 +966,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package dependency boundary diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package dependency boundary diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2612",
       "fixture_id": "package_ambiguous_direct_import_root",
       "normalizers": [
@@ -981,7 +981,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package dependency boundary diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package dependency boundary diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2612",
       "fixture_id": "package_transitive_dependency_import",
       "normalizers": [
@@ -996,7 +996,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package dependency boundary diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package dependency boundary diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2612",
       "fixture_id": "package_private_dependency_module",
       "normalizers": [
@@ -1011,7 +1011,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for production manifest exports diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for production manifest exports diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
       "fixture_id": "package_manifest_exports_not_production",
       "normalizers": [
@@ -1026,7 +1026,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for production manifest bin table diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for production manifest bin table diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
       "fixture_id": "package_manifest_bin_tables_not_production",
       "normalizers": [
@@ -1041,7 +1041,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package script recursion diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package script recursion diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2594",
       "fixture_id": "package_script_recursion",
       "normalizers": [
@@ -1056,7 +1056,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for self-update receipt diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for self-update receipt diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2588",
       "fixture_id": "self_update_missing_receipt",
       "normalizers": [
@@ -1071,7 +1071,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_constructor_float",
       "normalizers": [
@@ -1086,7 +1086,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_constructor_non_literal_string",
       "normalizers": [
@@ -1101,7 +1101,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigdecimal_quantize_negative_scale_context",
       "normalizers": [
@@ -1116,7 +1116,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bigint_int_mixed_arithmetic",
       "normalizers": [
@@ -1131,7 +1131,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_blocking_io_direct_call_in_async_rejected",
       "normalizers": [
@@ -1146,7 +1146,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_blocking_io_on_async_def_rejected",
       "normalizers": [
@@ -1161,7 +1161,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bool_integer_comparison",
       "normalizers": [
@@ -1176,7 +1176,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_borrow_escape_return",
       "normalizers": [
@@ -1191,7 +1191,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_break_outside_loop",
       "normalizers": [
@@ -1206,7 +1206,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bytes_augmented_subscript_assignment_unsupported",
       "normalizers": [
@@ -1221,7 +1221,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_bytes_subscript_assignment_unsupported",
       "normalizers": [
@@ -1232,11 +1232,11 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:078b1a35d5f11f1ed2b2d7baccfb3dbf0bbc30caf531319fb26be10e50f71bd6",
+      "source_hash": "sha256:91e4960684be752584ff750f434a39edf06b66510489118df51e8bf90bab0fb5",
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_callable_type_annotation_param_list_required",
       "normalizers": [
@@ -1251,7 +1251,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_cancellation_error_not_result_error",
       "normalizers": [
@@ -1266,7 +1266,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_cancelled_task_use_rejected",
       "normalizers": [
@@ -1281,7 +1281,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_channel_non_send_element_rejected",
       "normalizers": [
@@ -1296,7 +1296,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_class_init_missing_type_annotation",
       "normalizers": [
@@ -1311,7 +1311,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_class_unknown_parent",
       "normalizers": [
@@ -1326,7 +1326,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_class_unsupported_field_default",
       "normalizers": [
@@ -1341,7 +1341,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_container_dict_key_type_conflict",
       "normalizers": [
@@ -1356,7 +1356,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_contextvars_deferred",
       "normalizers": [
@@ -1371,7 +1371,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_continue_outside_loop",
       "normalizers": [
@@ -1386,7 +1386,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_cpu_heavy_direct_call_in_async_rejected",
       "normalizers": [
@@ -1401,7 +1401,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_bigdecimal_mixed_arithmetic",
       "normalizers": [
@@ -1416,7 +1416,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_constructor_float",
       "normalizers": [
@@ -1431,7 +1431,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_float_mixed_arithmetic",
       "normalizers": [
@@ -1446,7 +1446,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_decimal_quantize_requires_int_scale",
       "normalizers": [
@@ -1461,7 +1461,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_duplicate_function_definition",
       "normalizers": [
@@ -1476,7 +1476,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_elif_condition_numeric_truthiness",
       "normalizers": [
@@ -1491,7 +1491,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_enum_duplicate_value",
       "normalizers": [
@@ -1506,7 +1506,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_enum_match_non_exhaustive",
       "normalizers": [
@@ -1521,7 +1521,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_enumerate_duplicate_start_keyword",
       "normalizers": [
@@ -1536,7 +1536,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_error_raise_bare",
       "normalizers": [
@@ -1551,7 +1551,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_exact_int_negative_power_requires_handling",
       "normalizers": [
@@ -1566,7 +1566,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_exact_int_true_division_requires_handling",
       "normalizers": [
@@ -1581,7 +1581,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_fixed_width_const_expression_out_of_range",
       "normalizers": [
@@ -1596,7 +1596,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_fixed_width_generic_addable_output_boundary",
       "normalizers": [
@@ -1611,7 +1611,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_for_loop_tuple_target_arity_mismatch",
       "normalizers": [
@@ -1626,7 +1626,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_generic_class_missing_type_arg",
       "normalizers": [
@@ -1641,7 +1641,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_import_intrinsic",
       "normalizers": [
@@ -1656,7 +1656,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_invalid_iter_parameter_signature",
       "normalizers": [
@@ -1671,7 +1671,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_ipc_multiprocessing_fork_unsupported",
       "normalizers": [
@@ -1686,7 +1686,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_ipc_payload_process_resource_rejected",
       "normalizers": [
@@ -1701,7 +1701,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_map_callable_arity_mismatch",
       "normalizers": [
@@ -1712,11 +1712,11 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:b30d4f5f7647fa3ea30a8f8c25c35597747578d99cf4300dbde00bae7c055588",
+      "source_hash": "sha256:983a2d774c716933357383763a5016dd71c8f70492a164039d2f1aea2abefadd",
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_match_invalid_field_name",
       "normalizers": [
@@ -1731,7 +1731,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_match_tuple_pattern_requires_tuple_subject",
       "normalizers": [
@@ -1746,7 +1746,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_match_type_mismatch_guard",
       "normalizers": [
@@ -1761,7 +1761,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_missing_field",
       "normalizers": [
@@ -1776,7 +1776,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_missing_return_value",
       "normalizers": [
@@ -1791,7 +1791,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_nested_function_recursive_nonlocal_unsupported",
       "normalizers": [
@@ -1806,7 +1806,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_optional_arithmetic_reachable_after_partial_narrowing",
       "normalizers": [
@@ -1821,7 +1821,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_own_parameter_augassign_requires_mut",
       "normalizers": [
@@ -1836,7 +1836,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_own_parameter_method_mutation_requires_mut",
       "normalizers": [
@@ -1851,7 +1851,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_process_async_pipe_writer_shared_rejected",
       "normalizers": [
@@ -1866,7 +1866,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_process_shell_exec_direct_async_rejected",
       "normalizers": [
@@ -1881,7 +1881,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_reserved_int128_annotation",
       "normalizers": [
@@ -1896,7 +1896,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_sorted_unexpected_keyword",
       "normalizers": [
@@ -1907,11 +1907,11 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:aae4910e2908af99611fb06813c86049ac4a9254c5c4ccf5a376729d201a111b",
+      "source_hash": "sha256:5b966e184dacc8d19a31af0225d924fc167d27b718d07101c24b795f444a779a",
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_spawn_blocking_unannotated_rejected",
       "normalizers": [
@@ -1926,7 +1926,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_ternary_type_mismatch",
       "normalizers": [
@@ -1941,7 +1941,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2584",
       "fixture_id": "e2e_text_i18n_dynamic_errors_handler",
       "normalizers": [
@@ -1956,7 +1956,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2584",
       "fixture_id": "e2e_text_i18n_open_dynamic_mode",
       "normalizers": [
@@ -1971,7 +1971,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for text I/O and encoding diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2584",
       "fixture_id": "e2e_text_i18n_open_without_encoding",
       "normalizers": [
@@ -1986,7 +1986,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_try_except_uncovered_error_types",
       "normalizers": [
@@ -2001,7 +2001,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_typevar_constraints_violation",
       "normalizers": [
@@ -2016,7 +2016,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unhashable_dict_key",
       "normalizers": [
@@ -2031,7 +2031,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unknown_except_error_type",
       "normalizers": [
@@ -2046,7 +2046,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unsupported_default_expr_call",
       "normalizers": [
@@ -2061,7 +2061,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unsupported_import_statement",
       "normalizers": [
@@ -2076,7 +2076,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_unused_result",
       "normalizers": [
@@ -2091,7 +2091,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_use_after_move_loop",
       "normalizers": [
@@ -2106,7 +2106,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_with_non_context_manager",
       "normalizers": [
@@ -2121,7 +2121,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for core semantic fail fixtures.",
+      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_yield_without_value",
       "normalizers": [
@@ -2136,7 +2136,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for canonical source import diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_private_member",
       "normalizers": [
@@ -2151,7 +2151,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for canonical source import diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_ambiguous_module",
       "normalizers": [
@@ -2166,7 +2166,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for canonical source import diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_namespace_collision",
       "normalizers": [
@@ -2181,7 +2181,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for canonical source import diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for canonical source import diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2574",
       "fixture_id": "source_import_cycle",
       "normalizers": [
@@ -2196,7 +2196,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
       "fixture_id": "semantic_unreachable_statement",
       "normalizers": [
@@ -2211,7 +2211,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
       "fixture_id": "semantic_bigint_transition_alias",
       "normalizers": [
@@ -2226,7 +2226,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
       "fixture_id": "semantic_result_invalid_except_type",
       "normalizers": [
@@ -2241,7 +2241,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
       "fixture_id": "semantic_arithmetic_overflow_warning",
       "normalizers": [
@@ -2256,7 +2256,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
       "fixture_id": "semantic_reveal_type_note",
       "normalizers": [
@@ -2271,7 +2271,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_blanket_suppression",
       "normalizers": [
@@ -2286,7 +2286,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_boolean_positional_argument",
       "normalizers": [
@@ -2301,7 +2301,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_duplicate_import",
       "normalizers": [
@@ -2316,7 +2316,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_large_parameter_list",
       "normalizers": [
@@ -2331,7 +2331,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_todo_comment",
       "normalizers": [
@@ -2346,7 +2346,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_trailing_whitespace",
       "normalizers": [
@@ -2361,7 +2361,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_unknown_suppression",
       "normalizers": [
@@ -2376,7 +2376,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for lint diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for lint diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2578",
       "fixture_id": "lint_unused_suppression",
       "normalizers": [
@@ -2391,7 +2391,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for formatter diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for formatter diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2582",
       "fixture_id": "fmt_formatting_drift",
       "normalizers": [
@@ -2406,7 +2406,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for workspace source-root diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_malformed_manifest",
       "normalizers": [
@@ -2421,7 +2421,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for workspace source-root diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_source_root_escapes",
       "normalizers": [
@@ -2436,7 +2436,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for workspace source-root diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_source_root_not_directory",
       "normalizers": [
@@ -2451,7 +2451,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for workspace source-root diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for workspace source-root diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2580",
       "fixture_id": "workspace_invalid_source_root",
       "normalizers": [
@@ -2466,7 +2466,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package projection repair checks.",
+      "bless_reason": "Compact diagnostic baseline coverage for package projection repair checks.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2598",
       "fixture_id": "package_projection_manifest_pointer_drift",
       "normalizers": [
@@ -2481,7 +2481,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package projection repair checks.",
+      "bless_reason": "Compact diagnostic baseline coverage for package projection repair checks.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2598",
       "fixture_id": "package_projection_pure_marker_missing",
       "normalizers": [
@@ -2496,7 +2496,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package metadata and source-layout diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package metadata and source-layout diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2600",
       "fixture_id": "package_missing_sifr_manifest",
       "normalizers": [
@@ -2511,7 +2511,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package metadata and source-layout diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package metadata and source-layout diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2600",
       "fixture_id": "package_misplaced_cargo_sifr_metadata",
       "normalizers": [
@@ -2526,7 +2526,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package metadata and source-layout diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package metadata and source-layout diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2600",
       "fixture_id": "package_non_trivial_pure_marker",
       "normalizers": [
@@ -2541,7 +2541,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package run-target diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package run-target diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2602",
       "fixture_id": "package_run_target_ambiguous",
       "normalizers": [
@@ -2556,7 +2556,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package run-target diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package run-target diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2602",
       "fixture_id": "package_run_invalid_app_target",
       "normalizers": [
@@ -2571,7 +2571,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2606",
       "fixture_id": "package_selected_rust_only",
       "normalizers": [
@@ -2586,7 +2586,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2606",
       "fixture_id": "package_rust_only_depends_on_sifr",
       "normalizers": [
@@ -2601,7 +2601,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package selection and workspace classification diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2606",
       "fixture_id": "package_selector_invalid",
       "normalizers": [
@@ -2616,7 +2616,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package release preflight diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
       "fixture_id": "package_untrusted_backend",
       "normalizers": [
@@ -2631,7 +2631,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package release preflight diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
       "fixture_id": "package_stale_trust_entry",
       "normalizers": [
@@ -2646,7 +2646,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package release preflight diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
       "fixture_id": "package_archive_missing_sifr_source",
       "normalizers": [
@@ -2661,7 +2661,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package release preflight diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package release preflight diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2609",
       "fixture_id": "package_archive_omits_required_source",
       "normalizers": [
@@ -2676,7 +2676,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package workspace selection diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package workspace selection diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2604",
       "fixture_id": "package_workspace_duplicate_import_root",
       "normalizers": [
@@ -2691,7 +2691,7 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Wave 4 compact diagnostic baseline coverage for package workspace selection diagnostics.",
+      "bless_reason": "Compact diagnostic baseline coverage for package workspace selection diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2604",
       "fixture_id": "package_workspace_duplicate_sifr_name",
       "normalizers": [

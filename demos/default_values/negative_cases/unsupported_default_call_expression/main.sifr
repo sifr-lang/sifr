@@ -1,5 +1,4 @@
-# Reference: m27_3
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
+# Reference: default_values
 # negative path: unsupported default call-expression should emit a deterministic diagnostic.
 
 def seed() -> int:

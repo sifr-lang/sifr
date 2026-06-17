@@ -1,4 +1,4 @@
-# Reference: phase_psp_struct_4_text_surface_governance_closure
+# Reference: stdlib_parity_struct_4_text_surface_governance_readiness
 from sifr.textwrap import TextWrapper, wrap, fill
 from sifr.html import escape, unescape
 

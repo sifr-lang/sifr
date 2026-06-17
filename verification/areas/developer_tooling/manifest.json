@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "developer_tooling",
   "owner": "compiler/tooling",
-  "description": "Developer tooling contracts for LSP, formatter, linter, editor assets, analysis queries, and Phase 36 closeout.",
+  "description": "Developer tooling rules for LSP, formatter, linter, editor assets, analysis queries, and editor tooling readiness.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local",
@@ -12,12 +12,12 @@
   "timeout_seconds": 1800,
   "suites": [
     {
-      "name": "typescript-go-m1",
+      "name": "typescript-go-transfer",
       "kind": "adapter",
       "cases": [
         {
-          "id": "typescript-go-m1",
-          "entry": "verification/areas/developer_tooling/check_typescript_go_m1_guardrails.py",
+          "id": "typescript-go-transfer",
+          "entry": "verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -25,12 +25,12 @@
       ]
     },
     {
-      "name": "diagnostic-contracts",
+      "name": "diagnostic-rules",
       "kind": "adapter",
       "cases": [
         {
-          "id": "diagnostic-contracts",
-          "entry": "verification/areas/developer_tooling/check_diagnostic_presentation_contract.py",
+          "id": "diagnostic-rules",
+          "entry": "verification/areas/developer_tooling/check_diagnostic_presentation_rules.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -43,7 +43,7 @@
       "cases": [
         {
           "id": "static",
-          "entry": "verification/areas/developer_tooling/check_tooling_contract_lock.py",
+          "entry": "verification/areas/developer_tooling/check_tooling_rules_lock.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -56,7 +56,7 @@
       "cases": [
         {
           "id": "formatter",
-          "entry": "verification/areas/developer_tooling/check_formatter_contract.py",
+          "entry": "verification/areas/developer_tooling/check_formatter_rules.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -69,7 +69,7 @@
       "cases": [
         {
           "id": "analysis",
-          "entry": "verification/areas/developer_tooling/check_analysis_snapshot_contract.py",
+          "entry": "verification/areas/developer_tooling/check_analysis_snapshot_rules.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -95,7 +95,7 @@
       "cases": [
         {
           "id": "editor-release",
-          "entry": "verification/areas/developer_tooling/check_vscode_extension_contract.py",
+          "entry": "verification/areas/developer_tooling/check_vscode_extension_rules.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -116,12 +116,12 @@
       ]
     },
     {
-      "name": "phase-closeout",
+      "name": "tooling-readiness",
       "kind": "adapter",
       "cases": [
         {
-          "id": "phase-closeout",
-          "entry": "verification/areas/developer_tooling/check_phase36_closeout.py",
+          "id": "tooling-readiness",
+          "entry": "verification/areas/developer_tooling/check_tooling_readiness.py",
           "command": "developer-tooling-suite",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -152,7 +152,7 @@
     "allowed": false,
     "requires_reason": true
   },
-  "baseline_metadata_contract": {
+  "baseline_metadata_rules": {
     "required": false,
     "source": "not-applicable"
   }

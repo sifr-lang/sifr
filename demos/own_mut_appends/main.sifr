@@ -1,5 +1,5 @@
-# Reference: ad_hoc_own_mut_parameter_convention_part3
-# Source issue: ad-hoc-own-mut-parameter-convention-part3-execution.md
+# Reference: own_mut_parameter_convention_part3
+# Reference: own-mut-parameter-convention-part3
 # `own mut` parameters should support simple append-and-return helpers.
 
 def append_zero(own mut values: list[int]) -> list[int]:

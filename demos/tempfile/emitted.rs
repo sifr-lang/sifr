@@ -309,21 +309,21 @@ impl std::error::Error for RegexError {
 
 fn collect_tempfile_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let preview_path: String = mktemp_path(&"sifr_m30_1e_preview_".to_string());
+    let preview_path: String = mktemp_path(&"sifr_tempfile_preview_".to_string());
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let file_path: String = mkstemp(&"sifr_m30_1e_tmp_".to_string())?;
-    let dir_path: String = mkdtemp(&"sifr_m30_1e_tmpd_".to_string())?;
+    let file_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
+    let dir_path: String = mkdtemp(&"sifr_tempfile_tmpd_".to_string())?;
     actual.push(std::path::Path::new(&file_path).exists());
     actual.push(std::path::Path::new(&dir_path).exists());
     let preview_name: String = basename(&preview_path);
     let file_name: String = basename(&file_path);
     let dir_name: String = basename(&dir_path);
-    let preview_has_prefix: bool = (((preview_name.chars().count() as i64) > ("sifr_m30_1e_preview_".to_string().chars().count() as i64)) && (String::from_iter((preview_name).chars().skip((0 as i64).max(0) as usize).take((("sifr_m30_1e_preview_".to_string().chars().count() as i64).max(0) - (0 as i64).max(0)).max(0) as usize)) == "sifr_m30_1e_preview_".to_string()));
-    let file_has_prefix: bool = (((file_name.chars().count() as i64) > ("sifr_m30_1e_tmp_".to_string().chars().count() as i64)) && (String::from_iter((file_name).chars().skip((0 as i64).max(0) as usize).take((("sifr_m30_1e_tmp_".to_string().chars().count() as i64).max(0) - (0 as i64).max(0)).max(0) as usize)) == "sifr_m30_1e_tmp_".to_string()));
-    let dir_has_prefix: bool = (((dir_name.chars().count() as i64) > ("sifr_m30_1e_tmpd_".to_string().chars().count() as i64)) && (String::from_iter((dir_name).chars().skip((0 as i64).max(0) as usize).take((("sifr_m30_1e_tmpd_".to_string().chars().count() as i64).max(0) - (0 as i64).max(0)).max(0) as usize)) == "sifr_m30_1e_tmpd_".to_string()));
+    let preview_has_prefix: bool = (((preview_name.chars().count() as i64) > ("sifr_tempfile_preview_".to_string().chars().count() as i64)) && (String::from_iter((preview_name).chars().skip((0 as i64).max(0) as usize).take((("sifr_tempfile_preview_".to_string().chars().count() as i64).max(0) - (0 as i64).max(0)).max(0) as usize)) == "sifr_tempfile_preview_".to_string()));
+    let file_has_prefix: bool = (((file_name.chars().count() as i64) > ("sifr_tempfile_tmp_".to_string().chars().count() as i64)) && (String::from_iter((file_name).chars().skip((0 as i64).max(0) as usize).take((("sifr_tempfile_tmp_".to_string().chars().count() as i64).max(0) - (0 as i64).max(0)).max(0) as usize)) == "sifr_tempfile_tmp_".to_string()));
+    let dir_has_prefix: bool = (((dir_name.chars().count() as i64) > ("sifr_tempfile_tmpd_".to_string().chars().count() as i64)) && (String::from_iter((dir_name).chars().skip((0 as i64).max(0) as usize).take((("sifr_tempfile_tmpd_".to_string().chars().count() as i64).max(0) - (0 as i64).max(0)).max(0) as usize)) == "sifr_tempfile_tmpd_".to_string()));
     actual.push((preview_has_prefix && file_has_prefix) && dir_has_prefix);
     let temp_root: String = dirname(&preview_path);
-    let missing_parent_name: String = "__sifr_m30_1e_missing_parent__".to_string();
+    let missing_parent_name: String = "__sifr_tempfile_missing_parent__".to_string();
     let missing_parent_path: String = format!("{}{}{}", temp_root, "/".to_string(), missing_parent_name);
     let missing_prefix: String = format!("{}{}", missing_parent_name, "/bad_".to_string());
     let _rm_missing: String = ({
@@ -365,7 +365,7 @@ fn collect_tempfile_actual() -> Vec<bool> {
 })?;
     let cleaned: bool = ((!(std::path::Path::new(&file_path).exists())) && (!(std::path::Path::new(&dir_path).exists())));
     actual.push(cleaned);
-    let next_path: String = mkstemp(&"sifr_m30_1e_tmp_".to_string())?;
+    let next_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
     actual.push(next_path != file_path);
     let _c4: String = ({
     let __cmd = format!("{}{}", "rm -f ".to_string(), next_path);
@@ -386,5 +386,5 @@ fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
     let actual: Vec<bool> = collect_tempfile_actual();
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1e tempfile parity demo: pass");
+    println!("tempfile tempfile parity demo: pass");
 }

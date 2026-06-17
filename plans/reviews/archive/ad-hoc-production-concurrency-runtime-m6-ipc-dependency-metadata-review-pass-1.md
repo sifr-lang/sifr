@@ -4,7 +4,7 @@ Verdict: **PASS**
 
 Branch: `codex/concurrency-runtime-m6-ipc-deps`
 Diff base: `origin/main`
-Touched files: 4 source + 1 ledger (`crates/sifr_stdlib/src/features.rs`, `crates/sifr/tests/e2e_support/fixture_compilation.rs`, `crates/sifr/tests/e2e_support/harness_model.rs`, `crates/sifr/tests/e2e_support/harness_contract_tests.rs`, `issues/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md`).
+Touched files: 4 source + 1 ledger (`crates/sifr_stdlib/src/features.rs`, `crates/sifr/tests/e2e_support/fixture_compilation.rs`, `crates/sifr/tests/e2e_support/harness_model.rs`, `crates/sifr/tests/e2e_support/harness_behavior_tests.rs`, `issues/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md`).
 
 ## Scope discipline
 
@@ -31,7 +31,7 @@ Touched files: 4 source + 1 ledger (`crates/sifr_stdlib/src/features.rs`, `crate
 
 ## File-size guardrail
 
-- `wc -l` confirms touched-file line counts match the brief: `fixture_compilation.rs` 900, `features.rs` 894, `harness_model.rs` 790, `harness_contract_tests.rs` 872 — all within the 900-line cap (fixture_compilation sits exactly at the cap; the constant extraction makes that headroom honest rather than monkey-patched).
+- `wc -l` confirms touched-file line counts match the brief: `fixture_compilation.rs` 900, `features.rs` 894, `harness_model.rs` 790, `harness_behavior_tests.rs` 872 — all within the 900-line cap (fixture_compilation sits exactly at the cap; the constant extraction makes that headroom honest rather than monkey-patched).
 - `python3 scripts/check_file_size_guardrails.py` PASS was reported on 2246 files at the 900-line limit.
 
 ## Ledger

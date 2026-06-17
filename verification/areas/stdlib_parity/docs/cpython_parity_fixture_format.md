@@ -1,6 +1,6 @@
 # CPython Parity Fixture Format (Baseline)
 
-This document defines the baseline fixture contract for Phase 30 CPython-derived parity
+This document defines the baseline fixture rules for CPython-derived parity
 tests. It is intentionally minimal so it can be applied uniformly across stdlib parity
 ports without requiring higher-order function support.
 
@@ -20,13 +20,13 @@ Use a simple vector table shape that maps cleanly to Sifr lists:
 
 ## Fixture structure rules
 
-These structure rules apply to Phase 30 parity fixtures. They are not a blanket style
+These structure rules apply to CPython parity fixtures. They are not a blanket style
 rule for unrelated non-parity e2e fixtures.
 
 Enforcement model:
-- These rules are intended to be enforced through normal module review and phase review.
+- These rules are intended to be enforced through normal module review and readiness review.
 - A dedicated structural-validation script is optional future hardening, not a baseline
-  requirement for Phase 30 readiness.
+  requirement for CPython parity readiness.
 
 1. Organize a module's parity corpus into a small number of semantic fixtures rather than
    one oversized catch-all fixture or a large number of microscopic files.
@@ -38,4 +38,4 @@ Enforcement model:
 4. Keep fixture ordering, test data, and assertion grouping deterministic so failures are
    reproducible and reviewer-friendly.
 5. Reuse this baseline format unless a module-specific extension is explicitly justified
-   in the phase tracking docs.
+   in the readiness tracking docs.

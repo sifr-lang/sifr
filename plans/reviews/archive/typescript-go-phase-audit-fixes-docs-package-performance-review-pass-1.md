@@ -25,7 +25,7 @@ The four substantive fixes land cleanly, but the artifact-cleanup itself regress
    - `verification/tooling/lsp_protocol_stress.py:135-181` adds a project-mode cross-file protocol stress that does exercise multi-file references/rename, which compensates for the bench gap.
 
 5. **SIFR-IMPORT-0005 candidate_paths formatting parity** — **SATISFIED.**
-   - `crates/sifr_driver/src/project/package_discovery.rs:220` now joins on `";"`, matching `display_paths` in `crates/sifr_driver/src/project/discovery.rs:440-446`. The single existing JSON baseline (`crates/sifr/tests/verification/project/workspace_ambiguous_import/baselines/check-json.stderr.txt:10`) already uses `;`; no other baseline needs to move because the package-mode fixture (`package_ambiguous_import_canonical`) only validates argument presence via `verification/tooling/check_diagnostic_source_canonicalization_contract.py:328-333`.
+   - `crates/sifr_driver/src/project/package_discovery.rs:220` now joins on `";"`, matching `display_paths` in `crates/sifr_driver/src/project/discovery.rs:440-446`. The single existing JSON baseline (`crates/sifr/tests/verification/project/workspace_ambiguous_import/baselines/check-json.stderr.txt:10`) already uses `;`; no other baseline needs to move because the package-mode fixture (`package_ambiguous_import_canonical`) only validates argument presence via `verification/tooling/check_diagnostic_source_canonicalization_rules.py:328-333`.
 
 ### Required fixes to flip to SATISFIED
 

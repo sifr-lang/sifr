@@ -1,5 +1,4 @@
-# Reference: m23_5
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: graph_isolation
 from a import value_a
 
 def value_c() -> int:

@@ -1,6 +1,6 @@
 # Integer Model Implementation Inventory
 
-This inventory supports `plans/issues/archive/ad-hoc-integer-model-and-fixed-width-numeric-contract.md` INT-0. It records the expected implementation blast radius for replacing the bootstrap machine-integer plus public `bigint` model with exact source-level `int` and explicit fixed-width integer families.
+This inventory supports `integer-model-and-fixed-width-numeric-rules record` INT-0. It records the expected implementation blast radius for replacing the bootstrap machine-integer plus public `bigint` model with exact source-level `int` and explicit fixed-width integer families.
 
 ## Compiler Frontend and Type System
 
@@ -15,7 +15,7 @@ Primary files and areas:
 - `crates/sifr_lowering/src/lower/type_bounds.rs`: `Addable`, `Hashable`, and future output-typed numeric protocol handling.
 - `crates/sifr_lowering/src/lower/expressions.rs`: constructors, casts, arithmetic lowering, range/index-related conversions.
 - `crates/sifr_lowering/src/lower/statements.rs`: assignment fitting, implicit narrowing rejection, pattern literal checks.
-- `crates/sifr_lowering/src/lower/decimal_methods.rs`: decimal/bigdecimal conversion contracts currently mentioning `bigint`.
+- `crates/sifr_lowering/src/lower/decimal_methods.rs`: decimal/bigdecimal conversion ruless currently mentioning `bigint`.
 
 Parser boundary work should avoid broad Ruff submodule churn unless necessary. The intended first step is a parser-driver or AST-to-HIR shim that preserves integer literal lexemes when parser-side numeric storage would be lossy.
 
@@ -37,7 +37,7 @@ Primary files and areas:
 - `crates/sifr_driver/src/build/*`: generated project materialization and Cargo manifest dependencies.
 - `crates/sifr/tests/e2e.rs`: e2e dependency inference currently scans for `num_bigint::BigInt`.
 
-Generated Rust must not expose user-triggerable integer panics. Existing generated emitted demo files with `as usize` and `as i64` casts are audit targets when the implementation reaches indexing/range milestones.
+Generated Rust must not expose user-triggerable integer panics. Existing generated emitted demo files with `as usize` and `as i64` casts are audit targets when the implementation reaches indexing/range work.
 
 ## Diagnostics
 
@@ -68,7 +68,7 @@ Primary surfaces:
 
 Relevant current tests include bytes fixtures, bigint fixtures, generic accumulator/counter/heapq bigint fixtures, and parse/conversion safety fixtures under `crates/sifr/tests/e2e`.
 
-## Serialization, Web, and Data Contracts
+## Serialization, Web, and Data Ruless
 
 Primary surfaces:
 
@@ -76,17 +76,17 @@ Primary surfaces:
 - Future web/API schema generation and TypeScript/OpenAPI mapping.
 - Generated `serde::Serialize`/`Deserialize` behavior for structs/classes with `int` fields.
 - SQL/model mapping: fixed-width or explicit decimal/string representation for storage.
-- Arrow/Parquet/dataframe/tensor contracts: fixed-width dtypes, dtype-preserving arithmetic, explicit overflow policy, explicit widen kernels. INT-6A locks this surface in `verification/areas/core_language/data/integer_dtype_contract.md` and `verification/areas/core_language/checks/integer_dtype_contract.py`.
+- Arrow/Parquet/dataframe/tensor ruless: fixed-width dtypes, dtype-preserving arithmetic, explicit overflow policy, explicit widen kernels. INT-6A locks this surface in `verification/areas/core_language/data/integer_dtype_rules.md` and `verification/areas/core_language/checks/integer_dtype_rules.py`.
 
-The dtype contract must land as a verification artifact or blocked fixtures even if array/tensor/dataframe runtime kernels are deferred.
+The dtype rules must land as a verification artifact or blocked fixtures even if array/tensor/dataframe runtime kernels are deferred.
 
 ## Known Legacy References to Retire or Quarantine
 
 These references are intentional audit findings, not blockers for the docs split:
 
-- `internal_docs/phases/01_language_foundations.md`: describes `int` overflow panicking in debug and wrapping in release.
-- `internal_docs/phases/13_type_system_completion.md`: milestone for public `bigint` as arbitrary-precision alternative.
-- `internal_docs/phases/28_decimal_type_and_exact_numeric_semantics.md`: decimal conversions mention `bigint`; these should become exact `int` conversions or transition-alias notes.
+- `internal_docs/architecture.md`: earlier architecture text described `int` overflow panicking in debug and wrapping in release.
+- Historical type-system completion notes described public `bigint` as an arbitrary-precision alternative.
+- `internal_docs/integer_model.md`: decimal conversion notes should use exact `int` conversions or transition-alias notes.
 - `internal_docs/diagnostic_emission_inventory.md`: `SIFR-TYPE-0006` int/bigint mixing entries.
 - `verification/areas/core_language/data/*_e2e_manifest.json`: historical `bigint_arithmetic` profile entries are retired from create-pr/merge manifests by INT-7.
 - `crates/sifr/tests/e2e/pass/*bigint*.sifr`, `crates/sifr/tests/e2e/fail/bigint_*.sifr`, and adjacent consolidated fixtures that still exercise the temporary alias are quarantined in `verification/areas/core_language/data/integer_model/bigint_transition_quarantine.md` until the public alias-removal PR deletes or rewrites them.
@@ -100,4 +100,4 @@ rg -n 'Primitives \(Copy\)|`int`.*are `Copy`|BigInt,?\s*$|bigint.*int\(b\)|int\s
 git diff --check
 ```
 
-The `rg` command is expected to find current implementation and tracked migration references until their owning milestones retire them. INT-0 uses it to classify remaining matches, not to require a zero-result tree.
+The `rg` command is expected to find current implementation and tracked migration references until their owning work retires them. INT-0 uses it to classify remaining matches, not to require a zero-result tree.

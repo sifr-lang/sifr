@@ -12,7 +12,7 @@
       "cache": {},
       "group": "build-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 12207.525,
         "p95_ms": 14452.433,
@@ -32,7 +32,7 @@
       "cache": {},
       "group": "build-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1551.902,
         "p95_ms": 1631.888,
@@ -52,7 +52,7 @@
       "cache": {},
       "group": "build-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1574.471,
         "p95_ms": 1696.298,
@@ -72,7 +72,7 @@
       "cache": {},
       "group": "build-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 4558.282,
         "p95_ms": 4796.265,
@@ -92,7 +92,7 @@
       "cache": {},
       "group": "build-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1564.741,
         "p95_ms": 1641.705,
@@ -112,7 +112,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1571.075,
         "p95_ms": 1653.637,
@@ -132,7 +132,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1578.583,
         "p95_ms": 1659.639,
@@ -152,7 +152,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1610.264,
         "p95_ms": 1712.573,
@@ -172,7 +172,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1719.179,
         "p95_ms": 1805.897,
@@ -192,7 +192,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1558.593,
         "p95_ms": 1703.623,
@@ -212,7 +212,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1560.37,
         "p95_ms": 1636.153,
@@ -232,7 +232,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1637.018,
         "p95_ms": 1842.629,
@@ -252,7 +252,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 8353.681,
         "p95_ms": 9518.096,
@@ -272,7 +272,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1632.046,
         "p95_ms": 1714.72,
@@ -292,7 +292,7 @@
       "cache": {},
       "group": "build-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1569.687,
         "p95_ms": 1678.367,
@@ -312,7 +312,7 @@
       "cache": {},
       "group": "check-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1351.541,
         "p95_ms": 1449.718,
@@ -332,7 +332,7 @@
       "cache": {},
       "group": "check-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1359.803,
         "p95_ms": 1452.812,
@@ -352,7 +352,7 @@
       "cache": {},
       "group": "check-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1344.999,
         "p95_ms": 1421.192,
@@ -372,7 +372,7 @@
       "cache": {},
       "group": "check-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1357.524,
         "p95_ms": 1428.693,
@@ -392,7 +392,7 @@
       "cache": {},
       "group": "check-project",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1358.935,
         "p95_ms": 1485.894,
@@ -412,7 +412,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1334.139,
         "p95_ms": 1419.542,
@@ -432,7 +432,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1352.58,
         "p95_ms": 1427.896,
@@ -452,7 +452,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1354.436,
         "p95_ms": 1549.524,
@@ -472,7 +472,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1335.239,
         "p95_ms": 1445.251,
@@ -492,7 +492,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1338.998,
         "p95_ms": 1419.156,
@@ -512,7 +512,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1334.839,
         "p95_ms": 1551.13,
@@ -532,7 +532,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1345.37,
         "p95_ms": 1467.53,
@@ -552,7 +552,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1350.209,
         "p95_ms": 1425.217,
@@ -572,7 +572,7 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1345.176,
         "p95_ms": 1421.773,
@@ -592,10 +592,110 @@
       "cache": {},
       "group": "check-single-file",
       "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 1342.024,
         "p95_ms": 1424.086,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.005931,
+        "median_ms": 1227.674,
+        "p95_ms": 1238.76,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-001-human-success-exit",
+      "budget_id": "perf.diagnostic.human_success_exit",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1350.441,
+        "p95_ms": 1424.574,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.026421,
+        "median_ms": 1214.504,
+        "p95_ms": 1293.217,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "budget_id": "perf.diagnostic.json_diagnostic_schema",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1335.954,
+        "p95_ms": 1487.2,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.015743,
+        "median_ms": 1227.41,
+        "p95_ms": 1272.689,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-003-compact-diagnostic-schema",
+      "budget_id": "perf.diagnostic.compact_diagnostic_schema",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1350.151,
+        "p95_ms": 1463.592,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.015609,
+        "median_ms": 1231.518,
+        "p95_ms": 1259.924,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-004-recovery-limit",
+      "budget_id": "perf.diagnostic.recovery_limit",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1354.67,
+        "p95_ms": 1448.913,
+        "peak_rss_bytes": 342556672,
+        "timeout_ms": 60000
+      }
+    },
+    {
+      "baseline": {
+        "coefficient_variation": 0.002534,
+        "median_ms": 1217.324,
+        "p95_ms": 1221.378,
+        "peak_rss_bytes": 309002240
+      },
+      "benchmark_id": "diagnostic-non-regression-005-project-error-exit",
+      "budget_id": "perf.diagnostic.project_error_exit",
+      "cache": {},
+      "group": "diagnostic-non-regression",
+      "policy": "command-default",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
+      "thresholds": {
+        "median_ms": 1339.056,
+        "p95_ms": 1404.585,
         "peak_rss_bytes": 342556672,
         "timeout_ms": 60000
       }
@@ -612,7 +712,7 @@
       "cache": {},
       "group": "formatter",
       "policy": "formatter-command-default",
-      "rationale": "Derived from Milestone 6 formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
+      "rationale": "Derived from formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
       "thresholds": {
         "median_ms": 2000,
         "p95_ms": 3000,
@@ -632,7 +732,7 @@
       "cache": {},
       "group": "formatter",
       "policy": "formatter-command-default",
-      "rationale": "Derived from Milestone 6 formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
+      "rationale": "Derived from formatter corpus and large-file benchmark samples with a conservative local CLI threshold.",
       "thresholds": {
         "median_ms": 2000,
         "p95_ms": 3000,
@@ -654,7 +754,7 @@
       },
       "group": "incremental-local-loop",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.113,
         "p95_ms": 5.117,
@@ -674,7 +774,7 @@
       "cache": {},
       "group": "incremental-local-loop",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.111,
         "p95_ms": 5.116,
@@ -694,7 +794,7 @@
       "cache": {},
       "group": "incremental-local-loop",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.44,
         "p95_ms": 5.447,
@@ -714,7 +814,7 @@
       "cache": {},
       "group": "incremental-local-loop",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.456,
         "p95_ms": 5.462,
@@ -734,7 +834,7 @@
       "cache": {},
       "group": "incremental-local-loop",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.285,
         "p95_ms": 5.291,
@@ -754,7 +854,7 @@
       "cache": {},
       "group": "interactive-tooling-foundation",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.049,
         "p95_ms": 5.052,
@@ -776,7 +876,7 @@
       },
       "group": "interactive-tooling-foundation",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.16,
         "p95_ms": 5.204,
@@ -798,7 +898,7 @@
       },
       "group": "interactive-tooling-foundation",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.066,
         "p95_ms": 5.07,
@@ -818,7 +918,7 @@
       "cache": {},
       "group": "interactive-tooling-foundation",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.265,
         "p95_ms": 5.27,
@@ -838,7 +938,7 @@
       "cache": {},
       "group": "interactive-tooling-foundation",
       "policy": "frontend-query-edit-loop",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
+      "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
         "median_ms": 2.03,
         "p95_ms": 5.031,
@@ -858,7 +958,7 @@
       "cache": {},
       "group": "lsp-query",
       "policy": "lsp-query",
-      "rationale": "Aggregate protocol smoke coverage retained after M12 split; per-request LSP budgets below enforce editor latency.",
+      "rationale": "Aggregate protocol smoke coverage retained after the per-family LSP split; per-request LSP budgets below enforce editor latency.",
       "thresholds": {
         "median_ms": 50,
         "p95_ms": 100,
@@ -1205,106 +1305,6 @@
         "peak_rss_bytes": 67108864,
         "timeout_ms": 60000
       }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.005931,
-        "median_ms": 1227.674,
-        "p95_ms": 1238.76,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-001-human-success-exit",
-      "budget_id": "perf.phase27.human_success_exit",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1350.441,
-        "p95_ms": 1424.574,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.026421,
-        "median_ms": 1214.504,
-        "p95_ms": 1293.217,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-002-json-diagnostic-schema",
-      "budget_id": "perf.phase27.json_diagnostic_schema",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1335.954,
-        "p95_ms": 1487.2,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.015743,
-        "median_ms": 1227.41,
-        "p95_ms": 1272.689,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-003-compact-diagnostic-schema",
-      "budget_id": "perf.phase27.compact_diagnostic_schema",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1350.151,
-        "p95_ms": 1463.592,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.015609,
-        "median_ms": 1231.518,
-        "p95_ms": 1259.924,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-004-recovery-limit",
-      "budget_id": "perf.phase27.recovery_limit",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1354.67,
-        "p95_ms": 1448.913,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
-    },
-    {
-      "baseline": {
-        "coefficient_variation": 0.002534,
-        "median_ms": 1217.324,
-        "p95_ms": 1221.378,
-        "peak_rss_bytes": 309002240
-      },
-      "benchmark_id": "phase27-non-regression-005-project-error-exit",
-      "budget_id": "perf.phase27.project_error_exit",
-      "cache": {},
-      "group": "phase27-non-regression",
-      "policy": "command-default",
-      "rationale": "Derived from Phase 35 m35.1 checked-in baseline using the default command or frontend-query budget rule.",
-      "thresholds": {
-        "median_ms": 1339.056,
-        "p95_ms": 1404.585,
-        "peak_rss_bytes": 342556672,
-        "timeout_ms": 60000
-      }
     }
   ],
   "derivation": {
@@ -1318,6 +1318,6 @@
     "lsp_query_p95_ms": "smoke fixed broad; otherwise min(slo_p95, max(baseline_p95 * 4, baseline_p95 + 10ms))",
     "lsp_query_cache": "not enforced until LSP exports stable per-request cache counters"
   },
-  "description": "Phase 35 performance budgets derived from verification/areas/performance/data/baselines.json.",
+  "description": "performance budgets derived from verification/areas/performance/data/baselines.json.",
   "version": 1
 }

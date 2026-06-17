@@ -1,10 +1,9 @@
-# Reference: m22_3
-# Source issue: phase22-frontend-mode-parity-hardening-execution.md
-# m22_3 cross-mode diagnostic and exit contract demo
+# Reference: diagnostic_exit_codes
+# diagnostic_exit_codes cross-mode diagnostic and exit behavior demo
 # Use with `check`, `build`, and `run` to validate frontend diagnostic parity.
 
 from helper import doubled
 
 def main():
-    print('m22_3 cross-mode diagnostic and exit contract demo:')
+    print('diagnostic_exit_codes cross-mode diagnostic and exit behavior demo:')
     print(doubled(21))

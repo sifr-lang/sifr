@@ -1227,9 +1227,9 @@ fn main() {
     let mut counter = Counter::new(None, Some(vec!["parse".to_string(), "parse".to_string(), "emit".to_string()]));
     assert!(counter.get(&"parse".to_string(), 0 as i64) == (2 as i64));
     let mut attempts = defaultdict::new(0 as i64, None);
-    let current_attempts: i64 = attempts.ensure(&"wave2".to_string());
-    attempts.set(&"wave2".to_string(), current_attempts + (1 as i64));
-    assert!(attempts.ensure(&"wave2".to_string()) == (1 as i64));
+    let current_attempts: i64 = attempts.ensure(&"collections_and_argparse".to_string());
+    attempts.set(&"collections_and_argparse".to_string(), current_attempts + (1 as i64));
+    assert!(attempts.ensure(&"collections_and_argparse".to_string()) == (1 as i64));
     let mut parser: ArgumentParser = ArgumentParser::new("sifr".to_string());
     parser.add_subparsers(&"cmd".to_string());
     let mut run_parser: ArgumentParser = ArgumentParser::new("run".to_string());

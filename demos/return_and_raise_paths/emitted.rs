@@ -39,7 +39,7 @@ fn classify(n: i64) -> i64 {
 }
 
 fn main() {
-    println!("m24_3 control-flow effect query unification demo:");
+    println!("return_and_raise_paths control-flow effect query unification demo:");
     println!("{}", classify(7 as i64));
     println!("{}", classify(0 as i64));
 }

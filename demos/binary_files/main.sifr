@@ -1,26 +1,26 @@
-# Reference: ad_hoc_runtime_wave0
-# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
+# Reference: runtime_binary_files
+# Reference: runtime-and-file-object-parity-expansion
 from sifr.io import exists
 from sifr.os import remove_file
 
 
 def main():
-    path: str = "/tmp/sifr_runtime_wave0_bytes_demo.bin"
+    path: str = "/tmp/sifr_runtime_binary_files_demo.bin"
     payload_ok: bool = False
     ints_ok: bool = False
     cleanup_ok: bool = False
 
     try:
         writer = open(path, "wb")
-        _w: None = writer.write_bytes(b"runtime-wave0")
+        _w: None = writer.write_bytes(b"runtime-binary_files")
         writer.close()
 
         reader = open(path, "rb")
         loaded: bytes = reader.read_bytes()
         reader.close()
 
-        payload_ok = loaded == b"runtime-wave0"
-        ints_ok = str(loaded.to_ints()) == "[114, 117, 110, 116, 105, 109, 101, 45, 119, 97, 118, 101, 48]"
+        payload_ok = loaded == b"runtime-binary_files"
+        ints_ok = str(loaded.to_ints()) == "[114, 117, 110, 116, 105, 109, 101, 45, 98, 105, 110, 97, 114, 121, 95, 102, 105, 108, 101, 115]"
     except IOError as e:
         _ = str(e.message)
 
@@ -34,4 +34,4 @@ def main():
     assert payload_ok
     assert ints_ok
     assert cleanup_ok
-    print("ad_hoc_runtime_wave0_bytes_binary_io_contract_demo: ok")
+    print("runtime_binary_files_binary_io_demo: ok")

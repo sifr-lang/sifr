@@ -1,5 +1,5 @@
-# Reference: ad_hoc_own_mut_parameter_convention_part2
-# Source issue: ad-hoc-own-mut-parameter-convention-part2-execution.md
+# Reference: own_mut_parameter_convention_part2
+# Reference: own-mut-parameter-convention-part2
 # Part 2 demo: borrow and mutability semantics for the four parameter modes.
 
 def mutate_and_return(own mut items: list[int]) -> list[int]:

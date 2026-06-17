@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate profile assignments against the closeout assignment matrix."""
+"""Validate profile assignments against the readiness assignment matrix."""
 
 from __future__ import annotations
 

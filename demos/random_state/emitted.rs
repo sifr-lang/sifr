@@ -949,7 +949,7 @@ fn main() {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        assert!(format!("{}", format!("{}{}", "unexpected random error: ".to_string(), e.message)) == "ad_hoc_rng_wave1_stateful_object_model_demo: pass".to_string());
+        assert!(format!("{}", format!("{}{}", "unexpected random error: ".to_string(), e.message)) == "rng_random_state_object_model_demo: pass".to_string());
     }
-    assert!(format!("{}", "ad_hoc_rng_wave1_stateful_object_model_demo: pass".to_string()) == "ad_hoc_rng_wave1_stateful_object_model_demo: pass".to_string());
+    assert!(format!("{}", "rng_random_state_object_model_demo: pass".to_string()) == "rng_random_state_object_model_demo: pass".to_string());
 }

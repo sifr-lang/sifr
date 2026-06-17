@@ -51,6 +51,6 @@ fn compute(values: &Vec<i64>) -> i64 {
 }
 
 fn main() {
-    println!("m24_1 canonical traversal layer contract demo:");
+    println!("loop_try_match canonical traversal layer behavior demo:");
     println!("{}", compute(&vec![3 as i64, 2 as i64, -(1 as i64)]));
 }

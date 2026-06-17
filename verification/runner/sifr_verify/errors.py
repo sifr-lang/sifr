@@ -8,7 +8,7 @@ class VerificationError(RuntimeError):
 
 
 class SchemaError(VerificationError):
-    """Schema contract or data validation failed."""
+    """Schema rules or data validation failed."""
 
 
 class DiscoveryError(VerificationError):

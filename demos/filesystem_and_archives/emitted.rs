@@ -1055,7 +1055,7 @@ fn _closed_stream_error() -> String {
 }
 fn _zip_unimplemented_error(feature: &String) -> String {
     return format!(
-        "{}{}{}", "zipfile ".to_string(), feature, " is not implemented in this wave"
+        "{}{}{}", "zipfile ".to_string(), feature, " is not implemented in this compatibility surface"
         .to_string()
     );
 }
@@ -1193,7 +1193,7 @@ impl std::error::Error for RegexError {
 }
 
 fn main() {
-    let base: String = format!("{}{}", "/tmp/sifr_wave_psp_d1_demo_".to_string(), format!("{}", std::process::id() as i64));
+    let base: String = format!("{}{}", "/tmp/sifr_filesystem_archive_surface_demo_".to_string(), format!("{}", std::process::id() as i64));
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _mk: String = ({
     let __cmd = format!("{}{}", "mkdir -p ".to_string(), base);
@@ -1219,8 +1219,8 @@ fn main() {
     let _cp: () = copy(&source, &copied)?;
     let _mv: () = move_file(&copied, &moved)?;
     println!("{}", format!("{}{}", "shutil.move_file exists = ".to_string(), format!("{}", Path::new(moved).exists())));
-    let temp_file: String = mkstemp(&"sifr_wave_psp_d1_demo_".to_string())?;
-    let temp_dir: String = mkdtemp(&"sifr_wave_psp_d1_demo_".to_string())?;
+    let temp_file: String = mkstemp(&"sifr_filesystem_archive_surface_demo_".to_string())?;
+    let temp_dir: String = mkdtemp(&"sifr_filesystem_archive_surface_demo_".to_string())?;
     println!("{}", format!("{}{}", "tempfile.mkstemp = ".to_string(), temp_file));
     println!("{}", format!("{}{}", "tempfile.mkdtemp = ".to_string(), temp_dir));
     let compressed: Vec<i64> = compress(&"archive sample".to_string());
@@ -1257,6 +1257,6 @@ fn main() {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", format!("{}{}", "wave_psp_d1 demo error: ".to_string(), e.message));
+        println!("{}", format!("{}{}", "filesystem_archive_surface demo error: ".to_string(), e.message));
     }
 }

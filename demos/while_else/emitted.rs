@@ -15,7 +15,7 @@ fn classify(items: &Vec<i64>) -> String {
 }
 
 fn main() {
-    println!("m21_2 while-else structured support demo:");
+    println!("while_else while-else structured support demo:");
     println!("{}", classify(&vec![]));
     println!("{}", classify(&vec![1 as i64]));
 }

@@ -1,6 +1,6 @@
-# Reference: milestone_stdlib_class_deepening
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_stdlib_class_deepening
+# Reference: stdlib_class_deepening
+# Reference: compiler-feature-history
+# Demo: stdlib_class_deepening
 # Demonstrates class-based APIs: sifr.collections.deque, datetime, pathlib.Path,
 # re.Pattern, logging.Logger, csv reader/writer
 

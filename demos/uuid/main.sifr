@@ -1,5 +1,4 @@
-# Reference: m30_1f
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: uuid
 from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID, uuid3, uuid5, NAMESPACE_DNS
 from sifr.test import assert_bool_vector_eq
 
@@ -89,4 +88,4 @@ def main():
     append_all(actual, collect_negative_and_class_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1f uuid parity demo: pass")
+    print("uuid uuid parity demo: pass")

@@ -15,8 +15,8 @@
       "kind": "adapter",
       "cases": [
         {
-          "id": "ruff-fork-update-contract",
-          "entry": "verification/areas/performance/check_ruff_fork_update_contract.py",
+          "id": "ruff-fork-update-rules",
+          "entry": "verification/areas/performance/check_ruff_fork_update_rules.py",
           "command": "python-script",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -36,8 +36,8 @@
           "diagnostic_formats": []
         },
         {
-          "id": "frontend-cache-contract",
-          "entry": "verification/areas/performance/check_frontend_cache_contract.py",
+          "id": "frontend-cache-rules",
+          "entry": "verification/areas/performance/check_frontend_cache_rules.py",
           "command": "python-script",
           "expect_exit_code": 0,
           "diagnostic_formats": []
@@ -45,7 +45,7 @@
       ]
     },
     {
-      "name": "contracts",
+      "name": "rules",
       "kind": "adapter",
       "cases": [
         {
@@ -142,7 +142,7 @@
     "allowed": false,
     "requires_reason": true
   },
-  "baseline_metadata_contract": {
+  "baseline_metadata_rules": {
     "required": false,
     "source": "not-applicable"
   }

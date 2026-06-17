@@ -1,5 +1,4 @@
-# Reference: m22_2
-# Source issue: phase22-frontend-mode-parity-hardening-execution.md
+# Reference: project_check
 from sifr.math import pi
 
 def area_like(r: float) -> float:

@@ -112,7 +112,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
     writer.writerow(vec!["alice".to_string(), "30".to_string()]);
     let writer_ok = writer.getvalue() == "alice,30";
 
-    let path = "/tmp/sifr_m30_1e_csv_demo.csv";
+    let path = "/tmp/sifr_csv_csv_demo.csv";
     let csv_file_ok = writer_to_path(
         path,
         vec![
@@ -130,7 +130,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
     })
     .unwrap_or(false);
 
-    let missing_rejected = reader_from_path("/tmp/sifr_m30_1e_csv_demo_missing.csv").is_err();
+    let missing_rejected = reader_from_path("/tmp/sifr_csv_csv_demo_missing.csv").is_err();
 
     vec![rows_ok, writer_ok, csv_file_ok, missing_rejected]
 }
@@ -141,5 +141,5 @@ fn main() {
     actual.extend(collect_object_and_file_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true]);
-    println!("m30_1e csv parity demo: pass");
+    println!("csv csv parity demo: pass");
 }

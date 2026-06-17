@@ -243,7 +243,7 @@ The final corpus milestone must repeat this discovery after implementation, beca
 - Add project-mode coverage where `from math import sqrt` without `math.sifr` produces `SIFR-IMPORT-0008`, and a paired case with real `math.sifr` proves user modules win.
 - Add package-mode coverage for unresolved bare stdlib `ImportFrom`.
 - Add single-file lowering coverage for both `Stmt::Import` and `Stmt::ImportFrom`.
-- Add CLI verification fixture coverage for human/json/compact output and register required args in `crates/sifr_driver/src/bin/diagnostic_contract_harness.rs`.
+- Add CLI verification fixture coverage for human/json/compact output and register required args in `crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs`.
 
 Validation:
 

@@ -11,6 +11,6 @@ Trust policy names a backend crate that is not a direct dependency.
 | Severity | Error |
 | Owner | `sifr_package::cargo::trust` |
 | Message template | `trusted backend crate '{backend_name}' is not direct` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry` |
+| Representative fixture | `crates/sifr_package/src/cargo_backend_integration_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry` |
 | Declared args | `backend_name (message+json)`, `cargo_package_id (json-only)`, `package_id (json-only)` |
 | Dedupe args | `cargo_package_id`, `package_id`, `backend_name` |

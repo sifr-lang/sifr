@@ -1,6 +1,5 @@
-# Reference: m26_3
-# Source issue: phase26-type-system-soundness-execution.md
-# m26_3 optional arithmetic soundness demo
+# Reference: optional_arithmetic
+# optional_arithmetic optional arithmetic soundness demo
 # Demonstrates that optional arithmetic only works after explicit narrowing.
 
 def safe_add_one(x: int | None) -> int:
@@ -9,7 +8,7 @@ def safe_add_one(x: int | None) -> int:
     return x + 1
 
 def main():
-    print('m26_3 optional arithmetic soundness demo:')
+    print('optional_arithmetic optional arithmetic soundness demo:')
     print(safe_add_one(5))
     print(safe_add_one(None))
 

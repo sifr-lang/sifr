@@ -1,12 +1,12 @@
 # Performance Budgets
 
-Phase 35 performance policy is local-first and versioned under `verification/areas/performance/`.
+frontend query architecture performance policy is local-first and versioned under `verification/areas/performance/`.
 
 ## Files
 
 - `manifest.json` defines the verification area suites.
 - `data/benchmark_manifest.json` defines the benchmark corpus and stable budget ids.
-- `data/baselines.json` records the approved m35.1 baseline run for every manifest case.
+- `data/baselines.json` records the approved performance baseline run for every manifest case.
 - `data/budgets.json` records thresholds derived from the checked-in baselines.
 - `data/waivers.json` records active temporary performance waivers.
 - `run_benchmarks.py` executes benchmarks and emits evidence under `target/performance/evidence/`.
@@ -43,7 +43,7 @@ representative subset with the manifest sample counts into
 `target/performance/full.budget.latest.json` for `nightly` and `release`, and
 run `check_budgets.py --allow-subset` against that result file. The subset
 covers single-file check, project check, single-file build, project build,
-incremental cache behavior, interactive diagnostics, and Phase 27
+incremental cache behavior, interactive diagnostics, and diagnostic architecture
 diagnostic/exit-code non-regression.
 Full-corpus benchmark execution and baseline refresh remain explicit:
 
@@ -70,8 +70,8 @@ Frontend-query and local edit-loop benchmarks use stricter latency thresholds:
 - p95 latency: `max(baseline_p95 * 1.10, baseline_p95 + 5ms)`
 - peak RSS uses the same 10% / 32MiB rule as command benchmarks.
 - cases with baseline cache hits must keep at least the baseline hit count.
-- m36.5 added `lsp-query-001-request-families` with budget id
-  `perf.lsp.request_families`; M12 keeps that case as aggregate protocol smoke
+- LSP protocol layer added `lsp-query-001-request-families` with budget id
+  `perf.lsp.request_families`; LSP latency budget keeps that case as aggregate protocol smoke
   coverage only and adds per-request `lsp-query-*` cases with concrete
   `perf.lsp.*` budget ids. These cases execute `lsp_query_bench.py` through
   `sifr lsp --stdio` and are validated by the same manifest/budget gate. Cold
@@ -99,9 +99,9 @@ JSON-RPC operations instead of in-process compiler queries:
   thresholds until the LSP server exports real cache counters; protocol latency
   remains enforced through median, p95, RSS, and timeout checks.
 
-The Phase 35 frontend-query budgets measure compiler-service operations below
+The frontend query architecture frontend-query budgets measure compiler-service operations below
 the protocol layer, such as warm diagnostics queries, source-map lookups, and
-local edit-loop invalidation. M12 LSP budgets measure the editor-observed
+local edit-loop invalidation. LSP latency budget LSP budgets measure the editor-observed
 JSON-RPC path on top of those same analysis APIs: cold start includes process
 spawn and initialize, document diagnostics include notification-to-publication
 plus pull diagnostics, and warm request-family cases reuse an initialized LSP

@@ -1,6 +1,5 @@
-# Reference: m27_2
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
-# m27_2 indexing and semantics parity fixes demo
+# Reference: indexing_rules
+# indexing_rules indexing and semantics parity fixes demo
 #
 # Positive path: negative-index mutations and delete semantics are deterministic,
 # parity-aligned, and panic-free.
@@ -12,5 +11,5 @@ def main():
     del items[-1]
     del items[-5]
 
-    print("m27_2 indexing and semantics parity fixes demo:")
+    print("indexing_rules indexing and semantics parity fixes demo:")
     print(items)

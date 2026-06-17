@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject forbidden production dependencies in Phase 36 tooling paths."""
+"""Reject forbidden production dependencies in editor tooling paths."""
 
 from __future__ import annotations
 

@@ -14,17 +14,17 @@ Cross-referenced pass-2 blockers against the current phase doc. Files confirmed 
 - Schema defined (lines 297–302): `schema`, `gate_state`, `allowed_rule_families`, `parser_aware_api`, `updated_by_milestone`
 - Initial state: `gate_state = "physical_line_only"`, `allowed_rule_families = ["physical-line"]` (line 303)
 - M3 update: `gate_state = "parser_aware"`, all four families allowed (line 355)
-- Validation: `check_linter_reuse_contract.py` checks manifest path and state (lines 304, 364)
+- Validation: `check_linter_reuse_rules.py` checks manifest path and state (lines 304, 364)
 
 **D-3: M3→M5 enforcement mechanism — RESOLVED**
 
 - Single mechanism specified: syntax/HIR/workspace rule modules must depend on `sifr_lint::suppression::ParserAwareSuppressions` at compile time (quality contract line 61, M3 scope line 349)
-- `check_linter_reuse_contract.py` validates this (M3 validation line 356)
+- `check_linter_reuse_rules.py` validates this (M3 validation line 356)
 - "or dedicated guardrail" ambiguity removed — no alternative path remains
 
 **D-1: Phase validation plan omission — RESOLVED**
 
-- Validation plan (lines 475–476) now includes `check_linter_reuse_contract.py` and `check_linter_reuse_contract.py --self-test`
+- Validation plan (lines 475–476) now includes `check_linter_reuse_rules.py` and `check_linter_reuse_rules.py --self-test`
 - M1 creates the script before validation plan references it
 
 **AC-13**: Mechanical gate prevents syntax/HIR/workspace rules before parser-aware suppression ✓
@@ -41,7 +41,7 @@ Cross-referenced pass-2 blockers against the current phase doc. Files confirmed 
 
 **H-3**: Traversal negative tests scoped in M2 (line 320) but no defined budget number. Performance budget is an implementation detail. Cross-reference to pass-1 H-4 (`collect_sifr_files_inner` depth/budget) is noted.
 
-**H-4**: No script verifies the suppression-gate manifest state transitions. The manifest schema is now defined; `check_linter_reuse_contract.py` validation (M1 line 304, M3 line 364) covers this. M1 implementation must create the script before the check can run.
+**H-4**: No script verifies the suppression-gate manifest state transitions. The manifest schema is now defined; `check_linter_reuse_rules.py` validation (M1 line 304, M3 line 364) covers this. M1 implementation must create the script before the check can run.
 
 ---
 

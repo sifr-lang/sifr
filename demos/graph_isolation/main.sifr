@@ -1,9 +1,8 @@
-# Reference: m23_5
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
-# m23_5 graph and isolation regression matrix demo
+# Reference: graph_isolation
+# graph_isolation graph and isolation regression matrix demo
 
 from helper import value
 
 def main():
-    print('m23_5 graph and isolation regression matrix demo:')
+    print('graph_isolation graph and isolation regression matrix demo:')
     print(value())

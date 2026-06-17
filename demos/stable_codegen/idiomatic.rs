@@ -13,6 +13,6 @@ fn summarize(values: &[i64]) -> i64 {
 }
 
 fn main() {
-    println!("m24_4 analysis/emission boundary hardening demo:");
+    println!("stable_codegen analysis/emission boundary hardening demo:");
     println!("{}", summarize(&[3, 12, 20]));
 }

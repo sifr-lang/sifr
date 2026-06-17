@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "name": "create-pr",
-  "description": "Fast local developer confidence with bounded contract coverage and representative e2e only.",
+  "description": "Fast local developer confidence with bounded rule coverage and representative e2e only.",
   "budgets": {
     "warm_wall_time_minutes": 2,
     "cold_wall_time_minutes": 5
@@ -64,7 +64,7 @@
     {
       "area": "coverage_matrix",
       "suites": [
-        "closeout"
+        "readiness"
       ],
       "resource_classes": [
         "default-local"
@@ -73,7 +73,7 @@
     {
       "area": "diagnostics",
       "suites": [
-        "contracts"
+        "rules"
       ],
       "resource_classes": [
         "default-local"

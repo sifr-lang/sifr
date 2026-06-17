@@ -16,7 +16,7 @@ Reviewed the working tree end-to-end after pass-1 fixes. Confirmed both residual
 
 **Other contracts re-verified**
 - Snapshot-handle privacy unchanged: `handles.rs:1` keeps `#![allow(dead_code)]`, types/methods are `pub(crate)`, and `lib.rs:10` declares `mod handles;` with no `pub use`. No symbol leaks outside the crate.
-- Package diagnostic non-duplication asserts in `verification/tooling/check_diagnostic_source_canonicalization_contract.py` and the M1 guardrail pins in `verification/tooling/check_typescript_go_m1_guardrails.py` remain intact; `python3 verification/tooling/check_typescript_go_m1_guardrails.py` → PASS.
+- Package diagnostic non-duplication asserts in `verification/tooling/check_diagnostic_source_canonicalization_rules.py` and the M1 guardrail pins in `verification/tooling/check_typescript_go_m1_guardrails.py` remain intact; `python3 verification/tooling/check_typescript_go_m1_guardrails.py` → PASS.
 - Doc/tracker fit unchanged from pass 1 (`internal_docs/architecture.md`, `frontend_query_architecture.md`, `typescript_go_architecture_transfer_m1_guardrails.md`, the new M17 doc, and the M17 row in `issues/ad-hoc-typescript-go-compiler-architecture-transfer.md`).
 
 ## Residual (non-blocking)

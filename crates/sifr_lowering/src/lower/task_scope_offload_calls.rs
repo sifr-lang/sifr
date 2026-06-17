@@ -58,7 +58,7 @@ fn lower_scope_spawn_blocking(
         ),
     };
     validate_sendable_result(&ok_ty, &err_ty, call, ctx, "scope.spawn_blocking()")?;
-    enforce_group_contract(&object, &err_ty, call, ctx)?;
+    enforce_group_rules(&object, &err_ty, call, ctx)?;
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method.to_string(),
@@ -95,7 +95,7 @@ fn lower_scope_spawn_cpu(object: HirExpr, call: &ExprCall, ctx: &mut LowerCtx) -
         ),
     };
     validate_sendable_result(&ok_ty, &source_err_ty, call, ctx, "scope.spawn_cpu()")?;
-    enforce_group_contract(&object, &task_err_ty, call, ctx)?;
+    enforce_group_rules(&object, &task_err_ty, call, ctx)?;
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method.to_string(),
@@ -266,7 +266,7 @@ fn validate_sendable_result(
     Some(())
 }
 
-fn enforce_group_contract(
+fn enforce_group_rules(
     object: &HirExpr,
     task_err_ty: &Type,
     call: &ExprCall,

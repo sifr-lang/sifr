@@ -11,8 +11,8 @@
 | Category | Files |
 |---|---|
 | New docs (5) | `tooling_analysis.md`, `lsp_server.md`, `vscode_extension.md`, `editor_integrations.md`, `tooling_verification.md` |
-| New contracts (2) | `lsp_protocol_matrix.json`, `vscode_extension_contract.json` |
-| New guardrails (4) | `check_tooling_contract_lock.py`, `check_tooling_dependency_boundaries.py`, `check_lsp_split_brain.py`, `check_vscode_extension_contract.py` |
+| New contracts (2) | `lsp_protocol_matrix.json`, `vscode_extension_rules.json` |
+| New guardrails (4) | `check_tooling_rules_lock.py`, `check_tooling_dependency_boundaries.py`, `check_lsp_split_brain.py`, `check_vscode_extension_rules.py` |
 | New placeholder (1) | `check_vscode_extension.py` |
 | Execution trackers (2) | `phase36-developer-tooling-execution.md`, `phase36-vscode-extension-production-execution.md` |
 | Script wiring (1) | `scripts/run_all_tests.sh` |
@@ -29,7 +29,7 @@
 
 **1. Contract lock completeness**
 
-All 7 contract artifacts exist and agree. Crate names (`sifr_analysis`, `sifr_format`, `sifr_lint`, `sifr_lsp`) are locked in the phase doc execution status block, `lsp_protocol_matrix.json`, `tooling_analysis.md`, `tooling_verification.md`, and `lsp_server.md`. VS Code repo boundary (`sifr-lang/sifr-vscode`) is locked in the phase doc, `vscode_extension_contract.json`, `vscode_extension.md`, and `tooling_verification.md`.
+All 7 contract artifacts exist and agree. Crate names (`sifr_analysis`, `sifr_format`, `sifr_lint`, `sifr_lsp`) are locked in the phase doc execution status block, `lsp_protocol_matrix.json`, `tooling_analysis.md`, `tooling_verification.md`, and `lsp_server.md`. VS Code repo boundary (`sifr-lang/sifr-vscode`) is locked in the phase doc, `vscode_extension_rules.json`, `vscode_extension.md`, and `tooling_verification.md`.
 
 **2. LSP protocol matrix coverage**
 
@@ -37,17 +37,17 @@ All 7 contract artifacts exist and agree. Crate names (`sifr_analysis`, `sifr_fo
 
 **3. VS Code extension contract**
 
-`vscode_extension_contract.json` correctly locks `separate-repository` boundary, `sifr-lang/sifr-vscode` full name, `sifr-lang.sifr-vscode` extension id, `^1.90.0` min engine, `sifr` default command with `["lsp", "--stdio"]` args, all 8 required commands, all 5 required settings, and 12 forbidden behavior entries. `check_vscode_extension_contract.py` validates the main-repo contract in m36.1 and fails with an actionable message if the extension checkout is missing when Phase 36 extension validation is active — it does not silently skip before m36.7. The `activation_milestone` field correctly records `"36.7"` for extension repo validation.
+`vscode_extension_rules.json` correctly locks `separate-repository` boundary, `sifr-lang/sifr-vscode` full name, `sifr-lang.sifr-vscode` extension id, `^1.90.0` min engine, `sifr` default command with `["lsp", "--stdio"]` args, all 8 required commands, all 5 required settings, and 12 forbidden behavior entries. `check_vscode_extension_rules.py` validates the main-repo contract in m36.1 and fails with an actionable message if the extension checkout is missing when Phase 36 extension validation is active — it does not silently skip before m36.7. The `activation_milestone` field correctly records `"36.7"` for extension repo validation.
 
 **4. Guardrail quality**
 
 Each guardrail has a meaningful self-test:
-- `check_tooling_contract_lock.py --self-test` removes `textDocument/completion` from the matrix and verifies the check fails.
+- `check_tooling_rules_lock.py --self-test` removes `textDocument/completion` from the matrix and verifies the check fails.
 - `check_tooling_dependency_boundaries.py --self-test` seeds `ty_python_semantic` in a temp file and verifies detection.
 - `check_lsp_split_brain.py --self-test` seeds `HirModule` and `lower_module(` in a temp file and verifies detection.
-- `check_vscode_extension_contract.py --self-test` removes `sifr.runCheck` from a temp package.json and verifies failure.
+- `check_vscode_extension_rules.py --self-test` removes `sifr.runCheck` from a temp package.json and verifies failure.
 
-`check_tooling_contract_lock.py` validates crate names, diagnostics modes, token legend, settings, methods with owner/coverage requirements, commands, and unsupported surface presence — it is not merely a file-existence check.
+`check_tooling_rules_lock.py` validates crate names, diagnostics modes, token legend, settings, methods with owner/coverage requirements, commands, and unsupported surface presence — it is not merely a file-existence check.
 
 `check_lsp_split_brain.py` correctly excludes `AnalysisHost::generated_rust_preview` from pattern matching (allowed snippet), checks `crates/sifr_lsp/` if and only if it exists (no false positive on missing crate), and scans line-by-line for fine-grained error reporting.
 

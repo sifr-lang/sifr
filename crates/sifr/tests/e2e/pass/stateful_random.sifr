@@ -1,4 +1,4 @@
-# Reference: phase_psp_rng_1_stateful_random_object_model
+# Reference: stdlib_parity_rng_1_stateful_random_object_model
 from sifr.random import Random, RandomState, getstate, randint, randbytes, random, seed, setstate
 from sifr.test import assert_eq, assert_true
 

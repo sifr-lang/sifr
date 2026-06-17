@@ -1,5 +1,5 @@
-// Reference: milestone_imports
-// Source issue: milestone-imports-epic.md
+// Reference: import semantics work
+// Reference: imports
 mod utils;
 mod models;
 

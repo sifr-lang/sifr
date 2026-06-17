@@ -1,5 +1,3 @@
-# Reference: m_driver_4
-# Source issue: phase31-sifr-driver-decomposition-and-boundary-hardening-execution.md
 from formatter import render_value
 
 def render() -> str:

@@ -49,13 +49,13 @@ fn bytes_from_hex(text: &str) -> Result<Vec<u8>, ParseError> {
 }
 
 fn main() {
-    let contract_payload = encode_utf8("binary-contract");
-    assert!(contract_payload.starts_with(b"binary"));
-    assert!(contract_payload.ends_with(b"contract"));
+    let payload = encode_utf8("binary-sample");
+    assert!(payload.starts_with(b"binary"));
+    assert!(payload.ends_with(b"sample"));
 
-    let conversion_ok = bytes_from_hex(&bytes_to_hex(&contract_payload))
+    let conversion_ok = bytes_from_hex(&bytes_to_hex(&payload))
         .and_then(decode_utf8)
-        .map(|text| text == "binary-contract")
+        .map(|text| text == "binary-sample")
         .unwrap_or(false);
 
     assert!(conversion_ok);

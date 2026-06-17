@@ -63,7 +63,7 @@ fn collect_runtime_actual() -> Vec<bool> {
 }
 
 fn collect_filesystem_actual() -> Vec<bool> {
-    let base = format!("/tmp/sifr_m30_1e_os_demo_{}", getpid());
+    let base = format!("/tmp/sifr_os_os_demo_{}", getpid());
     let file_path = format!("{base}/demo.txt");
 
     let _ = fs::remove_file(&file_path);
@@ -89,7 +89,7 @@ fn collect_filesystem_actual() -> Vec<bool> {
 }
 
 fn collect_missing_actual() -> Vec<bool> {
-    vec![rmdir("/tmp/sifr_m30_1e_os_demo_missing").is_err()]
+    vec![rmdir("/tmp/sifr_os_os_demo_missing").is_err()]
 }
 
 fn main() {
@@ -99,5 +99,5 @@ fn main() {
     actual.extend(collect_missing_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true]);
-    println!("m30_1e os parity demo: pass");
+    println!("os os parity demo: pass");
 }

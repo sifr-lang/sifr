@@ -1,5 +1,5 @@
-# Reference: wave_psp_c1
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: structured-parsing-sample
+# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.csv import DictReader, DictWriter, Dialect, QUOTE_ALL, format_row
 from sifr.io import write_text
 from sifr.json import JsonValue, dumps, from_array, from_bool, from_int, from_object, from_str, load
@@ -8,10 +8,10 @@ from sifr.tomllib import TomlValue, loads
 
 
 def main() -> None:
-    print("wave_psp_c1 structured parsing and serialization demo")
+    print("structured-parsing-sample structured parsing and serialization demo")
 
     try:
-        json_path: str = "/tmp/sifr_wave_psp_c1_demo.json"
+        json_path: str = "/tmp/sifr_structured_parsing_serialization.json"
         _: None = write_text(json_path, "{\"name\":\"sifr\",\"items\":[1,true]}")
         json_value: JsonValue = load(json_path)
         json_items: JsonValue | None = json_value.get("items")

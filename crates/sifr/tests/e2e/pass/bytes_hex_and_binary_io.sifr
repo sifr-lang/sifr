@@ -1,4 +1,4 @@
-# Reference: phase_psp_bytes_4_raw_backend_and_lowering_separation
+# Reference: stdlib_parity_bytes_4_raw_backend_and_lowering_separation
 from sifr.bytes import bytes_from_hex, bytes_to_hex
 from sifr.io import exists
 from sifr.os import remove_file

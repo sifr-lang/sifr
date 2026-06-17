@@ -291,18 +291,18 @@ pub(crate) fn test_e2e_fail() {
     }
 
     let mut fail_cases = Vec::new();
-    let mut contract_errors = Vec::new();
+    let mut rules_errors = Vec::new();
     for path in read_dir_file_paths_sorted(fail_dir) {
         let source = std::fs::read_to_string(&path).unwrap();
         match parse_compile_failure_expectations(&source, &path) {
             Ok(expected) => fail_cases.push((path, source, expected)),
-            Err(mut errors) => contract_errors.append(&mut errors),
+            Err(mut errors) => rules_errors.append(&mut errors),
         }
     }
-    if !contract_errors.is_empty() {
+    if !rules_errors.is_empty() {
         panic!(
-            "fail fixture expectation contract violations:\n{}",
-            format_expectation_contract_errors(&contract_errors)
+            "fail fixture expectation rules violations:\n{}",
+            format_expectation_rules_errors(&rules_errors)
         );
     }
 
@@ -473,7 +473,7 @@ pub(crate) fn test_cache_root_from_env_resolution() {
 }
 
 #[test]
-pub(crate) fn test_expectation_parsing_contract() {
+pub(crate) fn test_expectation_parsing_rules() {
     let source = [
         "# expect-stdout: a",
         "# expect-stdout: b",
@@ -511,7 +511,7 @@ pub(crate) fn test_expectation_parsing_contract() {
 }
 
 #[test]
-pub(crate) fn test_expected_error_contract_accepts_canonical_codes_and_columns() {
+pub(crate) fn test_expected_error_rules_accepts_canonical_codes_and_columns() {
     let parsed = parse_expected_error("SIFR-TYPE-0002").unwrap();
     assert_eq!(parsed.code, "SIFR-TYPE-0002");
     assert_eq!(parsed.column, None);
@@ -524,7 +524,7 @@ pub(crate) fn test_expected_error_contract_accepts_canonical_codes_and_columns()
 }
 
 #[test]
-pub(crate) fn test_expected_error_contract_rejects_messages_retired_and_unknown_codes() {
+pub(crate) fn test_expected_error_rules_rejects_messages_retired_and_unknown_codes() {
     let message_error = parse_expected_error("SIFR-TYPE-0002: assignment to immutability")
         .expect_err("message substrings must be rejected");
     assert!(message_error.contains("message substrings are not accepted"));
@@ -547,7 +547,7 @@ pub(crate) fn test_expected_error_contract_rejects_messages_retired_and_unknown_
 }
 
 #[test]
-pub(crate) fn test_expected_error_contract_rejects_malformed_grammar() {
+pub(crate) fn test_expected_error_rules_rejects_malformed_grammar() {
     let empty_error = parse_expected_error("").expect_err("empty payload must be rejected");
     assert!(empty_error.contains("expected a diagnostic code"));
 
@@ -576,7 +576,7 @@ pub(crate) fn test_expected_error_contract_rejects_malformed_grammar() {
 }
 
 #[test]
-pub(crate) fn test_expected_error_contract_rejects_contradictory_overlapping_locations() {
+pub(crate) fn test_expected_error_rules_rejects_contradictory_overlapping_locations() {
     let same_location = vec![
         LocatedCompileFailureExpectation {
             line_number: 12,

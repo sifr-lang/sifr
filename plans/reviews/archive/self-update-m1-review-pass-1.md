@@ -109,7 +109,7 @@ reviewers don't expect to see runtime emission yet.
   generation time. ✓
 - `verification/distribution/self_update_install_receipt.schema.json` has
   `additionalProperties: false` and pins the receipt shape against drift. ✓
-- `artifact_self_update_receipt_contract.sh` exercises the real installer,
+- `artifact_self_update_receipt_rules.sh` exercises the real installer,
   asserts field-order, checks lock release, and checks the temp manifest
   file was renamed away. ✓
 - `run_distribution_validation.sh` discovers `*.sh` automatically, so the

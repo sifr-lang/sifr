@@ -1,4 +1,4 @@
-# Reference: phase_psp_ext_2_itertools_materialization_required
+# Reference: stdlib_parity_ext_2_itertools_materialization_required
 from sifr.itertools import accumulate
 
 

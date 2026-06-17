@@ -61,5 +61,5 @@ fn main() {
 
     let expected = vec![true, true, true, true, true, true];
     assert_eq!(actual, expected);
-    println!("m30_1d json parity demo: pass");
+    println!("json json parity demo: pass");
 }

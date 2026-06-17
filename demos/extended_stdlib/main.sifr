@@ -1,7 +1,7 @@
-# Reference: milestone_ext_stdlib
-# Source issue: milestone-ext-stdlib-epic.md
+# Reference: ext_stdlib
+# Reference: ext-stdlib
 # ============================================================
-# Milestone: Extended Standard Library Demo
+# Feature Demo: Extended Standard Library Demo
 # ============================================================
 # Demonstrates all extended stdlib modules:
 #   sifr.time     — Time operations

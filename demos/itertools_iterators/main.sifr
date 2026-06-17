@@ -1,8 +1,8 @@
-# Reference: ad_hoc_iter_wave5
-# Source issue: ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md
+# Reference: iter_itertools_iterators
+# Reference: first-class-lazy-iterators-and-python-iterable-protocol
 from sifr.itertools import chain, repeat, islice, count
 
-# Ad-hoc iterator wave 5 demo: itertools subset now returns Iterator[T].
+# iterator Iterator behavior demo: itertools subset now returns Iterator[T].
 # chain, repeat, islice, and count are lazy; list(...) is the eager boundary.
 
 def main():

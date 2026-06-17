@@ -72,7 +72,7 @@ M2 materially implements the locked lint config, file discovery, and non-fix CLI
 ### 5. Ruff/Python Rejection
 
 **VERIFIED**:
-- `check_linter_reuse_contract.py` passes
+- `check_linter_reuse_rules.py` passes
 - `ruff_rule_config_audit.json` encodes rejected keys
 - `config.rs:148-165` explicitly rejects Ruff/Python keys (`target-version`, `extension`, `src`, `builtins`, `typing-modules`, fix keys)
 - Forbidden source patterns not found
@@ -82,8 +82,8 @@ M2 materially implements the locked lint config, file discovery, and non-fix CLI
 **VERIFIED:**
 - `cargo clippy -p sifr_lint -- -D warnings` passes
 - `cargo test -p sifr_lint` passes: 6 unit tests
-- `python3 verification/tooling/check_linter_reuse_contract.py` passes
-- `python3 verification/tooling/check_linter_reuse_contract.py --self-test` passes
+- `python3 verification/tooling/check_linter_reuse_rules.py` passes
+- `python3 verification/tooling/check_linter_reuse_rules.py --self-test` passes
 - File sizes: `lib.rs` (706 lines), `config.rs` (319 lines), `discovery.rs` (142 lines), `lint_cli.rs` (355 lines) — all under 900-line cap
 
 **Pre-existing note:** `cargo clippy -p sifr_lint -p sifr` fails on a pre-existing `too_many_arguments` warning in `diagnostic_rendering_and_run.rs:219`, outside this diff.

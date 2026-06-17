@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generated_from": "cargo test -p sifr_codegen -- --nocapture",
   "captured_on": "2026-06-14",
-  "updated_on": "2026-06-14 (post-Wave-2.final)",
+  "updated_on": "2026-06-14 (post-generated-code-quality-gate)",
   "test_result": {
     "passed": 709,
     "failed": 0,
@@ -16,11 +16,11 @@
     "owner": "codegen",
     "failure_count": 0,
     "triage_file": "plans/issues/active/codegen-test-triage.md",
-    "issue": "plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md",
+    "issue": "compiler-codebase-verification-readiness",
     "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-    "closes_in_wave": 2,
-    "closes_in_subwave": "final",
-    "expiry": "Wave 2.final"
+    "resolution_gate": 2,
+    "resolution_slice": "final",
+    "expiry": "generated-code quality gate"
   },
   "classification_values": [
     "stale-expectation",
@@ -35,15 +35,15 @@
       "classification": "obsolete-test",
       "owner": "codegen",
       "proposed_pr_slice": "2.3",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "production-source architecture guard",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "production-source architecture guard",
       "source_location": "crates/sifr_codegen/src/intrinsic_method_emitters/narrowing_helpers.rs:39:9",
       "current_output": "Guard expects removed helper names in intrinsic_method_emitters.rs; replace with a current structured-registry boundary check or delete if covered by production no-non-IR-token scan.",
       "panic": "assertion failed: prod_src.contains(\"fn try_lower_registry_expr_strict(\") note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
       "expected_output_or_snapshot": "Current production source should be guarded by token/architecture checks that match the refactored helper names.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "3"
+      "resolution_slice": "3"
     },
     {
       "id": "codegen-red-0002",
@@ -51,15 +51,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "extended math intrinsic rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "extended math intrinsic rendering",
       "source_location": "crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:498:5",
       "current_output": "ldexp assertion expects older `(2.0 as f64).powi` spelling; current renderer uses normalized float literal spelling.",
       "panic": "assertion failed: render_expr(&ldexp.expr).contains(\"(2.0 as f64).powi\")",
       "expected_output_or_snapshot": "Refresh assertion to the intended normalized Rust expression and keep coverage for ldexp scale semantics.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0003",
@@ -67,15 +67,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "basic function return rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "basic function return rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_control_codegen_tests.rs:235:5",
       "current_output": "Assertion expects explicit `return a + b;`; current renderer uses Rust tail expression for final returns.",
       "panic": "assertion failed: rust_code.contains(\"return a + b;\")",
-      "expected_output_or_snapshot": "Update expected output to tail-expression contract or assert semantic Rust shape structurally.",
+      "expected_output_or_snapshot": "Update expected output to tail-expression rules or assert semantic Rust shape structurally.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0004",
@@ -83,15 +83,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "source fixture validity",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "source fixture validity",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_control_codegen_tests.rs:96:1",
       "current_output": "Embedded source contains a function with no parser-accepted indented body after newer parser rules.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 33..36 }",
       "expected_output_or_snapshot": "Add explicit `pass`/valid body while preserving unreachable-return regression coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0005",
@@ -99,15 +99,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "source fixture validity",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "source fixture validity",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_control_codegen_tests.rs:48:1",
       "current_output": "Embedded nested function fixture is now parser-invalid because an empty block lacks an explicit body.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 12..15 }",
       "expected_output_or_snapshot": "Make fixture parser-valid and keep loop-else recursion plus try/except return assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0006",
@@ -115,15 +115,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:115:10",
       "current_output": "Fixture uses an async worker with no real suspension; HIR now rejects it with SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add a real suspension or convert helper to `def`, preserving generated-error conversion assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0007",
@@ -131,15 +131,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "float cast receiver rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "float cast receiver rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:387:5",
       "current_output": "Assertion expects `1 as i64` inside float casts; current output is parenthesized and valid with `1_i64`.",
       "panic": "expected min receiver to be parenthesized; got: fn main() { println!(\"{}\", ((1_i64) as f64).min((2_i64) as f64)); println!(\"{}\", ((1_i64) as f64).max((2_i64) as f64)); }",
       "expected_output_or_snapshot": "Refresh literal spelling while retaining the invalid-precedence negative assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0008",
@@ -147,15 +147,15 @@
       "classification": "obsolete-test",
       "owner": "codegen",
       "proposed_pr_slice": "2.3",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "production-source architecture guard",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "production-source architecture guard",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:204:5",
       "current_output": "Guard looks for old stmt_support_emitter helper text after source decomposition/refactor.",
       "panic": "assertion failed: stmt_support_src.contains(\"self.lower_stmt_expr_for_ir(value)\")",
       "expected_output_or_snapshot": "Replace with a current structured generator-init path guard or map to existing no-non-IR-token scan.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "3"
+      "resolution_slice": "3"
     },
     {
       "id": "codegen-red-0009",
@@ -163,15 +163,15 @@
       "classification": "obsolete-test",
       "owner": "codegen",
       "proposed_pr_slice": "2.3",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "production-source architecture guard",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "production-source architecture guard",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:198:5",
       "current_output": "Guard expects assembled body logic in lib.rs even though implementation moved out during decomposition.",
       "panic": "assertion failed: lib_src.contains(\"if !emitter.body_items.is_empty() {\")",
       "expected_output_or_snapshot": "Retarget to the owning module_body/entrypoint source or remove if covered by decomposition guardrails.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "3"
+      "resolution_slice": "3"
     },
     {
       "id": "codegen-red-0010",
@@ -179,15 +179,15 @@
       "classification": "obsolete-test",
       "owner": "codegen",
       "proposed_pr_slice": "2.3",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "production-source architecture guard",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "production-source architecture guard",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:182:5",
       "current_output": "Guard expects lib.rs to contain body_items wiring after decomposition moved the responsibility.",
       "panic": "assertion failed: lib_src.contains(\"if !emitter.body_items.is_empty() {\")",
       "expected_output_or_snapshot": "Retarget to current module_constants/entrypoint files with a stable ownership assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "3"
+      "resolution_slice": "3"
     },
     {
       "id": "codegen-red-0011",
@@ -195,15 +195,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "float cast receiver rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "float cast receiver rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:322:5",
       "current_output": "Current output is correctly parenthesized but literal spelling changed from `3 as i64` to `3_i64`.",
       "panic": "expected round receiver to be parenthesized; got: fn main() { println!(\"{}\", ((3_i64) as f64).round() as i64); }",
       "expected_output_or_snapshot": "Refresh expected substring and keep the invalid-precedence negative assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0012",
@@ -211,15 +211,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.5",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async try/finally cleanup semantics",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async try/finally cleanup semantics",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:61:10",
       "current_output": "Generated Rust already emits cleanup before rethrow; assertion expected stale integer literal spelling.",
       "panic": "cleanup marker should be emitted",
       "expected_output_or_snapshot": "Refresh assertion to the current literal spelling while retaining cleanup-before-rethrow ordering coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "5"
+      "resolution_slice": "5"
     },
     {
       "id": "codegen-red-0013",
@@ -227,15 +227,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:282:10",
       "current_output": "Fixture worker is async without real suspension and is rejected by SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add a real suspension to worker while preserving join observation assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0014",
@@ -243,15 +243,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:70:10",
       "current_output": "Fixture worker raises without a suspension and is rejected by SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make coroutine policy-compliant and retain result-spawn helper coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0015",
@@ -259,15 +259,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:107:10",
       "current_output": "Fixture worker has no real suspension and is rejected before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add real suspension or accepted async escape hatch while keeping error-parameter assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0016",
@@ -275,15 +275,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:42:10",
       "current_output": "One or more gather helper coroutines have no real suspension and fail lowering.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'first' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..15), line: None, col: None }, HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'second' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(50..56), line: None, col: None }]",
       "expected_output_or_snapshot": "Make gather fixture coroutines policy-compliant and retain private gather helper assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0017",
@@ -291,15 +291,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:12:10",
       "current_output": "Fixture worker has no real suspension and is rejected by HIR before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Add a real await in worker or adjust fixture to accepted async protocol.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0018",
@@ -307,15 +307,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:256:10",
       "current_output": "Fixture worker has no real suspension and is rejected by HIR before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make fixture async-valid and keep task result observation regression target.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0019",
@@ -323,15 +323,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:167:10",
       "current_output": "Race worker has no real suspension and fails SIFR-ASYNC-0001.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make worker policy-compliant and preserve unwrapped error-parameter assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0020",
@@ -339,15 +339,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:139:10",
       "current_output": "At least one race coroutine has no real suspension and is rejected before codegen.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'first' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..15), line: None, col: None }]",
       "expected_output_or_snapshot": "Add real suspension to every async helper that must remain async.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0021",
@@ -355,15 +355,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "async fixture policy",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "async fixture policy",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:331:10",
       "current_output": "Timeout worker has no real suspension and is rejected by HIR.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-ASYNC-0001\", declared_severity: Error }), message: \"async function 'worker' has no real suspension effect; use 'def' unless an explicit async protocol escape hatch is required\", args: {}, help: None, primary_range: Some(10..16), line: None, col: None }]",
       "expected_output_or_snapshot": "Make timeout worker policy-compliant and retain private timeout result assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0022",
@@ -371,15 +371,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "integer literal rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "integer literal rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:259:5",
       "current_output": "Assertion expects `7 as i64`; renderer now emits normalized `7_i64`.",
       "panic": "assertion `left == right` failed left: \"7_i64\" right: \"7 as i64\"",
       "expected_output_or_snapshot": "Refresh expected literal spelling while retaining bool-op rendering coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0023",
@@ -387,15 +387,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "source fixture validity",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "source fixture validity",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:69:1",
       "current_output": "Fieldless class fixture lacks parser-accepted body after newer parser rules.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after `class` definition\"), location: 13..17 }",
       "expected_output_or_snapshot": "Add explicit `pass` and keep default-constructor regression target.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0024",
@@ -403,15 +403,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "multi-module constant rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "multi-module constant rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:527:5",
       "current_output": "Assertion expects `7 as i64` for exported constant; current code normalizes integer literal spelling.",
       "panic": "assertion failed: utils_rs.contains(\"pub const ANSWER: i64 = 7 as i64;\")",
       "expected_output_or_snapshot": "Refresh expected exported constant while keeping non-main visibility checks.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0025",
@@ -419,15 +419,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "source fixture validity",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "source fixture validity",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:183:1",
       "current_output": "Fixture source is parser-invalid due an empty function body/block.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 38..43 }",
       "expected_output_or_snapshot": "Make fixture parser-valid and keep guarded non-option compare assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0026",
@@ -435,15 +435,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "source fixture validity",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "source fixture validity",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:52:1",
       "current_output": "Nested function fixture is parser-invalid because a body is missing.",
       "panic": "parse failed: ParseError { error: OtherError(\"Expected an indented block after function definition\"), location: 12..16 }",
       "expected_output_or_snapshot": "Add explicit body and retain local nested mutborrow regression target.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0027",
@@ -451,15 +451,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "module constant rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "module constant rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:354:5",
       "current_output": "Assertion expects `const LIMIT: i64 = 7 as i64`; current output uses normalized integer literal spelling.",
       "panic": "assertion failed: result.rust_source.contains(\"const LIMIT: i64 = 7 as i64;\")",
       "expected_output_or_snapshot": "Refresh expected constant spelling and keep module-constant rewrite assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0028",
@@ -467,15 +467,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "structured stmt literal rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "structured stmt literal rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:659:5",
       "current_output": "Assertion expects `1 as i64`; current output uses normalized integer literal spelling.",
       "panic": "assertion failed: generated.rust_source.contains(\"1 as i64\")",
       "expected_output_or_snapshot": "Refresh substring while preserving structured statement stats assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0029",
@@ -483,15 +483,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.5",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "generator control-flow preservation",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "generator control-flow preservation",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:149:10",
       "current_output": "Generated Rust already preserves the conditional branch and else region; assertion expected stale literal and assignment spelling.",
       "panic": "generator conditional branch should be emitted",
       "expected_output_or_snapshot": "Refresh assertions to current literal and augassign spelling while retaining conditional-yield else coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "5"
+      "resolution_slice": "5"
     },
     {
       "id": "codegen-red-0030",
@@ -499,15 +499,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "generator yield literal rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "generator yield literal rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:136:5",
       "current_output": "Assertion expects `_yields.push(1 as i64)`; current output likely uses normalized integer literal spelling.",
       "panic": "assertion failed: rust_code.contains(\"_yields.push(1 as i64);\")",
       "expected_output_or_snapshot": "Refresh yield literal spelling after confirming shape still materializes without panic.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0031",
@@ -515,15 +515,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "iterator materialization rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "iterator materialization rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:190:5",
       "current_output": "Assertion expects an exact `let xs` statement spelling that changed under normalized rendering/tail expression cleanup.",
       "panic": "assertion failed: rust_code.contains(\"let xs: Vec<i64> = (it).into_iter().collect::<Vec<_>>();\")",
-      "expected_output_or_snapshot": "Replace brittle substring with current materialization contract or structured assertion.",
+      "expected_output_or_snapshot": "Replace brittle substring with current materialization rules or structured assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0032",
@@ -531,15 +531,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "iterator materialization rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "iterator materialization rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:200:5",
       "current_output": "Assertion expects explicit `return it.collect::<Vec<_>>();`; final return may now render as a tail expression.",
       "panic": "assertion failed: rust_code.contains(\"return it.collect::<Vec<_>>();\")",
-      "expected_output_or_snapshot": "Refresh to current return-style contract while preserving materialization for Iterable signature.",
+      "expected_output_or_snapshot": "Refresh to current return-style rules while preserving materialization for Iterable signature.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0033",
@@ -547,15 +547,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "iterator return rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "iterator return rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:210:5",
       "current_output": "Assertion expects explicit `return Box::new(result.into_iter());`; current renderer may use tail expression.",
       "panic": "assertion failed: rust_code.contains(\"return Box::new(result.into_iter());\") ok",
       "expected_output_or_snapshot": "Refresh expected return style and retain owned local consumption coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0034",
@@ -563,15 +563,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "iterator return rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "iterator return rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:220:5",
       "current_output": "Assertion expects explicit return statement for owned param iterator conversion.",
       "panic": "assertion failed: rust_code.contains(\"return Box::new(items.into_iter());\")",
       "expected_output_or_snapshot": "Refresh to current tail-expression/return rendering while preserving ownership consumption assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0035",
@@ -579,15 +579,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.2",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "source fixture validity",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "source fixture validity",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:224:1",
       "current_output": "Fixture uses text-mode open without explicit encoding; HIR now rejects it with SIFR-IO-0801.",
       "panic": "lowering failed: [HirDiagnostic { code: Some(DiagnosticCode { code: \"SIFR-IO-0801\", declared_severity: Error }), message: \"text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings\", args: {}, help: None, primary_range: Some(20..24), line: None, col: None }]",
       "expected_output_or_snapshot": "Add explicit encoding and keep canonical FileHandle constructor assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "2"
+      "resolution_slice": "2"
     },
     {
       "id": "codegen-red-0036",
@@ -595,15 +595,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "recursive constructor literal rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "recursive constructor literal rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:253:5",
       "current_output": "Assertion expects `4 as i64`/`5 as i64`/`6 as i64`; current output uses normalized integer literals.",
       "panic": "assertion failed: rust_code.contains(\"let long: Entry = Entry::new(4 as i64, Some(Box::new(Entry::new(5 as i64, Some(Box::new(Entry::new(6 as i64, None)))))));\")",
       "expected_output_or_snapshot": "Refresh expected constructor string or assert optional boxing structurally.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0037",
@@ -611,15 +611,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.5",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "self-field clone suppression and dict access",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "self-field clone suppression and dict access",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:624:5",
       "current_output": "Generated Rust already emits copied self.table access without cloning; assertion expected stale explicit-return spelling.",
       "panic": "assertion failed: rust_code.contains(\"return self.table.get(\\\"k\\\").copied();\")",
       "expected_output_or_snapshot": "Refresh assertions to tail-expression output while preserving non-cloned table lookup and label clone coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "5"
+      "resolution_slice": "5"
     },
     {
       "id": "codegen-red-0038",
@@ -627,15 +627,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "structured augassign literal rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "structured augassign literal rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:714:5",
       "current_output": "Assertion expects `items.extend(vec![2 as i64])`; current output uses normalized integer literal spelling.",
       "panic": "assertion failed: generated.rust_source.contains(\"items.extend(vec![2 as i64])\")",
       "expected_output_or_snapshot": "Refresh expected literal spelling and keep push_str/extend no-operator regression.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0039",
@@ -643,31 +643,31 @@
       "classification": "obsolete-test",
       "owner": "codegen",
       "proposed_pr_slice": "2.3",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "production-source architecture guard",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "production-source architecture guard",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:584:10",
       "current_output": "Guard expects an `emit_stmt` wrapper in lib.rs after decomposition moved statement lowering out.",
       "panic": "emit_stmt wrapper should exist FAILED",
       "expected_output_or_snapshot": "Retarget decomposition guard to current owner files or rely on maintainability guardrail.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "3"
+      "resolution_slice": "3"
     },
     {
       "id": "codegen-red-0040",
-      "test_id": "lib_codegen_tests::structured_lowering_codegen_tests::test_production_lowering_contract_uses_result_helpers_only",
+      "test_id": "lib_codegen_tests::structured_lowering_codegen_tests::test_production_lowering_rules_uses_result_helpers_only",
       "classification": "obsolete-test",
       "owner": "codegen",
       "proposed_pr_slice": "2.3",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "production-source architecture guard",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "production-source architecture guard",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:610:5",
       "current_output": "Guard expects old helper names in lib.rs/module files after result-helper refactor.",
       "panic": "assertion failed: lib_src.contains(\"try_lower_simple_stmt_with_scope_result(\")",
-      "expected_output_or_snapshot": "Replace with current helper-name contract or delete if no longer meaningful.",
+      "expected_output_or_snapshot": "Replace with current helper-name rules or delete if no longer meaningful.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "3"
+      "resolution_slice": "3"
     },
     {
       "id": "codegen-red-0041",
@@ -675,15 +675,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "intrinsic expression rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "intrinsic expression rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:33:5",
       "current_output": "Assertion expects `(9.0 as f64).sqrt()`; current renderer changed float literal/cast spelling.",
       "panic": "assertion failed: generated.rust_source.contains(\"(9.0 as f64).sqrt()\")",
       "expected_output_or_snapshot": "Refresh intrinsic call substring while preserving structured expr/stmt stats assertions.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0042",
@@ -691,15 +691,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "structured assignment rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "structured assignment rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:339:5",
       "current_output": "Assertion expects `x = (9.0 as f64).sqrt();`; current output uses normalized float spelling.",
       "panic": "assertion failed: generated.rust_source.contains(\"x = (9.0 as f64).sqrt();\")",
       "expected_output_or_snapshot": "Refresh expected assignment rendering while keeping structured stmt path assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0043",
@@ -707,15 +707,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "structured let rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "structured let rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:380:5",
       "current_output": "Assertion expects `let x: f64 = (9.0 as f64).sqrt();`; current output uses normalized float spelling.",
       "panic": "assertion failed: generated.rust_source.contains(\"let x: f64 = (9.0 as f64).sqrt();\")",
       "expected_output_or_snapshot": "Refresh expected let rendering and keep structured path assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0044",
@@ -723,15 +723,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "structured return rendering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "structured return rendering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:420:5",
       "current_output": "Assertion expects explicit `return (9.0 as f64).sqrt();`; current renderer may use tail expression and normalized float spelling.",
       "panic": "assertion failed: generated.rust_source.contains(\"return (9.0 as f64).sqrt();\")",
-      "expected_output_or_snapshot": "Refresh expected return-style contract and keep structured path assertion.",
+      "expected_output_or_snapshot": "Refresh expected return-style rules and keep structured path assertion.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     },
     {
       "id": "codegen-red-0045",
@@ -739,15 +739,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.5",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "safe string indexing return lowering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "safe string indexing return lowering",
       "source_location": "crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:519:5",
       "current_output": "Generated Rust already emits a compiler-verified string index guard through the char cache path; assertion expected stale explicit-return and nth spelling.",
       "panic": "assertion failed: generated.rust_source.contains(\"return {\")",
       "expected_output_or_snapshot": "Refresh assertions to the current char-cache guard while preserving compiler-verified string-index coverage.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "5"
+      "resolution_slice": "5"
     },
     {
       "id": "codegen-red-0046",
@@ -755,15 +755,15 @@
       "classification": "compiler-bug",
       "owner": "codegen",
       "proposed_pr_slice": "2.4",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "structured field assignment lowering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "structured field assignment lowering",
       "source_location": "crates/sifr_codegen/src/lower_stmt/core_and_tuple_tests.rs:219:10",
       "current_output": "Internal simple-stmt lowering no longer handles non-self field assignment.",
       "panic": "field assign lowered",
       "expected_output_or_snapshot": "Restore/replace structured field assignment lowering and add regression for non-self target assignment.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "4"
+      "resolution_slice": "4"
     },
     {
       "id": "codegen-red-0047",
@@ -771,15 +771,15 @@
       "classification": "compiler-bug",
       "owner": "codegen",
       "proposed_pr_slice": "2.4",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "option narrowing if/elif lowering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "option narrowing if/elif lowering",
       "source_location": "crates/sifr_codegen/src/lower_stmt/return_assert_if_tests.rs:697:17",
       "current_output": "Internal simple-stmt lowering no longer emits expected IfLet for option truthiness in elif.",
       "panic": "assertion failed: matches!(else_body[0], RustStmt::IfLet { pattern: ref p, expr: RustExpr::Ident(ref n), else_body: Some(_), .. } if p == \"Some(maybe_x)\" && n == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix option-truthiness elif lowering or update to an equivalent safe Rust IR shape with regression.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "4"
+      "resolution_slice": "4"
     },
     {
       "id": "codegen-red-0048",
@@ -787,15 +787,15 @@
       "classification": "compiler-bug",
       "owner": "codegen",
       "proposed_pr_slice": "2.4",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "option narrowing let-else lowering",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "option narrowing let-else lowering",
       "source_location": "crates/sifr_codegen/src/lower_stmt/return_assert_if_tests.rs:466:5",
       "current_output": "Option-is-none exiting-body optimization no longer emits expected LetElse without unwrap.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::LetElse { pattern: ref p, value: RustExpr::Ident(ref name), ref else_body, } if p == \"Some(maybe_x)\" && name == \"maybe_x\" && !else_body.is_empty())",
       "expected_output_or_snapshot": "Restore safe LetElse lowering or replace with equivalent no-unwrap codegen regression.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "4"
+      "resolution_slice": "4"
     },
     {
       "id": "codegen-red-0049",
@@ -803,15 +803,15 @@
       "classification": "compiler-bug",
       "owner": "codegen",
       "proposed_pr_slice": "2.4",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "alias option truthiness narrowing",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "alias option truthiness narrowing",
       "source_location": "crates/sifr_codegen/src/lower_stmt/return_assert_if_tests.rs:636:5",
       "current_output": "Alias option truthiness no longer lowers to expected IfLet shape.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::IfLet { pattern: ref p, expr: RustExpr::Ident(ref n), else_body: Some(_), .. } if p == \"Some(maybe_x)\" && n == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix alias-aware option narrowing or assert equivalent generated no-unwrap behavior.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "4"
+      "resolution_slice": "4"
     },
     {
       "id": "codegen-red-0050",
@@ -819,15 +819,15 @@
       "classification": "compiler-bug",
       "owner": "codegen",
       "proposed_pr_slice": "2.4",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "option is-not-none narrowing",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "option is-not-none narrowing",
       "source_location": "crates/sifr_codegen/src/lower_stmt/return_assert_if_tests.rs:499:5",
       "current_output": "Option `is not None` compare no longer lowers to expected IfLet shape.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::IfLet { ref pattern, expr: RustExpr::Ident(ref name), .. } if pattern == \"Some(maybe_x)\" && name == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix option compare narrowing or replace with equivalent no-unwrap regression.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "4"
+      "resolution_slice": "4"
     },
     {
       "id": "codegen-red-0051",
@@ -835,15 +835,15 @@
       "classification": "compiler-bug",
       "owner": "codegen",
       "proposed_pr_slice": "2.4",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "option truthiness narrowing",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "option truthiness narrowing",
       "source_location": "crates/sifr_codegen/src/lower_stmt/return_assert_if_tests.rs:610:5",
       "current_output": "Option truthiness no longer lowers to expected IfLet shape with else body.",
       "panic": "assertion failed: matches!(lowered[0], RustStmt::IfLet { pattern: ref p, expr: RustExpr::Ident(ref n), else_body: Some(_), .. } if p == \"Some(maybe_x)\" && n == \"maybe_x\")",
       "expected_output_or_snapshot": "Fix option truthiness lowering or assert equivalent safe generated Rust shape.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "4"
+      "resolution_slice": "4"
     },
     {
       "id": "codegen-red-0052",
@@ -851,15 +851,15 @@
       "classification": "stale-expectation",
       "owner": "codegen",
       "proposed_pr_slice": "2.1",
-      "closes_in_wave": 2,
-      "affected_compiler_contract": "render snapshot",
+      "resolution_gate": 2,
+      "affected_compiler_rules": "render snapshot",
       "source_location": "crates/sifr_codegen/src/render/render_helpers.rs:302:5",
       "current_output": "Insta snapshot expects explicit `return value;`; renderer now emits a tail expression `value`.",
       "panic": "snapshot assertion for 'renders_function_type_param_bounds' failed in line 319",
-      "expected_output_or_snapshot": "Bless/update snapshot if tail expression is intended render contract.",
+      "expected_output_or_snapshot": "Bless/update snapshot if tail expression is intended render rules.",
       "status": "closed",
       "reproduction_command": "cargo test -p sifr_codegen -- --nocapture",
-      "closes_in_subwave": "1"
+      "resolution_slice": "1"
     }
   ]
 }

@@ -1,8 +1,8 @@
-// Reference: milestone_rust_ir_types
-// Source issue: revised_phase_roadmap_698c629c.md
-// Milestone 14.1 demo: Rust IR type definitions.
+// Reference: rust_ir_types
+// Reference: compiler-feature-history
+// compiler feature demo: Rust IR type definitions.
 //
-// This milestone introduces the structured Rust IR model in
+// This feature set introduces the structured Rust IR model in
 // `crates/sifr_codegen/src/rust_ir.rs`.
 //
 // Demo validation command:

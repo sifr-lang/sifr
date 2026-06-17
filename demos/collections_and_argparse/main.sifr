@@ -1,5 +1,5 @@
-# Reference: ad_hoc_struct_wave2
-# Source issue: ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md
+# Reference: struct_collections_and_argparse
+# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.collections import Counter, defaultdict
 from sifr.argparse import ArgumentParser
 
@@ -9,8 +9,8 @@ def main() -> None:
     assert counter.get("parse") == 2
 
     attempts = defaultdict(int)
-    attempts["wave2"] += 1
-    assert attempts["wave2"] == 1
+    attempts["collections_and_argparse"] += 1
+    assert attempts["collections_and_argparse"] == 1
 
     parser: ArgumentParser = ArgumentParser("sifr")
     parser.add_subparsers(dest="cmd")

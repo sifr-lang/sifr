@@ -137,7 +137,7 @@ fn add(a: i64, b: i64) -> i64 {
 fn main() {
     let total: i64 = add(10 as i64, 11 as i64);
     if total > (20 as i64) {
-        println!("m20_1 lower decomposition demo:");
+        println!("compiled_expressions lower decomposition demo:");
     }
     println!("{}", total);
     println!("{}", (3.9 as f64).floor() as i64);

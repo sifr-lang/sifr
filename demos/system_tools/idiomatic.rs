@@ -190,7 +190,7 @@ fn workload() {
 }
 
 fn main() {
-    match run_command("echo wave_psp_d2") {
+    match run_command("echo system-tools-sample") {
         Ok(shell_out) => {
             let cwd = getcwd().unwrap_or_default();
             println!("os.run_command = {}", shell_out);
@@ -199,9 +199,9 @@ fn main() {
         Err(error) => println!("os error: {}", error),
     }
 
-    setenv("SIFR_WAVE_D2_DEMO", "ok");
-    println!("env getenv = {}", getenv("SIFR_WAVE_D2_DEMO", "fallback"));
-    unsetenv("SIFR_WAVE_D2_DEMO");
+    setenv("SIFR_SYSTEM_TOOLS_DEMO", "ok");
+    println!("env getenv = {}", getenv("SIFR_SYSTEM_TOOLS_DEMO", "fallback"));
+    unsetenv("SIFR_SYSTEM_TOOLS_DEMO");
 
     println!("sys.argv len = {}", argv().len());
     println!("sys.version = {}", version());
@@ -229,7 +229,7 @@ fn main() {
         Err(error) => println!("subprocess error: {}", error),
     }
 
-    let mut logger = get_logger("wave_psp_d2_demo");
+    let mut logger = get_logger("system-tools-sample_demo");
     logger.set_level(INFO);
     logger.info("logging demo line");
 

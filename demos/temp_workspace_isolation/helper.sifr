@@ -1,4 +1,3 @@
-# Reference: m23_4
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: temp_workspace_isolation
 def value() -> int:
     return 44

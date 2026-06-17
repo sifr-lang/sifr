@@ -1,5 +1,4 @@
-# Reference: m30_1e
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: os
 from sifr.os import run_command, mkdir, listdir, rmdir, getpid, is_dir, is_file, remove_file, stat
 from sifr.io import write_text
 from sifr.test import assert_bool_vector_eq
@@ -19,7 +18,7 @@ def collect_runtime_actual() -> list[bool]:
 
 def collect_filesystem_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_m30_1e_os_demo_" + str(getpid())
+    base: str = "/tmp/sifr_os_os_demo_" + str(getpid())
     file_path: str = base + "/demo.txt"
     os_flow_ok: bool = False
     list_ok: bool = False
@@ -53,7 +52,7 @@ def collect_missing_actual() -> list[bool]:
     actual: list[bool] = []
     missing_rejected: bool = False
     try:
-        _bad: None = rmdir("/tmp/sifr_m30_1e_os_demo_missing")
+        _bad: None = rmdir("/tmp/sifr_os_os_demo_missing")
     except IOError as e:
         _ = str(e.message)
         missing_rejected = True
@@ -74,4 +73,4 @@ def main():
     append_all(actual, collect_missing_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1e os parity demo: pass")
+    print("os os parity demo: pass")

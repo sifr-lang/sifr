@@ -1,7 +1,7 @@
-# Phase 34 Generated-Code Panic Inventory
+# Generated-Code Panic Inventory
 
-Phase 27's historical panic inventory could not be located under
-`verification/` at Phase 34 start, so this file is the refreshed Phase 34 source
+The historical diagnostic-panic inventory could not be located under
+`verification/` at generated-code quality rules start, so this file is the refreshed generated-code quality source
 of truth for generated user-path scans.
 
 ## Generated User-Path Policy
@@ -16,7 +16,7 @@ Generated Rust user runtime paths must not contain:
 - `unsafe`
 - `#[allow(...)]` gate suppression
 
-The Phase 34 scanner enforces these patterns on generated `.rs` files for every
+The generated-code quality scanner enforces these patterns on generated `.rs` files for every
 positive manifest entry. Data-dependent user paths have no allowlist.
 
 ## Internal-Invariant Allowlist

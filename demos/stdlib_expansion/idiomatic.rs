@@ -168,5 +168,5 @@ fn main() {
     assert!(fnmatch("test.py", "*.py"));
     assert!(!fnmatch("test.py", "*.txt"));
 
-    println!("milestone_stdlib_expansion demo: all checks passed!");
+    println!("stdlib_expansion demo: all checks passed!");
 }

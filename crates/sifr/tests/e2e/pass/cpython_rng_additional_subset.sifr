@@ -1,0 +1,365 @@
+# Additional CPython-derived parity coverage for RNG/crypto/polish surface.
+from sifr.hashlib import HashObject, copy_hash, new, new_bytes, sha1_obj, sha512_obj
+from sifr.html import escape, unescape
+from sifr.random import Random, RandomState, choices, getstate, seed, setstate
+from sifr.base64 import b32decode
+from sifr.statistics import StatisticsError, median_grouped, mode
+from sifr.test import (
+    assert_almost_eq,
+    assert_eq,
+    assert_true,
+)
+from sifr.hashlib import sha256_obj
+from sifr.textwrap import TextWrapper
+
+
+def contains(values: list[str], needle: str) -> bool:
+    for value in values:
+        if value == needle:
+            return True
+    return False
+
+
+def count_int(values: list[int], target: int) -> int:
+    total: int = 0
+    for value in values:
+        if value == target:
+            total = total + 1
+    return total
+
+
+def clone_words(words: list[int]) -> list[int]:
+    copied: list[int] = []
+    for word in words:
+        copied.append(word)
+    return copied
+
+
+def with_bad_first_word(words: list[int]) -> list[int]:
+    mutated: list[int] = []
+    first: bool = True
+    for word in words:
+        if first:
+            mutated.append(4294967296)
+            first = False
+        else:
+            mutated.append(word)
+    return mutated
+
+
+def repeated_block(count: int) -> str:
+    block: str = "abcXYZ123"
+    out: str = ""
+    i: int = 0
+    while i < count:
+        out = out + block
+        i = i + 1
+    return out
+
+
+def check_random_state_boundaries() -> None:
+    rng: Random = Random(7)
+    state: RandomState = rng.getstate()
+
+    state_ok: bool = True
+    try:
+        _ok_state: None = rng.setstate(state)
+        _ = _ok_state
+    except ValueError as e:
+        _ = e.message
+        state_ok = False
+    assert_true(state_ok)
+
+    bad_version: RandomState = RandomState(
+        2,
+        clone_words(state.state_words),
+        state.index,
+        state.gauss_next,
+    )
+    bad_version_rejected: bool = False
+    try:
+        _bad_version: None = rng.setstate(bad_version)
+        _ = _bad_version
+    except ValueError as e:
+        _ = e.message
+        bad_version_rejected = True
+    assert_true(bad_version_rejected)
+
+    bad_len: RandomState = RandomState(3, [1, 2], state.index, state.gauss_next)
+    bad_len_rejected: bool = False
+    try:
+        _bad_len: None = rng.setstate(bad_len)
+        _ = _bad_len
+    except ValueError as e:
+        _ = e.message
+        bad_len_rejected = True
+    assert_true(bad_len_rejected)
+
+    bad_index: RandomState = RandomState(
+        3,
+        clone_words(state.state_words),
+        625,
+        state.gauss_next,
+    )
+    bad_index_rejected: bool = False
+    try:
+        _bad_index: None = rng.setstate(bad_index)
+        _ = _bad_index
+    except ValueError as e:
+        _ = e.message
+        bad_index_rejected = True
+    assert_true(bad_index_rejected)
+
+    bad_word: RandomState = RandomState(
+        3,
+        with_bad_first_word(state.state_words),
+        state.index,
+        state.gauss_next,
+    )
+    bad_word_rejected: bool = False
+    try:
+        _bad_word: None = rng.setstate(bad_word)
+        _ = _bad_word
+    except ValueError as e:
+        _ = e.message
+        bad_word_rejected = True
+    assert_true(bad_word_rejected)
+
+    module_state: RandomState = getstate()
+    module_bad_version_rejected: bool = False
+    try:
+        _module_bad_version: None = setstate(
+            RandomState(2, clone_words(module_state.state_words), module_state.index, module_state.gauss_next)
+        )
+        _ = _module_bad_version
+    except ValueError as e:
+        _ = e.message
+        module_bad_version_rejected = True
+    assert_true(module_bad_version_rejected)
+
+
+def check_random_choices_and_gauss_model() -> None:
+    seed(123)
+
+    choices_ok: bool = False
+    picked: list[int] = []
+    try:
+        parsed_picked: list[int] = choices([1, 2, 3, 4], 20)
+        picked = parsed_picked
+        choices_ok = True
+    except ValueError as e:
+        _ = e.message
+        choices_ok = False
+    assert_true(choices_ok)
+    assert_eq(
+        str(picked),
+        "[3, 2, 3, 3, 1, 3, 3, 2, 4, 3, 4, 2, 3, 2, 1, 2, 3, 4, 2, 1]",
+    )
+
+    seed(321)
+    picked_many: list[int] = []
+    picked_many_ok: bool = False
+    try:
+        parsed_many: list[int] = choices([1, 2, 3, 4], 2000)
+        picked_many = parsed_many
+        picked_many_ok = True
+    except ValueError as e:
+        _ = e.message
+        picked_many_ok = False
+    assert_true(picked_many_ok)
+    assert_eq(len(picked_many), 2000)
+
+    c1: int = count_int(picked_many, 1)
+    c2: int = count_int(picked_many, 2)
+    c3: int = count_int(picked_many, 3)
+    c4: int = count_int(picked_many, 4)
+    assert_true(c1 >= 350 and c1 <= 650)
+    assert_true(c2 >= 350 and c2 <= 650)
+    assert_true(c3 >= 350 and c3 <= 650)
+    assert_true(c4 >= 350 and c4 <= 650)
+
+    rng: Random = Random(99)
+    first: float = rng.gauss(0.0, 1.0)
+    after_first: RandomState = rng.getstate()
+    assert_true(after_first.gauss_next is not None)
+    second: float = rng.gauss(0.0, 1.0)
+    after_second: RandomState = rng.getstate()
+    assert_true(after_second.gauss_next is None)
+
+    replay: Random = Random(99)
+    first_replay: float = replay.gauss(0.0, 1.0)
+    second_replay: float = replay.gauss(0.0, 1.0)
+    assert_almost_eq(first, first_replay, 0.000000000001)
+    assert_almost_eq(second, second_replay, 0.000000000001)
+
+
+def check_hashlib_vectors_and_case() -> None:
+    upper: HashObject = sha1_obj("")
+    try:
+        parsed_upper: HashObject = new("SHA256", "abc")
+        upper = parsed_upper
+    except ValueError as e:
+        _ = e.message
+        assert_true(False)
+    assert_eq(
+        upper.hexdigest(),
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    )
+
+    sha1_hash: HashObject = sha1_obj("abc")
+    assert_eq(sha1_hash.hexdigest(), "a9993e364706816aba3e25717850c26c9cd0d89d")
+
+    sha512_hash: HashObject = sha512_obj("abc")
+    assert_eq(
+        sha512_hash.hexdigest(),
+        "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a"
+        + "2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f",
+    )
+
+    copied: HashObject = copy_hash(upper)
+    copied.update("x")
+    assert_eq(
+        upper.hexdigest(),
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    )
+    assert_eq(
+        copied.hexdigest(),
+        "7571ce1f8e21c6b13dd7ec2c5ec7c9e4dd9852e209869511853f2f1f74b17927",
+    )
+
+    guaranteed: list[str] = [
+        "md5",
+        "sha1",
+        "sha224",
+        "sha256",
+        "sha384",
+        "sha512",
+        "blake2b",
+        "blake2s",
+    ]
+    assert_true(contains(guaranteed, "sha1"))
+    assert_true(contains(guaranteed, "sha512"))
+    assert_true(contains(guaranteed, "blake2b"))
+
+    unknown_rejected: bool = False
+    try:
+        _unknown: HashObject = new_bytes("no_such_hash", b"")
+        _ = _unknown.name
+    except ValueError as e:
+        _ = e.message
+        unknown_rejected = True
+    assert_true(unknown_rejected)
+
+
+def check_hashlib_large_incremental_update() -> None:
+    payload: str = repeated_block(3000)
+    whole: HashObject = sha256_obj(payload)
+    chunked: HashObject = sha256_obj("")
+    i: int = 0
+    while i < 3000:
+        chunked.update("abcXYZ123")
+        i = i + 1
+    assert_eq(whole.hexdigest(), chunked.hexdigest())
+
+
+def check_base64_casefold_decode() -> None:
+    decoded: str = ""
+    decode_ok: bool = False
+    try:
+        parsed_decoded: str = b32decode("mzxw6===")
+        decoded = parsed_decoded
+        decode_ok = True
+    except ParseError as e:
+        _ = e.message
+        decode_ok = False
+    assert_true(decode_ok)
+    assert_eq(decoded, "foo")
+
+
+def check_statistics_grouped_cases() -> None:
+    grouped: float = 0.0
+    try:
+        parsed_grouped: float = median_grouped([2.0, 2.0, 3.0, 3.0, 3.0, 4.0], 2.0)
+        grouped = parsed_grouped
+    except StatisticsError as e:
+        _ = e.message
+        assert_true(False)
+    assert_almost_eq(grouped, 2.6666666667, 0.000001)
+
+    tie_mode: int = 0
+    try:
+        parsed_tie_mode: int = mode([2, 2, 3, 3, 1])
+        tie_mode = parsed_tie_mode
+    except StatisticsError as e:
+        _ = e.message
+        assert_true(False)
+    assert_eq(tie_mode, 2)
+
+    empty_rejected: bool = False
+    try:
+        _bad_empty: float = median_grouped([], 1.0)
+        _ = _bad_empty
+    except StatisticsError as e:
+        _ = e.message
+        empty_rejected = True
+    assert_true(empty_rejected)
+
+    interval_rejected: bool = False
+    try:
+        _bad_interval: float = median_grouped([1.0, 2.0, 3.0], -1.0)
+        _ = _bad_interval
+    except StatisticsError as e:
+        _ = e.message
+        interval_rejected = True
+    assert_true(interval_rejected)
+
+
+def check_textwrap_sentence_cases() -> None:
+    wrapper: TextWrapper = TextWrapper(60, fix_sentence_endings=True)
+    assert_eq(
+        str(wrapper.wrap("A short line. Note the single space.")),
+        "[\"A short line.  Note the single space.\"]",
+    )
+    assert_eq(
+        str(wrapper.wrap("Well, Doctor?\nWhat do you think?")),
+        "[\"Well, Doctor?  What do you think?\"]",
+    )
+    assert_eq(
+        str(wrapper.wrap("File stdio.h is nice.")),
+        "[\"File stdio.h is nice.\"]",
+    )
+
+
+def check_html_escape_cases() -> None:
+    sample: str = "'<script>\"&foo;\"</script>'"
+    assert_eq(
+        escape(sample),
+        "&#x27;&lt;script&gt;&quot;&amp;foo;&quot;&lt;/script&gt;&#x27;",
+    )
+    assert_eq(
+        escape(sample, False),
+        "'&lt;script&gt;\"&amp;foo;\"&lt;/script&gt;'",
+    )
+    assert_eq(unescape("no character references"), "no character references")
+    assert_eq(unescape("&#39;"), "'")
+    assert_eq(unescape("&#x27;"), "'")
+    assert_eq(unescape("&#X27;"), "'")
+    assert_eq(unescape("&#60;"), "<")
+    assert_eq(unescape("&#x3C;"), "<")
+    assert_eq(unescape("&#X3C;"), "<")
+    assert_eq(unescape("&#62;"), ">")
+    assert_eq(unescape("&#x3E;"), ">")
+    assert_eq(unescape("&#X3E;"), ">")
+    assert_eq(unescape(escape(sample)), sample)
+
+
+def main() -> None:
+    check_random_state_boundaries()
+    check_random_choices_and_gauss_model()
+    check_hashlib_vectors_and_case()
+    check_hashlib_large_incremental_update()
+    check_base64_casefold_decode()
+    check_statistics_grouped_cases()
+    check_textwrap_sentence_cases()
+    check_html_escape_cases()
+    assert str("cpython_rng_additional_subset: pass") == "cpython_rng_additional_subset: pass"

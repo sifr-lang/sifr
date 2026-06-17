@@ -1,4 +1,4 @@
-# Reference: phase_psp_a1_range_duplicate_stop_keyword
+# Reference: stdlib_parity_a1_range_duplicate_stop_keyword
 # expect-error[col=26]: SIFR-CALL-0003
 
 def main():

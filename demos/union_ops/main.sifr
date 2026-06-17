@@ -1,7 +1,7 @@
-# Reference: milestone_union_ops
-# Source issue: revised_phase_roadmap_698c629c.md
+# Reference: union_ops
+# Reference: compiler-feature-history
 # ============================================================
-# Milestone 14: Union Type Operations Demo
+# compiler feature: Union Type Operations Demo
 # ============================================================
 # Demonstrates:
 # 1. Arithmetic on T|None with explicit narrowing

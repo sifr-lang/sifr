@@ -27,7 +27,7 @@ The plan is implementation-ready with no remaining blockers.
 
 - **All 5 editors covered**: Neovim, Zed, Helix, Emacs, and VS Code each have documented formatter support in the execution tracker with explicit LSP-based formatter paths. The forbidden behavior section explicitly bans direct `sifr fmt` as the primary editor formatting provider.
 - **LSP primary path**: The execution tracker locks the contract that editors launch `sifr lsp --stdio` and request formatting through standard LSP methods. `sifr_format` is the shared formatter core; `sifr_analysis` routes formatting queries; `sifr_lsp` is a protocol adapter only. The protocol matrix has positive/negative rows for `textDocument/formatting` and `textDocument/rangeFormatting` with the `lsp-formatting` budget.
-- **VS Code**: The extension uses the native LSP client document formatting provider and `editor.formatOnSave`, with no extension-owned formatter implementation. The extension contract is locked in `internal_docs/vscode_extension.md` and `verification/tooling/vscode_extension_contract.json`.
+- **VS Code**: The extension uses the native LSP client document formatting provider and `editor.formatOnSave`, with no extension-owned formatter implementation. The extension contract is locked in `internal_docs/vscode_extension.md` and `verification/tooling/vscode_extension_rules.json`.
 
 **Expectation 4 — Phase 36 extension vs. modification:**
 

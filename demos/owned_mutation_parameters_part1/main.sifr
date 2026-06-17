@@ -1,5 +1,5 @@
-# Reference: ad_hoc_own_mut_parameter_convention_part1
-# Source issue: ad-hoc-own-mut-parameter-convention-part1-execution.md
+# Reference: own_mut_parameter_convention_part1
+# Reference: own-mut-parameter-convention-part1
 # Part 1 demo: parser/HIR normalization for orthogonal parameter ownership and mutability.
 
 def borrowed_view(items: list[int]) -> int:

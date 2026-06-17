@@ -2,7 +2,7 @@
 
 ## Status
 
-This document is the canonical design for Sifr's integer model before production. The implementation is tracked by `plans/issues/archive/ad-hoc-integer-model-and-fixed-width-numeric-contract.md`.
+This document is the canonical design for Sifr's integer model before production. The implementation is tracked by `integer-model-and-fixed-width-numeric-rules record`.
 
 Sifr intentionally does not preserve the older bootstrap model where source-level `int` lowered to Rust `i64` and arbitrary precision lived behind a separate user-facing `bigint`. The target language model is clean because Sifr is not production-released yet.
 
@@ -11,7 +11,7 @@ Sifr intentionally does not preserve the older bootstrap model where source-leve
 - Keep ordinary application, web, data science, and AI code Python-simple: `int` is the default integer and arithmetic does not overflow, wrap, or panic.
 - Give users explicit Rust-compatible fixed-width access when memory layout or wire/storage representation matters.
 - Preserve Sifr's safety guarantee: no silent precision loss, no user-triggerable integer panics, and typed errors at fallible boundaries.
-- Make serialization and interop rules visible enough that generated web/API/database contracts do not accidentally lie about integer precision.
+- Make serialization and interop rules visible enough that generated web/API/database rules do not accidentally lie about integer precision.
 
 ## Non-Goals
 
@@ -20,7 +20,7 @@ Sifr intentionally does not preserve the older bootstrap model where source-leve
 - No implicit narrowing.
 - No silent fixed-width wrapping through ordinary operators.
 - No guarantee that source-level `int` is `Copy`, pointer-sized, ABI-stable, or C-compatible.
-- No integer literal suffix syntax in the first implementation slice. Type annotations, constructors, dtypes, schemas, and FFI signatures are enough.
+- No integer literal suffix syntax in the initial implementation. Type annotations, constructors, dtypes, schemas, and FFI signatures are enough.
 
 ## Core Decision
 
@@ -42,7 +42,7 @@ pub enum SifrInt {
 
 That means `x: int = 42` is conceptually exact arbitrary precision at the source level, and implementation-wise should compile to `SifrInt::Small(42)` or an equivalent optimized local representation that preserves the same observable semantics. Optimizations may keep proven-small locals in Rust primitives internally, but generated public semantics remain `SifrInt`.
 
-The `SifrInt` enum is a runtime crate API for generated Rust, not a C ABI. If INT-1 exposes the concrete `Small`/`Big` variants to generated projects, representation changes such as switching `Small(i64)` to `Small(i128)` must be treated as generated-runtime compatibility changes. If the implementation wants freedom to change the layout later, the variants should be hidden behind constructors and accessors from the first runtime slice.
+The `SifrInt` enum is a runtime crate API for generated Rust, not a C ABI. If INT-1 exposes the concrete `Small`/`Big` variants to generated projects, representation changes such as switching `Small(i64)` to `Small(i128)` must be treated as generated-runtime compatibility changes. If the implementation wants freedom to change the layout later, the variants should be hidden behind constructors and accessors from the initial runtime implementation.
 
 Fixed-width integers are first-class explicit types for representation-sensitive work:
 
@@ -64,7 +64,7 @@ Width is a storage, binary protocol, dtype, schema, or FFI choice. It is not the
 | `uint8`, `uint16`, `uint32`, `uint64` | unsigned fixed-width integer | bytes, protocols, external unsigned schemas, FFI | `u8`, `u16`, `u32`, `u64` |
 | `isize`, `usize` | pointer-sized Rust interop integer | FFI boundary only | `isize`, `usize` |
 
-Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `i128` and `u128`, and some storage targets need 128-bit values, but Sifr does not need to ship them in the first fixed-width slice. Using either reserved name before support lands must produce `SIFR-INT-0003`, not a generic unresolved-name diagnostic.
+Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `i128` and `u128`, and some storage targets need 128-bit values, but Sifr does not need to ship them in the initial fixed-width implementation. Using either reserved name before support lands must produce `SIFR-INT-0003`, not a generic unresolved-name diagnostic.
 
 The reserved-width diagnostic is reached after ordinary annotation name resolution. Existing Sifr type names are shadowable, so a user-defined type variable, type alias, or class named `int128` or `uint128` resolves to that user definition instead of emitting `SIFR-INT-0003`. INT-2B should keep this general shadowing behavior rather than create a special anti-shadowing rule only for future integer widths. A later language-wide reserved-identifier policy may tighten this consistently across all builtin and reserved names.
 
@@ -187,7 +187,7 @@ Arithmetic involving `int` and a fixed-width integer returns `int` unless the op
 
 `usize` and `isize` follow the same scalar promotion rule when they escape FFI-only signatures: ordinary arithmetic widens to `int`, and narrowing back to pointer-sized storage is explicit and fallible.
 
-Decimal mixing keeps the Phase 28 policy:
+Decimal mixing keeps the decimal semantics architecture policy:
 
 - `int + decimal` returns `decimal`.
 - `int + bigdecimal` returns `bigdecimal`.
@@ -196,7 +196,7 @@ Decimal mixing keeps the Phase 28 policy:
 
 Equality and ordering compare mathematical values, not bit patterns. `int8(-1) != uint8(255)`.
 
-Integer and float comparisons are exact rather than cast-based. `int(2 ** 53 + 1) == float(2 ** 53 + 1)` compares the exact integer to the exact rational value represented by the float and returns `False`; it must not cast the integer to `float` first. Ordering follows the same rule by comparing the integer against the exact decomposed float mantissa/exponent. NaN remains unordered according to the float comparison contract.
+Integer and float comparisons are exact rather than cast-based. `int(2 ** 53 + 1) == float(2 ** 53 + 1)` compares the exact integer to the exact rational value represented by the float and returns `False`; it must not cast the integer to `float` first. Ordering follows the same rule by comparing the integer against the exact decomposed float mantissa/exponent. NaN remains unordered according to the float comparison rules.
 
 If two hashable exact/fixed integer values compare equal, their hashes must agree:
 
@@ -209,7 +209,7 @@ assert hash(int(1)) == hash(int8(1))
 
 Generic arithmetic must model operator output type. A generic `T + T -> T` bound is valid only for numeric types whose operator output is assignable to `T`. Fixed-width scalar types do not satisfy that bound for ordinary arithmetic because `int32 + int32 -> int`.
 
-The existing `Addable` protocol must be refined to carry an associated output type or be limited to `Self`-preserving addition. A generic function that wants mathematical integer addition across `int` and fixed-width families should use a future integer protocol with an explicit accumulator/output type, not assume Rust's `Add<Output = Self>` shape. This refinement belongs to the scalar arithmetic milestone because it changes operator typing and generic monomorphization.
+The existing `Addable` protocol must be refined to carry an associated output type or be limited to `Self`-preserving addition. A generic function that wants mathematical integer addition across `int` and fixed-width families should use a future integer protocol with an explicit accumulator/output type, not assume Rust's `Add<Output = Self>` shape. This refinement belongs to the scalar arithmetic work because it changes operator typing and generic monomorphization.
 
 ```python
 def sum_int32(values: list[int32]) -> int:
@@ -266,9 +266,9 @@ On `wasm32` or any 32-bit target, compiler-owned `usize` conversions use the tar
 
 `bytearray` follows the same element type rule on reads and iteration: elements are `uint8`. Writes require a fitting literal or a `uint8` value. Assigning an arbitrary `int` to a bytearray element requires explicit fallible narrowing through `uint8(value)` so mutation cannot silently truncate.
 
-`array` is a future dtype-bearing surface in this design context; references to `array[int32]` describe the required contract for the data-science phase even when the runtime container is not implemented yet.
-The reviewable and test-owned contract artifact for this deferred dtype surface
-is `verification/areas/core_language/data/integer_dtype_contract.md`; the quick
+`array` is a future dtype-bearing surface in this design context; references to `array[int32]` describe the required rules for the data-science work even when the runtime container is not implemented yet.
+The reviewable and test-owned rules artifact for this deferred dtype surface
+is `verification/areas/core_language/data/integer_dtype_rules.md`; the quick
 validation profile runs its sentinel check so future runtime work cannot remove the
 no-silent-wrap and no-implicit-widen requirements by accident.
 
@@ -292,7 +292,7 @@ Array/tensor/dataframe reductions use the same naming pattern: `xs.checked_sum()
 
 The standard library should reinforce the distinction between mathematical scalar values and storage representation.
 
-| Surface | Contract |
+| Surface | Rules |
 | --- | --- |
 | `len`, `enumerate`, `range`, indexes | return/use `int` at the source level |
 | `sum(list[int])` | returns `int` |
@@ -318,7 +318,7 @@ def add_samples(left: int16, right: int16) -> int16:
 
 ## Web, Validation, and Public API Models
 
-For Sifr's web-app target, integer semantics must be visible in generated request and response contracts.
+For Sifr's web-app target, integer semantics must be visible in generated request and response rules.
 
 - Route path/query parameters annotated as `int` parse exact decimal strings under the configured digit limit.
 - Route path/query parameters annotated as fixed-width types validate range at the boundary and return typed validation errors on failure.
@@ -343,15 +343,15 @@ Under `json.web`, schema-driven public models default to JSON numbers only when 
 
 Core rule: Sifr never silently loses integer precision when crossing a boundary. A serializer either preserves the exact integer, proves the target can represent it, or returns a typed error.
 
-The reviewable contract artifact for schema, client, generated serde, and
+The reviewable rules artifact for schema, client, generated serde, and
 storage boundary mappings is
-`verification/areas/core_language/data/integer_model/serialization_boundary_contract.md`. Future web,
-ORM, and schema phases must update that artifact when they implement the
-corresponding runtime surfaces.
+`verification/areas/core_language/data/integer_model/serialization_boundary_rules.md`.
+Future work on web, ORM, and schema surfaces must update that artifact when
+implementing the corresponding runtime surfaces.
 
 ### JSON
 
-Sifr's JSON parser parses integer number tokens into exact `int` values. A JSON number token with no `.`, `e`, or `E` is an integer token. Fractional or exponent-bearing number tokens follow the selected numeric profile, initially `float` unless a Phase 28 decimal profile is requested.
+Sifr's JSON parser parses integer number tokens into exact `int` values. A JSON number token with no `.`, `e`, or `E` is an integer token. Fractional or exponent-bearing number tokens follow the selected numeric profile, initially `float` unless a decimal semantics architecture decimal profile is requested.
 
 JSON readers apply deterministic resource limits such as maximum integer digits and maximum document bytes. Exceeding those limits returns `JsonLimitError` rather than allocating unbounded memory from untrusted input.
 The current `sifr.json.loads` path validates JSON integer token digit budgets
@@ -381,7 +381,7 @@ OpenAPI/JSON Schema generation must reflect the chosen boundary:
 
 SQL integer columns are fixed-width or database-specific. Writing Sifr `int` into `SMALLINT`, `INTEGER`, `BIGINT`, or unsigned dialect columns is fallible unless statically proven in range.
 
-| Storage target | Sifr contract |
+| Storage target | Sifr rules |
 | --- | --- |
 | SQL `SMALLINT`/`INTEGER`/`BIGINT` | explicit fixed-width Sifr field or fallible narrowing from `int` |
 | SQL unsigned dialect column | explicit `uint*` Sifr field or fallible narrowing from `int` |
@@ -477,7 +477,7 @@ Reserve the `SIFR-INT-*` family for integer-model diagnostics:
 | `SIFR-INT-0010` | bytearray/bytes construction or mutation requires fitting `uint8` |
 | `SIFR-INT-0011` | temporary `bigint` transition alias or stale public `bigint` usage |
 
-## Runtime and Codegen Contract
+## Runtime and Codegen Rules
 
 The target runtime placement is a new workspace crate, `crates/sifr_runtime`, linked by generated projects through the codegen-emitted Cargo manifest. `SifrInt`, integer parsing/formatting helpers, arithmetic budget helpers, normalized integer hashing, and JSON integer profile helpers live there rather than being re-emitted into every generated Rust file.
 
@@ -502,7 +502,7 @@ Passing an `int` to that function requires `uint32(value)` or a compiler-proven 
 
 Sifr structs/classes containing `int` fields are not C-ABI-compatible because `SifrInt` has no `repr(C)` layout guarantee. FFI structs must use fixed-width integer fields for integer slots or an explicit future big-integer handle type.
 
-Panics from Rust FFI remain an interop boundary concern and should be caught or rejected according to the FFI safety contract. Integer overflow inside Sifr-generated fixed-width helper methods must not panic in user-triggerable paths.
+Panics from Rust FFI remain an interop boundary concern and should be caught or rejected according to the FFI safety rules. Integer overflow inside Sifr-generated fixed-width helper methods must not panic in user-triggerable paths.
 
 ## Compiler Architecture Impact
 
@@ -514,7 +514,7 @@ The existing implementation assumes source-level `int` has a Rust signed-64-bit 
 4. Remove the user-facing need for `Type::BigInt`; keep only a temporary compatibility alias if implementation staging needs it.
 5. Update numeric operator type checking so ordinary fixed-width arithmetic promotes to `int`.
 6. Add explicit fallible narrowing constructors and fixed-width checked/wrapping/saturating/overflowing APIs.
-7. Add array/tensor/dataframe dtype arithmetic contracts so scalar promotion does not infect fixed-width columnar kernels.
+7. Add array/tensor/dataframe dtype arithmetic rules so scalar promotion does not infect fixed-width columnar kernels.
 8. Update range, len, indexing, enum values, byte boundaries, diagnostics, and generated Rust casts that currently assume `i64`.
 9. Teach ownership/codegen that source-level `int` is value-semantic but no longer a Rust `Copy` scalar.
 10. Update type inference, container specialization, builtin signatures, web/model schema generation, and diagnostics so widths appear only through explicit annotations, constructors, schemas, FFI, or dtype declarations.
@@ -522,7 +522,7 @@ The existing implementation assumes source-level `int` has a Rust signed-64-bit 
 
 ## Validation Matrix
 
-Implementation slices should add positive and negative tests for each boundary.
+Implementation increments should add positive and negative tests for each boundary.
 
 | Area | Positive cases | Negative cases |
 | --- | --- | --- |

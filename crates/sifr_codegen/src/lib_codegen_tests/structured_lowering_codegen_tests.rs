@@ -659,7 +659,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
 }
 
 #[test]
-fn test_production_lowering_contract_uses_result_helpers_only() {
+fn test_production_lowering_rules_uses_result_helpers_only() {
     let lib_src = include_str!("../lib.rs");
     let emitter_state_src = include_str!("../lib_emitter_state.rs");
     let lower_expr_src = include_str!("../lower_expr/leaves_and_plain_calls.rs");

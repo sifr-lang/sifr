@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m18_1 run/build alignment demo:");
+    println!("run_and_build run/build alignment demo:");
     println!("{}", helper::msg());
 }

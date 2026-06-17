@@ -11,6 +11,6 @@ Cargo include/exclude rules omit required Sifr files.
 | Severity | Error |
 | Owner | `sifr_package::cargo::package` |
 | Message template | `Cargo package include/exclude rules omit required Sifr file '{path}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_required_entry_reports_0403` |
+| Representative fixture | `crates/sifr_package/src/package_publish_archive_tests.rs::archive_missing_required_entry_reports_0403` |
 | Declared args | `path (message+json)`, `cargo_package_id (json-only)` |
 | Dedupe args | `cargo_package_id`, `path` |

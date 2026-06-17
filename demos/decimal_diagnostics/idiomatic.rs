@@ -2,7 +2,7 @@ use bigdecimal::{BigDecimal, RoundingMode};
 use rust_decimal::{Decimal, RoundingStrategy};
 
 fn main() {
-    println!("m28_4 decimal diagnostics contract demo");
+    println!("decimal_diagnostics decimal diagnostics behavior demo");
 
     let decimal = Decimal::from_str_exact("10.5000").unwrap_or_else(|_| unreachable!());
     assert_eq!(

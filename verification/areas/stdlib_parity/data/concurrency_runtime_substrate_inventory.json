@@ -1,4 +1,101 @@
 {
+  "baseline_resolved_decisions": [
+    {
+      "decision": "mixed runtime owner",
+      "evidence": "Server shutdown, process pump tasks, blocking offload, and CPU offload can be represented as typed child handles under TaskGroup or JoinSet without non-fail-fast scope semantics.",
+      "outcome": "Use TaskGroup[E] as the canonical mixed owner; no distinct task.Scope/runtime.Scope is introduced in baseline decision."
+    },
+    {
+      "decision": "public task handle name",
+      "evidence": "Existing generated lowering already treats task and blocking handles as affine observation handles.",
+      "outcome": "TaskHandle[T, E] is public; Task and BlockingTask remain internal/generated names only."
+    },
+    {
+      "decision": "observed TaskGroup failures",
+      "evidence": "Matches the structured-runtime static handled-failure proof while preserving deterministic fail-fast group exit.",
+      "outcome": "An explicitly awaited and statically handled child failure is observed and is not re-reported at group exit; unhandled child failure triggers fail-fast sibling cancellation and TaskGroupError[E]."
+    },
+    {
+      "decision": "race/select containers",
+      "evidence": "Both use homogeneous result/error types unless the user supplies an explicit sum/enum type.",
+      "outcome": "race returns RaceResult { winner_index, outcome, loser_cancellations }; select returns SelectResult { branch_tag, outcome, loser_cancellations }."
+    },
+    {
+      "decision": "select syntax",
+      "evidence": "Static branch identity is enforced without exposing runtime callback transports or event-loop objects.",
+      "outcome": "select uses a compiler-known named-branch form task.select(name=awaitable, ...); keyword names are static branch tags."
+    },
+    {
+      "decision": "scoped process handle shape",
+      "evidence": "TaskHandle[Status, SubprocessError] would lose first-class pipe ownership; returning Child alone would blur supervision and observation.",
+      "outcome": "TaskGroup.spawn_process returns a distinct ProcessHandle that owns Child status observation plus stdin/stdout/stderr pipe access."
+    },
+    {
+      "decision": "offload error binding",
+      "evidence": "Runtime worker failures and user E remain typed under one homogeneous group error type.",
+      "outcome": "TaskGroup.spawn_blocking/spawn_cpu require TaskGroup[WorkerError[E]] and align with JoinSet.join_all().await -> list[Result[T, WorkerError[E]]]."
+    },
+    {
+      "decision": "lock/permit await policy",
+      "evidence": "Prevents hidden shared mutable state and unbounded permit retention across suspension points.",
+      "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in sync-primitives capability unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns."
+    },
+    {
+      "decision": "Barrier and Once",
+      "evidence": "Channels, locks, semaphores, and events cover near-term web/worker/data needs without toy public primitives.",
+      "outcome": "Barrier is deferred-to-future-capability unless sync-primitives capability finds a near-term production need; Once remains internal-only over std::sync::OnceLock."
+    }
+  ],
+  "capability_queue": [
+    {
+      "acceptance": "legacy public sifr.asyncio/sifr.subprocess/sifr.concurrent/sifr.threading surfaces removed, hidden, or diagnosed; native imports remain canonical",
+      "artifact": "concurrency_runtime_legacy_surface_traceability.md",
+      "capability": "concurrency_runtime_legacy_surface",
+      "fixtures": "bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixtures; legacy sifr.* unsupported-diagnostic fixtures"
+    },
+    {
+      "acceptance": "TaskHandle/TaskGroup/cancel_scope/race/select/timeout behavior typed and no public Tokio leak",
+      "artifact": "concurrency_runtime_structured_tasks_traceability.md",
+      "capability": "concurrency_runtime_structured_tasks",
+      "fixtures": "task sendability, observed failure, unobserved drop, race/select loser evidence fixtures"
+    },
+    {
+      "acceptance": "bounded backpressure, close, cancellation, sendability, and lock/permit await diagnostics",
+      "artifact": "concurrency_runtime_sync_primitives_traceability.md",
+      "capability": "concurrency_runtime_sync_primitives",
+      "fixtures": "producer/consumer pipeline, channel non-send, sync lock across await, semaphore permit policy fixtures"
+    },
+    {
+      "acceptance": "spawn_blocking/spawn_cpu/JoinSet/parallel map use typed WorkerError and private Rayon pools",
+      "artifact": "concurrency_runtime_offload_traceability.md",
+      "capability": "concurrency_runtime_offload",
+      "fixtures": "JoinSet drop/order/cancel, non-send CPU capture, async direct parallel.map diagnostic fixtures"
+    },
+    {
+      "acceptance": "sifr.process sync/async child supervision, owned pipes, text mode, shell_exec effect, timeout/cancel",
+      "artifact": "concurrency_runtime_process_traceability.md",
+      "capability": "concurrency_runtime_process",
+      "fixtures": "sync/async subprocess loopback, pipe ownership, shell effect, process cancellation fixtures"
+    },
+    {
+      "acceptance": "structured signals, cleanup stacks, explicit task Context, diagnostics/tracing policy",
+      "artifact": "concurrency_runtime_shutdown_traceability.md",
+      "capability": "concurrency_runtime_shutdown",
+      "fixtures": "shutdown stream, cleanup under cancellation, context propagation, signal.signal/warnings rejection fixtures"
+    },
+    {
+      "acceptance": "typed IPC frame protocol, schema identity, version negotiation, malformed-frame errors, payload diagnostics",
+      "artifact": "concurrency_runtime_typed_ipc_design.md",
+      "capability": "concurrency_runtime_typed_ipc",
+      "fixtures": "schema accept/reject, unsupported payload, malformed frame, cancellation frame fixtures"
+    },
+    {
+      "acceptance": "docs, demos, validation profiles, panic scans, final inventory readiness, final external PASS review",
+      "artifact": "concurrency_runtime_readiness_traceability.md",
+      "capability": "concurrency_runtime_readiness",
+      "fixtures": "structured task demo, channel pipeline demo, offload demo, process demo, shutdown/cleanup demo"
+    }
+  ],
   "cpython_checkout": {
     "commit": "14cbd0e6afa98355bdc6749b8230fed4c9b21bd6",
     "path": "../cpython"
@@ -49,7 +146,7 @@
   ],
   "legacy_python_shaped_surfaces": [
     {
-      "owner_milestone": "milestone_concurrency_runtime_0a",
+      "owner_capability": "concurrency_runtime_legacy_surface",
       "replacement": "sifr.task and sifr.sync",
       "revisit_rule": "Only a new Sifr-native API design can revisit this; migration compatibility is insufficient.",
       "stability": "compiler-known-intrinsic",
@@ -57,15 +154,15 @@
       "terminal_state": "unsupported-with-diagnostic"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_0a",
+      "owner_capability": "concurrency_runtime_legacy_surface",
       "replacement": "sifr.process",
-      "revisit_rule": "No CPython-shaped process adapter survives M0a.",
+      "revisit_rule": "No CPython-shaped process adapter survives legacy-surface capability.",
       "stability": "compiler-known-intrinsic",
       "surface": "sifr.subprocess",
       "terminal_state": "unsupported-with-diagnostic"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_0a",
+      "owner_capability": "concurrency_runtime_legacy_surface",
       "replacement": "sifr.sync",
       "revisit_rule": "Future queue API must prove Sifr-native value over channels.",
       "stability": "compiler-known-intrinsic",
@@ -73,7 +170,7 @@
       "terminal_state": "unsupported-with-diagnostic"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_0a",
+      "owner_capability": "concurrency_runtime_legacy_surface",
       "replacement": "sifr.runtime and sifr.parallel",
       "revisit_rule": "Future adapter requires a separate design gate and cannot be the offload spine.",
       "stability": "compiler-known-intrinsic",
@@ -81,15 +178,15 @@
       "terminal_state": "unsupported-with-diagnostic"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_0a",
+      "owner_capability": "concurrency_runtime_legacy_surface",
       "replacement": "sifr.process plus sifr.ipc",
-      "revisit_rule": "Process workers require the M6 typed IPC design and a future process-worker phase.",
+      "revisit_rule": "Process workers require the typed IPC design and a future process-worker capability.",
       "stability": "compiler-known-intrinsic",
       "surface": "sifr.multiprocessing",
       "terminal_state": "rejected"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_0a",
+      "owner_capability": "concurrency_runtime_legacy_surface",
       "replacement": "sifr.runtime, sifr.parallel, and sifr.sync",
       "revisit_rule": "Raw thread objects are not the public execution model.",
       "stability": "compiler-known-intrinsic",
@@ -97,7 +194,7 @@
       "terminal_state": "unsupported-with-diagnostic"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_5",
+      "owner_capability": "concurrency_runtime_shutdown",
       "replacement": "structured diagnostics/tracing events",
       "revisit_rule": "No process-global warning/filter mutation from concurrent contexts.",
       "stability": "compiler-known-intrinsic",
@@ -105,132 +202,35 @@
       "terminal_state": "rejected"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_5",
+      "owner_capability": "concurrency_runtime_shutdown",
       "replacement": "sifr.resource",
-      "revisit_rule": "Generator decorator helpers require a future generator semantics phase; cleanup scopes remain Sifr-native.",
+      "revisit_rule": "Generator decorator helpers require a future generator semantics capability; cleanup scopes remain Sifr-native.",
       "stability": "compiler-known-intrinsic",
       "surface": "sifr.contextlib",
       "terminal_state": "unsupported-with-diagnostic"
     },
     {
-      "owner_milestone": "milestone_concurrency_runtime_5",
+      "owner_capability": "concurrency_runtime_shutdown",
       "replacement": "structured diagnostics/tracing events",
-      "revisit_rule": "No Python global warning filter adapter ships in this phase.",
+      "revisit_rule": "No Python global warning filter adapter ships in this capability.",
       "stability": "compiler-known-intrinsic",
       "surface": "sifr.warnings",
       "terminal_state": "rejected"
     }
   ],
-  "m0_resolved_decisions": [
-    {
-      "decision": "mixed runtime owner",
-      "evidence": "Server shutdown, process pump tasks, blocking offload, and CPU offload can be represented as typed child handles under TaskGroup or JoinSet without non-fail-fast scope semantics.",
-      "outcome": "Use TaskGroup[E] as the canonical mixed owner; no distinct task.Scope/runtime.Scope is introduced in M0."
-    },
-    {
-      "decision": "public task handle name",
-      "evidence": "Existing generated lowering already treats task and blocking handles as affine observation handles.",
-      "outcome": "TaskHandle[T, E] is public; Task and BlockingTask remain internal/generated names only."
-    },
-    {
-      "decision": "observed TaskGroup failures",
-      "evidence": "Matches the phase's static handled-failure proof while preserving deterministic fail-fast group exit.",
-      "outcome": "An explicitly awaited and statically handled child failure is observed and is not re-reported at group exit; unhandled child failure triggers fail-fast sibling cancellation and TaskGroupError[E]."
-    },
-    {
-      "decision": "race/select containers",
-      "evidence": "Both use homogeneous result/error types unless the user supplies an explicit sum/enum type.",
-      "outcome": "race returns RaceResult { winner_index, outcome, loser_cancellations }; select returns SelectResult { branch_tag, outcome, loser_cancellations }."
-    },
-    {
-      "decision": "select syntax",
-      "evidence": "Static branch identity is enforced without exposing runtime callback transports or event-loop objects.",
-      "outcome": "select uses a compiler-known named-branch form task.select(name=awaitable, ...); keyword names are static branch tags."
-    },
-    {
-      "decision": "scoped process handle shape",
-      "evidence": "TaskHandle[Status, SubprocessError] would lose first-class pipe ownership; returning Child alone would blur supervision and observation.",
-      "outcome": "TaskGroup.spawn_process returns a distinct ProcessHandle that owns Child status observation plus stdin/stdout/stderr pipe access."
-    },
-    {
-      "decision": "offload error binding",
-      "evidence": "Runtime worker failures and user E remain typed under one homogeneous group error type.",
-      "outcome": "TaskGroup.spawn_blocking/spawn_cpu require TaskGroup[WorkerError[E]] and align with JoinSet.join_all().await -> list[Result[T, WorkerError[E]]]."
-    },
-    {
-      "decision": "lock/permit await policy",
-      "evidence": "Prevents hidden shared mutable state and unbounded permit retention across suspension points.",
-      "outcome": "Sync lock guards cannot cross await. Async lock guards are await-forbidden in M2 unless a specific guard is marked await-safe. Semaphore permits are guard-like: they cannot cross await and cannot escape through returns."
-    },
-    {
-      "decision": "Barrier and Once",
-      "evidence": "Channels, locks, semaphores, and events cover near-term web/worker/data needs without toy public primitives.",
-      "outcome": "Barrier is deferred-to-phase-X unless M2 finds a near-term production need; Once remains internal-only over std::sync::OnceLock."
-    }
-  ],
-  "milestone_backlog": [
-    {
-      "acceptance": "legacy public sifr.asyncio/sifr.subprocess/sifr.concurrent/sifr.threading surfaces removed, hidden, or diagnosed; native imports remain canonical",
-      "artifact": "concurrency_runtime_m0a_legacy_surface_traceability.md",
-      "fixtures": "bare_cpython_asyncio/queue/subprocess/concurrent_futures/multiprocessing/signal/contextlib/warnings/threading import fixtures; legacy sifr.* unsupported-diagnostic fixtures",
-      "milestone": "milestone_concurrency_runtime_0a"
-    },
-    {
-      "acceptance": "TaskHandle/TaskGroup/cancel_scope/race/select/timeout behavior typed and no public Tokio leak",
-      "artifact": "concurrency_runtime_m1_task_traceability.md",
-      "fixtures": "task sendability, observed failure, unobserved drop, race/select loser evidence fixtures",
-      "milestone": "milestone_concurrency_runtime_1"
-    },
-    {
-      "acceptance": "bounded backpressure, close, cancellation, sendability, and lock/permit await diagnostics",
-      "artifact": "concurrency_runtime_m2_sync_traceability.md",
-      "fixtures": "producer/consumer pipeline, channel non-send, sync lock across await, semaphore permit policy fixtures",
-      "milestone": "milestone_concurrency_runtime_2"
-    },
-    {
-      "acceptance": "spawn_blocking/spawn_cpu/JoinSet/parallel map use typed WorkerError and private Rayon pools",
-      "artifact": "concurrency_runtime_m3_offload_traceability.md",
-      "fixtures": "JoinSet drop/order/cancel, non-send CPU capture, async direct parallel.map diagnostic fixtures",
-      "milestone": "milestone_concurrency_runtime_3"
-    },
-    {
-      "acceptance": "sifr.process sync/async child supervision, owned pipes, text mode, shell_exec effect, timeout/cancel",
-      "artifact": "concurrency_runtime_m4_process_traceability.md",
-      "fixtures": "sync/async subprocess loopback, pipe ownership, shell effect, process cancellation fixtures",
-      "milestone": "milestone_concurrency_runtime_4"
-    },
-    {
-      "acceptance": "structured signals, cleanup stacks, explicit task Context, diagnostics/tracing policy",
-      "artifact": "concurrency_runtime_m5_shutdown_traceability.md",
-      "fixtures": "shutdown stream, cleanup under cancellation, context propagation, signal.signal/warnings rejection fixtures",
-      "milestone": "milestone_concurrency_runtime_5"
-    },
-    {
-      "acceptance": "typed IPC frame protocol, schema identity, version negotiation, malformed-frame errors, payload diagnostics",
-      "artifact": "concurrency_runtime_m6_ipc_traceability.md",
-      "fixtures": "schema accept/reject, unsupported payload, malformed frame, cancellation frame fixtures",
-      "milestone": "milestone_concurrency_runtime_6"
-    },
-    {
-      "acceptance": "docs, demos, validation profiles, panic scans, final inventory closure, final external PASS review",
-      "artifact": "concurrency_runtime_m7_closeout_traceability.md",
-      "fixtures": "structured task demo, channel pipeline demo, offload demo, process demo, shutdown/cleanup demo",
-      "milestone": "milestone_concurrency_runtime_7"
-    }
-  ],
-  "platform_contract": "verification/areas/runtime_platform/platform_contract.json",
+  "platform_rules": "verification/areas/runtime_platform/platform_rules.json",
   "production_surfaces": [
     {
       "notes": "Public affine observation handle; generated/internal Task names remain internal-only.",
-      "owner_milestone": "milestone_concurrency_runtime_1",
+      "owner_capability": "concurrency_runtime_structured_tasks",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.task.TaskHandle[T, E]",
       "terminal_state": "production-public"
     },
     {
-      "notes": "Canonical mixed structured-runtime owner; no distinct Scope is introduced in M0.",
-      "owner_milestone": "milestone_concurrency_runtime_1",
+      "notes": "Canonical mixed structured-runtime owner; no distinct Scope is introduced in baseline decision.",
+      "owner_capability": "concurrency_runtime_structured_tasks",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.task.TaskGroup[E]",
@@ -238,7 +238,7 @@
     },
     {
       "notes": "Stable task helpers with typed timeout/cancellation evidence and no public Tokio types.",
-      "owner_milestone": "milestone_concurrency_runtime_1",
+      "owner_capability": "concurrency_runtime_structured_tasks",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.task.spawn_scoped/sleep/timeout/deadline/cancel_scope/join_all/race/select",
@@ -246,7 +246,7 @@
     },
     {
       "notes": "Native bounded backpressure and synchronization replace queue parity.",
-      "owner_milestone": "milestone_concurrency_runtime_2",
+      "owner_capability": "concurrency_runtime_sync_primitives",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.sync channels, locks, semaphores, events",
@@ -254,7 +254,7 @@
     },
     {
       "notes": "Structured blocking and CPU offload; JoinSet is homogeneous and must be consumed.",
-      "owner_milestone": "milestone_concurrency_runtime_3",
+      "owner_capability": "concurrency_runtime_offload",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.runtime spawn_blocking/spawn_cpu/JoinSet",
@@ -262,23 +262,23 @@
     },
     {
       "notes": "Private Rayon pools, fixed default sizing from available_parallelism(), no global pool mutation.",
-      "owner_milestone": "milestone_concurrency_runtime_3",
+      "owner_capability": "concurrency_runtime_offload",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.parallel map/try_map/Pool/PoolConfig",
       "terminal_state": "production-public"
     },
     {
-      "notes": "M0 chooses distinct ProcessHandle for scoped process supervision while preserving pipe access.",
-      "owner_milestone": "milestone_concurrency_runtime_4",
+      "notes": "The baseline decision chooses distinct ProcessHandle for scoped process supervision while preserving pipe access.",
+      "owner_capability": "concurrency_runtime_process",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.process Command/Child/ProcessHandle/owned pipes",
       "terminal_state": "production-public"
     },
     {
-      "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain M5 work and arbitrary signal.signal handlers are unsupported.",
-      "owner_milestone": "milestone_concurrency_runtime_5",
+      "notes": "Portable `Signal`, `SIGINT`, `SIGTERM`, and `strsignal` value-model evidence is importable; structured streams remain shutdown rules work and arbitrary signal.signal handlers are unsupported.",
+      "owner_capability": "concurrency_runtime_shutdown",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.signal structured shutdown streams",
@@ -286,15 +286,15 @@
     },
     {
       "notes": "`nullcontext(...)` covers no-value and value-carrying generic helper evidence; ExitStack/AsyncExitStack/closing/aclosing are closed as unsupported diagnostics until cleanup-error and owned-close protocols are implemented.",
-      "owner_milestone": "milestone_concurrency_runtime_5",
+      "owner_capability": "concurrency_runtime_shutdown",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.resource ExitStack/AsyncExitStack/closing/aclosing/nullcontext",
       "terminal_state": "production-public"
     },
     {
-      "notes": "Value-model foundation is importable; explicit propagation remains M5 work with no contextvars parity or implicit dynamic mutation.",
-      "owner_milestone": "milestone_concurrency_runtime_5",
+      "notes": "Value-model foundation is importable; explicit propagation remains shutdown rules work with no contextvars parity or implicit dynamic mutation.",
+      "owner_capability": "concurrency_runtime_shutdown",
       "stability": "stable-public-api",
       "support_tier": "production-public",
       "surface": "sifr.task.Context/ContextKey[T]",
@@ -302,7 +302,7 @@
     },
     {
       "notes": "Typed, versioned IPC over accepted process pipes; no pickle-style arbitrary object transport.",
-      "owner_milestone": "milestone_concurrency_runtime_6",
+      "owner_capability": "concurrency_runtime_typed_ipc",
       "stability": "stable-production-substrate",
       "support_tier": "production-substrate",
       "surface": "sifr.ipc typed frame protocol",
@@ -417,7 +417,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "compiler-known-intrinsic",
         "support_tier": "internal-only",
         "terminal_state": "unsupported-with-diagnostic"
@@ -6687,7 +6687,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -6721,7 +6721,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -6808,7 +6808,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -6859,7 +6859,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -6937,7 +6937,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -7019,7 +7019,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -7078,7 +7078,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -7195,7 +7195,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -7280,7 +7280,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -7365,7 +7365,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -7421,7 +7421,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -7483,7 +7483,7 @@
     {
       "classification": {
         "evidence_state": "mined-as-substrate-fixture",
-        "native_mapping": "phase evidence",
+        "native_mapping": "rules evidence",
         "stability": "test-only-harness",
         "support_tier": "test-only-harness",
         "terminal_state": "test-only-harness"
@@ -11055,108 +11055,108 @@
       "Modules/clinic/_posixsubprocess.c.h"
     ]
   },
-  "status": "milestone_concurrency_runtime_7-inventory-audited",
+  "status": "concurrency_runtime_readiness-inventory-audited",
   "workload_database": [
     {
       "api": "sifr.task.sleep",
       "classification": "async-suspension",
-      "owner": "M1",
+      "owner": "concurrency_runtime_structured_tasks",
       "validation": "task sleep fixture"
     },
     {
       "api": "sifr.task.timeout/deadline",
       "classification": "async-suspension cancellation",
-      "owner": "M1",
+      "owner": "concurrency_runtime_structured_tasks",
       "validation": "timeout/deadline evidence fixture"
     },
     {
       "api": "sifr.task.cancel_scope",
       "classification": "async-suspension cancellation",
-      "owner": "M1",
+      "owner": "concurrency_runtime_structured_tasks",
       "validation": "cancel-scope fixture"
     },
     {
       "api": "sifr.sync.Channel.send/receive async forms",
       "classification": "async-suspension backpressure",
-      "owner": "M2",
+      "owner": "concurrency_runtime_sync_primitives",
       "validation": "channel backpressure and cancellation fixtures"
     },
     {
       "api": "sifr.sync.Channel send/receive sync forms",
       "classification": "@blocking_io-equivalent sync wait",
-      "owner": "M2",
+      "owner": "concurrency_runtime_sync_primitives",
       "validation": "blocking-in-async diagnostic fixture"
     },
     {
       "api": "sifr.sync.Mutex/RwLock sync lock",
       "classification": "@blocking_io-equivalent sync wait",
-      "owner": "M2",
+      "owner": "concurrency_runtime_sync_primitives",
       "validation": "lock direct async diagnostic fixture"
     },
     {
       "api": "sifr.sync.AsyncMutex/AsyncRwLock/Semaphore/Event",
       "classification": "async-suspension",
-      "owner": "M2",
+      "owner": "concurrency_runtime_sync_primitives",
       "validation": "async sync primitive fixtures"
     },
     {
       "api": "sifr.runtime.spawn_blocking",
       "classification": "@blocking_io offload boundary",
-      "owner": "M3",
+      "owner": "concurrency_runtime_offload",
       "validation": "spawn_blocking typed WorkerError fixture"
     },
     {
       "api": "sifr.task.spawn_cpu",
       "classification": "@cpu_heavy offload boundary with typed runtime/worker evidence",
-      "owner": "M3",
+      "owner": "concurrency_runtime_offload",
       "validation": "`spawn_cpu_basic`, `spawn_cpu_user_error_typed`, `spawn_cpu_worker_panic_typed`, `spawn_cpu_unannotated_rejected`, `spawn_cpu_blocking_io_rejected`, `spawn_cpu_non_send_rejected`"
     },
     {
       "api": "sifr.task.TaskScope/TaskGroup scoped offload",
       "classification": "@blocking_io/@cpu_heavy scoped owner offload with typed task evidence",
-      "owner": "M3",
+      "owner": "concurrency_runtime_offload",
       "validation": "`task_scope_spawn_blocking`, `task_group_spawn_cpu`, `task_group_spawn_cpu_user_error`, `task_scope_spawn_cpu_unannotated_rejected`, `task_group_spawn_blocking_error_mismatch_rejected`"
     },
     {
       "api": "sifr.task.JoinSet",
       "classification": "homogeneous task/offload collection with explicit observation/cancellation",
-      "owner": "M3",
+      "owner": "concurrency_runtime_offload",
       "validation": "`join_set_add_task_join_all`, `join_set_spawn_cpu_join_all_ordered`, `join_set_cancel_all_evidence`, `join_set_cancel_all_task_cancelled`, `join_set_spawn_blocking`, `join_set_bound_terminal_await`, `join_set_reassign_live_rejected`, `join_set_unconsumed_rejected`, `join_set_terminal_must_be_awaited_rejected`"
     },
     {
       "api": "sifr.parallel.map/try_map",
       "classification": "@cpu_heavy synchronous, typed worker-runtime boundary",
-      "owner": "M3",
+      "owner": "concurrency_runtime_offload",
       "validation": "`parallel_map_basic`, `parallel_try_map_basic`, `parallel_map_worker_panic_typed`, `parallel_try_map_user_error_typed`, async direct-call diagnostic fixture"
     },
     {
       "api": "sifr.process.run/output/wait sync",
       "classification": "@blocking_io plus optional @shell_exec",
-      "owner": "M4",
+      "owner": "concurrency_runtime_process",
       "validation": "process blocking-in-async and shell-effect fixtures"
     },
     {
       "api": "sifr.process async spawn/wait/communicate",
       "classification": "async-suspension plus optional @shell_exec",
-      "owner": "M4",
+      "owner": "concurrency_runtime_process",
       "validation": "async process loopback fixture"
     },
     {
       "api": "sifr.signal.shutdown_stream/ctrl_c/terminate",
       "classification": "async-suspension host-limited",
-      "owner": "M5",
+      "owner": "concurrency_runtime_shutdown",
       "validation": "signal host matrix fixture"
     },
     {
       "api": "sifr.resource.AsyncExitStack",
       "classification": "async cleanup under cancellation",
-      "owner": "M5",
+      "owner": "concurrency_runtime_shutdown",
       "validation": "async cleanup cancellation fixture"
     },
     {
       "api": "sifr.ipc.Connection send/receive",
       "classification": "async-suspension backpressure serialization",
-      "owner": "M6",
+      "owner": "concurrency_runtime_typed_ipc",
       "validation": "IPC frame/malformed/cancel fixtures"
     }
   ]

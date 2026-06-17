@@ -1,17 +1,17 @@
 # Sifr Tooling Analysis Architecture
 
-status: phase36-contract-locked
+status: tooling-rules-locked
 
 ## Implementation Status
 
-- m36.1 locked the analysis, formatter, lint, LSP, editor, and VS Code contracts.
-- m36.2 added `sifr_format` and `sifr_lint` as concrete workspace crates.
-- m36.3 adds `sifr_analysis` as the concrete editor-query crate.
-- m36.4 fills the first complete editor query layer through `sifr_analysis`.
+- tooling lock locked the analysis, formatter, lint, LSP, editor, and VS Code rules.
+- formatter/linter foundation added `sifr_format` and `sifr_lint` as concrete workspace crates.
+- analysis-host foundation adds `sifr_analysis` as the concrete editor-query crate.
+- editor-query layer fills the first complete editor query layer through `sifr_analysis`.
 
 ## Ownership
 
-Phase 36 locks the editor analysis boundary to these Sifr-owned crates:
+developer tooling surface locks the editor analysis boundary to these Sifr-owned crates:
 
 - `sifr_format`: formatting over `sifr_syntax` tokens, trivia, comments, and source maps.
 - `sifr_lint`: suppressible policy-rule metadata, severity resolution, suppression parsing, and exclusion policy.
@@ -20,7 +20,7 @@ Phase 36 locks the editor analysis boundary to these Sifr-owned crates:
 
 `sifr_analysis` is the only editor-query crate. LSP handlers, VS Code commands, and other editor adapters must not traverse HIR or raw syntax directly to answer semantic questions.
 
-## Analysis Host Contract
+## Analysis Host Rules
 
 `sifr_analysis::AnalysisHost` owns the editor session model for:
 
@@ -33,20 +33,20 @@ Phase 36 locks the editor analysis boundary to these Sifr-owned crates:
 - current-workspace symbol identity
 - editor query results and metadata
 
-The public query surface is the Phase 36 editor query contract: diagnostics, workspace diagnostics, completion, hover, signature help, definition, declaration, type definition, references, prepare rename, rename, document symbols, workspace symbols, semantic tokens, inlay hints, document highlights, folding ranges, selection ranges, type hierarchy, code actions, formatting, generated Rust preview, explain diagnostic, test discovery, and test command metadata.
+The public query surface is the developer tooling surface editor query rules: diagnostics, workspace diagnostics, completion, hover, signature help, definition, declaration, type definition, references, prepare rename, rename, document symbols, workspace symbols, semantic tokens, inlay hints, document highlights, folding ranges, selection ranges, type hierarchy, code actions, formatting, generated Rust preview, explain diagnostic, test discovery, and test command metadata.
 
 Every query result must carry enough revision metadata to prove it was produced from the snapshot captured for that request.
 
-m36.3 implementation:
+analysis-host foundation implementation:
 
 - `AnalysisHost::open_single_file` and `AnalysisHost::open_project` wrap `sifr_frontend::FrontendContext`.
 - `AnalysisHost::update_document` enforces monotonic document versions before updating the canonical frontend context.
 - `AnalysisSnapshot` captures graph/source revisions and rejects stale queries after document invalidation.
 - The current-workspace `SymbolIndex` is built from `sifr_frontend::ProjectAnalysisView` and `ModuleGraphView`; symbol ids include module, file, kind, name, and ordinal so dirty-bucket refresh and cold rebuild paths preserve identity for unchanged symbols.
-- TypeScript-Go M14 adds bucket readiness over workspace/package/stdlib symbol and import entries. Package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. When a document update invalidates known modules and an index already exists, `AnalysisHost` refreshes only those dirty buckets before completion, workspace-symbol, and import-symbol queries reuse the clean buckets.
-- All Phase 36 editor query methods compile through `sifr_analysis`. m36.3 implements session/query plumbing, diagnostics, workspace diagnostics, document/workspace symbols, formatter handoff, lint handoff, and completion ranking infrastructure; the full feature logic for hover, references, rename edits, semantic tokens, code actions, generated Rust preview, explain diagnostic enrichment, and test metadata lands in m36.4.
+- TypeScript-Go bucketed index adds bucket readiness over workspace/package/stdlib symbol and import entries. Package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. When a document update invalidates known modules and an index already exists, `AnalysisHost` refreshes only those dirty buckets before completion, workspace-symbol, and import-symbol queries reuse the clean buckets.
+- All developer tooling surface editor query methods compile through `sifr_analysis`. analysis-host foundation implements session/query plumbing, diagnostics, workspace diagnostics, document/workspace symbols, formatter handoff, lint handoff, and completion ranking infrastructure; the full feature logic for hover, references, rename edits, semantic tokens, code actions, generated Rust preview, explain diagnostic enrichment, and test metadata lands in editor-query layer.
 
-m36.4 implementation:
+editor-query layer implementation:
 
 - Editor token facts are derived through `FrontendContext::parse_module`, not a raw parser path.
 - Hover, definition/declaration/type-definition, references, prepare-rename, rename, document highlights, folding ranges, selection ranges, semantic tokens, and inlay hints are token-backed and snapshot-gated.
@@ -55,14 +55,14 @@ m36.4 implementation:
 - Generated Rust preview calls the canonical `sifr_driver::compile_with_metadata` handoff and returns structured unavailability when compilation fails.
 - Parity coverage lives in `verification/areas/developer_tooling/parity_manifest.json`, `verification/areas/developer_tooling/editor_query_snapshots/`, and `verification/areas/developer_tooling/completion_quality/`.
 
-TypeScript-Go architecture transfer M4 implementation:
+TypeScript-Go architecture transfer process runtime implementation:
 
 - `AnalysisHost` owns a serialized `sifr_frontend::WorkspaceSession` instead of a bare `FrontendContext`.
 - `AnalysisSnapshot` carries the captured `WorkspaceSnapshot` and the graph/source analysis revision.
-- Snapshot query methods cover the full Phase 36 editor query surface and stamp `QueryMetadata::workspace_snapshot_id`.
+- Snapshot query methods cover the full developer tooling surface editor query surface and stamp `QueryMetadata::workspace_snapshot_id`.
 - Direct `AnalysisHost` query methods remain for internal tests and serialized callers.
 
-TypeScript-Go architecture transfer M5 implementation:
+TypeScript-Go architecture transfer task context and shutdown implementation:
 
 - `sifr_lsp::Session` owns the persistent LSP analysis workspace instead of storing analysis hosts in `DocumentStore`.
 - `DocumentStore` now tracks protocol document state only: URI, path, text, version, and settings.
@@ -71,14 +71,14 @@ TypeScript-Go architecture transfer M5 implementation:
 
 ## Required Frontend Exports
 
-Phase 35 exports are sufficient for m36.1 to proceed:
+frontend query architecture exports are sufficient for tooling lock to proceed:
 
 - `sifr_syntax` exposes parse, token, text-position, and syntax range primitives.
 - `sifr_frontend` exposes `FrontendContext`, module/source graph identity, source maps, query metadata, invalidation reports, diagnostics, source-map lookup stubs, symbol/type-display/editor-query view structs, and selection-range view shape.
 - `sifr_diagnostics` owns canonical diagnostic rendering and schema data.
 - `sifr_codegen` remains the generated-Rust authority and will be called through compiler-owned handoff APIs when preview support lands.
 
-Missing implementation detail inside a placeholder view is not a blocker for m36.2, but adding a second parser, lowerer, checker, diagnostic engine, formatter, linter, or codegen path is blocked by the tooling guardrails.
+Missing implementation detail inside a placeholder view is not a blocker for formatter/linter foundation, but adding a second parser, lowerer, checker, diagnostic engine, formatter, linter, or codegen path is blocked by the tooling guardrails.
 
 ## Query Boundaries
 
@@ -137,7 +137,7 @@ Production formatter path:
 - optionally formats Sifr docstring snippets when `docstring-code-format` is enabled
 - rejects invalid source and invalid ranges through stable Sifr formatter diagnostics
 
-m36.2 lint foundation:
+formatter/linter foundation lint foundation:
 
 - defines Sifr-owned policy metadata
 - implements `# sifr: ignore[rule-id]`
@@ -146,32 +146,32 @@ m36.2 lint foundation:
 - implements the first suppressible policy rule, `trailing-whitespace`
 - supports diagnostics modes and include/exclude discovery options without applying excludes to explicit file targets
 
-Ad hoc production-grade linter phase:
+Production-grade linter work:
 
-- phase contract: `plans/issues/archive/ad-hoc-production-grade-sifr-linter.md`
-- execution tracker: `plans/issues/archive/ad-hoc-production-grade-sifr-linter-execution.md`
+- source plan: `production-grade-sifr-linter record`
+- execution tracker: `production-grade-sifr-linter-execution record`
 - Ruff rule-family/config audit manifest: `verification/areas/developer_tooling/linter_manifests/ruff_rule_config_audit.json`
 - lint CLI parity manifest: `verification/areas/developer_tooling/linter_manifests/lint_cli_parity.json`
 - rule metadata manifest: `verification/areas/developer_tooling/linter_manifests/lint_rule_metadata.json`
 - suppression-gate manifest: `verification/areas/developer_tooling/linter_manifests/suppression_gate.json`
-- enforcement: `python3 verification/areas/developer_tooling/check_linter_reuse_contract.py`
+- enforcement: `python3 verification/areas/developer_tooling/check_linter_reuse_rules.py`
 
-The ad hoc phase keeps Ruff Python rule families, Ruff's Python rule registry,
+This capability keeps Ruff Python rule families, Ruff's Python rule registry,
 Ruff Server diagnostic behavior, and Python project/module semantics out of
-Sifr lint authority. Milestone 1 locks those decisions in machine-readable
-manifests before config, discovery, parser-aware suppressions, phase-gated
+Sifr lint authority. compiler feature locks those decisions in machine-readable
+manifests before config, discovery, parser-aware suppressions, stage-gated
 orchestration, fix support, or editor actions are expanded.
 
-Milestone 2 implements the non-fix `sifr lint [OPTIONS] [FILES]...` surface
+The linter CLI implements the non-fix `sifr lint [OPTIONS] [FILES]...` surface
 through `crates/sifr/src/lint_cli.rs` and keeps command execution separate from
 package/build/check orchestration. `sifr_lint` now owns `[lint]`,
 `[lint.rules]`, and `[lint.per-file-ignores]` config loading from `sifr.toml`,
 path-relative `extend`, CLI overrides, selector validation, per-file ignores,
 glob-based include/exclude matching, and `ignore`-crate backed gitignore
 discovery. The suppression gate remains `physical_line_only`; non-line rules
-are still blocked until the parser-aware suppression milestone.
+are still blocked until parser-aware suppression work.
 
-Milestone 3 replaces line-only suppression attachment with
+Suppression attachment replaces line-only suppression attachment with
 `sifr_lint::suppression::ParserAwareSuppressions`. The API parses Sifr
 suppression directives once per source file, attaches them to physical-line or
 statement ranges depending on rule suppression complexity, supports
@@ -179,24 +179,24 @@ statement ranges depending on rule suppression complexity, supports
 deterministically, and transitions the suppression gate manifest to
 `parser_aware` for future syntax, HIR, and workspace policy rules.
 
-Milestone 4 routes source and path linting through
-`sifr_lint::LintRunner`. The runner exposes explicit phase execution state for
+Lint execution routes source and path linting through
+`sifr_lint::LintRunner`. The runner exposes explicit execution-step state for
 file discovery, token/trivia, physical-line, syntax-node, statement-range, HIR,
 workspace, suppression filtering, per-file ignore filtering, fix filtering, and
-deterministic sorting. Disabled rule families skip their phases, current
+deterministic sorting. Disabled rule families skip their execution steps, current
 physical-line policy diagnostics remain preserved, invalid source still runs
-source-independent policy phases, and path linting records file-discovery
+source-independent policy steps, and path linting records file-discovery
 execution before per-file source checks.
 
-Milestone 5 adds representative Sifr-owned policy rule families without
+Policy linting adds representative Sifr-owned policy rule families without
 porting Python lint semantics: token/trivia TODO/FIXME comment detection,
 syntax-node positional boolean argument detection, HIR-backed large parameter
 list policy, and duplicate import declaration policy. These rules use Sifr rule
 IDs, `sifr_diagnostics`, parser-aware suppressions for non-physical rules, and
-the phase-gated runner. The CLI also exposes `sifr lint --statistics` for
+the stage-gated runner. The CLI also exposes `sifr lint --statistics` for
 deterministic per-rule diagnostic counts.
 
-Milestone 6 adds the first Sifr-owned safe fix engine and policy-only editor
+The safe-fix engine adds the first Sifr-owned safe fix engine and policy-only editor
 actions. `trailing-whitespace` now carries a machine-applicable safe suggestion,
 `sifr_lint` applies non-overlapping fix groups deterministically, `sifr lint`
 implements the fix-related Ruff-compatible surfaces through Sifr rule metadata,
@@ -204,12 +204,12 @@ and LSP code actions use typed `Hard`/`Policy` diagnostic class payloads instead
 of diagnostic-code prefixes. Safe per-diagnostic fixes are synchronous; fix-all
 is deferred through `codeAction/resolve` and rejects stale document versions.
 
-Milestone 7 closes the production-grade linter phase by making the public and
-internal docs match the shipped command/editor contract. `docs/linter.md`
+Production runtime audit closes the production-grade linter work by making the public and
+internal docs match the shipped command/editor rules. `docs/linter.md`
 documents config, rule IDs, parser-aware suppressions, safe fix behavior, exit
 status, and editor behavior. `internal_docs/lsp_server.md`,
 `internal_docs/editor_integrations.md`, `internal_docs/vscode_extension.md`, and
-`internal_docs/tooling_verification.md` lock the LSP/editor contract that only
+`internal_docs/tooling_verification.md` lock the LSP/editor rules that only
 typed policy diagnostics receive suppression or fix actions and that editor
 adapters must not implement lint semantics locally.
 

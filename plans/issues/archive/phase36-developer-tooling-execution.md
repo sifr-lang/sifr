@@ -36,12 +36,12 @@ Scope:
 
 ## m36.1 Validation Evidence
 
-- `python3 verification/tooling/check_tooling_contract_lock.py && python3 verification/tooling/check_tooling_contract_lock.py --self-test` -> PASS.
+- `python3 verification/tooling/check_tooling_rules_lock.py && python3 verification/tooling/check_tooling_rules_lock.py --self-test` -> PASS.
 - `python3 verification/tooling/check_tooling_dependency_boundaries.py && python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test` -> PASS.
 - `python3 verification/tooling/check_lsp_split_brain.py && python3 verification/tooling/check_lsp_split_brain.py --self-test` -> PASS.
-- `python3 verification/tooling/check_vscode_extension_contract.py && python3 verification/tooling/check_vscode_extension_contract.py --self-test` -> PASS.
-- `python3 -m json.tool verification/tooling/lsp_protocol_matrix.json >/dev/null && python3 -m json.tool verification/tooling/vscode_extension_contract.json >/dev/null` -> PASS.
-- `python3 -m py_compile verification/tooling/check_tooling_contract_lock.py verification/tooling/check_tooling_dependency_boundaries.py verification/tooling/check_lsp_split_brain.py verification/tooling/check_vscode_extension_contract.py verification/tooling/check_vscode_extension.py` -> PASS.
+- `python3 verification/tooling/check_vscode_extension_rules.py && python3 verification/tooling/check_vscode_extension_rules.py --self-test` -> PASS.
+- `python3 -m json.tool verification/tooling/lsp_protocol_matrix.json >/dev/null && python3 -m json.tool verification/tooling/vscode_extension_rules.json >/dev/null` -> PASS.
+- `python3 -m py_compile verification/tooling/check_tooling_rules_lock.py verification/tooling/check_tooling_dependency_boundaries.py verification/tooling/check_lsp_split_brain.py verification/tooling/check_vscode_extension_rules.py verification/tooling/check_vscode_extension.py` -> PASS.
 - `cargo fmt --check` -> PASS.
 - `git diff --check` -> PASS.
 - `scripts/run_all_tests.sh --profile quick` -> PASS on rerun. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=939.02s`; `max_rss=555.4MiB`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
@@ -69,7 +69,7 @@ Scope:
 - [x] Add Sifr-owned `FMT` and `LINT` diagnostic families and generated docs.
 - [x] Implement conservative syntax-validated formatter foundation over `sifr_syntax`.
 - [x] Implement policy metadata, explicit suppressions, unknown suppression, unused suppression, and blanket suppression diagnostics.
-- [x] Add `check_formatter_contract.py` and `check_rule_suppression_contract.py` with negative self-tests.
+- [x] Add `check_formatter_rules.py` and `check_rule_suppression_rules.py` with negative self-tests.
 - [x] Wire m36.2 checks into `scripts/run_all_tests.sh`.
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
@@ -83,8 +83,8 @@ Scope:
 - `cargo clippy -p sifr_format -p sifr_lint -p sifr_driver -p sifr -- -D warnings` -> PASS.
 - `cargo test -p sifr_format -p sifr_lint` -> PASS.
 - `cargo test -p sifr_driver test_diagnostic_labels_are_derived_from_diagnostic_codes` -> PASS.
-- `python3 verification/tooling/check_formatter_contract.py && python3 verification/tooling/check_formatter_contract.py --self-test` -> PASS.
-- `python3 verification/tooling/check_rule_suppression_contract.py && python3 verification/tooling/check_rule_suppression_contract.py --self-test` -> PASS.
+- `python3 verification/tooling/check_formatter_rules.py && python3 verification/tooling/check_formatter_rules.py --self-test` -> PASS.
+- `python3 verification/tooling/check_rule_suppression_rules.py && python3 verification/tooling/check_rule_suppression_rules.py --self-test` -> PASS.
 - `python3 scripts/check_diagnostic_code_coverage.py && python3 scripts/check_diagnostic_docs_sync.py && python3 scripts/check_diagnostic_schema_sync.py` -> PASS.
 - Full developer tooling guardrail block, including m36.1 and m36.2 checks plus negative self-tests -> PASS.
 - `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=944.96s`; `max_rss=756.4MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
@@ -112,7 +112,7 @@ Scope:
 - [x] Add formatter and lint handoffs through `sifr_format` and `sifr_lint`.
 - [x] Add completion ranking/evaluation foundation.
 - [x] Add positive/negative tests for load/update/query plumbing, stale versions, stale snapshots, project symbols, and query metadata.
-- [x] Add `check_analysis_snapshot_contract.py` and `check_analysis_split_brain.py` with negative self-tests.
+- [x] Add `check_analysis_snapshot_rules.py` and `check_analysis_split_brain.py` with negative self-tests.
 - [x] Wire m36.3 checks into `scripts/run_all_tests.sh`.
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
@@ -122,8 +122,8 @@ Scope:
 ## m36.3 Validation Evidence
 
 - `cargo fmt --check && git diff --check` -> PASS.
-- `python3 -m py_compile verification/tooling/check_analysis_snapshot_contract.py verification/tooling/check_analysis_split_brain.py` -> PASS.
-- `python3 verification/tooling/check_analysis_snapshot_contract.py && python3 verification/tooling/check_analysis_snapshot_contract.py --self-test` -> PASS.
+- `python3 -m py_compile verification/tooling/check_analysis_snapshot_rules.py verification/tooling/check_analysis_split_brain.py` -> PASS.
+- `python3 verification/tooling/check_analysis_snapshot_rules.py && python3 verification/tooling/check_analysis_snapshot_rules.py --self-test` -> PASS.
 - `python3 verification/tooling/check_analysis_split_brain.py && python3 verification/tooling/check_analysis_split_brain.py --self-test` -> PASS.
 - `cargo check -p sifr_frontend -p sifr_analysis` -> PASS.
 - `cargo clippy -p sifr_frontend -p sifr_analysis -- -D warnings` -> PASS.
@@ -162,7 +162,7 @@ Scope:
 
 - `cargo fmt --check && git diff --check` -> PASS.
 - `python3 -m py_compile verification/tooling/run_tooling_parity.py verification/tooling/check_analysis_split_brain.py` -> PASS.
-- `python3 verification/tooling/check_analysis_snapshot_contract.py && python3 verification/tooling/check_analysis_snapshot_contract.py --self-test` -> PASS.
+- `python3 verification/tooling/check_analysis_snapshot_rules.py && python3 verification/tooling/check_analysis_snapshot_rules.py --self-test` -> PASS.
 - `python3 verification/tooling/check_analysis_split_brain.py && python3 verification/tooling/check_analysis_split_brain.py --self-test` -> PASS.
 - `python3 verification/tooling/run_tooling_parity.py && python3 verification/tooling/run_tooling_parity.py --self-test` -> PASS.
 - `cargo check -p sifr_analysis -p sifr_frontend -p sifr_driver` -> PASS.
@@ -247,7 +247,7 @@ Scope:
 - `python3 -m json.tool editor_integrations/syntaxes/sifr.tmLanguage.json >/dev/null && python3 -m json.tool editor_integrations/syntaxes/sifr-token-scope-map.json >/dev/null` -> PASS.
 - `python3 verification/tooling/check_editor_assets.py && python3 verification/tooling/check_editor_assets.py --self-test` -> PASS.
 - `python3 verification/tooling/check_tooling_dependency_boundaries.py && python3 verification/tooling/check_tooling_dependency_boundaries.py --self-test` -> PASS.
-- `python3 verification/tooling/check_tooling_contract_lock.py && python3 verification/tooling/check_tooling_contract_lock.py --self-test` -> PASS.
+- `python3 verification/tooling/check_tooling_rules_lock.py && python3 verification/tooling/check_tooling_rules_lock.py --self-test` -> PASS.
 - `python3 scripts/check_diagnostic_cancel_usage.py && cargo check -p sifr_lsp && cargo clippy -p sifr_lsp -- -D warnings` -> PASS after renaming the LSP request-queue cancellation operation to avoid the diagnostics-only `.cancel(...)` guardrail.
 - `scripts/run_all_tests.sh --profile quick` -> first attempt failed in `check_diagnostic_cancel_usage.py` on `crates/sifr_lsp/src/request_queue.rs` and `crates/sifr_lsp/src/session.rs`; fixed by renaming the queue operation.
 - `scripts/run_all_tests.sh --profile quick` -> PASS on rerun. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=2305.22s`; `max_rss=595.5MiB`; `e2e cache_hits=0/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
@@ -270,7 +270,7 @@ Scope:
 
 - [x] Implement the VS Code extension in the locked `sifr-lang/sifr-vscode` repository boundary.
 - [x] Add language id, file extension, grammar, language configuration, LSP launcher, settings, commands, trace/logging, binary discovery, generated Rust preview, explain diagnostic, check/test commands, VS Code Test Explorer integration, format command, restart server, and server log access.
-- [x] Add `.vsix` packaging, extension integration tests, and `vscode_extension_contract.json` validation.
+- [x] Add `.vsix` packaging, extension integration tests, and `vscode_extension_rules.json` validation.
 - [x] Ensure extension tests can launch the locally built `sifr lsp --stdio`.
 - [x] Run local validation.
 - [x] Run Claude Opus review rounds until satisfied.
@@ -282,8 +282,8 @@ Scope:
 - In `../sifr-vscode`: `npm install` -> PASS, generated `package-lock.json`; npm reported 0 vulnerabilities.
 - In `../sifr-vscode`: `npm run lint && npm run typecheck && npm test && npm run test:extension && npm run package` -> PASS after fixing the pure-config unit-test import and package output directory. Produced `dist/sifr-vscode-0.0.0.vsix`.
 - Extension repo PR: <https://github.com/sifr-lang/sifr-vscode/pull/1>; merge commit: `eea6255bb4080e74ebd0b541923ea33315f4e279`.
-- `python3 -m py_compile verification/tooling/check_vscode_extension.py verification/tooling/check_vscode_extension_contract.py` -> PASS.
-- `python3 verification/tooling/check_vscode_extension_contract.py --require-extension-repo && python3 verification/tooling/check_vscode_extension_contract.py --self-test` -> PASS.
+- `python3 -m py_compile verification/tooling/check_vscode_extension.py verification/tooling/check_vscode_extension_rules.py` -> PASS.
+- `python3 verification/tooling/check_vscode_extension_rules.py --require-extension-repo && python3 verification/tooling/check_vscode_extension_rules.py --self-test` -> PASS.
 - `python3 verification/tooling/check_vscode_extension.py && python3 verification/tooling/check_vscode_extension.py --self-test` -> PASS.
 - `scripts/run_all_tests.sh --profile quick` -> PASS. Report: `target/validation_lane_reports/quick.latest.json`; `wall_time=1459.55s`; `max_rss=562.1MiB`; `e2e cache_hits=12/12`; `report_signature=f808284595f17a99`; advisories: warm wall-time budget exceeded and high group skew.
 

@@ -11,6 +11,6 @@ Public API symbol is exported more than once.
 | Severity | Error |
 | Owner | `sifr_package::imports::namespace_api` |
 | Message template | `duplicate public API symbol '{symbol}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::duplicate_init_public_symbol_reports_0713` |
+| Representative fixture | `crates/sifr_package/src/package_public_api_tests.rs::duplicate_init_public_symbol_reports_0713` |
 | Declared args | `symbol (message+json)`, `cargo_package_id (json-only)`, `manifest_path (json-only)` |
 | Dedupe args | `cargo_package_id`, `manifest_path`, `symbol` |

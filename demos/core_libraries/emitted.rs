@@ -908,7 +908,7 @@ fn main() {
         println!("{}", format!("{}{}", "statistics error: ".to_string(), e.message));
     }
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let mut h: HashObject = new(&"sha256".to_string(), &"wave_psp_e1".to_string())?;
+    let mut h: HashObject = new(&"sha256".to_string(), &"hashlib-sample".to_string())?;
     println!("{}", format!("{}{}", "hashlib.sha256 len = ".to_string(), format!("{}", h.hexdigest().chars().count() as i64)));
     return Ok(());
 })();

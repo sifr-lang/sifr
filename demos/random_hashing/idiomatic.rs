@@ -98,7 +98,7 @@ fn main() {
     }
     assert!(range_ok);
 
-    let payload = "phase-rng-wave0";
+    let payload = "random_hashing_seed";
     let encoded = b64encode(payload);
     let decode_ok = b64decode(&encoded).is_ok_and(|decoded| decoded == payload);
     assert!(decode_ok);
@@ -106,5 +106,5 @@ fn main() {
     let digest = sha256_obj(payload).hexdigest();
     assert_eq!(digest.len(), 64);
 
-    println!("ad_hoc_rng_wave0_architecture_lock_demo: pass");
+    println!("rng_random_hashing_lock_demo: pass");
 }

@@ -1,11 +1,11 @@
-# Reference: ad_hoc_runtime_wave0
-# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
+# Reference: runtime_file_streams
+# Reference: runtime-and-file-object-parity-expansion
 from sifr.io import write_text, read_text, read_lines, exists
 from sifr.os import remove_file
 
 
 def main():
-    path: str = "/tmp/sifr_runtime_wave0_stream_demo.txt"
+    path: str = "/tmp/sifr_runtime_file_streams_demo.txt"
     text_ok: bool = False
     binary_ok: bool = False
     cleanup_ok: bool = False
@@ -36,4 +36,4 @@ def main():
     assert text_ok
     assert binary_ok
     assert cleanup_ok
-    print("ad_hoc_runtime_wave0_stream_hierarchy_contract_demo: ok")
+    print("runtime_file_streams_hierarchy_demo: ok")

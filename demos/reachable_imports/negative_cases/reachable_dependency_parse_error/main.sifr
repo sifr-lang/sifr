@@ -1,5 +1,4 @@
-# Reference: m23_1
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: reachable_imports
 # negative path: reachable dependency parse errors must fail compilation.
 
 from helper import compute

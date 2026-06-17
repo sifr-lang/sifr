@@ -1,5 +1,5 @@
-# Reference: wave_psp_b2
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: iterators-randomness-sample
+# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.itertools import chain, combinations, islice, permutations, product, starmap
 from sifr.random import choice, choices, randrange, shuffle
 from sifr.secrets import compare_digest, randbits, token_hex

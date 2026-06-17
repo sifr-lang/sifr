@@ -679,7 +679,7 @@ pub(super) fn diagnostic_explanation(code: &str) -> Option<String> {
 pub(super) fn cmd_lsp(stdio: bool, parent_pid: Option<u32>) -> i32 {
     if !stdio {
         let diagnostic = diagnostic_with_code(
-            "sifr lsp requires --stdio in Phase 36",
+            "sifr lsp requires --stdio in editor tooling",
             DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
         );
         render_diagnostics(&[diagnostic], DiagnosticFormat::Human);

@@ -113,5 +113,5 @@ fn main() {
     let expected = [true, true, true, true, true, true];
     let actual = collect_primary_actual();
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1c re parity demo: pass");
+    println!("regex re parity demo: pass");
 }

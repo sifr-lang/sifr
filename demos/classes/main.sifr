@@ -1,7 +1,7 @@
-# Reference: milestone_classes
-# Source issue: milestone-classes-epic.md
+# Reference: classes
+# Reference: classes
 # ============================================================
-# Sifr milestone_classes Demo
+# Sifr classes Demo
 # ============================================================
 # Demonstrates: class definitions, constructors, methods,
 # field access, isinstance narrowing, class unions, hash()

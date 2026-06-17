@@ -2768,7 +2768,7 @@ fn main() {
     if let Err(__sifr_try_err) = __sifr_try_res {
         let se = __sifr_try_err.clone();
         println!("{}", format!("{}{}", "statistics error: ".to_string(), se.message));
-        assert!(format!("{}", format!("{}{}", "statistics error: ".to_string(), se.message)) == "milestone_stdlib_expansion demo: all checks passed!".to_string());
+        assert!(format!("{}", format!("{}{}", "statistics error: ".to_string(), se.message)) == "stdlib_expansion demo: all checks passed!".to_string());
     }
     let mut heap: Vec<i64> = vec![];
     heappush(&mut heap, &(5 as i64));
@@ -2804,5 +2804,5 @@ fn main() {
     assert_eq!(val, "file.txt");
     assert!(fnmatch(&"test.py".to_string(), &"*.py".to_string()));
     assert!(!(fnmatch(&"test.py".to_string(), &"*.txt".to_string())));
-    println!("milestone_stdlib_expansion demo: all checks passed!");
+    println!("stdlib_expansion demo: all checks passed!");
 }

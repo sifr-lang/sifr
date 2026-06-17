@@ -322,7 +322,7 @@ The phase specifies validation at every level:
 - Analysis level: `cargo test -p sifr_analysis`
 - LSP level: `cargo test -p sifr_lsp`
 - CLI level: `cargo test -p sifr`
-- Tooling level: `check_formatter_contract.py`, `check_formatter_ast_coverage.py`, LSP smoke/stress, editor asset checks
+- Tooling level: `check_formatter_rules.py`, `check_formatter_ast_coverage.py`, LSP smoke/stress, editor asset checks
 - Integration level: `scripts/run_all_tests.sh --profile quick` + full suite
 
 **Validation coverage is complete across all affected crates and tooling paths.**

@@ -51,5 +51,5 @@ fn main() {
     append_all(&mut actual, &collect_constants_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true, true, true]);
-    println!("m30_1c string parity demo: pass");
+    println!("string string parity demo: pass");
 }

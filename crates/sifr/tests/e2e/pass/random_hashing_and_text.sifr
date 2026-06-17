@@ -1,4 +1,4 @@
-# Reference: phase_psp_rng_0_architecture_lock
+# Reference: stdlib_parity_rng_0_architecture_lock
 from sifr.random import choice, randrange
 from sifr.hashlib import new, HashObject
 from sifr.base64 import b64encode, b64decode
@@ -26,10 +26,10 @@ def main() -> None:
     assert hash_ok
 
     codec_ok: bool = False
-    encoded: str = b64encode("rng-wave0")
+    encoded: str = b64encode("rng-stream-sample")
     try:
         decoded: str = b64decode(encoded)
-        codec_ok = decoded == "rng-wave0"
+        codec_ok = decoded == "rng-stream-sample"
     except ParseError as e:
         _ = str(e.message)
     assert codec_ok

@@ -1,4 +1,4 @@
-# Reference: phase_psp_d2_process_runtime_platform
+# Reference: stdlib_parity_d2_process_runtime_platform
 from sifr.os import run_command, getcwd
 from sifr.env import getenv, getenv_opt, setenv, unsetenv
 from sifr.sys import argv, version, platform, maxsize
@@ -24,8 +24,8 @@ def collect_runtime_actual() -> list[bool]:
 
     shell_ok: bool = False
     try:
-        out: str = run_command("echo wave_psp_d2")
-        shell_ok = out == "wave_psp_d2"
+        out: str = run_command("echo stdlib_parity_d2")
+        shell_ok = out == "stdlib_parity_d2"
     except IOError as e:
         _ = e.message
     actual.append(shell_ok)

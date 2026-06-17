@@ -169,5 +169,5 @@ fn main() {
     assert_vector_eq(&collect_positive_actual(), &expected);
     assert_bool_vector_eq(&collect_negative_actual_false(), &expected_false);
 
-    println!("m30_1b math parity demo: pass");
+    println!("math math parity demo: pass");
 }

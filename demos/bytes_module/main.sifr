@@ -1,6 +1,5 @@
-# Reference: m30_1a
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
-# m30_1a bytes parity demo
+# Reference: bytes_module
+# bytes_module bytes parity demo
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
@@ -51,7 +50,7 @@ def collect_invalid_actual_ok() -> list[bool]:
     return invalid_actual_ok
 
 def main():
-    payload: bytes = encode_utf8("bytes-phase30")
+    payload: bytes = encode_utf8("bytes-bytes_module")
     expected: list[str] = ["2", "5", "true", "true"]
     actual: list[str] = collect_primary_actual(payload)
     assert_vector_eq(actual, expected)
@@ -68,4 +67,4 @@ def main():
     invalid_actual_ok: list[bool] = collect_invalid_actual_ok()
     assert_bool_vector_eq(invalid_actual_ok, invalid_expected_ok)
 
-    print("m30_1a bytes parity demo: pass")
+    print("bytes_module bytes parity demo: pass")

@@ -1,6 +1,5 @@
-# Reference: phase31
-# Source issue: phase31-m31a-len-alias-range-guard-execution.md
-# Phase 31 / m31_a slice 7 demo: range bounds inferred through len(...) aliases.
+# Reference: range_aliasing
+# driver/package architecture / range_aliasing behavior group 7 demo: range bounds inferred through len(...) aliases.
 
 def sum_forward(nums: list[int]) -> int:
     n: int = len(nums)

@@ -3,7 +3,7 @@
 ### P1 — must fix before elegant
 
 1. **Missing matrix row: CLI behavior and exit codes.**
-   World-Class Verification Standard line 51 enumerates "CLI behavior and exit codes" as a required compiler surface, but the target matrix has no row for it. The Discovery Snapshot already lists `sifr` integration tests `e2e`, `validation_contracts`, and `build_output_contracts`; the merge command already runs them, so the inventory exists in spirit but is not pinned in the matrix.
+   World-Class Verification Standard line 51 enumerates "CLI behavior and exit codes" as a required compiler surface, but the target matrix has no row for it. The Discovery Snapshot already lists `sifr` integration tests `e2e`, `validation_contracts`, and `build_output_behavior`; the merge command already runs them, so the inventory exists in spirit but is not pinned in the matrix.
 
 2. **Missing matrix row: project/workspace behavior.**
    Discovery Snapshot line 247 ships a `project_workspace` area with four suites (`frontend_mode_parity`, `phase23_graph_isolation`, `baselines`, `audit-fixtures`). The matrix omits this surface entirely, leaving the area's existing merge/nightly assignments uncodified.
@@ -29,7 +29,7 @@
 
 **E1. Insert a CLI surfaces row.** Place under the matrix between "First-party crates" and "Cargo features and targets" (or wherever fits the ordering — current ordering is by area-of-the-compiler, so here is natural):
 ```
-| CLI behavior and exit codes | `sifr` integration test inventory (`e2e`, `validation_contracts`, `build_output_contracts`) and a documented CLI exit-code contract list | every documented CLI exit-code contract has a corresponding integration test | full CLI behavior matrix and broader exit-code scenarios | an exit-code contract without an integration test fails |
+| CLI behavior and exit codes | `sifr` integration test inventory (`e2e`, `validation_contracts`, `build_output_behavior`) and a documented CLI exit-code contract list | every documented CLI exit-code contract has a corresponding integration test | full CLI behavior matrix and broader exit-code scenarios | an exit-code contract without an integration test fails |
 ```
 
 **E2. Insert a project/workspace row.** For example:

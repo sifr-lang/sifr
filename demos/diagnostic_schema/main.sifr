@@ -1,9 +1,8 @@
-# Reference: m27_4
-# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
-# m27_4 span and diagnostic schema quality demo
+# Reference: diagnostic_schema
+# diagnostic_schema span and diagnostic schema quality demo
 #
 # Positive path: source compiles successfully while the CLI can render diagnostics
 # in either human or json formats using the canonical schema.
 
 def main():
-    print("m27_4 diagnostic schema quality demo")
+    print("diagnostic_schema diagnostic schema quality demo")

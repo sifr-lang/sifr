@@ -121,7 +121,7 @@ M1 lists test cases at the diagnostic level but not at the layer level. Required
 - Project-mode test: place a `main.sifr` with `from math import sqrt` under a workspace that does **not** contain `math.sifr` → expect `SIFR-IMPORT-0008`, not `IMPORT_UNKNOWN_SOURCE_MODULE`. Pair with a positive test that places `math.sifr` in a source root and asserts that `from math import sqrt` resolves to the user file (proves the resolution-priority decision).
 - Package-mode test: same shape, under `package_discovery.rs`.
 - Single-file test: covers both `Stmt::Import` and `Stmt::ImportFrom`.
-- A `cargo run -- check` CLI fixture under the verification harness producing the human/json/compact tri-output, since the existing diagnostic-contract harness (`crates/sifr_driver/src/bin/diagnostic_contract_harness.rs:34-60`) enforces the args set. New args (`bare_module`, `suggested_module`, `imported_names`) need to be registered there explicitly.
+- A `cargo run -- check` CLI fixture under the verification harness producing the human/json/compact tri-output, since the existing diagnostic-contract harness (`crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs:34-60`) enforces the args set. New args (`bare_module`, `suggested_module`, `imported_names`) need to be registered there explicitly.
 
 M1 must also state whether `SIFR-IMPORT-0008` shares args with `IMPORT_UNKNOWN_SOURCE_MODULE` or defines its own arg set — the harness contract is structural.
 

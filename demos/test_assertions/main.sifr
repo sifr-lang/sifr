@@ -1,6 +1,6 @@
-# Reference: milestone_test_assertions_parity
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_test_assertions_parity
+# Reference: test_assertions_parity
+# Reference: compiler-feature-history
+# Demo: test_assertions_parity
 # Showcases:
 # 1) Core assertion helpers
 # 2) Almost-equality edge behavior

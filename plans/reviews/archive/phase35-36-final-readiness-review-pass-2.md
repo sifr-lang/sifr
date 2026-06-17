@@ -8,7 +8,7 @@ All six amendments are present, executable, and properly wired. Here is the veri
 
 ### Amendment 1 - Phase 35 Ruff Fork Update/Rebase Governance [OK]
 - **Depends On (line 21):** policy declared - fork updates require review, `sifr_syntax` API validation, fixture revalidation, and documentation with new hash/rationale. Automated checks must fail on unpinned advances.
-- **Verification infra (line 459):** `verification/performance/check_ruff_fork_update_contract.py` explicitly listed.
+- **Verification infra (line 459):** `verification/performance/check_ruff_fork_update_rules.py` explicitly listed.
 - **m35.4a scope (line 575):** fork update/rebase contract check added as scope item.
 - **m35.4a DoD (line 581):** "fork update contract check fails on a seeded fork pin update without fixture revalidation evidence" - this is the executable gate.
 

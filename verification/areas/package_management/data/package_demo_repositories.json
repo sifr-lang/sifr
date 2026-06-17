@@ -1,0 +1,134 @@
+{
+  "rules": "cargo-backed-package-management",
+  "description": "Concrete package-management rules organization demo repositories checked out as git submodules. These subrepos are guarded locally so the demo surface does not regress.",
+  "checkout_model": "git_submodule",
+  "repository_root": "verification/areas/package_management/corpora/demo_repositories",
+  "required_validations": [
+    "git_dependency_fetch",
+    "lockfile_pins_git_revisions",
+    "locked_build_after_fetch",
+    "offline_requires_fetch",
+    "archive_missing_sifr_source_rejection",
+    "pure_marker_rejects_rust_implementation",
+    "rust_backed_trust_requires_reqwest",
+    "multiple_version_alias_identity",
+    "workspace_filter_dependency_closure",
+    "workspace_default_members_and_exclude",
+    "workspace_dependencies_inheritance",
+    "changed_file_filters"
+  ],
+  "repositories": [
+    {
+      "id": "sifr-demo-json",
+      "url": "https://github.com/sifr-lang/sifr-demo-json",
+      "root": "sifr-demo-json",
+      "kind": "pure_sifr_package",
+      "tags": ["v0.1.0", "v0.2.0"],
+      "required_paths": [
+        "Cargo.toml",
+        "Cargo.lock",
+        "sifr.toml",
+        "src/__init__.sifr",
+        "src/parse.sifr",
+        "src/lib.rs"
+      ],
+      "validations": [
+        "archive_missing_sifr_source_rejection",
+        "pure_marker_rejects_rust_implementation"
+      ]
+    },
+    {
+      "id": "sifr-demo-http",
+      "url": "https://github.com/sifr-lang/sifr-demo-http",
+      "root": "sifr-demo-http",
+      "kind": "rust_backed_sifr_package",
+      "tags": ["v0.1.0"],
+      "required_paths": [
+        "Cargo.toml",
+        "Cargo.lock",
+        "sifr.toml",
+        "src/__init__.sifr",
+        "src/client.sifr",
+        "src/lib.rs"
+      ],
+      "validations": [
+        "git_dependency_fetch",
+        "rust_backed_trust_requires_reqwest"
+      ]
+    },
+    {
+      "id": "sifr-demo-test-support",
+      "url": "https://github.com/sifr-lang/sifr-demo-test-support",
+      "root": "sifr-demo-test-support",
+      "kind": "dev_only_sifr_package",
+      "tags": ["v0.1.0"],
+      "required_paths": [
+        "Cargo.toml",
+        "Cargo.lock",
+        "sifr.toml",
+        "src/__init__.sifr",
+        "src/assertions.sifr",
+        "src/lib.rs"
+      ],
+      "validations": [
+        "locked_build_after_fetch"
+      ]
+    },
+    {
+      "id": "sifr-demo-app",
+      "url": "https://github.com/sifr-lang/sifr-demo-app",
+      "root": "sifr-demo-app",
+      "kind": "consumer_app",
+      "tags": ["v0.1.0"],
+      "required_paths": [
+        "Cargo.toml",
+        "Cargo.lock",
+        "README.md",
+        "sifr.toml",
+        "src/__init__.sifr",
+        "src/main.sifr",
+        "src/migrate.sifr",
+        "src/lib.rs"
+      ],
+      "validations": [
+        "git_dependency_fetch",
+        "lockfile_pins_git_revisions",
+        "offline_requires_fetch",
+        "multiple_version_alias_identity"
+      ]
+    },
+    {
+      "id": "sifr-demo-workspace",
+      "url": "https://github.com/sifr-lang/sifr-demo-workspace",
+      "root": "sifr-demo-workspace",
+      "kind": "workspace",
+      "tags": ["v0.1.0"],
+      "required_paths": [
+        "Cargo.toml",
+        "Cargo.lock",
+        "packages/core/Cargo.toml",
+        "packages/core/sifr.toml",
+        "packages/core/src/__init__.sifr",
+        "packages/core/src/lib.rs",
+        "packages/utils/Cargo.toml",
+        "packages/utils/sifr.toml",
+        "packages/utils/src/__init__.sifr",
+        "packages/utils/src/lib.rs",
+        "packages/app/Cargo.toml",
+        "packages/app/sifr.toml",
+        "packages/app/src/__init__.sifr",
+        "packages/app/src/bin/status.sifr",
+        "packages/app/src/main.sifr",
+        "packages/app/src/lib.rs",
+        "packages/backend-utils/Cargo.toml",
+        "packages/backend-utils/src/lib.rs"
+      ],
+      "validations": [
+        "workspace_filter_dependency_closure",
+        "workspace_default_members_and_exclude",
+        "workspace_dependencies_inheritance",
+        "changed_file_filters"
+      ]
+    }
+  ]
+}

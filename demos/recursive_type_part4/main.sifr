@@ -1,6 +1,6 @@
-# Reference: ad_hoc_recursive_type_part4
-# Source issue: ad-hoc-full-recursive-type-feature-part4-execution.md
-# Ad hoc recursive type feature, part 4:
+# Reference: recursive_type_part4
+# Reference: full-recursive-type-feature-part4
+# Recursive type feature, part 4:
 # recursive node values behave like normal typed class values after guard narrowing.
 
 class TreeNode:

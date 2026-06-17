@@ -1,6 +1,6 @@
-# Reference: milestone_error_subclasses
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_error_subclasses
+# Reference: error_subclasses
+# Reference: compiler-feature-history
+# Demo: error_subclasses
 # Error subclass hierarchy enables compile-time checked fine-grained error handling.
 # The type tells you the error kind; the message tells you the details.
 # print(e) is the idiomatic way to display errors.

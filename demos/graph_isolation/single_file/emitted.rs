@@ -1,3 +1,3 @@
 fn main() {
-    println!("single-file-m23_5");
+    println!("single-file-graph_isolation_single_file");
 }

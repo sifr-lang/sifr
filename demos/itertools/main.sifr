@@ -1,5 +1,4 @@
-# Reference: m30_1d
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: itertools
 from sifr.itertools import chain, pairwise, batched, accumulate, cycle
 from sifr.test import assert_bool_vector_eq
 
@@ -42,4 +41,4 @@ def main():
     append_all(actual, collect_negative_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1d itertools parity demo: pass")
+    print("itertools itertools parity demo: pass")

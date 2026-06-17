@@ -1,6 +1,5 @@
-# Reference: m21_2
-# Source issue: phase21-traversal-completeness-and-control-flow-correctness-execution.md
-# m21_2 while-else structured support demo
+# Reference: while_else
+# while_else while-else structured support demo
 # Demonstrates while-else behavior in borrowed-condition paths.
 
 def classify(items: list[int]) -> str:
@@ -14,6 +13,6 @@ def classify(items: list[int]) -> str:
 
 
 def main():
-    print('m21_2 while-else structured support demo:')
+    print('while_else while-else structured support demo:')
     print(classify([]))
     print(classify([1]))

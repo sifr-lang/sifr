@@ -30,7 +30,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
             match parse_module_raw(stdlib_source.source, Some(&format!("stdlib:{module_name}"))) {
                 Ok(parsed) => {
                     if !parsed.has_valid_syntax() {
-                        // TODO(diag_4a slice 2): classify Ruff parse failures
+                        // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures
                         // into the precise active parse-code buckets.
                         let errors: Vec<RenderedDiagnostic> = parsed
                             .errors()
@@ -47,7 +47,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                     parsed
                 }
                 Err(errors) => {
-                    // TODO(diag_4a slice 2): classify Ruff parse failures into
+                    // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures into
                     // the precise active parse-code buckets.
                     return Err(errors
                         .into_iter()

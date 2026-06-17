@@ -135,7 +135,7 @@ fn collect_path_helpers_actual() -> Vec<bool> {
 }
 
 fn collect_path_class_actual() -> Vec<bool> {
-    let base = format!("/tmp/sifr_m30_1e_pathlib_demo_{}", std::process::id());
+    let base = format!("/tmp/sifr_pathlib_pathlib_demo_{}", std::process::id());
     let _ = fs::remove_dir_all(&base);
 
     let filep = Path::new(join_path(&base, "demo.txt"));
@@ -161,7 +161,7 @@ fn collect_path_class_actual() -> Vec<bool> {
 }
 
 fn collect_missing_path_actual() -> Vec<bool> {
-    vec![Path::new("/tmp/sifr_m30_1e_pathlib_demo_missing.txt")
+    vec![Path::new("/tmp/sifr_pathlib_pathlib_demo_missing.txt")
         .read_text()
         .is_err()]
 }
@@ -173,5 +173,5 @@ fn main() {
     actual.extend(collect_missing_path_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true]);
-    println!("m30_1e pathlib parity demo: pass");
+    println!("pathlib pathlib parity demo: pass");
 }

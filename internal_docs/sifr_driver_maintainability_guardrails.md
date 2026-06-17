@@ -1,6 +1,6 @@
 # sifr_driver Maintainability Guardrails
 
-This document defines the anti-regrowth guardrails for the Phase 31 `sifr_driver` decomposition work.
+This document defines the anti-regrowth guardrails for the driver/package architecture `sifr_driver` decomposition work.
 
 ## File Boundaries
 

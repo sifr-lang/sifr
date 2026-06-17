@@ -1716,7 +1716,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
     let mut w: writer = writer::new(None, ",".to_string(), "\"".to_string(), "".to_string(), true, false, "\n".to_string(), 0 as i64);
     w.writerow(&vec!["alice".to_string(), "30".to_string()]);
     actual.push((w.getvalue()).as_str() == ("alice,30".to_string()).as_str());
-    let path: String = "/tmp/sifr_m30_1e_csv_demo.csv".to_string();
+    let path: String = "/tmp/sifr_csv_csv_demo.csv".to_string();
     let mut csv_file_ok: bool = false;
     let mut missing_rejected: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
@@ -1731,7 +1731,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
     }
     actual.push(csv_file_ok);
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let mut _missing: reader = reader_from_path(&"/tmp/sifr_m30_1e_csv_demo_missing.csv".to_string(), &None, &",".to_string(), &"\"".to_string(), &"".to_string(), true, false, 0 as i64)?;
+    let mut _missing: reader = reader_from_path(&"/tmp/sifr_csv_csv_demo_missing.csv".to_string(), &None, &",".to_string(), &"\"".to_string(), &"".to_string(), true, false, 0 as i64)?;
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -1755,5 +1755,5 @@ fn main() {
     append_all(&mut actual, &collect_parse_actual());
     append_all(&mut actual, &collect_object_and_file_actual());
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1e csv parity demo: pass");
+    println!("csv csv parity demo: pass");
 }

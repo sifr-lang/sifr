@@ -251,7 +251,7 @@ fn iterator_plan_copies_tuple_of_copy_elements() {
 }
 
 #[test]
-fn iterator_plan_consumes_range_without_clone_contract() {
+fn iterator_plan_consumes_range_without_clone_rules() {
     let source = HirExpr::Name {
         name: "r".to_string(),
         ty: Type::Range,

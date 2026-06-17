@@ -11,6 +11,6 @@ Explicit Sifr file target is outside the package source root.
 | Severity | Error |
 | Owner | `sifr_package::ops::session` |
 | Message template | `explicit file is outside package source root` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_explicit_file_outside_source_root` |
+| Representative fixture | `crates/sifr_package/src/package_session_tests.rs::package_session_rejects_explicit_file_outside_source_root` |
 | Declared args | `file (message+json)`, `source_root (message+json)` |
 | Dedupe args | `file`, `source_root` |

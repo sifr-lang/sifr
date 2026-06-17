@@ -1,6 +1,6 @@
-# Reference: milestone_integer_safety
-# Source issue: 196-milestone_integer_safety.md
-# Demo: milestone_integer_safety
+# Reference: integer_safety
+# Source issue: 196-integer_safety.md
+# Demo: integer_safety
 # Showcases exact int arithmetic and explicit fixed-width integer checks.
 
 def factorial(n: int) -> int:

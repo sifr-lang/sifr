@@ -1,5 +1,5 @@
-// Reference: milestone_core_language
-// Source issue: 3-m1-core-language-compiler.md
+// Reference: core_language
+// Source issue: 3-core_language-core-language-compiler.md
 fn factorial(n: i64) -> i64 {
     if n <= 1_i64 {
         return 1_i64;

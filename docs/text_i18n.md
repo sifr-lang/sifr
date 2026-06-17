@@ -17,7 +17,7 @@ except Error as e:
     _ = e.message
 ```
 
-Supported phase-exit encodings are Tier 0 (`utf-8`, `utf-8-sig`, `ascii`, `latin-1`, `utf-16-le`, `utf-16-be`) and selected Tier 1 Windows-125x labels through `encoding_rs`, including `windows-1252` / `cp1252`. Tier 2 CJK and UTF-32 encodings are deferred.
+Supported rules-exit encodings are Tier 0 (`utf-8`, `utf-8-sig`, `ascii`, `latin-1`, `utf-16-le`, `utf-16-be`) and selected Tier 1 Windows-125x labels through `encoding_rs`, including `windows-1252` / `cp1252`. Tier 2 CJK and UTF-32 encodings are deferred.
 
 Encoding failures return typed `DecodeError` or `EncodeError`. Recovery-capable APIs return `DecodeOutcome` or `EncodeOutcome` so recovery diagnostics are not discarded. Error handlers are typed values; dynamic handler registration and dynamic handler names are unsupported.
 
@@ -55,7 +55,7 @@ except UnicodeDataError as e:
     _ = e.message
 ```
 
-The phase ships Unicode 17.0.0 data for normalization, names, scalar properties, numeric values, case folding, grapheme boundaries, and word boundaries. Sentence boundaries and streaming segmentation cursors are deferred.
+The surface ships Unicode 17.0.0 data for normalization, names, scalar properties, numeric values, case folding, grapheme boundaries, and word boundaries. Sentence boundaries and streaming segmentation cursors are deferred.
 
 ## Locale And I18n
 
@@ -93,7 +93,7 @@ except Error as e:
 
 The production API centers are `sifr.encoding`, `sifr.unicode`, `sifr.io`, and `sifr.i18n`.
 
-Not production APIs in this phase:
+Not production APIs in this surface:
 
 - `sifr.codecs`
 - `sifr.encodings`

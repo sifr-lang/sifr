@@ -1,4 +1,4 @@
-# Reference: phase_psp_b1_collections_ordered_helpers
+# Reference: stdlib_parity_b1_collections_ordered_helpers
 from sifr.collections import Counter, deque, from_list
 from sifr.bisect import bisect, bisect_left, insort
 from sifr.heapq import (

@@ -1,4 +1,4 @@
-# Consolidated stdlib timeit coverage for milestone_30_4 structure rules
+# Consolidated stdlib timeit coverage for stdlib_consolidation structure rules
 from sifr.timeit import default_timer, timeit, repeat, Timer
 from sifr.time import sleep
 from sifr.test import assert_bool_vector_eq

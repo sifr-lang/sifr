@@ -1,4 +1,4 @@
-# Reference: phase31_builtin_sum_wrong_arity
+# Reference: narrowing_builtin_sum_wrong_arity
 # expect-error[col=21]: SIFR-CALL-0001
 # Test: builtin sum still enforces its iterable-only arity when it is not shadowed.
 

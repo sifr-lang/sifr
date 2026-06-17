@@ -1,7 +1,7 @@
-// Reference: milestone_generators
-// Source issue: milestone-generators-epic.md
+// Reference: generators
+// Reference: generators
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
-     Running `target/debug/sifr emit demos/milestone_generators_demo.sifr`
+     Running `target/debug/sifr emit demos/generators_demo.sifr`
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Timer {
     label: String,

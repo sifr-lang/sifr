@@ -33,17 +33,17 @@ fn env_unset(key: &str) {
 }
 
 fn main() {
-    env_unset("SIFR_M30_ENV_DEMO");
-    env_set("SIFR_M30_ENV_DEMO", "phase30");
+    env_unset("SIFR_ENV_SAMPLE");
+    env_set("SIFR_ENV_SAMPLE", "env");
 
-    let with_default = getenv("SIFR_M30_ENV_DEMO", "fallback");
+    let with_default = getenv("SIFR_ENV_SAMPLE", "fallback");
     println!("{with_default}");
-    assert_eq!(with_default, "phase30");
+    assert_eq!(with_default, "env");
 
-    env_unset("SIFR_M30_ENV_DEMO");
-    let without_default = getenv_opt("SIFR_M30_ENV_DEMO");
+    env_unset("SIFR_ENV_SAMPLE");
+    let without_default = getenv_opt("SIFR_ENV_SAMPLE");
     assert!(without_default.is_none());
-    assert_eq!(getenv("SIFR_M30_ENV_DEMO", "fallback"), "fallback");
+    assert_eq!(getenv("SIFR_ENV_SAMPLE", "fallback"), "fallback");
 
     let expected = [false, false];
     env_set("", "x");
@@ -51,5 +51,5 @@ fn main() {
     let actual = [env_get("").is_some(), env_get("A=B").is_some()];
     assert_bool_vector_eq(&actual, &expected);
 
-    println!("m30_1a env parity demo: pass");
+    println!("env env parity demo: pass");
 }

@@ -73,7 +73,7 @@ channels = metadata.get("channels")
 if not isinstance(channels, dict):
     raise SystemExit("channel metadata channels must be an object")
 if "stable" in channels:
-    raise SystemExit("stable channel metadata is disabled until Phase 39")
+    raise SystemExit("stable channel metadata is disabled until stable channels are supported")
 if set(channels) != {"alpha", "beta"}:
     unknown = sorted(set(channels) - {"alpha", "beta"})
     if unknown:

@@ -6,9 +6,9 @@
 //! in single-file resolution and still surface the reachable unresolved-name
 //! follow-on diagnostics.
 //!
-//! This folder exists to preserve the phase-18 resolver-trigger contract. The
+//! This folder exists to preserve the resolver resolver-trigger rules. The
 //! important behavior is not a generic Rust import failure, but Sifr's promise
 //! that unsupported local import syntax does not silently switch compilation
-//! modes. This file therefore records the frontend contract directly.
+//! modes. This file therefore records the frontend rules directly.
 
 fn main() {}

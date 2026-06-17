@@ -1,6 +1,6 @@
-# Reference: milestone_codegen_preamble_migration
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_codegen_preamble_migration
+# Reference: codegen_preamble_migration
+# Reference: compiler-feature-history
+# Demo: codegen_preamble_migration
 # Exercises IR-emitted preamble pieces:
 # - IOError + file handle infrastructure via open/read/close
 # - logging global state via getLogger().set_level()/info()
@@ -9,19 +9,19 @@ from sifr.io import write_text
 from sifr.logging import getLogger, Logger
 
 def main():
-    path: str = "/tmp/sifr_m14_preamble_demo.txt"
+    path: str = "/tmp/sifr_codegen_preamble_demo.txt"
     try:
-        _: None = write_text(path, "m14 preamble")
+        _: None = write_text(path, "codegen preamble")
         f = open(path, "r", encoding="utf-8")
         text: str = f.read()
         f.close()
         print("file = " + text)
-        assert str("file = " + text) == "file = m14 preamble"
+        assert str("file = " + text) == "file = codegen preamble"
     except IOError as e:
         print("ioerror = " + e.message)
         assert str("ioerror = " + e.message) == "preamble demo complete"
 
-    log: Logger = getLogger("m14")
+    log: Logger = getLogger("codegen")
     log.set_level(20)
     log.info("preamble logging alive")
     print("preamble demo complete")

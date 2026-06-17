@@ -1,8 +1,7 @@
-# Reference: m17_2
-# Source issue: phase17-import-and-externals-correctness-execution.md
-# milestone_17_2 demo main module
+# Reference: external_modules
+# external-modules-sample demo main module
 from worker import call
 
 def main():
-    print("m17_2 non-main externals demo:")
+    print("external_modules non-main externals demo:")
     print(call())

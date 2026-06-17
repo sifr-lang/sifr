@@ -5,21 +5,21 @@ Reviewer: Claude phase review
 Phase: `issues/ad-hoc-production-grade-sifr-linter.md`
 Execution: `issues/ad-hoc-production-grade-sifr-linter-execution.md`
 Pass 1 blockers:
-- C-1: No `check_linter_reuse_contract.py` validation script
+- C-1: No `check_linter_reuse_rules.py` validation script
 - C-2: No explicit mechanical enforcement that parser-aware suppression blocks syntax/HIR rules
 
 ---
 
 ## Pass 1 Blocker Verdict
 
-### C-1: `check_linter_reuse_contract.py` — STILL BLOCKING
+### C-1: `check_linter_reuse_rules.py` — STILL BLOCKING
 
-The phase correctly identifies `verification/tooling/check_linter_reuse_contract.py` as a required M1 deliverable (lines 288–303). M1 scope explicitly calls for it. The validation bullets correctly reference it (lines 302–303).
+The phase correctly identifies `verification/tooling/check_linter_reuse_rules.py` as a required M1 deliverable (lines 288–303). M1 scope explicitly calls for it. The validation bullets correctly reference it (lines 302–303).
 
-However: the script **does not exist** in the codebase. `verification/tooling/` contains `check_tooling_dependency_boundaries.py` and `check_rule_suppression_contract.py` — these are different tools and do not cover M1's requirements. Specifically:
+However: the script **does not exist** in the codebase. `verification/tooling/` contains `check_tooling_dependency_boundaries.py` and `check_rule_suppression_rules.py` — these are different tools and do not cover M1's requirements. Specifically:
 
 - `check_tooling_dependency_boundaries.py` checks for `ty_python_semantic`, `ty_project`, `ruff_server`, `pyright`, `pylsp`. It does **not** check for `ruff_linter::rules`, `ruff_linter::registry`, `ruff_linter::linter`, `ruff_linter::noqa`, Python `Rule` IDs, or `ruff_python_semantic` into `sifr_lint`.
-- `check_rule_suppression_contract.py` tests runtime suppression behavior, not Rust Cargo-level dependency boundaries.
+- `check_rule_suppression_rules.py` tests runtime suppression behavior, not Rust Cargo-level dependency boundaries.
 
 The M1 requirement is a **Rust crate boundary check** across Cargo.toml and transit crate scans. The existing tooling covers adjacent concerns but not this one.
 
@@ -55,18 +55,18 @@ This is **significantly more specific than before**, but two problems remain:
 
 The validation plan for phase closure references:
 ```bash
-python3 verification/tooling/check_rule_suppression_contract.py
-python3 verification/tooling/check_rule_suppression_contract.py --self-test
+python3 verification/tooling/check_rule_suppression_rules.py
+python3 verification/tooling/check_rule_suppression_rules.py --self-test
 python3 verification/tooling/check_tooling_dependency_boundaries.py
 ```
 
 It does **not** reference:
-- `check_linter_reuse_contract.py` — the M1 delivery
-- `check_linter_reuse_contract.py --self-test`
+- `check_linter_reuse_rules.py` — the M1 delivery
+- `check_linter_reuse_rules.py --self-test`
 - the suppression-gate manifest existence check
 - the guardrail proving syntax/HIR workspace bypass fails
 
-Since the phase is planned (not yet implemented), `check_linter_reuse_contract.py` doesn't exist yet — this is expected. But the validation plan must be updated to include it once M1 ships, otherwise the closure gate will run old checks and miss the new dependency boundary enforcement.
+Since the phase is planned (not yet implemented), `check_linter_reuse_rules.py` doesn't exist yet — this is expected. But the validation plan must be updated to include it once M1 ships, otherwise the closure gate will run old checks and miss the new dependency boundary enforcement.
 
 **Verdict: D-1 is a blocker for phase closure, not for M1 start.** It must be fixed before phase closure, but does not prevent the phase from starting.
 
@@ -206,7 +206,7 @@ Clear split. M6a is the milestone minimum gate. M6b is enhanced. No structural i
 
 The phase correctly addressed the **intent** of pass-1 blockers C-1 and C-2, adding named guardrails, explicit scope updates, and AC-13. However:
 
-**C-1** (`check_linter_reuse_contract.py`) still has no implementation path. The code does not exist. M1 must create it.
+**C-1** (`check_linter_reuse_rules.py`) still has no implementation path. The code does not exist. M1 must create it.
 
 **C-2** (suppression gate enforcement) is partially addressed: the prose is now stronger and more specific. But it remains underspecified in two ways that still allow the gate to be implemented as "advisory":
 - Two enforcement options remain ("compile-time dependency or dedicated guardrail") without committing to one

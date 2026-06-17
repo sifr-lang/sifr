@@ -11,6 +11,6 @@ Sifr-managed Cargo projection include rules omit required package files.
 | Severity | Error |
 | Owner | `sifr_package::projection` |
 | Message template | `Cargo projection include rules omit required entry '{required}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_required_include_0704` |
+| Representative fixture | `crates/sifr_package/src/package_projection_tests.rs::repair_check_reports_missing_required_include_0704` |
 | Declared args | `cargo_package_id (json-only)`, `path (json-only)`, `required (message+json)` |
 | Dedupe args | `cargo_package_id`, `path`, `required` |

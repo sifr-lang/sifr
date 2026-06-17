@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m23_1 import-closure discovery demo:");
+    println!("reachable_imports import-closure discovery demo:");
     println!("{}", helper::compute(6));
 }

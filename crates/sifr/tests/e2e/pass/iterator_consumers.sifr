@@ -1,5 +1,5 @@
-# Reference: phase_psp_iter_fix_3_concrete_iterator_codegen
-# wave_psp_iter_fix_3: concrete iterator codegen pipeline closure
+# Reference: stdlib_parity_iter_fix_3_concrete_iterator_codegen
+# stdlib_parity_iter_fix_3: concrete iterator codegen pipeline readiness
 
 def is_even(x: int) -> bool:
     return x % 2 == 0

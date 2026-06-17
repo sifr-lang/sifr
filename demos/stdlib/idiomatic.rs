@@ -298,6 +298,6 @@ fn main() {
         Err(message) => panic!("unexpected timestamp failure: {}", message),
     }
 
-    println!("milestone_stdlib_parity demo: all checks passed!");
+    println!("stdlib_parity demo: all checks passed!");
     println!("Total stdlib modules: 37");
 }

@@ -17,7 +17,7 @@ from .profiles import (
     validate_selected_area_suites,
 )
 from .results import build_result
-from .schemas import load_schema, validate_all_committed_schemas, validate_data, validate_schema_contract
+from .schemas import load_schema, validate_all_committed_schemas, validate_data, validate_schema_requirement
 
 
 def run_all() -> list[str]:
@@ -51,7 +51,7 @@ def _schema_self_test() -> None:
     if missing:
         raise AssertionError(f"missing schema self-test coverage: {sorted(missing)}")
     try:
-        validate_schema_contract({"type": "object", "oneOf": []}, Path("bad.schema.json"))
+        validate_schema_requirement({"type": "object", "oneOf": []}, Path("bad.schema.json"))
     except Exception as exc:
         if "unsupported schema keyword 'oneOf'" not in str(exc):
             raise

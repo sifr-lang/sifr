@@ -1,8 +1,8 @@
-# Reference: milestone_pattern_matching
-# Source issue: 194-milestone_pattern_matching.md
+# Reference: pattern-matching work
+# Source issue: 194-pattern-matching work.md
 from sifr.io import read_text
 
-# Demo: milestone_pattern_matching
+# Demo: pattern-matching work
 # Showcases Python 3.10-style match/case structural pattern matching
 
 # 1. Literal patterns

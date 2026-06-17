@@ -11,6 +11,6 @@ fn main() {
         }
         return 0 as i64;
     }
-    println!("m21_1 canonical walker coverage demo:");
+    println!("recursive_for_else canonical walker coverage demo:");
     println!("{}", rec(3 as i64));
 }

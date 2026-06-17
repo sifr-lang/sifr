@@ -1,4 +1,3 @@
-# Reference: m23_5
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: graph_isolation
 def value() -> int:
     return 55

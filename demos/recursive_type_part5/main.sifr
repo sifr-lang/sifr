@@ -1,6 +1,6 @@
-# Reference: ad_hoc_recursive_type_part5
-# Source issue: ad-hoc-full-recursive-type-feature-part5-execution.md
-# Ad hoc recursive type feature, part 5:
+# Reference: recursive_type_part5
+# Reference: full-recursive-type-feature-part5
+# Recursive type feature, part 5:
 # recursive tree traversal lowers to finite, runnable Rust.
 
 class TreeNode:

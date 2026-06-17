@@ -6,7 +6,7 @@
 
 Pass1 was **SATISFIED**. Local quick validation then exposed two blockers:
 1. `sifr_lint` directly called `lower_module(` — breaking HIR encapsulation.
-2. `check_rule_suppression_contract.py` expected exit code `0` for diagnostic-producing lint fixtures — incorrect behavior.
+2. `check_rule_suppression_rules.py` expected exit code `0` for diagnostic-producing lint fixtures — incorrect behavior.
 
 Both were fixed before this pass. The post-fix validation evidence (contract check, self-test, quick profile, git diff check, grep for `lower_module(`) is on record. I re-verify below.
 
@@ -43,7 +43,7 @@ impl FrontendContext {
 
 ### Fix 2: Rule suppression contract exit codes
 
-**`verification/tooling/check_rule_suppression_contract.py`**
+**`verification/tooling/check_rule_suppression_rules.py`**
 - Line 34: `run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(source)], expect=1)` — explicitly expects `1` when diagnostics are produced.
 - Line 48: `run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(suppressed)])` — explicitly expects `0` when suppression applies.
 - Lines 54-61: self-test expects `1` for `expect=1` on blanket suppression source.
@@ -183,7 +183,7 @@ Matches the locked table in `issues/ad-hoc-production-grade-sifr-linter.md`.
 
 **`verification/tooling/linter_manifests/suppression_gate.json`**: `gate_state = "parser_aware"`, all 4 suppression families allowed, `parser_aware_api: "sifr_lint::suppression::ParserAwareSuppressions"`.
 
-`check_linter_reuse_contract.py` enforces: non-physical-line rule modules must import `ParserAwareSuppressions`. `boolean_positional_argument`, `large_parameter_list`, `duplicate_import` all do. `todo_comment` uses physical-line suppression and passes through `ParserAwareSuppressions` for blanket/unknown/error diagnostics.
+`check_linter_reuse_rules.py` enforces: non-physical-line rule modules must import `ParserAwareSuppressions`. `boolean_positional_argument`, `large_parameter_list`, `duplicate_import` all do. `todo_comment` uses physical-line suppression and passes through `ParserAwareSuppressions` for blanket/unknown/error diagnostics.
 
 ####10. `sifr_lint` dependency boundary**`crates/sifr_lint/Cargo.toml:9-17`**: No `ruff_linter`, `ruff_python_semantic`, Python project/runtime crates. Depends on `sifr_frontend`, `sifr_hir`, `sifr_python_ast`, `sifr_syntax` — all Sifr-owned. Glob/gitignore via `ignore` crate — language-neutral.
 
@@ -194,7 +194,7 @@ Matches the locked table in `issues/ad-hoc-production-grade-sifr-linter.md`.
 | Check | Result |
 |---|---|
 | Fix1: `hir_views.rs` wrapper, `frontend_hir` → `hir_module_view` | ✅ No direct `lower_module` call |
-| Fix 2: `check_rule_suppression_contract.py` `expect=1` for diagnostic lint | ✅ Lines 34, 58, 48 |
+| Fix 2: `check_rule_suppression_rules.py` `expect=1` for diagnostic lint | ✅ Lines 34, 58, 48 |
 | Post-fix evidence on record | ✅ Contract check, self-test, quick profile, git diff, grep |
 | Pre-existing `too_many_arguments` clippy in `sifr/src/diagnostic_rendering_and_run.rs:219` | ✅ Outside M5 scope |
 | Any remaining HIR encapsulation violation | ✅ None |

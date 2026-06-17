@@ -15,7 +15,7 @@ mod helper {
 use helper::evaluate;
 
 fn main() {
-    println!("m24_5 analysis consolidation regression matrix demo:");
+    println!("hir analysis consolidation regression matrix demo:");
     println!("{}", evaluate(10));
     println!("{}", evaluate(0));
 }

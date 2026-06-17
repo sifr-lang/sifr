@@ -410,7 +410,7 @@ async with ctx as value:
     print(value)   # my-value
 ```
 
-Language-level cleanup under task cancellation is part of Sifr's structured runtime contract: cleanup runs before cancellation evidence is observed by the caller.
+Language-level cleanup under task cancellation is part of Sifr's structured runtime rules: cleanup runs before cancellation evidence is observed by the caller.
 
 <Note>
 `ExitStack`, `AsyncExitStack`, `closing`, and `aclosing` are unsupported. Cleanup helpers do not provide a dynamic stack of arbitrary callbacks; all resource lifetimes are visible in the ownership graph.

@@ -46,7 +46,7 @@ def main():
 }
 
 #[test]
-fn test_check_and_project_lowering_share_typecheck_contract() {
+fn test_check_and_project_lowering_share_typecheck_rules() {
     let source = r#"
 def main():
     print(unknown_symbol)

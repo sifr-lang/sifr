@@ -238,7 +238,7 @@ fn lower_join_set_spawn_cpu(
         expression_diagnostics::type_mismatch(
             ctx,
             format!(
-                "JoinSet.spawn_cpu() requires JoinSet[T, WorkerError] in this milestone, got JoinSet[{}, {}]",
+                "JoinSet.spawn_cpu() requires JoinSet[T, WorkerError] in the current task runtime rules, got JoinSet[{}, {}]",
                 ok_ty.display_name(),
                 err_ty.display_name()
             ),

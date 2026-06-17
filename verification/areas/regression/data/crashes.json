@@ -3,8 +3,8 @@
   "entries": [
     {
       "id": "CR-0001",
-      "issue": "issues/phase27-panic-followups.md#open-items",
-      "owner": "phase_29_verification_hardening",
+      "issue": "diagnostic panic hardening record",
+      "owner": "verification_hardening_rules",
       "status": "unresolved",
       "root_cause_category": "cfg-invariant-panic-path",
       "source_reference": "crates/sifr_lowering/src/cfg.rs",
@@ -14,8 +14,8 @@
     },
     {
       "id": "CR-0002",
-      "issue": "issues/phase27-panic-followups.md#open-items",
-      "owner": "phase_29_verification_hardening",
+      "issue": "diagnostic panic hardening record",
+      "owner": "verification_hardening_rules",
       "status": "unresolved",
       "root_cause_category": "parser-invariant-unwrap-audit",
       "source_reference": "third_party/ruff/crates/ruff_python_parser/src/lexer.rs",

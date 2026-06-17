@@ -93,5 +93,5 @@ fn main() {
     assert!(bad_codec);
     assert!(bad_utf8);
 
-    println!("ad_hoc_bytes_wave2_negative_boundary_demo: ok");
+    println!("bytes_bytes_errors_boundary_demo: ok");
 }

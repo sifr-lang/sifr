@@ -1,5 +1,5 @@
-# Reference: milestone_borrow_hardening
-# Source issue: milestone-borrow-hardening-epic.md
+# Reference: borrow_hardening
+# Reference: borrow-hardening
 # Exclusivity Error Demo
 # ======================
 # This file demonstrates that Sifr correctly detects

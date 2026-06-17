@@ -1,10 +1,9 @@
-# Reference: m23_1
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
-# m23_1 import-closure discovery demo
+# Reference: reachable_imports
+# reachable_imports import-closure discovery demo
 # Only modules reachable from this entrypoint should participate in frontend analysis.
 
 from helper import compute
 
 def main():
-    print('m23_1 import-closure discovery demo:')
+    print('reachable_imports import-closure discovery demo:')
     print(compute(6))

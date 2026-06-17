@@ -181,7 +181,7 @@ fn collect_negative_actual_ok() -> Vec<bool> {
 }
 
 fn main() {
-    let tmp_path = "tmp_m30_1a_hashlib_demo.txt";
+    let tmp_path = "tmp_hashlib_hashlib_demo.txt";
     let _ = write_text(tmp_path, "file-data");
 
     assert_vector_eq(
@@ -198,5 +198,5 @@ fn main() {
     );
     assert_bool_vector_eq(&collect_negative_actual_ok(), &[false]);
 
-    println!("m30_1a hashlib parity demo: pass");
+    println!("hashlib hashlib parity demo: pass");
 }

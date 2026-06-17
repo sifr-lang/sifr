@@ -1,6 +1,5 @@
-# Reference: m24_4
-# Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_4 analysis/emission boundary hardening demo
+# Reference: stable_codegen
+# stable_codegen analysis/emission boundary hardening demo
 # Demonstrates stable emission while semantic facts are supplied by canonical analysis queries.
 
 def summarize(values: list[int]) -> int:
@@ -13,5 +12,5 @@ def summarize(values: list[int]) -> int:
     return total
 
 def main():
-    print('m24_4 analysis/emission boundary hardening demo:')
+    print('stable_codegen analysis/emission boundary hardening demo:')
     print(summarize([3, 12, 20]))

@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("m22_2 project-aware check parity demo:");
+    println!("project_check project-aware check parity demo:");
     println!("{}", helper::area_like(3.0));
 }

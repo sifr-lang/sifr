@@ -1,5 +1,5 @@
-# Reference: ad_hoc_nested_function_part4
-# Source issue: ad-hoc-full-nested-function-pipeline-part4-execution.md
+# Reference: nested_function_part4
+# Reference: full-nested-function-pipeline-part4
 # Part 4 demo: production nested-helper lowering for recursive collection-capture patterns
 
 def collect_value_groups(items: list[int], limit: int) -> list[list[int]]:

@@ -1,5 +1,5 @@
-# Reference: ad_hoc_struct_wave3
-# Source issue: ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md
+# Reference: struct_uuid_and_datetime
+# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.uuid import NAMESPACE_DNS, uuid3, uuid5
 from sifr.datetime import datetime, UTC, timezone, now, from_timestamp
 

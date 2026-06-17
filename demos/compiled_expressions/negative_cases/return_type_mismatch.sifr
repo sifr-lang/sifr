@@ -1,6 +1,5 @@
-# Reference: m20_1
-# Source issue: phase20-hir-decomposition-and-maintainability-hardening-execution.md
-# milestone_20_1 negative-path demo
+# Reference: compiled_expressions
+# compiled-expressions-sample negative-path demo
 # Must fail in lowering/type-checking with an explicit return-type mismatch diagnostic.
 
 def bad() -> int:

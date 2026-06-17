@@ -276,7 +276,7 @@ impl FileHandle {
 }
 
 fn main() {
-    let path: String = "/tmp/sifr_ad_hoc_bytes_wave3_demo.bin".to_string();
+    let path: String = "/tmp/sifr_bytes_bytes_file_io.bin".to_string();
     let mut loaded_ok: bool = false;
     let mut ints_ok: bool = false;
     let mut cleanup_ok: bool = false;
@@ -327,7 +327,7 @@ fn main() {
         },
     }
 })()?;
-    let _w: () = writer.write_bytes(&vec![(119 as i64) as u8, (97 as i64) as u8, (118 as i64) as u8, (101 as i64) as u8, (51 as i64) as u8])?;
+    let _w: () = writer.write_bytes(&vec![(98 as i64) as u8, (121 as i64) as u8, (116 as i64) as u8, (101 as i64) as u8, (115 as i64) as u8, (95 as i64) as u8, (102 as i64) as u8, (105 as i64) as u8, (108 as i64) as u8, (101 as i64) as u8, (95 as i64) as u8, (105 as i64) as u8, (111 as i64) as u8])?;
     writer.close();
     let mut reader: FileHandle = (|| {
     let __path = path.to_string();
@@ -377,8 +377,8 @@ fn main() {
 })()?;
     let loaded: Vec<u8> = reader.read_bytes()?;
     reader.close();
-    loaded_ok = loaded == vec![(119 as i64) as u8, (97 as i64) as u8, (118 as i64) as u8, (101 as i64) as u8, (51 as i64) as u8];
-    ints_ok = format!("{:?}", loaded.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>()) == "[119, 97, 118, 101, 51]".to_string();
+    loaded_ok = loaded == vec![(98 as i64) as u8, (121 as i64) as u8, (116 as i64) as u8, (101 as i64) as u8, (115 as i64) as u8, (95 as i64) as u8, (102 as i64) as u8, (105 as i64) as u8, (108 as i64) as u8, (101 as i64) as u8, (95 as i64) as u8, (105 as i64) as u8, (111 as i64) as u8];
+    ints_ok = format!("{:?}", loaded.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>()) == "[98, 121, 116, 101, 115, 95, 102, 105, 108, 101, 95, 105, 111]".to_string();
     return Ok(());
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {

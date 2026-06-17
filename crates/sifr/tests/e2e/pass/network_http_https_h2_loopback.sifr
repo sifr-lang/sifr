@@ -1,0 +1,77 @@
+# sifr-e2e-allow-http-transport-harness
+from sifr.http_transport import (
+    transport_http2_client_roundtrip_tls,
+    transport_http2_server_respond_tls,
+)
+from sifr.net import SocketAddr, TcpListener, TcpStream, connect_tcp, listen_tcp
+from sifr.tls import (
+    TlsClientConfig,
+    TlsServerConfig,
+    TlsStream,
+    client_config_from_ca_pem,
+    server_config_from_pem,
+)
+
+
+def cert_pem() -> bytes:
+    return b"-----BEGIN CERTIFICATE-----\nMIIBvzCCAWWgAwIBAgIUXg72etQ8f6Ntm5bSD9NioVQW2AIwCgYIKoZIzj0EAwIw\nFDESMBAGA1UEAwwJbG9jYWxob3N0MCAXDTI2MDYxMjAyMDYwMVoYDzIxMjYwNTE5\nMDIwNjAxWjAUMRIwEAYDVQQDDAlsb2NhbGhvc3QwWTATBgcqhkjOPQIBBggqhkjO\nPQMBBwNCAARpP8aZInRcXedS58LVHfaRvEpy7Q7q77PcXU81yOFyoFSHitSVtjiZ\nR8e8gsD/54jjAjYff7slVUuEub/M5Cp2o4GSMIGPMB0GA1UdDgQWBBRSFYkeBwSV\nwA+LGs+MsRmfi3XzDjAfBgNVHSMEGDAWgBRSFYkeBwSVwA+LGs+MsRmfi3XzDjAa\nBgNVHREEEzARgglsb2NhbGhvc3SHBH8AAAEwDAYDVR0TAQH/BAIwADAOBgNVHQ8B\nAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwCgYIKoZIzj0EAwIDSAAwRQIg\nNj8TX4MVR0Z3gMC4Q4zRwUscL0Aw0rUcKTn37XOxlLQCIQD9zsCdWzLGaviK3dLQ\no0acvf03F3cshDbwpd25T2269Q==\n-----END CERTIFICATE-----\n"
+
+
+def key_pem() -> bytes:
+    return b"-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIOh7ipDPAfBIzuGhz5Uj/Rz2TXKPblKyBkOQZFPqT3dhoAoGCCqGSM49\nAwEHoUQDQgAEaT/GmSJ0XF3nUufC1R32kbxKcu0O6u+z3F1PNcjhcqBUh4rUlbY4\nmUfHvILA/+eI4wI2H3+7JVVLhLm/zOQqdg==\n-----END EC PRIVATE KEY-----\n"
+
+
+async def server_once(own config: TlsServerConfig, own tcp: TcpStream) -> Result[bool, Error]:
+    try:
+        tls: TlsStream = await config.accept(tcp, timeout=2.0)
+        negotiated: bytes | None = tls.alpn_protocol()
+        assert negotiated == b"h2"
+        request: tuple[str, str, str, list[tuple[str, str]], bytes] = await transport_http2_server_respond_tls(
+            tls._handle,
+            203,
+            [("content-type", "application/octet-stream"), ("x-sifr-reply", "https-h2")],
+            b"pong-https-h2",
+            1024,
+            1024,
+        )
+        assert request[0] == "PATCH"
+        assert request[1] == "https://localhost/https-h2-loopback"
+        assert request[2] == "HTTP/2"
+        assert request[4] == b"ping-https-h2"
+        return True
+    except Error as e:
+        raise e
+
+
+async def main() -> Result[None, Error]:
+    try:
+        alpn: list[bytes] = [b"h2"]
+        server_config: TlsServerConfig = server_config_from_pem(cert_pem(), key_pem(), alpn)
+        client_config: TlsClientConfig = client_config_from_ca_pem(cert_pem(), alpn)
+        listener: TcpListener = await listen_tcp("127.0.0.1:0", reuse_addr=True)
+        addr: SocketAddr = listener.local_addr()
+        client_tcp: TcpStream = await connect_tcp(addr.value, timeout=2.0)
+        accepted: tuple[TcpStream, SocketAddr] = await listener.accept()
+        _closed: None = listener.close()
+
+        async with task.scope() as scope:
+            server = scope.spawn(server_once(server_config, accepted[0]))
+            tls: TlsStream = await client_config.connect(client_tcp, "localhost", timeout=2.0)
+            negotiated: bytes | None = tls.alpn_protocol()
+            assert negotiated == b"h2"
+            response: tuple[int, str, list[tuple[str, str]], bytes] = await transport_http2_client_roundtrip_tls(
+                tls._handle,
+                "PATCH",
+                "https://localhost/https-h2-loopback",
+                [("x-sifr-request", "https-h2")],
+                b"ping-https-h2",
+                1024,
+                1024,
+            )
+            assert response[0] == 203
+            assert response[1] == "HTTP/2"
+            assert response[3] == b"pong-https-h2"
+            _server_joined = await server.join()
+    except Error as e:
+        raise e
+    return None

@@ -1,5 +1,5 @@
-// Reference: milestone_type_system
-// Source issue: revised_phase_roadmap_698c629c.md
+// Reference: type_system
+// Reference: compiler-feature-history
 #[derive(Debug, Clone)]
 enum IntOrStr {
     Int(i64),

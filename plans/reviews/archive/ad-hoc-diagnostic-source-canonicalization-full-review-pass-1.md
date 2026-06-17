@@ -32,10 +32,10 @@ The file exceeds the hand-maintained file-size cap by 102 lines. The git diff sh
 
 ### Contract checker
 ```
-$ python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py
+$ python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py
 diagnostic source canonicalization contract: PASS
 
-$ python3 verification/tooling/check_diagnostic_source_canonicalization_contract.py --self-test
+$ python3 verification/tooling/check_diagnostic_source_canonicalization_rules.py --self-test
 diagnostic source canonicalization contract self-test: PASS
 ```
 

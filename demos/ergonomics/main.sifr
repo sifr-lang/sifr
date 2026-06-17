@@ -1,6 +1,6 @@
-# Reference: milestone_ergonomics
-# Source issue: milestone-ergonomics-epic.md
-# demos/milestone_ergonomics_demo.sifr
+# Reference: ergonomics
+# Reference: ergonomics
+# demos/ergonomics_demo.sifr
 # This demo showcases all major Language Ergonomics features:
 # - Augmented assignment operators
 # - Conditional expressions (ternary)
@@ -184,4 +184,4 @@ def main():
     demo_walrus()
     placeholder()
     demo_builtins()
-    print("All milestone_ergonomics features working!")
+    print("All ergonomics features working!")

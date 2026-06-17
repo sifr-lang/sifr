@@ -16,7 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 GOLDEN_MANIFEST = AREA_ROOT / "golden" / "manifest.json"
-PLATFORM_CONTRACT = AREA_ROOT / "platform_contract.json"
+PLATFORM_RULES = AREA_ROOT / "platform_rules.json"
 SANITIZER_MANIFEST = AREA_ROOT / "sanitizer_manifest.json"
 PLATFORM_EVIDENCE_TOOL = AREA_ROOT / "tools" / "check_platform_evidence.py"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "runtime-platform-results.json"
@@ -107,8 +107,8 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
     if suite_name == "platform-golden":
         variants = run_platform_golden()
-    elif suite_name == "platform-contract":
-        variants = [run_contract_variant()]
+    elif suite_name == "platform-rules":
+        variants = [run_rules_variant()]
     elif suite_name in {"platform-support-matrix", "platform-evidence"}:
         variants = run_platform_evidence_suite(suite_name)
     elif suite_name in {"sanitizer-smoke", "sanitizer-full"}:
@@ -138,25 +138,25 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_contract_variant() -> dict[str, Any]:
+def run_rules_variant() -> dict[str, Any]:
     started = time.perf_counter()
     status = "pass"
     failures: list[str] = []
     try:
-        payload = json.loads(PLATFORM_CONTRACT.read_text(encoding="utf-8"))
+        payload = json.loads(PLATFORM_RULES.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
-            failures.append("platform contract must be a JSON object")
+            failures.append("platform rules must be a JSON object")
     except Exception as exc:  # noqa: BLE001 - validation result captures parse failure.
         failures.append(str(exc))
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     if failures:
         status = "fail"
         for failure in failures:
-            print(f"[platform-contract] fail {failure}", file=sys.stderr, flush=True)
-    print_case_timing("platform-contract", "platform-contract", elapsed_ms, status)
+            print(f"[platform-rules] fail {failure}", file=sys.stderr, flush=True)
+    print_case_timing("platform-rules", "platform-rules", elapsed_ms, status)
     return {
-        "label": "platform-contract",
-        "argv": ["json-validate", str(PLATFORM_CONTRACT.relative_to(REPO_ROOT))],
+        "label": "platform-rules",
+        "argv": ["json-validate", str(PLATFORM_RULES.relative_to(REPO_ROOT))],
         "status": status,
         "mismatches": failures,
         "expected_exit_code": 0,
@@ -218,7 +218,7 @@ def run_platform_evidence_suite(suite_name: str) -> list[dict[str, Any]]:
 
 def run_platform_golden() -> list[dict[str, Any]]:
     manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
-    closed = {item.strip() for item in os.environ.get("SIFR_PLATFORM_CLOSED_MILESTONES", "").split(",") if item.strip()}
+    closed = {item.strip() for item in os.environ.get("SIFR_PLATFORM_CLOSED_CAPABILITIES", "").split(",") if item.strip()}
     variants = []
     passed = 0
     skipped = 0
@@ -235,9 +235,9 @@ def run_platform_golden() -> list[dict[str, Any]]:
 
 def run_platform_entry(entry: dict[str, Any], closed: set[str]) -> dict[str, Any]:
     program = str(entry["program"])
-    missing = [milestone for milestone in entry.get("blocked_until", []) if milestone not in closed]
+    missing = [capability for capability in entry.get("blocked_until_capabilities", []) if capability not in closed]
     if missing:
-        print(f"[platform-golden] skip {program} blocked_until={','.join(missing)}", flush=True)
+        print(f"[platform-golden] skip {program} blocked_until_capabilities={','.join(missing)}", flush=True)
         return {
             "label": program,
             "argv": [str(entry.get("command", ""))],
@@ -246,7 +246,7 @@ def run_platform_entry(entry: dict[str, Any], closed: set[str]) -> dict[str, Any
             "expected_exit_code": int(entry.get("expected_exit", 0)),
             "actual_exit_code": None,
             "duration_ms": 0.0,
-            "blocked_until": missing,
+            "blocked_until_capabilities": missing,
         }
 
     started = time.perf_counter()

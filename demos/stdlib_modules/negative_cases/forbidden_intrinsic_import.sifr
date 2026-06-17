@@ -1,6 +1,5 @@
-# Reference: m20_2
-# Source issue: phase20-hir-decomposition-and-maintainability-hardening-execution.md
-# milestone_20_2 negative-path demo
+# Reference: stdlib_modules
+# stdlib-modules-sample negative-path demo
 # Direct _sifr imports must remain rejected for user code.
 
 from _sifr.math import sqrt

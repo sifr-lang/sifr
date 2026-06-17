@@ -20,7 +20,7 @@ None. All pass 1 mandatory edits (E1–E5) and polish (E6–E8) are correctly in
 ### P2 — polish only
 
 1. **CLI exit-code contract list lacks a pinned file path.** Every other row's source-of-truth points at a concrete file. The CLI row (line 116) names `sifr` integration tests by binary target but the "plus CLI exit-code contract list" half is unscoped — no path, no owner-of-creation task. The minimum-content rule "exit-code contract without integration test fails" therefore has no machine-checkable input until Wave 0 implicitly creates one as part of the compiler surface matrix.
-   - Optional fix: pin to e.g. `verification/areas/developer_tooling/data/cli_exit_code_contracts.json` and add a Wave 0 or Wave 1 sub-task to populate it from current `sifr` integration test expectations.
+   - Optional fix: pin to e.g. `verification/areas/developer_tooling/data/cli_exit_code_rules.json` and add a Wave 0 or Wave 1 sub-task to populate it from current `sifr` integration test expectations.
 
 2. **Project/workspace row lacks an explicit "create the contract enumeration" task.** Similar to #1: the row promises "every shipped workspace and graph-isolation contract has a blocking suite row," but no wave is explicitly tasked with enumerating the contract set. Wave 0's compiler-surface matrix will absorb it, but it's left implicit.
 

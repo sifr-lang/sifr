@@ -190,7 +190,7 @@ fn debug_snapshot_explains_invalidation_and_status_counts() {
 
 #[test]
 fn closing_one_overlay_preserves_other_overlay_watcher() {
-    let temp = TempProject::new("workspace_session_m15_close_watchers");
+    let temp = TempProject::new("workspace_session_close_watchers");
     temp.write(
         "main.sifr",
         "from first import a\nfrom second import b\nprint(a + b)\n",
@@ -263,7 +263,7 @@ fn closing_one_overlay_preserves_other_overlay_watcher() {
 
 #[test]
 fn config_registry_pending_reload_and_extra_watch_roots_are_snapshot_visible() {
-    let temp = TempProject::new("workspace_session_m15_registry");
+    let temp = TempProject::new("workspace_session_registry");
     temp.write("main.sifr", "print(1)\n");
     let root = ProjectRoot {
         root: SourcePath::new(temp.root.clone()),
@@ -304,7 +304,7 @@ fn config_registry_pending_reload_and_extra_watch_roots_are_snapshot_visible() {
 
 #[test]
 fn build_info_is_verified_against_current_workspace_fingerprints() {
-    let temp = TempProject::new("workspace_session_m15_build_info");
+    let temp = TempProject::new("workspace_session_build_info");
     temp.write("main.sifr", "print(1)\n");
     let root = ProjectRoot {
         root: SourcePath::new(temp.root.clone()),
@@ -348,7 +348,7 @@ fn build_info_is_verified_against_current_workspace_fingerprints() {
 
 #[test]
 fn build_info_rejects_missing_extra_package_and_unloaded_inputs() {
-    let temp = TempProject::new("workspace_session_m15_build_info_reject");
+    let temp = TempProject::new("workspace_session_build_info_reject");
     temp.write("main.sifr", "print(1)\n");
     let root = ProjectRoot {
         root: SourcePath::new(temp.root.clone()),

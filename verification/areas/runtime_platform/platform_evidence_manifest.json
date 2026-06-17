@@ -173,7 +173,7 @@
       "allowed_skip_statuses": [
         "host-limited"
       ],
-      "skip_reason": "POSIX signal delivery is not a Windows platform contract",
+      "skip_reason": "POSIX signal delivery is not a Windows platform rules",
       "evidence": [
         "SIGTERM delivery",
         "signal-derived subprocess termination"

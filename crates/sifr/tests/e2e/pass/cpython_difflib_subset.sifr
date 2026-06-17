@@ -1,5 +1,5 @@
 # Adapted CPython difflib subset for sifr.difflib
-# Note: Sifr exposes the simplified SequenceMatcher(a, b) surface in this wave.
+# Note: Sifr exposes the simplified SequenceMatcher(a, b) API in this compatibility subset.
 from sifr.difflib import SequenceMatcher, get_close_matches
 
 def main():

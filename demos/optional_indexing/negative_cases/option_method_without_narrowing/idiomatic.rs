@@ -6,7 +6,7 @@
 //!
 //! This fixture exists to preserve deterministic optional-method diagnostics.
 //! The Rust-side analogue is the requirement to unwrap or pattern-match
-//! `Option<Vec<i64>>` before method access, so this file records the contract
+//! `Option<Vec<i64>>` before method access, so this file records the rules
 //! rather than inventing a different Rust compile error.
 
 fn main() {}

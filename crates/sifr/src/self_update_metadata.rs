@@ -37,12 +37,12 @@ impl PreviewVersion {
     pub(crate) fn parse(input: &str) -> Result<Self, Box<RenderedDiagnostic>> {
         if input.contains("-rc.") {
             return Err(self_update_diagnostic(format!(
-                "release-candidate version pins are disabled before Phase 39: {input}; use --channel alpha|beta or a supported preview version"
+                "release-candidate version pins are disabled while stable release channels are disabled: {input}; use --channel alpha|beta or a supported preview version"
             )));
         }
         if is_stable_version(input) {
             return Err(self_update_diagnostic(format!(
-                "stable-looking versions are disabled until Phase 39: {input}; use --channel alpha|beta or --version <preview>"
+                "stable-looking versions are disabled while stable release channels are disabled: {input}; use --channel alpha|beta or --version <preview>"
             )));
         }
         let (core, prerelease) = input.split_once('-').ok_or_else(|| {
@@ -65,7 +65,7 @@ impl PreviewVersion {
             "beta" => PreviewChannel::Beta,
             "rc" => {
                 return Err(self_update_diagnostic(format!(
-                    "release-candidate version pins are disabled before Phase 39: {input}; use --channel alpha|beta or a supported preview version"
+                    "release-candidate version pins are disabled while stable release channels are disabled: {input}; use --channel alpha|beta or a supported preview version"
                 )));
             }
             _ => return Err(invalid_preview_version(input)),
@@ -184,12 +184,12 @@ impl ChannelMetadata {
         for (name, version_value) in channels {
             if name == "stable" {
                 return Err(self_update_diagnostic(
-                    "stable channel metadata is disabled until Phase 39",
+                    "stable channel metadata is disabled while stable release channels are disabled",
                 ));
             }
             if name == "rc" {
                 return Err(self_update_diagnostic(
-                    "release-candidate channel metadata is disabled before Phase 39",
+                    "release-candidate channel metadata is disabled while stable release channels are disabled",
                 ));
             }
             if name != "alpha" && name != "beta" {
@@ -233,10 +233,10 @@ pub(crate) fn parse_channel(input: &str) -> Result<PreviewChannel, Box<RenderedD
         "alpha" => Ok(PreviewChannel::Alpha),
         "beta" => Ok(PreviewChannel::Beta),
         "stable" => Err(self_update_diagnostic(
-            "stable channel self-update is disabled until Phase 39; use --channel alpha|beta",
+            "stable channel self-update is disabled while stable release channels are disabled; use --channel alpha|beta",
         )),
         "rc" => Err(self_update_diagnostic(
-            "release-candidate channel self-update is disabled before Phase 39; use --channel alpha|beta",
+            "release-candidate channel self-update is disabled while stable release channels are disabled; use --channel alpha|beta",
         )),
         other => Err(self_update_diagnostic(format!(
             "unknown self-update channel: {other}; use --channel alpha|beta"
@@ -509,7 +509,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_rc_channel_before_phase_39() {
+    fn rejects_rc_channel_without_stable_release_channel() {
         let error = parse_channel("rc").expect_err("rc channel is gated");
         assert!(error.message.contains("release-candidate"));
     }

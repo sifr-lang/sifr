@@ -1,7 +1,7 @@
-# Reference: milestone_new_modules
-# Source issue: revised_phase_roadmap_698c629c.md
-# milestone_new_modules_demo.sifr
-# Demonstrates selected modules added in milestone_new_modules:
+# Reference: new_modules
+# Reference: compiler-feature-history
+# new_modules_demo.sifr
+# Demonstrates selected modules added in new_modules:
 # operator, calendar, html, sys, configparser, gzip, zipfile
 
 

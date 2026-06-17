@@ -1,5 +1,5 @@
-# Reference: wave_psp_c2
-# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
+# Reference: text-patterns-sample
+# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.string import Template, Formatter
 from sifr.textwrap import TextWrapper
 from sifr.base64 import b64encode, b64decode
@@ -22,8 +22,8 @@ def main() -> None:
     formatter: Formatter = Formatter()
     rendered_fmt_ok: bool = False
     try:
-        rendered_fmt: str = formatter.format("Wave {wave}: {status}", {"wave": "c2", "status": "ok"})
-        rendered_fmt_ok = rendered_fmt == "Wave c2: ok"
+        rendered_fmt: str = formatter.format("Status {label}: {status}", {"label": "c2", "status": "ok"})
+        rendered_fmt_ok = rendered_fmt == "Status c2: ok"
     except ValueError as e:
         _ = e.message
     assert rendered_fmt_ok

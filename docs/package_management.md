@@ -207,4 +207,4 @@ Sifr wraps Cargo process failures in `SIFR-PACKAGE-0101`. The wrapper carries th
 
 ## Python Interop
 
-`pyproject.toml`, `uv.lock`, and uv/Python package coordination are future interop work. They are not part of Phase 37 core package management and must lower into the same Cargo-backed `SifrPackageGraph` and `PackageSourceMap` model when implemented.
+`pyproject.toml`, `uv.lock`, and uv/Python package coordination are future interop work. They are not part of the core package-management rules and must lower into the same Cargo-backed `SifrPackageGraph` and `PackageSourceMap` model when implemented.

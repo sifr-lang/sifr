@@ -40,7 +40,7 @@ Reviewer date: 2026-06-02.
 | AC-26 Per-feature LSP budgets enforced separately | PASS | `verification/performance/manifest.json:67-84`; `verification/performance/budgets.json:857-1197` (18 `perf.lsp.*` scenarios) |
 | AC-27 `perf.lsp.request_families` retained as smoke only | PASS | Aggregate case still in manifest/budgets alongside per-request cases |
 | AC-28 Perf docs explain `perf.interactive.*` ↔ LSP budget relationship | PASS | `internal_docs/performance_budgets.md:100-108` |
-| AC-29 `SIFR-IMPORT-0005` vs `SIFR-PACKAGE-*` separation | PASS | `crates/sifr_diagnostics/src/codes/registry.rs:32,525`; `crates/sifr_driver/src/project/package_discovery.rs:91,209-275`; `verification/tooling/check_diagnostic_source_canonicalization_contract.py:347,373` |
+| AC-29 `SIFR-IMPORT-0005` vs `SIFR-PACKAGE-*` separation | PASS | `crates/sifr_diagnostics/src/codes/registry.rs:32,525`; `crates/sifr_driver/src/project/package_discovery.rs:91,209-275`; `verification/tooling/check_diagnostic_source_canonicalization_rules.py:347,373` |
 | AC-30 Package source map preserves ambiguous candidate sets | PASS | `crates/sifr_package/src/imports/source_map.rs:62-70,216,260` |
 | AC-31 Five-state coverage + cross-prefix negative checks | PASS | `crates/sifr_package/src/milestone_adhoc_tsgo_m2_tests.rs:11,48-90`; `crates/sifr/tests/verification/package/package_ambiguous_import_canonical/`; `crates/sifr/tests/verification/package/package_fatal_source_map_no_import_ambiguity/`; canonicalization contract checker |
 

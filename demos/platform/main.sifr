@@ -1,5 +1,4 @@
-# Reference: m30_1f
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: platform
 from sifr.platform import system, machine, node, release, version, processor
 from sifr.platform import platform_system, platform_arch, platform_node
 from sifr.test import assert_bool_vector_eq
@@ -41,4 +40,4 @@ def main():
     append_all(actual, collect_alias_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1f platform parity demo: pass")
+    print("platform platform parity demo: pass")

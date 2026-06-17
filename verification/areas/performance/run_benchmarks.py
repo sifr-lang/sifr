@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 35 local benchmark runner."""
+"""local benchmark runner."""
 
 from __future__ import annotations
 

@@ -1,9 +1,8 @@
-# Reference: m28_3
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_conversions
 from sifr.json import json_dumps
 
 def main():
-    print("m28_3 conversion and boundary contracts demo")
+    print("decimal_conversions conversion and boundary rules demo")
 
     d: decimal = Decimal("-1.9")
     bd: bigdecimal = BigDecimal("-1.9")

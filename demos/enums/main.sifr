@@ -1,6 +1,6 @@
-# Reference: milestone_enums
-# Source issue: 195-milestone_enums.md
-# Demo: milestone_enums
+# Reference: enum type-system work
+# Source issue: 195-enum type-system work.md
+# Demo: enum type-system work
 # Showcases enum types with variants, values, methods, pattern matching, and dict keys.
 
 from enum import Enum

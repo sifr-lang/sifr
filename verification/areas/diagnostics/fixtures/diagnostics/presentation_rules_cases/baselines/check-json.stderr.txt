@@ -1,0 +1,110 @@
+[
+  {
+    "code": "SIFR-TYPE-0002",
+    "severity": "Error",
+    "message": "carriage return normalized",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "carriage return normalized"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_rules_cases/main.sifr",
+        "byte_start": 4,
+        "byte_end": 9,
+        "line": 2,
+        "column": 5,
+        "end_line": 2,
+        "end_column": 10,
+        "is_primary": true,
+        "label": "primary span",
+        "lines": [
+          {
+            "text": "    value: int = 1\r",
+            "highlight_start": 5,
+            "highlight_end": 10
+          }
+        ]
+      },
+      {
+        "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_rules_cases/main.sifr",
+        "byte_start": 20,
+        "byte_end": 27,
+        "line": 3,
+        "column": 5,
+        "end_line": 3,
+        "end_column": 12,
+        "is_primary": false,
+        "label": "related span",
+        "lines": [
+          {
+            "text": "    related: int = 2",
+            "highlight_start": 5,
+            "highlight_end": 12
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "child note rendered"
+      },
+      {
+        "severity": "Help",
+        "message": "child help rendered"
+      }
+    ],
+    "help": "child help rendered",
+    "suggestions": [
+      {
+        "message": "replace value with safer expression",
+        "applicability": "MachineApplicable",
+        "edits": [
+          {
+            "span": {
+              "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_rules_cases/main.sifr",
+              "byte_start": 4,
+              "byte_end": 9,
+              "line": 2,
+              "column": 5,
+              "end_line": 2,
+              "end_column": 10,
+              "is_primary": false,
+              "label": null,
+              "lines": [
+                {
+                  "text": "    value: int = 1",
+                  "highlight_start": 5,
+                  "highlight_end": 10
+                }
+              ]
+            },
+            "replacement": "\"safe\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "SIFR-INTERNAL-0001",
+    "severity": "Error",
+    "message": "spanless internal diagnostic",
+    "message_template": "{message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "spanless internal diagnostic"
+      }
+    },
+    "url": "https://sifr.sh/docs/errors/SIFR-INTERNAL-0001",
+    "spans": [],
+    "children": [],
+    "help": "report this compiler bug",
+    "suggestions": []
+  }
+]

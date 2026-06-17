@@ -1,4 +1,4 @@
-# Reference: decimal_conversion_boundary_contracts
+# Reference: decimal_conversion_boundary_rules
 from sifr.json import json_dumps
 
 def main():

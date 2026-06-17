@@ -1,4 +1,4 @@
-# Reference: phase31_heapq_max_private_compat
+# Reference: narrowing_heapq_max_private_compat
 from sifr.heapq import _heapify_max, _heappop_max, _heapreplace_max
 from sifr.test import assert_bool_vector_eq
 

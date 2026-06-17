@@ -1,5 +1,4 @@
-# Reference: m28_5
-# Source issue: phase28-decimal-semantics-execution.md
+# Reference: decimal_verification
 def main():
     d: decimal = Decimal("1.0")
     b: bigdecimal = BigDecimal("2.0")

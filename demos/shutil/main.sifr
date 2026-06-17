@@ -1,5 +1,4 @@
-# Reference: m30_1e
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: shutil
 from sifr.shutil import copy, move_file, rmtree, which, disk_usage
 from sifr.io import write_text, read_text, exists
 from sifr.os import mkdir, run_command
@@ -9,7 +8,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_copy_move_tree_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = mktemp_path("sifr_m30_1e_shutil_demo_")
+    base: str = mktemp_path("sifr_shutil_shutil_demo_")
     src: str = base + "/src.txt"
     copied: str = base + "/copied.txt"
     moved: str = base + "/moved.txt"
@@ -49,7 +48,7 @@ def collect_copy_move_tree_actual() -> list[bool]:
 
 def collect_tooling_and_cleanup_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = mktemp_path("sifr_m30_1e_shutil_demo_cleanup_")
+    base: str = mktemp_path("sifr_shutil_shutil_demo_cleanup_")
     base_ready: bool = False
     try:
         _mk: None = mkdir(base)
@@ -103,4 +102,4 @@ def main():
     append_all(actual, collect_tooling_and_cleanup_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1e shutil parity demo: pass")
+    print("shutil shutil parity demo: pass")

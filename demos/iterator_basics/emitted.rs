@@ -356,5 +356,5 @@ fn main() {
     assert!(format!("{:?}", combos) == "[[1, 2], [1, 3], [2, 3]]".to_string());
     let prods: Vec<Vec<i64>> = product(&vec![vec![1 as i64, 2 as i64]], 2 as i64).collect::<Vec<_>>();
     assert!(format!("{:?}", prods) == "[[1, 1], [1, 2], [2, 1], [2, 2]]".to_string());
-    println!("ad_hoc_iter_wave6_parity_closure_demo: ok");
+    println!("iter_iterator_basics_closure_demo: ok");
 }

@@ -1,11 +1,10 @@
-# Reference: m24_5
-# Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_5 analysis consolidation regression matrix demo
+# Reference: hir_analysis_behavior
+# hir analysis consolidation regression matrix demo
 # Exercises nested conditionals and early-return paths used in consolidation parity checks.
 
 from helper import evaluate
 
 def main():
-    print('m24_5 analysis consolidation regression matrix demo:')
+    print('hir analysis consolidation regression matrix demo:')
     print(evaluate(10))
     print(evaluate(0))

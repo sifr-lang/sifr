@@ -1,4 +1,4 @@
-# Reference: phase_psp_b1_counter_iterable_constructor_unsupported
+# Reference: stdlib_parity_b1_counter_iterable_constructor_unsupported
 from sifr.collections import Counter
 
 def main():

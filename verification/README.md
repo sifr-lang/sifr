@@ -45,7 +45,7 @@ lanes.
 ## Layout
 
 - `runner/sifr_verify/` contains runner code and self-tests.
-- `schemas/` contains the supported committed data contracts.
+- `schemas/` contains the supported committed data schemas.
 - `profiles/` contains profile JSON files selected by `scripts/run_all_tests.sh --profile`
   and executed by `sifr_verify profiles run`.
   Profile v2 data owns `crate_test_membership`, the executable list of cargo
@@ -56,8 +56,8 @@ lanes.
   `coverage_matrix` owns the shipped guarantee registry and compiler surface
   matrix. It also owns `data/cargo_metadata_classification.json`, which maps
   every Cargo workspace package, target, and feature to its verification
-  assignment. The `coverage_matrix:closeout` suite is selected by all four
-  profiles and runs strict closeout mode plus profile-assignment checks. It
+  assignment. The `coverage_matrix:readiness` suite is selected by all four
+  profiles and runs strict readiness mode plus profile-assignment checks. It
   rejects temporary rows (`expected-missing`, `tests:none`, `red-blocker`),
   unknown or unassigned owners, missing profile membership, non-offline
   create-pr/merge policy, v1 stable-surface manifests, and unpinned required
@@ -68,17 +68,17 @@ lanes.
 
 ## Profile Ownership
 
-- `create-pr` is a fast representative profile. It selects closeout coverage,
-  diagnostics contracts, runtime/platform support evidence, algorithmic manifest
+- `create-pr` is a fast representative profile. It selects readiness coverage,
+  diagnostics rules, runtime/platform support evidence, algorithmic manifest
   checks, static/LSP smoke tooling, generated-code smoke, performance smoke, and
   stdlib module merge checks.
-- `merge` is the authoritative local gate. It selects the closeout coverage
+- `merge` is the authoritative local gate. It selects the readiness coverage
   suite, full first-party compiler crate membership, full semantic e2e pass
   corpus, diagnostics baselines, representative generated-code/performance
   suites, CPython hand-seeded differential checks, package offline smoke,
   stdlib module merge checks, runtime/platform evidence, regression, fuzz smoke,
   and curated ecosystem checks.
-- `nightly` and `release` run the same closeout coverage suite plus broader
+- `nightly` and `release` run the same readiness coverage suite plus broader
   full/generated/profile-owned suites such as full algorithmic compatibility,
   full generated-code quality, full performance, full distribution, broader
   CPython differential, sanitizer-full, ecosystem-broader, and module-full
@@ -87,7 +87,7 @@ lanes.
 Crate test membership is data-owned by `crate_test_membership.suites` in each
 profile. The coverage matrix cross-checks that first-party compiler crates with
 tests are in merge membership and executed; temporary red blockers are illegal
-at closeout.
+at readiness.
 
 ## Baselines And Blessing
 
@@ -104,7 +104,7 @@ uv run --project verification --locked python -m sifr_verify areas run --area di
 ```
 
 Baseline metadata, source hashes, stale/unused baseline detection, and recovery
-surface coverage are enforced by `diagnostics:contracts`.
+surface coverage are enforced by `diagnostics:rules`.
 
 ## Fuzz, Sanitizer, And Release Evidence
 
@@ -122,7 +122,7 @@ uv run --project verification --locked python -m sifr_verify areas run --area ru
 ```
 
 Release evidence is emitted under `target/validation_lane_reports/` and the
-area-specific `target/verification/areas/**` result files. A closeout archive
+area-specific `target/verification/areas/**` result files. A readiness archive
 must record commit SHA, OS/toolchain, emitted profile plans, suite counts,
 report signatures, and hashes of the validation report JSON files.
 

@@ -1,4 +1,4 @@
-//! Sifr intermediate representation data contracts.
+//! Sifr intermediate representation data schemas.
 //!
 //! This crate owns immutable HIR, CFG, flow-graph, and lowering result data.
 //! Lowering construction algorithms remain in the producer crate.

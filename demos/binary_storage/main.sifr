@@ -1,5 +1,5 @@
-# Reference: ad_hoc_bytes_wave4
-# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
+# Reference: bytes_binary_storage
+# Reference: first-class-bytes-and-binary-surface-foundation
 from sifr.bytes import bytes_from_hex, bytes_to_hex
 from sifr.io import exists
 from sifr.os import remove_file
@@ -14,17 +14,17 @@ def sum_bytes(data: bytes) -> int:
 
 
 def main():
-    payload: bytes = b"wave4"
+    payload: bytes = b"binary_storage"
 
     second: uint8 | None = payload[1]
     second_ok: bool = False
     if second is not None:
-        expected_second: uint8 = 97
+        expected_second: uint8 = 105
         second_ok = second == expected_second
 
-    iter_ok: bool = sum_bytes(payload) == 487
-    contains_ok: bool = payload.contains(119) and (not payload.contains(512))
-    count_ok: bool = payload.count(119) == 1 and payload.count(512) == 0
+    iter_ok: bool = sum_bytes(payload) == 1497
+    contains_ok: bool = payload.contains(98) and (not payload.contains(512))
+    count_ok: bool = payload.count(98) == 1 and payload.count(512) == 0
 
     hex_ok: bool = False
     try:
@@ -34,7 +34,7 @@ def main():
     except ParseError as e:
         _ = str(e.message)
 
-    path: str = "/tmp/sifr_ad_hoc_bytes_wave4_demo.bin"
+    path: str = "/tmp/sifr_bytes_binary_storage.bin"
     io_ok: bool = False
     cleanup_ok: bool = False
     try:
@@ -45,7 +45,7 @@ def main():
         reader = open(path, "rb")
         loaded: bytes = reader.read_bytes()
         reader.close()
-        io_ok = loaded == payload and str(loaded.to_ints()) == "[119, 97, 118, 101, 52]"
+        io_ok = loaded == payload and str(loaded.to_ints()) == "[98, 105, 110, 97, 114, 121, 95, 115, 116, 111, 114, 97, 103, 101]"
     except IOError as e:
         _ = str(e.message)
 

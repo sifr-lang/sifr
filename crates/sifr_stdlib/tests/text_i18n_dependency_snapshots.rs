@@ -21,7 +21,7 @@ fn normalize_runtime_dependency(dependency: &str) -> String {
 }
 
 #[test]
-fn text_i18n_feature_dependency_snapshots_cover_phase_combinations() {
+fn text_i18n_feature_dependency_snapshots_cover_feature_combinations() {
     let cases = [
         (
             "encoding",

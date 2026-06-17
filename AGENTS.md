@@ -78,10 +78,10 @@ See `internal_docs/architecture.md` for full architectural detail.
 ## Workspace structure
 
 - `crates/` — Rust workspace (see pipeline above)
-- `demos/` — Milestone demo files (*.sifr) showcasing language features
+- `demos/` — Runnable language-feature demos (*.sifr)
 - `scripts/` — Build/test automation
 - `verification/` — E2E test infrastructure
-- `plans/` — Roadmap, phase plans, issue plans, and review artifacts
+- `plans/` — Planning documents, issue plans, and review artifacts
 - `internal_docs/` — Durable architecture, accepted decisions, and current technical references
 - `docs/` — Public/site-facing docs such as Sifr documentation and CLI... etc
 

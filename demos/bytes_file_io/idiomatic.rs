@@ -17,13 +17,13 @@ fn cleanup(path: &Path) -> bool {
 }
 
 fn main() {
-    let path = Path::new("/tmp/sifr_ad_hoc_bytes_wave3_demo.bin");
-    let payload = b"wave3";
+    let path = Path::new("/tmp/sifr_bytes_bytes_file_io.bin");
+    let payload = b"bytes_file_io";
 
     let (loaded_ok, ints_ok) = match fs::write(path, payload).and_then(|()| fs::read(path)) {
         Ok(loaded) => (
             loaded == payload,
-            ints_string(&loaded) == "[119, 97, 118, 101, 51]",
+            ints_string(&loaded) == "[98, 121, 116, 101, 115, 95, 102, 105, 108, 101, 95, 105, 111]",
         ),
         Err(_) => (false, false),
     };

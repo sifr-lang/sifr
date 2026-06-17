@@ -63,7 +63,7 @@ fn wildcard_match(name: &str, pattern: &str) -> bool {
 }
 
 fn collect_glob_actual() -> Vec<bool> {
-    let base = format!("/tmp/sifr_m30_1e_glob_demo_{}", std::process::id());
+    let base = format!("/tmp/sifr_glob_glob_demo_{}", std::process::id());
     let _ = fs::remove_dir_all(&base);
 
     let result = (|| -> std::io::Result<Vec<bool>> {
@@ -93,5 +93,5 @@ fn collect_glob_actual() -> Vec<bool> {
 
 fn main() {
     assert_bool_vector_eq(&collect_glob_actual(), &[true, true, true, true, true]);
-    println!("m30_1e glob parity demo: pass");
+    println!("glob glob parity demo: pass");
 }

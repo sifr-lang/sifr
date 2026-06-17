@@ -1,6 +1,6 @@
-# Reference: ad_hoc_nested_function_part5
-# Source issue: ad-hoc-full-nested-function-pipeline-part5-execution.md
-# Ad hoc nested functions phase, part 5 demo:
+# Reference: nested_function_part5
+# Reference: full-nested-function-pipeline-part5
+# Nested functions part 5 demo:
 # authoritative closure evidence for the supported nested-helper surface.
 
 def apply_twice(f: Callable[[int], int], value: int) -> int:

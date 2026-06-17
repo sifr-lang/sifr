@@ -808,7 +808,7 @@ impl FileHandle {
 }
 
 fn main() {
-    let path: String = "/tmp/sifr_runtime_wave1_demo.bin".to_string();
+    let path: String = "/tmp/sifr_runtime_in_memory_streams.bin".to_string();
     let mut stringio_ok: bool = false;
     let mut stringio_negative_seek_ok: bool = false;
     let mut bytesio_ok: bool = false;
@@ -816,11 +816,11 @@ fn main() {
     let mut binary_file_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let mut sio: StringIO = StringIO::new("wave".to_string());
+    let mut sio: StringIO = StringIO::new("sample".to_string());
     let _w: () = sio.write(&"1".to_string())?;
     let _seek: i64 = sio.seek(0 as i64, 0 as i64)?;
     let text_value: String = sio.read(None)?;
-    stringio_ok = text_value == "1ave".to_string();
+    stringio_ok = text_value == "1ample".to_string();
     let __sifr_try_res: Result<(), IOError> = (|| {
     let _bad_seek: i64 = sio.seek(-(1 as i64), 0 as i64)?;
     let _: i64 = _bad_seek;
@@ -877,5 +877,5 @@ fn main() {
     assert!(bytesio_negative_seek_ok);
     assert!(binary_file_ok);
     assert!(cleanup_ok);
-    println!("ad_hoc_runtime_wave1_io_in_memory_hierarchy_demo: ok");
+    println!("runtime_in_memory_streams_in_memory_hierarchy_demo: ok");
 }

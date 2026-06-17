@@ -566,5 +566,5 @@ fn main() {
     let expected_ok: Vec<bool> = vec![false, true];
     let actual_ok: Vec<bool> = collect_decode_actual_ok(&decode_inputs);
     assert_bool_vector_eq(&actual_ok, &expected_ok);
-    println!("m30_1a base64 parity demo: pass");
+    println!("base64 base64 parity demo: pass");
 }

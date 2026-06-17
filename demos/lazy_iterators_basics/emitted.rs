@@ -71,5 +71,5 @@ fn main() {
     assert!(ticker.next() == Some(3 as i64));
     assert!(ticker.next() == Some(5 as i64));
     assert!(ticker.next() == Some(7 as i64));
-    println!("ad_hoc_iter_fix_wave0_contract_lock_demo: ok");
+    println!("iter_fix_lazy_iterators_basics_lock_demo: ok");
 }

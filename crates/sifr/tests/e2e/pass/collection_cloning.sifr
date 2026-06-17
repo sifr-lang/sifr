@@ -1,4 +1,4 @@
-# Reference: wave_clone_0_architecture_lock
+# Reference: ownership_clone_0_architecture_lock
 from sifr.test import assert_eq
 
 

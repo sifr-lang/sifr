@@ -1,7 +1,7 @@
-# Reference: milestone_generics
-# Source issue: milestone-generics-epic.md
+# Reference: generics
+# Reference: generics
 # =============================================================
-# Sifr Milestone: Generics, Lambdas & Iterators Demo
+# Sifr Feature Demo: Generics, Lambdas & Iterators Demo
 # =============================================================
 # Features demonstrated:
 # 1. Lambda expressions with map and filter

@@ -13,7 +13,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/distribution/build_preview_artifacts.sh --version <preview> --output-dir <dir> [options]
 
-Build or package preview artifacts for every Phase 33 target.
+Build or package preview artifacts for every preview release target.
 
 Options:
   --version <preview>       Semver prerelease version, for example 0.1.0-beta.1

@@ -1,7 +1,6 @@
-# Reference: m17_4
-# Source issue: phase17-import-and-externals-correctness-execution.md
+# Reference: import_forms
 from .helper import value
 
 def main():
-    print("m17_4 import-form semantics demo:")
+    print("import_forms import-form semantics demo:")
     print(value())

@@ -67,7 +67,7 @@ fn test_cfg_flow_matrix() {
 }
 
 fn main() {
-    println!("m25_5 cfg flow activation regression matrix demo:");
+    println!("cfg flow activation regression matrix demo:");
     println!("{}", safe(8 as i64));
     println!("{}", safe(3 as i64));
     println!("{}", unreachable_tail());

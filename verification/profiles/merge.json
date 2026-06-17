@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "name": "merge",
-  "description": "Authoritative merge gate with full contract matrices, full semantic e2e, and selected hardening.",
+  "description": "Authoritative merge gate with full rule matrices, full semantic e2e, and selected hardening.",
   "budgets": {
     "warm_wall_time_minutes": 15,
     "cold_wall_time_minutes": 25
@@ -64,7 +64,7 @@
     {
       "area": "coverage_matrix",
       "suites": [
-        "closeout"
+        "readiness"
       ],
       "resource_classes": [
         "default-local"
@@ -73,9 +73,9 @@
     {
       "area": "core_language",
       "suites": [
-        "integer_dtype_contract",
-        "phase24_hir_analysis",
-        "phase25_cfg_flow",
+        "integer_dtype_rules",
+        "hir_analysis_behaviors",
+        "cfg_flow_behaviors",
         "syntax_parser_lexer_matrix"
       ],
       "resource_classes": [
@@ -95,7 +95,7 @@
     {
       "area": "diagnostics",
       "suites": [
-        "contracts",
+        "rules",
         "baselines"
       ],
       "resource_classes": [
@@ -190,7 +190,7 @@
       "area": "project_workspace",
       "suites": [
         "frontend_mode_parity",
-        "phase23_graph_isolation",
+        "project_graph_isolation",
         "baselines"
       ],
       "resource_classes": [
@@ -281,10 +281,10 @@
   "legacy_facade": {
     "matrix_suites": [
       "frontend_mode_parity",
-      "phase23_graph_isolation",
-      "integer_dtype_contract",
-      "phase24_hir_analysis",
-      "phase25_cfg_flow",
+      "project_graph_isolation",
+      "integer_dtype_rules",
+      "hir_analysis_behaviors",
+      "cfg_flow_behaviors",
       "syntax_parser_lexer_matrix"
     ],
     "tooling_suites": [

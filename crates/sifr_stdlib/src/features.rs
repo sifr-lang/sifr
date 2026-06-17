@@ -143,7 +143,7 @@ const CHRONO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     spec: "chrono = \"0.4.44\"",
 }];
 // Cookie-header helpers are Sifr-owned string/header validation; no cookie jar
-// or signing dependency is emitted for the M3 substrate.
+// or signing dependency is emitted for the URL-header-cookie substrate.
 const COOKIE_DEPS: &[GeneratedCargoDependency] = &[];
 const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "encoding_rs",

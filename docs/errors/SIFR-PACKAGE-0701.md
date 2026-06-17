@@ -11,6 +11,6 @@ Production sifr.toml uses manifest-level exports.
 | Severity | Error |
 | Owner | `sifr_package::manifest::sifr` |
 | Message template | `production sifr.toml uses [exports].modules` |
-| Representative fixture | `crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_exports_report_0701` |
+| Representative fixture | `crates/sifr_package/src/package_public_api_tests.rs::production_manifest_exports_report_0701` |
 | Declared args | `cargo_package_id (json-only)`, `manifest_path (json-only)` |
 | Dedupe args | `cargo_package_id`, `manifest_path` |

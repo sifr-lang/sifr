@@ -1,4 +1,4 @@
-# Reference: phase_psp_iter_fix_8_reversed_runtime_iterator_not_reversible
+# Reference: stdlib_parity_iter_fix_8_reversed_runtime_iterator_not_reversible
 from sifr.pathlib import Path
 
 

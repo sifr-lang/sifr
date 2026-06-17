@@ -11,6 +11,6 @@ Workspace selection contains duplicate import roots.
 | Severity | Error |
 | Owner | `sifr_package::graph::workspace` |
 | Message template | `duplicate workspace import root '{import_root}'` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_import_roots_report_0602` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::workspace_duplicate_import_roots_report_0602` |
 | Declared args | `import_root (message+json)`, `packages (json-only)` |
 | Dedupe args | `import_root`, `packages` |

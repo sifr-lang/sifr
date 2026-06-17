@@ -1,6 +1,6 @@
-# Reference: milestone_borrow_codegen_fixes
-# Source issue: revised_phase_roadmap_698c629c.md
-# Milestone: Borrow-by-Default Codegen Fixes Demo
+# Reference: borrow_codegen_fixes
+# Reference: compiler-feature-history
+# Feature Demo: Borrow-by-Default Codegen Fixes Demo
 # =================================================
 # This demo showcases the codegen fixes for borrow-by-default regressions:
 # 1. Borrowed str params now compare correctly with string literals

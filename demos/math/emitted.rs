@@ -319,5 +319,5 @@ fn main() {
     let expected_false: Vec<bool> = vec![false, false];
     let actual_false: Vec<bool> = collect_negative_actual_false();
     assert_bool_vector_eq(&actual_false, &expected_false);
-    println!("m30_1b math parity demo: pass");
+    println!("math math parity demo: pass");
 }

@@ -7,6 +7,6 @@ mod worker {
 use worker::call;
 
 fn main() {
-    println!("m17_2 non-main externals demo:");
+    println!("external_modules non-main externals demo:");
     println!("{}", call());
 }

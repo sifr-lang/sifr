@@ -1,8 +1,8 @@
-# Reference: phase_psp_rng_2_hashlib_scrypt_unsupported
+# Reference: stdlib_parity_rng_2_hashlib_scrypt_unsupported
 from sifr.hashlib import scrypt
 
 
 def main() -> None:
-    # scrypt remains explicitly unsupported in wave_psp_rng_2 scope.
+    # scrypt remains explicitly unsupported in stdlib_parity_rng_2 scope.
     key: bytes = scrypt("password", "salt", 8, 1, 1)
     _ = key

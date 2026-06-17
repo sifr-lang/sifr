@@ -1,6 +1,5 @@
-# Reference: m25_3
-# Source issue: phase25-cfg-flow-analysis-activation-execution.md
-# m25_3 negative case
+# Reference: reachability
+# reachability negative case
 # Reachable return type mismatch should remain rejected.
 
 def classify(flag: bool) -> int:

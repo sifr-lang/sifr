@@ -1,4 +1,3 @@
-# Reference: m_adhoc_1
-# Source issue: ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md
-def phase_label() -> str:
-    return "adhoc milestone 1 rooted entrypoint demo: pass"
+# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
+def label() -> str:
+    return "rooted entrypoint demo: pass"

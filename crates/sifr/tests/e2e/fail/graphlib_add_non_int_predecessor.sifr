@@ -1,4 +1,4 @@
-# Reference: phase_psp_e2_graphlib_add_non_int_predecessor
+# Reference: stdlib_parity_e2_graphlib_add_non_int_predecessor
 from sifr.graphlib import TopologicalSorter
 
 

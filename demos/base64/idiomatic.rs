@@ -134,5 +134,5 @@ fn main() {
         &[false, true],
     );
 
-    println!("m30_1a base64 parity demo: pass");
+    println!("base64 base64 parity demo: pass");
 }

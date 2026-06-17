@@ -171,5 +171,5 @@ fn main() {
     append_all(&mut actual, &collect_other_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true]);
-    println!("m30_1c textwrap parity demo: pass");
+    println!("textwrap textwrap parity demo: pass");
 }

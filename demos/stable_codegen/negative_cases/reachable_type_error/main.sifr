@@ -1,6 +1,5 @@
-# Reference: m24_4
-# Source issue: phase24-hir-analysis-consolidation-execution.md
-# m24_4 negative case
+# Reference: stable_codegen
+# stable_codegen negative case
 # Reachable branch with a non-union member return must fail type checking.
 
 def bad(flag: bool) -> int | str:

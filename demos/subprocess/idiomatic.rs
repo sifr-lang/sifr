@@ -46,24 +46,24 @@ fn check_output(cmd: &str) -> io::Result<String> {
 }
 
 fn main() {
-    let demo_ok = match run("echo runtime_wave4_demo").and_then(|cp| {
+    let demo_ok = match run("echo runtime_subprocess").and_then(|cp| {
         Ok((
             cp.clone(),
-            check_call("echo runtime_wave4_demo_call")?,
-            check_output("echo runtime_wave4_demo_output")?,
+            check_call("echo runtime_subprocess_call")?,
+            check_output("echo runtime_subprocess_output")?,
         ))
     }) {
         Ok((cp, rc, out)) => {
             let constants_ok = PIPE == -1 && STDOUT == -2 && DEVNULL == -3;
             cp.returncode == 0
-                && cp.stdout.trim() == "runtime_wave4_demo"
+                && cp.stdout.trim() == "runtime_subprocess"
                 && rc == 0
-                && out.trim() == "runtime_wave4_demo_output"
+                && out.trim() == "runtime_subprocess_output"
                 && constants_ok
         }
         Err(_) => false,
     };
 
     assert!(demo_ok);
-    println!("ad_hoc_runtime_wave4_subprocess_sync_boundary_governance_demo: ok");
+    println!("runtime_subprocess_sync_boundary_governance_demo: ok");
 }

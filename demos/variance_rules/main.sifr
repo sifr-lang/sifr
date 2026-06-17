@@ -1,6 +1,5 @@
-# Reference: m26_2
-# Source issue: phase26-type-system-soundness-execution.md
-# m26_2 inheritance and variance corrections demo
+# Reference: variance_rules
+# variance_rules inheritance and variance corrections demo
 # Demonstrates transitive inheritance assignability and explicit mutable invariance.
 
 class Entity:
@@ -30,7 +29,7 @@ def sum_items(values: list[int]) -> int:
     return total
 
 def main():
-    print('m26_2 inheritance and variance corrections demo:')
+    print('variance_rules inheritance and variance corrections demo:')
     emp: Employee = Employee(11, 'Lin', 4)
     print(emp.name)
     print(sum_items([1, 2, 3]))

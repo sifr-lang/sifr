@@ -35,7 +35,7 @@ This phase locks the TypeScript-Go-derived architecture transfer before implemen
 
 ### Required Implementation Work
 
-| ID | Work item | Required closeout |
+| ID | Requirement | Required closeout |
 | --- | --- | --- |
 | W-0 | Prerequisite discovery found blockers that must be closed before snapshot/session implementation: source-map stubs, split source text/line-map authority, direct filesystem reads, revision-only snapshots, request-local LSP analysis, shallow scheduler/cancellation, and aggregate-only LSP latency evidence. | M0/M1 complete source-map correctness, shared conversion authority, direct-read inventory, actual-vs-target docs, minimum snapshot state shape, and reviewed implementation guardrails. |
 | W-1 | Analysis state is not yet owned by a coherent workspace/session snapshot layer. | M3 introduces `WorkspaceSession`; M4 migrates analysis queries onto immutable `WorkspaceSnapshot` handles. |

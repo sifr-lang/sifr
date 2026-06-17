@@ -1,5 +1,4 @@
-# Reference: m30_1c
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: textwrap
 from sifr.textwrap import wrap, fill, dedent, indent, shorten
 from sifr.test import assert_bool_vector_eq
 
@@ -42,4 +41,4 @@ def main():
     append_all(actual, collect_other_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1c textwrap parity demo: pass")
+    print("textwrap textwrap parity demo: pass")

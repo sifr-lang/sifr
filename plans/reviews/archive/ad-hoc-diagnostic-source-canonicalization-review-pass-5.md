@@ -2,7 +2,7 @@
 
 All four pass 4 findings are addressed:
 
-1. **Contract guardrail wiring (was moderate):** M6 lines 495-496 call `check_diagnostic_source_canonicalization_contract.py` and its `--self-test`. M1 line 424 explicitly wires the checker into `run_all_tests.sh --profile quick`. Row 12 of the verification matrix mirrors this.
+1. **Contract guardrail wiring (was moderate):** M6 lines 495-496 call `check_diagnostic_source_canonicalization_rules.py` and its `--self-test`. M1 line 424 explicitly wires the checker into `run_all_tests.sh --profile quick`. Row 12 of the verification matrix mirrors this.
 
 2. **M2 edge cases (was minor):** M2 line 438 explicitly names "CRLF source text" and "non-ASCII text before the error location" alongside the zero-length/out-of-bounds cases.
 

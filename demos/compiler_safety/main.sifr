@@ -1,6 +1,6 @@
-# Reference: milestone_compiler_hardening
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_compiler_hardening — Import Errors, Context Managers, Callable Fix
+# Reference: compiler hardening work
+# Reference: compiler-feature-history
+# Demo: compiler hardening work — Import Errors, Context Managers, Callable Fix
 # This demo showcases the three compiler correctness improvements.
 
 from typing import Callable

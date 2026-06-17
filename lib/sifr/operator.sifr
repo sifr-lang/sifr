@@ -75,7 +75,7 @@ def contains[T](items: list[T], value: T) -> bool:
     return value in items
 
 
-# CPython accepts any object here; this wave intentionally limits `truth` to
+# CPython accepts any object here; this surface intentionally limits `truth` to
 # list truthiness under Sifr's typed surface.
 def truth[T](value: list[T]) -> bool:
     return len(value) != 0

@@ -1,4 +1,4 @@
-# Reference: phase_psp_runtime_2_zip_bzip2_constant_unsupported
+# Reference: stdlib_parity_runtime_2_zip_bzip2_constant_unsupported
 from sifr.zipfile import ZIP_BZIP2
 
 

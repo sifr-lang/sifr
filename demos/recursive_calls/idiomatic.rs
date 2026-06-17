@@ -7,6 +7,6 @@ fn recurse(n: i64) -> i64 {
 }
 
 fn main() {
-    println!("m24_2 semantic query layer standardization demo:");
+    println!("recursive_calls semantic query layer standardization demo:");
     println!("{}", recurse(4));
 }

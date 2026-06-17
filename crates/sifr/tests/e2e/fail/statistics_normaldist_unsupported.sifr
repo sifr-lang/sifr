@@ -1,8 +1,8 @@
-# Reference: phase_psp_rng_3_statistics_normaldist_unsupported
+# Reference: stdlib_parity_rng_3_statistics_normaldist_unsupported
 from sifr.statistics import NormalDist
 
 
 def main() -> None:
-    # NormalDist remains explicitly unsupported after wave_psp_rng_3.
+    # NormalDist remains explicitly unsupported after stdlib_parity_rng_3.
     dist: NormalDist = NormalDist(0.0, 1.0)
     _ = dist

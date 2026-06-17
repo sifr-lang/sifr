@@ -22,6 +22,6 @@ fn main() {
     remove_at(&mut items, -1);
     remove_at(&mut items, -5);
 
-    println!("m27_2 indexing and semantics parity fixes demo:");
+    println!("indexing_rules indexing and semantics parity fixes demo:");
     println!("{items:?}");
 }

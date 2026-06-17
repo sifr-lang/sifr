@@ -1,5 +1,5 @@
-# Reference: phase31_reverse_range_recurrence_narrowing
-# Phase 31 m31_a slice 5
+# Reference: narrowing_reverse_range_recurrence_narrowing
+# Narrowing regression: reverse ranges
 # Proves reverse-range recurrence reads over sized local constructions lower to
 # concrete element types when the compiler can prove the +1 offset stays in range.
 

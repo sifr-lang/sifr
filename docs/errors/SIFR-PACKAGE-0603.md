@@ -11,6 +11,6 @@ Changed file could not be mapped to a package.
 | Severity | Error |
 | Owner | `sifr_package::graph::changed` |
 | Message template | `changed path '{path}' does not map to one Sifr package` |
-| Representative fixture | `crates/sifr_package/src/milestone_37_5_tests.rs::changed_file_mapping_reports_0603` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::changed_file_mapping_reports_0603` |
 | Declared args | `path (message+json)` |
 | Dedupe args | `path` |

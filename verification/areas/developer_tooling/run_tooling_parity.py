@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Phase 36 editor-query parity and completion-quality checks."""
+"""Run editor tooling editor-query parity and completion-quality checks."""
 
 from __future__ import annotations
 

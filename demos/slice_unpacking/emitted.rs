@@ -54,5 +54,5 @@ fn main() {
     _result
 });
     println!("{}", nums.len() as i64);
-    println!("ad_hoc_clone_wave2_index_slice_unpack_demo: pass");
+    println!("clone_slice_unpacking_slice_unpack_demo: pass");
 }

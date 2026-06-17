@@ -90,7 +90,7 @@ fn disk_usage(path: &str) -> Vec<u64> {
 }
 
 fn collect_copy_move_tree_actual() -> Vec<bool> {
-    let base = mktemp_path("sifr_m30_1e_shutil_demo_");
+    let base = mktemp_path("sifr_shutil_shutil_demo_");
     let _ = fs::remove_dir_all(&base);
 
     let src = format!("{base}/src.txt");
@@ -119,7 +119,7 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
 }
 
 fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
-    let base = mktemp_path("sifr_m30_1e_shutil_demo_cleanup_");
+    let base = mktemp_path("sifr_shutil_shutil_demo_cleanup_");
     let _ = fs::remove_dir_all(&base);
     let base_ready = mkdir(&base).map(|_| exists(&base)).unwrap_or(false);
 
@@ -143,5 +143,5 @@ fn main() {
     actual.extend(collect_tooling_and_cleanup_actual());
 
     assert_bool_vector_eq(&actual, &[true, true, true, true, true, true, true]);
-    println!("m30_1e shutil parity demo: pass");
+    println!("shutil shutil parity demo: pass");
 }

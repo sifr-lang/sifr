@@ -1,5 +1,3 @@
-# Reference: m_driver_3
-# Source issue: phase31-sifr-driver-decomposition-and-boundary-hardening-execution.md
 from provider import BASE, answer
 
 def describe() -> int:

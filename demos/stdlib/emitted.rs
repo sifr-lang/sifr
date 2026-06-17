@@ -2680,7 +2680,7 @@ fn main() {
     if let Err(__sifr_try_err) = __sifr_try_res {
         let err = __sifr_try_err.clone();
         println!("getcwd error: {}", err.message);
-        assert!(format!("{}", format!("getcwd error: {}", err.message)) == "milestone_stdlib_parity demo: all checks passed!".to_string());
+        assert!(format!("{}", format!("getcwd error: {}", err.message)) == "stdlib_parity demo: all checks passed!".to_string());
     }
     let __sifr_try_res: Result<(), RegexError> = (|| {
     let matches: Vec<String> = regex::Regex::new(&"[0-9]+".to_string()).map(|re| re.find_iter(&"abc123def456".to_string()).map(|m| m.as_str().to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })?;
@@ -2752,6 +2752,6 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message);
     }
-    println!("milestone_stdlib_parity demo: all checks passed!");
+    println!("stdlib_parity demo: all checks passed!");
     println!("Total stdlib modules: 37");
 }

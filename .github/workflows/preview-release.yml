@@ -47,7 +47,7 @@ jobs:
           esac
 
           if [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::stable-looking versions are disabled until Phase 39: ${version}"
+            echo "::error::stable-looking versions are disabled until a stable channel is supported: ${version}"
             exit 2
           fi
 
@@ -171,9 +171,9 @@ jobs:
             echo "Preview channel: ${CHANNEL}"
             echo "Base ref: ${BASE_REF}"
             echo
-            echo "This is a Phase 33 public preview release. Stable GA promotion remains disabled until Phase 39."
+            echo "This is a public preview release. Stable GA promotion remains disabled until a stable channel is supported."
             echo
-            echo "Assets are .tar.gz archives plus SHA-256 checksum files for the Phase 33 target set."
+            echo "Assets are .tar.gz archives plus SHA-256 checksum files for the preview release target set."
           } >"${notes_file}"
 
           if gh release view "${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then

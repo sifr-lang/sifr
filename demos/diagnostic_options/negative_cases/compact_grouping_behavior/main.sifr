@@ -1,0 +1,13 @@
+# Reference: diagnostic_options
+# negative path:
+# repeated diagnostics must stay deterministic in compact mode with stable grouping.
+
+def main():
+    a: int = "a"
+    b: int = "b"
+    c: int = "c"
+    d: int = "d"
+    e: int = "e"
+    f: int = "f"
+    g: int = "g"
+    h: int = "h"

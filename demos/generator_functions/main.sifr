@@ -1,6 +1,6 @@
-# Reference: ad_hoc_iter_wave3
-# Source issue: ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md
-# ad-hoc iterator wave 3 demo
+# Reference: iter_generator_functions
+# Reference: first-class-lazy-iterators-and-python-iterable-protocol
+# iterator Iterator behavior demo
 # Verifies generator functions are typed as Iterator[T] and list materialization is explicit.
 
 def countdown(n: int) -> Iterator[int]:

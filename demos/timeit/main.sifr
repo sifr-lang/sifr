@@ -1,5 +1,4 @@
-# Reference: m30_1f
-# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
+# Reference: timeit
 from sifr.timeit import default_timer, timeit, repeat
 from sifr.time import sleep
 from sifr.test import assert_bool_vector_eq
@@ -66,4 +65,4 @@ def main():
     append_all(actual, collect_edge_actual())
 
     assert_bool_vector_eq(actual, expected)
-    print("m30_1f timeit parity demo: pass")
+    print("timeit timeit parity demo: pass")

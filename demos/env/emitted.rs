@@ -174,30 +174,30 @@ impl std::error::Error for RegexError {
 
 fn main() {
     {
-    let __k = "SIFR_M30_ENV_DEMO".to_string();
+    let __k = "SIFR_ENV_SAMPLE".to_string();
     if !__k.is_empty() && (!__k.contains('=') && !__k.as_bytes().contains(&0)) {
         std::env::remove_var(__k);
     }
 };
     {
-    let __k = "SIFR_M30_ENV_DEMO".to_string();
-    let __v = "phase30".to_string();
+    let __k = "SIFR_ENV_SAMPLE".to_string();
+    let __v = "env".to_string();
     if !__k.is_empty() && (!__k.contains('=') && (!__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0))) {
         std::env::set_var(__k, __v);
     }
 };
-    let with_default: String = getenv(&"SIFR_M30_ENV_DEMO".to_string(), &"fallback".to_string());
+    let with_default: String = getenv(&"SIFR_ENV_SAMPLE".to_string(), &"fallback".to_string());
     println!("{}", with_default);
-    assert!(format!("{}", with_default) == "phase30".to_string());
+    assert!(format!("{}", with_default) == "env".to_string());
     {
-    let __k = "SIFR_M30_ENV_DEMO".to_string();
+    let __k = "SIFR_ENV_SAMPLE".to_string();
     if !__k.is_empty() && (!__k.contains('=') && !__k.as_bytes().contains(&0)) {
         std::env::remove_var(__k);
     }
 };
-    let without_default: Option<String> = getenv_opt(&"SIFR_M30_ENV_DEMO".to_string());
+    let without_default: Option<String> = getenv_opt(&"SIFR_ENV_SAMPLE".to_string());
     assert!(format!("{}", without_default.is_none()) == "true".to_string());
-    assert!(format!("{}", getenv(&"SIFR_M30_ENV_DEMO".to_string(), &"fallback".to_string())) == "fallback".to_string());
+    assert!(format!("{}", getenv(&"SIFR_ENV_SAMPLE".to_string(), &"fallback".to_string())) == "fallback".to_string());
     let invalid_expected_lookup_found: Vec<bool> = vec![false, false];
     let mut invalid_actual_lookup_found: Vec<bool> = vec![];
     {
@@ -223,5 +223,5 @@ fn main() {
     if __k.is_empty() || (__k.contains('=') || __k.as_bytes().contains(&0)) { None } else { std::env::var(__k).ok() }
 }) != None);
     assert_bool_vector_eq(&invalid_actual_lookup_found, &invalid_expected_lookup_found);
-    println!("m30_1a env parity demo: pass");
+    println!("env env parity demo: pass");
 }

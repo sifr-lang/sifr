@@ -1,4 +1,4 @@
-# Consolidated stdlib glob coverage for milestone_30_4 structure rules
+# Consolidated stdlib glob coverage for stdlib_consolidation structure rules
 from sifr.glob import glob
 from sifr.io import write_text
 from sifr.os import run_command

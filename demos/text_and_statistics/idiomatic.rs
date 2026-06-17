@@ -914,7 +914,7 @@ fn main() {
         let _e = __sifr_try_err.clone();
         assert!(
             format!("{}", "median_grouped unexpected error".to_string())
-                == "ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass".to_string()
+                == "rng_text_and_statistics_waiver_reduction_demo: pass".to_string()
         );
     }
     assert!(grouped > (2.2 as f64));
@@ -954,7 +954,7 @@ fn main() {
     assert!(
         format!(
             "{}",
-            "ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass".to_string()
-        ) == "ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass".to_string()
+            "rng_text_and_statistics_waiver_reduction_demo: pass".to_string()
+        ) == "rng_text_and_statistics_waiver_reduction_demo: pass".to_string()
     );
 }

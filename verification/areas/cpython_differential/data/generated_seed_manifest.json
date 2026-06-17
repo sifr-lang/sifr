@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generator_contract_version": 1,
+  "generator_rules_version": 1,
   "serializer": {
     "version": 1,
     "stdout": "exactly-one-json-line",

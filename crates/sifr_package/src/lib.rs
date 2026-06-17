@@ -69,25 +69,25 @@ pub use crate::projection::{
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 
 #[cfg(test)]
-mod milestone_37_2_tests;
+mod cargo_backend_integration_tests;
 #[cfg(test)]
-mod milestone_37_3_tests;
+mod package_dependency_scope_tests;
 #[cfg(test)]
-mod milestone_37_4_tests;
+mod package_import_resolution_tests;
 #[cfg(test)]
-mod milestone_37_5_tests;
+mod package_projection_tests;
 #[cfg(test)]
-mod milestone_37_6_tests;
+mod package_public_api_tests;
 #[cfg(test)]
-mod milestone_37_7_tests;
+mod package_publish_archive_tests;
 #[cfg(test)]
-mod milestone_adhoc_pkg_1_tests;
+mod package_session_tests;
 #[cfg(test)]
-mod milestone_adhoc_pkg_2_tests;
+mod package_source_map_tests;
 #[cfg(test)]
-mod milestone_adhoc_pkg_3_tests;
+mod package_verification_matrix_tests;
 #[cfg(test)]
-mod milestone_adhoc_tsgo_m2_tests;
+mod package_workspace_query_tests;
 
 #[cfg(test)]
 mod tests {

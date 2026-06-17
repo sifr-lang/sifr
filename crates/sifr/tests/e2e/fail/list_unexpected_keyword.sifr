@@ -1,4 +1,4 @@
-# Reference: phase_psp_a2_list_unexpected_keyword
+# Reference: stdlib_parity_a2_list_unexpected_keyword
 def main():
     nums: list[int] = [1]
     nums.append(value=2)

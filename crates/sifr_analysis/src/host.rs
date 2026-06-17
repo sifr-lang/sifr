@@ -1,8 +1,8 @@
 mod debug_status;
+#[cfg(test)]
+mod editor_query_corpus_tests;
 mod file_access;
 mod implementation;
-#[cfg(test)]
-mod m17_tests;
 pub use implementation::*;
 mod overlay_updates;
 mod snapshot_queries;

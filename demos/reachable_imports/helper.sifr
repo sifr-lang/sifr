@@ -1,5 +1,4 @@
-# Reference: m23_1
-# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
+# Reference: reachable_imports
 # Reachable dependency module used by main.
 
 def compute(x: int) -> int:

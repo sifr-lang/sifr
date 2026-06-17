@@ -1,4 +1,4 @@
-# Reference: phase_psp_d2_timeit_non_callable_stmt
+# Reference: stdlib_parity_d2_timeit_non_callable_stmt
 from sifr.timeit import timeit
 
 

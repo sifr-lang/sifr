@@ -891,5 +891,5 @@ fn main() {
     demo_bisect();
     demo_itertools();
     demo_counter();
-    println!("=== milestone_borrow_stdlib demo complete ===");
+    println!("=== borrow_stdlib demo complete ===");
 }

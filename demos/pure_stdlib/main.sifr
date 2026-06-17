@@ -1,6 +1,6 @@
-# Reference: milestone_stdlib_pure_expansion
-# Source issue: revised_phase_roadmap_698c629c.md
-# milestone_stdlib_pure_expansion demo
+# Reference: stdlib_pure_expansion
+# Reference: compiler-feature-history
+# stdlib_pure_expansion demo
 # Demonstrates: new math functions, statistics with Result types,
 # random additions, functools.reduce, new itertools, Counter enhancements,
 # and API naming divergences documented in architecture.md.
@@ -40,7 +40,7 @@ def main():
     data_fsum: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     print("fsum(10x0.1) = " + str(fsum(data_fsum)))
 
-    # --- Statistics with Result types (Phase 09 carryover fixed) ---
+    # --- Statistics with Result types ( carryover fixed) ---
     print("=== statistics (Result[float, StatisticsError]) ===")
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
     try:
@@ -178,4 +178,4 @@ def main():
     cd.subtract(from_list(["a"]))
     print("counter_sub a = " + str(cd.get("a")))
 
-    print("=== milestone_stdlib_pure_expansion: all features demonstrated ===")
+    print("=== stdlib_pure_expansion: all features demonstrated ===")

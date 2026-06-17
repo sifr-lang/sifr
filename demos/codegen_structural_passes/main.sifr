@@ -1,6 +1,6 @@
-# Reference: milestone_codegen_structural_passes
-# Source issue: revised_phase_roadmap_698c629c.md
-# Demo: milestone_codegen_structural_passes (RawCode-zero slice for datetime intrinsics)
+# Reference: codegen_structural_passes
+# Reference: compiler-feature-history
+# Demo: codegen_structural_passes (RawCode-zero slice for datetime intrinsics)
 from sifr.datetime import now, today, from_timestamp, datetime
 
 

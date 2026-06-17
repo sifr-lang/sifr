@@ -1,6 +1,6 @@
-# Reference: milestone_error_handling
-# Source issue: milestone-error-handling-epic.md
-# milestone_error_handling demo
+# Reference: error_handling
+# Reference: error-handling
+# error_handling demo
 # Showcases: Result type, custom errors, try/except, raise, assert,
 #            fallible/infallible conversions, must_use, let _ = discard
 

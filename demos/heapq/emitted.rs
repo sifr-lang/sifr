@@ -385,5 +385,5 @@ fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true, true];
     let actual: Vec<bool> = collect_actual();
     assert_bool_vector_eq(&actual, &expected);
-    println!("m30_1b heapq parity demo: pass");
+    println!("heapq heapq parity demo: pass");
 }

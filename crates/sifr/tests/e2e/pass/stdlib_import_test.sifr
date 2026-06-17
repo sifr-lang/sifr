@@ -1,12 +1,12 @@
 # Test that stdlib imports resolve to .sifr files (two-phase compilation)
-# This verifies the core M1 architecture: user code imports from sifr.*
-# which resolves to embedded .sifr files compiled in phase 1.
+# This verifies the core stdlib import architecture: user code imports from sifr.*
+# which resolves to embedded .sifr files compiled in the first import pass.
 from sifr.test import assert_eq
 from sifr.math import sqrt, pi
 from sifr.string import ascii_lowercase
 
 def main():
-    # Verify sifr.test resolves (phase 1 compiled)
+    # Verify sifr.test resolves (import pass compiled)
     assert_eq(1, 1)
 
     # Verify sifr.math resolves with functions and constants

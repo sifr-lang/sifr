@@ -334,8 +334,8 @@ Outputs:
 Validation:
 
 - `cargo test -p sifr_format`
-- `python3 verification/tooling/check_formatter_contract.py`
-- `python3 verification/tooling/check_formatter_contract.py --self-test`
+- `python3 verification/tooling/check_formatter_rules.py`
+- `python3 verification/tooling/check_formatter_rules.py --self-test`
 
 Review gate:
 
@@ -401,7 +401,7 @@ Scope:
   - Emacs uses Eglot or lsp-mode document formatting, including a save hook example
   - VS Code uses the standard document formatting provider from the Sifr LSP client and format-on-save settings
 - update `editor_integrations/README.md`, `internal_docs/editor_integrations.md`, `internal_docs/lsp_server.md`, `internal_docs/tooling_analysis.md`, `internal_docs/vscode_extension.md`, and the VS Code extension contract so editor setup mirrors the LSP-first Ruff setup pattern
-- extend `verification/tooling/check_editor_assets.py`, `verification/tooling/check_vscode_extension_contract.py`, and VS Code extension tests to reject editor-owned formatter logic, Python/Ruff fallbacks, missing `sifr lsp --stdio` launch configuration, and missing formatter setup docs
+- extend `verification/tooling/check_editor_assets.py`, `verification/tooling/check_vscode_extension_rules.py`, and VS Code extension tests to reject editor-owned formatter logic, Python/Ruff fallbacks, missing `sifr lsp --stdio` launch configuration, and missing formatter setup docs
 
 Outputs:
 
@@ -420,7 +420,7 @@ Validation:
 - `python3 verification/tooling/lsp_protocol_smoke.py`
 - `python3 verification/tooling/lsp_protocol_stress.py`
 - `python3 verification/tooling/check_editor_assets.py`
-- `python3 verification/tooling/check_vscode_extension_contract.py`
+- `python3 verification/tooling/check_vscode_extension_rules.py`
 - VS Code extension unit/smoke tests from the configured extension checkout
 
 Review gate:
@@ -510,8 +510,8 @@ cargo test -p sifr_format
 cargo test -p sifr_analysis
 cargo test -p sifr_lsp
 cargo test -p sifr
-python3 verification/tooling/check_formatter_contract.py
-python3 verification/tooling/check_formatter_contract.py --self-test
+python3 verification/tooling/check_formatter_rules.py
+python3 verification/tooling/check_formatter_rules.py --self-test
 scripts/run_all_tests.sh --profile quick
 scripts/run_all_tests.sh
 ```

@@ -59,5 +59,5 @@ fn main() {
         }
     }
 
-    println!("milestone_stdlib_migration demo: all checks passed!");
+    println!("stdlib_migration demo: all checks passed!");
 }

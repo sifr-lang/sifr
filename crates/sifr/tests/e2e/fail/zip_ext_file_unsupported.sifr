@@ -1,4 +1,4 @@
-# Reference: phase_psp_runtime_2_zip_ext_file_unsupported
+# Reference: stdlib_parity_runtime_2_zip_ext_file_unsupported
 from sifr.zipfile import ZipExtFile
 
 

@@ -126,7 +126,7 @@ fn main() -> io::Result<()> {
     }
 
     let base = std::env::temp_dir().join(format!(
-        "sifr_wave_psp_iter_fix_8_demo_{}",
+        "sifr_iterator_integration{}",
         std::process::id()
     ));
     let nested = base.join("nested");

@@ -56,7 +56,7 @@ This gap will surface at first upstream `lsp-types` upgrade and again at every L
 
 ### Gap 4 (Phase 36): Cross-Repository VS Code Extension Versioning Covenant Missing
 
-Phase 36 recommends a separate `sifr-lang/sifr-vscode` repository. The `check_vscode_extension_contract.py` validates the contract, but there's no explicit versioning covenant: when `sifr` releases version `X.Y.Z`, what is the required extension version alignment, and what happens when the extension lags the main repo?
+Phase 36 recommends a separate `sifr-lang/sifr-vscode` repository. The `check_vscode_extension_rules.py` validates the contract, but there's no explicit versioning covenant: when `sifr` releases version `X.Y.Z`, what is the required extension version alignment, and what happens when the extension lags the main repo?
 
 This gap will surface at first release and at every release thereafter.
 

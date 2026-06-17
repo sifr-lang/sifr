@@ -85,7 +85,7 @@ def run_property_suite(
                 "note",
             ),
         )
-        mismatches.extend(validate_property_target_contract(entry, known_targets))
+        mismatches.extend(validate_property_target_rules(entry, known_targets))
 
         entry_path_raw = entry.get("entry")
         command_name = entry.get("command")
@@ -313,7 +313,7 @@ def run_fuzz_smoke_suite(
 
     required = ("id", "note")
     mismatches = required_missing(payload, required)
-    mismatches.extend(validate_fuzz_target_contract(payload, repo_root))
+    mismatches.extend(validate_fuzz_target_rules(payload, repo_root))
 
     case_result = {
         "id": payload.get("id", "fuzz-smoke"),
@@ -350,7 +350,7 @@ def run_fuzz_target_smoke(*, target: dict[str, Any], repo_root: Path) -> dict[st
         return run_source_mutation_target(target=target, repo_root=repo_root)
     if str(target["input_grammar"]) == "sifr-source" and coverage_mode == "property-smoke":
         return run_source_seed_target(target=target, repo_root=repo_root)
-    if coverage_mode == "diagnostic-contract-smoke":
+    if coverage_mode == "diagnostic-rules-smoke":
         return run_reproduction_command_target(target=target, repo_root=repo_root)
     return target_metadata_failure(target=target, mismatch=f"unsupported-coverage-mode:{coverage_mode}")
 
@@ -644,18 +644,18 @@ def load_seed_sources(*, target: dict[str, Any], repo_root: Path) -> list[tuple[
 def load_known_targets(repo_root: Path) -> dict[str, dict[str, Any]]:
     manifest_path = repo_root / FUZZ_SMOKE_MANIFEST
     if not manifest_path.is_file():
-        raise SystemExit(f"fuzz target contract manifest missing: {manifest_path}")
+        raise SystemExit(f"fuzz target rules manifest missing: {manifest_path}")
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-    mismatches = validate_fuzz_target_contract(payload, repo_root)
+    mismatches = validate_fuzz_target_rules(payload, repo_root)
     if mismatches:
         raise SystemExit(
-            "fuzz target contract invalid: " + ", ".join(sorted(set(mismatches)))
+            "fuzz target rules invalid: " + ", ".join(sorted(set(mismatches)))
         )
     targets = payload.get("targets", [])
     return {str(target["id"]): target for target in targets}
 
 
-def validate_property_target_contract(entry: dict[str, Any], known_targets: dict[str, dict[str, Any]]) -> list[str]:
+def validate_property_target_rules(entry: dict[str, Any], known_targets: dict[str, dict[str, Any]]) -> list[str]:
     mismatches: list[str] = []
     target_ids = entry.get("target_ids")
     if not isinstance(target_ids, list) or not target_ids:
@@ -678,10 +678,10 @@ def validate_property_target_contract(entry: dict[str, Any], known_targets: dict
     return mismatches
 
 
-def validate_fuzz_target_contract(payload: dict[str, Any], repo_root: Path) -> list[str]:
+def validate_fuzz_target_rules(payload: dict[str, Any], repo_root: Path) -> list[str]:
     mismatches: list[str] = []
-    if payload.get("target_contract_version") != 1:
-        mismatches.append("target_contract_version")
+    if payload.get("target_rules_version") != 1:
+        mismatches.append("target_rules_version")
     required_target_ids = payload.get("required_target_ids")
     if not isinstance(required_target_ids, list) or set(required_target_ids) != REQUIRED_TARGET_IDS:
         mismatches.append("required_target_ids")
@@ -760,7 +760,7 @@ def validate_target_execution_fields(target_id: object, target: dict[str, Any]) 
                 mismatches.append(f"{target_id}.iterations")
         elif "iterations" in target:
             mismatches.append(f"{target_id}.iterations.unused")
-    elif coverage_mode == "diagnostic-contract-smoke":
+    elif coverage_mode == "diagnostic-rules-smoke":
         if not isinstance(target.get("expect_exit_code"), int):
             mismatches.append(f"{target_id}.expect_exit_code")
         if not isinstance(target.get("assert_no_panic"), bool):

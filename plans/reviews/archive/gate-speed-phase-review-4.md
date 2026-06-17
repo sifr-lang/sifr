@@ -8,13 +8,13 @@
 
 3. **Validation-contract row timing.** `crates/sifr/tests/validation_contract_support/runner.rs:62-84` wraps each row body in a closure, removes the temp dir unconditionally at line 73, then emits `[sifr-case-timing] bucket=validation_contract` before `result?`. The round-3 cosmetic about losing the timing line on `temp_root(...)?` failure (line 65) is still present but the failure is genuinely catastrophic (cannot create `${TMPDIR}/sifr-validation-contracts-…`), so no real evidence is lost.
 
-### New surface — `diagnostic_contract_harness` binary
+### New surface — `diagnostic_rendering_harness` binary
 
-4. **Binary builds and exists.** `crates/sifr_driver/src/bin/diagnostic_contract_harness.rs` (375 lines, under 900 cap) is invoked via `verification/tooling/check_diagnostic_source_canonicalization_contract.py:186-218` (`cargo build -q -p sifr_driver --bin diagnostic_contract_harness` → run). `target/debug/diagnostic_contract_harness` exists at ~30 MB, confirming it compiles. All imports (`check_single_file`, `check_project`, `check_package_project`, `PackageEntrypoint`, `render_package_diagnostic`) are publicly re-exported from `crates/sifr_driver/src/lib.rs:19-27`.
+4. **Binary builds and exists.** `crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs` (375 lines, under 900 cap) is invoked via `verification/tooling/check_diagnostic_source_canonicalization_rules.py:186-218` (`cargo build -q -p sifr_driver --bin diagnostic_rendering_harness` → run). `target/debug/diagnostic_rendering_harness` exists at ~30 MB, confirming it compiles. All imports (`check_single_file`, `check_project`, `check_package_project`, `PackageEntrypoint`, `render_package_diagnostic`) are publicly re-exported from `crates/sifr_driver/src/lib.rs:19-27`.
 
 5. **Harness decomposition is clean.** One function per fixture family (`check_parser_runtime_contract:109`, `check_project_runtime_contract:122`, `check_cycle_runtime_contract:141`, `check_package_runtime_contract:160`). `process::exit(1)` lives only in `main` (lines 83-89); all internal paths return `Result<(), String>`. `assert_contract` (line 259) takes 7 parameters which is at the clippy pedantic threshold, but the user's `cargo clippy --workspace -- -D warnings` validation passed.
 
-6. **Package path still uses one `cargo metadata`** (`crates/sifr_driver/src/bin/diagnostic_contract_harness.rs:186-204`). That's necessary to derive the package graph and is one external invocation per package fixture (~3 fixtures) rather than the ~42 `cargo run` invocations the Python harness was making. The 80.48s → 3.18s measurement in `issues/…:164` is consistent.
+6. **Package path still uses one `cargo metadata`** (`crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs:186-204`). That's necessary to derive the package graph and is one external invocation per package fixture (~3 fixtures) rather than the ~42 `cargo run` invocations the Python harness was making. The 80.48s → 3.18s measurement in `issues/…:164` is consistent.
 
 ### Other touched files
 
@@ -36,7 +36,7 @@
 
 ### Phase-closure obligation (not a code defect)
 
-14. **`crates/sifr_driver/src/bin/` is untracked in git.** `git status` lists `crates/sifr_driver/src/bin/` as untracked, so the new harness file (and its containing directory) is **not yet committed**. The Python validation harness at `verification/tooling/check_diagnostic_source_canonicalization_contract.py:188` issues `cargo build -p sifr_driver --bin diagnostic_contract_harness`, which would fail on any fresh clone or CI environment until this directory is staged into the closure PR. Round-3 SATISFIED with this same state, so the prior reviewer evidently expected the user to `git add` before opening the closure PR — flagging it here so the closure commit doesn't accidentally omit it.
+14. **`crates/sifr_driver/src/bin/` is untracked in git.** `git status` lists `crates/sifr_driver/src/bin/` as untracked, so the new harness file (and its containing directory) is **not yet committed**. The Python validation harness at `verification/tooling/check_diagnostic_source_canonicalization_rules.py:188` issues `cargo build -p sifr_driver --bin diagnostic_rendering_harness`, which would fail on any fresh clone or CI environment until this directory is staged into the closure PR. Round-3 SATISFIED with this same state, so the prior reviewer evidently expected the user to `git add` before opening the closure PR — flagging it here so the closure commit doesn't accidentally omit it.
 
 ## Verdict
 

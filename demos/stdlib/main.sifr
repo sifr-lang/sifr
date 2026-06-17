@@ -1,8 +1,8 @@
-# Reference: milestone_stdlib_parity
-# Source issue: milestone_stdlib_parity.md
-# milestone_stdlib_parity Demo
+# Reference: stdlib_parity
+# Source issue: stdlib_parity.md
+# stdlib_parity Demo
 #
-# Showcases all modules added/expanded in this milestone:
+# Showcases all modules added/expanded in this feature set:
 # Part A: Expanded existing modules (math, os, re, random, io)
 # Part B: New modules (graphlib, uuid, platform, pathlib, logging,
 #          difflib, ipaddress, timeit, tomllib, datetime)
@@ -35,7 +35,7 @@ def main():
         assert_true(len(cwd) > 0)
     except IOError as err:
         print(f"getcwd error: {err.message}")
-        assert str(f"getcwd error: {err.message}") == "milestone_stdlib_parity demo: all checks passed!"
+        assert str(f"getcwd error: {err.message}") == "stdlib_parity demo: all checks passed!"
 
     # re -- findall
     try:
@@ -105,5 +105,5 @@ def main():
 
     # Part C: Parity audit
     # 37 total stdlib modules available
-    print("milestone_stdlib_parity demo: all checks passed!")
+    print("stdlib_parity demo: all checks passed!")
     print("Total stdlib modules: 37")

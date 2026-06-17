@@ -24,9 +24,9 @@ Based on my review, here are my findings:
 
 ---
 
-### Finding 2: `check_diagnostic_source_canonicalization_contract.py` does not exist yet (minor, pre-flight)
+### Finding 2: `check_diagnostic_source_canonicalization_rules.py` does not exist yet (minor, pre-flight)
 
-**Status:** Only `check_diagnostic_presentation_contract.py` exists at `verification/tooling/`. The contract checker is required by:
+**Status:** Only `check_diagnostic_presentation_rules.py` exists at `verification/tooling/`. The contract checker is required by:
 - M1 line 424: "Wire the source-canonicalization contract checker and its negative self-tests into `scripts/run_all_tests.sh --profile quick`."
 - Verification matrix row 12
 

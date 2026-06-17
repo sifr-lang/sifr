@@ -1,14 +1,14 @@
 mod shared {
-    pub fn phase_label() -> &'static str {
-        "adhoc milestone 1 rooted entrypoint demo: pass"
+    pub fn label() -> &'static str {
+        "rooted entrypoint demo: pass"
     }
 }
 
 mod helper {
-    use crate::shared::phase_label;
+    use crate::shared::label;
 
     pub fn render() -> &'static str {
-        phase_label()
+        label()
     }
 }
 

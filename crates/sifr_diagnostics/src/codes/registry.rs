@@ -455,7 +455,7 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
     },
     DiagnosticFamily {
         name: "STDLIB",
-        summary: "Standard-library surface and intrinsic contract diagnostics.",
+        summary: "Standard-library surface and intrinsic rule diagnostics.",
         reserved_base: "SIFR-STDLIB-0000",
     },
     DiagnosticFamily {

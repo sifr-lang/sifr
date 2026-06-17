@@ -102,7 +102,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
 }
 
 fn main() {
-    let payload = encode_utf8("bytes-phase30");
+    let payload = encode_utf8("bytes-bytes_module");
     let actual = collect_primary_actual(&payload);
     assert_vector_eq(
         &actual,
@@ -124,5 +124,5 @@ fn main() {
 
     assert_bool_vector_eq(&collect_invalid_actual_ok(), &[false, false]);
 
-    println!("m30_1a bytes parity demo: pass");
+    println!("bytes_module bytes parity demo: pass");
 }

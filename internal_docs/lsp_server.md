@@ -1,6 +1,6 @@
 # Sifr LSP Server Architecture
 
-status: phase36-m36.5-implemented; TypeScript-Go architecture transfer M4 current-state caveats recorded
+status: tooling-LSP protocol layer-implemented; TypeScript-Go architecture transfer process runtime current-state caveats recorded
 
 ## Protocol Target
 
@@ -10,7 +10,7 @@ The production protocol is LSP 3.17 over stdio, launched by:
 sifr lsp --stdio
 ```
 
-The Rust implementation uses `lsp-server` and `lsp-types` directly. m36.5 pins `lsp-server` 0.7.9 and `lsp-types` 0.97.0 in `Cargo.lock`. Notebook synchronization and Python-specific import, interpreter, environment, and settings behavior are explicitly unsupported.
+The Rust implementation uses `lsp-server` and `lsp-types` directly. LSP protocol layer pins `lsp-server` 0.7.9 and `lsp-types` 0.97.0 in `Cargo.lock`. Notebook synchronization and Python-specific import, interpreter, environment, and settings behavior are explicitly unsupported.
 
 ## Server Ownership
 
@@ -41,7 +41,7 @@ The LSP implementation is being migrated toward these compiler-service layers:
 - `CommandRegistry`: owns restart, logs, explain diagnostic, generated Rust preview, check, and test commands.
 - `ProtocolTestHarness`: launches `sifr lsp --stdio`, drives JSON-RPC, and records deterministic protocol snapshots.
 
-The concrete m36.5 modules are:
+The concrete LSP protocol layer modules are:
 
 - `crates/sifr_lsp/src/capabilities.rs`
 - `crates/sifr_lsp/src/document_store.rs`
@@ -58,7 +58,7 @@ The stdio server terminates explicitly on `exit` after a successful `shutdown`
 response. This avoids retaining protocol IO threads after the client completes
 the required LSP shutdown sequence.
 
-## Current M5 Compiler-Service State
+## Current task context and shutdown Compiler-Service State
 
 The TypeScript-Go architecture transfer keeps request execution serialized while
 moving LSP analysis ownership and scheduling state into the language-server
@@ -85,7 +85,7 @@ session. Current implementation reality:
 - `workspace/didChangeWatchedFiles` summarizes each watcher batch once before
   invalidation. Normal watcher batches select graph-structure dirty scope;
   watcher storms degrade to workspace dirty scope with `WatcherStorm`.
-- `RequestQueue` owns M11 priority queues for latency-sensitive, formatting,
+- `RequestQueue` owns LSP scheduler priority queues for latency-sensitive, formatting,
   workspace, and background lanes. Dispatch remains serialized, but queued
   requests are selected through bounded-fairness scheduling so workspace and
   background work cannot permanently starve and cannot dominate latency-sensitive
@@ -100,8 +100,8 @@ session. Current implementation reality:
   progress is reported for multi-document diagnostics, and the parent-process
   watchdog has both message-loop checks and an idle timer thread.
 
-M7 owns dependency-sensitive signature invalidation. M11 owns priority
-queues/debounce. M13 owns cancellation, progress, background execution, and
+runtime substrate audit owns dependency-sensitive signature invalidation. LSP scheduler owns priority
+queues/debounce. LSP cancellation, progress, and watchdog owns cancellation, progress, background execution, and
 parent-process watchdog behavior.
 
 ## Capability Matrix
@@ -114,7 +114,7 @@ The checked-in capability source of truth is `verification/areas/developer_tooli
 - unsupported-feature behavior where applicable
 - a performance budget id where latency matters
 
-The matrix locks all required Phase 36 methods and workspace commands before implementation begins. `verification/areas/developer_tooling/check_tooling_contract_lock.py` validates required matrix coverage.
+The matrix locks all required developer tooling surface methods and workspace commands before implementation begins. `verification/areas/developer_tooling/check_tooling_lock.py` validates required matrix coverage.
 
 ## Settings
 
@@ -178,9 +178,9 @@ for policy fixes outside the native LSP/CLI surfaces.
 
 ## Versioning Policy
 
-LSP 3.17 is the Phase 36 target. Any `lsp-types` version bump requires a reviewed PR that records adopted capabilities, deferred capabilities, compatibility impact, and protocol matrix changes. Silent adoption of new LSP surfaces is forbidden.
+LSP 3.17 is the developer tooling surface target. Any `lsp-types` version bump requires a reviewed PR that records adopted capabilities, deferred capabilities, compatibility impact, and protocol matrix changes. Silent adoption of new LSP surfaces is forbidden.
 
-## m36.5 Protocol Coverage
+## LSP protocol layer Protocol Coverage
 
 `verification/areas/developer_tooling/lsp_protocol_smoke.py` initializes the server, opens a
 `.sifr` buffer, validates versioned push diagnostics, runs the required

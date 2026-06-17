@@ -347,7 +347,7 @@ def run_self_test() -> None:
         "rows": [
             {
                 "id": "param_default_borrow",
-                "fork_fixture": "pending:m2",
+                "fork_fixture": "pending:lint-config",
                 "sifr_wrapper_fixture": "formatter_corpus:parameters",
             }
         ],

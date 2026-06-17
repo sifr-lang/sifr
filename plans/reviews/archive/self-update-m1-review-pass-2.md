@@ -23,7 +23,7 @@ Local gates re-run here:
 - `cargo fmt --check` → clean
 - `cargo clippy -p sifr --no-deps -- -D warnings` → clean
 - `scripts/run_distribution_validation.sh` → exit 0
-  (`channel_metadata_generated.sh` and `artifact_self_update_receipt_contract.sh`
+  (`channel_metadata_generated.sh` and `artifact_self_update_receipt_rules.sh`
   run as part of the suite).
 
 ## Pass-1 follow-up status
@@ -59,7 +59,7 @@ foot-gun. Non-blocking.
 
 ### Low — receipt contract test only exercises `modify_path: false`
 
-`verification/distribution/artifact_self_update_receipt_contract.sh:26-30`
+`verification/distribution/artifact_self_update_receipt_rules.sh:26-30`
 runs the installer with both `SIFR_NO_MODIFY_PATH=1` *and*
 `--no-modify-path`, then asserts `modify_path is False`. The
 `modify_path: true` branch of `write_install_manifest` is only covered by
@@ -82,7 +82,7 @@ so the `pattern` on `version`, the `enum` on `channel`, the `const` on
 generated-installer drift on their own; they're only enforced by the
 hand-written Python assertions next to them. The Rust parser independently
 re-implements the same constraints. Two sources of truth claiming to be one.
-Either run the receipt through `jsonschema` in `artifact_self_update_receipt_contract.sh`
+Either run the receipt through `jsonschema` in `artifact_self_update_receipt_rules.sh`
 (stdlib-only via a small inlined validator, or accept the optional dep),
 or note explicitly in `internal_docs/distribution_pipeline.md` that the
 schema is documentation, not an executable contract. M1 calls the schema

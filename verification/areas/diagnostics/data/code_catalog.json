@@ -1563,7 +1563,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::cargo_failure_mapping_redacts_private_credentials",
+      "representative_fixture": "crates/sifr_package/src/cargo_backend_integration_tests.rs::cargo_failure_mapping_redacts_private_credentials",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1579,7 +1579,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::explicit_rust_only_selection_reports_0102",
+      "representative_fixture": "crates/sifr_package/src/package_workspace_query_tests.rs::explicit_rust_only_selection_reports_0102",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1611,7 +1611,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::offline_mode_reports_missing_sifr_source_package",
+      "representative_fixture": "crates/sifr_package/src/cargo_backend_integration_tests.rs::offline_mode_reports_missing_sifr_source_package",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1627,7 +1627,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::rust_only_member_depending_on_sifr_reports_0106",
+      "representative_fixture": "crates/sifr_package/src/package_workspace_query_tests.rs::rust_only_member_depending_on_sifr_reports_0106",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1643,7 +1643,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_2_tests.rs::duplicate_direct_import_root_in_one_scope_reports_0201",
+      "representative_fixture": "crates/sifr_package/src/package_dependency_scope_tests.rs::duplicate_direct_import_root_in_one_scope_reports_0201",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1659,7 +1659,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_3_tests.rs::transitive_dependency_import_reports_0202",
+      "representative_fixture": "crates/sifr_package/src/package_source_map_tests.rs::transitive_dependency_import_reports_0202",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1675,7 +1675,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_3_tests.rs::private_dependency_module_reports_0203",
+      "representative_fixture": "crates/sifr_package/src/package_source_map_tests.rs::private_dependency_module_reports_0203",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1691,7 +1691,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_2_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances",
+      "representative_fixture": "crates/sifr_package/src/package_dependency_scope_tests.rs::type_identity_mismatch_reports_0204_for_distinct_package_instances",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1707,7 +1707,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_reports_untrusted_direct_backend_crate",
+      "representative_fixture": "crates/sifr_package/src/cargo_backend_integration_tests.rs::backend_trust_reports_untrusted_direct_backend_crate",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1723,7 +1723,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_4_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry",
+      "representative_fixture": "crates/sifr_package/src/cargo_backend_integration_tests.rs::backend_trust_rejects_stale_non_direct_trust_entry",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1739,7 +1739,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_sifr_source_reports_0401",
+      "representative_fixture": "crates/sifr_package/src/package_publish_archive_tests.rs::archive_missing_sifr_source_reports_0401",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1755,7 +1755,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::publish_validation_failed_reports_0402",
+      "representative_fixture": "crates/sifr_package/src/package_publish_archive_tests.rs::publish_validation_failed_reports_0402",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1771,7 +1771,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::archive_missing_required_entry_reports_0403",
+      "representative_fixture": "crates/sifr_package/src/package_publish_archive_tests.rs::archive_missing_required_entry_reports_0403",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1787,7 +1787,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_6_tests.rs::archive_traversal_reports_0404",
+      "representative_fixture": "crates/sifr_package/src/package_publish_archive_tests.rs::archive_traversal_reports_0404",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1819,7 +1819,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::ambiguous_filter_reports_0601",
+      "representative_fixture": "crates/sifr_package/src/package_workspace_query_tests.rs::ambiguous_filter_reports_0601",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1835,7 +1835,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_import_roots_report_0602",
+      "representative_fixture": "crates/sifr_package/src/package_workspace_query_tests.rs::workspace_duplicate_import_roots_report_0602",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1851,7 +1851,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::changed_file_mapping_reports_0603",
+      "representative_fixture": "crates/sifr_package/src/package_workspace_query_tests.rs::changed_file_mapping_reports_0603",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1867,7 +1867,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::outdated_unknown_source_reports_0604",
+      "representative_fixture": "crates/sifr_package/src/package_workspace_query_tests.rs::outdated_unknown_source_reports_0604",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1883,7 +1883,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_reports_script_target_ambiguity",
+      "representative_fixture": "crates/sifr_package/src/package_session_tests.rs::package_session_reports_script_target_ambiguity",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1899,7 +1899,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_invalid_nested_target_name",
+      "representative_fixture": "crates/sifr_package/src/package_session_tests.rs::package_session_rejects_invalid_nested_target_name",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1915,7 +1915,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_37_5_tests.rs::workspace_duplicate_sifr_names_report_0607",
+      "representative_fixture": "crates/sifr_package/src/package_workspace_query_tests.rs::workspace_duplicate_sifr_names_report_0607",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1931,7 +1931,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_exports_report_0701",
+      "representative_fixture": "crates/sifr_package/src/package_public_api_tests.rs::production_manifest_exports_report_0701",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1947,7 +1947,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_manifest_pointer_0703",
+      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::repair_check_reports_missing_manifest_pointer_0703",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1963,7 +1963,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_check_reports_missing_required_include_0704",
+      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::repair_check_reports_missing_required_include_0704",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1979,7 +1979,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_2_tests.rs::repair_regenerates_missing_pure_marker",
+      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::repair_regenerates_missing_pure_marker",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1995,7 +1995,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_explicit_file_outside_source_root",
+      "representative_fixture": "crates/sifr_package/src/package_session_tests.rs::package_session_rejects_explicit_file_outside_source_root",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2011,7 +2011,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::production_manifest_bin_tables_report_0711",
+      "representative_fixture": "crates/sifr_package/src/package_public_api_tests.rs::production_manifest_bin_tables_report_0711",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2027,7 +2027,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_1_tests.rs::duplicate_init_public_symbol_reports_0713",
+      "representative_fixture": "crates/sifr_package/src/package_public_api_tests.rs::duplicate_init_public_symbol_reports_0713",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2043,7 +2043,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/milestone_adhoc_pkg_3_tests.rs::package_session_rejects_nested_script_expansion",
+      "representative_fixture": "crates/sifr_package/src/package_session_tests.rs::package_session_rejects_nested_script_expansion",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

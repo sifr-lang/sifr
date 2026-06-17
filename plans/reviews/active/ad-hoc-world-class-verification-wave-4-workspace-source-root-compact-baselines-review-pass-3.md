@@ -15,7 +15,7 @@ Concretely, `git diff verification/areas/diagnostics/data/code_baseline_coverage
 - `verification/areas/diagnostics/data/code_baseline_coverage.json:347-352` — `SIFR-ENCODING-0803`, owner `compiler/core-language`. An encoding-family diagnostic; not a workspace import graph code at all.
 - `verification/areas/diagnostics/data/code_baseline_coverage.json:452-457` — `SIFR-FMT-0001`, owner `compiler/diagnostics`. Formatter-family diagnostic.
 
-None of these four codes are listed in `LEGACY_WORKSPACE_IMPORT_CODES` (`crates/sifr_driver/src/bin/diagnostic_contract_harness.rs:13-18`); none of them are intentionally replaced on public CLI paths by source-spanned SIFR-IMPORT diagnostics. The new rationale text — "Legacy workspace graph diagnostic remains active, but current public project import paths intentionally render source-spanned SIFR-IMPORT replacements. Wave 4 follow-up must either add a lower-level rendered harness for this legacy code or make an explicit coverage-policy decision." — is materially wrong for each of them.
+None of these four codes are listed in `LEGACY_WORKSPACE_IMPORT_CODES` (`crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs:13-18`); none of them are intentionally replaced on public CLI paths by source-spanned SIFR-IMPORT diagnostics. The new rationale text — "Legacy workspace graph diagnostic remains active, but current public project import paths intentionally render source-spanned SIFR-IMPORT replacements. Wave 4 follow-up must either add a lower-level rendered harness for this legacy code or make an explicit coverage-policy decision." — is materially wrong for each of them.
 
 Meanwhile the intended targets remain untouched. `code_baseline_coverage.json:1839-1888` shows all four `SIFR-WORKSPACE-0101..0104` entries still carry the original "Rendered baseline fixture expansion is staged inside Wave 4..." boilerplate — exactly the text the pass-1 review flagged as dishonest for this code group and that the pass-2 review re-flagged.
 
@@ -51,7 +51,7 @@ Per the summary, `uv run --project verification --locked python -m sifr_verify a
 - `git diff verification/areas/diagnostics/data/code_baseline_coverage.json` enumerated every changed `reason:` row.
 - `grep -n "Legacy workspace graph diagnostic"` against `code_baseline_coverage.json` shows the rationale at lines 132, 145, 352, 457 — confirming the misattribution.
 - Read each of `code_baseline_coverage.json:125-150`, `:345-360`, `:450-465`, and `:1835-1890` to verify which `code:` field each updated `reason:` actually belongs to and to confirm WORKSPACE-0101..0104 are still on boilerplate.
-- Cross-checked the four wrongly-targeted codes against `LEGACY_WORKSPACE_IMPORT_CODES` in `crates/sifr_driver/src/bin/diagnostic_contract_harness.rs:13-18` — none of them are listed.
+- Cross-checked the four wrongly-targeted codes against `LEGACY_WORKSPACE_IMPORT_CODES` in `crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs:13-18` — none of them are listed.
 
 ## Verdict
 
