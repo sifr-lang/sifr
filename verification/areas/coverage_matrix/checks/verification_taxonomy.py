@@ -27,8 +27,6 @@ DELIVERY_TERMS = (DELIVERY_STAGE, DELIVERY_STEP, DELIVERY_BATCH)
 ACTIVE_ROOTS = (
     REPO_ROOT / "verification",
     REPO_ROOT / ".github" / "workflows",
-    REPO_ROOT / ".cursor" / "commands",
-    REPO_ROOT / ".cursor" / "skills",
     REPO_ROOT / "crates",
     REPO_ROOT / "demos",
     REPO_ROOT / "docs",
@@ -36,7 +34,6 @@ ACTIVE_ROOTS = (
     REPO_ROOT / "internal_docs",
     REPO_ROOT / "lib",
     REPO_ROOT / "scripts",
-    REPO_ROOT / "AGENTS.md",
 )
 
 TEXT_EXTENSIONS = {
