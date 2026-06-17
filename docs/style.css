@@ -16,3 +16,41 @@ pre.shiki {
   line-height: 1.45rem;
   font-size: 0.825rem;
 }
+
+@media (min-width: 1024px) {
+  #navbar div.hidden.lg\:flex.items-center.h-12 {
+    position: relative;
+    gap: 1rem;
+  }
+
+  #navbar div.hidden.lg\:flex.items-center.h-12 > div.flex-1:first-child {
+    flex: 0 0 auto !important;
+    width: auto;
+  }
+
+  #navbar div.hidden.lg\:flex.items-center.h-12 > nav {
+    flex: 0 0 auto;
+    justify-content: flex-start !important;
+  }
+
+  #navbar .topbar-right-container {
+    flex: 1 1 auto !important;
+    min-width: 0;
+  }
+
+  #navbar .topbar-right-container > div:has(#search-bar-entry) {
+    position: absolute !important;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(24rem, calc(100vw - 44rem));
+    min-width: 14rem;
+    justify-content: center !important;
+  }
+
+  #navbar #search-bar-entry {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding-left: 0.875rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
