@@ -16,6 +16,12 @@ Review artifacts:
 - `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-mutability-review-pass-2.md`
 - `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-concurrency-review-pass-1.md`
 - `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-concurrency-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-sonnet-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-sonnet-review-pass-3.md`
+
+Implementation status:
+
+- Wave 1: Ready for PR after Sonnet review. Scope: navigation foundation, `From Python`, `Status`, `Ownership and Mutability`, Slice 0 semantic fixes, and audience guide route placeholders. Validation: `cd docs && npx mint@latest validate` passed.
 
 ## Objective
 

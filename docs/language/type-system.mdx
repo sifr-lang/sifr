@@ -92,7 +92,7 @@ def find_value(x: int | None, target: int) -> str:
     return "not found"
 
 def is_positive(x: int | None) -> bool:
-    if x > 0:
+    if x is not None and x > 0:
         return True
     return False
 ```
@@ -144,12 +144,12 @@ The compiler instantiates a separate, fully-typed version of the function for ea
 
 | Sifr type | Description |
 |-----------|------------|
-| `int`     | 64-bit signed integer |
+| `int`     | Exact integer for ordinary arithmetic |
 | `float`   | 64-bit IEEE 754 double |
 | `bool`    | `True` / `False` |
 | `str`     | UTF-8 string |
 | `None`    | Absence of value |
 
 <Note>
-Primitive types (`int`, `float`, `bool`) are **Copy** types. Passing them to a function does not move or borrow them — the compiler copies the value automatically.
+Scalar values such as `int`, `float`, and `bool` have value semantics at the source level. Passing them to a function does not create use-after-move friction for the caller.
 </Note>
