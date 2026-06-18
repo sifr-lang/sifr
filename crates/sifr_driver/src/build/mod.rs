@@ -3,6 +3,7 @@ mod cargo_manifest;
 mod entrypoint;
 mod materialize;
 mod project_codegen;
+mod python_runtime;
 mod report;
 mod workspace;
 
@@ -12,6 +13,7 @@ pub use api::{
     check_package_project, check_project, check_single_file, emit_project,
 };
 pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
+pub use python_runtime::PackagePythonRuntime;
 pub use report::{BuildCompilationMode, BuildReport, BuildStageReport};
 
 pub(crate) use cargo_manifest::generate_dependency_cargo_toml;

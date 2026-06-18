@@ -78,12 +78,16 @@ fn materialize_binary_project_at_path(
     project_name: &str,
     generated_project: GeneratedBinaryProject,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
+    let python_interpreter = generated_project
+        .python_runtime
+        .as_ref()
+        .map(|runtime| runtime.interpreter().to_path_buf());
     let materialize_start = std::time::Instant::now();
     materialize_binary_project_files(project_path, project_name, generated_project)?;
     let materialize_elapsed = materialize_start.elapsed();
 
     let cargo_start = std::time::Instant::now();
-    run_cargo_build(project_path)?;
+    run_cargo_build(project_path, python_interpreter.as_deref())?;
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
@@ -163,16 +167,22 @@ fn materialize_binary_project_files(
     Ok(())
 }
 
-fn run_cargo_build(project_path: &Path) -> Result<(), Vec<RenderedDiagnostic>> {
-    let output = Command::new("cargo")
+fn run_cargo_build(
+    project_path: &Path,
+    python_interpreter: Option<&Path>,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    let mut command = Command::new("cargo");
+    command
         .args(["build", "--release", "--quiet"])
-        .current_dir(project_path)
-        .output()
-        .map_err(|error| {
-            vec![cargo_build_error(format!(
-                "failed to run cargo build: {error}"
-            ))]
-        })?;
+        .current_dir(project_path);
+    if let Some(python_interpreter) = python_interpreter {
+        command.env("PYO3_PYTHON", python_interpreter);
+    }
+    let output = command.output().map_err(|error| {
+        vec![cargo_build_error(format!(
+            "failed to run cargo build: {error}"
+        ))]
+    })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -270,6 +280,7 @@ mod tests {
             used_stdlib_modules: HashSet::new(),
             required_features: HashSet::new(),
             cache_key_fragment: None,
+            python_runtime: None,
         };
         let mut with_python_probe = GeneratedBinaryProject {
             cache_key_fragment: Some("python-probe-a".to_string()),

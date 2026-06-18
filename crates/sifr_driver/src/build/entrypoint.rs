@@ -3,8 +3,10 @@ use super::materialize::{
     materialize_cached_binary_project_with_report,
 };
 use super::project_codegen::{
-    generated_project_binary_project, generated_single_file_binary_project, GeneratedBinaryProject,
+    apply_package_runtime_metadata, generated_project_binary_project,
+    generated_single_file_binary_project, GeneratedBinaryProject,
 };
+use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildStageReport};
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
@@ -70,7 +72,7 @@ pub struct PackageEntrypoint {
     pub package_id: SifrPackageId,
     pub graph: SifrPackageGraph,
     pub source_map: PackageSourceMap,
-    pub python_probe_digest: Option<String>,
+    pub python_runtime: Option<PackagePythonRuntime>,
 }
 
 pub struct CachedBinaryArtifact {
@@ -92,7 +94,7 @@ pub(crate) struct RootedEntrypointPlan {
     shape: RootedEntrypointShape,
     stdlib: StdlibCompiled,
     project_lowering: ProjectLowering,
-    cache_key_fragment: Option<String>,
+    python_runtime: Option<PackagePythonRuntime>,
 }
 
 fn measure_stage<T>(
@@ -322,7 +324,7 @@ impl RootedEntrypointPlan {
         stages: &mut Vec<BuildStageReport>,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
         let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
-        let (shape, project_lowering, cache_key_fragment) = match entrypoint {
+        let (shape, project_lowering, python_runtime) = match entrypoint {
             RootedEntrypoint::SingleFile {
                 source,
                 display_path,
@@ -412,7 +414,7 @@ impl RootedEntrypointPlan {
                 (
                     RootedEntrypointShape::Project,
                     project_lowering,
-                    entrypoint.python_probe_digest.clone(),
+                    entrypoint.python_runtime.clone(),
                 )
             }
         };
@@ -424,7 +426,7 @@ impl RootedEntrypointPlan {
                 shape,
                 stdlib,
                 project_lowering,
-                cache_key_fragment,
+                python_runtime,
             },
             mode,
             entrypoint_path,
@@ -510,8 +512,8 @@ impl RootedEntrypointPlan {
     fn into_generated_binary_project(
         self,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
-        let cache_key_fragment = self.cache_key_fragment.clone();
-        let mut generated = match self.shape {
+        let python_runtime = self.python_runtime.clone();
+        let generated = match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;
                 generated_single_file_binary_project(codegen_result)
@@ -520,8 +522,7 @@ impl RootedEntrypointPlan {
                 generated_project_binary_project(&self.stdlib.code, self.project_lowering)?
             }
         };
-        generated.cache_key_fragment = cache_key_fragment;
-        Ok(generated)
+        apply_package_runtime_metadata(generated, python_runtime)
     }
 }
 

@@ -130,3 +130,19 @@ fn runtime_dependency_can_enable_unicode_and_i18n_together() {
     assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")
         && dep.contains("features = [\"i18n\", \"unicode\"]")));
 }
+
+#[test]
+fn python_runtime_feature_enables_sifr_runtime_python_feature() {
+    let deps = generated_cargo_dependencies(
+        &HashSet::new(),
+        &HashSet::from([StdlibFeature::PythonRuntime]),
+    );
+
+    assert!(deps
+        .iter()
+        .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"python\"]")));
+    assert_eq!(
+        feature_for_codegen_requirement("python-runtime"),
+        Some(StdlibFeature::PythonRuntime)
+    );
+}
