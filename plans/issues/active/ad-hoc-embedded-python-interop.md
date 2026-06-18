@@ -4,17 +4,25 @@
 
 ## Objective
 
-Deliver production-grade in-process CPython interoperability so Sifr programs can smoothly use Python code and Python ecosystem packages from uv-created environments while preserving Sifr's safety, error, ownership, diagnostics, and local-verification guarantees.
+Deliver production-grade in-process CPython interoperability so Sifr programs can call into Python code and Python ecosystem packages from uv-created environments while preserving Sifr's safety, error, ownership, diagnostics, and local-verification guarantees.
 
 Python interop is a separate lane from Rust-backed Sifr packages and raw C ABI interop. It is not a Deno-style generic `dlopen` layer and must not be collapsed into the Rust/C FFI model.
 
-## Depends On
+## Self-Contained Scope
 
-- Phase 32 async/offload semantics for foreign blocking diagnostics.
-- Phase 37 Cargo-backed package coordination for root package ownership, metadata, and trust policy shape.
-- Phase 40 typed model/validation where Sifr typed conversion helpers intersect with Python model/data validation.
-- Phase 42 data/ML planning for package-facing dataframes, tensors, arrays, and zero-copy data interchange.
-- Phase 43 interop planning for the separate Rust/C interop lane and shared fixed-width integer/bytes representation constraints.
+This phase owns the complete embedded Python implementation surface required for production use. It may reuse existing Sifr compiler, package, async/offload, validation, diagnostics, runtime, and verification infrastructure, but it does not depend on Phase 42, Phase 43, or any separate interop/data-science phase being implemented first.
+
+The phase must implement every Python-specific contract it relies on:
+
+- root application Python environment ownership and verification;
+- compiler metadata and build-plan plumbing for Python interop;
+- trust policy for Python imports and native Python extension modules;
+- `@blocking_io` diagnostics for Python calls in async Sifr code;
+- typed Python object handles, primitive conversion, callback, cleanup, and error semantics;
+- fixed-width integer, bytes, buffer, tensor, dataframe, and Arrow/DLPack interchange rules required by Python interop;
+- package certification and verification infrastructure for the supported Python package tiers.
+
+If an existing Sifr subsystem is not ready for one of these contracts, this phase includes the required implementation work inside the Python interop milestone sequence rather than waiting for another phase.
 
 ## Core Decisions
 
@@ -26,7 +34,7 @@ Python interop is a separate lane from Rust-backed Sifr packages and raw C ABI i
 - Multiple `.venv` environments in one binary/process are rejected.
 - `py.Object` is an opaque foreign object, not `Any`.
 - Every Python boundary operation is fallible and returns a Sifr `Result`.
-- Python calls are synchronous from Sifr's perspective and classified as `foreign_blocking`.
+- Python calls are synchronous from Sifr's perspective and classified as `@blocking_io`.
 - `py.Object` is not `Send` by default and cannot cross Sifr task/thread boundaries without an explicit audited bridge.
 - Zero-copy support is first-class in this phase: `Py_buffer`, Arrow PyCapsule, DLPack, and strict array-interface compatibility are all part of the contract.
 - Python-to-Sifr callbacks are first-class and have explicit local/threadsafe lifetime modes.
@@ -55,11 +63,10 @@ The root application owns the Python environment:
 
 ```toml
 [python]
-enabled = true
 venv = ".venv"
 pyproject = "pyproject.toml"
 lock = "uv.lock"
-interpreter = ".venv/bin/python"
+interpreter = ".venv/bin/python" # optional; if omitted, Sifr resolves from venv per platform
 allow-imports = ["torch", "polars", "pandas", "pyarrow"]
 
 [trust]
@@ -80,7 +87,9 @@ Rules:
 - If no selected environment is available, Sifr reports a deterministic environment diagnostic before codegen/build.
 - If multiple packages require incompatible Python import roots, uv dependency resolution is the user's responsibility; Sifr verifies the final environment.
 - If two packages attempt to select different `.venv` roots, Sifr rejects the build.
-- Applications may use `python = ["*"]` and `python-native = ["*"]` trust during local control. Published libraries must not use wildcards.
+- `allow-imports` defines the root modules Sifr code may request; `trust.python` authorizes executing those roots; `trust.python-native` separately authorizes roots that load extension modules.
+- Applications may use `python = ["*"]` and `python-native = ["*"]` during local control. Published libraries using wildcards are rejected by package publish/check gates and package-graph loading.
+- Static string imports are checked in HIR against `allow-imports` and trust. Dynamic import names are rejected unless the call site uses an explicit unsafe `@trust_python_dynamic` annotation, in which case runtime trust checks still gate the resolved root.
 - Sifr gates declared/root imports only. Transitive Python imports remain uv's responsibility.
 
 ## Environment Probe
@@ -124,6 +133,14 @@ Validation rules:
 - Treat the live interpreter probe as the source of truth. `uv.lock` digests are cache/diagnostic inputs, not correctness proof that the environment is synced.
 - If lock/env state appears stale, report "run `uv sync`" guidance without invoking uv automatically.
 
+## Build and Link Contract
+
+- Generated binaries use the selected venv/interpreter probe as build metadata and cache input.
+- Cache invalidates on interpreter path, CPython major/minor, SOABI, extension suffix set, pointer width, platform, `libpython` path when linked, `pyproject.toml` digest, `uv.lock` digest, declared imports, or trust config changes.
+- Runtime resolution must prefer the configured interpreter/venv. No host-global Python fallback is allowed.
+- PyO3 is built for embedding CPython, not for producing a Python extension module.
+- If dynamic `libpython` linking is required on a target, generated Cargo metadata records the link path and runtime loader requirements; missing loader resolution is a build/probe diagnostic, not a runtime surprise.
+
 ## Runtime Lifecycle
 
 `sifr_runtime::python` owns embedded CPython lifecycle.
@@ -162,21 +179,26 @@ pub mod python {
     }
 
     pub struct PythonRuntime;
+    pub struct PyGilScope;
+    pub enum PyValue;
     pub struct PyObjectHandle;
     pub struct PyBufferView;
     pub struct PyArrowCapsule;
     pub struct PyDlpackCapsule;
     pub struct PyCallbackHandle;
 
+    // Generic wrappers specialize into Sifr-level ArrowArray, ArrowStream, and ArrowSchema handles.
+
     pub fn initialize(config: PythonConfig) -> Result<(), PythonInitError>;
     pub fn import_module(name: &str) -> Result<PyObjectHandle, PythonError>;
+    pub fn with_gil<T>(f: impl FnOnce(PyGilScope) -> Result<T, PythonError>) -> Result<T, PythonError>;
     pub fn getattr(obj: &PyObjectHandle, name: &str) -> Result<PyObjectHandle, PythonError>;
     pub fn getitem(obj: &PyObjectHandle, key: PyValue) -> Result<PyObjectHandle, PythonError>;
     pub fn call(callable: &PyObjectHandle, args: &[PyValue], kwargs: &[(&str, PyValue)]) -> Result<PyObjectHandle, PythonError>;
 }
 ```
 
-Implementation should use PyO3 or a PyO3-compatible ownership model unless a later implementation review records a stronger reason to use raw CPython APIs directly.
+Implementation uses PyO3 for interpreter, GIL, owned-reference, exception, and ordinary object-operation safety. It uses `pyo3-ffi` or narrowly wrapped CPython C APIs only where PyO3 does not expose the required production surface, including `Py_buffer`, capsule validation, Arrow PyCapsule names, DLPack capsules, and low-level environment initialization details.
 
 ## Sifr Object Model
 
@@ -221,8 +243,8 @@ from sifr import python as py
 
 def main() -> Result[None, py.PythonError]:
     torch = try py.import_module("torch")
-    x = try py.call_attr(torch, "tensor", [[1.0, 2.0], [3.0, 4.0]])
-    y = try py.call_attr(torch, "matmul", [x, x])
+    x = try py.call_attr(torch, "tensor", [[1.0, 2.0], [3.0, 4.0]], [])
+    y = try py.call_attr(torch, "matmul", [x, x], [])
     text = try py.to_str(y)
     print(text)
     return None
@@ -241,6 +263,7 @@ try py.call_attr(obj, "method", args, kwargs)
 try py.to[T](obj)
 try py.to_str(obj)
 try py.to_bytes(obj)
+try py.scope(lambda gil: ...)
 try py.close(obj)
 try py.with(obj, lambda entered: ...)
 try py.run_coroutine_blocking(coro)
@@ -261,13 +284,16 @@ but it must lower to the same fallible operations and must not execute Python im
 | --- | --- |
 | `py.import_module("torch")` | `Result[py.Module, py.PythonError]` |
 | `py.get_attr(obj, "name")` | `Result[py.Object, py.PythonError]` |
-| `py.call_attr(obj, "method", args)` | `Result[py.Object, py.PythonError]` |
+| `py.call_attr(obj, "method", args, kwargs)` | `Result[py.Object, py.PythonError]` |
 | `py.call(callable, args, kwargs)` | `Result[py.Object, py.PythonError]` |
 | `py.get_item(obj, key)` | `Result[py.Object, py.PythonError]` |
 | `py.to[T](obj)` | `Result[T, py.TypeConversionError]` |
+| `py.zero_copy_as[T](obj)` | `Result[T, py.ZeroCopyError]`; never copies |
+| `py.copy_as[T](obj)` | `Result[T, py.TypeConversionError]`; explicit copy |
+| `py.scope(fn)` | `Result[T, py.PythonError]`; holds the GIL for batched operations |
 | `py.close(obj)` | `Result[None, py.PythonError]` |
 | `py.with(obj, fn)` | `Result[T, py.PythonError]` |
-| `py.run_coroutine_blocking(coro)` | `Result[py.Object, py.PythonError]`, classified `foreign_blocking` |
+| `py.run_coroutine_blocking(coro)` | `Result[py.Object, py.PythonError]`, classified `@blocking_io` |
 
 Outside a `try`/`Result` handling context, fallible Python operations are compile-time errors.
 
@@ -275,25 +301,16 @@ Outside a `try`/`Result` handling context, fallible Python operations are compil
 
 Automatic conversion is conservative.
 
-| Python value | Sifr value |
-| --- | --- |
-| `None` | `None` |
-| `bool` | `bool` |
-| Python `int` | Sifr exact `int`; fixed-width conversion is checked and fallible |
-| Python `float` | `float` |
-| Python `str` | `str` |
-| Python `bytes` | `bytes` |
-| Python `bytearray` | `py.Object` by default; explicit buffer/copy conversion required |
-| Python `memoryview` | `py.Object` by default; explicit buffer/copy conversion required |
-| Python `list` | `py.Object` by default; explicit typed conversion required |
-| Python `tuple` | `py.Object` by default; explicit typed conversion required |
-| Python `dict` | `py.Object` by default; explicit typed conversion required |
-| `numpy.ndarray` | `py.Object` by default; explicit buffer/array conversion required |
-| `torch.Tensor` | `py.Object` by default; explicit DLPack/copy conversion required |
-| `tensorflow.Tensor` | `py.Object` by default; explicit DLPack/copy conversion required |
-| `pandas.DataFrame` | `py.Object` by default; explicit Arrow/copy conversion required |
-| `polars.DataFrame` | `py.Object` by default; explicit Arrow/copy conversion required |
-| arbitrary Python object | `py.Object` |
+| Python value | Default Sifr type | Explicit conversion API |
+| --- | --- | --- |
+| `None`, bool, float, str, bytes | matching Sifr value | `py.to[T]`, `py.copy_as[T]` when needed |
+| Python `int` | exact `int` | fixed-width `py.to[int32]`/etc. is checked and fallible |
+| bytearray, memoryview, buffers | `py.Object` | `py.zero_copy_as[py.BufferView[T]]`, `py.copy_as[bytes]` |
+| list, tuple, dict | `py.Object` | `py.to[list[T]]`, `py.to[dict[str, T]]`, record conversion |
+| numpy arrays | `py.Object` | `py.BufferView`, array-interface compatibility, DLPack where available, explicit copy |
+| torch/tensorflow tensors | `py.Object` | DLPack or explicit copy |
+| pandas/polars/pyarrow dataframes | `py.Object` | Arrow PyCapsule/stream or explicit copy |
+| arbitrary Python object | `py.Object` | explicit protocol-specific conversion only |
 
 Rules:
 
@@ -331,12 +348,13 @@ Sifr waits until Python returns control.
 
 Rules:
 
-- Every Python call is classified as `foreign_blocking`.
+- Every Python call is classified as `@blocking_io`.
 - Direct Python calls in async Sifr code are compile-time errors unless explicitly offloaded.
-- `py.blocking` or the existing task offload primitive must run Python work in a blocking-safe region.
+- The existing Sifr blocking task/offload primitive is the only async escape hatch. There is no Python-specific `py.blocking` alias.
+- User-defined Sifr wrappers around Python work inherit or declare `@blocking_io`.
 - `py.Object` values cannot cross async task/thread boundaries by default.
 - Python cancellation is cooperative only. Sifr cannot safely kill embedded Python execution mid-call.
-- `py.run_coroutine_blocking` is allowed only as an explicitly blocking operation and should run the coroutine using Python-owned event-loop mechanics.
+- `py.run_coroutine_blocking` is `@blocking_io`, creates or reuses a runtime-owned per-thread Python event loop, rejects reentry into an already running loop on that thread, respects installed loop policies such as uvloop, and returns only after the coroutine finishes.
 
 ## Resource Cleanup
 
@@ -346,9 +364,10 @@ Supported cleanup APIs:
 
 ```sifr
 try py.close(obj)
-try py.call_method(obj, "close", [])
+try py.call_attr(obj, "close", [], [])
 try py.with(obj, lambda entered: ...)
-try py.run_coroutine_blocking(try py.call_attr(obj, "aclose", []))
+let coro = try py.call_attr(obj, "aclose", [], [])
+try py.run_coroutine_blocking(coro)
 try callback.close()
 try buffer.release()
 ```
@@ -357,6 +376,7 @@ Rules:
 
 - Do not rely on Python `__del__` for correctness.
 - Context-manager helpers must call `__enter__` and `__exit__` and preserve Python traceback on failure.
+- `py.with(obj, fn)` is scoped: `entered` cannot escape the lambda, the lambda returns generic `T`, and Python `__exit__(exc_type, exc, tb)` receives Sifr/Python failure context before the final `Result` is produced.
 - Async context managers require a Python wrapper or explicit `py.run_coroutine_blocking`.
 - Callback handles, buffer views, Arrow capsules, and DLPack capsules are resource handles with deterministic close/release semantics.
 - Double close/release is either idempotent by design or reports a deterministic resource-state error; the decision must be documented per resource type.
@@ -377,6 +397,7 @@ Rules:
 - Zero-copy APIs never silently copy.
 - Copying APIs never claim view semantics.
 - Every view tracks the Python owner/resource needed to keep memory valid.
+- `py.BufferView`, `py.ArrowArray`, `py.ArrowStream`, `py.ArrowSchema`, and `py.DlpackTensor` are non-`Send` by default. A view becomes transferable only through an explicit audited bridge that proves owner lifetime, device/stream sync, mutability, and thread-safety constraints.
 - Writable views require both Python exporter writeability and Sifr-side exclusivity/borrow rules.
 - Non-contiguous data is represented with strides when the target type supports strides; contiguity-required targets reject non-contiguous sources.
 
@@ -406,6 +427,8 @@ Used for:
 - suboffsets;
 - contiguity class;
 - requested flags.
+
+It is acquired via `try py.zero_copy_as[py.BufferView[T]](obj)`.
 
 Drop/release must call `PyBuffer_Release` exactly once while holding the GIL.
 
@@ -475,6 +498,7 @@ py.ThreadsafeCallback
 `py.LocalCallback`:
 
 - valid only during the active Sifr-to-Python call;
+- non-`Send`;
 - same-thread/same-stack reentry only;
 - may borrow scoped Sifr values;
 - cannot be stored by Python beyond the active call;
@@ -486,6 +510,9 @@ py.ThreadsafeCallback
 - may be called from Python-created threads, native extension callback threads, thread pools, or event-loop schedulers;
 - must own or clone captured state;
 - requires Send-like Sifr constraints on captured values;
+- is the explicit audited bridge exception to non-`Send` `py.Object` defaults;
+- stores Python callable references only inside the runtime registry, reacquires the GIL before dispatch, and never exposes those references as Send Sifr values;
+- dispatches non-Sifr-thread calls through the Sifr runtime scheduler unless the callback is explicitly marked same-thread reentrant;
 - is registered in a runtime callback registry;
 - has explicit `close`/`cancel`;
 - converts Sifr errors into Python exceptions;
@@ -513,6 +540,7 @@ Rules:
 - Native Python extensions are trusted in-process code.
 - Sifr cannot sandbox native extensions in embedded mode.
 - Native crashes can terminate the process.
+- Sifr's no-user-triggerable-runtime-panic guarantee applies to Sifr-attributable paths. `[trust].python-native` is an explicit opt-in boundary where process-abort safety is delegated to the trusted extension.
 - Native extensions may release the GIL.
 - Native extensions may create background threads.
 - Native extensions may call back into Python/Sifr from non-Sifr threads.
@@ -522,47 +550,22 @@ Rules:
 
 Sifr should support any CPython-compatible package installed in the selected uv environment. Certification is a verification promise for representative package surfaces, not a package whitelist.
 
-### Tier 1: Interop Certification Gate
+### Tier 1a: Core Interop Certification Gate
 
-Core runtime/package loading:
+These packages must pass at the full Python interop gate because they exercise the core embedded, native, conversion, zero-copy, and production-client surfaces: `pydantic`, `pydantic-core`, `httpx`, `requests`, `cryptography`, `cffi`, `numpy`, `pandas`, `pyarrow`, `polars`, `torch` CPU, `psycopg`, `sqlalchemy`, `redis`, `confluent-kafka`, `openai`, `google-genai`, `biip`, `schwifty`.
 
-- `pip`, `setuptools`, `wheel`, `build`, `hatchling`, `poetry-core`, `uv-build`, `pyproject-hooks`, `packaging`, `pkginfo`, `importlib-metadata`, `zipp`, `platformdirs`, `appdirs`, `typing-extensions`, `exceptiongroup`.
+### Tier 1b: Ecosystem Certification Gate
 
-Data validation/structured objects:
-
-- `pydantic`, `pydantic-core`, `pydantic-extra-types`, `annotated-types`, `attrs`, `marshmallow`, `cerberus`, `jsonpickle`, `deepdiff`, `protobuf`, `proto-plus`, `pyyaml`, `toml`, `tomli`, `python-dotenv`.
-
-HTTP/async/networking:
-
-- `requests`, `urllib3`, `httpx`, `httpcore`, `aiohttp`, `anyio`, `async-timeout`, `sniffio`, `h11`, `httptools`, `websockets`, `uvicorn`, `uvloop`.
-
-Web frameworks:
-
-- `fastapi`, `starlette`, `starlette-context`, `django`, `sanic`, `sanic-routing`, `sanic-testing`, `webargs`, `webargs-sanic`, `jinja2`, `markupsafe`, `python-multipart`.
-
-Databases/queues/brokers:
-
-- `sqlalchemy`, `sqlalchemy-utils`, `alembic`, `psycopg`, `psycopg2`, `psycopg2-binary`, `asyncpg`, `pymongo`, `motor`, `mongoengine`, `redis`, `fakeredis`, `hiredis`, `valkey`, `aiokafka`, `confluent-kafka`, `kafka-python`, `python-schema-registry-client`.
-
-Cloud/AI clients:
-
-- `openai`, `google-genai`, `google-api-core`, `google-api-python-client`, `google-auth`, `google-auth-httplib2`, `google-auth-oauthlib`, `google-cloud-core`, `google-cloud-storage`, `google-cloud-firestore`, `google-cloud-aiplatform`, `firebase-admin`, `kubernetes`, `pinecone-client`, `gspread`, `gspread-asyncio`.
-
-Security/crypto/native loading:
-
-- `cryptography`, `cffi`, `pycparser`, `certifi`, `idna`, `charset-normalizer`, `chardet`, `oauthlib`, `requests-oauthlib`, `python-jose`, `rsa`, `pyasn1`, `pyasn1-modules`.
-
-Data/binary/parser:
-
-- `pandas`, `pyarrow`, `openpyxl`, `lxml`, `bleach`, `defusedxml`, `nh3`, `regex`, `ujson`, `fastavro`, `avro`, `avro-python3`, `google-crc32c`, `tiktoken`.
-
-Observability/production infra:
-
-- `opentelemetry-api`, `opentelemetry-semantic-conventions`, `opentracing`, `sentry-sdk`, `sentry-asgi`, `datadog`, `structlog`, `logstash-formatter`.
-
-Domain examples:
-
-- `biip`, `schwifty`, `pycountry`, `babel`, `holidays`, `dateparser`, `pendulum`, `python-dateutil`, `pytz`, `tzdata`, `uuid-utils`, `rank-bm25`.
+- Runtime/package loading: `pip`, `setuptools`, `wheel`, `build`, `hatchling`, `poetry-core`, `uv-build`, `pyproject-hooks`, `packaging`, `pkginfo`, `importlib-metadata`, `zipp`, `platformdirs`, `appdirs`, `typing-extensions`, `exceptiongroup`.
+- Data validation/structured objects: `pydantic`, `pydantic-core`, `pydantic-extra-types`, `annotated-types`, `attrs`, `marshmallow`, `cerberus`, `jsonpickle`, `deepdiff`, `protobuf`, `proto-plus`, `pyyaml`, `toml`, `tomli`, `python-dotenv`.
+- HTTP/async/networking: `requests`, `urllib3`, `httpx`, `httpcore`, `aiohttp`, `anyio`, `async-timeout`, `sniffio`, `h11`, `httptools`, `websockets`, `uvicorn`, `uvloop`.
+- Web frameworks: `fastapi`, `starlette`, `starlette-context`, `django`, `sanic`, `sanic-routing`, `sanic-testing`, `webargs`, `webargs-sanic`, `jinja2`, `markupsafe`, `python-multipart`.
+- Databases/queues/brokers: `sqlalchemy`, `sqlalchemy-utils`, `alembic`, `psycopg`, `psycopg2`, `psycopg2-binary`, `asyncpg`, `pymongo`, `motor`, `mongoengine`, `redis`, `fakeredis`, `hiredis`, `valkey`, `aiokafka`, `confluent-kafka`, `kafka-python`, `python-schema-registry-client`.
+- Cloud/AI clients: `openai`, `google-genai`, `google-api-core`, `google-api-python-client`, `google-auth`, `google-auth-httplib2`, `google-auth-oauthlib`, `google-cloud-core`, `google-cloud-storage`, `google-cloud-firestore`, `google-cloud-aiplatform`, `firebase-admin`, `kubernetes`, `pinecone-client`, `gspread`, `gspread-asyncio`.
+- Security/crypto/native loading: `cryptography`, `cffi`, `pycparser`, `certifi`, `idna`, `charset-normalizer`, `chardet`, `oauthlib`, `requests-oauthlib`, `python-jose`, `rsa`, `pyasn1`, `pyasn1-modules`.
+- Data/binary/parser: `pandas`, `pyarrow`, `openpyxl`, `lxml`, `bleach`, `defusedxml`, `nh3`, `regex`, `ujson`, `fastavro`, `avro`, `avro-python3`, `google-crc32c`, `tiktoken`.
+- Observability/production infra: `opentelemetry-api`, `opentelemetry-semantic-conventions`, `opentracing`, `sentry-sdk`, `sentry-asgi`, `datadog`, `structlog`, `logstash-formatter`.
+- Domain examples: `biip`, `schwifty`, `pycountry`, `babel`, `holidays`, `dateparser`, `pendulum`, `python-dateutil`, `pytz`, `tzdata`, `uuid-utils`, `rank-bm25`.
 
 ### Tier 2: Broad Smoke Gate
 
@@ -652,7 +655,7 @@ Verification groups:
 - `web`: FastAPI/Starlette/Django/Sanic import and in-process smoke fixtures.
 - `cleanup`: close/context-manager/callback release/leak diagnostics.
 
-Runner shape:
+Runner shape: `run.sh` is canonical; it validates environment prerequisites and delegates to `runner/run.py`.
 
 ```bash
 verification/python_interop/run.sh --group env
@@ -678,6 +681,7 @@ Scope:
 - Land this full phase contract.
 - Create `verification/python_interop/` scaffold and package matrix files.
 - Define diagnostic families for Python environment/import/call/conversion/resource/zero-copy errors.
+- Reserve diagnostic families: `SIFR-PYENV`, `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, `SIFR-PYCB`, `SIFR-PYTRUST`.
 - Record package certification policy and host-dependent test policy.
 
 Definition of done:
@@ -737,9 +741,9 @@ Definition of done:
 ### milestone_py_5: Async/Blocking Integration
 
 Scope:
-- Classify Python calls as `foreign_blocking`.
+- Classify Python calls as `@blocking_io`.
 - Reject direct Python calls in async Sifr code unless offloaded.
-- Implement `py.blocking` or integrate with the existing blocking task primitive.
+- Integrate with the existing blocking task primitive; do not add `py.blocking`.
 - Implement `py.run_coroutine_blocking` as an explicitly blocking operation.
 - Enforce non-Send default behavior for `py.Object`.
 
@@ -831,12 +835,11 @@ Definition of done:
 Entry criteria:
 
 - Existing local validation gates remain green before implementation starts.
-- Phase 27 non-regression baseline is green.
 - Python phase contract is linked from phase index and roadmap docs.
 
 Global invariants:
 
-- No user-triggerable compiler or runtime panics.
+- No user-triggerable compiler or runtime panics in Sifr-attributable paths; trusted Python native extensions are the explicit in-process trust boundary exception.
 - No data-dependent emitted `.unwrap()`, `.expect()`, or `panic!` in user runtime paths.
 - Python errors are `Result` values with structured diagnostics.
 - Python calls in async Sifr code require explicit blocking/offload.
@@ -880,10 +883,10 @@ verification/python_interop/run.sh --group callbacks
 - Root app environment ownership, trust, and probing are enforced.
 - CPython lifecycle, GIL/refcount handling, and resource cleanup are deterministic.
 - `py.Object` operations are opaque, fallible, non-`Any`, and non-Send by default.
-- Python calls obey foreign-blocking/offload rules.
+- Python calls obey `@blocking_io`/offload rules.
 - Python-to-Sifr callbacks support local and threadsafe modes.
 - `Py_buffer`, Arrow PyCapsule, DLPack, and strict array-interface paths are implemented with no silent zero-copy fallback to copying.
 - Tier 1 package certification passes in the full Python interop gate.
 - Verification reports exist under `verification/python_interop/reports/`.
 - Public and internal docs describe the exact production contract.
-- Phase 27 non-regression contract remains green.
+- Existing non-regression contracts remain green.
