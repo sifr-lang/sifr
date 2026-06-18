@@ -522,6 +522,7 @@ Required package patterns:
 
 - confluent-kafka polling and background-thread callbacks;
 - Google Pub/Sub scheduler thread-pool callbacks;
+- boto3/botocore SQS long polling, SNS publish/subscribe, paginators, retries, and credential refresh;
 - CFFI callbacks;
 - Pika message callbacks;
 - Python code invoking Sifr handlers while Sifr is blocked in Python;
@@ -552,7 +553,7 @@ Sifr should support any CPython-compatible package installed in the selected uv 
 
 ### Tier 1a: Core Interop Certification Gate
 
-These packages must pass at the full Python interop gate because they exercise the core embedded, native, conversion, zero-copy, and production-client surfaces: `pydantic`, `pydantic-core`, `httpx`, `requests`, `cryptography`, `cffi`, `numpy`, `pandas`, `pyarrow`, `polars`, `torch` CPU, `psycopg`, `sqlalchemy`, `redis`, `confluent-kafka`, `openai`, `google-genai`, `biip`, `schwifty`.
+These packages must pass at the full Python interop gate because they exercise the core embedded, native, conversion, zero-copy, and production-client surfaces: `pydantic`, `pydantic-core`, `httpx`, `requests`, `cryptography`, `cffi`, `numpy`, `pandas`, `pyarrow`, `polars`, `torch` CPU, `psycopg`, `sqlalchemy`, `redis`, `confluent-kafka`, `boto3`, `botocore`, `openai`, `google-genai`, `biip`, `schwifty`.
 
 ### Tier 1b: Ecosystem Certification Gate
 
@@ -561,7 +562,7 @@ These packages must pass at the full Python interop gate because they exercise t
 - HTTP/async/networking: `requests`, `urllib3`, `httpx`, `httpcore`, `aiohttp`, `anyio`, `async-timeout`, `sniffio`, `h11`, `httptools`, `websockets`, `uvicorn`, `uvloop`.
 - Web frameworks: `fastapi`, `starlette`, `starlette-context`, `django`, `sanic`, `sanic-routing`, `sanic-testing`, `webargs`, `webargs-sanic`, `jinja2`, `markupsafe`, `python-multipart`.
 - Databases/queues/brokers: `sqlalchemy`, `sqlalchemy-utils`, `alembic`, `psycopg`, `psycopg2`, `psycopg2-binary`, `asyncpg`, `pymongo`, `motor`, `mongoengine`, `redis`, `fakeredis`, `hiredis`, `valkey`, `aiokafka`, `confluent-kafka`, `kafka-python`, `python-schema-registry-client`.
-- Cloud/AI clients: `openai`, `google-genai`, `google-api-core`, `google-api-python-client`, `google-auth`, `google-auth-httplib2`, `google-auth-oauthlib`, `google-cloud-core`, `google-cloud-storage`, `google-cloud-firestore`, `google-cloud-aiplatform`, `firebase-admin`, `kubernetes`, `pinecone-client`, `gspread`, `gspread-asyncio`.
+- Cloud/AI clients: `boto3`, `botocore`, `openai`, `google-genai`, `google-api-core`, `google-api-python-client`, `google-auth`, `google-auth-httplib2`, `google-auth-oauthlib`, `google-cloud-core`, `google-cloud-storage`, `google-cloud-firestore`, `google-cloud-aiplatform`, `firebase-admin`, `kubernetes`, `pinecone-client`, `gspread`, `gspread-asyncio`.
 - Security/crypto/native loading: `cryptography`, `cffi`, `pycparser`, `certifi`, `idna`, `charset-normalizer`, `chardet`, `oauthlib`, `requests-oauthlib`, `python-jose`, `rsa`, `pyasn1`, `pyasn1-modules`.
 - Data/binary/parser: `pandas`, `pyarrow`, `openpyxl`, `lxml`, `bleach`, `defusedxml`, `nh3`, `regex`, `ujson`, `fastavro`, `avro`, `avro-python3`, `google-crc32c`, `tiktoken`.
 - Observability/production infra: `opentelemetry-api`, `opentelemetry-semantic-conventions`, `opentracing`, `sentry-sdk`, `sentry-asgi`, `datadog`, `structlog`, `logstash-formatter`.
@@ -614,6 +615,9 @@ verification/python_interop/
     redis/
     kafka/
     pubsub/
+    aws_sqs/
+    aws_sns/
+    aws_sns_sqs_subscription/
     pandas_arrow/
     polars_arrow/
     pyarrow_capsule/
@@ -650,8 +654,8 @@ Verification groups:
 - `dataframes`: pandas/polars/pyarrow dataframe interop.
 - `tensors`: NumPy/torch/tensorflow tensor interop.
 - `databases`: SQLAlchemy, psycopg, asyncpg, pymongo, motor, redis.
-- `brokers`: confluent-kafka, aiokafka, kafka-python, Pub/Sub-style callbacks.
-- `cloud`: Google/Azure/AWS/client auth/import surfaces without requiring live credentials in the default gate.
+- `brokers`: confluent-kafka, aiokafka, kafka-python, SQS long polling, SNS-to-SQS delivery, Pub/Sub-style callbacks.
+- `cloud`: boto3/botocore SQS/SNS clients/resources/stubbers, Google/Azure/AWS auth/import surfaces, without requiring live credentials in the default gate.
 - `web`: FastAPI/Starlette/Django/Sanic import and in-process smoke fixtures.
 - `cleanup`: close/context-manager/callback release/leak diagnostics.
 
@@ -669,7 +673,7 @@ Validation profiles:
 
 - Fast gate: environment probe, core embedded runtime, pure imports, pydantic/httpx/cryptography/cffi/pandas/pyarrow smoke.
 - Full Python interop gate: all Tier 1 packages, native extension probes, zero-copy checks, callback/threading checks, local service-backed tests.
-- External integration gate: Kafka, Postgres, Redis, cloud SDK auth, Pub/Sub/SQS/SNS, RabbitMQ, and other service-backed tests.
+- External integration gate: Kafka, Postgres, Redis, AWS SQS/SNS via LocalStack/moto-style emulation or live credentials, Pub/Sub, RabbitMQ, cloud SDK auth, and other service-backed tests.
 
 ## Milestones
 
