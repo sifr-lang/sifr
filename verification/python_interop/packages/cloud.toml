@@ -1,0 +1,35 @@
+[[packages]]
+name = "google-api-core"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "google-api-python-client"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "google-auth"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "google-cloud-storage"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "google-cloud-firestore"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "kubernetes"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]

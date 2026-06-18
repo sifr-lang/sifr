@@ -1,0 +1,134 @@
+[[packages]]
+name = "pydantic"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports"]
+
+[[packages]]
+name = "pydantic-core"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "httpx"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "async"]
+
+[[packages]]
+name = "requests"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports"]
+
+[[packages]]
+name = "cryptography"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "cffi"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native", "callbacks"]
+native = true
+
+[[packages]]
+name = "numpy"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native", "buffers", "dlpack", "tensors"]
+native = true
+
+[[packages]]
+name = "pandas"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native", "arrow", "dataframes"]
+native = true
+
+[[packages]]
+name = "pyarrow"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native", "arrow", "dataframes"]
+native = true
+
+[[packages]]
+name = "polars"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native", "arrow", "dataframes"]
+native = true
+
+[[packages]]
+name = "torch"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native", "dlpack", "tensors"]
+native = true
+
+[[packages]]
+name = "psycopg"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "databases", "buffers"]
+
+[[packages]]
+name = "sqlalchemy"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "databases"]
+
+[[packages]]
+name = "redis"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "databases"]
+
+[[packages]]
+name = "confluent-kafka"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "native", "brokers", "callbacks"]
+native = true
+
+[[packages]]
+name = "boto3"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "cloud", "brokers"]
+
+[[packages]]
+name = "botocore"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "cloud", "brokers"]
+
+[[packages]]
+name = "openai"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "google-genai"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "biip"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports"]
+
+[[packages]]
+name = "schwifty"
+tier = "tier1"
+gate = "tier1a"
+groups = ["imports"]

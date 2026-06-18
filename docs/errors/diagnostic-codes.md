@@ -15,6 +15,14 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `IMPORT` | `SIFR-IMPORT-0000` | Module import and path resolution diagnostics. |
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
+| `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
+| `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
+| `PYCALL` | `SIFR-PYCALL-0000` | Embedded Python callable, attribute, item, and coroutine diagnostics. |
+| `PYCONV` | `SIFR-PYCONV-0000` | Sifr/Python primitive and structured conversion diagnostics. |
+| `PYRES` | `SIFR-PYRES-0000` | Embedded Python resource cleanup and leak diagnostics. |
+| `PYZC` | `SIFR-PYZC-0000` | Embedded Python zero-copy buffer, Arrow, DLPack, and array-interface diagnostics. |
+| `PYCB` | `SIFR-PYCB-0000` | Python-to-Sifr callback lifetime, dispatch, and closure diagnostics. |
+| `PYTRUST` | `SIFR-PYTRUST-0000` | Embedded Python import and native-extension trust diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
 | `INT` | `SIFR-INT-0000` | Exact and fixed-width integer model diagnostics. |
 | `IO` | `SIFR-IO-0000` | File and stream text/binary boundary diagnostics. |
@@ -219,6 +227,14 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-IMPORT-0000` | `IMPORT` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-TYPE-0000` | `TYPE` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-ASYNC-0000` | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYENV-0000` | `PYENV` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYIMP-0000` | `PYIMP` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYCALL-0000` | `PYCALL` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYCONV-0000` | `PYCONV` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYRES-0000` | `PYRES` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYZC-0000` | `PYZC` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYCB-0000` | `PYCB` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYTRUST-0000` | `PYTRUST` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INT-0000` | `INT` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-IO-0000` | `IO` | Reserved family base; not emitted as a diagnostic. |

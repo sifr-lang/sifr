@@ -1,0 +1,49 @@
+[[packages]]
+name = "click"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "typer"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "rich"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "pygments"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "tqdm"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "tenacity"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "responses"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "requests-mock"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "markdown"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "docutils"
+tier = "tier2"
+groups = ["imports"]

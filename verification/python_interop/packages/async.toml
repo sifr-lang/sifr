@@ -1,0 +1,30 @@
+[[packages]]
+name = "aiohttp"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+
+[[packages]]
+name = "anyio"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async"]
+
+[[packages]]
+name = "uvloop"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "async"]
+native = true
+
+[[packages]]
+name = "fastapi"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+
+[[packages]]
+name = "starlette"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]

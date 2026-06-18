@@ -1,0 +1,50 @@
+[[packages]]
+name = "pytest"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "pytest-asyncio"
+tier = "tier3"
+groups = ["imports", "async"]
+
+[[packages]]
+name = "coverage"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "tox"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "pre-commit"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "black"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "mypy"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "sphinx"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "mkdocs"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "cython"
+tier = "tier3"
+groups = ["imports", "native"]
+native = true
