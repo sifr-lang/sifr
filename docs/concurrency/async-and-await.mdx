@@ -1,0 +1,81 @@
+---
+title: "Async and Await"
+sidebarTitle: "Async and Await"
+description: "Define async functions, await real suspension points, and handle typed async errors in Sifr."
+---
+
+Use `async def` for functions that suspend. Use `await` to wait for an async operation inside another async context.
+
+```python
+async def one() -> int:
+    await task.sleep(0.0)
+    return 1
+```
+
+<Note>
+  The `task` namespace is available in async Sifr programs for core task operations such as `task.sleep`, `task.scope`, `task.gather`, and `task.TaskGroup`.
+</Note>
+
+Sifr tracks whether async code performs real suspension. An async function that never reaches a suspension point is rejected because it does not need to be async.
+
+## Typed Errors
+
+Async functions can return `Result[T, E]` just like synchronous functions. `raise` produces the error value, and callers handle it with `try`/`except`.
+
+```python
+async def fail_fast() -> Result[int, ValueError]:
+    await task.sleep(0.0)
+    raise ValueError("group child failed")
+```
+
+## Awaiting Work
+
+You can await a direct async call, a task handle, or an async API from the standard library.
+
+```python
+async def main() -> Result[None, Error]:
+    value: int = await one()
+    print(value)
+    return None
+```
+
+For async subprocess I/O, use the async process APIs rather than blocking calls.
+
+```python
+from sifr.process import Command, Stdio, async_spawn
+
+async def run_child() -> None:
+    command: Command = Command(["cat"])
+    command.stdin(Stdio.piped())
+    command.stdout(Stdio.piped())
+
+    child = await async_spawn(command)
+    stdin = child.stdin()
+    stdout = child.stdout()
+    await stdin.write_all(b"ping")
+    response: bytes = await stdout.read_all()
+```
+
+## What Is Different From `asyncio`
+
+Sifr has no exposed event-loop object. You do not call `get_event_loop`, mutate loop policy, or detach work into a global registry. Async work belongs to scopes, and the compiler verifies ownership at the boundary.
+
+## Blocking And CPU-Heavy Work
+
+Do not run blocking I/O or CPU-heavy functions directly inside async code. Sifr reports this as an async diagnostic because blocking the runtime would prevent other tasks from making progress.
+
+Use async APIs for I/O, and use `sifr.parallel` for CPU-heavy maps over owned data.
+
+```python
+from sifr.parallel import map as parallel_map
+
+def heavy(value: int) -> int:
+    return value * value
+
+def run_cpu_work(values: list[int]) -> list[int]:
+    return parallel_map(values, heavy)
+```
+
+<Tip>
+  If the next thing you want is "run two things at once", continue with [Structured Tasks](/concurrency/structured-tasks).
+</Tip>

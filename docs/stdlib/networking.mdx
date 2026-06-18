@@ -52,7 +52,7 @@ async def echo_server(port: int) -> None:
 ```
 
 <Note>
-Network operations consume Sifr's concurrency runtime for cancellation, deadlines, and backpressure. Use `task.scope()` or `task.timeout()` from `sifr.task` to bound the lifetime of network operations.
+Network operations consume Sifr's concurrency runtime for cancellation, deadlines, and backpressure. Use `task.scope()` or `task.timeout()` from `sifr.task` to bound the lifetime of network operations. See [Concurrency Overview](/language/concurrency) for the structured task model.
 </Note>
 
 ## TLS with `sifr.tls`

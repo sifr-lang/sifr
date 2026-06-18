@@ -1,0 +1,82 @@
+---
+title: "Structured Tasks"
+sidebarTitle: "Structured Tasks"
+description: "Use task scopes, spawned handles, gather, select, and TaskGroup in Sifr."
+---
+
+Spawned tasks live inside a scope. The scope owns the children and waits for them before the block exits.
+
+## Scoped Spawn
+
+```python
+async def one() -> int:
+    await task.sleep(0.0)
+    return 1
+
+async def two() -> int:
+    await task.sleep(0.0)
+    return 2
+
+async def main() -> Result[None, Error]:
+    async with task.scope() as scope:
+        first = scope.spawn(one())
+        second = scope.spawn(two())
+        values = await task.gather([first, second])
+    return None
+```
+
+`task.gather` returns results in the order the handles were passed.
+
+## Linear Handles
+
+`TaskHandle[T, E]` values are linear. Awaiting or joining a handle consumes it. The compiler rejects using the same handle twice.
+
+<Note>
+  This is the task version of Sifr's ownership model: a handle represents a live child task, so there is exactly one path that observes it.
+</Note>
+
+## Select
+
+Use `task.select` when two tasks race and the first result wins. The losing child is cancelled before the scope exits.
+
+```python
+async def fast() -> int:
+    await task.sleep(0.0)
+    return 10
+
+async def slow() -> int:
+    await task.sleep(0.20)
+    return 20
+
+async with task.scope() as scope:
+    selected: int = await task.select(
+        first=scope.spawn(fast()),
+        second=scope.spawn(slow()),
+    )
+```
+
+## TaskGroup
+
+Use `task.TaskGroup` when a group of tasks should run together and you need to observe individual results.
+
+```python
+async with task.TaskGroup() as group:
+    slow = group.spawn(slow())
+    failing = group.spawn(fail_fast())
+    failure = await failing
+```
+
+<Warning>
+  `TaskGroup` cancels unfinished siblings when any child fails. Do not rely on sibling work completing after another child has returned an error.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Cancellation and Timeouts" icon="clock-alert" href="/concurrency/cancellation-and-timeouts">
+    Bound the lifetime of async work.
+  </Card>
+  <Card title="Concurrency API" icon="library" href="/stdlib/concurrency">
+    See the full `sifr.task` API reference.
+  </Card>
+</CardGroup>

@@ -1,0 +1,73 @@
+---
+title: "Cancellation and Timeouts"
+sidebarTitle: "Cancellation and Timeouts"
+description: "Bound async work with timeouts, cancellation, cleanup, and structured task failure rules."
+---
+
+Sifr treats cancellation as part of structured concurrency. A cancelled child does not keep running in the background, and cleanup runs before cancellation or timeout evidence is observed by the caller.
+
+## Timeout
+
+Use `task.timeout` to bound the runtime of an awaitable operation.
+
+```python
+async def main() -> Result[None, Error]:
+    async with task.timeout(1.0):
+        await task.sleep(0.0)
+    return None
+```
+
+When the timeout expires, the block is cancelled and the caller handles typed timeout evidence.
+
+## Cleanup Runs First
+
+Cleanup in `finally` runs before the timeout is observed outside the block.
+
+```python
+from sifr.io import write_text
+
+async def main() -> Result[None, Error]:
+    try:
+        async with task.timeout(0.0):
+            try:
+                await task.sleep(10.0)
+            finally:
+                _written: None = write_text("/tmp/sifr-cleanup.txt", "cleanup")
+    except TimeoutError:
+        _timed_out: bool = True
+    return None
+```
+
+This keeps resource cleanup deterministic even when work is cancelled.
+
+## Manual Cancellation
+
+Task handles can be cancelled explicitly.
+
+```python
+async with task.scope() as scope:
+    slow = scope.spawn(slow_worker())
+    slow.cancel()
+    cancelled = await slow
+```
+
+The handle still has one owner and one observation path.
+
+## Sibling Cancellation
+
+`TaskGroup` cancels unfinished siblings when one child fails. Use this for all-or-cancel groups where partial completion should not leak beyond the group.
+
+<Warning>
+  Do not use task cancellation as a hidden control-flow side channel. Treat timeout and cancellation as typed evidence that the caller must handle.
+</Warning>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Structured Tasks" icon="workflow" href="/concurrency/structured-tasks">
+    Learn how child task scopes own and clean up spawned work.
+  </Card>
+  <Card title="Error Handling" icon="triangle-alert" href="/language/error-handling">
+    Review how typed errors flow through Sifr programs.
+  </Card>
+</CardGroup>

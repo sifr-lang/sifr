@@ -1,0 +1,103 @@
+---
+title: "Iteration in Sifr"
+sidebarTitle: "Iteration"
+description: "Use for loops, ranges, comprehensions, and safe collection iteration in Sifr."
+---
+
+Sifr keeps Python's readable loop syntax while enforcing ownership and type rules at compile time. Iteration is usually borrowed: you can loop over a collection without consuming it.
+
+## For Loops
+
+```python
+def total(values: list[int]) -> int:
+    result: int = 0
+    for value in values:
+        result = result + value
+    return result
+```
+
+The loop body sees each `value` as an `int`, and `values` remains usable after the loop.
+
+## Ranges
+
+Use `range` for counted loops.
+
+```python
+def factorial(n: int) -> int:
+    result: int = 1
+    for i in range(1, n + 1):
+        result = result * i
+    return result
+```
+
+Use `enumerate` when you need the index and the value together.
+
+```python
+def label(items: list[str]) -> list[str]:
+    result: list[str] = []
+    for index, item in enumerate(items):
+        result.append(str(index) + ": " + item)
+    return result
+```
+
+## Comprehensions
+
+List and dictionary comprehensions keep their Python shape.
+
+```python
+numbers: list[int] = [1, 2, 3, 4]
+squares: list[int] = [n * n for n in numbers]
+evens: list[int] = [n for n in numbers if n % 2 == 0]
+
+labels: dict[str, int] = {f"n{n}": n for n in numbers}
+```
+
+The result type is checked from the expression and the declared binding.
+
+## Optional Values While Iterating
+
+When a lookup can miss, handle `None` inside the loop before using the value.
+
+```python
+def sum_known(users: list[str], scores: dict[str, int]) -> int:
+    total: int = 0
+    for user in users:
+        score: int | None = scores[user]
+        if score is not None:
+            total = total + score
+    return total
+```
+
+## Mutation While Iterating
+
+Prefer building a new collection when transforming data.
+
+```python
+def positives(values: list[int]) -> list[int]:
+    return [value for value in values if value > 0]
+```
+
+Mutating a collection while iterating over it is a place where ownership rules matter. Keep mutation outside the loop, or write into a separate result collection.
+
+<Note>
+  If you know Python, this is stricter by design. Mutating the collection you are iterating over is an ownership constraint the compiler can reject instead of a runtime surprise.
+</Note>
+
+```python
+def doubled(values: list[int]) -> list[int]:
+    result: list[int] = []
+    for value in values:
+        result.append(value * 2)
+    return result
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Values and Collections" icon="braces" href="/language/values-and-collections">
+    Review the collection types that loops work with.
+  </Card>
+  <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
+    Learn when mutation needs `mut`, `own`, or `own mut`.
+  </Card>
+</CardGroup>
