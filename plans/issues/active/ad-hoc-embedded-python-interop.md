@@ -522,7 +522,7 @@ Required package patterns:
 
 - confluent-kafka polling and background-thread callbacks;
 - Google Pub/Sub scheduler thread-pool callbacks;
-- boto3/botocore SQS long polling, SNS publish/subscribe, paginators, retries, and credential refresh;
+- boto3/botocore refreshable-credentials callbacks and transfer-manager progress callbacks;
 - CFFI callbacks;
 - Pika message callbacks;
 - Python code invoking Sifr handlers while Sifr is blocked in Python;
@@ -556,6 +556,8 @@ Sifr should support any CPython-compatible package installed in the selected uv 
 These packages must pass at the full Python interop gate because they exercise the core embedded, native, conversion, zero-copy, and production-client surfaces: `pydantic`, `pydantic-core`, `httpx`, `requests`, `cryptography`, `cffi`, `numpy`, `pandas`, `pyarrow`, `polars`, `torch` CPU, `psycopg`, `sqlalchemy`, `redis`, `confluent-kafka`, `boto3`, `botocore`, `openai`, `google-genai`, `biip`, `schwifty`.
 
 ### Tier 1b: Ecosystem Certification Gate
+
+Packages already covered by Tier 1a may reappear here when they anchor a Tier 1b category; the Tier 1a gate is authoritative.
 
 - Runtime/package loading: `pip`, `setuptools`, `wheel`, `build`, `hatchling`, `poetry-core`, `uv-build`, `pyproject-hooks`, `packaging`, `pkginfo`, `importlib-metadata`, `zipp`, `platformdirs`, `appdirs`, `typing-extensions`, `exceptiongroup`.
 - Data validation/structured objects: `pydantic`, `pydantic-core`, `pydantic-extra-types`, `annotated-types`, `attrs`, `marshmallow`, `cerberus`, `jsonpickle`, `deepdiff`, `protobuf`, `proto-plus`, `pyyaml`, `toml`, `tomli`, `python-dotenv`.
@@ -654,8 +656,8 @@ Verification groups:
 - `dataframes`: pandas/polars/pyarrow dataframe interop.
 - `tensors`: NumPy/torch/tensorflow tensor interop.
 - `databases`: SQLAlchemy, psycopg, asyncpg, pymongo, motor, redis.
-- `brokers`: confluent-kafka, aiokafka, kafka-python, SQS long polling, SNS-to-SQS delivery, Pub/Sub-style callbacks.
-- `cloud`: boto3/botocore SQS/SNS clients/resources/stubbers, Google/Azure/AWS auth/import surfaces, without requiring live credentials in the default gate.
+- `brokers`: confluent-kafka, aiokafka, kafka-python, SQS long polling, SNS-to-SQS delivery, Pub/Sub-style callbacks. `brokers` covers messaging semantics; SDK surface is covered by `cloud`.
+- `cloud`: boto3/botocore SQS/SNS clients/resources/stubbers, Google/AWS auth/import surfaces, without requiring live credentials in the default gate.
 - `web`: FastAPI/Starlette/Django/Sanic import and in-process smoke fixtures.
 - `cleanup`: close/context-manager/callback release/leak diagnostics.
 
@@ -673,7 +675,7 @@ Validation profiles:
 
 - Fast gate: environment probe, core embedded runtime, pure imports, pydantic/httpx/cryptography/cffi/pandas/pyarrow smoke.
 - Full Python interop gate: all Tier 1 packages, native extension probes, zero-copy checks, callback/threading checks, local service-backed tests.
-- External integration gate: Kafka, Postgres, Redis, AWS SQS/SNS via LocalStack/moto-style emulation or live credentials, Pub/Sub, RabbitMQ, cloud SDK auth, and other service-backed tests.
+- External integration gate: Kafka, Postgres, Redis, AWS SQS/SNS via moto in-process mocking, LocalStack service emulation, or live AWS credentials, Pub/Sub, RabbitMQ, cloud SDK auth, and other service-backed tests.
 
 ## Milestones
 
