@@ -1,6 +1,6 @@
 # Ad Hoc: Documentation Learning Path and Python Compatibility Narrative
 
-Status: draft
+Status: closed (documentation learning path completed; implementation waves merged in PR #2656, #2657, #2658, and #2659; final phase review approved on 2026-06-18; closure PR #2660)
 Owner: Codex
 Review artifacts:
 
@@ -18,13 +18,25 @@ Review artifacts:
 - `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-concurrency-review-pass-2.md`
 - `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-sonnet-review-pass-2.md`
 - `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-sonnet-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-sonnet-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-sonnet-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-sonnet-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-sonnet-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-sonnet-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-sonnet-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-sonnet-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-sonnet-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-sonnet-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-final-phase-sonnet-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-final-phase-sonnet-review-pass-2.md`
 
 Implementation status:
 
 - Wave 1: Merged in PR #2656. Scope: navigation foundation, `From Python`, `Status`, `Ownership and Mutability`, Slice 0 semantic fixes, and audience guide route placeholders. Validation: `cd docs && npx mint@latest validate` passed.
 - Wave 2: Merged in PR #2657. Scope: core data model pages and dedicated Concurrency concept section. Validation: `cd docs && npx mint@latest validate` passed.
 - Wave 3: Merged in PR #2658. Scope: standard-library module inventory, CLI package/workspace reference, and published one-page-per-code error reference. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
-- Wave 4: Ready for PR after Sonnet review. Scope: Python/Rust developer guide paths and language-doc wayfinding. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
+- Wave 4: Merged in PR #2659. Scope: Python/Rust developer guide paths and language-doc wayfinding. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
+- Final closure: Full Mintlify validation passed with Node 24. Sonnet final phase review pass 1 approved closure with follow-up accuracy notes; pass 2 approved closure after OWN/IMPORT/PACKAGE error-page accuracy fixes. Closure PR #2660.
 
 ## Objective
 

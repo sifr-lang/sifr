@@ -8,7 +8,7 @@ description: "Bare CPython-style stdlib import attempt"
 
 ## Why It Happens
 
-The module graph cannot be resolved safely. Use explicit `sifr.*` imports for standard-library modules, avoid private imports, and remove ambiguous or cyclic import paths.
+Sifr reserves bare CPython standard-library names for real project modules. When no project module named `math`, `json`, or similar exists, write the supported Sifr standard-library path explicitly with `sifr.*`.
 
 <Info>
 Use `sifr --explain SIFR-IMPORT-0008` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.

@@ -8,7 +8,7 @@ description: "Sifr-managed Cargo projection manifest pointer drift"
 
 ## Why It Happens
 
-Sifr package or workspace metadata violates the package model. Inspect `sifr.toml`, Cargo metadata, source roots, trust policy, archive contents, package selectors, or projection files as named by the diagnostic.
+Sifr-managed Cargo projection files must point back to the canonical `sifr.toml` manifest. This diagnostic fires when the managed Cargo metadata is missing, stale, or points somewhere else.
 
 <Info>
 Use `sifr --explain SIFR-PACKAGE-0703` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
@@ -19,11 +19,16 @@ Use `sifr --explain SIFR-PACKAGE-0703` locally to see the renderer's exact messa
 ```toml
 [package]
 name = "demo"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.sifr]
+manifest = "../old/sifr.toml"
 ```
 
 ## How To Fix It
 
-Repair the package manifest, workspace selection, projection files, archive rules, or publish options named by the diagnostic.
+Run `sifr repair` to restore the Sifr-managed projection, or edit the managed Cargo metadata so it points at the package's `sifr.toml`.
 
 ## Fixed Code
 
@@ -31,9 +36,10 @@ Repair the package manifest, workspace selection, projection files, archive rule
 [package]
 name = "demo"
 version = "0.1.0"
+edition = "2024"
 
-[sifr]
-source-root = "src"
+[package.metadata.sifr]
+manifest = "sifr.toml"
 ```
 
 ## Details

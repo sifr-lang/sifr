@@ -17,9 +17,12 @@ Use `sifr --explain SIFR-OWN-0005` locally to see the renderer's exact message t
 ## Erroneous Code
 
 ```python
+def consume(own values: list[int]) -> int:
+    return len(values)
+
 items: list[int] = [1, 2]
-taken = own items
-count = len(items)
+taken: int = consume(items)
+count: int = len(items)
 ```
 
 ## How To Fix It
@@ -29,9 +32,12 @@ Move ownership only after the last use, keep mutable borrows scoped, and send on
 ## Fixed Code
 
 ```python
+def consume(own values: list[int]) -> int:
+    return len(values)
+
 items: list[int] = [1, 2]
-count = len(items)
-taken = own items
+count: int = len(items)
+taken: int = consume(items)
 ```
 
 ## Details
