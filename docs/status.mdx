@@ -1,0 +1,74 @@
+---
+title: "Sifr Status"
+sidebarTitle: "Status"
+description: "Current project status, supported surfaces, and practical boundaries for using Sifr today."
+---
+
+Sifr is in preview. The language, compiler, CLI, and standard library are usable for experimentation and early projects, but the public surface is still being tightened. This page sets expectations so you can decide what to try next.
+
+## Preview Channels
+
+Use the installer from the [Installation](/installation) page to get the current toolchain. Preview releases may adjust syntax, diagnostics, standard-library APIs, and package workflows as the compiler hardens.
+
+## Language Surface
+
+The core language currently focuses on:
+
+- Python-shaped functions, classes, expressions, and control flow;
+- static type annotations, unions, narrowing, and `None`;
+- `Result`-based recoverable errors;
+- ownership, borrow-by-default calls, `mut`, `own`, and `own mut`;
+- structured async tasks and task-boundary ownership.
+
+<Tip>
+  Start with [Quickstart](/quickstart), then read [From Python](/from-python) if you are bringing Python assumptions with you.
+</Tip>
+
+## Standard Library Surface
+
+Public docs cover the most important `sifr.*` areas today: collections, I/O and filesystem, networking, concurrency, and text/encoding. The shipped namespace is broader than the currently detailed pages, so the module index work will make availability easier to scan.
+
+Sifr docs define Sifr behavior even when a module mirrors a Python standard-library idea. Do not assume CPython module parity unless a Sifr page documents it.
+
+## Tooling Surface
+
+The CLI supports the core local loop:
+
+- `sifr run`
+- `sifr build`
+- `sifr check`
+- `sifr emit`
+- `sifr fmt`
+- `sifr lint`
+- `sifr test`
+- `sifr lsp`
+
+More package, repair, tracing, and self-update commands exist and need fuller reference coverage.
+
+## Practical Boundaries
+
+Use Sifr today when you want to explore:
+
+- native binaries from Python-shaped source;
+- compile-time type and ownership checks;
+- typed errors instead of runtime exception paths;
+- structured concurrency without fire-and-forget tasks.
+
+Be cautious when you need broad CPython library compatibility, mature third-party package ecosystems, or long-term API stability across preview releases.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install the preview toolchain.
+  </Card>
+  <Card title="Standard Library" icon="library" href="/stdlib/overview">
+    Browse documented `sifr.*` modules.
+  </Card>
+  <Card title="Diagnostics" icon="scan-search" href="/diagnostics/error-codes">
+    Look up compiler diagnostic families.
+  </Card>
+  <Card title="Packages" icon="package" href="/packages/overview">
+    Learn project layout and dependency basics.
+  </Card>
+</CardGroup>

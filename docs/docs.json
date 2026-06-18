@@ -69,11 +69,12 @@
               "index",
               "introduction",
               "installation",
-              "quickstart"
+              "quickstart",
+              "from-python"
             ]
           },
           {
-            "group": "Core Language",
+            "group": "Learn Sifr",
             "icon": "braces",
             "pages": [
               "language/type-system",
@@ -85,29 +86,7 @@
             ]
           },
           {
-            "group": "Commands",
-            "icon": "square-terminal",
-            "pages": [
-              "cli/overview",
-              "cli/build-run",
-              "cli/check-emit",
-              "cli/fmt-lint",
-              "cli/test",
-              "cli/lsp"
-            ]
-          },
-          {
-            "group": "Package management",
-            "icon": "package",
-            "pages": [
-              "packages/overview",
-              "packages/manifest",
-              "packages/dependencies",
-              "packages/publishing"
-            ]
-          },
-          {
-            "group": "Modules",
+            "group": "Standard Library",
             "icon": "book-open",
             "pages": [
               "stdlib/overview",
@@ -119,11 +98,20 @@
             ]
           },
           {
-            "group": "Compiler errors",
-            "icon": "scan-search",
+            "group": "Package Management",
+            "icon": "package",
             "pages": [
-              "diagnostics/overview",
-              "diagnostics/error-codes"
+              "packages/overview",
+              "packages/manifest",
+              "packages/dependencies",
+              "packages/publishing"
+            ]
+          },
+          {
+            "group": "Project",
+            "icon": "circle-dot",
+            "pages": [
+              "status"
             ]
           }
         ]
@@ -137,6 +125,40 @@
             "icon": "globe",
             "pages": [
               "guides/index"
+            ]
+          },
+          {
+            "group": "Audience Paths",
+            "icon": "map",
+            "pages": [
+              "guides/python-developers/index",
+              "guides/rust-developers/index"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "icon": "library",
+        "groups": [
+          {
+            "group": "CLI",
+            "icon": "square-terminal",
+            "pages": [
+              "cli/overview",
+              "cli/build-run",
+              "cli/check-emit",
+              "cli/fmt-lint",
+              "cli/test",
+              "cli/lsp"
+            ]
+          },
+          {
+            "group": "Error Codes",
+            "icon": "scan-search",
+            "pages": [
+              "diagnostics/overview",
+              "diagnostics/error-codes"
             ]
           }
         ]

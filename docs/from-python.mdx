@@ -1,0 +1,92 @@
+---
+title: "From Python to Sifr"
+sidebarTitle: "From Python"
+description: "A compact guide for Python developers: what carries over, what changes at compile time, and where to go next."
+---
+
+Sifr uses Python-shaped syntax, but it is not Python with a faster runtime. It is a compiled language with static types, ownership, and typed errors. The syntax should feel familiar; the contract is stricter.
+
+## Same Shape, Different Contract
+
+If you know Python, start by keeping the surface model and changing the failure model. Sifr tries to make illegal states visible before a binary is built: missing values are typed, fallible calls return `Result`, and values crossing ownership or task boundaries must be explicit.
+
+| Python concept | Sifr shape | Difference |
+| --- | --- | --- |
+| Type hints | Type annotations | Enforced by the compiler, not optional metadata |
+| Exceptions | `Result[T, E]` plus `try`/`except` | Recoverable errors are values, not stack unwinds |
+| Missing values | `T | None` | You must check `None` before using the inner value |
+| Imports | `sifr.*` modules and packages | Bare CPython stdlib names are not aliases |
+| Integers | Exact `int` plus explicit fixed-width types | Ordinary arithmetic stays simple; representation-sensitive widths are explicit |
+| Bytes | First-class `bytes` | Encode and decode at typed boundaries; do not rely on platform-default text behavior |
+| Async | `async def`, `await`, `sifr.task` | Structured scopes, typed cancellation evidence, no global event loop |
+| Function calls | Borrow by default | Heap values are not moved unless `own` is used |
+| Mutation | `mut` and `own mut` | Parameter mutation is explicit |
+| `assert` | Assertion | Programmer invariant, not recoverable control flow |
+
+## What Carries Over
+
+You still write `def`, `class`, `if`, `for`, list and dict literals, comprehensions, f-strings, `match`, `async def`, and `await`. The goal is not to make you learn a new surface grammar before you can write useful programs.
+
+```python
+def describe(value: int | str) -> str:
+    if isinstance(value, int):
+        return f"number: {value}"
+    return f"text: {value}"
+```
+
+The difference is that annotations are part of the program. If `describe` promises `str`, every path must return `str`.
+
+## What Changes At Compile Time
+
+Sifr turns several Python runtime surprises into compile-time obligations:
+
+- a dictionary lookup that might miss returns `V | None`;
+- a fallible function returns `Result[T, E]`;
+- a parameter is immutable unless marked `mut`;
+- a value is borrowed by default unless a function asks for `own`;
+- a spawned task can only capture values that are owned and sendable.
+
+```python
+users: dict[str, int] = {"alice": 30}
+age: int | None = users["bob"]
+
+if age is not None:
+    print(age + 1)
+else:
+    print("user not found")
+```
+
+<Note>
+  Sifr docs are the source of truth for Sifr semantics. Python references are useful for syntax vocabulary, but they do not define Sifr's type, ownership, error, or package model.
+</Note>
+
+## Common Surprises
+
+<AccordionGroup>
+  <Accordion title="Type hints are not hints">
+    Sifr annotations are checked before the program runs. Treat them as part of the language, not as documentation for a separate runtime.
+  </Accordion>
+  <Accordion title="Exceptions do not unwind normal errors">
+    `raise` inside a `Result`-returning function produces an error value. `try`/`except` handles that value explicitly.
+  </Accordion>
+  <Accordion title="Imports use the Sifr namespace">
+    Use `from sifr.collections import Counter`, not `import collections`. Supported stdlib-style modules live under `sifr.*`; see the [collections import example](/stdlib/collections#importing).
+  </Accordion>
+  <Accordion title="Mutation is explicit">
+    Use `mut` when a function should mutate a borrowed parameter, and `own mut` when it should take ownership and mutate the value before returning or dropping it.
+  </Accordion>
+</AccordionGroup>
+
+## Where To Go Next
+
+<CardGroup cols={2}>
+  <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
+    Learn `mut`, `own`, and borrow-by-default rules.
+  </Card>
+  <Card title="Error Handling" icon="triangle-alert" href="/language/error-handling">
+    See how `Result` and `try`/`except` replace recoverable exceptions.
+  </Card>
+  <Card title="Python Developers" icon="map" href="/guides/python-developers">
+    Follow a guided path written for Python developers.
+  </Card>
+</CardGroup>

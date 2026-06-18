@@ -43,7 +43,13 @@ scores: dict[str, int] = {"alice": 42, "bob": 17}
 doubled: dict[str, int] = {k: v * 2 for k, v in scores.items()}
 ```
 
-Safe access via `.get(key)` returns `Option[V]` (either the value or `None`). Direct `scores["missing"]` is a compile-time checked operation that produces a typed error if the key might be absent.
+Safe access via `.get(key)` returns `Option[V]` (either the value or `None`). Direct indexing uses the same panic-free contract: `scores["missing"]` returns `None` instead of raising `KeyError`.
+
+```python
+maybe_score: int | None = scores["charlie"]
+if maybe_score is not None:
+    print(maybe_score)
+```
 
 ## Sets
 
