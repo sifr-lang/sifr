@@ -148,7 +148,7 @@ pub(super) fn package_entrypoint_for_file(
         package_id: context.package_id,
         graph: context.graph,
         source_map: context.source_map,
-        python_probe_digest: context.python_probe_digest,
+        python_runtime: context.python_runtime,
     }))
 }
 
@@ -163,21 +163,20 @@ pub(super) fn package_compiler_context(
     let Some(package_id) = current_session_package_id(session, &context.graph) else {
         return Ok(None);
     };
-    let python_probe_digest =
-        package_python_probe_digest(&context.graph, &package_id, diagnostic_format)?;
+    let python_runtime = package_python_runtime(&context.graph, &package_id, diagnostic_format)?;
     Ok(Some(PackageCompilerContext {
         graph: context.graph,
         source_map: context.source_map,
         package_id,
-        python_probe_digest,
+        python_runtime,
     }))
 }
 
-fn package_python_probe_digest(
+fn package_python_runtime(
     graph: &sifr_package::SifrPackageGraph,
     package_id: &sifr_package::SifrPackageId,
     diagnostic_format: DiagnosticFormat,
-) -> Result<Option<String>, i32> {
+) -> Result<Option<sifr_driver::PackagePythonRuntime>, i32> {
     let resolved = match sifr_package::resolve_python_environment(graph, package_id) {
         Ok(resolved) => resolved,
         Err(errors) => {
@@ -200,9 +199,10 @@ fn package_python_probe_digest(
             return Err(EXIT_USER_DIAGNOSTIC);
         }
     };
-    Ok(Some(
-        sifr_package::digest_python_environment_probe(&request, &probe).hex,
-    ))
+    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    Ok(Some(sifr_driver::PackagePythonRuntime::from_probe(
+        &request, &probe, digest,
+    )))
 }
 
 pub(super) fn load_package_graph_context(

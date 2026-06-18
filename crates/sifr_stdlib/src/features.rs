@@ -29,6 +29,7 @@ pub enum StdlibFeature {
     NumBigint,
     NumTraits,
     PercentEncoding,
+    PythonRuntime,
     Rand,
     RandDistr,
     Rayon,
@@ -83,6 +84,7 @@ impl StdlibFeature {
             Self::NumBigint => "num-bigint",
             Self::NumTraits => "num-traits",
             Self::PercentEncoding => "percent-encoding",
+            Self::PythonRuntime => "sifr_runtime/python",
             Self::Rand => "rand",
             Self::RandDistr => "rand_distr",
             Self::Rayon => "rayon",
@@ -228,6 +230,7 @@ const PERCENT_ENCODING_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDepen
     package: "percent-encoding",
     spec: "percent-encoding = \"2.3.2\"",
 }];
+const PYTHON_RUNTIME_DEPS: &[GeneratedCargoDependency] = SIFR_RUNTIME_DEPS;
 const RAND_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "rand",
     spec: "rand = \"0.10.1\"",
@@ -429,6 +432,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: PERCENT_ENCODING_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::PythonRuntime,
+        cargo_dependencies: PYTHON_RUNTIME_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Rand,
         cargo_dependencies: RAND_DEPS,
     },
@@ -550,6 +557,9 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "num-bigint" => Some(StdlibFeature::NumBigint),
         "num-traits" => Some(StdlibFeature::NumTraits),
         "percent-encoding" | "percent_encoding" => Some(StdlibFeature::PercentEncoding),
+        "sifr_runtime/python" | "sifr-runtime/python" | "python-runtime" => {
+            Some(StdlibFeature::PythonRuntime)
+        }
         "rand" => Some(StdlibFeature::Rand),
         "rand_distr" => Some(StdlibFeature::RandDistr),
         "rayon" => Some(StdlibFeature::Rayon),
@@ -692,6 +702,7 @@ struct RuntimeFeatures {
     http: bool,
     i18n: bool,
     net: bool,
+    python: bool,
     tls: bool,
     unicode: bool,
 }
@@ -705,6 +716,7 @@ impl RuntimeFeatures {
             http: needs_sifr_runtime_http(stdlib_modules, required_features),
             i18n: needs_sifr_runtime_i18n(stdlib_modules, required_features),
             net: needs_sifr_runtime_net(stdlib_modules),
+            python: required_features.contains(&StdlibFeature::PythonRuntime),
             tls: needs_sifr_runtime_tls(stdlib_modules, required_features),
             unicode: needs_sifr_runtime_unicode(stdlib_modules, required_features),
         }
@@ -823,6 +835,9 @@ fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
     }
     if runtime_features.net || runtime_features.tls || runtime_features.http {
         features.push("\"net\"");
+    }
+    if runtime_features.python {
+        features.push("\"python\"");
     }
     if runtime_features.tls || runtime_features.http {
         features.push("\"tls\"");

@@ -1,0 +1,696 @@
+#![allow(unsafe_code)]
+
+use pyo3::{ffi, prelude::*, Py, PyAny};
+use std::ffi::{CStr, CString};
+use std::fmt;
+use std::mem::MaybeUninit;
+use std::sync::{Mutex, MutexGuard};
+
+static RUNTIME_STATE: Mutex<RuntimeState> = Mutex::new(RuntimeState::new());
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PythonRuntimeConfig {
+    pub venv_root: String,
+    pub interpreter: String,
+    pub executable: String,
+    pub sys_prefix: String,
+    pub sys_base_prefix: String,
+    pub probe_digest: String,
+    pub implementation_name: String,
+    pub implementation_version: String,
+    pub cpython_version_tuple: Vec<u64>,
+    pub sys_path: Vec<String>,
+    pub site_packages: Vec<String>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PythonRuntimeInitStatus {
+    Initialized,
+    AlreadyInitialized,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PythonRuntimeDiagnostics {
+    pub initialized: bool,
+    pub live_objects: usize,
+    pub leaked_objects: usize,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum PythonRuntimeError {
+    NotInitialized,
+    ConflictingEnvironment {
+        selected_interpreter: String,
+        attempted_interpreter: String,
+    },
+    InterpreterVersionMismatch {
+        expected: String,
+        actual: String,
+    },
+    InterpreterConfigMismatch {
+        field: &'static str,
+        expected: String,
+        actual: String,
+    },
+    PythonOperationFailed(String),
+    OutstandingResources {
+        live_objects: usize,
+        leaked_objects: usize,
+    },
+    StateUnavailable,
+}
+
+impl fmt::Display for PythonRuntimeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotInitialized => write!(f, "Python runtime has not been initialized"),
+            Self::ConflictingEnvironment {
+                selected_interpreter,
+                attempted_interpreter,
+            } => write!(
+                f,
+                "Python runtime was initialized with '{selected_interpreter}' and cannot be reinitialized with '{attempted_interpreter}'"
+            ),
+            Self::InterpreterVersionMismatch { expected, actual } => write!(
+                f,
+                "selected Python environment uses CPython {expected}, but the embedded interpreter is CPython {actual}"
+            ),
+            Self::InterpreterConfigMismatch {
+                field,
+                expected,
+                actual,
+            } => write!(
+                f,
+                "selected Python environment expected {field} '{expected}', but the embedded interpreter reported '{actual}'"
+            ),
+            Self::PythonOperationFailed(message) => {
+                write!(f, "Python runtime operation failed: {message}")
+            }
+            Self::OutstandingResources {
+                live_objects,
+                leaked_objects,
+            } => write!(
+                f,
+                "Python runtime shutdown blocked by {live_objects} live object(s) and {leaked_objects} leaked object(s)"
+            ),
+            Self::StateUnavailable => write!(f, "Python runtime state is unavailable"),
+        }
+    }
+}
+
+impl std::error::Error for PythonRuntimeError {}
+
+#[derive(Debug)]
+pub struct Object {
+    inner: Option<Py<PyAny>>,
+}
+
+impl Object {
+    pub fn new(object: Py<PyAny>) -> Result<Self, PythonRuntimeError> {
+        update_object_count(1)?;
+        Ok(Self {
+            inner: Some(object),
+        })
+    }
+}
+
+impl Drop for Object {
+    fn drop(&mut self) {
+        let Some(object) = self.inner.take() else {
+            return;
+        };
+        let mut pending = Some(object);
+        if Python::try_attach(|_py| {
+            drop(pending.take());
+        })
+        .is_some()
+        {
+            let _ignored = update_object_count(-1);
+            return;
+        }
+        if let Some(leaked) = pending.take() {
+            std::mem::forget(leaked);
+        }
+        let _ignored = record_leaked_object();
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RuntimeState {
+    config: Option<PythonRuntimeConfig>,
+    initialized: bool,
+    live_objects: usize,
+    leaked_objects: usize,
+}
+
+impl RuntimeState {
+    const fn new() -> Self {
+        Self {
+            config: None,
+            initialized: false,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    }
+}
+
+pub fn initialize_runtime(
+    config: PythonRuntimeConfig,
+) -> Result<PythonRuntimeInitStatus, PythonRuntimeError> {
+    let mut state = runtime_state()?;
+    if let Some(selected) = &state.config {
+        if selected != &config {
+            return Err(PythonRuntimeError::ConflictingEnvironment {
+                selected_interpreter: selected.interpreter.clone(),
+                attempted_interpreter: config.interpreter,
+            });
+        }
+        if state.initialized {
+            return Ok(PythonRuntimeInitStatus::AlreadyInitialized);
+        }
+    }
+
+    state.config = Some(config.clone());
+    initialize_cpython_with_config(&config)?;
+    configure_interpreter(&config)?;
+    state.initialized = true;
+    Ok(PythonRuntimeInitStatus::Initialized)
+}
+
+pub fn attach<F, R>(f: F) -> Result<R, PythonRuntimeError>
+where
+    F: for<'py> FnOnce(Python<'py>) -> R,
+{
+    ensure_initialized()?;
+    Python::try_attach(f).ok_or(PythonRuntimeError::NotInitialized)
+}
+
+pub fn detach<F, R>(py: Python<'_>, f: F) -> R
+where
+    F: FnOnce() -> R + Send,
+    R: Send,
+{
+    py.detach(f)
+}
+
+pub fn shutdown_diagnostics() -> Result<PythonRuntimeDiagnostics, PythonRuntimeError> {
+    let state = runtime_state()?;
+    Ok(PythonRuntimeDiagnostics {
+        initialized: state.initialized,
+        live_objects: state.live_objects,
+        leaked_objects: state.leaked_objects,
+    })
+}
+
+pub fn validate_shutdown() -> Result<(), PythonRuntimeError> {
+    let diagnostics = shutdown_diagnostics()?;
+    if diagnostics.live_objects == 0 && diagnostics.leaked_objects == 0 {
+        return Ok(());
+    }
+    Err(PythonRuntimeError::OutstandingResources {
+        live_objects: diagnostics.live_objects,
+        leaked_objects: diagnostics.leaked_objects,
+    })
+}
+
+fn configure_interpreter(config: &PythonRuntimeConfig) -> Result<(), PythonRuntimeError> {
+    attach_initialized(|py| {
+        verify_interpreter_version(py, config)?;
+        verify_interpreter_config(py, config)?;
+        let sys = py.import("sys").map_err(|error| py_error(&error))?;
+        let path = sys.getattr("path").map_err(|error| py_error(&error))?;
+        for entry in config
+            .site_packages
+            .iter()
+            .chain(config.sys_path.iter())
+            .rev()
+        {
+            path.call_method1("insert", (0, entry.as_str()))
+                .map_err(|error| py_error(&error))?;
+        }
+        Ok(())
+    })
+}
+
+fn initialize_cpython_with_config(config: &PythonRuntimeConfig) -> Result<(), PythonRuntimeError> {
+    if unsafe { ffi::Py_IsInitialized() } != 0 {
+        return Ok(());
+    }
+
+    let mut raw_config = MaybeUninit::<ffi::PyConfig>::uninit();
+    unsafe {
+        ffi::PyConfig_InitPythonConfig(raw_config.as_mut_ptr());
+    }
+    let mut raw_config = unsafe { raw_config.assume_init() };
+    raw_config.install_signal_handlers = 0;
+    raw_config.parse_argv = 0;
+    raw_config.use_environment = 0;
+    raw_config.user_site_directory = 0;
+    raw_config.module_search_paths_set = 1;
+
+    let configure_result = configure_raw_python_config(&mut raw_config, config);
+    let initialize_result = configure_result.and_then(|()| {
+        py_status_result(
+            unsafe { ffi::Py_InitializeFromConfig(&raw const raw_config) },
+            "initialize CPython",
+        )
+    });
+    unsafe {
+        ffi::PyConfig_Clear(&raw mut raw_config);
+    }
+    initialize_result?;
+    unsafe {
+        ffi::PyEval_SaveThread();
+    }
+    Ok(())
+}
+
+fn configure_raw_python_config(
+    raw_config: &mut ffi::PyConfig,
+    config: &PythonRuntimeConfig,
+) -> Result<(), PythonRuntimeError> {
+    let raw_config_ptr = std::ptr::from_mut(raw_config);
+    set_config_string(
+        raw_config_ptr,
+        std::ptr::addr_of_mut!(raw_config.executable),
+        &config.executable,
+        "set Python executable",
+    )?;
+    set_config_string(
+        raw_config_ptr,
+        std::ptr::addr_of_mut!(raw_config.base_executable),
+        &config.executable,
+        "set Python base executable",
+    )?;
+    set_config_string(
+        raw_config_ptr,
+        std::ptr::addr_of_mut!(raw_config.program_name),
+        &config.interpreter,
+        "set Python program name",
+    )?;
+    set_optional_config_string(
+        raw_config_ptr,
+        std::ptr::addr_of_mut!(raw_config.prefix),
+        &config.sys_prefix,
+        "set Python prefix",
+    )?;
+    set_optional_config_string(
+        raw_config_ptr,
+        std::ptr::addr_of_mut!(raw_config.exec_prefix),
+        &config.sys_prefix,
+        "set Python exec prefix",
+    )?;
+    set_optional_config_string(
+        raw_config_ptr,
+        std::ptr::addr_of_mut!(raw_config.base_prefix),
+        &config.sys_base_prefix,
+        "set Python base prefix",
+    )?;
+    set_optional_config_string(
+        raw_config_ptr,
+        std::ptr::addr_of_mut!(raw_config.base_exec_prefix),
+        &config.sys_base_prefix,
+        "set Python base exec prefix",
+    )?;
+    set_config_argv(raw_config, &config.interpreter)?;
+    for path in &config.sys_path {
+        append_module_search_path(raw_config, path)?;
+    }
+    Ok(())
+}
+
+fn set_optional_config_string(
+    raw_config: *mut ffi::PyConfig,
+    target: *mut *mut libc::wchar_t,
+    value: &str,
+    context: &'static str,
+) -> Result<(), PythonRuntimeError> {
+    if value.is_empty() {
+        return Ok(());
+    }
+    set_config_string(raw_config, target, value, context)
+}
+
+fn set_config_string(
+    raw_config: *mut ffi::PyConfig,
+    target: *mut *mut libc::wchar_t,
+    value: &str,
+    context: &'static str,
+) -> Result<(), PythonRuntimeError> {
+    let value = CString::new(value).map_err(|_| {
+        PythonRuntimeError::PythonOperationFailed(format!("{context}: value contains NUL byte"))
+    })?;
+    py_status_result(
+        unsafe { ffi::PyConfig_SetBytesString(raw_config, target, value.as_ptr()) },
+        context,
+    )
+}
+
+fn set_config_argv(
+    raw_config: &mut ffi::PyConfig,
+    interpreter: &str,
+) -> Result<(), PythonRuntimeError> {
+    let interpreter = CString::new(interpreter).map_err(|_| {
+        PythonRuntimeError::PythonOperationFailed(
+            "set Python argv: value contains NUL byte".to_string(),
+        )
+    })?;
+    let mut argv = [interpreter.as_ptr()];
+    py_status_result(
+        unsafe { ffi::PyConfig_SetBytesArgv(raw_config, 1, argv.as_mut_ptr()) },
+        "set Python argv",
+    )
+}
+
+fn append_module_search_path(
+    raw_config: &mut ffi::PyConfig,
+    path: &str,
+) -> Result<(), PythonRuntimeError> {
+    let wide = wide_string(path);
+    py_status_result(
+        unsafe {
+            ffi::PyWideStringList_Append(&raw mut raw_config.module_search_paths, wide.as_ptr())
+        },
+        "set Python module search path",
+    )
+}
+
+#[cfg(windows)]
+fn wide_string(value: &str) -> Vec<libc::wchar_t> {
+    use std::os::windows::ffi::OsStrExt;
+    std::ffi::OsStr::new(value)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect()
+}
+
+#[cfg(not(windows))]
+fn wide_string(value: &str) -> Vec<libc::wchar_t> {
+    value
+        .chars()
+        .map(|ch| ch as libc::wchar_t)
+        .chain(std::iter::once(0))
+        .collect()
+}
+
+fn py_status_result(
+    status: ffi::PyStatus,
+    context: &'static str,
+) -> Result<(), PythonRuntimeError> {
+    if unsafe { ffi::PyStatus_Exception(status) } == 0 {
+        return Ok(());
+    }
+    Err(PythonRuntimeError::PythonOperationFailed(format!(
+        "{context}: {}",
+        py_status_message(status)
+    )))
+}
+
+fn py_status_message(status: ffi::PyStatus) -> String {
+    if status.err_msg.is_null() {
+        return format!("status exit code {}", status.exitcode);
+    }
+    unsafe { CStr::from_ptr(status.err_msg) }
+        .to_string_lossy()
+        .into_owned()
+}
+
+fn verify_interpreter_version(
+    py: Python<'_>,
+    config: &PythonRuntimeConfig,
+) -> Result<(), PythonRuntimeError> {
+    if config.cpython_version_tuple.len() < 2 {
+        return Ok(());
+    }
+    let version = py.version_info();
+    let expected_major = config.cpython_version_tuple[0];
+    let expected_minor = config.cpython_version_tuple[1];
+    if u64::from(version.major) == expected_major && u64::from(version.minor) == expected_minor {
+        return Ok(());
+    }
+    Err(PythonRuntimeError::InterpreterVersionMismatch {
+        expected: format!("{expected_major}.{expected_minor}"),
+        actual: format!("{}.{}", version.major, version.minor),
+    })
+}
+
+fn verify_interpreter_config(
+    py: Python<'_>,
+    config: &PythonRuntimeConfig,
+) -> Result<(), PythonRuntimeError> {
+    let sys = py.import("sys").map_err(|error| py_error(&error))?;
+    verify_sys_attr(&sys, "executable", &config.executable)?;
+    verify_sys_attr(&sys, "prefix", &config.sys_prefix)?;
+    verify_sys_attr(&sys, "base_prefix", &config.sys_base_prefix)
+}
+
+fn verify_sys_attr(
+    sys: &Bound<'_, PyAny>,
+    field: &'static str,
+    expected: &str,
+) -> Result<(), PythonRuntimeError> {
+    if expected.is_empty() {
+        return Ok(());
+    }
+    let actual = sys
+        .getattr(field)
+        .and_then(|value| value.extract::<String>())
+        .map_err(|error| py_error(&error))?;
+    if actual == expected {
+        return Ok(());
+    }
+    Err(PythonRuntimeError::InterpreterConfigMismatch {
+        field,
+        expected: expected.to_string(),
+        actual,
+    })
+}
+
+fn attach_initialized<F, R>(f: F) -> Result<R, PythonRuntimeError>
+where
+    F: for<'py> FnOnce(Python<'py>) -> Result<R, PythonRuntimeError>,
+{
+    Python::try_attach(f).ok_or(PythonRuntimeError::NotInitialized)?
+}
+
+fn ensure_initialized() -> Result<(), PythonRuntimeError> {
+    let state = runtime_state()?;
+    if state.initialized {
+        Ok(())
+    } else {
+        Err(PythonRuntimeError::NotInitialized)
+    }
+}
+
+fn runtime_state() -> Result<MutexGuard<'static, RuntimeState>, PythonRuntimeError> {
+    RUNTIME_STATE
+        .lock()
+        .map_err(|_| PythonRuntimeError::StateUnavailable)
+}
+
+fn update_object_count(delta: isize) -> Result<(), PythonRuntimeError> {
+    let mut state = runtime_state()?;
+    if delta.is_positive() {
+        state.live_objects = state.live_objects.saturating_add(delta.cast_unsigned());
+    } else {
+        state.live_objects = state.live_objects.saturating_sub(delta.unsigned_abs());
+    }
+    Ok(())
+}
+
+fn record_leaked_object() -> Result<(), PythonRuntimeError> {
+    let mut state = runtime_state()?;
+    state.live_objects = state.live_objects.saturating_sub(1);
+    state.leaked_objects = state.leaked_objects.saturating_add(1);
+    Ok(())
+}
+
+fn py_error(error: &PyErr) -> PythonRuntimeError {
+    PythonRuntimeError::PythonOperationFailed(error.to_string())
+}
+
+#[cfg(test)]
+fn reset_runtime_state_for_tests() {
+    let mut state = runtime_state().expect("runtime state should be available");
+    *state = RuntimeState::new();
+}
+
+#[cfg(test)]
+fn test_config(label: &str) -> PythonRuntimeConfig {
+    let mut config = local_python_config();
+    config.probe_digest = format!("digest-{label}");
+    config
+}
+
+#[cfg(test)]
+fn local_python_config() -> PythonRuntimeConfig {
+    let script = r#"
+import os
+import sys
+print(sys.executable)
+print(sys.prefix)
+print(sys.base_prefix)
+print(".".join(str(part) for part in sys.version_info[:3]))
+print(os.pathsep.join(sys.path))
+"#;
+    let output = std::process::Command::new("python3")
+        .args(["-c", script])
+        .output()
+        .expect("python3 should be available for PyO3 runtime tests");
+    assert!(
+        output.status.success(),
+        "python3 probe should succeed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).expect("python3 probe should emit UTF-8");
+    let mut lines = stdout.lines();
+    let executable = lines
+        .next()
+        .expect("python3 probe should emit executable")
+        .to_string();
+    let sys_prefix = lines
+        .next()
+        .expect("python3 probe should emit sys.prefix")
+        .to_string();
+    let sys_base_prefix = lines
+        .next()
+        .expect("python3 probe should emit sys.base_prefix")
+        .to_string();
+    let version = lines
+        .next()
+        .expect("python3 probe should emit version tuple")
+        .split('.')
+        .map(|part| part.parse::<u64>().expect("version part should be numeric"))
+        .collect::<Vec<_>>();
+    let sys_path = lines
+        .next()
+        .unwrap_or_default()
+        .split(if cfg!(windows) { ';' } else { ':' })
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    PythonRuntimeConfig {
+        venv_root: sys_prefix.clone(),
+        interpreter: executable.clone(),
+        executable,
+        sys_prefix,
+        sys_base_prefix,
+        probe_digest: "digest-test".to_string(),
+        implementation_name: "cpython".to_string(),
+        implementation_version: "test".to_string(),
+        cpython_version_tuple: version,
+        sys_path,
+        site_packages: Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Mutex, MutexGuard};
+
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    fn test_guard() -> MutexGuard<'static, ()> {
+        TEST_LOCK.lock().expect("test lock should be available")
+    }
+
+    #[test]
+    fn initializes_and_accepts_repeated_same_config() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        let config = test_config("same");
+
+        assert_eq!(
+            initialize_runtime(config.clone()),
+            Ok(PythonRuntimeInitStatus::Initialized)
+        );
+        assert_eq!(
+            initialize_runtime(config),
+            Ok(PythonRuntimeInitStatus::AlreadyInitialized)
+        );
+    }
+
+    #[test]
+    fn rejects_reinitialization_with_different_config() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("first")).expect("first init should succeed");
+
+        let error =
+            initialize_runtime(test_config("second")).expect_err("different config should fail");
+
+        assert!(matches!(
+            error,
+            PythonRuntimeError::ConflictingEnvironment { .. }
+        ));
+    }
+
+    #[test]
+    fn attach_requires_runtime_initialization() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+
+        let result = attach(|py| py.version_info().major);
+
+        assert_eq!(result, Err(PythonRuntimeError::NotInitialized));
+    }
+
+    #[test]
+    fn attach_and_detach_run_under_initialized_runtime() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("detach")).expect("init should succeed");
+
+        let result = attach(|py| detach(py, || 41 + 1));
+
+        assert_eq!(result, Ok(42));
+    }
+
+    #[test]
+    fn owned_object_tracking_is_released_through_gil_bound_drop() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("object")).expect("init should succeed");
+        let object = attach(|py| Object::new(py.None())).expect("attach should succeed");
+        assert!(object.is_ok());
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            PythonRuntimeDiagnostics {
+                initialized: true,
+                live_objects: 1,
+                leaked_objects: 0,
+            }
+        );
+
+        drop(object);
+
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            PythonRuntimeDiagnostics {
+                initialized: true,
+                live_objects: 0,
+                leaked_objects: 0,
+            }
+        );
+    }
+
+    #[test]
+    fn shutdown_validation_reports_outstanding_objects() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("shutdown")).expect("init should succeed");
+        let object = attach(|py| Object::new(py.None())).expect("attach should succeed");
+        assert!(object.is_ok());
+
+        let error = validate_shutdown().expect_err("live object should block shutdown");
+
+        assert_eq!(
+            error,
+            PythonRuntimeError::OutstandingResources {
+                live_objects: 1,
+                leaked_objects: 0,
+            }
+        );
+        drop(object);
+    }
+}

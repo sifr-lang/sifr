@@ -1,3 +1,4 @@
+use super::python_runtime::{inject_python_runtime_bootstrap, PackagePythonRuntime};
 use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::project::{
     assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
@@ -13,6 +14,7 @@ pub(super) struct GeneratedBinaryProject {
     pub(super) used_stdlib_modules: HashSet<String>,
     pub(super) required_features: HashSet<StdlibFeature>,
     pub(super) cache_key_fragment: Option<String>,
+    pub(super) python_runtime: Option<PackagePythonRuntime>,
 }
 
 impl GeneratedBinaryProject {
@@ -45,6 +47,7 @@ pub(super) fn generated_single_file_binary_project(
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
         cache_key_fragment: None,
+        python_runtime: None,
     }
 }
 
@@ -88,5 +91,79 @@ pub(super) fn generated_project_binary_project(
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
         cache_key_fragment: None,
+        python_runtime: None,
     })
+}
+
+pub(super) fn apply_package_runtime_metadata(
+    mut generated: GeneratedBinaryProject,
+    python_runtime: Option<PackagePythonRuntime>,
+) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+    if let Some(metadata) = python_runtime {
+        generated
+            .required_features
+            .insert(StdlibFeature::PythonRuntime);
+        generated.main_rs = inject_python_runtime_bootstrap(&generated.main_rs, &metadata)
+            .map_err(|message| {
+                vec![crate::diagnostics::diagnostic_with_code(
+                    message,
+                    sifr_diagnostics::DiagnosticCode::INTERNAL_COMPILER_PANIC,
+                )]
+            })?;
+        generated.cache_key_fragment = Some(metadata.probe_digest().to_string());
+        generated.python_runtime = Some(metadata);
+    }
+    Ok(generated)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn base_project() -> GeneratedBinaryProject {
+        GeneratedBinaryProject {
+            main_rs: "fn main() {\n    println!(\"ok\");\n}\n".to_string(),
+            support_modules: BTreeMap::new(),
+            used_stdlib_modules: HashSet::new(),
+            required_features: HashSet::new(),
+            cache_key_fragment: None,
+            python_runtime: None,
+        }
+    }
+
+    #[test]
+    fn package_python_runtime_metadata_enables_feature_and_bootstrap() {
+        let metadata = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
+
+        let generated = apply_package_runtime_metadata(base_project(), Some(metadata))
+            .expect("metadata should apply");
+
+        assert!(generated
+            .required_features
+            .contains(&StdlibFeature::PythonRuntime));
+        assert_eq!(generated.cache_key_fragment.as_deref(), Some("digest-a"));
+        assert!(generated
+            .main_rs
+            .contains("__sifr_initialize_python_runtime"));
+        assert!(generated.python_runtime.is_some());
+    }
+
+    #[test]
+    fn package_python_runtime_metadata_requires_main_function() {
+        let mut project = base_project();
+        project.main_rs = "fn helper() {}\n".to_string();
+
+        let result = apply_package_runtime_metadata(
+            project,
+            Some(PackagePythonRuntime::for_tests(
+                "/tmp/sifr-py/bin/python",
+                "digest-a",
+            )),
+        );
+        let Err(errors) = result else {
+            panic!("missing main should fail");
+        };
+
+        assert!(errors[0].message.contains("no main function"));
+    }
 }

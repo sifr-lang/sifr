@@ -212,7 +212,7 @@ fn package_entrypoint(
         package_id,
         graph: graph.clone(),
         source_map: source_map.clone(),
-        python_probe_digest: None,
+        python_runtime: None,
     }
 }
 

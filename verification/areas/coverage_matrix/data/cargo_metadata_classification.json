@@ -98,6 +98,7 @@
         {"name": "http", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "i18n", "profile_assignment": "nightly", "classification": "first_party_runtime"},
         {"name": "net", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "python", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "tls", "profile_assignment": "nightly", "classification": "first_party_runtime"},
         {"name": "unicode", "profile_assignment": "nightly", "classification": "first_party_runtime"}
       ]

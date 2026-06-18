@@ -17,7 +17,14 @@
   - Added active `SIFR-PYENV-0001` through `SIFR-PYENV-0011` diagnostics and generated docs.
   - Wired package `check`/cached `run` contexts to resolve/probe the root-selected environment and feed the probe digest into generated-artifact cache keys.
   - Promoted `verification/python_interop/run.sh --group env` to live environment evidence with positive and negative fixture coverage.
-- [ ] `milestone_py_2`: Embedded runtime lifecycle.
+- [x] `milestone_py_2`: Embedded runtime lifecycle.
+  - Added optional `sifr_runtime/python` feature backed by PyO3 embedding APIs and CPython `PyConfig` initialization.
+  - Added generated package runtime metadata carrying the validated probe executable, prefixes, path set, version tuple, and digest into generated binaries.
+  - Added generated bootstrap that initializes the Python runtime before user `main` code for Python-enabled package builds.
+  - Added `PYO3_PYTHON` build environment wiring so generated package binaries link/configure against the selected interpreter.
+  - Added runtime lifecycle state with same-config repeated init, conflicting-config rejection, GIL attach/detach helpers, owned Python object tracking, and shutdown diagnostics.
+  - Added focused runtime, stdlib dependency, and driver bootstrap tests; Opus review approved and local `create-pr` validation passed.
+  - Merged via PR [#2667](https://github.com/sifr-lang/sifr/pull/2667).
 - [ ] `milestone_py_3`: Opaque object operations and errors.
 - [ ] `milestone_py_4`: Primitive and typed conversion.
 - [ ] `milestone_py_5`: Async/blocking integration.

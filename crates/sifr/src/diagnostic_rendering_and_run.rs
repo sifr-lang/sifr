@@ -445,7 +445,7 @@ pub(super) fn cmd_run_package_file(
         package_id: context.package_id,
         graph: context.graph,
         source_map: context.source_map,
-        python_probe_digest: context.python_probe_digest,
+        python_runtime: context.python_runtime,
     };
     let result = match run_with_panic_boundary(
         "internal compiler panic during package run command compilation",
