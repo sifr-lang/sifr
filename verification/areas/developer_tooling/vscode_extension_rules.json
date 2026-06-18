@@ -13,9 +13,9 @@
     "boundary": "separate-repository"
   },
   "extension": {
-    "publisher": "sifr-lang",
+    "publisher": "sifr",
     "name": "sifr-vscode",
-    "extension_id": "sifr-lang.sifr-vscode",
+    "extension_id": "sifr.sifr-vscode",
     "display_name": "Sifr",
     "language_id": "sifr",
     "extensions": [".sifr"],

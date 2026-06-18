@@ -71,8 +71,8 @@ def extension_repo_path(rules: dict[str, Any]) -> Path | None:
 def validate_rules(rules: dict[str, Any]) -> list[str]:
     failures: list[str] = []
     extension = rules.get("extension", {})
-    if extension.get("extension_id") != "sifr-lang.sifr-vscode":
-        failures.append("extension id must be sifr-lang.sifr-vscode")
+    if extension.get("extension_id") != "sifr.sifr-vscode":
+        failures.append("extension id must be sifr.sifr-vscode")
     if extension.get("language_id") != "sifr":
         failures.append("language id must be sifr")
     if ".sifr" not in extension.get("extensions", []):
@@ -158,7 +158,7 @@ def run_self_test() -> None:
     rules = read_json(RULES_PATH)
     package_json = {
         "name": "sifr-vscode",
-        "publisher": "sifr-lang",
+        "publisher": "sifr",
         "engines": {"vscode": "^1.90.0"},
         "contributes": {
             "languages": [{"id": "sifr", "extensions": [".sifr"]}],
