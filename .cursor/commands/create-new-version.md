@@ -16,6 +16,14 @@ Optional input:
 
 ## Examples
 
+Trigger the CI-native preview release workflow:
+
+```bash
+scripts/distribution/trigger_preview_release.sh \
+  --channel beta \
+  --version 0.1.0-beta.5
+```
+
 Dry-run:
 
 ```bash
@@ -36,6 +44,12 @@ scripts/distribution/create_new_version.sh \
 ```
 
 Production real-runs must keep `--mutation-mode github` once release assets are ready to publish. Local validation uses `--mutation-mode local` to exercise the same plan and file mutations without publishing GitHub Release assets.
+
+Use `trigger_preview_release.sh` for production preview releases when the release
+artifacts should be built on native GitHub-hosted runners. The script dispatches
+`.github/workflows/preview-release.yml`, which validates the preview inputs,
+builds each target on the matching runner family, and publishes a draft GitHub
+prerelease with the generated archives and checksum files.
 
 ## Safety Rules
 

@@ -1,4 +1,5 @@
 name: preview-release
+run-name: Preview release ${{ inputs.version }} (${{ inputs.channel }})
 
 on:
   workflow_dispatch:
@@ -187,6 +188,7 @@ jobs:
             gh release create "${VERSION}" \
               --repo "${GITHUB_REPOSITORY}" \
               --prerelease \
+              --draft \
               --latest=false \
               --title "Sifr ${VERSION}" \
               --notes-file "${notes_file}"
