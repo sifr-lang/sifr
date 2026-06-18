@@ -1,0 +1,50 @@
+---
+title: "SIFR-PACKAGE-0102: A selected Cargo package is Rust-only"
+sidebarTitle: "SIFR-PACKAGE-0102"
+description: "A selected Cargo package is Rust-only"
+---
+
+`SIFR-PACKAGE-0102` belongs to the **Package management** diagnostic family. It means: a selected cargo package is rust-only.
+
+## Why It Happens
+
+Sifr package or workspace metadata violates the package model. Inspect `sifr.toml`, Cargo metadata, source roots, trust policy, archive contents, package selectors, or projection files as named by the diagnostic.
+
+<Info>
+Use `sifr --explain SIFR-PACKAGE-0102` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```toml
+[package]
+name = "demo"
+```
+
+## How To Fix It
+
+Repair the package manifest, workspace selection, projection files, archive rules, or publish options named by the diagnostic.
+
+## Fixed Code
+
+```toml
+[package]
+name = "demo"
+version = "0.1.0"
+
+[sifr]
+source-root = "src"
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-PACKAGE-0102` |
+| Family | `PACKAGE` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/frontend` |
+| Representative fixture | `crates/sifr_package/src/package_workspace_query_tests.rs::explicit_rust_only_selection_reports_0102` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

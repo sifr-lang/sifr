@@ -1,0 +1,46 @@
+---
+title: "SIFR-NAME-0002: Undefined function or callable"
+sidebarTitle: "SIFR-NAME-0002"
+description: "Undefined function or callable"
+---
+
+`SIFR-NAME-0002` belongs to the **Name resolution** diagnostic family. It means: undefined function or callable.
+
+## Why It Happens
+
+A binding, type, function, module, or member name cannot be resolved in the current scope.
+
+<Info>
+Use `sifr --explain SIFR-NAME-0002` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+total = subtotal + tax
+```
+
+## How To Fix It
+
+Declare or import the name before use, and check whether you meant a module member, type name, or local binding.
+
+## Fixed Code
+
+```python
+subtotal: int = 10
+tax: int = 2
+total = subtotal + tax
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-NAME-0002` |
+| Family | `NAME` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/undefined_function.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

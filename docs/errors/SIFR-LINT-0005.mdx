@@ -1,0 +1,52 @@
+---
+title: "SIFR-LINT-0005: Comment contains a tracked TODO or FIXME marker"
+sidebarTitle: "SIFR-LINT-0005"
+description: "Comment contains a tracked TODO or FIXME marker"
+---
+
+`SIFR-LINT-0005` belongs to the **Policy linting** diagnostic family. It means: comment contains a tracked todo or fixme marker.
+
+## Why It Happens
+
+A suppressible policy rule fired, or a suppression itself is malformed. Fix the policy issue or make the suppression exact and local.
+
+<Info>
+Use `sifr --explain SIFR-LINT-0005` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+# sifr: ignore
+def f(flag: bool):
+    pass
+
+f(True)
+```
+
+## How To Fix It
+
+Fix the policy issue when possible. If suppression is intentional, list the exact policy rule id and keep it local.
+
+## Fixed Code
+
+```python
+# sifr: ignore SIFR-LINT-0006
+def f(flag: bool):
+    pass
+
+f(flag=True)
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-LINT-0005` |
+| Family | `LINT` |
+| Severity | Warning |
+| Stability | stable |
+| Owner | `compiler/diagnostics` |
+| Representative fixture | `crates/sifr_lint/src/rules/todo_comment.rs::todo_comment_reports_tracked_marker` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

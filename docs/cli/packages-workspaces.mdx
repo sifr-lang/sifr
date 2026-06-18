@@ -1,0 +1,109 @@
+---
+title: "Sifr CLI Package and Workspace Commands"
+sidebarTitle: "Packages and Workspaces"
+description: "Reference for Sifr package, workspace, dependency, publishing, vendoring, and self-update commands."
+---
+
+Sifr's package commands are Cargo-compatible where that matters, but they preserve Sifr's stricter source ownership rules. Use them when you are working with `sifr.toml`, Sifr-aware Cargo metadata, or workspace package selection.
+
+## Dependency and Workspace Commands
+
+| Command | Purpose |
+| --- | --- |
+| `sifr init [PATH]` | Create a new Sifr package in `PATH` or the current directory. |
+| `sifr fetch` | Fetch package dependencies without building. |
+| `sifr repair` | Repair Sifr-managed Cargo projection drift. |
+| `sifr tree` | Print the package dependency tree with Cargo-compatible tree options. |
+| `sifr package` | Assemble and verify a package archive. |
+| `sifr publish` | Publish a Sifr package through Cargo, or validate with `--dry-run`. |
+| `sifr vendor [PATH]` | Vendor dependency sources into `PATH`, defaulting to `vendor`. |
+
+<Tip>
+Use `--locked`, `--offline`, or `--frozen` on dependency-sensitive commands when you need reproducible package behavior.
+</Tip>
+
+## Create a Package
+
+```bash
+sifr init hello --bin
+sifr init math-lib --lib --name math-lib
+```
+
+`sifr init` creates missing Sifr-owned package files. Pass `--force` to create missing owned files without overwriting existing user files.
+
+## Check or Repair Projection Drift
+
+```bash
+sifr repair --check
+sifr repair
+```
+
+`--check` reports drift without writing. Without `--check`, Sifr repairs the Sifr-managed Cargo projection files.
+
+## Select Workspace Packages
+
+Commands such as `check`, `package`, `publish`, and `run` accept Cargo-shaped package selection:
+
+```bash
+sifr check --workspace
+sifr check -p app
+sifr package --workspace --exclude experimental
+sifr publish -p math-lib --dry-run
+```
+
+<Warning>
+Sifr rejects ambiguous package selections and duplicate Sifr package names. Fix the workspace metadata instead of relying on implicit selection.
+</Warning>
+
+## Package and Publish
+
+```bash
+sifr package --list
+sifr package --no-verify --allow-dirty
+sifr publish --dry-run
+```
+
+`sifr package` validates the archive shape before publishing. `sifr publish --dry-run` runs the publish path without uploading.
+
+## Vendor Dependencies
+
+```bash
+sifr vendor vendor
+sifr vendor vendor --sync other/Cargo.toml --versioned-dirs
+```
+
+Vendoring delegates dependency source collection to Cargo while preserving Sifr's package diagnostics and lock-mode flags.
+
+## Self Update
+
+```bash
+sifr self version
+sifr self version --short
+sifr self version --format json
+
+sifr self update
+sifr self update --dry-run
+sifr self update --dry-run --format json
+sifr self update --channel nightly
+sifr self update --version 0.4.0-preview.2 --force
+```
+
+`sifr self update --dry-run` prints the resolved plan without running the installer. Use `--channel` to resolve the latest preview for a channel, `--version` for one immutable preview version, and `--force` for an intentional reinstall, downgrade, or channel switch.
+
+<Note>
+`--format json` is accepted for `sifr self update` only with `--dry-run`. `sifr self version --short` cannot be combined with `--format json`.
+</Note>
+
+The standalone installer records an update receipt. If that receipt is missing or outside the install rules, Sifr reports a build-family diagnostic instead of guessing which files are safe to modify.
+
+## Global Diagnostic Flags
+
+Every command accepts the global diagnostic controls:
+
+```bash
+sifr --diagnostic-format compact check src/main.sifr
+sifr --diagnostic-format json check --workspace
+sifr --explain SIFR-IMPORT-0008
+```
+
+See [Diagnostics](/diagnostics/overview) and [Error Codes](/diagnostics/error-codes) for renderer behavior and per-code references.

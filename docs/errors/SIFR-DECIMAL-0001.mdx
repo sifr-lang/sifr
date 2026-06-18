@@ -1,0 +1,44 @@
+---
+title: "SIFR-DECIMAL-0001: Invalid Decimal exact literal"
+sidebarTitle: "SIFR-DECIMAL-0001"
+description: "Invalid Decimal exact literal"
+---
+
+`SIFR-DECIMAL-0001` belongs to the **Decimal arithmetic** diagnostic family. It means: invalid decimal exact literal.
+
+## Why It Happens
+
+Sifr keeps decimal values exact. This diagnostic fires when decimal construction, scale handling, or mixed numeric operations would introduce ambiguity or precision loss.
+
+<Info>
+Use `sifr --explain SIFR-DECIMAL-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+amount = Decimal("1.25")
+```
+
+## How To Fix It
+
+Keep exact decimal values out of binary floating point. Use exact literals or string construction, and do not mix Decimal and BigDecimal in one expression.
+
+## Fixed Code
+
+```python
+amount = Decimal("1.25")
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-DECIMAL-0001` |
+| Family | `DECIMAL` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

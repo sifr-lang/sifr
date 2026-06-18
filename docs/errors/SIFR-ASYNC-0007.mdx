@@ -1,0 +1,50 @@
+---
+title: "SIFR-ASYNC-0007: Shell execution function called directly from async context"
+sidebarTitle: "SIFR-ASYNC-0007"
+description: "Shell execution function called directly from async context"
+---
+
+`SIFR-ASYNC-0007` belongs to the **Async effect and awaitability** diagnostic family. It means: shell execution function called directly from async context.
+
+## Why It Happens
+
+Sifr tracks suspension and blocking effects statically. This diagnostic fires when async code either does not really suspend, awaits work that cannot suspend, or calls blocking/CPU-heavy work without an explicit offload boundary.
+
+<Info>
+Use `sifr --explain SIFR-ASYNC-0007` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+from sifr.process import shell_output
+
+async def version() -> str:
+    return shell_output("sifr --version")
+```
+
+## How To Fix It
+
+Use the async process API or an explicit offload boundary instead of direct shell execution from async code.
+
+## Fixed Code
+
+```python
+from sifr.process import async_shell_output
+
+async def version() -> str:
+    return await async_shell_output("sifr --version")
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-ASYNC-0007` |
+| Family | `ASYNC` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/process_shell_exec_direct_async_rejected.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

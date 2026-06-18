@@ -1,0 +1,44 @@
+---
+title: "SIFR-IMPORT-0009: Unsupported legacy Sifr stdlib module import"
+sidebarTitle: "SIFR-IMPORT-0009"
+description: "Unsupported legacy Sifr stdlib module import"
+---
+
+`SIFR-IMPORT-0009` belongs to the **Imports and module resolution** diagnostic family. It means: unsupported legacy sifr stdlib module import.
+
+## Why It Happens
+
+The module graph cannot be resolved safely. Use explicit `sifr.*` imports for standard-library modules, avoid private imports, and remove ambiguous or cyclic import paths.
+
+<Info>
+Use `sifr --explain SIFR-IMPORT-0009` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+from math import sqrt
+```
+
+## How To Fix It
+
+Use Sifr's explicit module namespace and import concrete symbols with `from sifr.<module> import <name>`.
+
+## Fixed Code
+
+```python
+from sifr.math import sqrt
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-IMPORT-0009` |
+| Family | `IMPORT` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/legacy_sifr_asyncio_removed.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

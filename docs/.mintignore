@@ -1,5 +1,5 @@
 # Internal compiler reference (not published on docs.sifr.sh yet).
-errors/
+errors/*.md
 schemas/
 cli_command_semantics.md
 concurrency_runtime.md

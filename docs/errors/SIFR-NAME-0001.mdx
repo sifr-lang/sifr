@@ -1,0 +1,46 @@
+---
+title: "SIFR-NAME-0001: Undefined variable"
+sidebarTitle: "SIFR-NAME-0001"
+description: "Undefined variable"
+---
+
+`SIFR-NAME-0001` belongs to the **Name resolution** diagnostic family. It means: undefined variable.
+
+## Why It Happens
+
+A binding, type, function, module, or member name cannot be resolved in the current scope.
+
+<Info>
+Use `sifr --explain SIFR-NAME-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+total = subtotal + tax
+```
+
+## How To Fix It
+
+Declare or import the name before use, and check whether you meant a module member, type name, or local binding.
+
+## Fixed Code
+
+```python
+subtotal: int = 10
+tax: int = 2
+total = subtotal + tax
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-NAME-0001` |
+| Family | `NAME` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/undefined_var.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

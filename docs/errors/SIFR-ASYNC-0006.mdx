@@ -1,0 +1,49 @@
+---
+title: "SIFR-ASYNC-0006: Synchronous workload annotation applied to async function"
+sidebarTitle: "SIFR-ASYNC-0006"
+description: "Synchronous workload annotation applied to async function"
+---
+
+`SIFR-ASYNC-0006` belongs to the **Async effect and awaitability** diagnostic family. It means: synchronous workload annotation applied to async function.
+
+## Why It Happens
+
+The `@blocking_io` and `@cpu_heavy` annotations describe synchronous workload classes. An `async def` already has its own scheduling contract, so it cannot also be classified as a blocking or CPU-heavy synchronous workload.
+
+<Info>
+Use `sifr --explain SIFR-ASYNC-0006` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+@blocking_io
+async def load() -> str:
+    await task.sleep(0.0)
+    return "done"
+```
+
+## How To Fix It
+
+Apply synchronous workload annotations to synchronous functions, not async functions.
+
+## Fixed Code
+
+```python
+@blocking_io
+def load() -> str:
+    return read_text("config.txt")
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-ASYNC-0006` |
+| Family | `ASYNC` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/blocking_io_on_async_def_rejected.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

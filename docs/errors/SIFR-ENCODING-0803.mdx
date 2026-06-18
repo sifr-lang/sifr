@@ -1,0 +1,44 @@
+---
+title: "SIFR-ENCODING-0803: Encoding error handler must be statically known"
+sidebarTitle: "SIFR-ENCODING-0803"
+description: "Encoding error handler must be statically known"
+---
+
+`SIFR-ENCODING-0803` belongs to the **Text encoding** diagnostic family. It means: encoding error handler must be statically known.
+
+## Why It Happens
+
+Text conversion behavior must be known at compile time. Use a supported, statically known encoding or error handler.
+
+<Info>
+Use `sifr --explain SIFR-ENCODING-0803` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+text = decode(data, "utf-8", handler_name)
+```
+
+## How To Fix It
+
+Use a statically known encoding error handler so text conversion remains predictable.
+
+## Fixed Code
+
+```python
+text = decode(data, "utf-8", "strict")
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-ENCODING-0803` |
+| Family | `ENCODING` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

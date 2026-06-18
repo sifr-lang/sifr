@@ -1,0 +1,46 @@
+---
+title: "SIFR-STDLIB-0001: Unsupported standard-library constructor, method, or surface"
+sidebarTitle: "SIFR-STDLIB-0001"
+description: "Unsupported standard-library constructor, method, or surface"
+---
+
+`SIFR-STDLIB-0001` belongs to the **Standard library surface** diagnostic family. It means: unsupported standard-library constructor, method, or surface.
+
+## Why It Happens
+
+The selected standard-library surface is not supported in this form. Use the documented `sifr.*` constructor, method, or module path.
+
+<Info>
+Use `sifr --explain SIFR-STDLIB-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+values = defaultdict()
+```
+
+## How To Fix It
+
+Use the supported `sifr.*` surface and constructor shape. Some CPython conveniences are intentionally absent or require explicit arguments.
+
+## Fixed Code
+
+```python
+from sifr.collections import defaultdict
+
+values = defaultdict(lambda: 0)
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-STDLIB-0001` |
+| Family | `STDLIB` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

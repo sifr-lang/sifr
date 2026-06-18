@@ -1,0 +1,48 @@
+---
+title: "SIFR-OWN-0004: Moved value is reused across loop iterations"
+sidebarTitle: "SIFR-OWN-0004"
+description: "Moved value is reused across loop iterations"
+---
+
+`SIFR-OWN-0004` belongs to the **Ownership and borrowing** diagnostic family. It means: moved value is reused across loop iterations.
+
+## Why It Happens
+
+The ownership model would be violated. Move values only once, keep borrows scoped, and cross task/channel/IPC boundaries only with owned values that satisfy the required safety traits.
+
+<Info>
+Use `sifr --explain SIFR-OWN-0004` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+items: list[int] = [1, 2]
+taken = own items
+count = len(items)
+```
+
+## How To Fix It
+
+Move ownership only after the last use, keep mutable borrows scoped, and send only owned sendable values across task or channel boundaries.
+
+## Fixed Code
+
+```python
+items: list[int] = [1, 2]
+count = len(items)
+taken = own items
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-OWN-0004` |
+| Family | `OWN` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/use_after_move_loop.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

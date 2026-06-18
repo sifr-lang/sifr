@@ -1,0 +1,44 @@
+---
+title: "SIFR-BUILD-0006: Expected build artifact was not produced"
+sidebarTitle: "SIFR-BUILD-0006"
+description: "Expected build artifact was not produced"
+---
+
+`SIFR-BUILD-0006` belongs to the **Build pipeline** diagnostic family. It means: expected build artifact was not produced.
+
+## Why It Happens
+
+Sifr reached the build pipeline but could not create, run, or verify one of the generated build artifacts. The source may be valid; inspect the output path, temporary workspace, Cargo/rustc excerpt, or standalone install receipt named by the diagnostic.
+
+<Info>
+Use `sifr --explain SIFR-BUILD-0006` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```bash
+sifr build app.sifr --output /root/out
+```
+
+## How To Fix It
+
+Check the generated build path, Cargo/rustc output, and whether Sifr can create its temporary workspace and final artifact.
+
+## Fixed Code
+
+```bash
+sifr build app.sifr --output build
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-BUILD-0006` |
+| Family | `BUILD` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/frontend` |
+| Representative fixture | `crates/sifr_driver/src/tests/project_build_check.rs` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

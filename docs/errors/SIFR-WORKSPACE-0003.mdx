@@ -1,0 +1,46 @@
+---
+title: "SIFR-WORKSPACE-0003: Workspace source root is not a directory"
+sidebarTitle: "SIFR-WORKSPACE-0003"
+description: "Workspace source root is not a directory"
+---
+
+`SIFR-WORKSPACE-0003` belongs to the **Workspace metadata** diagnostic family. It means: workspace source root is not a directory.
+
+## Why It Happens
+
+Workspace metadata does not describe a valid Sifr source layout. Keep source roots inside the workspace and use valid member/source-root shapes.
+
+<Info>
+Use `sifr --explain SIFR-WORKSPACE-0003` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```toml
+[workspace]
+members = [123]
+```
+
+## How To Fix It
+
+Fix workspace metadata so source roots stay inside the workspace and each entry has the expected string/path shape.
+
+## Fixed Code
+
+```toml
+[workspace]
+members = ["crates/app"]
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-WORKSPACE-0003` |
+| Family | `WORKSPACE` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/frontend` |
+| Representative fixture | `crates/sifr_driver/src/tests/discovery_and_workspace.rs` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

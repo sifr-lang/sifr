@@ -1,0 +1,50 @@
+---
+title: "SIFR-MATCH-0002: Match guard must be bool"
+sidebarTitle: "SIFR-MATCH-0002"
+description: "Match guard must be bool"
+---
+
+`SIFR-MATCH-0002` belongs to the **Pattern matching** diagnostic family. It means: match guard must be bool.
+
+## Why It Happens
+
+The pattern match cannot be proven valid. Check exhaustiveness, guard types, class-pattern fields, and unsupported pattern shapes.
+
+<Info>
+Use `sifr --explain SIFR-MATCH-0002` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+match value:
+    case 0:
+        label = "zero"
+```
+
+## How To Fix It
+
+Make patterns supported, guards boolean, field names valid, and matches exhaustive where required.
+
+## Fixed Code
+
+```python
+match value:
+    case 0:
+        label = "zero"
+    case _:
+        label = "other"
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-MATCH-0002` |
+| Family | `MATCH` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

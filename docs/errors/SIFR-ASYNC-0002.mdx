@@ -1,0 +1,53 @@
+---
+title: "SIFR-ASYNC-0002: Awaited same-task coroutine has no real suspension effect"
+sidebarTitle: "SIFR-ASYNC-0002"
+description: "Awaited same-task coroutine has no real suspension effect"
+---
+
+`SIFR-ASYNC-0002` belongs to the **Async effect and awaitability** diagnostic family. It means: awaited same-task coroutine has no real suspension effect.
+
+## Why It Happens
+
+Sifr tracks suspension and blocking effects statically. This diagnostic fires when async code either does not really suspend, awaits work that cannot suspend, or calls blocking/CPU-heavy work without an explicit offload boundary.
+
+<Info>
+Use `sifr --explain SIFR-ASYNC-0002` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+async def cached() -> int:
+    return 1
+
+async def main() -> int:
+    return await cached()
+```
+
+## How To Fix It
+
+Do not await a same-task coroutine that cannot suspend. Make the helper synchronous, or move the suspension into the helper.
+
+## Fixed Code
+
+```python
+def cached() -> int:
+    return 1
+
+async def main() -> int:
+    await task.sleep(0.0)
+    return cached()
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-ASYNC-0002` |
+| Family | `ASYNC` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/async_transitive_no_suspend_await_rejected.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.
