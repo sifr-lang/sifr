@@ -12,6 +12,7 @@ pub(super) struct GeneratedBinaryProject {
     pub(super) support_modules: BTreeMap<String, String>,
     pub(super) used_stdlib_modules: HashSet<String>,
     pub(super) required_features: HashSet<StdlibFeature>,
+    pub(super) cache_key_fragment: Option<String>,
 }
 
 impl GeneratedBinaryProject {
@@ -43,6 +44,7 @@ pub(super) fn generated_single_file_binary_project(
         support_modules: BTreeMap::new(),
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
+        cache_key_fragment: None,
     }
 }
 
@@ -85,5 +87,6 @@ pub(super) fn generated_project_binary_project(
         support_modules,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
+        cache_key_fragment: None,
     })
 }

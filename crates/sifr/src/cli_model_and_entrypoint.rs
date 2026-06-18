@@ -317,6 +317,7 @@ pub(super) struct PackageCompilerContext {
     pub(super) graph: sifr_package::SifrPackageGraph,
     pub(super) source_map: sifr_package::PackageSourceMap,
     pub(super) package_id: sifr_package::SifrPackageId,
+    pub(super) python_probe_digest: Option<String>,
 }
 
 pub(super) struct PackageGraphContext {

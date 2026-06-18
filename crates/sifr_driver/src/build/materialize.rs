@@ -226,7 +226,7 @@ fn binary_project_cache_key(
         .collect::<Vec<_>>()
         .join("\n===\n");
     format!(
-        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}",
+        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}\n[cache-key-fragment]\n{}",
         generate_dependency_cargo_toml(
             project_name,
             &generated_project.used_stdlib_modules,
@@ -235,7 +235,8 @@ fn binary_project_cache_key(
         generated_project.main_rs,
         support_modules,
         stdlib_modules.join("\n"),
-        required_features.join("\n")
+        required_features.join("\n"),
+        generated_project.cache_key_fragment.as_deref().unwrap_or("")
     )
 }
 
@@ -253,4 +254,31 @@ fn sorted_feature_lines(values: &std::collections::HashSet<StdlibFeature>) -> Ve
         ordered.insert(value.id());
     }
     ordered.into_iter().map(str::to_string).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::binary_project_cache_key;
+    use crate::build::project_codegen::GeneratedBinaryProject;
+    use std::collections::{BTreeMap, HashSet};
+
+    #[test]
+    fn binary_project_cache_key_includes_package_cache_fragment() {
+        let base = GeneratedBinaryProject {
+            main_rs: "fn main() {}\n".to_string(),
+            support_modules: BTreeMap::new(),
+            used_stdlib_modules: HashSet::new(),
+            required_features: HashSet::new(),
+            cache_key_fragment: None,
+        };
+        let mut with_python_probe = GeneratedBinaryProject {
+            cache_key_fragment: Some("python-probe-a".to_string()),
+            ..base
+        };
+        let first = binary_project_cache_key("sifr_output", &with_python_probe);
+        with_python_probe.cache_key_fragment = Some("python-probe-b".to_string());
+        let second = binary_project_cache_key("sifr_output", &with_python_probe);
+
+        assert_ne!(first, second);
+    }
 }

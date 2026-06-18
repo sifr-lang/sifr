@@ -11,9 +11,10 @@ use super::formatter_cli::FmtArgs;
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
-    build_cached_project, build_cached_single_file, build_project_report, build_single_file_report,
-    check_package_project, check_project, check_single_file, compile, emit_project, run_tests,
-    BuildReport, CachedBinaryArtifact, CompileResult, PackageEntrypoint,
+    build_cached_project, build_cached_single_file, build_package_project_report,
+    build_project_report, build_single_file_report, check_package_project, check_project,
+    check_single_file, compile, emit_project, run_tests, BuildReport, CachedBinaryArtifact,
+    CompileResult, PackageEntrypoint,
 };
 use sifr_format::config::{effective_format_config, EffectiveFormatConfig, FormatConfigOverrides};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
@@ -111,16 +112,11 @@ pub(super) fn cmd_check_package_file(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let context = match package_compiler_context(session, lock_mode, diagnostic_format) {
-        Ok(Some(context)) => context,
+    let entrypoint = match package_entrypoint_for_file(file, session, lock_mode, diagnostic_format)
+    {
+        Ok(Some(entrypoint)) => entrypoint,
         Ok(None) => return cmd_check_file(file, diagnostic_format),
         Err(exit_code) => return exit_code,
-    };
-    let entrypoint = PackageEntrypoint {
-        main_file: file.to_path_buf(),
-        package_id: context.package_id,
-        graph: context.graph,
-        source_map: context.source_map,
     };
     let errors = match run_with_panic_boundary(
         "internal compiler panic during package check command execution",
@@ -138,6 +134,24 @@ pub(super) fn cmd_check_package_file(
     }
 }
 
+pub(super) fn package_entrypoint_for_file(
+    file: &Path,
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<Option<PackageEntrypoint>, i32> {
+    let Some(context) = package_compiler_context(session, lock_mode, diagnostic_format)? else {
+        return Ok(None);
+    };
+    Ok(Some(PackageEntrypoint {
+        main_file: file.to_path_buf(),
+        package_id: context.package_id,
+        graph: context.graph,
+        source_map: context.source_map,
+        python_probe_digest: context.python_probe_digest,
+    }))
+}
+
 pub(super) fn package_compiler_context(
     session: &sifr_package::PackageSession,
     lock_mode: sifr_package::CargoLockMode,
@@ -149,11 +163,46 @@ pub(super) fn package_compiler_context(
     let Some(package_id) = current_session_package_id(session, &context.graph) else {
         return Ok(None);
     };
+    let python_probe_digest =
+        package_python_probe_digest(&context.graph, &package_id, diagnostic_format)?;
     Ok(Some(PackageCompilerContext {
         graph: context.graph,
         source_map: context.source_map,
         package_id,
+        python_probe_digest,
     }))
+}
+
+fn package_python_probe_digest(
+    graph: &sifr_package::SifrPackageGraph,
+    package_id: &sifr_package::SifrPackageId,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<Option<String>, i32> {
+    let resolved = match sifr_package::resolve_python_environment(graph, package_id) {
+        Ok(resolved) => resolved,
+        Err(errors) => {
+            let diagnostics = errors
+                .into_iter()
+                .map(package_diagnostic)
+                .collect::<Vec<_>>();
+            render_diagnostics(&diagnostics, diagnostic_format);
+            return Err(EXIT_USER_DIAGNOSTIC);
+        }
+    };
+    let Some(resolved) = resolved else {
+        return Ok(None);
+    };
+    let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
+    let probe = match sifr_package::probe_python_environment(&request) {
+        Ok(probe) => probe,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return Err(EXIT_USER_DIAGNOSTIC);
+        }
+    };
+    Ok(Some(
+        sifr_package::digest_python_environment_probe(&request, &probe).hex,
+    ))
 }
 
 pub(super) fn load_package_graph_context(
@@ -351,6 +400,28 @@ pub(super) fn compile_entrypoint_report(
             let source = read_source(file);
             build_single_file_report(&source, file, output)
         }
+    }
+}
+
+pub(super) fn compile_package_entrypoint_report(
+    file: &Path,
+    output: &Path,
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<Option<BuildReport>, i32> {
+    let Some(entrypoint) =
+        package_entrypoint_for_file(file, session, lock_mode, diagnostic_format)?
+    else {
+        return Ok(None);
+    };
+    match run_with_panic_boundary(
+        "internal compiler panic during package build command execution",
+        || build_package_project_report(&entrypoint, output),
+    ) {
+        Ok(Ok(report)) => Ok(Some(report)),
+        Ok(Err(errors)) => Err(render_diagnostics(&errors, diagnostic_format)),
+        Err(internal) => Err(render_diagnostics(&[*internal], diagnostic_format)),
     }
 }
 

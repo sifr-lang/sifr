@@ -121,4 +121,4 @@ flowchart LR
 - Phase 42 and Phase 43 are intentionally excluded from the main execution table until post-Phase-41 planning lock.
 - [42_data_science_ml.md](./phases/42_data_science_ml.md) (needs more planning)
 - [43_interoperability.md](./phases/43_interoperability.md) (needs more planning)
-- [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (active sequence-independent embedded CPython/uv interop lane; `milestone_py_0` reserves diagnostics and establishes `verification/python_interop/`)
+- [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (active sequence-independent embedded CPython/uv interop lane; `milestone_py_1` adds package config parsing, environment selection, canonical probe validation, and `verification/python_interop --group env` evidence)

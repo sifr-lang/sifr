@@ -388,6 +388,7 @@ fn package_diagnostics(package: &Path) -> Result<Vec<RenderedDiagnostic>, String
         package_id,
         graph,
         source_map,
+        python_probe_digest: None,
     };
     Ok(check_package_project(&entrypoint))
 }

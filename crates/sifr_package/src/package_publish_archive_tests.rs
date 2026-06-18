@@ -14,8 +14,8 @@ use crate::imports::source_map::{
     DottedModulePath, PackageModuleKey, PackageModuleSource, PackageSourceMap,
 };
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
-    TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
+    SifrPackageName, TrustPolicy,
 };
 use crate::ops::plan::PackageOperation;
 use crate::ops::publish::{publish_plan, vendor_plan};
@@ -90,6 +90,8 @@ fn package_dry_run_includes_cargo_package_and_publish_dry_run_commands() {
         native: vec!["reqwest".to_string()],
         build_scripts: Vec::new(),
         proc_macros: Vec::new(),
+        python: Vec::new(),
+        python_native: Vec::new(),
     });
     let graph = graph(package.clone(), vec![backend("reqwest")]);
     validate_backend_trust(&graph).expect("trust should pass");
@@ -334,6 +336,7 @@ fn package(trust: TrustPolicy) -> SifrPackageMetadata {
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
             trust,
+            python: PythonConfig::default(),
             production_schema: false,
         },
         aliases: BTreeMap::new(),

@@ -9,21 +9,22 @@ The canonical entrypoint is:
 
 ```bash
 verification/python_interop/run.sh --group scaffold
+verification/python_interop/run.sh --group env
 verification/python_interop/run.sh --tier tier1
 verification/python_interop/run.sh --package pandas
 verification/python_interop/run.sh --self-test
 ```
 
-The initial checked-in surface provides the scaffold contract only. Later
-implementation work replaces scaffold evidence with live checks for the same
-group and tier names. The runner must never invoke `uv sync` or install packages
-implicitly.
+The scaffold group validates the checked-in matrix and fixture surface. The env
+group records live interpreter ABI evidence and validates checked-in positive
+probe fixtures plus concrete negative probe/selection cases. The runner must
+never invoke `uv sync` or install packages implicitly.
 
 ## Groups
 
 - `scaffold`: validates matrix files, fixture directories, runner modules, and
   report output.
-- `env`: interpreter, venv, ABI, platform, lock/env freshness.
+- `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.

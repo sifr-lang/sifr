@@ -1,6 +1,8 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
-use crate::manifest::sifr::{CompilerRequirement, ImportRoot, SifrEdition, TrustPolicy};
+use crate::manifest::sifr::{
+    validate_relative_path, CompilerRequirement, ImportRoot, PythonConfig, SifrEdition, TrustPolicy,
+};
 use std::path::Path;
 
 pub(super) fn parse_exports(
@@ -60,6 +62,48 @@ pub(super) fn parse_trust(
             table,
             "trust.proc-macros",
         )?,
+        python: optional_import_root_list(cargo_package_id, manifest_path, table, "trust.python")?,
+        python_native: optional_import_root_list(
+            cargo_package_id,
+            manifest_path,
+            table,
+            "trust.python-native",
+        )?,
+    })
+}
+
+pub(super) fn parse_python_config(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    table: &toml::Table,
+) -> Result<PythonConfig, PackageDiagnostic> {
+    Ok(PythonConfig {
+        venv: optional_relative_path(cargo_package_id, manifest_path, table, "python.venv")?,
+        pyproject: optional_relative_path(
+            cargo_package_id,
+            manifest_path,
+            table,
+            "python.pyproject",
+        )?,
+        lock: optional_relative_path(cargo_package_id, manifest_path, table, "python.lock")?,
+        interpreter: optional_relative_path(
+            cargo_package_id,
+            manifest_path,
+            table,
+            "python.interpreter",
+        )?,
+        allow_imports: optional_import_root_list(
+            cargo_package_id,
+            manifest_path,
+            table,
+            "python.allow-imports",
+        )?,
+        requires_imports: optional_import_root_list(
+            cargo_package_id,
+            manifest_path,
+            table,
+            "python.requires-imports",
+        )?,
     })
 }
 
@@ -99,6 +143,59 @@ fn optional_string_list(
                 })
         })
         .collect()
+}
+
+fn optional_import_root_list(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    table: &toml::Table,
+    dotted_key: &'static str,
+) -> Result<Vec<String>, PackageDiagnostic> {
+    optional_string_list(cargo_package_id, manifest_path, table, dotted_key)?
+        .into_iter()
+        .map(|root| {
+            if root == "*" || root.split('.').all(valid_identifier) {
+                Ok(root)
+            } else {
+                Err(PackageDiagnostic::python_environment_config(
+                    cargo_package_id,
+                    manifest_path,
+                    dotted_key,
+                    format!("`{root}` is not a valid Python import root"),
+                ))
+            }
+        })
+        .collect()
+}
+
+fn optional_relative_path(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    table: &toml::Table,
+    dotted_key: &'static str,
+) -> Result<Option<std::path::PathBuf>, PackageDiagnostic> {
+    let local_key = dotted_key.rsplit('.').next().unwrap_or(dotted_key);
+    let Some(value) = table.get(local_key) else {
+        return Ok(None);
+    };
+    let Some(path) = value.as_str().filter(|value| !value.is_empty()) else {
+        return Err(PackageDiagnostic::python_environment_config(
+            cargo_package_id,
+            manifest_path,
+            dotted_key,
+            "expected a non-empty relative path",
+        ));
+    };
+    validate_relative_path(cargo_package_id, manifest_path, dotted_key, path)
+        .map(Some)
+        .map_err(|diagnostic| {
+            PackageDiagnostic::python_environment_config(
+                cargo_package_id,
+                manifest_path,
+                dotted_key,
+                diagnostic.message,
+            )
+        })
 }
 
 pub(super) fn validate_edition(

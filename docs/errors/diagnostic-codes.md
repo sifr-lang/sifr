@@ -217,6 +217,17 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0711`](SIFR-PACKAGE-0711.md) | Error | Production sifr.toml uses manifest binary target tables. |
 | [`SIFR-PACKAGE-0713`](SIFR-PACKAGE-0713.md) | Error | Public API symbol is exported more than once. |
 | [`SIFR-PACKAGE-0714`](SIFR-PACKAGE-0714.md) | Error | Package script expansion attempted to invoke another script. |
+| [`SIFR-PYENV-0001`](SIFR-PYENV-0001.md) | Error | Python environment configuration is malformed. |
+| [`SIFR-PYENV-0002`](SIFR-PYENV-0002.md) | Error | Package graph selects more than one Python virtual environment. |
+| [`SIFR-PYENV-0003`](SIFR-PYENV-0003.md) | Error | A package graph requires Python but no root environment is selected. |
+| [`SIFR-PYENV-0004`](SIFR-PYENV-0004.md) | Error | Selected Python interpreter probe failed or returned invalid JSON. |
+| [`SIFR-PYENV-0005`](SIFR-PYENV-0005.md) | Error | Selected Python interpreter is not supported CPython. |
+| [`SIFR-PYENV-0006`](SIFR-PYENV-0006.md) | Error | Selected interpreter does not belong to the configured virtual environment. |
+| [`SIFR-PYENV-0007`](SIFR-PYENV-0007.md) | Error | Selected Python environment has no site-packages path. |
+| [`SIFR-PYENV-0008`](SIFR-PYENV-0008.md) | Error | Declared Python import root is missing from the selected environment. |
+| [`SIFR-PYENV-0009`](SIFR-PYENV-0009.md) | Error | Trusted native Python import root failed to load. |
+| [`SIFR-PYENV-0010`](SIFR-PYENV-0010.md) | Error | Free-threaded CPython is not supported for embedded interop. |
+| [`SIFR-PYENV-0011`](SIFR-PYENV-0011.md) | Error | Configured Python project or lockfile is missing or stale. |
 
 ## Reserved Codes
 
