@@ -366,7 +366,7 @@ Supported cleanup APIs:
 try py.close(obj)
 try py.call_attr(obj, "close", [], [])
 try py.with(obj, lambda entered: ...)
-let coro = try py.call_attr(obj, "aclose", [], [])
+coro = try py.call_attr(obj, "aclose", [], [])
 try py.run_coroutine_blocking(coro)
 try callback.close()
 try buffer.release()
