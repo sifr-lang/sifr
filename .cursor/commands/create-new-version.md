@@ -48,7 +48,7 @@ Production real-runs must keep `--mutation-mode github` once release assets are 
 Use `trigger_preview_release.sh` for production preview releases when the release
 artifacts should be built on native GitHub-hosted runners. The script dispatches
 `.github/workflows/preview-release.yml`, which validates the preview inputs,
-builds each target on the matching runner family, and publishes a draft GitHub
+builds each target on the matching runner family, and publishes a GitHub
 prerelease with the generated archives and checksum files.
 
 ## Safety Rules

@@ -181,6 +181,7 @@ jobs:
             gh release edit "${VERSION}" \
               --repo "${GITHUB_REPOSITORY}" \
               --prerelease \
+              --draft=false \
               --latest=false \
               --title "Sifr ${VERSION}" \
               --notes-file "${notes_file}"
@@ -188,7 +189,6 @@ jobs:
             gh release create "${VERSION}" \
               --repo "${GITHUB_REPOSITORY}" \
               --prerelease \
-              --draft \
               --latest=false \
               --title "Sifr ${VERSION}" \
               --notes-file "${notes_file}"
