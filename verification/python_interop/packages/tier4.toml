@@ -1,0 +1,43 @@
+[[packages]]
+name = "gunicorn"
+tier = "tier4"
+groups = ["imports", "web"]
+host-dependent = true
+
+[[packages]]
+name = "testcontainers"
+tier = "tier4"
+groups = ["imports", "databases", "brokers"]
+host-dependent = true
+
+[[packages]]
+name = "watchdog"
+tier = "tier4"
+groups = ["imports", "native"]
+native = true
+host-dependent = true
+
+[[packages]]
+name = "psutil"
+tier = "tier4"
+groups = ["imports", "native"]
+native = true
+host-dependent = true
+
+[[packages]]
+name = "pexpect"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+
+[[packages]]
+name = "ipython"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+
+[[packages]]
+name = "ipykernel"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true

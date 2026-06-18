@@ -1,0 +1,27 @@
+[[packages]]
+name = "grpcio"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "cloud"]
+native = true
+
+[[packages]]
+name = "lxml"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "tiktoken"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "google-crc32c"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "cloud"]
+native = true

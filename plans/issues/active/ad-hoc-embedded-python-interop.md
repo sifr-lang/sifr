@@ -1,6 +1,25 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: draft planning lock. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
+> Status: in progress. Planning lock is active; `milestone_py_0` owns scaffold and diagnostic reservations. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
+
+## Execution Status
+
+- [x] `milestone_py_0`: Planning lock and verification scaffold.
+  - Added `verification/python_interop/` runner, package matrices, fixture directories, and report path.
+  - Reserved diagnostic families: `SIFR-PYENV`, `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, `SIFR-PYCB`, `SIFR-PYTRUST`.
+  - Linked the phase from roadmap, phase index, and architecture docs.
+- [ ] `milestone_py_1`: Environment discovery and probe.
+- [ ] `milestone_py_2`: Embedded runtime lifecycle.
+- [ ] `milestone_py_3`: Opaque object operations and errors.
+- [ ] `milestone_py_4`: Primitive and typed conversion.
+- [ ] `milestone_py_5`: Async/blocking integration.
+- [ ] `milestone_py_6`: Resource cleanup and leak diagnostics.
+- [ ] `milestone_py_7`: `Py_buffer` zero-copy core.
+- [ ] `milestone_py_8`: Arrow PyCapsule interop.
+- [ ] `milestone_py_9`: DLPack tensor interop.
+- [ ] `milestone_py_10`: Python-to-Sifr callbacks.
+- [ ] `milestone_py_11`: Package certification matrix.
+- [ ] `milestone_py_12`: Documentation, diagnostics, and closeout.
 
 ## Objective
 
@@ -556,12 +575,12 @@ Packages already covered by Tier 1a may reappear here when they anchor a Tier 1b
 
 - Runtime/package loading: `pip`, `setuptools`, `wheel`, `build`, `hatchling`, `poetry-core`, `uv-build`, `pyproject-hooks`, `packaging`, `pkginfo`, `importlib-metadata`, `zipp`, `platformdirs`, `appdirs`, `typing-extensions`, `exceptiongroup`.
 - Data validation/structured objects: `pydantic`, `pydantic-core`, `pydantic-extra-types`, `annotated-types`, `attrs`, `marshmallow`, `cerberus`, `jsonpickle`, `deepdiff`, `protobuf`, `proto-plus`, `pyyaml`, `toml`, `tomli`, `python-dotenv`.
-- HTTP/async/networking: `requests`, `urllib3`, `httpx`, `httpcore`, `aiohttp`, `anyio`, `async-timeout`, `sniffio`, `h11`, `httptools`, `websockets`, `uvicorn`, `uvloop`.
+- HTTP/async/networking: `requests`, `urllib3`, `httpx`, `httpcore`, `aiohttp`, `anyio`, `async-timeout`, `sniffio`, `h11`, `httptools`, `websockets`, `uvicorn`, `uvloop`, `grpcio`.
 - Web frameworks: `fastapi`, `starlette`, `starlette-context`, `django`, `sanic`, `sanic-routing`, `sanic-testing`, `webargs`, `webargs-sanic`, `jinja2`, `markupsafe`, `python-multipart`.
-- Databases/queues/brokers: `sqlalchemy`, `sqlalchemy-utils`, `alembic`, `psycopg`, `psycopg2`, `psycopg2-binary`, `asyncpg`, `pymongo`, `motor`, `mongoengine`, `redis`, `fakeredis`, `hiredis`, `valkey`, `aiokafka`, `confluent-kafka`, `kafka-python`, `python-schema-registry-client`.
+- Databases/queues/brokers: `sqlalchemy`, `sqlalchemy-utils`, `alembic`, `psycopg`, `psycopg2`, `psycopg2-binary`, `asyncpg`, `pymongo`, `motor`, `mongoengine`, `redis`, `fakeredis`, `hiredis`, `valkey`, `aiokafka`, `confluent-kafka`, `kafka-python`, `python-schema-registry-client`, `pika`, `moto`.
 - Cloud/AI clients: `boto3`, `botocore`, `openai`, `google-genai`, `google-api-core`, `google-api-python-client`, `google-auth`, `google-auth-httplib2`, `google-auth-oauthlib`, `google-cloud-core`, `google-cloud-storage`, `google-cloud-firestore`, `google-cloud-aiplatform`, `firebase-admin`, `kubernetes`, `pinecone-client`, `gspread`, `gspread-asyncio`.
 - Security/crypto/native loading: `cryptography`, `cffi`, `pycparser`, `certifi`, `idna`, `charset-normalizer`, `chardet`, `oauthlib`, `requests-oauthlib`, `python-jose`, `rsa`, `pyasn1`, `pyasn1-modules`.
-- Data/binary/parser: `pandas`, `pyarrow`, `openpyxl`, `lxml`, `bleach`, `defusedxml`, `nh3`, `regex`, `ujson`, `fastavro`, `avro`, `avro-python3`, `google-crc32c`, `tiktoken`.
+- Data/binary/parser: `pandas`, `pyarrow`, `openpyxl`, `lxml`, `bleach`, `defusedxml`, `nh3`, `regex`, `ujson`, `fastavro`, `avro`, `avro-python3`, `google-crc32c`, `tiktoken`, `Pillow`, `tensorflow`, `scikit-learn`.
 - Observability/production infra: `opentelemetry-api`, `opentelemetry-semantic-conventions`, `opentracing`, `sentry-sdk`, `sentry-asgi`, `datadog`, `structlog`, `logstash-formatter`.
 - Domain examples: `biip`, `schwifty`, `pycountry`, `babel`, `holidays`, `dateparser`, `pendulum`, `python-dateutil`, `pytz`, `tzdata`, `uuid-utils`, `rank-bm25`.
 

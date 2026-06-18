@@ -22,6 +22,14 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `IMPORT` | `SIFR-IMPORT-0000` | Module import and path resolution diagnostics. |
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
+| `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
+| `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
+| `PYCALL` | `SIFR-PYCALL-0000` | Embedded Python callable, attribute, item, and coroutine diagnostics. |
+| `PYCONV` | `SIFR-PYCONV-0000` | Sifr/Python primitive and structured conversion diagnostics. |
+| `PYRES` | `SIFR-PYRES-0000` | Embedded Python resource cleanup and leak diagnostics. |
+| `PYZC` | `SIFR-PYZC-0000` | Embedded Python zero-copy buffer, Arrow, DLPack, and array-interface diagnostics. |
+| `PYCB` | `SIFR-PYCB-0000` | Python-to-Sifr callback lifetime, dispatch, and closure diagnostics. |
+| `PYTRUST` | `SIFR-PYTRUST-0000` | Embedded Python import and native-extension trust diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
 | `INT` | `SIFR-INT-0000` | Exact and fixed-width integer model diagnostics. |
 | `IO` | `SIFR-IO-0000` | File and stream text/binary boundary diagnostics. |
@@ -51,6 +59,14 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-IMPORT-0000` | `IMPORT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-TYPE-0000` | `TYPE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-ASYNC-0000` | `ASYNC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYENV-0000` | `PYENV` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYIMP-0000` | `PYIMP` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYCALL-0000` | `PYCALL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYCONV-0000` | `PYCONV` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYRES-0000` | `PYRES` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYZC-0000` | `PYZC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYCB-0000` | `PYCB` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-PYTRUST-0000` | `PYTRUST` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0000` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-IO-0000` | `IO` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |

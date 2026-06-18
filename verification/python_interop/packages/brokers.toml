@@ -1,0 +1,29 @@
+[[packages]]
+name = "aiokafka"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "brokers", "callbacks"]
+
+[[packages]]
+name = "kafka-python"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "brokers"]
+
+[[packages]]
+name = "python-schema-registry-client"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "brokers"]
+
+[[packages]]
+name = "pika"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "brokers", "callbacks"]
+
+[[packages]]
+name = "moto"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud", "brokers"]

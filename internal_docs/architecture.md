@@ -51,6 +51,7 @@
 - Historical references in this architecture document may mention legacy sequencing from earlier planning versions.
 - When numbered-record conflicts exist, follow the project planning index and the matching staged planning files.
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
+- Embedded CPython interop has a separate design contract in the planning tree. The verification scaffold lives under [`verification/python_interop/`](../verification/python_interop/); this lane is separate from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation.
 
 ## Vision
 

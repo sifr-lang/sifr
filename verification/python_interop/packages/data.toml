@@ -1,0 +1,34 @@
+[[packages]]
+name = "openpyxl"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "dataframes"]
+
+[[packages]]
+name = "pillow"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "buffers", "arrow"]
+native = true
+
+[[packages]]
+name = "tensorflow"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "dlpack", "tensors"]
+native = true
+host-dependent = true
+
+[[packages]]
+name = "scikit-learn"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "fastavro"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true

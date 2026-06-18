@@ -389,6 +389,47 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-ASYNC-0000",
     },
     DiagnosticFamily {
+        name: "PYENV",
+        summary: "Embedded CPython environment selection, probing, and ABI diagnostics.",
+        reserved_base: "SIFR-PYENV-0000",
+    },
+    DiagnosticFamily {
+        name: "PYIMP",
+        summary: "Embedded Python import and module-loading diagnostics.",
+        reserved_base: "SIFR-PYIMP-0000",
+    },
+    DiagnosticFamily {
+        name: "PYCALL",
+        summary: "Embedded Python callable, attribute, item, and coroutine diagnostics.",
+        reserved_base: "SIFR-PYCALL-0000",
+    },
+    DiagnosticFamily {
+        name: "PYCONV",
+        summary: "Sifr/Python primitive and structured conversion diagnostics.",
+        reserved_base: "SIFR-PYCONV-0000",
+    },
+    DiagnosticFamily {
+        name: "PYRES",
+        summary: "Embedded Python resource cleanup and leak diagnostics.",
+        reserved_base: "SIFR-PYRES-0000",
+    },
+    DiagnosticFamily {
+        name: "PYZC",
+        summary:
+            "Embedded Python zero-copy buffer, Arrow, DLPack, and array-interface diagnostics.",
+        reserved_base: "SIFR-PYZC-0000",
+    },
+    DiagnosticFamily {
+        name: "PYCB",
+        summary: "Python-to-Sifr callback lifetime, dispatch, and closure diagnostics.",
+        reserved_base: "SIFR-PYCB-0000",
+    },
+    DiagnosticFamily {
+        name: "PYTRUST",
+        summary: "Embedded Python import and native-extension trust diagnostics.",
+        reserved_base: "SIFR-PYTRUST-0000",
+    },
+    DiagnosticFamily {
         name: "DECIMAL",
         summary: "Decimal literal and fixed-point arithmetic diagnostics.",
         reserved_base: "SIFR-DECIMAL-0000",
