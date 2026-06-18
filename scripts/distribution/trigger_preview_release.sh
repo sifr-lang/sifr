@@ -138,8 +138,8 @@ find_dispatched_run() {
     --workflow "${WORKFLOW}" \
     --event workflow_dispatch \
     --limit 20 \
-    --json databaseId,displayTitle,url \
-    --jq ".[] | select(.displayTitle == \"${title}\") | [.databaseId, .url] | @tsv" \
+    --json createdAt,databaseId,displayTitle,url \
+    --jq ".[] | select(.displayTitle == \"${title}\" and .createdAt >= \"${DISPATCH_STARTED_AT}\") | [.databaseId, .url] | @tsv" \
     | head -n 1
 }
 
@@ -181,6 +181,7 @@ if [[ "${DRY_RUN}" -eq 1 ]]; then
   exit 0
 fi
 
+DISPATCH_STARTED_AT="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 "${dispatch_command[@]}"
 
 cat <<EOF
