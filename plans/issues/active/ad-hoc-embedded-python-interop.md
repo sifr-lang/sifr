@@ -49,7 +49,7 @@ If an existing Sifr subsystem is not ready for one of these contracts, this phas
 - Do not introduce a Sifr-owned Python package manager.
 - Do not run `uv sync` automatically during ordinary `sifr build`, `sifr run`, or `sifr check`.
 - Do not support PyPy, GraalPy, MicroPython, or non-CPython implementations.
-- Do not support free-threaded CPython until a future audited phase explicitly enables it.
+- Do not support free-threaded CPython in this phase.
 - Do not support multiple Python interpreters or multiple virtual environments in one process.
 - Do not support CPython subinterpreters.
 - Do not expose Python objects as Sifr `Any`.
@@ -125,7 +125,7 @@ The probe must produce canonical JSON with:
 Validation rules:
 
 - Reject non-CPython implementations.
-- Reject free-threaded CPython unless an explicit future audit enables it.
+- Reject free-threaded CPython.
 - Reject a configured `.venv` whose interpreter does not report `sys.prefix` inside that `.venv`.
 - Reject missing `site-packages` for the selected environment.
 - Reject missing declared imports.
@@ -181,7 +181,7 @@ pub mod python {
 
     pub struct PythonRuntime;
     pub struct PyGilScope;
-    pub enum PyValue;
+    pub enum PyValue<'a> { None_, Bool(bool), IntExact(SifrExactInt), IntFixed(SifrFixedInt), Float(f64), Str(&'a str), Bytes(&'a [u8]), Object(&'a PyObjectHandle) }
     pub struct PyObjectHandle;
     pub struct PyBufferView;
     pub struct PyArrowCapsule;
@@ -270,14 +270,7 @@ try py.with(obj, lambda entered: ...)
 try py.run_coroutine_blocking(coro)
 ```
 
-Future syntax sugar may exist:
-
-```sifr
-import python torch
-import python polars as pl
-```
-
-but it must lower to the same fallible operations and must not execute Python imports during `sifr check`.
+This phase does not introduce `import python <name>` syntax sugar; explicit `py.*` operations are the only user-facing surface.
 
 ## Operation Lowering
 
@@ -320,6 +313,7 @@ Rules:
 - Do not assume Python sequences are finite, cheap, or pure.
 - Typed conversion of lists/dicts/records must validate every element and fail with path-rich diagnostics.
 - `bytes` conversion copies into owned immutable Sifr bytes unless an explicit zero-copy buffer view is requested.
+- Sifr-to-Python call arguments accept `None`, bool, exact/fixed-width integers, float, str, bytes, and existing `py.Object` handles. Sifr containers and records require explicit Python object construction; overflow or unsupported argument packing returns `py.TypeConversionError`.
 
 ## Error Model
 
@@ -727,11 +721,13 @@ Scope:
 - Implement `py.import_module`, attribute/item access, calls, kwargs, and explicit close/context-manager helpers.
 - Add structured `py.PythonError` families with traceback capture.
 - Enforce `Result` handling in lowering/type checking.
+- Enforce `allow-imports`, `[trust] python`, `[trust] python-native`, wildcard rejection, and `@trust_python_dynamic` runtime root checks with `SIFR-PYTRUST` diagnostics.
 - Keep `py.Object` distinct from `Any`.
 
 Definition of done:
 - Positive fixtures cover import, attr, item, call, kwargs, close, and context manager behavior.
 - Negative fixtures cover import failure, attr failure, call failure, wrong args, conversion failure, and unhandled `Result`.
+- Trust fixtures cover static imports, dynamic imports, native roots, wildcard rejection, and package-graph load failures.
 
 ### milestone_py_4: Primitive and Typed Conversion
 
