@@ -1,12 +1,12 @@
 ---
 title: "Concurrency Primitives: Tasks, Channels, and Parallelism"
-sidebarTitle: "Concurrency"
+sidebarTitle: "Concurrency API"
 description: "Concurrency API reference for Sifr: structured tasks, typed channels, CPU parallelism, subprocesses, runtime diagnostics, and cleanup helpers."
 ---
 
 Sifr's concurrency modules are a native structured-concurrency substrate that compiles to Rust's async runtime. Unlike CPython's `asyncio`, there is no exposed event-loop object, no global task registry, and no fire-and-forget detachment. Every task belongs to a scope, every value that crosses a task boundary must be owned and sendable, and every error is a typed value you handle explicitly.
 
-This page is the stdlib reference for concurrency. For an introduction to the concepts — ownership at task boundaries, the structured-scope model, and how Sifr's concurrency compares to CPython's — see the Language / Concurrency guide.
+This page is the stdlib reference for concurrency. For the concepts behind scopes, task-boundary ownership, cancellation, and Python `asyncio` differences, start with [Concurrency Overview](/language/concurrency).
 
 ## `sifr.task` — Structured Tasks
 
@@ -33,8 +33,6 @@ async def main() -> None:
 Bound the runtime of any awaitable expression using `task.timeout` (duration-based) or `task.deadline` (absolute time):
 
 ```python
-from sifr.task import TaskGroup
-
 async def fetch_with_timeout(url: str) -> bytes:
     try:
         async with task.timeout(5.0):
@@ -45,14 +43,15 @@ async def fetch_with_timeout(url: str) -> bytes:
 
 ### TaskGroup
 
-`TaskGroup` collects a set of tasks and waits for all of them, propagating the first error:
+`TaskGroup` collects a set of tasks and waits for all of them, propagating the first error. Use it as an async context manager:
 
 ```python
 async def run_all() -> None:
-    group: TaskGroup = TaskGroup()
-    group.spawn(job_one())
-    group.spawn(job_two())
-    await group.join()
+    async with task.TaskGroup() as group:
+        first = group.spawn(job_one())
+        second = group.spawn(job_two())
+        first_result = await first
+        second_result = await second
 ```
 
 ### Context Propagation

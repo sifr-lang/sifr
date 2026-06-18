@@ -80,9 +80,21 @@
               "language/type-system",
               "language/error-handling",
               "language/ownership",
+              "language/values-and-collections",
+              "language/iteration",
               "language/classes",
-              "language/pattern-matching",
-              "language/concurrency"
+              "language/pattern-matching"
+            ]
+          },
+          {
+            "group": "Concurrency",
+            "icon": "workflow",
+            "pages": [
+              "language/concurrency",
+              "concurrency/async-and-await",
+              "concurrency/structured-tasks",
+              "concurrency/cancellation-and-timeouts",
+              "concurrency/ownership-across-tasks"
             ]
           },
           {

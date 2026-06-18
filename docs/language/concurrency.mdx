@@ -1,237 +1,58 @@
 ---
-title: "Sifr Concurrency: Async Tasks and Structured Scopes"
-sidebarTitle: "Concurrency"
-description: "Write concurrent Sifr programs with sifr.task, sifr.sync, and sifr.parallel. Structured scopes, typed channels, and parallel maps — all ownership-safe."
+title: "Concurrency Overview"
+sidebarTitle: "Overview"
+description: "Understand Sifr's structured concurrency model: scoped tasks, explicit cancellation, ownership at task boundaries, and no global event loop."
 ---
 
-Sifr's concurrency model is built on structured concurrency: every task lives inside an explicit scope, and the scope does not exit until all child tasks have finished or been cancelled. There are no fire-and-forget tasks and no global event loops. The compiler enforces that values crossing task, thread, or process boundaries are owned and sendable — the same ownership rules that apply to the rest of the language.
-
-## Async Functions
-
-Declare an async function with `async def`. Call it with `await` inside another async function or an async scope.
-
-```python
-async def one() -> int:
-    await task.sleep(0.0)
-    return 1
-
-async def two() -> int:
-    await task.sleep(0.0)
-    return 2
-```
-
-Async functions that can fail return `Result[T, E]`:
-
-```python
-async def fail_fast() -> Result[int, ValueError]:
-    await task.sleep(0.0)
-    raise ValueError("group child failed")
-```
-
-## task.scope and Scoped Spawn
-
-Use `task.scope()` as an async context manager to create a structured scope. Spawn child tasks with `scope.spawn(...)`. The scope awaits all children before the `async with` block exits.
-
-```python
-async with task.scope() as scope:
-    gathered = await task.gather([scope.spawn(one()), scope.spawn(two())])
-```
-
-`task.gather` collects results in the order the handles were passed, preserving deterministic output ordering.
-
-<Note>
-Scoped spawn requires an active owner. Values that a spawned task captures must be **owned** and **sendable** across the task boundary. Lock guards, borrowed references, and other non-send resources are rejected at compile time.
-</Note>
-
-## task.select — Racing Tasks
-
-Use `task.select` to race two tasks against each other. The first task to finish wins; the compiler-generated runtime cancels the losing child automatically.
-
-```python
-async def fast() -> int:
-    await task.sleep(0.0)
-    return 10
-
-async def slow_writes_marker() -> int:
-    await task.sleep(0.20)
-    try:
-        _written: None = write_text(marker_path(), "not cancelled")
-    except IOError as e:
-        _message: str = str(e.message)
-    return 20
-
-async with task.scope() as scope:
-    selected = await task.select(
-        first=scope.spawn(fast()),
-        second=scope.spawn(slow_writes_marker()),
-    )
-```
-
-<Tip>
-`task.select` consumes both handles. Whichever child loses is cancelled before the scope exits, so you never observe a dangling task writing to shared state after the race.
-</Tip>
-
-## TaskGroup — Structured Error Propagation
-
-`task.TaskGroup` is the right tool when you want a group of tasks to run concurrently and you need to observe individual results. If one child fails, the `TaskGroup` cancels remaining siblings at scope exit.
-
-```python
-async with task.TaskGroup() as group:
-    slow = group.spawn(slow_writes_marker())
-    failing = group.spawn(fail_fast())
-    failure = await failing
-```
-
-`TaskHandle[T, E]` values are **linear**: awaiting or joining a handle consumes it. Attempting to await the same handle twice is a compile-time ownership error.
-
-<Warning>
-`TaskGroup` cancels unfinished siblings when any child fails. Do not rely on a sibling completing work after another child in the same group has raised an error.
-</Warning>
-
-## A Complete Structured Concurrency Example
-
-```python
-from sifr.io import exists, write_text
-from sifr.os import getpid, remove_file
-
-
-def marker_path() -> str:
-    return "/tmp/sifr_structured_concurrency_demo_" + str(getpid()) + ".txt"
-
-
-async def one() -> int:
-    await task.sleep(0.0)
-    return 1
-
-
-async def two() -> int:
-    await task.sleep(0.0)
-    return 2
-
-
-async def fast() -> int:
-    await task.sleep(0.0)
-    return 10
-
-
-async def slow_writes_marker() -> int:
-    await task.sleep(0.20)
-    try:
-        _written: None = write_text(marker_path(), "not cancelled")
-    except IOError as e:
-        _message: str = str(e.message)
-    return 20
-
-
-async def fail_fast() -> Result[int, ValueError]:
-    await task.sleep(0.0)
-    raise ValueError("group child failed")
-
-
-async def main() -> Result[None, Error]:
-    path: str = marker_path()
-    if exists(path):
-        try:
-            _removed_existing: None = remove_file(path)
-        except IOError as e:
-            _cleanup_message: str = str(e.message)
-
-    # Scoped gather: deterministic input ownership and ordering
-    async with task.scope() as scope:
-        gathered = await task.gather([scope.spawn(one()), scope.spawn(two())])
-
-    # Select: cancels the losing child
-    async with task.scope() as scope:
-        selected = await task.select(
-            first=scope.spawn(fast()),
-            second=scope.spawn(slow_writes_marker()),
-        )
-
-    # TaskGroup: cancels siblings when a child fails
-    async with task.TaskGroup() as group:
-        slow = group.spawn(slow_writes_marker())
-        failing = group.spawn(fail_fast())
-        failure = await failing
-
-    assert not exists(path)
-    return None
-```
-
-## sifr.sync — Shared State and Channels
-
-Use `sifr.sync` for same-process communication between tasks.
-
-<Tabs>
-  <Tab title="Channels">
-    Channels transfer **ownership** of values between tasks. Sending moves the value into the channel; receiving moves it back out.
-
-    ```python
-    from sifr.sync import channel
-
-    sender, receiver = channel()
-
-    async with task.scope() as scope:
-        scope.spawn(sender.send(42))
-        value = await receiver.receive()
-    ```
-
-    Use `bounded_channel(capacity)` for backpressure — sends block when the buffer is full.
-  </Tab>
-  <Tab title="Shared[T]">
-    `Shared[T]` wraps a value for concurrent read access by multiple tasks. Multiple tasks can hold a `Shared[T]` handle simultaneously without violating ownership rules.
-
-    ```python
-    from sifr.sync import Shared
-
-    counter: Shared[int] = Shared(0)
-    ```
-  </Tab>
-  <Tab title="Lock[T]">
-    `Lock[T]` provides exclusive mutable access. A `LockGuard` is returned when the lock is acquired, and it is released when the guard goes out of scope.
-
-    ```python
-    from sifr.sync import Lock
-
-    state: Lock[int] = Lock(0)
-    ```
-
-    Lock guards are scoped resources. Holding a guard across an `await` point is rejected by the compiler's ownership diagnostics.
-  </Tab>
-</Tabs>
-
-## sifr.parallel — CPU-Parallel Work
-
-Use `sifr.parallel` to distribute CPU-heavy work across native worker threads. `parallel.map` preserves output order; `parallel.try_map` returns a typed error when any item fails.
-
-```python
-from sifr.parallel import map as par_map
-
-results = par_map(items, heavy_compute)
-```
-
-<Note>
-Captured values and return values passed to `parallel.map` must satisfy worker-boundary ownership and sendability requirements. The same rules that apply to `task.scope` apply here.
-</Note>
-
-For more control, configure a `Pool` with `PoolConfig`:
-
-```python
-from sifr.parallel import Pool, PoolConfig
-
-config: PoolConfig = PoolConfig(workers=4)
-pool: Pool = Pool(config)
-results = pool.map(items, heavy_compute)
-```
-
-## Concurrency Modules at a Glance
-
-| Module | Purpose |
-|--------|---------|
-| `sifr.task` | Structured async tasks, scopes, gather, select, TaskGroup |
-| `sifr.sync` | Channels, `Shared[T]`, `Lock[T]`, `RwLock[T]`, `Semaphore`, `Notify` |
-| `sifr.parallel` | CPU-parallel `map`, `try_map`, and `Pool` |
-| `sifr.process` | Native subprocess spawning and I/O |
-| `sifr.signal` | Structured shutdown and signal handling |
-| `sifr.runtime` | Structured diagnostic events and observability |
-| `sifr.resource` | Deterministic cleanup helpers (`nullcontext`) |
-| `sifr.ipc` | Typed IPC substrate for future process workers |
+Sifr's concurrency model is structured: every task belongs to an explicit scope, and the scope cannot exit until its children have finished or been cancelled. There are no fire-and-forget tasks, no global event-loop object, and no hidden task registry.
+
+The compiler applies the same safety model at concurrency boundaries that it applies everywhere else. Values crossing task, thread, or process boundaries must be owned and sendable. Mutable borrows and lock guards stay scoped.
+
+## The Mental Model
+
+<CardGroup cols={2}>
+  <Card title="Async and Await" icon="timer" href="/concurrency/async-and-await">
+    Define async functions, await suspension points, and understand how Sifr differs from Python `asyncio`.
+  </Card>
+  <Card title="Structured Tasks" icon="workflow" href="/concurrency/structured-tasks">
+    Use scopes, spawned tasks, `gather`, `select`, and `TaskGroup`.
+  </Card>
+  <Card title="Cancellation and Timeouts" icon="clock-alert" href="/concurrency/cancellation-and-timeouts">
+    Bound work, observe cancellation evidence, and rely on cleanup before cancellation is surfaced.
+  </Card>
+  <Card title="Ownership Across Tasks" icon="shield-check" href="/concurrency/ownership-across-tasks">
+    Learn what can cross task boundaries and why borrowed values cannot escape.
+  </Card>
+</CardGroup>
+
+## What Is Different From Python
+
+Python `asyncio` exposes event loops, detached tasks, and ambient task registries. Sifr does not. Sifr makes the lifetime of concurrent work part of the source program.
+
+| Python habit | Sifr model |
+| --- | --- |
+| Create a background task and forget it | Spawn inside a scope that owns the child |
+| Reach for a global event loop | Use `async def`, `await`, and `sifr.task` scopes |
+| Share mutable objects between tasks | Move owned values, use channels, or use explicit sync primitives |
+| Treat cancellation as ambient | Observe typed cancellation or timeout evidence |
+
+## Where APIs Live
+
+This section explains the concepts. The API reference for `sifr.task`, `sifr.sync`, `sifr.parallel`, process helpers, signals, runtime diagnostics, and cleanup helpers lives in [Concurrency API](/stdlib/concurrency).
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
+    Review `mut`, `own`, `own mut`, and borrowed-value escape rules.
+  </Card>
+  <Card title="Error Handling" icon="triangle-alert" href="/language/error-handling">
+    See how async functions report typed errors with `Result`.
+  </Card>
+  <Card title="Networking" icon="radio" href="/stdlib/networking">
+    Use async TCP, HTTP, TLS, and URL helpers.
+  </Card>
+  <Card title="Error Codes" icon="scan-search" href="/diagnostics/error-codes">
+    Look up `SIFR-ASYNC-*` and task-boundary ownership diagnostics.
+  </Card>
+</CardGroup>

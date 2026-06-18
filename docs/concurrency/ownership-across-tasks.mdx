@@ -1,0 +1,80 @@
+---
+title: "Ownership Across Tasks"
+sidebarTitle: "Ownership Across Tasks"
+description: "Understand owned task-boundary inputs, sendability, shared state, and why mutable borrows cannot cross await."
+---
+
+Concurrency boundaries are ownership boundaries. A spawned task may outlive the current line of code, so values captured by that task must be owned and safe to send.
+
+## Owned Inputs
+
+Pass owned values into spawned tasks.
+
+```python
+async def count_items(own items: list[int]) -> int:
+    await task.sleep(0.0)
+    return len(items)
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(count_items([1, 2, 3]))
+        result = await handle
+    return None
+```
+
+The child owns its input. The parent observes the task through the handle.
+
+## Shared Read Access
+
+Use explicit synchronization primitives for values shared across tasks.
+
+```python
+from sifr.sync import Shared
+
+async def read_shared(own shared: Shared[int]) -> int:
+    await task.sleep(0.0)
+    return shared.get()
+```
+
+`Shared[T]` is for concurrent read access. Mutable shared state uses explicit lock types from `sifr.sync`.
+
+## Mutable Borrows And Await
+
+Mutable borrows must end before an `await`.
+
+This shape is rejected because the mutable borrow remains live when the function reaches `await`:
+
+```python
+async def rejected(mut items: list[int]) -> None:
+    items.append(1)
+    await task.sleep(0.0)
+```
+
+End the mutation before awaiting by moving the mutation into a synchronous helper.
+
+```python
+def append_before_await(mut items: list[int]) -> None:
+    items.append(2)
+    return None
+
+async def main() -> Result[None, ScopeFailure]:
+    values: list[int] = [1]
+    append_before_await(values)
+    await task.sleep(0.0)
+    return None
+```
+
+<Warning>
+  Lock guards, borrowed references, and mutable borrows cannot cross task or await boundaries. Move owned values, clone when copying is intended, or use `sifr.sync` primitives.
+</Warning>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
+    Review `mut`, `own`, `own mut`, and borrowed-value escape rules.
+  </Card>
+  <Card title="Concurrency API" icon="library" href="/stdlib/concurrency">
+    Browse channels, locks, shared values, and task APIs.
+  </Card>
+</CardGroup>

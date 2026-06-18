@@ -1,0 +1,128 @@
+---
+title: "Values and Collections in Sifr"
+sidebarTitle: "Values and Collections"
+description: "Learn Sifr's everyday values: exact integers, strings, None, lists, dictionaries, tuples, sets, truthiness, and mutation."
+---
+
+Most Sifr programs use familiar Python-shaped values: numbers, strings, `None`, lists, dictionaries, tuples, and sets. The difference is that every value has a compile-time type and every missing-value path is visible in that type.
+
+## Scalars
+
+| Type | Use it for |
+| --- | --- |
+| `int` | Ordinary exact integer arithmetic |
+| `float` | 64-bit floating-point values |
+| `bool` | `True` or `False` |
+| `str` | UTF-8 text |
+| `None` | Absence of a value |
+
+```python
+count: int = 3
+ratio: float = 0.5
+ready: bool = True
+name: str = "sifr"
+missing: None = None
+```
+
+`int` is the source-level integer you reach for by default. Use explicit fixed-width integer types when storage layout, binary protocols, FFI, or dtype-sensitive work requires a specific representation: `int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `isize`, and `usize`.
+
+## Optional Values
+
+Use `T | None` when a value might be absent. Sifr requires you to check `None` before using the inner value.
+
+```python
+def describe_age(age: int | None) -> str:
+    if age is not None:
+        return f"age: {age}"
+    return "age unknown"
+```
+
+Dictionary and sequence operations that can miss use this same shape.
+
+```python
+scores: dict[str, int] = {"alice": 42}
+maybe_score: int | None = scores["bob"]
+
+if maybe_score is not None:
+    print(maybe_score + 1)
+```
+
+## Lists
+
+Lists are ordered, mutable collections.
+
+```python
+numbers: list[int] = [1, 2, 3]
+first: int | None = numbers[0]
+```
+
+Mutating a list through a function parameter requires `mut`.
+
+```python
+def append_zero(mut values: list[int]) -> None:
+    values.append(0)
+```
+
+For the full parameter model, see [Ownership and Mutability](/language/ownership).
+
+## Dictionaries
+
+Dictionaries map keys to values. Lookup results are typed so a missing key cannot crash later.
+
+```python
+users: dict[str, int] = {"alice": 30, "bob": 25}
+age: int | None = users["charlie"]
+```
+
+<Note>
+  If you know Python, this is an intentional difference: `dict["missing"]` returns `None` in Sifr instead of raising `KeyError`.
+</Note>
+
+When you need module-level helpers such as `Counter` or `deque`, use [Collections](/stdlib/collections).
+
+## Tuples
+
+Tuples group a fixed shape of values.
+
+```python
+point: tuple[int, int] = (10, 20)
+name_and_score: tuple[str, int] = ("alice", 42)
+```
+
+Use a tuple when the position of each value has meaning and the shape is known.
+
+## Sets
+
+Sifr's set helpers live in `sifr.collections` and return deduplicated list values. This keeps ownership straightforward while still giving you set operations.
+
+```python
+from sifr.collections import set_from_list, set_intersection
+
+left: list[int] = set_from_list([1, 2, 2, 3])
+right: list[int] = set_from_list([3, 4])
+common: list[int] = set_intersection(left, right)
+```
+
+## Truthiness
+
+Collections can be checked directly for emptiness.
+
+```python
+def summarize(items: list[str]) -> str:
+    if not items:
+        return "empty"
+    return f"{len(items)} items"
+```
+
+Truthiness is a convenience for branching. It does not replace typed `None` handling when a value is optional.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Iteration" icon="repeat" href="/language/iteration">
+    Learn loops, comprehensions, and safe iteration patterns.
+  </Card>
+  <Card title="Collections" icon="boxes" href="/stdlib/collections">
+    Use `Counter`, `deque`, and set helpers from `sifr.collections`.
+  </Card>
+</CardGroup>

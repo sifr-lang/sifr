@@ -21,7 +21,8 @@ Review artifacts:
 
 Implementation status:
 
-- Wave 1: Ready for PR after Sonnet review. Scope: navigation foundation, `From Python`, `Status`, `Ownership and Mutability`, Slice 0 semantic fixes, and audience guide route placeholders. Validation: `cd docs && npx mint@latest validate` passed.
+- Wave 1: Merged in PR #2656. Scope: navigation foundation, `From Python`, `Status`, `Ownership and Mutability`, Slice 0 semantic fixes, and audience guide route placeholders. Validation: `cd docs && npx mint@latest validate` passed.
+- Wave 2: In progress. Scope: core data model pages and dedicated Concurrency concept section.
 
 ## Objective
 
