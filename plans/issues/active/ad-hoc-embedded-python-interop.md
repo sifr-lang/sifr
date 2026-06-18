@@ -36,10 +36,11 @@ If an existing Sifr subsystem is not ready for one of these contracts, this phas
 - Every Python boundary operation is fallible and returns a Sifr `Result`.
 - Python calls are synchronous from Sifr's perspective and classified as `@blocking_io`.
 - `py.Object` is not `Send` by default and cannot cross Sifr task/thread boundaries without an explicit audited bridge.
-- Zero-copy support is first-class in this phase: `Py_buffer`, Arrow PyCapsule, DLPack, and strict array-interface compatibility are all part of the contract.
+- Zero-copy support is first-class in this phase: `Py_buffer`, Arrow PyCapsule, DLPack, and the `__array_interface__`/`__array_struct__`/`__cuda_array_interface__` protocols are all part of the contract.
 - Python-to-Sifr callbacks are first-class and have explicit local/threadsafe lifetime modes.
 - Python imports and native Python extensions are trusted in-process code.
 - No subprocess, worker, or IPC-isolated Python mode is part of this phase.
+- No backward-compatibility shims, legacy compatibility layers, fallback paths, or degraded modes are in scope; this phase designs the correct production contract directly.
 - No silent fallback from zero-copy APIs to copying is allowed.
 - No transitive Python import scanner is required or allowed as a correctness dependency; uv owns transitive Python dependency resolution.
 
@@ -307,7 +308,7 @@ Automatic conversion is conservative.
 | Python `int` | exact `int` | fixed-width `py.to[int32]`/etc. is checked and fallible |
 | bytearray, memoryview, buffers | `py.Object` | `py.zero_copy_as[py.BufferView[T]]`, `py.copy_as[bytes]` |
 | list, tuple, dict | `py.Object` | `py.to[list[T]]`, `py.to[dict[str, T]]`, record conversion |
-| numpy arrays | `py.Object` | `py.BufferView`, array-interface compatibility, DLPack where available, explicit copy |
+| numpy arrays | `py.Object` | `py.BufferView`, array-interface protocols, DLPack where available, explicit copy |
 | torch/tensorflow tensors | `py.Object` | DLPack or explicit copy |
 | pandas/polars/pyarrow dataframes | `py.Object` | Arrow PyCapsule/stream or explicit copy |
 | arbitrary Python object | `py.Object` | explicit protocol-specific conversion only |
@@ -475,7 +476,7 @@ Rules:
 
 ### Array Interface
 
-Support `__array_interface__`, `__array_struct__`, and `__cuda_array_interface__` as compatibility paths only.
+Support `__array_interface__`, `__array_struct__`, and `__cuda_array_interface__` as additional zero-copy interchange protocols.
 
 Rules:
 
@@ -891,7 +892,7 @@ verification/python_interop/run.sh --group callbacks
 - `py.Object` operations are opaque, fallible, non-`Any`, and non-Send by default.
 - Python calls obey `@blocking_io`/offload rules.
 - Python-to-Sifr callbacks support local and threadsafe modes.
-- `Py_buffer`, Arrow PyCapsule, DLPack, and strict array-interface paths are implemented with no silent zero-copy fallback to copying.
+- `Py_buffer`, Arrow PyCapsule, DLPack, and array-interface protocols are implemented with no silent zero-copy fallback to copying.
 - Tier 1 package certification passes in the full Python interop gate.
 - Verification reports exist under `verification/python_interop/reports/`.
 - Public and internal docs describe the exact production contract.
