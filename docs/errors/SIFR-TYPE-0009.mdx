@@ -1,0 +1,44 @@
+---
+title: "SIFR-TYPE-0009: Tuple or list unpacking shape mismatch"
+sidebarTitle: "SIFR-TYPE-0009"
+description: "Tuple or list unpacking shape mismatch"
+---
+
+`SIFR-TYPE-0009` belongs to the **Static typing** diagnostic family. It means: tuple or list unpacking shape mismatch.
+
+## Why It Happens
+
+Static types do not line up. Align annotations, inferred expressions, branches, containers, operators, or generic constraints, and convert explicitly where needed.
+
+<Info>
+Use `sifr --explain SIFR-TYPE-0009` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+count: int = "three"
+```
+
+## How To Fix It
+
+Make annotations, inferred values, branch results, container elements, and operator operands agree. Add explicit conversions where the conversion is meaningful.
+
+## Fixed Code
+
+```python
+count: int = 3
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-TYPE-0009` |
+| Family | `TYPE` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/tuple_unpack_shape_mismatch.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

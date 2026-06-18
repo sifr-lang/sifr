@@ -1,0 +1,44 @@
+---
+title: "SIFR-IMPORT-0006: Source module namespace and file import collision"
+sidebarTitle: "SIFR-IMPORT-0006"
+description: "Source module namespace and file import collision"
+---
+
+`SIFR-IMPORT-0006` belongs to the **Imports and module resolution** diagnostic family. It means: source module namespace and file import collision.
+
+## Why It Happens
+
+The module graph cannot be resolved safely. Use explicit `sifr.*` imports for standard-library modules, avoid private imports, and remove ambiguous or cyclic import paths.
+
+<Info>
+Use `sifr --explain SIFR-IMPORT-0006` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+from math import sqrt
+```
+
+## How To Fix It
+
+Use Sifr's explicit module namespace and import concrete symbols with `from sifr.<module> import <name>`.
+
+## Fixed Code
+
+```python
+from sifr.math import sqrt
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-IMPORT-0006` |
+| Family | `IMPORT` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `verification/areas/project_workspace/fixtures/project/workspace_namespace_collision_canonical` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

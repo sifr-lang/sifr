@@ -1,0 +1,46 @@
+---
+title: "SIFR-STDLIB-0004: Standard-library cache build or reuse failure"
+sidebarTitle: "SIFR-STDLIB-0004"
+description: "Standard-library cache build or reuse failure"
+---
+
+`SIFR-STDLIB-0004` belongs to the **Standard library surface** diagnostic family. It means: standard-library cache build or reuse failure.
+
+## Why It Happens
+
+The selected standard-library surface is not supported in this form. Use the documented `sifr.*` constructor, method, or module path.
+
+<Info>
+Use `sifr --explain SIFR-STDLIB-0004` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+values = defaultdict()
+```
+
+## How To Fix It
+
+Use the supported `sifr.*` surface and constructor shape. Some CPython conveniences are intentionally absent or require explicit arguments.
+
+## Fixed Code
+
+```python
+from sifr.collections import defaultdict
+
+values = defaultdict(lambda: 0)
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-STDLIB-0004` |
+| Family | `STDLIB` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr_driver/src/tests/project_build_check.rs` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

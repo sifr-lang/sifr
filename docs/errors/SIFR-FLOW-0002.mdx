@@ -1,0 +1,49 @@
+---
+title: "SIFR-FLOW-0002: Continue outside a loop"
+sidebarTitle: "SIFR-FLOW-0002"
+description: "Continue outside a loop"
+---
+
+`SIFR-FLOW-0002` belongs to the **Control flow** diagnostic family. It means: continue outside a loop.
+
+## Why It Happens
+
+The control-flow graph cannot satisfy Sifr's static rules. Repair unsupported statements, invalid loop control, non-boolean conditions, missing returns, or unreachable code.
+
+<Info>
+Use `sifr --explain SIFR-FLOW-0002` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+def label(value: int) -> str:
+    if value > 0:
+        return "positive"
+```
+
+## How To Fix It
+
+Repair the control-flow shape: put break/continue inside loops, return on every required path, and use supported loop and assignment forms.
+
+## Fixed Code
+
+```python
+def label(value: int) -> str:
+    if value > 0:
+        return "positive"
+    return "zero or negative"
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-FLOW-0002` |
+| Family | `FLOW` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/continue_outside_loop.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

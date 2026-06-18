@@ -1,0 +1,45 @@
+---
+title: "SIFR-INT-0005: Integer division, modulo, or exponentiation requires handling a typed failure"
+sidebarTitle: "SIFR-INT-0005"
+description: "Integer division, modulo, or exponentiation requires handling a typed failure"
+---
+
+`SIFR-INT-0005` belongs to the **Integer model** diagnostic family. It means: integer division, modulo, or exponentiation requires handling a typed failure.
+
+## Why It Happens
+
+Sifr separates exact integers from fixed-width integers. This diagnostic fires when an integer value, operation, or conversion could overflow, lose precision, or rely on an implicit transition.
+
+<Info>
+Use `sifr --explain SIFR-INT-0005` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+small: int8 = 200
+```
+
+## How To Fix It
+
+Choose an integer type whose range fits the value, and make lossy or fallible numeric conversions explicit.
+
+## Fixed Code
+
+```python
+small: int8 = 127
+wide: int = 200
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-INT-0005` |
+| Family | `INT` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

@@ -1,0 +1,50 @@
+---
+title: "SIFR-PROTO-0003: Context-manager protocol is missing"
+sidebarTitle: "SIFR-PROTO-0003"
+description: "Context-manager protocol is missing"
+---
+
+`SIFR-PROTO-0003` belongs to the **Protocols** diagnostic family. It means: context-manager protocol is missing.
+
+## Why It Happens
+
+A value does not satisfy the structural protocol required by the operation, such as iteration, context management, hashing, comparison, or reversible iteration.
+
+<Info>
+Use `sifr --explain SIFR-PROTO-0003` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+for item in NotIterable():
+    pass
+```
+
+## How To Fix It
+
+Implement the required protocol shape, or pass a value that already satisfies the iterator, context-manager, hashable, or comparable requirement.
+
+## Fixed Code
+
+```python
+class Items:
+    def __iter__(self) -> Iterator[int]:
+        return iter([1, 2, 3])
+
+for item in Items():
+    pass
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-PROTO-0003` |
+| Family | `PROTO` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/with_non_context_manager.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

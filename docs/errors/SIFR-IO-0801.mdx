@@ -1,0 +1,48 @@
+---
+title: "SIFR-IO-0801: Text-mode open requires an explicit encoding"
+sidebarTitle: "SIFR-IO-0801"
+description: "Text-mode open requires an explicit encoding"
+---
+
+`SIFR-IO-0801` belongs to the **File and stream I/O** diagnostic family. It means: text-mode open requires an explicit encoding.
+
+## Why It Happens
+
+Sifr makes file mode and text encoding boundaries explicit. This diagnostic fires when file I/O would depend on runtime-default mode or encoding behavior.
+
+<Info>
+Use `sifr --explain SIFR-IO-0801` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+from sifr.io import open
+
+file = open("notes.txt", "r")
+```
+
+## How To Fix It
+
+Make file modes and encodings explicit at compile time, especially at text/binary boundaries.
+
+## Fixed Code
+
+```python
+from sifr.io import open_text
+
+file = open_text("notes.txt", encoding="utf-8")
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-IO-0801` |
+| Family | `IO` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

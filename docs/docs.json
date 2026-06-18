@@ -102,6 +102,7 @@
             "icon": "book-open",
             "pages": [
               "stdlib/overview",
+              "stdlib/module-index",
               "stdlib/collections",
               "stdlib/io-filesystem",
               "stdlib/networking",
@@ -162,7 +163,8 @@
               "cli/check-emit",
               "cli/fmt-lint",
               "cli/test",
-              "cli/lsp"
+              "cli/lsp",
+              "cli/packages-workspaces"
             ]
           },
           {

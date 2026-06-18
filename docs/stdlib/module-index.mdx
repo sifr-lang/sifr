@@ -1,0 +1,132 @@
+---
+title: "Sifr Standard Library Module Index"
+sidebarTitle: "Module Index"
+description: "A compact map of every sifr.* module and what it is for."
+---
+
+Sifr standard-library modules live under the `sifr.*` namespace. Import concrete symbols from the module you need:
+
+```python
+from sifr.json import loads
+from sifr.pathlib import join_path
+```
+
+<Note>
+This page is an orientation map. The deeper reference pages cover the modules most developers reach for first, and the compiler rejects bare CPython imports with `SIFR-IMPORT-0008`.
+</Note>
+
+## Choosing a Module
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="blocks" href="/stdlib/collections">
+    Lists, dictionaries, sets, counters, and safe lookup patterns.
+  </Card>
+  <Card title="I/O and Filesystem" icon="folder-open" href="/stdlib/io-filesystem">
+    Text/binary boundaries, paths, files, and directories.
+  </Card>
+  <Card title="Networking" icon="radio" href="/stdlib/networking">
+    TCP, HTTP, TLS, URLs, and typed network errors.
+  </Card>
+  <Card title="Concurrency API" icon="workflow" href="/stdlib/concurrency">
+    Tasks, channels, locks, pools, process helpers, and signals.
+  </Card>
+</CardGroup>
+
+## Math, Data, and Serialization
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.math` | Mathematical functions and numeric helpers. |
+| `sifr.json` | Typed JSON values, parsing, and serialization. |
+| `sifr.re` | Unicode-aware regular expression matching and substitution. |
+| `sifr.datetime` | Dates, times, durations, and timezone-aware values. |
+| `sifr.random` | Seeded random number generation. |
+| `sifr.statistics` | Mean, median, variance, and related statistics. |
+| `sifr.hashlib` | Hash functions, HMAC construction, and digest objects. |
+| `sifr.uuid` | UUID construction, parsing, and formatting. |
+| `sifr.base64` | Base64 text and byte encoding helpers. |
+| `sifr.tomllib` | TOML value parsing helpers. |
+| `sifr.csv` | CSV dialects, readers, and writers. |
+| `sifr.configparser` | INI-style configuration parsing. |
+
+## Collections and Iteration
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.collections` | Counters, deques, default dictionaries, and set helpers. |
+| `sifr.itertools` | Iterator construction and combinator helpers. |
+| `sifr.functools` | Higher-order function helpers such as `reduce`. |
+| `sifr.operator` | Named operator functions. |
+| `sifr.bisect` | Binary search and insertion helpers for ordered lists. |
+| `sifr.heapq` | Heap queues and priority queue helpers. |
+| `sifr.graphlib` | Topological sorting helpers. |
+
+## Filesystem, Environment, and System
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.io` | Explicit text and binary file I/O. |
+| `sifr.pathlib` | Path construction, joining, and traversal helpers. |
+| `sifr.os` | Filesystem stat helpers. |
+| `sifr.shutil` | Copy, move, and recursive remove helpers. |
+| `sifr.glob` | Filesystem glob expansion. |
+| `sifr.fnmatch` | Shell-style filename pattern matching. |
+| `sifr.tempfile` | Temporary file and directory helpers. |
+| `sifr.env` | Process environment variable access. |
+| `sifr.sys` | Process arguments, exit, version, and platform constants. |
+| `sifr.platform` | Host platform metadata. |
+
+## Text, Encoding, and Internationalization
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.string` | String templating and formatting helpers. |
+| `sifr.textwrap` | Text wrapping, indentation, and whitespace helpers. |
+| `sifr.encoding` | Explicit byte/text conversion with typed encoding errors. |
+| `sifr.unicode` | Unicode data, normalization, names, categories, and segmentation. |
+| `sifr.i18n` | Locale ids, number formatting, plural rules, and translation catalogs. |
+| `sifr.html` | HTML escaping and unescaping. |
+| `sifr.bytes` | Byte construction, search, and UTF-8 conversion helpers. |
+
+## Concurrency and Runtime
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.task` | Task contexts and structured task helpers. |
+| `sifr.sync` | Channels, shared values, locks, semaphores, and notifications. |
+| `sifr.parallel` | CPU-parallel maps and worker pools. |
+| `sifr.process` | Subprocess spawning, output collection, pipes, and async process helpers. |
+| `sifr.signal` | Structured signal and shutdown helpers. |
+| `sifr.runtime` | Structured runtime diagnostic events. |
+| `sifr.resource` | Deterministic cleanup context helpers. |
+| `sifr.ipc` | Typed IPC schema, frame, and backpressure primitives. |
+| `sifr.time` | Wall-clock and calendar time helpers. |
+| `sifr.timeit` | Timing helpers and repeatable benchmark loops. |
+| `sifr.logging` | Structured log levels, formatters, handlers, and emitters. |
+
+## Networking and Archives
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.net` | Async TCP networking primitives. |
+| `sifr.http` | HTTP methods, status codes, headers, bodies, and cookies. |
+| `sifr.tls` | TLS client/server configuration and streams. |
+| `sifr.url` | Typed URL parsing and manipulation. |
+| `sifr.ipaddress` | IPv4 parsing, classification, and conversion. |
+| `sifr.gzip` | Gzip compression and decompression. |
+| `sifr.zipfile` | ZIP archive inspection and read helpers. |
+| `sifr.secrets` | Security-oriented random helpers and constant-time comparison. |
+
+## Testing and CLIs
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.test` | Assertion helpers for Sifr tests. |
+| `sifr.argparse` | Command-line option parsing helpers and typed namespaces. |
+
+## Additional Modules
+
+| Module | Purpose |
+| --- | --- |
+| `sifr.calendar` | Calendar date calculations and text calendar helpers. |
+| `sifr.difflib` | Sequence matching and diff-adjacent helpers. |

@@ -1,0 +1,46 @@
+---
+title: "SIFR-PARSE-0008: Invalid match-pattern syntax"
+sidebarTitle: "SIFR-PARSE-0008"
+description: "Invalid match-pattern syntax"
+---
+
+`SIFR-PARSE-0008` belongs to the **Parsing** diagnostic family. It means: invalid match-pattern syntax.
+
+## Why It Happens
+
+The parser cannot recover a supported Sifr syntax tree from the source. Fix syntax before type, ownership, or package analysis can continue.
+
+<Info>
+Use `sifr --explain SIFR-PARSE-0008` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+def main( -> int:
+    return 1
+```
+
+## How To Fix It
+
+Fix the source syntax first. Parser diagnostics happen before Sifr can reason about types, ownership, or package structure.
+
+## Fixed Code
+
+```python
+def main() -> int:
+    return 1
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-PARSE-0008` |
+| Family | `PARSE` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/diagnostics` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/parser_invalid_match_pattern.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

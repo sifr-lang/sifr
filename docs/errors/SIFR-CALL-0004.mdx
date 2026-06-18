@@ -1,0 +1,50 @@
+---
+title: "SIFR-CALL-0004: Missing required argument"
+sidebarTitle: "SIFR-CALL-0004"
+description: "Missing required argument"
+---
+
+`SIFR-CALL-0004` belongs to the **Function and method calls** diagnostic family. It means: missing required argument.
+
+## Why It Happens
+
+The call site does not match the callable signature Sifr inferred or checked. Fix the number of arguments, keyword names, duplicate arguments, or the value being called.
+
+<Info>
+Use `sifr --explain SIFR-CALL-0004` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+def greet(name: str) -> str:
+    return "hi " + name
+
+message = greet()
+```
+
+## How To Fix It
+
+Make the call match the function signature: provide required arguments once, use known keyword names, and call only callable values.
+
+## Fixed Code
+
+```python
+def greet(name: str) -> str:
+    return "hi " + name
+
+message = greet("Sifr")
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-CALL-0004` |
+| Family | `CALL` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/missing_required_argument.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

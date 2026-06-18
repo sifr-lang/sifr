@@ -1,0 +1,46 @@
+---
+title: "SIFR-FMT-0001: Source formatting drift detected by sifr fmt --check"
+sidebarTitle: "SIFR-FMT-0001"
+description: "Source formatting drift detected by sifr fmt --check"
+---
+
+`SIFR-FMT-0001` belongs to the **Formatting** diagnostic family. It means: source formatting drift detected by sifr fmt --check.
+
+## Why It Happens
+
+The source file differs from canonical Sifr formatter output.
+
+<Info>
+Use `sifr --explain SIFR-FMT-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+def main()->int:
+ return 1
+```
+
+## How To Fix It
+
+Run `sifr fmt` to rewrite the file, or make the source match the formatter output before using `sifr fmt --check`.
+
+## Fixed Code
+
+```python
+def main() -> int:
+    return 1
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-FMT-0001` |
+| Family | `FMT` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/diagnostics` |
+| Representative fixture | `crates/sifr_format/src/lib.rs::check_reports_formatting_drift` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

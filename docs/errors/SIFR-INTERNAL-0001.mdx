@@ -1,0 +1,44 @@
+---
+title: "SIFR-INTERNAL-0001: Unclassified compiler panic after a panic boundary"
+sidebarTitle: "SIFR-INTERNAL-0001"
+description: "Unclassified compiler panic after a panic boundary"
+---
+
+`SIFR-INTERNAL-0001` belongs to the **Internal compiler recovery** diagnostic family. It means: unclassified compiler panic after a panic boundary.
+
+## Why It Happens
+
+This diagnostic indicates compiler recovery from an internal invariant failure or missing recovery cap. Preserve the diagnostic code, compiler version, and smallest reproducer for a bug report.
+
+<Info>
+Use `sifr --explain SIFR-INTERNAL-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```text
+compiler emitted SIFR-INTERNAL-0001
+```
+
+## How To Fix It
+
+Do not try to silence an internal diagnostic with user-code workarounds. Reduce the program and report it.
+
+## Fixed Code
+
+```text
+report the smallest reproducer with the Sifr version and diagnostic output
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-INTERNAL-0001` |
+| Family | `INTERNAL` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

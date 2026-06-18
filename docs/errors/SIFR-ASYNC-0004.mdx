@@ -1,0 +1,57 @@
+---
+title: "SIFR-ASYNC-0004: CPU-heavy function called directly from async context"
+sidebarTitle: "SIFR-ASYNC-0004"
+description: "CPU-heavy function called directly from async context"
+---
+
+`SIFR-ASYNC-0004` belongs to the **Async effect and awaitability** diagnostic family. It means: cpu-heavy function called directly from async context.
+
+## Why It Happens
+
+Sifr tracks suspension and blocking effects statically. This diagnostic fires when async code either does not really suspend, awaits work that cannot suspend, or calls blocking/CPU-heavy work without an explicit offload boundary.
+
+<Info>
+Use `sifr --explain SIFR-ASYNC-0004` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+def crunch(values: list[int]) -> int:
+    total: int = 0
+    for value in values:
+        total = total + value
+    return total
+
+async def main(values: list[int]) -> int:
+    return crunch(values)
+```
+
+## How To Fix It
+
+Keep CPU-heavy work out of the async executor. Use the parallel/offload surface intended for owned CPU work.
+
+## Fixed Code
+
+```python
+from sifr.parallel import map as par_map
+
+def crunch(value: int) -> int:
+    return value * value
+
+async def main(values: list[int]) -> list[int]:
+    return par_map(values, crunch)
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-ASYNC-0004` |
+| Family | `ASYNC` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/cpu_heavy_direct_call_in_async_rejected.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

@@ -1,0 +1,47 @@
+---
+title: "SIFR-RESULT-0001: Unused Result value"
+sidebarTitle: "SIFR-RESULT-0001"
+description: "Unused Result value"
+---
+
+`SIFR-RESULT-0001` belongs to the **Result and typed errors** diagnostic family. It means: unused result value.
+
+## Why It Happens
+
+A typed failure path is being ignored or described with an invalid error type. Handle the `Result`, return it, or cover the raised error types explicitly.
+
+<Info>
+Use `sifr --explain SIFR-RESULT-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+read_text("notes.txt")
+```
+
+## How To Fix It
+
+Handle typed failures explicitly. Use `try`/`except`, return the `Result`, or otherwise consume the value so failures cannot be ignored.
+
+## Fixed Code
+
+```python
+try:
+    text = read_text("notes.txt")
+except IOError as e:
+    text = ""
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-RESULT-0001` |
+| Family | `RESULT` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/unused_result.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

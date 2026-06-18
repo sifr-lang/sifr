@@ -1,0 +1,53 @@
+---
+title: "SIFR-CLASS-0004: Missing class field"
+sidebarTitle: "SIFR-CLASS-0004"
+description: "Missing class field"
+---
+
+`SIFR-CLASS-0004` belongs to the **Classes and declarations** diagnostic family. It means: missing class field.
+
+## Why It Happens
+
+The class declaration cannot be lowered into a safe Rust-backed representation. Check field initialization, default ordering, base classes, enum variants, and unsupported declaration shapes.
+
+<Info>
+Use `sifr --explain SIFR-CLASS-0004` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+class User:
+    name: str
+
+user = User()
+```
+
+## How To Fix It
+
+Give class declarations a shape the compiler can lower: initialized fields, valid bases, unique variants, and supported field ordering.
+
+## Fixed Code
+
+```python
+class User:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+user = User("Ada")
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-CLASS-0004` |
+| Family | `CLASS` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/missing_field.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

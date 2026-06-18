@@ -1,0 +1,44 @@
+---
+title: "SIFR-TYPE-0007: Invalid type annotation shape"
+sidebarTitle: "SIFR-TYPE-0007"
+description: "Invalid type annotation shape"
+---
+
+`SIFR-TYPE-0007` belongs to the **Static typing** diagnostic family. It means: invalid type annotation shape.
+
+## Why It Happens
+
+Static types do not line up. Align annotations, inferred expressions, branches, containers, operators, or generic constraints, and convert explicitly where needed.
+
+<Info>
+Use `sifr --explain SIFR-TYPE-0007` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+count: int = "three"
+```
+
+## How To Fix It
+
+Make annotations, inferred values, branch results, container elements, and operator operands agree. Add explicit conversions where the conversion is meaningful.
+
+## Fixed Code
+
+```python
+count: int = 3
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-TYPE-0007` |
+| Family | `TYPE` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

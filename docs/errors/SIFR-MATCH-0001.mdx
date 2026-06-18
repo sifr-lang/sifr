@@ -1,0 +1,50 @@
+---
+title: "SIFR-MATCH-0001: Non-exhaustive match"
+sidebarTitle: "SIFR-MATCH-0001"
+description: "Non-exhaustive match"
+---
+
+`SIFR-MATCH-0001` belongs to the **Pattern matching** diagnostic family. It means: non-exhaustive match.
+
+## Why It Happens
+
+The pattern match cannot be proven valid. Check exhaustiveness, guard types, class-pattern fields, and unsupported pattern shapes.
+
+<Info>
+Use `sifr --explain SIFR-MATCH-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+match value:
+    case 0:
+        label = "zero"
+```
+
+## How To Fix It
+
+Make patterns supported, guards boolean, field names valid, and matches exhaustive where required.
+
+## Fixed Code
+
+```python
+match value:
+    case 0:
+        label = "zero"
+    case _:
+        label = "other"
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-MATCH-0001` |
+| Family | `MATCH` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/enum_match_non_exhaustive.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

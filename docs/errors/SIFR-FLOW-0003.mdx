@@ -1,0 +1,49 @@
+---
+title: "SIFR-FLOW-0003: Invalid nonlocal or nested-function flow"
+sidebarTitle: "SIFR-FLOW-0003"
+description: "Invalid nonlocal or nested-function flow"
+---
+
+`SIFR-FLOW-0003` belongs to the **Control flow** diagnostic family. It means: invalid nonlocal or nested-function flow.
+
+## Why It Happens
+
+The control-flow graph cannot satisfy Sifr's static rules. Repair unsupported statements, invalid loop control, non-boolean conditions, missing returns, or unreachable code.
+
+<Info>
+Use `sifr --explain SIFR-FLOW-0003` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
+</Info>
+
+## Erroneous Code
+
+```python
+def label(value: int) -> str:
+    if value > 0:
+        return "positive"
+```
+
+## How To Fix It
+
+Repair the control-flow shape: put break/continue inside loops, return on every required path, and use supported loop and assignment forms.
+
+## Fixed Code
+
+```python
+def label(value: int) -> str:
+    if value > 0:
+        return "positive"
+    return "zero or negative"
+```
+
+## Details
+
+| Field | Value |
+| --- | --- |
+| Code | `SIFR-FLOW-0003` |
+| Family | `FLOW` |
+| Severity | Error |
+| Stability | stable |
+| Owner | `compiler/core-language` |
+| Representative fixture | `crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr` |
+
+See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.
