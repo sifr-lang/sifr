@@ -23,7 +23,8 @@ Implementation status:
 
 - Wave 1: Merged in PR #2656. Scope: navigation foundation, `From Python`, `Status`, `Ownership and Mutability`, Slice 0 semantic fixes, and audience guide route placeholders. Validation: `cd docs && npx mint@latest validate` passed.
 - Wave 2: Merged in PR #2657. Scope: core data model pages and dedicated Concurrency concept section. Validation: `cd docs && npx mint@latest validate` passed.
-- Wave 3: Ready for PR after Sonnet review. Scope: standard-library module inventory, CLI package/workspace reference, and published one-page-per-code error reference. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
+- Wave 3: Merged in PR #2658. Scope: standard-library module inventory, CLI package/workspace reference, and published one-page-per-code error reference. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
+- Wave 4: Ready for PR after Sonnet review. Scope: Python/Rust developer guide paths and language-doc wayfinding. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
 
 ## Objective
 

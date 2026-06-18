@@ -1,0 +1,127 @@
+---
+title: "Rust Concepts in Sifr"
+sidebarTitle: "Rust Concepts"
+description: "Map Rust ownership, Result, Option, async structure, and native builds to Sifr's Python-shaped source model."
+---
+
+Sifr compiles to Rust, but Sifr source is not Rust with different punctuation. The compiler maps a smaller, Python-shaped surface onto Rust-backed ownership, typed errors, and native code generation.
+
+Use Rust as the safety model, not as the syntax model.
+
+## Concept Map
+
+| Rust concept | Sifr source shape |
+| --- | --- |
+| Borrow by reference | Plain parameter, such as `items: list[int]` |
+| Mutable borrow | `mut items: list[int]` |
+| Move ownership | `own items: list[int]` |
+| Owned mutable value | `own mut items: list[int]` |
+| `Option<T>` | `T | None` |
+| `Result<T, E>` | `Result[T, E]` plus `raise` and `try`/`except` |
+| `async` tasks | Structured `sifr.task` scopes and handles |
+| Cargo-backed binary | `sifr build` native executable |
+
+## Ownership Is Spelled For The Caller
+
+Most Sifr function parameters borrow by default:
+
+```python
+def length(items: list[int]) -> int:
+    return len(items)
+```
+
+Reach for `own` only when the function's contract is consumption:
+
+```python
+def consume(own items: list[int]) -> int:
+    return len(items)
+```
+
+Reach for `mut` when the function mutates caller-owned state:
+
+```python
+def push(mut items: list[int], value: int) -> None:
+    items.append(value)
+```
+
+<Note>
+There are no lifetime annotations in Sifr source. The compiler still enforces the lifetime and move constraints before emitting Rust.
+</Note>
+
+## Option And Result Stay Visible
+
+Sifr uses union syntax for optional values:
+
+```python
+values: list[int] = [10, 20, 30]
+first: int | None = values[0]
+```
+
+Fallible functions use `Result[T, E]`:
+
+```python
+class ReadError(Error):
+    message: str
+
+def load(path: str) -> Result[str, ReadError]:
+    if path == "":
+        raise ReadError("missing path")
+    return "contents"
+```
+
+At the call site, `try`/`except` is the source-level pattern for consuming a `Result`:
+
+```python
+try:
+    text: str = load("config.sifr")
+except ReadError as e:
+    text = ""
+```
+
+## Inspect The Rust When You Need To
+
+Use `sifr emit` to inspect generated Rust:
+
+```bash
+sifr emit app.sifr
+```
+
+Use this for debugging, auditing, or learning how a construct lowers. Do not rely on generated Rust layout as the public source-level contract.
+
+## Async Is Structured
+
+Sifr's async model does not expose a global event loop as the unit of design. Tasks belong to scopes, and scopes wait for children to finish or cancel.
+
+```python
+async def load_one() -> int:
+    await task.sleep(0.0)
+    return 1
+
+async def load_two() -> int:
+    await task.sleep(0.0)
+    return 2
+
+async with task.scope() as scope:
+    first = scope.spawn(load_one())
+    second = scope.spawn(load_two())
+    values: list[int] = await task.gather([first, second])
+```
+
+If you think in Rust terms, prefer "scoped task ownership" over "detached background work."
+
+## Where To Go Next
+
+<CardGroup cols={2}>
+  <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
+    See the complete source-level ownership table.
+  </Card>
+  <Card title="Check and Emit" icon="file-code" href="/cli/check-emit">
+    Use `sifr check` and `sifr emit` during development.
+  </Card>
+  <Card title="Concurrency Overview" icon="workflow" href="/language/concurrency">
+    Learn scoped tasks, cancellation, and task-boundary ownership.
+  </Card>
+  <Card title="Build and Run" icon="terminal" href="/cli/build-run">
+    Compile and run native binaries.
+  </Card>
+</CardGroup>

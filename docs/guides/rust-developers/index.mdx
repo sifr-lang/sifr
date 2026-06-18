@@ -1,12 +1,15 @@
 ---
-title: "Sifr for Rust Developers"
-sidebarTitle: "Rust Developers"
-description: "A guided path for Rust developers learning how Sifr exposes ownership, Result, Option, generated Rust, and native builds."
+title: "Rust Developer Guide"
+sidebarTitle: "Overview"
+description: "A guided path for Rust developers learning how Sifr exposes ownership, Result, Option, generated Rust, and native builds through Python-shaped syntax."
 ---
 
-If you know Rust, Sifr's safety model will feel familiar, but the source language keeps Python-shaped syntax. Use this path to map ownership, typed errors, generated Rust, and native binaries back to the Rust concepts you already know.
+If you know Rust, Sifr's safety model will feel familiar, but the source language keeps Python-shaped syntax. Use this path to map ownership, typed errors, generated Rust, and native binaries back to concepts you already know.
 
 <CardGroup cols={2}>
+  <Card title="Rust Concepts in Sifr" icon="route" href="/guides/rust-developers/rust-concepts">
+    Translate `Option`, `Result`, borrowing, mutation, and generated Rust into Sifr's source model.
+  </Card>
   <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
     Map `mut`, `own`, and borrow-by-default to Sifr's source model.
   </Card>
@@ -21,12 +24,15 @@ If you know Rust, Sifr's safety model will feel familiar, but the source languag
   </Card>
 </CardGroup>
 
-## Guide Sequence
+## Learning Sequence
 
-The detailed guide pages below are planned follow-ups. Use the linked cards above for the current path through the docs.
+1. Build the mapping: [Rust Concepts in Sifr](/guides/rust-developers/rust-concepts).
+2. Inspect generated code: [Check and Emit](/cli/check-emit).
+3. Learn source-level ownership: [Ownership and Mutability](/language/ownership).
+4. Review typed failures: [Error Handling](/language/error-handling).
+5. Understand structured async: [Concurrency Overview](/language/concurrency).
+6. Ship a binary: [Build and Run](/cli/build-run).
 
-1. Map Rust patterns to Sifr.
-2. Ownership in Sifr terms.
-3. Results and optional values.
-4. Inspect generated Rust.
-5. Build a native binary.
+<Note>
+Sifr is not a Rust macro language. The generated Rust is an implementation target you can inspect, while the Sifr source model remains the language contract.
+</Note>

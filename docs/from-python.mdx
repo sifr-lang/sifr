@@ -73,20 +73,20 @@ else:
     Use `from sifr.collections import Counter`, not `import collections`. Supported stdlib-style modules live under `sifr.*`; see the [collections import example](/stdlib/collections#importing).
   </Accordion>
   <Accordion title="Mutation is explicit">
-    Use `mut` when a function should mutate a borrowed parameter, and `own mut` when it should take ownership and mutate the value before returning or dropping it.
+    Use `mut` when a function should mutate a borrowed parameter, and `own mut` when it should take ownership and mutate the value.
   </Accordion>
 </AccordionGroup>
 
 ## Where To Go Next
 
 <CardGroup cols={2}>
+  <Card title="Mental Model Shift" icon="route" href="/guides/python-developers/mental-model">
+    Follow the practical path from Python habits to Sifr's compile-time model.
+  </Card>
   <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
     Learn `mut`, `own`, and borrow-by-default rules.
   </Card>
   <Card title="Error Handling" icon="triangle-alert" href="/language/error-handling">
     See how `Result` and `try`/`except` replace recoverable exceptions.
-  </Card>
-  <Card title="Python Developers" icon="map" href="/guides/python-developers">
-    Follow a guided path written for Python developers.
   </Card>
 </CardGroup>

@@ -15,7 +15,7 @@ Sifr gives you Rust's memory-safety guarantees without making every call site lo
 | `own items: list[int]` | Owned immutable binding | No | No, unless copied into a mutable local |
 | `own mut items: list[int]` | Owned mutable binding | No | Yes |
 
-This table is the core model. A bare heap parameter is borrowed immutably. `mut` lets the function update the caller's value during the call. `own` moves the value into the function. `own mut` moves it and lets the function change it before returning or dropping it.
+This table is the core model. A bare heap parameter is borrowed immutably. `mut` lets the function update the caller's value during the call. `own` moves the value into the function. `own mut` moves it and lets the function change it.
 
 ## Borrow By Default
 
@@ -76,7 +76,7 @@ def main():
     # values is moved here
 ```
 
-Use `own mut` when the function consumes a value and needs to mutate it before returning or dropping it.
+Use `own mut` when the function consumes a value and needs to mutate it.
 
 ```python
 def append_zero(own mut values: list[int]) -> list[int]:

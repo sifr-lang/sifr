@@ -1,12 +1,15 @@
 ---
-title: "Sifr for Python Developers"
-sidebarTitle: "Python Developers"
-description: "A guided path for Python developers learning Sifr's compile-time types, errors, imports, ownership, and packages."
+title: "Python Developer Guide"
+sidebarTitle: "Overview"
+description: "A guided path for Python developers learning Sifr's compile-time types, errors, imports, ownership, async model, and packages."
 ---
 
-If you know Python, Sifr lets you keep much of the syntax while changing the contract around errors, missing values, mutation, and imports. Start with the compatibility bridge, then follow task-focused guides as they are added.
+If you know Python, Sifr lets you keep much of the syntax while changing the contract around errors, missing values, mutation, imports, and async work. Start with the compact bridge, then use this guide path to replace runtime habits with compile-time guarantees.
 
 <CardGroup cols={2}>
+  <Card title="Mental Model Shift" icon="route" href="/guides/python-developers/mental-model">
+    Learn the surprises to remove first: hints, exceptions, `None`, imports, and mutation.
+  </Card>
   <Card title="From Python" icon="map" href="/from-python">
     See what carries over and what Sifr checks at compile time.
   </Card>
@@ -21,12 +24,16 @@ If you know Python, Sifr lets you keep much of the syntax while changing the con
   </Card>
 </CardGroup>
 
-## Guide Sequence
+## Learning Sequence
 
-The detailed guide pages below are planned follow-ups. Use the linked cards above for the current path through the docs.
+1. Build the mental model: [what changes from Python](/guides/python-developers/mental-model).
+2. Compile a first program: [Quickstart](/quickstart).
+3. Learn everyday values: [Values and Collections](/language/values-and-collections).
+4. Handle failure intentionally: [Error Handling](/language/error-handling).
+5. Make mutation explicit: [Ownership and Mutability](/language/ownership).
+6. Use the Sifr namespace: [Standard Library](/stdlib/overview) and [Module Index](/stdlib/module-index).
+7. Move from scripts to packages: [Packages and Workspaces](/cli/packages-workspaces).
 
-1. Write your first Sifr program.
-2. Handle errors the Sifr way.
-3. Use typed values and collections.
-4. Import Sifr modules.
-5. Move from script to package.
+<Tip>
+If you only read one language page after this guide, read [Ownership and Mutability](/language/ownership). It explains why Sifr can look like Python while still compiling to safe Rust-backed binaries.
+</Tip>

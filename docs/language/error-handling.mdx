@@ -151,3 +151,12 @@ Reserve `assert` for internal correctness checks. Use `Result` and custom error 
 | Consume a result | `try` / `except MyError as e` |
 | Discard a result | `_ = fallible_call()` |
 | Invariant check | `assert condition` |
+
+<CardGroup cols={2}>
+  <Card title="Python Developer Guide" icon="map" href="/guides/python-developers/mental-model">
+    See why recoverable exceptions become typed values in Sifr.
+  </Card>
+  <Card title="Rust Developer Guide" icon="refresh-cw" href="/guides/rust-developers/rust-concepts">
+    Map Sifr's `Result[T, E]` syntax to Rust's `Result<T, E>` model.
+  </Card>
+</CardGroup>

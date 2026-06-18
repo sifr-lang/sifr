@@ -1,0 +1,115 @@
+---
+title: "What Changes From Python"
+sidebarTitle: "Mental Model"
+description: "A practical guide for Python developers learning which instincts transfer to Sifr and which runtime habits need to change."
+---
+
+Python knowledge helps you read Sifr quickly. The main adjustment is not syntax. It is where failure is allowed to live.
+
+In Python, many mistakes wait until a specific line executes. In Sifr, the compiler asks you to make those cases explicit before a binary exists.
+
+## Keep These Instincts
+
+You still write familiar control flow and data shapes:
+
+```python
+def describe(value: int | str) -> str:
+    if isinstance(value, int):
+        return f"number: {value}"
+    return f"text: {value}"
+```
+
+`def`, `class`, `if`, `for`, `match`, f-strings, lists, dictionaries, and `async def` all remain recognizable. Use that familiarity to move quickly through examples.
+
+## Change These Assumptions
+
+| Python habit | Sifr contract |
+| --- | --- |
+| Type hints document intent | Type annotations are checked |
+| Exceptions carry recoverable failure | `Result[T, E]` carries recoverable failure |
+| Missing keys raise later | Missing lookups return `T | None` |
+| Imports mirror CPython names | Standard-library imports use `sifr.*` |
+| Any parameter can be mutated locally | Parameter mutation needs `mut` |
+| Background async tasks can detach | Tasks live in structured scopes |
+
+## Missing Values Are Typed
+
+Sifr does not let a missing value hide inside a normal value.
+
+```python
+scores: dict[str, int] = {"ada": 10}
+score: int | None = scores["grace"]
+
+if score is not None:
+    print(score + 1)
+else:
+    print("not found")
+```
+
+<Info>
+If you expected `KeyError`, read [Values and Collections](/language/values-and-collections). Safe lookup is one of the first differences Python developers notice.
+</Info>
+
+## Errors Are Values
+
+Recoverable failures use `Result`, not stack unwinding.
+
+```python
+class ConfigError(Error):
+    message: str
+
+def read_port(text: str) -> Result[int, ConfigError]:
+    if text == "":
+        raise ConfigError("missing port")
+    return int(text)
+
+try:
+    port: int = read_port("8080")
+except ConfigError as e:
+    print(e.message)
+```
+
+`raise` inside a `Result`-returning function builds the error branch. The compiler requires the call site to handle it.
+
+## Mutation Is A Contract
+
+Sifr borrows by default. Use `mut` when a function should mutate the caller's value.
+
+```python
+def add_default(mut values: list[str]) -> None:
+    values.append("default")
+```
+
+Use `own` when a function consumes a value. Use `own mut` when it consumes and mutates the value.
+
+<Tip>
+Read `mut` as part of the function's public API. It tells the caller that the call may change their value.
+</Tip>
+
+## Imports Use Sifr Modules
+
+Use explicit Sifr modules:
+
+```python
+from sifr.math import sqrt
+from sifr.json import loads
+```
+
+Bare CPython module names are not aliases. `from math import sqrt` is rejected with [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) when no real project module named `math` exists.
+
+## Where To Go Next
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="zap" href="/quickstart">
+    Compile and run a first program.
+  </Card>
+  <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
+    Learn `mut`, `own`, and borrow-by-default.
+  </Card>
+  <Card title="Error Handling" icon="triangle-alert" href="/language/error-handling">
+    Understand `Result` and typed `try`/`except`.
+  </Card>
+  <Card title="Module Index" icon="library" href="/stdlib/module-index">
+    Browse the `sifr.*` standard-library namespace.
+  </Card>
+</CardGroup>
