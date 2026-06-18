@@ -9,6 +9,7 @@ mod formatting_and_lint;
 mod package;
 mod parsing_names_and_types;
 mod project_and_backend;
+mod python_interop;
 mod reserved;
 
 const REGISTRY_GROUPS: &[&[DiagnosticRegistryEntry]] = &[
@@ -18,6 +19,7 @@ const REGISTRY_GROUPS: &[&[DiagnosticRegistryEntry]] = &[
     project_and_backend::ENTRIES,
     formatting_and_lint::ENTRIES,
     package::ENTRIES,
+    python_interop::ENTRIES,
 ];
 
 pub static DIAGNOSTIC_REGISTRY: LazyLock<Vec<DiagnosticRegistryEntry>> = LazyLock::new(|| {

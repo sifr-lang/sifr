@@ -10,8 +10,8 @@ use crate::graph::derive::{
 use crate::graph::digest::{digest_package_build_cache_inputs, PackageBuildCacheInputs};
 use crate::manifest::metadata::CargoSifrMetadata;
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
-    TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
+    SifrPackageName, TrustPolicy,
 };
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::{BTreeMap, BTreeSet};
@@ -134,6 +134,8 @@ fn backend_trust_rejects_stale_non_direct_trust_entry() {
             native: vec!["unused-native".to_string()],
             build_scripts: Vec::new(),
             proc_macros: Vec::new(),
+            python: Vec::new(),
+            python_native: Vec::new(),
         },
         Vec::new(),
     );
@@ -177,6 +179,13 @@ fn package_build_cache_digest_changes_with_lock_source_and_target_inputs() {
     assert_ne!(
         digest_package_build_cache_inputs(&first),
         digest_package_build_cache_inputs(&changed)
+    );
+
+    let mut python_changed = first.clone();
+    python_changed.python_probe_digest = Some("python-probe-b".to_string());
+    assert_ne!(
+        digest_package_build_cache_inputs(&first),
+        digest_package_build_cache_inputs(&python_changed)
     );
 }
 
@@ -224,6 +233,7 @@ fn package_graph(
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
             trust,
+            python: PythonConfig::default(),
             production_schema: false,
         },
         aliases: BTreeMap::new(),

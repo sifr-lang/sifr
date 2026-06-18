@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: in progress. Planning lock is active; `milestone_py_0` owns scaffold and diagnostic reservations. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
+> Status: in progress. Planning lock is active; `milestone_py_0` established scaffold and diagnostic reservations, and `milestone_py_1` owns Python environment discovery/probing. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
 
 ## Execution Status
 
@@ -8,7 +8,15 @@
   - Added `verification/python_interop/` runner, package matrices, fixture directories, and report path.
   - Reserved diagnostic families: `SIFR-PYENV`, `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, `SIFR-PYCB`, `SIFR-PYTRUST`.
   - Linked the phase from roadmap, phase index, and architecture docs.
-- [ ] `milestone_py_1`: Environment discovery and probe.
+  - Merged via PR [#2665](https://github.com/sifr-lang/sifr/pull/2665).
+- [x] `milestone_py_1`: Environment discovery and probe.
+  - Added `[python]` manifest parsing for root environment selection, `allow-imports`, and library `requires-imports`.
+  - Added `[trust].python` and `[trust].python-native` manifest parsing.
+  - Added package-graph Python environment resolution with missing-selection and multiple-venv diagnostics.
+  - Added canonical CPython probe JSON validation for implementation, free-threaded status, venv prefix, site-packages, declared imports, native imports, and configured `pyproject.toml`/`uv.lock` digests.
+  - Added active `SIFR-PYENV-0001` through `SIFR-PYENV-0011` diagnostics and generated docs.
+  - Wired package `check`/cached `run` contexts to resolve/probe the root-selected environment and feed the probe digest into generated-artifact cache keys.
+  - Promoted `verification/python_interop/run.sh --group env` to live environment evidence with positive and negative fixture coverage.
 - [ ] `milestone_py_2`: Embedded runtime lifecycle.
 - [ ] `milestone_py_3`: Opaque object operations and errors.
 - [ ] `milestone_py_4`: Primitive and typed conversion.

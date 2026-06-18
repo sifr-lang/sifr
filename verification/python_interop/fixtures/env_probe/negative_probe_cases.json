@@ -1,0 +1,212 @@
+{
+  "cases": [
+    {
+      "expected_rule": "unsupported_interpreter",
+      "name": "reject-pypy",
+      "probe": {
+        "free_threaded": false,
+        "implementation_name": "PyPy",
+        "imports": [],
+        "native_imports": [],
+        "pyproject_digest": null,
+        "site_packages": [
+          "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+        ],
+        "sys_base_prefix": "/opt/python/3.13",
+        "sys_prefix": "/tmp/sifr-env/.venv",
+        "uv_lock_digest": null
+      },
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": null,
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    },
+    {
+      "expected_rule": "free_threaded_cpython",
+      "name": "reject-free-threaded",
+      "probe": {
+        "free_threaded": true,
+        "implementation_name": "CPython",
+        "imports": [],
+        "native_imports": [],
+        "pyproject_digest": null,
+        "site_packages": [
+          "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+        ],
+        "sys_base_prefix": "/opt/python/3.13",
+        "sys_prefix": "/tmp/sifr-env/.venv",
+        "uv_lock_digest": null
+      },
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": null,
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    },
+    {
+      "expected_rule": "venv_prefix_mismatch",
+      "name": "reject-system-prefix",
+      "probe": {
+        "free_threaded": false,
+        "implementation_name": "CPython",
+        "imports": [],
+        "native_imports": [],
+        "pyproject_digest": null,
+        "site_packages": [
+          "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+        ],
+        "sys_base_prefix": "/usr/local",
+        "sys_prefix": "/usr/local",
+        "uv_lock_digest": null
+      },
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": null,
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    },
+    {
+      "expected_rule": "missing_site_packages",
+      "name": "reject-system-site-packages",
+      "probe": {
+        "free_threaded": false,
+        "implementation_name": "CPython",
+        "imports": [],
+        "native_imports": [],
+        "pyproject_digest": null,
+        "site_packages": [
+          "/usr/local/lib/python3.13/site-packages"
+        ],
+        "sys_base_prefix": "/opt/python/3.13",
+        "sys_prefix": "/tmp/sifr-env/.venv",
+        "uv_lock_digest": null
+      },
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": null,
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    },
+    {
+      "expected_rule": "missing_declared_import",
+      "name": "reject-declared-import-failure",
+      "probe": {
+        "free_threaded": false,
+        "implementation_name": "CPython",
+        "imports": [
+          {
+            "error": "ImportError: broken package",
+            "ok": false,
+            "root": "broken_declared"
+          }
+        ],
+        "native_imports": [],
+        "pyproject_digest": null,
+        "site_packages": [
+          "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+        ],
+        "sys_base_prefix": "/opt/python/3.13",
+        "sys_prefix": "/tmp/sifr-env/.venv",
+        "uv_lock_digest": null
+      },
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": null,
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    },
+    {
+      "expected_rule": "native_import_failure",
+      "name": "reject-native-import-failure",
+      "probe": {
+        "free_threaded": false,
+        "implementation_name": "CPython",
+        "imports": [],
+        "native_imports": [
+          {
+            "error": "ImportError: missing extension",
+            "ok": false,
+            "root": "broken_native"
+          }
+        ],
+        "pyproject_digest": null,
+        "site_packages": [
+          "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+        ],
+        "sys_base_prefix": "/opt/python/3.13",
+        "sys_prefix": "/tmp/sifr-env/.venv",
+        "uv_lock_digest": null
+      },
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": null,
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    },
+    {
+      "expected_rule": "multiple_venv_selection",
+      "graph": {
+        "venv_selections": [
+          {
+            "package": "app",
+            "venv": "/tmp/sifr-env/app/.venv"
+          },
+          {
+            "package": "lib",
+            "venv": "/tmp/sifr-env/lib/.venv"
+          }
+        ]
+      },
+      "name": "reject-multiple-venvs"
+    },
+    {
+      "expected_rule": "missing_venv_selection",
+      "graph": {
+        "requires_python": true,
+        "venv_selections": []
+      },
+      "name": "reject-missing-venv"
+    },
+    {
+      "expected_rule": "stale_project_or_lock",
+      "name": "reject-missing-lock-digest",
+      "probe": {
+        "free_threaded": false,
+        "implementation_name": "CPython",
+        "imports": [],
+        "native_imports": [],
+        "pyproject_digest": null,
+        "site_packages": [
+          "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+        ],
+        "sys_base_prefix": "/opt/python/3.13",
+        "sys_prefix": "/tmp/sifr-env/.venv",
+        "uv_lock_digest": null
+      },
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": "/tmp/sifr-env/uv.lock",
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    },
+    {
+      "expected_rule": "probe_execution_failure",
+      "interpreter_exists": false,
+      "name": "reject-missing-interpreter",
+      "request": {
+        "interpreter": "/tmp/sifr-env/.venv/bin/python",
+        "lock": null,
+        "pyproject": null,
+        "venv_root": "/tmp/sifr-env/.venv"
+      }
+    }
+  ]
+}

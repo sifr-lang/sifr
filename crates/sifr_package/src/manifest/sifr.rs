@@ -7,7 +7,8 @@ use crate::manifest::production::{
     parse_source_config, reject_production_manifest_bins, reject_production_manifest_exports,
 };
 use crate::manifest::sifr_fields::{
-    parse_exports, parse_trust, validate_compiler_requirement, validate_edition,
+    parse_exports, parse_python_config, parse_trust, validate_compiler_requirement,
+    validate_edition,
 };
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
@@ -34,6 +35,18 @@ pub struct TrustPolicy {
     pub native: Vec<String>,
     pub build_scripts: Vec<String>,
     pub proc_macros: Vec<String>,
+    pub python: Vec<String>,
+    pub python_native: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct PythonConfig {
+    pub venv: Option<PathBuf>,
+    pub pyproject: Option<PathBuf>,
+    pub lock: Option<PathBuf>,
+    pub interpreter: Option<PathBuf>,
+    pub allow_imports: Vec<String>,
+    pub requires_imports: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -49,6 +62,7 @@ pub struct SifrManifest {
     pub dependencies: BTreeMap<String, SifrDependency>,
     pub dev_dependencies: BTreeMap<String, SifrDependency>,
     pub trust: TrustPolicy,
+    pub python: PythonConfig,
     pub production_schema: bool,
 }
 
@@ -129,8 +143,12 @@ impl SifrManifest {
             .map(|dependencies| parse_dependencies(cargo_package_id, manifest_path, dependencies))
             .transpose()?
             .unwrap_or_default();
-        let trust = table(&value, "trust")
+        let trust = optional_table(cargo_package_id, manifest_path, &value, "trust")?
             .map(|trust| parse_trust(cargo_package_id, manifest_path, trust))
+            .transpose()?
+            .unwrap_or_default();
+        let python = optional_python_table(cargo_package_id, manifest_path, &value, "python")?
+            .map(|python| parse_python_config(cargo_package_id, manifest_path, python))
             .transpose()?
             .unwrap_or_default();
 
@@ -146,6 +164,7 @@ impl SifrManifest {
             dependencies,
             dev_dependencies,
             trust,
+            python,
             production_schema,
         })
     }
@@ -160,6 +179,44 @@ impl SifrManifest {
 
 fn table<'a>(value: &'a toml::Table, key: &str) -> Option<&'a toml::Table> {
     value.get(key).and_then(toml::Value::as_table)
+}
+
+fn optional_table<'a>(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    value: &'a toml::Table,
+    key: &'static str,
+) -> Result<Option<&'a toml::Table>, PackageDiagnostic> {
+    let Some(entry) = value.get(key) else {
+        return Ok(None);
+    };
+    entry.as_table().map(Some).ok_or_else(|| {
+        PackageDiagnostic::invalid_sifr_manifest(
+            cargo_package_id,
+            manifest_path.to_path_buf(),
+            key,
+            "expected a table",
+        )
+    })
+}
+
+fn optional_python_table<'a>(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    value: &'a toml::Table,
+    key: &'static str,
+) -> Result<Option<&'a toml::Table>, PackageDiagnostic> {
+    let Some(entry) = value.get(key) else {
+        return Ok(None);
+    };
+    entry.as_table().map(Some).ok_or_else(|| {
+        PackageDiagnostic::python_environment_config(
+            cargo_package_id,
+            manifest_path,
+            key,
+            "expected a table",
+        )
+    })
 }
 
 fn required_string(
@@ -215,7 +272,7 @@ pub(super) fn parse_source_roots(
         .collect()
 }
 
-pub(super) fn validate_relative_path(
+pub(crate) fn validate_relative_path(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
     key: &'static str,

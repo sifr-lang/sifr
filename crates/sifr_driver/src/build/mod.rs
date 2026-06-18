@@ -8,8 +8,8 @@ mod workspace;
 
 pub use api::{
     build, build_cached_package_project, build_cached_project, build_cached_single_file,
-    build_project, build_project_report, build_single_file_report, check_package_project,
-    check_project, check_single_file, emit_project,
+    build_package_project_report, build_project, build_project_report, build_single_file_report,
+    check_package_project, check_project, check_single_file, emit_project,
 };
 pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
 pub use report::{BuildCompilationMode, BuildReport, BuildStageReport};

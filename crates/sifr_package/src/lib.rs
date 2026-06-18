@@ -5,6 +5,7 @@ pub mod imports;
 pub mod manifest;
 pub mod ops;
 pub mod projection;
+pub mod python;
 pub mod source;
 
 pub use crate::cargo::commands::{
@@ -32,7 +33,8 @@ pub use crate::graph::derive::{
 };
 pub use crate::graph::digest::{
     digest_graph_inputs, digest_package_build_cache_inputs, digest_package_graph,
-    digest_package_source_map, GraphDigest, PackageBuildCacheInputs,
+    digest_package_source_map, digest_python_environment_probe, GraphDigest,
+    PackageBuildCacheInputs,
 };
 pub use crate::graph::filters::{
     apply_package_filters, parse_package_filter, PackageFilter, PackageFilterTerm,
@@ -50,8 +52,8 @@ pub use crate::imports::source_map::{
 pub use crate::manifest::metadata::{CargoSifrAliasMetadata, CargoSifrMetadata};
 pub use crate::manifest::package_sections::{SifrDependency, SifrScript};
 pub use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
-    TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
+    SifrPackageName, TrustPolicy,
 };
 pub use crate::ops::publish::{
     package_plan, publish_plan, publish_plan_with_options, vendor_plan, vendor_plan_with_options,
@@ -65,6 +67,10 @@ pub use crate::ops::session::{
 pub use crate::projection::{
     check_projection, init_package, repair_projection, InitPackageKind, InitPackageOptions,
     ProjectionCheck, ProjectionRepair,
+};
+pub use crate::python::{
+    probe_python_environment, resolve_python_environment, validate_python_environment_probe,
+    PythonEnvironmentProbe, PythonEnvironmentProbeRequest, ResolvedPythonEnvironment,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 

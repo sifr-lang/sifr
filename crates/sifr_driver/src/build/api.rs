@@ -23,6 +23,16 @@ pub fn build_project_report(
     build_rooted_entrypoint_binary_with_report(&RootedEntrypoint::Project { main_file }, output_dir)
 }
 
+pub fn build_package_project_report(
+    entrypoint: &PackageEntrypoint,
+    output_dir: &Path,
+) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
+    build_rooted_entrypoint_binary_with_report(
+        &RootedEntrypoint::PackageProject { entrypoint },
+        output_dir,
+    )
+}
+
 pub fn check_project(main_file: &Path) -> Vec<RenderedDiagnostic> {
     match resolve_project_entrypoint_plan(main_file) {
         Ok(project_plan) => project_plan.frontend_diagnostics(),

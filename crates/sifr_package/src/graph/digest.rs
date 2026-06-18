@@ -1,6 +1,7 @@
 use crate::cargo::metadata::NormalizedCargoMetadata;
 use crate::graph::derive::SifrPackageGraph;
 use crate::imports::source_map::PackageSourceMap;
+use crate::python::{PythonEnvironmentProbe, PythonEnvironmentProbeRequest};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -22,12 +23,22 @@ pub fn digest_package_graph(graph: &SifrPackageGraph) -> GraphDigest {
     digest_serializable(&canonical)
 }
 
+#[must_use]
+pub fn digest_python_environment_probe(
+    request: &PythonEnvironmentProbeRequest,
+    probe: &PythonEnvironmentProbe,
+) -> GraphDigest {
+    let canonical = CanonicalPythonEnvironmentProbe { request, probe };
+    digest_serializable(&canonical)
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PackageBuildCacheInputs {
     pub cargo_lock_digest: Option<String>,
     pub cargo_metadata_digest: Option<String>,
     pub package_graph_digest: Option<String>,
     pub package_source_map_digest: Option<String>,
+    pub python_probe_digest: Option<String>,
     pub sifr_metadata_digests: BTreeMap<String, String>,
     pub sifr_source_digests: BTreeMap<String, String>,
     pub compiler_version: String,
@@ -207,6 +218,7 @@ struct CanonicalPackageBuildCacheInputs<'a> {
     cargo_metadata_digest: Option<&'a str>,
     package_graph_digest: Option<&'a str>,
     package_source_map_digest: Option<&'a str>,
+    python_probe_digest: Option<&'a str>,
     sifr_metadata_digests: Vec<(&'a str, &'a str)>,
     sifr_source_digests: Vec<(&'a str, &'a str)>,
     compiler_version: &'a str,
@@ -236,6 +248,7 @@ impl<'a> From<&'a PackageBuildCacheInputs> for CanonicalPackageBuildCacheInputs<
             cargo_metadata_digest: inputs.cargo_metadata_digest.as_deref(),
             package_graph_digest: inputs.package_graph_digest.as_deref(),
             package_source_map_digest: inputs.package_source_map_digest.as_deref(),
+            python_probe_digest: inputs.python_probe_digest.as_deref(),
             sifr_metadata_digests: inputs
                 .sifr_metadata_digests
                 .iter()
@@ -256,11 +269,35 @@ impl<'a> From<&'a PackageBuildCacheInputs> for CanonicalPackageBuildCacheInputs<
 }
 
 #[derive(Serialize)]
+struct CanonicalPythonEnvironmentProbe<'a> {
+    request: &'a PythonEnvironmentProbeRequest,
+    probe: &'a PythonEnvironmentProbe,
+}
+
+#[derive(Serialize)]
 struct CanonicalGraphPackage<'a> {
     package_id: &'a str,
     cargo_package_id: &'a str,
     sifr_name: &'a str,
     exports: Vec<&'a str>,
+    python: CanonicalPythonConfig<'a>,
+    python_trust: CanonicalPythonTrust<'a>,
+}
+
+#[derive(Serialize)]
+struct CanonicalPythonConfig<'a> {
+    venv: Option<String>,
+    pyproject: Option<String>,
+    lock: Option<String>,
+    interpreter: Option<String>,
+    allow_imports: Vec<&'a str>,
+    requires_imports: Vec<&'a str>,
+}
+
+#[derive(Serialize)]
+struct CanonicalPythonTrust<'a> {
+    python: Vec<&'a str>,
+    python_native: Vec<&'a str>,
 }
 
 #[derive(Serialize)]
@@ -285,6 +322,62 @@ impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
                         .iter()
                         .map(|root| root.0.as_str())
                         .collect(),
+                    python: CanonicalPythonConfig {
+                        venv: package
+                            .manifest
+                            .python
+                            .venv
+                            .as_ref()
+                            .map(|path| path.display().to_string()),
+                        pyproject: package
+                            .manifest
+                            .python
+                            .pyproject
+                            .as_ref()
+                            .map(|path| path.display().to_string()),
+                        lock: package
+                            .manifest
+                            .python
+                            .lock
+                            .as_ref()
+                            .map(|path| path.display().to_string()),
+                        interpreter: package
+                            .manifest
+                            .python
+                            .interpreter
+                            .as_ref()
+                            .map(|path| path.display().to_string()),
+                        allow_imports: package
+                            .manifest
+                            .python
+                            .allow_imports
+                            .iter()
+                            .map(String::as_str)
+                            .collect(),
+                        requires_imports: package
+                            .manifest
+                            .python
+                            .requires_imports
+                            .iter()
+                            .map(String::as_str)
+                            .collect(),
+                    },
+                    python_trust: CanonicalPythonTrust {
+                        python: package
+                            .manifest
+                            .trust
+                            .python
+                            .iter()
+                            .map(String::as_str)
+                            .collect(),
+                        python_native: package
+                            .manifest
+                            .trust
+                            .python_native
+                            .iter()
+                            .map(String::as_str)
+                            .collect(),
+                    },
                 })
                 .collect(),
             edges: graph

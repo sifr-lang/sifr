@@ -1,7 +1,8 @@
 use super::build_output::{render_build_success, BuildOutputOptions};
 use super::check_and_package_commands::{
     bounded_excerpt, build_run_artifact, cmd_check, compile_entrypoint_report,
-    load_package_graph_context, package_compiler_context, paths_equal, redacted_args,
+    compile_package_entrypoint_report, load_package_graph_context, package_compiler_context,
+    paths_equal, redacted_args,
 };
 use super::cli_model_and_entrypoint::{
     diagnostic_exit_code, diagnostic_with_code, package_diagnostic, run_with_panic_boundary,
@@ -74,6 +75,27 @@ pub(super) fn cmd_build(
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
+    match package_session_for_cwd(sifr_package::CargoLockMode::Normal) {
+        Ok(session) if !session.manifest_less_mode => {
+            match compile_package_entrypoint_report(
+                file,
+                output,
+                &session,
+                sifr_package::CargoLockMode::Normal,
+                diagnostic_format,
+            ) {
+                Ok(Some(report)) => return emit_build_result(&report, quiet, diagnostic_format),
+                Ok(None) => {}
+                Err(exit_code) => return exit_code,
+            }
+        }
+        Ok(_) => {}
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    }
+
     let result = match run_with_panic_boundary(
         "internal compiler panic during build command execution",
         || compile_entrypoint_report(file, output),
@@ -83,16 +105,22 @@ pub(super) fn cmd_build(
     };
 
     match result {
-        Ok(report) => {
-            let diagnostic_exit = emit_report_frontend_diagnostics(&report, diagnostic_format);
-            if diagnostic_exit != EXIT_SUCCESS {
-                return diagnostic_exit;
-            }
-            emit_build_report(&report, quiet, true, diagnostic_format);
-            EXIT_SUCCESS
-        }
+        Ok(report) => emit_build_result(&report, quiet, diagnostic_format),
         Err(errors) => render_diagnostics(&errors, diagnostic_format),
     }
+}
+
+fn emit_build_result(
+    report: &sifr_driver::BuildReport,
+    quiet: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let diagnostic_exit = emit_report_frontend_diagnostics(report, diagnostic_format);
+    if diagnostic_exit != EXIT_SUCCESS {
+        return diagnostic_exit;
+    }
+    emit_build_report(report, quiet, true, diagnostic_format);
+    EXIT_SUCCESS
 }
 
 fn emit_report_frontend_diagnostics(
@@ -417,6 +445,7 @@ pub(super) fn cmd_run_package_file(
         package_id: context.package_id,
         graph: context.graph,
         source_map: context.source_map,
+        python_probe_digest: context.python_probe_digest,
     };
     let result = match run_with_panic_boundary(
         "internal compiler panic during package run command compilation",

@@ -2241,6 +2241,182 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-PYENV-0001",
+      "constant": "PYENV_INVALID_CONFIG",
+      "docs_link": "docs/errors/SIFR-PYENV-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::invalid_python_manifest_config_reports_pyenv_0001",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0002",
+      "constant": "PYENV_MULTIPLE_SELECTIONS",
+      "docs_link": "docs/errors/SIFR-PYENV-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::multiple_python_environment_selections_report_pyenv_0002",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0003",
+      "constant": "PYENV_MISSING_SELECTION",
+      "docs_link": "docs/errors/SIFR-PYENV-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::missing_python_environment_selection_reports_pyenv_0003",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0004",
+      "constant": "PYENV_PROBE_FAILED",
+      "docs_link": "docs/errors/SIFR-PYENV-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_interpreter_with_pyenv_0004",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0005",
+      "constant": "PYENV_UNSUPPORTED_INTERPRETER",
+      "docs_link": "docs/errors/SIFR-PYENV-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_non_cpython_json_with_pyenv_0005",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0006",
+      "constant": "PYENV_VENV_PREFIX_MISMATCH",
+      "docs_link": "docs/errors/SIFR-PYENV-0006.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_prefix_outside_venv_with_pyenv_0006",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0007",
+      "constant": "PYENV_SITE_PACKAGES_MISSING",
+      "docs_link": "docs/errors/SIFR-PYENV-0007.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_site_packages_with_pyenv_0007",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0008",
+      "constant": "PYENV_DECLARED_IMPORT_MISSING",
+      "docs_link": "docs/errors/SIFR-PYENV-0008.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_declared_import_with_pyenv_0008",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0009",
+      "constant": "PYENV_NATIVE_IMPORT_FAILED",
+      "docs_link": "docs/errors/SIFR-PYENV-0009.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_native_import_failure_with_pyenv_0009",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0010",
+      "constant": "PYENV_FREE_THREADED_UNSUPPORTED",
+      "docs_link": "docs/errors/SIFR-PYENV-0010.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_free_threaded_cpython_with_pyenv_0010",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYENV-0011",
+      "constant": "PYENV_LOCK_OR_PROJECT_STALE",
+      "docs_link": "docs/errors/SIFR-PYENV-0011.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_lock_digest_with_pyenv_0011",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-RESULT-0001",
       "constant": "RESULT_UNUSED_VALUE",
       "docs_link": "docs/errors/SIFR-RESULT-0001.md",

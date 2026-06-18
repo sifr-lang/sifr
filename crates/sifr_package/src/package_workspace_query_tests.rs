@@ -8,8 +8,8 @@ use crate::graph::derive::{
 use crate::graph::filters::{apply_package_filters, parse_package_filter};
 use crate::graph::workspace::{explicit_package_selection, select_sifr_workspace_members};
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, SifrEdition, SifrManifest, SifrPackageName,
-    TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
+    SifrPackageName, TrustPolicy,
 };
 use crate::ops::read::{outdated_query_report, OutdatedPackageSource};
 use sifr_diagnostics::DiagnosticCode;
@@ -329,6 +329,7 @@ fn package(
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
             trust: TrustPolicy::default(),
+            python: PythonConfig::default(),
             production_schema: false,
         },
         aliases: BTreeMap::new(),

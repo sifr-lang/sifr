@@ -1,0 +1,27 @@
+{
+  "name": "gil-enabled-cpython-venv",
+  "probe": {
+    "free_threaded": false,
+    "implementation_name": "CPython",
+    "imports": [
+      {
+        "ok": true,
+        "root": "sys"
+      }
+    ],
+    "native_imports": [],
+    "pyproject_digest": null,
+    "site_packages": [
+      "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+    ],
+    "sys_base_prefix": "/opt/python/3.13",
+    "sys_prefix": "/tmp/sifr-env/.venv",
+    "uv_lock_digest": null
+  },
+  "request": {
+    "interpreter": "/tmp/sifr-env/.venv/bin/python",
+    "lock": null,
+    "pyproject": null,
+    "venv_root": "/tmp/sifr-env/.venv"
+  }
+}

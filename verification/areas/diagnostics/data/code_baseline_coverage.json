@@ -1431,6 +1431,116 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0001",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0002",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0003",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0004",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0005",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0006",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0007",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0008",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0009",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0010",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYENV-0011",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "e2e_unused_result",
       "code": "SIFR-RESULT-0001",
       "deferral": null,

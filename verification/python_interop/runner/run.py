@@ -8,6 +8,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from env import discover_paths
+from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
 from report import write_report
 from smoke_matrix import KNOWN_GATES, KNOWN_GROUPS, KNOWN_TIERS
@@ -46,6 +47,7 @@ REQUIRED_FIXTURES = (
     "cffi_callback",
     "cryptography_tls",
     "resource_cleanup",
+    "env_probe",
 )
 
 
@@ -82,10 +84,11 @@ def main(argv: list[str] | None = None) -> int:
         selected_gates,
         set(args.package),
     )
+    env_result = run_env_probe(paths.area_root) if "env" in selected_groups else None
     payload = {
         "schema_version": 1,
         "area": "python_interop",
-        "status": "scaffold",
+        "status": "passed" if env_result else "scaffold",
         "groups": selected_groups or ["scaffold"],
         "tiers": selected_tiers,
         "gates": selected_gates or sorted({entry.gate for entry in selected if entry.gate is not None}),
@@ -100,6 +103,8 @@ def main(argv: list[str] | None = None) -> int:
             "non_blocking_failures": 0,
         },
     }
+    if env_result is not None:
+        payload["env_probe"] = env_result
     report_path = paths.area_root / args.report
     write_report(report_path, payload)
     print(f"python interop scaffold ok: report={report_path.relative_to(paths.repo_root)}")
@@ -175,6 +180,7 @@ def select_entries(
 def run_self_tests(area_root: Path) -> None:
     entries = load_matrices(area_root / "packages")
     validate_matrix_entries(entries)
+    run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)
     except SystemExit:
