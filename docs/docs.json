@@ -141,11 +141,19 @@
             ]
           },
           {
-            "group": "Audience Paths",
+            "group": "Python Developer Guide",
             "icon": "map",
             "pages": [
               "guides/python-developers/index",
-              "guides/rust-developers/index"
+              "guides/python-developers/mental-model"
+            ]
+          },
+          {
+            "group": "Rust Developer Guide",
+            "icon": "refresh-cw",
+            "pages": [
+              "guides/rust-developers/index",
+              "guides/rust-developers/rust-concepts"
             ]
           }
         ]
