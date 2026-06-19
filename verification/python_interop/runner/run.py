@@ -59,6 +59,7 @@ REQUIRED_FIXTURE_FILES = (
     "numpy_buffer/py_buffer_contract.json",
     "pyarrow_capsule/arrow_capsule_contract.json",
     "torch_dlpack/dlpack_tensor_contract.json",
+    "cffi_callback/callback_contract.json",
     "resource_cleanup/context_manager_cleanup.json",
 )
 
@@ -76,6 +77,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "pyarrow_capsule/arrow_capsule_zero_copy.sifr",
     "torch_dlpack/dlpack_tensor_device_failure.sifr",
     "torch_dlpack/dlpack_tensor_roundtrip.sifr",
+    "cffi_callback/callback_roundtrip.sifr",
     "resource_cleanup/context_manager_body_failure.sifr",
     "resource_cleanup/context_manager_failure.sifr",
     "resource_cleanup/context_manager_success.sifr",

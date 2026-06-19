@@ -8,6 +8,8 @@ use std::sync::{Mutex, MutexGuard};
 
 mod arrow_ops;
 mod buffer_ops;
+mod call_depth;
+mod callback_ops;
 mod coroutine_ops;
 mod dlpack_ops;
 mod object_ops;
@@ -17,6 +19,11 @@ pub use arrow_ops::{
 };
 pub use buffer_ops::{
     buffer_u8, copy_buffer_u8, release_buffer, BufferHandle, PythonBufferMetadata,
+};
+use call_depth::{enter_python_call, python_call_depth};
+pub use callback_ops::{
+    close_callback, local_callback, local_callback_echo, threadsafe_callback,
+    threadsafe_callback_echo, CallbackHandle, PythonCallbackMetadata,
 };
 pub use coroutine_ops::run_coroutine_blocking;
 pub use dlpack_ops::{dlpack_tensor, release_dlpack, DlpackHandle, PythonDlpackTensorMetadata};

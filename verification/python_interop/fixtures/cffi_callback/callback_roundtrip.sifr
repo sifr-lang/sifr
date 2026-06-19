@@ -1,0 +1,41 @@
+from sifr.python import (
+    LocalCallback,
+    Object,
+    PythonError,
+    ThreadsafeCallback,
+    call,
+    close,
+    close_local_callback,
+    close_threadsafe_callback,
+    from_int,
+    local_callback,
+    threadsafe_callback,
+    to_int,
+)
+
+
+def increment_callback(value: Object) -> Result[Object, PythonError]:
+    try:
+        raw: int = to_int(value)
+        result: Object = from_int(raw + 1)
+        return result
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        local: LocalCallback = local_callback(increment_callback)
+        threaded: ThreadsafeCallback = threadsafe_callback(increment_callback)
+        arg: Object = from_int(5)
+        local_result: Object = call(local.callable, [arg], [])
+        threaded_result: Object = call(threaded.callable, [arg], [])
+        closed_local_result: None = close(local_result)
+        closed_threaded_result: None = close(threaded_result)
+        closed_arg: None = close(arg)
+        closed_local: None = close_local_callback(local)
+        closed_threaded: None = close_threadsafe_callback(threaded)
+        return closed_threaded
+    except PythonError as e:
+        raise e

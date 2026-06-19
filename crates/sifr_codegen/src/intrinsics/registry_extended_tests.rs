@@ -175,6 +175,26 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     )
     .expect("py_release_dlpack should lower");
     assert!(render_expr(&release_dlpack.expr).contains("sifr_runtime::python::release_dlpack"));
+
+    let callback =
+        lower_intrinsic("py_threadsafe_callback_echo", &[]).expect("callback should lower");
+    let callback_rendered = render_expr(&callback.expr);
+    assert!(callback_rendered.contains("sifr_runtime::python::threadsafe_callback_echo"));
+    assert!(callback_rendered.contains("__sifr_python_callback.object_handle"));
+
+    let registered_callback = lower_intrinsic("local_callback", &["handle_python".to_string()])
+        .expect("local_callback should lower");
+    let registered_rendered = render_expr(&registered_callback.expr);
+    assert!(registered_rendered.contains("sifr_runtime::python::local_callback"));
+    assert!(registered_rendered.contains("handle_python(&__sifr_callback_object)"));
+    assert!(registered_rendered.contains("LocalCallback::new"));
+
+    let close_callback = lower_intrinsic(
+        "py_close_callback",
+        &["callback_handle".to_string(), "callback_token".to_string()],
+    )
+    .expect("py_close_callback should lower");
+    assert!(render_expr(&close_callback.expr).contains("sifr_runtime::python::close_callback"));
 }
 
 #[test]

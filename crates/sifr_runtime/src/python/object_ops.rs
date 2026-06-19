@@ -175,6 +175,7 @@ pub fn call_object(
                 .set_item(*key, value.bind(py))
                 .map_err(|error| PythonError::from_pyerr(py, error, "conversion", *key))?;
         }
+        let _call_depth = super::enter_python_call();
         callable
             .bind(py)
             .call(tuple, Some(&kw_dict))

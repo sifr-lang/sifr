@@ -645,7 +645,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         ],
         "sifr.url" | "_sifr.url" => &[StdlibFeature::Url, StdlibFeature::PercentEncoding],
         "sifr.http" | "_sifr.http" => &[StdlibFeature::Http],
-        "sifr.python" | "_sifr.python" => &[StdlibFeature::PythonRuntime],
+        "sifr.python" | "sifr.python_core" | "_sifr.python" => &[StdlibFeature::PythonRuntime],
         "sifr.http_transport" => &[
             StdlibFeature::SifrRuntime,
             StdlibFeature::Tokio,

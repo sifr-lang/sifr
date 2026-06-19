@@ -87,6 +87,10 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
         source: include_str!("../../../lib/sifr/process.sifr"),
     },
     StdlibSource {
+        module: "sifr.python_core",
+        source: include_str!("../../../lib/sifr/python_core.sifr"),
+    },
+    StdlibSource {
         module: "sifr.python",
         source: include_str!("../../../lib/sifr/python.sifr"),
     },
