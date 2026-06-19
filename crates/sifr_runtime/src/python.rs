@@ -6,10 +6,14 @@ use std::fmt;
 use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
+mod arrow_ops;
 mod buffer_ops;
 mod coroutine_ops;
 mod object_ops;
 mod resource_ops;
+pub use arrow_ops::{
+    arrow_array, arrow_schema, arrow_stream, release_arrow, ArrowHandle, PythonArrowCapsuleMetadata,
+};
 pub use buffer_ops::{
     buffer_u8, copy_buffer_u8, release_buffer, BufferHandle, PythonBufferMetadata,
 };

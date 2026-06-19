@@ -127,6 +127,36 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
             python_error_result(Type::None),
         ),
     );
+    for name in ["py_arrow_array", "py_arrow_stream", "py_arrow_schema"] {
+        functions.insert(
+            name.to_string(),
+            FunctionType::all_borrow(
+                vec![
+                    ("handle".to_string(), Type::Int),
+                    ("token".to_string(), Type::Int),
+                ],
+                python_error_result(Type::Tuple(vec![
+                    Type::Int,
+                    Type::Int,
+                    Type::Str,
+                    Type::List(Box::new(Type::Str)),
+                    Type::Str,
+                    Type::Str,
+                    Type::Bool,
+                ])),
+            ),
+        );
+    }
+    functions.insert(
+        "py_release_arrow".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::None),
+        ),
+    );
     functions.insert(
         "py_enter_context".to_string(),
         FunctionType::all_borrow(
