@@ -53,7 +53,12 @@ REQUIRED_FIXTURES = (
 
 REQUIRED_FIXTURE_FILES = (
     "simple_import/opaque_object_operations.json",
+    "primitive_conversion/primitive_roundtrip.json",
     "resource_cleanup/context_manager_cleanup.json",
+)
+
+REQUIRED_SOURCE_FIXTURES = (
+    "primitive_conversion/primitive_roundtrip.sifr",
 )
 
 
@@ -104,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
         "matrix_entries": len(matrices),
         "fixture_directories": list(REQUIRED_FIXTURES),
         "fixture_files": list(REQUIRED_FIXTURE_FILES),
+        "source_fixtures": list(REQUIRED_SOURCE_FIXTURES),
         "summary": {
             "total_variants": max(1, len(selected)),
             "total_failures": 0,
@@ -172,6 +178,11 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as error:
             raise SystemExit(f"invalid python interop fixture JSON {path}: {error}") from error
+    missing_sources = [
+        name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
+    ]
+    if missing_sources:
+        raise SystemExit(f"missing python interop source fixtures: {', '.join(missing_sources)}")
 
 
 def select_entries(

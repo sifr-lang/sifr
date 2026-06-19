@@ -314,6 +314,29 @@ mod tests {
             Box::new(Type::Union(vec![Type::Int, Type::Str])),
         );
         assert!(!dict_int_int.is_assignable_to(&dict_int_union));
+
+        let object_a = Type::Class {
+            name: "Object".to_string(),
+            fields: vec![("_handle".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        let object_b = Type::Class {
+            name: "Object".to_string(),
+            fields: vec![("_token".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        assert!(Type::List(Box::new(object_a.clone()))
+            .is_assignable_to(&Type::List(Box::new(object_b))));
+
+        let child = Type::Class {
+            name: "ChildObject".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: Some("Object".to_string()),
+        };
+        assert!(!Type::List(Box::new(child)).is_assignable_to(&Type::List(Box::new(object_a))));
     }
 
     #[test]

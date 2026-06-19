@@ -439,6 +439,14 @@ impl Type {
             }
         }
 
+        fn invariant_slot_compatible(left: &Type, right: &Type) -> bool {
+            left == right
+                || same_alias_identity(left, right)
+                || contains_any(left)
+                || contains_any(right)
+                || (left.is_assignable_to(right) && right.is_assignable_to(left))
+        }
+
         if same_alias_identity(self, target) {
             return true;
         }
@@ -527,18 +535,10 @@ impl Type {
         // Mutable collections are invariant in their element/key/value types.
         // Explicit `Any` inside the collection type remains an escape hatch.
         match (source, target_resolved) {
-            (Self::List(a), Self::List(b)) => {
-                a == b || same_alias_identity(a, b) || contains_any(a) || contains_any(b)
-            }
-            (Self::Set(a), Self::Set(b)) => {
-                a == b || same_alias_identity(a, b) || contains_any(a) || contains_any(b)
-            }
+            (Self::List(a), Self::List(b)) => invariant_slot_compatible(a, b),
+            (Self::Set(a), Self::Set(b)) => invariant_slot_compatible(a, b),
             (Self::Dict(ak, av), Self::Dict(bk, bv)) => {
-                (ak == bk || same_alias_identity(ak, bk) || contains_any(ak) || contains_any(bk))
-                    && (av == bv
-                        || same_alias_identity(av, bv)
-                        || contains_any(av)
-                        || contains_any(bv))
+                invariant_slot_compatible(ak, bk) && invariant_slot_compatible(av, bv)
             }
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))

@@ -3,11 +3,59 @@ from _sifr.python import (
     py_call,
     py_call_attr,
     py_close,
+    py_copy_dict_str_bool,
+    py_copy_dict_str_bytes,
+    py_copy_dict_str_float,
+    py_copy_dict_str_i32,
+    py_copy_dict_str_int,
+    py_copy_dict_str_str,
+    py_copy_dict_str_u8,
+    py_copy_list_bool,
+    py_copy_list_bytes,
+    py_copy_list_float,
+    py_copy_list_i32,
+    py_copy_list_int,
+    py_copy_list_str,
+    py_copy_list_u8,
+    py_copy_record_fields,
+    py_copy_tuple_bool,
+    py_copy_tuple_bytes,
+    py_copy_tuple_float,
+    py_copy_tuple_i32,
+    py_copy_tuple_int,
+    py_copy_tuple_str,
+    py_copy_tuple_u8,
     py_enter_context,
     py_exit_context,
+    py_from_bool,
+    py_from_bytes,
+    py_from_dict_str,
+    py_from_float,
+    py_from_int,
+    py_from_list,
+    py_from_none,
+    py_from_record,
+    py_from_str,
+    py_from_tuple,
     py_get_attr,
     py_get_item_str,
     py_import_module,
+    py_to_bool,
+    py_to_bytes,
+    py_to_float,
+    py_to_i8,
+    py_to_i16,
+    py_to_i32,
+    py_to_i64,
+    py_to_int,
+    py_to_isize,
+    py_to_none,
+    py_to_str,
+    py_to_u8,
+    py_to_u16,
+    py_to_u32,
+    py_to_u64,
+    py_to_usize,
 )
 
 
@@ -49,6 +97,34 @@ def _object_from_handle(raw: tuple[int, int]) -> Object:
     return obj
 
 
+def _objects_from_handles(raw_values: list[tuple[int, int]]) -> list[Object]:
+    values: list[Object] = []
+    for raw in raw_values:
+        values.append(_object_from_handle(raw))
+    return values
+
+
+def _record_fields_from_handles(raw_values: list[tuple[str, tuple[int, int]]]) -> list[tuple[str, Object]]:
+    values: list[tuple[str, Object]] = []
+    for raw in raw_values:
+        values.append((raw[0], _object_from_handle(raw[1])))
+    return values
+
+
+def _handles_from_objects(values: list[Object]) -> list[tuple[int, int]]:
+    raw_values: list[tuple[int, int]] = []
+    for value in values:
+        raw_values.append((value._handle, value._token))
+    return raw_values
+
+
+def _keyed_handles_from_objects(values: list[tuple[str, Object]]) -> list[tuple[str, tuple[int, int]]]:
+    raw_values: list[tuple[str, tuple[int, int]]] = []
+    for value in values:
+        raw_values.append((value[0], (value[1]._handle, value[1]._token)))
+    return raw_values
+
+
 def import_module(name: str) -> Result[Object, PythonError]:
     try:
         raw: tuple[int, int] = py_import_module(name)
@@ -79,7 +155,9 @@ def call(
     kwargs: list[tuple[str, Object]],
 ) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_call(callable_obj._handle, callable_obj._token, args, kwargs)
+        raw_args: list[tuple[int, int]] = _handles_from_objects(args)
+        raw_kwargs: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(kwargs)
+        raw: tuple[int, int] = py_call(callable_obj._handle, callable_obj._token, raw_args, raw_kwargs)
         return _object_from_handle(raw)
     except PythonError as e:
         raise e
@@ -92,7 +170,9 @@ def call_attr(
     kwargs: list[tuple[str, Object]],
 ) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_call_attr(obj._handle, obj._token, name, args, kwargs)
+        raw_args: list[tuple[int, int]] = _handles_from_objects(args)
+        raw_kwargs: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(kwargs)
+        raw: tuple[int, int] = py_call_attr(obj._handle, obj._token, name, raw_args, raw_kwargs)
         return _object_from_handle(raw)
     except PythonError as e:
         raise e
@@ -112,3 +192,243 @@ def enter_context(obj: Object) -> Result[Object, PythonError]:
 
 def exit_context(obj: Object) -> Result[None, PythonError]:
     return py_exit_context(obj._handle, obj._token)
+
+
+def from_none() -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_from_none()
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_bool(value: bool) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_from_bool(value)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_int(value: int) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_from_int(value)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_float(value: float) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_from_float(value)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_str(value: str) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_from_str(value)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_bytes(value: bytes) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_from_bytes(value)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_list(own values: list[Object]) -> Result[Object, PythonError]:
+    try:
+        raw_values: list[tuple[int, int]] = _handles_from_objects(values)
+        raw: tuple[int, int] = py_from_list(raw_values)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_tuple(own values: list[Object]) -> Result[Object, PythonError]:
+    try:
+        raw_values: list[tuple[int, int]] = _handles_from_objects(values)
+        raw: tuple[int, int] = py_from_tuple(raw_values)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_dict_str(own values: list[tuple[str, Object]]) -> Result[Object, PythonError]:
+    try:
+        raw_values: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(values)
+        raw: tuple[int, int] = py_from_dict_str(raw_values)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def from_record(own values: list[tuple[str, Object]]) -> Result[Object, PythonError]:
+    try:
+        raw_values: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(values)
+        raw: tuple[int, int] = py_from_record(raw_values)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def to_none(obj: Object) -> Result[None, PythonError]:
+    return py_to_none(obj._handle, obj._token)
+
+
+def to_bool(obj: Object) -> Result[bool, PythonError]:
+    return py_to_bool(obj._handle, obj._token)
+
+
+def to_int(obj: Object) -> Result[int, PythonError]:
+    return py_to_int(obj._handle, obj._token)
+
+
+def to_i8(obj: Object) -> Result[int8, PythonError]:
+    return py_to_i8(obj._handle, obj._token)
+
+
+def to_i16(obj: Object) -> Result[int16, PythonError]:
+    return py_to_i16(obj._handle, obj._token)
+
+
+def to_i32(obj: Object) -> Result[int32, PythonError]:
+    return py_to_i32(obj._handle, obj._token)
+
+
+def to_i64(obj: Object) -> Result[int64, PythonError]:
+    return py_to_i64(obj._handle, obj._token)
+
+
+def to_u8(obj: Object) -> Result[uint8, PythonError]:
+    return py_to_u8(obj._handle, obj._token)
+
+
+def to_u16(obj: Object) -> Result[uint16, PythonError]:
+    return py_to_u16(obj._handle, obj._token)
+
+
+def to_u32(obj: Object) -> Result[uint32, PythonError]:
+    return py_to_u32(obj._handle, obj._token)
+
+
+def to_u64(obj: Object) -> Result[uint64, PythonError]:
+    return py_to_u64(obj._handle, obj._token)
+
+
+def to_isize(obj: Object) -> Result[isize, PythonError]:
+    return py_to_isize(obj._handle, obj._token)
+
+
+def to_usize(obj: Object) -> Result[usize, PythonError]:
+    return py_to_usize(obj._handle, obj._token)
+
+
+def to_float(obj: Object) -> Result[float, PythonError]:
+    return py_to_float(obj._handle, obj._token)
+
+
+def to_str(obj: Object) -> Result[str, PythonError]:
+    return py_to_str(obj._handle, obj._token)
+
+
+def to_bytes(obj: Object) -> Result[bytes, PythonError]:
+    return py_to_bytes(obj._handle, obj._token)
+
+
+def copy_list_bool(obj: Object) -> Result[list[bool], PythonError]:
+    return py_copy_list_bool(obj._handle, obj._token)
+
+
+def copy_list_int(obj: Object) -> Result[list[int], PythonError]:
+    return py_copy_list_int(obj._handle, obj._token)
+
+
+def copy_list_i32(obj: Object) -> Result[list[int32], PythonError]:
+    return py_copy_list_i32(obj._handle, obj._token)
+
+
+def copy_list_u8(obj: Object) -> Result[list[uint8], PythonError]:
+    return py_copy_list_u8(obj._handle, obj._token)
+
+
+def copy_list_float(obj: Object) -> Result[list[float], PythonError]:
+    return py_copy_list_float(obj._handle, obj._token)
+
+
+def copy_list_str(obj: Object) -> Result[list[str], PythonError]:
+    return py_copy_list_str(obj._handle, obj._token)
+
+
+def copy_list_bytes(obj: Object) -> Result[list[bytes], PythonError]:
+    return py_copy_list_bytes(obj._handle, obj._token)
+
+
+def copy_tuple_bool(obj: Object) -> Result[list[bool], PythonError]:
+    return py_copy_tuple_bool(obj._handle, obj._token)
+
+
+def copy_tuple_int(obj: Object) -> Result[list[int], PythonError]:
+    return py_copy_tuple_int(obj._handle, obj._token)
+
+
+def copy_tuple_i32(obj: Object) -> Result[list[int32], PythonError]:
+    return py_copy_tuple_i32(obj._handle, obj._token)
+
+
+def copy_tuple_u8(obj: Object) -> Result[list[uint8], PythonError]:
+    return py_copy_tuple_u8(obj._handle, obj._token)
+
+
+def copy_tuple_float(obj: Object) -> Result[list[float], PythonError]:
+    return py_copy_tuple_float(obj._handle, obj._token)
+
+
+def copy_tuple_str(obj: Object) -> Result[list[str], PythonError]:
+    return py_copy_tuple_str(obj._handle, obj._token)
+
+
+def copy_tuple_bytes(obj: Object) -> Result[list[bytes], PythonError]:
+    return py_copy_tuple_bytes(obj._handle, obj._token)
+
+
+def copy_dict_str_bool(obj: Object) -> Result[dict[str, bool], PythonError]:
+    return py_copy_dict_str_bool(obj._handle, obj._token)
+
+
+def copy_dict_str_int(obj: Object) -> Result[dict[str, int], PythonError]:
+    return py_copy_dict_str_int(obj._handle, obj._token)
+
+
+def copy_dict_str_i32(obj: Object) -> Result[dict[str, int32], PythonError]:
+    return py_copy_dict_str_i32(obj._handle, obj._token)
+
+
+def copy_dict_str_u8(obj: Object) -> Result[dict[str, uint8], PythonError]:
+    return py_copy_dict_str_u8(obj._handle, obj._token)
+
+
+def copy_dict_str_float(obj: Object) -> Result[dict[str, float], PythonError]:
+    return py_copy_dict_str_float(obj._handle, obj._token)
+
+
+def copy_dict_str_str(obj: Object) -> Result[dict[str, str], PythonError]:
+    return py_copy_dict_str_str(obj._handle, obj._token)
+
+
+def copy_dict_str_bytes(obj: Object) -> Result[dict[str, bytes], PythonError]:
+    return py_copy_dict_str_bytes(obj._handle, obj._token)
+
+
+def copy_record_fields(obj: Object, fields: list[str]) -> Result[list[tuple[str, Object]], PythonError]:
+    try:
+        raw: list[tuple[str, tuple[int, int]]] = py_copy_record_fields(obj._handle, obj._token, fields)
+        return _record_fields_from_handles(raw)
+    except PythonError as e:
+        raise e

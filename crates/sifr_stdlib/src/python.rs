@@ -1,21 +1,9 @@
 use super::{result_ty, IntrinsicModule};
-use sifr_type_system::{FunctionType, Type};
+use sifr_type_system::{FixedIntType, FunctionType, Type};
 use std::collections::HashMap;
 
 fn python_error_result(ok: Type) -> Type {
     result_ty(ok, "PythonError")
-}
-
-fn object_class() -> Type {
-    Type::Class {
-        name: "Object".to_string(),
-        fields: vec![
-            ("_handle".to_string(), Type::Int),
-            ("_token".to_string(), Type::Int),
-        ],
-        methods: vec![],
-        parent_class: None,
-    }
 }
 
 fn object_handle() -> Type {
@@ -60,10 +48,10 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
             vec![
                 ("handle".to_string(), Type::Int),
                 ("token".to_string(), Type::Int),
-                ("args".to_string(), Type::List(Box::new(object_class()))),
+                ("args".to_string(), Type::List(Box::new(object_handle()))),
                 (
                     "kwargs".to_string(),
-                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_class()]))),
+                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_handle()]))),
                 ),
             ],
             python_error_result(object_handle()),
@@ -76,10 +64,10 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
                 ("handle".to_string(), Type::Int),
                 ("token".to_string(), Type::Int),
                 ("name".to_string(), Type::Str),
-                ("args".to_string(), Type::List(Box::new(object_class()))),
+                ("args".to_string(), Type::List(Box::new(object_handle()))),
                 (
                     "kwargs".to_string(),
-                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_class()]))),
+                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_handle()]))),
                 ),
             ],
             python_error_result(object_handle()),
@@ -113,6 +101,203 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
                 ("token".to_string(), Type::Int),
             ],
             python_error_result(Type::None),
+        ),
+    );
+    functions.insert(
+        "py_from_none".to_string(),
+        FunctionType::all_borrow(vec![], python_error_result(object_handle())),
+    );
+    functions.insert(
+        "py_from_bool".to_string(),
+        FunctionType::all_borrow(
+            vec![("value".to_string(), Type::Bool)],
+            python_error_result(object_handle()),
+        ),
+    );
+    functions.insert(
+        "py_from_int".to_string(),
+        FunctionType::all_borrow(
+            vec![("value".to_string(), Type::Int)],
+            python_error_result(object_handle()),
+        ),
+    );
+    functions.insert(
+        "py_from_float".to_string(),
+        FunctionType::all_borrow(
+            vec![("value".to_string(), Type::Float)],
+            python_error_result(object_handle()),
+        ),
+    );
+    functions.insert(
+        "py_from_str".to_string(),
+        FunctionType::all_borrow(
+            vec![("value".to_string(), Type::Str)],
+            python_error_result(object_handle()),
+        ),
+    );
+    functions.insert(
+        "py_from_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![("value".to_string(), Type::Bytes)],
+            python_error_result(object_handle()),
+        ),
+    );
+    functions.insert(
+        "py_from_list".to_string(),
+        FunctionType::all_borrow(
+            vec![("values".to_string(), Type::List(Box::new(object_handle())))],
+            python_error_result(object_handle()),
+        ),
+    );
+    functions.insert(
+        "py_from_tuple".to_string(),
+        FunctionType::all_borrow(
+            vec![("values".to_string(), Type::List(Box::new(object_handle())))],
+            python_error_result(object_handle()),
+        ),
+    );
+    for name in ["py_from_dict_str", "py_from_record"] {
+        functions.insert(
+            name.to_string(),
+            FunctionType::all_borrow(
+                vec![(
+                    "values".to_string(),
+                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_handle()]))),
+                )],
+                python_error_result(object_handle()),
+            ),
+        );
+    }
+    functions.insert(
+        "py_to_none".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::None),
+        ),
+    );
+    functions.insert(
+        "py_to_bool".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::Bool),
+        ),
+    );
+    functions.insert(
+        "py_to_int".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::Int),
+        ),
+    );
+    for (name, fixed) in [
+        ("py_to_i8", FixedIntType::I8),
+        ("py_to_i16", FixedIntType::I16),
+        ("py_to_i32", FixedIntType::I32),
+        ("py_to_i64", FixedIntType::I64),
+        ("py_to_u8", FixedIntType::U8),
+        ("py_to_u16", FixedIntType::U16),
+        ("py_to_u32", FixedIntType::U32),
+        ("py_to_u64", FixedIntType::U64),
+        ("py_to_isize", FixedIntType::ISize),
+        ("py_to_usize", FixedIntType::USize),
+    ] {
+        functions.insert(
+            name.to_string(),
+            FunctionType::all_borrow(
+                vec![
+                    ("handle".to_string(), Type::Int),
+                    ("token".to_string(), Type::Int),
+                ],
+                python_error_result(Type::FixedInt(fixed)),
+            ),
+        );
+    }
+    functions.insert(
+        "py_to_float".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::Float),
+        ),
+    );
+    functions.insert(
+        "py_to_str".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::Str),
+        ),
+    );
+    functions.insert(
+        "py_to_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::Bytes),
+        ),
+    );
+    for (suffix, value_ty) in [
+        ("bool", Type::Bool),
+        ("int", Type::Int),
+        ("i32", Type::FixedInt(FixedIntType::I32)),
+        ("u8", Type::FixedInt(FixedIntType::U8)),
+        ("float", Type::Float),
+        ("str", Type::Str),
+        ("bytes", Type::Bytes),
+    ] {
+        let handle_params = vec![
+            ("handle".to_string(), Type::Int),
+            ("token".to_string(), Type::Int),
+        ];
+        functions.insert(
+            format!("py_copy_list_{suffix}"),
+            FunctionType::all_borrow(
+                handle_params.clone(),
+                python_error_result(Type::List(Box::new(value_ty.clone()))),
+            ),
+        );
+        functions.insert(
+            format!("py_copy_tuple_{suffix}"),
+            FunctionType::all_borrow(
+                handle_params.clone(),
+                python_error_result(Type::List(Box::new(value_ty.clone()))),
+            ),
+        );
+        functions.insert(
+            format!("py_copy_dict_str_{suffix}"),
+            FunctionType::all_borrow(
+                handle_params,
+                python_error_result(Type::Dict(Box::new(Type::Str), Box::new(value_ty))),
+            ),
+        );
+    }
+    functions.insert(
+        "py_copy_record_fields".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+                ("fields".to_string(), Type::List(Box::new(Type::Str))),
+            ],
+            python_error_result(Type::List(Box::new(Type::Tuple(vec![
+                Type::Str,
+                object_handle(),
+            ])))),
         ),
     );
     IntrinsicModule {

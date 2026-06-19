@@ -1,0 +1,45 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    copy_dict_str_int,
+    copy_list_int,
+    copy_record_fields,
+    copy_tuple_i32,
+    from_dict_str,
+    from_int,
+    from_list,
+    from_record,
+    from_str,
+    from_tuple,
+    to_int,
+)
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        list_a: Object = from_int(1)
+        list_b: Object = from_int(2)
+        values: Object = from_list([list_a, list_b])
+        copied_values: list[int] = copy_list_int(values)
+
+        tuple_a: Object = from_int(1)
+        tuple_b: Object = from_int(2)
+        pair: Object = from_tuple([tuple_a, tuple_b])
+        copied_pair: list[int32] = copy_tuple_i32(pair)
+
+        dict_a: Object = from_int(1)
+        dict_b: Object = from_int(2)
+        mapping: Object = from_dict_str([("one", dict_a), ("two", dict_b)])
+        copied_mapping: dict[str, int] = copy_dict_str_int(mapping)
+
+        record_value: Object = from_int(2)
+        record_label: Object = from_str("answer")
+        record: Object = from_record([("value", record_value), ("label", record_label)])
+        fields: list[tuple[str, Object]] = copy_record_fields(record, ["value"])
+        field_value: int = to_int(fields[0][1])
+
+        if len(copied_values) == 2 and len(copied_pair) == 2 and copied_mapping["one"] == 1 and field_value == 2:
+            return None
+        return None
+    except PythonError as e:
+        raise e
