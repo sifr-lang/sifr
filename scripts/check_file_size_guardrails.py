@@ -95,7 +95,7 @@ def has_any_prefix(rel_path: Path, prefixes: Sequence[str]) -> bool:
 def is_excluded_source_path(rel_path: Path) -> bool:
     parts = path_parts(rel_path)
     name = rel_path.name
-    if has_any_part(rel_path, {"target", "third_party", "snapshots"}):
+    if has_any_part(rel_path, {".venv", "target", "third_party", "snapshots"}):
         return True
     if has_any_prefix(rel_path, EXTERNAL_CORPUS_PREFIXES):
         return True
@@ -270,6 +270,7 @@ def run_self_test() -> None:
     excluded_oversized = (
         "target/generated.rs",
         "third_party/vendor/tool.py",
+        "verification/areas/python_interop/.venv/lib/python3.13/site-packages/vendor.py",
         "crates/example/src/snapshots/output.rs",
         "verification/areas/performance/baselines/result.py",
         "verification/areas/algorithmic_compatibility/corpora/leetcode/benchmarks/report.py",

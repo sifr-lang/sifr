@@ -25,12 +25,22 @@ probe/selection cases. The runner must never invoke `uv sync` or install
 packages implicitly.
 
 Live dependency examples are intentionally opt-in. The `python-interop-live`
-profile uses selected-areas-only execution and currently runs the
-`live-policy` suite, which verifies the container-runtime/testcontainers policy
-without starting containers. Service-backed examples must be added to that
-profile, not to the offline create-pr/merge/nightly/release profiles. The area
-manifest remains offline by default; live suites must declare their own
-`network_mode` and resource classes.
+profile uses selected-areas-only execution and runs both:
+
+- `live-policy`: verifies the container-runtime/testcontainers policy without
+  starting containers.
+- `live-examples`: type-checks Sifr interop source examples through an explicit
+  package trust policy, then runs testcontainers-backed Python client examples
+  for Redis, Postgres, a Kafka-compatible Redpanda broker, and LocalStack
+  SNS/SQS.
+
+The live examples use the area-local locked Python project and never install
+packages from the runner itself. If Docker is unavailable, the suite emits
+`structured-skip` for the service cases after the Sifr source checks pass. When
+Docker is running, those same cases must reach `live-passed` or fail the profile.
+Service-backed examples belong in this profile, not in the offline
+create-pr/merge/nightly/release profiles. The area manifest remains offline by
+default; live suites must declare their own `network_mode` and resource classes.
 
 ## Groups
 
@@ -73,3 +83,13 @@ The exit evidence is recorded in
 `reports/python_interop_exit_evidence.md`, including diagnostic families,
 validation commands, PR links, and the distinction between live and matrix-only
 gates.
+
+Live example reports additionally include:
+
+- `source_checks`: `sifr check` results for the Sifr interop examples, compiled
+  through generated package metadata that declares allowed and trusted Python
+  roots.
+- `cases`: service-backed testcontainers results, each tied to the Sifr source
+  it proves.
+- `container_runtime`: Docker daemon availability and structured skip reason
+  when the local runtime is absent.

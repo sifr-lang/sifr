@@ -270,7 +270,7 @@ def collect_failures(roots: tuple[Path, ...]) -> list[Failure]:
 
 def should_skip(path: Path) -> bool:
     parts = set(path.relative_to(REPO_ROOT).parts) if path.is_relative_to(REPO_ROOT) else set(path.parts)
-    if parts & {".git", "__pycache__", "node_modules", "target", "third_party"}:
+    if parts & {".git", ".venv", "__pycache__", "node_modules", "target", "third_party"}:
         return True
     return path.is_file() and path.suffix not in TEXT_EXTENSIONS
 

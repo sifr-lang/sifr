@@ -12,6 +12,7 @@ from certification_matrix import build_certification_report, validate_certificat
 from env import discover_paths
 from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
+from live_examples import build_live_examples_report, run_live_examples_self_tests
 from live_policy import build_live_policy_report, run_live_policy_self_tests
 from report import write_report
 from smoke_matrix import KNOWN_GATES, KNOWN_GROUPS, KNOWN_TIERS
@@ -98,6 +99,10 @@ REQUIRED_SOURCE_FIXTURES = (
     "resource_cleanup/context_manager_failure.sifr",
     "resource_cleanup/context_manager_success.sifr",
     "resource_cleanup/resource_diagnostics.sifr",
+    "live_examples/redis_live_roundtrip.sifr",
+    "live_examples/postgres_live_roundtrip.sifr",
+    "live_examples/kafka_live_roundtrip.sifr",
+    "live_examples/localstack_sns_sqs_live_roundtrip.sifr",
 )
 
 
@@ -114,6 +119,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--self-test", action="store_true", help="Run runner positive and negative self-tests.")
     parser.add_argument("--live-policy", action="store_true", help="Validate live container-runtime policy.")
+    parser.add_argument("--live-examples", action="store_true", help="Run testcontainers-backed live examples.")
     return parser.parse_args(argv)
 
 
@@ -123,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.self_test:
         run_self_tests(paths.area_root)
         run_live_policy_self_tests(paths)
+        run_live_examples_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:
@@ -131,6 +138,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(f"python interop live-policy ok: report={report_path.relative_to(paths.repo_root)}")
         return 0
+    if args.live_examples:
+        payload = build_live_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop live-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "live-failed" else 0
 
     selected_groups = validate_filters("group", args.group, KNOWN_GROUPS)
     selected_tiers = validate_filters("tier", args.tier, KNOWN_TIERS)
