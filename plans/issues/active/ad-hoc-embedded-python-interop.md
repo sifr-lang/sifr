@@ -63,7 +63,12 @@
   - Documented the parser reservation for exact `py.with(...)` and the helper-owned entered-object rule.
   - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2671](https://github.com/sifr-lang/sifr/pull/2671).
-- [ ] `milestone_py_7`: `Py_buffer` zero-copy core.
+- [x] `milestone_py_7`: `Py_buffer` zero-copy core.
+  - Added `py.BufferView` and explicit u8 buffer helpers for zero-copy acquisition, checked writable requests, explicit copy, and deterministic release.
+  - Added runtime `PyBuffer<u8>` ownership tracking with shape, stride, contiguity, format, readonly, and double-release diagnostics.
+  - Added numpy-buffer contract/source fixtures covering readonly bytes, memoryview, explicit copy, wrong dtype, writable-on-readonly, and use-after-release behavior.
+  - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - Merged via PR [#2672](https://github.com/sifr-lang/sifr/pull/2672).
 - [ ] `milestone_py_8`: Arrow PyCapsule interop.
 - [ ] `milestone_py_9`: DLPack tensor interop.
 - [ ] `milestone_py_10`: Python-to-Sifr callbacks.

@@ -1,0 +1,27 @@
+from sifr.python import (
+    ArrowCapsule,
+    Object,
+    PythonError,
+    close,
+    from_none,
+    release_arrow,
+    zero_copy_arrow_array,
+    zero_copy_arrow_schema,
+    zero_copy_arrow_stream,
+)
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        obj: Object = from_none()
+        array: ArrowCapsule = zero_copy_arrow_array(obj)
+        stream: ArrowCapsule = zero_copy_arrow_stream(obj)
+        schema: ArrowCapsule = zero_copy_arrow_schema(obj)
+        array_released: None = release_arrow(array)
+        stream_released: None = release_arrow(stream)
+        schema_released: None = release_arrow(schema)
+        closed: None = close(obj)
+        return None
+    except PythonError as e:
+        raise e

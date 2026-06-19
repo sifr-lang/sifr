@@ -57,6 +57,7 @@ REQUIRED_FIXTURE_FILES = (
     "primitive_conversion/primitive_roundtrip.json",
     "async_blocking/async_blocking_contract.json",
     "numpy_buffer/py_buffer_contract.json",
+    "pyarrow_capsule/arrow_capsule_contract.json",
     "resource_cleanup/context_manager_cleanup.json",
 )
 
@@ -69,6 +70,9 @@ REQUIRED_SOURCE_FIXTURES = (
     "numpy_buffer/py_buffer_readonly_failure.sifr",
     "numpy_buffer/py_buffer_memoryview.sifr",
     "numpy_buffer/py_buffer_roundtrip.sifr",
+    "pyarrow_capsule/arrow_capsule_copy_possible.sifr",
+    "pyarrow_capsule/arrow_capsule_roundtrip.sifr",
+    "pyarrow_capsule/arrow_capsule_zero_copy.sifr",
     "resource_cleanup/context_manager_body_failure.sifr",
     "resource_cleanup/context_manager_failure.sifr",
     "resource_cleanup/context_manager_success.sifr",

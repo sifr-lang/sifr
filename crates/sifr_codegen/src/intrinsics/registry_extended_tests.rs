@@ -143,6 +143,22 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     )
     .expect("py_release_buffer should lower");
     assert!(render_expr(&release.expr).contains("sifr_runtime::python::release_buffer"));
+
+    let arrow = lower_intrinsic(
+        "py_arrow_stream",
+        &["object_handle".to_string(), "object_token".to_string()],
+    )
+    .expect("py_arrow_stream should lower");
+    let arrow_rendered = render_expr(&arrow.expr);
+    assert!(arrow_rendered.contains("sifr_runtime::python::arrow_stream"));
+    assert!(arrow_rendered.contains("__sifr_python_arrow.copy_possible"));
+
+    let release_arrow = lower_intrinsic(
+        "py_release_arrow",
+        &["arrow_handle".to_string(), "arrow_token".to_string()],
+    )
+    .expect("py_release_arrow should lower");
+    assert!(render_expr(&release_arrow.expr).contains("sifr_runtime::python::release_arrow"));
 }
 
 #[test]

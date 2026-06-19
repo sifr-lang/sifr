@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "case_group": "python_arrow_pycapsule_interop",
+  "surface": "sifr.python",
+  "positive_cases": [
+    {
+      "name": "pyarrow_array_capsules_are_zero_copy_proven",
+      "operations": ["export_arrow_array", "zero_copy_arrow_array", "release_arrow"],
+      "expected_capsule_names": ["arrow_schema", "arrow_array"],
+      "expected_copy_possible": false,
+      "producer_roots": ["pyarrow"]
+    },
+    {
+      "name": "polars_stream_capsule_is_zero_copy_proven",
+      "operations": ["export_arrow_stream", "zero_copy_arrow_stream", "release_arrow"],
+      "expected_capsule_names": ["arrow_array_stream"],
+      "expected_copy_possible": false,
+      "producer_roots": ["polars"]
+    },
+    {
+      "name": "schema_capsule_preserves_release_ownership",
+      "operations": ["export_arrow_schema", "release_arrow"],
+      "expected_capsule_names": ["arrow_schema"],
+      "release_behavior": "deterministic_resource_release"
+    }
+  ],
+  "copy_possible_cases": [
+    {
+      "name": "pandas_stream_is_marked_copy_possible",
+      "operations": ["export_arrow_stream"],
+      "expected_copy_possible": true,
+      "zero_copy_helper_behavior": "rejects_without_silent_copy"
+    },
+    {
+      "name": "unknown_arrow_producer_is_marked_copy_possible",
+      "operations": ["export_arrow_array"],
+      "expected_copy_possible": true,
+      "zero_copy_helper_behavior": "rejects_without_silent_copy"
+    },
+    {
+      "name": "pillow_image_arrow_export_is_marked_copy_possible",
+      "operations": ["export_arrow_array"],
+      "expected_copy_possible": true,
+      "zero_copy_helper_behavior": "rejects_without_silent_copy"
+    }
+  ],
+  "negative_cases": [
+    {
+      "name": "malformed_capsule_name_rejected",
+      "operation": "export_arrow_array",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "SifrPythonArrowCapsuleError"
+    },
+    {
+      "name": "capsule_without_destructor_rejected",
+      "operation": "export_arrow_schema",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "SifrPythonArrowCapsuleError"
+    },
+    {
+      "name": "double_release_rejected",
+      "operation": "release_arrow",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedArrowCapsule"
+    }
+  ]
+}

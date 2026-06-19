@@ -11,6 +11,10 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_buffer_u8" => lower_py_buffer_u8(args),
         "py_copy_buffer_u8" => lower_py_copy_buffer_u8(args),
         "py_release_buffer" => lower_py_release_buffer(args),
+        "py_arrow_array" => lower_py_arrow_array(args),
+        "py_arrow_stream" => lower_py_arrow_stream(args),
+        "py_arrow_schema" => lower_py_arrow_schema(args),
+        "py_release_arrow" => lower_py_release_arrow(args),
         "py_enter_context" => lower_py_enter_context(args),
         "py_exit_context" => lower_py_exit_context(args),
         "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
@@ -270,6 +274,54 @@ pub(crate) fn lower_py_release_buffer(args: &[RustExpr]) -> Option<RustExpr> {
 }
 
 fn lower_buffer_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    let handle = render_expr(&args[0]);
+    let token = render_expr(&args[1]);
+    Some(map_python_error(format!(
+        "sifr_runtime::python::{function}(({handle}, {token}))"
+    )))
+}
+
+pub(crate) fn lower_py_arrow_array(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_arrow_export(args, "arrow_array")
+}
+
+pub(crate) fn lower_py_arrow_stream(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_arrow_export(args, "arrow_stream")
+}
+
+pub(crate) fn lower_py_arrow_schema(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_arrow_export(args, "arrow_schema")
+}
+
+pub(crate) fn lower_py_release_arrow(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_arrow_conversion(args, "release_arrow")
+}
+
+fn lower_arrow_export(args: &[RustExpr], function: &str) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    let handle = render_expr(&args[0]);
+    let token = render_expr(&args[1]);
+    Some(map_python_error(format!(
+        r#"sifr_runtime::python::{function}(({handle}, {token})).map(|__sifr_python_arrow| {{
+            (
+                __sifr_python_arrow.handle,
+                __sifr_python_arrow.token,
+                __sifr_python_arrow.kind,
+                __sifr_python_arrow.capsule_names,
+                __sifr_python_arrow.producer_module,
+                __sifr_python_arrow.producer_type,
+                __sifr_python_arrow.copy_possible,
+            )
+        }})"#
+    )))
+}
+
+fn lower_arrow_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
