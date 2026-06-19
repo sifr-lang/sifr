@@ -50,4 +50,4 @@ Phase status remains authoritative in each phase file header and is mirrored her
 | 41 | Phase 41: Web Framework and Platform Expansion | unspecified | [41_web_framework_and_platform_expansion.md](./41_web_framework_and_platform_expansion.md) |
 | 42 | Phase 42: Data Science and ML | unspecified | [42_data_science_ml.md](./42_data_science_ml.md) |
 | 43 | Phase 43: Interoperability | unspecified | [43_interoperability.md](./43_interoperability.md) |
-| PY-1 | Ad Hoc Embedded Python Interop | complete pending py12 PR #2677 merge (py0-py11 merged through PR #2676; py12 docs, diagnostics, reviews, and local validation complete) | [../issues/active/ad-hoc-embedded-python-interop.md](../issues/active/ad-hoc-embedded-python-interop.md) |
+| PY-1 | Ad Hoc Embedded Python Interop | complete (py0-py12 merged through PR #2677; py12 docs, diagnostics, reviews, and local validation complete) | [../issues/active/ad-hoc-embedded-python-interop.md](../issues/active/ad-hoc-embedded-python-interop.md) |

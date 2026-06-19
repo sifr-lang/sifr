@@ -121,4 +121,4 @@ flowchart LR
 - Phase 42 and Phase 43 are intentionally excluded from the main execution table until post-Phase-41 planning lock.
 - [42_data_science_ml.md](./phases/42_data_science_ml.md) (needs more planning)
 - [43_interoperability.md](./phases/43_interoperability.md) (needs more planning)
-- [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (complete pending py12 PR #2677 merge for the sequence-independent embedded CPython/uv interop lane; py0-py11 are merged through PR #2676, and py12 completed public/internal docs, diagnostic evidence, py12 and phase-level Opus reviews, and local validation)
+- [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (complete for the sequence-independent embedded CPython/uv interop lane; py0-py12 are merged through PR #2677 with public/internal docs, diagnostic evidence, py12 and phase-level Opus reviews, and local validation)
