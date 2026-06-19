@@ -2,12 +2,11 @@
 
 Status: documentation, evidence, Opus sign-offs, and local validation are complete. PR #2677 merged on 2026-06-19.
 
-Additional verification productionization implementation is complete through
-PR #2682: PR #2680 moved the runner into `verification/areas/python_interop`,
-PR #2681 added explicit container-runtime/live-profile policy, and PR #2682
-added the opt-in testcontainers-backed live examples for Redis, Postgres,
-Kafka-compatible Redpanda, and LocalStack SNS/SQS. Final status is tracked in
-`plans/issues/active/python-interop-verification-production.md`.
+Additional verification productionization is complete through PR #2683: PR
+#2680 moved the runner into `verification/areas/python_interop`, PR #2681 added
+explicit container-runtime/live-profile policy, PR #2682 added the opt-in
+testcontainers-backed live examples for Redis, Postgres, Kafka-compatible
+Redpanda, and LocalStack SNS/SQS, and PR #2683 recorded final status evidence.
 
 ## Scope Covered
 
@@ -121,3 +120,4 @@ Latest local validation evidence:
 - verification area migration: [#2680](https://github.com/sifr-lang/sifr/pull/2680)
 - verification live policy: [#2681](https://github.com/sifr-lang/sifr/pull/2681)
 - verification live examples: [#2682](https://github.com/sifr-lang/sifr/pull/2682)
+- verification final status: [#2683](https://github.com/sifr-lang/sifr/pull/2683)
