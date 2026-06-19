@@ -38,7 +38,16 @@
   - Deferred bootstrap reporter/`eprintln!` cleanup to `milestone_py_5` package-runtime startup work; py3 keeps init failure as pre-main process exit.
   - Focused validation passing: runtime Python tests, package Python tests, lowering trust tests, stdlib/codegen feature tests, `verification/python_interop/run.sh --group scaffold`, diagnostics coverage checks, and `scripts/run_all_tests.sh --profile create-pr`.
   - Merged via PR [#2668](https://github.com/sifr-lang/sifr/pull/2668).
-- [ ] `milestone_py_4`: Primitive and typed conversion.
+- [x] `milestone_py_4`: Primitive and typed conversion.
+  - Added explicit `sifr.python` primitive constructors/extractors for `None`, bool, exact int, checked fixed-width integers, float, str, and exact bytes.
+  - Added handle-based Python list, tuple, dict, and record construction so deep conversion remains explicit before Python calls.
+  - Added copy-oriented typed list/tuple/dict conversions for core primitive values plus record-field extraction as `Object` handles.
+  - Preserved nested conversion contexts for indexed/keyed failures and added fixed-width overflow diagnostics coverage.
+  - Fixed imported `list[Object]` wrapper compatibility by lowering public object containers to raw handle tuples at the intrinsic boundary.
+  - Added a regression test proving failed record-field conversion does not leak partially-created handles.
+  - Added py4 JSON/source fixtures and required them from the Python interop scaffold runner.
+  - Opus review round 2 reported no remaining blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - Merged via PR [#2669](https://github.com/sifr-lang/sifr/pull/2669).
 - [ ] `milestone_py_5`: Async/blocking integration.
 - [ ] `milestone_py_6`: Resource cleanup and leak diagnostics.
 - [ ] `milestone_py_7`: `Py_buffer` zero-copy core.

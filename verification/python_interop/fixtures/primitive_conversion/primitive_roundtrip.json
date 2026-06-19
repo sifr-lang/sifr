@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "case_group": "python_primitive_conversion",
+  "surface": "sifr.python",
+  "positive_cases": [
+    {
+      "name": "primitive_object_constructors",
+      "operations": ["from_none", "from_bool", "from_int", "from_float", "from_str", "from_bytes"],
+      "expected": "primitive Sifr values are explicitly copied into Python Object handles"
+    },
+    {
+      "name": "primitive_extractors",
+      "operations": ["to_none", "to_bool", "to_int", "to_float", "to_str", "to_bytes"],
+      "expected": "Python primitive objects convert explicitly to matching Sifr values"
+    },
+    {
+      "name": "fixed_width_extractors",
+      "operations": ["to_i8", "to_i16", "to_i32", "to_i64", "to_u8", "to_u16", "to_u32", "to_u64", "to_isize", "to_usize"],
+      "expected": "Python integers convert to fixed-width Sifr integers only when in range"
+    },
+    {
+      "name": "explicit_container_constructors",
+      "operations": ["from_list", "from_tuple", "from_dict_str", "from_record"],
+      "expected": "Sifr values must be explicitly converted to Object handles before Python containers or record dictionaries are constructed"
+    },
+    {
+      "name": "explicit_typed_container_copies",
+      "operations": ["copy_list_int", "copy_list_u8", "copy_tuple_i32", "copy_dict_str_int", "copy_record_fields"],
+      "expected": "Python lists, tuples, dictionaries, and record fields are copied only through explicit typed conversion APIs"
+    }
+  ],
+  "negative_cases": [
+    {
+      "name": "fixed_width_overflow",
+      "operation": "to_u8",
+      "input": 256,
+      "expected_error_kind": "conversion"
+    },
+    {
+      "name": "wrong_primitive_type",
+      "operation": "to_int",
+      "input": "not an int",
+      "expected_error_kind": "conversion"
+    },
+    {
+      "name": "closed_handle_conversion",
+      "operation": "to_str",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedObject"
+    },
+    {
+      "name": "nested_list_overflow_path",
+      "operation": "copy_list_u8",
+      "input": [1, 256],
+      "expected_error_kind": "conversion",
+      "expected_context_contains": "copy_list_u8[1]"
+    },
+    {
+      "name": "wrong_container_kind",
+      "operation": "copy_tuple_i32",
+      "input": [1, 2],
+      "expected_error_kind": "conversion",
+      "expected_context_contains": "copy_tuple_i32"
+    }
+  ],
+  "non_goals": [
+    "Deep list, tuple, dict, and record conversions are never performed implicitly by primitive constructors or Python call arguments.",
+    "Generic py.to[T] syntax remains future sugar over explicit typed conversion APIs until HIR lowering preserves explicit type arguments for intrinsics."
+  ]
+}

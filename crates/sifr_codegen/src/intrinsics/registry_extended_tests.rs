@@ -16,6 +16,86 @@ pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
 }
 
 #[test]
+pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
+    let imported = lower_intrinsic("py_import_module", &["module".to_string()])
+        .expect("py_import_module should lower");
+    assert_eq!(
+        imported.required_feature,
+        Some(sifr_stdlib::StdlibFeature::PythonRuntime)
+    );
+    let rendered = render_expr(&imported.expr);
+    assert!(rendered.contains("sifr_runtime::python::import_module"));
+    assert!(rendered.contains("PythonError"));
+
+    let call = lower_intrinsic(
+        "py_call",
+        &[
+            "callable_handle".to_string(),
+            "callable_token".to_string(),
+            "args".to_string(),
+            "kwargs".to_string(),
+        ],
+    )
+    .expect("py_call should lower");
+    assert_eq!(
+        call.required_feature,
+        Some(sifr_stdlib::StdlibFeature::PythonRuntime)
+    );
+    let call_rendered = render_expr(&call.expr);
+    assert!(call_rendered.contains("sifr_runtime::python::call_object"));
+    assert!(call_rendered.contains("(callable_handle, callable_token)"));
+    assert!(call_rendered.contains("__sifr_python_args"));
+    assert!(call_rendered.contains("__sifr_python_kwargs"));
+
+    let from_str =
+        lower_intrinsic("py_from_str", &["value".to_string()]).expect("py_from_str should lower");
+    assert_eq!(
+        from_str.required_feature,
+        Some(sifr_stdlib::StdlibFeature::PythonRuntime)
+    );
+    assert!(render_expr(&from_str.expr).contains("sifr_runtime::python::from_str"));
+
+    let to_i32 = lower_intrinsic(
+        "py_to_i32",
+        &["object_handle".to_string(), "object_token".to_string()],
+    )
+    .expect("py_to_i32 should lower");
+    assert_eq!(
+        to_i32.required_feature,
+        Some(sifr_stdlib::StdlibFeature::PythonRuntime)
+    );
+    let to_i32_rendered = render_expr(&to_i32.expr);
+    assert!(to_i32_rendered.contains("sifr_runtime::python::to_i32"));
+    assert!(to_i32_rendered.contains("(object_handle, object_token)"));
+
+    let from_list = lower_intrinsic("py_from_list", &["values".to_string()])
+        .expect("py_from_list should lower");
+    let from_list_rendered = render_expr(&from_list.expr);
+    assert!(from_list_rendered.contains("sifr_runtime::python::from_list"));
+    assert!(from_list_rendered.contains("__sifr_python_value.0"));
+
+    let copy_list_u8 = lower_intrinsic(
+        "py_copy_list_u8",
+        &["object_handle".to_string(), "object_token".to_string()],
+    )
+    .expect("py_copy_list_u8 should lower");
+    assert!(render_expr(&copy_list_u8.expr).contains("sifr_runtime::python::copy_list_u8"));
+
+    let record_fields = lower_intrinsic(
+        "py_copy_record_fields",
+        &[
+            "object_handle".to_string(),
+            "object_token".to_string(),
+            "fields".to_string(),
+        ],
+    )
+    .expect("py_copy_record_fields should lower");
+    let record_fields_rendered = render_expr(&record_fields.expr);
+    assert!(record_fields_rendered.contains("sifr_runtime::python::copy_record_fields"));
+    assert!(record_fields_rendered.contains("__sifr_python_fields"));
+}
+
+#[test]
 pub(crate) fn lowers_uuid_intrinsic_via_registry() {
     let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
     assert_eq!(

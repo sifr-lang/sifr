@@ -8,8 +8,15 @@ use std::sync::{Mutex, MutexGuard};
 
 mod object_ops;
 pub use object_ops::{
-    call_attr, call_object, close_object, enter_context, exit_context, get_attr, get_item_str,
-    import_module, ObjectHandle, PythonError,
+    call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
+    copy_dict_str_float, copy_dict_str_i32, copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8,
+    copy_list_bool, copy_list_bytes, copy_list_float, copy_list_i32, copy_list_int, copy_list_str,
+    copy_list_u8, copy_record_fields, copy_tuple_bool, copy_tuple_bytes, copy_tuple_float,
+    copy_tuple_i32, copy_tuple_int, copy_tuple_str, copy_tuple_u8, enter_context, exit_context,
+    from_bool, from_bytes, from_dict_str, from_float, from_int, from_list, from_none, from_record,
+    from_str, from_tuple, get_attr, get_item_str, import_module, to_bool, to_bytes, to_float,
+    to_i16, to_i32, to_i64, to_i8, to_int, to_isize, to_none, to_str, to_u16, to_u32, to_u64,
+    to_u8, to_usize, ObjectHandle, PythonError,
 };
 
 static RUNTIME_STATE: Mutex<RuntimeState> = Mutex::new(RuntimeState::new());
@@ -543,6 +550,14 @@ fn reset_runtime_state_for_tests() {
 }
 
 #[cfg(test)]
+static TEST_LOCK: Mutex<()> = Mutex::new(());
+
+#[cfg(test)]
+fn test_guard() -> MutexGuard<'static, ()> {
+    TEST_LOCK.lock().expect("test lock should be available")
+}
+
+#[cfg(test)]
 fn test_config(label: &str) -> PythonRuntimeConfig {
     let mut config = local_python_config();
     config.probe_digest = format!("digest-{label}");
@@ -627,13 +642,6 @@ print(os.pathsep.join(sys.path))
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::{Mutex, MutexGuard};
-
-    static TEST_LOCK: Mutex<()> = Mutex::new(());
-
-    fn test_guard() -> MutexGuard<'static, ()> {
-        TEST_LOCK.lock().expect("test lock should be available")
-    }
 
     #[test]
     fn initializes_and_accepts_repeated_same_config() {
@@ -821,6 +829,27 @@ mod tests {
 
         assert_eq!(error.kind, "resource");
         assert!(error.message.contains("closed"));
+    }
+
+    #[test]
+    fn failed_record_field_copy_does_not_leak_partial_handles() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("record-field-leak")).expect("init should succeed");
+        let value = from_int(42).expect("field value should be stored");
+        let record = from_record(&[("value", value)]).expect("record should be stored");
+        let before = shutdown_diagnostics().expect("diagnostics should be available");
+
+        let error = copy_record_fields(record, &["value", "missing"])
+            .expect_err("missing field should fail");
+
+        assert_eq!(error.kind, "conversion");
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            before
+        );
+        close_object(record).expect("record should close");
+        close_object(value).expect("field value should close");
     }
 
     #[test]
