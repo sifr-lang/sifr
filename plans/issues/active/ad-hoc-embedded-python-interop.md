@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: complete pending py12 PR #2677 merge. `milestone_py_0` through `milestone_py_11` are merged; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
+> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
 
 ## Execution Status
 
@@ -99,9 +99,9 @@
   - Recorded internal architecture evidence for runtime lifecycle, GIL/refcount ownership, environment probes, verification gates, and example-to-fixture mapping.
   - Confirmed active Python environment/trust diagnostics have stable codes, generated docs, structured JSON arguments, and positive/negative test references.
   - Recorded exit evidence in `verification/python_interop/reports/python_interop_exit_evidence.md`.
-  - Opus py12 review round 4 and final implementation review round 3 reported no blockers.
-  - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests with 0 failures and one warm wall-time advisory; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
-  - PR [#2677](https://github.com/sifr-lang/sifr/pull/2677) opened for final documentation PR merge.
+  - Opus py12 review round 4 and final implementation review round 2 reported no blockers.
+  - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed with e2e cache hits `44/44`, 6 hardening variants, and 0 failures; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
+  - Merged via PR [#2677](https://github.com/sifr-lang/sifr/pull/2677).
 
 ## Objective
 

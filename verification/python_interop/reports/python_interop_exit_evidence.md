@@ -1,6 +1,6 @@
 # Embedded Python Interop Exit Evidence
 
-Status: documentation, evidence, Opus sign-offs, and local validation are complete. PR #2677 is pending merge.
+Status: documentation, evidence, Opus sign-offs, and local validation are complete. PR #2677 merged on 2026-06-19.
 
 ## Scope Covered
 
@@ -78,10 +78,10 @@ Latest local validation evidence:
   - `verification/python_interop/run.sh --group dataframes`: `matrix-passed`, 4 certified packages.
   - `verification/python_interop/run.sh --group cloud --package boto3`: `matrix-passed`, 1 certified package.
 - py12 `scripts/run_all_tests.sh --profile create-pr` passed on 2026-06-19:
-  - `wall_time=713.46s`, `cpu=719.98s`, `max_rss=518.8MiB`, `swaps=0`.
-  - e2e: 132 passed, 0 failed; cache hits `0/44`.
+  - `wall_time=231.91s`, `cpu=218.51s`, `max_rss=391.6MiB`, `swaps=0`.
+  - e2e cache hits: `44/44`.
   - hardening summary: 6 variants, 0 failures, 0 blocking failures.
-  - advisory: `warm wall-time budget exceeded` from cold e2e cache rebuilds.
+  - advisory: `warm wall-time budget exceeded`.
 - py12 `scripts/run_all_tests.sh` default merge gate passed on 2026-06-19:
   - `wall_time=1360.56s`, `cpu=1268.50s`, `max_rss=542.7MiB`, `swaps=0`.
   - e2e: 651 passed, 0 failed; cache hits `182/182`.
