@@ -25,8 +25,8 @@
   - Added runtime lifecycle state with same-config repeated init, conflicting-config rejection, GIL attach/detach helpers, owned Python object tracking, and shutdown diagnostics.
   - Added focused runtime, stdlib dependency, and driver bootstrap tests; Opus review approved and local `create-pr` validation passed.
   - Merged via PR [#2667](https://github.com/sifr-lang/sifr/pull/2667).
-- [ ] `milestone_py_3`: Opaque object operations and errors.
-  - Implementation prepared on branch `ad-hoc-python-interop-py3`; Opus review round 3 found no remaining blocking findings for py3, and local `create-pr` validation passed pending PR and merge.
+- [x] `milestone_py_3`: Opaque object operations and errors.
+  - Implementation prepared on branch `ad-hoc-python-interop-py3`; Opus review round 3 found no remaining blocking findings for py3, and local `create-pr` validation passed.
   - Added `sifr.python` capability-token `Object`/structured `PythonError` surface over `_sifr.python` intrinsics; py3 accepts capability tokens as the practical opaque-object gate until a future sealed/extern class representation can remove the structural Sifr class surface.
   - Added runtime object handle operations for import, attr, string item access, calls, kwargs, explicit close, and context manager enter/exit.
   - Added runtime traceback capture and Python error family fields for import/attribute/item/call/conversion/resource/trust failures.
@@ -37,6 +37,7 @@
   - Deferred `__exit__` failure-triple plumbing to `milestone_py_6` `py.with` lowering, where Sifr/Python failure context will be available.
   - Deferred bootstrap reporter/`eprintln!` cleanup to `milestone_py_5` package-runtime startup work; py3 keeps init failure as pre-main process exit.
   - Focused validation passing: runtime Python tests, package Python tests, lowering trust tests, stdlib/codegen feature tests, `verification/python_interop/run.sh --group scaffold`, diagnostics coverage checks, and `scripts/run_all_tests.sh --profile create-pr`.
+  - Merged via PR [#2668](https://github.com/sifr-lang/sifr/pull/2668).
 - [ ] `milestone_py_4`: Primitive and typed conversion.
 - [ ] `milestone_py_5`: Async/blocking integration.
 - [ ] `milestone_py_6`: Resource cleanup and leak diagnostics.
