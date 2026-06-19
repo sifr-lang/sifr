@@ -123,6 +123,26 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     let exit_with_error_rendered = render_expr(&exit_with_error.expr);
     assert!(exit_with_error_rendered.contains("sifr_runtime::python::exit_context_with_error"));
     assert!(exit_with_error_rendered.contains("(object_handle, object_token)"));
+
+    let buffer = lower_intrinsic(
+        "py_buffer_u8",
+        &[
+            "object_handle".to_string(),
+            "object_token".to_string(),
+            "false".to_string(),
+        ],
+    )
+    .expect("py_buffer_u8 should lower");
+    let buffer_rendered = render_expr(&buffer.expr);
+    assert!(buffer_rendered.contains("sifr_runtime::python::buffer_u8"));
+    assert!(buffer_rendered.contains("__sifr_python_buffer.shape"));
+
+    let release = lower_intrinsic(
+        "py_release_buffer",
+        &["buffer_handle".to_string(), "buffer_token".to_string()],
+    )
+    .expect("py_release_buffer should lower");
+    assert!(render_expr(&release.expr).contains("sifr_runtime::python::release_buffer"));
 }
 
 #[test]

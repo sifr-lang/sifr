@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "case_group": "python_py_buffer_zero_copy_core",
+  "surface": "sifr.python",
+  "positive_cases": [
+    {
+      "name": "bytes_exporter_u8_readonly_view",
+      "operations": ["from_bytes", "zero_copy_as_u8", "copy_buffer_bytes", "release_buffer"],
+      "expected_metadata": {
+        "item_size": 1,
+        "readonly": true,
+        "c_contiguous": true,
+        "format": "B"
+      },
+      "release_behavior": "deterministic_resource_release"
+    },
+    {
+      "name": "copy_as_bytes_explicit_copy",
+      "operations": ["from_bytes", "copy_as_bytes"],
+      "copy_semantics": "explicit_copy_from_buffer_view"
+    },
+    {
+      "name": "memoryview_exporter_u8_view",
+      "operations": ["builtins.memoryview", "zero_copy_as_u8", "release_buffer"],
+      "expected_metadata": {
+        "item_size": 1,
+        "c_contiguous": true
+      }
+    }
+  ],
+  "negative_cases": [
+    {
+      "name": "readonly_exporter_rejects_writable_request",
+      "operation": "zero_copy_as_writable_u8",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "BufferError"
+    },
+    {
+      "name": "double_release",
+      "operation": "release_buffer",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedBuffer"
+    },
+    {
+      "name": "use_after_release",
+      "operation": "copy_buffer_bytes",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedBuffer"
+    },
+    {
+      "name": "non_buffer_exporter_rejected",
+      "operation": "zero_copy_as_u8",
+      "expected_error_kind": "zero-copy"
+    }
+  ]
+}

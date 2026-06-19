@@ -1,0 +1,29 @@
+from sifr.python import (
+    BufferView,
+    Object,
+    PythonError,
+    call_attr,
+    close,
+    from_bytes,
+    import_module,
+    release_buffer,
+    zero_copy_as_u8,
+)
+
+
+@trust_python_dynamic
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        module_name: str = "builtins"
+        builtins: Object = import_module(module_name)
+        payload: Object = from_bytes(b"memory")
+        view_obj: Object = call_attr(builtins, "memoryview", [payload], [])
+        view: BufferView = zero_copy_as_u8(view_obj)
+        released: None = release_buffer(view)
+        view_obj_closed: None = close(view_obj)
+        payload_closed: None = close(payload)
+        builtins_closed: None = close(builtins)
+        return None
+    except PythonError as e:
+        raise e

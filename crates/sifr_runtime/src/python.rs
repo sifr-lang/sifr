@@ -6,9 +6,13 @@ use std::fmt;
 use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
+mod buffer_ops;
 mod coroutine_ops;
 mod object_ops;
 mod resource_ops;
+pub use buffer_ops::{
+    buffer_u8, copy_buffer_u8, release_buffer, BufferHandle, PythonBufferMetadata,
+};
 pub use coroutine_ops::run_coroutine_blocking;
 pub use object_ops::{
     call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
@@ -525,7 +529,7 @@ fn runtime_config() -> Result<PythonRuntimeConfig, PythonRuntimeError> {
         .ok_or(PythonRuntimeError::NotInitialized)
 }
 
-fn update_object_count(delta: isize) -> Result<(), PythonRuntimeError> {
+pub(super) fn update_object_count(delta: isize) -> Result<(), PythonRuntimeError> {
     let mut state = runtime_state()?;
     if delta.is_positive() {
         state.live_objects = state.live_objects.saturating_add(delta.cast_unsigned());
@@ -535,7 +539,7 @@ fn update_object_count(delta: isize) -> Result<(), PythonRuntimeError> {
     Ok(())
 }
 
-fn record_leaked_object() -> Result<(), PythonRuntimeError> {
+pub(super) fn record_leaked_object() -> Result<(), PythonRuntimeError> {
     let mut state = runtime_state()?;
     state.live_objects = state.live_objects.saturating_sub(1);
     state.leaked_objects = state.leaked_objects.saturating_add(1);

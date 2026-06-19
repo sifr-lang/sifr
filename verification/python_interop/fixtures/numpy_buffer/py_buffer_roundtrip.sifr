@@ -1,0 +1,25 @@
+from sifr.python import (
+    BufferView,
+    Object,
+    PythonError,
+    close,
+    copy_as_bytes,
+    copy_buffer_bytes,
+    from_bytes,
+    release_buffer,
+    zero_copy_as_u8,
+)
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        obj: Object = from_bytes(b"sifr")
+        view: BufferView = zero_copy_as_u8(obj)
+        copied: bytes = copy_buffer_bytes(view)
+        direct_copy: bytes = copy_as_bytes(obj)
+        released: None = release_buffer(view)
+        closed: None = close(obj)
+        return None
+    except PythonError as e:
+        raise e
