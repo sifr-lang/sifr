@@ -10,7 +10,7 @@
         "value": "[main] needs_verbose() missing required argument 'verbose'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-CALL-0004",
+    "url": "https://docs.sifr.sh/errors/SIFR-CALL-0004",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
@@ -46,7 +46,7 @@
         "value": "[main] undefined variable: 'collections'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-NAME-0001",
+    "url": "https://docs.sifr.sh/errors/SIFR-NAME-0001",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
@@ -82,7 +82,7 @@
         "value": "[main] cannot borrow 'items' as mutable because it is already borrowed as immutable in the same call to 'read_then_mutate'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-OWN-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-OWN-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",
@@ -118,7 +118,7 @@
         "value": "[main] type mismatch: expected 'int', got 'str'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_mixed_semantic_recovery/main.sifr",

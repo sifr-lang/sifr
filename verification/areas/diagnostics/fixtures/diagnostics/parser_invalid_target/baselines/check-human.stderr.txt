@@ -4,4 +4,4 @@ error[SIFR-PARSE-0005]: invalid target: assignment target
    2 |     1 = 2
      |     ^
   = note: while parsing main
-  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0005
+  = docs: https://docs.sifr.sh/errors/SIFR-PARSE-0005

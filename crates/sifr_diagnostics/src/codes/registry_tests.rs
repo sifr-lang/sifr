@@ -11,7 +11,7 @@ use super::{
 fn docs_url_is_derived_from_code() {
     assert_eq!(
         DiagnosticCode::TEST_SOURCE_ERROR.docs_url(),
-        "https://sifr.sh/docs/errors/SIFR-NAME-9999"
+        "https://docs.sifr.sh/errors/SIFR-NAME-9999"
     );
 }
 

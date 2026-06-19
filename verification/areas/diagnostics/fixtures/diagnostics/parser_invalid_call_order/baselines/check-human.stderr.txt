@@ -4,4 +4,4 @@ error[SIFR-PARSE-0006]: invalid call arguments: positional argument after keywor
    5 |     print(f(a=1, 2))
      |                  ^
   = note: while parsing main
-  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0006
+  = docs: https://docs.sifr.sh/errors/SIFR-PARSE-0006

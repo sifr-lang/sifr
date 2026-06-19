@@ -5,4 +5,4 @@ error[SIFR-IMPORT-0002]: unknown import target: 'missing_math_utils'
      |      ^^^^^^^^^^^^^^^^^^
   = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/missing_math_utils.sifr
   = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/./missing_math_utils.sifr
-  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-IMPORT-0002

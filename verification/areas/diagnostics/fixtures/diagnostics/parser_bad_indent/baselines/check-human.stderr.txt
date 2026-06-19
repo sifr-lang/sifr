@@ -4,4 +4,4 @@ error[SIFR-PARSE-0002]: syntax error: expected an indented block after function 
    2 | print("bad indent")
      | ^^^^^
   = note: while parsing main
-  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-PARSE-0002

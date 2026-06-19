@@ -26,7 +26,7 @@
         "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/math.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/lib/math.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/./math.sifr"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0008",
+    "url": "https://docs.sifr.sh/errors/SIFR-IMPORT-0008",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/main.sifr",

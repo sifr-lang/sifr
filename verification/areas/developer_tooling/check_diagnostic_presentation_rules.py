@@ -135,7 +135,7 @@ def check_human_baselines(root: Path) -> None:
     require('Decimal("12.34.56")' in decimal, "human baseline missing source snippet")
     require("^^^^^^^^^^" in decimal, "human baseline missing visual highlight marker")
     require(
-        "https://sifr.sh/docs/errors/SIFR-DECIMAL-0001" in decimal,
+        "https://docs.sifr.sh/errors/SIFR-DECIMAL-0001" in decimal,
         "human baseline missing docs URL",
     )
 
@@ -300,7 +300,7 @@ def seed_minimal_repo(root: Path) -> None:
     write(
         root
         / "verification/areas/diagnostics/fixtures/diagnostics/decimal_invalid_literal/baselines/check-human.stderr.txt",
-        'error[SIFR-DECIMAL-0001]: msg\n  --> file.sifr:3:30\n   3 | Decimal("12.34.56")\n     | ^^^^^^^^^^\n  = docs: https://sifr.sh/docs/errors/SIFR-DECIMAL-0001\n',
+        'error[SIFR-DECIMAL-0001]: msg\n  --> file.sifr:3:30\n   3 | Decimal("12.34.56")\n     | ^^^^^^^^^^\n  = docs: https://docs.sifr.sh/errors/SIFR-DECIMAL-0001\n',
     )
     write(
         root
@@ -381,7 +381,7 @@ def diagnostic_json(code: str, lines: list[str]) -> dict[str, Any]:
         "message": "msg",
         "message_template": "{message}",
         "args": {},
-        "url": f"https://sifr.sh/docs/errors/{code}",
+        "url": f"https://docs.sifr.sh/errors/{code}",
         "spans": [
             {
                 "file": "file.sifr",

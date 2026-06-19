@@ -3,31 +3,31 @@ error[SIFR-TYPE-0002]: type mismatch: expected 'int', got 'str'
      |
    2 |     e1: int = "1"
      |               ^^^
-  = docs: https://sifr.sh/docs/errors/SIFR-TYPE-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-TYPE-0002
 error[SIFR-TYPE-0002]: type mismatch: expected 'int', got 'str'
   --> verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:3:15
      |
    3 |     e2: int = "2"
      |               ^^^
-  = docs: https://sifr.sh/docs/errors/SIFR-TYPE-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-TYPE-0002
 error[SIFR-TYPE-0002]: type mismatch: expected 'int', got 'str'
   --> verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:4:15
      |
    4 |     e3: int = "3"
      |               ^^^
-  = docs: https://sifr.sh/docs/errors/SIFR-TYPE-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-TYPE-0002
 error[SIFR-TYPE-0002]: type mismatch: expected 'int', got 'str'
   --> verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:5:15
      |
    5 |     e4: int = "4"
      |               ^^^
-  = docs: https://sifr.sh/docs/errors/SIFR-TYPE-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-TYPE-0002
 error[SIFR-TYPE-0002]: type mismatch: expected 'int', got 'str'
   --> verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr:6:15
      |
    6 |     e5: int = "5"
      |               ^^^
-  = docs: https://sifr.sh/docs/errors/SIFR-TYPE-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-TYPE-0002
 note[SIFR-INTERNAL-0002]: 3 additional diagnostics omitted by recovery cap (similar-diagnostic group)
   = location: <unavailable>
-  = docs: https://sifr.sh/docs/errors/SIFR-INTERNAL-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-INTERNAL-0002

@@ -18,7 +18,7 @@
         "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/missing/helper.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/lib/missing/helper.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/./missing/helper.sifr"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-IMPORT-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/main.sifr",

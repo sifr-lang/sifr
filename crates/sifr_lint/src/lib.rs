@@ -174,7 +174,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "trailing-whitespace",
         summary: "Line ends with trailing horizontal whitespace.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0004",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0004",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "style-policy",
@@ -185,7 +185,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "unknown-suppression",
         summary: "Suppression references an unknown policy rule id.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0001",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0001",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "suppression-policy",
@@ -196,7 +196,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "unused-suppression",
         summary: "Suppression did not suppress any diagnostic.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0002",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0002",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "suppression-policy",
@@ -207,7 +207,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "blanket-suppression",
         summary: "Suppression must list explicit Sifr policy rule ids.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0003",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0003",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "suppression-policy",
@@ -218,7 +218,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "todo-comment",
         summary: "Comment contains a tracked TODO or FIXME marker.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0005",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0005",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "comment-policy",
@@ -229,7 +229,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "boolean-positional-argument",
         summary: "Call passes a boolean literal positionally.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0006",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0006",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "readability-policy",
@@ -240,7 +240,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "large-parameter-list",
         summary: "Function has more parameters than the policy limit.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0007",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0007",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "complexity-policy",
@@ -251,7 +251,7 @@ pub const RULES: &[RuleMetadata] = &[
     RuleMetadata {
         id: "duplicate-import",
         summary: "Import duplicates a module/name pair already imported in the same source file.",
-        docs_url: "https://sifr.sh/docs/errors/SIFR-LINT-0008",
+        docs_url: "https://docs.sifr.sh/errors/SIFR-LINT-0008",
         default_level: RuleSeverity::Warn,
         status: RuleStatus::Stable,
         category: "workspace-policy",

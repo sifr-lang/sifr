@@ -9,4 +9,4 @@ error[SIFR-FLOW-0007]: invalid assignment target: attribute assignment target mu
      | ^^^^^^^^^^^^^
    6 |     ).field = 1
      | ^^^^^
-  = docs: https://sifr.sh/docs/errors/SIFR-FLOW-0007
+  = docs: https://docs.sifr.sh/errors/SIFR-FLOW-0007

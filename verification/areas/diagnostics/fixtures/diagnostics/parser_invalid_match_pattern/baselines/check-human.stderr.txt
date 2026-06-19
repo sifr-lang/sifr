@@ -4,4 +4,4 @@ error[SIFR-PARSE-0008]: invalid match pattern: star pattern outside a sequence p
    3 |         case *value:
      |              ^^^^^^
   = note: while parsing main
-  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0008
+  = docs: https://docs.sifr.sh/errors/SIFR-PARSE-0008

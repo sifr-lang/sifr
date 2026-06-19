@@ -18,7 +18,7 @@
         "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/missing_math_utils.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/./missing_math_utils.sifr"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-IMPORT-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/main.sifr",

@@ -3,4 +3,4 @@ error[SIFR-DECIMAL-0001]: Decimal() received invalid exact literal '12.34.56'
      |
    3 |     value: decimal = Decimal("12.34.56")
      |                              ^^^^^^^^^^
-  = docs: https://sifr.sh/docs/errors/SIFR-DECIMAL-0001
+  = docs: https://docs.sifr.sh/errors/SIFR-DECIMAL-0001

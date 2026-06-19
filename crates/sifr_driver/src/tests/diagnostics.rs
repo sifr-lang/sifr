@@ -18,7 +18,7 @@ fn test_diagnostic(
         message,
         message_template: "{message}".to_string(),
         args: std::collections::BTreeMap::new(),
-        url: format!("https://sifr.sh/docs/errors/{code}"),
+        url: format!("https://docs.sifr.sh/errors/{code}"),
         spans: span.into_iter().collect(),
         children: Vec::new(),
         help: None,
@@ -148,7 +148,7 @@ fn test_compiler_diagnostic_has_stable_code_and_url() {
     assert_eq!(diagnostic.severity, Severity::Error);
     assert_eq!(
         diagnostic.url,
-        "https://sifr.sh/docs/errors/SIFR-PARSE-0002"
+        "https://docs.sifr.sh/errors/SIFR-PARSE-0002"
     );
     assert_eq!(diagnostic.message, "unexpected token");
 }
@@ -230,7 +230,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
         assert_eq!(diagnostic.code, code.code());
         assert_eq!(
             diagnostic.url,
-            format!("https://sifr.sh/docs/errors/{}", code.code())
+            format!("https://docs.sifr.sh/errors/{}", code.code())
         );
     }
 }

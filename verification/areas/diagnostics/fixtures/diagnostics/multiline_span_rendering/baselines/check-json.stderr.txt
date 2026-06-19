@@ -10,7 +10,7 @@
         "value": "[main] invalid assignment target: attribute assignment target must be a simple name"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-FLOW-0007",
+    "url": "https://docs.sifr.sh/errors/SIFR-FLOW-0007",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/multiline_span_rendering/main.sifr",

@@ -6,4 +6,4 @@ error[SIFR-PARSE-0007]: malformed declaration list: global statement
    3 |
      | ^
   = note: while parsing main
-  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0007
+  = docs: https://docs.sifr.sh/errors/SIFR-PARSE-0007

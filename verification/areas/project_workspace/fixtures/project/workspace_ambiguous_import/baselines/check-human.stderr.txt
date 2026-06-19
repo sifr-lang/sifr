@@ -5,4 +5,4 @@ error[SIFR-IMPORT-0005]: ambiguous import target: 'helper'
      |      ^^^^^^
   = note: candidate path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/src_a/helper.sifr
   = note: candidate path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/src_b/helper.sifr
-  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0005
+  = docs: https://docs.sifr.sh/errors/SIFR-IMPORT-0005

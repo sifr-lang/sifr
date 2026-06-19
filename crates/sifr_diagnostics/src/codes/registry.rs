@@ -302,7 +302,7 @@ impl DiagnosticCode {
 
     #[must_use]
     pub fn docs_url(self) -> String {
-        format!("https://sifr.sh/docs/errors/{}", self.code())
+        format!("https://docs.sifr.sh/errors/{}", self.code())
     }
 }
 

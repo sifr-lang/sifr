@@ -10,7 +10,7 @@
         "value": "[main] type mismatch: expected 'int', got 'str'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
@@ -46,7 +46,7 @@
         "value": "[main] type mismatch: expected 'int', got 'str'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
@@ -82,7 +82,7 @@
         "value": "[main] type mismatch: expected 'int', got 'str'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
@@ -118,7 +118,7 @@
         "value": "[main] type mismatch: expected 'int', got 'str'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
@@ -154,7 +154,7 @@
         "value": "[main] type mismatch: expected 'int', got 'str'"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/hir_repeated_type_recovery/main.sifr",
@@ -198,7 +198,7 @@
         "value": "diagnostics"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-INTERNAL-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-INTERNAL-0002",
     "spans": [],
     "children": [],
     "help": null,

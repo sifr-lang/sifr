@@ -724,7 +724,7 @@ pub(super) fn test_human_diagnostic_format_renders_child_notes() {
             "error[SIFR-PARSE-0002]: syntax error: expected expression\n",
             "  = location: <unavailable>\n",
             "  = note: while parsing helper\n",
-            "  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0002\n",
+            "  = docs: https://docs.sifr.sh/errors/SIFR-PARSE-0002\n",
         )
     );
 }

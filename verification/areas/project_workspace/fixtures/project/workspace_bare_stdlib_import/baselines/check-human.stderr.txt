@@ -7,4 +7,4 @@ error[SIFR-IMPORT-0008]: bare stdlib import 'math'; Sifr stdlib lives under 'sif
   = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/lib/math.sifr
   = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_bare_stdlib_import/./math.sifr
   = help: use 'from sifr.math import sqrt'
-  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0008
+  = docs: https://docs.sifr.sh/errors/SIFR-IMPORT-0008

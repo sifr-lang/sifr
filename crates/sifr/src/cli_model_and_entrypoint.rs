@@ -671,7 +671,7 @@ pub(super) fn diagnostic_explanation(code: &str) -> Option<String> {
     let title = lines.find(|line| line.starts_with("# "))?;
     let summary = lines.find(|line| !line.trim().is_empty()).unwrap_or("");
     Some(format!(
-        "{}\n\n{}\n\nDocs: https://sifr.sh/docs/errors/{code}",
+        "{}\n\n{}\n\nDocs: https://docs.sifr.sh/errors/{code}",
         title.trim_start_matches("# "),
         summary,
     ))
