@@ -2,6 +2,13 @@
 
 Status: documentation, evidence, Opus sign-offs, and local validation are complete. PR #2677 merged on 2026-06-19.
 
+Additional verification productionization implementation is complete through
+PR #2682: PR #2680 moved the runner into `verification/areas/python_interop`,
+PR #2681 added explicit container-runtime/live-profile policy, and PR #2682
+added the opt-in testcontainers-backed live examples for Redis, Postgres,
+Kafka-compatible Redpanda, and LocalStack SNS/SQS. Final status is tracked in
+`plans/issues/active/python-interop-verification-production.md`.
+
 ## Scope Covered
 
 - Root-owned uv CPython environment selection, probing, and cache metadata.
@@ -51,6 +58,7 @@ verification/areas/python_interop/run.sh --tier tier4 --report ../../../target/v
 verification/areas/python_interop/run.sh --group callbacks --report ../../../target/verification/areas/python_interop/callbacks.latest.json
 verification/areas/python_interop/run.sh --group dataframes --report ../../../target/verification/areas/python_interop/dataframes.latest.json
 verification/areas/python_interop/run.sh --group cloud --package boto3 --report ../../../target/verification/areas/python_interop/package.latest.json
+scripts/run_all_tests.sh --profile python-interop-live
 ```
 
 Repository gates:
@@ -90,6 +98,10 @@ Latest local validation evidence:
   - project-workspace hardening baselines passed after the manifest-level quiet-run support was added for run baselines with deterministic stdout and intentionally empty stderr.
   - note: earlier local attempts were invalidated by stale overlapping validation work; the recorded gates above are the clean authoritative passes.
 - Opus sign-offs are recorded in the issue tracker review artifacts with no remaining blockers after documented fixes.
+- Additional verification productionization validation on 2026-06-19:
+  - `scripts/run_all_tests.sh --profile create-pr`: passed with zero failures and advisory `warm wall-time budget exceeded`.
+  - `scripts/run_all_tests.sh --profile python-interop-live`: passed; live Sifr source checks passed and service cases reported `structured-skip` because the local Docker daemon was unavailable.
+  - Final Opus review through `plans/reviews/active/python-interop-live-examples-review-4.md`: no blockers.
 
 ## PR Record
 
@@ -106,3 +118,6 @@ Latest local validation evidence:
 - py10: [#2675](https://github.com/sifr-lang/sifr/pull/2675)
 - py11: [#2676](https://github.com/sifr-lang/sifr/pull/2676)
 - py12: [#2677](https://github.com/sifr-lang/sifr/pull/2677)
+- verification area migration: [#2680](https://github.com/sifr-lang/sifr/pull/2680)
+- verification live policy: [#2681](https://github.com/sifr-lang/sifr/pull/2681)
+- verification live examples: [#2682](https://github.com/sifr-lang/sifr/pull/2682)
