@@ -5,7 +5,7 @@
 ## Execution Status
 
 - [x] `milestone_py_0`: Planning lock and verification scaffold.
-  - Added `verification/python_interop/` runner, package matrices, fixture directories, and report path.
+  - Added `verification/areas/python_interop/` runner, package matrices, fixture directories, and report path.
   - Reserved diagnostic families: `SIFR-PYENV`, `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, `SIFR-PYCB`, `SIFR-PYTRUST`.
   - Linked the phase from roadmap, phase index, and architecture docs.
   - Merged via PR [#2665](https://github.com/sifr-lang/sifr/pull/2665).
@@ -16,7 +16,7 @@
   - Added canonical CPython probe JSON validation for implementation, free-threaded status, venv prefix, site-packages, declared imports, native imports, and configured `pyproject.toml`/`uv.lock` digests.
   - Added active `SIFR-PYENV-0001` through `SIFR-PYENV-0011` diagnostics and generated docs.
   - Wired package `check`/cached `run` contexts to resolve/probe the root-selected environment and feed the probe digest into generated-artifact cache keys.
-  - Promoted `verification/python_interop/run.sh --group env` to live environment evidence with positive and negative fixture coverage.
+  - Promoted `verification/areas/python_interop/run.sh --group env` to live environment evidence with positive and negative fixture coverage.
   - Merged via PR [#2666](https://github.com/sifr-lang/sifr/pull/2666).
 - [x] `milestone_py_2`: Embedded runtime lifecycle.
   - Added optional `sifr_runtime/python` feature backed by PyO3 embedding APIs and CPython `PyConfig` initialization.
@@ -37,7 +37,7 @@
   - Added py3 verification fixture manifests for positive, negative, cleanup, and trust cases.
   - Deferred `__exit__` failure-triple plumbing to `milestone_py_6` context-helper lowering, where Sifr/Python failure context will be available.
   - Deferred bootstrap reporter/`eprintln!` cleanup to `milestone_py_5` package-runtime startup work; py3 keeps init failure as pre-main process exit.
-  - Focused validation passing: runtime Python tests, package Python tests, lowering trust tests, stdlib/codegen feature tests, `verification/python_interop/run.sh --group scaffold`, diagnostics coverage checks, and `scripts/run_all_tests.sh --profile create-pr`.
+  - Focused validation passing: runtime Python tests, package Python tests, lowering trust tests, stdlib/codegen feature tests, `verification/areas/python_interop/run.sh --group scaffold`, diagnostics coverage checks, and `scripts/run_all_tests.sh --profile create-pr`.
   - Merged via PR [#2668](https://github.com/sifr-lang/sifr/pull/2668).
 - [x] `milestone_py_4`: Primitive and typed conversion.
   - Added explicit `sifr.python` primitive constructors/extractors for `None`, bool, exact int, checked fixed-width integers, float, str, and exact bytes.
@@ -99,7 +99,7 @@
   - Published public Python interop examples covering biip/schwifty, FastAPI, Kafka callbacks, pandas/pyarrow/polars Arrow, torch/tensorflow DLPack, and cloud/AI clients.
   - Recorded internal architecture evidence for runtime lifecycle, GIL/refcount ownership, environment probes, verification gates, and example-to-fixture mapping.
   - Confirmed active Python environment/trust diagnostics have stable codes, generated docs, structured JSON arguments, and positive/negative test references.
-  - Recorded exit evidence in `verification/python_interop/reports/python_interop_exit_evidence.md`.
+  - Recorded exit evidence in `verification/areas/python_interop/reports/python_interop_exit_evidence.md`.
   - Opus py12 review round 4 and final implementation review round 4 reported no blockers after documented fixes.
   - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests with cache hits `44/44` and 6 hardening variants with 0 failures, plus a warm wall-time advisory; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
   - Merged via PR [#2677](https://github.com/sifr-lang/sifr/pull/2677).
@@ -698,7 +698,7 @@ These should install/import when applicable but do not need special runtime cert
 Create a dedicated verification area:
 
 ```text
-verification/python_interop/
+verification/areas/python_interop/
   README.md
   pyproject.toml
   uv.lock
@@ -769,11 +769,11 @@ Verification groups:
 Runner shape: `run.sh` is canonical; it validates environment prerequisites and delegates to `runner/run.py`.
 
 ```bash
-verification/python_interop/run.sh --group env
-verification/python_interop/run.sh --tier tier1
-verification/python_interop/run.sh --group native
-verification/python_interop/run.sh --group dataframes
-verification/python_interop/run.sh --package pandas
+verification/areas/python_interop/run.sh --group env
+verification/areas/python_interop/run.sh --tier tier1
+verification/areas/python_interop/run.sh --group native
+verification/areas/python_interop/run.sh --group dataframes
+verification/areas/python_interop/run.sh --package pandas
 ```
 
 Validation profiles:
@@ -790,7 +790,7 @@ Milestones are delivery order only. They do not reduce the design scope.
 
 Scope:
 - Land this full phase contract.
-- Create `verification/python_interop/` scaffold and package matrix files.
+- Create `verification/areas/python_interop/` scaffold and package matrix files.
 - Define diagnostic families for Python environment/import/call/conversion/resource/zero-copy errors.
 - Reserve diagnostic families: `SIFR-PYENV`, `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, `SIFR-PYCB`, `SIFR-PYTRUST`.
 - Record package certification policy and host-dependent test policy.
@@ -984,11 +984,11 @@ scripts/run_all_tests.sh --profile create-pr
 Python interop gates, once implemented:
 
 ```bash
-verification/python_interop/run.sh --group env
-verification/python_interop/run.sh --tier tier1
-verification/python_interop/run.sh --group native
-verification/python_interop/run.sh --group dataframes
-verification/python_interop/run.sh --group callbacks
+verification/areas/python_interop/run.sh --group env
+verification/areas/python_interop/run.sh --tier tier1
+verification/areas/python_interop/run.sh --group native
+verification/areas/python_interop/run.sh --group dataframes
+verification/areas/python_interop/run.sh --group callbacks
 ```
 
 ## Exit Gate
@@ -1001,6 +1001,6 @@ verification/python_interop/run.sh --group callbacks
 - Python-to-Sifr callbacks support local and threadsafe modes.
 - `Py_buffer`, Arrow PyCapsule, DLPack, and array-interface protocols are implemented with no silent zero-copy fallback to copying.
 - Tier 1 package certification passes in the full Python interop gate.
-- Verification reports exist under `verification/python_interop/reports/`.
+- Verification reports exist under `verification/areas/python_interop/reports/`.
 - Public and internal docs describe the exact production contract.
 - Existing non-regression contracts remain green.

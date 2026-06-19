@@ -16,7 +16,7 @@ class RunnerPaths:
 def discover_paths() -> RunnerPaths:
     area_root = Path(__file__).resolve().parents[1]
     return RunnerPaths(
-        repo_root=area_root.parents[1],
+        repo_root=area_root.parents[2],
         area_root=area_root,
         packages_root=area_root / "packages",
         fixtures_root=area_root / "fixtures",

@@ -315,14 +315,14 @@ Compiler diagnostics use stable URLs and structured JSON fields:
 - `SIFR-PYTRUST-0001..0004`: Python trust policy and dynamic import diagnostics.
 - `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, and `SIFR-PYCB`: reserved families for future compiler-emitted diagnostics; current runtime failures in these areas are returned as structured `py.PythonError` values.
 
-Verification lives under `verification/python_interop/`:
+Verification lives under `verification/areas/python_interop/`:
 
 ```bash
-verification/python_interop/run.sh --group env
-verification/python_interop/run.sh --tier tier1
-verification/python_interop/run.sh --group callbacks
-verification/python_interop/run.sh --group dataframes
-verification/python_interop/run.sh --self-test
+verification/areas/python_interop/run.sh --group env
+verification/areas/python_interop/run.sh --tier tier1
+verification/areas/python_interop/run.sh --group callbacks
+verification/areas/python_interop/run.sh --group dataframes
+verification/areas/python_interop/run.sh --self-test
 ```
 
 Matrix-only package evidence reports `matrix-passed`; live environment execution reports `passed`. Host-dependent packages include explicit skip reasons.

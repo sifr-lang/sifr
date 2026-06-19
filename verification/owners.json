@@ -72,6 +72,11 @@
       "display_name": "Runtime Platform"
     },
     {
+      "id": "runtime/python-interop",
+      "kind": "team",
+      "display_name": "Runtime Python Interop"
+    },
+    {
       "id": "stdlib/parity",
       "kind": "team",
       "display_name": "Standard Library Parity"

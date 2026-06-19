@@ -51,3 +51,4 @@ Phase status remains authoritative in each phase file header and is mirrored her
 | 42 | Phase 42: Data Science and ML | unspecified | [42_data_science_ml.md](./42_data_science_ml.md) |
 | 43 | Phase 43: Interoperability | unspecified | [43_interoperability.md](./43_interoperability.md) |
 | PY-1 | Ad Hoc Embedded Python Interop | complete (py0-py12 merged through PR #2677; py12 docs, diagnostics, reviews, and local validation complete) | [../issues/active/ad-hoc-embedded-python-interop.md](../issues/active/ad-hoc-embedded-python-interop.md) |
+| PY-1V | Python Interop Verification Productionization | in progress | [../issues/active/python-interop-verification-production.md](../issues/active/python-interop-verification-production.md) |

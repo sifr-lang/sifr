@@ -136,6 +136,7 @@ class ProfileRunner:
             ("core_guardrails", self.run_core_guardrails),
             ("diagnostic_rules", self.run_diagnostic_rules),
             ("cpython_differential", self.run_cpython_differential_suites),
+            ("python_interop", self.run_python_interop_suites),
             ("frontend_syntax_guardrails", self.run_frontend_syntax_guardrails),
             ("developer_tooling_checks", self.run_developer_tooling_checks),
             ("performance_budget_checks", self.run_performance_budget_checks),
@@ -305,6 +306,17 @@ class ProfileRunner:
             return
         print("Running CPython differential checks")
         args = ["--area", "cpython_differential"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args))
+
+    def run_python_interop_suites(self) -> None:
+        suites = self.selected_suites_for_area("python_interop")
+        if not suites:
+            print(f"Skipping Python interop checks for lane {self.profile_name}")
+            return
+        print("Running Python interop checks")
+        args = ["--area", "python_interop"]
         for suite in suites:
             args.extend(["--suite", suite])
         run_command(uv_area_command(*args))

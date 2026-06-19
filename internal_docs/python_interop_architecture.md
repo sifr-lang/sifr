@@ -1,6 +1,6 @@
 # Embedded Python Interop Architecture
 
-This note records the production contract implemented by the embedded CPython interop phase. It complements the public guide in `docs/python-interop.mdx` and the verification surface in `verification/python_interop/`.
+This note records the production contract implemented by the embedded CPython interop phase. It complements the public guide in `docs/python-interop.mdx` and the verification surface in `verification/areas/python_interop/`.
 
 ## Ownership Boundary
 
@@ -60,7 +60,7 @@ Zero-copy APIs never fall back to copying. Copy-capable paths are represented by
 
 ## Verification Gates
 
-The canonical local entrypoint is `verification/python_interop/run.sh`.
+The canonical local entrypoint is `verification/areas/python_interop/run.sh`.
 
 Important selectors:
 
@@ -85,7 +85,7 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 | Example family | Evidence |
 | --- | --- |
 | biip / schwifty package calls | Tier 1a package matrix entries and `simple_import` opaque-object contract coverage. |
-| FastAPI app construction | `verification/python_interop/fixtures/fastapi_app/fastapi_app_contract.json`. |
+| FastAPI app construction | `verification/areas/python_interop/fixtures/fastapi_app/fastapi_app_contract.json`. |
 | pandas / pyarrow / polars Arrow bridge | `pandas_arrow`, `polars_arrow`, and `pyarrow_capsule` fixture contracts. |
 | torch / TensorFlow DLPack | `torch_dlpack` source fixtures and `tensorflow_dlpack` package contract. |
 | Kafka callbacks | `kafka` and `cffi_callback` contracts plus callback source fixtures. |
