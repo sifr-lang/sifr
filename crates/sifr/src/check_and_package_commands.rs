@@ -201,7 +201,12 @@ fn package_python_runtime(
     };
     let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
     Ok(Some(sifr_driver::PackagePythonRuntime::from_probe(
-        &request, &probe, digest,
+        &request,
+        &probe,
+        digest,
+        resolved.allowed_imports,
+        resolved.trusted_imports,
+        resolved.trusted_native_imports,
     )))
 }
 

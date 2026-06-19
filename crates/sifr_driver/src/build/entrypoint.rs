@@ -11,10 +11,10 @@ use super::report::{BuildCompilationMode, BuildReport, BuildStageReport};
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
-    collect_project_hir_source_modules, compile_single_frontend_module_with_source_and_options,
-    emit_project_frontend_diagnostics, parse_import_closure_source_modules,
-    parse_package_import_closure_source_modules, DiscoveryDiagnosticStyle, ModuleResolver,
-    ProjectLowering,
+    collect_project_hir_source_modules, collect_project_hir_source_modules_with_options,
+    compile_single_frontend_module_with_source_and_options, emit_project_frontend_diagnostics,
+    parse_import_closure_source_modules, parse_package_import_closure_source_modules,
+    DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
@@ -342,7 +342,7 @@ impl RootedEntrypointPlan {
                         },
                         stdlib.defs.clone(),
                         FrontendDiagnosticStyle::Bare,
-                        *lowering_options,
+                        lowering_options.clone(),
                     )
                 })?;
                 (RootedEntrypointShape::SingleFile, project_lowering, None)
@@ -409,7 +409,15 @@ impl RootedEntrypointPlan {
                 ));
                 let project_lowering =
                     measure_stage(stages, module_analysis_label(module_count), || {
-                        collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())
+                        let lowering_options = entrypoint.python_runtime.as_ref().map_or_else(
+                            LoweringOptions::default,
+                            PackagePythonRuntime::lowering_options,
+                        );
+                        collect_project_hir_source_modules_with_options(
+                            &parsed_modules,
+                            stdlib.defs.clone(),
+                            lowering_options,
+                        )
                     })?;
                 (
                     RootedEntrypointShape::Project,

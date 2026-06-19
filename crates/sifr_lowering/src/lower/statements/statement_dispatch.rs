@@ -4,7 +4,9 @@ use super::async_with::lower_async_with;
 use super::container_literal_specialization::{
     apply_container_specialization_patches, type_contains_unknown_or_any,
 };
-use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
+use super::diagnostics::{
+    collect_raise_error_types, format_type_name, has_decorator, is_valid_error_type,
+};
 use super::expressions::lower_expr;
 use super::function_flow::infer_function_return_type;
 use super::match_lowering::lower_match;
@@ -676,7 +678,11 @@ pub(in crate::lower) fn lower_stmt(
                 });
             }
 
+            let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+            ctx.current_function_trusts_dynamic_python =
+                has_decorator(func, "trust_python_dynamic");
             let body = lower_stmts(&func.body, &ft, ctx);
+            ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.exit_function_scope();
 
             if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())

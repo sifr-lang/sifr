@@ -1,4 +1,4 @@
-20 errors, 0 warnings, 0 notes
+23 errors, 0 warnings, 0 notes
 E SIFR-PACKAGE-0001 <unknown> invalid [package.metadata.sifr] for Cargo package 'synthetic-app': `manifest` must be a non-empty string
 E SIFR-PACKAGE-0101 <unknown> cargo metadata failed: manifest parse failed
 E SIFR-PACKAGE-0103 <unknown> could not parse Cargo package graph metadata: expected value at line 1 column 1
@@ -19,3 +19,6 @@ E SIFR-PYENV-0008 <unknown> declared Python import root is missing: numpy
 E SIFR-PYENV-0009 <unknown> trusted native Python import root failed to load: pandas
 E SIFR-PYENV-0010 <unknown> free-threaded CPython is not supported
 E SIFR-PYENV-0011 <unknown> Python environment metadata is stale: pyproject.toml digest is missing
+E SIFR-PYTRUST-0001 <unknown> Python wildcard import root is rejected
+E SIFR-PYTRUST-0002 <unknown> Python import root is allowed but not trusted: numpy
+E SIFR-PYTRUST-0003 <unknown> native Python import root is trusted without an allow-imports entry: pandas

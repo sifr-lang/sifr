@@ -8,6 +8,7 @@ use super::{
     LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
     StmtFunctionDef, Type,
 };
+use crate::lower::diagnostics::has_decorator;
 pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
@@ -586,6 +587,7 @@ pub(in crate::lower) fn lower_function(
     let previous_owner = ctx.current_owner.replace(func.name.to_string());
     let previous_async = ctx.current_function_is_async;
     let previous_async_generator = ctx.current_function_is_async_generator;
+    let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
     let previous_return_type = ctx
         .current_function_return_type
         .replace(ft.return_type.as_ref().clone());
@@ -594,12 +596,14 @@ pub(in crate::lower) fn lower_function(
         std::mem::take(&mut ctx.join_set_terminal_awaitables);
     ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
+    ctx.current_function_trusts_dynamic_python = has_decorator(func, "trust_python_dynamic");
     let body = lower_stmts(&func.body, &ft, ctx);
     reject_live_join_sets_at_function_exit(func, ctx);
     ctx.live_join_set_bindings = previous_live_join_sets;
     ctx.join_set_terminal_awaitables = previous_join_set_terminal_awaitables;
     ctx.current_function_is_async = previous_async;
     ctx.current_function_is_async_generator = previous_async_generator;
+    ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
     ctx.current_function_return_type = previous_return_type;
     ctx.current_owner = previous_owner;
 

@@ -345,6 +345,9 @@ pub(in crate::lower) fn lower_module_impl(
                                 _ => {}
                             }
                         }
+                        if stdlib_module_key == "sifr.python" && name == "import_module" {
+                            ctx.python_import_module_bindings.insert(local.clone());
+                        }
                         // Check functions
                         if !found {
                             if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {

@@ -110,7 +110,11 @@ pub(in crate::lower) fn lower_class(
                 );
 
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
+                let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+                ctx.current_function_trusts_dynamic_python =
+                    has_decorator(func, "trust_python_dynamic");
                 let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
 
@@ -196,7 +200,11 @@ pub(in crate::lower) fn lower_class(
                     return_ty.clone(),
                 );
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
+                let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+                ctx.current_function_trusts_dynamic_python =
+                    has_decorator(func, "trust_python_dynamic");
                 let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
                 ctx.current_class = None;
@@ -332,7 +340,11 @@ pub(in crate::lower) fn lower_class(
 
             // Lower method body
             let previous_owner = ctx.current_owner.replace(class_name.clone());
+            let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+            ctx.current_function_trusts_dynamic_python =
+                has_decorator(func, "trust_python_dynamic");
             let body = lower_stmts(&func.body, &method_ft, ctx);
+            ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.current_owner = previous_owner;
 
             // Determine receiver mutability: if any statement assigns to self.field, it's &mut self

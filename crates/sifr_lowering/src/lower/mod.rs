@@ -97,6 +97,8 @@ mod own_mut_semantics_tests;
 mod ownership_diagnostics;
 mod parallel_calls;
 mod protocol_diagnostics;
+#[cfg(test)]
+mod python_trust_tests;
 mod result_diagnostics;
 #[cfg(test)]
 mod result_diagnostics_tests;

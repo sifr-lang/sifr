@@ -101,6 +101,11 @@ fn python_environment_resolution_deduplicates_declared_roots() {
                 ..PythonConfig::default()
             },
             TrustPolicy {
+                python: vec![
+                    "numpy".to_string(),
+                    "pandas".to_string(),
+                    "pyarrow".to_string(),
+                ],
                 python_native: vec!["numpy".to_string()],
                 ..TrustPolicy::default()
             },
@@ -122,6 +127,14 @@ fn python_environment_resolution_deduplicates_declared_roots() {
 
     assert_eq!(
         resolved.declared_imports,
+        ["numpy", "pandas", "pyarrow"].map(str::to_string)
+    );
+    assert_eq!(
+        resolved.allowed_imports,
+        ["numpy", "pandas", "pyarrow"].map(str::to_string)
+    );
+    assert_eq!(
+        resolved.trusted_imports,
         ["numpy", "pandas", "pyarrow"].map(str::to_string)
     );
     assert_eq!(resolved.native_imports, ["numpy".to_string()]);

@@ -163,6 +163,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
     let uses_task_sleep = super::module_uses_task_sleep(module);
+    let needs_python_runtime = rust_source.contains("sifr_runtime::python::");
 
     CodegenResult {
         rust_source,
@@ -185,6 +186,9 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             }
             if uses_task_sleep {
                 features.insert(sifr_stdlib::StdlibFeature::Tokio);
+            }
+            if needs_python_runtime {
+                features.insert(sifr_stdlib::StdlibFeature::PythonRuntime);
             }
             features
         },

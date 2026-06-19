@@ -228,6 +228,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYENV-0009`](SIFR-PYENV-0009.md) | Error | Trusted native Python import root failed to load. |
 | [`SIFR-PYENV-0010`](SIFR-PYENV-0010.md) | Error | Free-threaded CPython is not supported for embedded interop. |
 | [`SIFR-PYENV-0011`](SIFR-PYENV-0011.md) | Error | Configured Python project or lockfile is missing or stale. |
+| [`SIFR-PYTRUST-0001`](SIFR-PYTRUST-0001.md) | Error | Dependency package declares a wildcard Python trust root. |
+| [`SIFR-PYTRUST-0002`](SIFR-PYTRUST-0002.md) | Error | Python import root is not trusted by package policy. |
+| [`SIFR-PYTRUST-0003`](SIFR-PYTRUST-0003.md) | Error | Native Python import root is trusted without an allow-imports entry. |
+| [`SIFR-PYTRUST-0004`](SIFR-PYTRUST-0004.md) | Error | Dynamic Python import requires an explicit trust annotation. |
 
 ## Reserved Codes
 

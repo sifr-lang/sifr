@@ -2417,6 +2417,70 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-PYTRUST-0001",
+      "constant": "PYTRUST_WILDCARD_REJECTED",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_rejects_wildcard_roots",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYTRUST-0002",
+      "constant": "PYTRUST_UNTRUSTED_IMPORT",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0002.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_allowed_roots_to_be_trusted",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYTRUST-0003",
+      "constant": "PYTRUST_UNTRUSTED_NATIVE_IMPORT",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_native_roots_to_be_allowed",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYTRUST-0004",
+      "constant": "PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0004.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/python_trust_tests.rs::dynamic_python_import_requires_trust_decorator",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-RESULT-0001",
       "constant": "RESULT_UNUSED_VALUE",
       "docs_link": "docs/errors/SIFR-RESULT-0001.md",

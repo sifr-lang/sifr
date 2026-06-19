@@ -72,6 +72,12 @@ impl DiagnosticCode {
     pub const PYENV_NATIVE_IMPORT_FAILED: Self = Self::new("SIFR-PYENV-0009", Severity::Error);
     pub const PYENV_FREE_THREADED_UNSUPPORTED: Self = Self::new("SIFR-PYENV-0010", Severity::Error);
     pub const PYENV_LOCK_OR_PROJECT_STALE: Self = Self::new("SIFR-PYENV-0011", Severity::Error);
+    pub const PYTRUST_WILDCARD_REJECTED: Self = Self::new("SIFR-PYTRUST-0001", Severity::Error);
+    pub const PYTRUST_UNTRUSTED_IMPORT: Self = Self::new("SIFR-PYTRUST-0002", Severity::Error);
+    pub const PYTRUST_UNTRUSTED_NATIVE_IMPORT: Self =
+        Self::new("SIFR-PYTRUST-0003", Severity::Error);
+    pub const PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST: Self =
+        Self::new("SIFR-PYTRUST-0004", Severity::Error);
 
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
     pub const DECIMAL_BIGDECIMAL_INVALID_LITERAL: Self =
@@ -633,6 +639,10 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PYENV_NATIVE_IMPORT_FAILED,
     DiagnosticCode::PYENV_FREE_THREADED_UNSUPPORTED,
     DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
+    DiagnosticCode::PYTRUST_WILDCARD_REJECTED,
+    DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT,
+    DiagnosticCode::PYTRUST_UNTRUSTED_NATIVE_IMPORT,
+    DiagnosticCode::PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_FLOAT_MIXED,

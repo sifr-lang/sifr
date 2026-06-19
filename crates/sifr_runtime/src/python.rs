@@ -6,6 +6,12 @@ use std::fmt;
 use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
+mod object_ops;
+pub use object_ops::{
+    call_attr, call_object, close_object, enter_context, exit_context, get_attr, get_item_str,
+    import_module, ObjectHandle, PythonError,
+};
+
 static RUNTIME_STATE: Mutex<RuntimeState> = Mutex::new(RuntimeState::new());
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -21,6 +27,10 @@ pub struct PythonRuntimeConfig {
     pub cpython_version_tuple: Vec<u64>,
     pub sys_path: Vec<String>,
     pub site_packages: Vec<String>,
+    pub allowed_import_roots: Vec<String>,
+    pub trusted_import_roots: Vec<String>,
+    pub native_import_roots: Vec<String>,
+    pub trusted_native_roots: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -111,6 +121,15 @@ impl Object {
         Ok(Self {
             inner: Some(object),
         })
+    }
+
+    fn clone_ref(&self, py: Python<'_>) -> Result<Py<PyAny>, PythonRuntimeError> {
+        self.inner
+            .as_ref()
+            .map(|object| object.clone_ref(py))
+            .ok_or(PythonRuntimeError::PythonOperationFailed(
+                "Python object handle is closed".to_string(),
+            ))
     }
 }
 
@@ -488,6 +507,13 @@ fn runtime_state() -> Result<MutexGuard<'static, RuntimeState>, PythonRuntimeErr
         .map_err(|_| PythonRuntimeError::StateUnavailable)
 }
 
+fn runtime_config() -> Result<PythonRuntimeConfig, PythonRuntimeError> {
+    runtime_state()?
+        .config
+        .clone()
+        .ok_or(PythonRuntimeError::NotInitialized)
+}
+
 fn update_object_count(delta: isize) -> Result<(), PythonRuntimeError> {
     let mut state = runtime_state()?;
     if delta.is_positive() {
@@ -513,6 +539,7 @@ fn py_error(error: &PyErr) -> PythonRuntimeError {
 fn reset_runtime_state_for_tests() {
     let mut state = runtime_state().expect("runtime state should be available");
     *state = RuntimeState::new();
+    object_ops::reset_object_store_for_tests();
 }
 
 #[cfg(test)]
@@ -580,6 +607,20 @@ print(os.pathsep.join(sys.path))
         cpython_version_tuple: version,
         sys_path,
         site_packages: Vec::new(),
+        allowed_import_roots: vec![
+            "builtins".to_string(),
+            "contextlib".to_string(),
+            "math".to_string(),
+            "sys".to_string(),
+        ],
+        trusted_import_roots: vec![
+            "builtins".to_string(),
+            "contextlib".to_string(),
+            "math".to_string(),
+            "sys".to_string(),
+        ],
+        native_import_roots: Vec::new(),
+        trusted_native_roots: Vec::new(),
     }
 }
 
@@ -692,5 +733,116 @@ mod tests {
             }
         );
         drop(object);
+    }
+
+    #[test]
+    fn object_operations_cover_import_attr_item_call_kwargs_and_context() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("ops")).expect("init should succeed");
+
+        let builtins = import_module("builtins").expect("builtins import should succeed");
+        let dict = get_attr(builtins, "dict").expect("dict attr should succeed");
+        let math = import_module("math").expect("math import should succeed");
+        let kwargs_dict =
+            call_object(dict, &[], &[("module", math)]).expect("kwargs call should succeed");
+        let item = get_item_str(kwargs_dict, "module").expect("item access should succeed");
+        close_object(item).expect("item close should succeed");
+        close_object(kwargs_dict).expect("dict close should succeed");
+        close_object(math).expect("math close should succeed");
+        close_object(dict).expect("dict callable close should succeed");
+
+        let contextlib = import_module("contextlib").expect("contextlib import should succeed");
+        let nullcontext =
+            get_attr(contextlib, "nullcontext").expect("nullcontext attr should succeed");
+        let manager = call_object(nullcontext, &[], &[]).expect("nullcontext call should succeed");
+        let entered = enter_context(manager).expect("context enter should succeed");
+        exit_context(manager).expect("context exit should succeed");
+        close_object(entered).expect("entered context close should succeed");
+        close_object(manager).expect("context manager close should succeed");
+        close_object(nullcontext).expect("nullcontext close should succeed");
+        close_object(contextlib).expect("contextlib close should succeed");
+        close_object(builtins).expect("builtins close should succeed");
+
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            PythonRuntimeDiagnostics {
+                initialized: true,
+                live_objects: 0,
+                leaked_objects: 0,
+            }
+        );
+    }
+
+    #[test]
+    fn import_failure_preserves_python_exception_context() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        let mut config = test_config("import-failure");
+        config
+            .allowed_import_roots
+            .push("sifr_missing_py3_module".to_string());
+        config
+            .trusted_import_roots
+            .push("sifr_missing_py3_module".to_string());
+        initialize_runtime(config).expect("init should succeed");
+
+        let error = import_module("sifr_missing_py3_module")
+            .expect_err("missing module should fail as PythonError");
+
+        assert_eq!(error.kind, "import");
+        assert_eq!(error.exception_type, "ModuleNotFoundError");
+        assert!(error.message.contains("sifr_missing_py3_module"));
+        assert!(!error.traceback.is_empty());
+    }
+
+    #[test]
+    fn trust_policy_rejects_undeclared_import_roots() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("trust")).expect("init should succeed");
+
+        let error = import_module("json").expect_err("untrusted import should fail");
+
+        assert_eq!(error.kind, "trust");
+        assert_eq!(error.exception_type, "SIFR-PYTRUST");
+        assert!(error.message.contains("json"));
+    }
+
+    #[test]
+    fn closed_object_handles_return_resource_errors() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("closed")).expect("init should succeed");
+        let math = import_module("math").expect("math import should succeed");
+        close_object(math).expect("close should succeed");
+
+        let error = get_attr(math, "pi").expect_err("closed object should fail");
+
+        assert_eq!(error.kind, "resource");
+        assert!(error.message.contains("closed"));
+    }
+
+    #[test]
+    fn attribute_and_call_failures_preserve_python_error_families() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("operation-failures")).expect("init should succeed");
+        let math = import_module("math").expect("math import should succeed");
+
+        let attr_error = get_attr(math, "does_not_exist")
+            .expect_err("missing attribute should fail as PythonError");
+        assert_eq!(attr_error.kind, "attribute");
+        assert_eq!(attr_error.exception_type, "AttributeError");
+
+        let builtins = import_module("builtins").expect("builtins import should succeed");
+        let len = get_attr(builtins, "len").expect("len attr should succeed");
+        let call_error = call_object(len, &[], &[]).expect_err("wrong arg count should fail");
+        assert_eq!(call_error.kind, "call");
+        assert_eq!(call_error.exception_type, "TypeError");
+
+        close_object(len).expect("len close should succeed");
+        close_object(builtins).expect("builtins close should succeed");
+        close_object(math).expect("math close should succeed");
     }
 }

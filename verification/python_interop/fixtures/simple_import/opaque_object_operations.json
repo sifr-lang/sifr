@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "case_group": "python_opaque_object_operations",
+  "surface": "sifr.python",
+  "positive_cases": [
+    {
+      "name": "import_attr_item_call_kwargs",
+      "imports": ["builtins", "math"],
+      "operations": ["import_module", "get_attr", "call", "kwargs", "get_item"],
+      "expected": "opaque Object handles are returned and closed explicitly"
+    }
+  ],
+  "negative_cases": [
+    {
+      "name": "import_failure",
+      "operation": "import_module",
+      "expected_error_kind": "import",
+      "expected_exception_type": "ModuleNotFoundError"
+    },
+    {
+      "name": "attribute_failure",
+      "operation": "get_attr",
+      "expected_error_kind": "attribute",
+      "expected_exception_type": "AttributeError"
+    },
+    {
+      "name": "wrong_args",
+      "operation": "call",
+      "expected_error_kind": "call",
+      "expected_exception_type": "TypeError"
+    },
+    {
+      "name": "conversion_failure",
+      "operation": "call",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedObject"
+    },
+    {
+      "name": "unhandled_result",
+      "operation": "close",
+      "expected_diagnostic": "SIFR-RESULT-0001"
+    }
+  ],
+  "trust_cases": [
+    {
+      "name": "static_allowed_and_trusted_import",
+      "allow_imports": ["math"],
+      "trust_python": ["math"],
+      "expected": "accepted"
+    },
+    {
+      "name": "dynamic_import_requires_trust_annotation",
+      "operation": "import_module",
+      "argument": "variable",
+      "expected_diagnostic": "SIFR-PYTRUST-0004"
+    },
+    {
+      "name": "dynamic_root_runtime_rejection_after_annotation",
+      "allow_imports": ["math"],
+      "trust_python": ["math"],
+      "annotation": "trust_python_dynamic",
+      "runtime_import": "json",
+      "expected_diagnostic": "SIFR-PYTRUST"
+    },
+    {
+      "name": "dependency_wildcard_rejection",
+      "allow_imports": ["*"],
+      "trust_python": ["*"],
+      "package_kind": "dependency",
+      "expected_diagnostic": "SIFR-PYTRUST-0001"
+    },
+    {
+      "name": "root_wildcard_allowed",
+      "allow_imports": ["*"],
+      "trust_python": ["*"],
+      "package_kind": "root",
+      "expected": "accepted"
+    },
+    {
+      "name": "native_root_requires_allow_imports",
+      "trust_python_native": ["numpy"],
+      "expected_diagnostic": "SIFR-PYTRUST-0003"
+    }
+  ]
+}
