@@ -34,6 +34,9 @@
       "redis",
       "postgres",
       "kafka-compatible",
+      "pubsub-compatible",
+      "aws-compatible-sns",
+      "aws-compatible-sqs",
       "aws-compatible-sns-sqs"
     ],
     "sifr_sources_required": true,
@@ -46,5 +49,5 @@
     "live-failed"
   ],
   "artifact_root": "target/verification/areas/python_interop",
-  "notes": "This policy gate is intentionally non-containerized. Any live dependency suite must use this profile/resource contract."
+  "notes": "This policy gate is intentionally non-containerized. Any live dependency suite must use this profile/resource contract. Service aliases map to concrete live examples as redis, postgres, kafka-compatible, pubsub-compatible over LocalStack SNS-to-SQS fanout, aws-compatible-sns over LocalStack SNS delivery to SQS, aws-compatible-sqs over LocalStack SQS, and aws-compatible-sns-sqs as the shared LocalStack topology."
 }

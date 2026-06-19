@@ -1,0 +1,25 @@
+I've examined the full diff, the new fixtures, the runner, the policy, and the docs. Round 1's HIGH and MEDIUM items have been addressed in substance. Findings below — no remaining blockers for PR.
+
+## Findings — round 2
+
+### Resolved from round 1
+- **HIGH (handler_ack truth-in-reporting)** — fixed. `handler_contract`, `sifr-callback-source-contract`, and the `control_flow` strings now read as source-check evidence; `_assert_message_ready_for_sifr_handler` returns `{"status": "source-checked", "handler_model": "threadsafe_callback"}` rather than a fake ack. README:42–45 and python-interop.mdx:335–340 explicitly call this a source-checked contract, "not a live Sifr binary invocation." Consistent across `live_examples.py:443/451/465/480/538/548/575/591`, `internal_docs/python_interop_architecture.md:85–87`, and the exit evidence summary line.
+- **MEDIUM (orphaned `localstack_sns_sqs_live_roundtrip.sifr`)** — fixed. Deleted from disk; removed from `REQUIRED_SOURCE_FIXTURES` (`run.py:83–108`) and absent from `LIVE_EXAMPLE_SOURCES` (`live_examples.py:16–23`). No dangling references in fixtures/docs.
+- **MEDIUM (handlers don't read the message)** — addressed, minimally. `kafka_live_roundtrip.sifr:20` now calls `__len__` on `message_batch`; `pubsub_live_callback_roundtrip.sifr:21`, `sns_live_callback_roundtrip.sifr:21`, and `sqs_live_callback_roundtrip.sifr:19` all `get_item(delivery, "Messages")`. The handlers still close the result and return a constant `from_str("sifr:<case>:handled")` rather than extracting payload bodies, but the "Sifr side consumes the structure" claim now has compile-time evidence.
+- **MEDIUM (Kafka empty-poll plausibility)** — partially addressed via the `__len__` call. Not branched on emptiness, but a read from the structure exists.
+- **LOW (IAM policy divergence)** — fixed. `pubsub_live_callback_roundtrip.sifr:77–84` and `sns_live_callback_roundtrip.sifr:79–86` build a `Resource: queue_arn` / `aws:SourceArn: topic_arn` policy via `str.format` that matches `live_examples.py:509–520`.
+- **LOW (no live-failed self-test)** — fixed. `live_examples.py:131–147` synthesizes a `live-failed` case and asserts `status == "live-failed"` and `summary.total_failures == 1`.
+
+### Not addressed, non-blocking
+- **`EXPECTED_LIVE_SERVICES` still has overlapping aliases.** `live_policy.py:39–47` and `live_policy.json:33–41` declare seven service classes for six case IDs (`aws-compatible-sns-sqs` overlaps with `aws-compatible-sns` / `aws-compatible-sqs` / `pubsub-compatible`). Round 1 already flagged this as LOW; nothing requires 1:1 mapping at policy-validation level, but if a reviewer asks "which case satisfies `aws-compatible-sns-sqs`?", there is no documented answer. Worth a short comment or a follow-up issue, not a blocker.
+- **Exit evidence has no dated entry for this branch's validation.** `reports/python_interop_exit_evidence.md:103–106` last records 2026-06-19 validation tied to PR #2683 / live-examples-review-4. The message-callback branch's `scripts/run_all_tests.sh --profile python-interop-live` pass isn't yet logged. Convention in this file is to record validation at PR time, so add a py13-style entry as part of the PR.
+- **`_assert_message_ready_for_sifr_handler` is misleadingly named.** `live_examples.py:595` is mostly a metadata builder with a defensive `None` check; the `_assert_` prefix overpromises. Cosmetic only.
+
+### Latent (not triggered by current execution paths)
+- **`get_item(delivery, "Messages")` in `sqs_live_callback_roundtrip.sifr:19` and the SNS/Pub-Sub variants** would raise `PythonError` against a real boto3 `receive_message` response that returned no messages (boto3 omits the `Messages` key when empty). Today this is unreachable because the Python runner never invokes the Sifr binary and the Sifr `main` is only `sifr check`-ed. If `live-examples` ever grows a real Sifr-binary invocation, the handler would need a presence check or the `main` would need to gate on emptiness.
+
+### Residual risk
+- **Docker-unavailable** on this host means `--profile python-interop-live` reached `structured-skip` for the six service cases after Sifr source checks passed. Actual boto3/kafka-python API call shapes are plausible per docs and `sifr check` accepted them, but runtime behavior (`set_queue_attributes Attributes={"Policy": str(...)}`, `subscribe(Endpoint=queue_arn)`, `KafkaConsumer.poll(...)` against Redpanda) has not been observed end-to-end on this branch. Recommend logging a follow-up to run the live profile on a Docker-enabled host before declaring the cases proven, but no code change required.
+
+## Verdict
+**No blockers for PR.** The two non-blocking items worth folding into this PR if you want them: (1) add a fresh py13-style validation entry to `python_interop_exit_evidence.md`, and (2) optional sentence in `live_policy.json`/policy doc explaining which service alias maps to which case ID. The taxonomy alias drift and the latent missing-`Messages` handling can become a follow-up issue.

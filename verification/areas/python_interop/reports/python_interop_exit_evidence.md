@@ -7,6 +7,9 @@ Additional verification productionization is complete through PR #2683: PR
 explicit container-runtime/live-profile policy, PR #2682 added the opt-in
 testcontainers-backed live examples for Redis, Postgres, Kafka-compatible
 Redpanda, and LocalStack SNS/SQS, and PR #2683 recorded final status evidence.
+Message callback verification now includes first-class Kafka, Pub/Sub-style,
+SNS, and SQS examples where Python clients consume messages, while checked Sifr
+fixtures pass the consumed Python object to `threadsafe_callback` handlers.
 
 ## Scope Covered
 
@@ -101,6 +104,10 @@ Latest local validation evidence:
   - `scripts/run_all_tests.sh --profile create-pr`: passed with zero failures and advisory `warm wall-time budget exceeded`.
   - `scripts/run_all_tests.sh --profile python-interop-live`: passed; live Sifr source checks passed and service cases reported `structured-skip` because the local Docker daemon was unavailable.
   - Final Opus review through `plans/reviews/active/python-interop-live-examples-review-4.md`: no blockers.
+- Message callback example validation on 2026-06-19:
+  - `scripts/run_all_tests.sh --profile python-interop-live`: passed; Sifr source checks covered Redis, Postgres, Kafka, Pub/Sub-style SNS fanout, SNS, and SQS, then service cases reported `structured-skip` because the local Docker daemon was unavailable.
+  - `scripts/run_all_tests.sh --profile create-pr`: passed with zero failures and advisory `warm wall-time budget exceeded`; final e2e pass cache hits were `44/44`.
+  - Opus review through `plans/reviews/active/python-interop-message-callback-examples-review-2.md`: no blockers.
 
 ## PR Record
 

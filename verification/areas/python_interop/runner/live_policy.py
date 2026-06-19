@@ -40,6 +40,9 @@ EXPECTED_LIVE_SERVICES = {
     "redis",
     "postgres",
     "kafka-compatible",
+    "pubsub-compatible",
+    "aws-compatible-sns",
+    "aws-compatible-sqs",
     "aws-compatible-sns-sqs",
 }
 

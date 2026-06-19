@@ -1,0 +1,151 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    ThreadsafeCallback,
+    call,
+    call_attr,
+    close,
+    close_threadsafe_callback,
+    from_dict_str,
+    from_list,
+    from_int,
+    from_str,
+    get_item,
+    import_module,
+    threadsafe_callback,
+)
+
+
+def handle_sns_delivery(delivery: Object) -> Result[Object, PythonError]:
+    try:
+        messages: Object = get_item(delivery, "Messages")
+        closed_messages: None = close(messages)
+        ack: Object = from_str("sifr:sns:handled")
+        return ack
+    except PythonError as e:
+        raise e
+
+
+@trust_python_dynamic
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        boto3: Object = import_module("boto3")
+        endpoint: Object = from_str("http://127.0.0.1:4566")
+        region: Object = from_str("us-east-1")
+        access_key: Object = from_str("test")
+        secret_key: Object = from_str("test")
+        sqs_service: Object = from_str("sqs")
+        sns_service: Object = from_str("sns")
+        sqs: Object = call_attr(
+            boto3,
+            "client",
+            [sqs_service],
+            [
+                ("endpoint_url", endpoint),
+                ("region_name", region),
+                ("aws_access_key_id", access_key),
+                ("aws_secret_access_key", secret_key),
+            ],
+        )
+        sns: Object = call_attr(
+            boto3,
+            "client",
+            [sns_service],
+            [
+                ("endpoint_url", endpoint),
+                ("region_name", region),
+                ("aws_access_key_id", access_key),
+                ("aws_secret_access_key", secret_key),
+            ],
+        )
+        queue_name: Object = from_str("sifr-live-sns-queue")
+        topic_name: Object = from_str("sifr-live-sns-topic")
+        message: Object = from_str("sns-ready")
+        queue: Object = call_attr(sqs, "create_queue", [], [("QueueName", queue_name)])
+        queue_url: Object = get_item(queue, "QueueUrl")
+        topic: Object = call_attr(sns, "create_topic", [], [("Name", topic_name)])
+        topic_arn: Object = get_item(topic, "TopicArn")
+        queue_arn_key: Object = from_str("QueueArn")
+        attribute_names: Object = from_list([queue_arn_key])
+        queue_attrs_response: Object = call_attr(
+            sqs,
+            "get_queue_attributes",
+            [],
+            [("QueueUrl", queue_url), ("AttributeNames", attribute_names)],
+        )
+        queue_attrs: Object = get_item(queue_attrs_response, "Attributes")
+        queue_arn: Object = get_item(queue_attrs, "QueueArn")
+        queue_policy_template: Object = from_str("{{\"Version\":\"2012-10-17\",\"Statement\":[{{\"Effect\":\"Allow\",\"Principal\":{{\"Service\":\"sns.amazonaws.com\"}},\"Action\":\"sqs:SendMessage\",\"Resource\":\"{queue_arn}\",\"Condition\":{{\"ArnEquals\":{{\"aws:SourceArn\":\"{topic_arn}\"}}}}}}]}}")
+        queue_policy_body: Object = call_attr(
+            queue_policy_template,
+            "format",
+            [],
+            [("queue_arn", queue_arn), ("topic_arn", topic_arn)],
+        )
+        queue_policy_attrs: Object = from_dict_str([("Policy", queue_policy_body)])
+        queue_policy_result: Object = call_attr(
+            sqs,
+            "set_queue_attributes",
+            [],
+            [("QueueUrl", queue_url), ("Attributes", queue_policy_attrs)],
+        )
+        subscription: Object = call_attr(
+            sns,
+            "subscribe",
+            [],
+            [("TopicArn", topic_arn), ("Protocol", sqs_service), ("Endpoint", queue_arn)],
+        )
+        published: Object = call_attr(
+            sns,
+            "publish",
+            [],
+            [("TopicArn", topic_arn), ("Message", message)],
+        )
+        max_messages: Object = from_int(1)
+        wait_seconds: Object = from_int(10)
+        delivery: Object = call_attr(
+            sqs,
+            "receive_message",
+            [],
+            [
+                ("QueueUrl", queue_url),
+                ("MaxNumberOfMessages", max_messages),
+                ("WaitTimeSeconds", wait_seconds),
+            ],
+        )
+        handler: ThreadsafeCallback = threadsafe_callback(handle_sns_delivery)
+        handled: Object = call(handler.callable, [delivery], [])
+        closed_handled: None = close(handled)
+        closed_handler: None = close_threadsafe_callback(handler)
+        closed_delivery: None = close(delivery)
+        closed_wait_seconds: None = close(wait_seconds)
+        closed_max_messages: None = close(max_messages)
+        closed_published: None = close(published)
+        closed_subscription: None = close(subscription)
+        closed_queue_policy_result: None = close(queue_policy_result)
+        closed_queue_policy_attrs: None = close(queue_policy_attrs)
+        closed_queue_policy_template: None = close(queue_policy_template)
+        closed_queue_arn: None = close(queue_arn)
+        closed_queue_attrs: None = close(queue_attrs)
+        closed_queue_attrs_response: None = close(queue_attrs_response)
+        closed_attribute_names: None = close(attribute_names)
+        closed_topic_arn: None = close(topic_arn)
+        closed_topic: None = close(topic)
+        closed_queue_url: None = close(queue_url)
+        closed_queue: None = close(queue)
+        closed_message: None = close(message)
+        closed_topic_name: None = close(topic_name)
+        closed_queue_name: None = close(queue_name)
+        closed_sns: None = close(sns)
+        closed_sqs: None = close(sqs)
+        closed_sns_service: None = close(sns_service)
+        closed_sqs_service: None = close(sqs_service)
+        closed_secret_key: None = close(secret_key)
+        closed_access_key: None = close(access_key)
+        closed_region: None = close(region)
+        closed_endpoint: None = close(endpoint)
+        closed_boto3: None = close(boto3)
+        return None
+    except PythonError as e:
+        raise e
