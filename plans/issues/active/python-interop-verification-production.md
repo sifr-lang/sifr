@@ -40,7 +40,7 @@ Make embedded Python interop verification authoritative enough to prove real exa
 - `verification_py_area_1`: implemented in PR [#2680](https://github.com/sifr-lang/sifr/pull/2680).
 - `verification_py_area_2`: implemented in PR [#2681](https://github.com/sifr-lang/sifr/pull/2681) (`python-interop-container-policy`).
 - `verification_py_area_3`: implemented in PR [#2682](https://github.com/sifr-lang/sifr/pull/2682) (`python-interop-testcontainers-live-examples`).
-- `verification_py_area_4`: final closeout implemented on branch `python-interop-verification-closeout`; PR pending.
+- `verification_py_area_4`: final closeout implemented in PR #2683 (`python-interop-verification-closeout`); pending merge.
 
 ## Final Evidence
 
