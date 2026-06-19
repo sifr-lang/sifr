@@ -160,6 +160,26 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "live-examples",
+      "kind": "adapter",
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ],
+      "network_mode": "live",
+      "timeout_seconds": 1800,
+      "cases": [
+        {
+          "id": "live-examples",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-live-examples",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

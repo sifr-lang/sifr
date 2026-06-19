@@ -329,4 +329,9 @@ scripts/run_all_tests.sh --profile python-interop-live
 Matrix-only package evidence reports `matrix-passed`; live environment execution reports `passed`. Host-dependent packages include explicit skip reasons.
 The `python-interop-live` profile is explicit opt-in container-runtime policy
 for service-backed examples; it is not part of offline `create-pr`, `merge`,
-`nightly`, or `release` validation.
+`nightly`, or `release` validation. It first validates live policy, then checks
+Sifr source examples for Redis, Postgres, a Kafka-compatible broker, and
+LocalStack SNS/SQS interop before running the matching testcontainers-backed
+Python client examples. If Docker is not running locally, the service cases
+report `structured-skip` after source checks pass; with Docker running they must
+report `live-passed`.

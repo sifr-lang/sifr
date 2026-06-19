@@ -1,0 +1,38 @@
+from sifr.python import Object, PythonError, call_attr, close, from_str, import_module
+
+
+@trust_python_dynamic
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        boto3: Object = import_module("boto3")
+        service: Object = from_str("sqs")
+        endpoint: Object = from_str("http://127.0.0.1:4566")
+        region: Object = from_str("us-east-1")
+        access_key: Object = from_str("test")
+        secret_key: Object = from_str("test")
+        sqs: Object = call_attr(
+            boto3,
+            "client",
+            [service],
+            [
+                ("endpoint_url", endpoint),
+                ("region_name", region),
+                ("aws_access_key_id", access_key),
+                ("aws_secret_access_key", secret_key),
+            ],
+        )
+        queue_name: Object = from_str("sifr-live-queue")
+        create_result: Object = call_attr(sqs, "create_queue", [], [("QueueName", queue_name)])
+        closed_create_result: None = close(create_result)
+        closed_queue_name: None = close(queue_name)
+        closed_sqs: None = close(sqs)
+        closed_secret_key: None = close(secret_key)
+        closed_access_key: None = close(access_key)
+        closed_region: None = close(region)
+        closed_endpoint: None = close(endpoint)
+        closed_service: None = close(service)
+        closed_boto3: None = close(boto3)
+        return None
+    except PythonError as e:
+        raise e

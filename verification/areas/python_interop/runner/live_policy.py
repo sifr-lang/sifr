@@ -15,6 +15,8 @@ REQUIRED_POLICY_KEYS = {
     "offline_profiles",
     "offline_forbidden_suites",
     "container_runtime",
+    "live_suites",
+    "live_examples",
     "result_statuses",
     "artifact_root",
     "notes",
@@ -26,7 +28,20 @@ REQUIRED_CONTAINER_KEYS = {
     "cleanup_required",
     "timeout_seconds",
 }
+REQUIRED_LIVE_EXAMPLE_KEYS = {
+    "provider",
+    "services",
+    "sifr_sources_required",
+    "structured_skip_when_docker_unavailable",
+}
 EXPECTED_STATUSES = {"policy-passed", "live-passed", "structured-skip", "live-failed"}
+EXPECTED_LIVE_SUITES = {"live-policy", "live-examples"}
+EXPECTED_LIVE_SERVICES = {
+    "redis",
+    "postgres",
+    "kafka-compatible",
+    "aws-compatible-sns-sqs",
+}
 
 
 def build_live_policy_report(paths: RunnerPaths) -> dict[str, Any]:
@@ -92,12 +107,19 @@ def run_live_policy_self_tests(paths: RunnerPaths) -> None:
 
     poisoned_manifest = deepcopy(manifest)
     for suite in poisoned_manifest["suites"]:
-        if suite["name"] == "live-policy":
+        if suite["name"] == "live-examples":
             suite["network_mode"] = "offline"
             break
     _expect_policy_failure(
         lambda: _validate_live_manifest(poisoned_manifest, policy),
-        "must declare live network mode",
+        "live suite live-examples must declare live network mode",
+    )
+
+    poisoned_selection = deepcopy(profile)
+    poisoned_selection["selected_areas"][0]["suites"] = ["live-policy"]
+    _expect_policy_failure(
+        lambda: _validate_live_profile(poisoned_selection, policy),
+        "missing live python interop suites: live-examples",
     )
 
 
@@ -139,6 +161,27 @@ def _validate_policy_shape(policy: dict[str, Any]) -> None:
         raise SystemExit("python interop live policy must require Docker and cleanup")
     if not isinstance(container["timeout_seconds"], int) or container["timeout_seconds"] <= 0:
         raise SystemExit("python interop live policy timeout_seconds must be a positive integer")
+    live_suites = _string_set(policy, "live_suites")
+    if live_suites != EXPECTED_LIVE_SUITES:
+        raise SystemExit(f"python interop live policy suite drift: {sorted(live_suites)}")
+    live_examples = policy["live_examples"]
+    if not isinstance(live_examples, dict):
+        raise SystemExit("python interop live policy live_examples must be an object")
+    missing_examples = sorted(REQUIRED_LIVE_EXAMPLE_KEYS.difference(live_examples))
+    if missing_examples:
+        raise SystemExit(
+            "python interop live policy live_examples missing keys: "
+            + ", ".join(missing_examples)
+        )
+    if live_examples["provider"] != "testcontainers":
+        raise SystemExit("python interop live examples provider must be testcontainers")
+    services = _string_set(live_examples, "services")
+    if services != EXPECTED_LIVE_SERVICES:
+        raise SystemExit(f"python interop live examples service drift: {sorted(services)}")
+    if live_examples["sifr_sources_required"] is not True:
+        raise SystemExit("python interop live examples must require Sifr sources")
+    if live_examples["structured_skip_when_docker_unavailable"] is not True:
+        raise SystemExit("python interop live examples must declare structured Docker skip semantics")
 
 
 def _validate_live_profile(profile: dict[str, Any], policy: dict[str, Any]) -> None:
@@ -155,12 +198,13 @@ def _validate_live_profile(profile: dict[str, Any], policy: dict[str, Any]) -> N
         raise SystemExit("python-interop-live profile network policy must be live")
     if network_policy.get("live_network_allowed") is not True:
         raise SystemExit("python-interop-live profile must explicitly allow live network")
-    selected_live_policy = False
+    selected_live_suites: set[str] = set()
+    live_suites = _string_set(policy, "live_suites")
     for selection in profile.get("selected_areas", []):
         if not isinstance(selection, dict) or selection.get("area") != "python_interop":
             continue
         suites = set(selection.get("suites", []))
-        selected_live_policy = "live-policy" in suites
+        selected_live_suites.update(live_suites.intersection(suites))
         selected_classes = set(selection.get("resource_classes", []))
         missing_selection = sorted(required_classes.difference(selected_classes))
         if missing_selection:
@@ -168,8 +212,12 @@ def _validate_live_profile(profile: dict[str, Any], policy: dict[str, Any]) -> N
                 "python-interop-live profile python_interop selection is missing resource classes: "
                 + ", ".join(missing_selection)
             )
-    if not selected_live_policy:
-        raise SystemExit("python-interop-live profile must select python_interop:live-policy")
+    missing_live_suites = sorted(live_suites.difference(selected_live_suites))
+    if missing_live_suites:
+        raise SystemExit(
+            "python-interop-live profile is missing live python interop suites: "
+            + ", ".join(missing_live_suites)
+        )
 
 
 def _validate_live_manifest(manifest: dict[str, Any], policy: dict[str, Any]) -> None:
@@ -177,26 +225,35 @@ def _validate_live_manifest(manifest: dict[str, Any], policy: dict[str, Any]) ->
     suites = manifest.get("suites", [])
     if not isinstance(suites, list):
         raise SystemExit("python interop manifest suites must be an array")
-    live_suite = next(
-        (suite for suite in suites if isinstance(suite, dict) and suite.get("name") == "live-policy"),
-        None,
-    )
-    if not isinstance(live_suite, dict):
-        raise SystemExit("python interop manifest must declare live-policy suite")
-    if live_suite.get("network_mode") != "live":
-        raise SystemExit("python interop live-policy suite must declare live network mode")
-    suite_classes = set(live_suite.get("resource_classes", []))
-    missing = sorted(required_classes.difference(suite_classes))
-    if missing:
-        raise SystemExit(f"python interop live-policy suite is missing resource classes: {', '.join(missing)}")
-    if not isinstance(live_suite.get("timeout_seconds"), int) or live_suite["timeout_seconds"] <= 0:
-        raise SystemExit("python interop live-policy suite timeout_seconds must be a positive integer")
-    cases = live_suite.get("cases", [])
-    if not isinstance(cases, list) or len(cases) != 1:
-        raise SystemExit("python interop live-policy suite must contain exactly one policy case")
-    case = cases[0]
-    if not isinstance(case, dict) or case.get("command") != "python-interop-live-policy":
-        raise SystemExit("python interop live-policy suite must dispatch python-interop-live-policy")
+    suite_by_name = {
+        suite.get("name"): suite for suite in suites if isinstance(suite, dict)
+    }
+    for suite_name in _string_list(policy, "live_suites"):
+        live_suite = suite_by_name.get(suite_name)
+        if not isinstance(live_suite, dict):
+            raise SystemExit(f"python interop manifest must declare {suite_name} suite")
+        if live_suite.get("network_mode") != "live":
+            raise SystemExit(f"python interop live suite {suite_name} must declare live network mode")
+        suite_classes = set(live_suite.get("resource_classes", []))
+        missing = sorted(required_classes.difference(suite_classes))
+        if missing:
+            raise SystemExit(
+                f"python interop live suite {suite_name} is missing resource classes: "
+                + ", ".join(missing)
+            )
+        if not isinstance(live_suite.get("timeout_seconds"), int) or live_suite["timeout_seconds"] <= 0:
+            raise SystemExit(
+                f"python interop live suite {suite_name} timeout_seconds must be a positive integer"
+            )
+        cases = live_suite.get("cases", [])
+        if not isinstance(cases, list) or len(cases) != 1:
+            raise SystemExit(f"python interop live suite {suite_name} must contain exactly one case")
+        case = cases[0]
+        expected_command = f"python-interop-{suite_name}"
+        if not isinstance(case, dict) or case.get("command") != expected_command:
+            raise SystemExit(
+                f"python interop live suite {suite_name} must dispatch {expected_command}"
+            )
 
 
 def _validate_offline_profiles(repo_root: Path, policy: dict[str, Any]) -> None:

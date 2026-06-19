@@ -75,6 +75,14 @@ python-interop-live`. It uses selected-areas-only execution and requires the
 `container-runtime`, `network`, and `platform-specific` resource classes. Offline
 profiles must not select live Python interop suites.
 
+The live profile runs two suites. `live-policy` validates the policy boundary
+without starting containers. `live-examples` compiles Sifr examples through a
+generated package with explicit Python allow/trust metadata, then runs
+testcontainers-backed Python client examples against Redis, Postgres, a
+Kafka-compatible Redpanda broker, and LocalStack SNS/SQS. Docker absence is
+reported as `structured-skip` only after source checks pass; with Docker
+available, service cases must produce `live-passed`.
+
 Report status values are intentional:
 
 - `passed`: live environment execution ran.

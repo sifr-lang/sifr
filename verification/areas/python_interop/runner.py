@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -78,6 +79,15 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/live-policy.latest.json",
     ],
+    "python-interop-live-examples": [
+        "--live-examples",
+        "--report",
+        "../../../target/verification/areas/python_interop/live-examples.latest.json",
+    ],
+}
+
+AREA_PROJECT_COMMANDS = {
+    "python-interop-live-examples",
 }
 
 
@@ -195,7 +205,22 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
     if not entry.is_file():
         raise SystemExit(f"python_interop case entry does not exist: {entry}")
     expected_exit = int(case["expect_exit_code"])
-    argv = [sys.executable, str(entry), *COMMAND_ARGS[command]]
+    env = None
+    if command in AREA_PROJECT_COMMANDS:
+        argv = [
+            "uv",
+            "run",
+            "--project",
+            str(AREA_ROOT),
+            "--locked",
+            "python",
+            str(entry),
+            *COMMAND_ARGS[command],
+        ]
+        env = os.environ.copy()
+        env.pop("VIRTUAL_ENV", None)
+    else:
+        argv = [sys.executable, str(entry), *COMMAND_ARGS[command]]
     started = time.perf_counter()
     proc = subprocess.run(
         argv,
@@ -203,6 +228,7 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         text=True,
         capture_output=True,
         check=False,
+        env=env,
     )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     if proc.stdout:

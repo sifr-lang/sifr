@@ -1,0 +1,24 @@
+from sifr.python import Object, PythonError, call_attr, close, from_bytes, from_str, import_module
+
+
+@trust_python_dynamic
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        kafka: Object = import_module("kafka")
+        bootstrap: Object = from_str("127.0.0.1:9092")
+        topic: Object = from_str("sifr-live-topic")
+        payload: Object = from_bytes(b"{\"source\":\"sifr\",\"status\":\"kafka-ready\"}")
+        producer: Object = call_attr(kafka, "KafkaProducer", [], [("bootstrap_servers", bootstrap)])
+        send_result: Object = call_attr(producer, "send", [topic, payload], [])
+        flush_result: Object = call_attr(producer, "flush", [], [])
+        closed_flush: None = close(flush_result)
+        closed_send: None = close(send_result)
+        closed_producer: None = close(producer)
+        closed_payload: None = close(payload)
+        closed_topic: None = close(topic)
+        closed_bootstrap: None = close(bootstrap)
+        closed_kafka: None = close(kafka)
+        return None
+    except PythonError as e:
+        raise e

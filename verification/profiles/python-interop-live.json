@@ -45,7 +45,8 @@
     {
       "area": "python_interop",
       "suites": [
-        "live-policy"
+        "live-policy",
+        "live-examples"
       ],
       "resource_classes": [
         "container-runtime",
