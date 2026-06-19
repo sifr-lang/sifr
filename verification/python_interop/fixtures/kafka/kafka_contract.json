@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "kafka",
+  "groups": ["brokers", "callbacks", "native"],
+  "packages": ["confluent-kafka", "aiokafka", "kafka-python"],
+  "default_gate": "import_and_callback_shape",
+  "host_policy": "broker-backed tests require external integration gate",
+  "cases": [
+    "confluent_kafka_native_imports",
+    "poll_callback_shape_uses_threadsafe_callback",
+    "aiokafka_imports_without_running_event_loop"
+  ]
+}

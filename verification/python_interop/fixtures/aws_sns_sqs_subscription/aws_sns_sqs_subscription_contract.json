@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "aws_sns_sqs_subscription",
+  "groups": ["cloud", "brokers", "callbacks"],
+  "packages": ["boto3", "botocore", "moto"],
+  "default_gate": "stubbed_subscription_smoke",
+  "host_policy": "no live AWS credentials in default gate",
+  "cases": [
+    "sns_to_sqs_subscription_shape",
+    "sqs_receive_message_polling_shape",
+    "callback_progress_hook_scaffolded"
+  ]
+}

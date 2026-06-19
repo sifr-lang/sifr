@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "aws_sqs",
+  "groups": ["cloud", "brokers", "imports"],
+  "packages": ["boto3", "botocore", "moto"],
+  "default_gate": "stubbed_client_smoke",
+  "host_policy": "no live AWS credentials in default gate",
+  "cases": [
+    "sqs_client_imports",
+    "botocore_stubber_send_receive_delete",
+    "long_polling_timeout_is_blocking_io"
+  ]
+}

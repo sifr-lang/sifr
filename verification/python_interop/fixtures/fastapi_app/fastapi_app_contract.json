@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "fastapi_app",
+  "groups": ["web", "async", "imports"],
+  "packages": ["fastapi", "starlette", "pydantic", "uvicorn"],
+  "default_gate": "inprocess_app_smoke",
+  "host_policy": "no bound public sockets in default gate",
+  "cases": [
+    "fastapi_app_constructs",
+    "pydantic_request_model_constructs",
+    "asgi_call_shape_is_blocking_or_offloaded"
+  ]
+}

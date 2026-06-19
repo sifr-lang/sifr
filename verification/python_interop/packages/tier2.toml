@@ -24,7 +24,90 @@ tier = "tier2"
 groups = ["imports"]
 
 [[packages]]
+name = "colorama"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "decorator"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "deprecated"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "backoff"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "backoff-utils"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["backoff_utils"]
+
+[[packages]]
 name = "tenacity"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "ratelimit"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "cachetools"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "cachecontrol"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "aiocache"
+tier = "tier2"
+groups = ["imports", "async"]
+
+[[packages]]
+name = "aiofiles"
+tier = "tier2"
+groups = ["imports", "async"]
+
+[[packages]]
+name = "asgi-lifespan"
+tier = "tier2"
+groups = ["imports", "async", "web"]
+import-roots = ["asgi_lifespan"]
+
+[[packages]]
+name = "basicauth"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "faker"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "freezegun"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "time-machine"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["time_machine"]
+
+[[packages]]
+name = "testfixtures"
 tier = "tier2"
 groups = ["imports"]
 
@@ -37,6 +120,66 @@ groups = ["imports"]
 name = "requests-mock"
 tier = "tier2"
 groups = ["imports"]
+import-roots = ["requests_mock"]
+
+[[packages]]
+name = "pytest-httpx"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["pytest_httpx"]
+
+[[packages]]
+name = "sortedcontainers"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "more-itertools"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["more_itertools"]
+
+[[packages]]
+name = "inflect"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "text-unidecode"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["text_unidecode"]
+
+[[packages]]
+name = "python-slugify"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["slugify"]
+
+[[packages]]
+name = "pyhumps"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "parse"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "docopt"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "argh"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "commonmark"
+tier = "tier2"
+groups = ["imports"]
 
 [[packages]]
 name = "markdown"
@@ -44,6 +187,54 @@ tier = "tier2"
 groups = ["imports"]
 
 [[packages]]
+name = "markdown-it-py"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["markdown_it"]
+
+[[packages]]
+name = "mdurl"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "pymdown-extensions"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["pymdownx"]
+
+[[packages]]
 name = "docutils"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "readme-renderer"
+tier = "tier2"
+groups = ["imports"]
+import-roots = ["readme_renderer"]
+
+[[packages]]
+name = "rfc3986"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "uritemplate"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "webencodings"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "wrapt"
+tier = "tier2"
+groups = ["imports"]
+
+[[packages]]
+name = "wcwidth"
 tier = "tier2"
 groups = ["imports"]

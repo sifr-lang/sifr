@@ -10,6 +10,7 @@ tier = "tier1"
 gate = "tier1a"
 groups = ["imports", "native"]
 native = true
+import-roots = ["pydantic_core"]
 
 [[packages]]
 name = "httpx"
@@ -96,6 +97,7 @@ tier = "tier1"
 gate = "tier1a"
 groups = ["imports", "native", "brokers", "callbacks"]
 native = true
+import-roots = ["confluent_kafka"]
 
 [[packages]]
 name = "boto3"
@@ -120,6 +122,7 @@ name = "google-genai"
 tier = "tier1"
 gate = "tier1a"
 groups = ["imports", "cloud"]
+import-roots = ["google.genai"]
 
 [[packages]]
 name = "biip"
@@ -132,3 +135,251 @@ name = "schwifty"
 tier = "tier1"
 gate = "tier1a"
 groups = ["imports"]
+
+[[packages]]
+name = "pip"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "setuptools"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "wheel"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "build"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "hatchling"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "poetry-core"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["poetry.core"]
+
+[[packages]]
+name = "uv-build"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["uv_build"]
+
+[[packages]]
+name = "pyproject-hooks"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["pyproject_hooks"]
+
+[[packages]]
+name = "packaging"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "pkginfo"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "importlib-metadata"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["importlib_metadata"]
+
+[[packages]]
+name = "zipp"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "platformdirs"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "appdirs"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "typing-extensions"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["typing_extensions"]
+
+[[packages]]
+name = "exceptiongroup"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "pydantic-extra-types"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["pydantic_extra_types"]
+
+[[packages]]
+name = "annotated-types"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["annotated_types"]
+
+[[packages]]
+name = "attrs"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "marshmallow"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "cerberus"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "jsonpickle"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "deepdiff"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "protobuf"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["google.protobuf"]
+
+[[packages]]
+name = "proto-plus"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["proto"]
+
+[[packages]]
+name = "pyyaml"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["yaml"]
+
+[[packages]]
+name = "toml"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "tomli"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "python-dotenv"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["dotenv"]
+
+[[packages]]
+name = "pycountry"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "babel"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "holidays"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "dateparser"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "pendulum"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "python-dateutil"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["dateutil"]
+
+[[packages]]
+name = "pytz"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "tzdata"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "uuid-utils"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["uuid_utils"]
+
+[[packages]]
+name = "rank-bm25"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["rank_bm25"]

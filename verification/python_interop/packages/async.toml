@@ -1,14 +1,64 @@
 [[packages]]
+name = "urllib3"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
 name = "aiohttp"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "async", "web"]
 
 [[packages]]
+name = "httpcore"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async"]
+
+[[packages]]
 name = "anyio"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "async"]
+
+[[packages]]
+name = "async-timeout"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async"]
+import-roots = ["async_timeout"]
+
+[[packages]]
+name = "sniffio"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async"]
+
+[[packages]]
+name = "h11"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async"]
+
+[[packages]]
+name = "httptools"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "async", "web"]
+native = true
+
+[[packages]]
+name = "websockets"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+
+[[packages]]
+name = "uvicorn"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
 
 [[packages]]
 name = "uvloop"
@@ -28,3 +78,69 @@ name = "starlette"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "async", "web"]
+
+[[packages]]
+name = "starlette-context"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+import-roots = ["starlette_context"]
+
+[[packages]]
+name = "django"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "web"]
+
+[[packages]]
+name = "sanic"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+
+[[packages]]
+name = "sanic-routing"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+import-roots = ["sanic_routing"]
+
+[[packages]]
+name = "sanic-testing"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+import-roots = ["sanic_testing"]
+
+[[packages]]
+name = "webargs"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "web"]
+
+[[packages]]
+name = "webargs-sanic"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "web"]
+import-roots = ["webargs_sanic"]
+
+[[packages]]
+name = "jinja2"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "web"]
+
+[[packages]]
+name = "markupsafe"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "web"]
+native = true
+
+[[packages]]
+name = "python-multipart"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "web"]
+import-roots = ["multipart"]

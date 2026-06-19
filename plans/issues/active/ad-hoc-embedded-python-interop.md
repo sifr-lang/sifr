@@ -87,7 +87,12 @@
   - Split shared Python wrapper types into `sifr.python_core` with targeted `sifr.python` re-export metadata preservation for blocking workloads and constructor defaults.
   - Added callback contract/source fixtures and native build coverage for real Sifr handler invocation through Python callables.
   - Opus review round 4 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
-- [ ] `milestone_py_11`: Package certification matrix.
+  - Merged via PR [#2675](https://github.com/sifr-lang/sifr/pull/2675).
+- [x] `milestone_py_11`: Package certification matrix.
+  - Expanded Tier 1 certification matrices, Tier 2/Tier 3 deterministic smoke matrices, and Tier 4 host-dependent skip evidence.
+  - Added deterministic package certification reports with `matrix-passed` status for matrix-only evidence and explicit host-dependent skip counts.
+  - Added representative package-family contract fixtures for web, data, DB, broker, cloud/AI, TLS/native, callbacks, and tensor surfaces.
+  - Opus review round 1 reported no blockers; local focused validation passed.
 - [ ] `milestone_py_12`: Documentation, diagnostics, and closeout.
 
 ## Objective
@@ -648,7 +653,7 @@ Packages already covered by Tier 1a may reappear here when they anchor a Tier 1b
 - HTTP/async/networking: `requests`, `urllib3`, `httpx`, `httpcore`, `aiohttp`, `anyio`, `async-timeout`, `sniffio`, `h11`, `httptools`, `websockets`, `uvicorn`, `uvloop`, `grpcio`.
 - Web frameworks: `fastapi`, `starlette`, `starlette-context`, `django`, `sanic`, `sanic-routing`, `sanic-testing`, `webargs`, `webargs-sanic`, `jinja2`, `markupsafe`, `python-multipart`.
 - Databases/queues/brokers: `sqlalchemy`, `sqlalchemy-utils`, `alembic`, `psycopg`, `psycopg2`, `psycopg2-binary`, `asyncpg`, `pymongo`, `motor`, `mongoengine`, `redis`, `fakeredis`, `hiredis`, `valkey`, `aiokafka`, `confluent-kafka`, `kafka-python`, `python-schema-registry-client`, `pika`, `moto`.
-- Cloud/AI clients: `boto3`, `botocore`, `openai`, `google-genai`, `google-api-core`, `google-api-python-client`, `google-auth`, `google-auth-httplib2`, `google-auth-oauthlib`, `google-cloud-core`, `google-cloud-storage`, `google-cloud-firestore`, `google-cloud-aiplatform`, `firebase-admin`, `kubernetes`, `pinecone-client`, `gspread`, `gspread-asyncio`.
+- Cloud/AI clients: `boto3`, `botocore`, `openai`, `google-genai`, `google-api-core`, `google-api-python-client`, `google-auth`, `google-auth-httplib2`, `google-auth-oauthlib`, `google-cloud-core`, `google-cloud-storage`, `google-cloud-firestore`, `google-cloud-aiplatform`, `google-cloud-pubsub`, `firebase-admin`, `kubernetes`, `pinecone-client`, `gspread`, `gspread-asyncio`.
 - Security/crypto/native loading: `cryptography`, `cffi`, `pycparser`, `certifi`, `idna`, `charset-normalizer`, `chardet`, `oauthlib`, `requests-oauthlib`, `python-jose`, `rsa`, `pyasn1`, `pyasn1-modules`.
 - Data/binary/parser: `pandas`, `pyarrow`, `openpyxl`, `lxml`, `bleach`, `defusedxml`, `nh3`, `regex`, `ujson`, `fastavro`, `avro`, `avro-python3`, `google-crc32c`, `tiktoken`, `Pillow`, `tensorflow`, `scikit-learn`.
 - Observability/production infra: `opentelemetry-api`, `opentelemetry-semantic-conventions`, `opentracing`, `sentry-sdk`, `sentry-asgi`, `datadog`, `structlog`, `logstash-formatter`.
@@ -909,6 +914,7 @@ Definition of done:
 - Tier 1 package certification is green in the full Python interop gate.
 - Tier 2/Tier 3 smoke gates are deterministic.
 - Host-dependent skips are explicit and reported.
+- Tier 1 packages that are host-dependent because of wheel or CPU feature availability must report explicit skip evidence in matrix-only gates and require live evidence in the full external gate.
 
 ### milestone_py_12: Documentation, Diagnostics, and Closeout
 

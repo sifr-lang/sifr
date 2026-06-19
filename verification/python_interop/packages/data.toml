@@ -10,6 +10,7 @@ tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "native", "buffers", "arrow"]
 native = true
+import-roots = ["PIL"]
 
 [[packages]]
 name = "tensorflow"
@@ -18,6 +19,7 @@ gate = "tier1b"
 groups = ["imports", "native", "dlpack", "tensors"]
 native = true
 host-dependent = true
+skip-reason = "TensorFlow wheel availability and CPU feature requirements vary by host"
 
 [[packages]]
 name = "scikit-learn"
@@ -25,9 +27,78 @@ tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "native"]
 native = true
+import-roots = ["sklearn"]
+
+[[packages]]
+name = "lxml"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "bleach"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "defusedxml"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "nh3"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "regex"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "ujson"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
 
 [[packages]]
 name = "fastavro"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native"]
+native = true
+
+[[packages]]
+name = "avro"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "avro-python3"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["avro"]
+
+[[packages]]
+name = "google-crc32c"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "cloud"]
+native = true
+import-roots = ["google_crc32c"]
+
+[[packages]]
+name = "tiktoken"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "native"]

@@ -7,6 +7,61 @@ groups = ["imports"]
 name = "pytest-asyncio"
 tier = "tier3"
 groups = ["imports", "async"]
+import-roots = ["pytest_asyncio"]
+
+[[packages]]
+name = "pytest-bdd"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["pytest_bdd"]
+
+[[packages]]
+name = "pytest-cov"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["pytest_cov"]
+
+[[packages]]
+name = "pytest-mock"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["pytest_mock"]
+
+[[packages]]
+name = "pytest-env"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["pytest_env"]
+
+[[packages]]
+name = "pytest-freezegun"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["pytest_freezegun"]
+
+[[packages]]
+name = "pytest-redis"
+tier = "tier3"
+groups = ["imports", "databases"]
+import-roots = ["pytest_redis"]
+
+[[packages]]
+name = "pytest-postgresql"
+tier = "tier3"
+groups = ["imports", "databases"]
+import-roots = ["pytest_postgresql"]
+
+[[packages]]
+name = "pytest-pgsql"
+tier = "tier3"
+groups = ["imports", "databases"]
+import-roots = ["pytest_pgsql"]
+
+[[packages]]
+name = "pytest-sugar"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["pytest_sugar"]
 
 [[packages]]
 name = "coverage"
@@ -22,6 +77,7 @@ groups = ["imports"]
 name = "pre-commit"
 tier = "tier3"
 groups = ["imports"]
+import-roots = ["pre_commit"]
 
 [[packages]]
 name = "black"
@@ -29,7 +85,82 @@ tier = "tier3"
 groups = ["imports"]
 
 [[packages]]
+name = "flake8"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "flake8-black"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["flake8_black"]
+
+[[packages]]
+name = "flake8-isort"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["flake8_isort"]
+
+[[packages]]
+name = "flake8-eradicate"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["flake8_eradicate"]
+
+[[packages]]
+name = "flake8-pyprojecttoml"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["flake8_pyprojecttoml"]
+
+[[packages]]
+name = "isort"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
 name = "mypy"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "mypy-extensions"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["mypy_extensions"]
+
+[[packages]]
+name = "pycodestyle"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "pyflakes"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "mccabe"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "bandit"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "eradicate"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "yapf"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "reno"
 tier = "tier3"
 groups = ["imports"]
 
@@ -44,7 +175,42 @@ tier = "tier3"
 groups = ["imports"]
 
 [[packages]]
+name = "mkdocs-material"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["mkdocs_material"]
+
+[[packages]]
+name = "mkdocs-material-extensions"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["mkdocs_material_extensions"]
+
+[[packages]]
+name = "ghp-import"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["ghp_import"]
+
+[[packages]]
+name = "twine"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "pep517"
+tier = "tier3"
+groups = ["imports"]
+
+[[packages]]
+name = "setuptools-scm"
+tier = "tier3"
+groups = ["imports"]
+import-roots = ["setuptools_scm"]
+
+[[packages]]
 name = "cython"
 tier = "tier3"
 groups = ["imports", "native"]
 native = true
+import-roots = ["Cython"]
