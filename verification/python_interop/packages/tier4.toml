@@ -3,12 +3,36 @@ name = "gunicorn"
 tier = "tier4"
 groups = ["imports", "web"]
 host-dependent = true
+skip-reason = "requires process-manager behavior that varies by host platform"
+
+[[packages]]
+name = "uvicorn-worker"
+tier = "tier4"
+groups = ["imports", "web"]
+host-dependent = true
+import-roots = ["uvicorn_worker"]
+skip-reason = "requires process-manager behavior that varies by host platform"
 
 [[packages]]
 name = "testcontainers"
 tier = "tier4"
 groups = ["imports", "databases", "brokers"]
 host-dependent = true
+skip-reason = "requires a usable local container runtime or external service endpoints"
+
+[[packages]]
+name = "pyngrok"
+tier = "tier4"
+groups = ["imports", "web"]
+host-dependent = true
+skip-reason = "requires host tunnel binary and external network access"
+
+[[packages]]
+name = "wmctrl"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "requires a Linux window manager control backend"
 
 [[packages]]
 name = "watchdog"
@@ -16,6 +40,7 @@ tier = "tier4"
 groups = ["imports", "native"]
 native = true
 host-dependent = true
+skip-reason = "requires host filesystem event backend support"
 
 [[packages]]
 name = "psutil"
@@ -23,21 +48,169 @@ tier = "tier4"
 groups = ["imports", "native"]
 native = true
 host-dependent = true
+skip-reason = "reports host process and kernel capabilities"
 
 [[packages]]
 name = "pexpect"
 tier = "tier4"
 groups = ["imports"]
 host-dependent = true
+skip-reason = "requires pseudo-terminal support from the host"
+
+[[packages]]
+name = "ptyprocess"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "requires pseudo-terminal support from the host"
+
+[[packages]]
+name = "sh"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "executes host shell commands"
+
+[[packages]]
+name = "keyring"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "requires host credential-store backend"
+
+[[packages]]
+name = "secretstorage"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "requires Linux Secret Service backend"
+
+[[packages]]
+name = "jeepney"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "requires host DBus behavior for live coverage"
+
+[[packages]]
+name = "keyrings-google-artifactregistry-auth"
+tier = "tier4"
+groups = ["imports", "cloud"]
+host-dependent = true
+import-roots = ["keyrings.google_artifactregistry_auth"]
+skip-reason = "requires host keyring and Google credential configuration"
 
 [[packages]]
 name = "ipython"
 tier = "tier4"
 groups = ["imports"]
 host-dependent = true
+skip-reason = "interactive shell behavior is host dependent"
 
 [[packages]]
 name = "ipykernel"
 tier = "tier4"
 groups = ["imports"]
 host-dependent = true
+skip-reason = "kernel startup and transport behavior are host dependent"
+
+[[packages]]
+name = "ipdb"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive debugger behavior is host dependent"
+
+[[packages]]
+name = "pdbpp"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive debugger behavior is host dependent"
+
+[[packages]]
+name = "pdbp"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive debugger behavior is host dependent"
+
+[[packages]]
+name = "pdbr"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive debugger behavior is host dependent"
+
+[[packages]]
+name = "fancycompleter"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive completion depends on host terminal capabilities"
+
+[[packages]]
+name = "jedi"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive analysis behavior depends on host files and environment"
+
+[[packages]]
+name = "parso"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive analysis behavior depends on host files and environment"
+
+[[packages]]
+name = "prompt-toolkit"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+import-roots = ["prompt_toolkit"]
+skip-reason = "terminal UI behavior depends on host terminal capabilities"
+
+[[packages]]
+name = "pyrepl"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "REPL behavior depends on host terminal capabilities"
+
+[[packages]]
+name = "asttokens"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive traceback behavior depends on host source context"
+
+[[packages]]
+name = "executing"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "interactive traceback behavior depends on host source context"
+
+[[packages]]
+name = "pure-eval"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+import-roots = ["pure_eval"]
+skip-reason = "interactive traceback behavior depends on host source context"
+
+[[packages]]
+name = "stack-data"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+import-roots = ["stack_data"]
+skip-reason = "interactive traceback behavior depends on host source context"
+
+[[packages]]
+name = "traitlets"
+tier = "tier4"
+groups = ["imports"]
+host-dependent = true
+skip-reason = "kernel and interactive configuration depend on host runtime context"

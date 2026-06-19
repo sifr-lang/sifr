@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "redis",
+  "groups": ["databases", "imports"],
+  "packages": ["redis", "fakeredis", "hiredis"],
+  "default_gate": "inprocess_fake_service_smoke",
+  "host_policy": "live Redis requires external integration gate",
+  "cases": [
+    "redis_client_imports",
+    "fakeredis_roundtrip_shape",
+    "hiredis_native_import_is_trusted"
+  ]
+}

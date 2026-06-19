@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "polars_arrow",
+  "groups": ["dataframes", "arrow", "native"],
+  "packages": ["polars", "pyarrow"],
+  "default_gate": "dataframe_arrow_smoke",
+  "host_policy": "CPU-only local dataframes in default gate",
+  "cases": [
+    "polars_dataframe_imports",
+    "arrow_capsule_export_shape",
+    "zero_copy_claim_requires_capsule_metadata"
+  ]
+}

@@ -8,6 +8,7 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from certification_matrix import build_certification_report, validate_certification_policy
 from env import discover_paths
 from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
@@ -56,10 +57,24 @@ REQUIRED_FIXTURE_FILES = (
     "simple_import/opaque_object_operations.json",
     "primitive_conversion/primitive_roundtrip.json",
     "async_blocking/async_blocking_contract.json",
+    "async_http/async_http_contract.json",
+    "aws_sns/aws_sns_contract.json",
+    "aws_sns_sqs_subscription/aws_sns_sqs_subscription_contract.json",
+    "aws_sqs/aws_sqs_contract.json",
+    "cryptography_tls/cryptography_tls_contract.json",
+    "fastapi_app/fastapi_app_contract.json",
+    "kafka/kafka_contract.json",
     "numpy_buffer/py_buffer_contract.json",
+    "pandas_arrow/pandas_arrow_contract.json",
+    "polars_arrow/polars_arrow_contract.json",
+    "pubsub/pubsub_contract.json",
     "pyarrow_capsule/arrow_capsule_contract.json",
+    "pydantic_models/pydantic_models_contract.json",
+    "redis/redis_contract.json",
     "torch_dlpack/dlpack_tensor_contract.json",
     "cffi_callback/callback_contract.json",
+    "sqlalchemy_psycopg/sqlalchemy_psycopg_contract.json",
+    "tensorflow_dlpack/tensorflow_dlpack_contract.json",
     "resource_cleanup/context_manager_cleanup.json",
 )
 
@@ -109,6 +124,7 @@ def main(argv: list[str] | None = None) -> int:
     selected_gates = validate_filters("gate", args.gate, KNOWN_GATES)
     matrices = load_matrices(paths.packages_root)
     validate_matrix_entries(matrices)
+    validate_certification_policy(matrices)
     validate_fixtures(paths.fixtures_root)
     validate_fixture_files(paths.fixtures_root)
 
@@ -120,10 +136,18 @@ def main(argv: list[str] | None = None) -> int:
         set(args.package),
     )
     env_result = run_env_probe(paths.area_root) if "env" in selected_groups else None
+    certification = build_certification_report(selected)
+    skipped = certification["host_dependent_skips"]
     payload = {
         "schema_version": 1,
         "area": "python_interop",
-        "status": "passed" if env_result else "scaffold",
+        "status": report_status(
+            env_result,
+            selected_groups,
+            selected_tiers,
+            selected_gates,
+            bool(args.package),
+        ),
         "groups": selected_groups or ["scaffold"],
         "tiers": selected_tiers,
         "gates": selected_gates or sorted({entry.gate for entry in selected if entry.gate is not None}),
@@ -138,7 +162,9 @@ def main(argv: list[str] | None = None) -> int:
             "total_failures": 0,
             "blocking_failures": 0,
             "non_blocking_failures": 0,
+            "skipped": skipped,
         },
+        "package_certification": certification,
     }
     if env_result is not None:
         payload["env_probe"] = env_result
@@ -231,9 +257,24 @@ def select_entries(
     return selected
 
 
+def report_status(
+    env_result: dict[str, object] | None,
+    groups: list[str],
+    tiers: list[str],
+    gates: list[str],
+    has_package_filter: bool,
+) -> str:
+    if env_result is not None:
+        return "passed"
+    if tiers or gates or has_package_filter or (groups and groups != ["scaffold"]):
+        return "matrix-passed"
+    return "scaffold"
+
+
 def run_self_tests(area_root: Path) -> None:
     entries = load_matrices(area_root / "packages")
     validate_matrix_entries(entries)
+    validate_certification_policy(entries)
     validate_fixture_files(area_root / "fixtures")
     run_env_probe(area_root)
     try:
@@ -266,6 +307,24 @@ def run_self_tests(area_root: Path) -> None:
         pass
     else:
         raise SystemExit("negative self-test failed: non-tier1 package with gate was accepted")
+    try:
+        validate_certification_policy([PackageEntry("bad-tier4", "tier4", ("imports",))])
+    except SystemExit:
+        pass
+    else:
+        raise SystemExit("negative self-test failed: tier4 package without skip was accepted")
+    payload = build_certification_report([
+        PackageEntry(name="requests", tier="tier1", groups=("imports",), gate="tier1a"),
+        PackageEntry(
+            name="watchdog",
+            tier="tier4",
+            groups=("imports",),
+            host_dependent=True,
+            skip_reason="requires host filesystem event backend",
+        ),
+    ])
+    if payload["certified_packages"] != 1 or payload["host_dependent_skips"] != 1:
+        raise SystemExit("negative self-test failed: package status counts drifted")
 
 
 if __name__ == "__main__":

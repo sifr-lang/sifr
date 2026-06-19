@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "aws_sns",
+  "groups": ["cloud", "brokers", "imports"],
+  "packages": ["boto3", "botocore", "moto"],
+  "default_gate": "stubbed_client_smoke",
+  "host_policy": "no live AWS credentials in default gate",
+  "cases": [
+    "sns_client_imports",
+    "botocore_stubber_publish_request",
+    "python_error_mapping_for_stubbed_failure"
+  ]
+}

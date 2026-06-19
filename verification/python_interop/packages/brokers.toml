@@ -1,4 +1,77 @@
 [[packages]]
+name = "sqlalchemy-utils"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "databases"]
+import-roots = ["sqlalchemy_utils"]
+
+[[packages]]
+name = "alembic"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "databases"]
+
+[[packages]]
+name = "psycopg2"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "databases"]
+native = true
+
+[[packages]]
+name = "psycopg2-binary"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "databases"]
+native = true
+import-roots = ["psycopg2"]
+
+[[packages]]
+name = "asyncpg"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "async", "databases"]
+native = true
+
+[[packages]]
+name = "pymongo"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "databases"]
+native = true
+
+[[packages]]
+name = "motor"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "databases"]
+
+[[packages]]
+name = "mongoengine"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "databases"]
+
+[[packages]]
+name = "fakeredis"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "databases"]
+
+[[packages]]
+name = "hiredis"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "native", "databases"]
+native = true
+
+[[packages]]
+name = "valkey"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "databases"]
+
+[[packages]]
 name = "aiokafka"
 tier = "tier1"
 gate = "tier1b"
@@ -9,12 +82,14 @@ name = "kafka-python"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "brokers"]
+import-roots = ["kafka"]
 
 [[packages]]
 name = "python-schema-registry-client"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "brokers"]
+import-roots = ["schema_registry"]
 
 [[packages]]
 name = "pika"

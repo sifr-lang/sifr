@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "pandas_arrow",
+  "groups": ["dataframes", "arrow", "native"],
+  "packages": ["pandas", "pyarrow", "numpy"],
+  "default_gate": "dataframe_arrow_smoke",
+  "host_policy": "CPU-only local dataframes in default gate",
+  "cases": [
+    "pandas_dataframe_imports",
+    "arrow_table_export_shape",
+    "copy_possible_paths_are_reported"
+  ]
+}

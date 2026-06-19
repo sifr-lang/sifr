@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "sqlalchemy_psycopg",
+  "groups": ["databases", "imports"],
+  "packages": ["sqlalchemy", "psycopg", "alembic"],
+  "default_gate": "dialect_import_smoke",
+  "host_policy": "live Postgres requires external integration gate",
+  "cases": [
+    "sqlalchemy_engine_imports",
+    "psycopg_driver_imports",
+    "connection_failure_maps_to_python_error"
+  ]
+}

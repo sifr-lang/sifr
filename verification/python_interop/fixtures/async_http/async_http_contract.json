@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "async_http",
+  "groups": ["async", "web", "imports"],
+  "packages": ["httpx", "httpcore", "aiohttp", "anyio", "h11", "sniffio"],
+  "default_gate": "import_and_inprocess_smoke",
+  "host_policy": "no external network; loopback-only clients in live gates",
+  "cases": [
+    "httpx_client_imports_without_event_loop_takeover",
+    "aiohttp_client_session_imports_under_blocking_boundary",
+    "asyncio_coroutine_results_are_explicitly_blocked_or_offloaded"
+  ]
+}

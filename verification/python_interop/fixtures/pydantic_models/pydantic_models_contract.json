@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "pydantic_models",
+  "groups": ["imports"],
+  "packages": ["pydantic", "pydantic-core", "annotated-types"],
+  "default_gate": "model_validation_smoke",
+  "host_policy": "pure in-process validation only",
+  "cases": [
+    "model_constructs",
+    "validation_error_maps_to_python_error",
+    "pydantic_core_native_extension_imports"
+  ]
+}

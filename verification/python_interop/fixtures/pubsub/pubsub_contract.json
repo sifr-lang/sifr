@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "pubsub",
+  "groups": ["cloud", "brokers", "callbacks"],
+  "packages": ["google-api-core", "google-cloud-pubsub", "google-auth"],
+  "default_gate": "import_and_callback_shape",
+  "host_policy": "live Pub/Sub requires external integration gate",
+  "cases": [
+    "google_client_imports",
+    "subscriber_callback_shape_uses_threadsafe_callback",
+    "credential_failure_maps_to_python_error"
+  ]
+}

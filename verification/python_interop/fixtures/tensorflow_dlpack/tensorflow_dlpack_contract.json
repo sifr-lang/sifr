@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "tensorflow_dlpack",
+  "groups": ["tensors", "dlpack", "native"],
+  "packages": ["tensorflow", "numpy"],
+  "default_gate": "host_dependent_tensor_smoke",
+  "host_policy": "TensorFlow wheel availability is host dependent; CPU-only evidence accepted",
+  "cases": [
+    "tensorflow_import_is_host_dependent",
+    "cpu_tensor_dlpack_shape",
+    "unsupported_device_is_reported"
+  ]
+}

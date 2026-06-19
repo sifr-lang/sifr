@@ -4,24 +4,74 @@ tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "native", "cloud"]
 native = true
+import-roots = ["grpc"]
 
 [[packages]]
-name = "lxml"
+name = "pycparser"
 tier = "tier1"
 gate = "tier1b"
-groups = ["imports", "native"]
-native = true
+groups = ["imports"]
 
 [[packages]]
-name = "tiktoken"
+name = "certifi"
 tier = "tier1"
 gate = "tier1b"
-groups = ["imports", "native"]
-native = true
+groups = ["imports"]
 
 [[packages]]
-name = "google-crc32c"
+name = "idna"
 tier = "tier1"
 gate = "tier1b"
-groups = ["imports", "native", "cloud"]
-native = true
+groups = ["imports"]
+
+[[packages]]
+name = "charset-normalizer"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["charset_normalizer"]
+
+[[packages]]
+name = "chardet"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "oauthlib"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "requests-oauthlib"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["requests_oauthlib"]
+
+[[packages]]
+name = "python-jose"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["jose"]
+
+[[packages]]
+name = "rsa"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "pyasn1"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "pyasn1-modules"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["pyasn1_modules"]

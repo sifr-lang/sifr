@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "fixture": "cryptography_tls",
+  "groups": ["native", "imports"],
+  "packages": ["cryptography", "cffi", "certifi"],
+  "default_gate": "native_import_and_object_smoke",
+  "host_policy": "no external certificate fetches in default gate",
+  "cases": [
+    "cryptography_native_extension_imports",
+    "cffi_backend_imports",
+    "certificate_object_creation_maps_errors"
+  ]
+}

@@ -3,33 +3,153 @@ name = "google-api-core"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "cloud"]
+import-roots = ["google.api_core"]
 
 [[packages]]
 name = "google-api-python-client"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "cloud"]
+import-roots = ["googleapiclient"]
 
 [[packages]]
 name = "google-auth"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "cloud"]
+import-roots = ["google.auth"]
+
+[[packages]]
+name = "google-auth-httplib2"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+import-roots = ["google_auth_httplib2"]
+
+[[packages]]
+name = "google-auth-oauthlib"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+import-roots = ["google_auth_oauthlib"]
+
+[[packages]]
+name = "google-cloud-core"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+import-roots = ["google.cloud"]
 
 [[packages]]
 name = "google-cloud-storage"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "cloud"]
+import-roots = ["google.cloud.storage"]
 
 [[packages]]
 name = "google-cloud-firestore"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "cloud"]
+import-roots = ["google.cloud.firestore"]
+
+[[packages]]
+name = "google-cloud-aiplatform"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+import-roots = ["google.cloud.aiplatform"]
+
+[[packages]]
+name = "google-cloud-pubsub"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud", "brokers", "callbacks"]
+import-roots = ["google.cloud.pubsub"]
+
+[[packages]]
+name = "firebase-admin"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+import-roots = ["firebase_admin"]
 
 [[packages]]
 name = "kubernetes"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "cloud"]
+
+[[packages]]
+name = "pinecone-client"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+import-roots = ["pinecone"]
+
+[[packages]]
+name = "gspread"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "cloud"]
+
+[[packages]]
+name = "gspread-asyncio"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "async", "cloud"]
+import-roots = ["gspread_asyncio"]
+
+[[packages]]
+name = "opentelemetry-api"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["opentelemetry"]
+
+[[packages]]
+name = "opentelemetry-semantic-conventions"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["opentelemetry.semconv"]
+
+[[packages]]
+name = "opentracing"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "sentry-sdk"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["sentry_sdk"]
+
+[[packages]]
+name = "sentry-asgi"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports", "web"]
+import-roots = ["sentry_asgi"]
+
+[[packages]]
+name = "datadog"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "structlog"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+
+[[packages]]
+name = "logstash-formatter"
+tier = "tier1"
+gate = "tier1b"
+groups = ["imports"]
+import-roots = ["logstash_formatter"]

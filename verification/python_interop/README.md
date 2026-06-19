@@ -11,14 +11,17 @@ The canonical entrypoint is:
 verification/python_interop/run.sh --group scaffold
 verification/python_interop/run.sh --group env
 verification/python_interop/run.sh --tier tier1
+verification/python_interop/run.sh --tier tier4
 verification/python_interop/run.sh --package pandas
 verification/python_interop/run.sh --self-test
 ```
 
-The scaffold group validates the checked-in matrix and fixture surface. The env
-group records live interpreter ABI evidence and validates checked-in positive
-probe fixtures plus concrete negative probe/selection cases. The runner must
-never invoke `uv sync` or install packages implicitly.
+The scaffold group validates the checked-in matrix and fixture surface. Tier,
+gate, and package filters emit deterministic package-certification evidence from
+the checked-in matrix and contracts. The env group records live interpreter ABI
+evidence and validates checked-in positive probe fixtures plus concrete negative
+probe/selection cases. The runner must never invoke `uv sync` or install
+packages implicitly.
 
 ## Groups
 
@@ -44,5 +47,14 @@ never invoke `uv sync` or install packages implicitly.
 
 Runner output is written to `reports/latest.json` by default. Reports use
 deterministic JSON with selected filters, matrix counts, fixture coverage, and
-scaffold status so interop evidence can be reviewed before implementation gates
-exist.
+package-certification status so interop evidence can be reviewed before live
+package execution gates exist.
+
+Package certification records include:
+
+- per-package tier, gate, group, native-extension, and host-dependency metadata;
+- deterministic pass records for Tier 1, Tier 2, and Tier 3 matrix contracts;
+- top-level `matrix-passed` status for matrix-only evidence, distinct from live
+  environment/package execution status;
+- explicit Tier 4 skip records with `skip_reason` for host-dependent packages;
+- aggregate tier, gate, pass, and skip counts.

@@ -13,6 +13,8 @@ class PackageEntry:
     gate: str | None = None
     native: bool = False
     host_dependent: bool = False
+    import_roots: tuple[str, ...] = ()
+    skip_reason: str | None = None
 
 
 def load_matrix(path: Path) -> list[PackageEntry]:
@@ -32,7 +34,18 @@ def parse_entry(path: Path, index: int, entry: object) -> PackageEntry:
     gate = optional_string(path, index, entry, "gate")
     native = optional_bool(path, index, entry, "native")
     host_dependent = optional_bool(path, index, entry, "host-dependent")
-    return PackageEntry(name, tier, tuple(groups), gate, native, host_dependent)
+    import_roots = optional_string_list(path, index, entry, "import-roots")
+    skip_reason = optional_string(path, index, entry, "skip-reason")
+    return PackageEntry(
+        name,
+        tier,
+        tuple(groups),
+        gate,
+        native,
+        host_dependent,
+        tuple(import_roots or [default_import_root(name)]),
+        skip_reason,
+    )
 
 
 def required_string(path: Path, index: int, entry: dict[str, object], key: str) -> str:
@@ -65,3 +78,20 @@ def optional_string(path: Path, index: int, entry: dict[str, object], key: str) 
     if not isinstance(value, str) or not value:
         raise ValueError(f"{path} package entry {index} field {key} must be a non-empty string")
     return value
+
+
+def optional_string_list(
+    path: Path, index: int, entry: dict[str, object], key: str
+) -> list[str] | None:
+    value = entry.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, list) or not value:
+        raise ValueError(f"{path} package entry {index} field {key} must be a non-empty list")
+    if not all(isinstance(item, str) and item for item in value):
+        raise ValueError(f"{path} package entry {index} field {key} must contain strings")
+    return value
+
+
+def default_import_root(package_name: str) -> str:
+    return package_name.replace("-", "_")
