@@ -14,10 +14,11 @@ Make embedded Python interop verification authoritative enough to prove real exa
   - Wire non-container Python interop suites into validation profiles.
   - Update public/internal docs and exit evidence paths.
   - Local validation passed with `scripts/run_all_tests.sh --profile create-pr` on 2026-06-19; Opus review `plans/reviews/active/python-interop-area-migration-review-1.md` returned no blockers.
-- [ ] `verification_py_area_2`: Container-runtime profile and policy.
+- [x] `verification_py_area_2`: Container-runtime profile and policy.
   - Add explicit container-runtime resource classification and profile support.
   - Define live Python interop profile semantics, skip rules, and result statuses.
   - Keep offline profiles honest and free of implicit container/runtime requirements.
+  - Added `python-interop-live` as an explicit selected-areas-only profile and `live-policy` as the policy gate for later testcontainers suites.
 - [ ] `verification_py_area_3`: Live dependency examples.
   - Add testcontainer-backed examples for service dependencies.
   - Cover Redis, Postgres, Kafka-compatible broker, and AWS-compatible SQS/SNS behavior.
@@ -37,3 +38,4 @@ Make embedded Python interop verification authoritative enough to prove real exa
 ## Milestone Evidence
 
 - `verification_py_area_1`: implemented in PR [#2680](https://github.com/sifr-lang/sifr/pull/2680).
+- `verification_py_area_2`: implemented in PR #2681 (`python-interop-container-policy`).

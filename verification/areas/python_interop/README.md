@@ -14,6 +14,7 @@ verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
 verification/areas/python_interop/run.sh --self-test
+scripts/run_all_tests.sh --profile python-interop-live
 ```
 
 The scaffold group validates the checked-in matrix and fixture surface. Tier,
@@ -22,6 +23,14 @@ the checked-in matrix and contracts. The env group records live interpreter ABI
 evidence and validates checked-in positive probe fixtures plus concrete negative
 probe/selection cases. The runner must never invoke `uv sync` or install
 packages implicitly.
+
+Live dependency examples are intentionally opt-in. The `python-interop-live`
+profile uses selected-areas-only execution and currently runs the
+`live-policy` suite, which verifies the container-runtime/testcontainers policy
+without starting containers. Service-backed examples must be added to that
+profile, not to the offline create-pr/merge/nightly/release profiles. The area
+manifest remains offline by default; live suites must declare their own
+`network_mode` and resource classes.
 
 ## Groups
 
@@ -45,7 +54,8 @@ packages implicitly.
 
 ## Reports
 
-Runner output is written to `reports/latest.json` by default. Reports use
+Runner output is written under `target/verification/areas/python_interop/` by
+the area and profile runners. Reports use
 deterministic JSON with selected filters, matrix counts, fixture coverage, and
 package-certification status so interop evidence can be reviewed before live
 package execution gates exist.

@@ -131,6 +131,9 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
+        if self.execution_mode == "selected-areas-only":
+            return self.run_selected_areas_only()
+
         steps: list[tuple[str, Callable[[], None]]] = [
             ("coverage_matrix_checks", self.run_coverage_matrix_checks),
             ("core_guardrails", self.run_core_guardrails),
@@ -164,6 +167,10 @@ class ProfileRunner:
             if status != 0:
                 return status
         return 0
+
+    @property
+    def execution_mode(self) -> str:
+        return str(self.profile.get("execution_mode", "legacy-facade"))
 
     @property
     def budgets(self) -> dict[str, Any]:
@@ -229,6 +236,30 @@ class ProfileRunner:
             if isinstance(raw_suites, list):
                 suites.extend(str(suite) for suite in raw_suites)
         return suites
+
+    def run_selected_areas_only(self) -> int:
+        selections = [
+            selection
+            for selection in self.profile.get("selected_areas", [])
+            if isinstance(selection, dict)
+        ]
+        if not selections:
+            print(f"sifr_verify: profile {self.profile_name} selects no areas", file=sys.stderr)
+            return 2
+        for selection in selections:
+            area = str(selection["area"])
+            suites = [str(suite) for suite in selection.get("suites", [])]
+            step_name = f"{area}_selected_suites"
+            status = timed_step(step_name, lambda area=area, suites=suites: self.run_area_suites(area, suites))
+            if status != 0:
+                return status
+        return 0
+
+    def run_area_suites(self, area: str, suites: list[str]) -> None:
+        args = ["--area", area]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args))
 
     def run_coverage_matrix_checks(self) -> None:
         suites = self.selected_suites_for_area("coverage_matrix")

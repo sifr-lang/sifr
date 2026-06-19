@@ -6,7 +6,8 @@
   "parallel_safe": false,
   "resource_classes": [
     "default-local",
-    "platform-specific"
+    "platform-specific",
+    "container-runtime"
   ],
   "timeout_seconds": 900,
   "suites": [
@@ -135,6 +136,26 @@
           "id": "cloud-boto3",
           "entry": "verification/areas/python_interop/runner/run.py",
           "command": "python-interop-cloud-boto3",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "live-policy",
+      "kind": "adapter",
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ],
+      "network_mode": "live",
+      "timeout_seconds": 60,
+      "cases": [
+        {
+          "id": "live-policy",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-live-policy",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "profile": "python-interop-live",
+  "status": "policy-only",
+  "required_resource_classes": [
+    "container-runtime",
+    "network",
+    "platform-specific"
+  ],
+  "offline_profiles": [
+    "create-pr",
+    "merge",
+    "nightly",
+    "release"
+  ],
+  "offline_forbidden_suites": [
+    "live-policy"
+  ],
+  "container_runtime": {
+    "provider": "testcontainers",
+    "docker_required": true,
+    "image_pull_policy": "explicit-profile-only",
+    "cleanup_required": true,
+    "timeout_seconds": 1800
+  },
+  "result_statuses": [
+    "policy-passed",
+    "live-passed",
+    "structured-skip",
+    "live-failed"
+  ],
+  "artifact_root": "target/verification/areas/python_interop",
+  "notes": "This policy gate is intentionally non-containerized. Any live dependency suite must use this profile/resource contract."
+}

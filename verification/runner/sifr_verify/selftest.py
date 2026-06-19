@@ -79,9 +79,11 @@ def _schema_self_test() -> None:
 
 def _profile_schema_self_test() -> None:
     profiles = load_all_profiles()
-    expected = {"create-pr", "merge", "nightly", "release"}
+    expected = {"create-pr", "merge", "nightly", "python-interop-live", "release"}
     if set(profiles) != expected:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
+    if profiles["python-interop-live"].get("execution_mode") != "selected-areas-only":
+        raise AssertionError("python-interop-live must use selected-areas-only execution")
 
 
 def _crate_membership_self_test() -> None:
@@ -273,13 +275,13 @@ def _discovery_self_test() -> None:
 
 def _resource_class_self_test() -> None:
     profile = {
-        "resource_policy": {"classes": ["default-local", "network"]},
+        "resource_policy": {"classes": ["default-local", "network", "container-runtime"]},
         "selected_areas": [
             {"area": "core_language", "resource_classes": ["default-local"]},
             {"area": "ecosystem_compatibility", "resource_classes": ["external-corpus"]},
         ],
     }
-    expected = {"default-local", "network", "external-corpus"}
+    expected = {"default-local", "network", "external-corpus", "container-runtime"}
     actual = selected_resource_classes(profile)
     if actual != expected:
         raise AssertionError(f"resource class selection mismatch: {actual}")

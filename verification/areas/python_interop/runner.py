@@ -73,6 +73,11 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/package.latest.json",
     ],
+    "python-interop-live-policy": [
+        "--live-policy",
+        "--report",
+        "../../../target/verification/areas/python_interop/live-policy.latest.json",
+    ],
 }
 
 

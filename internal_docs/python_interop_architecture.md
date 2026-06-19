@@ -70,11 +70,18 @@ Important selectors:
 - `--group callbacks`, `--group dataframes`, `--group cloud`, `--group brokers`, and similar group filters: representative contract coverage.
 - `--self-test`: runner positive/negative tests, certification-policy invariants, fixture JSON validation, and env-probe smoke.
 
+The explicit live dependency lane is `scripts/run_all_tests.sh --profile
+python-interop-live`. It uses selected-areas-only execution and requires the
+`container-runtime`, `network`, and `platform-specific` resource classes. Offline
+profiles must not select live Python interop suites.
+
 Report status values are intentional:
 
 - `passed`: live environment execution ran.
 - `matrix-passed`: deterministic matrix or contract evidence ran without live package execution.
 - `scaffold`: repository-shape scaffold validation only.
+- `policy-passed`: live container-runtime policy was validated without running service containers.
+- `live-passed`, `structured-skip`, `live-failed`: reserved for testcontainers-backed live examples.
 
 Tier 4 and other host-dependent entries must include explicit `skip_reason` evidence. The full external gate is responsible for live service/host evidence.
 
