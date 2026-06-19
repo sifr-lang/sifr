@@ -93,6 +93,15 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     let record_fields_rendered = render_expr(&record_fields.expr);
     assert!(record_fields_rendered.contains("sifr_runtime::python::copy_record_fields"));
     assert!(record_fields_rendered.contains("__sifr_python_fields"));
+
+    let coroutine = lower_intrinsic(
+        "py_run_coroutine_blocking",
+        &["object_handle".to_string(), "object_token".to_string()],
+    )
+    .expect("py_run_coroutine_blocking should lower");
+    let coroutine_rendered = render_expr(&coroutine.expr);
+    assert!(coroutine_rendered.contains("sifr_runtime::python::run_coroutine_blocking"));
+    assert!(coroutine_rendered.contains("(object_handle, object_token)"));
 }
 
 #[test]

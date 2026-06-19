@@ -10,6 +10,7 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_close" => lower_py_close(args),
         "py_enter_context" => lower_py_enter_context(args),
         "py_exit_context" => lower_py_exit_context(args),
+        "py_run_coroutine_blocking" => lower_py_run_coroutine_blocking(args),
         "py_from_none" => lower_py_from_none(args),
         "py_from_bool" => lower_py_from_bool(args),
         "py_from_int" => lower_py_from_int(args),
@@ -248,6 +249,10 @@ pub(crate) fn lower_py_exit_context(args: &[RustExpr]) -> Option<RustExpr> {
     Some(map_python_error(format!(
         "sifr_runtime::python::exit_context(({handle}, {token}))"
     )))
+}
+
+pub(crate) fn lower_py_run_coroutine_blocking(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_handle_conversion(args, "run_coroutine_blocking")
 }
 
 pub(crate) fn lower_py_from_none(args: &[RustExpr]) -> Option<RustExpr> {

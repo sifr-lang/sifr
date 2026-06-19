@@ -1,0 +1,51 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    call_attr,
+    close,
+    from_float,
+    from_int,
+    import_module,
+    run_coroutine_blocking,
+    to_int,
+)
+
+
+@blocking_io
+def build_value() -> Result[int, PythonError]:
+    try:
+        obj: Object = from_int(41)
+        value: int = to_int(obj)
+        closed: None = close(obj)
+        return value
+    except PythonError as e:
+        raise e
+
+
+@trust_python_dynamic
+@blocking_io
+def run_python_owned_loop() -> Result[int, PythonError]:
+    try:
+        module_name: str = "asyncio"
+        asyncio: Object = import_module(module_name)
+        delay: Object = from_float(0.0)
+        expected: Object = from_int(42)
+        coro: Object = call_attr(asyncio, "sleep", [delay], [("result", expected)])
+        result_obj: Object = run_coroutine_blocking(coro)
+        result: int = to_int(result_obj)
+        result_closed: None = close(result_obj)
+        coro_closed: None = close(coro)
+        expected_closed: None = close(expected)
+        delay_closed: None = close(delay)
+        asyncio_closed: None = close(asyncio)
+        return result
+    except PythonError as e:
+        raise e
+
+
+async def main() -> Result[None, ScopeFailure]:
+    value_handle = task.spawn_blocking(build_value)
+    loop_handle = task.spawn_blocking(run_python_owned_loop)
+    value = await value_handle
+    loop_value = await loop_handle
+    return None

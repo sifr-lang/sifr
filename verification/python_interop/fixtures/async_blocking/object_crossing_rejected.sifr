@@ -1,0 +1,17 @@
+# expect-error: SIFR-TYPE-0002
+from sifr.python import Object, PythonError, from_int
+
+
+@blocking_io
+def build_object() -> Result[Object, PythonError]:
+    try:
+        value: Object = from_int(41)
+        return value
+    except PythonError as e:
+        raise e
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_blocking(build_object)
+    await task.sleep(0.0)
+    return None

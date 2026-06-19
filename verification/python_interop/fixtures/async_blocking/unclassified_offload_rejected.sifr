@@ -1,0 +1,17 @@
+# expect-error: SIFR-ASYNC-0005
+from sifr.python import Object, PythonError, from_int, to_int
+
+
+def build_value() -> Result[int, PythonError]:
+    try:
+        obj: Object = from_int(41)
+        value: int = to_int(obj)
+        return value
+    except PythonError as e:
+        raise e
+
+
+async def main() -> Result[None, ScopeFailure]:
+    handle = task.spawn_blocking(build_value)
+    await task.sleep(0.0)
+    return None

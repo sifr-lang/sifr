@@ -104,6 +104,16 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "py_run_coroutine_blocking".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(object_handle()),
+        ),
+    );
+    functions.insert(
         "py_from_none".to_string(),
         FunctionType::all_borrow(vec![], python_error_result(object_handle())),
     );

@@ -1,0 +1,11 @@
+# expect-error: SIFR-ASYNC-0003
+from sifr.python import Object, PythonError, from_int
+
+
+async def main() -> Result[None, PythonError]:
+    try:
+        value: Object = from_int(41)
+        await task.sleep(0.0)
+        return None
+    except PythonError as e:
+        raise e

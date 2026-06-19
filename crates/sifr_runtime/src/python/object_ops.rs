@@ -42,7 +42,7 @@ pub struct PythonError {
 }
 
 impl PythonError {
-    fn runtime(error: PythonRuntimeError) -> Self {
+    pub(super) fn runtime(error: PythonRuntimeError) -> Self {
         Self {
             kind: "runtime".to_string(),
             exception_type: "SifrPythonRuntimeError".to_string(),
@@ -72,7 +72,7 @@ impl PythonError {
         }
     }
 
-    fn from_pyerr(
+    pub(super) fn from_pyerr(
         py: Python<'_>,
         error: PyErr,
         kind: &'static str,
@@ -452,7 +452,7 @@ fn contains_root(roots: &[String], root: &str) -> bool {
         .any(|candidate| candidate == root || candidate == "*")
 }
 
-fn store_object(object: Py<PyAny>) -> Result<ObjectHandle, PythonError> {
+pub(super) fn store_object(object: Py<PyAny>) -> Result<ObjectHandle, PythonError> {
     let object = Object::new(object).map_err(PythonError::runtime)?;
     let mut store = object_store()?;
     let (handle, token) = reserve_handle(&mut store)?;
@@ -729,7 +729,10 @@ fn clone_handles(py: Python<'_>, values: &[ObjectHandle]) -> Result<Vec<Py<PyAny
         .collect::<Result<Vec<_>, _>>()
 }
 
-fn clone_handle(py: Python<'_>, (handle, token): ObjectHandle) -> Result<Py<PyAny>, PythonError> {
+pub(super) fn clone_handle(
+    py: Python<'_>,
+    (handle, token): ObjectHandle,
+) -> Result<Py<PyAny>, PythonError> {
     object_store()?
         .objects
         .get(&handle)

@@ -6,7 +6,9 @@ use std::fmt;
 use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
+mod coroutine_ops;
 mod object_ops;
+pub use coroutine_ops::run_coroutine_blocking;
 pub use object_ops::{
     call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
     copy_dict_str_float, copy_dict_str_i32, copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8,
@@ -623,12 +625,14 @@ print(os.pathsep.join(sys.path))
         sys_path,
         site_packages: Vec::new(),
         allowed_import_roots: vec![
+            "asyncio".to_string(),
             "builtins".to_string(),
             "contextlib".to_string(),
             "math".to_string(),
             "sys".to_string(),
         ],
         trusted_import_roots: vec![
+            "asyncio".to_string(),
             "builtins".to_string(),
             "contextlib".to_string(),
             "math".to_string(),
