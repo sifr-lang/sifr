@@ -98,6 +98,8 @@ mod ownership_diagnostics;
 mod parallel_calls;
 mod protocol_diagnostics;
 #[cfg(test)]
+mod python_async_tests;
+#[cfg(test)]
 mod python_trust_tests;
 mod result_diagnostics;
 #[cfg(test)]

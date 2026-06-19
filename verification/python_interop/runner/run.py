@@ -30,6 +30,7 @@ REQUIRED_FIXTURES = (
     "simple_import",
     "primitive_conversion",
     "pydantic_models",
+    "async_blocking",
     "async_http",
     "fastapi_app",
     "sqlalchemy_psycopg",
@@ -54,10 +55,15 @@ REQUIRED_FIXTURES = (
 REQUIRED_FIXTURE_FILES = (
     "simple_import/opaque_object_operations.json",
     "primitive_conversion/primitive_roundtrip.json",
+    "async_blocking/async_blocking_contract.json",
     "resource_cleanup/context_manager_cleanup.json",
 )
 
 REQUIRED_SOURCE_FIXTURES = (
+    "async_blocking/direct_python_call_rejected.sifr",
+    "async_blocking/object_crossing_rejected.sifr",
+    "async_blocking/offloaded_python_calls.sifr",
+    "async_blocking/unclassified_offload_rejected.sifr",
     "primitive_conversion/primitive_roundtrip.sifr",
 )
 

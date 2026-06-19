@@ -189,7 +189,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                     name: class.name.clone(),
                     fields: class.fields.clone(),
                     methods,
-                    parent_class: None,
+                    parent_class: class.parent_class.clone(),
                 };
                 class_exports.insert(class.name.clone(), class_ty);
                 if !class.type_params.is_empty() {
@@ -788,5 +788,24 @@ mod tests {
         assert_eq!(exports.get("ANSWER"), Some(&42));
         assert!(!exports.contains_key("_PRIVATE"));
         assert!(!exports.contains_key("STALE"));
+    }
+
+    #[test]
+    fn stdlib_class_exports_preserve_parent_markers() {
+        let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+        let object_ty = compiled
+            .defs
+            .classes
+            .get("sifr.python")
+            .and_then(|classes| classes.get("Object"))
+            .expect("sifr.python.Object should be exported");
+
+        assert!(matches!(
+            object_ty,
+            Type::Class {
+                parent_class: Some(parent),
+                ..
+            } if parent.split('|').any(|name| name == "NonSend")
+        ));
     }
 }

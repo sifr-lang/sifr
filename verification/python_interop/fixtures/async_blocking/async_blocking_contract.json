@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "contract": "py5_async_blocking",
+  "name": "async_blocking_contract",
+  "positive": [
+    {
+      "fixture": "offloaded_python_calls.sifr",
+      "covers": [
+        "annotated Python work is offloaded through task.spawn_blocking",
+        "run_coroutine_blocking is an explicit blocking operation",
+        "Python-owned event loop results are copied back to sendable Sifr values"
+      ]
+    }
+  ],
+  "negative": [
+    {
+      "fixture": "direct_python_call_rejected.sifr",
+      "diagnostic": "SIFR-ASYNC-0003",
+      "covers": "direct Python calls in async code are rejected"
+    },
+    {
+      "fixture": "object_crossing_rejected.sifr",
+      "diagnostic": "SIFR-TYPE-0002",
+      "covers": "py.Object is non-Send and cannot cross worker boundaries"
+    },
+    {
+      "fixture": "unclassified_offload_rejected.sifr",
+      "diagnostic": "SIFR-ASYNC-0005",
+      "covers": "blocking offload targets must be classified"
+    }
+  ]
+}
