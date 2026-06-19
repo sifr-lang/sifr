@@ -106,6 +106,25 @@
       ]
     },
     {
+      "area": "python_interop",
+      "suites": [
+        "self-test",
+        "scaffold",
+        "env",
+        "tier1",
+        "tier2",
+        "tier3",
+        "tier4",
+        "callbacks",
+        "dataframes",
+        "cloud-boto3"
+      ],
+      "resource_classes": [
+        "default-local",
+        "platform-specific"
+      ]
+    },
+    {
       "area": "runtime_platform",
       "suites": [
         "platform-golden",

@@ -106,7 +106,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--tier", action="append", default=[], help="Package tier filter.")
     parser.add_argument("--gate", action="append", default=[], help="Certification gate filter.")
     parser.add_argument("--package", action="append", default=[], help="Package name filter.")
-    parser.add_argument("--report", default="reports/latest.json", help="Report path under verification/python_interop.")
+    parser.add_argument(
+        "--report",
+        default="../../../target/verification/areas/python_interop/latest.json",
+        help="Report path relative to verification/areas/python_interop.",
+    )
     parser.add_argument("--self-test", action="store_true", help="Run runner positive and negative self-tests.")
     return parser.parse_args(argv)
 
@@ -168,9 +172,11 @@ def main(argv: list[str] | None = None) -> int:
     }
     if env_result is not None:
         payload["env_probe"] = env_result
-    report_path = paths.area_root / args.report
+    report_path = (paths.area_root / args.report).resolve()
     write_report(report_path, payload)
-    print(f"python interop scaffold ok: report={report_path.relative_to(paths.repo_root)}")
+    print(
+        f"python interop {payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+    )
     return 0
 
 

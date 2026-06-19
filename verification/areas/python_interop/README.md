@@ -8,12 +8,12 @@ selected uv-created CPython environment.
 The canonical entrypoint is:
 
 ```bash
-verification/python_interop/run.sh --group scaffold
-verification/python_interop/run.sh --group env
-verification/python_interop/run.sh --tier tier1
-verification/python_interop/run.sh --tier tier4
-verification/python_interop/run.sh --package pandas
-verification/python_interop/run.sh --self-test
+verification/areas/python_interop/run.sh --group scaffold
+verification/areas/python_interop/run.sh --group env
+verification/areas/python_interop/run.sh --tier tier1
+verification/areas/python_interop/run.sh --tier tier4
+verification/areas/python_interop/run.sh --package pandas
+verification/areas/python_interop/run.sh --self-test
 ```
 
 The scaffold group validates the checked-in matrix and fixture surface. Tier,

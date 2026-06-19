@@ -40,17 +40,17 @@ Runtime failures in those areas currently return structured `py.PythonError` fam
 Focused Python interop commands:
 
 ```bash
-python3 -m py_compile verification/python_interop/runner/*.py
-verification/python_interop/run.sh --self-test
-verification/python_interop/run.sh --group scaffold
-verification/python_interop/run.sh --group env
-verification/python_interop/run.sh --tier tier1 --report reports/tier1.latest.json
-verification/python_interop/run.sh --tier tier2 --report reports/tier2.latest.json
-verification/python_interop/run.sh --tier tier3 --report reports/tier3.latest.json
-verification/python_interop/run.sh --tier tier4 --report reports/tier4.latest.json
-verification/python_interop/run.sh --group callbacks --report reports/callbacks.latest.json
-verification/python_interop/run.sh --group dataframes --report reports/dataframes.latest.json
-verification/python_interop/run.sh --group cloud --package boto3 --report reports/package.latest.json
+python3 -m py_compile verification/areas/python_interop/runner/*.py
+verification/areas/python_interop/run.sh --self-test
+verification/areas/python_interop/run.sh --group scaffold
+verification/areas/python_interop/run.sh --group env
+verification/areas/python_interop/run.sh --tier tier1 --report ../../../target/verification/areas/python_interop/tier1.latest.json
+verification/areas/python_interop/run.sh --tier tier2 --report ../../../target/verification/areas/python_interop/tier2.latest.json
+verification/areas/python_interop/run.sh --tier tier3 --report ../../../target/verification/areas/python_interop/tier3.latest.json
+verification/areas/python_interop/run.sh --tier tier4 --report ../../../target/verification/areas/python_interop/tier4.latest.json
+verification/areas/python_interop/run.sh --group callbacks --report ../../../target/verification/areas/python_interop/callbacks.latest.json
+verification/areas/python_interop/run.sh --group dataframes --report ../../../target/verification/areas/python_interop/dataframes.latest.json
+verification/areas/python_interop/run.sh --group cloud --package boto3 --report ../../../target/verification/areas/python_interop/package.latest.json
 ```
 
 Repository gates:
@@ -68,15 +68,15 @@ Latest local validation evidence:
 
 - py11 `create-pr` validation passed on 2026-06-19 with zero failures and advisory `warm wall-time budget exceeded`; this included Python interop package certification code as merged in PR #2676.
 - py12 focused validation on 2026-06-19:
-  - `python3 -m py_compile verification/python_interop/runner/*.py`
-  - `verification/python_interop/run.sh --self-test`
-  - `verification/python_interop/run.sh --group scaffold`: `scaffold`
-  - `verification/python_interop/run.sh --group env`: `passed`
-  - `verification/python_interop/run.sh --tier tier1`: `matrix-passed`, 149 selected, 148 certified, 1 host-dependent skip.
-  - `verification/python_interop/run.sh --tier tier4`: `matrix-passed`, 30 selected, 0 certified, 30 host-dependent skips.
-  - `verification/python_interop/run.sh --group callbacks`: `matrix-passed`, 5 certified packages.
-  - `verification/python_interop/run.sh --group dataframes`: `matrix-passed`, 4 certified packages.
-  - `verification/python_interop/run.sh --group cloud --package boto3`: `matrix-passed`, 1 certified package.
+  - `python3 -m py_compile verification/areas/python_interop/runner/*.py`
+  - `verification/areas/python_interop/run.sh --self-test`
+  - `verification/areas/python_interop/run.sh --group scaffold`: `scaffold`
+  - `verification/areas/python_interop/run.sh --group env`: `passed`
+  - `verification/areas/python_interop/run.sh --tier tier1`: `matrix-passed`, 149 selected, 148 certified, 1 host-dependent skip.
+  - `verification/areas/python_interop/run.sh --tier tier4`: `matrix-passed`, 30 selected, 0 certified, 30 host-dependent skips.
+  - `verification/areas/python_interop/run.sh --group callbacks`: `matrix-passed`, 5 certified packages.
+  - `verification/areas/python_interop/run.sh --group dataframes`: `matrix-passed`, 4 certified packages.
+  - `verification/areas/python_interop/run.sh --group cloud --package boto3`: `matrix-passed`, 1 certified package.
 - py12 `scripts/run_all_tests.sh --profile create-pr` passed on 2026-06-19:
   - `wall_time=362.24s`, `cpu=222.93s`, `max_rss=390.4MiB`, `swaps=0`.
   - e2e: 132 passed, 0 failed; cache hits `44/44`.

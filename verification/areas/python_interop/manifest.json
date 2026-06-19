@@ -1,0 +1,158 @@
+{
+  "schema_version": 2,
+  "name": "python_interop",
+  "owner": "runtime/python-interop",
+  "description": "Embedded CPython interop environment, package matrix, fixture, and contract verification.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "platform-specific"
+  ],
+  "timeout_seconds": 900,
+  "suites": [
+    {
+      "name": "self-test",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "self-test",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "scaffold",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "scaffold",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-scaffold",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "env",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "env",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-env",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "tier1",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "tier1",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-tier1",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "tier2",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "tier2",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-tier2",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "tier3",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "tier3",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-tier3",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "tier4",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "tier4",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-tier4",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "callbacks",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "callbacks",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-callbacks",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "dataframes",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "dataframes",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-dataframes",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "cloud-boto3",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "cloud-boto3",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-cloud-boto3",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": true,
+    "requires_reason": true
+  },
+  "baseline_metadata_rules": {
+    "required": false,
+    "source": "not-applicable"
+  }
+}
