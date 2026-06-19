@@ -1,6 +1,6 @@
 # Python Interop Verification Productionization
 
-> Status: in progress. This follow-up converts Python interop verification from a standalone matrix/probe runner into a first-class verification area and adds production-grade live dependency examples backed by testcontainers.
+> Status: closeout in progress. The implementation PRs have converted Python interop verification from a standalone matrix/probe runner into a first-class verification area and added production-grade live dependency examples backed by testcontainers. The final closeout PR is pending.
 
 ## Objective
 
@@ -38,5 +38,16 @@ Make embedded Python interop verification authoritative enough to prove real exa
 ## Milestone Evidence
 
 - `verification_py_area_1`: implemented in PR [#2680](https://github.com/sifr-lang/sifr/pull/2680).
-- `verification_py_area_2`: implemented in PR #2681 (`python-interop-container-policy`).
-- `verification_py_area_3`: implemented in PR #2682 (`python-interop-testcontainers-live-examples`).
+- `verification_py_area_2`: implemented in PR [#2681](https://github.com/sifr-lang/sifr/pull/2681) (`python-interop-container-policy`).
+- `verification_py_area_3`: implemented in PR [#2682](https://github.com/sifr-lang/sifr/pull/2682) (`python-interop-testcontainers-live-examples`).
+- `verification_py_area_4`: final closeout implemented in PR #2683 (`python-interop-verification-closeout`); pending merge.
+
+## Final Evidence
+
+- First-class area migration merged in PR #2680.
+- Container-runtime/live-profile policy merged in PR #2681.
+- Testcontainers-backed live examples merged in PR #2682.
+- PR3 Opus reviews reported no blockers through `plans/reviews/active/python-interop-live-examples-review-4.md`.
+- Closeout Opus reviews are tracked in `plans/reviews/active/python-interop-verification-closeout-review-1.md` and `plans/reviews/active/python-interop-verification-closeout-review-2.md`.
+- Latest local PR gate for the live examples passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed with zero failures and advisory `warm wall-time budget exceeded`.
+- Latest live profile evidence on 2026-06-19: `scripts/run_all_tests.sh --profile python-interop-live` passed; Sifr source checks passed, and service cases reported `structured-skip` because the local Docker daemon was unavailable.
