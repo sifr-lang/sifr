@@ -84,6 +84,50 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "py_buffer_u8".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+                ("require_writable".to_string(), Type::Bool),
+            ],
+            python_error_result(Type::Tuple(vec![
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::Bool,
+                Type::Int,
+                Type::List(Box::new(Type::Int)),
+                Type::List(Box::new(Type::Int)),
+                Type::List(Box::new(Type::Int)),
+                Type::Bool,
+                Type::Bool,
+                Type::Str,
+            ])),
+        ),
+    );
+    functions.insert(
+        "py_copy_buffer_u8".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::Bytes),
+        ),
+    );
+    functions.insert(
+        "py_release_buffer".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::None),
+        ),
+    );
+    functions.insert(
         "py_enter_context".to_string(),
         FunctionType::all_borrow(
             vec![

@@ -4,7 +4,9 @@ from typing import Callable
 from _sifr.python import (
     py_call,
     py_call_attr,
+    py_buffer_u8,
     py_close,
+    py_copy_buffer_u8,
     py_copy_dict_str_bool,
     py_copy_dict_str_bytes,
     py_copy_dict_str_float,
@@ -44,6 +46,7 @@ from _sifr.python import (
     py_get_item_str,
     py_import_module,
     py_resource_diagnostics,
+    py_release_buffer,
     py_run_coroutine_blocking,
     py_to_bool,
     py_to_bytes,
@@ -106,6 +109,35 @@ class ResourceDiagnostics:
         self.leaked_objects = leaked_objects
 
 
+class BufferView(NonSend):
+    _handle: int
+    _token: int
+    length: int
+    item_size: int
+    readonly: bool
+    dimensions: int
+    shape: list[int]
+    strides: list[int]
+    suboffsets: list[int]
+    c_contiguous: bool
+    f_contiguous: bool
+    format: str
+
+    def __init__(self):
+        self._handle = -1
+        self._token = 0
+        self.length = 0
+        self.item_size = 0
+        self.readonly = True
+        self.dimensions = 0
+        self.shape = []
+        self.strides = []
+        self.suboffsets = []
+        self.c_contiguous = False
+        self.f_contiguous = False
+        self.format = ""
+
+
 def _object_from_handle(raw: tuple[int, int]) -> Object:
     obj: Object = Object()
     obj._handle = raw[0]
@@ -122,6 +154,23 @@ def _objects_from_handles(raw_values: list[tuple[int, int]]) -> list[Object]:
     for raw in raw_values:
         values.append(_object_from_handle(raw))
     return values
+
+
+def _buffer_from_raw(raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str]) -> BufferView:
+    view: BufferView = BufferView()
+    view._handle = raw[0]
+    view._token = raw[1]
+    view.length = raw[2]
+    view.item_size = raw[3]
+    view.readonly = raw[4]
+    view.dimensions = raw[5]
+    view.shape = raw[6]
+    view.strides = raw[7]
+    view.suboffsets = raw[8]
+    view.c_contiguous = raw[9]
+    view.f_contiguous = raw[10]
+    view.format = raw[11]
+    return view
 
 
 def _record_fields_from_handles(raw_values: list[tuple[str, tuple[int, int]]]) -> list[tuple[str, Object]]:
@@ -206,6 +255,53 @@ def call_attr(
 @blocking_io
 def close(own obj: Object) -> Result[None, PythonError]:
     return py_close(obj._handle, obj._token)
+
+
+@blocking_io
+def zero_copy_as_u8(obj: Object) -> Result[BufferView, PythonError]:
+    try:
+        raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str] = py_buffer_u8(
+            obj._handle,
+            obj._token,
+            False,
+        )
+        return _buffer_from_raw(raw)
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def zero_copy_as_writable_u8(obj: Object) -> Result[BufferView, PythonError]:
+    try:
+        raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str] = py_buffer_u8(
+            obj._handle,
+            obj._token,
+            True,
+        )
+        return _buffer_from_raw(raw)
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def copy_buffer_bytes(view: BufferView) -> Result[bytes, PythonError]:
+    return py_copy_buffer_u8(view._handle, view._token)
+
+
+@blocking_io
+def release_buffer(own view: BufferView) -> Result[None, PythonError]:
+    return py_release_buffer(view._handle, view._token)
+
+
+@blocking_io
+def copy_as_bytes(obj: Object) -> Result[bytes, PythonError]:
+    try:
+        view: BufferView = zero_copy_as_u8(obj)
+        data: bytes = copy_buffer_bytes(view)
+        released: None = release_buffer(view)
+        return data
+    except PythonError as e:
+        raise e
 
 
 @blocking_io

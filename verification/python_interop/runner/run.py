@@ -56,6 +56,7 @@ REQUIRED_FIXTURE_FILES = (
     "simple_import/opaque_object_operations.json",
     "primitive_conversion/primitive_roundtrip.json",
     "async_blocking/async_blocking_contract.json",
+    "numpy_buffer/py_buffer_contract.json",
     "resource_cleanup/context_manager_cleanup.json",
 )
 
@@ -65,6 +66,9 @@ REQUIRED_SOURCE_FIXTURES = (
     "async_blocking/offloaded_python_calls.sifr",
     "async_blocking/unclassified_offload_rejected.sifr",
     "primitive_conversion/primitive_roundtrip.sifr",
+    "numpy_buffer/py_buffer_readonly_failure.sifr",
+    "numpy_buffer/py_buffer_memoryview.sifr",
+    "numpy_buffer/py_buffer_roundtrip.sifr",
     "resource_cleanup/context_manager_body_failure.sifr",
     "resource_cleanup/context_manager_failure.sifr",
     "resource_cleanup/context_manager_success.sifr",

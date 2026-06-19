@@ -8,6 +8,9 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_call" => lower_py_call(args),
         "py_call_attr" => lower_py_call_attr(args),
         "py_close" => lower_py_close(args),
+        "py_buffer_u8" => lower_py_buffer_u8(args),
+        "py_copy_buffer_u8" => lower_py_copy_buffer_u8(args),
+        "py_release_buffer" => lower_py_release_buffer(args),
         "py_enter_context" => lower_py_enter_context(args),
         "py_exit_context" => lower_py_exit_context(args),
         "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
@@ -228,6 +231,52 @@ pub(crate) fn lower_py_close(args: &[RustExpr]) -> Option<RustExpr> {
     let token = render_expr(&args[1]);
     Some(map_python_error(format!(
         "sifr_runtime::python::close_object(({handle}, {token}))"
+    )))
+}
+
+pub(crate) fn lower_py_buffer_u8(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 3 {
+        return None;
+    }
+    let handle = render_expr(&args[0]);
+    let token = render_expr(&args[1]);
+    let require_writable = render_expr(&args[2]);
+    Some(map_python_error(format!(
+        r#"sifr_runtime::python::buffer_u8(({handle}, {token}), {require_writable}).map(|__sifr_python_buffer| {{
+            (
+                __sifr_python_buffer.handle,
+                __sifr_python_buffer.token,
+                __sifr_python_buffer.len_bytes,
+                __sifr_python_buffer.item_size,
+                __sifr_python_buffer.readonly,
+                __sifr_python_buffer.dimensions,
+                __sifr_python_buffer.shape,
+                __sifr_python_buffer.strides,
+                __sifr_python_buffer.suboffsets,
+                __sifr_python_buffer.c_contiguous,
+                __sifr_python_buffer.f_contiguous,
+                __sifr_python_buffer.format,
+            )
+        }})"#
+    )))
+}
+
+pub(crate) fn lower_py_copy_buffer_u8(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_buffer_conversion(args, "copy_buffer_u8")
+}
+
+pub(crate) fn lower_py_release_buffer(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_buffer_conversion(args, "release_buffer")
+}
+
+fn lower_buffer_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    let handle = render_expr(&args[0]);
+    let token = render_expr(&args[1]);
+    Some(map_python_error(format!(
+        "sifr_runtime::python::{function}(({handle}, {token}))"
     )))
 }
 

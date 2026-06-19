@@ -1,0 +1,12 @@
+from sifr.python import BufferView, Object, PythonError, close, from_bytes, zero_copy_as_writable_u8
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        obj: Object = from_bytes(b"readonly")
+        view: BufferView = zero_copy_as_writable_u8(obj)
+        closed: None = close(obj)
+        return None
+    except PythonError as e:
+        raise e

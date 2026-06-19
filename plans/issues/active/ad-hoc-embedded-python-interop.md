@@ -56,7 +56,13 @@
   - Added async-blocking verification fixtures and required them from the Python interop scaffold runner.
   - Opus review round 1 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2670](https://github.com/sifr-lang/sifr/pull/2670).
-- [ ] `milestone_py_6`: Resource cleanup and leak diagnostics.
+- [x] `milestone_py_6`: Resource cleanup and leak diagnostics.
+  - Added `py.with_context` with failure-aware `__exit__` plumbing and deterministic entered-handle cleanup on success, body failure, and normal `__exit__` failure paths.
+  - Added runtime `resource_diagnostics` and `exit_context_with_error` operations with object double-close resource errors and recording context-manager coverage.
+  - Added resource cleanup source fixtures for context-manager success, missing-enter failure, body failure, and outstanding diagnostics.
+  - Documented the parser reservation for exact `py.with(...)` and the helper-owned entered-object rule.
+  - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - Merged via PR [#2671](https://github.com/sifr-lang/sifr/pull/2671).
 - [ ] `milestone_py_7`: `Py_buffer` zero-copy core.
 - [ ] `milestone_py_8`: Arrow PyCapsule interop.
 - [ ] `milestone_py_9`: DLPack tensor interop.
