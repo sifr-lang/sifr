@@ -36,4 +36,4 @@ Make embedded Python interop verification authoritative enough to prove real exa
 
 ## Milestone Evidence
 
-- `verification_py_area_1`: implemented on branch `python-interop-area-migration`; PR pending.
+- `verification_py_area_1`: implemented in PR [#2680](https://github.com/sifr-lang/sifr/pull/2680).
