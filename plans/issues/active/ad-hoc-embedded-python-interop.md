@@ -17,6 +17,7 @@
   - Added active `SIFR-PYENV-0001` through `SIFR-PYENV-0011` diagnostics and generated docs.
   - Wired package `check`/cached `run` contexts to resolve/probe the root-selected environment and feed the probe digest into generated-artifact cache keys.
   - Promoted `verification/python_interop/run.sh --group env` to live environment evidence with positive and negative fixture coverage.
+  - Merged via PR [#2666](https://github.com/sifr-lang/sifr/pull/2666).
 - [x] `milestone_py_2`: Embedded runtime lifecycle.
   - Added optional `sifr_runtime/python` feature backed by PyO3 embedding APIs and CPython `PyConfig` initialization.
   - Added generated package runtime metadata carrying the validated probe executable, prefixes, path set, version tuple, and digest into generated binaries.
@@ -99,8 +100,8 @@
   - Recorded internal architecture evidence for runtime lifecycle, GIL/refcount ownership, environment probes, verification gates, and example-to-fixture mapping.
   - Confirmed active Python environment/trust diagnostics have stable codes, generated docs, structured JSON arguments, and positive/negative test references.
   - Recorded exit evidence in `verification/python_interop/reports/python_interop_exit_evidence.md`.
-  - Opus py12 review round 4 and final implementation review round 2 reported no blockers.
-  - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed with e2e cache hits `44/44`, 6 hardening variants, and 0 failures; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
+  - Opus py12 review round 4 and final implementation review round 4 reported no blockers after documented fixes.
+  - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests with cache hits `44/44` and 6 hardening variants with 0 failures, plus a warm wall-time advisory; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
   - Merged via PR [#2677](https://github.com/sifr-lang/sifr/pull/2677).
 
 ## Objective

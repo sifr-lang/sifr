@@ -78,8 +78,8 @@ Latest local validation evidence:
   - `verification/python_interop/run.sh --group dataframes`: `matrix-passed`, 4 certified packages.
   - `verification/python_interop/run.sh --group cloud --package boto3`: `matrix-passed`, 1 certified package.
 - py12 `scripts/run_all_tests.sh --profile create-pr` passed on 2026-06-19:
-  - `wall_time=231.91s`, `cpu=218.51s`, `max_rss=391.6MiB`, `swaps=0`.
-  - e2e cache hits: `44/44`.
+  - `wall_time=362.24s`, `cpu=222.93s`, `max_rss=390.4MiB`, `swaps=0`.
+  - e2e: 132 passed, 0 failed; cache hits `44/44`.
   - hardening summary: 6 variants, 0 failures, 0 blocking failures.
   - advisory: `warm wall-time budget exceeded`.
 - py12 `scripts/run_all_tests.sh` default merge gate passed on 2026-06-19:
@@ -89,7 +89,7 @@ Latest local validation evidence:
   - advisories: `warm wall-time budget exceeded`; `group skew is high; investigate batching balance or fixture clustering`.
   - project-workspace hardening baselines passed after the manifest-level quiet-run support was added for run baselines with deterministic stdout and intentionally empty stderr.
   - note: earlier local attempts were invalidated by stale overlapping validation work; the recorded gates above are the clean authoritative passes.
-- Opus sign-offs are recorded in the issue tracker review artifacts with no remaining blockers.
+- Opus sign-offs are recorded in the issue tracker review artifacts with no remaining blockers after documented fixes.
 
 ## PR Record
 
