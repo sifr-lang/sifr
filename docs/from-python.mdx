@@ -72,6 +72,9 @@ else:
   <Accordion title="Imports use the Sifr namespace">
     Use `from sifr.collections import Counter`, not `import collections`. Supported stdlib-style modules live under `sifr.*`; see the [collections import example](/stdlib/collections#importing).
   </Accordion>
+  <Accordion title="Calling installed Python packages is explicit">
+    Use `sifr.python` when you intentionally embed CPython and call packages from a uv-created environment. Configure the root package's `[python]` and `[trust]` tables first; see [Embedded Python Interop](/python-interop).
+  </Accordion>
   <Accordion title="Mutation is explicit">
     Use `mut` when a function should mutate a borrowed parameter, and `own mut` when it should take ownership and mutate the value.
   </Accordion>
@@ -88,5 +91,8 @@ else:
   </Card>
   <Card title="Error Handling" icon="triangle-alert" href="/language/error-handling">
     See how `Result` and `try`/`except` replace recoverable exceptions.
+  </Card>
+  <Card title="Embedded Python Interop" icon="package-open" href="/python-interop">
+    Call installed Python packages through explicit environment and trust boundaries.
   </Card>
 </CardGroup>

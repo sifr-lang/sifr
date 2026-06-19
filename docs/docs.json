@@ -70,7 +70,8 @@
               "introduction",
               "installation",
               "quickstart",
-              "from-python"
+              "from-python",
+              "python-interop"
             ]
           },
           {

@@ -97,6 +97,17 @@ Packages that exceed their declared trust boundary are rejected at publish time 
 Sifr wraps Cargo process failures in diagnostic code `SIFR-PACKAGE-0101`. If a dependency fetch, tree command, or other Cargo-delegated operation fails, run `sifr --explain SIFR-PACKAGE-0101` for structured diagnostic help. The explainer does not perform any package operations — it is safe to run at any time.
 </Warning>
 
+## Python package requirements
+
+Sifr does not resolve Python dependencies. Python packages are installed by the root application's uv environment, and Sifr verifies the final interpreter/probe before compile or run. Dependency packages may declare:
+
+```toml
+[python]
+requires-imports = ["pydantic", "httpx"]
+```
+
+The root application must select one `[python].venv`, allow the required import roots, and trust the Python and native-extension roots it is willing to execute in process. See [Embedded Python Interop](/python-interop).
+
 ## Cross-package imports and public APIs
 
 Only names that a dependency exposes through its public namespace are importable from outside that package. A package's public API is defined by `src/__init__.sifr` and any child namespaces that have their own `__init__.sifr`. Implementation files such as `src/client.sifr` are private to the package unless explicitly re-exported.

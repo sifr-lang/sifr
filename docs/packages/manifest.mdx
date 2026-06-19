@@ -129,6 +129,7 @@ Knowing where to put configuration prevents confusion and keeps Sifr's tooling w
 - Formatter and lint configuration
 - Named scripts
 - Native trust policy for backend Rust crates
+- Root application Python environment selection and Python trust policy
 
 **Put in `Cargo.toml`:**
 - Distribution metadata (description, authors, license, repository URL)
@@ -147,6 +148,36 @@ The Cargo metadata hook is the bridge between the two files. Sifr reads `cargo m
 manifest = "sifr.toml"
 # end sifr-managed
 ```
+
+## `[python]` and Python trust policy
+
+Embedded Python interop is configured in `sifr.toml`. The root application selects exactly one uv-created virtual environment; libraries may only declare import roots that the final application must provide.
+
+Root application example:
+
+```toml
+[python]
+venv = ".venv"
+pyproject = "pyproject.toml"
+lock = "uv.lock"
+interpreter = ".venv/bin/python"
+allow-imports = ["pandas", "pyarrow", "torch"]
+
+[trust]
+python = ["pandas", "pyarrow", "torch"]
+python-native = ["numpy", "pyarrow", "torch"]
+```
+
+Library package example:
+
+```toml
+[python]
+requires-imports = ["polars"]
+```
+
+Sifr verifies the selected interpreter before generated Python-enabled binaries run. It rejects missing root selection, multiple selected virtual environments, non-CPython interpreters, free-threaded CPython, missing declared imports, failed trusted native imports, and stale configured project metadata. Sifr never runs `uv sync` automatically.
+
+See [Embedded Python Interop](/python-interop) for runtime, blocking, callback, resource, and zero-copy semantics.
 
 ## Keeping Cargo.toml in sync with `sifr repair`
 

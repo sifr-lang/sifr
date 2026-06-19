@@ -313,6 +313,7 @@ def run_baseline_case(
 ) -> tuple[dict[str, Any], bool, int]:
     case_id, entry, command_name, formats = baseline_case_metadata(config, suite_name, case)
     expected_exit = int(case["expect_exit_code"])
+    quiet = baseline_case_quiet(config, suite_name, case_id, command_name, case)
 
     case_failed = False
     failed_variants = 0
@@ -328,6 +329,7 @@ def run_baseline_case(
             command_name=command_name,
             entry=entry,
             diagnostic_format=diagnostic_format,
+            quiet=quiet,
         )
         stdout_norm = canonicalize_output(stdout, diagnostic_format, "stdout")
         stderr_norm = canonicalize_output(stderr, diagnostic_format, "stderr")
@@ -390,6 +392,23 @@ def baseline_case_metadata(
         raise SystemExit(f"{config.area} suite '{suite_name}' case '{case_id}' has invalid diagnostic_formats")
     validate_unique_diagnostic_formats(suite_name, case_id, formats)
     return case_id, entry, command_name, formats
+
+
+def baseline_case_quiet(
+    config: AreaAdapterConfig,
+    suite_name: str,
+    case_id: str,
+    command_name: str,
+    case: dict[str, Any],
+) -> bool:
+    raw_quiet = case.get("quiet", False)
+    if not isinstance(raw_quiet, bool):
+        raise SystemExit(f"{config.area} suite '{suite_name}' case '{case_id}' quiet must be a boolean")
+    if raw_quiet and command_name not in {"build", "run"}:
+        raise SystemExit(
+            f"{config.area} suite '{suite_name}' case '{case_id}' quiet is only supported for build/run"
+        )
+    return raw_quiet
 
 
 def case_entry_path(
@@ -464,6 +483,7 @@ def run_sifr_variant(
     command_name: str,
     entry: Path,
     diagnostic_format: str | None,
+    quiet: bool,
 ) -> tuple[int, str, str, float, list[str]]:
     cwd = REPO_ROOT
     argv = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
@@ -518,7 +538,10 @@ def run_sifr_variant(
     elif command_name == "self-version":
         argv.extend(["self", "version"])
     else:
-        argv.extend([command_name, str(entry)])
+        argv.append(command_name)
+        if quiet:
+            argv.append("--quiet")
+        argv.append(str(entry))
     env = None
     if command_name == "self-version":
         env = dict(os.environ)

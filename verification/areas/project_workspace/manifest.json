@@ -44,7 +44,8 @@
           "entry": "verification/areas/project_workspace/fixtures/project/multi_module_run/main.sifr",
           "command": "run",
           "expect_exit_code": 0,
-          "diagnostic_formats": []
+          "diagnostic_formats": [],
+          "quiet": true
         },
         {
           "id": "missing_import_reports_error",
@@ -62,7 +63,8 @@
           "entry": "verification/areas/project_workspace/fixtures/project/workspace_dotted_helper_run/app.sifr",
           "command": "run",
           "expect_exit_code": 0,
-          "diagnostic_formats": []
+          "diagnostic_formats": [],
+          "quiet": true
         },
         {
           "id": "workspace_ambiguous_import",

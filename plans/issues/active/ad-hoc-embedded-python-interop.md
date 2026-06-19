@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: in progress. Planning lock is active; `milestone_py_0` established scaffold and diagnostic reservations, and `milestone_py_1` owns Python environment discovery/probing. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
+> Status: complete pending py12 PR #2677 merge. `milestone_py_0` through `milestone_py_11` are merged; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
 
 ## Execution Status
 
@@ -92,8 +92,16 @@
   - Expanded Tier 1 certification matrices, Tier 2/Tier 3 deterministic smoke matrices, and Tier 4 host-dependent skip evidence.
   - Added deterministic package certification reports with `matrix-passed` status for matrix-only evidence and explicit host-dependent skip counts.
   - Added representative package-family contract fixtures for web, data, DB, broker, cloud/AI, TLS/native, callbacks, and tensor surfaces.
-  - Opus review round 1 reported no blockers; local focused validation passed.
-- [ ] `milestone_py_12`: Documentation, diagnostics, and closeout.
+  - Opus review round 4 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - Merged via PR [#2676](https://github.com/sifr-lang/sifr/pull/2676).
+- [x] `milestone_py_12`: Documentation, diagnostics, and closeout.
+  - Published public Python interop examples covering biip/schwifty, FastAPI, Kafka callbacks, pandas/pyarrow/polars Arrow, torch/tensorflow DLPack, and cloud/AI clients.
+  - Recorded internal architecture evidence for runtime lifecycle, GIL/refcount ownership, environment probes, verification gates, and example-to-fixture mapping.
+  - Confirmed active Python environment/trust diagnostics have stable codes, generated docs, structured JSON arguments, and positive/negative test references.
+  - Recorded exit evidence in `verification/python_interop/reports/python_interop_exit_evidence.md`.
+  - Opus py12 review round 4 and final implementation review round 3 reported no blockers.
+  - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests with 0 failures and one warm wall-time advisory; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
+  - PR [#2677](https://github.com/sifr-lang/sifr/pull/2677) opened for final documentation PR merge.
 
 ## Objective
 
@@ -336,31 +344,35 @@ The canonical surface is explicit:
 from sifr import python as py
 
 def main() -> Result[None, py.PythonError]:
-    torch = try py.import_module("torch")
-    x = try py.call_attr(torch, "tensor", [[1.0, 2.0], [3.0, 4.0]], [])
-    y = try py.call_attr(torch, "matmul", [x, x], [])
-    text = try py.to_str(y)
-    print(text)
-    return None
+    try:
+        torch = py.import_module("torch")
+        x = py.call_attr(torch, "tensor", [[1.0, 2.0], [3.0, 4.0]], [])
+        y = py.call_attr(torch, "matmul", [x, x], [])
+        text = py.to_str(y)
+        print(text)
+        return None
+    except py.PythonError as e:
+        raise e
 ```
 
 Core operations:
 
 ```sifr
-try py.import_module("module.name")
-try py.get_attr(obj, "name")
-try py.set_attr(obj, "name", value)
-try py.get_item(obj, key)
-try py.set_item(obj, key, value)
-try py.call(callable, args, kwargs)
-try py.call_attr(obj, "method", args, kwargs)
-try py.to[T](obj)
-try py.to_str(obj)
-try py.to_bytes(obj)
-try py.scope(lambda gil: ...)
-try py.close(obj)
-try py.with_context(obj, lambda entered: ...)
-try py.run_coroutine_blocking(coro)
+try:
+    module = py.import_module("module.name")
+    attr = py.get_attr(obj, "name")
+    updated_attr = py.set_attr(obj, "name", value)
+    item = py.get_item(obj, key)
+    updated_item = py.set_item(obj, key, value)
+    result = py.call(callable, args, kwargs)
+    method_result = py.call_attr(obj, "method", args, kwargs)
+    text = py.to_str(result)
+    raw = py.to_bytes(result)
+    closed = py.close(result)
+    context_result = py.with_context(obj, lambda entered: ...)
+    coroutine_result = py.run_coroutine_blocking(coro)
+except py.PythonError as e:
+    raise e
 ```
 
 This phase does not introduce `import python <name>` syntax sugar; explicit `py.*` operations are the only user-facing surface.
@@ -451,13 +463,16 @@ Python resource cleanup must be explicit and ergonomic.
 Supported cleanup APIs:
 
 ```sifr
-try py.close(obj)
-try py.call_attr(obj, "close", [], [])
-try py.with_context(obj, lambda entered: ...)
-coro = try py.call_attr(obj, "aclose", [], [])
-try py.run_coroutine_blocking(coro)
-try callback.close()
-try buffer.release()
+try:
+    closed = py.close(obj)
+    close_result = py.call_attr(obj, "close", [], [])
+    context_result = py.with_context(obj, lambda entered: ...)
+    coro = py.call_attr(obj, "aclose", [], [])
+    coroutine_result = py.run_coroutine_blocking(coro)
+    callback_closed = py.close_callback(callback)
+    buffer_released = py.release_buffer(buffer)
+except py.PythonError as e:
+    raise e
 ```
 
 Rules:
@@ -756,7 +771,7 @@ Runner shape: `run.sh` is canonical; it validates environment prerequisites and 
 verification/python_interop/run.sh --group env
 verification/python_interop/run.sh --tier tier1
 verification/python_interop/run.sh --group native
-verification/python_interop/run.sh --group data
+verification/python_interop/run.sh --group dataframes
 verification/python_interop/run.sh --package pandas
 ```
 
@@ -971,7 +986,7 @@ Python interop gates, once implemented:
 verification/python_interop/run.sh --group env
 verification/python_interop/run.sh --tier tier1
 verification/python_interop/run.sh --group native
-verification/python_interop/run.sh --group data
+verification/python_interop/run.sh --group dataframes
 verification/python_interop/run.sh --group callbacks
 ```
 
