@@ -122,4 +122,4 @@ flowchart LR
 - [42_data_science_ml.md](./phases/42_data_science_ml.md) (needs more planning)
 - [43_interoperability.md](./phases/43_interoperability.md) (needs more planning)
 - [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (complete for the sequence-independent embedded CPython/uv interop lane; py0-py12 are merged through PR #2677 with public/internal docs, diagnostic evidence, py12 and phase-level Opus reviews, and local validation)
-- [python-interop-verification-production.md](./issues/active/python-interop-verification-production.md) (closeout in progress; implementation complete through PR #2682 with first-class area wiring, explicit live/container policy, and testcontainers-backed Redis/Postgres/Kafka-compatible/LocalStack SNS-SQS examples)
+- [python-interop-verification-production.md](./issues/active/python-interop-verification-production.md) (complete follow-up: first-class area wiring, explicit live/container policy, testcontainers-backed Redis/Postgres/Kafka-compatible/LocalStack SNS-SQS examples, and final status evidence)
