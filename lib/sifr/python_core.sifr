@@ -1,0 +1,126 @@
+# sifr.python_core - shared embedded CPython public wrapper types
+
+from _sifr.python import (
+    py_close_callback,
+    py_local_callback_echo,
+    py_threadsafe_callback_echo,
+)
+
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+    def __init__(
+        self,
+        message: str,
+        kind: str = "",
+        exception_type: str = "",
+        traceback: str = "",
+        context: str = "",
+    ):
+        self.message = message
+        self.kind = kind
+        self.exception_type = exception_type
+        self.traceback = traceback
+        self.context = context
+
+
+class Object(NonSend):
+    _handle: int
+    _token: int
+
+    def __init__(self):
+        self._handle = -1
+        self._token = 0
+
+
+class ResourceDiagnostics:
+    initialized: bool
+    live_objects: int
+    leaked_objects: int
+
+    def __init__(self, initialized: bool, live_objects: int, leaked_objects: int):
+        self.initialized = initialized
+        self.live_objects = live_objects
+        self.leaked_objects = leaked_objects
+
+class LocalCallback(NonSend):
+    _handle: int
+    _token: int
+    callable: Object
+    kind: str
+
+    def __init__(self):
+        self._handle = -1
+        self._token = 0
+        self.callable = Object()
+        self.kind = "local"
+
+
+class ThreadsafeCallback:
+    _handle: int
+    _token: int
+    callable: Object
+    kind: str
+
+    def __init__(self):
+        self._handle = -1
+        self._token = 0
+        self.callable = Object()
+        self.kind = "threadsafe"
+
+
+def _object_from_handle(raw: tuple[int, int]) -> Object:
+    obj: Object = Object()
+    obj._handle = raw[0]
+    obj._token = raw[1]
+    return obj
+
+
+def _local_callback_from_raw(raw: tuple[int, int, int, int, str]) -> LocalCallback:
+    callback: LocalCallback = LocalCallback()
+    callback._handle = raw[0]
+    callback._token = raw[1]
+    callback.callable = _object_from_handle((raw[2], raw[3]))
+    callback.kind = "local"
+    return callback
+
+
+def _threadsafe_callback_from_raw(raw: tuple[int, int, int, int, str]) -> ThreadsafeCallback:
+    callback: ThreadsafeCallback = ThreadsafeCallback()
+    callback._handle = raw[0]
+    callback._token = raw[1]
+    callback.callable = _object_from_handle((raw[2], raw[3]))
+    callback.kind = "threadsafe"
+    return callback
+
+
+@blocking_io
+def local_callback_echo() -> Result[LocalCallback, PythonError]:
+    try:
+        raw: tuple[int, int, int, int, str] = py_local_callback_echo()
+        return _local_callback_from_raw(raw)
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def threadsafe_callback_echo() -> Result[ThreadsafeCallback, PythonError]:
+    try:
+        raw: tuple[int, int, int, int, str] = py_threadsafe_callback_echo()
+        return _threadsafe_callback_from_raw(raw)
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def close_local_callback(own callback: LocalCallback) -> Result[None, PythonError]:
+    return py_close_callback(callback._handle, callback._token)
+
+
+@blocking_io
+def close_threadsafe_callback(own callback: ThreadsafeCallback) -> Result[None, PythonError]:
+    return py_close_callback(callback._handle, callback._token)

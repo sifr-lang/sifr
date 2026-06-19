@@ -52,10 +52,12 @@ fn needs_sifr_runtime_python(
     stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
 ) -> bool {
-    stdlib_modules
-        .iter()
-        .any(|module| matches!(module.as_str(), "sifr.python" | "_sifr.python"))
-        || required_features.contains(&StdlibFeature::PythonRuntime)
+    stdlib_modules.iter().any(|module| {
+        matches!(
+            module.as_str(),
+            "sifr.python" | "sifr.python_core" | "_sifr.python"
+        )
+    }) || required_features.contains(&StdlibFeature::PythonRuntime)
 }
 
 fn needs_sifr_runtime_tls(

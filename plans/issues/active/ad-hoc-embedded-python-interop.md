@@ -75,8 +75,18 @@
   - Added pyarrow capsule contract/source fixtures covering pyarrow, polars, pandas, Pillow, unknown producer, malformed capsule, and copy-possible behavior.
   - Opus review round 3 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2673](https://github.com/sifr-lang/sifr/pull/2673).
-- [ ] `milestone_py_9`: DLPack tensor interop.
-- [ ] `milestone_py_10`: Python-to-Sifr callbacks.
+- [x] `milestone_py_9`: DLPack tensor interop.
+  - Added `py.DlpackTensor` with DLPack one-shot capsule consumption, `"used_dltensor"` marking, metadata extraction, and exact-once deleter release.
+  - Added runtime checks for CPU tensors, scalar null-shape tensors, double consumption, double release, unsupported dtype/device, and invalid capsule names.
+  - Added torch DLPack contract/source fixtures covering NumPy, torch, tensorflow CPU paths and rejection cases.
+  - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - Merged via PR [#2674](https://github.com/sifr-lang/sifr/pull/2674).
+- [x] `milestone_py_10`: Python-to-Sifr callbacks.
+  - Added compiler-lowered `py.local_callback` and `py.threadsafe_callback` registration for Sifr handlers returning `py.Object` results.
+  - Added runtime callback registry dispatch, local same-stack escape checks, deterministic close/after-close behavior, and Sifr-error-to-Python-exception mapping.
+  - Split shared Python wrapper types into `sifr.python_core` with targeted `sifr.python` re-export metadata preservation for blocking workloads and constructor defaults.
+  - Added callback contract/source fixtures and native build coverage for real Sifr handler invocation through Python callables.
+  - Opus review round 4 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
 - [ ] `milestone_py_11`: Package certification matrix.
 - [ ] `milestone_py_12`: Documentation, diagnostics, and closeout.
 

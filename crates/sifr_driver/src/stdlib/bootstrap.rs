@@ -2,6 +2,7 @@ use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
 use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
+use crate::stdlib::re_exports::{re_export_stdlib_imports, ReExportMaps};
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
@@ -97,6 +98,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                     func.name.clone(),
                     function_type_from_params(&func.params, &func.return_type),
                 );
+                if module_name == "sifr.python"
+                    && matches!(func.name.as_str(), "local_callback" | "threadsafe_callback")
+                {
+                    intrinsic_names_for_module.insert(func.name.clone());
+                }
                 if let Some(vararg_index) = result.function_varargs.get(&func.name) {
                     vararg_exports.insert(func.name.clone(), *vararg_index);
                 }
@@ -152,6 +158,23 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 }
             } else if import.module.starts_with("sifr.") {
                 transitive_deps_for_module.insert(import.module.clone());
+                if module_name == "sifr.python" && import.module == "sifr.python_core" {
+                    let mut exports = ReExportMaps {
+                        functions: &mut fn_exports,
+                        classes: &mut class_exports,
+                        class_type_params: &mut class_type_param_exports,
+                        defaults: &mut default_exports,
+                        varargs: &mut vararg_exports,
+                        workloads: &mut workload_exports,
+                        constants: &mut const_exports,
+                    };
+                    re_export_stdlib_imports(
+                        &mut exports,
+                        &stdlib_defs,
+                        &import.module,
+                        &import.names,
+                    );
+                }
                 if let Some(deps) = stdlib_code.transitive_deps.get(&import.module) {
                     transitive_deps_for_module.extend(deps.iter().cloned());
                 }
@@ -807,5 +830,32 @@ mod tests {
                 ..
             } if parent.split('|').any(|name| name == "NonSend")
         ));
+    }
+
+    #[test]
+    fn python_core_re_exports_preserve_callable_metadata() {
+        let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+        let workloads = compiled
+            .defs
+            .function_workloads
+            .get("sifr.python")
+            .expect("sifr.python should export workload metadata");
+
+        assert_eq!(
+            workloads.get("threadsafe_callback_echo"),
+            Some(&"blocking_io".to_string())
+        );
+        assert_eq!(
+            workloads.get("close_local_callback"),
+            Some(&"blocking_io".to_string())
+        );
+
+        let defaults = compiled
+            .defs
+            .function_defaults
+            .get("sifr.python")
+            .and_then(|module_defaults| module_defaults.get("PythonError"))
+            .expect("PythonError constructor defaults should be re-exported");
+        assert_eq!(defaults.len(), 4);
     }
 }

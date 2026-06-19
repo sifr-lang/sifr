@@ -192,6 +192,31 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
             python_error_result(Type::None),
         ),
     );
+    for name in ["py_local_callback_echo", "py_threadsafe_callback_echo"] {
+        functions.insert(
+            name.to_string(),
+            FunctionType::all_borrow(
+                vec![],
+                python_error_result(Type::Tuple(vec![
+                    Type::Int,
+                    Type::Int,
+                    Type::Int,
+                    Type::Int,
+                    Type::Str,
+                ])),
+            ),
+        );
+    }
+    functions.insert(
+        "py_close_callback".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::None),
+        ),
+    );
     functions.insert(
         "py_enter_context".to_string(),
         FunctionType::all_borrow(

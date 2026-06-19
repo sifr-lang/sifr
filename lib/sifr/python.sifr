@@ -73,46 +73,18 @@ from _sifr.python import (
 )
 
 
-class PythonError(Error):
-    message: str
-    kind: str
-    exception_type: str
-    traceback: str
-    context: str
+from sifr.python_core import (
+    LocalCallback,
+    Object,
+    PythonError,
+    ResourceDiagnostics,
+    ThreadsafeCallback,
+    close_local_callback,
+    close_threadsafe_callback,
+    local_callback_echo,
+    threadsafe_callback_echo,
+)
 
-    def __init__(
-        self,
-        message: str,
-        kind: str = "",
-        exception_type: str = "",
-        traceback: str = "",
-        context: str = "",
-    ):
-        self.message = message
-        self.kind = kind
-        self.exception_type = exception_type
-        self.traceback = traceback
-        self.context = context
-
-
-class Object(NonSend):
-    _handle: int
-    _token: int
-
-    def __init__(self):
-        self._handle = -1
-        self._token = 0
-
-
-class ResourceDiagnostics:
-    initialized: bool
-    live_objects: int
-    leaked_objects: int
-
-    def __init__(self, initialized: bool, live_objects: int, leaked_objects: int):
-        self.initialized = initialized
-        self.live_objects = live_objects
-        self.leaked_objects = leaked_objects
 
 
 class BufferView(NonSend):
@@ -483,6 +455,16 @@ def zero_copy_dlpack_tensor(obj: Object) -> Result[DlpackTensor, PythonError]:
 @blocking_io
 def release_dlpack(own tensor: DlpackTensor) -> Result[None, PythonError]:
     return py_release_dlpack(tensor._handle, tensor._token)
+
+
+@blocking_io
+def local_callback(handler: Callable[[Object], Result[Object, PythonError]]) -> Result[LocalCallback, PythonError]:
+    raise PythonError("local_callback is lowered by the Sifr compiler")
+
+
+@blocking_io
+def threadsafe_callback(handler: Callable[[Object], Result[Object, PythonError]]) -> Result[ThreadsafeCallback, PythonError]:
+    raise PythonError("threadsafe_callback is lowered by the Sifr compiler")
 
 
 @blocking_io

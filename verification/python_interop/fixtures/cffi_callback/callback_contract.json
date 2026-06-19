@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "case_group": "python_to_sifr_callbacks",
+  "surface": "sifr.python",
+  "positive_cases": [
+    {
+      "name": "local_callback_success",
+      "operations": ["local_callback", "call", "close_local_callback"],
+      "lifetime": "same_stack_single_invocation"
+    },
+    {
+      "name": "threadsafe_callback_success",
+      "operations": ["threadsafe_callback", "call", "close_threadsafe_callback"],
+      "lifetime": "repeatable_registry_handle"
+    },
+    {
+      "name": "python_background_thread_invokes_threadsafe_callback",
+      "operations": ["threading.Thread", "threadsafe_callback"],
+      "lifetime": "gil_reacquired_for_dispatch"
+    }
+  ],
+  "negative_cases": [
+    {
+      "name": "local_callback_escape_rejected",
+      "operation": "local_callback",
+      "expected_error_kind": "call",
+      "expected_exception_type": "RuntimeError"
+    },
+    {
+      "name": "callback_after_close_rejected",
+      "operation": "close_threadsafe_callback",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedCallback"
+    },
+    {
+      "name": "double_close_rejected",
+      "operation": "close_threadsafe_callback",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedCallback"
+    },
+    {
+      "name": "captured_state_constraints_scaffolded",
+      "operation": "threadsafe_callback",
+      "expected_policy": "send_like_owned_state_required"
+    },
+    {
+      "name": "python_exception_mapping",
+      "operation": "call",
+      "expected_error_kind": "call"
+    }
+  ],
+  "package_patterns": ["kafka", "pubsub", "cffi", "boto3", "pika"]
+}

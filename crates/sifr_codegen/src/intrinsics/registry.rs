@@ -789,6 +789,10 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             python::lower_python_intrinsic(name, args),
             Some(StdlibFeature::PythonRuntime),
         ),
+        "local_callback" | "threadsafe_callback" => (
+            python::lower_python_intrinsic(name, args),
+            Some(StdlibFeature::PythonRuntime),
+        ),
         "task_current_context" => (
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),

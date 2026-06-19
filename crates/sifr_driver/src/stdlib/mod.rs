@@ -1,6 +1,7 @@
 mod bootstrap;
 mod cache;
 mod intrinsics;
+mod re_exports;
 mod types;
 
 pub(crate) use bootstrap::compile_stdlib;
