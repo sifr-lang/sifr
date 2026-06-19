@@ -32,12 +32,21 @@ profile uses selected-areas-only execution and runs both:
 - `live-examples`: type-checks Sifr interop source examples through an explicit
   package trust policy, then runs testcontainers-backed Python client examples
   for Redis, Postgres, a Kafka-compatible Redpanda broker, and LocalStack
-  SNS/SQS.
+  Pub/Sub-style SNS fanout, SNS, and SQS message delivery.
 
 The live examples use the area-local locked Python project and never install
 packages from the runner itself. If Docker is unavailable, the suite emits
 `structured-skip` for the service cases after the Sifr source checks pass. When
 Docker is running, those same cases must reach `live-passed` or fail the profile.
+The Kafka, Pub/Sub-style, SNS, and SQS live cases produce and consume messages
+in Python client code. Their checked Sifr source fixtures pass the consumed
+Python object to a Sifr `threadsafe_callback` handler, and the report labels
+that portion as a source-checked callback contract rather than a live Sifr binary
+invocation.
+The policy service aliases map to these concrete cases: `pubsub-compatible`
+uses LocalStack SNS fanout to an SQS subscription, `aws-compatible-sns` uses
+LocalStack SNS delivery to SQS, `aws-compatible-sqs` uses direct LocalStack SQS,
+and `aws-compatible-sns-sqs` names the shared LocalStack topology.
 Service-backed examples belong in this profile, not in the offline
 create-pr/merge/nightly/release profiles. The area manifest remains offline by
 default; live suites must declare their own `network_mode` and resource classes.

@@ -17,7 +17,9 @@ LIVE_EXAMPLE_SOURCES = {
     "redis": "live_examples/redis_live_roundtrip.sifr",
     "postgres": "live_examples/postgres_live_roundtrip.sifr",
     "kafka": "live_examples/kafka_live_roundtrip.sifr",
-    "aws_sns_sqs": "live_examples/localstack_sns_sqs_live_roundtrip.sifr",
+    "pubsub": "live_examples/pubsub_live_callback_roundtrip.sifr",
+    "sns": "live_examples/sns_live_callback_roundtrip.sifr",
+    "sqs": "live_examples/sqs_live_callback_roundtrip.sifr",
 }
 
 LIVE_IMAGES = {
@@ -125,6 +127,24 @@ def run_live_examples_self_tests(paths: RunnerPaths) -> None:
     )
     if success_payload["status"] != "live-passed":
         raise SystemExit("live examples self-test expected live-passed with fake live runner")
+
+    live_failure_payload = build_live_examples_report(
+        paths,
+        docker_probe=lambda: DockerAvailability(True, "self-test docker available"),
+        live_runner=lambda: [
+            {
+                "id": "kafka",
+                "status": "live-failed",
+                "sifr_source": LIVE_EXAMPLE_SOURCES["kafka"],
+                "error": "synthetic live failure",
+            }
+        ],
+        compile_sources=False,
+    )
+    if live_failure_payload["status"] != "live-failed":
+        raise SystemExit("live examples self-test expected live-failed from fake live runner")
+    if live_failure_payload["summary"]["total_failures"] != 1:
+        raise SystemExit("live examples self-test expected one live failure")
 
     source_failure_payload = build_live_examples_report(
         paths,
@@ -310,7 +330,9 @@ def run_live_cases() -> list[dict[str, Any]]:
         _timed_case("redis", _run_redis_roundtrip),
         _timed_case("postgres", _run_postgres_roundtrip),
         _timed_case("kafka", _run_kafka_roundtrip),
-        _timed_case("aws_sns_sqs", _run_localstack_sns_sqs_roundtrip),
+        _timed_case("pubsub", _run_localstack_pubsub_roundtrip),
+        _timed_case("sns", _run_localstack_sns_roundtrip),
+        _timed_case("sqs", _run_localstack_sqs_roundtrip),
     ]
 
 
@@ -418,19 +440,60 @@ def _run_kafka_roundtrip() -> dict[str, Any]:
             consumer.close()
     if expected not in messages:
         raise AssertionError(f"kafka message not observed: {messages!r}")
+    handler_contract = _message_handler_source_contract("kafka", messages[0])
     return {
         "image": LIVE_IMAGES["kafka"],
-        "operations": ["produce", "consume"],
+        "operations": ["produce", "consume", "sifr-callback-source-contract"],
+        "control_flow": (
+            "Python producer -> Python KafkaConsumer; checked Sifr source passes "
+            "the consumed Python object to a threadsafe_callback handler"
+        ),
+        "handler_contract": handler_contract,
     }
 
 
-def _run_localstack_sns_sqs_roundtrip() -> dict[str, Any]:
+def _run_localstack_pubsub_roundtrip() -> dict[str, Any]:
+    return _run_localstack_topic_subscription_roundtrip(
+        case_id="pubsub",
+        expected="localstack-pubsub-ready",
+        operations=[
+            "create-subscription-queue",
+            "create-topic",
+            "subscribe",
+            "publish",
+            "consume-subscription-message",
+            "sifr-callback-source-contract",
+            "delete",
+        ],
+    )
+
+
+def _run_localstack_sns_roundtrip() -> dict[str, Any]:
+    return _run_localstack_topic_subscription_roundtrip(
+        case_id="sns",
+        expected="localstack-sns-ready",
+        operations=[
+            "create-sns-topic",
+            "subscribe-sqs-endpoint",
+            "publish",
+            "consume-delivery",
+            "sifr-callback-source-contract",
+            "delete",
+        ],
+    )
+
+
+def _run_localstack_topic_subscription_roundtrip(
+    *,
+    case_id: str,
+    expected: str,
+    operations: list[str],
+) -> dict[str, Any]:
     import boto3  # noqa: F401 - imported to prove the locked runtime dependency is present.
     from testcontainers.localstack import LocalStackContainer
 
     queue_name = f"sifr-live-{uuid.uuid4().hex}"
     topic_name = f"sifr-live-{uuid.uuid4().hex}"
-    expected = "localstack-sns-sqs-ready"
     with LocalStackContainer(
         image=LIVE_IMAGES["localstack"],
         region_name="us-east-1",
@@ -472,10 +535,70 @@ def _run_localstack_sns_sqs_roundtrip() -> dict[str, Any]:
         body = json.loads(messages[0]["Body"])
         if body.get("Message") != expected:
             raise AssertionError(f"SNS message body mismatch: {body!r}")
+        handler_contract = _message_handler_source_contract(case_id, body)
         sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=messages[0]["ReceiptHandle"])
     return {
         "image": LIVE_IMAGES["localstack"],
-        "operations": ["create-queue", "create-topic", "subscribe", "publish", "receive", "delete"],
+        "service_model": "LocalStack SNS topic with SQS subscription",
+        "operations": operations,
+        "control_flow": (
+            "Python SNS/SQS clients consume delivery; checked Sifr source passes "
+            "the consumed Python object to a threadsafe_callback handler"
+        ),
+        "handler_contract": handler_contract,
+    }
+
+
+def _run_localstack_sqs_roundtrip() -> dict[str, Any]:
+    import boto3  # noqa: F401 - imported to prove the locked runtime dependency is present.
+    from testcontainers.localstack import LocalStackContainer
+
+    queue_name = f"sifr-live-{uuid.uuid4().hex}"
+    expected = "localstack-sqs-ready"
+    with LocalStackContainer(
+        image=LIVE_IMAGES["localstack"],
+        region_name="us-east-1",
+    ).with_services("sqs") as container:
+        sqs = container.get_client("sqs")
+        queue_url = sqs.create_queue(QueueName=queue_name)["QueueUrl"]
+        sqs.send_message(QueueUrl=queue_url, MessageBody=expected)
+        response = sqs.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=10,
+        )
+        messages = response.get("Messages", [])
+        if len(messages) != 1:
+            raise AssertionError(f"expected one SQS message, got {len(messages)}")
+        if messages[0].get("Body") != expected:
+            raise AssertionError(f"SQS message body mismatch: {messages[0]!r}")
+        handler_contract = _message_handler_source_contract("sqs", messages[0])
+        sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=messages[0]["ReceiptHandle"])
+    return {
+        "image": LIVE_IMAGES["localstack"],
+        "service_model": "LocalStack SQS queue",
+        "operations": [
+            "create-queue",
+            "send-message",
+            "receive-message",
+            "sifr-callback-source-contract",
+            "delete",
+        ],
+        "control_flow": (
+            "Python SQS client consumes message; checked Sifr source passes "
+            "the consumed Python object to a threadsafe_callback handler"
+        ),
+        "handler_contract": handler_contract,
+    }
+
+
+def _message_handler_source_contract(case_id: str, message: Any) -> dict[str, str]:
+    if message is None:
+        raise AssertionError(f"{case_id} handler handoff received no message")
+    return {
+        "status": "source-checked",
+        "sifr_source": LIVE_EXAMPLE_SOURCES[case_id],
+        "handler_model": "threadsafe_callback",
     }
 
 

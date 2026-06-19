@@ -79,9 +79,12 @@ The live profile runs two suites. `live-policy` validates the policy boundary
 without starting containers. `live-examples` compiles Sifr examples through a
 generated package with explicit Python allow/trust metadata, then runs
 testcontainers-backed Python client examples against Redis, Postgres, a
-Kafka-compatible Redpanda broker, and LocalStack SNS/SQS. Docker absence is
-reported as `structured-skip` only after source checks pass; with Docker
-available, service cases must produce `live-passed`.
+Kafka-compatible Redpanda broker, and LocalStack Pub/Sub-style SNS fanout, SNS,
+and SQS message delivery. Docker absence is reported as `structured-skip` only
+after source checks pass; with Docker available, service cases must produce
+`live-passed`. Message-broker live cases consume through Python clients; the
+checked Sifr fixtures pass the consumed Python object back to a
+`threadsafe_callback` handler.
 
 Report status values are intentional:
 

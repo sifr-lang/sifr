@@ -330,8 +330,11 @@ Matrix-only package evidence reports `matrix-passed`; live environment execution
 The `python-interop-live` profile is explicit opt-in container-runtime policy
 for service-backed examples; it is not part of offline `create-pr`, `merge`,
 `nightly`, or `release` validation. It first validates live policy, then checks
-Sifr source examples for Redis, Postgres, a Kafka-compatible broker, and
-LocalStack SNS/SQS interop before running the matching testcontainers-backed
-Python client examples. If Docker is not running locally, the service cases
-report `structured-skip` after source checks pass; with Docker running they must
-report `live-passed`.
+Sifr source examples for Redis, Postgres, a Kafka-compatible broker,
+Pub/Sub-style LocalStack fanout, SNS delivery, and SQS delivery before running
+the matching testcontainers-backed Python client examples. Kafka, Pub/Sub-style,
+SNS, and SQS live cases consume through Python clients; the checked Sifr
+fixtures pass the consumed Python object to a Sifr `threadsafe_callback`
+handler. If Docker is not running locally, the service cases report
+`structured-skip` after source checks pass; with Docker running they must report
+`live-passed`.

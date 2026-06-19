@@ -102,7 +102,9 @@ REQUIRED_SOURCE_FIXTURES = (
     "live_examples/redis_live_roundtrip.sifr",
     "live_examples/postgres_live_roundtrip.sifr",
     "live_examples/kafka_live_roundtrip.sifr",
-    "live_examples/localstack_sns_sqs_live_roundtrip.sifr",
+    "live_examples/pubsub_live_callback_roundtrip.sifr",
+    "live_examples/sns_live_callback_roundtrip.sifr",
+    "live_examples/sqs_live_callback_roundtrip.sifr",
 )
 
 
