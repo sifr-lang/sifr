@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "name": "python-interop-live",
+  "description": "Explicit opt-in Python interop live dependency lane backed by container-runtime policy.",
+  "execution_mode": "selected-areas-only",
+  "budgets": {
+    "warm_wall_time_minutes": 10,
+    "cold_wall_time_minutes": 20
+  },
+  "resource_policy": {
+    "classes": [
+      "default-local",
+      "platform-specific",
+      "container-runtime",
+      "network"
+    ],
+    "max_parallel": 1
+  },
+  "network_policy": {
+    "mode": "live",
+    "live_network_allowed": true
+  },
+  "cargo_policy": {
+    "locked": true,
+    "offline": false,
+    "setup_command": "cargo fetch --locked"
+  },
+  "reference_host": {
+    "os": "darwin-or-linux",
+    "arch": "aarch64-or-x86_64",
+    "notes": "Requires an explicit local container runtime. External image pulls are allowed only in this opt-in live profile."
+  },
+  "execution_sandbox": {
+    "tempdir_only": true,
+    "external_network": "allowed",
+    "loopback_network": "allowed",
+    "subprocess_cleanup": true,
+    "stdout_stderr_byte_limit": 10485760
+  },
+  "profile_plan": {
+    "emit_command": "scripts/run_all_tests.sh --profile python-interop-live --emit-plan",
+    "compare_command": "uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>"
+  },
+  "selected_areas": [
+    {
+      "area": "python_interop",
+      "suites": [
+        "live-policy"
+      ],
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ]
+    }
+  ],
+  "toolchain_steps": [],
+  "guardrail_steps": [],
+  "retry_policy": {
+    "max_attempts": 1,
+    "retry_flaky_only": false
+  },
+  "shard_policy": {
+    "strategy": "deterministic",
+    "shards": 1
+  },
+  "resume_policy": {
+    "enabled": true,
+    "failure_reproduction": "profile-and-case"
+  },
+  "report": {
+    "format": "json-v1",
+    "output_dir": "target/validation_lane_reports"
+  },
+  "legacy_facade": {
+    "matrix_suites": [],
+    "tooling_suites": [],
+    "distribution": "none",
+    "generated_code_quality": "none",
+    "performance_budget": "none",
+    "crate_tests": "smoke",
+    "e2e": {
+      "fixture_manifest": "",
+      "sifr_jobs": 1,
+      "rust_jobs": 1,
+      "run_jobs": 1,
+      "cargo_build_jobs": 1,
+      "max_group_fixtures": 1,
+      "disable_cache": false
+    },
+    "hardening_suites": [],
+    "extra_checks": [],
+    "thermal_policy": "explicit-container-runtime-opt-in",
+    "memory_policy": "single-live-suite"
+  }
+}

@@ -16,9 +16,11 @@ Profiles:
   merge     Authoritative merge gate (default).
   nightly   Broad hardening and full-corpus signal.
   release   Highest-confidence local qualification gate.
+  python-interop-live
+            Explicit opt-in Python interop container/runtime policy and live examples.
 
 Options:
-  --profile <create-pr|merge|nightly|release>  Validation profile (default: merge)
+  --profile <name>                            Validation profile (default: merge)
   --emit-plan                                 Print the selected profile execution plan and exit
   --help                                      Show this help
 

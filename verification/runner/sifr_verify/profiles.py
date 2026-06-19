@@ -290,6 +290,7 @@ def print_summary(requested_profile: str) -> None:
     print(f"  requested_profile={requested_profile}")
     print(f"  resolved_profile={profile['name']}")
     print(f"  description={profile.get('description', '')}")
+    print(f"  execution_mode={profile.get('execution_mode', 'legacy-facade')}")
     print(
         "  budgets="
         f"warm<={profile['budgets']['warm_wall_time_minutes']}m "
@@ -332,6 +333,7 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
         "schema_version": 1,
         "profile": profile["name"],
         "description": profile.get("description", ""),
+        "execution_mode": profile.get("execution_mode", "legacy-facade"),
         "network_policy": profile.get("network_policy", {}),
         "cargo_policy": profile.get("cargo_policy", {}),
         "reference_host": profile.get("reference_host", {}),
@@ -372,6 +374,7 @@ def compare_plans(local_path: str, ci_path: str) -> int:
     ci = load_json(Path(ci_path))
     keys = [
         "profile",
+        "execution_mode",
         "selected_areas",
         "legacy_facade",
         "crate_test_membership",

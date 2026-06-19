@@ -29,6 +29,10 @@
     "description": {
       "type": "string"
     },
+    "execution_mode": {
+      "type": "string",
+      "enum": ["legacy-facade", "selected-areas-only"]
+    },
     "budgets": {
       "type": "object",
       "required": ["warm_wall_time_minutes", "cold_wall_time_minutes"],
@@ -57,7 +61,8 @@
               "large-memory",
               "platform-specific",
               "long-running",
-              "external-corpus"
+              "external-corpus",
+              "container-runtime"
             ]
           }
         },
@@ -237,7 +242,8 @@
                 "large-memory",
                 "platform-specific",
                 "long-running",
-                "external-corpus"
+                "external-corpus",
+                "container-runtime"
               ]
             }
           }

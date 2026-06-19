@@ -12,6 +12,7 @@ from certification_matrix import build_certification_report, validate_certificat
 from env import discover_paths
 from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
+from live_policy import build_live_policy_report, run_live_policy_self_tests
 from report import write_report
 from smoke_matrix import KNOWN_GATES, KNOWN_GROUPS, KNOWN_TIERS
 
@@ -112,6 +113,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Report path relative to verification/areas/python_interop.",
     )
     parser.add_argument("--self-test", action="store_true", help="Run runner positive and negative self-tests.")
+    parser.add_argument("--live-policy", action="store_true", help="Validate live container-runtime policy.")
     return parser.parse_args(argv)
 
 
@@ -120,7 +122,14 @@ def main(argv: list[str] | None = None) -> int:
     paths = discover_paths()
     if args.self_test:
         run_self_tests(paths.area_root)
+        run_live_policy_self_tests(paths)
         print("python interop runner self-test ok")
+        return 0
+    if args.live_policy:
+        payload = build_live_policy_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(f"python interop live-policy ok: report={report_path.relative_to(paths.repo_root)}")
         return 0
 
     selected_groups = validate_filters("group", args.group, KNOWN_GROUPS)

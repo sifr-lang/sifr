@@ -40,7 +40,8 @@
           "large-memory",
           "platform-specific",
           "long-running",
-          "external-corpus"
+          "external-corpus",
+          "container-runtime"
         ]
       }
     },
@@ -164,6 +165,28 @@
                 }
               }
             }
+          },
+          "resource_classes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "default-local",
+                "network",
+                "large-memory",
+                "platform-specific",
+                "long-running",
+                "external-corpus",
+                "container-runtime"
+              ]
+            }
+          },
+          "network_mode": {
+            "type": "string",
+            "enum": ["offline", "live"]
+          },
+          "timeout_seconds": {
+            "type": "integer"
           }
         }
       }

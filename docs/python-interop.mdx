@@ -323,6 +323,10 @@ verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --group callbacks
 verification/areas/python_interop/run.sh --group dataframes
 verification/areas/python_interop/run.sh --self-test
+scripts/run_all_tests.sh --profile python-interop-live
 ```
 
 Matrix-only package evidence reports `matrix-passed`; live environment execution reports `passed`. Host-dependent packages include explicit skip reasons.
+The `python-interop-live` profile is explicit opt-in container-runtime policy
+for service-backed examples; it is not part of offline `create-pr`, `merge`,
+`nightly`, or `release` validation.
