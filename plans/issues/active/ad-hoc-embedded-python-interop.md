@@ -34,7 +34,7 @@
   - Added lowering-time `SIFR-PYTRUST` diagnostics for static literal imports outside package allow/trust policy and dynamic imports without `@trust_python_dynamic`; single-file mode has no package trust policy, so static `sifr.python.import_module("...")` is rejected instead of falling through to runtime.
   - Added generated runtime config allow/trust/native root metadata and runtime root checks, with native roots detected from probe extension-module origins independently of trusted native roots.
   - Added py3 verification fixture manifests for positive, negative, cleanup, and trust cases.
-  - Deferred `__exit__` failure-triple plumbing to `milestone_py_6` `py.with` lowering, where Sifr/Python failure context will be available.
+  - Deferred `__exit__` failure-triple plumbing to `milestone_py_6` context-helper lowering, where Sifr/Python failure context will be available.
   - Deferred bootstrap reporter/`eprintln!` cleanup to `milestone_py_5` package-runtime startup work; py3 keeps init failure as pre-main process exit.
   - Focused validation passing: runtime Python tests, package Python tests, lowering trust tests, stdlib/codegen feature tests, `verification/python_interop/run.sh --group scaffold`, diagnostics coverage checks, and `scripts/run_all_tests.sh --profile create-pr`.
   - Merged via PR [#2668](https://github.com/sifr-lang/sifr/pull/2668).
@@ -48,7 +48,14 @@
   - Added py4 JSON/source fixtures and required them from the Python interop scaffold runner.
   - Opus review round 2 reported no remaining blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2669](https://github.com/sifr-lang/sifr/pull/2669).
-- [ ] `milestone_py_5`: Async/blocking integration.
+- [x] `milestone_py_5`: Async/blocking integration.
+  - Classified every public `sifr.python` boundary operation as `@blocking_io`, including explicit constructors, extractors, copy APIs, context operations, calls, and `run_coroutine_blocking`.
+  - Added `py.run_coroutine_blocking` through `_sifr.python` intrinsic metadata, codegen lowering, and runtime `asyncio.run` integration for Python-owned event loops returning explicit `Object` handles to Sifr.
+  - Made `py.Object` inherit `NonSend` and fixed stdlib bootstrap export metadata so imported stdlib parent markers survive real single-file and project checks.
+  - Added async/offload lowering tests for direct Python call rejection, explicit coroutine blocking rejection, offloaded sendable Python work, non-Send object return rejection, and unclassified offload target rejection.
+  - Added async-blocking verification fixtures and required them from the Python interop scaffold runner.
+  - Opus review round 1 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - Merged via PR [#2670](https://github.com/sifr-lang/sifr/pull/2670).
 - [ ] `milestone_py_6`: Resource cleanup and leak diagnostics.
 - [ ] `milestone_py_7`: `Py_buffer` zero-copy core.
 - [ ] `milestone_py_8`: Arrow PyCapsule interop.
@@ -321,7 +328,7 @@ try py.to_str(obj)
 try py.to_bytes(obj)
 try py.scope(lambda gil: ...)
 try py.close(obj)
-try py.with(obj, lambda entered: ...)
+try py.with_context(obj, lambda entered: ...)
 try py.run_coroutine_blocking(coro)
 ```
 
@@ -341,7 +348,7 @@ This phase does not introduce `import python <name>` syntax sugar; explicit `py.
 | `py.copy_as[T](obj)` | `Result[T, py.TypeConversionError]`; explicit copy |
 | `py.scope(fn)` | `Result[T, py.PythonError]`; holds the GIL for batched operations |
 | `py.close(obj)` | `Result[None, py.PythonError]` |
-| `py.with(obj, fn)` | `Result[T, py.PythonError]` |
+| `py.with_context(obj, fn)` | `Result[T, py.PythonError]` |
 | `py.run_coroutine_blocking(coro)` | `Result[py.Object, py.PythonError]`, classified `@blocking_io` |
 
 Outside a `try`/`Result` handling context, fallible Python operations are compile-time errors.
@@ -415,7 +422,7 @@ Supported cleanup APIs:
 ```sifr
 try py.close(obj)
 try py.call_attr(obj, "close", [], [])
-try py.with(obj, lambda entered: ...)
+try py.with_context(obj, lambda entered: ...)
 coro = try py.call_attr(obj, "aclose", [], [])
 try py.run_coroutine_blocking(coro)
 try callback.close()
@@ -426,7 +433,8 @@ Rules:
 
 - Do not rely on Python `__del__` for correctness.
 - Context-manager helpers must call `__enter__` and `__exit__` and preserve Python traceback on failure.
-- `py.with(obj, fn)` is scoped: `entered` cannot escape the lambda, the lambda returns generic `T`, and Python `__exit__(exc_type, exc, tb)` receives Sifr/Python failure context before the final `Result` is produced.
+- `py.with_context(obj, fn)` is scoped: `entered` cannot escape the lambda, the lambda returns generic `T`, and Python `__exit__(exc_type, exc, tb)` receives Sifr/Python failure context before the final `Result` is produced. The exact `py.with(...)` spelling is reserved until the parser supports hard-keyword member calls.
+- The `entered` object passed to a `py.with_context` body is helper-owned. The body may inspect or call through it, but must not call `py.close(entered)`; the helper closes it after `__exit__` on both success and failure paths.
 - Async context managers require a Python wrapper or explicit `py.run_coroutine_blocking`.
 - Callback handles, buffer views, Arrow capsules, and DLPack capsules are resource handles with deterministic close/release semantics.
 - Double close/release is either idempotent by design or reports a deterministic resource-state error; the decision must be documented per resource type.
@@ -812,7 +820,7 @@ Definition of done:
 ### milestone_py_6: Resource Cleanup and Leak Diagnostics
 
 Scope:
-- Implement `py.close`, `py.with`, callback close, buffer release, Arrow/DLPack release tracking, and leak diagnostics.
+- Implement `py.close`, `py.with_context`, callback close, buffer release, Arrow/DLPack release tracking, and leak diagnostics.
 - Define idempotence/error behavior for double close/release per resource.
 
 Definition of done:

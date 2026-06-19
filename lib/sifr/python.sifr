@@ -1,4 +1,6 @@
 # sifr.python - Explicit embedded CPython interop
+from typing import Callable
+
 from _sifr.python import (
     py_call,
     py_call_attr,
@@ -27,6 +29,7 @@ from _sifr.python import (
     py_copy_tuple_u8,
     py_enter_context,
     py_exit_context,
+    py_exit_context_with_error,
     py_from_bool,
     py_from_bytes,
     py_from_dict_str,
@@ -40,6 +43,7 @@ from _sifr.python import (
     py_get_attr,
     py_get_item_str,
     py_import_module,
+    py_resource_diagnostics,
     py_run_coroutine_blocking,
     py_to_bool,
     py_to_bytes,
@@ -91,11 +95,26 @@ class Object(NonSend):
         self._token = 0
 
 
+class ResourceDiagnostics:
+    initialized: bool
+    live_objects: int
+    leaked_objects: int
+
+    def __init__(self, initialized: bool, live_objects: int, leaked_objects: int):
+        self.initialized = initialized
+        self.live_objects = live_objects
+        self.leaked_objects = leaked_objects
+
+
 def _object_from_handle(raw: tuple[int, int]) -> Object:
     obj: Object = Object()
     obj._handle = raw[0]
     obj._token = raw[1]
     return obj
+
+
+def _object_ref(obj: Object) -> Object:
+    return _object_from_handle((obj._handle, obj._token))
 
 
 def _objects_from_handles(raw_values: list[tuple[int, int]]) -> list[Object]:
@@ -201,6 +220,86 @@ def enter_context(obj: Object) -> Result[Object, PythonError]:
 @blocking_io
 def exit_context(obj: Object) -> Result[None, PythonError]:
     return py_exit_context(obj._handle, obj._token)
+
+
+def _exit_context_with_error(obj: Object, error: PythonError) -> Result[None, PythonError]:
+    return py_exit_context_with_error(
+        obj._handle,
+        obj._token,
+        error.kind,
+        error.exception_type,
+        error.message,
+        error.traceback,
+        error.context,
+    )
+
+
+@blocking_io
+def with_context(
+    obj: Object,
+    body: Callable[[Object], None],
+) -> Result[None, PythonError]:
+    try:
+        entered: Object = enter_context(obj)
+        result: None = _with_entered_context(obj, entered, body)
+        return None
+    except PythonError as e:
+        raise e
+
+
+def _with_entered_context(
+    obj: Object,
+    entered: Object,
+    body: Callable[[Object], None],
+) -> Result[None, PythonError]:
+    body_completed: bool = False
+    body_failed: bool = False
+    error_kind: str = ""
+    error_exception_type: str = ""
+    error_message: str = ""
+    error_traceback: str = ""
+    error_context: str = ""
+    try:
+        body_entered: Object = _object_ref(entered)
+        body_result: None = body(body_entered)
+        body_completed = True
+        exited: None = exit_context(obj)
+        return None
+    except PythonError as e:
+        if not body_completed:
+            body_failed = True
+            error_kind = e.kind
+            error_exception_type = e.exception_type
+            error_message = e.message
+            error_traceback = e.traceback
+            error_context = e.context
+        raise e
+    finally:
+        if body_failed:
+            body_error: PythonError = PythonError(
+                error_message,
+                error_kind,
+                error_exception_type,
+                error_traceback,
+                error_context,
+            )
+            try:
+                exit_result: None = _exit_context_with_error(obj, body_error)
+            except PythonError as e:
+                cleanup_context: str = e.context
+        try:
+            closed: None = close(entered)
+        except PythonError as e:
+            cleanup_context: str = e.context
+
+
+@blocking_io
+def resource_diagnostics() -> Result[ResourceDiagnostics, PythonError]:
+    try:
+        raw: tuple[bool, int, int] = py_resource_diagnostics()
+        return ResourceDiagnostics(raw[0], raw[1], raw[2])
+    except PythonError as e:
+        raise e
 
 
 @blocking_io

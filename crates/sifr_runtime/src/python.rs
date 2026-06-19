@@ -8,6 +8,7 @@ use std::sync::{Mutex, MutexGuard};
 
 mod coroutine_ops;
 mod object_ops;
+mod resource_ops;
 pub use coroutine_ops::run_coroutine_blocking;
 pub use object_ops::{
     call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
@@ -20,6 +21,7 @@ pub use object_ops::{
     to_i16, to_i32, to_i64, to_i8, to_int, to_isize, to_none, to_str, to_u16, to_u32, to_u64,
     to_u8, to_usize, ObjectHandle, PythonError,
 };
+pub use resource_ops::{exit_context_with_error, resource_diagnostics, PythonResourceDiagnostics};
 
 static RUNTIME_STATE: Mutex<RuntimeState> = Mutex::new(RuntimeState::new());
 

@@ -1,0 +1,16 @@
+from sifr.python import Object, PythonError, close, from_int, with_context
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        value: Object = from_int(1)
+
+        def observe(entered: Object) -> None:
+            return None
+
+        used: None = with_context(value, observe)
+        closed: None = close(value)
+        return None
+    except PythonError as e:
+        raise e

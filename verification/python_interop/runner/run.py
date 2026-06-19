@@ -65,6 +65,10 @@ REQUIRED_SOURCE_FIXTURES = (
     "async_blocking/offloaded_python_calls.sifr",
     "async_blocking/unclassified_offload_rejected.sifr",
     "primitive_conversion/primitive_roundtrip.sifr",
+    "resource_cleanup/context_manager_body_failure.sifr",
+    "resource_cleanup/context_manager_failure.sifr",
+    "resource_cleanup/context_manager_success.sifr",
+    "resource_cleanup/resource_diagnostics.sifr",
 )
 
 

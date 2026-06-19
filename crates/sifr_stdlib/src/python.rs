@@ -104,6 +104,28 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "py_exit_context_with_error".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+                ("kind".to_string(), Type::Str),
+                ("exception_type".to_string(), Type::Str),
+                ("message".to_string(), Type::Str),
+                ("traceback".to_string(), Type::Str),
+                ("context".to_string(), Type::Str),
+            ],
+            python_error_result(Type::None),
+        ),
+    );
+    functions.insert(
+        "py_resource_diagnostics".to_string(),
+        FunctionType::all_borrow(
+            vec![],
+            python_error_result(Type::Tuple(vec![Type::Bool, Type::Int, Type::Int])),
+        ),
+    );
+    functions.insert(
         "py_run_coroutine_blocking".to_string(),
         FunctionType::all_borrow(
             vec![

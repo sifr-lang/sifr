@@ -6,6 +6,11 @@
     {
       "name": "explicit_close_releases_object_handle",
       "operations": ["import_module", "get_attr", "close"],
+      "double_close_behavior": {
+        "object": "deterministic_resource_error",
+        "expected_error_kind": "resource",
+        "expected_exception_type": "SifrPythonClosedObject"
+      },
       "expected_runtime_diagnostics": {
         "live_objects": 0,
         "leaked_objects": 0
@@ -14,11 +19,22 @@
     {
       "name": "context_manager_enter_exit",
       "imports": ["contextlib"],
-      "operations": ["import_module", "get_attr", "call", "enter_context", "exit_context", "close"],
+      "operations": ["import_module", "call_attr", "with_context", "enter_context", "exit_context", "close"],
+      "helper": {
+        "public_name": "with_context",
+        "reason": "the parser currently treats with as a hard keyword after dot syntax, so exact py.with is not parseable",
+        "body_parameter_ownership": "helper_owned_body_must_not_close_entered"
+      },
       "expected_runtime_diagnostics": {
         "live_objects": 0,
         "leaked_objects": 0
       }
+    },
+    {
+      "name": "future_resource_tracking_contract",
+      "resource_classes": ["callback", "buffer", "arrow_capsule", "dlpack_capsule"],
+      "double_release_behavior": "deterministic_resource_error",
+      "tracking": "all future Python resource handles must participate in the same outstanding-resource diagnostics counters before their public release APIs ship"
     }
   ],
   "negative_cases": [
@@ -33,6 +49,25 @@
       "operation": "enter_context",
       "expected_error_kind": "call",
       "expected_exception_type": "AttributeError"
+    },
+    {
+      "name": "body_failure_exits_with_error_context",
+      "operation": "with_context",
+      "expected_error_kind": "attribute",
+      "expected_exit_args": {
+        "exc_type": "non_null",
+        "exc_value": "Sifr PythonError wrapper",
+        "traceback": "none_sifr_traceback_embedded_in_exception_message"
+      },
+      "expected_entered_handle_release": "closed_after_exit_with_error"
+    },
+    {
+      "name": "outstanding_object_diagnostics",
+      "operation": "resource_diagnostics",
+      "expected_runtime_diagnostics": {
+        "live_objects_greater_than": 0,
+        "leaked_objects": 0
+      }
     }
   ]
 }

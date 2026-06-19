@@ -102,6 +102,27 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     let coroutine_rendered = render_expr(&coroutine.expr);
     assert!(coroutine_rendered.contains("sifr_runtime::python::run_coroutine_blocking"));
     assert!(coroutine_rendered.contains("(object_handle, object_token)"));
+
+    let diagnostics = lower_intrinsic("py_resource_diagnostics", &[])
+        .expect("py_resource_diagnostics should lower");
+    assert!(render_expr(&diagnostics.expr).contains("sifr_runtime::python::resource_diagnostics"));
+
+    let exit_with_error = lower_intrinsic(
+        "py_exit_context_with_error",
+        &[
+            "object_handle".to_string(),
+            "object_token".to_string(),
+            "kind".to_string(),
+            "exception_type".to_string(),
+            "message".to_string(),
+            "traceback".to_string(),
+            "context".to_string(),
+        ],
+    )
+    .expect("py_exit_context_with_error should lower");
+    let exit_with_error_rendered = render_expr(&exit_with_error.expr);
+    assert!(exit_with_error_rendered.contains("sifr_runtime::python::exit_context_with_error"));
+    assert!(exit_with_error_rendered.contains("(object_handle, object_token)"));
 }
 
 #[test]
