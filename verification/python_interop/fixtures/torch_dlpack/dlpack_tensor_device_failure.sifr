@@ -1,0 +1,18 @@
+from sifr.python import (
+    DlpackTensor,
+    Object,
+    PythonError,
+    from_none,
+    zero_copy_dlpack_tensor,
+)
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        obj: Object = from_none()
+        tensor: DlpackTensor = zero_copy_dlpack_tensor(obj)
+        requires_sync: bool = tensor.stream_sync_required
+        return None
+    except PythonError as e:
+        raise e

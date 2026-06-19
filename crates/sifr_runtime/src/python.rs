@@ -9,6 +9,7 @@ use std::sync::{Mutex, MutexGuard};
 mod arrow_ops;
 mod buffer_ops;
 mod coroutine_ops;
+mod dlpack_ops;
 mod object_ops;
 mod resource_ops;
 pub use arrow_ops::{
@@ -18,6 +19,7 @@ pub use buffer_ops::{
     buffer_u8, copy_buffer_u8, release_buffer, BufferHandle, PythonBufferMetadata,
 };
 pub use coroutine_ops::run_coroutine_blocking;
+pub use dlpack_ops::{dlpack_tensor, release_dlpack, DlpackHandle, PythonDlpackTensorMetadata};
 pub use object_ops::{
     call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
     copy_dict_str_float, copy_dict_str_i32, copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8,
