@@ -1,0 +1,114 @@
+# sifr.python - Explicit embedded CPython interop
+from _sifr.python import (
+    py_call,
+    py_call_attr,
+    py_close,
+    py_enter_context,
+    py_exit_context,
+    py_get_attr,
+    py_get_item_str,
+    py_import_module,
+)
+
+
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+    def __init__(
+        self,
+        message: str,
+        kind: str = "",
+        exception_type: str = "",
+        traceback: str = "",
+        context: str = "",
+    ):
+        self.message = message
+        self.kind = kind
+        self.exception_type = exception_type
+        self.traceback = traceback
+        self.context = context
+
+
+class Object:
+    _handle: int
+    _token: int
+
+    def __init__(self):
+        self._handle = -1
+        self._token = 0
+
+
+def _object_from_handle(raw: tuple[int, int]) -> Object:
+    obj: Object = Object()
+    obj._handle = raw[0]
+    obj._token = raw[1]
+    return obj
+
+
+def import_module(name: str) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_import_module(name)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def get_attr(obj: Object, name: str) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_get_attr(obj._handle, obj._token, name)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def get_item(obj: Object, key: str) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_get_item_str(obj._handle, obj._token, key)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def call(
+    callable_obj: Object,
+    args: list[Object],
+    kwargs: list[tuple[str, Object]],
+) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_call(callable_obj._handle, callable_obj._token, args, kwargs)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def call_attr(
+    obj: Object,
+    name: str,
+    args: list[Object],
+    kwargs: list[tuple[str, Object]],
+) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_call_attr(obj._handle, obj._token, name, args, kwargs)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def close(own obj: Object) -> Result[None, PythonError]:
+    return py_close(obj._handle, obj._token)
+
+
+def enter_context(obj: Object) -> Result[Object, PythonError]:
+    try:
+        raw: tuple[int, int] = py_enter_context(obj._handle, obj._token)
+        return _object_from_handle(raw)
+    except PythonError as e:
+        raise e
+
+
+def exit_context(obj: Object) -> Result[None, PythonError]:
+    return py_exit_context(obj._handle, obj._token)

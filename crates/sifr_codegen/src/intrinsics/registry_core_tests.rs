@@ -141,6 +141,39 @@ pub(crate) fn runtime_diagnostic_intrinsic_rejects_wrong_arity() {
 }
 
 #[test]
+pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
+    let imported = lower_intrinsic("py_import_module", &["module".to_string()])
+        .expect("py_import_module should lower");
+    assert_eq!(
+        imported.required_feature,
+        Some(sifr_stdlib::StdlibFeature::PythonRuntime)
+    );
+    let rendered = render_expr(&imported.expr);
+    assert!(rendered.contains("sifr_runtime::python::import_module"));
+    assert!(rendered.contains("PythonError"));
+
+    let call = lower_intrinsic(
+        "py_call",
+        &[
+            "callable_handle".to_string(),
+            "callable_token".to_string(),
+            "args".to_string(),
+            "kwargs".to_string(),
+        ],
+    )
+    .expect("py_call should lower");
+    assert_eq!(
+        call.required_feature,
+        Some(sifr_stdlib::StdlibFeature::PythonRuntime)
+    );
+    let call_rendered = render_expr(&call.expr);
+    assert!(call_rendered.contains("sifr_runtime::python::call_object"));
+    assert!(call_rendered.contains("(callable_handle, callable_token)"));
+    assert!(call_rendered.contains("__sifr_python_args"));
+    assert!(call_rendered.contains("__sifr_python_kwargs"));
+}
+
+#[test]
 pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades() {
     let deps = sifr_stdlib::generated_cargo_dependencies(
         &std::collections::HashSet::from(["sifr.runtime".to_string()]),

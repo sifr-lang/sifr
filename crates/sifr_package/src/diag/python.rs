@@ -46,6 +46,21 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn python_trust_graph(
+        code: DiagnosticCode,
+        message: impl Into<String>,
+        cargo_package_id: Option<CargoPackageId>,
+        help: impl Into<String>,
+    ) -> Self {
+        Self {
+            code,
+            message: message.into(),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata { cargo_package_id }),
+            help: Some(help.into()),
+        }
+    }
+
+    #[must_use]
     pub fn python_environment_probe(
         code: DiagnosticCode,
         interpreter: &Path,

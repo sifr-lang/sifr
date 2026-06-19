@@ -7,9 +7,8 @@ use sifr_diagnostics::DiagnosticCode;
 #[cfg(test)]
 use sifr_frontend::compile_module_hir;
 use sifr_frontend::{
-    collect_module_exports, compile_module_hir_with_source,
-    compile_module_hir_with_source_and_options, reveal_type_diagnostics, warning_diagnostics,
-    FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
+    collect_module_exports, compile_module_hir_with_source_and_options, reveal_type_diagnostics,
+    warning_diagnostics, FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
 };
 use sifr_ir::FlowGraph;
 use sifr_lowering::{ExternalDefs, HirModule, LoweringOptions, LoweringResult};
@@ -155,7 +154,19 @@ pub(crate) fn collect_project_hir_modules(
 
 pub(crate) fn collect_project_hir_source_modules(
     parsed_modules: &HashMap<String, ParsedProjectModule>,
+    external_defs: ExternalDefs,
+) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
+    collect_project_hir_source_modules_with_options(
+        parsed_modules,
+        external_defs,
+        LoweringOptions::default(),
+    )
+}
+
+pub(crate) fn collect_project_hir_source_modules_with_options(
+    parsed_modules: &HashMap<String, ParsedProjectModule>,
     mut external_defs: ExternalDefs,
+    lowering_options: LoweringOptions,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
     let suites: HashMap<String, CompileOrderSourceModule<'_>> = parsed_modules
         .iter()
@@ -182,7 +193,7 @@ pub(crate) fn collect_project_hir_source_modules(
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         };
-        let result = compile_module_hir_with_source(
+        let result = compile_module_hir_with_source_and_options(
             module_name,
             &parsed_module.suite,
             &external_defs,
@@ -191,6 +202,7 @@ pub(crate) fn collect_project_hir_source_modules(
                 display_path: &parsed_module.display_path,
                 source: &parsed_module.source,
             }),
+            lowering_options.clone(),
         )?;
         let source_context = FrontendSourceContext {
             display_path: &parsed_module.display_path,

@@ -26,6 +26,7 @@ mod process;
 mod process_async;
 mod process_child_lifecycle;
 mod process_pipes;
+mod python;
 mod random;
 mod re;
 mod requirements;
@@ -784,6 +785,20 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             Some(StdlibFeature::Tokio),
         ),
         "runtime_emit_diagnostic" => (runtime::lower_runtime_emit_diagnostic(args), None),
+        name if name.starts_with("py_") => (
+            match name {
+                "py_import_module" => python::lower_py_import_module(args),
+                "py_get_attr" => python::lower_py_get_attr(args),
+                "py_get_item_str" => python::lower_py_get_item_str(args),
+                "py_call" => python::lower_py_call(args),
+                "py_call_attr" => python::lower_py_call_attr(args),
+                "py_close" => python::lower_py_close(args),
+                "py_enter_context" => python::lower_py_enter_context(args),
+                "py_exit_context" => python::lower_py_exit_context(args),
+                _ => None,
+            },
+            Some(StdlibFeature::PythonRuntime),
+        ),
         "task_current_context" => (
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),

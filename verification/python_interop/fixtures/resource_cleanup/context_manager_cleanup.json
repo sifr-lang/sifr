@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "case_group": "python_context_manager_cleanup",
+  "surface": "sifr.python",
+  "positive_cases": [
+    {
+      "name": "explicit_close_releases_object_handle",
+      "operations": ["import_module", "get_attr", "close"],
+      "expected_runtime_diagnostics": {
+        "live_objects": 0,
+        "leaked_objects": 0
+      }
+    },
+    {
+      "name": "context_manager_enter_exit",
+      "imports": ["contextlib"],
+      "operations": ["import_module", "get_attr", "call", "enter_context", "exit_context", "close"],
+      "expected_runtime_diagnostics": {
+        "live_objects": 0,
+        "leaked_objects": 0
+      }
+    }
+  ],
+  "negative_cases": [
+    {
+      "name": "closed_handle_reuse",
+      "operation": "get_attr",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedObject"
+    },
+    {
+      "name": "missing_enter",
+      "operation": "enter_context",
+      "expected_error_kind": "call",
+      "expected_exception_type": "AttributeError"
+    }
+  ]
+}

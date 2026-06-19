@@ -1,5 +1,9 @@
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId};
+use crate::python::trust_policy::{
+    allowed_python_imports, declared_python_imports, native_python_imports, trusted_python_imports,
+    trusted_python_native_policy_imports, validate_python_trust_policy,
+};
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeSet;
@@ -14,6 +18,9 @@ pub struct ResolvedPythonEnvironment {
     pub lock: Option<PathBuf>,
     pub declared_imports: Vec<String>,
     pub native_imports: Vec<String>,
+    pub allowed_imports: Vec<String>,
+    pub trusted_imports: Vec<String>,
+    pub trusted_native_imports: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -64,6 +71,9 @@ pub fn resolve_python_environment(
     let selections = python_environment_selections(graph);
     let declared_imports = declared_python_imports(graph);
     let native_imports = native_python_imports(graph);
+    let allowed_imports = allowed_python_imports(graph);
+    let trusted_imports = trusted_python_imports(graph);
+    let trusted_native_imports = trusted_python_native_policy_imports(graph);
     let requires_python = graph.packages.values().any(|package| {
         !package.manifest.python.requires_imports.is_empty()
             || !package.manifest.python.allow_imports.is_empty()
@@ -116,6 +126,13 @@ pub fn resolve_python_environment(
     if !non_root_selections.is_empty() {
         return Err(non_root_selections);
     }
+    validate_python_trust_policy(
+        graph,
+        root_package_id,
+        &declared_imports,
+        &native_imports,
+        &trusted_imports,
+    )?;
 
     let selected = selections.into_iter().next().ok_or_else(|| {
         vec![PackageDiagnostic::cargo_metadata_parse(
@@ -128,8 +145,11 @@ pub fn resolve_python_environment(
         interpreter: selected.interpreter,
         pyproject: selected.pyproject,
         lock: selected.lock,
-        declared_imports,
+        declared_imports: declared_imports.clone(),
         native_imports,
+        allowed_imports,
+        trusted_imports,
+        trusted_native_imports,
     }))
 }
 
@@ -205,37 +225,6 @@ fn python_environment_selections(graph: &SifrPackageGraph) -> Vec<PythonEnvironm
                 venv_root,
             })
         })
-        .collect()
-}
-
-fn declared_python_imports(graph: &SifrPackageGraph) -> Vec<String> {
-    graph
-        .packages
-        .values()
-        .flat_map(|package| {
-            package
-                .manifest
-                .python
-                .allow_imports
-                .iter()
-                .chain(package.manifest.python.requires_imports.iter())
-        })
-        .filter(|root| root.as_str() != "*")
-        .cloned()
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect()
-}
-
-fn native_python_imports(graph: &SifrPackageGraph) -> Vec<String> {
-    graph
-        .packages
-        .values()
-        .flat_map(|package| package.manifest.trust.python_native.iter())
-        .filter(|root| root.as_str() != "*")
-        .cloned()
-        .collect::<BTreeSet<_>>()
-        .into_iter()
         .collect()
 }
 

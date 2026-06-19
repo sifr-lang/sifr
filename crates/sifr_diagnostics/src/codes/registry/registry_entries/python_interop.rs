@@ -139,4 +139,48 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         [arg!("reason"), json_arg!("interpreter"), json_arg!("venv")],
         ["interpreter", "venv", "reason"]
     ),
+    active_entry!(
+        "SIFR-PYTRUST-0001",
+        "PYTRUST",
+        "Dependency package declares a wildcard Python trust root.",
+        Severity::Error,
+        "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_rejects_wildcard_roots",
+        "Python wildcard import root is rejected",
+        "sifr_package::python",
+        [json_arg!("cargo_package_id")],
+        ["cargo_package_id"]
+    ),
+    active_entry!(
+        "SIFR-PYTRUST-0002",
+        "PYTRUST",
+        "Python import root is not trusted by package policy.",
+        Severity::Error,
+        "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_allowed_roots_to_be_trusted",
+        "Python import root is allowed but not trusted: {import_root}",
+        "sifr_package::python",
+        [arg!("import_root")],
+        ["import_root"]
+    ),
+    active_entry!(
+        "SIFR-PYTRUST-0003",
+        "PYTRUST",
+        "Native Python import root is trusted without an allow-imports entry.",
+        Severity::Error,
+        "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_native_roots_to_be_allowed",
+        "native Python import root is trusted without an allow-imports entry: {import_root}",
+        "sifr_package::python",
+        [arg!("import_root")],
+        ["import_root"]
+    ),
+    active_entry!(
+        "SIFR-PYTRUST-0004",
+        "PYTRUST",
+        "Dynamic Python import requires an explicit trust annotation.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_trust_tests.rs::dynamic_python_import_requires_trust_decorator",
+        "dynamic Python import requires @trust_python_dynamic",
+        "sifr_lowering",
+        [],
+        []
+    ),
 ];

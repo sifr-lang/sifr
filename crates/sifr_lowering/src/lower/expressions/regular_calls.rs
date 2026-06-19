@@ -13,6 +13,53 @@ pub(super) fn lower_regular_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
+    if ctx.python_import_module_bindings.contains(&func_name) {
+        if let Some(arg) = call.arguments.args.first() {
+            match arg {
+                Expr::StringLiteral(literal) => {
+                    let import_name = literal.value.to_str();
+                    let root = import_name.split('.').next().unwrap_or_default();
+                    let allowed_roots = ctx
+                        .python_trust_policy
+                        .as_ref()
+                        .map_or(&[][..], |policy| policy.allowed_import_roots.as_slice());
+                    let trusted_roots = ctx
+                        .python_trust_policy
+                        .as_ref()
+                        .map_or(&[][..], |policy| policy.trusted_import_roots.as_slice());
+                    if !python_root_allowed(allowed_roots, root) {
+                        ctx.error_with_code_at(
+                            DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT,
+                            format!(
+                                "Python import root '{root}' is not listed in [python].allow-imports"
+                            ),
+                            arg.range(),
+                        );
+                        return None;
+                    }
+                    if !python_root_allowed(trusted_roots, root) {
+                        ctx.error_with_code_at(
+                            DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT,
+                            format!("Python import root '{root}' is not listed in [trust].python"),
+                            arg.range(),
+                        );
+                        return None;
+                    }
+                }
+                _ if !ctx.current_function_trusts_dynamic_python => {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST,
+                        format!(
+                            "dynamic Python import through '{func_name}' requires @trust_python_dynamic"
+                        ),
+                        call.func.range(),
+                    );
+                    return None;
+                }
+                _ => {}
+            }
+        }
+    }
     if let Some(result) = parallel_calls::lower_parallel_imported_call(&func_name, call, ctx) {
         return result;
     }
@@ -465,4 +512,10 @@ pub(super) fn lower_regular_call(
             ty: call_type,
         })
     }
+}
+
+fn python_root_allowed(roots: &[String], root: &str) -> bool {
+    roots
+        .iter()
+        .any(|candidate| candidate == root || candidate == "*")
 }

@@ -62,6 +62,7 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
 pub fn compile_with_metadata_allowing_http_transport_harness(source: &str) -> CompileResultFull {
     let options = LoweringOptions {
         allow_http_transport_harness_imports: true,
+        ..LoweringOptions::default()
     };
     let codegen_result =
         match compile_single_file_entrypoint_with_metadata_and_options(source, options) {

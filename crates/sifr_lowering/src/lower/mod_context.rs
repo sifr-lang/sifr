@@ -103,6 +103,9 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) explicit_defaultdict_bindings: HashSet<String>,
     pub(in crate::lower) parallel_map_bindings: HashSet<String>,
     pub(in crate::lower) parallel_try_map_bindings: HashSet<String>,
+    pub(in crate::lower) python_import_module_bindings: HashSet<String>,
+    pub(in crate::lower) current_function_trusts_dynamic_python: bool,
+    pub(in crate::lower) python_trust_policy: Option<PythonTrustPolicy>,
     /// Nested local function captures observed while lowering the current statement block.
     pub(in crate::lower) nested_function_captures: HashMap<String, Vec<(String, Type)>>,
     pub(in crate::lower) sequence_guards: Vec<SequenceGuard>,
@@ -172,6 +175,9 @@ impl LowerCtx {
             explicit_defaultdict_bindings: HashSet::new(),
             parallel_map_bindings: HashSet::new(),
             parallel_try_map_bindings: HashSet::new(),
+            python_import_module_bindings: HashSet::new(),
+            current_function_trusts_dynamic_python: false,
+            python_trust_policy: None,
             nested_function_captures: HashMap::new(),
             sequence_guards: Vec::new(),
             len_aliases: Vec::new(),
@@ -198,6 +204,7 @@ impl LowerCtx {
     #[must_use]
     pub(in crate::lower) fn with_options(mut self, options: LoweringOptions) -> Self {
         self.allow_http_transport_harness_imports = options.allow_http_transport_harness_imports;
+        self.python_trust_policy = options.python_trust_policy;
         self
     }
 
@@ -317,9 +324,16 @@ impl LowerCtx {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct PythonTrustPolicy {
+    pub allowed_import_roots: Vec<String>,
+    pub trusted_import_roots: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LoweringOptions {
     pub allow_http_transport_harness_imports: bool,
+    pub python_trust_policy: Option<PythonTrustPolicy>,
 }
 /// Substitute type variables in a type with concrete types.
 pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {

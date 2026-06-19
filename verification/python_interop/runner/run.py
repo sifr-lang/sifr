@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -50,6 +51,11 @@ REQUIRED_FIXTURES = (
     "env_probe",
 )
 
+REQUIRED_FIXTURE_FILES = (
+    "simple_import/opaque_object_operations.json",
+    "resource_cleanup/context_manager_cleanup.json",
+)
+
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run Sifr embedded Python interop verification.")
@@ -76,6 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     matrices = load_matrices(paths.packages_root)
     validate_matrix_entries(matrices)
     validate_fixtures(paths.fixtures_root)
+    validate_fixture_files(paths.fixtures_root)
 
     selected = select_entries(
         matrices,
@@ -96,6 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         "matrix_files": list(MATRIX_FILES),
         "matrix_entries": len(matrices),
         "fixture_directories": list(REQUIRED_FIXTURES),
+        "fixture_files": list(REQUIRED_FIXTURE_FILES),
         "summary": {
             "total_variants": max(1, len(selected)),
             "total_failures": 0,
@@ -154,6 +162,18 @@ def validate_fixtures(fixtures_root: Path) -> None:
         raise SystemExit(f"missing python interop fixture directories: {', '.join(missing)}")
 
 
+def validate_fixture_files(fixtures_root: Path) -> None:
+    missing = [name for name in REQUIRED_FIXTURE_FILES if not (fixtures_root / name).is_file()]
+    if missing:
+        raise SystemExit(f"missing python interop fixture files: {', '.join(missing)}")
+    for name in REQUIRED_FIXTURE_FILES:
+        path = fixtures_root / name
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as error:
+            raise SystemExit(f"invalid python interop fixture JSON {path}: {error}") from error
+
+
 def select_entries(
     entries: list[PackageEntry],
     groups: list[str],
@@ -180,6 +200,7 @@ def select_entries(
 def run_self_tests(area_root: Path) -> None:
     entries = load_matrices(area_root / "packages")
     validate_matrix_entries(entries)
+    validate_fixture_files(area_root / "fixtures")
     run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)

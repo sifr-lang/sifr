@@ -25,6 +25,7 @@ mod math_test;
 mod net;
 mod platform_misc;
 mod process;
+mod python;
 mod runtime;
 mod signal;
 mod sources;
@@ -67,6 +68,7 @@ use platform_misc::{
     intrinsic_platform, intrinsic_toml,
 };
 use process::intrinsic_process;
+use python::intrinsic_python;
 use runtime::intrinsic_runtime;
 use signal::intrinsic_signal;
 pub use sources::{StdlibSource, STDLIB_SOURCES};
@@ -143,6 +145,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.url" => Some(intrinsic_url()),
         "_sifr.http" => Some(intrinsic_http()),
         "_sifr.process" => Some(intrinsic_process()),
+        "_sifr.python" => Some(intrinsic_python()),
         "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),
         "_sifr.task" => Some(intrinsic_task()),

@@ -821,6 +821,8 @@ pub fn generate_rust_with_stdlib_for_module(
         source
     };
 
+    let needs_python_runtime = rust_source.contains("sifr_runtime::python::");
+
     // Add transitive dependencies from stdlib modules
     let mut all_used_modules = emitter.used_stdlib_modules.clone();
     for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
@@ -864,6 +866,9 @@ pub fn generate_rust_with_stdlib_for_module(
                 || module_uses_task_scope_spawn_cpu(module)
             {
                 features.insert(StdlibFeature::Rayon);
+            }
+            if needs_python_runtime {
+                features.insert(StdlibFeature::PythonRuntime);
             }
             features
         },

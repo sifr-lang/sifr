@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use sifr_lowering::{LoweringOptions, PythonTrustPolicy};
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackagePythonRuntime {
     venv_root: PathBuf,
@@ -13,6 +15,10 @@ pub struct PackagePythonRuntime {
     cpython_version_tuple: Vec<u64>,
     sys_path: Vec<String>,
     site_packages: Vec<String>,
+    allowed_import_roots: Vec<String>,
+    trusted_import_roots: Vec<String>,
+    native_import_roots: Vec<String>,
+    trusted_native_roots: Vec<String>,
 }
 
 impl PackagePythonRuntime {
@@ -21,6 +27,9 @@ impl PackagePythonRuntime {
         request: &sifr_package::PythonEnvironmentProbeRequest,
         probe: &sifr_package::PythonEnvironmentProbe,
         probe_digest: String,
+        allowed_import_roots: Vec<String>,
+        trusted_import_roots: Vec<String>,
+        trusted_native_roots: Vec<String>,
     ) -> Self {
         Self {
             venv_root: request.venv_root.clone(),
@@ -34,6 +43,10 @@ impl PackagePythonRuntime {
             cpython_version_tuple: probe.cpython_version_tuple.clone(),
             sys_path: probe.sys_path.clone(),
             site_packages: probe.site_packages.clone(),
+            allowed_import_roots,
+            trusted_import_roots,
+            native_import_roots: detected_native_import_roots(probe),
+            trusted_native_roots,
         }
     }
 
@@ -45,6 +58,17 @@ impl PackagePythonRuntime {
     #[must_use]
     pub(crate) fn interpreter(&self) -> &std::path::Path {
         &self.interpreter
+    }
+
+    #[must_use]
+    pub(super) fn lowering_options(&self) -> LoweringOptions {
+        LoweringOptions {
+            python_trust_policy: Some(PythonTrustPolicy {
+                allowed_import_roots: self.allowed_import_roots.clone(),
+                trusted_import_roots: self.trusted_import_roots.clone(),
+            }),
+            ..LoweringOptions::default()
+        }
     }
 
     #[cfg(test)]
@@ -61,6 +85,10 @@ impl PackagePythonRuntime {
             cpython_version_tuple: vec![3, 13, 1],
             sys_path: vec!["/tmp/sifr-py/lib".to_string()],
             site_packages: vec!["/tmp/sifr-py/site-packages".to_string()],
+            allowed_import_roots: vec!["math".to_string()],
+            trusted_import_roots: vec!["math".to_string()],
+            native_import_roots: Vec::new(),
+            trusted_native_roots: Vec::new(),
         }
     }
 }
@@ -80,6 +108,10 @@ pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> 
         cpython_version_tuple: vec![{version_tuple}],
         sys_path: vec![{sys_path}],
         site_packages: vec![{site_packages}],
+        allowed_import_roots: vec![{allowed_import_roots}],
+        trusted_import_roots: vec![{trusted_import_roots}],
+        native_import_roots: vec![{native_import_roots}],
+        trusted_native_roots: vec![{trusted_native_roots}],
     }}
 }}
 
@@ -99,6 +131,10 @@ fn __sifr_initialize_python_runtime() -> Result<(), sifr_runtime::python::Python
         version_tuple = render_u64_vec(&metadata.cpython_version_tuple),
         sys_path = render_string_vec(&metadata.sys_path),
         site_packages = render_string_vec(&metadata.site_packages),
+        allowed_import_roots = render_string_vec(&metadata.allowed_import_roots),
+        trusted_import_roots = render_string_vec(&metadata.trusted_import_roots),
+        native_import_roots = render_string_vec(&metadata.native_import_roots),
+        trusted_native_roots = render_string_vec(&metadata.trusted_native_roots),
     )
 }
 
@@ -106,16 +142,9 @@ pub(super) fn inject_python_runtime_bootstrap(
     main_rs: &str,
     metadata: &PackagePythonRuntime,
 ) -> Result<String, String> {
-    let Some(main_start) = main_rs.find("fn main") else {
-        return Err(
-            "generated package project has Python runtime metadata but no main function"
-                .to_string(),
-        );
-    };
-    let Some(body_offset) = main_rs[main_start..].find('{') else {
-        return Err("generated package project main function has no body".to_string());
-    };
-    let insert_at = main_start + body_offset + 1;
+    let insert_at = find_main_body_insert(main_rs).ok_or_else(|| {
+        "generated package project has Python runtime metadata but no main function".to_string()
+    })?;
     let mut with_bootstrap = render_python_runtime_prelude(metadata);
     with_bootstrap.push_str(&main_rs[..insert_at]);
     with_bootstrap.push_str(
@@ -123,6 +152,14 @@ pub(super) fn inject_python_runtime_bootstrap(
     );
     with_bootstrap.push_str(&main_rs[insert_at..]);
     Ok(with_bootstrap)
+}
+
+fn find_main_body_insert(main_rs: &str) -> Option<usize> {
+    let main_start = main_rs
+        .find("\nfn main() {")
+        .map(|index| index + 1)
+        .or_else(|| main_rs.strip_prefix("fn main() {").map(|_| 0))?;
+    Some(main_start + "fn main() {".len())
 }
 
 fn render_u64_vec(values: &[u64]) -> String {
@@ -145,6 +182,26 @@ fn rust_string_literal(value: &str) -> String {
     format!("{value:?}")
 }
 
+fn detected_native_import_roots(probe: &sifr_package::PythonEnvironmentProbe) -> Vec<String> {
+    probe
+        .imports
+        .iter()
+        .chain(probe.native_imports.iter())
+        .filter(|import| import.ok)
+        .filter(|import| {
+            import.origin.as_ref().is_some_and(|origin| {
+                probe
+                    .extension_suffixes
+                    .iter()
+                    .any(|suffix| origin.ends_with(suffix))
+            })
+        })
+        .map(|import| import.root.clone())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -164,6 +221,58 @@ mod tests {
         assert!(rendered.contains("PythonRuntimeConfig"));
         assert!(rendered.contains("\"/tmp/sifr py/bin/python\".to_string()"));
         assert!(rendered.contains("cpython_version_tuple: vec![3, 13, 1]"));
+    }
+
+    #[test]
+    fn native_import_roots_are_detected_from_probe_origins() {
+        let request = sifr_package::PythonEnvironmentProbeRequest {
+            venv_root: PathBuf::from("/tmp/sifr-py"),
+            interpreter: PathBuf::from("/tmp/sifr-py/bin/python"),
+            pyproject: None,
+            lock: None,
+            declared_imports: vec!["numpy".to_string()],
+            native_imports: Vec::new(),
+        };
+        let probe = sifr_package::PythonEnvironmentProbe {
+            implementation_name: "CPython".to_string(),
+            implementation_version: "3.13.1".to_string(),
+            cpython_version_tuple: vec![3, 13, 1],
+            executable: "/tmp/sifr-py/bin/python".to_string(),
+            sys_prefix: "/tmp/sifr-py".to_string(),
+            sys_base_prefix: "/opt/python".to_string(),
+            site_packages: vec!["/tmp/sifr-py/site-packages".to_string()],
+            sys_path: vec!["/tmp/sifr-py/lib".to_string()],
+            soabi: Some("cpython-313-darwin".to_string()),
+            extension_suffixes: vec![".cpython-313-darwin.so".to_string()],
+            pointer_width: 64,
+            platform: "macOS".to_string(),
+            machine: "arm64".to_string(),
+            libpython: None,
+            free_threaded: false,
+            imports: vec![sifr_package::python::PythonImportProbe {
+                root: "numpy".to_string(),
+                ok: true,
+                origin: Some(
+                    "/tmp/sifr-py/site-packages/numpy/_core.cpython-313-darwin.so".to_string(),
+                ),
+                error: None,
+            }],
+            native_imports: Vec::new(),
+            pyproject_digest: None,
+            uv_lock_digest: None,
+        };
+        let metadata = PackagePythonRuntime::from_probe(
+            &request,
+            &probe,
+            "digest".to_string(),
+            vec!["numpy".to_string()],
+            vec!["numpy".to_string()],
+            Vec::new(),
+        );
+        let rendered = render_python_runtime_prelude(&metadata);
+
+        assert!(rendered.contains("native_import_roots: vec![\"numpy\".to_string()]"));
+        assert!(rendered.contains("trusted_native_roots: vec![]"));
     }
 
     #[test]
