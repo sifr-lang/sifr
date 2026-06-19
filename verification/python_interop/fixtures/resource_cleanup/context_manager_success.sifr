@@ -1,0 +1,33 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    ResourceDiagnostics,
+    call_attr,
+    close,
+    from_int,
+    import_module,
+    resource_diagnostics,
+    with_context,
+)
+
+
+@trust_python_dynamic
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        module_name: str = "contextlib"
+        contextlib: Object = import_module(module_name)
+        value: Object = from_int(7)
+        manager: Object = call_attr(contextlib, "nullcontext", [value], [])
+
+        def observe(entered: Object) -> None:
+            return None
+
+        used: None = with_context(manager, observe)
+        diagnostics: ResourceDiagnostics = resource_diagnostics()
+        manager_closed: None = close(manager)
+        value_closed: None = close(value)
+        contextlib_closed: None = close(contextlib)
+        return None
+    except PythonError as e:
+        raise e

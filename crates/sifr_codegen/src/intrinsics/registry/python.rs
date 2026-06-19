@@ -10,6 +10,8 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_close" => lower_py_close(args),
         "py_enter_context" => lower_py_enter_context(args),
         "py_exit_context" => lower_py_exit_context(args),
+        "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
+        "py_resource_diagnostics" => lower_py_resource_diagnostics(args),
         "py_run_coroutine_blocking" => lower_py_run_coroutine_blocking(args),
         "py_from_none" => lower_py_from_none(args),
         "py_from_bool" => lower_py_from_bool(args),
@@ -249,6 +251,45 @@ pub(crate) fn lower_py_exit_context(args: &[RustExpr]) -> Option<RustExpr> {
     Some(map_python_error(format!(
         "sifr_runtime::python::exit_context(({handle}, {token}))"
     )))
+}
+
+pub(crate) fn lower_py_exit_context_with_error(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 7 {
+        return None;
+    }
+    let handle = render_expr(&args[0]);
+    let token = render_expr(&args[1]);
+    let kind = render_expr(&args[2]);
+    let exception_type = render_expr(&args[3]);
+    let message = render_expr(&args[4]);
+    let traceback = render_expr(&args[5]);
+    let context = render_expr(&args[6]);
+    Some(map_python_error(format!(
+        r#"sifr_runtime::python::exit_context_with_error(
+            ({handle}, {token}),
+            ({kind}).as_str(),
+            ({exception_type}).as_str(),
+            ({message}).as_str(),
+            ({traceback}).as_str(),
+            ({context}).as_str(),
+        )"#
+    )))
+}
+
+pub(crate) fn lower_py_resource_diagnostics(args: &[RustExpr]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(map_python_error(
+        r#"sifr_runtime::python::resource_diagnostics().map(|__sifr_python_diagnostics| {
+            (
+                __sifr_python_diagnostics.initialized,
+                __sifr_python_diagnostics.live_objects,
+                __sifr_python_diagnostics.leaked_objects,
+            )
+        })"#
+        .to_string(),
+    ))
 }
 
 pub(crate) fn lower_py_run_coroutine_blocking(args: &[RustExpr]) -> Option<RustExpr> {

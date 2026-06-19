@@ -1,0 +1,31 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    call_attr,
+    from_int,
+    get_attr,
+    import_module,
+    with_context,
+)
+
+
+def fail_body(entered: Object) -> None:
+    try:
+        missing: Object = get_attr(entered, "sifr_missing_attr")
+        return None
+    except PythonError as e:
+        raise e
+
+
+@trust_python_dynamic
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        module_name: str = "contextlib"
+        contextlib: Object = import_module(module_name)
+        value: Object = from_int(7)
+        manager: Object = call_attr(contextlib, "nullcontext", [value], [])
+        used: None = with_context(manager, fail_body)
+        return None
+    except PythonError as e:
+        raise e

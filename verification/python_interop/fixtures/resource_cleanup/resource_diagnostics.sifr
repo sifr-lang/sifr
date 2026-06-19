@@ -1,0 +1,14 @@
+from sifr.python import Object, PythonError, ResourceDiagnostics, close, from_int, resource_diagnostics
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        value: Object = from_int(1)
+        during: ResourceDiagnostics = resource_diagnostics()
+        closed: None = close(value)
+        after: ResourceDiagnostics = resource_diagnostics()
+        return None
+    except PythonError as e:
+        raise e
