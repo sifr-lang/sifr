@@ -1,7 +1,7 @@
 ---
 title: "Sifr Diagnostic Code Reference for All Error Families"
 sidebarTitle: "Error Codes"
-description: "A complete reference for Sifr's 23 active diagnostic code families plus the reserved CODEGEN family."
+description: "A complete reference for Sifr's active diagnostic code families and reserved diagnostic namespaces."
 ---
 
 Sifr organizes every diagnostic into a named family. Each code follows the format `SIFR-<FAMILY>-dddd`, where the four-digit number is scoped within its family. This page lists every active diagnostic family and links each code to a dedicated reference page. Use `sifr --explain <CODE>` in your terminal to get the exact renderer template and suggestions for your installed compiler version.
@@ -95,6 +95,43 @@ The `ASYNC` family covers violations of Sifr's async effect system. Sifr tracks 
 | [`SIFR-ASYNC-0005`](/errors/SIFR-ASYNC-0005) | Error | Blocking offload target is not classified as blocking I/O or CPU-heavy work. |
 | [`SIFR-ASYNC-0006`](/errors/SIFR-ASYNC-0006) | Error | Synchronous workload annotation applied to async function. |
 | [`SIFR-ASYNC-0007`](/errors/SIFR-ASYNC-0007) | Error | Shell execution function called directly from async context. |
+
+</Accordion>
+
+<Accordion title="PYENV — Embedded CPython environment">
+
+The `PYENV` family covers root Python environment selection and live interpreter probe failures for embedded CPython interop.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| [`SIFR-PYENV-0001`](/errors/SIFR-PYENV-0001) | Error | Python environment configuration is malformed. |
+| [`SIFR-PYENV-0002`](/errors/SIFR-PYENV-0002) | Error | Package graph selects more than one Python virtual environment. |
+| [`SIFR-PYENV-0003`](/errors/SIFR-PYENV-0003) | Error | A package graph requires Python but no root environment is selected. |
+| [`SIFR-PYENV-0004`](/errors/SIFR-PYENV-0004) | Error | Selected Python interpreter probe failed or returned invalid JSON. |
+| [`SIFR-PYENV-0005`](/errors/SIFR-PYENV-0005) | Error | Selected Python interpreter is not supported CPython. |
+| [`SIFR-PYENV-0006`](/errors/SIFR-PYENV-0006) | Error | Selected interpreter does not belong to the configured virtual environment. |
+| [`SIFR-PYENV-0007`](/errors/SIFR-PYENV-0007) | Error | Selected Python environment has no site-packages path. |
+| [`SIFR-PYENV-0008`](/errors/SIFR-PYENV-0008) | Error | Declared Python import root is missing from the selected environment. |
+| [`SIFR-PYENV-0009`](/errors/SIFR-PYENV-0009) | Error | Trusted native Python import root failed to load. |
+| [`SIFR-PYENV-0010`](/errors/SIFR-PYENV-0010) | Error | Free-threaded CPython is not supported for embedded interop. |
+| [`SIFR-PYENV-0011`](/errors/SIFR-PYENV-0011) | Error | Configured Python project or lockfile is missing or stale. |
+
+</Accordion>
+
+<Accordion title="PYTRUST — Embedded Python trust policy">
+
+The `PYTRUST` family covers import-root and native-extension trust policy for embedded Python interop.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| [`SIFR-PYTRUST-0001`](/errors/SIFR-PYTRUST-0001) | Error | Dependency package declares a wildcard Python trust root. |
+| [`SIFR-PYTRUST-0002`](/errors/SIFR-PYTRUST-0002) | Error | Python import root is not trusted by package policy. |
+| [`SIFR-PYTRUST-0003`](/errors/SIFR-PYTRUST-0003) | Error | Native Python import root is trusted without an allow-imports entry. |
+| [`SIFR-PYTRUST-0004`](/errors/SIFR-PYTRUST-0004) | Error | Dynamic Python import requires an explicit trust annotation. |
+
+<Note>
+The `PYIMP`, `PYCALL`, `PYCONV`, `PYRES`, `PYZC`, and `PYCB` families are reserved for future compiler-emitted Python interop diagnostics. Current runtime failures in those areas are returned as structured `PythonError` values.
+</Note>
 
 </Accordion>
 

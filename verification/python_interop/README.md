@@ -58,3 +58,8 @@ Package certification records include:
   environment/package execution status;
 - explicit Tier 4 skip records with `skip_reason` for host-dependent packages;
 - aggregate tier, gate, pass, and skip counts.
+
+The exit evidence is recorded in
+`reports/python_interop_exit_evidence.md`, including diagnostic families,
+validation commands, PR links, and the distinction between live and matrix-only
+gates.

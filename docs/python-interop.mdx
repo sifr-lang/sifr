@@ -1,0 +1,328 @@
+---
+title: "Embedded Python Interop"
+sidebarTitle: "Python Interop"
+description: "Configure and use embedded CPython from Sifr with explicit environment ownership, trust, blocking, resource, and zero-copy semantics."
+---
+
+Sifr can embed one uv-created CPython environment in a compiled Sifr application. This is for calling Python ecosystem packages from Sifr while preserving Sifr's normal contracts: fallible operations return `Result`, Python objects are opaque and non-send by default, native Python extensions are explicitly trusted, and zero-copy APIs never silently copy.
+
+This is not Python source compatibility and it is not a generic `dlopen` layer. Use Sifr's native `sifr.*` standard library for Sifr code, and use `sifr.python` only when you intentionally cross into installed Python packages.
+
+## Package Configuration
+
+The root application owns the Python environment. Sifr verifies and consumes that environment; it does not run `uv sync`, install packages, or fall back to host-global Python.
+
+```toml
+[python]
+venv = ".venv"
+pyproject = "pyproject.toml"
+lock = "uv.lock"
+interpreter = ".venv/bin/python"
+allow-imports = ["pandas", "pyarrow", "torch", "httpx"]
+
+[trust]
+python = ["pandas", "pyarrow", "torch", "httpx"]
+python-native = ["numpy", "pyarrow", "torch"]
+```
+
+`interpreter` is optional when the platform-standard interpreter path under `venv` is correct. `pyproject` and `lock` are cache and diagnostic inputs; the live interpreter probe remains the source of truth.
+
+Library packages may declare the import roots they require, but they do not choose the interpreter or virtual environment:
+
+```toml
+[python]
+requires-imports = ["polars"]
+```
+
+Sifr rejects package graphs that need Python but have no root-selected environment, graphs that select multiple virtual environments, non-CPython interpreters, free-threaded CPython, stale or missing project metadata, missing declared imports, and trusted native roots that fail to load.
+
+## Trust Boundary
+
+Python import roots and native extension roots are separate trust decisions.
+
+| Key | Meaning |
+| --- | --- |
+| `[python].allow-imports` | Roots Sifr source may import or call dynamically after trust checks. |
+| `[python].requires-imports` | Roots a library requires the final app to provide. |
+| `[trust].python` | Roots allowed to execute Python code in process. |
+| `[trust].python-native` | Roots allowed to load native Python extension modules in process. |
+
+Native Python extensions can abort the process, create threads, release the GIL, or call back into Python/Sifr. That is the explicit trust boundary exception to Sifr-attributable no-panic guarantees.
+
+Root applications may use wildcard Python trust during local control. Published dependency packages cannot rely on wildcard Python trust roots.
+
+## Runtime Semantics
+
+The generated binary initializes CPython once before user `main` when Python interop is used. Initialization uses the validated probe metadata: executable, venv prefix, site-packages, `sys.path`, CPython version, SOABI, extension suffixes, platform, pointer width, and `libpython` when discoverable.
+
+Rules:
+
+- CPython main interpreter only; no subinterpreters.
+- No normal shutdown finalization with `Py_FinalizeEx`.
+- Reinitialization with the same config is allowed; conflicting config is rejected.
+- Every CPython API operation that needs the GIL acquires it.
+- Decref and resource release happen while holding the GIL.
+- `py.Object`, buffers, Arrow capsules, DLPack tensors, and callbacks are tracked for deterministic close/release diagnostics.
+
+## Calling Python
+
+The public surface is explicit:
+
+```python
+from sifr.python import Object, PythonError, call_attr, from_str, import_module, to_str
+
+def main() -> Result[None, PythonError]:
+    try:
+        biip: Object = import_module("biip")
+        gs1: Object = from_str("01070327700360141524010110ABC123")
+        parsed: Object = call_attr(biip, "parse", [gs1], [])
+        print(to_str(parsed))
+
+        schwifty: Object = import_module("schwifty")
+        bic_code: Object = from_str("DEUTDEFF")
+        bic: Object = call_attr(schwifty, "BIC", [bic_code], [])
+        print(to_str(bic))
+        return None
+    except PythonError as e:
+        raise e
+```
+
+Every Python boundary operation returns `Result`. Python exceptions are captured as structured `py.PythonError` values with exception type, message, traceback, operation context, and conversion/resource/zero-copy metadata where relevant. Python exceptions do not unwind through Sifr user code.
+
+## Blocking And Async
+
+Every public `sifr.python` operation is classified as `@blocking_io`. Direct Python calls in async Sifr code are rejected unless the work is explicitly offloaded through Sifr's blocking offload primitive.
+
+```python
+from sifr.python import Object, PythonError, call_attr, from_str, get_attr, import_module, to_str
+
+async def fetch_status() -> Result[str, PythonError]:
+    handle = task.spawn_blocking(fetch_status_sync)
+    return await handle.join()
+
+@blocking_io
+def fetch_status_sync() -> Result[str, PythonError]:
+    try:
+        httpx: Object = import_module("httpx")
+        url_obj: Object = from_str("https://example.com")
+        response: Object = call_attr(httpx, "get", [url_obj], [])
+        status: Object = get_attr(response, "status_code")
+        return to_str(status)
+    except PythonError as e:
+        raise e
+```
+
+`py.run_coroutine_blocking` is also `@blocking_io`. It is for Python-owned coroutine objects and returns only after Python finishes.
+
+## Resources
+
+Python resources must be closed or released explicitly when correctness depends on cleanup:
+
+```python
+from sifr.python import Object, PythonError, call_attr, from_str, import_module, to_str, with_context
+
+def consume_file(entered: Object) -> Result[None, PythonError]:
+    try:
+        text: Object = call_attr(entered, "read", [], [])
+        print(to_str(text))
+        return None
+    except PythonError as e:
+        raise e
+
+def read_with_context(path: str) -> Result[None, PythonError]:
+    try:
+        builtins: Object = import_module("builtins")
+        path_obj: Object = from_str(path)
+        mode: Object = from_str("r")
+        handle: Object = call_attr(builtins, "open", [path_obj, mode], [])
+        return with_context(handle, consume_file)
+    except PythonError as e:
+        raise e
+```
+
+Use `py.close`, `py.with_context`, callback `close`, buffer `release`, Arrow release helpers, and DLPack release helpers. Double close/release returns deterministic resource-state errors for resource types that are not intentionally idempotent.
+
+## Callbacks
+
+Sifr supports two callback lifetimes:
+
+- `py.local_callback`: valid only during the active Sifr-to-Python call. It is non-send and cannot be stored by Python beyond the active call.
+- `py.threadsafe_callback`: may be called later from Python-created threads, native extension callback threads, thread pools, or event-loop schedulers. Captured state must satisfy send-like constraints.
+
+Callback dispatch converts Sifr errors into Python exceptions and maps Python callback-dispatch failures back into `Result` when control returns to Sifr.
+
+Kafka-style and Pub/Sub-style callbacks are represented by contract fixtures in the Python interop verification area. Cloud SDK callback examples use deterministic stubs or structured matrix evidence unless an external integration gate is explicitly selected.
+
+## Zero-Copy Interop
+
+Sifr exposes zero-copy APIs only when view semantics can be proven:
+
+```python
+from sifr.python import ArrowCapsule, DlpackTensor, Object, PythonError, zero_copy_arrow_stream, zero_copy_dlpack_tensor
+
+def dataframe_to_arrow_stream(df: Object) -> Result[ArrowCapsule, PythonError]:
+    try:
+        return zero_copy_arrow_stream(df)
+    except PythonError as e:
+        raise e
+
+def torch_tensor_to_dlpack(tensor: Object) -> Result[DlpackTensor, PythonError]:
+    try:
+        return zero_copy_dlpack_tensor(tensor)
+    except PythonError as e:
+        raise e
+```
+
+Supported surfaces:
+
+- `Py_buffer` for bytes-like objects, memoryview, NumPy, and other buffer protocol producers.
+- Arrow PyCapsules for `__arrow_c_array__`, `__arrow_c_stream__`, and `__arrow_c_schema__`.
+- DLPack capsules for NumPy, torch, and TensorFlow CPU tensor paths.
+- Array-interface protocols with owner retention and metadata validation.
+
+Zero-copy APIs reject unsupported dtype, shape, stride, device, mutability, malformed capsule, double-consumption, and copy-required paths. Explicit copy APIs are separate and never claim view semantics.
+
+## Package Examples
+
+These are representative patterns covered by verification fixtures or matrix contracts:
+
+```python biip / schwifty validation
+from sifr.python import Object, PythonError, call_attr, from_str, import_module, to_str
+
+def validate_identifiers(gtin: str, bic_text: str) -> Result[str, PythonError]:
+    try:
+        biip: Object = import_module("biip")
+        gtin_obj: Object = from_str(gtin)
+        parsed: Object = call_attr(biip, "parse", [gtin_obj], [])
+
+        schwifty: Object = import_module("schwifty")
+        bic_obj: Object = from_str(bic_text)
+        bic: Object = call_attr(schwifty, "BIC", [bic_obj], [])
+        parsed_text: str = to_str(parsed)
+        bic_text_value: str = to_str(bic)
+        return f"{parsed_text} / {bic_text_value}"
+    except PythonError as e:
+        raise e
+```
+
+```python FastAPI in-process import
+from sifr.python import Object, PythonError, call_attr, import_module
+
+def build_app() -> Result[Object, PythonError]:
+    try:
+        fastapi: Object = import_module("fastapi")
+        return call_attr(fastapi, "FastAPI", [], [])
+    except PythonError as e:
+        raise e
+```
+
+```python pandas / pyarrow / polars Arrow bridge
+from sifr.python import (
+    ArrowCapsule,
+    Object,
+    PythonError,
+    call_attr,
+    export_arrow_stream,
+    from_dict_str,
+    from_int,
+    from_list,
+    get_attr,
+    import_module,
+    zero_copy_arrow_stream,
+)
+
+def arrow_contract() -> Result[ArrowCapsule, PythonError]:
+    try:
+        one: Object = from_int(1)
+        two: Object = from_int(2)
+        three: Object = from_int(3)
+        column: Object = from_list([one, two, three])
+        data: Object = from_dict_str([("x", column)])
+
+        pandas: Object = import_module("pandas")
+        pdf: Object = call_attr(pandas, "DataFrame", [data], [])
+
+        polars: Object = import_module("polars")
+        df: Object = call_attr(polars, "from_pandas", [pdf], [])
+
+        pyarrow: Object = import_module("pyarrow")
+        table_class: Object = get_attr(pyarrow, "Table")
+        table: Object = call_attr(table_class, "from_pandas", [pdf], [])
+        exported: ArrowCapsule = export_arrow_stream(table)
+        return zero_copy_arrow_stream(df)
+    except PythonError as e:
+        raise e
+```
+
+```python torch / tensorflow DLPack
+from sifr.python import DlpackTensor, Object, PythonError, call_attr, from_float, from_list, import_module, zero_copy_dlpack_tensor
+
+def tensor_contract() -> Result[DlpackTensor, PythonError]:
+    try:
+        torch: Object = import_module("torch")
+        one: Object = from_float(1.0)
+        two: Object = from_float(2.0)
+        three: Object = from_float(3.0)
+        values: Object = from_list([one, two, three])
+        tensor: Object = call_attr(torch, "tensor", [values], [])
+        torch_view: DlpackTensor = zero_copy_dlpack_tensor(tensor)
+
+        tensorflow: Object = import_module("tensorflow")
+        tf_tensor: Object = call_attr(tensorflow, "constant", [values], [])
+        return zero_copy_dlpack_tensor(tf_tensor)
+    except PythonError as e:
+        raise e
+```
+
+```python Kafka callback shape
+from sifr.python import Object, PythonError, call_attr, from_list, from_str, threadsafe_callback
+
+def handle_message(msg: Object) -> Result[Object, PythonError]:
+    return msg
+
+def register_callback(consumer: Object) -> Result[None, PythonError]:
+    try:
+        callback = threadsafe_callback(handle_message)
+        topic: Object = from_str("events")
+        topics: Object = from_list([topic])
+        result: Object = call_attr(consumer, "subscribe", [topics], [("on_assign", callback.callable)])
+        return None
+    except PythonError as e:
+        raise e
+```
+
+```python Cloud and AI clients
+from sifr.python import Object, PythonError, call_attr, import_module
+
+def import_cloud_clients() -> Result[tuple[Object, Object, Object], PythonError]:
+    try:
+        openai: Object = import_module("openai")
+        boto3: Object = import_module("boto3")
+        pubsub: Object = import_module("google.cloud.pubsub")
+        client: Object = call_attr(openai, "OpenAI", [], [])
+        return (client, boto3, pubsub)
+    except PythonError as e:
+        raise e
+```
+
+Credentialed or service-backed behavior belongs in the external Python interop gate. The default local gate uses import, stub, contract, and matrix evidence.
+
+## Diagnostics And Reports
+
+Compiler diagnostics use stable URLs and structured JSON fields:
+
+- `SIFR-PYENV-0001..0011`: environment selection, probing, interpreter, ABI, import, native-load, and metadata diagnostics.
+- `SIFR-PYTRUST-0001..0004`: Python trust policy and dynamic import diagnostics.
+- `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, and `SIFR-PYCB`: reserved families for future compiler-emitted diagnostics; current runtime failures in these areas are returned as structured `py.PythonError` values.
+
+Verification lives under `verification/python_interop/`:
+
+```bash
+verification/python_interop/run.sh --group env
+verification/python_interop/run.sh --tier tier1
+verification/python_interop/run.sh --group callbacks
+verification/python_interop/run.sh --group dataframes
+verification/python_interop/run.sh --self-test
+```
+
+Matrix-only package evidence reports `matrix-passed`; live environment execution reports `passed`. Host-dependent packages include explicit skip reasons.
