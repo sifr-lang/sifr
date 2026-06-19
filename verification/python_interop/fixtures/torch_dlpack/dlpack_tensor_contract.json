@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "case_group": "python_dlpack_tensor_interop",
+  "surface": "sifr.python",
+  "positive_cases": [
+    {
+      "name": "numpy_cpu_tensor_supported_dtype",
+      "operations": ["zero_copy_dlpack_tensor", "release_dlpack"],
+      "expected_device_type": 1,
+      "expected_stream_sync_required": false,
+      "expected_metadata": ["dtype", "shape", "strides", "byte_offset", "has_deleter"]
+    },
+    {
+      "name": "torch_cpu_tensor_supported_dtype",
+      "operations": ["zero_copy_dlpack_tensor", "release_dlpack"],
+      "expected_device_type": 1,
+      "expected_stream_sync_required": false
+    },
+    {
+      "name": "tensorflow_cpu_tensor_supported_dtype",
+      "operations": ["zero_copy_dlpack_tensor", "release_dlpack"],
+      "expected_device_type": 1,
+      "expected_stream_sync_required": false
+    }
+  ],
+  "negative_cases": [
+    {
+      "name": "double_consumption_rejected",
+      "operation": "zero_copy_dlpack_tensor",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "SifrPythonDlpackError"
+    },
+    {
+      "name": "double_release_rejected",
+      "operation": "release_dlpack",
+      "expected_error_kind": "resource",
+      "expected_exception_type": "SifrPythonClosedDlpackTensor"
+    },
+    {
+      "name": "unsupported_dtype_rejected",
+      "operation": "zero_copy_dlpack_tensor",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "SifrPythonDlpackUnsupportedDtype"
+    },
+    {
+      "name": "unsupported_device_rejected",
+      "operation": "zero_copy_dlpack_tensor",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "SifrPythonDlpackUnsupportedDevice"
+    },
+    {
+      "name": "invalid_capsule_name_rejected",
+      "operation": "zero_copy_dlpack_tensor",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "SifrPythonDlpackError"
+    },
+    {
+      "name": "sync_required_device_rejected_in_zero_copy_helper",
+      "operation": "zero_copy_dlpack_tensor",
+      "expected_error_kind": "zero-copy",
+      "expected_exception_type": "SifrPythonDlpackUnsupportedDevice"
+    }
+  ]
+}

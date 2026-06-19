@@ -32,6 +32,7 @@ from _sifr.python import (
     py_copy_tuple_int,
     py_copy_tuple_str,
     py_copy_tuple_u8,
+    py_dlpack_tensor,
     py_enter_context,
     py_exit_context,
     py_exit_context_with_error,
@@ -51,6 +52,7 @@ from _sifr.python import (
     py_resource_diagnostics,
     py_release_arrow,
     py_release_buffer,
+    py_release_dlpack,
     py_run_coroutine_blocking,
     py_to_bool,
     py_to_bytes,
@@ -161,6 +163,39 @@ class ArrowCapsule(NonSend):
         self.copy_possible = True
 
 
+class DlpackTensor(NonSend):
+    _handle: int
+    _token: int
+    dtype_code: int
+    dtype_bits: int
+    dtype_lanes: int
+    dtype: str
+    device_type: int
+    device_id: int
+    dimensions: int
+    shape: list[int]
+    strides: list[int]
+    byte_offset: int
+    has_deleter: bool
+    stream_sync_required: bool
+
+    def __init__(self):
+        self._handle = -1
+        self._token = 0
+        self.dtype_code = 0
+        self.dtype_bits = 0
+        self.dtype_lanes = 0
+        self.dtype = ""
+        self.device_type = 0
+        self.device_id = 0
+        self.dimensions = 0
+        self.shape = []
+        self.strides = []
+        self.byte_offset = 0
+        self.has_deleter = False
+        self.stream_sync_required = True
+
+
 def _object_from_handle(raw: tuple[int, int]) -> Object:
     obj: Object = Object()
     obj._handle = raw[0]
@@ -206,6 +241,25 @@ def _arrow_from_raw(raw: tuple[int, int, str, list[str], str, str, bool]) -> Arr
     capsule.producer_type = raw[5]
     capsule.copy_possible = raw[6]
     return capsule
+
+
+def _dlpack_from_raw(raw: tuple[int, int, int, int, int, str, int, int, int, list[int], list[int], int, bool, bool]) -> DlpackTensor:
+    tensor: DlpackTensor = DlpackTensor()
+    tensor._handle = raw[0]
+    tensor._token = raw[1]
+    tensor.dtype_code = raw[2]
+    tensor.dtype_bits = raw[3]
+    tensor.dtype_lanes = raw[4]
+    tensor.dtype = raw[5]
+    tensor.device_type = raw[6]
+    tensor.device_id = raw[7]
+    tensor.dimensions = raw[8]
+    tensor.shape = raw[9]
+    tensor.strides = raw[10]
+    tensor.byte_offset = raw[11]
+    tensor.has_deleter = raw[12]
+    tensor.stream_sync_required = raw[13]
+    return tensor
 
 
 def _record_fields_from_handles(raw_values: list[tuple[str, tuple[int, int]]]) -> list[tuple[str, Object]]:
@@ -412,6 +466,23 @@ def zero_copy_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
         return _arrow_from_raw(raw)
     except PythonError as e:
         raise e
+
+
+@blocking_io
+def zero_copy_dlpack_tensor(obj: Object) -> Result[DlpackTensor, PythonError]:
+    try:
+        raw: tuple[int, int, int, int, int, str, int, int, int, list[int], list[int], int, bool, bool] = py_dlpack_tensor(
+            obj._handle,
+            obj._token,
+        )
+        return _dlpack_from_raw(raw)
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def release_dlpack(own tensor: DlpackTensor) -> Result[None, PythonError]:
+    return py_release_dlpack(tensor._handle, tensor._token)
 
 
 @blocking_io

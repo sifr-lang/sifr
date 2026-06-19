@@ -15,6 +15,8 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_arrow_stream" => lower_py_arrow_stream(args),
         "py_arrow_schema" => lower_py_arrow_schema(args),
         "py_release_arrow" => lower_py_release_arrow(args),
+        "py_dlpack_tensor" => lower_py_dlpack_tensor(args),
+        "py_release_dlpack" => lower_py_release_dlpack(args),
         "py_enter_context" => lower_py_enter_context(args),
         "py_exit_context" => lower_py_exit_context(args),
         "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
@@ -322,6 +324,49 @@ fn lower_arrow_export(args: &[RustExpr], function: &str) -> Option<RustExpr> {
 }
 
 fn lower_arrow_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    let handle = render_expr(&args[0]);
+    let token = render_expr(&args[1]);
+    Some(map_python_error(format!(
+        "sifr_runtime::python::{function}(({handle}, {token}))"
+    )))
+}
+
+pub(crate) fn lower_py_dlpack_tensor(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    let handle = render_expr(&args[0]);
+    let token = render_expr(&args[1]);
+    Some(map_python_error(format!(
+        r#"sifr_runtime::python::dlpack_tensor(({handle}, {token})).map(|__sifr_python_dlpack| {{
+            (
+                __sifr_python_dlpack.handle,
+                __sifr_python_dlpack.token,
+                __sifr_python_dlpack.dtype_code,
+                __sifr_python_dlpack.dtype_bits,
+                __sifr_python_dlpack.dtype_lanes,
+                __sifr_python_dlpack.dtype,
+                __sifr_python_dlpack.device_type,
+                __sifr_python_dlpack.device_id,
+                __sifr_python_dlpack.dimensions,
+                __sifr_python_dlpack.shape,
+                __sifr_python_dlpack.strides,
+                __sifr_python_dlpack.byte_offset,
+                __sifr_python_dlpack.has_deleter,
+                __sifr_python_dlpack.stream_sync_required,
+            )
+        }})"#
+    )))
+}
+
+pub(crate) fn lower_py_release_dlpack(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_dlpack_conversion(args, "release_dlpack")
+}
+
+fn lower_dlpack_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }

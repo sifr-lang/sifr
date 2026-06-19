@@ -159,6 +159,22 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     )
     .expect("py_release_arrow should lower");
     assert!(render_expr(&release_arrow.expr).contains("sifr_runtime::python::release_arrow"));
+
+    let dlpack = lower_intrinsic(
+        "py_dlpack_tensor",
+        &["object_handle".to_string(), "object_token".to_string()],
+    )
+    .expect("py_dlpack_tensor should lower");
+    let dlpack_rendered = render_expr(&dlpack.expr);
+    assert!(dlpack_rendered.contains("sifr_runtime::python::dlpack_tensor"));
+    assert!(dlpack_rendered.contains("__sifr_python_dlpack.dtype"));
+
+    let release_dlpack = lower_intrinsic(
+        "py_release_dlpack",
+        &["dlpack_handle".to_string(), "dlpack_token".to_string()],
+    )
+    .expect("py_release_dlpack should lower");
+    assert!(render_expr(&release_dlpack.expr).contains("sifr_runtime::python::release_dlpack"));
 }
 
 #[test]

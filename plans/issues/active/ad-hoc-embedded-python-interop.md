@@ -69,7 +69,12 @@
   - Added numpy-buffer contract/source fixtures covering readonly bytes, memoryview, explicit copy, wrong dtype, writable-on-readonly, and use-after-release behavior.
   - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2672](https://github.com/sifr-lang/sifr/pull/2672).
-- [ ] `milestone_py_8`: Arrow PyCapsule interop.
+- [x] `milestone_py_8`: Arrow PyCapsule interop.
+  - Added `py.ArrowCapsule` export, zero-copy-proof, copy-possible, and deterministic release helpers for Arrow array, stream, and schema PyCapsules.
+  - Added runtime validation for exact Arrow capsule names, PyCapsule destructors, malformed capsules, destructor-less capsules, and double release.
+  - Added pyarrow capsule contract/source fixtures covering pyarrow, polars, pandas, Pillow, unknown producer, malformed capsule, and copy-possible behavior.
+  - Opus review round 3 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - Merged via PR [#2673](https://github.com/sifr-lang/sifr/pull/2673).
 - [ ] `milestone_py_9`: DLPack tensor interop.
 - [ ] `milestone_py_10`: Python-to-Sifr callbacks.
 - [ ] `milestone_py_11`: Package certification matrix.

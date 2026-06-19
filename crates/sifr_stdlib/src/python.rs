@@ -158,6 +158,41 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
         ),
     );
     functions.insert(
+        "py_dlpack_tensor".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::Tuple(vec![
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::Str,
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::List(Box::new(Type::Int)),
+                Type::List(Box::new(Type::Int)),
+                Type::Int,
+                Type::Bool,
+                Type::Bool,
+            ])),
+        ),
+    );
+    functions.insert(
+        "py_release_dlpack".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("handle".to_string(), Type::Int),
+                ("token".to_string(), Type::Int),
+            ],
+            python_error_result(Type::None),
+        ),
+    );
+    functions.insert(
         "py_enter_context".to_string(),
         FunctionType::all_borrow(
             vec![
