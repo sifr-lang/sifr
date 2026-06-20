@@ -14,12 +14,12 @@ from typing import Any
 from env import RunnerPaths
 
 LIVE_EXAMPLE_SOURCES = {
-    "redis": "live_examples/redis_live_roundtrip.sifr",
-    "postgres": "live_examples/postgres_live_roundtrip.sifr",
-    "kafka": "live_examples/kafka_live_roundtrip.sifr",
-    "pubsub": "live_examples/pubsub_live_callback_roundtrip.sifr",
-    "sns": "live_examples/sns_live_callback_roundtrip.sifr",
-    "sqs": "live_examples/sqs_live_callback_roundtrip.sifr",
+    "redis": "redis/redis_live_roundtrip.sifr",
+    "postgres": "sqlalchemy_psycopg/postgres_live_roundtrip.sifr",
+    "kafka": "kafka/kafka_live_roundtrip.sifr",
+    "pubsub": "pubsub/pubsub_live_callback_roundtrip.sifr",
+    "sns": "aws_sns/sns_live_callback_roundtrip.sifr",
+    "sqs": "aws_sqs/sqs_live_callback_roundtrip.sifr",
 }
 
 LIVE_IMAGES = {

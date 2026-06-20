@@ -115,12 +115,12 @@ REQUIRED_SOURCE_FIXTURES = (
     "resource_cleanup/context_manager_failure.sifr",
     "resource_cleanup/context_manager_success.sifr",
     "resource_cleanup/resource_diagnostics.sifr",
-    "live_examples/redis_live_roundtrip.sifr",
-    "live_examples/postgres_live_roundtrip.sifr",
-    "live_examples/kafka_live_roundtrip.sifr",
-    "live_examples/pubsub_live_callback_roundtrip.sifr",
-    "live_examples/sns_live_callback_roundtrip.sifr",
-    "live_examples/sqs_live_callback_roundtrip.sifr",
+    "redis/redis_live_roundtrip.sifr",
+    "sqlalchemy_psycopg/postgres_live_roundtrip.sifr",
+    "kafka/kafka_live_roundtrip.sifr",
+    "pubsub/pubsub_live_callback_roundtrip.sifr",
+    "aws_sns/sns_live_callback_roundtrip.sifr",
+    "aws_sqs/sqs_live_callback_roundtrip.sifr",
 )
 
 
