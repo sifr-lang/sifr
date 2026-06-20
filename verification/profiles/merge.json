@@ -104,6 +104,7 @@
         "tier4",
         "callbacks",
         "dataframes",
+        "ml",
         "cloud-boto3"
       ],
       "resource_classes": [
