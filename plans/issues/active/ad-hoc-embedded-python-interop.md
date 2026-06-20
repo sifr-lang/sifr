@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. Post-closeout verification hardening for runnable dependency examples is merged through PR #2691 without changing the binding design decisions below. Additional post-closeout ML example hardening is in progress.
+> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. Post-closeout verification hardening for runnable dependency examples is merged through PR #2691 and PR #2694 without changing the binding design decisions below.
 
 ## Execution Status
 
@@ -110,14 +110,14 @@
   - Opus review round 1 reported no blockers and round 2 reported no blockers after stdout-marker, trust-root, timeout, cleanup, and `@blocking_io` helper fixes.
   - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `dataframe-examples` passed, and hardening variants reported 0 failures; warm wall-time/cache advisories only.
   - Merged via PR [#2691](https://github.com/sifr-lang/sifr/pull/2691).
-- [ ] `post_closeout_ml_examples`: Full runnable torch and scikit-learn examples.
+- [x] `post_closeout_ml_examples`: Full runnable torch and scikit-learn examples.
   - Add area-local locked dependencies for torch and scikit-learn.
   - Add compiled Sifr examples that construct ML library objects, run real tensor/model operations, convert results back to typed Sifr values, and assert expected outputs.
   - Add an `ml-examples` verification case that executes the examples through temporary Sifr packages linked to the area uv environment.
   - Fix the DLPack stdlib wrapper to own raw tuple metadata with non-copy fields so executable tensor examples can validate real DLPack metadata/release.
   - Opus review round 1 reported no blockers; round 2 reported no blockers after tightening runner wrapper callback types and deleting an unused stdlib helper.
   - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `ml-examples` passed, and hardening variants reported 0 failures; warm wall-time advisory only.
-  - PR and merge pending.
+  - Merged via PR [#2694](https://github.com/sifr-lang/sifr/pull/2694).
 
 ## Objective
 
