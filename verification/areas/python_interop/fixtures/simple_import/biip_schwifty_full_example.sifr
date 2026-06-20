@@ -1,0 +1,68 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    call,
+    call_attr,
+    close,
+    from_str,
+    get_attr,
+    import_module,
+    to_int,
+    to_str,
+)
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        biip: Object = import_module("biip")
+        schwifty: Object = import_module("schwifty")
+
+        gtin_text: Object = from_str("7032069804988")
+        parsed: Object = call_attr(biip, "parse", [gtin_text], [])
+        gtin: Object = get_attr(parsed, "gtin")
+        gtin_value_obj: Object = get_attr(gtin, "value")
+        gtin_value: str = to_str(gtin_value_obj)
+        gtin_format_obj: Object = get_attr(gtin, "format")
+        gtin_format_value_obj: Object = get_attr(gtin_format_obj, "value")
+        gtin_format: int = to_int(gtin_format_value_obj)
+        check_digit_obj: Object = get_attr(gtin, "check_digit")
+        check_digit: int = to_int(check_digit_obj)
+
+        bic_class: Object = get_attr(schwifty, "BIC")
+        bic_text: Object = from_str("DEUTDEFF")
+        bic: Object = call(bic_class, [bic_text], [])
+        bic_country_obj: Object = get_attr(bic, "country_code")
+        bic_country: str = to_str(bic_country_obj)
+        bic_bank_obj: Object = get_attr(bic, "bank_code")
+        bic_bank: str = to_str(bic_bank_obj)
+
+        passed: bool = (
+            gtin_value == "7032069804988"
+            and gtin_format == 13
+            and check_digit == 8
+            and bic_country == "DE"
+            and bic_bank == "DEUT"
+        )
+
+        closed_bic_bank_obj: None = close(bic_bank_obj)
+        closed_bic_country_obj: None = close(bic_country_obj)
+        closed_bic: None = close(bic)
+        closed_bic_text: None = close(bic_text)
+        closed_bic_class: None = close(bic_class)
+        closed_check_digit_obj: None = close(check_digit_obj)
+        closed_gtin_format_value_obj: None = close(gtin_format_value_obj)
+        closed_gtin_format_obj: None = close(gtin_format_obj)
+        closed_gtin_value_obj: None = close(gtin_value_obj)
+        closed_gtin: None = close(gtin)
+        closed_parsed: None = close(parsed)
+        closed_gtin_text: None = close(gtin_text)
+        closed_schwifty: None = close(schwifty)
+        closed_biip: None = close(biip)
+        if passed:
+            print("sifr-python-interop:biip-schwifty:gtin=7032069804988:bic=DEUTDEFF")
+        else:
+            raise PythonError("biip/schwifty full example did not validate expected identifiers")
+    except PythonError as e:
+        raise e
+    return None

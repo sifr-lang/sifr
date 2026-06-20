@@ -1,0 +1,53 @@
+from sifr.python import (
+    ArrowCapsule,
+    Object,
+    PythonError,
+    call_attr,
+    close,
+    export_arrow_array,
+    from_int,
+    from_list,
+    import_module,
+    release_arrow,
+    to_int,
+)
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        pyarrow: Object = import_module("pyarrow")
+        compute: Object = import_module("pyarrow.compute")
+        one: Object = from_int(1)
+        two: Object = from_int(2)
+        three: Object = from_int(3)
+        four: Object = from_int(4)
+        values: Object = from_list([one, two, three, four])
+        array: Object = call_attr(pyarrow, "array", [values], [])
+        sum_scalar: Object = call_attr(compute, "sum", [array], [])
+        sum_obj: Object = call_attr(sum_scalar, "as_py", [], [])
+        total: int = to_int(sum_obj)
+        capsule: ArrowCapsule = export_arrow_array(array)
+
+        capsule_ok: bool = (
+            capsule.kind == "array"
+            and not capsule.copy_possible
+            and len(capsule.capsule_names) == 2
+            and capsule.producer_module == "pyarrow.lib"
+        )
+        passed: bool = total == 10 and capsule_ok
+
+        released: None = release_arrow(capsule)
+        closed_sum_obj: None = close(sum_obj)
+        closed_sum_scalar: None = close(sum_scalar)
+        closed_array: None = close(array)
+        closed_values: None = close(values)
+        closed_compute: None = close(compute)
+        closed_pyarrow: None = close(pyarrow)
+        if passed:
+            print("sifr-python-interop:pyarrow:sum=10:kind=array:producer=pyarrow.lib")
+        else:
+            raise PythonError("pyarrow full example did not validate expected Arrow results")
+    except PythonError as e:
+        raise e
+    return None

@@ -15,6 +15,7 @@ verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --dataframe-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --ml-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --library-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```
@@ -101,6 +102,28 @@ checks deterministic stdout markers. TensorFlow remains matrix/contract evidence
 only in the offline gate because its wheel and CPU feature requirements are
 host-dependent.
 
+Library examples are offline but executable. The `library-examples` suite covers
+the remaining non-service, non-host-dependent library contracts that previously
+had only matrix or JSON/source-fixture evidence:
+
+- biip GTIN parsing and schwifty BIC validation.
+- pyarrow array compute plus Arrow PyCapsule metadata/release.
+- FastAPI app construction, Pydantic validation through pydantic-core, and
+  Starlette JSON response rendering.
+- cryptography Fernet encrypt/decrypt, CFFI parser setup, and certifi CA bundle
+  discovery.
+- boto3 SQS client calls through botocore Stubber with no AWS credentials or
+  network access.
+- redis client import, fakeredis in-process round trip, and hiredis RESP
+  parsing.
+- SQLAlchemy in-memory query execution plus Alembic migration-context
+  construction and psycopg conninfo construction.
+
+Service-backed libraries remain in `live-examples`: Redis, Postgres/psycopg,
+Kafka, Pub/Sub-style SNS fanout, SNS, and SQS are exercised with testcontainers
+when Docker is available. TensorFlow remains host-dependent and is represented
+by contract/matrix evidence in offline profiles.
+
 Package certification records include:
 
 - per-package tier, gate, group, native-extension, and host-dependency metadata;
@@ -135,6 +158,15 @@ Dataframe example reports additionally include:
 ML example reports use the same schema and include:
 
 - `source_checks`: checked-in Sifr example presence for torch and scikit-learn.
+- `cases`: `sifr run` results for each compiled example.
+- `stdout_marker`: deterministic per-example output required for a passing case.
+- `dependencies`: the Python import roots trusted by at least one temporary package.
+
+Library example reports use the same schema and include:
+
+- `source_checks`: checked-in Sifr example presence for pyarrow,
+  biip/schwifty, FastAPI/Pydantic/Starlette, cryptography/CFFI/certifi,
+  boto3/botocore, redis/fakeredis/hiredis, and SQLAlchemy/Alembic/psycopg.
 - `cases`: `sifr run` results for each compiled example.
 - `stdout_marker`: deterministic per-example output required for a passing case.
 - `dependencies`: the Python import roots trusted by at least one temporary package.

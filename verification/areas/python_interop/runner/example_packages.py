@@ -19,6 +19,7 @@ class ExampleCase:
     relative_source: str
     stdout_marker: str
     import_roots: tuple[str, ...]
+    native_roots: tuple[str, ...] | None = None
 
 
 def build_examples_report(
@@ -189,6 +190,8 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
         encoding="utf-8",
     )
     roots = ", ".join(f'"{root}"' for root in case.import_roots)
+    native_roots = case.native_roots if case.native_roots is not None else case.import_roots
+    native_roots_toml = ", ".join(f'"{root}"' for root in native_roots)
     (package_root / "sifr.toml").write_text(
         "\n".join(
             [
@@ -206,7 +209,7 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
                 "",
                 "[trust]",
                 f"python = [{roots}]",
-                f"python-native = [{roots}]",
+                f"python-native = [{native_roots_toml}]",
                 "",
             ]
         ),
@@ -267,6 +270,7 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
         "stdout_marker": case_config.stdout_marker,
         "stdout_marker_observed": marker_observed,
         "trusted_import_roots": list(case_config.import_roots),
+        "trusted_native_roots": list(case_config.native_roots if case_config.native_roots is not None else case_config.import_roots),
         "stdout": proc.stdout[-4000:],
     }
     if status != "example-passed":

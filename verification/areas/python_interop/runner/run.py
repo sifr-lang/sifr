@@ -13,6 +13,7 @@ from dataframe_examples import build_dataframe_examples_report, run_dataframe_ex
 from env import discover_paths
 from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
+from library_examples import build_library_examples_report, run_library_examples_self_tests
 from live_examples import build_live_examples_report, run_live_examples_self_tests
 from live_policy import build_live_policy_report, run_live_policy_self_tests
 from ml_examples import build_ml_examples_report, run_ml_examples_self_tests
@@ -88,6 +89,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "async_blocking/object_crossing_rejected.sifr",
     "async_blocking/offloaded_python_calls.sifr",
     "async_blocking/unclassified_offload_rejected.sifr",
+    "simple_import/biip_schwifty_full_example.sifr",
     "primitive_conversion/primitive_roundtrip.sifr",
     "numpy_buffer/py_buffer_readonly_failure.sifr",
     "numpy_buffer/py_buffer_memoryview.sifr",
@@ -98,6 +100,12 @@ REQUIRED_SOURCE_FIXTURES = (
     "pyarrow_capsule/arrow_capsule_copy_possible.sifr",
     "pyarrow_capsule/arrow_capsule_roundtrip.sifr",
     "pyarrow_capsule/arrow_capsule_zero_copy.sifr",
+    "pyarrow_capsule/pyarrow_full_example.sifr",
+    "fastapi_app/fastapi_pydantic_full_example.sifr",
+    "cryptography_tls/cryptography_cffi_full_example.sifr",
+    "aws_sqs/boto3_botocore_full_example.sifr",
+    "redis/redis_fakeredis_full_example.sifr",
+    "sqlalchemy_psycopg/sqlalchemy_psycopg_full_example.sifr",
     "torch_dlpack/dlpack_tensor_device_failure.sifr",
     "torch_dlpack/dlpack_tensor_roundtrip.sifr",
     "torch_dlpack/torch_full_example.sifr",
@@ -132,6 +140,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--live-examples", action="store_true", help="Run testcontainers-backed live examples.")
     parser.add_argument("--dataframe-examples", action="store_true", help="Run full NumPy/pandas/Polars Sifr examples.")
     parser.add_argument("--ml-examples", action="store_true", help="Run full torch/scikit-learn Sifr examples.")
+    parser.add_argument("--library-examples", action="store_true", help="Run full library-family Sifr examples.")
     return parser.parse_args(argv)
 
 
@@ -144,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         run_live_examples_self_tests(paths)
         run_dataframe_examples_self_tests(paths)
         run_ml_examples_self_tests(paths)
+        run_library_examples_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:
@@ -176,6 +186,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop ml-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.library_examples:
+        payload = build_library_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop library-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0

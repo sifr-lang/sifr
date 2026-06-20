@@ -1,0 +1,75 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    call_attr,
+    close,
+    from_str,
+    get_attr,
+    import_module,
+    to_int,
+    to_str,
+)
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        alembic_migration: Object = import_module("alembic.runtime.migration")
+        psycopg: Object = import_module("psycopg")
+        sqlalchemy: Object = import_module("sqlalchemy")
+        conninfo_module: Object = import_module("psycopg.conninfo")
+
+        url: Object = from_str("sqlite+pysqlite:///:memory:")
+        engine: Object = call_attr(sqlalchemy, "create_engine", [url], [])
+        connection: Object = call_attr(engine, "connect", [], [])
+        query_text: Object = from_str("select 40 + 2")
+        statement: Object = call_attr(sqlalchemy, "text", [query_text], [])
+        result: Object = call_attr(connection, "execute", [statement], [])
+        scalar_obj: Object = call_attr(result, "scalar_one", [], [])
+        scalar: int = to_int(scalar_obj)
+
+        migration_context_class: Object = get_attr(alembic_migration, "MigrationContext")
+        migration_context: Object = call_attr(migration_context_class, "configure", [connection], [])
+        dialect: Object = get_attr(migration_context, "dialect")
+        dialect_name_obj: Object = get_attr(dialect, "name")
+        dialect_name: str = to_str(dialect_name_obj)
+
+        psycopg_version_obj: Object = get_attr(psycopg, "__version__")
+        psycopg_version: str = to_str(psycopg_version_obj)
+        host: Object = from_str("localhost")
+        dbname: Object = from_str("postgres")
+        conninfo_obj: Object = call_attr(conninfo_module, "make_conninfo", [], [("host", host), ("dbname", dbname)])
+        conninfo: str = to_str(conninfo_obj)
+
+        close_result: Object = call_attr(connection, "close", [], [])
+        dispose_result: Object = call_attr(engine, "dispose", [], [])
+        passed: bool = scalar == 42 and dialect_name == "sqlite" and psycopg_version != "" and conninfo != ""
+
+        closed_dispose_result: None = close(dispose_result)
+        closed_close_result: None = close(close_result)
+        closed_conninfo_obj: None = close(conninfo_obj)
+        closed_dbname: None = close(dbname)
+        closed_host: None = close(host)
+        closed_psycopg_version_obj: None = close(psycopg_version_obj)
+        closed_dialect_name_obj: None = close(dialect_name_obj)
+        closed_dialect: None = close(dialect)
+        closed_migration_context: None = close(migration_context)
+        closed_migration_context_class: None = close(migration_context_class)
+        closed_scalar_obj: None = close(scalar_obj)
+        closed_result: None = close(result)
+        closed_statement: None = close(statement)
+        closed_query_text: None = close(query_text)
+        closed_connection: None = close(connection)
+        closed_engine: None = close(engine)
+        closed_url: None = close(url)
+        closed_conninfo_module: None = close(conninfo_module)
+        closed_sqlalchemy: None = close(sqlalchemy)
+        closed_psycopg: None = close(psycopg)
+        closed_alembic_migration: None = close(alembic_migration)
+        if passed:
+            print("sifr-python-interop:sqlalchemy-psycopg:scalar=42:dialect=sqlite:conninfo=ok")
+        else:
+            raise PythonError("SQLAlchemy/psycopg full example did not validate expected results")
+    except PythonError as e:
+        raise e
+    return None
