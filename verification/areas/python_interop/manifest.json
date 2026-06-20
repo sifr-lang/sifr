@@ -162,6 +162,19 @@
       ]
     },
     {
+      "name": "libraries",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "library-examples",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-library-examples",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "live-policy",
       "kind": "adapter",
       "resource_classes": [

@@ -102,12 +102,17 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 
 | Example family | Evidence |
 | --- | --- |
-| biip / schwifty package calls | Tier 1a package matrix entries and `simple_import` opaque-object contract coverage. |
-| FastAPI app construction | `verification/areas/python_interop/fixtures/fastapi_app/fastapi_app_contract.json`. |
-| pandas / pyarrow / polars Arrow bridge | `pandas_arrow`, `polars_arrow`, and `pyarrow_capsule` fixture contracts. |
-| torch / TensorFlow DLPack | `torch_dlpack` source fixtures and `tensorflow_dlpack` package contract. |
+| biip / schwifty package calls | `library-examples` runs `simple_import/biip_schwifty_full_example.sifr`; Tier 1a package matrix entries and `simple_import` contract coverage remain inventory evidence. |
+| FastAPI app construction | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `fastapi_app_contract.json` remains the contract inventory. |
+| Pydantic / pydantic-core validation | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `pydantic_models_contract.json` remains the contract inventory. |
+| pandas / pyarrow / polars Arrow bridge | `dataframe-examples` runs pandas and Polars examples; `library-examples` runs `pyarrow_capsule/pyarrow_full_example.sifr`; Arrow capsule fixtures remain contract inventory. |
+| torch / TensorFlow DLPack | `ml-examples` runs `torch_dlpack/torch_full_example.sifr`; TensorFlow remains host-dependent matrix/contract evidence through `tensorflow_dlpack_contract.json`. |
 | Kafka callbacks | `kafka` and `cffi_callback` contracts plus callback source fixtures. |
-| cloud / AI clients | `aws_sqs`, `aws_sns`, `aws_sns_sqs_subscription`, `pubsub`, and Tier 1 cloud package matrices. |
+| cryptography / CFFI / certifi | `library-examples` runs `cryptography_tls/cryptography_cffi_full_example.sifr`; `cryptography_tls_contract.json` remains the contract inventory. |
+| boto3 / botocore cloud clients | `library-examples` runs `aws_sqs/boto3_botocore_full_example.sifr`; live LocalStack SNS/SQS examples cover service-backed delivery. |
+| redis / fakeredis / hiredis | `library-examples` runs `redis/redis_fakeredis_full_example.sifr`; live Redis examples cover container-backed service behavior. |
+| SQLAlchemy / Alembic / psycopg | `library-examples` runs `sqlalchemy_psycopg/sqlalchemy_psycopg_full_example.sifr`; live Postgres examples cover container-backed service behavior. |
+| cloud / AI clients | `aws_sqs`, `aws_sns`, `aws_sns_sqs_subscription`, `pubsub`, `library-examples`, live LocalStack examples, and Tier 1 cloud package matrices. |
 | observability / production clients | Tier 1 cloud/observability package matrix entries and deterministic matrix reports. |
 
 ## Diagnostic Evidence

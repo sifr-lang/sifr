@@ -1,0 +1,74 @@
+from sifr.python import (
+    Object,
+    PythonError,
+    call,
+    call_attr,
+    close,
+    from_dict_str,
+    from_str,
+    get_attr,
+    get_item,
+    import_module,
+    to_str,
+)
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        boto3: Object = import_module("boto3")
+        stub_module: Object = import_module("botocore.stub")
+
+        service: Object = from_str("sqs")
+        region: Object = from_str("us-east-1")
+        access_key: Object = from_str("test")
+        secret_key: Object = from_str("test")
+        client: Object = call_attr(
+            boto3,
+            "client",
+            [service],
+            [("region_name", region), ("aws_access_key_id", access_key), ("aws_secret_access_key", secret_key)],
+        )
+
+        stubber_class: Object = get_attr(stub_module, "Stubber")
+        stubber: Object = call(stubber_class, [client], [])
+        operation: Object = from_str("create_queue")
+        queue_url_value: Object = from_str("https://sqs.us-east-1.amazonaws.com/123456789012/sifr-queue")
+        response: Object = from_dict_str([("QueueUrl", queue_url_value)])
+        queue_name_value: Object = from_str("sifr-queue")
+        expected_params: Object = from_dict_str([("QueueName", queue_name_value)])
+        add_result: Object = call_attr(stubber, "add_response", [operation, response, expected_params], [])
+        activate_result: Object = call_attr(stubber, "activate", [], [])
+        request_queue_name: Object = from_str("sifr-queue")
+        create_result: Object = call_attr(client, "create_queue", [], [("QueueName", request_queue_name)])
+        queue_url_obj: Object = get_item(create_result, "QueueUrl")
+        queue_url: str = to_str(queue_url_obj)
+        deactivate_result: Object = call_attr(stubber, "deactivate", [], [])
+
+        passed: bool = queue_url == "https://sqs.us-east-1.amazonaws.com/123456789012/sifr-queue"
+
+        closed_deactivate_result: None = close(deactivate_result)
+        closed_queue_url_obj: None = close(queue_url_obj)
+        closed_create_result: None = close(create_result)
+        closed_request_queue_name: None = close(request_queue_name)
+        closed_activate_result: None = close(activate_result)
+        closed_add_result: None = close(add_result)
+        closed_expected_params: None = close(expected_params)
+        closed_response: None = close(response)
+        closed_operation: None = close(operation)
+        closed_stubber: None = close(stubber)
+        closed_stubber_class: None = close(stubber_class)
+        closed_client: None = close(client)
+        closed_secret_key: None = close(secret_key)
+        closed_access_key: None = close(access_key)
+        closed_region: None = close(region)
+        closed_service: None = close(service)
+        closed_stub_module: None = close(stub_module)
+        closed_boto3: None = close(boto3)
+        if passed:
+            print("sifr-python-interop:boto3-botocore:queue=https://sqs.us-east-1.amazonaws.com/123456789012/sifr-queue")
+        else:
+            raise PythonError("boto3/botocore full example did not validate expected SQS stub result")
+    except PythonError as e:
+        raise e
+    return None
