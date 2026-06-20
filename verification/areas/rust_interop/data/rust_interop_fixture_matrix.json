@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "phase": "39_rust_interop",
+  "architecture": "internal_docs/rust_interop_architecture.md",
+  "bridge_version": 1,
+  "diagnostic_families": {
+    "SIFR-RUST-ASYNC-0001": "invalid Rust async/thread-affinity contract",
+    "SIFR-RUST-CARGO-0001": "Cargo metadata or lock/profile mismatch",
+    "SIFR-RUST-CB-0001": "invalid callback lifetime or threading contract",
+    "SIFR-RUST-CONFIG-0001": "malformed Rust interop decorator",
+    "SIFR-RUST-HANDLE-0001": "invalid opaque handle contract",
+    "SIFR-RUST-PANIC-0001": "incompatible Rust panic strategy or poisoned handle",
+    "SIFR-RUST-RESOLVE-0001": "unresolved Rust target path",
+    "SIFR-RUST-TRUST-0001": "missing Rust interop trust declaration",
+    "SIFR-RUST-TYPE-0001": "unsupported Rust bridge type",
+    "SIFR-RUST-ZC-0001": "invalid zero-copy/view lifetime contract"
+  },
+  "fixtures": [
+    {
+      "id": "direct_crate_crc32",
+      "tier": 1,
+      "capability": "direct compatible function binding",
+      "required_crates": ["crc32fast"],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "crc32fast_hash_uint32", "status": "planned"},
+      "negative_evidence": {"id": "crc32fast_missing_panic_policy", "status": "planned"}
+    },
+    {
+      "id": "direct_crate_matrix",
+      "tier": 1,
+      "capability": "direct crate matrix",
+      "required_crates": ["blake3", "sha2", "uuid", "regex"],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "compatible_direct_signatures", "status": "planned"},
+      "negative_evidence": {"id": "incompatible_direct_signatures", "status": "planned"}
+    },
+    {
+      "id": "direct_crate_negative_type",
+      "tier": 0,
+      "capability": "invalid direct bridge type diagnostics",
+      "required_crates": ["regex"],
+      "execution_kind": "compiler-diagnostic",
+      "positive_evidence": {"id": "unsupported_type_rejected", "status": "planned"},
+      "negative_evidence": {"id": "unsupported_type_cannot_compile_silently", "status": "planned"}
+    },
+    {
+      "id": "dotted_path_resolution",
+      "tier": 0,
+      "capability": "structured Rust decorator paths",
+      "required_crates": [],
+      "execution_kind": "compiler-diagnostic",
+      "positive_evidence": {"id": "valid_structured_paths", "status": "planned"},
+      "negative_evidence": {"id": "string_and_reserved_root_rejection", "status": "planned"}
+    },
+    {
+      "id": "bridge_type_matrix",
+      "tier": 1,
+      "capability": "bridge type generation and conversion",
+      "required_crates": ["serde", "serde_json", "thiserror", "bytes", "indexmap"],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "supported_type_roundtrips", "status": "planned"},
+      "negative_evidence": {"id": "unsupported_container_rejections", "status": "planned"}
+    },
+    {
+      "id": "local_bridge_blake3",
+      "tier": 1,
+      "capability": "package-local bridge binding",
+      "required_crates": ["blake3"],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "local_bridge_hash_bytes", "status": "planned"},
+      "negative_evidence": {"id": "missing_local_bridge_export", "status": "planned"}
+    },
+    {
+      "id": "same_workspace_crate",
+      "tier": 1,
+      "capability": "same-workspace crate as ordinary Cargo dependency",
+      "required_crates": [],
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "declared_path_dependency_resolves", "status": "planned"},
+      "negative_evidence": {"id": "undeclared_workspace_crate_rejected", "status": "planned"}
+    },
+    {
+      "id": "shared_bridge_crate",
+      "tier": 1,
+      "capability": "shared bridge crate boundary",
+      "required_crates": [],
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "stable_runtime_types_only", "status": "planned"},
+      "negative_evidence": {"id": "package_generated_type_import_rejected", "status": "planned"}
+    },
+    {
+      "id": "opaque_handle_tokenizer",
+      "tier": 2,
+      "capability": "opaque Rust handle basics",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "owned_handle_method_and_close", "status": "planned"},
+      "negative_evidence": {"id": "use_after_close_rejected", "status": "planned"}
+    },
+    {
+      "id": "opaque_resource_matrix",
+      "tier": 2,
+      "capability": "resource-shaped opaque handles",
+      "required_crates": ["reqwest", "rusqlite", "tokio-postgres", "redis"],
+      "features": {
+        "redis": {"default_features": false, "features": ["tokio-comp"]},
+        "reqwest": {"default_features": false, "features": ["rustls-tls", "json"]},
+        "rusqlite": {"features": ["bundled"]},
+        "tokio-postgres": {"default_features": false, "features": ["runtime"]}
+      },
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "resource_close_aclose_matrix", "status": "planned"},
+      "negative_evidence": {"id": "invalid_resource_aliasing", "status": "planned"}
+    },
+    {
+      "id": "close_after_use",
+      "tier": 2,
+      "capability": "closed and poisoned handle state transitions",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "closed_handle_error_surface", "status": "planned"},
+      "negative_evidence": {"id": "double_close_and_poisoned_access", "status": "planned"}
+    },
+    {
+      "id": "bridge_version_mismatch",
+      "tier": 0,
+      "capability": "bridge-version validation",
+      "required_crates": [],
+      "execution_kind": "compiler-diagnostic",
+      "positive_evidence": {"id": "bridge_version_1_accepted", "status": "planned"},
+      "negative_evidence": {"id": "unsupported_bridge_version_rejected", "status": "planned"}
+    },
+    {
+      "id": "panic_boundary",
+      "tier": 2,
+      "capability": "panic-to-error behavior",
+      "required_crates": [],
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "panic_maps_to_rust_panic_error", "status": "planned"},
+      "negative_evidence": {"id": "panic_payload_not_exposed", "status": "planned"}
+    },
+    {
+      "id": "panic_abort_profile",
+      "tier": 2,
+      "capability": "abort-profile rejection and trust",
+      "required_crates": [],
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "explicit_abort_trust_declared", "status": "planned"},
+      "negative_evidence": {"id": "recoverable_abort_profile_rejected", "status": "planned"}
+    },
+    {
+      "id": "async_runtime_reqwest",
+      "tier": 2,
+      "capability": "async Rust bridge on Sifr Tokio runtime",
+      "required_crates": ["tokio", "reqwest"],
+      "features": {"reqwest": {"default_features": false, "features": ["rustls-tls", "json"]}},
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "async_reqwest_loopback", "status": "planned"},
+      "negative_evidence": {"id": "hidden_block_on_rejected", "status": "planned"}
+    },
+    {
+      "id": "async_ecosystem_matrix",
+      "tier": 2,
+      "capability": "async ecosystem signature probing",
+      "required_crates": ["futures", "tower", "http", "http-body"],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "future_output_shapes", "status": "planned"},
+      "negative_evidence": {"id": "non_send_future_without_affinity", "status": "planned"}
+    },
+    {
+      "id": "blocking_diagnostics",
+      "tier": 0,
+      "capability": "blocking I/O and CPU-heavy classification",
+      "required_crates": ["rusqlite", "rayon", "flate2"],
+      "features": {"rusqlite": {"features": ["bundled"]}, "flate2": {"default_features": false, "features": ["rust_backend"]}},
+      "execution_kind": "compiler-diagnostic",
+      "positive_evidence": {"id": "classified_sync_calls", "status": "planned"},
+      "negative_evidence": {"id": "classified_async_declarations_rejected", "status": "planned"}
+    },
+    {
+      "id": "callbacks_call_scoped",
+      "tier": 2,
+      "capability": "call-scoped callback lifetime",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "callback_valid_during_call", "status": "planned"},
+      "negative_evidence": {"id": "callback_storage_rejected", "status": "planned"}
+    },
+    {
+      "id": "callbacks_threadsafe",
+      "tier": 2,
+      "capability": "thread-safe callback policy",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "bounded_callback_policy", "status": "planned"},
+      "negative_evidence": {"id": "missing_backpressure_rejected", "status": "planned"}
+    },
+    {
+      "id": "callback_subscription_matrix",
+      "tier": 2,
+      "capability": "callback subscriptions and shutdown",
+      "required_crates": ["tokio-tungstenite", "redis", "notify"],
+      "features": {"redis": {"default_features": false, "features": ["tokio-comp"]}, "tokio-tungstenite": {"default_features": false}},
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "subscription_cancel_shutdown", "status": "planned"},
+      "negative_evidence": {"id": "invalid_thread_capture_rejected", "status": "planned"}
+    },
+    {
+      "id": "zero_copy_bytes",
+      "tier": 2,
+      "capability": "zero-copy bytes view",
+      "required_crates": ["bytes"],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "borrowed_bytes_view", "status": "planned"},
+      "negative_evidence": {"id": "copy_fallback_rejected", "status": "planned"}
+    },
+    {
+      "id": "zero_copy_view_matrix",
+      "tier": 2,
+      "capability": "core zero-copy views",
+      "required_crates": ["memmap2", "bytemuck", "zerocopy"],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "owner_lifetime_views", "status": "planned"},
+      "negative_evidence": {"id": "mutable_alias_rejected", "status": "planned"}
+    },
+    {
+      "id": "arrow_record_batch",
+      "tier": 4,
+      "capability": "Arrow record batch exchange",
+      "required_crates": ["arrow"],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "arrow_schema_identity", "status": "planned"},
+      "negative_evidence": {"id": "invalid_arrow_metadata", "status": "planned"}
+    },
+    {
+      "id": "tensor_dlpack_bridge",
+      "tier": 4,
+      "capability": "tensor and DLPack handoff",
+      "required_crates": ["ndarray"],
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "explicit_tensor_ownership", "status": "planned"},
+      "negative_evidence": {"id": "implicit_dlpack_ownership_rejected", "status": "planned"}
+    },
+    {
+      "id": "advanced_data_matrix",
+      "tier": 4,
+      "capability": "advanced data and tensor ecosystems",
+      "required_crates": ["datafusion", "polars", "ndarray", "candle"],
+      "features": {"candle": {"backend": "cpu-only"}},
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "advanced_data_metadata", "status": "planned"},
+      "negative_evidence": {"id": "dtype_shape_mismatch", "status": "planned"}
+    },
+    {
+      "id": "ecosystem_backend_certification",
+      "tier": 4,
+      "capability": "backend/service ecosystem certification",
+      "required_crates": ["axum", "tower-http", "sqlx"],
+      "features": {"sqlx": {"default_features": false, "features": ["runtime-tokio-rustls", "postgres", "macros"]}},
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "backend_probe_coverage", "status": "planned"},
+      "negative_evidence": {"id": "sqlx_without_offline_artifacts", "status": "planned"}
+    },
+    {
+      "id": "ecosystem_cli_certification",
+      "tier": 4,
+      "capability": "CLI/tooling ecosystem certification",
+      "required_crates": ["clap", "tracing", "tracing-subscriber", "anyhow"],
+      "features": {"tracing-subscriber": {"features": ["env-filter"]}},
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "cli_tooling_probe_coverage", "status": "planned"},
+      "negative_evidence": {"id": "unsupported_anyhow_surface", "status": "planned"}
+    },
+    {
+      "id": "native_build_script",
+      "tier": 3,
+      "capability": "build-script and native-link trust",
+      "required_crates": ["cc", "bindgen", "cxx", "zstd"],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "trusted_build_script_native_evidence", "status": "planned"},
+      "negative_evidence": {"id": "untrusted_native_link_rejected", "status": "planned"}
+    },
+    {
+      "id": "proc_macro_trust",
+      "tier": 3,
+      "capability": "build-script and proc-macro trust",
+      "required_crates": ["serde_derive", "prost-build"],
+      "features": {"prost-build": {"generated_output": "deterministic"}},
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "trusted_proc_macro", "status": "planned"},
+      "negative_evidence": {"id": "untrusted_proc_macro_rejected_pre_execution", "status": "planned"}
+    },
+    {
+      "id": "cargo_locked_offline",
+      "tier": 3,
+      "capability": "locked/offline/frozen Cargo behavior",
+      "required_crates": [],
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "locked_offline_cache_hit", "status": "planned"},
+      "negative_evidence": {"id": "lockfile_feature_drift_rejected", "status": "planned"}
+    }
+  ]
+}

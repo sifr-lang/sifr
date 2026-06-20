@@ -1,6 +1,6 @@
 # Rust Interop Architecture
 
-Status: design locked for Phase 39 planning.
+Status: design locked for Rust interop implementation planning.
 
 This document defines Sifr Rust interop as declaration-level Cargo integration. It is a self-contained design for Rust interop and does not depend on the Python interop lane, raw C ABI interop, or earlier interoperability drafts.
 
@@ -147,7 +147,7 @@ RustInteropDecoratorValue =
   | RustTargetPath
 ```
 
-`RustTargetPath` is the structured dotted-path form used by `@rust(...)`, `@rust.opaque(type=...)`, and path-valued policy fields such as `panic=map_error(...)`. `PolicyCall` is allowed only where a decorator explicitly permits it; Phase 39 permits `bounded(N)` for callback backpressure and `custom(path)` for opaque clone policy. Other call-shaped decorator values are rejected with `SIFR-RUST-CONFIG-*` diagnostics instead of being interpreted dynamically.
+`RustTargetPath` is the structured dotted-path form used by `@rust(...)`, `@rust.opaque(type=...)`, and path-valued policy fields such as `panic=map_error(...)`. `PolicyCall` is allowed only where a decorator explicitly permits it; the initial Rust interop contract permits `bounded(N)` for callback backpressure and `custom(path)` for opaque clone policy. Other call-shaped decorator values are rejected with `SIFR-RUST-CONFIG-*` diagnostics instead of being interpreted dynamically.
 
 Opaque decorator keys are fixed:
 
@@ -401,7 +401,7 @@ Exact `int` is not a native ABI integer. `SifrIntBridge` lives in `sifr_runtime:
 
 Nested borrowed forms are generated from the outer ownership mode. For example, borrowed `list[str]` is not `&[&str]`; it is a generated list view whose elements are borrowed string views with the same lifetime as the list view. `Option[str]` and `Option[bytes]` use generated optional borrowed views for borrowed parameters and owned `Option<String>` / `Option<Vec<u8>>` for owned parameters and returns.
 
-Sifr container types not listed above, including `set[T]`, `tuple[...]`, and arbitrary iterator/generator types, are not bridge-compatible in Phase 39 and produce `SIFR-RUST-TYPE-*` diagnostics. No implicit conversion is allowed.
+Sifr container types not listed above, including `set[T]`, `tuple[...]`, and arbitrary iterator/generator types, are not bridge-compatible in the initial Rust interop contract and produce `SIFR-RUST-TYPE-*` diagnostics. No implicit conversion is allowed.
 
 Rejected public bridge surfaces include:
 
@@ -589,7 +589,7 @@ def resize(input: bytes, width: uint32, height: uint32) -> Result[bytes, ImageEr
 
 Direct calls to classified blocking or CPU-heavy Rust functions from async Sifr code are compile-time errors unless explicitly offloaded through the Sifr task/offload APIs.
 
-`@blocking_io` and `@cpu_heavy` classify synchronous Rust-backed declarations. They are rejected on `async def` Rust interop declarations unless a later design adds an explicit async-blocking adapter surface. Phase 39 does not generate hidden blocking adapters, hidden `block_on`, or implicit offload for async Rust declarations.
+`@blocking_io` and `@cpu_heavy` classify synchronous Rust-backed declarations. They are rejected on `async def` Rust interop declarations unless a future design adds an explicit async-blocking adapter surface. The initial Rust interop contract does not generate hidden blocking adapters, hidden `block_on`, or implicit offload for async Rust declarations.
 
 Default async bridge requirements:
 
@@ -798,7 +798,7 @@ Rust interop diagnostics use stable diagnostic families:
 
 Every diagnostic must include source span, resolved target when available, required fix, and documentation URL.
 
-Milestone 39.0 reserves the first code in every family:
+The initial verification scaffold reserves the first code in every family:
 
 | Code | Reserved meaning |
 | --- | --- |
@@ -831,7 +831,7 @@ Completion must prefer valid dotted paths. Invalid string-style Rust targets are
 
 ## Verification Area
 
-Phase 39 creates a first-class verification area:
+Rust interop creates a first-class verification area:
 
 ```text
 verification/areas/rust_interop/
@@ -916,7 +916,7 @@ Ecosystem certification fixtures:
 | Backend/service certification | `axum`, `tower-http`, `sqlx` |
 | CLI/tooling certification | `clap`, `tracing`, `tracing-subscriber`, `anyhow` |
 
-Ecosystem certification for `axum`, `tower-http`, and `sqlx` is limited to canonical-package compilation and probe coverage; product-level web framework workflows remain out of Phase 39.
+Ecosystem certification for `axum`, `tower-http`, and `sqlx` is limited to canonical-package compilation and probe coverage; product-level web framework workflows remain out of the Rust interop scope.
 
 `tokio` runtime behavior is exercised through `async_runtime_reqwest`, `async_ecosystem_matrix`, `opaque_resource_matrix`, and `callback_subscription_matrix`; do not add a redundant standalone Tokio fixture unless a future runtime contract requires it.
 
@@ -924,18 +924,18 @@ Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matr
 
 - `reqwest`: `default-features = false`, `features = ["rustls-tls", "json"]`; do not enable `blocking` in async fixtures.
 - `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
-- `rusqlite`: `features = ["bundled"]`; the unbundled system-sqlite variant is intentionally not certified in Phase 39.
+- `rusqlite`: `features = ["bundled"]`; the unbundled system-sqlite variant is intentionally not certified in the Rust interop scope.
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
 - `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
 - `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
 - `axum` and `tower-http`: use default feature sets unless a fixture documents a narrower feature requirement.
 - `tracing-subscriber`: include `env-filter`.
 - `flate2`: `default-features = false`, `features = ["rust_backend"]`.
-- `candle`: CPU-only default backend; GPU and accelerator backend features are out of scope for Phase 39.
+- `candle`: CPU-only default backend; GPU and accelerator backend features are out of scope for Rust interop.
 - `prost-build`: use default features over a checked-in `.proto` input; generated output must be deterministic.
 
 Runtime-service fixtures must declare whether they are compile/probe-only, loopback-service backed, or in-process stub backed. `reqwest`, `tokio-tungstenite`, and `notify` fixtures should prefer loopback or local filesystem inputs. `tokio-postgres` and `redis` fixtures require explicit local service configuration and must be skippable only by fixture-tier policy, not by silently degrading the interop behavior under test.
 
-The matrix proves the Rust interop contract and package model. It does not create first-party Sifr wrappers for every listed crate and it does not move game, GUI, embedded, or product-level web framework work into Phase 39.
+The matrix proves the Rust interop contract and package model. It does not create first-party Sifr wrappers for every listed crate and it does not move game, GUI, embedded, or product-level web framework work into Rust interop.
 
 The area must record positive and negative fixtures for every declared capability. A feature is not complete until its failure mode is as deliberate as its success path.

@@ -1,0 +1,59 @@
+[tier0]
+name = "parser-lowering-metadata-diagnostics"
+description = "Parser, lowering, metadata, and diagnostics without Cargo build."
+fixtures = [
+  "dotted_path_resolution",
+  "direct_crate_negative_type",
+  "bridge_version_mismatch",
+  "blocking_diagnostics",
+]
+
+[tier1]
+name = "direct-and-local-bridge-build"
+description = "Direct crate and local bridge build fixtures."
+fixtures = [
+  "direct_crate_crc32",
+  "direct_crate_matrix",
+  "bridge_type_matrix",
+  "local_bridge_blake3",
+  "same_workspace_crate",
+  "shared_bridge_crate",
+]
+
+[tier2]
+name = "runtime-safety-and-core-views"
+description = "Opaque handles, panic boundary, async/blocking, callbacks, and zero-copy."
+fixtures = [
+  "opaque_handle_tokenizer",
+  "opaque_resource_matrix",
+  "close_after_use",
+  "panic_boundary",
+  "panic_abort_profile",
+  "async_runtime_reqwest",
+  "async_ecosystem_matrix",
+  "callbacks_call_scoped",
+  "callbacks_threadsafe",
+  "callback_subscription_matrix",
+  "zero_copy_bytes",
+  "zero_copy_view_matrix",
+]
+
+[tier3]
+name = "cargo-trust-native-locked"
+description = "Build scripts, proc macros, native linking, and offline/locked Cargo behavior."
+fixtures = [
+  "native_build_script",
+  "proc_macro_trust",
+  "cargo_locked_offline",
+]
+
+[tier4]
+name = "production-ecosystem-certification"
+description = "Production examples and compatibility matrix for selected Rust ecosystems."
+fixtures = [
+  "arrow_record_batch",
+  "tensor_dlpack_bridge",
+  "advanced_data_matrix",
+  "ecosystem_backend_certification",
+  "ecosystem_cli_certification",
+]

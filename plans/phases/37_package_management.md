@@ -78,9 +78,13 @@ tls = { cargo-package = "reqwest", cargo-feature = "rustls-tls" }
 json = { cargo-package = "reqwest", cargo-feature = "json" }
 
 [trust]
-native = ["reqwest"]
-build-scripts = []
-proc-macros = []
+rust-build-scripts = []
+rust-proc-macros = []
+native-links = []
+unsafe-rust-bridges = []
+build-env = []
+rust-no-panic = []
+rust-panic-abort = []
 ```
 
 Pure Sifr packages still include a minimal Rust target because Cargo requires at least one target. The generated `src/lib.rs` marker should contain no semantic implementation and must not become a second source of truth for Sifr behavior.
@@ -713,9 +717,13 @@ roots = ["sifr"]
 modules = ["demo_http"]
 
 [trust]
-native = ["reqwest"]
-build-scripts = []
-proc-macros = []
+rust-build-scripts = []
+rust-proc-macros = []
+native-links = []
+unsafe-rust-bridges = []
+build-env = []
+rust-no-panic = []
+rust-panic-abort = []
 ```
 
 Consumer demo:

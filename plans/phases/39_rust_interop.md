@@ -32,8 +32,8 @@ Phase 39 owns the full Rust interop implementation:
 - Python interop.
 - Raw C ABI interop.
 - Rust dynamic ABI loading.
-- `extern rust` syntax.
-- Runtime `dlopen` of Rust functions.
+- Rejected `extern rust` syntax.
+- Rejected runtime `dlopen` of Rust functions.
 - Compatibility shims for earlier draft interop syntax.
 - Silent copy fallback for zero-copy APIs.
 - Hidden Tokio runtimes, generated `block_on`, or implicit offload.

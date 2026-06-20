@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "name": "rust_interop",
+  "owner": "compiler/package-management",
+  "description": "Rust interop declaration, Cargo, trust, probe, bridge, runtime, and ecosystem verification.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "external-corpus",
+    "platform-specific",
+    "long-running"
+  ],
+  "timeout_seconds": 1800,
+  "suites": [
+    {
+      "name": "matrix",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "rust-interop-matrix",
+          "entry": "verification/areas/rust_interop/checks/check_fixture_matrix.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "tiers",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "rust-interop-tiers",
+          "entry": "verification/areas/rust_interop/checks/check_tiers.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "stale-drafts",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "rust-interop-stale-drafts",
+          "entry": "verification/areas/rust_interop/checks/check_stale_drafts.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_rules": {
+    "required": false,
+    "source": "not-applicable"
+  }
+}
