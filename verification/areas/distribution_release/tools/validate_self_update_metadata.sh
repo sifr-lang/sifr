@@ -6,8 +6,8 @@ usage() {
   cat <<'EOF'
 Usage: verification/areas/distribution_release/tools/validate_self_update_metadata.sh --install-root <dir> --channels-file <file>
 
-Validate that self-update channel metadata, preview dispatchers, and immutable
-version installers agree.
+Validate that self-update channel metadata is well-formed and the website
+install root contains only GitHub-backed bootstrap dispatchers.
 EOF
 }
 
@@ -45,12 +45,6 @@ fail() {
 [[ -d "${INSTALL_ROOT}" ]] || fail "install root not found: ${INSTALL_ROOT}"
 [[ -n "${CHANNELS_FILE}" ]] || fail "--channels-file is required"
 [[ -f "${CHANNELS_FILE}" ]] || fail "channel metadata missing: ${CHANNELS_FILE}"
-
-extract_var() {
-  local file="$1"
-  local name="$2"
-  sed -n "s/^${name}=\"\\(.*\\)\"$/\\1/p" "${file}" | head -n 1
-}
 
 metadata_path="${CHANNELS_FILE}"
 
@@ -115,30 +109,17 @@ done <<<"${metadata_values}"
 
 for dispatcher in index alpha beta; do
   [[ -f "${INSTALL_ROOT}/${dispatcher}" ]] || fail "dispatcher missing: ${INSTALL_ROOT}/${dispatcher}"
+  grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \
+    "${INSTALL_ROOT}/${dispatcher}" || fail "dispatcher does not resolve channels from GitHub: ${dispatcher}"
+  grep -q 'INSTALLER_RELEASE_BASE_URL="https://github.com/sifr-lang/sifr/releases/download"' \
+    "${INSTALL_ROOT}/${dispatcher}" || fail "dispatcher does not download installers from GitHub: ${dispatcher}"
+  grep -q 'sifr-installer-${resolved_version}' \
+    "${INSTALL_ROOT}/${dispatcher}" || fail "dispatcher does not use GitHub installer assets: ${dispatcher}"
 done
 
-index_alpha="$(extract_var "${INSTALL_ROOT}/index" ALPHA_VERSION)"
-index_beta="$(extract_var "${INSTALL_ROOT}/index" BETA_VERSION)"
-alpha_alpha="$(extract_var "${INSTALL_ROOT}/alpha" ALPHA_VERSION)"
-alpha_beta="$(extract_var "${INSTALL_ROOT}/alpha" BETA_VERSION)"
-beta_alpha="$(extract_var "${INSTALL_ROOT}/beta" ALPHA_VERSION)"
-beta_beta="$(extract_var "${INSTALL_ROOT}/beta" BETA_VERSION)"
+grep -q 'DEFAULT_CHANNEL="beta"' "${INSTALL_ROOT}/index" || fail "index dispatcher must default to beta"
+grep -q 'DEFAULT_CHANNEL="alpha"' "${INSTALL_ROOT}/alpha" || fail "alpha dispatcher must default to alpha"
+grep -q 'DEFAULT_CHANNEL="beta"' "${INSTALL_ROOT}/beta" || fail "beta dispatcher must default to beta"
 
-[[ "${index_alpha}" == "${alpha_alpha}" && "${index_alpha}" == "${beta_alpha}" ]] || fail "dispatcher ALPHA_VERSION drift"
-[[ "${index_beta}" == "${alpha_beta}" && "${index_beta}" == "${beta_beta}" ]] || fail "dispatcher BETA_VERSION drift"
-[[ "${metadata_alpha}" == "${index_alpha}" ]] || fail "metadata alpha version drift: metadata=${metadata_alpha} dispatcher=${index_alpha}"
-[[ "${metadata_beta}" == "${index_beta}" ]] || fail "metadata beta version drift: metadata=${metadata_beta} dispatcher=${index_beta}"
-
-validate_installer() {
-  local channel="$1"
-  local version="$2"
-  local installer="${INSTALL_ROOT}/versions/${version}"
-  [[ -f "${installer}" ]] || fail "immutable installer missing for ${channel}: ${installer}"
-  local installer_version
-  installer_version="$(extract_var "${installer}" APP_VERSION)"
-  [[ -n "${installer_version}" ]] || fail "immutable installer missing APP_VERSION for ${channel}: ${installer}"
-  [[ "${installer_version}" == "${version}" ]] || fail "immutable installer APP_VERSION drift for ${channel}: metadata=${version} installer=${installer_version}"
-}
-
-validate_installer alpha "${metadata_alpha}"
-validate_installer beta "${metadata_beta}"
+[[ ! -e "${INSTALL_ROOT}/metadata/channels.json" ]] || fail "website must not publish metadata/channels.json"
+[[ ! -d "${INSTALL_ROOT}/versions" ]] || fail "website must not publish immutable version installers"

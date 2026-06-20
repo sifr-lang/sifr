@@ -35,7 +35,7 @@ Sifr provides prebuilt preview binaries for the following targets:
       ```
     </CodeGroup>
 
-    The beta channel is the recommended starting point. Use the alpha channel if you want the absolute latest preview features and are comfortable with a less stable build.
+    The beta channel is the recommended starting point. The installer resolves the latest beta from Sifr's GitHub-hosted channel metadata, then downloads the matching GitHub release installer. Use the alpha channel if you want the absolute latest preview features and are comfortable with a less stable build.
   </Step>
   <Step title="Reload your shell">
     The installer updates your shell profile (`~/.bashrc`, `~/.zshrc`, or equivalent), but the change only takes effect in new shell sessions. Reload your profile now so the current session can find `sifr`:
@@ -51,7 +51,7 @@ Sifr provides prebuilt preview binaries for the following targets:
     sifr --version
     ```
 
-    You should see a version string such as `0.1.0-beta.1`. If the command is not found, check that `~/.sifr/bin` is in your `PATH`.
+    You should see a version string such as `0.1.0-beta.7`. If the command is not found, check that `~/.sifr/bin` is in your `PATH`.
   </Step>
 </Steps>
 
@@ -62,7 +62,7 @@ Sifr provides prebuilt preview binaries for the following targets:
 If you need a specific preview release — for reproducible CI environments or to test a particular build — pass `--version` to the installer:
 
 ```bash
-curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.1
+curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.7
 ```
 
 ### Install to a custom directory
@@ -89,7 +89,7 @@ If you manage your PATH manually or are scripting the install in a CI pipeline, 
 
 ## Keeping Sifr up to date
 
-Sifr includes a built-in self-update command for installs created by the official installer script.
+Sifr includes a built-in self-update command for installs created by the official installer script. Self-update uses the same GitHub-hosted channel metadata as the public installer.
 
 ```bash
 sifr self update
@@ -115,7 +115,7 @@ sifr self update --channel beta
 You can update to a specific preview version rather than the latest on your channel:
 
 ```bash
-sifr self update --version 0.1.0-beta.2
+sifr self update --version 0.1.0-beta.7
 ```
 
 ### Reinstalls, downgrades, and channel switches
@@ -123,7 +123,7 @@ sifr self update --version 0.1.0-beta.2
 Same-version reinstalls, downgrades, and channel switches all require `--force`:
 
 ```bash
-sifr self update --version 0.1.0-beta.2 --force
+sifr self update --version 0.1.0-beta.7 --force
 sifr self update --channel alpha --force
 ```
 

@@ -13,13 +13,15 @@ trap cleanup EXIT HUP INT TERM
 install_root="${tmp_dir}/install"
 channels_file="${tmp_dir}/channels.json"
 make_self_update_install_root_fixture "${install_root}" "0.1.0-alpha.4" "0.1.0-beta.7"
+sed -i.bak 's#https://github.com/sifr-lang/sifr/releases/download/channels/channels.json#https://sifr.sh/install/metadata/channels.json#' \
+  "${install_root}/index"
 "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
   --out "${channels_file}" \
   --alpha-version "0.1.0-alpha.4" \
-  --beta-version "0.1.0-beta.6" >/dev/null
+  --beta-version "0.1.0-beta.7" >/dev/null
 
 require_failure_contains \
-  "metadata beta version drift" \
+  "dispatcher does not resolve channels from GitHub: index" \
   "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
     --install-root "${install_root}" \
     --channels-file "${channels_file}"

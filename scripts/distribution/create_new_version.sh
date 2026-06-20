@@ -129,6 +129,26 @@ extract_var() {
   sed -n "s/^${name}=\"\\(.*\\)\"$/\\1/p" "${file}" | head -n 1
 }
 
+read_current_channel_versions() {
+  local metadata_file="${INSTALL_ROOT}/channels.json"
+  local temp_file=""
+
+  if [[ ! -f "${metadata_file}" ]]; then
+    temp_file="$(mktemp "${TMPDIR:-/tmp}/sifr-current-channels.XXXXXX")"
+    metadata_file="${temp_file}"
+    curl -fsSL \
+      "https://github.com/sifr-lang/sifr/releases/download/channels/channels.json" \
+      -o "${metadata_file}" || fail "could not fetch current GitHub channel metadata"
+  fi
+
+  read -r CURRENT_ALPHA CURRENT_BETA < <("${SCRIPT_DIR}/read_channel_versions.py" "${metadata_file}")
+  [[ -n "${CURRENT_ALPHA}" && -n "${CURRENT_BETA}" ]] || fail "current channel metadata is missing alpha or beta"
+
+  if [[ -n "${temp_file}" ]]; then
+    rm -f "${temp_file}"
+  fi
+}
+
 validate_inputs() {
   [[ "${CHANNEL}" == "alpha" || "${CHANNEL}" == "beta" ]] || fail "--channel must be alpha or beta"
   [[ -n "${VERSION}" ]] || fail "--version is required"
@@ -148,24 +168,14 @@ validate_site_dispatchers() {
     [[ -f "${INSTALL_ROOT}/${expected_path}" ]] || fail "site dispatcher missing: ${INSTALL_ROOT}/${expected_path}"
   done
 
-  local index_alpha index_beta alpha_alpha alpha_beta beta_alpha beta_beta
-  index_alpha="$(extract_var "${INSTALL_ROOT}/index" ALPHA_VERSION)"
-  index_beta="$(extract_var "${INSTALL_ROOT}/index" BETA_VERSION)"
-  alpha_alpha="$(extract_var "${INSTALL_ROOT}/alpha" ALPHA_VERSION)"
-  alpha_beta="$(extract_var "${INSTALL_ROOT}/alpha" BETA_VERSION)"
-  beta_alpha="$(extract_var "${INSTALL_ROOT}/beta" ALPHA_VERSION)"
-  beta_beta="$(extract_var "${INSTALL_ROOT}/beta" BETA_VERSION)"
-
-  [[ -n "${index_alpha}" && -n "${index_beta}" ]] || fail "site dispatcher drift: index missing channel version variables"
-  [[ "${index_alpha}" == "${alpha_alpha}" && "${index_alpha}" == "${beta_alpha}" ]] || fail "site dispatcher drift: ALPHA_VERSION differs across dispatchers"
-  [[ "${index_beta}" == "${alpha_beta}" && "${index_beta}" == "${beta_beta}" ]] || fail "site dispatcher drift: BETA_VERSION differs across dispatchers"
-
   [[ "$(extract_var "${INSTALL_ROOT}/index" DEFAULT_CHANNEL)" == "beta" ]] || fail "site dispatcher drift: index must default to beta"
   [[ "$(extract_var "${INSTALL_ROOT}/alpha" DEFAULT_CHANNEL)" == "alpha" ]] || fail "site dispatcher drift: alpha must default to alpha"
   [[ "$(extract_var "${INSTALL_ROOT}/beta" DEFAULT_CHANNEL)" == "beta" ]] || fail "site dispatcher drift: beta must default to beta"
+  grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \
+    "${INSTALL_ROOT}/index" || fail "site dispatcher drift: index must resolve channels from GitHub"
+  [[ ! -d "${INSTALL_ROOT}/versions" ]] || fail "site dispatcher drift: website must not publish immutable version installers"
 
-  CURRENT_ALPHA="${index_alpha}"
-  CURRENT_BETA="${index_beta}"
+  read_current_channel_versions
 }
 
 build_plan() {
@@ -215,7 +225,6 @@ current_alpha=${CURRENT_ALPHA}
 current_beta=${CURRENT_BETA}
 new_alpha=${NEW_ALPHA}
 new_beta=${NEW_BETA}
-version_installer=${INSTALL_ROOT}/versions/${VERSION}
 github_installer_asset=${INSTALLER_ASSET_FILE}
 channel_metadata=${CHANNEL_METADATA_FILE}
 stable_entrypoint=unchanged_absent
@@ -262,9 +271,8 @@ $(for target in "${TARGETS[@]}"; do echo "- [x] sifr-${VERSION}-${target}.tar.gz
 
 ## Installer And Dispatcher
 
-- [x] Immutable generated installer: ${INSTALL_ROOT}/versions/${VERSION}
 - [x] GitHub immutable installer asset: ${INSTALLER_ASSET_FILE}
-- [x] Channel dispatcher update: ${CHANNEL} -> ${VERSION}
+- [x] Website bootstrap dispatchers resolve channels from GitHub
 - [x] GitHub channel metadata update: alpha=${NEW_ALPHA}, beta=${NEW_BETA}
 - [x] Stable entrypoint unchanged and absent
 - [x] SHA-256 checksums embedded in immutable installer
@@ -293,9 +301,8 @@ write_recovery_note() {
 - Plan SHA-256: ${PLAN_SHA}
 - Completed mutations:
   - artifact directory verified: ${ARTIFACT_DIR}
-  - immutable installer generated: ${INSTALL_ROOT}/versions/${VERSION}
   - GitHub immutable installer asset generated: ${INSTALLER_ASSET_FILE}
-  - channel dispatchers regenerated: alpha=${NEW_ALPHA}, beta=${NEW_BETA}
+  - GitHub-backed website dispatchers regenerated
   - GitHub channel metadata generated: ${CHANNEL_METADATA_FILE}
   - release checklist written: ${CHECKLIST_FILE}
 - Incomplete mutations:
@@ -323,12 +330,8 @@ real_run() {
     --artifact-dir "${ARTIFACT_DIR}" \
     --out "${INSTALLER_ASSET_FILE}" >/dev/null
 
-  cp "${INSTALLER_ASSET_FILE}" "${INSTALL_ROOT}/versions/${VERSION}"
-
   "${SCRIPT_DIR}/generate_dispatchers.sh" \
-    --install-root "${INSTALL_ROOT}" \
-    --alpha-version "${NEW_ALPHA}" \
-    --beta-version "${NEW_BETA}" >/dev/null
+    --install-root "${INSTALL_ROOT}" >/dev/null
 
   "${SCRIPT_DIR}/generate_channel_metadata.sh" \
     --out "${CHANNEL_METADATA_FILE}" \
@@ -348,7 +351,6 @@ plan_sha256=${PLAN_SHA}
 plan_file=${PLAN_FILE}
 release_checklist=${CHECKLIST_FILE}
 recovery_note=${RECOVERY_FILE}
-site_installer=${INSTALL_ROOT}/versions/${VERSION}
 github_release_mode=${MUTATION_MODE}
 EOF
 }

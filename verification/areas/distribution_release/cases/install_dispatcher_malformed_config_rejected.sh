@@ -10,11 +10,22 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-make_dispatcher_fixture "${tmp_dir}" "0.1.0-alpha.1" "0.1.0-beta.1"
-sed -i.bak 's/BETA_VERSION="0.1.0-beta.1"/BETA_VERSION="0.1.0-alpha.1"/' "${tmp_dir}/index"
+make_dispatcher_fixture "${tmp_dir}"
+make_mock_version_installers "${tmp_dir}"
+python3 - "${tmp_dir}/channels.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+metadata = json.loads(path.read_text())
+metadata["channels"]["beta"] = "0.1.0-alpha.1"
+path.write_text(json.dumps(metadata, indent=2) + "\n")
+PY
 
 SITE_INSTALL_ROOT="${tmp_dir}"
-DISPATCH_BASE_URL="file://${tmp_dir}"
+DISPATCH_RELEASE_BASE_URL="file://${tmp_dir}/github-releases"
+DISPATCH_CHANNEL_METADATA_URL="file://${tmp_dir}/channels.json"
 require_failure_contains \
-  "malformed dispatcher configuration: beta points at 0.1.0-alpha.1" \
+  "malformed channel metadata: beta points at 0.1.0-alpha.1" \
   run_dispatcher index

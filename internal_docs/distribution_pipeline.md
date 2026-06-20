@@ -19,15 +19,13 @@ public/install/
   index
   alpha
   beta
-  versions/
-    <version>
 ```
 
-`index` is the default beta dispatcher. The deployment must serve it at `https://sifr.sh/install`; `alpha` and `beta` are served at `https://sifr.sh/install/alpha` and `https://sifr.sh/install/beta`. Immutable generated installers are served from `https://sifr.sh/install/versions/<version>` for the public curl installer path.
+`index` is the default beta bootstrap. The deployment must serve it at `https://sifr.sh/install`; `alpha` and `beta` are served at `https://sifr.sh/install/alpha` and `https://sifr.sh/install/beta`. These scripts are stable website entrypoints only: they fetch GitHub `channels.json`, resolve the requested channel or version pin, and download `sifr-installer-<version>` from the resolved version's GitHub release.
 
-Self-update channel resolution is not served from the website install tree. It is published as the `channels.json` asset on the `sifr-lang/sifr` GitHub release tag `channels`, and self-update downloads immutable installer assets from the resolved version's GitHub release.
+Channel resolution is not served from the website install tree. It is published as the `channels.json` asset on the `sifr-lang/sifr` GitHub release tag `channels`; both the website bootstrap scripts and `sifr self update` use that metadata and download immutable installer assets from version releases.
 
-The website repository must not publish `public/install/metadata/channels.json`. Remove any stale `public/install/metadata/` directory on the next site rollout after this contract is adopted.
+The website repository must not publish `public/install/metadata/channels.json` or `public/install/versions/`. Remove any stale `public/install/metadata/` or `public/install/versions/` directory on the next site rollout after this contract is adopted.
 
 This directory layout avoids the impossible static-file shape where `public/install` is both an executable file and a directory for nested channel paths.
 
@@ -37,20 +35,18 @@ Generate dispatchers with:
 
 ```bash
 scripts/distribution/generate_dispatchers.sh \
-  --install-root <site-repo>/apps/sifr-site/public/install \
-  --alpha-version 0.1.0-alpha.1 \
-  --beta-version 0.1.0-beta.1
+  --install-root <site-repo>/apps/sifr-site/public/install
 ```
 
 Dispatcher behavior:
 
-- `/install` defaults to the configured beta preview.
+- `/install` defaults to the beta channel from GitHub `channels.json`.
 - `/install/alpha` and `/install/beta` select the corresponding preview channel.
 - `--channel alpha|beta` and `SIFR_CHANNEL=alpha|beta` select a moving preview channel.
-- `--version <semver-prerelease>` selects `versions/<version>` directly.
+- `--version <semver-prerelease>` selects the matching GitHub release installer directly.
 - `stable` and stable-looking versions such as `1.0.0` or `0.1.0` are rejected before download.
 - Conflicting `SIFR_CHANNEL`, `--channel`, and `--version` inputs are rejected.
-- The dispatcher downloads exactly one immutable generated installer and preserves its exit status.
+- The dispatcher downloads exactly one immutable GitHub installer asset and preserves its exit status.
 
 The dispatcher never resolves artifacts itself and never compiles from source.
 
@@ -182,7 +178,7 @@ Generate the immutable installer from the verified artifact directory:
 scripts/distribution/generate_version_installer.sh \
   --version 0.1.0-beta.1 \
   --artifact-dir target/preview-artifacts/0.1.0-beta.1 \
-  --out <site-repo>/apps/sifr-site/public/install/versions/0.1.0-beta.1
+  --out target/preview-artifacts/0.1.0-beta.1/sifr-installer-0.1.0-beta.1
 ```
 
 The generated installer embeds:
@@ -264,7 +260,7 @@ verification/areas/distribution_release/cases/artifact_target_mismatch_rejected.
 verification/areas/distribution_release/cases/stable_entrypoints_unchanged_by_preview_release.sh
 ```
 
-The self-update metadata drift checks validate that the GitHub-bound `channels.json`, preview dispatchers, and immutable installer `APP_VERSION` values are generated from one release plan:
+The self-update metadata drift checks validate that the GitHub-bound `channels.json` is well formed and that website dispatchers are GitHub-backed bootstrap scripts without website-hosted metadata or version installers:
 
 ```bash
 verification/areas/distribution_release/tools/validate_self_update_metadata.sh \
@@ -308,7 +304,7 @@ scripts/distribution/create_new_version.sh \
 
 Dry-run validates inputs, resolves the base commit, computes every target artifact name, detects site dispatcher drift, confirms stable entrypoints remain absent, and prints the exact GitHub Release, channel metadata, and site mutations.
 
-Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable version installer for both the website path and the GitHub release asset, regenerates channel dispatchers and evidence-only GitHub channel metadata from one plan, validates metadata/dispatcher/installer agreement, writes a release checklist, and writes a recovery note. It does not publish GitHub assets; `preview-release.yml` is the only authoritative GitHub-publish path for version releases and the shared `channels` release asset.
+Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable GitHub installer asset, regenerates GitHub-backed website bootstrap scripts and evidence-only GitHub channel metadata from one plan, validates metadata/dispatcher agreement, writes a release checklist, and writes a recovery note. It does not publish GitHub assets; `preview-release.yml` is the only authoritative GitHub-publish path for version releases and the shared `channels` release asset.
 
 The GitHub Actions preview-release workflow serializes runs with the `preview-release-channels` concurrency group because channel publication is a read-modify-write operation over the shared `channels` release asset.
 Do not run workstation GitHub publication while `preview-release.yml` is publishing. Use `scripts/distribution/trigger_preview_release.sh` to dispatch GitHub releases.

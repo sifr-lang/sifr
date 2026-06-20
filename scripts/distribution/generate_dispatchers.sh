@@ -4,23 +4,25 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/distribution/generate_dispatchers.sh --install-root <dir> --alpha-version <version> --beta-version <version>
+Usage: scripts/distribution/generate_dispatchers.sh --install-root <dir> [options]
 
-Generate the public Sifr preview installer dispatchers.
+Generate the public Sifr installer bootstrap scripts.
+
+The generated scripts do not embed channel versions or download installers from
+the website. They resolve moving channels from the GitHub channels release
+asset and download immutable installers from GitHub version releases.
 
 Options:
-  --install-root <dir>      Destination install root directory, usually apps/sifr-site/public/install
-  --alpha-version <ver>     Immutable generated installer version for the alpha channel
-  --beta-version <ver>      Immutable generated installer version for the beta channel and default entrypoint
-  --base-url <url>          Public installer base URL (default: https://sifr.sh/install)
-  --help                    Show this help
+  --install-root <dir>                 Destination install root directory, usually apps/sifr-site/public/install
+  --channel-metadata-url <url>         Channel metadata URL (default: GitHub channels release asset)
+  --installer-release-base-url <url>   Version release base URL (default: GitHub releases download base)
+  --help                               Show this help
 EOF
 }
 
 INSTALL_ROOT=""
-ALPHA_VERSION=""
-BETA_VERSION=""
-BASE_URL="https://sifr.sh/install"
+CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"
+INSTALLER_RELEASE_BASE_URL="https://github.com/sifr-lang/sifr/releases/download"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,16 +30,12 @@ while [[ $# -gt 0 ]]; do
       INSTALL_ROOT="${2:-}"
       shift 2
       ;;
-    --alpha-version)
-      ALPHA_VERSION="${2:-}"
+    --channel-metadata-url)
+      CHANNEL_METADATA_URL="${2:-}"
       shift 2
       ;;
-    --beta-version)
-      BETA_VERSION="${2:-}"
-      shift 2
-      ;;
-    --base-url)
-      BASE_URL="${2:-}"
+    --installer-release-base-url)
+      INSTALLER_RELEASE_BASE_URL="${2:-}"
       shift 2
       ;;
     --help)
@@ -52,31 +50,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "${INSTALL_ROOT}" || -z "${ALPHA_VERSION}" || -z "${BETA_VERSION}" ]]; then
-  echo "--install-root, --alpha-version, and --beta-version are required" >&2
+if [[ -z "${INSTALL_ROOT}" ]]; then
+  echo "--install-root is required" >&2
   usage >&2
   exit 2
 fi
-
-preview_version_channel() {
-  local version="$1"
-  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
-    return 1
-  fi
-  printf '%s\n' "${BASH_REMATCH[1]}"
-}
-
-if [[ "$(preview_version_channel "${ALPHA_VERSION}")" != "alpha" ]]; then
-  echo "alpha version must use an -alpha.N prerelease label: ${ALPHA_VERSION}" >&2
-  exit 2
-fi
-
-if [[ "$(preview_version_channel "${BETA_VERSION}")" != "beta" ]]; then
-  echo "beta version must use a -beta.N prerelease label: ${BETA_VERSION}" >&2
-  exit 2
-fi
-
-mkdir -p "${INSTALL_ROOT}/versions"
 
 write_dispatcher() {
   local path="$1"
@@ -89,9 +67,8 @@ write_dispatcher() {
 set -eu
 
 DEFAULT_CHANNEL="${default_channel}"
-ALPHA_VERSION="${ALPHA_VERSION}"
-BETA_VERSION="${BETA_VERSION}"
-DEFAULT_INSTALL_BASE_URL="${BASE_URL}"
+CHANNEL_METADATA_URL="${CHANNEL_METADATA_URL}"
+INSTALLER_RELEASE_BASE_URL="${INSTALLER_RELEASE_BASE_URL}"
 
 fail() {
   echo "sifr installer dispatcher: \$*" >&2
@@ -135,8 +112,14 @@ download() {
   elif command -v wget >/dev/null 2>&1; then
     wget -q -O "\$2" "\$1"
   else
-    fail "curl or wget is required to download the immutable installer"
+    fail "curl or wget is required to download Sifr"
   fi
+}
+
+channel_version_from_metadata() {
+  channel="\$1"
+  metadata_file="\$2"
+  sed -n 's/.*"'\${channel}'"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p' "\${metadata_file}" | head -n 1
 }
 
 env_channel="\${SIFR_CHANNEL:-}"
@@ -183,6 +166,11 @@ if [ -n "\${env_channel}" ] && [ -n "\${arg_channel}" ] && [ "\${env_channel}" !
 fi
 
 explicit_channel="\${arg_channel:-\${env_channel}}"
+tmp_dir="\$(mktemp -d "\${TMPDIR:-/tmp}/sifr-install-dispatch.XXXXXX")"
+cleanup() {
+  rm -rf "\${tmp_dir}"
+}
+trap cleanup EXIT HUP INT TERM
 
 if [ -n "\${version_pin}" ]; then
   version_channel="\$(preview_channel_for_version "\${version_pin}")"
@@ -193,39 +181,29 @@ if [ -n "\${version_pin}" ]; then
   resolved_channel="\${version_channel}"
 else
   resolved_channel="\$(normalize_channel "\${explicit_channel:-\${DEFAULT_CHANNEL}}")"
-  case "\${resolved_channel}" in
-    alpha)
-      resolved_version="\${ALPHA_VERSION}"
-      ;;
-    beta)
-      resolved_version="\${BETA_VERSION}"
-      ;;
-    *)
-      fail "unreachable dispatcher channel: \${resolved_channel}"
-      ;;
-  esac
+  metadata_url="\${SIFR_CHANNEL_METADATA_URL:-\${CHANNEL_METADATA_URL}}"
+  metadata_path="\${tmp_dir}/channels.json"
+  if ! download "\${metadata_url}" "\${metadata_path}"; then
+    fail "channel metadata unavailable: \${metadata_url}"
+  fi
+  resolved_version="\$(channel_version_from_metadata "\${resolved_channel}" "\${metadata_path}")"
+  [ -n "\${resolved_version}" ] || fail "channel \${resolved_channel} missing from metadata"
   configured_version_channel="\$(preview_channel_for_version "\${resolved_version}")"
   if [ "\${configured_version_channel}" != "\${resolved_channel}" ]; then
-    fail "malformed dispatcher configuration: \${resolved_channel} points at \${resolved_version}"
+    fail "malformed channel metadata: \${resolved_channel} points at \${resolved_version}"
   fi
 fi
 
-base_url="\${SIFR_INSTALL_BASE_URL:-\${DEFAULT_INSTALL_BASE_URL}}"
-installer_url="\${base_url%/}/versions/\${resolved_version}"
+release_base_url="\${SIFR_INSTALLER_RELEASE_BASE_URL:-\${INSTALLER_RELEASE_BASE_URL}}"
+installer_url="\${release_base_url%/}/\${resolved_version}/sifr-installer-\${resolved_version}"
 
 if [ "\${SIFR_DISPATCH_TRACE:-0}" = "1" ]; then
   echo "sifr dispatcher channel=\${resolved_channel} version=\${resolved_version} url=\${installer_url}"
 fi
 
-tmp_dir="\$(mktemp -d "\${TMPDIR:-/tmp}/sifr-install-dispatch.XXXXXX")"
-cleanup() {
-  rm -rf "\${tmp_dir}"
-}
-trap cleanup EXIT HUP INT TERM
-
 installer_path="\${tmp_dir}/installer.sh"
 if ! download "\${installer_url}" "\${installer_path}"; then
-  fail "immutable generated installer unavailable: \${installer_url}"
+  fail "GitHub installer unavailable: \${installer_url}"
 fi
 
 chmod +x "\${installer_path}"
@@ -244,8 +222,11 @@ EOF
   chmod 755 "${path}"
 }
 
+mkdir -p "${INSTALL_ROOT}"
+rm -rf "${INSTALL_ROOT}/versions" "${INSTALL_ROOT}/metadata"
+
 write_dispatcher "${INSTALL_ROOT}/index" "beta"
 write_dispatcher "${INSTALL_ROOT}/alpha" "alpha"
 write_dispatcher "${INSTALL_ROOT}/beta" "beta"
 
-echo "generated dispatchers under ${INSTALL_ROOT}"
+echo "generated GitHub-backed dispatchers under ${INSTALL_ROOT}"
