@@ -7,7 +7,7 @@ use super::formatter_cli::FmtArgs;
 use super::lint_cli::{cmd_lint, LintArgs};
 use super::self_update_cli::{cmd_self, SelfArgs};
 use super::trace_cli::cmd_trace;
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
 #[cfg(test)]
 use sifr_driver::diagnostic_label_for_code_str;
@@ -360,16 +360,13 @@ fn run_cli(cli: Cli) -> i32 {
     if let Some(code) = cli.explain {
         return cmd_explain(&code, diagnostic_format);
     }
-    let config = cli.config;
-    let isolated = cli.isolated;
     let Some(command) = cli.command else {
-        let diagnostic = diagnostic_with_code(
-            "no command provided",
-            DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
-        );
-        render_diagnostics(&[diagnostic], diagnostic_format);
+        let mut cli_command = Cli::command();
+        let _ = cli_command.write_help(&mut io::stderr());
         return EXIT_USAGE_OR_CONFIG;
     };
+    let config = cli.config;
+    let isolated = cli.isolated;
     match command {
         Commands::Build {
             file,

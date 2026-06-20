@@ -65,6 +65,38 @@ fn run_sifr_with_env(args: &[&str], cwd: &Path, envs: &[(&str, &str)]) -> Comman
 }
 
 #[test]
+fn bare_invocation_shows_available_commands() {
+    let project = TestProject::new("bare_invocation", "def main():\n    pass\n");
+
+    let capture = run_sifr(&[], &project.root);
+
+    assert_eq!(capture.status_code, 2);
+    assert!(capture.stdout.is_empty());
+    assert!(capture.stderr.contains("Usage:"));
+    assert!(capture.stderr.contains("--diagnostic-format"));
+    assert!(capture.stderr.contains("--explain"));
+    assert!(capture.stderr.contains("Commands:"));
+    for command in [
+        "build", "run", "check", "emit", "fmt", "lint", "lsp", "test",
+    ] {
+        assert!(capture.stderr.contains(command), "missing {command}");
+    }
+    assert!(!capture.stderr.contains("SIFR-WORKSPACE-0004"));
+    assert!(!capture.stderr.contains("no command provided"));
+}
+
+#[test]
+fn explain_without_subcommand_still_prints_explanation() {
+    let project = TestProject::new("explain_without_subcommand", "def main():\n    pass\n");
+
+    let capture = run_sifr(&["--explain", "SIFR-PACKAGE-0105"], &project.root);
+
+    assert_eq!(capture.status_code, 0);
+    assert!(capture.stdout.contains("SIFR-PACKAGE-0105 is retired"));
+    assert!(capture.stderr.is_empty());
+}
+
+#[test]
 fn build_output_default_is_phase_aware_and_stderr_only() {
     let project = TestProject::new("default", "def main():\n    print(\"ok\")\n");
     let output_dir = project.output_dir("out");
