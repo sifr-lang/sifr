@@ -125,6 +125,13 @@
           "command": "python-interop-dataframes",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "dataframe-examples",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-dataframe-examples",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },

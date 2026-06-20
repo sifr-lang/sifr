@@ -155,11 +155,17 @@ pub(super) fn inject_python_runtime_bootstrap(
 }
 
 fn find_main_body_insert(main_rs: &str) -> Option<usize> {
-    let main_start = main_rs
-        .find("\nfn main() {")
+    find_function_body_insert(main_rs, "fn main(")
+        .or_else(|| find_function_body_insert(main_rs, "async fn main("))
+}
+
+fn find_function_body_insert(source: &str, signature_start: &str) -> Option<usize> {
+    let main_start = source
+        .find(&format!("\n{signature_start}"))
         .map(|index| index + 1)
-        .or_else(|| main_rs.strip_prefix("fn main() {").map(|_| 0))?;
-    Some(main_start + "fn main() {".len())
+        .or_else(|| source.strip_prefix(signature_start).map(|_| 0))?;
+    let body_offset = source[main_start..].find('{')?;
+    Some(main_start + body_offset + 1)
 }
 
 fn render_u64_vec(values: &[u64]) -> String {
@@ -285,6 +291,36 @@ mod tests {
         assert!(rendered.starts_with("fn __sifr_python_runtime_config()"));
         assert!(rendered.contains("fn main() {\n    if let Err(__sifr_python_runtime_error)"));
         assert!(rendered.contains("println!(\"ok\")"));
+    }
+
+    #[test]
+    fn injects_runtime_init_into_result_returning_main() {
+        let main_rs =
+            "fn main() -> Result<(), PythonError> {\n    run_example()?;\n    Ok(())\n}\n"
+                .to_string();
+
+        let rendered =
+            inject_python_runtime_bootstrap(&main_rs, &metadata()).expect("main should be patched");
+
+        assert!(rendered.contains(
+            "fn main() -> Result<(), PythonError> {\n    if let Err(__sifr_python_runtime_error)"
+        ));
+        assert!(rendered.contains("run_example()?"));
+    }
+
+    #[test]
+    fn injects_runtime_init_into_async_main() {
+        let main_rs =
+            "#[tokio::main]\nasync fn main() -> Result<(), Error> {\n    run().await\n}\n"
+                .to_string();
+
+        let rendered =
+            inject_python_runtime_bootstrap(&main_rs, &metadata()).expect("main should be patched");
+
+        assert!(rendered.contains(
+            "async fn main() -> Result<(), Error> {\n    if let Err(__sifr_python_runtime_error)"
+        ));
+        assert!(rendered.contains("run().await"));
     }
 
     #[test]
