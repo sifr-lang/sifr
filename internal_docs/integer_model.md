@@ -495,7 +495,7 @@ Rust interop requires exact signatures. If a Rust function takes `u32`, Sifr exp
 
 ```sifr
 @rust(bridge.net.set_flags)
-def set_flags(flags: uint32) -> Result[None, IOError]:
+def set_flags(flags: uint32) -> Result[None, IOError | RustPanicError]:
     pass
 ```
 

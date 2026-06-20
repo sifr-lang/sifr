@@ -135,6 +135,25 @@ The `PYIMP`, `PYCALL`, `PYCONV`, `PYRES`, `PYZC`, and `PYCB` families are reserv
 
 </Accordion>
 
+<Accordion title="RUST — Rust interop">
+
+The `SIFR-RUST-*` families are reserved for declaration-level Rust interop through Cargo. These placeholders lock the Rust interop diagnostic namespaces before compiler emission lands.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `SIFR-RUST-CONFIG-0001` | Error | Malformed Rust interop decorator. |
+| `SIFR-RUST-RESOLVE-0001` | Error | Unresolved Rust target path. |
+| `SIFR-RUST-TRUST-0001` | Error | Missing Rust interop trust declaration. |
+| `SIFR-RUST-TYPE-0001` | Error | Unsupported Rust bridge type. |
+| `SIFR-RUST-HANDLE-0001` | Error | Invalid opaque handle contract. |
+| `SIFR-RUST-ASYNC-0001` | Error | Invalid Rust async or thread-affinity contract. |
+| `SIFR-RUST-ZC-0001` | Error | Invalid zero-copy or view lifetime contract. |
+| `SIFR-RUST-CB-0001` | Error | Invalid callback lifetime or threading contract. |
+| `SIFR-RUST-PANIC-0001` | Error | Incompatible Rust panic strategy or poisoned handle. |
+| `SIFR-RUST-CARGO-0001` | Error | Cargo metadata, lockfile, or profile mismatch. |
+
+</Accordion>
+
 <Accordion title="DECIMAL — Decimal and fixed-point arithmetic">
 
 The `DECIMAL` family covers errors in Sifr's `Decimal` and `BigDecimal` numeric types. Sifr's decimal types are distinct from Python floats and have their own literal syntax, scale rules, and construction constraints.
