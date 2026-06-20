@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. This phase is intentionally scoped as a complete design contract, not an MVP. Implementation may be delivered in milestones, but the design decisions below are binding for the whole Python interop surface.
+> Status: complete with post-closeout verification hardening in progress. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. Follow-up PRs add production-grade runnable examples requested during phase closure without changing the binding design decisions below.
 
 ## Execution Status
 
@@ -103,6 +103,13 @@
   - Opus py12 review round 4 and final implementation review round 4 reported no blockers after documented fixes.
   - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests with cache hits `44/44` and 6 hardening variants with 0 failures, plus a warm wall-time advisory; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
   - Merged via PR [#2677](https://github.com/sifr-lang/sifr/pull/2677).
+- [ ] `post_closeout_dataframe_examples`: Full runnable NumPy, pandas, and Polars examples.
+  - Add area-local locked dependencies for NumPy, pandas, Polars, and pyarrow.
+  - Add compiled Sifr examples that construct library objects, run real operations, convert results back to typed Sifr values, and assert expected outputs.
+  - Add a `dataframe-examples` verification case that executes the examples through a temporary Sifr package linked to the area uv environment.
+  - Opus review round 1 reported no blockers and round 2 reported no blockers after stdout-marker, trust-root, timeout, cleanup, and `@blocking_io` helper fixes.
+  - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `dataframe-examples` passed, and hardening variants reported 0 failures; warm wall-time/cache advisories only.
+  - PR and merge pending.
 
 ## Objective
 

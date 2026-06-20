@@ -9,6 +9,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from certification_matrix import build_certification_report, validate_certification_policy
+from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
 from env import discover_paths
 from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
@@ -88,7 +89,10 @@ REQUIRED_SOURCE_FIXTURES = (
     "primitive_conversion/primitive_roundtrip.sifr",
     "numpy_buffer/py_buffer_readonly_failure.sifr",
     "numpy_buffer/py_buffer_memoryview.sifr",
+    "numpy_buffer/numpy_full_example.sifr",
     "numpy_buffer/py_buffer_roundtrip.sifr",
+    "pandas_arrow/pandas_full_example.sifr",
+    "polars_arrow/polars_full_example.sifr",
     "pyarrow_capsule/arrow_capsule_copy_possible.sifr",
     "pyarrow_capsule/arrow_capsule_roundtrip.sifr",
     "pyarrow_capsule/arrow_capsule_zero_copy.sifr",
@@ -122,6 +126,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--self-test", action="store_true", help="Run runner positive and negative self-tests.")
     parser.add_argument("--live-policy", action="store_true", help="Validate live container-runtime policy.")
     parser.add_argument("--live-examples", action="store_true", help="Run testcontainers-backed live examples.")
+    parser.add_argument("--dataframe-examples", action="store_true", help="Run full NumPy/pandas/Polars Sifr examples.")
     return parser.parse_args(argv)
 
 
@@ -132,6 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         run_self_tests(paths.area_root)
         run_live_policy_self_tests(paths)
         run_live_examples_self_tests(paths)
+        run_dataframe_examples_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:
@@ -149,6 +155,15 @@ def main(argv: list[str] | None = None) -> int:
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "live-failed" else 0
+    if args.dataframe_examples:
+        payload = build_dataframe_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop dataframe-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
 
     selected_groups = validate_filters("group", args.group, KNOWN_GROUPS)
     selected_tiers = validate_filters("tier", args.tier, KNOWN_TIERS)

@@ -13,6 +13,7 @@ verification/areas/python_interop/run.sh --group env
 verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --dataframe-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```
@@ -79,6 +80,16 @@ deterministic JSON with selected filters, matrix counts, fixture coverage, and
 package-certification status so interop evidence can be reviewed before live
 package execution gates exist.
 
+Dataframe examples are offline but executable. The `dataframe-examples` case
+links a temporary Sifr package to the area-local locked uv environment and runs
+real Sifr programs for NumPy, pandas, and Polars. These examples cover array or
+dataframe construction, library operations, conversion back into typed Sifr
+values, explicit result assertions, and deterministic stdout markers checked by
+the runner. They are separate from the dataframes matrix case so reviewers can
+distinguish package-certification metadata from compiled Sifr execution
+evidence. Runner self-tests validate report aggregation and fixture drift; the
+actual Cargo/Sifr/venv execution path is covered by `--dataframe-examples`.
+
 Package certification records include:
 
 - per-package tier, gate, group, native-extension, and host-dependency metadata;
@@ -102,3 +113,10 @@ Live example reports additionally include:
   it proves.
 - `container_runtime`: Docker daemon availability and structured skip reason
   when the local runtime is absent.
+
+Dataframe example reports additionally include:
+
+- `source_checks`: checked-in Sifr example presence for NumPy, pandas, and Polars.
+- `cases`: `sifr run` results for each compiled example.
+- `stdout_marker`: deterministic per-example output required for a passing case.
+- `dependencies`: the Python import roots trusted by at least one temporary package.
