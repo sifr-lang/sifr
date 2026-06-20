@@ -25,7 +25,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - Every bug fix includes a regression test before phase closure.
 - `check` remains hard-separated from codegen/runtime.
 - Parse/lower/type-check/semantic-diagnostic logic must flow through one canonical frontend API; tool-specific semantic reimplementation is forbidden.
-- Every top-level user-facing compiler diagnostic must carry a stable code and deterministic documentation URL of the form `https://sifr.sh/docs/errors/<CODE>`.
+- Every top-level user-facing compiler diagnostic must carry a stable code and deterministic documentation URL of the form `https://docs.sifr.sh/errors/<CODE>`.
 - No user-triggerable compiler panics.
 - No data-dependent emitted `.unwrap()`/`.expect()` in generated user runtime paths.
 - Scoped fix-back (`N+1` discovering defect in `N`) is allowed only if minimal, documented, regression-tested, and revalidated.

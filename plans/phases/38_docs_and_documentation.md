@@ -21,7 +21,7 @@ Establish a production-grade documentation layer (developer, user, and operation
 - Scope:
   - Publish versioned references for CLI behavior, diagnostics, package workflows, and phase contracts.
   - Publish the diagnostic catalog, output-format contract (`human`/`json`/`compact`), and stability guarantees for codes/help/suggestion fields.
-  - Publish one page per stable diagnostic code at `https://sifr.sh/docs/errors/<CODE>`.
+  - Publish one page per stable diagnostic code at `https://docs.sifr.sh/errors/<CODE>`.
   - Document the canonical severity enum exactly as `Error | Warning | Note | Help`.
   - Document the compact renderer contract and examples so downstream tools do not guess at grouping/truncation behavior.
   - Document expected compatibility/stability guarantees for users and contributors.
@@ -50,7 +50,7 @@ Establish a production-grade documentation layer (developer, user, and operation
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_38_1` (Documentation Information Architecture): validation goals cover: Define canonical docs structure for language, compiler internals, stdlib, CLI, packaging, and operations; Remove duplicated/contradictory guidance and centralize source-of-truth ownership. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_38_2` (Reference and Contract Documentation): validation goals cover: Publish versioned references for CLI behavior, diagnostics, package workflows, and phase contracts; Publish the diagnostic catalog, output-format contract, and stability guarantees for codes/help/suggestion fields; Publish one page per stable diagnostic code at `https://sifr.sh/docs/errors/<CODE>`; Document the canonical severity enum and compact renderer contract; Document expected compatibility/stability guarantees for users and contributors. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_38_2` (Reference and Contract Documentation): validation goals cover: Publish versioned references for CLI behavior, diagnostics, package workflows, and phase contracts; Publish the diagnostic catalog, output-format contract, and stability guarantees for codes/help/suggestion fields; Publish one page per stable diagnostic code at `https://docs.sifr.sh/errors/<CODE>`; Document the canonical severity enum and compact renderer contract; Document expected compatibility/stability guarantees for users and contributors. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_38_3` (Documentation Quality Gates): validation goals cover: Add local docs validation for link integrity, required sections, and drift checks against phase files; Ensure docs checks are runnable in local `create-pr/merge/release` workflows. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Core documentation is canonical, navigable, and quality-gated for ongoing phase execution and release usage.
 

@@ -14,7 +14,7 @@
         "value": "Cannot use `lazy` import statement on Python 3.14 (syntax was added in Python 3.15)"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0009",
+    "url": "https://docs.sifr.sh/errors/SIFR-PARSE-0009",
     "spans": [
       {
         "file": "main",

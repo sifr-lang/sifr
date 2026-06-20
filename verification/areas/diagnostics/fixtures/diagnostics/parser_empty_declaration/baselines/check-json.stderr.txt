@@ -14,7 +14,7 @@
         "value": "declaration_list"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0007",
+    "url": "https://docs.sifr.sh/errors/SIFR-PARSE-0007",
     "spans": [
       {
         "file": "main",

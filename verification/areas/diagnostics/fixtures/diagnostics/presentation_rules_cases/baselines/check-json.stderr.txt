@@ -10,7 +10,7 @@
         "value": "carriage return normalized"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0002",
+    "url": "https://docs.sifr.sh/errors/SIFR-TYPE-0002",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_rules_cases/main.sifr",
@@ -101,7 +101,7 @@
         "value": "spanless internal diagnostic"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-INTERNAL-0001",
+    "url": "https://docs.sifr.sh/errors/SIFR-INTERNAL-0001",
     "spans": [],
     "children": [],
     "help": "report this compiler bug",

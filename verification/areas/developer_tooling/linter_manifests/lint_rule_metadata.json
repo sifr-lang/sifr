@@ -4,7 +4,7 @@
     {
       "id": "trailing-whitespace",
       "summary": "Line ends with trailing horizontal whitespace.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0004",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0004",
       "default_severity": "warn",
       "status": "stable",
       "category": "style-policy",
@@ -15,7 +15,7 @@
     {
       "id": "unknown-suppression",
       "summary": "Suppression references an unknown policy rule id.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0001",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0001",
       "default_severity": "warn",
       "status": "stable",
       "category": "suppression-policy",
@@ -26,7 +26,7 @@
     {
       "id": "unused-suppression",
       "summary": "Suppression did not suppress any diagnostic.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0002",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0002",
       "default_severity": "warn",
       "status": "stable",
       "category": "suppression-policy",
@@ -37,7 +37,7 @@
     {
       "id": "blanket-suppression",
       "summary": "Suppression must list explicit Sifr policy rule ids.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0003",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0003",
       "default_severity": "warn",
       "status": "stable",
       "category": "suppression-policy",
@@ -48,7 +48,7 @@
     {
       "id": "todo-comment",
       "summary": "Comment contains a tracked TODO or FIXME marker.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0005",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0005",
       "default_severity": "warn",
       "status": "stable",
       "category": "comment-policy",
@@ -59,7 +59,7 @@
     {
       "id": "boolean-positional-argument",
       "summary": "Call passes a boolean literal positionally.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0006",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0006",
       "default_severity": "warn",
       "status": "stable",
       "category": "readability-policy",
@@ -70,7 +70,7 @@
     {
       "id": "large-parameter-list",
       "summary": "Function has more parameters than the policy limit.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0007",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0007",
       "default_severity": "warn",
       "status": "stable",
       "category": "complexity-policy",
@@ -81,7 +81,7 @@
     {
       "id": "duplicate-import",
       "summary": "Import duplicates a module/name pair already imported in the same source file.",
-      "docs_url": "https://sifr.sh/docs/errors/SIFR-LINT-0008",
+      "docs_url": "https://docs.sifr.sh/errors/SIFR-LINT-0008",
       "default_severity": "warn",
       "status": "stable",
       "category": "workspace-policy",

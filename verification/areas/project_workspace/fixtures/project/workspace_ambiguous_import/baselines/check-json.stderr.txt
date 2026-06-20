@@ -18,7 +18,7 @@
         "value": "workspace"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-IMPORT-0005",
+    "url": "https://docs.sifr.sh/errors/SIFR-IMPORT-0005",
     "spans": [
       {
         "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import/main.sifr",

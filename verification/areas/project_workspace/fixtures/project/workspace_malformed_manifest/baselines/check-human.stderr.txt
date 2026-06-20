@@ -5,4 +5,4 @@ error[SIFR-WORKSPACE-0001]: could not parse sifr.toml at '<WORKSPACE>/verificati
 unclosed table, expected `]`
 
   = location: <unavailable>
-  = docs: https://sifr.sh/docs/errors/SIFR-WORKSPACE-0001
+  = docs: https://docs.sifr.sh/errors/SIFR-WORKSPACE-0001

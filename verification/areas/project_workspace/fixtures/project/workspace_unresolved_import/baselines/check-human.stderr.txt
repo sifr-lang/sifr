@@ -6,4 +6,4 @@ error[SIFR-IMPORT-0002]: unknown import target: 'missing.helper'
   = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/missing/helper.sifr
   = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/lib/missing/helper.sifr
   = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/./missing/helper.sifr
-  = docs: https://sifr.sh/docs/errors/SIFR-IMPORT-0002
+  = docs: https://docs.sifr.sh/errors/SIFR-IMPORT-0002

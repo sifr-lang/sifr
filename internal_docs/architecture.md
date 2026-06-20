@@ -884,7 +884,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 **Rules:**
 
 - **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable family-local code of the form `SIFR-<FAMILY>-dddd`, for example `SIFR-NAME-0001`. Families identify the semantic domain, not merely the compiler stage. Historical `E####`/`W####` and message-embedded pseudo-codes are removed before public stability.
-- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.sh/docs/errors/<CODE>"`. This URL is part of the stable rules and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future reviewed verbose compact flag is added.
+- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://docs.sifr.sh/errors/<CODE>"`. This URL is part of the stable rules and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future reviewed verbose compact flag is added.
 - **Canonical severity enum:** the shared diagnostic model uses exactly three top-level severities:
   - `Error` -- blocks compilation or the active command
   - `Warning` -- non-blocking but actionable

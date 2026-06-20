@@ -68,7 +68,7 @@ pub(super) fn test_diagnostic(
         message: message.to_string(),
         message_template: "{message}".to_string(),
         args: BTreeMap::new(),
-        url: format!("https://sifr.sh/docs/errors/{code}"),
+        url: format!("https://docs.sifr.sh/errors/{code}"),
         spans: span.into_iter().collect(),
         children: Vec::new(),
         help: help.map(str::to_string),

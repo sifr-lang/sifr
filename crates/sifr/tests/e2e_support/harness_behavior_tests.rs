@@ -65,7 +65,7 @@ pub(crate) fn test_rendered_diagnostic_column_is_used_for_expect_error_matching(
         message: "type mismatch".to_string(),
         message_template: "{message}".to_string(),
         args: BTreeMap::new(),
-        url: "https://sifr.sh/docs/errors/SIFR-TYPE-0002".to_string(),
+        url: "https://docs.sifr.sh/errors/SIFR-TYPE-0002".to_string(),
         spans: vec![sifr_diagnostics::DiagnosticSpan {
             file: Some("unit.sifr".to_string()),
             byte_start: 4,

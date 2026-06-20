@@ -4,4 +4,4 @@ error[SIFR-PARSE-0009]: unsupported syntax: Cannot use `lazy` import statement o
    1 | lazy import value
      | ^^^^
   = note: while parsing main
-  = docs: https://sifr.sh/docs/errors/SIFR-PARSE-0009
+  = docs: https://docs.sifr.sh/errors/SIFR-PARSE-0009

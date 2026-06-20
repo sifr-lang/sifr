@@ -245,7 +245,7 @@ def validate_rule_metadata(manifest: dict[str, Any]) -> None:
     rust_ids = sorted(set(re.findall(r'id:\s*"([^"]+)"', lib)))
     require(sorted(ids) == rust_ids, f"rule metadata manifest does not match sifr_lint RULES: manifest={sorted(ids)} rust={rust_ids}")
     for rule in rules:
-        require(rule.get("docs_url", "").startswith("https://sifr.sh/docs/errors/"), f"rule docs URL must be Sifr-owned: {rule}")
+        require(rule.get("docs_url", "").startswith("https://docs.sifr.sh/errors/"), f"rule docs URL must be Sifr-owned: {rule}")
         require(rule.get("default_severity") in {"ignore", "warn", "error"}, f"invalid rule severity: {rule}")
         require(rule.get("status") in {"stable", "experimental", "deprecated"}, f"invalid rule status: {rule}")
         require(rule.get("category"), f"missing rule category: {rule}")

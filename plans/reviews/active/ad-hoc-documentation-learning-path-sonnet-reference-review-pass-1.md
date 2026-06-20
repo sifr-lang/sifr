@@ -14,7 +14,7 @@ The overall plan shape is right. The idea of a Reference tab, per-code pages see
 
 ### Issue 1: URL route is already committed in the compiler — this must be resolved before any page is published
 
-`crates/sifr_diagnostics/src/codes/registry.rs:287` emits `https://sifr.sh/docs/errors/<CODE>` as the live `docs_url()` for every diagnostic. The plan proposes `reference/error-codes/sifr-type-0002.mdx`, which would serve at a different path.
+`crates/sifr_diagnostics/src/codes/registry.rs:305` emits `https://docs.sifr.sh/errors/<CODE>` as the live `docs_url()` for every diagnostic. The plan proposes `reference/error-codes/sifr-type-0002.mdx`, which would serve at a different path.
 
 This is the highest-priority decision. Options:
 

@@ -14,7 +14,7 @@
         "value": "positional argument after keyword argument"
       }
     },
-    "url": "https://sifr.sh/docs/errors/SIFR-PARSE-0006",
+    "url": "https://docs.sifr.sh/errors/SIFR-PARSE-0006",
     "spans": [
       {
         "file": "main",
