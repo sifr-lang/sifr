@@ -813,22 +813,32 @@ verification/areas/rust_interop/
     rust_interop_tiers.toml
   fixtures/
     direct_crate_crc32/
+    direct_crate_matrix/          # sha2, uuid, regex
     direct_crate_negative_type/
     dotted_path_resolution/
+    bridge_type_matrix/           # serde, serde_json, thiserror, bytes, indexmap
     local_bridge_blake3/
-    same_workspace_crate/
-    shared_bridge_crate/
+    same_workspace_crate/         # contract-only workspace dependency behavior
+    shared_bridge_crate/          # contract-only shared bridge crate boundary
     opaque_handle_tokenizer/
+    opaque_resource_matrix/       # reqwest::Client, rusqlite, tokio-postgres, redis
     close_after_use/
-    panic_boundary/
-    panic_abort_profile/
+    bridge_version_mismatch/
+    panic_boundary/               # contract-only panic-to-error behavior
+    panic_abort_profile/          # contract-only abort-profile rejection
     async_runtime_reqwest/
+    async_ecosystem_matrix/       # futures, tower, http, http-body
     blocking_diagnostics/
     callbacks_call_scoped/
     callbacks_threadsafe/
+    callback_subscription_matrix/ # tokio-tungstenite, redis pub/sub, notify
     zero_copy_bytes/
+    zero_copy_view_matrix/        # memmap2, bytemuck, zerocopy
     arrow_record_batch/
-    tensor_dlpack_bridge/
+    tensor_dlpack_bridge/         # contract-only DLPack ownership handoff
+    advanced_data_matrix/         # datafusion, polars, ndarray, candle
+    ecosystem_backend_certification/ # axum, tower-http, sqlx
+    ecosystem_cli_certification/  # clap, tracing, tracing-subscriber, anyhow
     native_build_script/
     proc_macro_trust/
     cargo_locked_offline/
@@ -847,5 +857,57 @@ Verification tiers:
 - Tier 2: opaque handles, panic boundary, async/blocking, callbacks, and zero-copy.
 - Tier 3: package ecosystem fixtures for build scripts, proc macros, native linking, and offline/locked Cargo behavior.
 - Tier 4: production examples and compatibility matrix for selected Rust ecosystems.
+
+The Crate Verification Matrix must cover representative crates, not just synthetic fixtures.
+
+Required core fixtures:
+
+| Capability | Required crates |
+| --- | --- |
+| Direct compatible functions | `crc32fast`, `blake3`, `sha2`, `uuid`, `regex` |
+| Bridge type generation and conversion | `serde`, `serde_json`, `thiserror`, `bytes`, `indexmap` |
+| Build and proc-macro trust | `serde_derive`, `prost-build` |
+| Native/build links | `cc`, `bindgen`, `cxx`, `zstd` |
+| Async/Tokio ecosystem | `tokio`, `futures`, `reqwest`, `tower`, `http`, `http-body` |
+| Opaque resources | `reqwest::Client`, `rusqlite`, `tokio-postgres`, `redis` |
+| Blocking and CPU-heavy calls | `rusqlite`, `rayon`, `flate2` |
+| Zero-copy core views | `bytes`, `memmap2`, `bytemuck`, `zerocopy` |
+
+Required advanced fixtures:
+
+| Capability | Required crates |
+| --- | --- |
+| Arrow and dataframe exchange | `arrow`, `datafusion`, `polars` |
+| Tensor and array exchange | `ndarray`, `candle` |
+| Thread-safe callbacks and subscriptions | `tokio-tungstenite`, `redis` pub/sub, `notify` |
+
+Ecosystem certification fixtures:
+
+| Area | Representative crates |
+| --- | --- |
+| Backend/service certification | `axum`, `tower-http`, `sqlx` |
+| CLI/tooling certification | `clap`, `tracing`, `tracing-subscriber`, `anyhow` |
+
+Ecosystem certification for `axum`, `tower-http`, and `sqlx` is limited to canonical-package compilation and probe coverage; product-level web framework workflows remain out of Phase 39.
+
+`tokio` runtime behavior is exercised through `async_runtime_reqwest`, `async_ecosystem_matrix`, `opaque_resource_matrix`, and `callback_subscription_matrix`; do not add a redundant standalone Tokio fixture unless a future runtime contract requires it.
+
+Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matrix.json`:
+
+- `reqwest`: `default-features = false`, `features = ["rustls-tls", "json"]`; do not enable `blocking` in async fixtures.
+- `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
+- `rusqlite`: `features = ["bundled"]`; the unbundled system-sqlite variant is intentionally not certified in Phase 39.
+- `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
+- `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
+- `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
+- `axum` and `tower-http`: use default feature sets unless a fixture documents a narrower feature requirement.
+- `tracing-subscriber`: include `env-filter`.
+- `flate2`: `default-features = false`, `features = ["rust_backend"]`.
+- `candle`: CPU-only default backend; GPU and accelerator backend features are out of scope for Phase 39.
+- `prost-build`: use default features over a checked-in `.proto` input; generated output must be deterministic.
+
+Runtime-service fixtures must declare whether they are compile/probe-only, loopback-service backed, or in-process stub backed. `reqwest`, `tokio-tungstenite`, and `notify` fixtures should prefer loopback or local filesystem inputs. `tokio-postgres` and `redis` fixtures require explicit local service configuration and must be skippable only by fixture-tier policy, not by silently degrading the interop behavior under test.
+
+The matrix proves the Rust interop contract and package model. It does not create first-party Sifr wrappers for every listed crate and it does not move game, GUI, embedded, or product-level web framework work into Phase 39.
 
 The area must record positive and negative fixtures for every declared capability. A feature is not complete until its failure mode is as deliberate as its success path.

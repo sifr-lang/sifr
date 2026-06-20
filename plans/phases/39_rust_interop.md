@@ -99,7 +99,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Discover user-authored `src/bridges/*.rs` files without overwriting them silently.
   - Support shared bridge crates as normal Cargo dependencies while enforcing that shared bridge crates cannot import package-specific generated bridge types.
   - Validate bridge module target paths, exported functions, managed projection conflicts, and package archive contents.
-  - Add fixtures for local bridge, shared bridge crate, generated projection ownership, plain cargo-check limitations, package archive validation, and bridge module conflict behavior.
+  - Add fixtures for local bridge, shared bridge crate, generated projection ownership, bridge-version mismatch, plain cargo-check limitations, package archive validation, and bridge module conflict behavior.
 - Definition of done:
   - User bridge files remain owned by users.
   - Generated glue can call package-local bridge functions deterministically.
@@ -124,7 +124,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Implement direct binding for Cargo dependency functions whose public Rust signatures are bridge-compatible under milestone_39_4.
   - Validate function existence, visibility, arity, parameter types, return types, receiver mode, asyncness, panic policy, and `Result`/`Option` shape through milestone_39_2 probes.
   - Reject arbitrary lifetimes, borrowed returns, raw pointers, trait objects, unconstrained generics, closures, `unsafe fn`, and unsupported `Pin`/self-referential surfaces.
-  - Add direct binding fixtures for simple crates such as `crc32fast`, including compatible direct signatures, incompatible signatures, reserved-root conflicts, no-panic trust, and probe diagnostic mapping.
+  - Add direct binding fixtures for simple crates such as `crc32fast`, `blake3`, `sha2`, `uuid`, and `regex`, including compatible direct signatures, incompatible signatures, reserved-root conflicts, no-panic trust, and probe diagnostic mapping.
 - Definition of done:
   - Direct crate binding works without package-local bridge code for compatible signatures.
   - Incompatible third-party APIs require an explicit bridge and produce actionable diagnostics.
@@ -137,7 +137,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Generate handle wrappers that prevent use-after-close and double-close, enforce closed/poisoned state transitions, use private generated-glue tokens for state mutation, use `PoisonOnPanic` guards for owned handles, and expose only generated-safe accessors.
   - Require either safe `Drop` cleanup or explicit `close`/`aclose` contracts for owning handles.
   - Add diagnostics for leaking explicitly-closed handles where ownership analysis can prove the leak.
-  - Cover sync close, async close, borrowed handle, exclusive handle, clone, and non-clone paths.
+  - Cover sync close, async close, borrowed handle, exclusive handle, clone, and non-clone paths with resource-shaped crates such as `reqwest`, `rusqlite`, `tokio-postgres`, and `redis`.
 - Definition of done:
   - Opaque handles preserve Sifr ownership rules at the Rust boundary.
   - Use-after-close and invalid aliasing produce stable errors.
@@ -152,6 +152,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Require explicit Sifr offload APIs when classified calls are used from async Sifr code.
   - Allow non-`Send` futures only when explicitly pinned to the current Sifr Tokio runtime through `thread_affinity=tokio_current_thread`; reject non-`Send` futures that may leave that runtime.
   - Map cancellation and shutdown behavior to stable Sifr errors.
+  - Cover async ecosystem shapes with `tokio`, `futures`, `reqwest`, `tower`, `http`, and `http-body`.
 - Definition of done:
   - Async Rust interop composes with current-thread Tokio entrypoints.
   - Blocking and CPU-heavy calls cannot accidentally run on async scheduler paths.
@@ -178,7 +179,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Enforce owner/view lifetime rules, returned-view lifetime restrictions, aliasing, mutable exclusivity, Send/Sync declarations, and async suspension restrictions.
   - Support zero-copy bytes views.
   - Provide separate copy APIs for copy behavior; never silently copy for a zero-copy declaration.
-  - Add positive and negative fixtures for borrowed views, mutable exclusivity, owner lifetime, and copy-fallback rejection.
+  - Add positive and negative fixtures for borrowed views, mutable exclusivity, owner lifetime, copy-fallback rejection, and real view-backed crates such as `bytes`, `memmap2`, `bytemuck`, and `zerocopy`.
 - Definition of done:
   - Zero-copy fixtures include positive and negative ownership/lifetime cases.
   - Copy fallback attempts are rejected with `SIFR-RUST-ZC-*` diagnostics.
@@ -189,6 +190,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Add Arrow-compatible record batch/array bridge contracts through shared bridge crates.
   - Add tensor buffer contracts with dtype, shape, layout, strides, device, and ownership metadata.
   - Support DLPack-style tensor handoff through shared bridge crates where the ownership contract is explicit.
+  - Certify advanced data fixtures with `arrow`, `datafusion`, `polars`, `ndarray`, and `candle`.
 - Definition of done:
   - Arrow and tensor bridge fixtures validate metadata, ownership, and dtype behavior.
   - Shared bridge crates for Arrow/tensor work do not import package-specific generated bridge types.
@@ -201,6 +203,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Enforce Sifr task-spawn/offload ownership requirements for callbacks that may cross threads: no borrowed stack-local values, no non-send opaque handles, and no current-thread/current-OS-thread-affine captures.
   - Require explicit backpressure, cancellation, and shutdown policy for async or thread-safe callbacks.
   - Add panic-to-error handling around callback invocation.
+  - Exercise thread-safe callback and subscription behavior with crates such as `tokio-tungstenite`, `redis` pub/sub, and `notify`.
 - Definition of done:
   - Callback fixtures cover call-scoped and thread-safe callback behavior.
   - Invalid callback storage, threading, capture, and backpressure declarations fail at check/build time.
@@ -224,6 +227,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 - Scope:
   - Certify representative packages across direct binding, local bridge, shared bridge, opaque handle, zero-copy, async, callbacks, build script, proc macro, native link, and locked/offline Cargo behavior.
   - Publish a Rust interop compatibility matrix with `supported`, `supported-through-bridge`, `unsupported-by-design`, and `future-owned-by-separate-phase` categories.
+  - Include required fixture evidence for direct binding, bridge types, async, resource handles, blocking/CPU-heavy calls, zero-copy views, Arrow/dataframe exchange, tensor exchange, callbacks, proc macros, build scripts, native links, and locked/offline Cargo behavior.
   - Run production-grade review rounds until no `SIFR-RUST-*` diagnostic family, verification tier, bridge-type contract, runtime safety rule, or package/build-plan contract has an open specification gap.
 - Definition of done:
   - Every design capability has a passing positive fixture and a deliberate negative fixture.
@@ -242,6 +246,66 @@ Verification tiers:
 - Tier 3: build scripts, proc macros, native linking, and locked/offline Cargo behavior.
 - Tier 4: production examples and compatibility matrix.
 
+### Crate Verification Matrix
+
+Phase 39 verifies Rust interop behavior with representative real crates. This matrix is fixture guidance, not a promise that Sifr ships first-party package wrappers for every crate listed. A crate can count only when the fixture records the exact interop shape it exercises, the positive/negative evidence, the Cargo feature set, target triple, lock state, and any trust policy required.
+
+Required core fixtures:
+
+| Capability | Required crates | Verification purpose |
+| --- | --- | --- |
+| Direct compatible functions | `crc32fast`, `blake3`, `sha2`, `uuid`, `regex` | Dotted-path direct binding, bridge-compatible signatures, panic policy, incompatible signature rejection, and probe diagnostic mapping. |
+| Bridge type generation and conversion | `serde`, `serde_json`, `thiserror`, `bytes`, `indexmap` | Generated records/enums/errors, ordered dictionaries, owned bytes, explicit error types, and conversion diagnostics. |
+| Build and proc-macro trust | `serde_derive`, `prost-build` | Pre-execution proc-macro/build-script trust rejection, trusted execution evidence, and cache-key sensitivity. |
+| Native/build links | `cc`, `bindgen`, `cxx`, `zstd` | Trusted build-script link output, native-link evidence, unsafe bridge policy, and post-execution artifact acceptance. |
+| Async/Tokio ecosystem | `tokio`, `futures`, `reqwest`, `tower`, `http`, `http-body` | Async function probing, future output conversion, Send/non-Send diagnostics, cancellation, and service-shaped public types on Sifr's Tokio runtime. |
+| Opaque resources | `reqwest::Client`, `rusqlite`, `tokio-postgres`, `redis` | Owned handles, borrowed/exclusive receivers, close/aclose contracts, Send/Sync policy, poisoned handles, and resource cleanup. |
+| Blocking and CPU-heavy calls | `rusqlite`, `rayon`, `flate2` | `@blocking_io`, `@cpu_heavy`, explicit offload requirements, and rejection of accidental async-scheduler blocking. |
+| Zero-copy core views | `bytes`, `memmap2`, `bytemuck`, `zerocopy` | Owner/view lifetimes, mutable exclusivity, no-copy guarantees, static/call/owner lifetimes, and copy-fallback rejection. |
+
+Required advanced fixtures:
+
+| Capability | Required crates | Verification purpose |
+| --- | --- | --- |
+| Arrow and dataframe exchange | `arrow`, `datafusion`, `polars` | Arrow schema identity, record batches, columnar ownership metadata, shared bridge crate limits, and dataframe boundary behavior. |
+| Tensor and array exchange | `ndarray`, `candle` | Dtype, shape, layout, strides, device metadata, ownership transfer, and DLPack-style bridge contracts. |
+| Thread-safe callbacks and subscriptions | `tokio-tungstenite`, `redis` pub/sub, `notify` | Callback registration, cancellation handles, backpressure, overflow policy, shutdown, thread-safety, and callback panic mapping. |
+
+Ecosystem certification fixtures:
+
+| Area | Representative crates | Purpose |
+| --- | --- | --- |
+| Backend/service certification | `axum`, `tower-http`, `sqlx` | Prove real Rust-backed service packages can compile and probe through the canonical package model without adding web-framework-specific rules. |
+| CLI/tooling certification | `clap`, `tracing`, `tracing-subscriber`, `anyhow` | Prove common package-author dependencies work with generated bridge crates, diagnostics, and runtime integration. |
+
+Pinned fixture feature policy:
+
+- `reqwest`: `default-features = false`, `features = ["rustls-tls", "json"]`; do not enable `blocking` in async fixtures.
+- `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
+- `rusqlite`: `features = ["bundled"]`; the unbundled system-sqlite variant is intentionally not certified in Phase 39.
+- `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
+- `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
+- `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; this is ecosystem certification, not the primary opaque-resource fixture, and query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
+- `axum` and `tower-http`: use default feature sets unless a fixture documents a narrower feature requirement.
+- `tracing-subscriber`: include `env-filter` for the CLI/tooling certification fixture.
+- `flate2`: `default-features = false`, `features = ["rust_backend"]`.
+- `candle`: CPU-only default backend; GPU and accelerator backend features are out of scope for Phase 39.
+- `prost-build`: use default features and a checked-in `.proto` fixture; generated output must be deterministic.
+
+Fixture execution policy:
+
+- Compile/probe-only fixtures are valid for syntax, lowering, Cargo metadata, signature, feature, trust, and diagnostics coverage.
+- Resource-behavior fixtures must use loopback services, local filesystem inputs, or explicit local service configuration so close/aclose, cancellation, subscription, and shutdown behavior is actually observed.
+- `reqwest`, `tokio-tungstenite`, and `notify` should prefer loopback or local filesystem inputs.
+- `tokio-postgres` and `redis` require explicit local service configuration when runtime behavior is under test; a fixture can be tier-gated, but it cannot silently degrade into compile-only coverage while claiming resource behavior evidence.
+
+Out of scope for required Phase 39 verification:
+
+- Game, GUI, desktop, and rendering crates such as `bevy`, `wgpu`, `egui`, `tauri`, and `iced`.
+- Embedded and `no_std` ecosystems such as `embedded-hal`, `embassy`, and `defmt`.
+- Full product-level web framework support. Phase 39 may certify `axum`/`tower-http` package compilation and probing, but web framework product workflows belong to separate Sifr web work.
+- Creating Sifr standard wrappers for every crate above. Phase 39 proves the interop contract and package model; wrapper packages can be authored independently after the contract is implemented.
+
 ## Quality Contract
 
 - Entry criteria: Phase 38 is completed and docs/planning for the Rust interop architecture are canonical.
@@ -259,16 +323,16 @@ Verification tiers:
 
 - `milestone_39_0`: architecture, verification area, fixture matrix, tiers, diagnostic family inventory, and stale interop-design removal.
 - `milestone_39_1`: decorator parsing/lowering, structured target metadata, HIR representation, build-plan output, and invalid syntax diagnostics.
-- `milestone_39_2`: Cargo metadata, trust gates, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence.
-- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, package archive validation, projection conflicts, and same-workspace dependency behavior.
+- `milestone_39_2`: Cargo metadata, trust gates, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence with crates such as `serde_derive`, `prost-build`, `cc`, `bindgen`, `cxx`, and `zstd`.
+- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, bridge-version mismatch rejection, package archive validation, projection conflicts, and same-workspace dependency behavior.
 - `milestone_39_4`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, opaque `Handle<T>` representation, closed enum representation, unsupported containers, and unsupported bridge type diagnostics.
-- `milestone_39_5`: direct binding success, direct binding rejection for unsupported Rust signatures, probe diagnostic mapping, reserved-root conflict behavior, and no-panic trust behavior.
-- `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, state transitions, use-after-close, double-close, poisoned-handle behavior, and leak diagnostics.
-- `milestone_39_7`: async Rust functions, blocking/CPU-heavy classification, explicit offload, Tokio current-thread compatibility, current-thread non-`Send` futures, and invalid non-`Send` rejection.
+- `milestone_39_5`: direct binding success with `crc32fast`, `blake3`, `sha2`, `uuid`, and `regex`; direct binding rejection for unsupported Rust signatures; probe diagnostic mapping; reserved-root conflict behavior; and no-panic trust behavior.
+- `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, state transitions, use-after-close, double-close, poisoned-handle behavior, leak diagnostics, and resource-shaped crates such as `reqwest`, `rusqlite`, `tokio-postgres`, and `redis`.
+- `milestone_39_7`: async Rust functions, blocking/CPU-heavy classification, explicit offload, Tokio current-thread compatibility, current-thread non-`Send` futures, invalid non-`Send` rejection, and async ecosystem fixtures with `tokio`, `futures`, `reqwest`, `tower`, `http`, and `http-body`.
 - `milestone_39_8`: panic containment, Rust user errors, panic strategy rejection, poisoned handle behavior, and abort opt-in evidence.
-- `milestone_39_9`: zero-copy bytes, core view contracts, owner/view lifetime rejection, mutable exclusivity, and copy-fallback rejection.
-- `milestone_39_10`: Arrow record batches, tensor/DLPack handoff, shared bridge crate data boundaries, metadata validation, schema identity, and dtype behavior.
-- `milestone_39_11`: call-scoped callbacks, thread-safe callbacks, cancellation handles, backpressure, shutdown, and invalid capture/threading diagnostics.
+- `milestone_39_9`: zero-copy bytes, core view contracts, owner/view lifetime rejection, mutable exclusivity, copy-fallback rejection, and view-backed crates such as `bytes`, `memmap2`, `bytemuck`, and `zerocopy`.
+- `milestone_39_10`: Arrow record batches, dataframe exchange, tensor/DLPack handoff, shared bridge crate data boundaries, metadata validation, schema identity, dtype behavior, and advanced fixtures with `arrow`, `datafusion`, `polars`, `ndarray`, and `candle`.
+- `milestone_39_11`: call-scoped callbacks, thread-safe callbacks, cancellation handles, backpressure, shutdown, invalid capture/threading diagnostics, and subscription/event fixtures with `tokio-tungstenite`, `redis` pub/sub, and `notify`.
 - `milestone_39_12`: LSP completions, diagnostic documentation, package-author docs, `sifr bridge check`, `sifr repair --check`, `sifr repair`, user examples, and rejected-design docs.
 - `milestone_39_13`: ecosystem compatibility matrix, fixture evidence, review closure, and phase closeout.
 
