@@ -483,7 +483,7 @@ The target runtime placement is a new workspace crate, `crates/sifr_runtime`, li
 
 `SifrInt` is immutable, `Clone`, `Eq`, `Ord`, `Hash`, `Send`, and `Sync` when its backing implementation supports those traits. It is not `Copy` and has no `#[repr(C)]` ABI guarantee.
 
-Rust interop APIs must not expose `SifrInt` as a C-compatible integer. Interop either uses fixed-width integers or an explicit exact-integer bridge representation.
+Rust interop APIs must not expose `SifrInt` as a C-compatible integer. Interop either uses fixed-width integers or `sifr_runtime::interop::SifrIntBridge`, the explicit exact-integer bridge representation defined by the Rust interop architecture.
 
 Sifr source treats `int` as scalar value-semantic and non-consuming: using an `int` binding in more than one expression is always legal. Codegen is responsible for borrowing, cloning, or primitive-local optimization so Rust ownership does not leak into ordinary integer use.
 
@@ -501,7 +501,7 @@ def set_flags(flags: uint32) -> Result[None, IOError]:
 
 Passing an `int` to that function requires `uint32(value)` or a compiler-proven fitting literal. Returning Rust `u32` produces `uint32`; users widen with `int(value)` when they want Python-style arithmetic.
 
-Sifr structs/classes containing `int` fields are not C-ABI-compatible because `SifrInt` has no `repr(C)` layout guarantee. FFI structs must use fixed-width integer fields for integer slots or an explicit future big-integer handle type.
+Sifr structs/classes containing `int` fields are not C-ABI-compatible because `SifrInt` has no `repr(C)` layout guarantee. Low-level interop structs must use fixed-width integer fields for integer slots or generated bridge fields backed by `SifrIntBridge`.
 
 Panics from Rust interop remain a boundary concern and should be caught or rejected according to Rust interop safety rules. Integer overflow inside Sifr-generated fixed-width helper methods must not panic in user-triggerable paths.
 

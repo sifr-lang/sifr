@@ -67,14 +67,20 @@ def hash_bytes(input: bytes) -> Result[bytes, HashError]:
 
 The Rust bridge lives in package source, not generated output:
 
+`Error` is Sifr's canonical error base type defined by the error-safety contract in [`08_error_safety.md`](../plans/phases/08_error_safety.md); generated bridge error types follow the same `Bridge` naming and module placement rules as records and closed enums.
+
 ```rust
 // src/bridges/blake3.rs
+use crate::__sifr_bridge::fast_hash::HashErrorBridge;
+
 pub fn hash_bytes(input: &[u8]) -> Result<Vec<u8>, HashErrorBridge> {
     Ok(blake3::hash(input).as_bytes().to_vec())
 }
 ```
 
 Consumers do not see the Rust bridge unless they are maintaining the package.
+
+Bridge authors import generated Sifr bridge types from `crate::__sifr_bridge::<sifr_module_path>::<Name>Bridge`. The `Bridge` suffix is reserved for generated interop types; user-authored bridge modules must not define public items with that suffix in the generated bridge namespace.
 
 ## Declaration Syntax
 
@@ -129,12 +135,21 @@ class KafkaConsumer:
     def poll(self) -> Result[Message, KafkaError]:
         pass
 
-    @rust(Self.aclose)
-    def aclose(self) -> Result[None, KafkaError]:
+    @rust(bridge.kafka.consumer_aclose)
+    async def aclose(self) -> Result[None, KafkaError]:
         pass
 ```
 
 Decorator values are symbolic values, not strings. The opaque class declares ownership, close semantics, thread behavior, and borrowing rules before generated glue can expose the handle.
+
+Opaque decorator keys are fixed:
+
+- `type=` names the Rust type wrapped by the opaque handle.
+- `send=` and `sync=` declare whether the generated Sifr handle may cross Sifr task/thread boundaries.
+- `clone=` declares generated clone behavior.
+- `close=` declares cleanup behavior.
+- `borrow=` declares the default method receiver mode: `shared` lowers `Self.method` to `&self`, `exclusive` lowers to `&mut self`, and `owned` lowers to a consuming `self` call.
+- `thread_affinity=` declares runtime or OS-thread affinity that generated glue must preserve.
 
 ## Path Resolution
 
@@ -156,6 +171,31 @@ Resolution is compiler-owned and deterministic:
 5. Emit generated Rust glue and structured `InteropBuildPlan` metadata.
 
 Same-workspace crates are not special. They must still be declared as ordinary Cargo dependencies with a package, path, git, registry, and feature set.
+
+### `Self` Resolution
+
+Inside a `@rust.opaque` class, `Self.method` resolves against the Rust type declared by `@rust.opaque(type=...)`.
+
+Resolution order is:
+
+1. inherent methods on the resolved Rust type,
+2. diagnostic failure when the target is missing or is not an inherent method.
+
+For the `KafkaConsumer.poll` example above, `Self.poll` lowers to an inherent call on the wrapped `bridge.kafka.Consumer` value:
+
+```rust
+crate::bridges::kafka::Consumer::poll(&mut handle.inner)
+```
+
+Trait methods are not resolved through `Self` because Rust trait lookup depends on imports and can become ambiguous. Package authors expose trait-backed behavior through a package-local bridge shim:
+
+```python
+@rust(bridge.kafka.consumer_aclose)
+async def aclose(self) -> Result[None, KafkaError]:
+    pass
+```
+
+Missing, trait-only, ambiguous, or non-method `Self` targets produce `SIFR-RUST-RESOLVE-*` diagnostics with the opaque class span and target decorator span.
 
 ## Package Layout
 
@@ -192,6 +232,10 @@ build-env = ["LIBTOKENIZER_PATH"]
 ```
 
 Sifr may generate projection modules and guarded regions, but it must not overwrite user-authored Rust bridge files without an explicit diagnostic and user action.
+
+Backend crates are linked statically as ordinary Rust library crates. The supported backend crate type is `lib`; `cdylib`, `dylib`, and runtime-loaded backend crates are rejected for the Rust interop lane because they imply a dynamic ABI boundary.
+
+`bridge-version = 1` is the schema version for generated bridge modules, generated bridge type naming, decorator lowering, and runtime glue contracts. A package compiled by a compiler that does not support the declared bridge version fails during package validation.
 
 ## Compiler Model
 
@@ -238,17 +282,26 @@ Sifr-facing Rust bridge signatures are intentionally small and explicit.
 | `uint8`/`uint16`/`uint32`/`uint64` | matching unsigned integer | matching unsigned integer | matching unsigned integer |
 | `float32` | `f32` | `f32` | `f32` |
 | `float64` / `float` | `f64` | `f64` | `f64` |
+| `int` | `&SifrIntBridge` | `SifrIntBridge` | `SifrIntBridge` |
 | `str` | `&str` | `String` | `String` |
 | `bytes` | `&[u8]` | `Vec<u8>` | `Vec<u8>` |
 | `list[T]` | `&[T]` | `Vec<T>` | `Vec<T>` |
-| `dict[str, T]` | `&HashMap<String, T>` | `HashMap<String, T>` | `HashMap<String, T>` |
+| `dict[str, T]` | `&interop::IndexMap<String, T>` | `interop::IndexMap<String, T>` | `interop::IndexMap<String, T>` |
 | `Option[T]` | `Option<T>` | `Option<T>` | `Option<T>` |
 | `Result[T, E]` | not a parameter | not a parameter | `Result<T, E>` |
 | closed enum | generated bridge enum | generated bridge enum | generated bridge enum |
 | record class | generated bridge struct | generated bridge struct | generated bridge struct |
 | opaque class | `&Handle<T>` / `&mut Handle<T>` | `Handle<T>` | `Handle<T>` |
+| `Callback[[...], R]` | generated call-scoped callback handle | not storable | not a return type |
+| `ThreadsafeCallback[[...], R]` | generated thread-safe callback handle | generated thread-safe callback handle | not a return type |
 
-Exact `int` is not a native ABI integer. A bridge may accept exact integers only through Sifr's exact integer bridge representation. Fixed-width integer declarations are required for representation-sensitive APIs.
+Exact `int` is not a native ABI integer. `SifrIntBridge` lives in `sifr_runtime::interop` and is an owned, immutable, cloneable exact-integer value with `Eq`, `Ord`, `Hash`, `Send`, and `Sync`, no `Copy` implementation, and no `repr(C)` guarantee. Borrowed parameters use `&SifrIntBridge`; owned parameters and returns use `SifrIntBridge`. Bridges that need fixed-width storage or ABI layout must declare fixed-width integer types instead.
+
+`dict[str, T]` preserves Sifr/Python insertion order through `sifr_runtime::interop::IndexMap`, a runtime re-export of the pinned `indexmap::IndexMap` version used by generated bridge glue. Non-`str` dict keys are not bridge-compatible until a later design defines stable hashing/equality and ordering semantics for those key types.
+
+Nested borrowed forms are generated from the outer ownership mode. For example, borrowed `list[str]` is not `&[&str]`; it is a generated list view whose elements are borrowed string views with the same lifetime as the list view. `Option[str]` and `Option[bytes]` use generated optional borrowed views for borrowed parameters and owned `Option<String>` / `Option<Vec<u8>>` for owned parameters and returns.
+
+Sifr container types not listed above, including `set[T]`, `tuple[...]`, and arbitrary iterator/generator types, are not bridge-compatible in Phase 39 and produce `SIFR-RUST-TYPE-*` diagnostics. No implicit conversion is allowed.
 
 Rejected public bridge surfaces include:
 
@@ -266,15 +319,29 @@ Rejected public bridge surfaces include:
 
 Bridge-compatible records and enums are generated with explicit representation rules. Layout-sensitive interop must use generated bridge structs or declared wire layouts, not Rust's default layout.
 
+### Generated Bridge Types
+
+Every Sifr record, closed enum, and error type reachable across an `@rust` boundary materializes under:
+
+```rust
+crate::__sifr_bridge::<sifr_module_path>::<Name>Bridge
+```
+
+Generated record bridge structs preserve declared Sifr field order and expose generated constructors/accessors. When a bridge declaration needs layout-sensitive Rust access, the generated struct uses an explicit layout contract owned by the bridge schema; otherwise bridge authors must use accessors and must not rely on Rust default layout.
+
+Closed enum bridge types use explicit numeric discriminants assigned by declaration order unless the Sifr enum declares stable discriminant values. The default representation is `repr(u32)`. Values returned as a typed generated enum from Rust do not need runtime discriminant validation because Rust's type system has already constructed a valid enum value. Values returned through integer or wire adapters must validate the discriminant before becoming a Sifr value; invalid discriminants return a `SIFR-RUST-TYPE-*` runtime conversion error.
+
 ## Error Semantics
 
 Every fallible Rust call exposed to Sifr returns `Result`. Panics are not user errors.
 
-Generated wrappers catch unwind-safe panics at the boundary:
+Generated wrappers catch panics at the boundary:
 
 ```rust
 pub fn call_encode(text: &str) -> Result<Tokenized, NativeErrorOr<TokenizeError>> {
-    match std::panic::catch_unwind(|| tokenizer_backend::encode(text)) {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        tokenizer_backend::encode(text)
+    })) {
         Ok(Ok(value)) => Ok(value),
         Ok(Err(error)) => Err(NativeErrorOr::User(error)),
         Err(payload) => Err(NativeErrorOr::RustPanic(RustPanicError::from_payload(payload))),
@@ -282,7 +349,9 @@ pub fn call_encode(text: &str) -> Result<Tokenized, NativeErrorOr<TokenizeError>
 }
 ```
 
-`panic = "abort"` profiles are rejected for recoverable bridge builds unless the package explicitly opts into process-aborting behavior and the Sifr API documents that it cannot preserve the no-panic guarantee for that backend. Aborts, segmentation faults, and process kills are outside recoverability.
+`panic = "abort"` profiles are rejected for recoverable bridge builds unless the package explicitly opts into process-aborting behavior through `[trust].rust-panic-abort` and the Sifr API documents that it cannot preserve the no-panic guarantee for that backend. Aborts, segmentation faults, and process kills are outside recoverability.
+
+Generated wrappers use `AssertUnwindSafe` at the boundary because opaque handles and mutable bridge state are commonly not `UnwindSafe`. The generated wrapper marks an opaque handle as poisoned automatically when `catch_unwind` returns `Err`; bridge authors do not implement poisoning manually and must not depend on additional bridge code running after a panic. Re-entering a poisoned handle returns a stable `SIFR-RUST-PANIC-*` error instead of calling Rust again.
 
 `Drop` panics are backend contract violations. Fallible cleanup must be modeled as explicit `close` or `aclose`, not as hidden destructor failure.
 
@@ -340,9 +409,19 @@ Default async bridge requirements:
 
 - generated futures must be `'static` when spawned,
 - `Send` is required for work that leaves the current-thread runtime,
-- non-`Send` futures are rejected until Sifr has an explicit local-task surface for them,
+- non-`Send` futures are allowed only when pinned to the current Sifr Tokio runtime through `thread_affinity=tokio_current_thread` on the opaque type or through an explicit function-level `@rust.async(thread_affinity=tokio_current_thread)` declaration,
+- non-`Send` futures without current-thread affinity are rejected,
 - cancellation is cooperative and must map to stable Sifr cancellation errors,
 - runtime shutdown must drain or cancel registered Rust interop tasks deterministically.
+
+Free async functions that require current-thread affinity declare it explicitly:
+
+```python
+@rust.async(thread_affinity=tokio_current_thread)
+@rust(bridge.local_client.fetch)
+async def fetch(url: str) -> Result[Response, HttpError]:
+    pass
+```
 
 ## Zero-Copy and Views
 
@@ -354,6 +433,23 @@ Zero-copy is first-class and explicit, including bytes, Arrow-style columnar dat
 def digest_view(input: bytes) -> Result[DigestView, HashError]:
     pass
 ```
+
+`@rust.zero_copy(...)` declares that the API cannot copy. `@rust.view(...)` declares the view's lifetime, mutability, and thread behavior. They compose: `@rust.zero_copy` is required whenever copying is prohibited, `@rust.view` is required whenever the return value is a borrowed view, and a borrowed zero-copy API uses both decorators.
+
+```python
+@rust.view(
+    owner=input,
+    lifetime=call,
+    mutability=immutable,
+    send=false,
+    sync=false,
+)
+@rust(bridge.parser.tokens_view)
+def tokens_view(input: bytes) -> Result[TokenView, ParseError]:
+    pass
+```
+
+Allowed `lifetime` values are `call`, `owner`, and `static`. `call` views cannot escape the bridge call. `owner` views are tied to the named owner parameter or opaque handle. `static` requires the Rust target to return owned or globally valid data and is rejected for borrowed returns. `mutability=mutable` requires exclusive Sifr ownership of the owner for the full view lifetime.
 
 Rules:
 
@@ -370,7 +466,7 @@ Data-oriented bridges must support explicit contracts for:
 - Python/Rust-independent buffers,
 - Arrow C Data Interface compatible record batches and arrays,
 - tensor buffers with shape, dtype, layout, strides, device, and ownership metadata,
-- DLPack-style tensor handoff through shared bridge crates,
+- DLPack-style tensor handoff through a shared `sifr_tensor_bridge` crate,
 - dataframe adapters that preserve ownership and schema identity.
 
 ## Callbacks
@@ -418,6 +514,7 @@ rust-proc-macros = ["serde_derive"]
 native = ["openssl-sys"]
 unsafe-rust-bridges = ["src/bridges/tokenizer.rs"]
 build-env = ["OPENSSL_DIR"]
+rust-panic-abort = []
 ```
 
 Trust gates:
@@ -427,6 +524,7 @@ Trust gates:
 - native library linking,
 - unsafe code in first-party bridge files,
 - environment variables consumed by build scripts,
+- process-aborting panic profiles through `rust-panic-abort`,
 - optional strict allowlist for Rust crate roots.
 
 Safe Rust crates are not inherently unsafe, but code execution during build is. The trust model must separate build-time execution, native linking, unsafe bridge code, and ordinary safe dependency use.
@@ -442,15 +540,17 @@ The interop build cache key includes:
 - local bridge source digests,
 - `Cargo.lock`,
 - resolved Cargo package IDs, source IDs, features, and target triples,
+- selected Cargo profile name and profile settings that affect code generation or panic behavior,
+- resolved panic strategy, `lto`, `codegen-units`, `incremental`, target features, and rustc target-spec hash,
 - `@rust` target paths,
 - `@rust.opaque`, callback, and zero-copy declarations,
 - trust policy,
 - build-script/proc-macro/native evidence,
 - `rustc` and Cargo versions,
-- selected Sifr runtime metadata,
+- selected Sifr runtime metadata and bridge-version schema,
 - declared build environment variables and their values when policy allows them.
 
-Any change to bridge declarations, local bridge code, Cargo lock state, selected features, target triple, or trust policy invalidates the relevant interop build plan.
+Any change to bridge declarations, local bridge code, Cargo lock state, selected features, target triple, profile, panic strategy, bridge version, or trust policy invalidates the relevant interop build plan.
 
 ## Diagnostics
 
@@ -468,6 +568,21 @@ Rust interop diagnostics use stable diagnostic families:
 - `SIFR-RUST-CARGO-*`: Cargo metadata, feature, lockfile, or offline/frozen violation.
 
 Every diagnostic must include source span, resolved target when available, required fix, and documentation URL.
+
+Milestone 39.0 reserves the first code in every family:
+
+| Code | Reserved meaning |
+| --- | --- |
+| `SIFR-RUST-CONFIG-0001` | malformed Rust interop decorator |
+| `SIFR-RUST-RESOLVE-0001` | unresolved Rust target path |
+| `SIFR-RUST-TRUST-0001` | missing Rust interop trust declaration |
+| `SIFR-RUST-TYPE-0001` | unsupported Rust bridge type |
+| `SIFR-RUST-HANDLE-0001` | invalid opaque handle contract |
+| `SIFR-RUST-ASYNC-0001` | invalid Rust async/thread-affinity contract |
+| `SIFR-RUST-ZC-0001` | invalid zero-copy/view lifetime contract |
+| `SIFR-RUST-CB-0001` | invalid callback lifetime or threading contract |
+| `SIFR-RUST-PANIC-0001` | incompatible Rust panic strategy or poisoned handle |
+| `SIFR-RUST-CARGO-0001` | Cargo metadata or lock/profile mismatch |
 
 ## Tooling
 
