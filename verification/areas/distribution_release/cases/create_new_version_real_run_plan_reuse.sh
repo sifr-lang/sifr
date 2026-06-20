@@ -44,11 +44,16 @@ real_sha="$(printf '%s\n' "${real_output}" | sed -n 's/^plan_sha256=//p')"
 }
 
 grep -q "BETA_VERSION=\"${version}\"" "${site_repo}/apps/sifr-site/public/install/index"
-grep -q "\"beta\": \"${version}\"" "${site_repo}/apps/sifr-site/public/install/metadata/channels.json"
+grep -q "\"beta\": \"${version}\"" "${work_dir}/channels.json"
+test ! -e "${site_repo}/apps/sifr-site/public/install/metadata/channels.json"
 grep -q "APP_VERSION=\"${version}\"" "${site_repo}/apps/sifr-site/public/install/versions/${version}"
+grep -q "APP_VERSION=\"${version}\"" "${work_dir}/sifr-installer-${version}"
+cmp "${work_dir}/sifr-installer-${version}" "${site_repo}/apps/sifr-site/public/install/versions/${version}"
 test -x "${site_repo}/apps/sifr-site/public/install/versions/${version}"
 test -f "${work_dir}/plan.txt"
+test -f "${work_dir}/channels.json"
 test -f "${work_dir}/release-checklist.md"
 test -f "${work_dir}/recovery-note.md"
 "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
-  --install-root "${site_repo}/apps/sifr-site/public/install"
+  --install-root "${site_repo}/apps/sifr-site/public/install" \
+  --channels-file "${work_dir}/channels.json"

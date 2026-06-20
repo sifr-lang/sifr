@@ -5,8 +5,10 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::process::Command;
 
-pub(crate) const INSTALL_BASE_URL: &str = "https://sifr.sh/install";
-const CHANNEL_METADATA_URL: &str = "https://sifr.sh/install/metadata/channels.json";
+const GITHUB_RELEASE_DOWNLOAD_BASE_URL: &str =
+    "https://github.com/sifr-lang/sifr/releases/download";
+const CHANNEL_METADATA_URL: &str =
+    "https://github.com/sifr-lang/sifr/releases/download/channels/channels.json";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum PreviewChannel {
@@ -84,7 +86,10 @@ impl PreviewVersion {
     }
 
     pub(crate) fn installer_url(&self) -> String {
-        format!("{INSTALL_BASE_URL}/versions/{}", self.text)
+        format!(
+            "{GITHUB_RELEASE_DOWNLOAD_BASE_URL}/{}/sifr-installer-{}",
+            self.text, self.text
+        )
     }
 
     pub(crate) fn cmp_version(&self, other: &Self) -> std::cmp::Ordering {
