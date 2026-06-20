@@ -142,6 +142,41 @@ sifr self version --short   # prints only the version string
   `sifr self update` works only for standalone installs created by the official `https://sifr.sh/install` script. If you installed Sifr via Cargo, Homebrew, or a system package manager, use that tool's update mechanism instead.
 </Warning>
 
+## Uninstall Sifr
+
+Sifr does not currently include a `sifr self uninstall` command. To remove a standalone install created by the official installer, delete the installed binary and receipt directory:
+
+```bash
+rm -rf "$HOME/.sifr"
+```
+
+Then remove the installer-managed PATH source line from any shell profiles it updated. Look for this line:
+
+```bash
+. "${HOME}/.sifr/env"
+```
+
+Depending on your shell, it may appear in one or more of these files:
+
+- `~/.profile`
+- `~/.bashrc`
+- `~/.bash_profile`
+- `~/.zshrc`
+
+If you use fish, also remove the fish PATH helper:
+
+```bash
+rm -f "$HOME/.config/fish/conf.d/sifr.env.fish"
+```
+
+Restart your shell, then confirm that `sifr` is no longer on your PATH:
+
+```bash
+command -v sifr
+```
+
+If you installed Sifr to a custom directory with `SIFR_INSTALL_DIR`, remove that directory's `sifr` binary and its `install.json` receipt instead. If you installed Sifr through Cargo, Homebrew, or a system package manager, uninstall it with that same tool.
+
 ## Troubleshooting
 
 **Receipt missing or malformed.** If `sifr self update` reports that the install receipt is missing, predates the self-update rules, or is malformed, rerun the standalone installer to create a fresh receipt:
