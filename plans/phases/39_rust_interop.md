@@ -47,6 +47,8 @@ Phase 39 owns the full Rust interop implementation:
 
 This phase is otherwise self-contained. Any compiler, runtime, package, or verification plumbing missing for Rust interop must be implemented inside Phase 39 rather than deferred to another interop phase.
 
+Phase 39 has internal implementation checkpoints, not separate release phases. Core Rust interop must land before advanced data/callback certification, but Phase 39 is not complete, and Phase 40 does not start, until both core and advanced gates in this file are satisfied.
+
 ## Milestones
 
 ### milestone_39_0: Architecture Lock and Verification Scaffold
@@ -74,54 +76,58 @@ This phase is otherwise self-contained. Any compiler, runtime, package, or verif
   - Every parsed Rust interop declaration is visible to check/build/run paths before Cargo execution.
   - Negative fixtures prove invalid syntax cannot silently compile.
 
-### milestone_39_2: Cargo Resolution, Trust, and Cache Integration
+### milestone_39_2: Cargo Resolution, Trust, Cache, and Probe Infrastructure
 
 - Scope:
   - Resolve direct Cargo dependency roots, same-workspace crates, shared bridge crates, and package-local bridge roots.
   - Preserve Cargo as the source of truth for package IDs, source IDs, features, target triples, lockfiles, `--locked`, `--offline`, and `--frozen`.
-  - Add trust gates for `rust-build-scripts`, `rust-proc-macros`, `native`, `unsafe-rust-bridges`, `build-env`, and `rust-panic-abort`.
+  - Add trust gates for `rust-build-scripts`, `rust-proc-macros`, `native-links`, `unsafe-rust-bridges`, `build-env`, `rust-no-panic`, and `rust-panic-abort`.
+  - Split trust validation into pre-execution evidence that rejects known build scripts/proc macros before Cargo execution and post-execution evidence for trusted build-script link output before final artifact acceptance.
   - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, bridge-version schema, and declared build environment values in cache keys.
+  - Generate `RustBridgeProbePlan` metadata and isolated probe modules for Rust item/signature checking.
 - Definition of done:
   - Cargo metadata failures become Sifr diagnostics with spans and remediation.
-  - Trust failures are detected before executing untrusted build scripts or proc macros where possible.
+  - Known untrusted build scripts and proc macros are rejected before Cargo execution; native link evidence emitted by trusted build scripts is validated before final artifact acceptance.
   - Cache invalidation changes when any bridge declaration, bridge source, Cargo lock state, target, feature, or trust input changes.
+  - Probe failures map rustc diagnostics to `SIFR-RUST-RESOLVE-*` or `SIFR-RUST-TYPE-*` diagnostics at the original decorator span.
 
-### milestone_39_3: Direct Cargo Crate Bindings
-
-- Scope:
-  - Implement direct binding for Cargo dependency functions whose public Rust signatures are bridge-compatible.
-  - Validate function existence, visibility, arity, parameter types, return types, and `Result`/`Option` shape.
-  - Reject arbitrary lifetimes, borrowed returns, raw pointers, trait objects, unconstrained generics, closures, `unsafe fn`, and unsupported `Pin`/self-referential surfaces.
-  - Add direct binding fixtures for simple crates such as `crc32fast`.
-- Definition of done:
-  - Direct crate binding works without package-local bridge code for compatible signatures.
-  - Incompatible third-party APIs require an explicit bridge and produce actionable diagnostics.
-  - Same-workspace crates work only when declared as ordinary Cargo dependencies.
-
-### milestone_39_4: Package-Local and Shared Bridge Modules
+### milestone_39_3: Package-Local and Shared Bridge Modules
 
 - Scope:
-  - Generate and maintain Sifr-owned projection entries for `src/bridges/mod.rs`.
+  - Generate and maintain Sifr-owned projection entries for `src/bridges/mod.rs`, Sifr-managed `src/lib.rs`, and generated `crate::__sifr_bridge`.
   - Discover user-authored `src/bridges/*.rs` files without overwriting them silently.
-  - Support shared bridge crates as normal Cargo dependencies.
-  - Validate bridge module target paths and exported functions.
-  - Add fixtures for local bridge, shared bridge crate, and bridge module conflict behavior.
+  - Support shared bridge crates as normal Cargo dependencies while enforcing that shared bridge crates cannot import package-specific generated bridge types.
+  - Validate bridge module target paths, exported functions, managed projection conflicts, and package archive contents.
+  - Add fixtures for local bridge, shared bridge crate, generated projection ownership, plain cargo-check limitations, package archive validation, and bridge module conflict behavior.
 - Definition of done:
   - User bridge files remain owned by users.
   - Generated glue can call package-local bridge functions deterministically.
   - Bridge projection conflicts fail with stable diagnostics instead of clobbering user files.
+  - Shared bridge crates expose only stable Rust/runtime interop types or their own opaque types.
 
-### milestone_39_5: Bridge Type Contract and Conversion Runtime
+### milestone_39_4: Bridge Type Contract and Conversion Runtime
 
 - Scope:
   - Implement checked bridge mappings for booleans, fixed-width integers, exact integers through `sifr_runtime::interop::SifrIntBridge`, floats, strings, bytes, lists, order-preserving dicts, `Option`, `Result`, closed enums, records, callbacks, and errors.
   - Generate explicit bridge types for records, closed enums, and errors under `crate::__sifr_bridge::<sifr_module_path>::<Name>Bridge`.
   - Reject source-level exact `int` where a fixed-width or explicit exact representation is required.
-  - Add conversion diagnostics for width, overflow, invalid UTF-8, unsupported container shapes, and record layout mismatches.
+  - Add conversion diagnostics for width, overflow, invalid UTF-8, unsupported container shapes, record layout mismatches, invalid enum discriminants, and unsupported containers such as `set`/`tuple`.
 - Definition of done:
   - Supported type mappings roundtrip through Rust bridge calls.
-  - Unsupported mappings fail before generated Rust can reach an invalid Cargo build.
+  - Unsupported mappings fail before final generated binary build.
   - Every conversion failure has a stable Sifr error surface.
+
+### milestone_39_5: Direct Cargo Crate Bindings
+
+- Scope:
+  - Implement direct binding for Cargo dependency functions whose public Rust signatures are bridge-compatible under milestone_39_4.
+  - Validate function existence, visibility, arity, parameter types, return types, receiver mode, asyncness, panic policy, and `Result`/`Option` shape through milestone_39_2 probes.
+  - Reject arbitrary lifetimes, borrowed returns, raw pointers, trait objects, unconstrained generics, closures, `unsafe fn`, and unsupported `Pin`/self-referential surfaces.
+  - Add direct binding fixtures for simple crates such as `crc32fast`, including compatible direct signatures, incompatible signatures, reserved-root conflicts, no-panic trust, and probe diagnostic mapping.
+- Definition of done:
+  - Direct crate binding works without package-local bridge code for compatible signatures.
+  - Incompatible third-party APIs require an explicit bridge and produce actionable diagnostics.
+  - Same-workspace crates work only when declared as ordinary Cargo dependencies.
 
 ### milestone_39_6: Opaque Rust Handles and Resource Cleanup
 
@@ -163,22 +169,29 @@ This phase is otherwise self-contained. Any compiler, runtime, package, or verif
   - Abort-profile behavior is explicit and covered by negative validation.
   - Rust user errors and Rust panics remain distinguishable.
 
-### milestone_39_9: Zero-Copy, Views, Arrow, and Tensor Buffers
+### milestone_39_9: Zero-Copy and Core Views
 
 - Scope:
   - Implement explicit `@rust.zero_copy(...)` and `@rust.view(...)` contracts.
   - Enforce owner/view lifetime rules, aliasing, mutable exclusivity, Send/Sync declarations, and async suspension restrictions.
   - Support zero-copy bytes views.
+  - Provide separate copy APIs for copy behavior; never silently copy for a zero-copy declaration.
+  - Add positive and negative fixtures for borrowed views, mutable exclusivity, owner lifetime, and copy-fallback rejection.
+- Definition of done:
+  - Zero-copy fixtures include positive and negative ownership/lifetime cases.
+  - Copy fallback attempts are rejected with `SIFR-RUST-ZC-*` diagnostics.
+
+### milestone_39_10: Advanced Data Bridges
+
+- Scope:
   - Add Arrow-compatible record batch/array bridge contracts through shared bridge crates.
   - Add tensor buffer contracts with dtype, shape, layout, strides, device, and ownership metadata.
   - Support DLPack-style tensor handoff through shared bridge crates where the ownership contract is explicit.
-  - Provide separate copy APIs for copy behavior; never silently copy for a zero-copy declaration.
 - Definition of done:
-  - Zero-copy fixtures include positive and negative ownership/lifetime cases.
   - Arrow and tensor bridge fixtures validate metadata, ownership, and dtype behavior.
-  - Copy fallback attempts are rejected with `SIFR-RUST-ZC-*` diagnostics.
+  - Shared bridge crates for Arrow/tensor work do not import package-specific generated bridge types.
 
-### milestone_39_10: Callback Contracts
+### milestone_39_11: Callback Contracts
 
 - Scope:
   - Implement call-scoped callbacks that cannot be stored, called after return, or called from unmanaged threads.
@@ -191,19 +204,20 @@ This phase is otherwise self-contained. Any compiler, runtime, package, or verif
   - Invalid callback storage, threading, capture, and backpressure declarations fail at check/build time.
   - Registered callbacks clean up deterministically during shutdown.
 
-### milestone_39_11: Tooling, Diagnostics, and Documentation
+### milestone_39_12: Tooling, Diagnostics, and Documentation
 
 - Scope:
   - Add LSP completion and validation for Rust decorator dotted paths.
   - Add diagnostics documentation for `SIFR-RUST-CONFIG-*`, `SIFR-RUST-RESOLVE-*`, `SIFR-RUST-TRUST-*`, `SIFR-RUST-TYPE-*`, `SIFR-RUST-HANDLE-*`, `SIFR-RUST-ASYNC-*`, `SIFR-RUST-ZC-*`, `SIFR-RUST-CB-*`, `SIFR-RUST-PANIC-*`, and `SIFR-RUST-CARGO-*`.
   - Document package-author workflows for direct bindings, local bridges, shared bridge crates, opaque handles, async, zero-copy, callbacks, and trust policy.
+  - Document `sifr bridge check`, `sifr repair --check`, and `sifr repair` workflows for managed projections and local bridge authoring.
   - Document user-facing examples for `crc32fast`, `blake3`, tokenizer handles, async HTTP, Arrow, tensor/DLPack, and callback registration.
 - Definition of done:
   - Tooling surfaces the same target resolution and diagnostics as the compiler.
   - Public and internal docs are aligned with the architecture document.
   - Invalid examples are documented as rejected designs, not alternate forms.
 
-### milestone_39_12: Ecosystem Certification and Closeout
+### milestone_39_13: Ecosystem Certification and Closeout
 
 - Scope:
   - Certify representative packages across direct binding, local bridge, shared bridge, opaque handle, zero-copy, async, callbacks, build script, proc macro, native link, and locked/offline Cargo behavior.
@@ -243,21 +257,33 @@ Verification tiers:
 
 - `milestone_39_0`: architecture, verification area, fixture matrix, tiers, diagnostic family inventory, and stale interop-design removal.
 - `milestone_39_1`: decorator parsing/lowering, structured target metadata, HIR representation, build-plan output, and invalid syntax diagnostics.
-- `milestone_39_2`: Cargo metadata, trust gates, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native evidence.
-- `milestone_39_3`: direct binding success and direct binding rejection for unsupported Rust signatures.
-- `milestone_39_4`: package-local bridge generation, shared bridge crates, projection conflicts, and same-workspace dependency behavior.
-- `milestone_39_5`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, and unsupported bridge type diagnostics.
+- `milestone_39_2`: Cargo metadata, trust gates, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence.
+- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, package archive validation, projection conflicts, and same-workspace dependency behavior.
+- `milestone_39_4`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, closed enum representation, unsupported containers, and unsupported bridge type diagnostics.
+- `milestone_39_5`: direct binding success, direct binding rejection for unsupported Rust signatures, probe diagnostic mapping, reserved-root conflict behavior, and no-panic trust behavior.
 - `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, use-after-close, double-close, and leak diagnostics.
 - `milestone_39_7`: async Rust functions, blocking/CPU-heavy classification, explicit offload, Tokio current-thread compatibility, current-thread non-`Send` futures, and invalid non-`Send` rejection.
 - `milestone_39_8`: panic containment, Rust user errors, panic strategy rejection, poisoned handle behavior, and abort opt-in evidence.
-- `milestone_39_9`: zero-copy bytes, Arrow record batches, tensor/DLPack handoff, owner/view lifetime rejection, mutable exclusivity, and copy-fallback rejection.
-- `milestone_39_10`: call-scoped callbacks, thread-safe callbacks, cancellation handles, backpressure, shutdown, and invalid capture/threading diagnostics.
-- `milestone_39_11`: LSP completions, diagnostic documentation, package-author docs, user examples, and rejected-design docs.
-- `milestone_39_12`: ecosystem compatibility matrix, fixture evidence, review closure, and phase closeout.
+- `milestone_39_9`: zero-copy bytes, core view contracts, owner/view lifetime rejection, mutable exclusivity, and copy-fallback rejection.
+- `milestone_39_10`: Arrow record batches, tensor/DLPack handoff, shared bridge crate data boundaries, metadata validation, schema identity, and dtype behavior.
+- `milestone_39_11`: call-scoped callbacks, thread-safe callbacks, cancellation handles, backpressure, shutdown, and invalid capture/threading diagnostics.
+- `milestone_39_12`: LSP completions, diagnostic documentation, package-author docs, `sifr bridge check`, `sifr repair --check`, `sifr repair`, user examples, and rejected-design docs.
+- `milestone_39_13`: ecosystem compatibility matrix, fixture evidence, review closure, and phase closeout.
 
 ## Exit Gate
 
-- Rust-backed Sifr packages can expose direct Cargo bindings, package-local bridges, shared bridge crates, opaque handles, async functions, zero-copy views, tensors, Arrow-style data, and callbacks under the canonical declaration model.
+Core gate:
+
+- Rust-backed Sifr packages can expose package-local bridges, shared bridge crates, direct Cargo bindings, bridge-compatible records/enums/errors, opaque handles, async functions, blocking/CPU-heavy classifications, panic surfaces, and zero-copy core views under the canonical declaration model.
+- Cargo resolution, Rust signature probing, trust policy, cache keys, managed projections, diagnostics, and verification tiers 0-2 are implemented with positive and negative fixtures.
+
+Advanced gate:
+
+- Rust-backed Sifr packages can expose Arrow-style data, tensors, DLPack handoff, thread-safe callbacks, advanced zero-copy views, tooling/docs flows, and ecosystem certification under the same canonical declaration model.
+- Verification tiers 3-4 and the compatibility matrix are backed by local validation evidence.
+
+Full Phase 39 exit:
+
 - Every Rust interop path lowers through structured metadata into generated Rust and Cargo build plans.
 - Every unsafe, build-time, native, blocking, CPU-heavy, callback, panic, and zero-copy hazard has a stable trust/diagnostic/verification surface.
 - The verification area contains positive and negative fixtures for every supported capability.

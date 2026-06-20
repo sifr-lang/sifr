@@ -493,7 +493,7 @@ Decimal string formatting of `int` is exact. Format specs for binary, octal, hex
 
 Rust interop requires exact signatures. If a Rust function takes `u32`, Sifr exposes `uint32`, not `int`.
 
-```python
+```sifr
 @rust(bridge.net.set_flags)
 def set_flags(flags: uint32) -> Result[None, IOError]:
     pass

@@ -46,23 +46,22 @@ Raw C ABI interop is a separate unsafe lane. Python interop is a separate embedd
 
 Rust-backed APIs are normal Sifr APIs:
 
-```python
+```sifr
 from fast_hash import hash_bytes
 
-def main() -> Result[None, HashError]:
+def main() -> Result[None, HashError | RustPanicError]:
     digest = try hash_bytes(b"hello")
     print(digest.hex())
 ```
 
 The package author declares the Rust implementation boundary:
 
-```python
+```sifr
 class HashError(Error):
     message: str
 
 @rust(bridge.blake3.hash_bytes)
-def hash_bytes(input: bytes) -> Result[bytes, HashError]:
-    pass
+def hash_bytes(input: bytes) -> Result[bytes, HashError | RustPanicError]: ...
 ```
 
 The Rust bridge lives in package source, not generated output:
@@ -88,43 +87,40 @@ Rust interop uses decorators on normal Sifr declarations.
 
 ### Direct Function Binding
 
-```python
-@rust(crc32fast.hash)
-def crc32(data: bytes) -> uint32:
-    pass
+```sifr
+@rust(crc32fast.hash, panic=trusted_no_panic)
+def crc32(data: bytes) -> uint32: ...
 ```
 
 `crc32fast.hash` resolves to a direct Cargo dependency root named `crc32fast` and Rust path `crc32fast::hash`.
 
-Direct binding is allowed only when the target signature is bridge-compatible without adaptation. If the Rust crate exposes a non-compatible API, the package author must write a package-local bridge.
+Direct binding is allowed only when the target signature is bridge-compatible without adaptation. If the Rust crate exposes a non-compatible API, the package author must write a package-local bridge. Non-`Result` direct bindings require an explicit panic policy such as `panic=trusted_no_panic`; otherwise they must expose `Result[..., RustPanicError]`.
 
 ### Package-Local Bridge Binding
 
-```python
+```sifr
 @rust(bridge.tokenizer.encode)
-def encode(text: str) -> Result[Tokenized, TokenizeError]:
-    pass
+def encode(text: str) -> Result[Tokenized, TokenizeError | RustPanicError]: ...
 ```
 
 `bridge.tokenizer.encode` resolves to `crate::bridges::tokenizer::encode` in the generated package crate. Sifr owns projection entries for `src/bridges/mod.rs`, but user-authored bridge files remain user files and must never be overwritten silently.
 
 ### Shared Bridge Crate Binding
 
-```python
+```sifr
 @rust(sifr_arrow_bridge.record_batch_from_columns)
-def record_batch(columns: dict[str, ArrowArray]) -> Result[ArrowRecordBatch, ArrowError]:
-    pass
+def record_batch(columns: dict[str, ArrowArray]) -> Result[ArrowRecordBatch, ArrowError | RustPanicError]: ...
 ```
 
 Shared bridge crates are ordinary Cargo dependencies that publish stable adapter APIs for common Rust ecosystems.
 
 ### Opaque Types
 
-```python
+```sifr
 @rust.opaque(
     type=bridge.kafka.Consumer,
-    send=false,
-    sync=false,
+    send=False,
+    sync=False,
     clone=none,
     close=async_close,
     borrow=exclusive,
@@ -132,12 +128,10 @@ Shared bridge crates are ordinary Cargo dependencies that publish stable adapter
 )
 class KafkaConsumer:
     @rust(Self.poll)
-    def poll(self) -> Result[Message, KafkaError]:
-        pass
+    def poll(self) -> Result[Message, KafkaError | RustPanicError]: ...
 
     @rust(bridge.kafka.consumer_aclose)
-    async def aclose(self) -> Result[None, KafkaError]:
-        pass
+    async def aclose(own self) -> Result[None, KafkaError | RustPanicError]: ...
 ```
 
 Decorator values are symbolic values, not strings. The opaque class declares ownership, close semantics, thread behavior, and borrowing rules before generated glue can expose the handle.
@@ -148,8 +142,10 @@ Opaque decorator keys are fixed:
 - `send=` and `sync=` declare whether the generated Sifr handle may cross Sifr task/thread boundaries.
 - `clone=` declares generated clone behavior.
 - `close=` declares cleanup behavior.
-- `borrow=` declares the default method receiver mode: `shared` lowers `Self.method` to `&self`, `exclusive` lowers to `&mut self`, and `owned` lowers to a consuming `self` call.
+- `borrow=` declares the default method receiver mode: `shared` lowers unannotated `self` on `Self.method` to `&self`, `exclusive` lowers it to `&mut self`, and `owned` lowers it to a consuming `self` call.
 - `thread_affinity=` declares runtime or OS-thread affinity that generated glue must preserve.
+
+Method receiver annotations win over the class-level `borrow=` default. `def method(self, ...)` uses the class default, `def method(mut self, ...)` lowers to `&mut self`, and `def method(own self, ...)` consumes the handle and marks it closed or moved. `close=close` requires `def close(own self) -> Result[None, E]`; `close=async_close` requires `async def aclose(own self) -> Result[None, E]`. If the close target is a package-local function rather than `Self.method`, generated glue passes the owned handle value to the bridge function, marks the Sifr handle closed before returning success, and marks it poisoned if the Rust call panics.
 
 ## Path Resolution
 
@@ -172,6 +168,8 @@ Resolution is compiler-owned and deterministic:
 
 Same-workspace crates are not special. They must still be declared as ordinary Cargo dependencies with a package, path, git, registry, and feature set.
 
+`bridge` and `Self` are reserved roots inside `@rust` paths. A Cargo dependency named `bridge` or `Self` cannot be targeted directly; package authors must use a Cargo dependency alias such as `bridge_crate = { package = "bridge", version = "..." }`. Reserved-root collisions produce `SIFR-RUST-RESOLVE-*` diagnostics with the dependency and decorator spans.
+
 ### `Self` Resolution
 
 Inside a `@rust.opaque` class, `Self.method` resolves against the Rust type declared by `@rust.opaque(type=...)`.
@@ -189,10 +187,9 @@ crate::bridges::kafka::Consumer::poll(&mut handle.inner)
 
 Trait methods are not resolved through `Self` because Rust trait lookup depends on imports and can become ambiguous. Package authors expose trait-backed behavior through a package-local bridge shim:
 
-```python
+```sifr
 @rust(bridge.kafka.consumer_aclose)
-async def aclose(self) -> Result[None, KafkaError]:
-    pass
+async def aclose(own self) -> Result[None, KafkaError | RustPanicError]: ...
 ```
 
 Missing, trait-only, ambiguous, or non-method `Self` targets produce `SIFR-RUST-RESOLVE-*` diagnostics with the opaque class span and target decorator span.
@@ -226,12 +223,23 @@ direct-crate-bindings = true
 [trust]
 rust-build-scripts = ["tokenizer_backend"]
 rust-proc-macros = []
-native = ["tokenizer_backend"]
+native-links = []
 unsafe-rust-bridges = ["src/bridges/tokenizer.rs"]
 build-env = ["LIBTOKENIZER_PATH"]
+rust-no-panic = []
+rust-panic-abort = []
 ```
 
 Sifr may generate projection modules and guarded regions, but it must not overwrite user-authored Rust bridge files without an explicit diagnostic and user action.
+
+File ownership is fixed:
+
+- `src/bridges/*.rs` files are user-owned. Sifr never overwrites them.
+- `src/bridges/mod.rs` is Sifr-owned for Rust-backed packages. If it is missing or user-authored, Sifr emits a repair/projection diagnostic before build.
+- `src/lib.rs` is Sifr-managed for packages using local bridges. Pure packages keep the pure marker target; Rust-backed packages receive managed module declarations for bridges and generated bridge types.
+- `crate::__sifr_bridge` is generated and reserved. User code cannot define this namespace.
+
+Rust-backed package archives must include `sifr.toml`, Sifr source, `Cargo.toml`, declared `src/bridges/*.rs` files, Sifr-managed projection files, and bridge-version metadata. `sifr package` rejects archives whose managed projections, source digests, or bridge-version metadata do not match the interop build plan.
 
 Backend crates are linked statically as ordinary Rust library crates. The supported backend crate type is `lib`; `cdylib`, `dylib`, and runtime-loaded backend crates are rejected for the Rust interop lane because they imply a dynamic ABI boundary.
 
@@ -262,6 +270,7 @@ The Rust plan records:
 - direct Cargo dependency roots,
 - local bridge module paths and source digests,
 - bridge signature requirements,
+- RustBridgeProbePlan entries for direct binding checks,
 - opaque handle layouts,
 - async/blocking classifications,
 - zero-copy/view contracts,
@@ -270,6 +279,21 @@ The Rust plan records:
 - Cargo feature and package metadata that must enter the build cache key.
 
 The driver materializes generated glue from this plan. It must not scan emitted Rust text to infer dependencies.
+
+## Rust Signature Probing
+
+Sifr does not implement a Rust resolver. Direct binding signatures are validated through a Sifr-generated `RustBridgeProbePlan` that asks Cargo/rustc to type-check item existence, visibility, arity, receiver mode, asyncness, and bridge-compatible types in an isolated probe module before final generated binary build.
+
+Probe code uses generated type assertions rather than semantic Rust item metadata:
+
+```rust
+const _: () = {
+    fn assert_signature(f: fn(&[u8]) -> u32) {}
+    let _ = assert_signature(crc32fast::hash);
+};
+```
+
+Probe failures map rustc diagnostics back to the original `@rust(...)` span as `SIFR-RUST-RESOLVE-*` or `SIFR-RUST-TYPE-*` diagnostics. The final generated binary is not built until probe diagnostics are clean. This is the precise meaning of "checked before build": incompatibility is detected in a Sifr-controlled probe/check step rather than surfacing as raw application build noise.
 
 ## Bridge Type Contract
 
@@ -331,9 +355,27 @@ Generated record bridge structs preserve declared Sifr field order and expose ge
 
 Closed enum bridge types use explicit numeric discriminants assigned by declaration order unless the Sifr enum declares stable discriminant values. The default representation is `repr(u32)`. Values returned as a typed generated enum from Rust do not need runtime discriminant validation because Rust's type system has already constructed a valid enum value. Values returned through integer or wire adapters must validate the discriminant before becoming a Sifr value; invalid discriminants return a `SIFR-RUST-TYPE-*` runtime conversion error.
 
+### Shared Bridge Crate Boundaries
+
+Package-local bridges compile inside the generated package crate and may use package-generated `crate::__sifr_bridge::<module>::<Name>Bridge` types.
+
+Shared bridge crates are ordinary Cargo dependencies and cannot import package-specific generated bridge modules. They may expose only stable Rust types, `sifr_runtime::interop` helper types, or their own opaque handle types. Generated glue adapts package-local Sifr records, enums, and errors to the shared bridge crate's public types outside the shared bridge crate.
+
 ## Error Semantics
 
 Every fallible Rust call exposed to Sifr returns `Result`. Panics are not user errors.
+
+## Panic Surface Policy
+
+Every `@rust` declaration has an explicit panic surface.
+
+Result-returning functions convert caught Rust panics to `RustPanicError`, and that error must enter the declared Sifr error channel through one of:
+
+- a declared union/member error type such as `Result[T, E | RustPanicError]`,
+- a declared `panic=map_error` adapter that maps `RustPanicError` into the public error type,
+- a deliberate supertype error surface such as `Result[T, Error]`.
+
+Non-`Result` functions cannot return a recoverable panic without changing their public type. They are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
 
 Generated wrappers catch panics at the boundary:
 
@@ -351,7 +393,7 @@ pub fn call_encode(text: &str) -> Result<Tokenized, NativeErrorOr<TokenizeError>
 
 `panic = "abort"` profiles are rejected for recoverable bridge builds unless the package explicitly opts into process-aborting behavior through `[trust].rust-panic-abort` and the Sifr API documents that it cannot preserve the no-panic guarantee for that backend. Aborts, segmentation faults, and process kills are outside recoverability.
 
-Generated wrappers use `AssertUnwindSafe` at the boundary because opaque handles and mutable bridge state are commonly not `UnwindSafe`. The generated wrapper marks an opaque handle as poisoned automatically when `catch_unwind` returns `Err`; bridge authors do not implement poisoning manually and must not depend on additional bridge code running after a panic. Re-entering a poisoned handle returns a stable `SIFR-RUST-PANIC-*` error instead of calling Rust again.
+Generated wrappers use `AssertUnwindSafe` at the boundary because opaque handles and mutable bridge state are commonly not `UnwindSafe`. The generated wrapper marks the opaque receiver plus any mutable or owned opaque handles passed to the Rust call as poisoned automatically when `catch_unwind` returns `Err`; bridge authors do not implement poisoning manually and must not depend on additional bridge code running after a panic. Re-entering a poisoned handle returns a stable `SIFR-RUST-PANIC-*` error instead of calling Rust again.
 
 `Drop` panics are backend contract violations. Fallible cleanup must be modeled as explicit `close` or `aclose`, not as hidden destructor failure.
 
@@ -383,24 +425,21 @@ Sifr uses Tokio as its async runtime. Current generated async entrypoints use th
 
 Async Rust APIs are declared explicitly:
 
-```python
+```sifr
 @rust(http_client.fetch)
-async def fetch(url: str) -> Result[Response, HttpError]:
-    pass
+async def fetch(url: str) -> Result[Response, HttpError | RustPanicError]: ...
 ```
 
 Blocking and CPU-heavy APIs must be classified:
 
-```python
+```sifr
 @blocking_io
 @rust(postgres_bridge.query_blocking)
-def query(sql: str) -> Result[Rows, DbError]:
-    pass
+def query(sql: str) -> Result[Rows, DbError | RustPanicError]: ...
 
 @cpu_heavy
 @rust(image_bridge.resize)
-def resize(input: bytes, width: uint32, height: uint32) -> Result[bytes, ImageError]:
-    pass
+def resize(input: bytes, width: uint32, height: uint32) -> Result[bytes, ImageError | RustPanicError]: ...
 ```
 
 Direct calls to classified blocking or CPU-heavy Rust functions from async Sifr code are compile-time errors unless explicitly offloaded through the Sifr task/offload APIs.
@@ -416,37 +455,34 @@ Default async bridge requirements:
 
 Free async functions that require current-thread affinity declare it explicitly:
 
-```python
+```sifr
 @rust.async(thread_affinity=tokio_current_thread)
 @rust(bridge.local_client.fetch)
-async def fetch(url: str) -> Result[Response, HttpError]:
-    pass
+async def fetch(url: str) -> Result[Response, HttpError | RustPanicError]: ...
 ```
 
 ## Zero-Copy and Views
 
 Zero-copy is first-class and explicit, including bytes, Arrow-style columnar data, tensor buffers, and application-defined views.
 
-```python
+```sifr
 @rust.zero_copy(owner=bytes, view=bridge.hash.BytesView)
 @rust(bridge.hash.digest_view)
-def digest_view(input: bytes) -> Result[DigestView, HashError]:
-    pass
+def digest_view(input: bytes) -> Result[DigestView, HashError | RustPanicError]: ...
 ```
 
 `@rust.zero_copy(...)` declares that the API cannot copy. `@rust.view(...)` declares the view's lifetime, mutability, and thread behavior. They compose: `@rust.zero_copy` is required whenever copying is prohibited, `@rust.view` is required whenever the return value is a borrowed view, and a borrowed zero-copy API uses both decorators.
 
-```python
+```sifr
 @rust.view(
     owner=input,
     lifetime=call,
     mutability=immutable,
-    send=false,
-    sync=false,
+    send=False,
+    sync=False,
 )
 @rust(bridge.parser.tokens_view)
-def tokens_view(input: bytes) -> Result[TokenView, ParseError]:
-    pass
+def tokens_view(input: bytes) -> Result[TokenView, ParseError | RustPanicError]: ...
 ```
 
 Allowed `lifetime` values are `call`, `owner`, and `static`. `call` views cannot escape the bridge call. `owner` views are tied to the named owner parameter or opaque handle. `static` requires the Rust target to return owned or globally valid data and is rejected for borrowed returns. `mutability=mutable` requires exclusive Sifr ownership of the owner for the full view lifetime.
@@ -475,23 +511,21 @@ Callbacks are supported only with declared lifetime and threading policy.
 
 Call-scoped callback:
 
-```python
+```sifr
 @rust(bridge.parser.visit)
-def visit(text: str, callback: Callback[[Token], Result[None, ParseError]]) -> Result[None, ParseError]:
-    pass
+def visit(text: str, callback: Callback[[Token], Result[None, ParseError]]) -> Result[None, ParseError | RustPanicError]: ...
 ```
 
 The Rust implementation cannot store a call-scoped callback, call it after the bridge call returns, or call it from an unmanaged thread.
 
 Thread-safe callback registration:
 
-```python
+```sifr
 @rust(bridge.kafka.on_message)
 def on_message(
     consumer: KafkaConsumer,
     callback: ThreadsafeCallback[[Message], Result[None, KafkaError]],
-) -> Result[Subscription, KafkaError]:
-    pass
+) -> Result[Subscription, KafkaError | RustPanicError]: ...
 ```
 
 Thread-safe callbacks require:
@@ -511,9 +545,10 @@ Rust interop extends existing native trust policy with Rust-specific evidence:
 [trust]
 rust-build-scripts = ["openssl-sys", "tokenizer_backend"]
 rust-proc-macros = ["serde_derive"]
-native = ["openssl-sys"]
+native-links = ["openssl"]
 unsafe-rust-bridges = ["src/bridges/tokenizer.rs"]
 build-env = ["OPENSSL_DIR"]
+rust-no-panic = ["crc32fast.hash"]
 rust-panic-abort = []
 ```
 
@@ -521,13 +556,36 @@ Trust gates:
 
 - build scripts,
 - procedural macros,
-- native library linking,
+- native links reported through Cargo `links` metadata or trusted build-script output,
 - unsafe code in first-party bridge files,
 - environment variables consumed by build scripts,
+- no-panic assertions through `rust-no-panic`,
 - process-aborting panic profiles through `rust-panic-abort`,
 - optional strict allowlist for Rust crate roots.
 
 Safe Rust crates are not inherently unsafe, but code execution during build is. The trust model must separate build-time execution, native linking, unsafe bridge code, and ordinary safe dependency use.
+
+Trust evidence is split into pre-execution and post-execution checks.
+
+Pre-execution evidence must be rejected before any untrusted build script or proc macro runs:
+
+- Cargo targets with `custom-build`,
+- Cargo targets with `proc-macro`,
+- manifest `links` keys,
+- declared dependency roots and features,
+- local bridge files that contain `unsafe` when not listed in `unsafe-rust-bridges`,
+- declared build environment variables.
+
+Post-execution evidence is allowed only after the build script or proc macro has already passed pre-execution trust:
+
+- `cargo:rustc-link-lib` output,
+- emitted `cfg`, environment, and link-search paths,
+- generated native or bindgen artifacts,
+- native library names discovered through trusted build output.
+
+Native trust names native link identities such as `openssl` or `rdkafka`, not Rust sys crates. The sys crate that runs build code must be listed in `rust-build-scripts`; the native link it exposes must be listed in `native-links`.
+
+Package-local bridges compile with `#![deny(unsafe_code)]` by default. Files listed in `unsafe-rust-bridges` receive a generated module-local allow boundary for that file only. Untrusted `unsafe` in a local bridge file produces `SIFR-RUST-TRUST-*` before final build acceptance; token scanning may provide early diagnostics, but rustc linting is the authoritative backstop.
 
 ## Cargo and Build Cache
 
@@ -558,7 +616,7 @@ Rust interop diagnostics use stable diagnostic families:
 
 - `SIFR-RUST-CONFIG-*`: malformed decorators, manifest conflict, missing bridge directory,
 - `SIFR-RUST-RESOLVE-*`: unresolved dependency root, module, item, or `Self` target,
-- `SIFR-RUST-TRUST-*`: missing build-script, proc-macro, native, unsafe, or build-env trust,
+- `SIFR-RUST-TRUST-*`: missing build-script, proc-macro, native-link, unsafe bridge, build-env, no-panic, or panic-abort trust,
 - `SIFR-RUST-TYPE-*`: signature mismatch or unsupported bridge type,
 - `SIFR-RUST-HANDLE-*`: invalid opaque handle ownership, close, clone, or thread contract,
 - `SIFR-RUST-ASYNC-*`: hidden blocking, invalid future, unsupported non-`Send`, cancellation mismatch,
@@ -593,6 +651,12 @@ LSP support is staged:
 3. Integrate rust-analyzer metadata for richer signatures and go-to-definition.
 
 Completion must prefer valid dotted paths. Invalid string-style Rust targets are rejected instead of tolerated.
+
+`sifr check` is the source of truth for Rust-backed packages. Plain `cargo check` on a source package may require prior Sifr projection generation because local bridge files can import generated `crate::__sifr_bridge` modules. Tooling must provide:
+
+- `sifr bridge check` for bridge projection and probe validation,
+- `sifr repair --check` for detecting missing or stale managed projection files,
+- `sifr repair` for regenerating Sifr-managed projection files without touching user-owned bridge files.
 
 ## Verification Area
 
