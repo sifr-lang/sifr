@@ -69,6 +69,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 - Scope:
   - Parse and validate `@rust(...)`, `@rust.opaque(...)`, `@rust.async(...)`, `@rust.zero_copy(...)`, and `@rust.view(...)`.
   - Represent Rust decorator targets as structured dotted-path AST nodes, not strings.
+  - Implement the fixed Rust interop decorator value grammar for booleans, identifier symbols, integers, bounded/custom policy calls, and structured Rust target paths.
   - Lower Rust interop declarations into HIR with source spans, effect classifications, and ABI requirements.
   - Extend codegen outputs with `InteropBuildPlan { rust: RustInteropPlan }`.
   - Reject malformed decorators, string targets, unsupported roots, and prior draft syntax with stable diagnostics.
@@ -83,6 +84,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Resolve direct Cargo dependency roots, same-workspace crates, shared bridge crates, and package-local bridge roots.
   - Preserve Cargo as the source of truth for package IDs, source IDs, features, target triples, lockfiles, `--locked`, `--offline`, and `--frozen`.
   - Add trust gates for `rust-build-scripts`, `rust-proc-macros`, `native-links`, `unsafe-rust-bridges`, `build-env`, `rust-no-panic`, and `rust-panic-abort`.
+  - Resolve `rust-no-panic` and `rust-panic-abort` entries through canonical Sifr dotted target paths, not lowered Rust `::` paths.
   - Split trust validation into pre-execution evidence that rejects known build scripts/proc macros before Cargo execution and post-execution evidence for trusted build-script link output before final artifact acceptance.
   - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, bridge-version schema, and declared build environment values in cache keys.
   - Generate `RustBridgeProbePlan` metadata and isolated probe modules for sync functions, async functions, receiver-mode methods, opaque types, Send/Sync assertions, and Rust item/signature checking.
@@ -96,6 +98,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 
 - Scope:
   - Generate and maintain Sifr-owned projection entries for `src/bridges/mod.rs`, Sifr-managed `src/lib.rs`, and generated `crate::__sifr_bridge`.
+  - Use bridge-versioned deterministic Rust module-name mangling for generated `crate::__sifr_bridge::<sifr_module_path>` paths.
   - Discover user-authored `src/bridges/*.rs` files without overwriting them silently.
   - Support shared bridge crates as normal Cargo dependencies while enforcing that shared bridge crates cannot import package-specific generated bridge types.
   - Validate bridge module target paths, exported functions, managed projection conflicts, and package archive contents.
@@ -149,6 +152,8 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Support async Rust bridge functions using Sifr's existing Tokio runtime model.
   - Reject hidden runtime creation, generated `block_on`, and assumptions that `rt-multi-thread` is available.
   - Enforce explicit `@blocking_io` and `@cpu_heavy` annotations for blocking or CPU-heavy Rust calls.
+  - Reject `@blocking_io` and `@cpu_heavy` on `async def` Rust interop declarations.
+  - Own converted borrowed inputs inside generated async wrapper futures before exposing them to Sifr async lifetime and spawn checks.
   - Require explicit Sifr offload APIs when classified calls are used from async Sifr code.
   - Allow non-`Send` futures only when explicitly pinned to the current Sifr Tokio runtime through `thread_affinity=tokio_current_thread`; reject non-`Send` futures that may leave that runtime.
   - Map cancellation and shutdown behavior to stable Sifr errors.
@@ -176,6 +181,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 
 - Scope:
   - Implement explicit `@rust.zero_copy(...)` and `@rust.view(...)` contracts.
+  - Require borrowed zero-copy returns to declare both no-copy behavior and view lifetime/thread policy.
   - Enforce owner/view lifetime rules, returned-view lifetime restrictions, aliasing, mutable exclusivity, Send/Sync declarations, and async suspension restrictions.
   - Support zero-copy bytes views.
   - Provide separate copy APIs for copy behavior; never silently copy for a zero-copy declaration.
@@ -322,15 +328,15 @@ Out of scope for required Phase 39 verification:
 ## Validation Planning Goals
 
 - `milestone_39_0`: architecture, verification area, fixture matrix, tiers, diagnostic family inventory, and stale interop-design removal.
-- `milestone_39_1`: decorator parsing/lowering, structured target metadata, HIR representation, build-plan output, and invalid syntax diagnostics.
-- `milestone_39_2`: Cargo metadata, trust gates, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence with crates such as `serde_derive`, `prost-build`, `cc`, `bindgen`, `cxx`, and `zstd`.
-- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, bridge-version mismatch rejection, package archive validation, projection conflicts, and same-workspace dependency behavior.
+- `milestone_39_1`: decorator parsing/lowering, decorator value grammar, structured target metadata, HIR representation, build-plan output, and invalid syntax diagnostics.
+- `milestone_39_2`: Cargo metadata, trust gates, canonical Sifr dotted trust target paths, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence with crates such as `serde_derive`, `prost-build`, `cc`, `bindgen`, `cxx`, and `zstd`.
+- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, deterministic bridge module path mangling, bridge-version mismatch rejection, package archive validation, projection conflicts, and same-workspace dependency behavior.
 - `milestone_39_4`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, opaque `Handle<T>` representation, closed enum representation, unsupported containers, and unsupported bridge type diagnostics.
 - `milestone_39_5`: direct binding success with `crc32fast`, `blake3`, `sha2`, `uuid`, and `regex`; direct binding rejection for unsupported Rust signatures; probe diagnostic mapping; reserved-root conflict behavior; and no-panic trust behavior.
 - `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, state transitions, use-after-close, double-close, poisoned-handle behavior, leak diagnostics, and resource-shaped crates such as `reqwest`, `rusqlite`, `tokio-postgres`, and `redis`.
-- `milestone_39_7`: async Rust functions, blocking/CPU-heavy classification, explicit offload, Tokio current-thread compatibility, current-thread non-`Send` futures, invalid non-`Send` rejection, and async ecosystem fixtures with `tokio`, `futures`, `reqwest`, `tower`, `http`, and `http-body`.
+- `milestone_39_7`: async Rust functions, borrowed-input wrapper futures, blocking/CPU-heavy classification, rejection of async blocking/CPU-heavy decorator conflicts, explicit offload, Tokio current-thread compatibility, current-thread non-`Send` futures, invalid non-`Send` rejection, and async ecosystem fixtures with `tokio`, `futures`, `reqwest`, `tower`, `http`, and `http-body`.
 - `milestone_39_8`: panic containment, Rust user errors, panic strategy rejection, poisoned handle behavior, and abort opt-in evidence.
-- `milestone_39_9`: zero-copy bytes, core view contracts, owner/view lifetime rejection, mutable exclusivity, copy-fallback rejection, and view-backed crates such as `bytes`, `memmap2`, `bytemuck`, and `zerocopy`.
+- `milestone_39_9`: zero-copy bytes, required combined zero-copy/view contracts for borrowed returns, core view contracts, owner/view lifetime rejection, mutable exclusivity, copy-fallback rejection, and view-backed crates such as `bytes`, `memmap2`, `bytemuck`, and `zerocopy`.
 - `milestone_39_10`: Arrow record batches, dataframe exchange, tensor/DLPack handoff, shared bridge crate data boundaries, metadata validation, schema identity, dtype behavior, and advanced fixtures with `arrow`, `datafusion`, `polars`, `ndarray`, and `candle`.
 - `milestone_39_11`: call-scoped callbacks, thread-safe callbacks, cancellation handles, backpressure, shutdown, invalid capture/threading diagnostics, and subscription/event fixtures with `tokio-tungstenite`, `redis` pub/sub, and `notify`.
 - `milestone_39_12`: LSP completions, diagnostic documentation, package-author docs, `sifr bridge check`, `sifr repair --check`, `sifr repair`, user examples, and rejected-design docs.

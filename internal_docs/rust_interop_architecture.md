@@ -136,6 +136,19 @@ class KafkaConsumer:
 
 Decorator values are symbolic values, not strings. The opaque class declares ownership, close semantics, thread behavior, and borrowing rules before generated glue can expose the handle.
 
+Rust interop decorator values use a deliberately small grammar:
+
+```text
+RustInteropDecoratorValue =
+    BooleanLiteral
+  | IdentifierSymbol
+  | IntegerLiteral
+  | PolicyCall(IdentifierSymbol, IntegerLiteral | RustTargetPath)
+  | RustTargetPath
+```
+
+`RustTargetPath` is the structured dotted-path form used by `@rust(...)`, `@rust.opaque(type=...)`, and path-valued policy fields such as `panic=map_error(...)`. `PolicyCall` is allowed only where a decorator explicitly permits it; Phase 39 permits `bounded(N)` for callback backpressure and `custom(path)` for opaque clone policy. Other call-shaped decorator values are rejected with `SIFR-RUST-CONFIG-*` diagnostics instead of being interpreted dynamically.
+
 Opaque decorator keys are fixed:
 
 - `type=` names the Rust type wrapped by the opaque handle.
@@ -414,6 +427,8 @@ Every Sifr record, closed enum, and error type reachable across an `@rust` bound
 crate::__sifr_bridge::<sifr_module_path>::<Name>Bridge
 ```
 
+Generated bridge module paths use the same deterministic Rust module-name mangling as generated Sifr modules. Every Sifr module path maps bijectively to a Rust module path; keyword escapes, invalid-identifier escapes, package aliases, renamed imports, and nested public namespace segments are stable and included in `bridge-version`. Bridge authors may import generated bridge types directly, so changing this mangling is a bridge-versioned compatibility break.
+
 Generated record bridge structs preserve declared Sifr field order and expose generated constructors/accessors. When a bridge declaration needs layout-sensitive Rust access, the generated struct uses an explicit layout contract owned by the bridge schema; otherwise bridge authors must use accessors and must not rely on Rust default layout.
 
 Closed enum bridge types use explicit numeric discriminants assigned by declaration order unless the Sifr enum declares stable discriminant values. The default representation is `repr(u32)`. Values returned as a typed generated enum from Rust do not need runtime discriminant validation because Rust's type system has already constructed a valid enum value. Values returned through integer or wire adapters must validate the discriminant before becoming a Sifr value; invalid discriminants return a `SIFR-RUST-TYPE-*` runtime conversion error.
@@ -538,7 +553,7 @@ Required declarations:
 - whether use-after-close is diagnosed at runtime with a stable error,
 - `Send` and `Sync` status,
 - clone strategy: `none`, `copy`, `arc`, or custom bridge function,
-- close strategy: `drop`, `close`, `async_close`, or prohibited,
+- close strategy: `drop`, `close`, `async_close`, or `none`,
 - thread affinity: none, current Sifr Tokio runtime, current OS thread, or custom guard.
 
 The compiler rejects owning opaque handles that have neither safe `Drop` cleanup nor explicit close semantics. Handles that require explicit close must produce diagnostics for missing close in paths where Sifr's ownership analysis can prove the leak.
@@ -574,6 +589,8 @@ def resize(input: bytes, width: uint32, height: uint32) -> Result[bytes, ImageEr
 
 Direct calls to classified blocking or CPU-heavy Rust functions from async Sifr code are compile-time errors unless explicitly offloaded through the Sifr task/offload APIs.
 
+`@blocking_io` and `@cpu_heavy` classify synchronous Rust-backed declarations. They are rejected on `async def` Rust interop declarations unless a later design adds an explicit async-blocking adapter surface. Phase 39 does not generate hidden blocking adapters, hidden `block_on`, or implicit offload for async Rust declarations.
+
 Default async bridge requirements:
 
 - generated futures must be `'static` when spawned,
@@ -582,6 +599,8 @@ Default async bridge requirements:
 - non-`Send` futures without current-thread affinity are rejected,
 - cancellation is cooperative and must map to stable Sifr cancellation errors,
 - runtime shutdown must drain or cancel registered Rust interop tasks deterministically.
+
+For async Rust targets that borrow converted inputs, generated glue owns the converted values inside the wrapper future. The raw Rust future may borrow those owned wrapper values, but any Sifr-exposed future must satisfy Sifr async lifetime and spawn rules after wrapping. This allows ordinary Rust APIs such as `async fn fetch(url: &str) -> Result<_, _>` without exposing borrowed futures that outlive their generated wrapper state.
 
 Free async functions that require current-thread affinity declare it explicitly:
 
@@ -596,7 +615,14 @@ async def fetch(url: str) -> Result[Response, HttpError | RustPanicError]: ...
 Zero-copy is first-class and explicit, including bytes, Arrow-style columnar data, tensor buffers, and application-defined views.
 
 ```sifr
-@rust.zero_copy(owner=input, view=bridge.hash.BytesView)
+@rust.zero_copy(owner=input, view=bridge.hash.DigestView)
+@rust.view(
+    owner=input,
+    lifetime=owner,
+    mutability=immutable,
+    send=False,
+    sync=False,
+)
 @rust(bridge.hash.digest_view)
 def digest_view(input: bytes) -> Result[DigestView, HashError | RustPanicError]: ...
 ```
@@ -691,8 +717,8 @@ rust-proc-macros = ["serde_derive"]
 native-links = ["openssl"]
 unsafe-rust-bridges = ["src/bridges/tokenizer.rs"]
 build-env = ["OPENSSL_DIR"]
-rust-no-panic = ["crc32fast.hash"]
-rust-panic-abort = []
+rust-no-panic = ["crc32fast.hash", "bridge.hash.fast_hash"]
+rust-panic-abort = ["legacy_backend.run"]
 ```
 
 Trust gates:
@@ -727,6 +753,8 @@ Post-execution evidence is allowed only after the build script or proc macro has
 - native library names discovered through trusted build output.
 
 Native trust names native link identities such as `openssl` or `rdkafka`, not Rust sys crates. The sys crate that runs build code must be listed in `rust-build-scripts`; the native link it exposes must be listed in `native-links`.
+
+Trust entries that name Rust call targets use canonical Sifr dotted target paths, not lowered Rust `::` paths. For direct bindings this is the target written in `@rust(...)`, such as `crc32fast.hash`; for package-local bridges this is the Sifr decorator target such as `bridge.hash.fast_hash`; for aborting legacy integrations this is the canonical target such as `legacy_backend.run`. Diagnostics point from the trust entry back to the matching decorator span.
 
 Package-local bridges compile with `#![deny(unsafe_code)]` by default. Files listed in `unsafe-rust-bridges` receive a generated module-local allow boundary for that file only. Untrusted `unsafe` in a local bridge file produces `SIFR-RUST-TRUST-*` before final build acceptance; token scanning may provide early diagnostics, but rustc linting is the authoritative backstop.
 
