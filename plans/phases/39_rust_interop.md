@@ -108,7 +108,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 ### milestone_39_4: Bridge Type Contract and Conversion Runtime
 
 - Scope:
-  - Implement checked bridge mappings for booleans, fixed-width integers, exact integers through `sifr_runtime::interop::SifrIntBridge`, floats, strings, bytes, lists, order-preserving dicts, `Option`, `Result`, closed enums, records, callbacks, and errors.
+  - Implement checked bridge mappings for booleans, fixed-width integers, exact integers through `sifr_runtime::interop::SifrIntBridge`, floats, strings, bytes, lists, order-preserving dicts, `Option`, `Result`, closed enums, records, opaque handles through `sifr_runtime::interop::Handle<T>`, callbacks, and errors.
   - Generate explicit bridge types for records, closed enums, and errors under `crate::__sifr_bridge::<sifr_module_path>::<Name>Bridge`.
   - Reject source-level exact `int` where a fixed-width or explicit exact representation is required.
   - Add conversion diagnostics for width, overflow, invalid UTF-8, unsupported container shapes, record layout mismatches, invalid enum discriminants, and unsupported containers such as `set`/`tuple`.
@@ -133,7 +133,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 
 - Scope:
   - Implement `@rust.opaque(...)` classes with ownership, borrowing, clone, close, `Send`, `Sync`, and thread-affinity metadata.
-  - Generate handle wrappers that prevent use-after-close and double-close.
+  - Generate handle wrappers that prevent use-after-close and double-close, enforce closed/poisoned state transitions, and expose only generated-safe accessors.
   - Require either safe `Drop` cleanup or explicit `close`/`aclose` contracts for owning handles.
   - Add diagnostics for leaking explicitly-closed handles where ownership analysis can prove the leak.
   - Cover sync close, async close, borrowed handle, exclusive handle, clone, and non-clone paths.
@@ -196,7 +196,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 - Scope:
   - Implement call-scoped callbacks that cannot be stored, called after return, or called from unmanaged threads.
   - Implement thread-safe callback registration with cancellation/subscription handles.
-  - Enforce captured-value `Send + 'static` requirements for callbacks that may cross threads.
+  - Enforce Sifr task-spawn/offload ownership requirements for callbacks that may cross threads: no borrowed stack-local values, no non-send opaque handles, and no current-thread/current-OS-thread-affine captures.
   - Require explicit backpressure, cancellation, and shutdown policy for async or thread-safe callbacks.
   - Add panic-to-error handling around callback invocation.
 - Definition of done:
@@ -259,9 +259,9 @@ Verification tiers:
 - `milestone_39_1`: decorator parsing/lowering, structured target metadata, HIR representation, build-plan output, and invalid syntax diagnostics.
 - `milestone_39_2`: Cargo metadata, trust gates, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence.
 - `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, package archive validation, projection conflicts, and same-workspace dependency behavior.
-- `milestone_39_4`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, closed enum representation, unsupported containers, and unsupported bridge type diagnostics.
+- `milestone_39_4`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, opaque `Handle<T>` representation, closed enum representation, unsupported containers, and unsupported bridge type diagnostics.
 - `milestone_39_5`: direct binding success, direct binding rejection for unsupported Rust signatures, probe diagnostic mapping, reserved-root conflict behavior, and no-panic trust behavior.
-- `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, use-after-close, double-close, and leak diagnostics.
+- `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, state transitions, use-after-close, double-close, poisoned-handle behavior, and leak diagnostics.
 - `milestone_39_7`: async Rust functions, blocking/CPU-heavy classification, explicit offload, Tokio current-thread compatibility, current-thread non-`Send` futures, and invalid non-`Send` rejection.
 - `milestone_39_8`: panic containment, Rust user errors, panic strategy rejection, poisoned handle behavior, and abort opt-in evidence.
 - `milestone_39_9`: zero-copy bytes, core view contracts, owner/view lifetime rejection, mutable exclusivity, and copy-fallback rejection.

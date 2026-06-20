@@ -20,7 +20,7 @@ Sifr intentionally does not preserve the older bootstrap model where source-leve
 - No implicit narrowing.
 - No silent fixed-width wrapping through ordinary operators.
 - No guarantee that source-level `int` is `Copy`, pointer-sized, ABI-stable, or C-compatible.
-- No integer literal suffix syntax in the initial implementation. Type annotations, constructors, dtypes, schemas, and FFI signatures are enough.
+- No integer literal suffix syntax in the initial implementation. Type annotations, constructors, dtypes, schemas, and interop signatures are enough.
 
 ## Core Decision
 
@@ -53,15 +53,15 @@ ids: array[int64] = ...
 tokens: array[uint32] = tokenizer.encode(text)
 ```
 
-Width is a storage, binary protocol, dtype, schema, or FFI choice. It is not the compiler's default guess for small literals.
+Width is a storage, binary protocol, dtype, schema, or interop choice. It is not the compiler's default guess for small literals.
 
 ## Source Types
 
 | Sifr type | Meaning | Primary use | Rust representation |
 | --- | --- | --- | --- |
 | `int` | exact signed integer, arbitrary precision | default app/web/business/algorithm integer | `SifrInt`, inline-small with arbitrary-precision spill |
-| `int8`, `int16`, `int32`, `int64` | signed fixed-width integer | binary formats, DB/dataframe/tensor schemas, FFI, memory-sensitive storage | `i8`, `i16`, `i32`, `i64` |
-| `uint8`, `uint16`, `uint32`, `uint64` | unsigned fixed-width integer | bytes, protocols, external unsigned schemas, FFI | `u8`, `u16`, `u32`, `u64` |
+| `int8`, `int16`, `int32`, `int64` | signed fixed-width integer | binary formats, DB/dataframe/tensor schemas, interop, memory-sensitive storage | `i8`, `i16`, `i32`, `i64` |
+| `uint8`, `uint16`, `uint32`, `uint64` | unsigned fixed-width integer | bytes, protocols, external unsigned schemas, interop | `u8`, `u16`, `u32`, `u64` |
 | `isize`, `usize` | pointer-sized Rust interop integer | low-level interop boundary only | `isize`, `usize` |
 
 Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `i128` and `u128`, and some storage targets need 128-bit values, but Sifr does not need to ship them in the initial fixed-width implementation. Using either reserved name before support lands must produce `SIFR-INT-0003`, not a generic unresolved-name diagnostic.
@@ -185,7 +185,7 @@ ok: bool = narrow < limit
 
 Arithmetic involving `int` and a fixed-width integer returns `int` unless the operator is representation-specific. Arithmetic between two fixed-width integer operands also promotes to `int` for ordinary `+`, `-`, `*`, `//`, `%`, and `**`.
 
-`usize` and `isize` follow the same scalar promotion rule when they escape FFI-only signatures: ordinary arithmetic widens to `int`, and narrowing back to pointer-sized storage is explicit and fallible.
+`usize` and `isize` follow the same scalar promotion rule when they escape low-level interop signatures: ordinary arithmetic widens to `int`, and narrowing back to pointer-sized storage is explicit and fallible.
 
 Decimal mixing keeps the decimal semantics architecture policy:
 
@@ -225,7 +225,7 @@ The compiler must never infer a width because a literal is small.
 
 - Unsuffixed integer literals infer as `int`.
 - Function parameters and return annotations written as `int` mean exact `int`, never machine integer.
-- Fixed-width types appear only from explicit annotations, constructors, imported schemas, FFI signatures, or dtype declarations.
+- Fixed-width types appear only from explicit annotations, constructors, imported schemas, interop signatures, or dtype declarations.
 - A contextual fixed-width target may accept a const-evaluable fitting literal.
 - Without a contextual fixed-width target, a mixed scalar expression involving a fixed-width value and an unsuffixed literal widens to `int`.
 
@@ -518,7 +518,7 @@ The existing implementation assumes source-level `int` has a Rust signed-64-bit 
 7. Add array/tensor/dataframe dtype arithmetic rules so scalar promotion does not infect fixed-width columnar kernels.
 8. Update range, len, indexing, enum values, byte boundaries, diagnostics, and generated Rust casts that currently assume `i64`.
 9. Teach ownership/codegen that source-level `int` is value-semantic but no longer a Rust `Copy` scalar.
-10. Update type inference, container specialization, builtin signatures, web/model schema generation, and diagnostics so widths appear only through explicit annotations, constructors, schemas, FFI, or dtype declarations.
+10. Update type inference, container specialization, builtin signatures, web/model schema generation, and diagnostics so widths appear only through explicit annotations, constructors, schemas, interop signatures, or dtype declarations.
 11. Add or update HIR maintainability guardrails for the fixed-width type family so adding variants does not produce new monolithic lowering paths.
 
 ## Validation Matrix
@@ -535,12 +535,12 @@ Implementation increments should add positive and negative tests for each bounda
 | Serialization | JSON exact/web/string profiles, OpenAPI/TypeScript mapping, DB narrowing | JS-unsafe `json.web` output, SQL range overflow, missing schema policy |
 | Web validation | route/query/path parsing with range/digit diagnostics | over-limit integer strings, fixed-width validation failures |
 | Domain newtypes | ID/port/status-code wrappers over fixed-width storage | treating domain wrappers as raw interchangeable ints |
-| Interop | Rust `u32`/`i64` signatures map to fixed-width Sifr types | passing exact `int` to FFI without explicit narrowing |
+| Interop | Rust `u32`/`i64` signatures map to fixed-width Sifr types | passing exact `int` to Rust interop without explicit narrowing |
 | Pattern matching | in-range literal arms for fixed-width subjects | out-of-range literal patterns and bool arms against integer subjects |
 | Mixed numeric arithmetic | exact `int` with decimal-family values, handled `int`/`float` precision cases | silent `int`/`float` precision loss, invalid bool/integer comparisons |
 | Integer/float comparisons | exact comparison against finite float mantissa/exponent values | cast-based comparison that rounds large integers |
 | Formatting and methods | exact decimal/binary/hex formatting, `bit_length`, `bit_count`, `to_bytes`, `from_bytes` | truncating format specs, out-of-range byte conversion |
 | Range and materialization | lazy `range(10 ** 100)`, target-width indexing guards | materializing unaddressable ranges without typed error |
-| Pointer-sized boundaries | `usize`/`isize` in FFI signatures and internal indexing conversions | leaking `usize`/`isize` into ordinary APIs |
+| Pointer-sized boundaries | `usize`/`isize` in low-level interop signatures and internal indexing conversions | leaking `usize`/`isize` into ordinary APIs |
 | Performance | small `int` loops stay on `SifrInt::Small` without per-iteration heap allocation | allocations for ordinary small counters/arithmetic |
 | Cross-type dict/set lookup | equal exact/fixed integer keys hash consistently | bool/int aliasing or incompatible fixed-width key-domain surprises |

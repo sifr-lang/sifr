@@ -147,6 +147,15 @@ Opaque decorator keys are fixed:
 
 Method receiver annotations win over the class-level `borrow=` default. `def method(self, ...)` uses the class default, `def method(mut self, ...)` lowers to `&mut self`, and `def method(own self, ...)` consumes the handle and marks it closed or moved. `close=close` requires `def close(own self) -> Result[None, E]`; `close=async_close` requires `async def aclose(own self) -> Result[None, E]`. If the close target is a package-local function rather than `Self.method`, generated glue passes the owned handle value to the bridge function, marks the Sifr handle closed before returning success, and marks it poisoned if the Rust call panics.
 
+Allowed symbolic values are:
+
+- `send=True | False`
+- `sync=True | False`
+- `clone=none | copy | arc | custom`
+- `close=drop | close | async_close | none`
+- `borrow=shared | exclusive | owned`
+- `thread_affinity=none | tokio_current_thread | current_os_thread`
+
 ## Path Resolution
 
 `@rust(...)` accepts a dotted path expression with one of these roots:
@@ -170,6 +179,8 @@ Same-workspace crates are not special. They must still be declared as ordinary C
 
 `bridge` and `Self` are reserved roots inside `@rust` paths. A Cargo dependency named `bridge` or `Self` cannot be targeted directly; package authors must use a Cargo dependency alias such as `bridge_crate = { package = "bridge", version = "..." }`. Reserved-root collisions produce `SIFR-RUST-RESOLVE-*` diagnostics with the dependency and decorator spans.
 
+The same roots resolve Rust type paths for `@rust.opaque(type=...)`. Probe code validates type existence with a generated type assertion before any opaque wrapper is emitted.
+
 ### `Self` Resolution
 
 Inside a `@rust.opaque` class, `Self.method` resolves against the Rust type declared by `@rust.opaque(type=...)`.
@@ -182,7 +193,7 @@ Resolution order is:
 For the `KafkaConsumer.poll` example above, `Self.poll` lowers to an inherent call on the wrapped `bridge.kafka.Consumer` value:
 
 ```rust
-crate::bridges::kafka::Consumer::poll(&mut handle.inner)
+crate::bridges::kafka::Consumer::poll(handle.inner_mut()?)
 ```
 
 Trait methods are not resolved through `Self` because Rust trait lookup depends on imports and can become ambiguous. Package authors expose trait-backed behavior through a package-local bridge shim:
@@ -239,11 +250,34 @@ File ownership is fixed:
 - `src/lib.rs` is Sifr-managed for packages using local bridges. Pure packages keep the pure marker target; Rust-backed packages receive managed module declarations for bridges and generated bridge types.
 - `crate::__sifr_bridge` is generated and reserved. User code cannot define this namespace.
 
-Rust-backed package archives must include `sifr.toml`, Sifr source, `Cargo.toml`, declared `src/bridges/*.rs` files, Sifr-managed projection files, and bridge-version metadata. `sifr package` rejects archives whose managed projections, source digests, or bridge-version metadata do not match the interop build plan.
+Rust-backed package archives must include `sifr.toml`, Sifr source, `Cargo.toml`, declared `src/bridges/*.rs` files, Sifr-managed projection files, and the `[rust].bridge-version` value declared in `sifr.toml`. `sifr package` rejects archives whose managed projections, source digests, or bridge-version metadata do not match the interop build plan.
 
 Backend crates are linked statically as ordinary Rust library crates. The supported backend crate type is `lib`; `cdylib`, `dylib`, and runtime-loaded backend crates are rejected for the Rust interop lane because they imply a dynamic ABI boundary.
 
 `bridge-version = 1` is the schema version for generated bridge modules, generated bridge type naming, decorator lowering, and runtime glue contracts. A package compiled by a compiler that does not support the declared bridge version fails during package validation.
+
+Bridge version 1 covers:
+
+- generated bridge type paths under `crate::__sifr_bridge::<module>::<Name>Bridge`,
+- closed enum `repr(u32)` discriminant rules,
+- `sifr_runtime::interop::{SifrIntBridge, IndexMap, Handle}` helper versions,
+- `Handle<T>` closed/poisoned state semantics,
+- `bridge` and `Self` namespace reservation,
+- managed projection file ownership.
+
+Same-workspace backend crates are ordinary dependencies:
+
+```toml
+[dependencies]
+tokenizer_backend = { path = "backend" }
+```
+
+They are targeted through normal dotted paths:
+
+```sifr
+@rust(tokenizer_backend.encode, panic=map_error(bridge.tokenizer.map_panic))
+def encode(text: str) -> Result[Tokenized, TokenizeError]: ...
+```
 
 ## Compiler Model
 
@@ -310,12 +344,12 @@ Sifr-facing Rust bridge signatures are intentionally small and explicit.
 | `str` | `&str` | `String` | `String` |
 | `bytes` | `&[u8]` | `Vec<u8>` | `Vec<u8>` |
 | `list[T]` | `&[T]` | `Vec<T>` | `Vec<T>` |
-| `dict[str, T]` | `&interop::IndexMap<String, T>` | `interop::IndexMap<String, T>` | `interop::IndexMap<String, T>` |
+| `dict[str, T]` | `&sifr_runtime::interop::IndexMap<String, T>` | `sifr_runtime::interop::IndexMap<String, T>` | `sifr_runtime::interop::IndexMap<String, T>` |
 | `Option[T]` | `Option<T>` | `Option<T>` | `Option<T>` |
 | `Result[T, E]` | not a parameter | not a parameter | `Result<T, E>` |
 | closed enum | generated bridge enum | generated bridge enum | generated bridge enum |
 | record class | generated bridge struct | generated bridge struct | generated bridge struct |
-| opaque class | `&Handle<T>` / `&mut Handle<T>` | `Handle<T>` | `Handle<T>` |
+| opaque class | `&sifr_runtime::interop::Handle<T>` / `&mut sifr_runtime::interop::Handle<T>` | `sifr_runtime::interop::Handle<T>` | `sifr_runtime::interop::Handle<T>` |
 | `Callback[[...], R]` | generated call-scoped callback handle | not storable | not a return type |
 | `ThreadsafeCallback[[...], R]` | generated thread-safe callback handle | generated thread-safe callback handle | not a return type |
 
@@ -355,6 +389,49 @@ Generated record bridge structs preserve declared Sifr field order and expose ge
 
 Closed enum bridge types use explicit numeric discriminants assigned by declaration order unless the Sifr enum declares stable discriminant values. The default representation is `repr(u32)`. Values returned as a typed generated enum from Rust do not need runtime discriminant validation because Rust's type system has already constructed a valid enum value. Values returned through integer or wire adapters must validate the discriminant before becoming a Sifr value; invalid discriminants return a `SIFR-RUST-TYPE-*` runtime conversion error.
 
+### Opaque Handle Representation
+
+Opaque handles use `sifr_runtime::interop::Handle<T>`. The runtime type stores:
+
+- the Rust value `T`,
+- a closed flag,
+- a poisoned flag,
+- generated metadata for handle type identity and thread-affinity checks.
+
+The fields are private. Generated glue and bridge authors use accessors:
+
+- `Handle::new(value: T) -> Handle<T>`
+- `inner_ref() -> Result<&T, HandleStateError>`
+- `inner_mut() -> Result<&mut T, HandleStateError>`
+- `into_inner() -> Result<T, HandleStateError>`
+- `mark_closed()`
+- `mark_poisoned(RustPanicError)`
+
+Package-local bridge code may call `Handle::new` when returning a newly owned opaque value. Only generated wrappers may call `mark_closed` and `mark_poisoned`. Package-local bridge code may borrow or consume handles through the accessors but must not manipulate state flags directly.
+
+`HandleStateError` lives at `sifr_runtime::interop::HandleStateError` and has two variants: `Closed` and `Poisoned(RustPanicError)`. Generated wrappers convert `Closed` into the stable closed-handle error for the Sifr surface and reuse the stored `RustPanicError` for `Poisoned` before propagating into the declared Sifr error channel.
+
+`Handle<T>` implements `Send` only when `@rust.opaque(send=True)` is declared and the Rust target satisfies the generated `T: Send` probe. `Handle<T>` implements `Sync` only when `@rust.opaque(sync=True)` is declared and the Rust target satisfies the generated `T: Sync` probe. Without those declarations, the generated Sifr handle is task/thread local even if `T` would be `Send` or `Sync` in Rust.
+
+Generated Send/Sync probes use Rust trait assertions:
+
+```rust
+const _: fn() where crate::bridges::kafka::Consumer: Send = || {};
+const _: fn() where crate::bridges::kafka::Consumer: Sync = || {};
+```
+
+State transitions are deterministic:
+
+| Starting state | Event | New state | Later access |
+| --- | --- | --- | --- |
+| open | successful consuming close/move | closed | returns closed-handle error |
+| open | caught panic during any call | poisoned | returns stored panic error |
+| open | caught panic during close | poisoned | poisoned wins over closed |
+| closed | any method call | closed | returns closed-handle error |
+| poisoned | any method call | poisoned | returns stored panic error |
+
+Generated `Self.method` lowering calls `inner_ref`, `inner_mut`, or `into_inner` according to the receiver mapping. Free bridge functions may accept `Handle<T>`, `&Handle<T>`, or `&mut Handle<T>` only when the Sifr receiver/parameter declaration grants the same ownership or borrow capability.
+
 ### Shared Bridge Crate Boundaries
 
 Package-local bridges compile inside the generated package crate and may use package-generated `crate::__sifr_bridge::<module>::<Name>Bridge` types.
@@ -374,6 +451,13 @@ Result-returning functions convert caught Rust panics to `RustPanicError`, and t
 - a declared union/member error type such as `Result[T, E | RustPanicError]`,
 - a declared `panic=map_error` adapter that maps `RustPanicError` into the public error type,
 - a deliberate supertype error surface such as `Result[T, Error]`.
+
+`panic=map_error` names a Sifr or bridge adapter resolved through the same dotted-path rules as `@rust` targets:
+
+```sifr
+@rust(bridge.tokenizer.encode, panic=map_error(bridge.tokenizer.map_panic))
+def encode(text: str) -> Result[Tokenized, TokenizeError]: ...
+```
 
 Non-`Result` functions cannot return a recoverable panic without changing their public type. They are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
 
@@ -403,7 +487,7 @@ Opaque handles represent Rust-owned state with declared lifetime and thread beha
 
 Required declarations:
 
-- ownership model: owned, borrowed, shared, or exclusive,
+- ownership model: owned, shared, or exclusive,
 - destructor or explicit close contract,
 - whether use-after-close is diagnosed at runtime with a stable error,
 - `Send` and `Sync` status,
@@ -530,7 +614,7 @@ def on_message(
 
 Thread-safe callbacks require:
 
-- captured values to satisfy Sifr's `Send + 'static` equivalent,
+- captured values to satisfy the same Sifr task-spawn/offload ownership rule used for values that may leave the current task: no borrowed stack-local values, no non-send opaque handles, and no values with current-thread or current-OS-thread affinity,
 - a returned cancellation/subscription handle,
 - runtime entry guards for non-Sifr threads,
 - explicit backpressure policy,
