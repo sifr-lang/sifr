@@ -52,6 +52,7 @@
 - When numbered-record conflicts exist, follow the project planning index and the matching staged planning files.
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
 - Embedded CPython interop is production-grade complete as a separate lane from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation. Package metadata records Python environment selection, declared import roots, and Python trust roots; the package layer resolves a single selected environment and validates canonical CPython probe JSON before runtime embedding consumes it. Runtime lifecycle, GIL/refcount ownership, blocking/offload, callbacks, resources, and zero-copy rules are documented in [`python_interop_architecture.md`](./python_interop_architecture.md), with verification under [`verification/areas/python_interop/`](../verification/areas/python_interop/).
+- Rust interop is designed as declaration-level Cargo integration, not a runtime `dlopen` layer or Rust ABI FFI surface. Rust-backed Sifr packages expose normal Sifr declarations annotated with `@rust(...)`, direct Cargo bindings are allowed only for checked bridge-compatible signatures, and package-local/shared bridge crates own adaptation. The source of truth is [`rust_interop_architecture.md`](./rust_interop_architecture.md).
 
 ## Vision
 
@@ -476,7 +477,7 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (erro
 | Exact integer arithmetic (`int`) | Exact value-semantic arithmetic; explosive operations such as exponentiation/large shifts are budgeted and fallible when needed | Use fixed-width integer APIs only when representation matters; no silent wrap/panic in normal `int` arithmetic | `SifrInt` inline-small runtime type; fixed-width types map to Rust primitives |
 | Type conversion                  | `Result[T, ParseError]`           | `try`/`except`                                              | `.parse::<T>()`                                            |
 | Unused `Result`                  | **Compile-time error**            | Must handle via `try`/`except` or discard with `_ = ...`    | `#[must_use]` attribute on `Result`                        |
-| Rust FFI (ffi)         | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points                     | Panic -> `Result::Err` conversion                          |
+| Rust interop           | Rust panics caught at boundary    | `catch_unwind` at generated Rust interop entry points       | Panic -> `Result::Err` conversion                          |
 | C FFI (ffi)            | Crashes are non-recoverable       | Safe wrappers validate inputs                               | Process terminates on segfault/abort                       |
 | `assert` statement               | Panic (programmer invariant only) | Not catchable                                               | `assert!()` or `panic!()`                                  |
 | Main function                    | `Result` printed as exit code     | Non-zero exit on `Err`                                      | `fn main() -> Result<(), Box<dyn Error>>`                  |
@@ -714,7 +715,7 @@ This rules is split across three workstreams: import semantics work (multi-file 
 - **Package identity:** package instance identity includes Cargo package id, version, and source identity. Multiple Cargo-selected versions are allowed when each package's direct dependency scope remains unambiguous.
 - **Distribution:** a Sifr package is a valid Cargo package carrying `.sifr` source and `[package.metadata.sifr] manifest = "sifr.toml"`. Pure Sifr packages include only the canonical Rust marker target; Rust-backed packages must declare and pass backend trust validation.
 - **No Sifr-native lockfile in package-management architecture:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.
-- **Python interop deferred:** `pyproject.toml`, `uv.lock`, uv, and Python package distribution are future interop surfaces. They must lower into the same Cargo-backed package graph and import semantics instead of forking package resolution.
+- **Interop package surfaces:** Python interop consumes externally managed `pyproject.toml`, `uv.lock`, and `.venv` metadata without forking package resolution. Rust interop consumes Cargo dependencies and bridge metadata through declaration-level Cargo integration. Both lanes must lower into the same package graph/import semantics instead of creating alternate resolvers.
 
 ### 5. CI Quality Gates
 
@@ -969,10 +970,10 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 
 ### Ecosystem Strategy
 
-Sifr's standard library follows a **thin wrapper + FFI** strategy:
+Sifr's standard library follows a thin wrapper plus declared interop strategy:
 
 - **Thin wrappers (protocols-data_processing):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
-- **Rust FFI (ffi):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives Sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
+- **Rust interop:** For crates not yet wrapped by stdlib modules, package authors expose Rust-backed Sifr declarations through declaration-level Cargo integration and checked bridge-compatible signatures. This gives Sifr access to the Rust ecosystem without using Rust's private ABI or runtime `dlopen` as the Rust path.
 - **Package ecosystem (ecosystem):** A package registry (`sifr.sh`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
 - **No reinventing:** Sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
 

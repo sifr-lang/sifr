@@ -35,7 +35,7 @@ This phase does not own:
 - incremental cache/query correctness, invalidation contracts, and local-loop cache architecture (Phase 35)
 - performance thresholds and benchmark governance (Phase 35)
 - tooling parity (Phase 36)
-- release governance (Phase 39)
+- release governance (Phase 40)
 
 ## Verification Taxonomy
 The phase must define explicit suite kinds with contracts, ownership, and required artifacts.

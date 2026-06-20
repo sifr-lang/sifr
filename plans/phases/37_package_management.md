@@ -189,7 +189,7 @@ Sifr edition is orthogonal to Cargo edition. `Cargo.toml` `edition` controls Rus
 
 Out of scope for Phase 37 core package management.
 
-Future Phase 43/Python interop may add:
+The sequence-independent embedded Python interop lane may add:
 
 - `pyproject.toml` `[tool.sifr]` pointers.
 - uv-managed Python dependencies.

@@ -6,7 +6,7 @@ Completed on 2026-05-12. Closure evidence is recorded in `../issues/archive/phas
 
 ## Objective
 
-Ship preview release channels early for adoption while keeping stable GA promotion gated for Phase 39.
+Ship preview release channels early for adoption while keeping stable GA promotion gated for Phase 40.
 
 Phase 33 establishes the first public distribution path for preview binaries with the least custom release infrastructure that still satisfies Sifr's safety bar:
 
@@ -47,7 +47,7 @@ The following are not Phase 33 exit criteria:
 - Custom channel manifest and version manifest schemas, unless generated installer entrypoints cannot satisfy a concrete Phase 33 requirement.
 - Package-manager distribution (`brew`, `apt`, `npm`, `pip`, `cargo install`, Windows package managers).
 - Automatic runtime telemetry or update checks from installed binaries.
-- Rollback and incident governance beyond reverting preview channel pointers; Phase 39 (`plans/phases/39_stable_channel_ga_promotion_and_release_governance.md`) owns GA rollback governance.
+- Rollback and incident governance beyond reverting preview channel pointers; Phase 40 (`plans/phases/40_stable_channel_ga_promotion_and_release_governance.md`) owns GA rollback governance.
 - Windows installer support for `curl | bash`; Windows artifacts may be added later behind a separate installer contract.
 - Long-term signing authority rotation policy.
 
@@ -78,7 +78,7 @@ This attribution requirement applies even if the adapted code is later checked i
 3. Each preview version has an immutable generated installer script under `https://sifr.sh/install/versions/<version>`.
 4. The default `https://sifr.sh/install` entrypoint resolves to the current `beta` preview.
 5. `https://sifr.sh/install/alpha` resolves to the current `alpha` preview, and `https://sifr.sh/install/beta` resolves to the current `beta` preview.
-6. `--version <preview>` selects the immutable generated installer for that preview version. Stable-looking versions without preview prerelease labels are rejected until Phase 39.
+6. `--version <preview>` selects the immutable generated installer for that preview version. Stable-looking versions without preview prerelease labels are rejected until Phase 40.
 7. `SIFR_CHANNEL` and `--channel` are thin dispatcher inputs only. They select `alpha` or `beta` and then delegate to the immutable generated installer for the selected channel. They must not implement independent artifact resolution.
 8. Invalid combinations are hard errors. `--version` with a conflicting `--channel` or `SIFR_CHANNEL` is rejected instead of silently choosing one.
 9. The installer never compiles Sifr from source and never falls back to an alternate artifact if the resolved artifact is missing or invalid.
@@ -98,7 +98,7 @@ The installer and release command must reject stable-looking versions using thes
 1. Versions matching `X.Y.Z` without prerelease labels, for example `1.0.0` or `2.0.0`, are rejected.
 2. Versions with `-alpha.N`, `-beta.N`, or `-rc.N` prerelease labels, for example `1.0.0-alpha.1` or `2.0.0-beta.2`, are accepted as preview versions.
 3. Versions matching `0.X.Y` without prerelease labels are treated as stable-looking. Phase 33 does not define 0.x preview semantics without explicit prerelease labels.
-4. Stable-looking versions remain rejected regardless of what Phase 39 later permits.
+4. Stable-looking versions remain rejected regardless of what Phase 40 later permits.
 
 ## Artifact Format Specification
 

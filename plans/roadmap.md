@@ -7,7 +7,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - Per review alignment, **Phase 12, 13, and 14 are completed**.
 - Active sequencing is split into:
   - **Reliability and Architecture Track:** Phase 15 through Phase 31
-  - **Expansion and Distribution Track:** Phase 32 through Phase 41
+  - **Expansion and Distribution Track:** Phase 32 through Phase 43
 
 ## Historical Status Clarifications
 
@@ -29,7 +29,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - No user-triggerable compiler panics.
 - No data-dependent emitted `.unwrap()`/`.expect()` in generated user runtime paths.
 - Scoped fix-back (`N+1` discovering defect in `N`) is allowed only if minimal, documented, regression-tested, and revalidated.
-- Phase entry/exit gates, milestone quality checks, and mandatory local validation commands are embedded in each phase file (`15`-`41`) under `## Quality Contract`.
+- Phase entry/exit gates, milestone quality checks, and mandatory local validation commands are embedded in each phase file (`15`-`43`) under `## Quality Contract`.
 
 ## Reliability and Architecture Track (Phase 15-31)
 
@@ -58,7 +58,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 31.8 | Ad Hoc World-Class Verification Standard and Gate Closure | complete | [plans/issues/archive/ad-hoc-world-class-verification-standard-and-gate-closure.md](issues/archive/ad-hoc-world-class-verification-standard-and-gate-closure.md) | Local-first verification gate closure across crate membership, codegen, diagnostics baselines, CPython differential, fuzz/sanitizer, tooling, ecosystem, package, stdlib, platform, algorithmic compatibility, and closeout coverage-matrix enforcement completed through PR [#2650](https://github.com/sifr-lang/sifr/pull/2650). |
 | 32.1 | Ad Hoc Async Effect And Offload Diagnostics | completed | [plans/issues/archive/ad-hoc-async-effect-and-offload-diagnostics.md](issues/archive/ad-hoc-async-effect-and-offload-diagnostics.md), [plans/issues/archive/ad-hoc-async-effect-and-offload-diagnostics-execution.md](issues/archive/ad-hoc-async-effect-and-offload-diagnostics-execution.md) | Corrective Phase 32 seal completed on 2026-05-12: async functions and awaits must have real suspension effects, direct annotated blocking/CPU-heavy calls in async code are errors, and blocking offload requires classified `@blocking_io`, `@cpu_heavy`, or known stdlib work. |
 
-## Expansion and Distribution Track (Phase 32-41)
+## Expansion and Distribution Track (Phase 32-43)
 
 | # | Phase | Status | Phase File | Unlocks |
 |---|---|---|---|---|
@@ -71,14 +71,16 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 36.2 | Ad Hoc Production-Grade Sifr Linter | completed, audited | [ad-hoc-production-grade-sifr-linter.md](issues/archive/ad-hoc-production-grade-sifr-linter.md), [ad-hoc-production-grade-sifr-linter-execution.md](issues/archive/ad-hoc-production-grade-sifr-linter-execution.md) | Sifr-owned lint config, discovery, parser-aware suppressions, phase-gated rule execution, policy rule families, safe fixes, typed LSP policy code actions, public/internal docs, and final production-readiness review completed on 2026-05-27. |
 | 36.3 | Ad Hoc TypeScript-Go Compiler Architecture Transfer | completed, audited | [plans/issues/archive/ad-hoc-typescript-go-compiler-architecture-transfer.md](issues/archive/ad-hoc-typescript-go-compiler-architecture-transfer.md) | Compiler-service source authority, provider/session snapshots, cache reuse, dirty scopes, LSP scheduling/cancellation/budgets, residency/watch/build-info state, trace/status surfaces, editor corpus fixtures, and package diagnostic separation completed with final full implementation review on 2026-06-02. |
 | 36.4 | Ad Hoc Production Concurrency Runtime Platform Substrate | completed, audited | [plans/issues/archive/ad-hoc-production-concurrency-runtime-platform-substrate.md](issues/archive/ad-hoc-production-concurrency-runtime-platform-substrate.md), [plans/issues/archive/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md](issues/archive/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md) | Production `sifr.task`, `sifr.sync`, `sifr.runtime`, `sifr.parallel`, `sifr.process`, `sifr.signal`, `sifr.resource`, and `sifr.ipc` substrate completed on 2026-06-09 with final local merge-gate validation and Opus closeout review recorded in PR #2488. |
-| 36.5 | Ad Hoc Production Network and HTTP Platform Substrate | completed, audited | [plans/issues/archive/ad-hoc-production-network-http-platform-substrate.md](issues/archive/ad-hoc-production-network-http-platform-substrate.md), [plans/issues/archive/ad-hoc-production-network-http-platform-substrate-execution.md](issues/archive/ad-hoc-production-network-http-platform-substrate-execution.md), [network_http_architecture.md](../internal_docs/network_http_architecture.md) | Production `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http` substrate completed on 2026-06-12 with M0-M5 PRs #2494-#2499, post-closure Fable High remediation merged via [PR #2501](https://github.com/sifr-lang/sifr/pull/2501), local create-pr and merge-gate validation, and Opus/Fable review artifacts. Phase 41 may consume the protocol/runtime substrate; multi-core serving throughput stays deferred to the serving-scale follow-up. |
+| 36.5 | Ad Hoc Production Network and HTTP Platform Substrate | completed, audited | [plans/issues/archive/ad-hoc-production-network-http-platform-substrate.md](issues/archive/ad-hoc-production-network-http-platform-substrate.md), [plans/issues/archive/ad-hoc-production-network-http-platform-substrate-execution.md](issues/archive/ad-hoc-production-network-http-platform-substrate-execution.md), [network_http_architecture.md](../internal_docs/network_http_architecture.md) | Production `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http` substrate completed on 2026-06-12 with M0-M5 PRs #2494-#2499, post-closure Fable High remediation merged via [PR #2501](https://github.com/sifr-lang/sifr/pull/2501), local create-pr and merge-gate validation, and Opus/Fable review artifacts. Phase 42 may consume the protocol/runtime substrate; multi-core serving throughput stays deferred to the serving-scale follow-up. |
 | 37 | Package Management | completed, audited | [37_package_management.md](./phases/37_package_management.md) | Cargo-backed package graph, workspace selection, package archive validation, publishing/vendoring delegation, and package guardrails completed on 2026-05-19 |
-| 37.1 | Ad Hoc Sifr Self Update | completed, audited | [plans/issues/archive/ad-hoc-sifr-self-update.md](issues/archive/ad-hoc-sifr-self-update.md), [plans/issues/archive/ad-hoc-sifr-self-update-execution.md](issues/archive/ad-hoc-sifr-self-update-execution.md) | CLI-native standalone self-update completed on 2026-06-03: managed-install receipt eligibility, preview metadata resolution, immutable-installer delegation, distribution drift guardrails, public docs, and stable-channel gating until Phase 39. |
+| 37.1 | Ad Hoc Sifr Self Update | completed, audited | [plans/issues/archive/ad-hoc-sifr-self-update.md](issues/archive/ad-hoc-sifr-self-update.md), [plans/issues/archive/ad-hoc-sifr-self-update-execution.md](issues/archive/ad-hoc-sifr-self-update-execution.md) | CLI-native standalone self-update completed on 2026-06-03: managed-install receipt eligibility, preview metadata resolution, immutable-installer delegation, distribution drift guardrails, public docs, and stable-channel gating until Phase 40. |
 | 37.2 | Ad Hoc PR Gate Speed and Validation Lane Rebalancing | draft | [plans/issues/archive/ad-hoc-pr-gate-speed-and-validation-lane-rebalancing.md](issues/archive/ad-hoc-pr-gate-speed-and-validation-lane-rebalancing.md) | Benchmark and rebalance local PR-creation and merge gates so compiler-relevant checks stay fast, deterministic, and fully measured while tooling, generated-code, distribution, performance, and hardening breadth move to explicit lanes. |
 | 38 | Docs and Documentation | draft | [38_docs_and_documentation.md](./phases/38_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
-| 39 | Stable Channel GA Promotion and Release Governance | planned | [39_stable_channel_ga_promotion_and_release_governance.md](./phases/39_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
-| 40 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [40_typed_data_model_and_validation.md](./phases/40_typed_data_model_and_validation.md) | Typed model/validation layer with stable error contracts |
-| 41 | Web Framework and Platform Expansion | planned | [41_web_framework_and_platform_expansion.md](./phases/41_web_framework_and_platform_expansion.md) | Web stack with typed extractors and platform expansion baseline |
+| 39 | Rust Interop | planned | [39_rust_interop.md](./phases/39_rust_interop.md), [rust_interop_architecture.md](../internal_docs/rust_interop_architecture.md) | Declaration-level Cargo integration for Rust-backed Sifr packages |
+| 40 | Stable Channel GA Promotion and Release Governance | planned | [40_stable_channel_ga_promotion_and_release_governance.md](./phases/40_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
+| 41 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [41_typed_data_model_and_validation.md](./phases/41_typed_data_model_and_validation.md) | Typed model/validation layer with stable error contracts |
+| 42 | Web Framework and Platform Expansion | planned | [42_web_framework_and_platform_expansion.md](./phases/42_web_framework_and_platform_expansion.md) | Web stack with typed extractors and platform expansion baseline |
+| 43 | Data Science and ML | planned | [43_data_science_ml.md](./phases/43_data_science_ml.md) | DataFrame, tensor, and ML inference workflows |
 
 ## Dependency Chain
 
@@ -107,9 +109,11 @@ flowchart LR
     p35 --> p36["Phase 36\nProduction Developer Tooling"]
     p36 --> p37["Phase 37\nPackage Management"]
     p37 --> p38["Phase 38\nDocs and Documentation"]
-    p38 --> p39["Phase 39\nStable GA Governance"]
-    p39 --> p40["Phase 40\nTyped Data Model + Validation"]
-    p40 --> p41["Phase 41\nWeb + Platform Expansion"]
+    p38 --> p39["Phase 39\nRust Interop"]
+    p39 --> p40["Phase 40\nStable GA Governance"]
+    p40 --> p41["Phase 41\nTyped Data Model + Validation"]
+    p41 --> p42["Phase 42\nWeb + Platform Expansion"]
+    p42 --> p43["Phase 43\nData Science + ML"]
 ```
 
 ## Execution Discipline
@@ -117,9 +121,6 @@ flowchart LR
 - Any scoped fix-back must be recorded in both affected phase docs.
 - Merge decisions are based on local gate evidence first, CI second.
 
-## Deferred Planning Drafts (Need Alignment)
-- Phase 42 and Phase 43 are intentionally excluded from the main execution table until post-Phase-41 planning lock.
-- [42_data_science_ml.md](./phases/42_data_science_ml.md) (needs more planning)
-- [43_interoperability.md](./phases/43_interoperability.md) (needs more planning)
+## Completed Sequence-Independent Interop Work
 - [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (complete for the sequence-independent embedded CPython/uv interop lane; py0-py12 are merged through PR #2677 with public/internal docs, diagnostic evidence, py12 and phase-level Opus reviews, and local validation)
 - [python-interop-verification-production.md](./issues/active/python-interop-verification-production.md) (complete follow-up: first-class area wiring, explicit live/container policy, testcontainers-backed Redis/Postgres/Kafka-compatible/LocalStack SNS-SQS examples, and final status evidence)

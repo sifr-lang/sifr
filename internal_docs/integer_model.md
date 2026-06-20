@@ -62,7 +62,7 @@ Width is a storage, binary protocol, dtype, schema, or FFI choice. It is not the
 | `int` | exact signed integer, arbitrary precision | default app/web/business/algorithm integer | `SifrInt`, inline-small with arbitrary-precision spill |
 | `int8`, `int16`, `int32`, `int64` | signed fixed-width integer | binary formats, DB/dataframe/tensor schemas, FFI, memory-sensitive storage | `i8`, `i16`, `i32`, `i64` |
 | `uint8`, `uint16`, `uint32`, `uint64` | unsigned fixed-width integer | bytes, protocols, external unsigned schemas, FFI | `u8`, `u16`, `u32`, `u64` |
-| `isize`, `usize` | pointer-sized Rust interop integer | FFI boundary only | `isize`, `usize` |
+| `isize`, `usize` | pointer-sized Rust interop integer | low-level interop boundary only | `isize`, `usize` |
 
 Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `i128` and `u128`, and some storage targets need 128-bit values, but Sifr does not need to ship them in the initial fixed-width implementation. Using either reserved name before support lands must produce `SIFR-INT-0003`, not a generic unresolved-name diagnostic.
 
@@ -250,7 +250,7 @@ size: int = len(items)
 value: T | None = items[i]
 ```
 
-Generated Rust may convert to `usize` internally at indexing boundaries, but that conversion is compiler-owned and checked. Users should not need `usize` for ordinary Sifr code. Exposing `usize` in user APIs is limited to Rust FFI signatures or explicit low-level modules gated by a future package/module-level low-level interop opt-in; ordinary modules cannot name `usize` by accident.
+Generated Rust may convert to `usize` internally at indexing boundaries, but that conversion is compiler-owned and checked. Users should not need `usize` for ordinary Sifr code. Exposing `usize` in user APIs is limited to explicit low-level Rust interop declarations or low-level modules gated by a package/module-level interop opt-in; ordinary modules cannot name `usize` by accident.
 
 Negative indexing remains natural because indexes are signed exact integers.
 
@@ -483,7 +483,7 @@ The target runtime placement is a new workspace crate, `crates/sifr_runtime`, li
 
 `SifrInt` is immutable, `Clone`, `Eq`, `Ord`, `Hash`, `Send`, and `Sync` when its backing implementation supports those traits. It is not `Copy` and has no `#[repr(C)]` ABI guarantee.
 
-Rust FFI APIs must not expose `SifrInt` as a C-compatible integer. FFI either uses fixed-width integers or a future explicit big-integer handle/adapter.
+Rust interop APIs must not expose `SifrInt` as a C-compatible integer. Interop either uses fixed-width integers or an explicit exact-integer bridge representation.
 
 Sifr source treats `int` as scalar value-semantic and non-consuming: using an `int` binding in more than one expression is always legal. Codegen is responsible for borrowing, cloning, or primitive-local optimization so Rust ownership does not leak into ordinary integer use.
 
@@ -491,18 +491,19 @@ Decimal string formatting of `int` is exact. Format specs for binary, octal, hex
 
 ## Rust Interop
 
-Rust FFI requires exact signatures. If a Rust function takes `u32`, Sifr exposes `uint32`, not `int`.
+Rust interop requires exact signatures. If a Rust function takes `u32`, Sifr exposes `uint32`, not `int`.
 
 ```python
-extern rust "crate::net":
-    def set_flags(flags: uint32) -> Result[None, IOError]
+@rust(bridge.net.set_flags)
+def set_flags(flags: uint32) -> Result[None, IOError]:
+    pass
 ```
 
 Passing an `int` to that function requires `uint32(value)` or a compiler-proven fitting literal. Returning Rust `u32` produces `uint32`; users widen with `int(value)` when they want Python-style arithmetic.
 
 Sifr structs/classes containing `int` fields are not C-ABI-compatible because `SifrInt` has no `repr(C)` layout guarantee. FFI structs must use fixed-width integer fields for integer slots or an explicit future big-integer handle type.
 
-Panics from Rust FFI remain an interop boundary concern and should be caught or rejected according to the FFI safety rules. Integer overflow inside Sifr-generated fixed-width helper methods must not panic in user-triggerable paths.
+Panics from Rust interop remain a boundary concern and should be caught or rejected according to Rust interop safety rules. Integer overflow inside Sifr-generated fixed-width helper methods must not panic in user-triggerable paths.
 
 ## Compiler Architecture Impact
 
