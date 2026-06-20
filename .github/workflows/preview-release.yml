@@ -24,6 +24,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: preview-release-channels
+  cancel-in-progress: false
+
 jobs:
   validate:
     name: validate preview inputs
@@ -133,6 +137,11 @@ jobs:
       CHANNEL: ${{ needs.validate.outputs.channel }}
       BASE_REF: ${{ needs.validate.outputs.base_ref }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BASE_REF }}
+          submodules: recursive
+
       - uses: actions/download-artifact@v4
         with:
           path: release-assets
@@ -160,6 +169,68 @@ jobs:
               exit 2
             fi
           done
+
+      - name: Generate immutable installer asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/distribution/generate_version_installer.sh \
+            --version "${VERSION}" \
+            --artifact-dir release-assets \
+            --out "release-assets/sifr-installer-${VERSION}"
+
+      - name: Generate channel metadata asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p channel-metadata
+          current_metadata="$(mktemp)"
+          if ! curl -fsSL \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/channels/channels.json" \
+            -o "${current_metadata}"; then
+            echo "::warning::channels release asset fetch failed; bootstrapping metadata from public GitHub prereleases"
+            gh release list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --limit 100 \
+              --json tagName,isDraft,isPrerelease \
+              > current-releases.json
+            scripts/distribution/bootstrap_channel_metadata.py \
+              --releases-json current-releases.json \
+              --channel "${CHANNEL}" \
+              --version "${VERSION}" \
+              --out "${current_metadata}"
+          fi
+
+          read -r current_alpha current_beta < <(scripts/distribution/read_channel_versions.py "${current_metadata}")
+
+          new_alpha="${current_alpha}"
+          new_beta="${current_beta}"
+          case "${CHANNEL}" in
+            alpha) new_alpha="${VERSION}" ;;
+            beta) new_beta="${VERSION}" ;;
+            *) echo "::error::unexpected channel ${CHANNEL}"; exit 2 ;;
+          esac
+
+          scripts/distribution/generate_channel_metadata.sh \
+            --out channel-metadata/channels.json \
+            --alpha-version "${new_alpha}" \
+            --beta-version "${new_beta}"
+
+      - name: Verify immutable installer asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          installer="release-assets/sifr-installer-${VERSION}"
+          test -f "${installer}" || { echo "::error::missing ${installer}"; exit 2; }
+          size="$(wc -c <"${installer}" | tr -d '[:space:]')"
+          if [[ "${size}" -lt 1024 ]]; then
+            echo "::error::installer asset too small: ${size} bytes"
+            exit 2
+          fi
+          head -n 1 "${installer}" | grep -q '^#!' || {
+            echo "::error::installer asset must start with a shebang"
+            exit 2
+          }
 
       - name: Publish GitHub prerelease
         shell: bash
@@ -195,5 +266,45 @@ jobs:
           fi
 
           gh release upload "${VERSION}" release-assets/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+
+      - name: Verify published release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/distribution/list_channel_versions.py channel-metadata/channels.json > channel-versions.txt
+
+          while IFS= read -r channel_version; do
+            gh release view "${channel_version}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json assets \
+              > "release-view-${channel_version}.json"
+            scripts/distribution/verify_release_installer_asset.py \
+              "release-view-${channel_version}.json" \
+              "sifr-installer-${channel_version}"
+          done < channel-versions.txt
+
+      - name: Publish channel metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view channels --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release edit channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --draft=false \
+              --latest=false \
+              --title "Sifr self-update channels" \
+              --notes "Machine-readable Sifr self-update channel metadata."
+          else
+            gh release create channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --draft=false \
+              --latest=false \
+              --title "Sifr self-update channels" \
+              --notes "Machine-readable Sifr self-update channel metadata."
+          fi
+
+          gh release upload channels channel-metadata/channels.json \
             --repo "${GITHUB_REPOSITORY}" \
             --clobber

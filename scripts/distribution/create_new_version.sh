@@ -27,7 +27,7 @@ Options:
   --artifact-dir <dir>       Existing artifact directory for real-run validation/publication
   --binary <path>            Existing binary packaged for all targets in local validation
   --work-dir <dir>           Work/evidence directory (default: target/preview-release/<version>)
-  --mutation-mode <mode>     local or github (default: github)
+  --mutation-mode <mode>     local only; GitHub publication is handled by preview-release.yml
   --help                     Show this help
 EOF
 }
@@ -40,7 +40,7 @@ SITE_REPO="${SIFR_SITE_REPO:-}"
 ARTIFACT_DIR=""
 BINARY=""
 WORK_DIR=""
-MUTATION_MODE="github"
+MUTATION_MODE="local"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -134,7 +134,7 @@ validate_inputs() {
   [[ -n "${VERSION}" ]] || fail "--version is required"
   [[ -n "${MODE}" ]] || fail "choose --dry-run or --real-run"
   [[ -n "${SITE_REPO}" ]] || fail "--site-repo is required when SIFR_SITE_REPO is not set"
-  [[ "${MUTATION_MODE}" == "local" || "${MUTATION_MODE}" == "github" ]] || fail "--mutation-mode must be local or github"
+  [[ "${MUTATION_MODE}" == "local" ]] || fail "--mutation-mode github is disabled; use scripts/distribution/trigger_preview_release.sh for GitHub publication"
   [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "stable-looking versions are disabled until a stable channel is supported: ${VERSION}"
   version_channel="$(preview_channel_for_version "${VERSION}")" || fail "version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}"
   [[ "${version_channel}" == "${CHANNEL}" ]] || fail "version ${VERSION} belongs to ${version_channel}, not ${CHANNEL}"
@@ -191,6 +191,8 @@ build_plan() {
   PLAN_FILE="${WORK_DIR}/plan.txt"
   CHECKLIST_FILE="${WORK_DIR}/release-checklist.md"
   RECOVERY_FILE="${WORK_DIR}/recovery-note.md"
+  CHANNEL_METADATA_FILE="${WORK_DIR}/channels.json"
+  INSTALLER_ASSET_FILE="${WORK_DIR}/sifr-installer-${VERSION}"
 
   artifact_lines=""
   for target in "${TARGETS[@]}"; do
@@ -214,9 +216,11 @@ current_beta=${CURRENT_BETA}
 new_alpha=${NEW_ALPHA}
 new_beta=${NEW_BETA}
 version_installer=${INSTALL_ROOT}/versions/${VERSION}
-channel_metadata=${INSTALL_ROOT}/metadata/channels.json
+github_installer_asset=${INSTALLER_ASSET_FILE}
+channel_metadata=${CHANNEL_METADATA_FILE}
 stable_entrypoint=unchanged_absent
 github_release=sifr-lang/sifr:${VERSION}
+github_channel_release=sifr-lang/sifr:channels
 site_dispatcher_update=${CHANNEL}:${VERSION}
 channel_metadata_update=alpha:${NEW_ALPHA},beta:${NEW_BETA}${artifact_lines}
 EOF
@@ -259,8 +263,9 @@ $(for target in "${TARGETS[@]}"; do echo "- [x] sifr-${VERSION}-${target}.tar.gz
 ## Installer And Dispatcher
 
 - [x] Immutable generated installer: ${INSTALL_ROOT}/versions/${VERSION}
+- [x] GitHub immutable installer asset: ${INSTALLER_ASSET_FILE}
 - [x] Channel dispatcher update: ${CHANNEL} -> ${VERSION}
-- [x] Channel metadata update: alpha=${NEW_ALPHA}, beta=${NEW_BETA}
+- [x] GitHub channel metadata update: alpha=${NEW_ALPHA}, beta=${NEW_BETA}
 - [x] Stable entrypoint unchanged and absent
 - [x] SHA-256 checksums embedded in immutable installer
 
@@ -289,26 +294,15 @@ write_recovery_note() {
 - Completed mutations:
   - artifact directory verified: ${ARTIFACT_DIR}
   - immutable installer generated: ${INSTALL_ROOT}/versions/${VERSION}
+  - GitHub immutable installer asset generated: ${INSTALLER_ASSET_FILE}
   - channel dispatchers regenerated: alpha=${NEW_ALPHA}, beta=${NEW_BETA}
+  - GitHub channel metadata generated: ${CHANNEL_METADATA_FILE}
   - release checklist written: ${CHECKLIST_FILE}
 - Incomplete mutations:
   - GitHub release publication is skipped when mutation_mode=local.
   - Site deployment remains the existing sifr.sh deployment step.
+  - The GitHub Actions workflow publishes the version release before the shared channels release asset; if channel verification fails, retry after correcting the failed asset check.
 EOF
-}
-
-publish_github_release() {
-  gh release view "${VERSION}" --repo sifr-lang/sifr >/dev/null 2>&1 || \
-    gh release create "${VERSION}" \
-      --repo sifr-lang/sifr \
-      --prerelease \
-      --draft \
-      --title "Sifr ${VERSION}" \
-      --notes-file "${CHECKLIST_FILE}"
-
-  gh release upload "${VERSION}" "${ARTIFACT_DIR}"/sifr-"${VERSION}"-*.tar.gz "${ARTIFACT_DIR}"/sifr-"${VERSION}"-*.tar.gz.sha256 \
-    --repo sifr-lang/sifr \
-    --clobber
 }
 
 real_run() {
@@ -327,19 +321,26 @@ real_run() {
   "${SCRIPT_DIR}/generate_version_installer.sh" \
     --version "${VERSION}" \
     --artifact-dir "${ARTIFACT_DIR}" \
-    --out "${INSTALL_ROOT}/versions/${VERSION}" >/dev/null
+    --out "${INSTALLER_ASSET_FILE}" >/dev/null
+
+  cp "${INSTALLER_ASSET_FILE}" "${INSTALL_ROOT}/versions/${VERSION}"
 
   "${SCRIPT_DIR}/generate_dispatchers.sh" \
     --install-root "${INSTALL_ROOT}" \
     --alpha-version "${NEW_ALPHA}" \
     --beta-version "${NEW_BETA}" >/dev/null
 
+  "${SCRIPT_DIR}/generate_channel_metadata.sh" \
+    --out "${CHANNEL_METADATA_FILE}" \
+    --alpha-version "${NEW_ALPHA}" \
+    --beta-version "${NEW_BETA}" >/dev/null
+
+  "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
+    --install-root "${INSTALL_ROOT}" \
+    --channels-file "${CHANNEL_METADATA_FILE}" >/dev/null
+
   write_checklist
   write_recovery_note
-
-  if [[ "${MUTATION_MODE}" == "github" ]]; then
-    publish_github_release
-  fi
 
   cat <<EOF
 real_run_complete=1

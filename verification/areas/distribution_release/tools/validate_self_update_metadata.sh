@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: verification/areas/distribution_release/tools/validate_self_update_metadata.sh --install-root <dir>
+Usage: verification/areas/distribution_release/tools/validate_self_update_metadata.sh --install-root <dir> --channels-file <file>
 
 Validate that self-update channel metadata, preview dispatchers, and immutable
 version installers agree.
@@ -12,11 +12,16 @@ EOF
 }
 
 INSTALL_ROOT=""
+CHANNELS_FILE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --install-root)
       INSTALL_ROOT="${2:-}"
+      shift 2
+      ;;
+    --channels-file)
+      CHANNELS_FILE="${2:-}"
       shift 2
       ;;
     --help)
@@ -38,6 +43,8 @@ fail() {
 
 [[ -n "${INSTALL_ROOT}" ]] || fail "--install-root is required"
 [[ -d "${INSTALL_ROOT}" ]] || fail "install root not found: ${INSTALL_ROOT}"
+[[ -n "${CHANNELS_FILE}" ]] || fail "--channels-file is required"
+[[ -f "${CHANNELS_FILE}" ]] || fail "channel metadata missing: ${CHANNELS_FILE}"
 
 extract_var() {
   local file="$1"
@@ -45,8 +52,7 @@ extract_var() {
   sed -n "s/^${name}=\"\\(.*\\)\"$/\\1/p" "${file}" | head -n 1
 }
 
-metadata_path="${INSTALL_ROOT}/metadata/channels.json"
-[[ -f "${metadata_path}" ]] || fail "channel metadata missing: ${metadata_path}"
+metadata_path="${CHANNELS_FILE}"
 
 metadata_values="$(
   python3 - "${metadata_path}" 2>&1 <<'PY'

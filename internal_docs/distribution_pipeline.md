@@ -19,13 +19,15 @@ public/install/
   index
   alpha
   beta
-  metadata/
-    channels.json
   versions/
     <version>
 ```
 
-`index` is the default beta dispatcher. The deployment must serve it at `https://sifr.sh/install`; `alpha` and `beta` are served at `https://sifr.sh/install/alpha` and `https://sifr.sh/install/beta`. Immutable generated installers are served from `https://sifr.sh/install/versions/<version>`. Channel resolution metadata is served from `https://sifr.sh/install/metadata/channels.json`.
+`index` is the default beta dispatcher. The deployment must serve it at `https://sifr.sh/install`; `alpha` and `beta` are served at `https://sifr.sh/install/alpha` and `https://sifr.sh/install/beta`. Immutable generated installers are served from `https://sifr.sh/install/versions/<version>` for the public curl installer path.
+
+Self-update channel resolution is not served from the website install tree. It is published as the `channels.json` asset on the `sifr-lang/sifr` GitHub release tag `channels`, and self-update downloads immutable installer assets from the resolved version's GitHub release.
+
+The website repository must not publish `public/install/metadata/channels.json`. Remove any stale `public/install/metadata/` directory on the next site rollout after this contract is adopted.
 
 This directory layout avoids the impossible static-file shape where `public/install` is both an executable file and a directory for nested channel paths.
 
@@ -52,7 +54,16 @@ Dispatcher behavior:
 
 The dispatcher never resolves artifacts itself and never compiles from source.
 
-Generating dispatchers also writes `metadata/channels.json` from the same alpha/beta version inputs:
+Generate self-update channel metadata with:
+
+```bash
+scripts/distribution/generate_channel_metadata.sh \
+  --out <work-dir>/channels.json \
+  --alpha-version 0.1.0-alpha.1 \
+  --beta-version 0.1.0-beta.1
+```
+
+The generated `channels.json` shape is:
 
 ```json
 {
@@ -64,7 +75,44 @@ Generating dispatchers also writes `metadata/channels.json` from the same alpha/
 }
 ```
 
-The metadata file is resolution metadata only. It records channel-to-version mappings and must not contain executable URLs. The Rust CLI derives immutable installer URLs from the trusted install base URL and the resolved version string. Stable metadata remains absent until stable-channel release architecture changes the stable-channel rules.
+The metadata file is resolution metadata only. It records channel-to-version mappings and must not contain executable URLs. The Rust CLI derives immutable installer URLs from the trusted GitHub release download base URL and the resolved version string. Stable metadata remains absent until stable-channel release architecture changes the stable-channel rules.
+
+First-time GitHub setup for a repository without a `channels` release can be bootstrapped from existing public prereleases:
+
+```bash
+for version in <current-alpha-version> <current-beta-version>; do
+  scripts/distribution/generate_version_installer.sh \
+    --version "${version}" \
+    --artifact-dir "target/preview-artifacts/${version}" \
+    --out "target/preview-artifacts/${version}/sifr-installer-${version}"
+  gh release upload "${version}" \
+    "target/preview-artifacts/${version}/sifr-installer-${version}" \
+    --repo sifr-lang/sifr \
+    --clobber
+done
+
+gh release list --repo sifr-lang/sifr --limit 100 --json tagName,isDraft,isPrerelease > current-releases.json
+scripts/distribution/bootstrap_channel_metadata.py \
+  --releases-json current-releases.json \
+  --channel beta \
+  --version <current-beta-version> \
+  --out channels.json
+gh release create channels \
+  --repo sifr-lang/sifr \
+  --latest=false \
+  --title "Sifr self-update channels" \
+  --notes "Machine-readable Sifr self-update channel metadata."
+gh release upload channels channels.json --repo sifr-lang/sifr --clobber
+```
+
+The installer-asset backfill is a one-time migration prerequisite when the
+current channel releases were created before GitHub-hosted self-update
+metadata. The preview-release workflow verifies that both channel versions in
+`channels.json` already have `sifr-installer-<version>` assets before it
+publishes or updates the shared `channels` release asset.
+
+The bootstrap helper fills the current channel from the release being published and requires an existing public prerelease for the other channel so schema-version 1 metadata always contains both `alpha` and `beta`.
+It refuses to move the current channel backward relative to public prereleases unless a future reviewed release-governance change adds an explicit downgrade flow.
 
 ## Preview metadata validation Validation
 
@@ -216,15 +264,19 @@ verification/areas/distribution_release/cases/artifact_target_mismatch_rejected.
 verification/areas/distribution_release/cases/stable_entrypoints_unchanged_by_preview_release.sh
 ```
 
-The self-update metadata drift checks validate that `metadata/channels.json`, preview dispatchers, and immutable installer `APP_VERSION` values are generated from one release plan:
+The self-update metadata drift checks validate that the GitHub-bound `channels.json`, preview dispatchers, and immutable installer `APP_VERSION` values are generated from one release plan:
 
 ```bash
-verification/areas/distribution_release/tools/validate_self_update_metadata.sh --install-root <install-root>
+verification/areas/distribution_release/tools/validate_self_update_metadata.sh \
+  --install-root <install-root> \
+  --channels-file <work-dir>/channels.json
 verification/areas/distribution_release/cases/channel_metadata_installer_agreement.sh
 verification/areas/distribution_release/cases/channel_metadata_dispatcher_drift_rejected.sh
 verification/areas/distribution_release/cases/channel_metadata_installer_drift_rejected.sh
 verification/areas/distribution_release/cases/channel_metadata_stable_rejected.sh
 ```
+
+Run the validator after every `create_new_version.sh --real-run` and before pushing/deploying the site repository. The real-run command invokes it automatically before GitHub publication.
 
 ## Preview Release Command
 
@@ -251,12 +303,19 @@ scripts/distribution/create_new_version.sh \
   --version 0.1.0-beta.2 \
   --real-run \
   --artifact-dir target/preview-artifacts/0.1.0-beta.2 \
-  --mutation-mode github
+  --mutation-mode local
 ```
 
-Dry-run validates inputs, resolves the base commit, computes every target artifact name, detects site dispatcher drift, confirms stable entrypoints remain absent, and prints the exact GitHub Release and site mutations.
+Dry-run validates inputs, resolves the base commit, computes every target artifact name, detects site dispatcher drift, confirms stable entrypoints remain absent, and prints the exact GitHub Release, channel metadata, and site mutations.
 
-Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable version installer, regenerates channel dispatchers and channel metadata from one plan, writes a release checklist, writes a recovery note, and publishes GitHub Release assets when `--mutation-mode github` is selected. Validation uses `--mutation-mode local` to exercise the same file mutations without publishing assets.
+Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable version installer for both the website path and the GitHub release asset, regenerates channel dispatchers and evidence-only GitHub channel metadata from one plan, validates metadata/dispatcher/installer agreement, writes a release checklist, and writes a recovery note. It does not publish GitHub assets; `preview-release.yml` is the only authoritative GitHub-publish path for version releases and the shared `channels` release asset.
+
+The GitHub Actions preview-release workflow serializes runs with the `preview-release-channels` concurrency group because channel publication is a read-modify-write operation over the shared `channels` release asset.
+Do not run workstation GitHub publication while `preview-release.yml` is publishing. Use `scripts/distribution/trigger_preview_release.sh` to dispatch GitHub releases.
+The workflow publishes the version release before updating `channels.json`; if
+the final channel update fails, retry the workflow after correcting the failed
+verification. Version-pinned installs may see the already-published release
+asset before the moving channel pointer advances.
 
 The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
 

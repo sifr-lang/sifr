@@ -166,4 +166,6 @@ make_site_repo_fixture() {
   fi
   mkdir -p "${target_repo}/apps/sifr-site/public"
   cp -R "${SITE_INSTALL_ROOT}" "${target_repo}/apps/sifr-site/public/install"
+  rm -f "${target_repo}/apps/sifr-site/public/install/metadata/channels.json"
+  rmdir "${target_repo}/apps/sifr-site/public/install/metadata" 2>/dev/null || true
 }

@@ -411,7 +411,7 @@ mod tests {
   "resolved_channel": "beta",
   "install_dir": "/Users/example/.sifr/bin",
   "binary_path": "/Users/example/.sifr/bin/sifr",
-  "installer_url": "https://sifr.sh/install/versions/0.1.0-beta.2",
+  "installer_url": "https://github.com/sifr-lang/sifr/releases/download/0.1.0-beta.2/sifr-installer-0.1.0-beta.2",
   "action": "update",
   "force": false,
   "would_run_installer": true,

@@ -14,6 +14,19 @@ and delegates installation to that installer. The CLI does not download release
 archives, extract artifacts, rewrite shell profiles, or bypass installer-owned
 checksum validation.
 
+Channel resolution uses the `channels.json` asset on the `sifr-lang/sifr`
+GitHub release tag `channels`. The resolved version's immutable installer is
+downloaded from that version's GitHub release asset.
+GitHub may redirect release asset downloads through its object storage hosts;
+self-update allows only HTTPS downloads and HTTPS redirects.
+
+Each version referenced by GitHub-hosted channel metadata must already have a
+`sifr-installer-<version>` asset on that version's GitHub release. During the
+first migration from website-hosted metadata, backfill this installer asset for
+the current `alpha` and `beta` versions before publishing the `channels`
+release asset. The preview-release workflow intentionally refuses to publish
+`channels.json` until both channel versions have installer assets.
+
 ## Commands
 
 ```bash
@@ -36,9 +49,9 @@ acquiring the install lock. `--format json` is available only with `--dry-run`.
 ## Preview Limits
 
 Self-update currently accepts only `alpha` and `beta` preview channels.
-`stable` channels and stable-looking version pins remain gated until the stable release channel is enabled
-stable-channel promotion. Release-candidate channels and `-rc.N` pins are also
-rejected before the stable release channel is enabled.
+`stable` channels and stable-looking version pins remain gated until the stable
+release channel is enabled. Release-candidate channels and `-rc.N` pins are
+also rejected before the stable release channel is enabled.
 
 Same-version reinstalls, downgrades, and channel switches require `--force`:
 
@@ -49,6 +62,19 @@ sifr self update --channel alpha --force
 
 Regular newer-version updates within the receipt channel do not require
 `--force`.
+
+## Migrating Earlier Previews
+
+Preview binaries released before GitHub-hosted channel metadata still resolve
+moving channels from `https://sifr.sh/install/metadata/channels.json`. Once the
+website metadata file is removed, those older binaries cannot discover the
+moving latest channel. Bridge them with an explicit version pin or by rerunning
+the installer:
+
+```bash
+sifr self update --version <new-preview-version>
+curl -fsSL https://sifr.sh/install | sh
+```
 
 ## Troubleshooting
 
