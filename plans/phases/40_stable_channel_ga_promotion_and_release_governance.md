@@ -1,9 +1,9 @@
-# Phase 39: Stable Channel GA Promotion and Release Governance
+# Phase 40: Stable Channel GA Promotion and Release Governance
 
 ## Objective
 Promote stable channel only after reliability/parity/performance evidence is complete and governed.
 
-Phase 39 owns the point where stable distribution becomes user-facing, including:
+Phase 40 owns the point where stable distribution becomes user-facing, including:
 
 - stable release artifact eligibility,
 - stable installer entrypoints and metadata,
@@ -11,16 +11,17 @@ Phase 39 owns the point where stable distribution becomes user-facing, including
 - formal release sign-off,
 - stable-channel support in `sifr self update`.
 
-Before this phase, preview self-update must keep `stable` and stable-looking version pins gated. Phase 39 is the phase that can lift that gate, but only after stable metadata, installer behavior, self-update behavior, rollback, and release sign-off are validated as one governance surface.
+Before this phase, preview self-update must keep `stable` and stable-looking version pins gated. Phase 40 is the phase that can lift that gate, but only after stable metadata, installer behavior, self-update behavior, rollback, and release sign-off are validated as one governance surface.
 
 ## Depends on
+- Phase 39
 - Phase 38
 - Phase 34 generated-code quality gates pass before stable artifacts are eligible for GA promotion.
-- Ad Hoc Sifr Self Update (`../issues/archive/ad-hoc-sifr-self-update.md`) preview substrate, if it has landed before Phase 39 starts. If that ad hoc phase has not landed, Phase 39 must first implement the same receipt-checked, version-metadata-only, immutable-installer-delegating self-update substrate before enabling stable self-update.
+- Ad Hoc Sifr Self Update (`../issues/archive/ad-hoc-sifr-self-update.md`) preview substrate, if it has landed before Phase 40 starts. If that ad hoc phase has not landed, Phase 40 must first implement the same receipt-checked, version-metadata-only, immutable-installer-delegating self-update substrate before enabling stable self-update.
 
 ## Milestones
 
-### milestone_39_1: Stable Promotion Policy
+### milestone_40_1: Stable Promotion Policy
 - Scope:
   - Define hard preconditions for `stable` promotion from preview channels.
   - Define the exact criteria for lifting stable gating in installer dispatchers, release metadata, and `sifr self update`.
@@ -29,7 +30,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
   - Promotion checklist is documented and mandatory.
   - Stable self-update cannot be enabled without passing the stable promotion checklist.
 
-### milestone_39_2: Rollback and Incident Governance
+### milestone_40_2: Rollback and Incident Governance
 - Scope:
   - Define rollback triggers, owner responsibilities, and communication protocol.
   - Define stable self-update rollback behavior as a governed downgrade: when rollback is approved, stable metadata points to the approved rollback version, `sifr self update` refuses to install that older stable version without `--force`, and `sifr self update --force` delegates to the immutable installer for the rollback target.
@@ -38,7 +39,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
   - Rollback path is tested and documented.
   - Rollback validation covers both fresh stable installs and `sifr self update` from an affected stable release.
 
-### milestone_39_3: Release Sign-off Workflow
+### milestone_40_3: Release Sign-off Workflow
 - Scope:
   - Enforce formal release sign-off and artifact provenance checks.
   - Include stable self-update metadata, immutable installer scripts, and stable dispatcher changes in the sign-off artifact set.
@@ -46,7 +47,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
 - Definition of done:
   - Stable releases require auditable approvals and pass governance gates.
 
-### milestone_39_4: Stable Installer And Self-Update Activation
+### milestone_40_4: Stable Installer And Self-Update Activation
 - Scope:
   - Enable the public `stable` installer channel only through the governed release plan.
   - Generate stable channel metadata from the same plan as dispatchers and immutable installers.
@@ -63,7 +64,7 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
   - Pre-GA stable metadata and unsigned or unapproved stable versions remain rejected.
 
 ## Quality Contract
-- Entry criteria: Phase 38 is completed and release-facing documentation is canonical.
+- Entry criteria: Phase 39 is completed, Phase 38 is completed, and release-facing documentation is canonical.
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
 - Any milestone that regresses these invariants is incomplete, even if its local scope passes.
@@ -77,13 +78,13 @@ Before this phase, preview self-update must keep `stable` and stable-looking ver
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_39_1` (Stable Promotion Policy): validation goals cover: Define hard preconditions for `stable` promotion from preview channels. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_39_1` must include negative-path validation proving stable self-update remains gated until promotion policy is satisfied.
-  - `milestone_39_2` (Rollback and Incident Governance): validation goals cover: Define rollback triggers, owner responsibilities, and communication protocol. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_39_2` must include rollback validation through `sifr self update`, not only fresh installer dispatchers.
-  - `milestone_39_3` (Release Sign-off Workflow): validation goals cover: Enforce formal release sign-off and artifact provenance checks. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_39_3` must prove stable self-update metadata, immutable installer scripts, release assets, and docs are included in the sign-off evidence.
-  - `milestone_39_4` (Stable Installer And Self-Update Activation): validation goals cover stable channel metadata, stable installer dispatch, stable self-update, rollback/downgrade controls, stale metadata rejection, and receipt mismatch rejection.
+  - `milestone_40_1` (Stable Promotion Policy): validation goals cover: Define hard preconditions for `stable` promotion from preview channels. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_40_1` must include negative-path validation proving stable self-update remains gated until promotion policy is satisfied.
+  - `milestone_40_2` (Rollback and Incident Governance): validation goals cover: Define rollback triggers, owner responsibilities, and communication protocol. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_40_2` must include rollback validation through `sifr self update`, not only fresh installer dispatchers.
+  - `milestone_40_3` (Release Sign-off Workflow): validation goals cover: Enforce formal release sign-off and artifact provenance checks. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_40_3` must prove stable self-update metadata, immutable installer scripts, release assets, and docs are included in the sign-off evidence.
+  - `milestone_40_4` (Stable Installer And Self-Update Activation): validation goals cover stable channel metadata, stable installer dispatch, stable self-update, rollback/downgrade controls, stale metadata rejection, and receipt mismatch rejection.
   - Exit-gate evidence explicitly demonstrates: Stable GA promotion is policy-driven, auditable, reversible, and reachable through both fresh install and `sifr self update`.
 
 ## Exit Gate

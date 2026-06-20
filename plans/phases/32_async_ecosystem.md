@@ -57,7 +57,7 @@ The following are not Phase 32 v1 exit criteria:
 - async generator expressions
 - nested async comprehensions and awaited comprehension filters
 
-`ProcessPoolExecutor`, multiprocessing, and hard interruption of CPU-bound work are blocked on the future Phase 40 typed data/IPC contract.
+`ProcessPoolExecutor`, multiprocessing, and hard interruption of CPU-bound work are blocked on the future Phase 41 typed data/IPC contract.
 
 Subprocess and signal integration require a later model amendment. Older Phase 32 notes that listed subprocess or signal delivery as exit criteria are superseded by the model contract.
 
@@ -1044,7 +1044,7 @@ Implementation notes:
   - `Queue`
 - Add `sifr.concurrent.Future` as a compatibility wrapper over canonical task/blocking-work observation semantics, not a second runtime primitive.
 - Keep raw event loops, loop policies, transports/protocols, public selectors, contextvars, multiprocessing, and process pools deferred.
-- Treat `ProcessPoolExecutor` as blocked on Phase 40 typed IPC/serialization.
+- Treat `ProcessPoolExecutor` as blocked on Phase 41 typed IPC/serialization.
 - Add CPython-derived compatibility tests for the supported subset.
 - Add CPython-derived negative/waiver tests for unsupported APIs.
 - Document intentional divergences.

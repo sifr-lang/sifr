@@ -457,14 +457,14 @@ These exist because of Python's specific nature (interpreted, dynamic, REPL-orie
 
 ---
 
-## Why NOT Full Rust FFI for Stdlib
+## Why NOT Full Rust Interop for Stdlib
 
-Full FFI (`extern crate`, `unsafe` blocks, type marshaling) solves a different problem: letting **users** call arbitrary Rust crates. For stdlib, the intrinsics approach is:
+Full Rust interop solves a different problem: letting package authors expose Rust-backed Sifr declarations through checked Cargo integration and bridge contracts. For stdlib, the intrinsics approach is:
 
 - **Simpler:** No `unsafe` keyword, no extern blocks, no type marshaling
 - **Safer:** Intrinsics are compiler-controlled, always correct
 - **Faster to ship:** Reuses the existing `emit_stdlib_call` mechanism
-- **Forward-compatible:** When FFI lands later (milestone_ffi in the Interoperability phase), intrinsics can be reimplemented as FFI calls internally without changing the stdlib `.sifr` files
+- **Forward-compatible:** Rust interop can later back selected stdlib internals without changing the stdlib `.sifr` files
 
 ---
 

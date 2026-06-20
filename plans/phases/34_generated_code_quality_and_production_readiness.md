@@ -20,7 +20,7 @@ This file is the authoritative contract for Phase 34 until implementation create
 
 ## Feeds Into
 
-- Phase 39 stable GA promotion must consume Phase 34 quality gates before stable artifacts are eligible for release.
+- Phase 40 stable GA promotion must consume Phase 34 quality gates before stable artifacts are eligible for release.
 
 ## Non-Goals And Deferrals
 

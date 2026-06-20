@@ -57,7 +57,7 @@ Those documents support this phase file; they must not introduce behavior that c
 
 - Package-aware external dependency intelligence after Phase 37 package management.
 - Public documentation and editor installation guides in Phase 38.
-- Stable release governance and marketplace publication mechanics in Phase 39.
+- Stable release governance and marketplace publication mechanics in Phase 40.
 - Future ecosystem integrations that consume the same LSP/editor assets without adding new semantics.
 
 ## Strict Non-Goals
@@ -469,14 +469,14 @@ Syntax highlighting strategy:
 Publication readiness:
 
 - Phase 36 must produce a packageable extension artifact and publication checklist.
-- Actual marketplace upload may be performed by Phase 39 release governance if credentials or release approvals are required.
+- Actual marketplace upload may be performed by Phase 40 release governance if credentials or release approvals are required.
 
 ### Extension Versioning Covenant
 
 - The VS Code extension version must either be explicitly coupled to the Sifr compiler version or have a documented version-independence policy before `milestone_36_7` closes.
 - When the main `sifr-lang/sifr` repository releases version `X.Y.Z`, the extension must either release a corresponding compatible version or document a supported Sifr version range in extension metadata and release notes.
 - Extension releases are gated on the extension contract check passing, `sifr lsp --stdio` smoke tests passing with the target Sifr version, and the `check_vscode_extension.py` build/test/package sequence passing.
-- Phase 39 owns marketplace publication governance, but this phase must establish the versioning covenant and validation coupling between the compiler, LSP, and extension.
+- Phase 40 owns marketplace publication governance, but this phase must establish the versioning covenant and validation coupling between the compiler, LSP, and extension.
 - Extension validation must not silently skip when the main Sifr version advances.
 
 ## Multi-Editor Integration Contract
@@ -717,7 +717,7 @@ No Phase 36 milestone may depend on parallel work. Ad hoc PR slices are allowed 
   - `scripts/run_all_tests.sh --profile merge` passes.
   - Every required Phase 36 feature has positive and negative evidence.
   - Production validation evidence is recorded in the phase execution checklist issue.
-  - No open deferrals remain inside the Phase 36 contract except package-registry intelligence after Phase 37 and release-governance publication mechanics after Phase 39.
+  - No open deferrals remain inside the Phase 36 contract except package-registry intelligence after Phase 37 and release-governance publication mechanics after Phase 40.
 
 ## Quality Contract
 
