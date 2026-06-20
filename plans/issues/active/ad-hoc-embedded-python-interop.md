@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. Post-closeout verification hardening for runnable dependency examples is merged through PR #2691 and PR #2694 without changing the binding design decisions below. Additional non-service library example hardening is in progress.
+> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. Post-closeout verification hardening for runnable dependency examples is merged through PR #2691, PR #2694, and PR #2696 without changing the binding design decisions below.
 
 ## Execution Status
 
@@ -118,7 +118,7 @@
   - Opus review round 1 reported no blockers; round 2 reported no blockers after tightening runner wrapper callback types and deleting an unused stdlib helper.
   - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `ml-examples` passed, and hardening variants reported 0 failures; warm wall-time advisory only.
   - Merged via PR [#2694](https://github.com/sifr-lang/sifr/pull/2694).
-- [ ] `post_closeout_library_examples`: Full runnable examples for remaining offline library contracts.
+- [x] `post_closeout_library_examples`: Full runnable examples for remaining offline library contracts.
   - Add area-local locked dependencies for biip, schwifty, FastAPI, Starlette, Pydantic, cryptography, CFFI, certifi, fakeredis, hiredis, SQLAlchemy, and Alembic-adjacent SQLAlchemy/psycopg coverage.
   - Add compiled Sifr examples for biip/schwifty, pyarrow, FastAPI/Pydantic/Starlette, cryptography/CFFI/certifi, boto3/botocore, redis/fakeredis/hiredis, and SQLAlchemy/psycopg.
   - Add a `library-examples` verification case that executes the examples through temporary Sifr packages linked to the area uv environment and select it in create-pr, merge, and release profiles.
@@ -126,7 +126,7 @@
   - Opus review round 1 reported one blocker in boto3 response conversion; round 2 reported no blockers after stable `QueueUrl` projection, precise native trust roots, pyarrow producer assertion, Alembic/psycopg depth improvements, and documented Pydantic embedded-frame handling.
   - Targeted local validation passed on 2026-06-20: `--library-examples`, `runner.py --suite libraries`, `runner.py --suite scaffold`, runner self-test, JSON/profile plan checks, `cargo fmt --check`, and HIR maintainability guardrails.
   - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `library-examples` passed in 19813 ms, and hardening variants reported 0 failures; warm wall-time advisory only.
-  - PR and merge pending.
+  - Merged via PR [#2696](https://github.com/sifr-lang/sifr/pull/2696).
 
 ## Objective
 
