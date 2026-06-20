@@ -12,7 +12,9 @@ dependencies = [
     "psycopg[binary]>=3.2,<4",
     "pyarrow>=16,<23",
     "redis>=5,<7",
+    "scikit-learn>=1.5,<2",
     "testcontainers[kafka,localstack,postgres,redis]>=4.12,<5",
+    "torch>=2.5,<3",
 ]
 
 [tool.uv]

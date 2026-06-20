@@ -14,6 +14,7 @@ verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --dataframe-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --ml-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```
@@ -90,6 +91,16 @@ distinguish package-certification metadata from compiled Sifr execution
 evidence. Runner self-tests validate report aggregation and fixture drift; the
 actual Cargo/Sifr/venv execution path is covered by `--dataframe-examples`.
 
+ML examples are offline but executable. The `ml-examples` suite uses the same
+temporary-package execution path and runs real Sifr programs for torch and
+scikit-learn. The torch example constructs a CPU `float32` tensor, performs
+tensor math, converts results back to typed Sifr values, and validates DLPack
+metadata/release. The scikit-learn example trains a deterministic decision tree,
+predicts labels, copies predictions/classes back into typed Sifr lists, and
+checks deterministic stdout markers. TensorFlow remains matrix/contract evidence
+only in the offline gate because its wheel and CPU feature requirements are
+host-dependent.
+
 Package certification records include:
 
 - per-package tier, gate, group, native-extension, and host-dependency metadata;
@@ -117,6 +128,13 @@ Live example reports additionally include:
 Dataframe example reports additionally include:
 
 - `source_checks`: checked-in Sifr example presence for NumPy, pandas, and Polars.
+- `cases`: `sifr run` results for each compiled example.
+- `stdout_marker`: deterministic per-example output required for a passing case.
+- `dependencies`: the Python import roots trusted by at least one temporary package.
+
+ML example reports use the same schema and include:
+
+- `source_checks`: checked-in Sifr example presence for torch and scikit-learn.
 - `cases`: `sifr run` results for each compiled example.
 - `stdout_marker`: deterministic per-example output required for a passing case.
 - `dependencies`: the Python import roots trusted by at least one temporary package.

@@ -179,14 +179,7 @@ def _object_ref(obj: Object) -> Object:
     return _object_from_handle((obj._handle, obj._token))
 
 
-def _objects_from_handles(raw_values: list[tuple[int, int]]) -> list[Object]:
-    values: list[Object] = []
-    for raw in raw_values:
-        values.append(_object_from_handle(raw))
-    return values
-
-
-def _buffer_from_raw(raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str]) -> BufferView:
+def _buffer_from_raw(own raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str]) -> BufferView:
     view: BufferView = BufferView()
     view._handle = raw[0]
     view._token = raw[1]
@@ -203,7 +196,7 @@ def _buffer_from_raw(raw: tuple[int, int, int, int, bool, int, list[int], list[i
     return view
 
 
-def _arrow_from_raw(raw: tuple[int, int, str, list[str], str, str, bool]) -> ArrowCapsule:
+def _arrow_from_raw(own raw: tuple[int, int, str, list[str], str, str, bool]) -> ArrowCapsule:
     capsule: ArrowCapsule = ArrowCapsule()
     capsule._handle = raw[0]
     capsule._token = raw[1]
@@ -215,7 +208,7 @@ def _arrow_from_raw(raw: tuple[int, int, str, list[str], str, str, bool]) -> Arr
     return capsule
 
 
-def _dlpack_from_raw(raw: tuple[int, int, int, int, int, str, int, int, int, list[int], list[int], int, bool, bool]) -> DlpackTensor:
+def _dlpack_from_raw(own raw: tuple[int, int, int, int, int, str, int, int, int, list[int], list[int], int, bool, bool]) -> DlpackTensor:
     tensor: DlpackTensor = DlpackTensor()
     tensor._handle = raw[0]
     tensor._token = raw[1]
@@ -234,7 +227,7 @@ def _dlpack_from_raw(raw: tuple[int, int, int, int, int, str, int, int, int, lis
     return tensor
 
 
-def _record_fields_from_handles(raw_values: list[tuple[str, tuple[int, int]]]) -> list[tuple[str, Object]]:
+def _record_fields_from_handles(own raw_values: list[tuple[str, tuple[int, int]]]) -> list[tuple[str, Object]]:
     values: list[tuple[str, Object]] = []
     for raw in raw_values:
         values.append((raw[0], _object_from_handle(raw[1])))

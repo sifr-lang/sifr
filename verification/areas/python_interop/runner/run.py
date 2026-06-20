@@ -15,6 +15,7 @@ from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
 from live_examples import build_live_examples_report, run_live_examples_self_tests
 from live_policy import build_live_policy_report, run_live_policy_self_tests
+from ml_examples import build_ml_examples_report, run_ml_examples_self_tests
 from report import write_report
 from smoke_matrix import KNOWN_GATES, KNOWN_GROUPS, KNOWN_TIERS
 
@@ -50,6 +51,7 @@ REQUIRED_FIXTURES = (
     "numpy_buffer",
     "torch_dlpack",
     "tensorflow_dlpack",
+    "sklearn",
     "cffi_callback",
     "cryptography_tls",
     "resource_cleanup",
@@ -98,6 +100,8 @@ REQUIRED_SOURCE_FIXTURES = (
     "pyarrow_capsule/arrow_capsule_zero_copy.sifr",
     "torch_dlpack/dlpack_tensor_device_failure.sifr",
     "torch_dlpack/dlpack_tensor_roundtrip.sifr",
+    "torch_dlpack/torch_full_example.sifr",
+    "sklearn/sklearn_full_example.sifr",
     "cffi_callback/callback_roundtrip.sifr",
     "resource_cleanup/context_manager_body_failure.sifr",
     "resource_cleanup/context_manager_failure.sifr",
@@ -127,6 +131,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--live-policy", action="store_true", help="Validate live container-runtime policy.")
     parser.add_argument("--live-examples", action="store_true", help="Run testcontainers-backed live examples.")
     parser.add_argument("--dataframe-examples", action="store_true", help="Run full NumPy/pandas/Polars Sifr examples.")
+    parser.add_argument("--ml-examples", action="store_true", help="Run full torch/scikit-learn Sifr examples.")
     return parser.parse_args(argv)
 
 
@@ -138,6 +143,7 @@ def main(argv: list[str] | None = None) -> int:
         run_live_policy_self_tests(paths)
         run_live_examples_self_tests(paths)
         run_dataframe_examples_self_tests(paths)
+        run_ml_examples_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:
@@ -161,6 +167,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop dataframe-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.ml_examples:
+        payload = build_ml_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop ml-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0

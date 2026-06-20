@@ -71,6 +71,11 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/dataframe-examples.latest.json",
     ],
+    "python-interop-ml-examples": [
+        "--ml-examples",
+        "--report",
+        "../../../target/verification/areas/python_interop/ml-examples.latest.json",
+    ],
     "python-interop-cloud-boto3": [
         "--group",
         "cloud",
@@ -93,6 +98,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
 
 AREA_PROJECT_COMMANDS = {
     "python-interop-dataframe-examples",
+    "python-interop-ml-examples",
     "python-interop-live-examples",
 }
 
