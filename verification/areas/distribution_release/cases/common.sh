@@ -5,12 +5,14 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 DEFAULT_SITE_INSTALL_ROOT="${REPO_ROOT}/target/distribution_release/default-site-install"
 SITE_INSTALL_ROOT="${SIFR_SITE_INSTALL_ROOT:-${DEFAULT_SITE_INSTALL_ROOT}}"
-DISPATCH_BASE_URL="${SIFR_INSTALL_BASE_URL:-file://${SITE_INSTALL_ROOT}}"
+DISPATCH_RELEASE_BASE_URL="${SIFR_INSTALLER_RELEASE_BASE_URL:-file://${SITE_INSTALL_ROOT}/github-releases}"
+DISPATCH_CHANNEL_METADATA_URL="${SIFR_CHANNEL_METADATA_URL:-file://${SITE_INSTALL_ROOT}/channels.json}"
 
 run_dispatcher() {
   local dispatcher="$1"
   shift
-  SIFR_INSTALL_BASE_URL="${DISPATCH_BASE_URL}" \
+  SIFR_INSTALLER_RELEASE_BASE_URL="${DISPATCH_RELEASE_BASE_URL}" \
+    SIFR_CHANNEL_METADATA_URL="${DISPATCH_CHANNEL_METADATA_URL}" \
     SIFR_DISPATCH_TRACE=1 \
     sh "${SITE_INSTALL_ROOT}/${dispatcher}" "$@"
 }
@@ -52,30 +54,31 @@ require_failure_contains() {
 
 make_dispatcher_fixture() {
   local target_root="$1"
-  local alpha_version="${2:-0.1.0-alpha.1}"
-  local beta_version="${3:-0.1.0-beta.1}"
-  mkdir -p "${target_root}/versions"
+  mkdir -p "${target_root}"
   "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
-    --install-root "${target_root}" \
-    --alpha-version "${alpha_version}" \
-    --beta-version "${beta_version}" \
-    --base-url "file://${target_root}" >/dev/null
+    --install-root "${target_root}" >/dev/null
 }
 
 make_mock_version_installers() {
   local target_root="$1"
-  mkdir -p "${target_root}/versions"
-  cat >"${target_root}/versions/0.1.0-alpha.1" <<'EOF'
+  mkdir -p "${target_root}/github-releases/0.1.0-alpha.1" "${target_root}/github-releases/0.1.0-beta.1"
+  cat >"${target_root}/github-releases/0.1.0-alpha.1/sifr-installer-0.1.0-alpha.1" <<'EOF'
 #!/usr/bin/env sh
 set -eu
 echo "sifr mock generated installer version=0.1.0-alpha.1"
 EOF
-  cat >"${target_root}/versions/0.1.0-beta.1" <<'EOF'
+  cat >"${target_root}/github-releases/0.1.0-beta.1/sifr-installer-0.1.0-beta.1" <<'EOF'
 #!/usr/bin/env sh
 set -eu
 echo "sifr mock generated installer version=0.1.0-beta.1"
 EOF
-  chmod 755 "${target_root}/versions/0.1.0-alpha.1" "${target_root}/versions/0.1.0-beta.1"
+  chmod 755 \
+    "${target_root}/github-releases/0.1.0-alpha.1/sifr-installer-0.1.0-alpha.1" \
+    "${target_root}/github-releases/0.1.0-beta.1/sifr-installer-0.1.0-beta.1"
+  "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
+    --out "${target_root}/channels.json" \
+    --alpha-version "0.1.0-alpha.1" \
+    --beta-version "0.1.0-beta.1" >/dev/null
 }
 
 use_mock_dispatcher_fixture() {
@@ -87,7 +90,8 @@ use_mock_dispatcher_fixture() {
   make_dispatcher_fixture "${MOCK_DISPATCHER_TMP_DIR}"
   make_mock_version_installers "${MOCK_DISPATCHER_TMP_DIR}"
   SITE_INSTALL_ROOT="${MOCK_DISPATCHER_TMP_DIR}"
-  DISPATCH_BASE_URL="file://${MOCK_DISPATCHER_TMP_DIR}"
+  DISPATCH_RELEASE_BASE_URL="file://${MOCK_DISPATCHER_TMP_DIR}/github-releases"
+  DISPATCH_CHANNEL_METADATA_URL="file://${MOCK_DISPATCHER_TMP_DIR}/channels.json"
 }
 
 sha256_fixture_file() {
@@ -135,33 +139,18 @@ make_self_update_install_root_fixture() {
   local install_root="$1"
   local alpha_version="${2:-0.1.0-alpha.4}"
   local beta_version="${3:-0.1.0-beta.7}"
-  local artifact_dir
-  mkdir -p "${install_root}/versions"
-  artifact_dir="$(mktemp -d "${TMPDIR:-/tmp}/sifr-self-update-artifacts.XXXXXX")"
-  make_target_specific_artifacts "${alpha_version}" "${artifact_dir}/alpha"
-  make_target_specific_artifacts "${beta_version}" "${artifact_dir}/beta"
   "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
-    --install-root "${install_root}" \
+    --install-root "${install_root}" >/dev/null
+  "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
+    --out "${install_root}/channels.json" \
     --alpha-version "${alpha_version}" \
-    --beta-version "${beta_version}" \
-    --base-url "file://${install_root}" >/dev/null
-  "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
-    --version "${alpha_version}" \
-    --artifact-dir "${artifact_dir}/alpha" \
-    --out "${install_root}/versions/${alpha_version}" \
-    --artifact-base-url "file://${artifact_dir}/alpha" >/dev/null
-  "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
-    --version "${beta_version}" \
-    --artifact-dir "${artifact_dir}/beta" \
-    --out "${install_root}/versions/${beta_version}" \
-    --artifact-base-url "file://${artifact_dir}/beta" >/dev/null
-  # Drift fixtures inspect embedded installer metadata; they do not execute these installers.
-  rm -rf "${artifact_dir}"
+    --beta-version "${beta_version}" >/dev/null
 }
 
 make_site_repo_fixture() {
   local target_repo="$1"
-  if [[ -z "${SIFR_SITE_INSTALL_ROOT:-}" && ! -d "${SITE_INSTALL_ROOT}" ]]; then
+  if [[ -z "${SIFR_SITE_INSTALL_ROOT:-}" ]]; then
+    rm -rf "${SITE_INSTALL_ROOT}"
     make_self_update_install_root_fixture "${SITE_INSTALL_ROOT}"
   fi
   mkdir -p "${target_repo}/apps/sifr-site/public"

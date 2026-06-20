@@ -43,13 +43,12 @@ real_sha="$(printf '%s\n' "${real_output}" | sed -n 's/^plan_sha256=//p')"
   exit 1
 }
 
-grep -q "BETA_VERSION=\"${version}\"" "${site_repo}/apps/sifr-site/public/install/index"
 grep -q "\"beta\": \"${version}\"" "${work_dir}/channels.json"
 test ! -e "${site_repo}/apps/sifr-site/public/install/metadata/channels.json"
-grep -q "APP_VERSION=\"${version}\"" "${site_repo}/apps/sifr-site/public/install/versions/${version}"
 grep -q "APP_VERSION=\"${version}\"" "${work_dir}/sifr-installer-${version}"
-cmp "${work_dir}/sifr-installer-${version}" "${site_repo}/apps/sifr-site/public/install/versions/${version}"
-test -x "${site_repo}/apps/sifr-site/public/install/versions/${version}"
+grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \
+  "${site_repo}/apps/sifr-site/public/install/index"
+test ! -d "${site_repo}/apps/sifr-site/public/install/versions"
 test -f "${work_dir}/plan.txt"
 test -f "${work_dir}/channels.json"
 test -f "${work_dir}/release-checklist.md"

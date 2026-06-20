@@ -13,6 +13,7 @@ trap cleanup EXIT HUP INT TERM
 version="0.1.0-beta.10"
 artifact_dir="${tmp_dir}/artifacts"
 install_root="${tmp_dir}/install-root"
+release_root="${tmp_dir}/github-releases"
 install_dir="${tmp_dir}/installed"
 binary="${tmp_dir}/sifr"
 
@@ -24,16 +25,20 @@ make_mock_binary "${binary}" "dispatcher generated installer fixture"
 "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
   --version "${version}" \
   --artifact-dir "${artifact_dir}" \
-  --out "${install_root}/versions/${version}" \
+  --out "${release_root}/${version}/sifr-installer-${version}" \
   --artifact-base-url "file://${artifact_dir}" >/dev/null
+"${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
+  --out "${tmp_dir}/channels.json" \
+  --alpha-version "0.1.0-alpha.1" \
+  --beta-version "${version}" >/dev/null
 "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
   --install-root "${install_root}" \
-  --alpha-version "0.1.0-alpha.1" \
-  --beta-version "${version}" \
-  --base-url "file://${install_root}" >/dev/null
+  --channel-metadata-url "file://${tmp_dir}/channels.json" \
+  --installer-release-base-url "file://${release_root}" >/dev/null
 make_mock_version_installers "${install_root}"
 
-SIFR_INSTALL_BASE_URL="file://${install_root}" \
+SIFR_INSTALLER_RELEASE_BASE_URL="file://${release_root}" \
+  SIFR_CHANNEL_METADATA_URL="file://${tmp_dir}/channels.json" \
   SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
   SIFR_TARGET="x86_64-unknown-linux-gnu" \
   SIFR_INSTALL_DIR="${install_dir}" \
