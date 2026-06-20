@@ -22,6 +22,9 @@ DEFAULT_WAIVERS = PERF_DATA / "waivers.json"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
 ALLOWED_WAIVER_OVERRIDE_KEYS = {"median_ms", "p95_ms", "peak_rss_bytes", "cache_hits"}
+# The nearest-rank p95 used by the benchmark runner collapses to the maximum
+# sample below 20 samples, making quick representative runs scheduler-bound.
+MIN_P95_SAMPLE_COUNT = 20
 EMPTY_WAIVERS = {
     "version": 1,
     "waivers": [],
@@ -52,7 +55,7 @@ def main() -> int:
         budgets = load_json(Path(args.budgets))
         waivers = load_json(Path(args.waivers))
         results = load_json(Path(args.results))
-        check_budgets(manifest, budgets, waivers, results, allow_subset=args.allow_subset)
+        check_budgets(manifest, budgets, waivers, results, allow_subset=args.allow_subset, report_skipped_p95=True)
         print("performance budget check passed")
         return 0
     except BudgetError as error:
@@ -67,6 +70,7 @@ def check_budgets(
     results: dict[str, Any],
     *,
     allow_subset: bool = False,
+    report_skipped_p95: bool = False,
 ) -> None:
     cases = validate_manifest(manifest)
     budget_entries = validate_budgets(budgets, cases)
@@ -85,6 +89,8 @@ def check_budgets(
 
     if failures:
         raise BudgetError("budget check failed:\n" + "\n".join(failures))
+    if report_skipped_p95:
+        report_p95_skips(results_by_id, budget_entries)
 
 
 def validate_manifest(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -234,6 +240,14 @@ def validate_results_shape(
             raise BudgetError(f"duplicate benchmark result id {result_id}")
         seen.add(result_id)
         require_string(raw, "budget_id", f"benchmark result {result_id}")
+        sample_count = raw.get("sample_count")
+        if not isinstance(sample_count, int) or isinstance(sample_count, bool) or sample_count <= 0:
+            raise BudgetError(f"benchmark result {result_id} field sample_count must be a positive integer")
+        samples = raw.get("samples_ms")
+        if not isinstance(samples, list) or len(samples) != sample_count:
+            raise BudgetError(f"benchmark result {result_id} samples_ms length must match sample_count")
+        if not all(isinstance(sample, int | float) and not isinstance(sample, bool) for sample in samples):
+            raise BudgetError(f"benchmark result {result_id} samples_ms entries must be numeric")
         metrics = raw.get("metrics")
         if not isinstance(metrics, dict):
             raise BudgetError(f"benchmark result {result_id} is missing metrics")
@@ -268,8 +282,9 @@ def compare_result(
     thresholds = budget["thresholds"]
     checks = [
         ("median_ms", metrics["median_ms"], thresholds["median_ms"]),
-        ("p95_ms", metrics["p95_ms"], thresholds["p95_ms"]),
     ]
+    if should_enforce_p95(result):
+        checks.append(("p95_ms", metrics["p95_ms"], thresholds["p95_ms"]))
     if thresholds.get("peak_rss_bytes") is not None and metrics.get("peak_rss_bytes") is not None:
         checks.append(("peak_rss_bytes", metrics["peak_rss_bytes"], thresholds["peak_rss_bytes"]))
     for metric, measured, threshold in checks:
@@ -295,6 +310,24 @@ def compare_result(
             )
         )
     return failures
+
+
+def should_enforce_p95(result: dict[str, Any]) -> bool:
+    return int(result["sample_count"]) >= MIN_P95_SAMPLE_COUNT
+
+
+def report_p95_skips(results_by_id: dict[str, dict[str, Any]], budget_entries: dict[str, dict[str, Any]]) -> None:
+    skipped = [
+        f"{case_id}:{results_by_id[case_id]['sample_count']}"
+        for case_id in sorted(budget_entries)
+        if case_id in results_by_id and not should_enforce_p95(results_by_id[case_id])
+    ]
+    if skipped:
+        print(
+            f"performance budget note: skipped p95_ms for {len(skipped)} benchmark(s) "
+            f"with sample_count < {MIN_P95_SAMPLE_COUNT}: {', '.join(skipped)}",
+            file=sys.stderr,
+        )
 
 
 def has_waiver(case_id: str, budget_id: str, metric: str, waivers: list[dict[str, Any]]) -> bool:
@@ -331,7 +364,7 @@ def run_self_test() -> None:
     check_budgets(manifest, budgets, waivers, baselines)
 
     assert_budget_fails("budget_median_regression_result.json", "median_ms regression", allow_subset=True)
-    assert_budget_fails("budget_p95_regression_result.json", "p95_ms regression", allow_subset=True)
+    assert_result_fails(make_result_seed(spike_twenty_sample_p95), "p95_ms regression", allow_subset=True)
     assert_budget_fails("budget_rss_regression_result.json", "peak_rss_bytes regression", allow_subset=True)
     assert_budget_fails("budget_timeout_result.json", "timeout regression", allow_subset=True)
     assert_budget_fails("budget_missing_result.json", "missing benchmark ids")
@@ -341,18 +374,33 @@ def run_self_test() -> None:
     assert_waiver_fails("malformed_waiver.json", "owner")
     assert_waiver_fails("correctness_waiver.json", "non-performance")
 
+    assert_result_fails(make_result_seed(spike_five_sample_median), "median_ms regression", allow_subset=True)
+    check_budgets(manifest, budgets, EMPTY_WAIVERS, make_result_seed(spike_p95_below_threshold))
+    assert_result_fails(make_result_seed(spike_p95_at_threshold), "p95_ms regression", allow_subset=True)
+
     active_waiver = load_json(NEGATIVE_ROOT / "active_median_waiver.json")
     median_regression = load_json(NEGATIVE_ROOT / "budget_median_regression_result.json")
     check_budgets(manifest, budgets, active_waiver, median_regression, allow_subset=True)
 
 
 def assert_budget_fails(seed: str, expected: str, *, allow_subset: bool = False) -> None:
+    result = load_json(NEGATIVE_ROOT / seed)
+    assert_result_fails(result, expected, allow_subset=allow_subset, seed=seed)
+
+
+def assert_result_fails(
+    result: dict[str, Any],
+    expected: str,
+    *,
+    allow_subset: bool = False,
+    seed: str = "generated result",
+) -> None:
     try:
         check_budgets(
             load_json(DEFAULT_MANIFEST),
             load_json(DEFAULT_BUDGETS),
             EMPTY_WAIVERS,
-            load_json(NEGATIVE_ROOT / seed),
+            result,
             allow_subset=allow_subset,
         )
     except BudgetError as error:
@@ -415,6 +463,41 @@ def parse_date(value: str, waiver_id: str, field: str) -> date:
         return date.fromisoformat(value)
     except ValueError as error:
         raise BudgetError(f"waiver {waiver_id} field {field} must be ISO date YYYY-MM-DD") from error
+
+
+def spike_five_sample_median(result: dict[str, Any]) -> None:
+    spike_metric(result, "check-project-004-project-graph", "median_ms")
+
+
+def spike_twenty_sample_p95(result: dict[str, Any]) -> None:
+    spike_metric(result, "interactive-tooling-foundation-002-warm-diagnostics-query", "p95_ms")
+
+
+def spike_p95_below_threshold(result: dict[str, Any]) -> None:
+    force_sample_count(result, "interactive-tooling-foundation-002-warm-diagnostics-query", MIN_P95_SAMPLE_COUNT - 1)
+    spike_twenty_sample_p95(result)
+
+
+def spike_p95_at_threshold(result: dict[str, Any]) -> None:
+    force_sample_count(result, "interactive-tooling-foundation-002-warm-diagnostics-query", MIN_P95_SAMPLE_COUNT)
+    spike_twenty_sample_p95(result)
+
+
+def spike_metric(result: dict[str, Any], case_id: str, metric: str) -> None:
+    for entry in result["results"]:
+        if entry["id"] == case_id:
+            entry["metrics"][metric] = 999_999
+            return
+    raise BudgetError(f"self-test seed did not find {case_id}")
+
+
+def force_sample_count(result: dict[str, Any], case_id: str, sample_count: int) -> None:
+    for entry in result["results"]:
+        if entry["id"] == case_id:
+            entry["sample_count"] = sample_count
+            entry["samples_ms"] = entry["samples_ms"][:sample_count]
+            return
+    raise BudgetError(f"self-test seed did not find {case_id}")
 
 
 def make_result_seed(mutator: Any) -> dict[str, Any]:
