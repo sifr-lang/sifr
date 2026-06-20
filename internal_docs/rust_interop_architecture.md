@@ -156,6 +156,8 @@ Allowed symbolic values are:
 - `borrow=shared | exclusive | owned`
 - `thread_affinity=none | tokio_current_thread | current_os_thread`
 
+`clone=arc` creates multiple Sifr handles that share one `HandleState` cell; closing or poisoning one clone closes or poisons all clones. `clone=copy` is allowed only when a generated probe proves `T: Copy`, and each copied handle has independent state because the Rust value is independent. `clone=custom(path)` must name an explicit bridge function that returns a fresh `Handle<T>`; bare `clone=custom` is rejected.
+
 ## Path Resolution
 
 `@rust(...)` accepts a dotted path expression with one of these roots:
@@ -329,6 +331,33 @@ const _: () = {
 
 Probe failures map rustc diagnostics back to the original `@rust(...)` span as `SIFR-RUST-RESOLVE-*` or `SIFR-RUST-TYPE-*` diagnostics. The final generated binary is not built until probe diagnostics are clean. This is the precise meaning of "checked before build": incompatibility is detected in a Sifr-controlled probe/check step rather than surfacing as raw application build noise.
 
+Async probes assert the callable and future output shape:
+
+```rust
+fn assert_async_signature<F, Fut>(f: F)
+where
+    F: Fn(&str) -> Fut,
+    Fut: std::future::Future<Output = Result<ResponseBridge, HttpErrorBridge>>,
+{
+}
+
+const _: () = {
+    assert_async_signature(http_client::fetch);
+};
+```
+
+Method probes assert receiver mode explicitly:
+
+```rust
+fn assert_method<T>(f: fn(&mut T, &str) -> Result<TokenizedBridge, ErrorBridge>) {}
+
+const _: () = {
+    assert_method::<crate::bridges::tokenizers::Tokenizer>(
+        crate::bridges::tokenizers::Tokenizer::encode,
+    );
+};
+```
+
 ## Bridge Type Contract
 
 Sifr-facing Rust bridge signatures are intentionally small and explicit.
@@ -404,10 +433,18 @@ The fields are private. Generated glue and bridge authors use accessors:
 - `inner_ref() -> Result<&T, HandleStateError>`
 - `inner_mut() -> Result<&mut T, HandleStateError>`
 - `into_inner() -> Result<T, HandleStateError>`
-- `mark_closed()`
-- `mark_poisoned(RustPanicError)`
+- `mark_closed(GeneratedGlueToken)`
+- `mark_poisoned(GeneratedGlueToken, RustPanicError)`
 
-Package-local bridge code may call `Handle::new` when returning a newly owned opaque value. Only generated wrappers may call `mark_closed` and `mark_poisoned`. Package-local bridge code may borrow or consume handles through the accessors but must not manipulate state flags directly.
+Package-local bridge code may call `Handle::new` when returning a newly owned opaque value. State-mutating APIs require a generated private capability token:
+
+```rust
+pub struct GeneratedGlueToken {
+    _private: (),
+}
+```
+
+Only generated glue can construct `GeneratedGlueToken`, so only generated wrappers can call `mark_closed` and `mark_poisoned`. Package-local bridge code may borrow or consume handles through the accessors but must not manipulate state flags directly.
 
 `HandleStateError` lives at `sifr_runtime::interop::HandleStateError` and has two variants: `Closed` and `Poisoned(RustPanicError)`. Generated wrappers convert `Closed` into the stable closed-handle error for the Sifr surface and reuse the stored `RustPanicError` for `Poisoned` before propagating into the declared Sifr error channel.
 
@@ -431,6 +468,8 @@ State transitions are deterministic:
 | poisoned | any method call | poisoned | returns stored panic error |
 
 Generated `Self.method` lowering calls `inner_ref`, `inner_mut`, or `into_inner` according to the receiver mapping. Free bridge functions may accept `Handle<T>`, `&Handle<T>`, or `&mut Handle<T>` only when the Sifr receiver/parameter declaration grants the same ownership or borrow capability.
+
+Before moving an owned opaque value into Rust, generated glue creates a `PoisonOnPanic` guard tied to the Sifr handle state. The guard is disarmed only after the Rust call returns successfully or returns an ordinary `Result` error. If unwinding crosses the boundary, the guard marks the original handle state poisoned even when the inner Rust value was moved into the bridge call.
 
 ### Shared Bridge Crate Boundaries
 
@@ -458,6 +497,13 @@ Result-returning functions convert caught Rust panics to `RustPanicError`, and t
 @rust(bridge.tokenizer.encode, panic=map_error(bridge.tokenizer.map_panic))
 def encode(text: str) -> Result[Tokenized, TokenizeError]: ...
 ```
+
+The adapter must be non-async, non-blocking, and shape-checked:
+
+- Rust bridge adapter: `fn map_panic(error: RustPanicErrorBridge) -> EBridge`
+- Sifr adapter: `def map_panic(error: RustPanicError) -> E`
+
+If the mapper panics, generated glue ignores the failed mapper and surfaces the original `RustPanicError` through a stable `SIFR-RUST-PANIC-*` path. If the public error channel cannot represent that original panic after mapper failure, the declaration is rejected.
 
 Non-`Result` functions cannot return a recoverable panic without changing their public type. They are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
 
@@ -550,7 +596,7 @@ async def fetch(url: str) -> Result[Response, HttpError | RustPanicError]: ...
 Zero-copy is first-class and explicit, including bytes, Arrow-style columnar data, tensor buffers, and application-defined views.
 
 ```sifr
-@rust.zero_copy(owner=bytes, view=bridge.hash.BytesView)
+@rust.zero_copy(owner=input, view=bridge.hash.BytesView)
 @rust(bridge.hash.digest_view)
 def digest_view(input: bytes) -> Result[DigestView, HashError | RustPanicError]: ...
 ```
@@ -560,7 +606,7 @@ def digest_view(input: bytes) -> Result[DigestView, HashError | RustPanicError]:
 ```sifr
 @rust.view(
     owner=input,
-    lifetime=call,
+    lifetime=owner,
     mutability=immutable,
     send=False,
     sync=False,
@@ -569,7 +615,7 @@ def digest_view(input: bytes) -> Result[DigestView, HashError | RustPanicError]:
 def tokens_view(input: bytes) -> Result[TokenView, ParseError | RustPanicError]: ...
 ```
 
-Allowed `lifetime` values are `call`, `owner`, and `static`. `call` views cannot escape the bridge call. `owner` views are tied to the named owner parameter or opaque handle. `static` requires the Rust target to return owned or globally valid data and is rejected for borrowed returns. `mutability=mutable` requires exclusive Sifr ownership of the owner for the full view lifetime.
+Allowed `lifetime` values are `call`, `owner`, and `static`. `call` views cannot escape the bridge call and are valid only for callback-local or bridge-internal views that do not become the function return value. Returned views must use `lifetime=owner` or `lifetime=static`. `owner` views are tied to the named owner parameter or opaque handle. `static` requires the Rust target to return owned or globally valid data and is rejected for borrowed returns. `mutability=mutable` requires exclusive Sifr ownership of the owner for the full view lifetime.
 
 Rules:
 
@@ -605,6 +651,11 @@ The Rust implementation cannot store a call-scoped callback, call it after the b
 Thread-safe callback registration:
 
 ```sifr
+@rust.callback(
+    backpressure=bounded(1024),
+    overflow=error,
+    shutdown=drain,
+)
 @rust(bridge.kafka.on_message)
 def on_message(
     consumer: KafkaConsumer,
@@ -620,6 +671,14 @@ Thread-safe callbacks require:
 - explicit backpressure policy,
 - explicit cancellation and shutdown behavior,
 - panic-to-error handling at both callback and Rust boundaries.
+
+Thread-safe callback policy values are:
+
+- `backpressure=direct | bounded(N) | unbounded`
+- `overflow=error | drop_oldest | drop_newest`
+- `shutdown=drain | cancel | detach_forbidden`
+
+`@rust.callback(...)` is required for `ThreadsafeCallback` parameters. Missing policy is a `SIFR-RUST-CB-*` diagnostic.
 
 ## Trust Policy
 

@@ -58,6 +58,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Create `verification/areas/rust_interop`.
   - Add fixture matrix, tier definitions, README, and runner skeletons.
   - Add diagnostic family inventory and documentation placeholders for `SIFR-RUST-*`.
+  - Search active docs for stale Rust interop drafts and update or remove `extern rust`, `from rust import`, `native = [`, panic examples without `RustPanicError` or explicit panic policy, `@rust(crate=..., path=...)`, and Python code fences for Sifr interop examples.
 - Definition of done:
   - The verification area exists and names every fixture required by the design.
   - The architecture document and phase file agree on supported capabilities and rejected designs.
@@ -84,7 +85,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
   - Add trust gates for `rust-build-scripts`, `rust-proc-macros`, `native-links`, `unsafe-rust-bridges`, `build-env`, `rust-no-panic`, and `rust-panic-abort`.
   - Split trust validation into pre-execution evidence that rejects known build scripts/proc macros before Cargo execution and post-execution evidence for trusted build-script link output before final artifact acceptance.
   - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, bridge-version schema, and declared build environment values in cache keys.
-  - Generate `RustBridgeProbePlan` metadata and isolated probe modules for Rust item/signature checking.
+  - Generate `RustBridgeProbePlan` metadata and isolated probe modules for sync functions, async functions, receiver-mode methods, opaque types, Send/Sync assertions, and Rust item/signature checking.
 - Definition of done:
   - Cargo metadata failures become Sifr diagnostics with spans and remediation.
   - Known untrusted build scripts and proc macros are rejected before Cargo execution; native link evidence emitted by trusted build scripts is validated before final artifact acceptance.
@@ -133,7 +134,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 
 - Scope:
   - Implement `@rust.opaque(...)` classes with ownership, borrowing, clone, close, `Send`, `Sync`, and thread-affinity metadata.
-  - Generate handle wrappers that prevent use-after-close and double-close, enforce closed/poisoned state transitions, and expose only generated-safe accessors.
+  - Generate handle wrappers that prevent use-after-close and double-close, enforce closed/poisoned state transitions, use private generated-glue tokens for state mutation, use `PoisonOnPanic` guards for owned handles, and expose only generated-safe accessors.
   - Require either safe `Drop` cleanup or explicit `close`/`aclose` contracts for owning handles.
   - Add diagnostics for leaking explicitly-closed handles where ownership analysis can prove the leak.
   - Cover sync close, async close, borrowed handle, exclusive handle, clone, and non-clone paths.
@@ -161,6 +162,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 - Scope:
   - Wrap Rust bridge calls in unwind boundaries where recoverable.
   - Convert Rust panics into `RustPanicError` without exposing Rust panic payload details unsafely.
+  - Validate `panic=map_error(...)` adapter signatures and mapper-panic fallback behavior.
   - Reject `panic = "abort"` for recoverable bridge builds unless explicitly opted into through `[trust].rust-panic-abort` and documented.
   - Preserve Sifr user error semantics for Rust `Result` values.
   - Add diagnostics for panic strategy mismatch, unreachable panic containment, and poisoned opaque handles after caught panics.
@@ -173,7 +175,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 
 - Scope:
   - Implement explicit `@rust.zero_copy(...)` and `@rust.view(...)` contracts.
-  - Enforce owner/view lifetime rules, aliasing, mutable exclusivity, Send/Sync declarations, and async suspension restrictions.
+  - Enforce owner/view lifetime rules, returned-view lifetime restrictions, aliasing, mutable exclusivity, Send/Sync declarations, and async suspension restrictions.
   - Support zero-copy bytes views.
   - Provide separate copy APIs for copy behavior; never silently copy for a zero-copy declaration.
   - Add positive and negative fixtures for borrowed views, mutable exclusivity, owner lifetime, and copy-fallback rejection.
@@ -195,7 +197,7 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 
 - Scope:
   - Implement call-scoped callbacks that cannot be stored, called after return, or called from unmanaged threads.
-  - Implement thread-safe callback registration with cancellation/subscription handles.
+  - Implement thread-safe callback registration with cancellation/subscription handles and required `@rust.callback(...)` backpressure/overflow/shutdown policy.
   - Enforce Sifr task-spawn/offload ownership requirements for callbacks that may cross threads: no borrowed stack-local values, no non-send opaque handles, and no current-thread/current-OS-thread-affine captures.
   - Require explicit backpressure, cancellation, and shutdown policy for async or thread-safe callbacks.
   - Add panic-to-error handling around callback invocation.
