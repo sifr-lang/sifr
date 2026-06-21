@@ -47,6 +47,7 @@ fi
 
 grep -F '. "${HOME}/.sifr/env"' "${home_dir}/.profile" >/dev/null
 grep -F '. "${HOME}/.sifr/env"' "${home_dir}/.zshrc" >/dev/null
+zshrc_source_count_before="$(grep -F -c '. "${HOME}/.sifr/env"' "${home_dir}/.zshrc")"
 
 resolved="$(
   HOME="${home_dir}" PATH="/usr/bin:/bin" sh -c '. "${HOME}/.sifr/env"; command -v sifr'
@@ -61,5 +62,49 @@ output="$(
 )"
 if [[ "${output}" != "path fixture" ]]; then
   echo "installed sifr was not runnable through configured PATH: ${output}" >&2
+  exit 1
+fi
+
+rm -f "${home_dir}/.sifr/env"
+mkdir -p "${home_dir}/.config/fish"
+output="$(
+  HOME="${home_dir}" \
+    SHELL=/bin/zsh \
+    PATH="${home_dir}/.sifr/bin:/usr/bin:/bin" \
+    SIFR_TARGET="${target}" \
+    SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
+    sh "${installer}"
+)"
+
+if [[ "${output}" == *"configured Sifr PATH via"* ]]; then
+  echo "installer reported PATH configuration while repairing an already-on-PATH install" >&2
+  echo "--- output ---" >&2
+  echo "${output}" >&2
+  exit 1
+fi
+
+if [[ ! -f "${home_dir}/.sifr/env" ]]; then
+  echo "installer did not repair missing managed env script when install dir was already on PATH" >&2
+  echo "--- output ---" >&2
+  echo "${output}" >&2
+  exit 1
+fi
+
+if [[ ! -f "${home_dir}/.config/fish/conf.d/sifr.env.fish" ]]; then
+  echo "installer did not repair missing fish env script when install dir was already on PATH" >&2
+  exit 1
+fi
+
+zshrc_source_count_after="$(grep -F -c '. "${HOME}/.sifr/env"' "${home_dir}/.zshrc")"
+if [[ "${zshrc_source_count_after}" != "${zshrc_source_count_before}" ]]; then
+  echo "installer duplicated zsh profile hook while repairing an already-on-PATH install" >&2
+  exit 1
+fi
+
+resolved="$(
+  HOME="${home_dir}" PATH="/usr/bin:/bin" sh -c '. "${HOME}/.zshrc"; command -v sifr'
+)"
+if [[ "${resolved}" != "${home_dir}/.sifr/bin/sifr" ]]; then
+  echo "repaired zsh profile did not resolve installed sifr: ${resolved}" >&2
   exit 1
 fi
