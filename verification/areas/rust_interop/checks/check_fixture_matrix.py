@@ -37,6 +37,7 @@ REQUIRED_FIXTURES = {
     "opaque_resource_matrix",
     "panic_abort_profile",
     "panic_boundary",
+    "panic_boundary_wrapper_emission",
     "proc_macro_trust",
     "same_workspace_crate",
     "shared_bridge_crate",

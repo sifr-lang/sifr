@@ -14,6 +14,8 @@ mod rust_interop_cargo_inputs;
 mod rust_interop_contract_tests;
 mod rust_interop_contracts;
 mod rust_interop_digest;
+#[cfg(test)]
+mod rust_interop_panic_contract_tests;
 mod rust_interop_probe;
 #[cfg(test)]
 mod rust_interop_tests;

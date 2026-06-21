@@ -1,9 +1,15 @@
 //! Stable Rust interop helper types used by generated bridge contracts.
 
 use crate::{IntegerParseError, IntegerRangeError, SifrInt};
+use std::any::Any;
 use std::fmt;
 use std::marker::PhantomData;
 use std::rc::Rc;
+use std::sync::Mutex;
+
+// `catch_unwind` still invokes the process-wide panic hook, so bridge panic
+// redaction serializes hook swaps while the recoverable boundary is active.
+static RUST_INTEROP_PANIC_HOOK_LOCK: Mutex<()> = Mutex::new(());
 
 pub use indexmap::IndexMap;
 
@@ -149,6 +155,11 @@ impl RustPanicErrorBridge {
     }
 
     #[must_use]
+    pub fn from_panic_payload(_payload: &(dyn Any + Send)) -> Self {
+        Self::redacted()
+    }
+
+    #[must_use]
     pub fn message(&self) -> &str {
         &self.message
     }
@@ -161,6 +172,21 @@ impl fmt::Display for RustPanicErrorBridge {
 }
 
 impl std::error::Error for RustPanicErrorBridge {}
+
+pub fn catch_rust_panic<T, F>(f: F) -> Result<T, RustPanicErrorBridge>
+where
+    F: FnOnce() -> T,
+{
+    let _hook_guard = match RUST_INTEROP_PANIC_HOOK_LOCK.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    let previous_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
+    std::panic::set_hook(previous_hook);
+    result.map_err(|payload| RustPanicErrorBridge::from_panic_payload(payload.as_ref()))
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HandleStateError {
@@ -379,6 +405,20 @@ mod tests {
             handle.inner_ref(),
             Err(HandleStateError::Poisoned(_))
         ));
+    }
+
+    #[test]
+    fn catch_rust_panic_redacts_payload_details() {
+        let error =
+            super::catch_rust_panic(|| panic!("secret backend token")).expect_err("panic maps");
+
+        assert_eq!(error.message(), "Rust bridge panicked");
+        assert!(!error.message().contains("secret"));
+    }
+
+    #[test]
+    fn catch_rust_panic_preserves_successful_values() {
+        assert_eq!(super::catch_rust_panic(|| 42_i64), Ok(42));
     }
 
     #[test]

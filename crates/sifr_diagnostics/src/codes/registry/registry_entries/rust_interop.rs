@@ -71,6 +71,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["reason"]
     ),
     active_entry!(
+        "SIFR-RUST-PANIC-0001",
+        "RUST-PANIC",
+        "Rust panic boundary contract is invalid.",
+        Severity::Error,
+        "crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs::package_rust_interop_rejects_unknown_panic_policy",
+        "invalid Rust panic boundary contract: {reason}",
+        "sifr_driver::build::rust_interop",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
         "SIFR-RUST-CARGO-0001",
         "RUST-CARGO",
         "Rust interop Cargo metadata is unavailable or inconsistent.",

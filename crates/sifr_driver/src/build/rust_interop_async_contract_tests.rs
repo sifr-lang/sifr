@@ -18,7 +18,7 @@ const ASYNC_HASH_SOURCE: &str = r#"
 class RustError(Error):
     message: str
 
-@rust(native.hash)
+@rust(native.hash, panic=map_error(bridge.hash.map_panic))
 async def hash(input: str) -> Result[str, RustError]:
     await task.sleep(0.0)
     return "ok"
@@ -29,7 +29,7 @@ class RustError(Error):
     message: str
 
 @rust.async(thread_affinity=tokio_current_thread)
-@rust(native.hash)
+@rust(native.hash, panic=map_error(bridge.hash.map_panic))
 async def hash(input: str) -> Result[str, RustError]:
     await task.sleep(0.0)
     return "ok"
@@ -129,7 +129,7 @@ class RustError(Error):
     message: str
 
 @rust.async(thread_affinity=current_os_thread)
-@rust(native.hash)
+@rust(native.hash, panic=map_error(bridge.hash.map_panic))
 async def hash(input: str) -> Result[str, RustError]:
     await task.sleep(0.0)
     return "ok"
@@ -163,7 +163,7 @@ class RustError(Error):
 
 @rust.opaque(type=bridge.Client, thread_affinity=tokio_current_thread)
 class Client:
-    @rust(Self.hash)
+    @rust(Self.hash, panic=map_error(bridge.hash.map_panic))
     async def hash(self, input: str) -> Result[str, RustError]:
         return "ok"
 "#;
