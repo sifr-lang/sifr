@@ -16,6 +16,10 @@ pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>
     get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
 }
 
+pub fn external_defs() -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
+    compile_stdlib().map(|compiled| compiled.defs)
+}
+
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     compile_stdlib_uncached_impl()
 }

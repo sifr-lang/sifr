@@ -71,6 +71,13 @@ session. Current implementation reality:
   files without a workspace manifest keep the single-file fallback. Both paths
   wrap `WorkspaceSession` and update unsaved editor buffers through
   `WorkspaceSession` overlays.
+- All LSP analysis hosts are compiler-backed with embedded Sifr stdlib
+  definitions from `sifr_driver::stdlib_external_defs()`. Standalone files,
+  `sifr.toml` workspaces, and Cargo-backed Sifr package folders therefore
+  resolve `sifr.*` imports the same way the CLI does before editor diagnostics,
+  completion, navigation, or generated-Rust queries run. If stdlib bootstrap
+  fails, host open reports that compiler failure instead of continuing with an
+  empty semantic context.
 - LSP notifications update `DocumentStore` first, then feed the latest document
   text/version into the session-owned analysis workspace before diagnostics or
   semantic requests capture snapshots.
@@ -192,7 +199,9 @@ LSP 3.17 is the developer tooling surface target. Any `lsp-types` version bump r
 `verification/areas/developer_tooling/lsp_protocol_smoke.py` initializes the server, opens a
 `.sifr` buffer, validates versioned push diagnostics, runs the required
 document/workspace query families, exercises generated-Rust and test commands,
-and shuts down through `shutdown` plus `exit`.
+checks embedded stdlib import resolution across standalone, `sifr.toml`
+workspace, and Cargo-backed package layouts, and shuts down through `shutdown`
+plus `exit`.
 
 `verification/areas/developer_tooling/lsp_protocol_stress.py` covers cancellation
 notifications, full sync, stale-version rejection, invalid-range protocol

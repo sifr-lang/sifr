@@ -11,7 +11,10 @@ impl AnalysisHost {
         root: &ProjectRoot,
         overlays: Vec<(SourcePath, Option<String>, DocumentVersion, SourceText)>,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let mut session = WorkspaceSession::project(root.clone());
+        let mut session = WorkspaceSession::project_with_external_defs(
+            root.clone(),
+            sifr_driver::stdlib_external_defs()?,
+        );
         for (path, uri, version, source) in overlays {
             session.upsert_overlay(path, uri, version, source, None);
         }
@@ -26,7 +29,11 @@ impl AnalysisHost {
         source: SourceText,
         mode: FrontendMode,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let mut session = WorkspaceSession::single_file(path.clone(), mode);
+        let mut session = WorkspaceSession::single_file_with_external_defs(
+            path.clone(),
+            mode,
+            sifr_driver::stdlib_external_defs()?,
+        );
         session.upsert_overlay(path, uri, version, source, None);
         session.reload()?;
         Self::new(session)

@@ -49,6 +49,15 @@ def main() -> int:
     return value
 """
 
+STDLIB_IMPORT_SAMPLE = """\
+from sifr.random import randint
+
+def main() -> int:
+    value = randint(0, 100)
+    mismatch: int = "not int"
+    return mismatch
+"""
+
 def initialize(
     client: LspClient,
     root: Path,
@@ -327,6 +336,104 @@ def run_utf16_diagnostic_range_check(root: Path) -> None:
         client.close()
 
 
+def run_stdlib_import_check(root: Path, source: Path) -> None:
+    source.write_text(STDLIB_IMPORT_SAMPLE, encoding="utf-8")
+    client = LspClient()
+    try:
+        initialize(client, root)
+        diagnostics = open_document(client, source, STDLIB_IMPORT_SAMPLE)
+        codes = {item.get("code") for item in diagnostics}
+        forbidden = {"SIFR-IMPORT-0002", "SIFR-NAME-0002"}
+        if codes & forbidden:
+            raise LspProtocolError(
+                f"stdlib import was diagnosed as unresolved in {root}: {diagnostics}"
+            )
+        if "SIFR-TYPE-0002" not in codes:
+            raise LspProtocolError(
+                f"stdlib import sample did not reach semantic type checking in {root}: {diagnostics}"
+            )
+        client.request("shutdown", {})
+        client.notify("exit", {})
+    finally:
+        client.close()
+
+
+def write_sifr_workspace_manifest(root: Path) -> None:
+    (root / "sifr.toml").write_text(
+        """\
+[package]
+name = "lsp-stdlib-smoke"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+roots = ["."]
+""",
+        encoding="utf-8",
+    )
+
+
+def write_cargo_backed_sifr_package(root: Path) -> None:
+    # Synthetic package-app layout: this fixture intentionally includes
+    # manifest bin/export tables so LSP stdlib resolution is exercised in a
+    # Cargo-backed folder, not only in loose source directories. LSP workspace
+    # discovery keys off sifr.toml; Cargo.toml verifies the same path in a
+    # realistic package directory shape.
+    (root / "sifr.toml").write_text(
+        """\
+[package]
+name = "lsp-stdlib-smoke"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+roots = ["."]
+
+[exports]
+modules = []
+
+[[bin]]
+name = "lsp-stdlib-smoke"
+path = "main.sifr"
+""",
+        encoding="utf-8",
+    )
+    (root / "src").mkdir()
+    (root / "src" / "lib.rs").write_text(
+        "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n",
+        encoding="utf-8",
+    )
+    (root / "Cargo.toml").write_text(
+        """\
+[package]
+name = "lsp-stdlib-smoke"
+version = "0.1.0"
+edition = "2021"
+include = ["Cargo.toml", "sifr.toml", "*.sifr", "src/lib.rs"]
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+""",
+        encoding="utf-8",
+    )
+
+
+def run_stdlib_import_context_checks() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-lsp-stdlib-single-") as raw:
+        root = Path(raw)
+        run_stdlib_import_check(root, root / "main.sifr")
+
+    with tempfile.TemporaryDirectory(prefix="sifr-lsp-stdlib-workspace-") as raw:
+        root = Path(raw)
+        write_sifr_workspace_manifest(root)
+        run_stdlib_import_check(root, root / "main.sifr")
+
+    with tempfile.TemporaryDirectory(prefix="sifr-lsp-stdlib-package-") as raw:
+        root = Path(raw)
+        write_cargo_backed_sifr_package(root)
+        run_stdlib_import_check(root, root / "main.sifr")
+
+
 def run_smoke() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-smoke-") as raw:
         root = Path(raw)
@@ -351,6 +458,7 @@ def run_smoke() -> None:
         run_utf8_negotiation_check(root)
         run_utf16_position_behavior_check(root)
         run_utf16_diagnostic_range_check(root)
+        run_stdlib_import_context_checks()
 
 
 def run_self_test() -> None:
