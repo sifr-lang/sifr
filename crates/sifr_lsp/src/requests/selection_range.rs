@@ -6,12 +6,14 @@ use serde_json::Value;
 
 pub(crate) fn selection_range(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
+    let source = session.store().document(&uri)?.text().to_string();
+    let position_encoding = session.position_encoding();
     let positions = params
         .get("positions")
         .and_then(Value::as_array)
         .ok_or_else(|| LspError::invalid_params("selectionRange requires positions"))?
         .iter()
-        .map(conversion::lsp_position)
+        .map(|position| conversion::lsp_position_to_utf8(position, &source, position_encoding))
         .collect::<LspResult<Vec<_>>>()?;
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         snapshot
@@ -19,7 +21,7 @@ pub(crate) fn selection_range(session: &mut Session, params: Value) -> LspResult
             .map_err(|error| LspError::internal(error.message))?
             .into_value()
             .into_iter()
-            .map(|range| conversion::selection_range(range, source))
+            .map(|range| conversion::selection_range(range, source, position_encoding))
             .collect::<LspResult<Vec<_>>>()
             .map(Value::Array)
     })

@@ -28,6 +28,21 @@ def main()->int:
     return value
 """
 
+UNICODE_POSITION_SAMPLE = """\
+def helper(value: int) -> int:
+    return value + 1
+
+def main() -> int:
+    result: int = 0 if "🦀" else helper(41)
+    return result
+"""
+
+UNICODE_DIAGNOSTIC_SAMPLE = """\
+def main() -> int:
+    value: int = "🦀" @
+    return 0
+"""
+
 def initialize(
     client: LspClient,
     root: Path,
@@ -40,6 +55,7 @@ def initialize(
             "publishDiagnostics": {"relatedInformation": True},
             "semanticTokens": {"requests": {"full": True, "range": True}},
         },
+        "general": {"positionEncodings": ["utf-16"]},
         "workspace": {"configuration": True, "workspaceFolders": True},
     }
     if work_done_progress:
@@ -59,6 +75,10 @@ def initialize(
     capabilities = result.get("capabilities")
     if not isinstance(capabilities, dict):
         raise LspProtocolError("initialize response missing capabilities")
+    if capabilities.get("positionEncoding") != "utf-16":
+        raise LspProtocolError(
+            f"initialize negotiated unexpected position encoding: {capabilities.get('positionEncoding')!r}"
+        )
     required_capabilities = {
         "textDocumentSync",
         "diagnosticProvider",
@@ -199,6 +219,95 @@ def run_disabled_formatting_check(root: Path) -> None:
         client.close()
 
 
+def run_utf8_negotiation_check(root: Path) -> None:
+    client = LspClient()
+    try:
+        capabilities = initialize(
+            client,
+            root,
+            work_done_progress=False,
+        )
+        if capabilities.get("positionEncoding") != "utf-16":
+            raise LspProtocolError("default smoke initialization should negotiate utf-16")
+        client.request("shutdown", {})
+        client.notify("exit", {})
+    finally:
+        client.close()
+
+    client = LspClient()
+    try:
+        result = client.request(
+            "initialize",
+            {
+                "processId": None,
+                "rootUri": file_uri(root),
+                "capabilities": {
+                    "general": {"positionEncodings": ["utf-16", "utf-8"]},
+                    "workspace": {"configuration": True, "workspaceFolders": True},
+                },
+                "workspaceFolders": [{"uri": file_uri(root), "name": "sifr-lsp-smoke"}],
+                "initializationOptions": {},
+            },
+        )
+        capabilities = result.get("capabilities") if isinstance(result, dict) else None
+        if not isinstance(capabilities, dict):
+            raise LspProtocolError("utf-8 negotiation initialize missing capabilities")
+        if capabilities.get("positionEncoding") != "utf-8":
+            raise LspProtocolError(
+                f"utf-8 capable client negotiated {capabilities.get('positionEncoding')!r}"
+            )
+        client.notify("initialized", {})
+        client.request("shutdown", {})
+        client.notify("exit", {})
+    finally:
+        client.close()
+
+
+def run_utf16_position_behavior_check(root: Path) -> None:
+    source = root / "unicode-position.sifr"
+    source.write_text(UNICODE_POSITION_SAMPLE, encoding="utf-8")
+    client = LspClient()
+    try:
+        initialize(client, root)
+        open_document(client, source, UNICODE_POSITION_SAMPLE)
+        hover = client.request(
+            "textDocument/hover",
+            {
+                "textDocument": {"uri": file_uri(source)},
+                "position": {"line": 4, "character": 33},
+            },
+        )
+        contents = hover.get("contents", {}) if isinstance(hover, dict) else {}
+        if "helper" not in contents.get("value", ""):
+            raise LspProtocolError(f"utf-16 hover position did not resolve helper: {hover}")
+        client.request("shutdown", {})
+        client.notify("exit", {})
+    finally:
+        client.close()
+
+
+def run_utf16_diagnostic_range_check(root: Path) -> None:
+    source = root / "unicode-diagnostic.sifr"
+    source.write_text(UNICODE_DIAGNOSTIC_SAMPLE, encoding="utf-8")
+    client = LspClient()
+    try:
+        initialize(client, root)
+        open_document(client, source, UNICODE_DIAGNOSTIC_SAMPLE)
+        report = client.request("textDocument/diagnostic", {"textDocument": {"uri": file_uri(source)}})
+        items = report.get("items", []) if isinstance(report, dict) else []
+        starts = [
+            item.get("range", {}).get("start")
+            for item in items
+            if isinstance(item, dict) and item.get("range", {}).get("start", {}).get("line") == 1
+        ]
+        if {"line": 1, "character": 23} not in starts:
+            raise LspProtocolError(f"utf-16 diagnostic range did not land on invalid token: {items}")
+        client.request("shutdown", {})
+        client.notify("exit", {})
+    finally:
+        client.close()
+
+
 def run_smoke() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-smoke-") as raw:
         root = Path(raw)
@@ -217,6 +326,9 @@ def run_smoke() -> None:
         finally:
             client.close()
         run_disabled_formatting_check(root)
+        run_utf8_negotiation_check(root)
+        run_utf16_position_behavior_check(root)
+        run_utf16_diagnostic_range_check(root)
 
 
 def run_self_test() -> None:

@@ -11,10 +11,11 @@ pub(crate) fn full(session: &mut Session, params: Value) -> LspResult<Value> {
 pub(crate) fn range(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let source = session.store().document(&uri)?.text().to_string();
+    let position_encoding = session.position_encoding();
     let range = params
         .get("range")
         .ok_or_else(|| LspError::invalid_params("semanticTokens/range requires range"))
-        .and_then(|range| conversion::lsp_range(range, &source))?;
+        .and_then(|range| conversion::lsp_range(range, &source, position_encoding))?;
     tokens(session, params, Some(range))
 }
 
@@ -24,11 +25,12 @@ fn tokens(
     range: Option<ruff_text_size::TextRange>,
 ) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
+    let position_encoding = session.position_encoding();
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let tokens = snapshot
             .semantic_tokens(host, file, range)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
-        conversion::semantic_tokens(tokens, source)
+        conversion::semantic_tokens(tokens, source, position_encoding)
     })
 }

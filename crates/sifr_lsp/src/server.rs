@@ -50,9 +50,14 @@ impl LspServer {
         self.session.set_work_done_progress_enabled(
             crate::settings::work_done_progress_from_initialize_params(&initialize_params),
         );
+        let position_encoding = capabilities::negotiated_position_encoding(&initialize_params);
+        self.session.set_position_encoding(position_encoding);
         self.session.store_mut().apply_settings(settings.clone());
         let initialize_data = serde_json::json!({
-            "capabilities": capabilities::server_capabilities(settings.format_enable),
+            "capabilities": capabilities::server_capabilities(
+                settings.format_enable,
+                position_encoding
+            ),
             "serverInfo": {
                 "name": "sifr-lsp",
                 "version": env!("CARGO_PKG_VERSION")

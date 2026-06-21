@@ -11,12 +11,13 @@ pub(crate) fn formatting(session: &mut Session, params: Value) -> LspResult<Valu
     let uri = text_document_uri(&params)?;
     let path = session.store().document(&uri)?.path().to_path_buf();
     let options = format_options(&params, &path)?;
+    let position_encoding = session.position_encoding();
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let edits = snapshot
             .format_document(host, file, options)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
-        conversion::text_edits(edits, source)
+        conversion::text_edits(edits, source, position_encoding)
     })
 }
 
@@ -26,17 +27,18 @@ pub(crate) fn range_formatting(session: &mut Session, params: Value) -> LspResul
     let document = session.store().document(&uri)?;
     let source = document.text().to_string();
     let path = document.path().to_path_buf();
+    let position_encoding = session.position_encoding();
     let range = params
         .get("range")
         .ok_or_else(|| LspError::invalid_params("rangeFormatting requires range"))
-        .and_then(|range| conversion::lsp_range(range, &source))?;
+        .and_then(|range| conversion::lsp_range(range, &source, position_encoding))?;
     let options = format_options(&params, &path)?;
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let edits = snapshot
             .format_range(host, file, range, options)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
-        conversion::text_edits(edits, source)
+        conversion::text_edits(edits, source, position_encoding)
     })
 }
 

@@ -1,6 +1,6 @@
 use crate::capabilities::{SEMANTIC_TOKEN_MODIFIERS, SEMANTIC_TOKEN_TYPES};
 use crate::errors::{LspError, LspResult};
-use ruff_text_size::TextRange;
+use ruff_text_size::{TextRange, TextSize};
 use serde_json::{json, Value};
 use sifr_analysis::{
     CodeAction, CompletionItem, DeferredCodeAction, DiagnosticClass, DiagnosticId,
@@ -42,8 +42,48 @@ pub(crate) fn lsp_position(value: &Value) -> LspResult<TextPosition> {
     Ok(TextPosition { line, character })
 }
 
-pub(crate) fn lsp_range(value: &Value, source: &str) -> LspResult<TextRange> {
-    lsp_range_with_encoding(value, source, PositionEncoding::Utf8)
+pub(crate) fn lsp_position_to_utf8(
+    value: &Value,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<TextPosition> {
+    let position = lsp_position(value)?;
+    if encoding == PositionEncoding::Utf8 {
+        return Ok(position);
+    }
+    let source = SourceTextMap::new(source);
+    let offset = source
+        .byte_offset_with_encoding(&position, encoding)
+        .ok_or_else(|| LspError::invalid_params("position is outside the document"))?;
+    source
+        .position_at(offset, PositionEncoding::Utf8)
+        .ok_or_else(|| LspError::invalid_params("position is outside the document"))
+}
+
+pub(crate) fn text_position(
+    position: &TextPosition,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
+    if encoding == PositionEncoding::Utf8 {
+        return Ok(json!({ "line": position.line, "character": position.character }));
+    }
+    let source = SourceTextMap::new(source);
+    let offset = source
+        .byte_offset_with_encoding(position, PositionEncoding::Utf8)
+        .ok_or_else(|| LspError::internal("analysis returned a position outside the document"))?;
+    let encoded = source
+        .position_at(offset, encoding)
+        .ok_or_else(|| LspError::internal("analysis returned a position outside the document"))?;
+    Ok(json!({ "line": encoded.line, "character": encoded.character }))
+}
+
+pub(crate) fn lsp_range(
+    value: &Value,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<TextRange> {
+    lsp_range_with_encoding(value, source, encoding)
 }
 
 fn lsp_range_with_encoding(
@@ -74,8 +114,12 @@ fn lsp_range_with_encoding(
     Ok(TextRange::new(start, end))
 }
 
-pub(crate) fn text_range(range: TextRange, source: &str) -> LspResult<Value> {
-    text_range_with_encoding(range, source, PositionEncoding::Utf8)
+pub(crate) fn text_range(
+    range: TextRange,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
+    text_range_with_encoding(range, source, encoding)
 }
 
 fn text_range_with_encoding(
@@ -105,11 +149,12 @@ pub(crate) fn location(
     location: &Location,
     uri_for_file: impl Fn(FileId) -> LspResult<String>,
     source: &str,
+    encoding: PositionEncoding,
 ) -> LspResult<Value> {
     let uri = uri_for_file(location.file)?;
     let range = location.range.map_or_else(
         || Ok(json!({"start": {"line": 0, "character": 0}, "end": {"line": 0, "character": 0}})),
-        |range| text_range(range, source),
+        |range| text_range(range, source, encoding),
     )?;
     Ok(json!({ "uri": uri, "range": range }))
 }
@@ -126,10 +171,14 @@ pub(crate) fn workspace_symbol(symbol: WorkspaceSymbol, uri: String) -> Value {
     })
 }
 
-pub(crate) fn document_symbol(symbol: DocumentSymbol, source: &str) -> LspResult<Value> {
+pub(crate) fn document_symbol(
+    symbol: DocumentSymbol,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
     let range = symbol.range.map_or_else(
         || Ok(json!({"start": {"line": 0, "character": 0}, "end": {"line": 0, "character": 0}})),
-        |range| text_range(range, source),
+        |range| text_range(range, source, encoding),
     )?;
     Ok(json!({
         "name": symbol.name,
@@ -165,18 +214,22 @@ pub(crate) fn signature_help(help: SignatureHelp) -> Value {
     })
 }
 
-pub(crate) fn semantic_tokens(tokens: Vec<SemanticToken>, source: &str) -> LspResult<Value> {
+pub(crate) fn semantic_tokens(
+    tokens: Vec<SemanticToken>,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
     let source_map = SourceTextMap::new(source);
     let mut encoded = Vec::new();
     let mut previous_line = 0;
     let mut previous_start = 0;
     for token in tokens {
-        let Some(start) = source_map.text_position(token.range.start()) else {
+        let Some(start) = source_map.position_at(token.range.start(), encoding) else {
             return Err(LspError::internal(
                 "semantic token start is outside the document",
             ));
         };
-        let Some(end) = source_map.text_position(token.range.end()) else {
+        let Some(end) = source_map.position_at(token.range.end(), encoding) else {
             return Err(LspError::internal(
                 "semantic token end is outside the document",
             ));
@@ -198,20 +251,32 @@ pub(crate) fn semantic_tokens(tokens: Vec<SemanticToken>, source: &str) -> LspRe
     Ok(json!({ "data": encoded }))
 }
 
-pub(crate) fn inlay_hint(hint: InlayHint) -> Value {
-    json!({
-        "position": { "line": hint.position.line, "character": hint.position.character },
+pub(crate) fn inlay_hint(
+    hint: InlayHint,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
+    Ok(json!({
+        "position": text_position(&hint.position, source, encoding)?,
         "label": hint.label,
         "kind": 1
-    })
+    }))
 }
 
-pub(crate) fn document_highlight(highlight: DocumentHighlight, source: &str) -> LspResult<Value> {
-    Ok(json!({ "range": text_range(highlight.range, source)?, "kind": 1 }))
+pub(crate) fn document_highlight(
+    highlight: DocumentHighlight,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
+    Ok(json!({ "range": text_range(highlight.range, source, encoding)?, "kind": 1 }))
 }
 
-pub(crate) fn folding_range(range: FoldingRange, source: &str) -> LspResult<Value> {
-    let value = text_range(range.range, source)?;
+pub(crate) fn folding_range(
+    range: FoldingRange,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
+    let value = text_range(range.range, source, encoding)?;
     Ok(json!({
         "startLine": value["start"]["line"],
         "startCharacter": value["start"]["character"],
@@ -223,13 +288,14 @@ pub(crate) fn folding_range(range: FoldingRange, source: &str) -> LspResult<Valu
 pub(crate) fn selection_range(
     range: sifr_analysis::SelectionRange,
     source: &str,
+    encoding: PositionEncoding,
 ) -> LspResult<Value> {
     let parent = range
         .parent
-        .map(|parent| selection_range(*parent, source))
+        .map(|parent| selection_range(*parent, source, encoding))
         .transpose()?;
     Ok(json!({
-        "range": text_range(range.range, source)?,
+        "range": text_range(range.range, source, encoding)?,
         "parent": parent
     }))
 }
@@ -238,10 +304,11 @@ pub(crate) fn type_hierarchy_item(
     item: TypeHierarchyItem,
     uri: String,
     source: &str,
+    encoding: PositionEncoding,
 ) -> LspResult<Value> {
     let range = item.location.range.map_or_else(
         || Ok(json!({"start": {"line": 0, "character": 0}, "end": {"line": 0, "character": 0}})),
-        |range| text_range(range, source),
+        |range| text_range(range, source, encoding),
     )?;
     Ok(json!({
         "name": item.name,
@@ -258,10 +325,11 @@ pub(crate) fn code_action(
     request_uri: &str,
     uri_for_file: impl Fn(FileId) -> LspResult<String>,
     source_for_file: impl Fn(FileId) -> LspResult<String>,
+    encoding: PositionEncoding,
 ) -> LspResult<Value> {
     let edit = action
         .edit
-        .map(|edit| workspace_edit(edit, uri_for_file, source_for_file))
+        .map(|edit| workspace_edit(edit, uri_for_file, source_for_file, encoding))
         .transpose()?;
     Ok(json!({
         "title": action.title,
@@ -290,11 +358,12 @@ pub(crate) fn workspace_edit(
     edit: WorkspaceEdit,
     uri_for_file: impl Fn(FileId) -> LspResult<String>,
     source_for_file: impl Fn(FileId) -> LspResult<String>,
+    encoding: PositionEncoding,
 ) -> LspResult<Value> {
     let mut changes = serde_json::Map::new();
     for file_edit in edit.edits {
         let uri = uri_for_file(file_edit.file)?;
-        changes.insert(uri, file_text_edits(file_edit, &source_for_file)?);
+        changes.insert(uri, file_text_edits(file_edit, &source_for_file, encoding)?);
     }
     Ok(json!({ "changes": changes }))
 }
@@ -302,17 +371,22 @@ pub(crate) fn workspace_edit(
 pub(crate) fn file_text_edits(
     file_edit: FileTextEdits,
     source_for_file: &impl Fn(FileId) -> LspResult<String>,
+    encoding: PositionEncoding,
 ) -> LspResult<Value> {
     let source = source_for_file(file_edit.file)?;
-    text_edits(file_edit.edits, &source)
+    text_edits(file_edit.edits, &source, encoding)
 }
 
-pub(crate) fn text_edits(edits: Vec<TextEdit>, source: &str) -> LspResult<Value> {
+pub(crate) fn text_edits(
+    edits: Vec<TextEdit>,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
     edits
         .into_iter()
         .map(|edit| {
             Ok(json!({
-                "range": text_range(edit.range, source)?,
+                "range": text_range(edit.range, source, encoding)?,
                 "newText": edit.replacement
             }))
         })
@@ -320,7 +394,11 @@ pub(crate) fn text_edits(edits: Vec<TextEdit>, source: &str) -> LspResult<Value>
         .map(Value::Array)
 }
 
-pub(crate) fn diagnostic(diagnostic: RenderedDiagnostic) -> Value {
+pub(crate) fn diagnostic(
+    diagnostic: RenderedDiagnostic,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
     let primary = diagnostic
         .spans
         .iter()
@@ -328,8 +406,8 @@ pub(crate) fn diagnostic(diagnostic: RenderedDiagnostic) -> Value {
         .or_else(|| diagnostic.spans.first());
     let class = diagnostic_class(&diagnostic);
     let rule_id = diagnostic_rule_id(&diagnostic);
-    json!({
-        "range": primary.map_or_else(default_range, diagnostic_span_range),
+    Ok(json!({
+        "range": primary.map_or_else(|| Ok(default_range()), |span| diagnostic_span_range(span, source, encoding))?,
         "severity": diagnostic_severity(diagnostic.severity),
         "code": diagnostic.code,
         "codeDescription": { "href": diagnostic.url },
@@ -343,7 +421,7 @@ pub(crate) fn diagnostic(diagnostic: RenderedDiagnostic) -> Value {
             "children": diagnostic.children,
             "suggestions": diagnostic.suggestions
         }
-    })
+    }))
 }
 
 pub(crate) fn diagnostic_id(value: &Value) -> Option<DiagnosticId> {
@@ -406,17 +484,19 @@ pub(crate) fn test_command(command: TestCommand) -> Value {
     json!({ "kind": kind, "args": command.args })
 }
 
-fn diagnostic_span_range(span: &DiagnosticSpan) -> Value {
-    json!({
-        "start": {
-            "line": span.line.unwrap_or(1).saturating_sub(1),
-            "character": span.column.unwrap_or(1).saturating_sub(1)
-        },
-        "end": {
-            "line": span.end_line.unwrap_or_else(|| span.line.unwrap_or(1)).saturating_sub(1),
-            "character": span.end_column.unwrap_or_else(|| span.column.unwrap_or(1)).saturating_sub(1)
-        }
-    })
+fn diagnostic_span_range(
+    span: &DiagnosticSpan,
+    source: &str,
+    encoding: PositionEncoding,
+) -> LspResult<Value> {
+    if span.byte_start > span.byte_end {
+        return Err(LspError::internal("diagnostic span start is after end"));
+    }
+    text_range(
+        TextRange::new(TextSize::new(span.byte_start), TextSize::new(span.byte_end)),
+        source,
+        encoding,
+    )
 }
 
 fn default_range() -> Value {

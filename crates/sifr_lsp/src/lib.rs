@@ -11,6 +11,7 @@ mod cancellation;
 mod capabilities;
 mod commands;
 mod conversion;
+mod diagnostic_jobs;
 mod diagnostics;
 mod document_events;
 mod document_store;
