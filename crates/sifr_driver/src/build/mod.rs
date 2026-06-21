@@ -6,6 +6,7 @@ mod project_codegen;
 mod python_runtime;
 mod report;
 mod rust_interop;
+mod rust_interop_cargo_inputs;
 mod rust_interop_digest;
 mod rust_interop_probe;
 #[cfg(test)]

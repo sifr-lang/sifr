@@ -11,6 +11,7 @@ use crate::cargo::trust::validate_backend_trust;
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata};
 use crate::imports::source_map::PackageSourceMap;
+use crate::projection_bridge;
 use std::collections::BTreeSet;
 use std::path::{Component, Path, PathBuf};
 
@@ -131,6 +132,10 @@ pub fn required_archive_entries(
                 relative_to_package_root(&package.package_root, &module.file_path)
             }),
     );
+    required.extend(projection_bridge::required_archive_entries(
+        &package.package_root,
+        &package.manifest,
+    ));
     required
 }
 

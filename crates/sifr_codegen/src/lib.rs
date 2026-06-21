@@ -85,9 +85,9 @@ pub use render::*;
 mod rust_interop_plan;
 pub use rust_interop_plan::{
     InteropBuildPlan, RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan,
-    RustBridgeSourceDigest, RustInteropCargoInputs, RustInteropOwner, RustInteropPlan,
-    RustInteropPlanDeclaration, RustInteropResolvedRoot, RustInteropResolvedTarget,
-    RustInteropTrustRequirement, RustInteropTrustRequirementKind,
+    RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs, RustInteropOwner,
+    RustInteropPlan, RustInteropPlanDeclaration, RustInteropResolvedRoot,
+    RustInteropResolvedTarget, RustInteropTrustRequirement, RustInteropTrustRequirementKind,
 };
 mod rust_ir;
 pub use rust_ir::*;

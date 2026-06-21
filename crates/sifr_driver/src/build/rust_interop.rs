@@ -1,15 +1,16 @@
 use super::project_codegen::GeneratedBinaryProject;
-use super::rust_interop_digest::{
-    digest_file, digest_path, fnv1a64_hex, normalized_path_string, push_cache_bytes,
-    relative_path_string,
+use super::rust_interop_cargo_inputs::{
+    bridge_source_digests, cargo_inputs, first_generated_bridge_import,
+    generated_bridge_module_path,
 };
+use super::rust_interop_digest::{normalized_path_string, relative_path_string};
 use super::rust_interop_probe::{execute_direct_cargo_probe, PendingRustBridgeProbe};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::ParsedProjectModule;
 use ruff_text_size::TextRange;
 use sifr_codegen::{
-    RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan, RustBridgeSourceDigest,
-    RustInteropCargoInputs, RustInteropOwner, RustInteropResolvedRoot, RustInteropResolvedTarget,
+    RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan, RustGeneratedBridgeModule,
+    RustInteropOwner, RustInteropResolvedRoot, RustInteropResolvedTarget,
     RustInteropTrustRequirement, RustInteropTrustRequirementKind,
 };
 use sifr_diagnostics::render::render_sink;
@@ -18,14 +19,10 @@ use sifr_diagnostics::{
     SourceMap, SourceSpan,
 };
 use sifr_ir::{RustInteropDeclaration, RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
-use sifr_package::{
-    digest_package_graph, digest_package_source_map, BackendCrateMetadata, PackageSourceMap,
-    SifrPackageGraph, SifrPackageId, TrustPolicy,
-};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use sifr_package::{BackendCrateMetadata, PackageSourceMap, SifrPackageGraph, SifrPackageId};
+use std::collections::{BTreeSet, HashMap};
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub(super) struct PackageRustInteropContext {
@@ -75,6 +72,7 @@ struct RustInteropResolver<'a> {
     context: &'a PackageRustInteropContext,
     diagnostics: Vec<RenderedDiagnostic>,
     resolved_targets: Vec<RustInteropResolvedTarget>,
+    generated_bridge_modules: BTreeSet<RustGeneratedBridgeModule>,
     trust_requirements: Vec<RustInteropTrustRequirement>,
     seen_trust_requirements: BTreeSet<(String, String, String)>,
     probes: Vec<RustBridgeProbe>,
@@ -87,6 +85,7 @@ impl<'a> RustInteropResolver<'a> {
             context,
             diagnostics: Vec::new(),
             resolved_targets: Vec::new(),
+            generated_bridge_modules: BTreeSet::new(),
             trust_requirements: Vec::new(),
             seen_trust_requirements: BTreeSet::new(),
             probes: Vec::new(),
@@ -117,6 +116,10 @@ impl<'a> RustInteropResolver<'a> {
             .get(&self.context.package_id)
             .expect("package rust interop context must reference graph package");
         generated.interop.rust.resolved_targets = std::mem::take(&mut self.resolved_targets);
+        generated.interop.rust.generated_bridge_modules =
+            std::mem::take(&mut self.generated_bridge_modules)
+                .into_iter()
+                .collect();
         generated.interop.rust.trust_requirements = std::mem::take(&mut self.trust_requirements);
         generated.interop.rust.probe_plan = RustBridgeProbePlan {
             probes: std::mem::take(&mut self.probes),
@@ -152,6 +155,10 @@ impl<'a> RustInteropResolver<'a> {
             );
             return;
         };
+        if !self.validate_bridge_version(declaration, package) {
+            return;
+        }
+        self.push_generated_bridge_module(declaration, package);
 
         for path in declaration_paths(&declaration.declaration) {
             self.resolve_path(declaration, &package_id, package, path);
@@ -228,6 +235,7 @@ impl<'a> RustInteropResolver<'a> {
                     return;
                 };
                 self.validate_backend_trust(declaration, &canonical_target_path, package, backend);
+                self.validate_backend_generated_bridge_imports(declaration, backend);
                 self.pending_direct_probes.push(PendingRustBridgeProbe {
                     declaration: declaration.clone(),
                     path: path.clone(),
@@ -299,6 +307,77 @@ impl<'a> RustInteropResolver<'a> {
                 ),
             );
         }
+    }
+
+    fn validate_bridge_version(
+        &mut self,
+        declaration: &sifr_codegen::RustInteropPlanDeclaration,
+        package: &sifr_package::SifrPackageMetadata,
+    ) -> bool {
+        if package.manifest.rust.bridge_version == Some(1) {
+            return true;
+        }
+        self.push_diagnostic(
+            declaration,
+            declaration.declaration.span,
+            DiagnosticCode::RUST_CARGO_METADATA,
+            "unsupported Rust bridge version",
+            vec![(
+                "bridge_version",
+                package
+                    .manifest
+                    .rust
+                    .bridge_version
+                    .map_or_else(|| "<missing>".to_string(), |version| version.to_string()),
+            )],
+            vec!["declare `[rust] bridge-version = 1` in sifr.toml".to_string()],
+            Some("Rust interop generated bridge modules are bridge-versioned compatibility surfaces.".to_string()),
+        );
+        false
+    }
+
+    fn push_generated_bridge_module(
+        &mut self,
+        declaration: &sifr_codegen::RustInteropPlanDeclaration,
+        package: &sifr_package::SifrPackageMetadata,
+    ) {
+        let bridge_version = package.manifest.rust.bridge_version.unwrap_or(1);
+        self.generated_bridge_modules
+            .insert(RustGeneratedBridgeModule {
+                module_name: declaration.module_name.clone(),
+                rust_module_path: generated_bridge_module_path(declaration.module_name.as_deref()),
+                bridge_version,
+            });
+    }
+
+    fn validate_backend_generated_bridge_imports(
+        &mut self,
+        declaration: &sifr_codegen::RustInteropPlanDeclaration,
+        backend: &BackendCrateMetadata,
+    ) {
+        let Some(manifest_dir) = backend.cargo_manifest_path.parent() else {
+            return;
+        };
+        let source_root = manifest_dir.join("src");
+        let Some(path) = first_generated_bridge_import(&source_root) else {
+            return;
+        };
+        self.push_diagnostic(
+            declaration,
+            declaration.declaration.span,
+            DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
+            "shared Rust bridge crate imports package-specific generated bridge types",
+            vec![
+                ("dependency", backend.dependency_name.clone()),
+                ("path", path.display().to_string()),
+            ],
+            vec![
+                "move this bridge code into the Sifr package-local bridge root".to_string(),
+                "or expose only stable Rust/runtime interop types from the shared crate"
+                    .to_string(),
+            ],
+            None,
+        );
     }
 
     fn validate_declaration_trust(
@@ -663,175 +742,6 @@ fn probe_kind(
         )
         .then_some(RustBridgeProbeKind::View),
     }
-}
-
-fn bridge_source_digests(
-    context: &PackageRustInteropContext,
-    package: &sifr_package::SifrPackageMetadata,
-) -> Vec<RustBridgeSourceDigest> {
-    let mut digests = package
-        .manifest
-        .rust
-        .bridges
-        .iter()
-        .map(|bridge_root| RustBridgeSourceDigest {
-            package_id: context.package_id.0.clone(),
-            bridge_root: normalized_path_string(bridge_root),
-            digest: digest_path(&package.package_root.join(bridge_root)),
-        })
-        .collect::<Vec<_>>();
-    digests.sort_by(|left, right| {
-        (&left.package_id, &left.bridge_root).cmp(&(&right.package_id, &right.bridge_root))
-    });
-    digests
-}
-
-fn cargo_inputs(
-    context: &PackageRustInteropContext,
-    package: &sifr_package::SifrPackageMetadata,
-) -> RustInteropCargoInputs {
-    let graph_digest = digest_package_graph(&context.graph);
-    let source_map_digest = digest_package_source_map(&context.source_map);
-    let trust_policy_digest = trust_policy_digest(&package.manifest.trust);
-    let mut declared_build_env = package.manifest.trust.build_env.clone();
-    declared_build_env.sort();
-    RustInteropCargoInputs {
-        package_id: context.package_id.0.clone(),
-        cargo_metadata_digest: None,
-        package_graph_digest: Some(graph_digest.hex),
-        package_source_map_digest: Some(source_map_digest.hex),
-        cargo_lock_digest: cargo_lock_digest(&package.package_root),
-        target_triple: target_triple(),
-        target_features: target_features(),
-        cargo_profile: "release".to_string(),
-        panic_strategy: std::env::var("SIFR_RUST_PANIC_STRATEGY").ok(),
-        profile_codegen_settings: profile_codegen_settings(&package.package_root, "release"),
-        cargo_version: tool_version("cargo"),
-        rustc_version: tool_version("rustc"),
-        bridge_version: package.manifest.rust.bridge_version,
-        trust_policy_digest,
-        declared_build_env,
-    }
-}
-
-fn cargo_lock_digest(package_root: &Path) -> Option<String> {
-    nearest_ancestor_file(package_root, "Cargo.lock").and_then(|path| digest_file(&path))
-}
-
-fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
-    for ancestor in start.ancestors() {
-        let candidate = ancestor.join(file_name);
-        if candidate.is_file() {
-            return Some(candidate);
-        }
-    }
-    None
-}
-
-fn profile_codegen_settings(package_root: &Path, profile: &str) -> Vec<(String, String)> {
-    let mut settings = Vec::new();
-    for cargo_toml in ancestor_cargo_tomls(package_root) {
-        let Ok(source) = fs::read_to_string(&cargo_toml) else {
-            continue;
-        };
-        let Ok(table) = source.parse::<toml::Table>() else {
-            continue;
-        };
-        let Some(profile_table) = table
-            .get("profile")
-            .and_then(toml::Value::as_table)
-            .and_then(|profiles| profiles.get(profile))
-            .and_then(toml::Value::as_table)
-        else {
-            continue;
-        };
-        for key in [
-            "opt-level",
-            "lto",
-            "codegen-units",
-            "panic",
-            "debug",
-            "strip",
-        ] {
-            if let Some(value) = profile_table.get(key) {
-                settings.push((
-                    format!("{}:{key}", normalized_path_string(&cargo_toml)),
-                    value.to_string(),
-                ));
-            }
-        }
-    }
-    settings.sort();
-    settings
-}
-
-fn ancestor_cargo_tomls(package_root: &Path) -> Vec<PathBuf> {
-    package_root
-        .ancestors()
-        .map(|ancestor| ancestor.join("Cargo.toml"))
-        .filter(|candidate| candidate.is_file())
-        .collect()
-}
-
-fn target_triple() -> Option<String> {
-    std::env::var("SIFR_TARGET").ok().or_else(rustc_host_triple)
-}
-
-fn rustc_host_triple() -> Option<String> {
-    Command::new("rustc")
-        .arg("-vV")
-        .output()
-        .ok()
-        .filter(|output| output.status.success())
-        .and_then(|output| String::from_utf8(output.stdout).ok())
-        .and_then(|version| {
-            version
-                .lines()
-                .find_map(|line| line.strip_prefix("host: "))
-                .map(str::to_string)
-        })
-}
-
-fn target_features() -> Vec<String> {
-    let mut features = Vec::new();
-    if let Ok(flags) = std::env::var("RUSTFLAGS") {
-        features.push(format!("RUSTFLAGS={flags}"));
-    }
-    if let Ok(flags) = std::env::var("CARGO_ENCODED_RUSTFLAGS") {
-        features.push(format!("CARGO_ENCODED_RUSTFLAGS={flags}"));
-    }
-    features.sort();
-    features
-}
-
-fn trust_policy_digest(trust: &TrustPolicy) -> String {
-    let mut entries = BTreeMap::new();
-    entries.insert("rust-build-scripts", trust.rust_build_scripts.clone());
-    entries.insert("rust-proc-macros", trust.rust_proc_macros.clone());
-    entries.insert("native-links", trust.native_links.clone());
-    entries.insert("unsafe-rust-bridges", trust.unsafe_rust_bridges.clone());
-    entries.insert("build-env", trust.build_env.clone());
-    entries.insert("rust-no-panic", trust.rust_no_panic.clone());
-    entries.insert("rust-panic-abort", trust.rust_panic_abort.clone());
-    let mut bytes = Vec::new();
-    for (key, mut values) in entries {
-        values.sort();
-        push_cache_bytes(&mut bytes, key);
-        for value in values {
-            push_cache_bytes(&mut bytes, &value);
-        }
-    }
-    fnv1a64_hex(&bytes)
-}
-
-fn tool_version(tool: &str) -> Option<String> {
-    Command::new(tool)
-        .arg("--version")
-        .output()
-        .ok()
-        .filter(|output| output.status.success())
-        .and_then(|output| String::from_utf8(output.stdout).ok())
-        .map(|version| version.trim().to_string())
 }
 
 fn source_diagnostic(

@@ -118,6 +118,113 @@ fn cargo_projection_repair_regenerates_missing_pure_marker() {
     assert!(package.join("src/lib.rs").is_file());
 }
 
+#[test]
+fn rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge() {
+    let temp = TestWorkspace::new("repair_rust_bridge_projection");
+    let package = temp.root.join("demo_json");
+    write_rust_bridge_package(&package);
+
+    let repair = repair_projection(&package, false);
+
+    assert!(repair.diagnostics.is_empty());
+    assert!(package.join("src/lib.rs").is_file());
+    assert!(package.join("src/bridges/mod.rs").is_file());
+    assert!(package.join("src/__sifr_bridge/mod.rs").is_file());
+    assert_eq!(
+        fs::read_to_string(package.join("src/bridges/tokenizer.rs"))
+            .expect("bridge remains readable"),
+        "pub fn tokenize() {}\n"
+    );
+    assert!(fs::read_to_string(package.join("src/lib.rs"))
+        .expect("lib projection exists")
+        .contains("pub mod __sifr_bridge;"));
+    assert!(fs::read_to_string(package.join("src/bridges/mod.rs"))
+        .expect("bridge projection exists")
+        .contains("pub mod tokenizer;"));
+    assert!(fs::read_to_string(package.join("Cargo.toml"))
+        .expect("cargo projection exists")
+        .contains("src/**/*.rs"));
+    assert!(check_projection(&package).diagnostics.is_empty());
+}
+
+#[test]
+fn rust_bridge_projection_conflict_does_not_overwrite_user_authored_mod_rs() {
+    let temp = TestWorkspace::new("repair_rust_bridge_conflict");
+    let package = temp.root.join("demo_json");
+    write_rust_bridge_package(&package);
+    fs::write(
+        package.join("src/bridges/mod.rs"),
+        "pub fn user_owned() {}\n",
+    )
+    .expect("write conflict");
+
+    let repair = repair_projection(&package, false);
+
+    assert!(repair.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT
+            && diagnostic.message.contains("user-authored")
+    }));
+    assert_eq!(
+        fs::read_to_string(package.join("src/bridges/mod.rs")).expect("read conflict"),
+        "pub fn user_owned() {}\n"
+    );
+}
+
+#[test]
+fn rust_bridge_projection_rejects_reserved_generated_bridge_file() {
+    let temp = TestWorkspace::new("repair_rust_bridge_reserved_namespace");
+    let package = temp.root.join("demo_json");
+    write_rust_bridge_package(&package);
+    fs::write(package.join("src/__sifr_bridge.rs"), "pub mod user {}\n")
+        .expect("write reserved conflict");
+
+    let check = check_projection(&package);
+
+    assert!(check.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT
+            && diagnostic.message.contains("reserved")
+    }));
+}
+
+#[test]
+fn rust_bridge_projection_rejects_keyword_bridge_module_filename() {
+    let temp = TestWorkspace::new("repair_rust_bridge_keyword_filename");
+    let package = temp.root.join("demo_json");
+    write_rust_bridge_package(&package);
+    fs::write(
+        package.join("src/bridges/match.rs"),
+        "pub fn keyword() {}\n",
+    )
+    .expect("write keyword bridge file");
+
+    let check = check_projection(&package);
+
+    assert!(check.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT
+            && diagnostic.message.contains("valid Rust identifiers")
+    }));
+}
+
+fn write_rust_bridge_package(package: &std::path::Path) {
+    fs::create_dir_all(package.join("src/bridges")).expect("create bridges");
+    fs::write(
+        package.join("Cargo.toml"),
+        "[package]\nname = \"sifr-demo-json\"\nversion = \"0.1.0\"\nedition = \"2024\"\ninclude = [\"Cargo.toml\", \"Cargo.lock\", \"sifr.toml\", \"src/**/*.sifr\", \"src/lib.rs\"]\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n",
+    )
+    .expect("write Cargo.toml");
+    fs::write(
+        package.join("sifr.toml"),
+        "[package]\nname = \"demo_json\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[rust]\nbridge-version = 1\nbridges = [\"src/bridges\"]\n",
+    )
+    .expect("write sifr.toml");
+    fs::write(package.join("src/__init__.sifr"), "").expect("write Sifr source");
+    fs::write(
+        package.join("src/bridges/tokenizer.rs"),
+        "pub fn tokenize() {}\n",
+    )
+    .expect("write user bridge");
+}
+
 struct TestWorkspace {
     root: PathBuf,
 }
