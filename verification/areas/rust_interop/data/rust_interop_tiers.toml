@@ -28,6 +28,7 @@ fixtures = [
   "opaque_resource_matrix",
   "close_after_use",
   "panic_boundary",
+  "panic_boundary_wrapper_emission",
   "panic_abort_profile",
   "async_runtime_reqwest",
   "async_ecosystem_matrix",

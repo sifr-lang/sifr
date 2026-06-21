@@ -31,8 +31,8 @@
       "capability": "direct crate matrix",
       "required_crates": ["blake3", "sha2", "uuid", "regex"],
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "compatible_direct_signatures", "status": "planned"},
-      "negative_evidence": {"id": "incompatible_direct_signatures", "status": "planned"}
+      "positive_evidence": {"id": "compatible_direct_signatures", "status": "passing"},
+      "negative_evidence": {"id": "incompatible_direct_signatures", "status": "passing"}
     },
     {
       "id": "direct_crate_negative_type",
@@ -49,8 +49,8 @@
       "capability": "structured Rust decorator paths",
       "required_crates": [],
       "execution_kind": "compiler-diagnostic",
-      "positive_evidence": {"id": "valid_structured_paths", "status": "planned"},
-      "negative_evidence": {"id": "string_and_reserved_root_rejection", "status": "planned"}
+      "positive_evidence": {"id": "valid_structured_paths", "status": "passing"},
+      "negative_evidence": {"id": "string_and_reserved_root_rejection", "status": "passing"}
     },
     {
       "id": "bridge_type_matrix",
@@ -67,8 +67,8 @@
       "capability": "package-local bridge binding",
       "required_crates": ["blake3"],
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "local_bridge_hash_bytes", "status": "probe-only"},
-      "negative_evidence": {"id": "missing_local_bridge_export", "status": "probe-only"}
+      "positive_evidence": {"id": "local_bridge_hash_bytes", "status": "passing"},
+      "negative_evidence": {"id": "missing_local_bridge_export", "status": "passing"}
     },
     {
       "id": "same_workspace_crate",
@@ -76,8 +76,8 @@
       "capability": "same-workspace crate as ordinary Cargo dependency",
       "required_crates": [],
       "execution_kind": "contract-only",
-      "positive_evidence": {"id": "declared_path_dependency_resolves", "status": "probe-only"},
-      "negative_evidence": {"id": "undeclared_workspace_crate_rejected", "status": "probe-only"}
+      "positive_evidence": {"id": "declared_path_dependency_resolves", "status": "passing"},
+      "negative_evidence": {"id": "undeclared_workspace_crate_rejected", "status": "passing"}
     },
     {
       "id": "shared_bridge_crate",
@@ -85,7 +85,7 @@
       "capability": "shared bridge crate boundary",
       "required_crates": [],
       "execution_kind": "contract-only",
-      "positive_evidence": {"id": "stable_runtime_types_only", "status": "probe-only"},
+      "positive_evidence": {"id": "stable_runtime_types_only", "status": "passing"},
       "negative_evidence": {"id": "package_generated_type_import_rejected", "status": "passing"}
     },
     {

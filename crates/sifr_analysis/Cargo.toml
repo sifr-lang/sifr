@@ -15,5 +15,8 @@ sifr_lint = { workspace = true }
 sifr_driver = { workspace = true }
 sifr_syntax = { workspace = true }
 
+[lib]
+doctest = false
+
 [lints]
 workspace = true

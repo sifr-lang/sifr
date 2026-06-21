@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -14,6 +15,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[4]
 INVENTORY_PATH = REPO_ROOT / "verification/areas/stdlib_parity/data/module_parity_inventory.json"
 DEFAULT_TIMEOUT_SECONDS = 15
+DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
 SUPPORTED_STATUSES = {"supported", "known_gap", "zero_example_inventory"}
 SUPPORTED_PROFILES = {"merge", "full", "inventory-only"}
 
@@ -196,12 +198,13 @@ def run_entries(entries: list[dict[str, Any]]) -> list[str]:
     failures: list[str] = []
     if not entries:
         return ["selected stdlib module parity scope must execute at least one supported row"]
+    command_prefix = stdlib_module_command_prefix()
     for entry in entries:
         fixture = resolve_repo_path(entry["fixture"])
         started = time.perf_counter()
         try:
             proc = subprocess.run(
-                ["cargo", "run", "--locked", "-q", "-p", "sifr", "--", "check", str(fixture)],
+                [*command_prefix, "check", str(fixture)],
                 cwd=REPO_ROOT,
                 text=True,
                 capture_output=True,
@@ -223,6 +226,15 @@ def run_entries(entries: list[dict[str, Any]]) -> list[str]:
             output = "" if proc is None else (proc.stdout + proc.stderr)[-1200:]
             failures.append(f"{entry['id']}: exit={actual_exit} fixture={entry['fixture']}\n{output}")
     return failures
+
+
+def stdlib_module_command_prefix() -> list[str]:
+    configured_bin = os.environ.get("SIFR_STDLIB_MODULE_BIN")
+    if configured_bin:
+        return [configured_bin]
+    if DEFAULT_SIFR_BIN.is_file():
+        return [str(DEFAULT_SIFR_BIN)]
+    return ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
 
 
 def string_field(entry: dict[str, Any], field: str, failures: list[str]) -> str | None:

@@ -39,6 +39,19 @@
       ]
     },
     {
+      "name": "compatibility-matrix",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "rust-interop-compatibility-matrix",
+          "entry": "verification/areas/rust_interop/checks/check_compatibility_matrix.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "stale-drafts",
       "kind": "adapter",
       "cases": [

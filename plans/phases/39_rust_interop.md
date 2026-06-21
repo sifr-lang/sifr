@@ -45,9 +45,21 @@ Phase 39 owns the full Rust interop implementation:
 - Existing Sifr async/offload diagnostics and Tokio runtime substrate.
 - Existing Phase 27 safety and diagnostic non-regression contracts.
 
-This phase is otherwise self-contained. Any compiler, runtime, package, or verification plumbing missing for Rust interop must be implemented inside Phase 39 rather than deferred to another interop phase.
+This phase is otherwise self-contained for the Rust interop contract it claims
+as supported: declaration syntax, structured metadata, Cargo build-plan
+integration, diagnostics, trust policy, tooling, documentation, and the
+machine-checkable compatibility matrix. Runtime or ecosystem surfaces that do
+not have passing positive and negative evidence must not be claimed as Phase 39
+support. They must be categorized as `future-owned-by-separate-phase` and
+linked to an active follow-up issue or phase before closeout.
 
-Phase 39 has internal implementation checkpoints, not separate release phases. Core Rust interop must land before advanced data/callback certification, but Phase 39 is not complete, and Phase 40 does not start, until both core and advanced gates in this file are satisfied.
+Phase 39 has internal implementation checkpoints, not separate release phases
+for the supported core contract. Core Rust interop must land before any stable
+release can claim Rust-backed package support. Advanced runtime/ecosystem
+surfaces that remain future-owned are tracked by
+[`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md)
+and cannot be advertised as supported by Phase 40 stable promotion while they
+remain future-owned.
 
 ## Milestones
 
@@ -127,7 +139,7 @@ Status: implemented in [PR #2705](https://github.com/sifr-lang/sifr/pull/2705); 
   - Reject source-level exact `int` where a fixed-width or explicit exact representation is required.
   - Add conversion diagnostics for width, overflow, invalid UTF-8, unsupported container shapes, record layout mismatches, invalid enum discriminants, and unsupported containers such as `set`/`tuple`.
 - Definition of done:
-  - Supported type mappings roundtrip through Rust bridge calls.
+  - Supported type mappings roundtrip through Rust bridge calls; full runtime value-roundtrip certification for `bridge_type_matrix` is future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) and is not claimed as Phase 39 support until both evidence directions pass.
   - Unsupported mappings fail before final generated binary build.
   - Every conversion failure has a stable Sifr error surface.
 
@@ -147,7 +159,7 @@ Status: implemented in [PR #2707](https://github.com/sifr-lang/sifr/pull/2707); 
 
 ### milestone_39_6: Opaque Rust Handles and Resource Cleanup
 
-Status: implemented in [PR #2709](https://github.com/sifr-lang/sifr/pull/2709); focused driver/runtime validation covers opaque contract parsing, Send/Sync/Copy probes, explicit close/aclose contract diagnostics, and runtime closed/poisoned handle transitions. Full ecosystem resource wrappers remain tracked by `opaque_resource_matrix`.
+Status: implemented in [PR #2709](https://github.com/sifr-lang/sifr/pull/2709); focused driver/runtime validation covers opaque contract parsing, Send/Sync/Copy probes, explicit close/aclose contract diagnostics, and runtime closed/poisoned handle transitions. Full ecosystem resource wrappers are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through the `opaque_resource_matrix` compatibility row.
 
 - Scope:
   - Implement `@rust.opaque(...)` classes with ownership, borrowing, clone, close, `Send`, `Sync`, and thread-affinity metadata.
@@ -162,14 +174,14 @@ Status: implemented in [PR #2709](https://github.com/sifr-lang/sifr/pull/2709); 
 
 ### milestone_39_7: Async, Blocking, and Tokio Integration
 
-Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); local `create-pr` validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-7-review-round3.md`. Focused validation covers `@rust.async(...)` lowering on `async def`, rejection on sync declarations, default `Send` future probe obligations, `thread_affinity=tokio_current_thread` non-`Send` opt-out, invalid async affinity diagnostics, and rejection of blocking/CPU-heavy classifications on async Rust declarations. Full runtime cancellation/shutdown fixtures and borrowed-input wrapper-future ownership remain tracked by `async_runtime_reqwest`.
+Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); local `create-pr` validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-7-review-round3.md`. Focused validation covers `@rust.async(...)` lowering on `async def`, rejection on sync declarations, default `Send` future probe obligations, `thread_affinity=tokio_current_thread` non-`Send` opt-out, invalid async affinity diagnostics, and rejection of blocking/CPU-heavy classifications on async Rust declarations. Full runtime cancellation/shutdown fixtures and borrowed-input wrapper-future ownership are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through the `async_runtime_reqwest` compatibility row.
 
 - Scope:
   - Support async Rust bridge functions using Sifr's existing Tokio runtime model.
   - Reject hidden runtime creation, generated `block_on`, and assumptions that `rt-multi-thread` is available.
   - Enforce explicit `@blocking_io` and `@cpu_heavy` annotations for blocking or CPU-heavy Rust calls.
   - Reject `@blocking_io` and `@cpu_heavy` on `async def` Rust interop declarations.
-  - Defer owning converted borrowed inputs inside generated async wrapper futures to `async_runtime_reqwest`; do not claim borrowed-input wrapper support in the M39.7 contract surface.
+  - Defer owning converted borrowed inputs inside generated async wrapper futures to [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through `async_runtime_reqwest`; do not claim borrowed-input wrapper support in the M39.7 contract surface.
   - Require explicit Sifr offload APIs when classified calls are used from async Sifr code.
   - Allow non-`Send` futures only when explicitly pinned to the current Sifr Tokio runtime through `thread_affinity=tokio_current_thread`; reject non-`Send` futures that may leave that runtime.
   - Map cancellation and shutdown behavior to stable Sifr errors.
@@ -181,7 +193,7 @@ Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); 
 
 ### milestone_39_8: Panic Boundary and Rust Error Surface
 
-Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focused validation covers built-in `RustPanicError` signatures, explicit `RustPanicError`/`panic=map_error(...)` Result panic surfaces, rejection of missing or invalid panic policies, rejection of `panic=map_error(...)` on non-Result APIs, abort policy trust gates, abort-profile strategy validation, and redacted `RustPanicErrorBridge` panic payload conversion. Full generated wrapper emission for package-local bridge calls remains tracked by `panic_boundary_wrapper_emission`.
+Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focused validation covers built-in `RustPanicError` signatures, explicit `RustPanicError`/`panic=map_error(...)` Result panic surfaces, rejection of missing or invalid panic policies, rejection of `panic=map_error(...)` on non-Result APIs, abort policy trust gates, abort-profile strategy validation, and redacted `RustPanicErrorBridge` panic payload conversion. Full generated wrapper emission for package-local bridge calls is future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through the `panic_boundary_wrapper_emission` compatibility row.
 
 - Scope:
   - Wrap Rust bridge calls in unwind boundaries where recoverable.
@@ -197,7 +209,7 @@ Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focus
 
 ### milestone_39_9: Zero-Copy and Core Views
 
-Status: merged in [PR #2720](https://github.com/sifr-lang/sifr/pull/2720); focused validation covers explicit `@rust.zero_copy(...)` and `@rust.view(...)` contract shapes, required paired view contracts for zero-copy returns, owner/lifetime/mutability checks, rejection of `lifetime=call` returned views, rejection of mutable views from shared-borrow owners, rejection of copy-fallback declarations, async borrowed-view suspension rejection, and view Send/Sync probe metadata. Runtime-observed crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` remains staged behind the zero-copy fixture families, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-9-review-round3.md`.
+Status: merged in [PR #2720](https://github.com/sifr-lang/sifr/pull/2720); focused validation covers explicit `@rust.zero_copy(...)` and `@rust.view(...)` contract shapes, required paired view contracts for zero-copy returns, owner/lifetime/mutability checks, rejection of `lifetime=call` returned views, rejection of mutable views from shared-borrow owners, rejection of copy-fallback declarations, async borrowed-view suspension rejection, and view Send/Sync probe metadata. Runtime-observed crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` is future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) while contract-only zero-copy rows remain supported, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-9-review-round3.md`.
 
 - Scope:
   - Implement explicit `@rust.zero_copy(...)` and `@rust.view(...)` contracts.
@@ -212,7 +224,7 @@ Status: merged in [PR #2720](https://github.com/sifr-lang/sifr/pull/2720); focus
 
 ### milestone_39_10: Advanced Data Bridges
 
-Status: merged in [PR #2722](https://github.com/sifr-lang/sifr/pull/2722); focused validation covers contract-only `@rust.view(...)` advanced data metadata for Arrow/dataframe and tensor/DLPack views, required Arrow schema identity, tensor dtype/rank/shape/layout/strides/device metadata, CPU-only device constraints, explicit DLPack transfer ownership with owned owner parameters, and matching shared bridge crate roots. Runtime-observed crate-backed certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle` remains staged for ecosystem closeout.
+Status: merged in [PR #2722](https://github.com/sifr-lang/sifr/pull/2722); focused validation covers contract-only `@rust.view(...)` advanced data metadata for Arrow/dataframe and tensor/DLPack views, required Arrow schema identity, tensor dtype/rank/shape/layout/strides/device metadata, CPU-only device constraints, explicit DLPack transfer ownership with owned owner parameters, and matching shared bridge crate roots. Runtime-observed crate-backed certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle` is future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) and is not claimed as Phase 39 support until both evidence directions pass.
 
 - Scope:
   - Add Arrow-compatible record batch/array bridge contracts through shared bridge crates.
@@ -225,7 +237,7 @@ Status: merged in [PR #2722](https://github.com/sifr-lang/sifr/pull/2722); focus
 
 ### milestone_39_11: Callback Contracts
 
-Status: contract-only callback declaration, validation, and bridge planning support merged in [PR #2724](https://github.com/sifr-lang/sifr/pull/2724). Focused validation covers `@rust.callback(...)` lowering, required thread-safe callback `backpressure`/`overflow`/`shutdown` policy, rejection of missing/invalid/duplicate callback contracts with `SIFR-RUST-CB-0001`, and bridge-compatible top-level `Callable` parameters only when paired with an explicit callback contract. Runtime-observed call-scoped storage rejection, subscription handle cleanup, cross-thread capture enforcement, callback invocation panic mapping, and `tokio-tungstenite`/`redis`/`notify` ecosystem certification remain staged behind `callbacks_call_scoped` and `callback_subscription_matrix` for the remaining callback fixtures.
+Status: contract-only callback declaration, validation, and bridge planning support merged in [PR #2724](https://github.com/sifr-lang/sifr/pull/2724). Focused validation covers `@rust.callback(...)` lowering, required thread-safe callback `backpressure`/`overflow`/`shutdown` policy, rejection of missing/invalid/duplicate callback contracts with `SIFR-RUST-CB-0001`, and bridge-compatible top-level `Callable` parameters only when paired with an explicit callback contract. Runtime-observed call-scoped storage rejection, subscription handle cleanup, cross-thread capture enforcement, callback invocation panic mapping, and `tokio-tungstenite`/`redis`/`notify` ecosystem certification are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through the `callbacks_call_scoped` and `callback_subscription_matrix` compatibility rows.
 
 - Scope:
   - Implement call-scoped callbacks that cannot be stored, called after return, or called from unmanaged threads.
@@ -256,15 +268,20 @@ Status: merged in [PR #2726](https://github.com/sifr-lang/sifr/pull/2726); focus
 
 ### milestone_39_13: Ecosystem Certification and Closeout
 
+Status: opened in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`.
+
 - Scope:
   - Certify representative packages across direct binding, local bridge, shared bridge, opaque handle, zero-copy, async, callbacks, build script, proc macro, native link, and locked/offline Cargo behavior.
   - Publish a Rust interop compatibility matrix with `supported`, `supported-through-bridge`, `unsupported-by-design`, and `future-owned-by-separate-phase` categories.
   - Include required fixture evidence for direct binding, bridge types, async, resource handles, blocking/CPU-heavy calls, zero-copy views, Arrow/dataframe exchange, tensor exchange, callbacks, proc macros, build scripts, native links, and locked/offline Cargo behavior.
   - Run production-grade review rounds until no `SIFR-RUST-*` diagnostic family, verification tier, bridge-type contract, runtime safety rule, or package/build-plan contract has an open specification gap.
 - Definition of done:
-  - Every design capability has a passing positive fixture and a deliberate negative fixture.
+  - Every supported design capability has a passing positive fixture and a deliberate negative fixture.
   - The compatibility matrix matches actual verification evidence.
-  - Phase closeout leaves no undocumented Rust interop gaps and no fixture family without both positive and negative evidence.
+  - Phase closeout leaves no undocumented Rust interop gaps: incomplete fixture
+    families must have positive and negative evidence placeholders, a
+    `future-owned-by-separate-phase` compatibility row, and a concrete active
+    issue or phase owner.
 
 ## Verification Area
 
@@ -367,6 +384,9 @@ Out of scope for required Phase 39 verification:
 - `milestone_39_11`: call-scoped callbacks, thread-safe callbacks, cancellation handles, backpressure, shutdown, invalid capture/threading diagnostics, and subscription/event fixtures with `tokio-tungstenite`, `redis` pub/sub, and `notify`.
 - `milestone_39_12`: LSP completions, diagnostic documentation, package-author docs, `sifr bridge check`, `sifr repair --check`, `sifr repair`, user examples, and rejected-design docs.
 - `milestone_39_13`: ecosystem compatibility matrix, fixture evidence, review closure, and phase closeout.
+  Future-owned runtime/ecosystem certification rows are tracked by
+  [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md)
+  and are not Phase 39 supported surfaces until both evidence directions pass.
 
 ## Exit Gate
 
@@ -377,13 +397,22 @@ Core gate:
 
 Advanced gate:
 
-- Rust-backed Sifr packages can expose Arrow-style data, tensors, DLPack handoff, thread-safe callbacks, advanced zero-copy views, tooling/docs flows, and ecosystem certification under the same canonical declaration model.
-- Verification tiers 3-4 and the compatibility matrix are backed by local validation evidence.
+- Rust-backed Sifr packages can expose the advanced data, callback, and
+  zero-copy contracts that the compatibility matrix marks as `supported` or
+  `supported-through-bridge`.
+- Runtime/ecosystem certification rows that remain
+  `future-owned-by-separate-phase` are explicitly excluded from Phase 39 support
+  claims and are blocked from stable-release advertising until their active
+  follow-up issue lands passing evidence.
+- Verification tiers 3-4 and the compatibility matrix are backed by local
+  validation evidence for supported rows, and future-owned rows are backed by
+  concrete follow-up ownership.
 
 Full Phase 39 exit:
 
 - Every Rust interop path lowers through structured metadata into generated Rust and Cargo build plans.
 - Every unsafe, build-time, native, blocking, CPU-heavy, callback, panic, and zero-copy hazard has a stable trust/diagnostic/verification surface.
 - The verification area contains positive and negative fixtures for every supported capability.
-- The compatibility matrix is backed by actual local validation evidence.
+- The compatibility matrix is backed by local validation evidence for supported
+  rows and active follow-up ownership for future-owned rows.
 - Phase 27 non-regression remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic in user runtime paths, and stable diagnostics/renderer/exit-code behavior.

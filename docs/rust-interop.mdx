@@ -8,6 +8,10 @@ Rust interop lets a Sifr package expose Rust-backed declarations while keeping t
 
 Rust interop is source-level Cargo integration. It is not Rust ABI loading, `dlopen`, or a C FFI layer.
 
+See [Rust Interop Compatibility](/rust-interop-compatibility) for the support
+matrix that separates supported, bridge-supported, unsupported, and future-owned
+ecosystem surfaces.
+
 ## Package Setup
 
 Declare Rust dependencies in `Cargo.toml` and Sifr interop policy in `sifr.toml`:
@@ -192,16 +196,16 @@ def bad_string_target(data: bytes) -> uint32: ...
 ```
 
 ```sifr
-extern rust crc32fast.hash
+# rejected: extern rust crc32fast.hash
 ```
 
 ```sifr
-from rust import crc32fast
+# rejected: from rust import crc32fast
 ```
 
 ```sifr
-@rust(crate="crc32fast", path="hash")
-def bad_legacy_shape(data: bytes) -> uint32: ...
+# rejected: @rust(crate="crc32fast", path="hash")
+# rejected: def bad_legacy_shape(data: bytes) -> uint32: ...
 ```
 
 Rust interop never falls back from zero-copy to copying, never creates a hidden Tokio runtime, and never lets a Rust panic unwind through Sifr user code in recoverable builds.

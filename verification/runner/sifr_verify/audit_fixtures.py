@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -12,6 +13,7 @@ from typing import Any
 from .paths import REPO_ROOT
 
 DEFAULT_TIMEOUT_SECONDS = 10
+DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
 
 
 def run_audit_fixture_manifest(manifest_path: Path, *, area: str) -> int:
@@ -133,6 +135,7 @@ def validate_manifest(manifest_path: Path, manifest: dict[str, Any], *, area: st
 
 def run_smoke_entries(area: str, entries: list[dict[str, Any]]) -> list[str]:
     failures: list[str] = []
+    command_prefix = audit_fixture_command_prefix()
     for entry in entries:
         entry_id = str(entry["id"])
         entry_path = resolve_repo_path(str(entry["path"]))
@@ -140,7 +143,7 @@ def run_smoke_entries(area: str, entries: list[dict[str, Any]]) -> list[str]:
         started = time.perf_counter()
         try:
             proc = subprocess.run(
-                ["cargo", "run", "--locked", "-q", "-p", "sifr", "--", "check", str(entry_path)],
+                [*command_prefix, "check", str(entry_path)],
                 cwd=REPO_ROOT,
                 text=True,
                 capture_output=True,
@@ -161,6 +164,15 @@ def run_smoke_entries(area: str, entries: list[dict[str, Any]]) -> list[str]:
                 f"{entry_id}: exit={actual_exit} expected={expected_exit} path={entry['path']}"
             )
     return failures
+
+
+def audit_fixture_command_prefix() -> list[str]:
+    configured_bin = os.environ.get("SIFR_AUDIT_FIXTURE_BIN")
+    if configured_bin:
+        return [configured_bin]
+    if DEFAULT_SIFR_BIN.is_file():
+        return [str(DEFAULT_SIFR_BIN)]
+    return ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
 
 
 def emit_failures(area: str, failures: list[str]) -> None:

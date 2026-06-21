@@ -7,4 +7,4 @@ metadata, tensor shape/strides metadata, CPU-only device metadata, and invalid
 dtype/shape metadata rejection.
 
 Runtime-observed certification for `datafusion`, `polars`, `ndarray`, and
-`candle` remains staged for ecosystem certification.
+`candle` is pending for ecosystem certification.

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -123,10 +124,13 @@ def run_cargo_tests(manifest: dict[str, Any]) -> int:
         for entry in manifest.get("completion_quality", [])
         if isinstance(entry, dict) and isinstance(entry.get("cargo_test"), str)
     }
+    env = os.environ.copy()
+    env.setdefault("CARGO_INCREMENTAL", "0")
     for test in sorted(tests):
         result = subprocess.run(
-            ["cargo", "test", "-p", "sifr_analysis", test],
+            ["cargo", "test", "--locked", "-p", "sifr_analysis", test],
             cwd=REPO_ROOT,
+            env=env,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
