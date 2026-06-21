@@ -5,6 +5,8 @@ pub mod imports;
 pub mod manifest;
 pub mod ops;
 pub mod projection;
+mod projection_bridge;
+mod projection_rust_keywords;
 pub mod python;
 pub mod source;
 
@@ -86,6 +88,8 @@ mod package_projection_tests;
 mod package_public_api_tests;
 #[cfg(test)]
 mod package_publish_archive_tests;
+#[cfg(test)]
+mod package_rust_bridge_archive_tests;
 #[cfg(test)]
 mod package_session_tests;
 #[cfg(test)]

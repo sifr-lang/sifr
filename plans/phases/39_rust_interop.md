@@ -102,6 +102,8 @@ Status: implemented in [PR #2703](https://github.com/sifr-lang/sifr/pull/2703); 
 
 ### milestone_39_3: Package-Local and Shared Bridge Modules
 
+Status: implemented in [PR #2704](https://github.com/sifr-lang/sifr/pull/2704); focused validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-3-review-round3.md`.
+
 - Scope:
   - Generate and maintain Sifr-owned projection entries for `src/bridges/mod.rs`, Sifr-managed `src/lib.rs`, and generated `crate::__sifr_bridge`.
   - Use bridge-versioned deterministic Rust module-name mangling for generated `crate::__sifr_bridge::<sifr_module_path>` paths.

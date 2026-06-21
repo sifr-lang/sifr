@@ -67,8 +67,8 @@
       "capability": "package-local bridge binding",
       "required_crates": ["blake3"],
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "local_bridge_hash_bytes", "status": "planned"},
-      "negative_evidence": {"id": "missing_local_bridge_export", "status": "planned"}
+      "positive_evidence": {"id": "local_bridge_hash_bytes", "status": "probe-only"},
+      "negative_evidence": {"id": "missing_local_bridge_export", "status": "probe-only"}
     },
     {
       "id": "same_workspace_crate",
@@ -76,8 +76,8 @@
       "capability": "same-workspace crate as ordinary Cargo dependency",
       "required_crates": [],
       "execution_kind": "contract-only",
-      "positive_evidence": {"id": "declared_path_dependency_resolves", "status": "planned"},
-      "negative_evidence": {"id": "undeclared_workspace_crate_rejected", "status": "planned"}
+      "positive_evidence": {"id": "declared_path_dependency_resolves", "status": "probe-only"},
+      "negative_evidence": {"id": "undeclared_workspace_crate_rejected", "status": "probe-only"}
     },
     {
       "id": "shared_bridge_crate",
@@ -85,8 +85,8 @@
       "capability": "shared bridge crate boundary",
       "required_crates": [],
       "execution_kind": "contract-only",
-      "positive_evidence": {"id": "stable_runtime_types_only", "status": "planned"},
-      "negative_evidence": {"id": "package_generated_type_import_rejected", "status": "planned"}
+      "positive_evidence": {"id": "stable_runtime_types_only", "status": "probe-only"},
+      "negative_evidence": {"id": "package_generated_type_import_rejected", "status": "passing"}
     },
     {
       "id": "opaque_handle_tokenizer",
@@ -127,8 +127,8 @@
       "capability": "bridge-version validation",
       "required_crates": [],
       "execution_kind": "compiler-diagnostic",
-      "positive_evidence": {"id": "bridge_version_1_accepted", "status": "planned"},
-      "negative_evidence": {"id": "unsupported_bridge_version_rejected", "status": "planned"}
+      "positive_evidence": {"id": "bridge_version_1_accepted", "status": "passing"},
+      "negative_evidence": {"id": "unsupported_bridge_version_rejected", "status": "passing"}
     },
     {
       "id": "panic_boundary",

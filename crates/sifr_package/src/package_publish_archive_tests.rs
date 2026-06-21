@@ -23,7 +23,6 @@ use crate::ops::session::PackageSession;
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-
 #[test]
 fn archive_missing_sifr_source_reports_0401() {
     let package = package(TrustPolicy::default());
@@ -99,6 +98,7 @@ fn package_dry_run_includes_cargo_package_and_publish_dry_run_commands() {
         &source_map,
         &package.package_id,
         &[
+            entry("Cargo.toml"),
             entry("sifr.toml"),
             entry("src/__init__.sifr"),
             entry("src/main.sifr"),

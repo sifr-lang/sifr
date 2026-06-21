@@ -1,6 +1,7 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::SifrManifest;
+use crate::projection_bridge;
 use crate::source::layout::canonical_pure_marker_source;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -99,12 +100,15 @@ pub fn repair_projection(package_root: &Path, check: bool) -> ProjectionRepair {
     if let Ok(manifest) = load_manifest(package_root) {
         if fs::write(
             package_root.join("Cargo.toml"),
-            render_cargo_toml(&manifest.package_name.0),
+            render_cargo_toml_for_manifest(&manifest),
         )
         .is_ok()
         {
             wrote_files.push(package_root.join("Cargo.toml"));
         }
+        let bridge_repair =
+            projection_bridge::repair(package_root, &manifest, &projection_cargo_id(package_root));
+        wrote_files.extend(bridge_repair.wrote_files);
     }
     if !package_root.join("src/lib.rs").exists()
         && fs::create_dir_all(package_root.join("src")).is_ok()
@@ -203,12 +207,29 @@ fn projection_diagnostics(package_root: &Path) -> Vec<PackageDiagnostic> {
             ));
         }
     }
+    for required in projection_bridge::cargo_include_entries(&manifest)
+        .into_iter()
+        .filter(|required| required == "src/**/*.rs")
+    {
+        if !cargo_source.contains(&required) {
+            diagnostics.push(PackageDiagnostic::projection_include_drift(
+                &projection_cargo_id(package_root),
+                cargo_toml.clone(),
+                required,
+            ));
+        }
+    }
     if !package_root.join("src/lib.rs").exists() && !manifest.declares_rust_backend() {
         diagnostics.push(PackageDiagnostic::projection_pure_marker_missing(
             &projection_cargo_id(package_root),
             package_root.join("src/lib.rs"),
         ));
     }
+    diagnostics.extend(projection_bridge::diagnostics(
+        package_root,
+        &manifest,
+        &projection_cargo_id(package_root),
+    ));
     diagnostics
 }
 
@@ -226,9 +247,37 @@ fn render_sifr_toml(sifr_name: &str) -> String {
 }
 
 fn render_cargo_toml(sifr_name: &str) -> String {
+    render_cargo_toml_with_includes(sifr_name, &default_cargo_include_entries())
+}
+
+fn render_cargo_toml_for_manifest(manifest: &SifrManifest) -> String {
+    render_cargo_toml_with_includes(
+        &manifest.package_name.0,
+        &projection_bridge::cargo_include_entries(manifest),
+    )
+}
+
+fn default_cargo_include_entries() -> Vec<String> {
+    vec![
+        "Cargo.toml".to_string(),
+        "Cargo.lock".to_string(),
+        "sifr.toml".to_string(),
+        "src/**/*.sifr".to_string(),
+        "src/lib.rs".to_string(),
+        "README.md".to_string(),
+        "LICENSE".to_string(),
+    ]
+}
+
+fn render_cargo_toml_with_includes(sifr_name: &str, include_entries: &[String]) -> String {
     let cargo_name = format!("sifr-{}", kebab_case(sifr_name));
+    let include = include_entries
+        .iter()
+        .map(|entry| format!("\"{entry}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
     format!(
-        "[package]\nname = \"{cargo_name}\"\nversion = \"{DEFAULT_VERSION}\"\nedition = \"{RUST_EDITION}\"\ninclude = [\"Cargo.toml\", \"Cargo.lock\", \"sifr.toml\", \"src/**/*.sifr\", \"src/lib.rs\", \"README.md\", \"LICENSE\"]\n\n# sifr-managed\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n# end sifr-managed\n"
+        "[package]\nname = \"{cargo_name}\"\nversion = \"{DEFAULT_VERSION}\"\nedition = \"{RUST_EDITION}\"\ninclude = [{include}]\n\n# sifr-managed\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n# end sifr-managed\n"
     )
 }
 

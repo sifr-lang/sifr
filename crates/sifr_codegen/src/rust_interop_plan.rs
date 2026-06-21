@@ -31,6 +31,13 @@ impl InteropBuildPlan {
             push_resolved_target(&mut out, target);
             out.push('\n');
         }
+        out.push_str("rust.generated_bridge_modules=");
+        out.push_str(&self.rust.generated_bridge_modules.len().to_string());
+        out.push('\n');
+        for module in &self.rust.generated_bridge_modules {
+            push_generated_bridge_module(&mut out, module);
+            out.push('\n');
+        }
         out.push_str("rust.trust_requirements=");
         out.push_str(&self.rust.trust_requirements.len().to_string());
         out.push('\n');
@@ -63,6 +70,7 @@ impl InteropBuildPlan {
 pub struct RustInteropPlan {
     pub declarations: Vec<RustInteropPlanDeclaration>,
     pub resolved_targets: Vec<RustInteropResolvedTarget>,
+    pub generated_bridge_modules: Vec<RustGeneratedBridgeModule>,
     pub trust_requirements: Vec<RustInteropTrustRequirement>,
     pub probe_plan: RustBridgeProbePlan,
     pub bridge_sources: Vec<RustBridgeSourceDigest>,
@@ -91,6 +99,13 @@ pub struct RustInteropResolvedTarget {
     pub canonical_target_path: String,
     pub root: RustInteropResolvedRoot,
     pub span: ruff_text_size::TextRange,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct RustGeneratedBridgeModule {
+    pub module_name: Option<String>,
+    pub rust_module_path: Vec<String>,
+    pub bridge_version: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -400,6 +415,21 @@ fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
     }
     out.push_str(";span=");
     push_span(out, target.span);
+}
+
+fn push_generated_bridge_module(out: &mut String, module: &RustGeneratedBridgeModule) {
+    out.push_str("generated_bridge=");
+    match &module.module_name {
+        Some(module_name) => {
+            out.push_str("module:");
+            out.push_str(module_name);
+        }
+        None => out.push_str("binary-entry"),
+    }
+    out.push_str(";version=");
+    out.push_str(&module.bridge_version.to_string());
+    out.push_str(";path=");
+    out.push_str(&module.rust_module_path.join("::"));
 }
 
 fn push_trust_requirement(out: &mut String, requirement: &RustInteropTrustRequirement) {

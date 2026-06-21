@@ -133,6 +133,133 @@ fn package_rust_interop_resolves_bridge_root() {
         generated.interop.rust.resolved_targets[0].root,
         sifr_codegen::RustInteropResolvedRoot::PackageBridge { .. }
     ));
+    assert_eq!(generated.interop.rust.generated_bridge_modules.len(), 1);
+    assert_eq!(
+        generated.interop.rust.generated_bridge_modules[0].rust_module_path,
+        ["__sifr_bridge".to_string(), "app".to_string()]
+    );
+    assert_eq!(
+        generated.interop.rust.generated_bridge_modules[0].bridge_version,
+        1
+    );
+}
+
+#[test]
+fn package_rust_interop_rejects_unsupported_bridge_version() {
+    let generated = base_project(vec![declaration_entry(
+        "bridge.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+    set_bridge_version(&mut context, Some(2));
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "unsupported bridge version must fail",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CARGO-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("unsupported Rust bridge version"));
+}
+
+#[test]
+fn package_rust_interop_rejects_shared_bridge_crate_importing_generated_bridge_types() {
+    let backend_root = temp_package_root("rust_interop_shared_bridge_boundary");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"shared_bridge\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "use crate::__sifr_bridge::app::TokenBridge;\npub fn hash() {}\n",
+    )
+    .expect("write backend lib");
+    let generated = base_project(vec![declaration_entry(
+        "shared_bridge.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "shared_bridge",
+            false,
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "shared bridge boundary violation must fail",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
+    assert!(diagnostics[0].message.contains("package-specific"));
+}
+
+#[test]
+fn package_rust_interop_allows_shared_bridge_comments_about_generated_bridge_types() {
+    let backend_root = temp_package_root("rust_interop_shared_bridge_comment");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"shared_bridge\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "// crate::__sifr_bridge is package-local only\npub const NOTE: &str = \"__sifr_bridge::Token\";\npub fn hash() {}\n",
+    )
+    .expect("write backend lib");
+    let generated = base_project(vec![declaration_entry(
+        "shared_bridge.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "shared_bridge",
+            false,
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("comments and strings must not violate shared bridge boundary");
+}
+
+#[test]
+fn package_rust_interop_resolves_same_workspace_path_dependency() {
+    let backend_root = temp_package_root("rust_interop_same_workspace_path");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"workspace_backend\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(backend_root.join("src/lib.rs"), "pub fn hash() {}\n")
+        .expect("write backend lib");
+    let generated = base_project(vec![declaration_entry(
+        "workspace_backend.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "workspace_backend",
+            false,
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("declared path dependency should resolve and probe");
 }
 
 #[test]
@@ -604,6 +731,15 @@ fn set_bridge_roots(context: &mut PackageRustInteropContext, bridges: Vec<PathBu
         .get_mut(&context.package_id)
         .expect("package exists");
     package.manifest.rust.bridges = bridges;
+}
+
+fn set_bridge_version(context: &mut PackageRustInteropContext, bridge_version: Option<u32>) {
+    let package = context
+        .graph
+        .packages
+        .get_mut(&context.package_id)
+        .expect("package exists");
+    package.manifest.rust.bridge_version = bridge_version;
 }
 
 fn temp_package_root(name: &str) -> PathBuf {
