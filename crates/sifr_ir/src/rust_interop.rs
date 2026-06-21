@@ -58,6 +58,7 @@ pub enum RustInteropValue {
     Boolean(bool),
     Symbol(String),
     Integer(i64),
+    IntegerList(Vec<i64>),
     PolicyCall {
         name: String,
         argument: Box<RustInteropValue>,

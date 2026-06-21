@@ -234,6 +234,8 @@ fn parse_value(
                 None
             }
         }
+        Expr::List(list) => parse_integer_list_value(&list.elts, list.range, ctx),
+        Expr::Tuple(tuple) => parse_integer_list_value(&tuple.elts, tuple.range, ctx),
         Expr::Attribute(_) => parse_target_path(expr, owner, ctx).map(RustInteropValue::TargetPath),
         Expr::Call(call) => parse_policy_call(call, owner, ctx),
         Expr::StringLiteral(_) => {
@@ -261,6 +263,15 @@ fn parse_integer_value(
     negate: bool,
     ctx: &mut LowerCtx,
 ) -> Option<RustInteropValue> {
+    parse_integer_literal(number, span, negate, ctx).map(RustInteropValue::Integer)
+}
+
+fn parse_integer_literal(
+    number: &Number,
+    span: TextRange,
+    negate: bool,
+    ctx: &mut LowerCtx,
+) -> Option<i64> {
     if let Number::Int(value) = number {
         let Some(value) = value.as_i64() else {
             malformed(ctx, "integer decorator value is too large", span);
@@ -271,7 +282,7 @@ fn parse_integer_value(
         } else {
             Some(value)
         };
-        value.map(RustInteropValue::Integer).or_else(|| {
+        value.or_else(|| {
             malformed(ctx, "integer decorator value is too large", span);
             None
         })
@@ -283,6 +294,52 @@ fn parse_integer_value(
         );
         None
     }
+}
+
+fn parse_integer_list_value(
+    elements: &[Expr],
+    span: TextRange,
+    ctx: &mut LowerCtx,
+) -> Option<RustInteropValue> {
+    let mut values = Vec::with_capacity(elements.len());
+    for element in elements {
+        let value = match element {
+            Expr::NumberLiteral(number) => {
+                parse_integer_literal(&number.value, number.range(), false, ctx)
+            }
+            Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {
+                if let Expr::NumberLiteral(number) = unary.operand.as_ref() {
+                    parse_integer_literal(&number.value, unary.range, true, ctx)
+                } else {
+                    malformed(
+                        ctx,
+                        "integer list decorator values must contain only integer literals"
+                            .to_string(),
+                        unary.range,
+                    );
+                    None
+                }
+            }
+            _ => {
+                malformed(
+                    ctx,
+                    "integer list decorator values must contain only integer literals".to_string(),
+                    element.range(),
+                );
+                None
+            }
+        }?;
+        values.push(value);
+    }
+    if values.is_empty() {
+        malformed(
+            ctx,
+            "integer list decorator values cannot be empty".to_string(),
+            span,
+        );
+        return None;
+    }
+    Some(RustInteropValue::IntegerList(values))
 }
 
 fn parse_policy_call(

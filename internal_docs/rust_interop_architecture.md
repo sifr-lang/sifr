@@ -668,6 +668,17 @@ Data-oriented bridges must support explicit contracts for:
 - DLPack-style tensor handoff through a shared `sifr_tensor_bridge` crate,
 - dataframe adapters that preserve ownership and schema identity.
 
+The initial advanced data contract surface is contract-only and extends
+`@rust.view(...)` with `data=`, `schema=`, `dtype=`, `rank=`, `shape=`,
+`layout=`, `strides=`, `device=`, `ownership=`, and `protocol=` metadata. Arrow
+and dataframe views require schema identity and the `sifr_arrow_bridge` shared
+bridge crate root; tensor and DLPack views require dtype/shape/layout/strides
+and CPU-only device metadata plus the `sifr_tensor_bridge` shared bridge crate
+root. DLPack handoff must declare `ownership=transfer`, an owned owner
+parameter, and `protocol=` explicitly. Runtime-observed crate-backed
+certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle`
+remains staged for ecosystem certification.
+
 ## Callbacks
 
 Callbacks are supported only with declared lifetime and threading policy.
