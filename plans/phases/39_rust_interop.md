@@ -212,7 +212,7 @@ Status: merged in [PR #2720](https://github.com/sifr-lang/sifr/pull/2720); focus
 
 ### milestone_39_10: Advanced Data Bridges
 
-Status: implemented locally on branch `phase39-rust-interop-m39-10`; focused validation covers contract-only `@rust.view(...)` advanced data metadata for Arrow/dataframe and tensor/DLPack views, required Arrow schema identity, tensor dtype/rank/shape/layout/strides/device metadata, CPU-only device constraints, explicit DLPack transfer ownership with owned owner parameters, and matching shared bridge crate roots. Runtime-observed crate-backed certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle` remains staged for ecosystem closeout.
+Status: merged in [PR #2722](https://github.com/sifr-lang/sifr/pull/2722); focused validation covers contract-only `@rust.view(...)` advanced data metadata for Arrow/dataframe and tensor/DLPack views, required Arrow schema identity, tensor dtype/rank/shape/layout/strides/device metadata, CPU-only device constraints, explicit DLPack transfer ownership with owned owner parameters, and matching shared bridge crate roots. Runtime-observed crate-backed certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle` remains staged for ecosystem closeout.
 
 - Scope:
   - Add Arrow-compatible record batch/array bridge contracts through shared bridge crates.
