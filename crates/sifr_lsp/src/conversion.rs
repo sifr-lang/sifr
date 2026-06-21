@@ -5,8 +5,8 @@ use serde_json::{json, Value};
 use sifr_analysis::{
     CodeAction, CompletionItem, DeferredCodeAction, DiagnosticClass, DiagnosticId,
     DocumentHighlight, DocumentSymbol, FileId, FileTextEdits, FoldingRange, GeneratedRustPreview,
-    HoverInfo, InlayHint, Location, SemanticToken, SignatureHelp, TestCommand, TestCommandKind,
-    TestItem, TextEdit, TypeHierarchyItem, WorkspaceEdit, WorkspaceSymbol,
+    HoverInfo, InlayHint, Location, SemanticToken, SignatureHelp, TextEdit, TypeHierarchyItem,
+    WorkspaceEdit, WorkspaceSymbol,
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticSpan, RenderedDiagnostic, Severity};
 use sifr_source::{PositionEncoding, SourceText as SourceTextMap, TextPosition};
@@ -466,22 +466,6 @@ pub(crate) fn generated_rust_preview(preview: GeneratedRustPreview) -> Value {
         "rust": preview.rust,
         "unavailableReason": preview.unavailable_reason
     })
-}
-
-pub(crate) fn test_item(item: TestItem) -> Value {
-    json!({
-        "id": item.id.0,
-        "label": item.label,
-        "file": item.file.map(FileId::as_u32)
-    })
-}
-
-pub(crate) fn test_command(command: TestCommand) -> Value {
-    let kind = match command.kind {
-        TestCommandKind::Check => "check",
-        TestCommandKind::Run => "run",
-    };
-    json!({ "kind": kind, "args": command.args })
 }
 
 fn diagnostic_span_range(

@@ -72,12 +72,8 @@ REQUIRED_METHODS = {
 }
 
 REQUIRED_COMMANDS = {
-    "sifr.restartServer",
-    "sifr.showServerLogs",
-    "sifr.explainDiagnostic",
-    "sifr.showGeneratedRust",
-    "sifr.checkWorkspace",
-    "sifr.runTests",
+    "sifr.server.explainDiagnostic",
+    "sifr.server.showGeneratedRust",
 }
 
 REQUIRED_SETTINGS = {

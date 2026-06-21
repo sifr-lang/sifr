@@ -45,8 +45,8 @@
     {"command": "sifr.runLint", "title": "Sifr: Run Lint", "backend": "cli:sifr lint"},
     {"command": "sifr.checkFormat", "title": "Sifr: Check Format", "backend": "cli:sifr fmt --check"},
     {"command": "sifr.formatDocument", "title": "Sifr: Format Document", "backend": "lsp-or-cli:sifr fmt"},
-    {"command": "sifr.showGeneratedRust", "title": "Sifr: Show Generated Rust", "backend": "lsp:sifr.showGeneratedRust"},
-    {"command": "sifr.explainDiagnostic", "title": "Sifr: Explain Diagnostic", "backend": "lsp:sifr.explainDiagnostic"}
+    {"command": "sifr.showGeneratedRust", "title": "Sifr: Show Generated Rust", "backend": "lsp:sifr.server.showGeneratedRust"},
+    {"command": "sifr.explainDiagnostic", "title": "Sifr: Explain Diagnostic", "backend": "lsp:sifr.server.explainDiagnostic"}
   ],
   "package_scripts": ["lint", "typecheck", "test", "test:extension", "package"],
   "forbidden_extension_behavior": [
