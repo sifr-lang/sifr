@@ -737,6 +737,7 @@ pub(in crate::lower) fn lower_stmt(
                 ctx,
                 has_decorator(func, "blocking_io"),
                 has_decorator(func, "cpu_heavy"),
+                func.is_async,
             );
 
             Some(HirStmt::NestedFunction {
@@ -745,7 +746,7 @@ pub(in crate::lower) fn lower_stmt(
                     params,
                     return_type: inferred_return_type,
                     body,
-                    is_async: false,
+                    is_async: func.is_async,
                     method_kind: MethodKind::Regular,
                     decorators,
                     rust_interop,

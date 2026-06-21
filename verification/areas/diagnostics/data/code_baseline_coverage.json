@@ -1644,6 +1644,19 @@
     },
     {
       "baseline_fixture_id": null,
+      "code": "SIFR-RUST-ASYNC-0001",
+      "deferral": {
+        "issue": "rust-interop-async-rendered-fixtures",
+        "owner": "compiler/package-management",
+        "reason": "covered by crates/sifr_driver/src/build/rust_interop_async_contract_tests.rs::package_rust_interop_async_requires_send_future_by_default until package-level diagnostics fixtures cover Rust async interop contracts",
+        "removal_target": "add package diagnostics fixture for invalid Rust async interop contracts"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
       "code": "SIFR-RUST-CARGO-0001",
       "deferral": {
         "issue": "rust-interop-rendered-fixtures",

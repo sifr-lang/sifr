@@ -1,9 +1,9 @@
 use super::{
-    collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
-    is_operator_dunder, is_protocol_class, lower_stmts, missing_method_param_annotation,
-    resolve_annotation_expr, Expr, FunctionType, HirClass, HirClassKind, HirExpr, HirFunction,
-    HirParam, HirPattern, HirStmt, HirTupleTargetBinding, LowerCtx, MethodKind, ParamConvention,
-    Ranged, Stmt, StmtClassDef, Type,
+    collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
+    has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_stmts,
+    missing_method_param_annotation, resolve_annotation_expr, Expr, FunctionType, HirClass,
+    HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt, HirTupleTargetBinding,
+    LowerCtx, MethodKind, ParamConvention, Ranged, Stmt, StmtClassDef, Type,
 };
 use crate::lower::rust_interop::{collect_rust_interop_declarations, RustInteropOwner};
 /// Second pass: lower class method bodies into `HirClass`.
@@ -69,6 +69,7 @@ pub(in crate::lower) fn lower_class(
                 ctx,
                 false,
                 false,
+                false,
             ),
         });
     }
@@ -120,9 +121,16 @@ pub(in crate::lower) fn lower_class(
 
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+                let previous_async = ctx.current_function_is_async;
+                let previous_async_generator = ctx.current_function_is_async_generator;
                 ctx.current_function_trusts_dynamic_python =
                     has_decorator(func, "trust_python_dynamic");
+                ctx.current_function_is_async = func.is_async;
+                ctx.current_function_is_async_generator =
+                    func.is_async && function_body_contains_yield(&func.body);
                 let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.current_function_is_async = previous_async;
+                ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
@@ -132,7 +140,7 @@ pub(in crate::lower) fn lower_class(
                     params,
                     return_type: return_ty,
                     body,
-                    is_async: false,
+                    is_async: func.is_async,
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop: collect_rust_interop_declarations(
@@ -141,6 +149,7 @@ pub(in crate::lower) fn lower_class(
                         ctx,
                         has_decorator(func, "blocking_io"),
                         has_decorator(func, "cpu_heavy"),
+                        func.is_async,
                     ),
                     type_params: Vec::new(),
                 });
@@ -167,6 +176,7 @@ pub(in crate::lower) fn lower_class(
                 &class_def.decorator_list,
                 RustInteropOwner::Class,
                 ctx,
+                false,
                 false,
                 false,
             ),
@@ -224,9 +234,16 @@ pub(in crate::lower) fn lower_class(
                 );
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+                let previous_async = ctx.current_function_is_async;
+                let previous_async_generator = ctx.current_function_is_async_generator;
                 ctx.current_function_trusts_dynamic_python =
                     has_decorator(func, "trust_python_dynamic");
+                ctx.current_function_is_async = func.is_async;
+                ctx.current_function_is_async_generator =
+                    func.is_async && function_body_contains_yield(&func.body);
                 let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.current_function_is_async = previous_async;
+                ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
@@ -236,7 +253,7 @@ pub(in crate::lower) fn lower_class(
                     params,
                     return_type: return_ty,
                     body,
-                    is_async: false,
+                    is_async: func.is_async,
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop: collect_rust_interop_declarations(
@@ -245,6 +262,7 @@ pub(in crate::lower) fn lower_class(
                         ctx,
                         has_decorator(func, "blocking_io"),
                         has_decorator(func, "cpu_heavy"),
+                        func.is_async,
                     ),
                     type_params: Vec::new(),
                 });
@@ -268,6 +286,7 @@ pub(in crate::lower) fn lower_class(
                 &class_def.decorator_list,
                 RustInteropOwner::Class,
                 ctx,
+                false,
                 false,
                 false,
             ),
@@ -378,9 +397,16 @@ pub(in crate::lower) fn lower_class(
             // Lower method body
             let previous_owner = ctx.current_owner.replace(class_name.clone());
             let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+            let previous_async = ctx.current_function_is_async;
+            let previous_async_generator = ctx.current_function_is_async_generator;
             ctx.current_function_trusts_dynamic_python =
                 has_decorator(func, "trust_python_dynamic");
+            ctx.current_function_is_async = func.is_async;
+            ctx.current_function_is_async_generator =
+                func.is_async && function_body_contains_yield(&func.body);
             let body = lower_stmts(&func.body, &method_ft, ctx);
+            ctx.current_function_is_async = previous_async;
+            ctx.current_function_is_async_generator = previous_async_generator;
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.current_owner = previous_owner;
 
@@ -427,6 +453,7 @@ pub(in crate::lower) fn lower_class(
                     ctx,
                     has_decorator(func, "blocking_io"),
                     has_decorator(func, "cpu_heavy"),
+                    func.is_async,
                 ),
                 type_params: Vec::new(),
             };
@@ -493,6 +520,7 @@ pub(in crate::lower) fn lower_class(
             &class_def.decorator_list,
             RustInteropOwner::Class,
             ctx,
+            false,
             false,
             false,
         ),

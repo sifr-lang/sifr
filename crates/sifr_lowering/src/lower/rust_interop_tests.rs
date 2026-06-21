@@ -29,7 +29,6 @@ fn rust_interop_lowers_function_decorators_into_hir() {
     let module = lower_ok(
         r"
 @rust(bridge.hash.digest, panic=map_error(bridge.hash.map_panic))
-@rust.async(thread_affinity=tokio_current_thread)
 @rust.zero_copy(owner=input, view=bridge.hash.DigestView)
 @rust.view(lifetime=borrowed, mutable=False)
 def digest(input: bytes) -> int:
@@ -38,7 +37,7 @@ def digest(input: bytes) -> int:
     );
 
     let function = &module.functions[0];
-    assert_eq!(function.rust_interop.len(), 4);
+    assert_eq!(function.rust_interop.len(), 3);
     assert_eq!(
         function.rust_interop[0].kind,
         RustInteropDecoratorKind::Function
@@ -51,7 +50,7 @@ def digest(input: bytes) -> int:
             .dotted(),
         "bridge.hash.digest"
     );
-    assert_eq!(function.rust_interop[0].effect, RustInteropEffect::Async);
+    assert_eq!(function.rust_interop[0].effect, RustInteropEffect::Sync);
     assert!(function.rust_interop.iter().any(|declaration| {
         declaration.kind == RustInteropDecoratorKind::ZeroCopy
             && declaration.abi_requirements.zero_copy
@@ -59,6 +58,91 @@ def digest(input: bytes) -> int:
     assert!(function.rust_interop.iter().any(|declaration| {
         declaration.kind == RustInteropDecoratorKind::View && declaration.abi_requirements.view
     }));
+}
+
+#[test]
+fn rust_interop_rejects_async_decorator_on_sync_function() {
+    let errors = lower_errors(
+        r"
+@rust.async(thread_affinity=tokio_current_thread)
+def digest(input: bytes) -> int:
+    return 1
+",
+    );
+
+    assert!(errors
+        .iter()
+        .any(|error| error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT)));
+}
+
+#[test]
+fn rust_interop_lowers_blocking_io_effect_for_sync_rust_function() {
+    let module = lower_ok(
+        r"
+@blocking_io
+@rust(bridge.db.query)
+def query() -> int:
+    return 1
+",
+    );
+
+    assert_eq!(
+        module.functions[0].rust_interop[0].effect,
+        RustInteropEffect::BlockingIo
+    );
+}
+
+#[test]
+fn rust_interop_lowers_async_decorator_on_async_function() {
+    let module = lower_ok(
+        r#"
+@rust(bridge.http.fetch)
+@rust.async(thread_affinity=tokio_current_thread)
+async def fetch(url: str) -> str:
+    await task.sleep(0.0)
+    return "ok"
+"#,
+    );
+
+    let function = &module.functions[0];
+    assert_eq!(function.rust_interop.len(), 2);
+    assert!(function
+        .rust_interop
+        .iter()
+        .all(|declaration| { declaration.effect == RustInteropEffect::Async }));
+    assert!(function.rust_interop.iter().any(|declaration| {
+        declaration.kind == RustInteropDecoratorKind::Function
+            && declaration.abi_requirements.async_boundary
+            && declaration
+                .target
+                .as_ref()
+                .is_some_and(|target| target.dotted() == "bridge.http.fetch")
+    }));
+    assert!(function.rust_interop.iter().any(|declaration| {
+        declaration.kind == RustInteropDecoratorKind::Async
+            && declaration.abi_requirements.async_boundary
+            && declaration.arguments.iter().any(|argument| {
+                argument.name.as_deref() == Some("thread_affinity")
+                    && matches!(&argument.value, RustInteropValue::Symbol(value) if value == "tokio_current_thread")
+            })
+    }));
+}
+
+#[test]
+fn rust_interop_rejects_blocking_classification_on_async_function() {
+    let errors = lower_errors(
+        r"
+@blocking_io
+@rust(bridge.db.query)
+async def query() -> int:
+    await task.sleep(0.0)
+    return 1
+",
+    );
+
+    assert!(errors
+        .iter()
+        .any(|error| error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT)));
 }
 
 #[test]

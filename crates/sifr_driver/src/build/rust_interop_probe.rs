@@ -9,12 +9,20 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(super) enum AsyncThreadAffinity {
+    #[default]
+    None,
+    TokioCurrentThread,
+}
+
 #[derive(Clone)]
 pub(super) struct PendingRustBridgeProbe {
     pub(super) declaration: RustInteropPlanDeclaration,
     pub(super) path: RustTargetPath,
     pub(super) backend: BackendCrateMetadata,
     pub(super) signature: Option<RustBridgeSignatureContract>,
+    pub(super) async_thread_affinity: AsyncThreadAffinity,
 }
 
 pub(super) struct ProbeExecutionFailure {
@@ -70,19 +78,35 @@ pub(super) fn execute_direct_cargo_probe(
         return Ok(());
     }
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let code = if stderr.contains("cannot find")
-        || stderr.contains("failed to resolve")
-        || stderr.contains("unresolved")
-        || stderr.contains("not found")
-    {
-        DiagnosticCode::RUST_RESOLVE_TARGET_ROOT
+    let (code, message_template, args) = if stderr_reports_resolution_failure(&stderr) {
+        (
+            DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
+            "Rust bridge probe failed for `{target}`",
+            vec![("target", canonical_sifr_target_path(&probe.declaration))],
+        )
+    } else if async_future_requires_send(probe) && stderr_reports_non_send_future(&stderr) {
+        (
+            DiagnosticCode::RUST_ASYNC_CONTRACT,
+            "invalid Rust async contract: {reason}",
+            vec![(
+                "reason",
+                format!(
+                    "future returned by `{}` must be Send or declare thread_affinity=tokio_current_thread",
+                    canonical_sifr_target_path(&probe.declaration)
+                ),
+            )],
+        )
     } else {
-        DiagnosticCode::RUST_TYPE_PROBE_FAILURE
+        (
+            DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
+            "Rust bridge probe failed for `{target}`",
+            vec![("target", canonical_sifr_target_path(&probe.declaration))],
+        )
     };
     Err(ProbeExecutionFailure {
         code,
-        message_template: "Rust bridge probe failed for `{target}`",
-        args: vec![("target", canonical_sifr_target_path(&probe.declaration))],
+        message_template,
+        args,
         notes: vec![format!("rustc stderr: {}", stderr.trim())],
     })
 }
@@ -173,7 +197,11 @@ fn signature_probe_source(
         out.push_str(&params);
         out.push_str(") -> Fut,\n    Fut: std::future::Future<Output = ");
         out.push_str(return_type);
-        out.push_str(">,\n{}\nfn __sifr_probe() { __sifr_assert_async_signature(");
+        out.push('>');
+        if async_future_requires_send(probe) {
+            out.push_str(" + Send");
+        }
+        out.push_str(",\n{}\nfn __sifr_probe() { __sifr_assert_async_signature(");
         out.push_str(rust_path);
         out.push_str("); }\n");
     } else {
@@ -215,6 +243,26 @@ fn is_async_probe(probe: &PendingRustBridgeProbe) -> bool {
             .declaration
             .abi_requirements
             .async_boundary
+}
+
+fn async_future_requires_send(probe: &PendingRustBridgeProbe) -> bool {
+    if !is_async_probe(probe) {
+        return false;
+    }
+    probe.async_thread_affinity != AsyncThreadAffinity::TokioCurrentThread
+}
+
+fn stderr_reports_non_send_future(stderr: &str) -> bool {
+    stderr.contains("future cannot be sent")
+        || (stderr.contains("future") && stderr.contains("cannot be sent between threads safely"))
+        || stderr.contains("future is not `Send`")
+}
+
+fn stderr_reports_resolution_failure(stderr: &str) -> bool {
+    stderr.contains("cannot find")
+        || stderr.contains("failed to resolve")
+        || stderr.contains("unresolved")
+        || stderr.contains("not found")
 }
 
 fn opaque_bool_argument(probe: &PendingRustBridgeProbe, name: &str) -> bool {
