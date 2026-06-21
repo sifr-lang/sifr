@@ -1,5 +1,6 @@
 use super::cargo_manifest::generate_dependency_cargo_toml;
 use super::project_codegen::GeneratedBinaryProject;
+use super::rust_interop_bridge_sources::generated_bridge_sources;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
@@ -128,11 +129,23 @@ fn materialize_binary_project_files(
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
-    write_project_file(
-        &src_dir.join("main.rs"),
-        generated_project.main_rs,
-        "main.rs",
-    )?;
+    let bridge_sources = generated_bridge_sources(
+        &generated_project
+            .interop
+            .rust
+            .bridge_contracts
+            .generated_types,
+    );
+    let main_rs = if bridge_sources.is_empty() {
+        generated_project.main_rs
+    } else {
+        format!("pub mod __sifr_bridge;\n{}", generated_project.main_rs)
+    };
+    write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
+
+    for (path, source) in bridge_sources {
+        write_project_file(&src_dir.join(&path), source, &path.display().to_string())?;
+    }
 
     let mut support_modules = generated_project.support_modules;
     let support_module_names: Vec<String> = support_modules.keys().cloned().collect();

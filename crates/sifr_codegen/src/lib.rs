@@ -82,7 +82,14 @@ mod preamble;
 pub use preamble::*;
 mod render;
 pub use render::*;
+mod rust_interop_bridge_contract;
 mod rust_interop_plan;
+pub use rust_interop_bridge_contract::{
+    RustBridgeContractPlan, RustBridgeParamContract, RustBridgeParamConvention,
+    RustBridgeSignatureContract, RustBridgeTypeContract, RustBridgeTypeKind,
+    RustGeneratedBridgeField, RustGeneratedBridgeType, RustGeneratedBridgeTypeKind,
+    RustGeneratedBridgeVariant,
+};
 pub use rust_interop_plan::{
     InteropBuildPlan, RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan,
     RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs, RustInteropOwner,

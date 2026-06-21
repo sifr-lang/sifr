@@ -1,0 +1,358 @@
+use super::project_codegen::GeneratedBinaryProject;
+use super::rust_interop::{
+    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+};
+use crate::diagnostics::RenderedDiagnostic;
+use ruff_text_size::{TextRange, TextSize};
+use sifr_codegen::{
+    InteropBuildPlan, RustBridgeContractPlan, RustBridgeParamContract, RustBridgeParamConvention,
+    RustBridgeSignatureContract, RustBridgeTypeContract, RustBridgeTypeKind, RustInteropOwner,
+    RustInteropPlan, RustInteropPlanDeclaration,
+};
+use sifr_ir::{
+    RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
+    RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,
+};
+use sifr_package::{
+    BackendCrateMetadata, CargoPackageId, ImportRoot, PackageClassification, PackageSourceMap,
+    PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph,
+    SifrPackageId, SifrPackageMetadata, SifrPackageName, TrustPolicy,
+};
+use sifr_stdlib::StdlibFeature;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::path::PathBuf;
+
+#[test]
+fn package_rust_interop_rejects_unsupported_bridge_type_contract() {
+    let generated = base_project_with_contracts(
+        vec![declaration_entry(
+            "bridge.hash",
+            RustInteropDecoratorKind::Function,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "items",
+                RustBridgeParamConvention::Borrow,
+                unsupported_contract(
+                    "set[int]",
+                    "set[T] is not a supported Rust bridge container",
+                ),
+            )],
+            none_contract(),
+        )],
+    );
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "unsupported bridge type must fail before build",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("set[int]"));
+    assert!(diagnostics[0].message.contains("app.hash"));
+}
+
+#[test]
+fn package_rust_interop_direct_probe_checks_signature_shape() {
+    let backend_root = temp_package_root("rust_interop_signature_probe");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub fn hash(input: Vec<u8>) -> Vec<u8> { input }\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "input",
+                RustBridgeParamConvention::Borrow,
+                bytes_contract(),
+            )],
+            bytes_contract(),
+        )],
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "signature probe must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
+}
+
+#[test]
+fn package_rust_interop_direct_probe_accepts_bridge_signature() {
+    let backend_root = temp_package_root("rust_interop_signature_probe_ok");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub fn hash(input: &[u8]) -> Vec<u8> { input.to_vec() }\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "input",
+                RustBridgeParamConvention::Borrow,
+                bytes_contract(),
+            )],
+            bytes_contract(),
+        )],
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("compatible signature should pass probe");
+}
+
+fn base_project_with_contracts(
+    declarations: Vec<RustInteropPlanDeclaration>,
+    signatures: Vec<RustBridgeSignatureContract>,
+) -> GeneratedBinaryProject {
+    GeneratedBinaryProject {
+        main_rs: "fn main() {}\n".to_string(),
+        support_modules: BTreeMap::new(),
+        used_stdlib_modules: HashSet::new(),
+        required_features: HashSet::<StdlibFeature>::new(),
+        interop: InteropBuildPlan {
+            rust: RustInteropPlan {
+                declarations,
+                bridge_contracts: RustBridgeContractPlan {
+                    signatures,
+                    generated_types: Vec::new(),
+                },
+                ..RustInteropPlan::default()
+            },
+        },
+        cache_key_fragment: None,
+        python_runtime: None,
+    }
+}
+
+fn signature_contract(
+    params: Vec<RustBridgeParamContract>,
+    return_type: RustBridgeTypeContract,
+) -> RustBridgeSignatureContract {
+    RustBridgeSignatureContract {
+        canonical_target_path: "app.hash".to_string(),
+        module_name: Some("app".to_string()),
+        owner: RustInteropOwner::Function {
+            name: "hash".to_string(),
+        },
+        params,
+        return_type,
+        span: span(),
+    }
+}
+
+fn param_contract(
+    name: &str,
+    convention: RustBridgeParamConvention,
+    ty: RustBridgeTypeContract,
+) -> RustBridgeParamContract {
+    RustBridgeParamContract {
+        name: name.to_string(),
+        convention,
+        ty,
+    }
+}
+
+fn bytes_contract() -> RustBridgeTypeContract {
+    RustBridgeTypeContract {
+        sifr_type: "bytes".to_string(),
+        rust_borrowed_type: Some("&[u8]".to_string()),
+        rust_owned_type: Some("Vec<u8>".to_string()),
+        rust_return_type: Some("Vec<u8>".to_string()),
+        kind: RustBridgeTypeKind::Bytes,
+        unsupported_reason: None,
+    }
+}
+
+fn none_contract() -> RustBridgeTypeContract {
+    RustBridgeTypeContract {
+        sifr_type: "None".to_string(),
+        rust_borrowed_type: Some("()".to_string()),
+        rust_owned_type: Some("()".to_string()),
+        rust_return_type: Some("()".to_string()),
+        kind: RustBridgeTypeKind::None,
+        unsupported_reason: None,
+    }
+}
+
+fn unsupported_contract(sifr_type: &str, reason: &str) -> RustBridgeTypeContract {
+    RustBridgeTypeContract {
+        sifr_type: sifr_type.to_string(),
+        rust_borrowed_type: None,
+        rust_owned_type: None,
+        rust_return_type: None,
+        kind: RustBridgeTypeKind::Unsupported,
+        unsupported_reason: Some(reason.to_string()),
+    }
+}
+
+fn interop_errors(
+    generated: GeneratedBinaryProject,
+    context: Option<PackageRustInteropContext>,
+    message: &str,
+) -> Vec<RenderedDiagnostic> {
+    match apply_package_rust_interop_metadata(generated, context) {
+        Ok(_) => panic!("{message}"),
+        Err(diagnostics) => diagnostics,
+    }
+}
+
+fn declaration_entry(target: &str, kind: RustInteropDecoratorKind) -> RustInteropPlanDeclaration {
+    RustInteropPlanDeclaration {
+        module_name: Some("app".to_string()),
+        owner: RustInteropOwner::Function {
+            name: "hash".to_string(),
+        },
+        declaration: RustInteropDeclaration {
+            kind,
+            target: Some(RustTargetPath {
+                segments: target.split('.').map(str::to_string).collect(),
+                span: span(),
+            }),
+            arguments: vec![RustInteropArgument {
+                name: Some("trusted_no_panic".to_string()),
+                value: RustInteropValue::Boolean(false),
+                span: span(),
+            }],
+            span: span(),
+            effect: RustInteropEffect::Sync,
+            abi_requirements: RustInteropAbiRequirements::default(),
+        },
+    }
+}
+
+fn package_context(
+    trust: TrustPolicy,
+    backend_crates: Vec<BackendCrateMetadata>,
+) -> PackageRustInteropContext {
+    let package_root = PathBuf::from("/ws/app");
+    let package_id = SifrPackageId("sifr-app@0.1.0#path".to_string());
+    let cargo_package_id = CargoPackageId("path+file:///ws/app#sifr-app@0.1.0".to_string());
+    let package = SifrPackageMetadata {
+        package_id: package_id.clone(),
+        cargo_package_id: cargo_package_id.clone(),
+        cargo_package_name: "sifr-app".to_string(),
+        cargo_version: "0.1.0".to_string(),
+        cargo_source: None,
+        package_root: package_root.clone(),
+        sifr_manifest: package_root.join("sifr.toml"),
+        sifr_name: SifrPackageName("app".to_string()),
+        manifest: SifrManifest {
+            package_name: SifrPackageName("app".to_string()),
+            edition: SifrEdition("2026".to_string()),
+            compiler_requirement: sifr_package::CompilerRequirement(">=0.3,<0.4".to_string()),
+            default_run: None,
+            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
+            exports: vec![ImportRoot("app".to_string())],
+            source_features: BTreeMap::new(),
+            scripts: BTreeMap::new(),
+            dependencies: BTreeMap::new(),
+            dev_dependencies: BTreeMap::new(),
+            trust,
+            python: sifr_package::PythonConfig::default(),
+            rust: RustInteropConfig {
+                bridge_version: Some(1),
+                bridges: Vec::new(),
+                direct_crate_bindings: true,
+            },
+            production_schema: false,
+        },
+        aliases: BTreeMap::new(),
+    };
+    PackageRustInteropContext {
+        package_id: package_id.clone(),
+        graph: SifrPackageGraph {
+            packages: BTreeMap::from([(package_id.clone(), package)]),
+            cargo_edges: BTreeMap::new(),
+            direct_dependency_scopes: BTreeMap::new(),
+            backend_crates: BTreeMap::from([(package_id.clone(), backend_crates)]),
+            classifications: BTreeMap::from([(
+                cargo_package_id,
+                PackageClassification::SifrSource(package_id.clone()),
+            )]),
+        },
+        source_map: PackageSourceMap::default(),
+        module_packages: HashMap::from([("app".to_string(), package_id)]),
+        module_sources: HashMap::from([(
+            "app".to_string(),
+            RustInteropModuleSource {
+                source: "@rust(native.hash)\ndef hash() -> None:\n    pass\n".to_string(),
+                display_path: "/ws/app/sifr/app.sifr".to_string(),
+            },
+        )]),
+    }
+}
+
+fn backend_with_manifest(name: &str, cargo_manifest_path: PathBuf) -> BackendCrateMetadata {
+    BackendCrateMetadata {
+        cargo_package_id: CargoPackageId(format!("path+file:///ws/{name}#{name}@0.1.0")),
+        dependency_name: name.to_string(),
+        dependency_kind: None,
+        cargo_package_name: name.to_string(),
+        cargo_version: "0.1.0".to_string(),
+        cargo_source: None,
+        cargo_manifest_path,
+        links: None,
+        has_build_script: false,
+        has_proc_macro: false,
+    }
+}
+
+fn set_bridge_roots(context: &mut PackageRustInteropContext, bridges: Vec<PathBuf>) {
+    let package = context
+        .graph
+        .packages
+        .get_mut(&context.package_id)
+        .expect("package exists");
+    package.manifest.rust.bridges = bridges;
+}
+
+fn temp_package_root(name: &str) -> PathBuf {
+    let root = std::env::temp_dir().join(format!("sifr_{name}_{}", std::process::id()));
+    if root.exists() {
+        std::fs::remove_dir_all(&root).expect("remove stale temp root");
+    }
+    root
+}
+
+fn span() -> TextRange {
+    TextRange::new(TextSize::from(0), TextSize::from(18))
+}
