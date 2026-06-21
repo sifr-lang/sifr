@@ -229,6 +229,34 @@ fn analysis_snapshot_carries_workspace_state_and_query_metadata() {
 }
 
 #[test]
+fn completion_query_includes_rust_interop_policy_candidates() {
+    let source = "@rust.callback(\n    \n)\ndef main():\n    return 1\n";
+    let mut host =
+        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let file = host.files()[0];
+    let completions = host
+        .completion(
+            file,
+            &TextPosition {
+                line: 1,
+                character: 4,
+            },
+        )
+        .expect("completion should query")
+        .into_value();
+    let labels = completions
+        .items
+        .into_iter()
+        .map(|item| item.label)
+        .collect::<Vec<_>>();
+
+    assert!(labels.contains(&"backpressure".to_string()));
+    assert!(labels.contains(&"overflow".to_string()));
+    assert!(labels.contains(&"shutdown".to_string()));
+    assert!(!labels.contains(&"lifetime".to_string()));
+}
+
+#[test]
 fn project_symbol_index_is_stable_for_workspace_queries() {
     let dir = std::env::temp_dir().join(format!(
         "sifr_analysis_project_{}_{}",

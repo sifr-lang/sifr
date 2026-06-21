@@ -128,7 +128,7 @@ Knowing where to put configuration prevents confusion and keeps Sifr's tooling w
 - Source root (`[source].roots`)
 - Formatter and lint configuration
 - Named scripts
-- Native trust policy for backend Rust crates
+- Rust interop bridge metadata and native trust policy
 - Root application Python environment selection and Python trust policy
 
 **Put in `Cargo.toml`:**
@@ -148,6 +148,28 @@ The Cargo metadata hook is the bridge between the two files. Sifr reads `cargo m
 manifest = "sifr.toml"
 # end sifr-managed
 ```
+
+## `[rust]` and Rust interop trust policy
+
+Rust-backed packages declare Sifr-owned bridge projection metadata in `[rust]` and execution trust evidence in `[trust]`.
+
+```toml
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+
+[trust]
+rust-build-scripts = []
+rust-proc-macros = []
+native-links = []
+unsafe-rust-bridges = []
+rust-no-panic = ["crc32fast.hash"]
+rust-panic-abort = []
+```
+
+`bridge-version` pins the generated bridge module contract. `bridges` lists package-local Rust bridge roots that Sifr may reference through the `bridge` decorator root. Files such as `src/bridges/tokenizer.rs` are user-owned; Sifr-managed projection files are checked with `sifr repair --check` and regenerated with `sifr repair`.
+
+See [Rust Interop](/rust-interop) for direct bindings, local bridges, shared bridge crates, opaque handles, async, zero-copy, callbacks, and the `sifr bridge check` workflow.
 
 ## `[python]` and Python trust policy
 

@@ -71,7 +71,8 @@
               "installation",
               "quickstart",
               "from-python",
-              "python-interop"
+              "python-interop",
+              "rust-interop"
             ]
           },
           {

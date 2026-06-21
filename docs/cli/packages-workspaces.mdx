@@ -12,6 +12,7 @@ Sifr's package commands are Cargo-compatible where that matters, but they preser
 | --- | --- |
 | `sifr init [PATH]` | Create a new Sifr package in `PATH` or the current directory. |
 | `sifr fetch` | Fetch package dependencies without building. |
+| `sifr bridge check` | Validate Rust bridge projections and interop probes. |
 | `sifr repair` | Repair Sifr-managed Cargo projection drift. |
 | `sifr tree` | Print the package dependency tree with Cargo-compatible tree options. |
 | `sifr package` | Assemble and verify a package archive. |
@@ -34,11 +35,14 @@ sifr init math-lib --lib --name math-lib
 ## Check or Repair Projection Drift
 
 ```bash
+sifr bridge check
 sifr repair --check
 sifr repair
 ```
 
-`--check` reports drift without writing. Without `--check`, Sifr repairs the Sifr-managed Cargo projection files.
+`sifr bridge check` runs the same package check path as `sifr check`, including Rust decorator parsing, target resolution, bridge type contracts, trust policy, and probe diagnostics. Use it while authoring `@rust(...)` declarations or `src/bridges/*.rs` files.
+
+`sifr repair --check` reports drift without writing. `sifr repair` repairs Sifr-managed Cargo projection files and leaves user-owned local bridge files untouched.
 
 ## Select Workspace Packages
 

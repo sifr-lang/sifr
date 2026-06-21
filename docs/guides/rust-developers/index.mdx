@@ -19,6 +19,9 @@ If you know Rust, Sifr's safety model will feel familiar, but the source languag
   <Card title="Check and Emit" icon="file-code" href="/cli/check-emit">
     Inspect generated Rust with `sifr emit`.
   </Card>
+  <Card title="Rust Interop" icon="plug-zap" href="/rust-interop">
+    Expose Rust crates and bridge modules through checked Sifr declarations.
+  </Card>
   <Card title="Build and Run" icon="terminal" href="/cli/build-run">
     Compile Sifr into native binaries.
   </Card>
@@ -31,7 +34,8 @@ If you know Rust, Sifr's safety model will feel familiar, but the source languag
 3. Learn source-level ownership: [Ownership and Mutability](/language/ownership).
 4. Review typed failures: [Error Handling](/language/error-handling).
 5. Understand structured async: [Concurrency Overview](/language/concurrency).
-6. Ship a binary: [Build and Run](/cli/build-run).
+6. Expose Rust-backed APIs: [Rust Interop](/rust-interop).
+7. Ship a binary: [Build and Run](/cli/build-run).
 
 <Note>
 Sifr is not a Rust macro language. The generated Rust is an implementation target you can inspect, while the Sifr source model remains the language contract.

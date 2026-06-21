@@ -1,0 +1,207 @@
+---
+title: "Rust Interop"
+sidebarTitle: "Rust Interop"
+description: "Expose Rust crates and bridge modules as checked Sifr declarations through Cargo-backed Rust interop."
+---
+
+Rust interop lets a Sifr package expose Rust-backed declarations while keeping the same compile-time contracts as ordinary Sifr code. Sifr resolves targets through Cargo metadata, validates bridge-compatible signatures before final build, and reports Rust interop failures as `SIFR-RUST-*` diagnostics.
+
+Rust interop is source-level Cargo integration. It is not Rust ABI loading, `dlopen`, or a C FFI layer.
+
+## Package Setup
+
+Declare Rust dependencies in `Cargo.toml` and Sifr interop policy in `sifr.toml`:
+
+```toml Cargo.toml
+[dependencies]
+crc32fast = "1"
+blake3 = "1"
+reqwest = { version = "0.12", default-features = false }
+```
+
+```toml sifr.toml
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+
+[trust]
+rust-build-scripts = []
+rust-proc-macros = []
+native-links = []
+unsafe-rust-bridges = []
+rust-no-panic = ["crc32fast.hash"]
+rust-panic-abort = []
+```
+
+Use `sifr bridge check` for Rust interop feedback. It uses the same package check path as `sifr check`, so decorator parsing, target resolution, bridge contracts, trust policy, and probe diagnostics match the compiler.
+
+```bash
+sifr bridge check
+sifr bridge check --workspace --locked
+sifr repair --check
+sifr repair
+```
+
+`sifr repair --check` reports drift in Sifr-managed Cargo projection files. `sifr repair` regenerates only Sifr-owned projection metadata and does not overwrite user-authored bridge files under `src/bridges`.
+
+## Direct Bindings
+
+Use `@rust(...)` when a public Rust function has a bridge-compatible signature. The target is a dotted path, not a string.
+
+```sifr
+@rust(crc32fast.hash, panic=trusted_no_panic)
+def crc32(data: bytes) -> uint32: ...
+```
+
+```sifr
+class HashError(Error):
+    message: str
+
+@rust(blake3.hash, panic=map_error(bridge.hash.map_panic))
+def blake3_hash(data: bytes) -> Result[bytes, HashError | RustPanicError]: ...
+```
+
+Direct binding is for compatible Rust signatures. If a crate exposes lifetimes, generics, borrowed returns, trait objects, raw pointers, closures, `unsafe fn`, or another unsupported shape, write a bridge.
+
+## Local Bridges
+
+Local bridges adapt Rust APIs that are not directly bridge-compatible. The Sifr target root `bridge` resolves to user-authored Rust modules under `src/bridges`.
+
+```sifr
+@rust.opaque(type=bridge.tokenizer.Tokenizer, close=close, send=True, sync=False)
+class Tokenizer:
+    @rust(Self.encode, panic=map_error(bridge.tokenizer.map_panic))
+    def encode(self, text: str) -> Result[list[uint32], TokenizerError | RustPanicError]: ...
+
+    @rust(bridge.tokenizer.close, panic=map_error(bridge.tokenizer.map_panic))
+    def close(own self) -> Result[None, TokenizerError | RustPanicError]: ...
+```
+
+```rust src/bridges/tokenizer.rs
+pub struct Tokenizer {
+    inner: tokenizer_backend::Tokenizer,
+}
+
+pub fn close(_tokenizer: Tokenizer) -> Result<(), TokenizerErrorBridge> {
+    Ok(())
+}
+```
+
+Package-local bridges may import generated bridge types from `crate::__sifr_bridge::<module>`. Shared bridge crates must not import those package-specific generated modules; they expose stable Rust types or `sifr_runtime::interop` helper types instead.
+
+## Async HTTP
+
+Async Rust interop must be declared on an `async def`. By default, returned futures must be `Send`; add `@rust.async(thread_affinity=tokio_current_thread)` only for explicitly current-runtime futures.
+
+```sifr
+class HttpError(Error):
+    message: str
+
+@rust(bridge.http.fetch_text, panic=map_error(bridge.http.map_panic))
+async def fetch_text(url: str) -> Result[str, HttpError | RustPanicError]: ...
+```
+
+Blocking or CPU-heavy Rust calls are never hidden inside async scheduler paths. Declare them explicitly with the existing Sifr blocking or CPU-heavy annotations and call them through the appropriate offload workflow.
+
+## Zero-Copy And Views
+
+Zero-copy declarations must make owner, lifetime, mutability, and view metadata explicit. Sifr rejects silent copy fallback.
+
+```sifr
+@rust.zero_copy(owner=input, view=sifr_arrow_bridge.record_batch.RecordBatchView)
+@rust.view(
+    owner=input,
+    lifetime=owner,
+    mutability=immutable,
+    send=True,
+    sync=True,
+    data=arrow_record_batch,
+    schema=sifr_arrow_bridge.schema.RecordBatch,
+    ownership=borrowed,
+)
+@rust(sifr_arrow_bridge.record_batch_from_bytes, panic=map_error(sifr_arrow_bridge.panic.map))
+def arrow_batch(input: bytes) -> Result[ArrowRecordBatch, ArrowError | RustPanicError]: ...
+```
+
+```sifr
+@rust.zero_copy(owner=input, view=sifr_tensor_bridge.dlpack.DlpackView)
+@rust.view(
+    owner=input,
+    lifetime=owner,
+    mutability=immutable,
+    send=True,
+    sync=True,
+    data=dlpack,
+    dtype=f32,
+    rank=2,
+    shape=[2, 3],
+    layout=strided,
+    strides=[3, 1],
+    device=cpu,
+    ownership=transfer,
+    protocol=sifr_tensor_bridge.dlpack.Capsule,
+)
+@rust(sifr_tensor_bridge.dlpack_from_bytes, panic=map_error(sifr_tensor_bridge.panic.map))
+def dlpack_tensor(own input: bytes) -> Result[Tensor, TensorError | RustPanicError]: ...
+```
+
+Returned borrowed views cannot outlive their owner, mutable views require exclusive ownership, and async functions cannot suspend while holding a borrowed Rust view.
+
+## Callbacks
+
+Backpressure, overflow, and shutdown behavior must be visible in callback registration declarations. Thread-safety is part of the callback type and the explicit `@rust.callback(...)` contract.
+
+```sifr
+@rust.callback(
+    backpressure=bounded(1024),
+    overflow=error,
+    shutdown=drain,
+)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(handler: ThreadsafeCallback[[Event], Result[None, EventError]]) -> Result[Subscription, EventError | RustPanicError]: ...
+```
+
+Sifr rejects callback contracts that permit hidden storage, unmanaged thread entry, missing shutdown behavior, or captures that cannot cross the declared thread boundary.
+
+## Diagnostics
+
+Rust interop diagnostics are grouped by contract family:
+
+| Family | Covers |
+| --- | --- |
+| [`SIFR-RUST-CONFIG-*`](/diagnostics/error-codes) | Malformed decorators, invalid policy values, and unsupported decorator shapes. |
+| [`SIFR-RUST-RESOLVE-*`](/diagnostics/error-codes) | Unresolved dependency roots, bridge modules, Rust items, or `Self` targets. |
+| [`SIFR-RUST-TRUST-*`](/diagnostics/error-codes) | Missing build-script, proc-macro, native-link, unsafe bridge, no-panic, or panic-abort trust evidence. |
+| [`SIFR-RUST-TYPE-*`](/diagnostics/error-codes) | Bridge signature mismatches and unsupported Rust/Sifr type mappings. |
+| [`SIFR-RUST-HANDLE-*`](/diagnostics/error-codes) | Opaque handle ownership, close, clone, thread, and poisoning contracts. |
+| [`SIFR-RUST-ASYNC-*`](/diagnostics/error-codes) | Async function, future `Send`, thread-affinity, blocking, and CPU-heavy violations. |
+| [`SIFR-RUST-ZC-*`](/diagnostics/error-codes) | Zero-copy owner, lifetime, mutability, view, and copy-fallback violations. |
+| [`SIFR-RUST-CB-*`](/diagnostics/error-codes) | Callback lifetime, threading, backpressure, overflow, and shutdown violations. |
+| [`SIFR-RUST-PANIC-*`](/diagnostics/error-codes) | Panic policy, panic strategy, and poisoned handle contract violations. |
+| [`SIFR-RUST-CARGO-*`](/diagnostics/error-codes) | Missing Cargo context, metadata, lock, profile, and feature consistency failures. |
+
+Run `sifr --explain SIFR-RUST-CB-0001` for a stable explanation of any active code.
+
+## Rejected Designs
+
+These forms are invalid and produce diagnostics:
+
+```sifr
+@rust("crc32fast::hash")
+def bad_string_target(data: bytes) -> uint32: ...
+```
+
+```sifr
+extern rust crc32fast.hash
+```
+
+```sifr
+from rust import crc32fast
+```
+
+```sifr
+@rust(crate="crc32fast", path="hash")
+def bad_legacy_shape(data: bytes) -> uint32: ...
+```
+
+Rust interop never falls back from zero-copy to copying, never creates a hidden Tokio runtime, and never lets a Rust panic unwind through Sifr user code in recoverable builds.

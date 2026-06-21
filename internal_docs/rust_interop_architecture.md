@@ -848,17 +848,18 @@ The initial verification scaffold reserves the first code in every family:
 
 ## Tooling
 
-LSP support is staged:
+LSP support is staged and must use the same analysis/compiler facts that back `sifr check`:
 
-1. Resolve decorator roots from Sifr package metadata and Cargo metadata.
-2. Parse package-local bridge module names and exported functions for completions.
-3. Integrate rust-analyzer metadata for richer signatures and go-to-definition.
+1. Complete canonical Rust interop decorator dotted paths and policy keys (`@rust`, `@rust.async`, `@rust.opaque`, `@rust.zero_copy`, `@rust.view`, `@rust.callback`, and their policy arguments).
+2. Resolve decorator roots from Sifr package metadata and Cargo metadata.
+3. Parse package-local bridge module names and exported functions for completions.
+4. Integrate rust-analyzer metadata for richer signatures and go-to-definition.
 
 Completion must prefer valid dotted paths. Invalid string-style Rust targets are rejected instead of tolerated.
 
 `sifr check` is the source of truth for Rust-backed packages. Plain `cargo check` on a source package may require prior Sifr projection generation because local bridge files can import generated `crate::__sifr_bridge` modules. Tooling must provide:
 
-- `sifr bridge check` for bridge projection and probe validation,
+- `sifr bridge check` for bridge projection and probe validation through the same package check path,
 - `sifr repair --check` for detecting missing or stale managed projection files,
 - `sifr repair` for regenerating Sifr-managed projection files without touching user-owned bridge files.
 

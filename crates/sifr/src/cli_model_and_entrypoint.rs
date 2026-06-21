@@ -1,3 +1,4 @@
+pub(crate) use super::bridge_cli::BridgeCommands;
 use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
 use super::diagnostic_rendering_and_run::{
     cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run_with_options, cmd_tree, cmd_vendor,
@@ -127,6 +128,11 @@ pub(crate) enum Commands {
         /// Check projection drift without writing
         #[arg(long)]
         check: bool,
+    },
+    /// Validate Rust bridge projections and interop probes for a package
+    Bridge {
+        #[command(subcommand)]
+        command: BridgeCommands,
     },
     /// Type-check a .sifr file without compiling
     Check {
@@ -412,6 +418,29 @@ fn run_cli(cli: Cli) -> i32 {
             force,
         } => cmd_init(&path, lib, bin, name.as_deref(), force, diagnostic_format),
         Commands::Repair { check } => cmd_repair(check, diagnostic_format),
+        Commands::Bridge { command } => match command {
+            BridgeCommands::Check {
+                workspace,
+                packages,
+                exclude,
+                locked,
+                offline,
+                frozen,
+            } => {
+                let selection = sifr_package::CargoPackageSelection {
+                    workspace,
+                    packages,
+                    excludes: exclude,
+                };
+                cmd_check(
+                    None,
+                    None,
+                    &selection,
+                    lock_mode_from_flags(locked, offline, frozen),
+                    diagnostic_format,
+                )
+            }
+        },
         Commands::Check {
             path,
             workspace,

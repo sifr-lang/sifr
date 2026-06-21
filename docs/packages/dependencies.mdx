@@ -87,11 +87,13 @@ A pure Sifr package contains no non-trivial Rust code — all behavior is expres
 
 Sifr validates this marker and rejects any package that contains non-trivial Rust in `src/lib.rs` but does not declare Rust-backed behavior. Do not add Rust logic to `lib.rs` in a pure Sifr package.
 
-## Trust policy for backend Rust crates
+## Trust policy for Rust interop
 
-Some Sifr packages interoperate with Rust crates at the backend level. Sifr enforces a trust policy that controls which Rust crates a package is permitted to call. This policy is configured in `sifr.toml` and validated during `sifr package` and `sifr publish`.
+Some Sifr packages expose Rust crates or local bridge modules through `@rust(...)` declarations. Sifr enforces trust policy for build scripts, proc macros, native links, unsafe local bridge files, no-panic assertions, and panic-abort opt-ins. This policy is configured in `sifr.toml` and validated by `sifr bridge check`, `sifr check`, `sifr package`, and `sifr publish`.
 
-Packages that exceed their declared trust boundary are rejected at publish time with a backend trust violation error.
+Packages that exceed their declared trust boundary are rejected with `SIFR-RUST-TRUST-*` diagnostics before the final Rust-backed package build is accepted.
+
+See [Rust Interop](/rust-interop) for direct bindings, local bridges, shared bridge crates, opaque handles, async, zero-copy, callbacks, and trust examples.
 
 <Warning>
 Sifr wraps Cargo process failures in diagnostic code `SIFR-PACKAGE-0101`. If a dependency fetch, tree command, or other Cargo-delegated operation fails, run `sifr --explain SIFR-PACKAGE-0101` for structured diagnostic help. The explainer does not perform any package operations — it is safe to run at any time.

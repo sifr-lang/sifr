@@ -12,6 +12,7 @@
 //!   sifr lsp --stdio          Run the native Language Server Protocol server
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, dead_code))]
 
+mod bridge_cli;
 mod cli_model_and_entrypoint;
 pub(crate) use cli_model_and_entrypoint::main;
 mod build_output;
@@ -26,6 +27,8 @@ mod self_update_runner;
 mod trace_cli;
 mod workspace_run_selection;
 
+#[cfg(test)]
+mod bridge_cli_tests;
 #[cfg(test)]
 mod diagnostics_and_packages_tests;
 #[cfg(test)]

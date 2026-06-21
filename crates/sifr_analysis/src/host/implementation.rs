@@ -1,5 +1,7 @@
 use super::text_edits::{fixed_source_edits, full_range, ranges_overlap, source_edit_to_text_edit};
-use crate::completion::{rank_completion_candidates, CompletionCandidate};
+use crate::completion::{
+    rank_completion_candidates, rust_interop_completion_candidates, CompletionCandidate,
+};
 use crate::editor::{line_end_insert_range, EditorFacts, EditorToken};
 use crate::queries::{
     CodeAction, CodeActionContext, CodeActionData, CompletionItem, CompletionItems,
@@ -166,12 +168,12 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<CompletionItems> {
-        let query = self
-            .editor_facts(file)?
+        let facts = self.editor_facts(file)?;
+        let query = facts
             .identifier_at_position(position)
             .map(|token| token.text.clone())
             .unwrap_or_default();
-        let candidates = self
+        let mut candidates: Vec<CompletionCandidate> = self
             .symbol_index()?
             .completion_symbols("")
             .into_iter()
@@ -181,6 +183,7 @@ impl AnalysisHost {
                 detail: symbol.container_name,
             })
             .collect();
+        candidates.extend(rust_interop_completion_candidates(&facts.source, position));
         let ranked = rank_completion_candidates(&query, candidates);
         let items = ranked
             .candidates
