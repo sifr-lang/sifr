@@ -93,9 +93,9 @@
       "tier": 2,
       "capability": "opaque Rust handle basics",
       "required_crates": [],
-      "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "owned_handle_method_and_close", "status": "planned"},
-      "negative_evidence": {"id": "use_after_close_rejected", "status": "planned"}
+      "execution_kind": "cargo-probe",
+      "positive_evidence": {"id": "declared_send_sync_copy_handle", "status": "passing"},
+      "negative_evidence": {"id": "unsatisfied_send_or_copy_rejected", "status": "passing"}
     },
     {
       "id": "opaque_resource_matrix",
@@ -118,8 +118,8 @@
       "capability": "closed and poisoned handle state transitions",
       "required_crates": [],
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "closed_handle_error_surface", "status": "planned"},
-      "negative_evidence": {"id": "double_close_and_poisoned_access", "status": "planned"}
+      "positive_evidence": {"id": "closed_handle_error_surface", "status": "passing"},
+      "negative_evidence": {"id": "double_close_and_poisoned_access", "status": "passing"}
     },
     {
       "id": "bridge_version_mismatch",

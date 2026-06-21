@@ -147,6 +147,8 @@ Status: implemented in [PR #2707](https://github.com/sifr-lang/sifr/pull/2707); 
 
 ### milestone_39_6: Opaque Rust Handles and Resource Cleanup
 
+Status: implemented locally on branch `phase39-rust-interop-m39-6`; focused driver/runtime validation covers opaque contract parsing, Send/Sync/Copy probes, explicit close/aclose contract diagnostics, and runtime closed/poisoned handle transitions. Full ecosystem resource wrappers remain tracked by `opaque_resource_matrix`.
+
 - Scope:
   - Implement `@rust.opaque(...)` classes with ownership, borrowing, clone, close, `Send`, `Sync`, and thread-affinity metadata.
   - Generate handle wrappers that prevent use-after-close and double-close, enforce closed/poisoned state transitions, use private generated-glue tokens for state mutation, use `PoisonOnPanic` guards for owned handles, and expose only generated-safe accessors.

@@ -9,6 +9,8 @@ use super::rust_interop_probe::{execute_direct_cargo_probe, PendingRustBridgePro
 use super::rust_interop_trust::{build_env_trust_entries, panic_policy};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::ParsedProjectModule;
+use opaque_contract::OpaqueContract;
+use opaque_validation::opaque_probe_obligations;
 use ruff_text_size::TextRange;
 use sifr_codegen::{
     RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan, RustBridgeSignatureContract,
@@ -28,6 +30,10 @@ use std::path::Path;
 
 #[path = "rust_interop/direct_panic_policy.rs"]
 mod direct_panic_policy;
+#[path = "rust_interop/opaque_contract.rs"]
+mod opaque_contract;
+#[path = "rust_interop/opaque_validation.rs"]
+mod opaque_validation;
 
 #[derive(Clone, Debug)]
 pub(super) struct PackageRustInteropContext {
@@ -83,6 +89,7 @@ struct RustInteropResolver<'a> {
     probes: Vec<RustBridgeProbe>,
     pending_direct_probes: Vec<PendingRustBridgeProbe>,
     signature_contracts: HashMap<String, RustBridgeSignatureContract>,
+    opaque_contracts: HashMap<String, OpaqueContract>,
 }
 
 impl<'a> RustInteropResolver<'a> {
@@ -97,6 +104,7 @@ impl<'a> RustInteropResolver<'a> {
             probes: Vec::new(),
             pending_direct_probes: Vec::new(),
             signature_contracts: HashMap::new(),
+            opaque_contracts: HashMap::new(),
         }
     }
 
@@ -117,6 +125,7 @@ impl<'a> RustInteropResolver<'a> {
             self.resolve_declaration(&declaration);
         }
 
+        self.validate_opaque_close_contracts(&generated.interop.rust.declarations);
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));
         }
@@ -180,6 +189,11 @@ impl<'a> RustInteropResolver<'a> {
                 return;
             }
             self.push_generated_bridge_module(declaration, package);
+        }
+        if declaration.declaration.kind == RustInteropDecoratorKind::Opaque
+            && !self.validate_opaque_declaration(declaration)
+        {
+            return;
         }
 
         for path in declaration_paths(&declaration.declaration) {
@@ -529,13 +543,15 @@ impl<'a> RustInteropResolver<'a> {
             );
             return;
         };
+        let (requires_send, requires_sync) =
+            opaque_probe_obligations(declaration, &self.opaque_contracts);
         self.probes.push(RustBridgeProbe {
             canonical_target_path: canonical_sifr_target_path(declaration),
             module_name: declaration.module_name.clone(),
             owner: declaration.owner.clone(),
             kind,
-            requires_send: declaration.declaration.abi_requirements.async_boundary,
-            requires_sync: declaration.declaration.abi_requirements.view,
+            requires_send,
+            requires_sync,
             span: declaration.declaration.span,
         });
     }

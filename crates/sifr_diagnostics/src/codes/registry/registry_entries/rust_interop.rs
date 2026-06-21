@@ -49,6 +49,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["target"]
     ),
     active_entry!(
+        "SIFR-RUST-HANDLE-0001",
+        "RUST-HANDLE",
+        "Rust opaque handle contract is invalid.",
+        Severity::Error,
+        "crates/sifr_driver/src/build/rust_interop_contract_tests.rs::package_rust_interop_opaque_close_policy_requires_close_method_contract",
+        "opaque Rust handle {target} requires {method} cleanup method",
+        "sifr_driver::build::rust_interop",
+        [arg!("target"), arg!("method")],
+        ["target", "method"]
+    ),
+    active_entry!(
         "SIFR-RUST-CARGO-0001",
         "RUST-CARGO",
         "Rust interop Cargo metadata is unavailable or inconsistent.",

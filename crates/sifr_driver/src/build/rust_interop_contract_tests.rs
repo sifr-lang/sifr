@@ -344,6 +344,155 @@ fn package_rust_interop_direct_probe_accepts_mutable_borrow_signature() {
         .expect("compatible mutable borrow signature should pass probe");
 }
 
+#[test]
+fn package_rust_interop_opaque_probe_accepts_declared_send_sync_copy() {
+    let backend_root = temp_package_root("rust_interop_opaque_send_sync_copy");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "#[derive(Clone, Copy)]\npub struct Tokenizer(pub u64);\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "native.Tokenizer"),
+            bool_argument("send", true),
+            bool_argument("sync", true),
+            symbol_argument("clone", "copy"),
+        ])],
+        Vec::new(),
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("opaque Send + Sync + Copy type should pass probe");
+    let probe = &generated.interop.rust.probe_plan.probes[0];
+    assert_eq!(probe.kind, sifr_codegen::RustBridgeProbeKind::OpaqueHandle);
+    assert!(probe.requires_send);
+    assert!(probe.requires_sync);
+}
+
+#[test]
+fn package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation() {
+    let backend_root = temp_package_root("rust_interop_opaque_not_send");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub struct Tokenizer(pub std::rc::Rc<()>);\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "native.Tokenizer"),
+            bool_argument("send", true),
+        ])],
+        Vec::new(),
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "Send probe must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
+}
+
+#[test]
+fn package_rust_interop_opaque_probe_rejects_unsatisfied_copy_clone_policy() {
+    let backend_root = temp_package_root("rust_interop_opaque_not_copy");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "#[derive(Clone)]\npub struct Tokenizer(pub String);\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "native.Tokenizer"),
+            symbol_argument("clone", "copy"),
+        ])],
+        Vec::new(),
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "Copy probe must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
+}
+
+#[test]
+fn package_rust_interop_opaque_rejects_unknown_contract_key() {
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "native.Tokenizer"),
+            symbol_argument("lifetime", "static"),
+        ])],
+        Vec::new(),
+    );
+    let context = package_context(TrustPolicy::default(), Vec::new());
+
+    let diagnostics = interop_errors(generated, Some(context), "unknown opaque key must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CONFIG-0001");
+    assert!(diagnostics[0].message.contains("unsupported `@rust.opaque"));
+}
+
+#[test]
+fn package_rust_interop_opaque_close_policy_requires_close_method_contract() {
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "bridge.resources.Connection"),
+            symbol_argument("close", "close"),
+        ])],
+        Vec::new(),
+    );
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(generated, Some(context), "missing close method must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-HANDLE-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("requires `close` cleanup method"));
+}
+
 fn base_project_with_contracts(
     declarations: Vec<RustInteropPlanDeclaration>,
     signatures: Vec<RustBridgeSignatureContract>,
@@ -488,6 +637,28 @@ fn trusted_no_panic_declaration_entry(
     )
 }
 
+fn opaque_class_declaration_entry(
+    arguments: Vec<RustInteropArgument>,
+) -> RustInteropPlanDeclaration {
+    RustInteropPlanDeclaration {
+        module_name: Some("app".to_string()),
+        owner: RustInteropOwner::Class {
+            name: "Tokenizer".to_string(),
+        },
+        declaration: RustInteropDeclaration {
+            kind: RustInteropDecoratorKind::Opaque,
+            target: None,
+            arguments,
+            span: span(),
+            effect: RustInteropEffect::Sync,
+            abi_requirements: RustInteropAbiRequirements {
+                opaque_handle: true,
+                ..RustInteropAbiRequirements::default()
+            },
+        },
+    }
+}
+
 fn declaration_entry_with_arguments(
     target: &str,
     kind: RustInteropDecoratorKind,
@@ -509,6 +680,33 @@ fn declaration_entry_with_arguments(
             effect: RustInteropEffect::Sync,
             abi_requirements: RustInteropAbiRequirements::default(),
         },
+    }
+}
+
+fn target_argument(name: &str, target: &str) -> RustInteropArgument {
+    RustInteropArgument {
+        name: Some(name.to_string()),
+        value: RustInteropValue::TargetPath(RustTargetPath {
+            segments: target.split('.').map(str::to_string).collect(),
+            span: span(),
+        }),
+        span: span(),
+    }
+}
+
+fn bool_argument(name: &str, value: bool) -> RustInteropArgument {
+    RustInteropArgument {
+        name: Some(name.to_string()),
+        value: RustInteropValue::Boolean(value),
+        span: span(),
+    }
+}
+
+fn symbol_argument(name: &str, value: &str) -> RustInteropArgument {
+    RustInteropArgument {
+        name: Some(name.to_string()),
+        value: RustInteropValue::Symbol(value.to_string()),
+        span: span(),
     }
 }
 
