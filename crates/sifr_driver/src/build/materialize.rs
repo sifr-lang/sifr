@@ -3,6 +3,7 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
+use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_stdlib::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet};
@@ -82,12 +83,19 @@ fn materialize_binary_project_at_path(
         .python_runtime
         .as_ref()
         .map(|runtime| runtime.interpreter().to_path_buf());
+    let validate_native_links = should_validate_native_link_evidence(&generated_project);
+    let trusted_native_links = trusted_native_links(&generated_project);
     let materialize_start = std::time::Instant::now();
     materialize_binary_project_files(project_path, project_name, generated_project)?;
     let materialize_elapsed = materialize_start.elapsed();
 
     let cargo_start = std::time::Instant::now();
-    run_cargo_build(project_path, python_interpreter.as_deref())?;
+    run_cargo_build(
+        project_path,
+        python_interpreter.as_deref(),
+        validate_native_links,
+        &trusted_native_links,
+    )?;
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
@@ -170,10 +178,17 @@ fn materialize_binary_project_files(
 fn run_cargo_build(
     project_path: &Path,
     python_interpreter: Option<&Path>,
+    validate_native_links: bool,
+    trusted_native_links: &BTreeSet<String>,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let mut command = Command::new("cargo");
     command
-        .args(["build", "--release", "--quiet"])
+        .args([
+            "build",
+            "--release",
+            "--quiet",
+            "--message-format=json-render-diagnostics",
+        ])
         .current_dir(project_path);
     if let Some(python_interpreter) = python_interpreter {
         command.env("PYO3_PYTHON", python_interpreter);
@@ -184,6 +199,10 @@ fn run_cargo_build(
         ))]
     })?;
 
+    if validate_native_links {
+        validate_native_link_evidence(&output.stdout, trusted_native_links)?;
+    }
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(vec![cargo_build_error(format!(
@@ -191,6 +210,72 @@ fn run_cargo_build(
         ))]);
     }
     Ok(())
+}
+
+fn trusted_native_links(generated_project: &GeneratedBinaryProject) -> BTreeSet<String> {
+    generated_project
+        .interop
+        .rust
+        .trust_requirements
+        .iter()
+        .filter(|requirement| {
+            requirement.trusted && requirement.kind == RustInteropTrustRequirementKind::NativeLinks
+        })
+        .map(|requirement| requirement.required_entry.clone())
+        .collect()
+}
+
+fn should_validate_native_link_evidence(generated_project: &GeneratedBinaryProject) -> bool {
+    let rust = &generated_project.interop.rust;
+    !rust.declarations.is_empty()
+        || !rust.resolved_targets.is_empty()
+        || !rust.trust_requirements.is_empty()
+        || !rust.probe_plan.probes.is_empty()
+        || !rust.bridge_sources.is_empty()
+        || rust.cargo_inputs.is_some()
+}
+
+fn validate_native_link_evidence(
+    stdout: &[u8],
+    trusted_native_links: &BTreeSet<String>,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    for line in String::from_utf8_lossy(stdout).lines() {
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        if value.get("reason").and_then(serde_json::Value::as_str) != Some("build-script-executed")
+        {
+            continue;
+        }
+        let Some(linked_libs) = value
+            .get("linked_libs")
+            .and_then(serde_json::Value::as_array)
+        else {
+            continue;
+        };
+        for linked_lib in linked_libs {
+            let Some(linked_lib) = linked_lib.as_str() else {
+                continue;
+            };
+            let link_name = normalized_link_name(linked_lib);
+            if !trusted_native_links.contains(&link_name) {
+                return Err(vec![crate::diagnostics::diagnostic_with_code(
+                    format!(
+                        "untrusted native link evidence `{link_name}` emitted by Rust build script"
+                    ),
+                    DiagnosticCode::RUST_TRUST_MISSING,
+                )]);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn normalized_link_name(linked_lib: &str) -> String {
+    linked_lib
+        .rsplit_once('=')
+        .map_or(linked_lib, |(_, name)| name)
+        .to_string()
 }
 
 fn namespace_module_file_path(module_name: &str) -> PathBuf {
@@ -269,16 +354,20 @@ fn sorted_feature_lines(values: &std::collections::HashSet<StdlibFeature>) -> Ve
 
 #[cfg(test)]
 mod tests {
-    use super::binary_project_cache_key;
+    use super::{
+        binary_project_cache_key, should_validate_native_link_evidence,
+        validate_native_link_evidence,
+    };
     use crate::build::project_codegen::GeneratedBinaryProject;
     use sifr_codegen::{
         InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
+        RustInteropTrustRequirement, RustInteropTrustRequirementKind,
     };
     use sifr_ir::{
         RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
         RustInteropEffect, RustTargetPath,
     };
-    use std::collections::{BTreeMap, HashSet};
+    use std::collections::{BTreeMap, BTreeSet, HashSet};
 
     #[test]
     fn binary_project_cache_key_includes_package_cache_fragment() {
@@ -321,6 +410,7 @@ mod tests {
                         abi_requirements: RustInteropAbiRequirements::default(),
                     },
                 }],
+                ..RustInteropPlan::default()
             },
         };
 
@@ -328,6 +418,37 @@ mod tests {
             binary_project_cache_key("sifr_output", &base),
             binary_project_cache_key("sifr_output", &with_interop)
         );
+    }
+
+    #[test]
+    fn native_link_evidence_rejects_untrusted_build_script_output() {
+        let stdout = br#"{"reason":"build-script-executed","linked_libs":["dylib=ssl"]}"#;
+        let diagnostics = validate_native_link_evidence(stdout, &BTreeSet::new())
+            .expect_err("untrusted link evidence should fail");
+
+        assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+
+        let trusted = BTreeSet::from(["ssl".to_string()]);
+        validate_native_link_evidence(stdout, &trusted).expect("trusted link should pass");
+    }
+
+    #[test]
+    fn native_link_evidence_policy_skips_non_rust_interop_projects() {
+        let mut project = base_project();
+        assert!(!should_validate_native_link_evidence(&project));
+
+        project
+            .interop
+            .rust
+            .trust_requirements
+            .push(RustInteropTrustRequirement {
+                canonical_target_path: "openssl::ssl".to_string(),
+                kind: RustInteropTrustRequirementKind::NativeLinks,
+                trusted: true,
+                required_entry: "ssl".to_string(),
+                evidence: "links=ssl".to_string(),
+            });
+        assert!(should_validate_native_link_evidence(&project));
     }
 
     fn base_project() -> GeneratedBinaryProject {

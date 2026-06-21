@@ -5,6 +5,11 @@ mod materialize;
 mod project_codegen;
 mod python_runtime;
 mod report;
+mod rust_interop;
+mod rust_interop_digest;
+mod rust_interop_probe;
+#[cfg(test)]
+mod rust_interop_tests;
 mod workspace;
 
 pub use api::{

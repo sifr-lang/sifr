@@ -113,10 +113,26 @@ pub(super) fn apply_package_runtime_metadata(
                     sifr_diagnostics::DiagnosticCode::INTERNAL_COMPILER_PANIC,
                 )]
             })?;
-        generated.cache_key_fragment = Some(metadata.probe_digest().to_string());
+        push_cache_key_fragment(
+            &mut generated.cache_key_fragment,
+            "python-runtime",
+            metadata.probe_digest(),
+        );
         generated.python_runtime = Some(metadata);
     }
     Ok(generated)
+}
+
+pub(super) fn push_cache_key_fragment(fragment: &mut Option<String>, label: &str, value: &str) {
+    let mut next = fragment.take().unwrap_or_default();
+    next.push('[');
+    next.push_str(label);
+    next.push_str("]\n");
+    next.push_str(value);
+    if !value.ends_with('\n') {
+        next.push('\n');
+    }
+    *fragment = Some(next);
 }
 
 #[cfg(test)]
@@ -145,7 +161,10 @@ mod tests {
         assert!(generated
             .required_features
             .contains(&StdlibFeature::PythonRuntime));
-        assert_eq!(generated.cache_key_fragment.as_deref(), Some("digest-a"));
+        assert_eq!(
+            generated.cache_key_fragment.as_deref(),
+            Some("[python-runtime]\ndigest-a\n")
+        );
         assert!(generated
             .main_rs
             .contains("__sifr_initialize_python_runtime"));

@@ -243,6 +243,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYTRUST-0003`](SIFR-PYTRUST-0003.md) | Error | Native Python import root is trusted without an allow-imports entry. |
 | [`SIFR-PYTRUST-0004`](SIFR-PYTRUST-0004.md) | Error | Dynamic Python import requires an explicit trust annotation. |
 | [`SIFR-RUST-CONFIG-0001`](SIFR-RUST-CONFIG-0001.md) | Error | Rust interop decorator syntax is malformed. |
+| [`SIFR-RUST-RESOLVE-0001`](SIFR-RUST-RESOLVE-0001.md) | Error | Rust interop target root cannot be resolved. |
+| [`SIFR-RUST-TRUST-0001`](SIFR-RUST-TRUST-0001.md) | Error | Rust interop trust declaration is missing. |
+| [`SIFR-RUST-TYPE-0001`](SIFR-RUST-TYPE-0001.md) | Error | Rust bridge probe failed type-contract validation. |
+| [`SIFR-RUST-CARGO-0001`](SIFR-RUST-CARGO-0001.md) | Error | Rust interop Cargo metadata is unavailable or inconsistent. |
 
 ## Reserved Codes
 

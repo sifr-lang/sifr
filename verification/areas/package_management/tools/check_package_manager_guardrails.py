@@ -502,7 +502,11 @@ def main() -> int:
             failures.append("pure Sifr marker validation is missing")
 
         digest_rs = (package_crate / "src/graph/digest.rs").read_text(encoding="utf-8")
-        if "CanonicalMetadata" not in digest_rs or "digest_graph_inputs" not in digest_rs:
+        metadata_digest_rs = (package_crate / "src/graph/digest_cargo_metadata.rs").read_text(
+            encoding="utf-8"
+        )
+        digest_support = digest_rs + metadata_digest_rs
+        if "CanonicalMetadata" not in digest_support or "digest_graph_inputs" not in digest_support:
             failures.append("metadata normalization digest support is missing")
 
     check_fixture_matrix(root, failures)

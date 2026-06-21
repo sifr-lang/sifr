@@ -1,0 +1,619 @@
+use super::project_codegen::GeneratedBinaryProject;
+use super::rust_interop::{
+    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+};
+use crate::diagnostics::RenderedDiagnostic;
+use ruff_text_size::{TextRange, TextSize};
+use sifr_codegen::{
+    InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
+};
+use sifr_ir::{
+    RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
+    RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,
+};
+use sifr_package::{
+    BackendCrateMetadata, CargoPackageId, ImportRoot, PackageClassification, PackageSourceMap,
+    PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph,
+    SifrPackageId, SifrPackageMetadata, SifrPackageName, TrustPolicy,
+};
+use sifr_stdlib::StdlibFeature;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::path::PathBuf;
+
+#[test]
+fn package_rust_interop_requires_cargo_context() {
+    let generated = base_project(vec![declaration_entry(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+
+    let diagnostics = interop_errors(generated, None, "missing package context must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CARGO-0001");
+}
+
+#[test]
+fn package_rust_interop_rejects_unknown_target_root() {
+    let generated = base_project(vec![declaration_entry(
+        "missing.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(TrustPolicy::default(), Vec::new());
+
+    let diagnostics = interop_errors(generated, Some(context), "unknown root must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
+    assert!(diagnostics[0].message.contains("missing"));
+    assert_eq!(
+        diagnostics[0].spans[0].file.as_deref(),
+        Some("/ws/app/sifr/app.sifr")
+    );
+}
+
+#[test]
+fn package_rust_interop_rejects_untrusted_build_script() {
+    let generated = base_project(vec![declaration_entry(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![BackendCrateMetadata {
+            cargo_package_id: CargoPackageId("path+file:///ws/native#native@0.1.0".to_string()),
+            dependency_name: "native".to_string(),
+            dependency_kind: None,
+            cargo_package_name: "native".to_string(),
+            cargo_version: "0.1.0".to_string(),
+            cargo_source: None,
+            cargo_manifest_path: PathBuf::from("/ws/native/Cargo.toml"),
+            links: None,
+            has_build_script: true,
+            has_proc_macro: false,
+        }],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "untrusted build script must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+    assert!(diagnostics[0].message.contains("app.hash"));
+}
+
+#[test]
+fn package_rust_interop_records_probe_plan() {
+    let generated = base_project(vec![declaration_entry(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy {
+            rust_build_scripts: vec!["native".to_string()],
+            ..TrustPolicy::default()
+        },
+        vec![BackendCrateMetadata {
+            cargo_package_id: CargoPackageId("path+file:///ws/native#native@0.1.0".to_string()),
+            dependency_name: "native".to_string(),
+            dependency_kind: None,
+            cargo_package_name: "native".to_string(),
+            cargo_version: "0.1.0".to_string(),
+            cargo_source: None,
+            cargo_manifest_path: PathBuf::from("/ws/native/Cargo.toml"),
+            links: None,
+            has_build_script: true,
+            has_proc_macro: false,
+        }],
+    );
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("trusted interop metadata should apply");
+
+    assert_eq!(generated.interop.rust.resolved_targets.len(), 1);
+    assert_eq!(generated.interop.rust.trust_requirements.len(), 1);
+    assert!(generated.interop.rust.trust_requirements[0].trusted);
+    assert_eq!(generated.interop.rust.probe_plan.probes.len(), 1);
+    assert!(generated
+        .interop
+        .cache_key_fragment()
+        .contains("rust.probes=1"));
+    assert!(generated.interop.rust.cargo_inputs.is_some());
+}
+
+#[test]
+fn package_rust_interop_resolves_bridge_root() {
+    let generated = base_project(vec![declaration_entry(
+        "bridge.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("bridge root should resolve");
+
+    assert!(matches!(
+        generated.interop.rust.resolved_targets[0].root,
+        sifr_codegen::RustInteropResolvedRoot::PackageBridge { .. }
+    ));
+}
+
+#[test]
+fn package_rust_interop_resolves_self_method_root() {
+    let generated = base_project(vec![method_declaration_entry(
+        "Self.poll",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(TrustPolicy::default(), Vec::new());
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("Self method root should resolve");
+
+    assert!(matches!(
+        generated.interop.rust.resolved_targets[0].root,
+        sifr_codegen::RustInteropResolvedRoot::SelfMethod { .. }
+    ));
+}
+
+#[test]
+fn package_rust_interop_rejects_untrusted_proc_macro() {
+    let generated = base_project(vec![declaration_entry(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_custom("native", false, true, None)],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "untrusted proc-macro must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+}
+
+#[test]
+fn package_rust_interop_rejects_untrusted_native_links() {
+    let generated = base_project(vec![declaration_entry(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_custom(
+            "native",
+            false,
+            false,
+            Some("ssl".to_string()),
+        )],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "untrusted native link must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+}
+
+#[test]
+fn package_rust_interop_rejects_untrusted_unsafe_bridge_file() {
+    let root = temp_package_root("rust_interop_unsafe_bridge");
+    let bridge_dir = root.join("src/bridges");
+    std::fs::create_dir_all(&bridge_dir).expect("create bridge dir");
+    std::fs::write(bridge_dir.join("hash.rs"), "pub unsafe fn hash() {}\n")
+        .expect("write unsafe bridge");
+    let generated = base_project(vec![declaration_entry(
+        "bridge.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let mut context = package_context_with_root(TrustPolicy::default(), Vec::new(), root.clone());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "untrusted unsafe bridge must fail",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+}
+
+#[test]
+fn package_rust_interop_cache_fragment_is_deterministic() {
+    let context = package_context(TrustPolicy::default(), vec![backend("native", false)]);
+
+    let first = apply_package_rust_interop_metadata(
+        base_project(vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )]),
+        Some(context.clone()),
+    )
+    .expect("first metadata pass should apply")
+    .interop
+    .cache_key_fragment();
+    let second = apply_package_rust_interop_metadata(
+        base_project(vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )]),
+        Some(context),
+    )
+    .expect("second metadata pass should apply")
+    .interop
+    .cache_key_fragment();
+
+    assert_eq!(first, second);
+}
+
+#[test]
+fn package_rust_interop_cache_changes_with_trust_policy() {
+    let first = apply_package_rust_interop_metadata(
+        base_project(vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )]),
+        Some(package_context(
+            TrustPolicy::default(),
+            vec![backend("native", false)],
+        )),
+    )
+    .expect("first metadata pass should apply")
+    .interop
+    .cache_key_fragment();
+    let second = apply_package_rust_interop_metadata(
+        base_project(vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )]),
+        Some(package_context(
+            TrustPolicy {
+                build_env: vec!["OPENSSL_DIR".to_string()],
+                ..TrustPolicy::default()
+            },
+            vec![backend("native", false)],
+        )),
+    )
+    .expect("second metadata pass should apply")
+    .interop
+    .cache_key_fragment();
+
+    assert_ne!(first, second);
+}
+
+#[test]
+fn package_rust_interop_rejects_unrepresentable_probe_owner() {
+    let mut entry = declaration_entry("native.hash", RustInteropDecoratorKind::Function);
+    entry.owner = RustInteropOwner::Class {
+        name: "Hash".to_string(),
+    };
+    let generated = base_project(vec![entry]);
+    let context = package_context(TrustPolicy::default(), vec![backend("native", false)]);
+
+    let diagnostics = interop_errors(generated, Some(context), "invalid probe owner must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+}
+
+#[test]
+fn package_rust_interop_maps_rustc_probe_resolution_failure() {
+    let backend_root = temp_package_root("rust_interop_backend_probe");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(backend_root.join("src/lib.rs"), "pub fn hash() {}\n")
+        .expect("write backend lib");
+
+    let generated = base_project(vec![declaration_entry(
+        "native.missing",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            false,
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "rustc probe must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
+    assert_eq!(
+        diagnostics[0].spans[0].file.as_deref(),
+        Some("/ws/app/sifr/app.sifr")
+    );
+}
+
+#[test]
+fn package_rust_interop_rejects_untrusted_no_panic_policy() {
+    let generated = base_project(vec![declaration_entry_with_args(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+        vec![symbol_arg("panic", "trusted_no_panic")],
+    )]);
+    let context = package_context(TrustPolicy::default(), vec![backend("native", false)]);
+
+    let diagnostics = interop_errors(generated, Some(context), "untrusted no-panic must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+    assert!(diagnostics[0].message.contains("app.hash"));
+}
+
+#[test]
+fn package_rust_interop_rejects_untrusted_panic_abort_policy() {
+    let generated = base_project(vec![declaration_entry_with_args(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+        vec![symbol_arg("panic", "abort")],
+    )]);
+    let context = package_context(TrustPolicy::default(), vec![backend("native", false)]);
+
+    let diagnostics = interop_errors(generated, Some(context), "untrusted panic-abort must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("missing Rust interop trust declaration"));
+}
+
+#[test]
+fn package_rust_interop_rejects_untrusted_build_env() {
+    let generated = base_project(vec![declaration_entry_with_args(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+        vec![symbol_arg("build_env", "OPENSSL_DIR")],
+    )]);
+    let context = package_context(TrustPolicy::default(), vec![backend("native", false)]);
+
+    let diagnostics = interop_errors(generated, Some(context), "untrusted build-env must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+    assert!(diagnostics[0].message.contains("app.hash"));
+}
+
+#[test]
+fn package_rust_interop_records_lock_and_profile_cache_inputs() {
+    let root = temp_package_root("rust_interop_cache_inputs");
+    std::fs::create_dir_all(&root).expect("create package root");
+    std::fs::write(root.join("Cargo.lock"), "version = 4\n").expect("write lock");
+    std::fs::write(
+        root.join("Cargo.toml"),
+        "[profile.release]\nlto = true\ncodegen-units = 1\n",
+    )
+    .expect("write cargo toml");
+
+    let generated = base_project(vec![declaration_entry(
+        "native.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    let context = package_context_with_root(
+        TrustPolicy::default(),
+        vec![backend("native", false)],
+        root.clone(),
+    );
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("interop metadata should apply");
+    let cargo_inputs = generated.interop.rust.cargo_inputs.expect("cargo inputs");
+
+    assert!(cargo_inputs.cargo_lock_digest.is_some());
+    assert_eq!(cargo_inputs.cargo_profile, "release");
+    assert!(cargo_inputs
+        .profile_codegen_settings
+        .iter()
+        .any(|(name, value)| name.ends_with(":lto") && value == "true"));
+    assert!(cargo_inputs.target_triple.is_some());
+}
+
+fn base_project(declarations: Vec<RustInteropPlanDeclaration>) -> GeneratedBinaryProject {
+    GeneratedBinaryProject {
+        main_rs: "fn main() {}\n".to_string(),
+        support_modules: BTreeMap::new(),
+        used_stdlib_modules: HashSet::new(),
+        required_features: HashSet::<StdlibFeature>::new(),
+        interop: InteropBuildPlan {
+            rust: RustInteropPlan {
+                declarations,
+                ..RustInteropPlan::default()
+            },
+        },
+        cache_key_fragment: None,
+        python_runtime: None,
+    }
+}
+
+fn interop_errors(
+    generated: GeneratedBinaryProject,
+    context: Option<PackageRustInteropContext>,
+    message: &str,
+) -> Vec<RenderedDiagnostic> {
+    match apply_package_rust_interop_metadata(generated, context) {
+        Ok(_) => panic!("{message}"),
+        Err(diagnostics) => diagnostics,
+    }
+}
+
+fn declaration_entry(target: &str, kind: RustInteropDecoratorKind) -> RustInteropPlanDeclaration {
+    declaration_entry_with_args(
+        target,
+        kind,
+        vec![RustInteropArgument {
+            name: Some("trusted_no_panic".to_string()),
+            value: RustInteropValue::Boolean(false),
+            span: span(),
+        }],
+    )
+}
+
+fn method_declaration_entry(
+    target: &str,
+    kind: RustInteropDecoratorKind,
+) -> RustInteropPlanDeclaration {
+    let mut entry = declaration_entry(target, kind);
+    entry.owner = RustInteropOwner::Method {
+        class_name: "Consumer".to_string(),
+        name: "poll".to_string(),
+    };
+    entry
+}
+
+fn declaration_entry_with_args(
+    target: &str,
+    kind: RustInteropDecoratorKind,
+    arguments: Vec<RustInteropArgument>,
+) -> RustInteropPlanDeclaration {
+    RustInteropPlanDeclaration {
+        module_name: Some("app".to_string()),
+        owner: RustInteropOwner::Function {
+            name: "hash".to_string(),
+        },
+        declaration: RustInteropDeclaration {
+            kind,
+            target: Some(RustTargetPath {
+                segments: target.split('.').map(str::to_string).collect(),
+                span: span(),
+            }),
+            arguments,
+            span: span(),
+            effect: RustInteropEffect::Sync,
+            abi_requirements: RustInteropAbiRequirements::default(),
+        },
+    }
+}
+
+fn symbol_arg(name: &str, value: &str) -> RustInteropArgument {
+    RustInteropArgument {
+        name: Some(name.to_string()),
+        value: RustInteropValue::Symbol(value.to_string()),
+        span: span(),
+    }
+}
+
+fn package_context(
+    trust: TrustPolicy,
+    backend_crates: Vec<BackendCrateMetadata>,
+) -> PackageRustInteropContext {
+    package_context_with_root(trust, backend_crates, PathBuf::from("/ws/app"))
+}
+
+fn package_context_with_root(
+    trust: TrustPolicy,
+    backend_crates: Vec<BackendCrateMetadata>,
+    package_root: PathBuf,
+) -> PackageRustInteropContext {
+    let package_id = SifrPackageId("sifr-app@0.1.0#path".to_string());
+    let cargo_package_id = CargoPackageId("path+file:///ws/app#sifr-app@0.1.0".to_string());
+    let package = SifrPackageMetadata {
+        package_id: package_id.clone(),
+        cargo_package_id: cargo_package_id.clone(),
+        cargo_package_name: "sifr-app".to_string(),
+        cargo_version: "0.1.0".to_string(),
+        cargo_source: None,
+        package_root: package_root.clone(),
+        sifr_manifest: package_root.join("sifr.toml"),
+        sifr_name: SifrPackageName("app".to_string()),
+        manifest: SifrManifest {
+            package_name: SifrPackageName("app".to_string()),
+            edition: SifrEdition("2026".to_string()),
+            compiler_requirement: sifr_package::CompilerRequirement(">=0.3,<0.4".to_string()),
+            default_run: None,
+            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
+            exports: vec![ImportRoot("app".to_string())],
+            source_features: BTreeMap::new(),
+            scripts: BTreeMap::new(),
+            dependencies: BTreeMap::new(),
+            dev_dependencies: BTreeMap::new(),
+            trust,
+            python: sifr_package::PythonConfig::default(),
+            rust: RustInteropConfig {
+                bridge_version: Some(1),
+                bridges: Vec::new(),
+                direct_crate_bindings: true,
+            },
+            production_schema: false,
+        },
+        aliases: BTreeMap::new(),
+    };
+    PackageRustInteropContext {
+        package_id: package_id.clone(),
+        graph: SifrPackageGraph {
+            packages: BTreeMap::from([(package_id.clone(), package)]),
+            cargo_edges: BTreeMap::new(),
+            direct_dependency_scopes: BTreeMap::new(),
+            backend_crates: BTreeMap::from([(package_id.clone(), backend_crates)]),
+            classifications: BTreeMap::from([(
+                cargo_package_id,
+                PackageClassification::SifrSource(package_id.clone()),
+            )]),
+        },
+        source_map: PackageSourceMap::default(),
+        module_packages: HashMap::from([("app".to_string(), package_id)]),
+        module_sources: HashMap::from([(
+            "app".to_string(),
+            RustInteropModuleSource {
+                source: "@rust(native.hash)\ndef hash() -> None:\n    pass\n".to_string(),
+                display_path: "/ws/app/sifr/app.sifr".to_string(),
+            },
+        )]),
+    }
+}
+
+fn backend(name: &str, has_build_script: bool) -> BackendCrateMetadata {
+    backend_with_manifest(
+        name,
+        has_build_script,
+        PathBuf::from(format!("/ws/{name}/Cargo.toml")),
+    )
+}
+
+fn backend_with_manifest(
+    name: &str,
+    has_build_script: bool,
+    cargo_manifest_path: PathBuf,
+) -> BackendCrateMetadata {
+    BackendCrateMetadata {
+        cargo_package_id: CargoPackageId(format!("path+file:///ws/{name}#{name}@0.1.0")),
+        dependency_name: name.to_string(),
+        dependency_kind: None,
+        cargo_package_name: name.to_string(),
+        cargo_version: "0.1.0".to_string(),
+        cargo_source: None,
+        cargo_manifest_path,
+        links: None,
+        has_build_script,
+        has_proc_macro: false,
+    }
+}
+
+fn backend_custom(
+    name: &str,
+    has_build_script: bool,
+    has_proc_macro: bool,
+    links: Option<String>,
+) -> BackendCrateMetadata {
+    BackendCrateMetadata {
+        has_proc_macro,
+        links,
+        ..backend(name, has_build_script)
+    }
+}
+
+fn set_bridge_roots(context: &mut PackageRustInteropContext, bridges: Vec<PathBuf>) {
+    let package = context
+        .graph
+        .packages
+        .get_mut(&context.package_id)
+        .expect("package exists");
+    package.manifest.rust.bridges = bridges;
+}
+
+fn temp_package_root(name: &str) -> PathBuf {
+    let root = std::env::temp_dir().join(format!("sifr_{name}_{}", std::process::id()));
+    if root.exists() {
+        std::fs::remove_dir_all(&root).expect("remove stale temp root");
+    }
+    root
+}
+
+fn span() -> TextRange {
+    TextRange::new(TextSize::from(0), TextSize::from(18))
+}

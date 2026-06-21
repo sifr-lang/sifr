@@ -2497,6 +2497,70 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-RUST-RESOLVE-0001",
+      "constant": "RUST_RESOLVE_TARGET_ROOT",
+      "docs_link": "docs/errors/SIFR-RUST-RESOLVE-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_rejects_unknown_target_root",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-TRUST-0001",
+      "constant": "RUST_TRUST_MISSING",
+      "docs_link": "docs/errors/SIFR-RUST-TRUST-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_rejects_untrusted_build_script",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-TYPE-0001",
+      "constant": "RUST_TYPE_PROBE_FAILURE",
+      "docs_link": "docs/errors/SIFR-RUST-TYPE-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_rejects_unrepresentable_probe_owner",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-CARGO-0001",
+      "constant": "RUST_CARGO_METADATA",
+      "docs_link": "docs/errors/SIFR-RUST-CARGO-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_requires_cargo_context",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-RESULT-0001",
       "constant": "RESULT_UNUSED_VALUE",
       "docs_link": "docs/errors/SIFR-RESULT-0001.md",
