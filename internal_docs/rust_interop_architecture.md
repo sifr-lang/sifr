@@ -600,6 +600,8 @@ Default async bridge requirements:
 - cancellation is cooperative and must map to stable Sifr cancellation errors,
 - runtime shutdown must drain or cancel registered Rust interop tasks deterministically.
 
+The initial compile-time async contract surface enforces that `@rust.async(...)` is valid only on `async def`, async Rust probes require returned futures to be `Send` by default, `thread_affinity=tokio_current_thread` is the only function-level non-`Send` opt-out, and blocking/CPU-heavy classifications are rejected on async Rust declarations with `SIFR-RUST-ASYNC-0001`.
+
 For async Rust targets that borrow converted inputs, generated glue owns the converted values inside the wrapper future. The raw Rust future may borrow those owned wrapper values, but any Sifr-exposed future must satisfy Sifr async lifetime and spawn rules after wrapping. This allows ordinary Rust APIs such as `async fn fetch(url: &str) -> Result<_, _>` without exposing borrowed futures that outlive their generated wrapper state.
 
 Free async functions that require current-thread affinity declare it explicitly:

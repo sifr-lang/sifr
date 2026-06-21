@@ -4,7 +4,7 @@ use super::diagnostics::{
 };
 use super::protocol_diagnostics;
 use super::statements::lower_stmts;
-use super::typing_and_functions::resolve_annotation_expr;
+use super::typing_and_functions::{function_body_contains_yield, resolve_annotation_expr};
 use super::{
     async_await, class_field_inference, diagnostics, simple_expr, str, typing_and_functions,
 };

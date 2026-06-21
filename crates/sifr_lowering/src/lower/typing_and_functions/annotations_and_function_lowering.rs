@@ -684,6 +684,7 @@ pub(in crate::lower) fn lower_function(
         ctx,
         has_decorator(func, "blocking_io"),
         has_decorator(func, "cpu_heavy"),
+        effective_is_async,
     );
 
     // Collect type parameters for generic functions

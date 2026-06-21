@@ -60,6 +60,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["target", "method"]
     ),
     active_entry!(
+        "SIFR-RUST-ASYNC-0001",
+        "RUST-ASYNC",
+        "Rust async interop contract is invalid.",
+        Severity::Error,
+        "crates/sifr_driver/src/build/rust_interop_async_contract_tests.rs::package_rust_interop_async_requires_send_future_by_default",
+        "invalid Rust async contract: {reason}",
+        "sifr_driver::build::rust_interop",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
         "SIFR-RUST-CARGO-0001",
         "RUST-CARGO",
         "Rust interop Cargo metadata is unavailable or inconsistent.",

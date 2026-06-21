@@ -5,7 +5,9 @@ use super::rust_interop_cargo_inputs::{
 };
 use super::rust_interop_contracts::bridge_contract_diagnostics;
 use super::rust_interop_digest::{normalized_path_string, relative_path_string};
-use super::rust_interop_probe::{execute_direct_cargo_probe, PendingRustBridgeProbe};
+use super::rust_interop_probe::{
+    execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
+};
 use super::rust_interop_trust::{build_env_trust_entries, panic_policy};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::ParsedProjectModule;
@@ -28,6 +30,8 @@ use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
 
+#[path = "rust_interop/async_validation.rs"]
+mod async_validation;
 #[path = "rust_interop/direct_panic_policy.rs"]
 mod direct_panic_policy;
 #[path = "rust_interop/opaque_contract.rs"]
@@ -90,6 +94,7 @@ struct RustInteropResolver<'a> {
     pending_direct_probes: Vec<PendingRustBridgeProbe>,
     signature_contracts: HashMap<String, RustBridgeSignatureContract>,
     opaque_contracts: HashMap<String, OpaqueContract>,
+    async_contracts: HashMap<String, AsyncThreadAffinity>,
 }
 
 impl<'a> RustInteropResolver<'a> {
@@ -105,6 +110,7 @@ impl<'a> RustInteropResolver<'a> {
             pending_direct_probes: Vec::new(),
             signature_contracts: HashMap::new(),
             opaque_contracts: HashMap::new(),
+            async_contracts: HashMap::new(),
         }
     }
 
@@ -121,6 +127,7 @@ impl<'a> RustInteropResolver<'a> {
             .cloned()
             .map(|signature| (signature.canonical_target_path.clone(), signature))
             .collect();
+        self.collect_async_contracts(&generated.interop.rust.declarations);
         for declaration in generated.interop.rust.declarations.clone() {
             self.resolve_declaration(&declaration);
         }
@@ -193,6 +200,9 @@ impl<'a> RustInteropResolver<'a> {
         if declaration.declaration.kind == RustInteropDecoratorKind::Opaque
             && !self.validate_opaque_declaration(declaration)
         {
+            return;
+        }
+        if !self.validate_async_declaration(declaration) {
             return;
         }
 
@@ -277,11 +287,13 @@ impl<'a> RustInteropResolver<'a> {
                     &canonical_target_path,
                     signature.as_ref(),
                 );
+                let async_thread_affinity = self.async_thread_affinity_for_probe(declaration);
                 self.pending_direct_probes.push(PendingRustBridgeProbe {
                     declaration: declaration.clone(),
                     path: path.clone(),
                     backend: backend.clone(),
                     signature,
+                    async_thread_affinity,
                 });
                 RustInteropResolvedRoot::DirectCargoDependency {
                     dependency_name: backend.dependency_name.clone(),
@@ -543,8 +555,15 @@ impl<'a> RustInteropResolver<'a> {
             );
             return;
         };
-        let (requires_send, requires_sync) =
+        let (mut requires_send, requires_sync) =
             opaque_probe_obligations(declaration, &self.opaque_contracts);
+        if requires_send
+            && declaration.declaration.abi_requirements.async_boundary
+            && self.async_thread_affinity_for_probe(declaration)
+                == AsyncThreadAffinity::TokioCurrentThread
+        {
+            requires_send = false;
+        }
         self.probes.push(RustBridgeProbe {
             canonical_target_path: canonical_sifr_target_path(declaration),
             module_name: declaration.module_name.clone(),
@@ -720,6 +739,7 @@ fn canonical_sifr_target_path(declaration: &sifr_codegen::RustInteropPlanDeclara
     }
     path
 }
+
 fn canonical_trust_target_path(declaration: &sifr_codegen::RustInteropPlanDeclaration) -> String {
     declaration_paths(&declaration.declaration)
         .first()

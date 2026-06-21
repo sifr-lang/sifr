@@ -20,6 +20,7 @@ pub(in crate::lower) fn collect_rust_interop_declarations(
     ctx: &mut LowerCtx,
     blocking_io: bool,
     cpu_heavy: bool,
+    is_async_decl: bool,
 ) -> Vec<RustInteropDeclaration> {
     let mut declarations = Vec::new();
     for decorator in decorators {
@@ -38,12 +39,30 @@ pub(in crate::lower) fn collect_rust_interop_declarations(
             );
             continue;
         }
-        if let Some(declaration) = parse_declaration(kind, call, owner, ctx) {
+        if kind == RustInteropDecoratorKind::Async && !is_async_decl {
+            ctx.error_with_code_at(
+                DiagnosticCode::RUST_ASYNC_CONTRACT,
+                "invalid Rust async contract: `@rust.async(...)` requires `async def`".to_string(),
+                decorator.expression.range(),
+            );
+            continue;
+        }
+        if let Some(declaration) = parse_declaration(kind, call, owner, is_async_decl, ctx) {
             declarations.push(declaration);
         }
     }
 
-    let effect = declaration_effect(&declarations, blocking_io, cpu_heavy);
+    if is_async_decl && !declarations.is_empty() && (blocking_io || cpu_heavy) {
+        ctx.error_with_code_at(
+            DiagnosticCode::RUST_ASYNC_CONTRACT,
+            "invalid Rust async contract: Rust async interop cannot be combined with blocking or CPU-heavy classification".to_string(),
+            decorators
+                .first()
+                .map_or(TextRange::default(), |decorator| decorator.range()),
+        );
+    }
+
+    let effect = declaration_effect(&declarations, blocking_io, cpu_heavy, is_async_decl);
     for declaration in &mut declarations {
         declaration.effect = effect;
     }
@@ -106,6 +125,7 @@ fn parse_declaration(
     kind: RustInteropDecoratorKind,
     call: &ExprCall,
     owner: RustInteropOwner,
+    is_async_decl: bool,
     ctx: &mut LowerCtx,
 ) -> Option<RustInteropDeclaration> {
     let target = parse_positional_target(kind, call, owner, ctx)?;
@@ -116,7 +136,7 @@ fn parse_declaration(
         arguments,
         span: call.range,
         effect: RustInteropEffect::Sync,
-        abi_requirements: abi_requirements(kind),
+        abi_requirements: abi_requirements(kind, is_async_decl),
     })
 }
 
@@ -389,11 +409,14 @@ fn declaration_effect(
     declarations: &[RustInteropDeclaration],
     blocking_io: bool,
     cpu_heavy: bool,
+    is_async_decl: bool,
 ) -> RustInteropEffect {
     if blocking_io {
         RustInteropEffect::BlockingIo
     } else if cpu_heavy {
         RustInteropEffect::CpuHeavy
+    } else if is_async_decl && !declarations.is_empty() {
+        RustInteropEffect::Async
     } else if declarations
         .iter()
         .any(|declaration| declaration.kind == RustInteropDecoratorKind::Async)
@@ -404,9 +427,12 @@ fn declaration_effect(
     }
 }
 
-fn abi_requirements(kind: RustInteropDecoratorKind) -> RustInteropAbiRequirements {
+fn abi_requirements(
+    kind: RustInteropDecoratorKind,
+    is_async_decl: bool,
+) -> RustInteropAbiRequirements {
     RustInteropAbiRequirements {
-        async_boundary: kind == RustInteropDecoratorKind::Async,
+        async_boundary: kind == RustInteropDecoratorKind::Async || is_async_decl,
         opaque_handle: kind == RustInteropDecoratorKind::Opaque,
         zero_copy: kind == RustInteropDecoratorKind::ZeroCopy,
         view: kind == RustInteropDecoratorKind::View,

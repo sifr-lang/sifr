@@ -164,8 +164,8 @@
       "capability": "async ecosystem signature probing",
       "required_crates": ["futures", "tower", "http", "http-body"],
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "future_output_shapes", "status": "planned"},
-      "negative_evidence": {"id": "non_send_future_without_affinity", "status": "planned"}
+      "positive_evidence": {"id": "current_thread_non_send_future", "status": "passing"},
+      "negative_evidence": {"id": "non_send_future_without_affinity", "status": "passing"}
     },
     {
       "id": "blocking_diagnostics",
@@ -174,8 +174,8 @@
       "required_crates": ["rusqlite", "rayon", "flate2"],
       "features": {"rusqlite": {"features": ["bundled"]}, "flate2": {"default_features": false, "features": ["rust_backend"]}},
       "execution_kind": "compiler-diagnostic",
-      "positive_evidence": {"id": "classified_sync_calls", "status": "planned"},
-      "negative_evidence": {"id": "classified_async_declarations_rejected", "status": "planned"}
+      "positive_evidence": {"id": "classified_sync_rust_effects", "status": "passing"},
+      "negative_evidence": {"id": "classified_async_declarations_rejected", "status": "passing"}
     },
     {
       "id": "callbacks_call_scoped",

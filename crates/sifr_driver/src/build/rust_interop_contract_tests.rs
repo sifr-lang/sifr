@@ -179,94 +179,6 @@ fn package_rust_interop_direct_non_result_requires_panic_policy() {
 }
 
 #[test]
-fn package_rust_interop_direct_probe_accepts_async_signature() {
-    let backend_root = temp_package_root("rust_interop_async_signature_probe_ok");
-    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
-    std::fs::write(
-        backend_root.join("Cargo.toml"),
-        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
-    )
-    .expect("write backend cargo toml");
-    std::fs::write(
-        backend_root.join("src/lib.rs"),
-        "pub async fn hash(input: String) -> Result<String, String> { Ok(input) }\n",
-    )
-    .expect("write backend lib");
-
-    let generated = base_project_with_contracts(
-        vec![declaration_entry(
-            "native.hash",
-            RustInteropDecoratorKind::Async,
-        )],
-        vec![signature_contract(
-            vec![param_contract(
-                "input",
-                RustBridgeParamConvention::Own,
-                string_contract(),
-            )],
-            result_contract(string_contract(), string_contract()),
-        )],
-    );
-    let context = package_context(
-        TrustPolicy::default(),
-        vec![backend_with_manifest(
-            "native",
-            backend_root.join("Cargo.toml"),
-        )],
-    );
-
-    apply_package_rust_interop_metadata(generated, Some(context))
-        .expect("compatible async signature should pass probe");
-}
-
-#[test]
-fn package_rust_interop_direct_probe_rejects_sync_function_for_async_binding() {
-    let backend_root = temp_package_root("rust_interop_async_signature_probe_bad");
-    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
-    std::fs::write(
-        backend_root.join("Cargo.toml"),
-        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
-    )
-    .expect("write backend cargo toml");
-    std::fs::write(
-        backend_root.join("src/lib.rs"),
-        "pub fn hash(input: String) -> Result<String, String> { Ok(input) }\n",
-    )
-    .expect("write backend lib");
-
-    let generated = base_project_with_contracts(
-        vec![declaration_entry(
-            "native.hash",
-            RustInteropDecoratorKind::Async,
-        )],
-        vec![signature_contract(
-            vec![param_contract(
-                "input",
-                RustBridgeParamConvention::Own,
-                string_contract(),
-            )],
-            result_contract(string_contract(), string_contract()),
-        )],
-    );
-    let context = package_context(
-        TrustPolicy::default(),
-        vec![backend_with_manifest(
-            "native",
-            backend_root.join("Cargo.toml"),
-        )],
-    );
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "sync function must fail async probe",
-    );
-
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
-    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
-}
-
-#[test]
 fn package_rust_interop_direct_probe_rejects_unsafe_fn() {
     let backend_root = temp_package_root("rust_interop_unsafe_signature_probe");
     std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
@@ -493,7 +405,7 @@ fn package_rust_interop_opaque_close_policy_requires_close_method_contract() {
         .contains("requires `close` cleanup method"));
 }
 
-fn base_project_with_contracts(
+pub(super) fn base_project_with_contracts(
     declarations: Vec<RustInteropPlanDeclaration>,
     signatures: Vec<RustBridgeSignatureContract>,
 ) -> GeneratedBinaryProject {
@@ -517,7 +429,7 @@ fn base_project_with_contracts(
     }
 }
 
-fn signature_contract(
+pub(super) fn signature_contract(
     params: Vec<RustBridgeParamContract>,
     return_type: RustBridgeTypeContract,
 ) -> RustBridgeSignatureContract {
@@ -533,7 +445,7 @@ fn signature_contract(
     }
 }
 
-fn param_contract(
+pub(super) fn param_contract(
     name: &str,
     convention: RustBridgeParamConvention,
     ty: RustBridgeTypeContract,
@@ -556,7 +468,7 @@ fn bytes_contract() -> RustBridgeTypeContract {
     }
 }
 
-fn string_contract() -> RustBridgeTypeContract {
+pub(super) fn string_contract() -> RustBridgeTypeContract {
     RustBridgeTypeContract {
         sifr_type: "str".to_string(),
         rust_borrowed_type: Some("&str".to_string()),
@@ -567,7 +479,7 @@ fn string_contract() -> RustBridgeTypeContract {
     }
 }
 
-fn result_contract(
+pub(super) fn result_contract(
     ok: RustBridgeTypeContract,
     err: RustBridgeTypeContract,
 ) -> RustBridgeTypeContract {
@@ -607,7 +519,7 @@ fn unsupported_contract(sifr_type: &str, reason: &str) -> RustBridgeTypeContract
     }
 }
 
-fn interop_errors(
+pub(super) fn interop_errors(
     generated: GeneratedBinaryProject,
     context: Option<PackageRustInteropContext>,
     message: &str,
@@ -618,7 +530,10 @@ fn interop_errors(
     }
 }
 
-fn declaration_entry(target: &str, kind: RustInteropDecoratorKind) -> RustInteropPlanDeclaration {
+pub(super) fn declaration_entry(
+    target: &str,
+    kind: RustInteropDecoratorKind,
+) -> RustInteropPlanDeclaration {
     declaration_entry_with_arguments(target, kind, Vec::new())
 }
 
@@ -659,10 +574,19 @@ fn opaque_class_declaration_entry(
     }
 }
 
-fn declaration_entry_with_arguments(
+pub(super) fn declaration_entry_with_arguments(
     target: &str,
     kind: RustInteropDecoratorKind,
     arguments: Vec<RustInteropArgument>,
+) -> RustInteropPlanDeclaration {
+    declaration_entry_with_arguments_and_effect(target, kind, arguments, effect_for_kind(kind))
+}
+
+fn declaration_entry_with_arguments_and_effect(
+    target: &str,
+    kind: RustInteropDecoratorKind,
+    arguments: Vec<RustInteropArgument>,
+    effect: RustInteropEffect,
 ) -> RustInteropPlanDeclaration {
     RustInteropPlanDeclaration {
         module_name: Some("app".to_string()),
@@ -677,9 +601,26 @@ fn declaration_entry_with_arguments(
             }),
             arguments,
             span: span(),
-            effect: RustInteropEffect::Sync,
-            abi_requirements: RustInteropAbiRequirements::default(),
+            effect,
+            abi_requirements: abi_for_kind(kind),
         },
+    }
+}
+
+fn effect_for_kind(kind: RustInteropDecoratorKind) -> RustInteropEffect {
+    if kind == RustInteropDecoratorKind::Async {
+        RustInteropEffect::Async
+    } else {
+        RustInteropEffect::Sync
+    }
+}
+
+fn abi_for_kind(kind: RustInteropDecoratorKind) -> RustInteropAbiRequirements {
+    RustInteropAbiRequirements {
+        async_boundary: kind == RustInteropDecoratorKind::Async,
+        opaque_handle: kind == RustInteropDecoratorKind::Opaque,
+        zero_copy: kind == RustInteropDecoratorKind::ZeroCopy,
+        view: kind == RustInteropDecoratorKind::View,
     }
 }
 
@@ -702,7 +643,7 @@ fn bool_argument(name: &str, value: bool) -> RustInteropArgument {
     }
 }
 
-fn symbol_argument(name: &str, value: &str) -> RustInteropArgument {
+pub(super) fn symbol_argument(name: &str, value: &str) -> RustInteropArgument {
     RustInteropArgument {
         name: Some(name.to_string()),
         value: RustInteropValue::Symbol(value.to_string()),
@@ -718,7 +659,7 @@ fn trusted_no_panic_context(
     package_context(trust, backend_crates)
 }
 
-fn package_context(
+pub(super) fn package_context(
     trust: TrustPolicy,
     backend_crates: Vec<BackendCrateMetadata>,
 ) -> PackageRustInteropContext {
@@ -780,7 +721,10 @@ fn package_context(
     }
 }
 
-fn backend_with_manifest(name: &str, cargo_manifest_path: PathBuf) -> BackendCrateMetadata {
+pub(super) fn backend_with_manifest(
+    name: &str,
+    cargo_manifest_path: PathBuf,
+) -> BackendCrateMetadata {
     BackendCrateMetadata {
         cargo_package_id: CargoPackageId(format!("path+file:///ws/{name}#{name}@0.1.0")),
         dependency_name: name.to_string(),
@@ -795,7 +739,7 @@ fn backend_with_manifest(name: &str, cargo_manifest_path: PathBuf) -> BackendCra
     }
 }
 
-fn set_bridge_roots(context: &mut PackageRustInteropContext, bridges: Vec<PathBuf>) {
+pub(super) fn set_bridge_roots(context: &mut PackageRustInteropContext, bridges: Vec<PathBuf>) {
     let package = context
         .graph
         .packages
@@ -804,7 +748,7 @@ fn set_bridge_roots(context: &mut PackageRustInteropContext, bridges: Vec<PathBu
     package.manifest.rust.bridges = bridges;
 }
 
-fn temp_package_root(name: &str) -> PathBuf {
+pub(super) fn temp_package_root(name: &str) -> PathBuf {
     let root = std::env::temp_dir().join(format!("sifr_{name}_{}", std::process::id()));
     if root.exists() {
         std::fs::remove_dir_all(&root).expect("remove stale temp root");

@@ -247,6 +247,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-RUST-TRUST-0001`](SIFR-RUST-TRUST-0001.md) | Error | Rust interop trust declaration is missing. |
 | [`SIFR-RUST-TYPE-0001`](SIFR-RUST-TYPE-0001.md) | Error | Rust bridge probe failed type-contract validation. |
 | [`SIFR-RUST-HANDLE-0001`](SIFR-RUST-HANDLE-0001.md) | Error | Rust opaque handle contract is invalid. |
+| [`SIFR-RUST-ASYNC-0001`](SIFR-RUST-ASYNC-0001.md) | Error | Rust async interop contract is invalid. |
 | [`SIFR-RUST-CARGO-0001`](SIFR-RUST-CARGO-0001.md) | Error | Rust interop Cargo metadata is unavailable or inconsistent. |
 
 ## Reserved Codes
