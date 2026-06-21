@@ -51,7 +51,7 @@ Sifr provides prebuilt preview binaries for the following targets:
     sifr --version
     ```
 
-    You should see a version string such as `0.1.0-beta.9`. If the command is not found, check that `~/.sifr/bin` is in your `PATH`.
+    You should see a version string such as `0.1.0-beta.10`. If the command is not found, check that `~/.sifr/bin` is in your `PATH`.
   </Step>
 </Steps>
 
@@ -62,7 +62,7 @@ Sifr provides prebuilt preview binaries for the following targets:
 If you need a specific preview release — for reproducible CI environments or to test a particular build — pass `--version` to the installer:
 
 ```bash
-curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.9
+curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.10
 ```
 
 ### Install to a custom directory
@@ -115,7 +115,7 @@ sifr self update --channel beta
 You can update to a specific preview version rather than the latest on your channel:
 
 ```bash
-sifr self update --version 0.1.0-beta.9
+sifr self update --version 0.1.0-beta.10
 ```
 
 ### Reinstalls, downgrades, and channel switches
@@ -123,7 +123,7 @@ sifr self update --version 0.1.0-beta.9
 Same-version reinstalls, downgrades, and channel switches all require `--force`:
 
 ```bash
-sifr self update --version 0.1.0-beta.9 --force
+sifr self update --version 0.1.0-beta.10 --force
 sifr self update --channel alpha --force
 ```
 
