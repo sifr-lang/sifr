@@ -45,7 +45,7 @@ Phase status remains authoritative in each phase file header and is mirrored her
 | 36 | Phase 36: Production Developer Tooling and Editor Ecosystem | completed | [36_developer_tooling_and_ecosystem_hooks.md](./36_developer_tooling_and_ecosystem_hooks.md) |
 | 37 | Phase 37: Cargo-Backed Sifr Package Coordination | unspecified | [37_package_management.md](./37_package_management.md) |
 | 38 | Phase 38: Docs and Documentation | unspecified | [38_docs_and_documentation.md](./38_docs_and_documentation.md) |
-| 39 | Phase 39: Rust Interop | planned | [39_rust_interop.md](./39_rust_interop.md) |
+| 39 | Phase 39: Rust Interop | completed, audited (2026-06-22, PRs #2702-#2729) | [39_rust_interop.md](./39_rust_interop.md) |
 | 40 | Phase 40: Stable Channel GA Promotion and Release Governance | unspecified | [40_stable_channel_ga_promotion_and_release_governance.md](./40_stable_channel_ga_promotion_and_release_governance.md) |
 | 41 | Phase 41: Typed Data Model and Validation (Pydantic-Parity Track) | unspecified | [41_typed_data_model_and_validation.md](./41_typed_data_model_and_validation.md) |
 | 42 | Phase 42: Web Framework and Platform Expansion | unspecified | [42_web_framework_and_platform_expansion.md](./42_web_framework_and_platform_expansion.md) |
