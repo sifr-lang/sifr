@@ -30,6 +30,8 @@ use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
 
+#[path = "rust_interop/advanced_data_validation.rs"]
+mod advanced_data_validation;
 #[path = "rust_interop/async_validation.rs"]
 mod async_validation;
 #[path = "rust_interop/opaque_contract.rs"]
@@ -131,6 +133,10 @@ impl<'a> RustInteropResolver<'a> {
             .collect();
         self.collect_async_contracts(&generated.interop.rust.declarations);
         self.validate_zero_copy_contracts(&generated.interop.rust.declarations);
+        if !self.diagnostics.is_empty() {
+            return Err(std::mem::take(&mut self.diagnostics));
+        }
+        self.validate_advanced_data_contracts(&generated.interop.rust.declarations);
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));
         }
@@ -709,7 +715,8 @@ fn collect_value_paths<'a>(value: &'a RustInteropValue, paths: &mut Vec<&'a Rust
         RustInteropValue::PolicyCall { argument, .. } => collect_value_paths(argument, paths),
         RustInteropValue::Boolean(_)
         | RustInteropValue::Symbol(_)
-        | RustInteropValue::Integer(_) => {}
+        | RustInteropValue::Integer(_)
+        | RustInteropValue::IntegerList(_) => {}
     }
 }
 

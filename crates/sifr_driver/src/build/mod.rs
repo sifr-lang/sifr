@@ -7,6 +7,8 @@ mod python_runtime;
 mod report;
 mod rust_interop;
 #[cfg(test)]
+mod rust_interop_advanced_data_contract_tests;
+#[cfg(test)]
 mod rust_interop_async_contract_tests;
 mod rust_interop_bridge_sources;
 mod rust_interop_cargo_inputs;

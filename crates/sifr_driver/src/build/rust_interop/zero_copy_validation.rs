@@ -277,6 +277,7 @@ fn parse_view_contract(
                 RustInteropValue::Boolean(value) => sync = Some(*value),
                 _ => return Err("`sync=` must be True or False"),
             },
+            _ if super::advanced_data_validation::is_advanced_view_key(name) => {}
             _ => return Err("unsupported `@rust.view(...)` key"),
         }
     }

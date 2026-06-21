@@ -100,5 +100,10 @@ if [[ "${EMIT_PLAN}" -eq 1 ]]; then
     python -m sifr_verify profiles plan --profile "${PROFILE}"
 fi
 
+if [[ "${#FORWARD_ARGS[@]}" -gt 0 ]]; then
+  exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify profiles run --profile "${PROFILE}" -- "${FORWARD_ARGS[@]}"
+fi
+
 exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
-  python -m sifr_verify profiles run --profile "${PROFILE}" -- "${FORWARD_ARGS[@]}"
+  python -m sifr_verify profiles run --profile "${PROFILE}"

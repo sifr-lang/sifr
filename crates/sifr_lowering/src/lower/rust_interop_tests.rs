@@ -239,6 +239,28 @@ def digest(input: bytes) -> int:
 }
 
 #[test]
+fn rust_interop_lowers_integer_list_values() {
+    let module = lower_ok(
+        r"
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, shape=[2, 3], strides=[3, 1])
+def tensor(input: bytes) -> int:
+    return 1
+",
+    );
+
+    assert!(module.functions[0].rust_interop[0]
+        .arguments
+        .iter()
+        .any(|arg| arg.name.as_deref() == Some("shape")
+            && arg.value == RustInteropValue::IntegerList(vec![2, 3])));
+    assert!(module.functions[0].rust_interop[0]
+        .arguments
+        .iter()
+        .any(|arg| arg.name.as_deref() == Some("strides")
+            && arg.value == RustInteropValue::IntegerList(vec![3, 1])));
+}
+
+#[test]
 fn rust_interop_rejects_string_target() {
     let errors = lower_errors(
         r#"
