@@ -133,7 +133,7 @@ Status: implemented in [PR #2705](https://github.com/sifr-lang/sifr/pull/2705); 
 
 ### milestone_39_5: Direct Cargo Crate Bindings
 
-Status: implemented locally on branch `phase39-rust-interop-m39-5`; `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-5-review-round1.md`.
+Status: implemented in [PR #2707](https://github.com/sifr-lang/sifr/pull/2707); `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-5-review-round1.md`.
 
 - Scope:
   - Implement direct binding for Cargo dependency functions whose public Rust signatures are bridge-compatible under milestone_39_4.
