@@ -32,12 +32,12 @@ use std::path::Path;
 
 #[path = "rust_interop/async_validation.rs"]
 mod async_validation;
-#[path = "rust_interop/direct_panic_policy.rs"]
-mod direct_panic_policy;
 #[path = "rust_interop/opaque_contract.rs"]
 mod opaque_contract;
 #[path = "rust_interop/opaque_validation.rs"]
 mod opaque_validation;
+#[path = "rust_interop/panic_validation.rs"]
+mod panic_validation;
 
 #[derive(Clone, Debug)]
 pub(super) struct PackageRustInteropContext {
@@ -205,6 +205,10 @@ impl<'a> RustInteropResolver<'a> {
         if !self.validate_async_declaration(declaration) {
             return;
         }
+        self.validate_panic_declaration(declaration, package);
+        if !self.diagnostics.is_empty() {
+            return;
+        }
 
         for path in declaration_paths(&declaration.declaration) {
             self.resolve_path(declaration, &package_id, package, path);
@@ -282,11 +286,6 @@ impl<'a> RustInteropResolver<'a> {
                     .signature_contracts
                     .get(&canonical_target_path)
                     .cloned();
-                self.validate_direct_panic_policy(
-                    declaration,
-                    &canonical_target_path,
-                    signature.as_ref(),
-                );
                 let async_thread_affinity = self.async_thread_affinity_for_probe(declaration);
                 self.pending_direct_probes.push(PendingRustBridgeProbe {
                     declaration: declaration.clone(),

@@ -503,8 +503,7 @@ Every `@rust` declaration has an explicit panic surface.
 Result-returning functions convert caught Rust panics to `RustPanicError`, and that error must enter the declared Sifr error channel through one of:
 
 - a declared union/member error type such as `Result[T, E | RustPanicError]`,
-- a declared `panic=map_error` adapter that maps `RustPanicError` into the public error type,
-- a deliberate supertype error surface such as `Result[T, Error]`.
+- a declared `panic=map_error` adapter that maps `RustPanicError` into the public error type.
 
 `panic=map_error` names a Sifr or bridge adapter resolved through the same dotted-path rules as `@rust` targets:
 
@@ -519,6 +518,8 @@ The adapter must be non-async, non-blocking, and shape-checked:
 - Sifr adapter: `def map_panic(error: RustPanicError) -> E`
 
 If the mapper panics, generated glue ignores the failed mapper and surfaces the original `RustPanicError` through a stable `SIFR-RUST-PANIC-*` path. If the public error channel cannot represent that original panic after mapper failure, the declaration is rejected.
+
+The initial compile-time panic contract validates the public panic surface and `panic=map_error(path)` shape. Full generated wrapper emission owns mapper signature validation and mapper-panic fallback behavior.
 
 Non-`Result` functions cannot return a recoverable panic without changing their public type. They are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
 
@@ -539,6 +540,8 @@ pub fn call_encode(text: &str) -> Result<Tokenized, NativeErrorOr<TokenizeError>
 `panic = "abort"` profiles are rejected for recoverable bridge builds unless the package explicitly opts into process-aborting behavior through `[trust].rust-panic-abort` and the Sifr API documents that it cannot preserve the no-panic guarantee for that backend. Aborts, segmentation faults, and process kills are outside recoverability.
 
 Generated wrappers use `AssertUnwindSafe` at the boundary because opaque handles and mutable bridge state are commonly not `UnwindSafe`. The generated wrapper marks the opaque receiver plus any mutable or owned opaque handles passed to the Rust call as poisoned automatically when `catch_unwind` returns `Err`; bridge authors do not implement poisoning manually and must not depend on additional bridge code running after a panic. Re-entering a poisoned handle returns a stable `SIFR-RUST-PANIC-*` error instead of calling Rust again.
+
+The initial panic-boundary contract surface enforces that Result-returning Rust interop declarations either expose `RustPanicError`, declare `panic=map_error(path)`, or use an explicit trusted/abort panic policy. Non-Result declarations require `panic=trusted_no_panic` or `panic=abort`; `panic=abort` requires both `[trust].rust-panic-abort` evidence and a selected Cargo profile whose panic strategy is `abort`. Runtime bridge helpers redact panic payloads when converting caught panics into `RustPanicErrorBridge`.
 
 `Drop` panics are backend contract violations. Fallible cleanup must be modeled as explicit `close` or `aclose`, not as hidden destructor failure.
 

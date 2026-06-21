@@ -1657,6 +1657,19 @@
     },
     {
       "baseline_fixture_id": null,
+      "code": "SIFR-RUST-PANIC-0001",
+      "deferral": {
+        "issue": "rust-interop-panic-rendered-fixtures",
+        "owner": "compiler/package-management",
+        "reason": "covered by crates/sifr_driver/src/build/rust_interop_panic_contract_tests.rs::package_rust_interop_result_requires_panic_surface until package-level diagnostics fixtures cover Rust panic interop contracts",
+        "removal_target": "add package diagnostics fixture for invalid Rust panic interop contracts"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
       "code": "SIFR-RUST-CARGO-0001",
       "deferral": {
         "issue": "rust-interop-rendered-fixtures",

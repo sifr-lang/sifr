@@ -136,8 +136,17 @@
       "capability": "panic-to-error behavior",
       "required_crates": [],
       "execution_kind": "contract-only",
-      "positive_evidence": {"id": "panic_maps_to_rust_panic_error", "status": "planned"},
-      "negative_evidence": {"id": "panic_payload_not_exposed", "status": "planned"}
+      "positive_evidence": {"id": "result_declares_rust_panic_error_or_map_error", "status": "passing"},
+      "negative_evidence": {"id": "panic_payload_not_exposed", "status": "passing"}
+    },
+    {
+      "id": "panic_boundary_wrapper_emission",
+      "tier": 2,
+      "capability": "generated panic wrapper emission, mapper signature validation, and mapper-panic fallback behavior",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "generated_wrapper_maps_panic_to_declared_error", "status": "planned"},
+      "negative_evidence": {"id": "invalid_map_error_signature_rejected", "status": "planned"}
     },
     {
       "id": "panic_abort_profile",
@@ -145,8 +154,8 @@
       "capability": "abort-profile rejection and trust",
       "required_crates": [],
       "execution_kind": "contract-only",
-      "positive_evidence": {"id": "explicit_abort_trust_declared", "status": "planned"},
-      "negative_evidence": {"id": "recoverable_abort_profile_rejected", "status": "planned"}
+      "positive_evidence": {"id": "explicit_abort_trust_and_strategy_declared", "status": "passing"},
+      "negative_evidence": {"id": "recoverable_abort_profile_rejected", "status": "passing"}
     },
     {
       "id": "async_runtime_reqwest",

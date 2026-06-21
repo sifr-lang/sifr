@@ -83,6 +83,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
         "KeyError",
         "OverflowError",
         "DecimalConversionError",
+        "RustPanicError",
         "TimeoutError",
         "ScopeFailure",
         "TaskCancelled",

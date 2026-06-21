@@ -172,10 +172,10 @@ fn package_rust_interop_direct_non_result_requires_panic_policy() {
 
     let diagnostics = interop_errors(generated, Some(context), "missing panic policy must fail");
 
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
     assert!(diagnostics[0]
         .message
-        .contains("requires explicit panic policy"));
+        .contains("non-Result Rust interop declarations"));
 }
 
 #[test]

@@ -25,6 +25,7 @@ pub(crate) const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "RuntimeError",
     "NotImplementedError",
     "DecimalConversionError",
+    "RustPanicError",
     "TimeoutError",
     "ScopeFailure",
     "TaskCancelled",

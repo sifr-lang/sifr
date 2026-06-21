@@ -181,6 +181,8 @@ Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); 
 
 ### milestone_39_8: Panic Boundary and Rust Error Surface
 
+Status: implemented locally on branch `phase39-rust-interop-m39-8`; focused validation covers built-in `RustPanicError` signatures, explicit `RustPanicError`/`panic=map_error(...)` Result panic surfaces, rejection of missing or invalid panic policies, rejection of `panic=map_error(...)` on non-Result APIs, abort policy trust gates, abort-profile strategy validation, and redacted `RustPanicErrorBridge` panic payload conversion. Full generated wrapper emission for package-local bridge calls remains tracked by `panic_boundary_wrapper_emission`.
+
 - Scope:
   - Wrap Rust bridge calls in unwind boundaries where recoverable.
   - Convert Rust panics into `RustPanicError` without exposing Rust panic payload details unsafely.

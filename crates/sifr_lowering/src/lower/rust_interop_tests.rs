@@ -2,6 +2,7 @@ use crate::{lower_module, HirDiagnostic, HirModule};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropEffect, RustInteropValue};
 use sifr_python_parser::parse_module;
+use sifr_type_system::Type;
 
 fn lower_ok(source: &str) -> HirModule {
     let parsed = parse_module(source).expect("source should parse");
@@ -58,6 +59,22 @@ def digest(input: bytes) -> int:
     assert!(function.rust_interop.iter().any(|declaration| {
         declaration.kind == RustInteropDecoratorKind::View && declaration.abi_requirements.view
     }));
+}
+
+#[test]
+fn rust_interop_accepts_builtin_rust_panic_error_result_surface() {
+    let module = lower_ok(
+        r#"
+@rust(bridge.hash.digest)
+def digest() -> Result[bytes, RustPanicError]:
+    return b"ok"
+"#,
+    );
+
+    assert!(matches!(
+        &module.functions[0].return_type,
+        Type::Result(_, err) if matches!(err.as_ref(), Type::Class { name, .. } if name == "RustPanicError")
+    ));
 }
 
 #[test]
