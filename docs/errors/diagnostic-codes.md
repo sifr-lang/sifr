@@ -249,6 +249,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-RUST-HANDLE-0001`](SIFR-RUST-HANDLE-0001.md) | Error | Rust opaque handle contract is invalid. |
 | [`SIFR-RUST-ASYNC-0001`](SIFR-RUST-ASYNC-0001.md) | Error | Rust async interop contract is invalid. |
 | [`SIFR-RUST-ZC-0001`](SIFR-RUST-ZC-0001.md) | Error | Rust zero-copy or borrowed-view contract is invalid. |
+| [`SIFR-RUST-CB-0001`](SIFR-RUST-CB-0001.md) | Error | Rust callback lifetime, threading, or policy contract is invalid. |
 | [`SIFR-RUST-PANIC-0001`](SIFR-RUST-PANIC-0001.md) | Error | Rust panic boundary contract is invalid. |
 | [`SIFR-RUST-CARGO-0001`](SIFR-RUST-CARGO-0001.md) | Error | Rust interop Cargo metadata is unavailable or inconsistent. |
 

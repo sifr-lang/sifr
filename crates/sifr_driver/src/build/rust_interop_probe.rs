@@ -137,6 +137,9 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
     let rust_path = probe.path.segments.join("::");
     match probe.declaration.declaration.kind {
         RustInteropDecoratorKind::Opaque => opaque_probe_source(probe, &rust_path),
+        RustInteropDecoratorKind::Callback => {
+            unreachable!("callback metadata is targetless and never enters probe planning")
+        }
         RustInteropDecoratorKind::Function
         | RustInteropDecoratorKind::Async
         | RustInteropDecoratorKind::ZeroCopy

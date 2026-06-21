@@ -15,9 +15,9 @@ use opaque_contract::OpaqueContract;
 use opaque_validation::opaque_probe_obligations;
 use ruff_text_size::TextRange;
 use sifr_codegen::{
-    RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan, RustBridgeSignatureContract,
-    RustGeneratedBridgeModule, RustInteropOwner, RustInteropResolvedRoot,
-    RustInteropResolvedTarget, RustInteropTrustRequirement, RustInteropTrustRequirementKind,
+    RustBridgeProbe, RustBridgeProbePlan, RustBridgeSignatureContract, RustGeneratedBridgeModule,
+    RustInteropOwner, RustInteropResolvedRoot, RustInteropResolvedTarget,
+    RustInteropTrustRequirement, RustInteropTrustRequirementKind,
 };
 use sifr_diagnostics::render::render_sink;
 use sifr_diagnostics::{
@@ -34,12 +34,16 @@ use std::path::Path;
 mod advanced_data_validation;
 #[path = "rust_interop/async_validation.rs"]
 mod async_validation;
+#[path = "rust_interop/callback_validation.rs"]
+mod callback_validation;
 #[path = "rust_interop/opaque_contract.rs"]
 mod opaque_contract;
 #[path = "rust_interop/opaque_validation.rs"]
 mod opaque_validation;
 #[path = "rust_interop/panic_validation.rs"]
 mod panic_validation;
+#[path = "rust_interop/probe_planning.rs"]
+mod probe_planning;
 #[path = "rust_interop/zero_copy_validation.rs"]
 mod zero_copy_validation;
 
@@ -132,6 +136,10 @@ impl<'a> RustInteropResolver<'a> {
             .map(|signature| (signature.canonical_target_path.clone(), signature))
             .collect();
         self.collect_async_contracts(&generated.interop.rust.declarations);
+        self.validate_callback_contracts(&generated.interop.rust.declarations);
+        if !self.diagnostics.is_empty() {
+            return Err(std::mem::take(&mut self.diagnostics));
+        }
         self.validate_zero_copy_contracts(&generated.interop.rust.declarations);
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));
@@ -215,6 +223,9 @@ impl<'a> RustInteropResolver<'a> {
             return;
         }
         if !self.validate_async_declaration(declaration) {
+            return;
+        }
+        if declaration.declaration.kind == RustInteropDecoratorKind::Callback {
             return;
         }
         self.validate_panic_declaration(declaration, package);
@@ -551,7 +562,8 @@ impl<'a> RustInteropResolver<'a> {
     }
 
     fn push_probe(&mut self, declaration: &sifr_codegen::RustInteropPlanDeclaration) {
-        let Some(kind) = probe_kind(&declaration.declaration, &declaration.owner) else {
+        let Some(kind) = probe_planning::probe_kind(&declaration.declaration, &declaration.owner)
+        else {
             self.push_diagnostic(
                 declaration,
                 declaration.declaration.span,
@@ -809,42 +821,6 @@ fn collect_unsafe_bridge_files(package_root: &Path, path: &Path, files: &mut Vec
     };
     for entry in read_dir.flatten() {
         collect_unsafe_bridge_files(package_root, &entry.path(), files);
-    }
-}
-
-fn probe_kind(
-    declaration: &RustInteropDeclaration,
-    owner: &RustInteropOwner,
-) -> Option<RustBridgeProbeKind> {
-    match declaration.kind {
-        RustInteropDecoratorKind::Function => {
-            if declaration.abi_requirements.async_boundary {
-                Some(RustBridgeProbeKind::AsyncFunction)
-            } else if matches!(owner, RustInteropOwner::Method { .. }) {
-                Some(RustBridgeProbeKind::Method)
-            } else if matches!(owner, RustInteropOwner::Function { .. }) {
-                Some(RustBridgeProbeKind::Function)
-            } else {
-                None
-            }
-        }
-        RustInteropDecoratorKind::Opaque => matches!(owner, RustInteropOwner::Class { .. })
-            .then_some(RustBridgeProbeKind::OpaqueHandle),
-        RustInteropDecoratorKind::Async => matches!(
-            owner,
-            RustInteropOwner::Function { .. } | RustInteropOwner::Method { .. }
-        )
-        .then_some(RustBridgeProbeKind::AsyncFunction),
-        RustInteropDecoratorKind::ZeroCopy => matches!(
-            owner,
-            RustInteropOwner::Function { .. } | RustInteropOwner::Method { .. }
-        )
-        .then_some(RustBridgeProbeKind::ZeroCopy),
-        RustInteropDecoratorKind::View => matches!(
-            owner,
-            RustInteropOwner::Function { .. } | RustInteropOwner::Method { .. }
-        )
-        .then_some(RustBridgeProbeKind::View),
     }
 }
 

@@ -104,6 +104,7 @@ fn classify_rust_call<'a>(
             let kind = match attr.attr.as_str() {
                 "opaque" => RustInteropDecoratorKind::Opaque,
                 "async" => RustInteropDecoratorKind::Async,
+                "callback" => RustInteropDecoratorKind::Callback,
                 "zero_copy" => RustInteropDecoratorKind::ZeroCopy,
                 "view" => RustInteropDecoratorKind::View,
                 other => {
@@ -160,6 +161,7 @@ fn parse_positional_target(
         }
         RustInteropDecoratorKind::Opaque
         | RustInteropDecoratorKind::Async
+        | RustInteropDecoratorKind::Callback
         | RustInteropDecoratorKind::ZeroCopy
         | RustInteropDecoratorKind::View => {
             if !call.arguments.args.is_empty() {
@@ -501,6 +503,7 @@ fn decorator_name(kind: RustInteropDecoratorKind) -> &'static str {
         RustInteropDecoratorKind::Function => "@rust",
         RustInteropDecoratorKind::Opaque => "@rust.opaque",
         RustInteropDecoratorKind::Async => "@rust.async",
+        RustInteropDecoratorKind::Callback => "@rust.callback",
         RustInteropDecoratorKind::ZeroCopy => "@rust.zero_copy",
         RustInteropDecoratorKind::View => "@rust.view",
     }

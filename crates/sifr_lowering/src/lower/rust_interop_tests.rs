@@ -261,6 +261,42 @@ def tensor(input: bytes) -> int:
 }
 
 #[test]
+fn rust_interop_lowers_callback_policy_contract() {
+    let source = r"
+@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe)
+def subscribe(callback: Callable[[int], None]) -> None:
+    pass
+";
+    let module = lower_ok(source);
+    let func = module
+        .functions
+        .iter()
+        .find(|func| func.name == "subscribe")
+        .expect("subscribe should lower");
+    assert!(func.rust_interop.iter().any(|declaration| {
+        declaration.kind == RustInteropDecoratorKind::Callback
+            && declaration.arguments.iter().any(|arg| {
+                arg.name.as_deref() == Some("backpressure")
+                    && matches!(
+                        &arg.value,
+                        RustInteropValue::PolicyCall { name, argument, .. }
+                            if name == "bounded"
+                                && matches!(argument.as_ref(), RustInteropValue::Integer(1024))
+                    )
+            })
+            && declaration.arguments.iter().any(|arg| {
+                arg.name.as_deref() == Some("overflow")
+                    && matches!(&arg.value, RustInteropValue::Symbol(value) if value == "error")
+            })
+            && declaration.arguments.iter().any(|arg| {
+                arg.name.as_deref() == Some("shutdown")
+                    && matches!(&arg.value, RustInteropValue::Symbol(value) if value == "drain")
+            })
+    }));
+}
+
+#[test]
 fn rust_interop_rejects_string_target() {
     let errors = lower_errors(
         r#"

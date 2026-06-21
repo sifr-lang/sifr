@@ -173,6 +173,12 @@ impl fmt::Display for RustPanicErrorBridge {
 
 impl std::error::Error for RustPanicErrorBridge {}
 
+#[derive(Debug)]
+pub struct ThreadsafeCallbackBridge {
+    // Contract marker for generated Rust callback bridge signatures.
+    _private: (),
+}
+
 pub fn catch_rust_panic<T, F>(f: F) -> Result<T, RustPanicErrorBridge>
 where
     F: FnOnce() -> T,

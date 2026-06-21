@@ -82,6 +82,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["reason"]
     ),
     active_entry!(
+        "SIFR-RUST-CB-0001",
+        "RUST-CB",
+        "Rust callback lifetime, threading, or policy contract is invalid.",
+        Severity::Error,
+        "crates/sifr_driver/src/build/rust_interop_callback_contract_tests.rs::package_rust_interop_rejects_callback_missing_backpressure",
+        "invalid Rust callback contract for {target}: {reason}",
+        "sifr_driver::build::rust_interop",
+        [arg!("target"), arg!("reason")],
+        ["target", "reason"]
+    ),
+    active_entry!(
         "SIFR-RUST-PANIC-0001",
         "RUST-PANIC",
         "Rust panic boundary contract is invalid.",

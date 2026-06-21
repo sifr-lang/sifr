@@ -64,6 +64,7 @@ pub enum RustBridgeTypeKind {
     GeneratedEnum,
     GeneratedError,
     OpaqueHandle,
+    Callback,
     None,
     Unsupported,
 }
@@ -108,10 +109,23 @@ pub(crate) fn bridge_contract_plan_for_named_modules<'a>(
         .collect::<BTreeMap<_, _>>();
     let mut generated_types = GeneratedTypeCollector::default();
     let mut signatures = Vec::new();
+    let callback_targets = declarations
+        .iter()
+        .filter(|declaration| {
+            declaration.declaration.kind == sifr_ir::RustInteropDecoratorKind::Callback
+        })
+        .map(canonical_sifr_target_path)
+        .collect::<BTreeSet<_>>();
     for declaration in declarations {
-        if let Some(signature) =
-            signature_contract(declaration, &module_catalogs, &mut generated_types)
-        {
+        if declaration.declaration.kind == sifr_ir::RustInteropDecoratorKind::Callback {
+            continue;
+        }
+        if let Some(signature) = signature_contract(
+            declaration,
+            &module_catalogs,
+            &mut generated_types,
+            &callback_targets,
+        ) {
             signatures.push(signature);
         }
     }
@@ -143,6 +157,7 @@ fn signature_contract(
     declaration: &RustInteropPlanDeclaration,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
+    callback_targets: &BTreeSet<String>,
 ) -> Option<RustBridgeSignatureContract> {
     let module_name = declaration.module_name.clone();
     let catalog = module_catalogs.get(&module_name);
@@ -168,6 +183,7 @@ fn signature_contract(
                 catalog,
                 generated_types,
                 BridgeTypePosition::Parameter,
+                callback_targets.contains(&canonical_sifr_target_path(declaration)),
             ),
         })
         .collect::<Vec<_>>();
@@ -178,6 +194,7 @@ fn signature_contract(
         catalog,
         generated_types,
         BridgeTypePosition::Return,
+        false,
     );
     Some(RustBridgeSignatureContract {
         canonical_target_path: canonical_sifr_target_path(declaration),
@@ -269,6 +286,7 @@ fn bridge_type_contract(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
+    callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     let resolved = ty.resolve_alias();
     match resolved {
@@ -311,6 +329,7 @@ fn bridge_type_contract(
             catalog,
             generated_types,
             position,
+            false,
         ),
         Type::Dict(key, value) => bridge_dict_type(
             key,
@@ -320,6 +339,7 @@ fn bridge_type_contract(
             catalog,
             generated_types,
             position,
+            false,
         ),
         Type::Union(members) => bridge_union_type(
             members,
@@ -328,6 +348,7 @@ fn bridge_type_contract(
             catalog,
             generated_types,
             position,
+            false,
         ),
         Type::Result(ok, err) => match position {
             BridgeTypePosition::Parameter => unsupported_type(
@@ -342,6 +363,7 @@ fn bridge_type_contract(
                     catalog,
                     generated_types,
                     BridgeTypePosition::Return,
+                    false,
                 );
                 let err_ty = bridge_type_contract(
                     err,
@@ -350,6 +372,7 @@ fn bridge_type_contract(
                     catalog,
                     generated_types,
                     BridgeTypePosition::Return,
+                    false,
                 );
                 combine_generic_type(
                     "Result",
@@ -417,17 +440,24 @@ fn bridge_type_contract(
                 unsupported_reason: None,
             }
         }
-        Type::Callable(..) => RustBridgeTypeContract {
-            sifr_type: ty.display_name(),
-            rust_borrowed_type: Some("crate::__sifr_bridge::CallbackBridge".to_string()),
-            rust_owned_type: None,
-            rust_return_type: None,
-            kind: RustBridgeTypeKind::Unsupported,
-            unsupported_reason: Some(
-                "callbacks require explicit callback contract support before they are bridge-compatible"
-                    .to_string(),
-            ),
-        },
+        Type::Callable(..)
+            if matches!(position, BridgeTypePosition::Parameter) && callback_parameter_allowed =>
+        {
+            RustBridgeTypeContract {
+                sifr_type: ty.display_name(),
+                rust_borrowed_type: Some(
+                    "&sifr_runtime::interop::ThreadsafeCallbackBridge".to_string(),
+                ),
+                rust_owned_type: Some("sifr_runtime::interop::ThreadsafeCallbackBridge".to_string()),
+                rust_return_type: None,
+                kind: RustBridgeTypeKind::Callback,
+                unsupported_reason: None,
+            }
+        }
+        Type::Callable(..) => unsupported_type(
+            ty,
+            "callbacks require explicit callback contract support before they are bridge-compatible",
+        ),
         Type::Set(_) => unsupported_type(ty, "set[T] is not a supported Rust bridge container"),
         Type::Tuple(_) => unsupported_type(ty, "tuple[...] is not a supported Rust bridge container"),
         Type::Any | Type::Unknown => {
@@ -490,6 +520,7 @@ fn bridge_list_type(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
+    _callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     let inner_ty = bridge_type_contract(
         inner,
@@ -498,6 +529,7 @@ fn bridge_list_type(
         catalog,
         generated_types,
         position,
+        false,
     );
     let Some(inner_owned) = inner_ty.rust_owned_type.clone() else {
         return unsupported_type(
@@ -523,6 +555,7 @@ fn bridge_dict_type(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
+    _callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     if !matches!(key.resolve_alias(), Type::Str) {
         return unsupported_type(
@@ -537,6 +570,7 @@ fn bridge_dict_type(
         catalog,
         generated_types,
         position,
+        false,
     );
     let Some(value_owned) = value_ty.rust_owned_type.clone() else {
         return unsupported_type(
@@ -562,6 +596,7 @@ fn bridge_union_type(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
+    _callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     if members.len() == 2 {
         let non_none = members
@@ -579,6 +614,7 @@ fn bridge_union_type(
                     catalog,
                     generated_types,
                     position,
+                    false,
                 );
                 let Some(inner_owned) = inner.rust_owned_type.clone() else {
                     return unsupported_type(
@@ -730,6 +766,7 @@ fn push_type_contract(out: &mut String, ty: &RustBridgeTypeContract) {
         RustBridgeTypeKind::GeneratedEnum => "enum",
         RustBridgeTypeKind::GeneratedError => "error",
         RustBridgeTypeKind::OpaqueHandle => "handle",
+        RustBridgeTypeKind::Callback => "callback",
         RustBridgeTypeKind::None => "none",
         RustBridgeTypeKind::Unsupported => "unsupported",
     });
