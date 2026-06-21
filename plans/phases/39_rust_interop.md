@@ -119,7 +119,7 @@ Status: implemented in [PR #2704](https://github.com/sifr-lang/sifr/pull/2704); 
 
 ### milestone_39_4: Bridge Type Contract and Conversion Runtime
 
-Status: implemented locally on branch `phase39-rust-interop-m39-4`; focused validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-4-review-round2.md`.
+Status: implemented in [PR #2705](https://github.com/sifr-lang/sifr/pull/2705); local `create-pr` validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-4-review-round2.md`.
 
 - Scope:
   - Implement checked bridge mappings for booleans, fixed-width integers, exact integers through `sifr_runtime::interop::SifrIntBridge`, floats, strings, bytes, lists, order-preserving dicts, `Option`, `Result`, closed enums, records, opaque handles through `sifr_runtime::interop::Handle<T>`, callbacks, and errors.
