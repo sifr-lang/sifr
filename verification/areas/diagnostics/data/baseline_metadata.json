@@ -1,6 +1,21 @@
 {
   "baselines": [
     {
+      "bless_reason": "Rust interop malformed decorator diagnostic baseline.",
+      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "fixture_id": "rust_interop_malformed_decorator",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/package-management",
+      "renderer": "compact",
+      "source_hash": "sha256:3cab7513c5c6ac8217bfe4d2146d20de2b121a83ca7f2124eee8be68b731729d",
+      "suite": "baselines"
+    },
+    {
       "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
       "bless_reference": "diagnostic-baseline-catalog-pr",
       "fixture_id": "decimal_invalid_literal",

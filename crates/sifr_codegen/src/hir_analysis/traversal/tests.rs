@@ -26,6 +26,7 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
 
@@ -122,6 +123,7 @@ fn walk_stmts_respects_nested_function_scope_boundary() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
     let stmts = vec![HirStmt::NestedFunction { func: nested }];

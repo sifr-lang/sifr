@@ -77,6 +77,9 @@ pub fn generate_rust_multi_with_metadata(
         rust_files: files,
         used_stdlib_modules,
         required_features,
+        interop: crate::rust_interop_plan::interop_build_plan_for_named_modules(
+            modules.iter().map(|(name, module)| (Some(*name), *module)),
+        ),
     }
 }
 

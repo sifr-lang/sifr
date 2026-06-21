@@ -59,6 +59,7 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
 
@@ -154,6 +155,7 @@ fn body_calls_function_ignores_nested_function_scope() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
     let stmts = vec![HirStmt::NestedFunction { func: nested }];
@@ -219,6 +221,7 @@ fn collect_locally_defined_vars_ignores_nested_function_body_bindings() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
 
@@ -267,6 +270,7 @@ fn collect_mutated_vars_ignores_nested_function_scope() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
 
@@ -288,6 +292,7 @@ fn collect_mutated_vars_includes_captured_rebinds_from_nested_functions() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
 
@@ -315,6 +320,7 @@ fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
 

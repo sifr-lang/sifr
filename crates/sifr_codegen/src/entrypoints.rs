@@ -192,6 +192,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             }
             features
         },
+        interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
     }

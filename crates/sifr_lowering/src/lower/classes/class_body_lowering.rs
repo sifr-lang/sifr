@@ -5,6 +5,7 @@ use super::{
     HirParam, HirPattern, HirStmt, HirTupleTargetBinding, LowerCtx, MethodKind, ParamConvention,
     Ranged, Stmt, StmtClassDef, Type,
 };
+use crate::lower::rust_interop::{collect_rust_interop_declarations, RustInteropOwner};
 /// Second pass: lower class method bodies into `HirClass`.
 pub(in crate::lower) fn lower_class(
     class_def: &StmtClassDef,
@@ -43,6 +44,7 @@ pub(in crate::lower) fn lower_class(
                     is_async: false,
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
+                    rust_interop: Vec::new(),
                     type_params: Vec::new(),
                 }
             })
@@ -61,6 +63,13 @@ pub(in crate::lower) fn lower_class(
             parent_class: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
+            rust_interop: collect_rust_interop_declarations(
+                &class_def.decorator_list,
+                RustInteropOwner::Class,
+                ctx,
+                false,
+                false,
+            ),
         });
     }
 
@@ -126,6 +135,13 @@ pub(in crate::lower) fn lower_class(
                     is_async: false,
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
+                    rust_interop: collect_rust_interop_declarations(
+                        &func.decorator_list,
+                        RustInteropOwner::Method,
+                        ctx,
+                        has_decorator(func, "blocking_io"),
+                        has_decorator(func, "cpu_heavy"),
+                    ),
                     type_params: Vec::new(),
                 });
             }
@@ -147,6 +163,13 @@ pub(in crate::lower) fn lower_class(
                 .iter()
                 .map(|variant| (variant.name.clone(), variant.value))
                 .collect(),
+            rust_interop: collect_rust_interop_declarations(
+                &class_def.decorator_list,
+                RustInteropOwner::Class,
+                ctx,
+                false,
+                false,
+            ),
         });
     }
 
@@ -216,6 +239,13 @@ pub(in crate::lower) fn lower_class(
                     is_async: false,
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
+                    rust_interop: collect_rust_interop_declarations(
+                        &func.decorator_list,
+                        RustInteropOwner::Method,
+                        ctx,
+                        has_decorator(func, "blocking_io"),
+                        has_decorator(func, "cpu_heavy"),
+                    ),
                     type_params: Vec::new(),
                 });
             }
@@ -234,6 +264,13 @@ pub(in crate::lower) fn lower_class(
             implements_protocols: Vec::new(),
             type_params: Vec::new(),
             enum_variants: Vec::new(),
+            rust_interop: collect_rust_interop_declarations(
+                &class_def.decorator_list,
+                RustInteropOwner::Class,
+                ctx,
+                false,
+                false,
+            ),
         });
     }
 
@@ -384,6 +421,13 @@ pub(in crate::lower) fn lower_class(
                 is_async: func.is_async,
                 method_kind,
                 decorators: method_decorators,
+                rust_interop: collect_rust_interop_declarations(
+                    &func.decorator_list,
+                    RustInteropOwner::Method,
+                    ctx,
+                    has_decorator(func, "blocking_io"),
+                    has_decorator(func, "cpu_heavy"),
+                ),
                 type_params: Vec::new(),
             };
 
@@ -445,6 +489,13 @@ pub(in crate::lower) fn lower_class(
         parent_class: parent_class_name,
         type_params: class_type_params,
         enum_variants: Vec::new(),
+        rust_interop: collect_rust_interop_declarations(
+            &class_def.decorator_list,
+            RustInteropOwner::Class,
+            ctx,
+            false,
+            false,
+        ),
     })
 }
 

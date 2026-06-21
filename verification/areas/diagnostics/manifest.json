@@ -55,6 +55,15 @@
       "kind": "adapter",
       "cases": [
         {
+          "id": "rust_interop_malformed_decorator",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/rust_interop_malformed_decorator/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "decimal_invalid_literal",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/decimal_invalid_literal/main.sifr",
           "command": "check",

@@ -11,6 +11,7 @@ mod parsing_names_and_types;
 mod project_and_backend;
 mod python_interop;
 mod reserved;
+mod rust_interop;
 
 const REGISTRY_GROUPS: &[&[DiagnosticRegistryEntry]] = &[
     reserved::ENTRIES,
@@ -20,6 +21,7 @@ const REGISTRY_GROUPS: &[&[DiagnosticRegistryEntry]] = &[
     formatting_and_lint::ENTRIES,
     package::ENTRIES,
     python_interop::ENTRIES,
+    rust_interop::ENTRIES,
 ];
 
 pub static DIAGNOSTIC_REGISTRY: LazyLock<Vec<DiagnosticRegistryEntry>> = LazyLock::new(|| {

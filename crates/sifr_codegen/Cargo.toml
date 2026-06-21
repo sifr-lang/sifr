@@ -12,6 +12,7 @@ sifr_diagnostics = { workspace = true }
 sifr_ir = { workspace = true }
 sifr_stdlib = { workspace = true }
 sifr_type_system = { workspace = true }
+ruff_text_size = { workspace = true }
 syn = { version = "2.0.117", features = ["full", "visit"] }
 prettyplease = "0.2.37"
 proc-macro2 = "1.0.106"

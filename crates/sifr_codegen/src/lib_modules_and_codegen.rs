@@ -64,6 +64,8 @@ pub struct CodegenResult {
     pub used_intrinsic_modules: HashSet<String>,
     /// Required stdlib/runtime features discovered during structured lowering/codegen.
     pub required_features: HashSet<StdlibFeature>,
+    /// Structured interop metadata required before generated project materialization.
+    pub interop: crate::InteropBuildPlan,
     /// Map of `constant_name` -> (type, `rust_name`) for module-level constants
     pub constant_mappings: HashMap<String, (Type, String)>,
     /// Counters for structured lowering usage during emission.
@@ -75,6 +77,8 @@ pub struct MultiModuleCodegenResult {
     pub rust_files: HashMap<String, String>,
     pub used_stdlib_modules: HashSet<String>,
     pub required_features: HashSet<StdlibFeature>,
+    /// Structured interop metadata required before generated project materialization.
+    pub interop: crate::InteropBuildPlan,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -872,6 +876,7 @@ pub fn generate_rust_with_stdlib_for_module(
             }
             features
         },
+        interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
     }

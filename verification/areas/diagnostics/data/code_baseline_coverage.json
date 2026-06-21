@@ -1581,6 +1581,16 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": "rust_interop_malformed_decorator",
+      "code": "SIFR-RUST-CONFIG-0001",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "e2e_unused_result",
       "code": "SIFR-RESULT-0001",
       "deferral": null,

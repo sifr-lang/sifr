@@ -588,6 +588,7 @@ mod tests {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: Vec::new(),
+            rust_interop: Vec::new(),
             type_params: Vec::new(),
         });
 
@@ -623,6 +624,7 @@ mod tests {
                 is_async: false,
                 method_kind: MethodKind::Regular,
                 decorators: Vec::new(),
+                rust_interop: Vec::new(),
                 type_params: Vec::new(),
             }],
             is_hashable: false,
@@ -634,6 +636,7 @@ mod tests {
             parent_class: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
+            rust_interop: Vec::new(),
         });
         module.constants.push((
             "LAST_ERR".to_string(),
@@ -694,6 +697,7 @@ mod tests {
             is_async: true,
             method_kind: MethodKind::Regular,
             decorators: Vec::new(),
+            rust_interop: Vec::new(),
             type_params: Vec::new(),
         });
 

@@ -105,6 +105,9 @@ mod result_diagnostics;
 #[cfg(test)]
 mod result_diagnostics_tests;
 mod return_lowering;
+mod rust_interop;
+#[cfg(test)]
+mod rust_interop_tests;
 mod scope_helpers;
 mod sequence_guard_detection;
 mod sequence_guard_updates;

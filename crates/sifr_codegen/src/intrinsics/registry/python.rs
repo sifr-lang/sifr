@@ -84,7 +84,7 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
     }
 }
 
-fn map_python_error(expr: String) -> RustExpr {
+fn map_python_error(expr: impl std::fmt::Display) -> RustExpr {
     RustExpr::Ident(format!(
         r#"({expr}).map_err(|__sifr_python_error| PythonError {{
             message: __sifr_python_error.message,
@@ -96,7 +96,7 @@ fn map_python_error(expr: String) -> RustExpr {
     ))
 }
 
-fn object_expr(handle: String, token: String) -> String {
+fn object_expr(handle: &str, token: &str) -> String {
     format!("({handle}, {token})")
 }
 
@@ -108,11 +108,11 @@ fn lower_handle_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr
     let token = render_expr(&args[1]);
     Some(map_python_error(format!(
         "sifr_runtime::python::{function}({})",
-        object_expr(handle, token)
+        object_expr(&handle, &token)
     )))
 }
 
-fn object_handles_expr(values: String) -> String {
+fn object_handles_expr(values: &str) -> String {
     format!(
         r#"({values})
                 .iter()
@@ -121,7 +121,7 @@ fn object_handles_expr(values: String) -> String {
     )
 }
 
-fn keyed_object_handles_expr(values: String) -> String {
+fn keyed_object_handles_expr(values: &str) -> String {
     format!(
         r#"({values})
                 .iter()
@@ -140,7 +140,7 @@ fn lower_object_list_constructor(args: &[RustExpr], function: &str) -> Option<Ru
             let __sifr_python_values = {};
             sifr_runtime::python::{function}(&__sifr_python_values)
         }}"#,
-        object_handles_expr(values)
+        object_handles_expr(&values)
     )))
 }
 
@@ -154,7 +154,7 @@ fn lower_keyed_object_constructor(args: &[RustExpr], function: &str) -> Option<R
             let __sifr_python_values = {};
             sifr_runtime::python::{function}(&__sifr_python_values)
         }}"#,
-        keyed_object_handles_expr(values)
+        keyed_object_handles_expr(&values)
     )))
 }
 

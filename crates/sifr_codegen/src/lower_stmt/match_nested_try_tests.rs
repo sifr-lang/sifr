@@ -167,6 +167,7 @@ fn lowers_simple_nested_function_to_closure_block() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         },
     };
@@ -200,6 +201,7 @@ fn lowers_recursive_nested_function_without_captures_to_local_fn() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         },
     };
@@ -226,6 +228,7 @@ fn lowers_mutating_capture_nested_function_to_mutable_closure_binding() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         },
     };

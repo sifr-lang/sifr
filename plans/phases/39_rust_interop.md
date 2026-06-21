@@ -66,6 +66,8 @@ Phase 39 has internal implementation checkpoints, not separate release phases. C
 
 ### milestone_39_1: Declaration Syntax, Lowering, and Build Plan Metadata
 
+Status: implemented in [PR #2702](https://github.com/sifr-lang/sifr/pull/2702); local `create-pr` validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-1-review-round3.md`.
+
 - Scope:
   - Parse and validate `@rust(...)`, `@rust.opaque(...)`, `@rust.async(...)`, `@rust.zero_copy(...)`, and `@rust.view(...)`.
   - Represent Rust decorator targets as structured dotted-path AST nodes, not strings.

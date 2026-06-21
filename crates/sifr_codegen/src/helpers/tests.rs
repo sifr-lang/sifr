@@ -12,6 +12,7 @@ fn mk_function(name: &str, body: Vec<HirStmt>) -> HirFunction {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     }
 }
@@ -310,6 +311,7 @@ fn body_calls_function_ignores_nested_function_scope() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
     let stmts = vec![HirStmt::NestedFunction { func: nested }];
@@ -419,6 +421,7 @@ fn body_contains_return_ignores_nested_function_scope() {
         is_async: false,
         method_kind: MethodKind::Regular,
         decorators: vec![],
+        rust_interop: Vec::new(),
         type_params: vec![],
     };
     let stmts = vec![HirStmt::NestedFunction { func: nested }];

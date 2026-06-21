@@ -141,7 +141,7 @@ fn check_active_doc_casing(repo_root: &Path, drift: &mut Vec<String>) {
 fn public_index() -> String {
     let mut out = generated_header("Diagnostic Codes");
     out.push_str(
-        "Sifr diagnostic codes use `SIFR-<FAMILY>-dddd`, with local numbers scoped to each family.\n\n",
+        "Sifr diagnostic codes use `SIFR-<FAMILY>-dddd`, with local numbers scoped to each family. Some interop families use hyphenated names such as `RUST-CONFIG`.\n\n",
     );
     out.push_str("Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false`, and machine-applicable suggestion availability is derived from emitted suggestions rather than authored registry metadata.\n\n");
 
@@ -192,7 +192,7 @@ fn public_index() -> String {
 fn internal_reference() -> String {
     let mut out = generated_header("Diagnostic Code Registry");
     out.push_str("This file is generated from `crates/sifr_diagnostics/src/codes.rs`.\n\n");
-    out.push_str("Codes use per-family local numbering. `SIFR-<FAMILY>-0000` is reserved as the family base and must never be emitted.\n\n");
+    out.push_str("Codes use per-family local numbering. `SIFR-<FAMILY>-0000` is reserved as the family base and must never be emitted. Family names may be hyphenated for scoped interop domains such as `RUST-CONFIG`.\n\n");
     out.push_str("Registry states:\n\n");
     out.push_str("- `Active`: may have a `DiagnosticCode` constant and can be emitted.\n");
     out.push_str(

@@ -236,7 +236,7 @@ fn binary_project_cache_key(
         .collect::<Vec<_>>()
         .join("\n===\n");
     format!(
-        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}\n[cache-key-fragment]\n{}",
+        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}\n[interop]\n{}\n[cache-key-fragment]\n{}",
         generate_dependency_cargo_toml(
             project_name,
             &generated_project.used_stdlib_modules,
@@ -246,6 +246,7 @@ fn binary_project_cache_key(
         support_modules,
         stdlib_modules.join("\n"),
         required_features.join("\n"),
+        generated_project.interop.cache_key_fragment(),
         generated_project.cache_key_fragment.as_deref().unwrap_or("")
     )
 }
@@ -270,18 +271,18 @@ fn sorted_feature_lines(values: &std::collections::HashSet<StdlibFeature>) -> Ve
 mod tests {
     use super::binary_project_cache_key;
     use crate::build::project_codegen::GeneratedBinaryProject;
+    use sifr_codegen::{
+        InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
+    };
+    use sifr_ir::{
+        RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
+        RustInteropEffect, RustTargetPath,
+    };
     use std::collections::{BTreeMap, HashSet};
 
     #[test]
     fn binary_project_cache_key_includes_package_cache_fragment() {
-        let base = GeneratedBinaryProject {
-            main_rs: "fn main() {}\n".to_string(),
-            support_modules: BTreeMap::new(),
-            used_stdlib_modules: HashSet::new(),
-            required_features: HashSet::new(),
-            cache_key_fragment: None,
-            python_runtime: None,
-        };
+        let base = base_project();
         let mut with_python_probe = GeneratedBinaryProject {
             cache_key_fragment: Some("python-probe-a".to_string()),
             ..base
@@ -291,5 +292,53 @@ mod tests {
         let second = binary_project_cache_key("sifr_output", &with_python_probe);
 
         assert_ne!(first, second);
+    }
+
+    #[test]
+    fn binary_project_cache_key_includes_interop_build_plan() {
+        let base = base_project();
+        let mut with_interop = base_project();
+        with_interop.interop = InteropBuildPlan {
+            rust: RustInteropPlan {
+                declarations: vec![RustInteropPlanDeclaration {
+                    module_name: Some("main".to_string()),
+                    owner: RustInteropOwner::Function {
+                        name: "digest".to_string(),
+                    },
+                    declaration: RustInteropDeclaration {
+                        kind: RustInteropDecoratorKind::Function,
+                        target: Some(RustTargetPath {
+                            segments: vec![
+                                "bridge".to_string(),
+                                "hash".to_string(),
+                                "digest".to_string(),
+                            ],
+                            span: Default::default(),
+                        }),
+                        arguments: Vec::new(),
+                        span: Default::default(),
+                        effect: RustInteropEffect::Sync,
+                        abi_requirements: RustInteropAbiRequirements::default(),
+                    },
+                }],
+            },
+        };
+
+        assert_ne!(
+            binary_project_cache_key("sifr_output", &base),
+            binary_project_cache_key("sifr_output", &with_interop)
+        );
+    }
+
+    fn base_project() -> GeneratedBinaryProject {
+        GeneratedBinaryProject {
+            main_rs: "fn main() {}\n".to_string(),
+            support_modules: BTreeMap::new(),
+            used_stdlib_modules: HashSet::new(),
+            required_features: HashSet::new(),
+            interop: InteropBuildPlan::default(),
+            cache_key_fragment: None,
+            python_runtime: None,
+        }
     }
 }

@@ -10,7 +10,7 @@ fn object_handle() -> Type {
     Type::Tuple(vec![Type::Int, Type::Int])
 }
 
-/// _sifr.python - Embedded CPython opaque object intrinsics.
+/// `_sifr.python` - Embedded `CPython` opaque object intrinsics.
 pub(super) fn intrinsic_python() -> IntrinsicModule {
     let mut functions = HashMap::new();
     functions.insert(

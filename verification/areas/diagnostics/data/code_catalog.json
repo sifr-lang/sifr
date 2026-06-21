@@ -2481,6 +2481,22 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-RUST-CONFIG-0001",
+      "constant": "RUST_CONFIG_MALFORMED_DECORATOR",
+      "docs_link": "docs/errors/SIFR-RUST-CONFIG-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/rust_interop_malformed_decorator/main.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-RESULT-0001",
       "constant": "RESULT_UNUSED_VALUE",
       "docs_link": "docs/errors/SIFR-RESULT-0001.md",

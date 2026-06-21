@@ -24,7 +24,7 @@ RECOVERY_PATH = DATA_ROOT / "recovery_surface_coverage.json"
 ALLOWED_RENDERERS = {"human", "json", "compact"}
 ALLOWED_STABILITY = {"stable", "unstable", "internal"}
 NORMALIZERS = {"workspace-path", "tmp-path", "crlf", "artifact-cache-lines", "json-sort"}
-CODE_RE = re.compile(r"^SIFR-[A-Z]+-\d{4}$")
+CODE_RE = re.compile(r"^SIFR-(?:[A-Z]+|RUST-[A-Z]+)-\d{4}$")
 BASELINE_RE = re.compile(r"^(?P<label>.+)\.(?P<stream>stdout|stderr|exit-code)\.txt$")
 
 

@@ -148,22 +148,31 @@ fn families_by_name() -> BTreeMap<&'static str, &'static super::DiagnosticFamily
 
 fn assert_family_name(name: &str) {
     assert!(
-        (2..=12).contains(&name.len()),
-        "family name {name} must be 2-12 ASCII letters"
+        (2..=16).contains(&name.len()),
+        "family name {name} must be 2-16 ASCII letters or hyphenated segments"
     );
     assert!(
-        name.bytes().all(|byte| byte.is_ascii_uppercase()),
-        "family name {name} must contain uppercase ASCII letters only"
+        name.split('-')
+            .all(|part| { !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_uppercase()) }),
+        "family name {name} must contain uppercase ASCII letter segments"
+    );
+    let segments = name.split('-').collect::<Vec<_>>();
+    assert!(
+        segments.len() == 1 || (segments.len() == 2 && segments[0] == "RUST"),
+        "hyphenated diagnostic families are reserved for RUST-* scoped interop families"
     );
 }
 
 fn assert_canonical_code(id: &str) {
-    let mut parts = id.split('-');
-    assert_eq!(parts.next(), Some("SIFR"));
-    let family = parts.next().expect("diagnostic id must include family");
-    let local = parts.next().expect("diagnostic id must include local code");
-    assert!(parts.next().is_none(), "diagnostic id has too many parts");
-    assert_family_name(family);
+    let parts = id.split('-').collect::<Vec<_>>();
+    assert_eq!(parts.first().copied(), Some("SIFR"));
+    assert!(
+        parts.len() >= 3,
+        "diagnostic id must include family and local code"
+    );
+    let local = parts.last().copied().expect("parts length was checked");
+    let family = parts[1..parts.len() - 1].join("-");
+    assert_family_name(&family);
     assert_eq!(local.len(), 4, "diagnostic local code must be four digits");
     assert!(
         local.bytes().all(|byte| byte.is_ascii_digit()),
@@ -171,10 +180,9 @@ fn assert_canonical_code(id: &str) {
     );
 }
 
-fn parse_family(id: &str) -> &str {
-    id.split('-')
-        .nth(1)
-        .expect("canonical diagnostic id must include family")
+fn parse_family(id: &str) -> String {
+    let parts = id.split('-').collect::<Vec<_>>();
+    parts[1..parts.len() - 1].join("-")
 }
 
 fn assert_dedupe_args_are_declared(entry: &super::DiagnosticRegistryEntry) {

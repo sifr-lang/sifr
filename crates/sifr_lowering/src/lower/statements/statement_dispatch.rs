@@ -26,6 +26,7 @@ use super::{
     lower_while, str,
 };
 use crate::hir_nodes::{HirExceptHandler, HirFunction, HirParam, HirStmt, MethodKind};
+use crate::lower::rust_interop::{collect_rust_interop_declarations, RustInteropOwner};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
@@ -730,6 +731,13 @@ pub(in crate::lower) fn lower_stmt(
                     }
                 })
                 .collect();
+            let rust_interop = collect_rust_interop_declarations(
+                &func.decorator_list,
+                RustInteropOwner::Function,
+                ctx,
+                has_decorator(func, "blocking_io"),
+                has_decorator(func, "cpu_heavy"),
+            );
 
             Some(HirStmt::NestedFunction {
                 func: HirFunction {
@@ -740,6 +748,7 @@ pub(in crate::lower) fn lower_stmt(
                     is_async: false,
                     method_kind: MethodKind::Regular,
                     decorators,
+                    rust_interop,
                     type_params: Vec::new(),
                 },
             })
