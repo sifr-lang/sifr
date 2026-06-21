@@ -52,6 +52,29 @@ if [[ -e "${home_dir}/.sifr/env" || -e "${home_dir}/.profile" || -e "${home_dir}
   exit 1
 fi
 
+output="$(
+  HOME="${home_dir}" \
+    SHELL=/bin/zsh \
+    PATH="${home_dir}/.sifr/bin:/usr/bin:/bin" \
+    SIFR_TARGET="${target}" \
+    SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
+    SIFR_NO_MODIFY_PATH=1 \
+    sh "${installer}" --no-modify-path
+)"
+
+if [[ "${output}" == *"configured Sifr PATH"* ]]; then
+  echo "installer configured PATH on already-on-PATH opt-out rerun" >&2
+  echo "--- output ---" >&2
+  echo "${output}" >&2
+  exit 1
+fi
+
+if [[ -e "${home_dir}/.sifr/env" || -e "${home_dir}/.profile" || -e "${home_dir}/.zshrc" ]]; then
+  echo "installer wrote shell profile files on already-on-PATH opt-out rerun" >&2
+  find "${home_dir}" -maxdepth 2 -type f -print >&2
+  exit 1
+fi
+
 if [[ "$("${home_dir}/.sifr/bin/sifr")" != "no path fixture" ]]; then
   echo "installer did not install binary when PATH modification was disabled" >&2
   exit 1

@@ -445,9 +445,10 @@ configure_path() {
   [ "\${NO_MODIFY_PATH}" = "1" ] && return 0
   [ -n "\${HOME:-}" ] || return 0
 
+  install_dir_on_path=0
   case ":\${PATH}:" in
     *:"\${install_dir}":*)
-      return 0
+      install_dir_on_path=1
       ;;
   esac
 
@@ -464,6 +465,14 @@ configure_path() {
 
   mkdir -p "\${sifr_home}"
   write_env_script_sh "\${install_dir_expr}" "\${env_script_path}"
+
+  if [ "\${install_dir_on_path}" = "1" ]; then
+    if [ -d "\${HOME}/.config/fish" ] || [ "\${shell_name}" = "fish" ]; then
+      mkdir -p "\${fish_config_dir}"
+      write_env_script_fish "\${install_dir_expr}" "\${fish_env_script_path}"
+    fi
+    return 0
+  fi
 
   if append_source_line "\${HOME}/.profile" "\${source_line}"; then
     :
