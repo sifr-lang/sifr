@@ -33,7 +33,7 @@ pub(super) fn bridge_contract_diagnostics(
         }
         if let Some(reason) = unsupported_bridge_type_reason(
             &signature.return_type,
-            signature.return_type.rust_return_type.as_deref(),
+            signature.return_type.rust_return_type.clone(),
         ) {
             diagnostics.push(RustBridgeContractDiagnostic {
                 signature: signature.clone(),
@@ -53,18 +53,26 @@ pub(super) fn bridge_contract_diagnostics(
 fn rust_param_type(
     convention: RustBridgeParamConvention,
     ty: &RustBridgeTypeContract,
-) -> Option<&str> {
+) -> Option<String> {
     match convention {
-        RustBridgeParamConvention::Borrow | RustBridgeParamConvention::MutableBorrow => {
-            ty.rust_borrowed_type.as_deref()
+        RustBridgeParamConvention::Borrow => ty.rust_borrowed_type.clone(),
+        RustBridgeParamConvention::MutableBorrow => {
+            ty.rust_borrowed_type.as_deref().map(mutable_borrow_type)
         }
-        RustBridgeParamConvention::Own => ty.rust_owned_type.as_deref(),
+        RustBridgeParamConvention::Own => ty.rust_owned_type.clone(),
     }
+}
+
+fn mutable_borrow_type(rust_type: &str) -> String {
+    rust_type.strip_prefix('&').map_or_else(
+        || rust_type.to_string(),
+        |inner| format!("&mut {}", inner.trim_start()),
+    )
 }
 
 fn unsupported_bridge_type_reason(
     ty: &RustBridgeTypeContract,
-    selected_rust_type: Option<&str>,
+    selected_rust_type: Option<String>,
 ) -> Option<String> {
     ty.unsupported_reason.clone().or_else(|| {
         selected_rust_type

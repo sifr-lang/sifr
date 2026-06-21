@@ -10,6 +10,7 @@ struct TestPackage {
     version: String,
     sifr_name: String,
     aliases: Vec<TestAlias>,
+    has_sifr_manifest: bool,
 }
 
 #[derive(Clone)]
@@ -65,6 +66,26 @@ fn production_package_version(
         version: version.to_string(),
         sifr_name: sifr_name.to_string(),
         aliases: Vec::new(),
+        has_sifr_manifest: true,
+    }
+}
+
+fn backend_rust_package(workspace: &Path, dir_name: &str, cargo_name: &str) -> TestPackage {
+    let root = workspace.join(dir_name);
+    std::fs::create_dir_all(root.join("src")).expect("backend src dir should be created");
+    std::fs::write(root.join("src/lib.rs"), "").expect("backend marker should be written");
+    std::fs::write(
+        root.join("Cargo.toml"),
+        format!("[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n"),
+    )
+    .expect("backend cargo manifest should be written");
+    TestPackage {
+        root,
+        cargo_name: cargo_name.to_string(),
+        version: "0.1.0".to_string(),
+        sifr_name: String::new(),
+        aliases: Vec::new(),
+        has_sifr_manifest: false,
     }
 }
 
@@ -141,6 +162,11 @@ fn package_graph(
                     )
                 })
                 .collect::<serde_json::Map<_, _>>();
+            let metadata = if package.has_sifr_manifest {
+                serde_json::json!({ "sifr": { "manifest": "sifr.toml", "aliases": aliases } })
+            } else {
+                serde_json::json!({})
+            };
             serde_json::json!({
                 "id": cargo_package_id(package),
                 "name": package.cargo_name,
@@ -155,7 +181,7 @@ fn package_graph(
                     "src_path": package.root.join("src/lib.rs").display().to_string()
                 }],
                 "features": {},
-                "metadata": { "sifr": { "manifest": "sifr.toml", "aliases": aliases } }
+                "metadata": metadata
             })
         })
         .collect::<Vec<_>>();
@@ -307,6 +333,47 @@ def main():\n    print(parse_json())\n",
 
     assert!(output.status.success());
     assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "7");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_build_cached_package_project_links_direct_rust_interop_dependency() {
+    let dir = mktemp_dir("package_direct_rust_interop");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    let crc32fast = backend_rust_package(&dir, "crc32fast", "crc32fast");
+    std::fs::write(
+        crc32fast.root.join("src/lib.rs"),
+        "pub fn hash(data: &[u8]) -> u32 {\n    data.iter().fold(0_u32, |acc, byte| acc.wrapping_add(u32::from(*byte)))\n}\n",
+    )
+    .expect("backend source should be written");
+    std::fs::write(
+        app.root.join("sifr.toml"),
+        "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[rust]\nbridge-version = 1\ndirect-crate-bindings = true\n\n[trust]\nrust-no-panic = [\"crc32fast.hash\"]\n",
+    )
+    .expect("app manifest should enable direct rust interop");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "@rust(crc32fast.hash, panic=trusted_no_panic)\n\
+def crc32(data: bytes) -> uint32:\n    zero: uint32 = 0\n    return zero\n\n\
+def main():\n    print(crc32(b\"abc\"))\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &crc32fast],
+        &[package_edge(&app, "crc32fast", &crc32fast)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let artifact = build_cached_package_project(&entrypoint)
+        .expect("direct Rust interop project should build");
+    let output = std::process::Command::new(artifact.binary_path())
+        .output()
+        .expect("package binary should run");
+
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "294");
     let _ = std::fs::remove_dir_all(dir);
 }
 

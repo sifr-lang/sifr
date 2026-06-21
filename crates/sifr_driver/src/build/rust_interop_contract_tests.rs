@@ -71,7 +71,7 @@ fn package_rust_interop_direct_probe_checks_signature_shape() {
     .expect("write backend lib");
 
     let generated = base_project_with_contracts(
-        vec![declaration_entry(
+        vec![trusted_no_panic_declaration_entry(
             "native.hash",
             RustInteropDecoratorKind::Function,
         )],
@@ -84,13 +84,10 @@ fn package_rust_interop_direct_probe_checks_signature_shape() {
             bytes_contract(),
         )],
     );
-    let context = package_context(
-        TrustPolicy::default(),
-        vec![backend_with_manifest(
-            "native",
-            backend_root.join("Cargo.toml"),
-        )],
-    );
+    let context = trusted_no_panic_context(vec![backend_with_manifest(
+        "native",
+        backend_root.join("Cargo.toml"),
+    )]);
 
     let diagnostics = interop_errors(generated, Some(context), "signature probe must fail");
 
@@ -101,6 +98,44 @@ fn package_rust_interop_direct_probe_checks_signature_shape() {
 #[test]
 fn package_rust_interop_direct_probe_accepts_bridge_signature() {
     let backend_root = temp_package_root("rust_interop_signature_probe_ok");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub fn hash(input: &[u8]) -> Vec<u8> { input.to_vec() }\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![trusted_no_panic_declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "input",
+                RustBridgeParamConvention::Borrow,
+                bytes_contract(),
+            )],
+            bytes_contract(),
+        )],
+    );
+    let context = trusted_no_panic_context(vec![backend_with_manifest(
+        "native",
+        backend_root.join("Cargo.toml"),
+    )]);
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("compatible signature should pass probe");
+}
+
+#[test]
+fn package_rust_interop_direct_non_result_requires_panic_policy() {
+    let backend_root = temp_package_root("rust_interop_missing_panic_policy");
     std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
     std::fs::write(
         backend_root.join("Cargo.toml"),
@@ -135,8 +170,178 @@ fn package_rust_interop_direct_probe_accepts_bridge_signature() {
         )],
     );
 
+    let diagnostics = interop_errors(generated, Some(context), "missing panic policy must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("requires explicit panic policy"));
+}
+
+#[test]
+fn package_rust_interop_direct_probe_accepts_async_signature() {
+    let backend_root = temp_package_root("rust_interop_async_signature_probe_ok");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub async fn hash(input: String) -> Result<String, String> { Ok(input) }\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Async,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "input",
+                RustBridgeParamConvention::Own,
+                string_contract(),
+            )],
+            result_contract(string_contract(), string_contract()),
+        )],
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
     apply_package_rust_interop_metadata(generated, Some(context))
-        .expect("compatible signature should pass probe");
+        .expect("compatible async signature should pass probe");
+}
+
+#[test]
+fn package_rust_interop_direct_probe_rejects_sync_function_for_async_binding() {
+    let backend_root = temp_package_root("rust_interop_async_signature_probe_bad");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub fn hash(input: String) -> Result<String, String> { Ok(input) }\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Async,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "input",
+                RustBridgeParamConvention::Own,
+                string_contract(),
+            )],
+            result_contract(string_contract(), string_contract()),
+        )],
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "sync function must fail async probe",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
+}
+
+#[test]
+fn package_rust_interop_direct_probe_rejects_unsafe_fn() {
+    let backend_root = temp_package_root("rust_interop_unsafe_signature_probe");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub unsafe fn hash(input: &[u8]) -> Vec<u8> { input.to_vec() }\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![trusted_no_panic_declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "input",
+                RustBridgeParamConvention::Borrow,
+                bytes_contract(),
+            )],
+            bytes_contract(),
+        )],
+    );
+    let context = trusted_no_panic_context(vec![backend_with_manifest(
+        "native",
+        backend_root.join("Cargo.toml"),
+    )]);
+
+    let diagnostics = interop_errors(generated, Some(context), "unsafe fn must fail probe");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
+}
+
+#[test]
+fn package_rust_interop_direct_probe_accepts_mutable_borrow_signature() {
+    let backend_root = temp_package_root("rust_interop_mut_borrow_signature_probe");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub fn hash(input: &mut [u8]) { input.reverse(); }\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![trusted_no_panic_declaration_entry(
+            "native.hash",
+            RustInteropDecoratorKind::Function,
+        )],
+        vec![signature_contract(
+            vec![param_contract(
+                "input",
+                RustBridgeParamConvention::MutableBorrow,
+                bytes_contract(),
+            )],
+            none_contract(),
+        )],
+    );
+    let context = trusted_no_panic_context(vec![backend_with_manifest(
+        "native",
+        backend_root.join("Cargo.toml"),
+    )]);
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("compatible mutable borrow signature should pass probe");
 }
 
 fn base_project_with_contracts(
@@ -202,6 +407,35 @@ fn bytes_contract() -> RustBridgeTypeContract {
     }
 }
 
+fn string_contract() -> RustBridgeTypeContract {
+    RustBridgeTypeContract {
+        sifr_type: "str".to_string(),
+        rust_borrowed_type: Some("&str".to_string()),
+        rust_owned_type: Some("String".to_string()),
+        rust_return_type: Some("String".to_string()),
+        kind: RustBridgeTypeKind::String,
+        unsupported_reason: None,
+    }
+}
+
+fn result_contract(
+    ok: RustBridgeTypeContract,
+    err: RustBridgeTypeContract,
+) -> RustBridgeTypeContract {
+    RustBridgeTypeContract {
+        sifr_type: format!("Result[{}, {}]", ok.sifr_type, err.sifr_type),
+        rust_borrowed_type: None,
+        rust_owned_type: None,
+        rust_return_type: Some(format!(
+            "Result<{}, {}>",
+            ok.rust_return_type.expect("ok result type"),
+            err.rust_return_type.expect("err result type")
+        )),
+        kind: RustBridgeTypeKind::Result,
+        unsupported_reason: None,
+    }
+}
+
 fn none_contract() -> RustBridgeTypeContract {
     RustBridgeTypeContract {
         sifr_type: "None".to_string(),
@@ -236,6 +470,29 @@ fn interop_errors(
 }
 
 fn declaration_entry(target: &str, kind: RustInteropDecoratorKind) -> RustInteropPlanDeclaration {
+    declaration_entry_with_arguments(target, kind, Vec::new())
+}
+
+fn trusted_no_panic_declaration_entry(
+    target: &str,
+    kind: RustInteropDecoratorKind,
+) -> RustInteropPlanDeclaration {
+    declaration_entry_with_arguments(
+        target,
+        kind,
+        vec![RustInteropArgument {
+            name: Some("panic".to_string()),
+            value: RustInteropValue::Symbol("trusted_no_panic".to_string()),
+            span: span(),
+        }],
+    )
+}
+
+fn declaration_entry_with_arguments(
+    target: &str,
+    kind: RustInteropDecoratorKind,
+    arguments: Vec<RustInteropArgument>,
+) -> RustInteropPlanDeclaration {
     RustInteropPlanDeclaration {
         module_name: Some("app".to_string()),
         owner: RustInteropOwner::Function {
@@ -247,16 +504,20 @@ fn declaration_entry(target: &str, kind: RustInteropDecoratorKind) -> RustIntero
                 segments: target.split('.').map(str::to_string).collect(),
                 span: span(),
             }),
-            arguments: vec![RustInteropArgument {
-                name: Some("trusted_no_panic".to_string()),
-                value: RustInteropValue::Boolean(false),
-                span: span(),
-            }],
+            arguments,
             span: span(),
             effect: RustInteropEffect::Sync,
             abi_requirements: RustInteropAbiRequirements::default(),
         },
     }
+}
+
+fn trusted_no_panic_context(
+    backend_crates: Vec<BackendCrateMetadata>,
+) -> PackageRustInteropContext {
+    let mut trust = TrustPolicy::default();
+    trust.rust_no_panic = vec!["native.hash".to_string()];
+    package_context(trust, backend_crates)
 }
 
 fn package_context(

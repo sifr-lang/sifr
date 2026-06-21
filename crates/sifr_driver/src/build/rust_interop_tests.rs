@@ -462,7 +462,7 @@ fn package_rust_interop_rejects_untrusted_no_panic_policy() {
     let diagnostics = interop_errors(generated, Some(context), "untrusted no-panic must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
-    assert!(diagnostics[0].message.contains("app.hash"));
+    assert!(diagnostics[0].message.contains("native.hash"));
 }
 
 #[test]
@@ -494,7 +494,7 @@ fn package_rust_interop_rejects_untrusted_build_env() {
     let diagnostics = interop_errors(generated, Some(context), "untrusted build-env must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
-    assert!(diagnostics[0].message.contains("app.hash"));
+    assert!(diagnostics[0].message.contains("native.hash"));
 }
 
 #[test]

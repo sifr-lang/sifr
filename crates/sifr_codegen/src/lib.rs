@@ -83,6 +83,7 @@ pub use preamble::*;
 mod render;
 pub use render::*;
 mod rust_interop_bridge_contract;
+mod rust_interop_direct;
 mod rust_interop_plan;
 pub use rust_interop_bridge_contract::{
     RustBridgeContractPlan, RustBridgeParamContract, RustBridgeParamConvention,
