@@ -241,6 +241,8 @@ Status: contract-only callback declaration, validation, and bridge planning supp
 
 ### milestone_39_12: Tooling, Diagnostics, and Documentation
 
+Status: merged in [PR #2726](https://github.com/sifr-lang/sifr/pull/2726); focused validation covers `sifr bridge check` routing through package check, decorator-specific Rust interop completion candidates through analysis/LSP, Rust diagnostic family documentation, package-author workflows, user-facing examples, and rejected-design docs. Reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-12-review-round2.md`. The `create-pr` facade passed through the previously failing audit suites on a warmed rerun but the final full-facade attempt was interrupted by the execution session before a final lane report; selected relevant areas were rerun directly and passed.
+
 - Scope:
   - Add LSP completion and validation for Rust decorator dotted paths.
   - Add diagnostics documentation for `SIFR-RUST-CONFIG-*`, `SIFR-RUST-RESOLVE-*`, `SIFR-RUST-TRUST-*`, `SIFR-RUST-TYPE-*`, `SIFR-RUST-HANDLE-*`, `SIFR-RUST-ASYNC-*`, `SIFR-RUST-ZC-*`, `SIFR-RUST-CB-*`, `SIFR-RUST-PANIC-*`, and `SIFR-RUST-CARGO-*`.
