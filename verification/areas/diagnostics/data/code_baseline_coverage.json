@@ -1670,6 +1670,19 @@
     },
     {
       "baseline_fixture_id": null,
+      "code": "SIFR-RUST-CB-0001",
+      "deferral": {
+        "issue": "rust-interop-callback-rendered-fixtures",
+        "owner": "compiler/package-management",
+        "reason": "covered by crates/sifr_driver/src/build/rust_interop_callback_contract_tests.rs::package_rust_interop_rejects_callback_missing_backpressure until package-level diagnostics fixtures cover Rust callback interop contracts",
+        "removal_target": "add package diagnostics fixture for invalid Rust callback interop contracts"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
       "code": "SIFR-RUST-PANIC-0001",
       "deferral": {
         "issue": "rust-interop-panic-rendered-fixtures",

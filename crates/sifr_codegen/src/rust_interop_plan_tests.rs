@@ -158,6 +158,57 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
 }
 
 #[test]
+fn interop_bridge_callable_params_require_callback_contract() {
+    let mut function = HirFunction {
+        name: "subscribe".to_string(),
+        params: vec![HirParam {
+            name: "callback".to_string(),
+            ty: Type::Callable(
+                vec![Type::Int],
+                vec![ParamConvention::borrow()],
+                Box::new(Type::None),
+            ),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::borrow(),
+        }],
+        return_type: Type::None,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![declaration(
+            RustInteropDecoratorKind::Function,
+            "bridge.events.subscribe",
+        )],
+        type_params: Vec::new(),
+    };
+    let module_without_callback = module_with(vec![function.clone()], Vec::new());
+    let plan_without_callback =
+        interop_build_plan_for_named_modules([(Some("main"), &module_without_callback)]);
+
+    assert_eq!(
+        plan_without_callback.rust.bridge_contracts.signatures[0].params[0]
+            .ty
+            .kind,
+        RustBridgeTypeKind::Unsupported
+    );
+
+    function.rust_interop.push(callback_declaration());
+    let module_with_callback = module_with(vec![function], Vec::new());
+    let plan_with_callback =
+        interop_build_plan_for_named_modules([(Some("main"), &module_with_callback)]);
+    let signature = &plan_with_callback.rust.bridge_contracts.signatures[0];
+
+    assert_eq!(plan_with_callback.rust.bridge_contracts.signatures.len(), 1);
+    assert_eq!(signature.params[0].ty.kind, RustBridgeTypeKind::Callback);
+    assert_eq!(
+        signature.params[0].ty.rust_borrowed_type.as_deref(),
+        Some("&sifr_runtime::interop::ThreadsafeCallbackBridge")
+    );
+}
+
+#[test]
 fn interop_bridge_generated_field_paths_use_declaring_module() {
     let token_ty = Type::Class {
         name: "Token".to_string(),
@@ -306,6 +357,17 @@ fn declaration(kind: RustInteropDecoratorKind, target: &str) -> RustInteropDecla
             segments: target.split('.').map(str::to_string).collect(),
             span: Default::default(),
         }),
+        arguments: Vec::new(),
+        span: Default::default(),
+        effect: RustInteropEffect::Sync,
+        abi_requirements: RustInteropAbiRequirements::default(),
+    }
+}
+
+fn callback_declaration() -> RustInteropDeclaration {
+    RustInteropDeclaration {
+        kind: RustInteropDecoratorKind::Callback,
+        target: None,
         arguments: Vec::new(),
         span: Default::default(),
         effect: RustInteropEffect::Sync,

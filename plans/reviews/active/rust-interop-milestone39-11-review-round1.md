@@ -1,0 +1,38 @@
+I have enough to deliver the review. Here are the findings, ordered by severity:
+
+## M39.11 Rust Callback Contracts — Review
+
+**No blocking findings.** The contract-only callback surface is well-scoped, parsed, validated with the new stable `SIFR-RUST-CB-0001`, ordered correctly relative to other contract validations, and the docs/matrix accurately mark runtime-observed behavior as staged. The validation step ordering (callback → zero-copy → advanced-data → resolve → bridge type) means a missing callback policy surfaces SIFR-RUST-CB-0001 early; a Callable parameter without policy still gets the SIFR-RUST-TYPE-0001 from the bridge contract pass.
+
+### Important (not blocking, recommend addressing)
+
+**1. Silent loss of `validate_view_owner` for standalone `@rust.view(...)` (no paired `@rust(...)`)** — `crates/sifr_codegen/src/rust_interop_bridge_contract.rs:119-125`. The new `if !matches!(... Function | Async) { continue; }` short-circuit means signature contracts are now built only from `@rust`/`@rust.async` declarations. Previously, a standalone `@rust.view(...)` on a Function/Method owner would itself produce a signature entry, which let `validate_view_owner` (`zero_copy_validation.rs:175`) catch misspelled `owner=` references. Now `signature_contracts.get(&key)` returns `None` for view-only declarations and `validate_view_owner` short-circuits silently at `zero_copy_validation.rs:166-168`. No existing fixture exercises view-without-`@rust`, and lowering does not reject the combination — either confirm view-without-`@rust` is rejected upstream or restore the lookup (e.g., add a `View` arm that maps to the same Function lookup, or have `validate_zero_copy_group` require a paired `@rust(...)` like advanced-data does for shared-bridge-root validation).
+
+**2. `Callback` participation in advanced-data grouping is dead weight** — `crates/sifr_driver/src/build/rust_interop/advanced_data_validation.rs:48-51`. Callback declarations are added to `by_target`, but `validate_advanced_data_group` only acts when a `View` declaration is found, and `validate_shared_bridge_root` filters back to `Function`-kind for the root probe. The Callback inclusion is harmless today but confusing and creates the impression that callbacks contribute to advanced-data semantics. Recommend dropping `RustInteropDecoratorKind::Callback` from the matches there (revert to `Function | View`).
+
+**3. Probe-source `Callback` arm is unreachable** — `crates/sifr_driver/src/build/rust_interop_probe.rs:142`. `probe_planning::probe_kind` returns `None` for `Callback` and `resolve_declaration` (`rust_interop.rs:228-230`) returns early before `push_probe` runs, so no probe is ever generated with `kind=Callback`. The added arm in `probe_source` cannot fire. Either drop it or add a comment that it is staged for the runtime work. Today it just claims behavior that isn't wired up.
+
+**4. `ThreadsafeCallbackBridge::generated_token()` is unreferenced** — `crates/sifr_runtime/src/interop.rs:181-185`. The runtime side ships a marker type; the const fn `generated_token()` has zero callers (codegen only references the type name, not the constructor). Either drop the constructor and `#[derive(Debug)]` (the struct is only used as a contract type reference in signature strings), or add a comment explaining why it must remain compile-checked. Otherwise this looks like an in-progress runtime hook that doesn't match the "contract-only" claim in `internal_docs/rust_interop_architecture.md:727-735`.
+
+### Minor / observations
+
+**5. One callback policy gates *all* `Callable` parameters on a declaration** — `crates/sifr_codegen/src/rust_interop_bridge_contract.rs:189`. `callback_parameter_allowed` is a per-declaration boolean, so a function with `@rust.callback(...)` plus N `Callable` parameters allows all N as bridge-compatible. The single policy applies uniformly. Consistent with the milestone spec ("explicit callback policy") but worth calling out — if a future milestone differentiates policies per callback, the gate will need to move from the declaration into the parameter. Document this assumption in the architecture doc near `internal_docs/rust_interop_architecture.md:724`.
+
+**6. Parameter convention not constrained for Callable bridge** — same file, the `Callable(..)` arm sets both `rust_borrowed_type` and `rust_owned_type`. If a Callable parameter were lowered with `own`/`transfer` convention, it would resolve to an owned `ThreadsafeCallbackBridge`. Architecture text doesn't forbid this, but most thread-safe callback registrations have move semantics. Not a bug; flag as a possible future constraint.
+
+**7. `parse_callback_contract` short-circuits on first error** — `callback_validation.rs:132-164`. Multiple missing/invalid keys produce only one diagnostic per turn. Pre-existing pattern in `zero_copy_validation`/`advanced_data_validation`, so consistent — but it means the duplicate-decl tests pass even with simultaneously invalid policies. Acceptable for the milestone.
+
+**8. Async-validation runs for `@rust.callback` declarations on `async def`** — `rust_interop.rs:225-230`. `validate_async_declaration` is called on the Callback declaration before the early-return at line 228, because `abi_requirements()` (`crates/sifr_lowering/src/lower/rust_interop.rs:489-499`) sets `async_boundary=true` for any declaration on an async function. If the function also has `blocking_io`/`cpu_heavy` markers, the async error fires on both the `@rust` and the `@rust.callback` declaration — same pre-existing pattern as other paired decorators, but worth noting because the milestone now adds another async-eligible decorator to the family.
+
+### Docs / matrix — accurate
+
+- `internal_docs/rust_interop_architecture.md:727-735`, `plans/phases/39_rust_interop.md:228`, and `verification/areas/rust_interop/fixtures/callbacks_threadsafe/README.md` each explicitly state that call-scoped storage rejection, subscription handles, cross-thread capture enforcement, panic mapping, and the tokio-tungstenite/redis/notify certification remain staged under `callbacks_call_scoped`/`callback_subscription_matrix`. The matrix correctly flips `callbacks_threadsafe` to `contract-only` / `passing` while leaving `callback_subscription_matrix` and `callbacks_call_scoped` as `runtime-observed` / `planned`. No overclaim.
+- Diagnostic registry, baseline coverage, docs index, and `SIFR-RUST-CB-0001.md` are all consistent and point at the representative fixture that exists in `rust_interop_callback_contract_tests.rs`.
+
+### Focus-area summary
+
+- **Grouping by canonical Sifr owner path**: correct. `canonical_sifr_target_path` uses `module + owner` (Function/Class/Method) which is the same key the lowering produces for paired `@rust` + `@rust.callback` decorators.
+- **Top-level Callable bridge compatibility**: appropriately narrow — only `BridgeTypePosition::Parameter`, only when `callback_parameter_allowed`, and containers (`List`/`Dict`/`Union`/`Result`) force `callback_parameter_allowed: false` on their inner recursion, so `Optional[Callable]`, `List[Callable]`, returns, etc. all stay `Unsupported`. Test coverage matches.
+- **Skipping non-Function/Async in bridge signature extraction**: positive deduplication for paired decorators, but introduces the standalone-view validation gap (Finding 1). Recommend addressing.
+- **Callback diagnostic spans/timing**: spans use `declaration.declaration.span` (the full decorator call range from `crates/sifr_lowering/src/lower/rust_interop.rs:138`), which is the right user-visible location. Callback validation runs before resolve/probe so users see CB errors before unrelated path/trust diagnostics.
+- **Docs/matrix overclaim**: none — runtime behavior consistently described as staged.

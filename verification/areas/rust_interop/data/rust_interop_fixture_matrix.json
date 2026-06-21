@@ -200,9 +200,9 @@
       "tier": 2,
       "capability": "thread-safe callback policy",
       "required_crates": [],
-      "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "bounded_callback_policy", "status": "planned"},
-      "negative_evidence": {"id": "missing_backpressure_rejected", "status": "planned"}
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "bounded_callback_policy", "status": "passing", "scope": "contract-only"},
+      "negative_evidence": {"id": "missing_backpressure_rejected", "status": "passing", "scope": "contract-only"}
     },
     {
       "id": "callback_subscription_matrix",

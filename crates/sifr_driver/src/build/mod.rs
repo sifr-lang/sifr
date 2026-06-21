@@ -11,6 +11,8 @@ mod rust_interop_advanced_data_contract_tests;
 #[cfg(test)]
 mod rust_interop_async_contract_tests;
 mod rust_interop_bridge_sources;
+#[cfg(test)]
+mod rust_interop_callback_contract_tests;
 mod rust_interop_cargo_inputs;
 #[cfg(test)]
 mod rust_interop_contract_tests;

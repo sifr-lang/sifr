@@ -323,6 +323,7 @@ fn push_declaration(out: &mut String, declaration: &RustInteropDeclaration) {
         sifr_ir::RustInteropDecoratorKind::Function => "function",
         sifr_ir::RustInteropDecoratorKind::Opaque => "opaque",
         sifr_ir::RustInteropDecoratorKind::Async => "async",
+        sifr_ir::RustInteropDecoratorKind::Callback => "callback",
         sifr_ir::RustInteropDecoratorKind::ZeroCopy => "zero_copy",
         sifr_ir::RustInteropDecoratorKind::View => "view",
     });

@@ -724,6 +724,21 @@ Thread-safe callback policy values are:
 
 `@rust.callback(...)` is required for `ThreadsafeCallback` parameters. Missing policy is a `SIFR-RUST-CB-*` diagnostic.
 
+The initial callback contract surface is contract-only. It lowers
+`@rust.callback(...)` metadata, requires named `backpressure=`, `overflow=`,
+and `shutdown=` policy, rejects malformed or duplicate callback contracts with
+`SIFR-RUST-CB-0001`, and makes top-level Sifr `Callable[[...], R]` bridge
+parameters compatible only when the same declaration also has an explicit
+callback contract. A single `@rust.callback(...)` policy applies uniformly to
+all top-level callback parameters on that declaration; per-parameter callback
+policy requires a later extension. Callable parameters without
+`@rust.callback(...)`, nested callback containers, and callback returns remain
+rejected as unsupported bridge types. Runtime-observed call-scoped storage
+rejection, registered subscription handles, cross-thread capture enforcement,
+callback invocation panic mapping, and `tokio-tungstenite`/`redis`/`notify`
+ecosystem certification remain owned by `callbacks_call_scoped` and
+`callback_subscription_matrix`.
+
 ## Trust Policy
 
 Rust interop extends existing native trust policy with Rust-specific evidence:

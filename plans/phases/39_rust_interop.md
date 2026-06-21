@@ -225,6 +225,8 @@ Status: merged in [PR #2722](https://github.com/sifr-lang/sifr/pull/2722); focus
 
 ### milestone_39_11: Callback Contracts
 
+Status: implemented locally on `phase39-rust-interop-m39-11`; focused validation covers contract-only `@rust.callback(...)` lowering, required thread-safe callback `backpressure`/`overflow`/`shutdown` policy, rejection of missing/invalid/duplicate callback contracts with `SIFR-RUST-CB-0001`, and bridge-compatible top-level `Callable` parameters only when paired with an explicit callback contract. Runtime-observed call-scoped storage rejection, subscription handle cleanup, cross-thread capture enforcement, callback invocation panic mapping, and `tokio-tungstenite`/`redis`/`notify` ecosystem certification remain staged behind `callbacks_call_scoped` and `callback_subscription_matrix` until this milestone PR lands and the remaining callback fixtures are closed.
+
 - Scope:
   - Implement call-scoped callbacks that cannot be stored, called after return, or called from unmanaged threads.
   - Implement thread-safe callback registration with cancellation/subscription handles and required `@rust.callback(...)` backpressure/overflow/shutdown policy.
