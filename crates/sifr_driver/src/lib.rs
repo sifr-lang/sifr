@@ -31,6 +31,7 @@ pub use frontend::{
     lower_source, parse_source, type_check_source,
 };
 pub use sifr_codegen::LoweringStats;
+pub use stdlib::external_defs as stdlib_external_defs;
 pub use test_runner::run_tests;
 pub use workspace::{find_workspace_root, SifrWorkspaceConfig, WorkspaceRoot};
 

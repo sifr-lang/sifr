@@ -391,6 +391,14 @@ impl FrontendContext {
         root: &ProjectRoot,
         provider: &mut impl SourceProvider,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        Self::load_project_with_provider_and_external_defs(root, provider, ExternalDefs::default())
+    }
+
+    pub fn load_project_with_provider_and_external_defs(
+        root: &ProjectRoot,
+        provider: &mut impl SourceProvider,
+        external_defs: ExternalDefs,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let entrypoint = root.entrypoint.as_path();
         let project_dir = root.root.as_path();
         let entry_source = provider.read_file(entrypoint).map_err(|error| {
@@ -487,8 +495,8 @@ impl FrontendContext {
             cache_target,
             compiler_options,
             package_config_identity,
-            base_external_defs: ExternalDefs::default(),
-            external_defs: ExternalDefs::default(),
+            base_external_defs: external_defs.clone(),
+            external_defs,
             lowering_modules: BTreeSet::new(),
         };
         context.rebuild_edges();

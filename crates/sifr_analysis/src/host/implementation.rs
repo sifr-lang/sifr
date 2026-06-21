@@ -37,12 +37,18 @@ pub struct AnalysisHost {
 
 impl AnalysisHost {
     pub fn open_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let session = WorkspaceSession::open_project(root.clone())?;
+        let session = WorkspaceSession::open_project_with_external_defs(
+            root.clone(),
+            sifr_driver::stdlib_external_defs()?,
+        )?;
         Self::new(session)
     }
 
     pub fn open_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let session = WorkspaceSession::open_single_file(input)?;
+        let session = WorkspaceSession::open_single_file_with_external_defs(
+            input,
+            sifr_driver::stdlib_external_defs()?,
+        )?;
         Self::new(session)
     }
 
