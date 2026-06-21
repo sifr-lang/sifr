@@ -38,6 +38,8 @@ mod opaque_contract;
 mod opaque_validation;
 #[path = "rust_interop/panic_validation.rs"]
 mod panic_validation;
+#[path = "rust_interop/zero_copy_validation.rs"]
+mod zero_copy_validation;
 
 #[derive(Clone, Debug)]
 pub(super) struct PackageRustInteropContext {
@@ -128,6 +130,10 @@ impl<'a> RustInteropResolver<'a> {
             .map(|signature| (signature.canonical_target_path.clone(), signature))
             .collect();
         self.collect_async_contracts(&generated.interop.rust.declarations);
+        self.validate_zero_copy_contracts(&generated.interop.rust.declarations);
+        if !self.diagnostics.is_empty() {
+            return Err(std::mem::take(&mut self.diagnostics));
+        }
         for declaration in generated.interop.rust.declarations.clone() {
             self.resolve_declaration(&declaration);
         }
@@ -556,6 +562,10 @@ impl<'a> RustInteropResolver<'a> {
         };
         let (mut requires_send, requires_sync) =
             opaque_probe_obligations(declaration, &self.opaque_contracts);
+        let (view_requires_send, view_requires_sync) =
+            zero_copy_validation::view_probe_obligations(declaration);
+        requires_send |= view_requires_send;
+        let requires_sync = requires_sync || view_requires_sync;
         if requires_send
             && declaration.declaration.abi_requirements.async_boundary
             && self.async_thread_affinity_for_probe(declaration)

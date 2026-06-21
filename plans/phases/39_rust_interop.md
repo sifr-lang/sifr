@@ -197,6 +197,8 @@ Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focus
 
 ### milestone_39_9: Zero-Copy and Core Views
 
+Status: implemented locally on branch `phase39-rust-interop-m39-9`; focused validation covers explicit `@rust.zero_copy(...)` and `@rust.view(...)` contract shapes, required paired view contracts for zero-copy returns, owner/lifetime/mutability checks, rejection of `lifetime=call` returned views, rejection of mutable views from shared-borrow owners, rejection of copy-fallback declarations, async borrowed-view suspension rejection, and view Send/Sync probe metadata. Runtime-observed crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` remains staged behind the zero-copy fixture families.
+
 - Scope:
   - Implement explicit `@rust.zero_copy(...)` and `@rust.view(...)` contracts.
   - Require borrowed zero-copy returns to declare both no-copy behavior and view lifetime/thread policy.

@@ -89,6 +89,9 @@ pub(super) fn opaque_probe_obligations(
     contracts: &HashMap<String, opaque_contract::OpaqueContract>,
 ) -> (bool, bool) {
     if declaration.declaration.kind != RustInteropDecoratorKind::Opaque {
+        if declaration.declaration.kind == RustInteropDecoratorKind::View {
+            return (false, false);
+        }
         return (
             declaration.declaration.abi_requirements.async_boundary,
             declaration.declaration.abi_requirements.view,

@@ -20,6 +20,8 @@ mod rust_interop_probe;
 #[cfg(test)]
 mod rust_interop_tests;
 mod rust_interop_trust;
+#[cfg(test)]
+mod rust_interop_zero_copy_contract_tests;
 mod workspace;
 
 pub use api::{

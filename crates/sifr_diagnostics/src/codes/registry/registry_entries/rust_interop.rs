@@ -71,6 +71,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["reason"]
     ),
     active_entry!(
+        "SIFR-RUST-ZC-0001",
+        "RUST-ZC",
+        "Rust zero-copy or borrowed-view contract is invalid.",
+        Severity::Error,
+        "crates/sifr_driver/src/build/rust_interop_zero_copy_contract_tests.rs::package_rust_interop_zero_copy_requires_view_contract",
+        "invalid Rust zero-copy/view contract: {reason}",
+        "sifr_driver::build::rust_interop",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
         "SIFR-RUST-PANIC-0001",
         "RUST-PANIC",
         "Rust panic boundary contract is invalid.",

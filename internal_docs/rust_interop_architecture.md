@@ -658,6 +658,8 @@ Rules:
 - fallible downgrade to copying must be a different API name and declaration,
 - views crossing async suspension points must satisfy the same lifetime and pinning requirements as native Sifr borrows.
 
+The initial compile-time zero-copy contract surface enforces explicit `owner=` and `view=` on `@rust.zero_copy(...)`, explicit `owner=`, `lifetime=`, `mutability=`, `send=`, and `sync=` on `@rust.view(...)`, paired view contracts for zero-copy borrowed returns, returned-view rejection for `lifetime=call`, mutable-view rejection for non-exclusive owners, copy-fallback rejection, async borrowed-view suspension rejection, and view Send/Sync probe metadata. View probes now derive Send/Sync obligations from the explicit `@rust.view(...)` contract rather than implicit ABI flags, so contract authors must declare the thread behavior that generated probes certify. Runtime-observed generated wrapper behavior and crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` remain owned by the zero-copy fixture families.
+
 Data-oriented bridges must support explicit contracts for:
 
 - Python/Rust-independent buffers,
