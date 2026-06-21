@@ -52,8 +52,8 @@ pub use crate::imports::source_map::{
 pub use crate::manifest::metadata::{CargoSifrAliasMetadata, CargoSifrMetadata};
 pub use crate::manifest::package_sections::{SifrDependency, SifrScript};
 pub use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
-    SifrPackageName, TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
+    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
 };
 pub use crate::ops::publish::{
     package_plan, publish_plan, publish_plan_with_options, vendor_plan, vendor_plan_with_options,

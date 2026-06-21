@@ -14,6 +14,13 @@ use sifr_python_ast::{Identifier, Stmt};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 
+#[derive(Clone, Debug)]
+pub(crate) struct PackageParsedProject {
+    pub(crate) entry_module_name: String,
+    pub(crate) parsed_modules: HashMap<String, ParsedProjectModule>,
+    pub(crate) module_packages: HashMap<String, SifrPackageId>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct PackageImportDependency {
     written_module_name: String,
@@ -23,13 +30,13 @@ struct PackageImportDependency {
     resolved_import_path: DottedModulePath,
 }
 
-pub(crate) fn parse_package_import_closure_source_modules(
+pub(crate) fn parse_package_import_closure_source_project(
     graph: &SifrPackageGraph,
     source_map: &PackageSourceMap,
     entry_package_id: &SifrPackageId,
     entry_file: &Path,
     diagnostic_style: DiscoveryDiagnosticStyle,
-) -> Result<(String, HashMap<String, ParsedProjectModule>), Vec<RenderedDiagnostic>> {
+) -> Result<PackageParsedProject, Vec<RenderedDiagnostic>> {
     let Some(entry_module) = source_map.module_for_file(entry_package_id, entry_file) else {
         return Err(vec![crate::diagnostics::diagnostic_with_code(
             format!(
@@ -41,6 +48,7 @@ pub(crate) fn parse_package_import_closure_source_modules(
     };
     let entry_module_name = entry_module.module_path.0.clone();
     let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
+    let mut module_packages: HashMap<String, SifrPackageId> = HashMap::new();
     let mut parsed_names: BTreeSet<PackageDiscoveryItem> = BTreeSet::new();
     let mut provider = DiskSourceProvider::new();
     let mut pending = BTreeSet::from([PackageDiscoveryItem {
@@ -139,8 +147,13 @@ pub(crate) fn parse_package_import_closure_source_modules(
                 pending.insert(dependency_item);
             }
         }
+        let compile_module_name = item.compile_module_name;
+        module_packages.insert(
+            compile_module_name.clone(),
+            resolved.resolved_module.package_id.clone(),
+        );
         parsed_modules.insert(
-            item.compile_module_name,
+            compile_module_name,
             ParsedProjectModule {
                 suite,
                 source,
@@ -149,7 +162,11 @@ pub(crate) fn parse_package_import_closure_source_modules(
         );
     }
 
-    Ok((entry_module_name, parsed_modules))
+    Ok(PackageParsedProject {
+        entry_module_name,
+        parsed_modules,
+        module_packages,
+    })
 }
 
 fn package_import_source_diagnostic(

@@ -10,8 +10,8 @@ use crate::graph::derive::{
 use crate::graph::digest::{digest_package_build_cache_inputs, PackageBuildCacheInputs};
 use crate::manifest::metadata::CargoSifrMetadata;
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
-    SifrPackageName, TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
+    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
 };
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::{BTreeMap, BTreeSet};
@@ -136,6 +136,13 @@ fn backend_trust_rejects_stale_non_direct_trust_entry() {
             proc_macros: Vec::new(),
             python: Vec::new(),
             python_native: Vec::new(),
+            rust_build_scripts: Vec::new(),
+            rust_proc_macros: Vec::new(),
+            native_links: Vec::new(),
+            unsafe_rust_bridges: Vec::new(),
+            build_env: Vec::new(),
+            rust_no_panic: Vec::new(),
+            rust_panic_abort: Vec::new(),
         },
         Vec::new(),
     );
@@ -147,6 +154,91 @@ fn backend_trust_rejects_stale_non_direct_trust_entry() {
         diagnostics[0].code,
         DiagnosticCode::PACKAGE_TRUST_NON_DIRECT_DEPENDENCY
     );
+}
+
+#[test]
+fn rust_interop_manifest_parses_config_and_trust_policy() {
+    let cargo_package_id = CargoPackageId("path+file:///ws/app#sifr-app@0.1.0".to_string());
+    let manifest = SifrManifest::parse(
+        &cargo_package_id,
+        &PathBuf::from("/ws/app/sifr.toml"),
+        r#"
+[package]
+name = "app"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+roots = ["sifr"]
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges", "rust/interop"]
+direct-crate-bindings = true
+
+[trust]
+rust-build-scripts = ["openssl_sys"]
+rust-proc-macros = ["serde_derive"]
+native-links = ["ssl"]
+unsafe-rust-bridges = ["app.hash"]
+build-env = ["OPENSSL_DIR"]
+rust-no-panic = ["app.hash.digest"]
+rust-panic-abort = ["app.exit"]
+"#,
+    )
+    .expect("manifest should parse");
+
+    assert_eq!(manifest.rust.bridge_version, Some(1));
+    assert_eq!(manifest.rust.bridges.len(), 2);
+    assert!(manifest.rust.direct_crate_bindings);
+    assert_eq!(manifest.trust.rust_build_scripts, ["openssl_sys"]);
+    assert_eq!(manifest.trust.rust_proc_macros, ["serde_derive"]);
+    assert_eq!(manifest.trust.native_links, ["ssl"]);
+    assert_eq!(manifest.trust.unsafe_rust_bridges, ["app.hash"]);
+    assert_eq!(manifest.trust.build_env, ["OPENSSL_DIR"]);
+    assert_eq!(manifest.trust.rust_no_panic, ["app.hash.digest"]);
+    assert_eq!(manifest.trust.rust_panic_abort, ["app.exit"]);
+    assert!(manifest.declares_rust_backend());
+}
+
+#[test]
+fn cargo_metadata_parses_native_links_evidence() {
+    let metadata = crate::cargo::metadata::parse_metadata_json(
+        r#"
+{
+  "packages": [{
+    "id": "path+file:///ws/native#native@0.1.0",
+    "name": "native",
+    "version": "0.1.0",
+    "source": null,
+    "links": "native",
+    "manifest_path": "/ws/native/Cargo.toml",
+    "dependencies": [],
+    "targets": [{
+      "name": "build-script-build",
+      "kind": ["custom-build"],
+      "crate_types": ["bin"],
+      "src_path": "/ws/native/build.rs"
+    }],
+    "features": {},
+    "metadata": {}
+  }],
+  "resolve": null,
+  "workspace_members": [],
+  "workspace_default_members": [],
+  "target_directory": "/ws/target",
+  "workspace_root": "/ws"
+}
+"#,
+    )
+    .expect("metadata should parse");
+
+    let package = metadata.packages.first().expect("package exists");
+    assert_eq!(package.links.as_deref(), Some("native"));
+    assert!(package
+        .targets
+        .iter()
+        .any(|target| target.kind.contains("custom-build")));
 }
 
 #[test]
@@ -195,6 +287,7 @@ fn cargo_package(manifest_path: &str) -> CargoPackage {
         name: "sifr-json".to_string(),
         version: "1.0.0".to_string(),
         source: Some("registry+https://example.invalid".to_string()),
+        links: None,
         manifest_path: PathBuf::from(manifest_path),
         dependencies: Vec::new(),
         targets: Vec::<CargoTarget>::new(),
@@ -234,6 +327,7 @@ fn package_graph(
             dev_dependencies: BTreeMap::new(),
             trust,
             python: PythonConfig::default(),
+            rust: RustInteropConfig::default(),
             production_schema: false,
         },
         aliases: BTreeMap::new(),
@@ -254,8 +348,14 @@ fn package_graph(
 fn backend(name: &str) -> BackendCrateMetadata {
     BackendCrateMetadata {
         cargo_package_id: CargoPackageId(format!("registry+{name}@1.0.0")),
+        dependency_name: name.to_string(),
+        dependency_kind: None,
         cargo_package_name: name.to_string(),
         cargo_version: "1.0.0".to_string(),
         cargo_source: Some("registry+https://example.invalid".to_string()),
+        cargo_manifest_path: PathBuf::from(format!("/ws/{name}/Cargo.toml")),
+        links: None,
+        has_build_script: false,
+        has_proc_macro: false,
     }
 }

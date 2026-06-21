@@ -39,9 +39,15 @@ pub struct SifrPackageMetadata {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BackendCrateMetadata {
     pub cargo_package_id: CargoPackageId,
+    pub dependency_name: String,
+    pub dependency_kind: Option<String>,
     pub cargo_package_name: String,
     pub cargo_version: String,
     pub cargo_source: Option<String>,
+    pub cargo_manifest_path: PathBuf,
+    pub links: Option<String>,
+    pub has_build_script: bool,
+    pub has_proc_macro: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -319,19 +325,33 @@ fn derive_backend_crates(
         let mut backend_crates = direct_dependencies
             .iter()
             .filter(|dependency| dependency.from == cargo_package.id)
-            .map(|dependency| &dependency.to)
-            .filter(|cargo_id| {
+            .filter(|dependency| {
                 matches!(
-                    classifications.get(*cargo_id),
+                    classifications.get(&dependency.to),
                     Some(PackageClassification::BackendRust)
                 )
             })
-            .filter_map(|cargo_id| cargo_packages.get(cargo_id))
-            .map(|dependency| BackendCrateMetadata {
-                cargo_package_id: dependency.id.clone(),
-                cargo_package_name: dependency.name.clone(),
-                cargo_version: dependency.version.clone(),
-                cargo_source: dependency.source.clone(),
+            .filter_map(|dependency| {
+                cargo_packages
+                    .get(&dependency.to)
+                    .map(|cargo_dependency| BackendCrateMetadata {
+                        cargo_package_id: cargo_dependency.id.clone(),
+                        dependency_name: dependency.dependency_name.clone(),
+                        dependency_kind: dependency.dependency_kind.clone(),
+                        cargo_package_name: cargo_dependency.name.clone(),
+                        cargo_version: cargo_dependency.version.clone(),
+                        cargo_source: cargo_dependency.source.clone(),
+                        cargo_manifest_path: cargo_dependency.manifest_path.clone(),
+                        links: cargo_dependency.links.clone(),
+                        has_build_script: cargo_dependency
+                            .targets
+                            .iter()
+                            .any(|target| target.kind.contains("custom-build")),
+                        has_proc_macro: cargo_dependency
+                            .targets
+                            .iter()
+                            .any(|target| target.kind.contains("proc-macro")),
+                    })
             })
             .collect::<Vec<_>>();
         backend_crates.sort_by(|left, right| {

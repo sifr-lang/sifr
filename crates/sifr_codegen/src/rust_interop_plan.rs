@@ -24,6 +24,37 @@ impl InteropBuildPlan {
             push_declaration(&mut out, &declaration.declaration);
             out.push('\n');
         }
+        out.push_str("rust.resolved_targets=");
+        out.push_str(&self.rust.resolved_targets.len().to_string());
+        out.push('\n');
+        for target in &self.rust.resolved_targets {
+            push_resolved_target(&mut out, target);
+            out.push('\n');
+        }
+        out.push_str("rust.trust_requirements=");
+        out.push_str(&self.rust.trust_requirements.len().to_string());
+        out.push('\n');
+        for requirement in &self.rust.trust_requirements {
+            push_trust_requirement(&mut out, requirement);
+            out.push('\n');
+        }
+        out.push_str("rust.probes=");
+        out.push_str(&self.rust.probe_plan.probes.len().to_string());
+        out.push('\n');
+        for probe in &self.rust.probe_plan.probes {
+            push_probe(&mut out, probe);
+            out.push('\n');
+        }
+        out.push_str("rust.bridge_sources=");
+        out.push_str(&self.rust.bridge_sources.len().to_string());
+        out.push('\n');
+        for bridge_source in &self.rust.bridge_sources {
+            push_bridge_source(&mut out, bridge_source);
+            out.push('\n');
+        }
+        if let Some(cargo) = &self.rust.cargo_inputs {
+            push_cargo_inputs(&mut out, cargo);
+        }
         out
     }
 }
@@ -31,6 +62,11 @@ impl InteropBuildPlan {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RustInteropPlan {
     pub declarations: Vec<RustInteropPlanDeclaration>,
+    pub resolved_targets: Vec<RustInteropResolvedTarget>,
+    pub trust_requirements: Vec<RustInteropTrustRequirement>,
+    pub probe_plan: RustBridgeProbePlan,
+    pub bridge_sources: Vec<RustBridgeSourceDigest>,
+    pub cargo_inputs: Option<RustInteropCargoInputs>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,6 +81,106 @@ pub enum RustInteropOwner {
     Function { name: String },
     Class { name: String },
     Method { class_name: String, name: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RustInteropResolvedTarget {
+    pub module_name: Option<String>,
+    pub owner: RustInteropOwner,
+    pub written_path: String,
+    pub canonical_target_path: String,
+    pub root: RustInteropResolvedRoot,
+    pub span: ruff_text_size::TextRange,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RustInteropResolvedRoot {
+    DirectCargoDependency {
+        dependency_name: String,
+        cargo_package_id: String,
+        cargo_package_name: String,
+        cargo_version: String,
+        cargo_source: Option<String>,
+    },
+    PackageBridge {
+        package_id: String,
+        bridge_roots: Vec<String>,
+    },
+    SelfMethod {
+        class_name: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RustInteropTrustRequirement {
+    pub canonical_target_path: String,
+    pub kind: RustInteropTrustRequirementKind,
+    pub trusted: bool,
+    pub required_entry: String,
+    pub evidence: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RustInteropTrustRequirementKind {
+    BuildScript,
+    ProcMacro,
+    NativeLinks,
+    BuildEnv,
+    UnsafeBridge,
+    NoPanic,
+    PanicAbort,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct RustBridgeProbePlan {
+    pub probes: Vec<RustBridgeProbe>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RustBridgeProbe {
+    pub canonical_target_path: String,
+    pub module_name: Option<String>,
+    pub owner: RustInteropOwner,
+    pub kind: RustBridgeProbeKind,
+    pub requires_send: bool,
+    pub requires_sync: bool,
+    pub span: ruff_text_size::TextRange,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RustBridgeProbeKind {
+    Function,
+    AsyncFunction,
+    Method,
+    OpaqueHandle,
+    ZeroCopy,
+    View,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RustBridgeSourceDigest {
+    pub package_id: String,
+    pub bridge_root: String,
+    pub digest: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RustInteropCargoInputs {
+    pub package_id: String,
+    pub cargo_metadata_digest: Option<String>,
+    pub package_graph_digest: Option<String>,
+    pub package_source_map_digest: Option<String>,
+    pub cargo_lock_digest: Option<String>,
+    pub target_triple: Option<String>,
+    pub target_features: Vec<String>,
+    pub cargo_profile: String,
+    pub panic_strategy: Option<String>,
+    pub profile_codegen_settings: Vec<(String, String)>,
+    pub cargo_version: Option<String>,
+    pub rustc_version: Option<String>,
+    pub bridge_version: Option<u32>,
+    pub trust_policy_digest: String,
+    pub declared_build_env: Vec<String>,
 }
 
 pub(crate) fn interop_build_plan_for_module(module: &HirModule) -> InteropBuildPlan {
@@ -217,6 +353,172 @@ fn push_declaration(out: &mut String, declaration: &RustInteropDeclaration) {
         out.push('@');
         push_span(out, argument.span);
     }
+}
+
+fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
+    out.push_str("resolved=");
+    out.push_str(target.module_name.as_deref().unwrap_or("<single>"));
+    out.push(':');
+    push_owner(out, &target.owner);
+    out.push_str(";written=");
+    out.push_str(&target.written_path);
+    out.push_str(";canonical=");
+    out.push_str(&target.canonical_target_path);
+    out.push_str(";root=");
+    match &target.root {
+        RustInteropResolvedRoot::DirectCargoDependency {
+            dependency_name,
+            cargo_package_id,
+            cargo_package_name,
+            cargo_version,
+            cargo_source,
+        } => {
+            out.push_str("cargo:");
+            out.push_str(dependency_name);
+            out.push(':');
+            out.push_str(cargo_package_id);
+            out.push(':');
+            out.push_str(cargo_package_name);
+            out.push('@');
+            out.push_str(cargo_version);
+            out.push(':');
+            out.push_str(cargo_source.as_deref().unwrap_or("<path>"));
+        }
+        RustInteropResolvedRoot::PackageBridge {
+            package_id,
+            bridge_roots,
+        } => {
+            out.push_str("bridge:");
+            out.push_str(package_id);
+            out.push(':');
+            out.push_str(&bridge_roots.join(","));
+        }
+        RustInteropResolvedRoot::SelfMethod { class_name } => {
+            out.push_str("self:");
+            out.push_str(class_name);
+        }
+    }
+    out.push_str(";span=");
+    push_span(out, target.span);
+}
+
+fn push_trust_requirement(out: &mut String, requirement: &RustInteropTrustRequirement) {
+    out.push_str("trust=");
+    out.push_str(&requirement.canonical_target_path);
+    out.push(':');
+    out.push_str(match requirement.kind {
+        RustInteropTrustRequirementKind::BuildScript => "build_script",
+        RustInteropTrustRequirementKind::ProcMacro => "proc_macro",
+        RustInteropTrustRequirementKind::NativeLinks => "native_links",
+        RustInteropTrustRequirementKind::BuildEnv => "build_env",
+        RustInteropTrustRequirementKind::UnsafeBridge => "unsafe_bridge",
+        RustInteropTrustRequirementKind::NoPanic => "no_panic",
+        RustInteropTrustRequirementKind::PanicAbort => "panic_abort",
+    });
+    out.push(':');
+    out.push_str(if requirement.trusted {
+        "trusted"
+    } else {
+        "untrusted"
+    });
+    out.push(':');
+    out.push_str(&requirement.required_entry);
+    out.push(':');
+    out.push_str(&requirement.evidence);
+}
+
+fn push_probe(out: &mut String, probe: &RustBridgeProbe) {
+    out.push_str("probe=");
+    out.push_str(&probe.canonical_target_path);
+    out.push(':');
+    out.push_str(probe.module_name.as_deref().unwrap_or("<single>"));
+    out.push(':');
+    push_owner(out, &probe.owner);
+    out.push(':');
+    out.push_str(match probe.kind {
+        RustBridgeProbeKind::Function => "function",
+        RustBridgeProbeKind::AsyncFunction => "async_function",
+        RustBridgeProbeKind::Method => "method",
+        RustBridgeProbeKind::OpaqueHandle => "opaque_handle",
+        RustBridgeProbeKind::ZeroCopy => "zero_copy",
+        RustBridgeProbeKind::View => "view",
+    });
+    out.push_str(":send=");
+    out.push_str(if probe.requires_send { "1" } else { "0" });
+    out.push_str(":sync=");
+    out.push_str(if probe.requires_sync { "1" } else { "0" });
+    out.push_str(":span=");
+    push_span(out, probe.span);
+}
+
+fn push_bridge_source(out: &mut String, bridge_source: &RustBridgeSourceDigest) {
+    out.push_str("bridge_source=");
+    out.push_str(&bridge_source.package_id);
+    out.push(':');
+    out.push_str(&bridge_source.bridge_root);
+    out.push(':');
+    out.push_str(&bridge_source.digest);
+}
+
+fn push_cargo_inputs(out: &mut String, cargo: &RustInteropCargoInputs) {
+    out.push_str("rust.cargo.package=");
+    out.push_str(&cargo.package_id);
+    out.push('\n');
+    out.push_str("rust.cargo.metadata_digest=");
+    out.push_str(cargo.cargo_metadata_digest.as_deref().unwrap_or("<none>"));
+    out.push('\n');
+    out.push_str("rust.cargo.graph_digest=");
+    out.push_str(cargo.package_graph_digest.as_deref().unwrap_or("<none>"));
+    out.push('\n');
+    out.push_str("rust.cargo.source_map_digest=");
+    out.push_str(
+        cargo
+            .package_source_map_digest
+            .as_deref()
+            .unwrap_or("<none>"),
+    );
+    out.push('\n');
+    out.push_str("rust.cargo.lock_digest=");
+    out.push_str(cargo.cargo_lock_digest.as_deref().unwrap_or("<none>"));
+    out.push('\n');
+    out.push_str("rust.cargo.target=");
+    out.push_str(cargo.target_triple.as_deref().unwrap_or("<host>"));
+    out.push('\n');
+    out.push_str("rust.cargo.features=");
+    out.push_str(&cargo.target_features.join(","));
+    out.push('\n');
+    out.push_str("rust.cargo.profile=");
+    out.push_str(&cargo.cargo_profile);
+    out.push('\n');
+    out.push_str("rust.cargo.panic=");
+    out.push_str(cargo.panic_strategy.as_deref().unwrap_or("<default>"));
+    out.push('\n');
+    for (name, value) in &cargo.profile_codegen_settings {
+        out.push_str("rust.cargo.profile_setting=");
+        out.push_str(name);
+        out.push('=');
+        out.push_str(value);
+        out.push('\n');
+    }
+    out.push_str("rust.cargo.cargo_version=");
+    out.push_str(cargo.cargo_version.as_deref().unwrap_or("<unknown>"));
+    out.push('\n');
+    out.push_str("rust.cargo.rustc_version=");
+    out.push_str(cargo.rustc_version.as_deref().unwrap_or("<unknown>"));
+    out.push('\n');
+    out.push_str("rust.cargo.bridge_version=");
+    out.push_str(
+        &cargo
+            .bridge_version
+            .map_or_else(|| "<none>".to_string(), |version| version.to_string()),
+    );
+    out.push('\n');
+    out.push_str("rust.cargo.trust_policy=");
+    out.push_str(&cargo.trust_policy_digest);
+    out.push('\n');
+    out.push_str("rust.cargo.build_env=");
+    out.push_str(&cargo.declared_build_env.join(","));
+    out.push('\n');
 }
 
 fn push_value(out: &mut String, value: &RustInteropValue) {

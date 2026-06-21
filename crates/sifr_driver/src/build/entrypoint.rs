@@ -8,12 +8,15 @@ use super::project_codegen::{
 };
 use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildStageReport};
+use super::rust_interop::{
+    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+};
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
     collect_project_hir_source_modules, collect_project_hir_source_modules_with_options,
     compile_single_frontend_module_with_source_and_options, emit_project_frontend_diagnostics,
-    parse_import_closure_source_modules, parse_package_import_closure_source_modules,
+    parse_import_closure_source_modules, parse_package_import_closure_source_project,
     DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
@@ -95,6 +98,7 @@ pub(crate) struct RootedEntrypointPlan {
     stdlib: StdlibCompiled,
     project_lowering: ProjectLowering,
     python_runtime: Option<PackagePythonRuntime>,
+    rust_interop_context: Option<PackageRustInteropContext>,
 }
 
 fn measure_stage<T>(
@@ -324,7 +328,7 @@ impl RootedEntrypointPlan {
         stages: &mut Vec<BuildStageReport>,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
         let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
-        let (shape, project_lowering, python_runtime) = match entrypoint {
+        let (shape, project_lowering, python_runtime, rust_interop_context) = match entrypoint {
             RootedEntrypoint::SingleFile {
                 source,
                 display_path,
@@ -345,7 +349,12 @@ impl RootedEntrypointPlan {
                         lowering_options.clone(),
                     )
                 })?;
-                (RootedEntrypointShape::SingleFile, project_lowering, None)
+                (
+                    RootedEntrypointShape::SingleFile,
+                    project_lowering,
+                    None,
+                    None,
+                )
             }
             RootedEntrypoint::Project { main_file } => {
                 let project_dir = main_file.parent().unwrap_or(Path::new("."));
@@ -385,24 +394,52 @@ impl RootedEntrypointPlan {
                     measure_stage(stages, module_analysis_label(module_count), || {
                         collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())
                     })?;
-                (RootedEntrypointShape::Project, project_lowering, None)
+                (RootedEntrypointShape::Project, project_lowering, None, None)
             }
             RootedEntrypoint::PackageProject { entrypoint } => {
                 let parse_start = Instant::now();
-                let (entry_module_name, mut parsed_modules) =
-                    parse_package_import_closure_source_modules(
-                        &entrypoint.graph,
-                        &entrypoint.source_map,
-                        &entrypoint.package_id,
-                        &entrypoint.main_file,
-                        DiscoveryDiagnosticStyle::ModuleName,
-                    )?;
+                let mut package_project = parse_package_import_closure_source_project(
+                    &entrypoint.graph,
+                    &entrypoint.source_map,
+                    &entrypoint.package_id,
+                    &entrypoint.main_file,
+                    DiscoveryDiagnosticStyle::ModuleName,
+                )?;
+                let entry_module_name = package_project.entry_module_name.clone();
                 if entry_module_name != "main" {
-                    if let Some(entry_module) = parsed_modules.remove(&entry_module_name) {
-                        parsed_modules.insert("main".to_string(), entry_module);
+                    if let Some(entry_module) =
+                        package_project.parsed_modules.remove(&entry_module_name)
+                    {
+                        package_project
+                            .parsed_modules
+                            .insert("main".to_string(), entry_module);
+                    }
+                    if let Some(entry_package) =
+                        package_project.module_packages.remove(&entry_module_name)
+                    {
+                        package_project
+                            .module_packages
+                            .insert("main".to_string(), entry_package);
                     }
                 }
-                let module_count = parsed_modules.len();
+                let module_sources = package_project
+                    .parsed_modules
+                    .iter()
+                    .map(|(module_name, parsed)| {
+                        (
+                            module_name.clone(),
+                            RustInteropModuleSource::from_parsed(parsed),
+                        )
+                    })
+                    .collect();
+                let rust_interop_context = PackageRustInteropContext {
+                    package_id: entrypoint.package_id.clone(),
+                    graph: entrypoint.graph.clone(),
+                    source_map: entrypoint.source_map.clone(),
+                    module_packages: package_project.module_packages.clone(),
+                    module_sources,
+                };
+                let module_count = package_project.parsed_modules.len();
                 stages.push(BuildStageReport::new(
                     import_closure_label(module_count),
                     parse_start.elapsed(),
@@ -414,7 +451,7 @@ impl RootedEntrypointPlan {
                             PackagePythonRuntime::lowering_options,
                         );
                         collect_project_hir_source_modules_with_options(
-                            &parsed_modules,
+                            &package_project.parsed_modules,
                             stdlib.defs.clone(),
                             &lowering_options,
                         )
@@ -423,6 +460,7 @@ impl RootedEntrypointPlan {
                     RootedEntrypointShape::Project,
                     project_lowering,
                     entrypoint.python_runtime.clone(),
+                    Some(rust_interop_context),
                 )
             }
         };
@@ -435,6 +473,7 @@ impl RootedEntrypointPlan {
                 stdlib,
                 project_lowering,
                 python_runtime,
+                rust_interop_context,
             },
             mode,
             entrypoint_path,
@@ -521,6 +560,7 @@ impl RootedEntrypointPlan {
         self,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
         let python_runtime = self.python_runtime.clone();
+        let rust_interop_context = self.rust_interop_context.clone();
         let generated = match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;
@@ -530,6 +570,7 @@ impl RootedEntrypointPlan {
                 generated_project_binary_project(&self.stdlib.code, self.project_lowering)?
             }
         };
+        let generated = apply_package_rust_interop_metadata(generated, rust_interop_context)?;
         apply_package_runtime_metadata(generated, python_runtime)
     }
 }

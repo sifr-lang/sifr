@@ -14,8 +14,8 @@ use crate::imports::source_map::{
     DottedModulePath, PackageModuleKey, PackageModuleSource, PackageSourceMap,
 };
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
-    SifrPackageName, TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
+    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
 };
 use crate::ops::plan::PackageOperation;
 use crate::ops::publish::{publish_plan, vendor_plan};
@@ -88,10 +88,7 @@ fn publish_validation_failed_reports_0402() {
 fn package_dry_run_includes_cargo_package_and_publish_dry_run_commands() {
     let package = package(TrustPolicy {
         native: vec!["reqwest".to_string()],
-        build_scripts: Vec::new(),
-        proc_macros: Vec::new(),
-        python: Vec::new(),
-        python_native: Vec::new(),
+        ..TrustPolicy::default()
     });
     let graph = graph(package.clone(), vec![backend("reqwest")]);
     validate_backend_trust(&graph).expect("trust should pass");
@@ -337,12 +334,12 @@ fn package(trust: TrustPolicy) -> SifrPackageMetadata {
             dev_dependencies: BTreeMap::new(),
             trust,
             python: PythonConfig::default(),
+            rust: RustInteropConfig::default(),
             production_schema: false,
         },
         aliases: BTreeMap::new(),
     }
 }
-
 fn source_map(package: &SifrPackageMetadata) -> PackageSourceMap {
     let init = PackageModuleSource {
         package_id: package.package_id.clone(),
@@ -381,7 +378,6 @@ fn source_map(package: &SifrPackageMetadata) -> PackageSourceMap {
         fatal_diagnostics: Vec::new(),
     }
 }
-
 fn graph(
     package: SifrPackageMetadata,
     backend_crates: Vec<BackendCrateMetadata>,
@@ -401,9 +397,15 @@ fn graph(
 fn backend(name: &str) -> BackendCrateMetadata {
     BackendCrateMetadata {
         cargo_package_id: cargo_id(name),
+        dependency_name: name.to_string(),
+        dependency_kind: None,
         cargo_package_name: name.to_string(),
         cargo_version: "1.0.0".to_string(),
         cargo_source: Some("registry+https://example.invalid".to_string()),
+        cargo_manifest_path: PathBuf::from(format!("/ws/{name}/Cargo.toml")),
+        links: None,
+        has_build_script: false,
+        has_proc_macro: false,
     }
 }
 

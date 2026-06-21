@@ -7,8 +7,8 @@ use crate::manifest::production::{
     parse_source_config, reject_production_manifest_bins, reject_production_manifest_exports,
 };
 use crate::manifest::sifr_fields::{
-    parse_exports, parse_python_config, parse_trust, validate_compiler_requirement,
-    validate_edition,
+    parse_exports, parse_python_config, parse_rust_interop_config, parse_trust,
+    validate_compiler_requirement, validate_edition,
 };
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
@@ -37,6 +37,13 @@ pub struct TrustPolicy {
     pub proc_macros: Vec<String>,
     pub python: Vec<String>,
     pub python_native: Vec<String>,
+    pub rust_build_scripts: Vec<String>,
+    pub rust_proc_macros: Vec<String>,
+    pub native_links: Vec<String>,
+    pub unsafe_rust_bridges: Vec<String>,
+    pub build_env: Vec<String>,
+    pub rust_no_panic: Vec<String>,
+    pub rust_panic_abort: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -47,6 +54,13 @@ pub struct PythonConfig {
     pub interpreter: Option<PathBuf>,
     pub allow_imports: Vec<String>,
     pub requires_imports: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct RustInteropConfig {
+    pub bridge_version: Option<u32>,
+    pub bridges: Vec<PathBuf>,
+    pub direct_crate_bindings: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -63,6 +77,7 @@ pub struct SifrManifest {
     pub dev_dependencies: BTreeMap<String, SifrDependency>,
     pub trust: TrustPolicy,
     pub python: PythonConfig,
+    pub rust: RustInteropConfig,
     pub production_schema: bool,
 }
 
@@ -151,6 +166,10 @@ impl SifrManifest {
             .map(|python| parse_python_config(cargo_package_id, manifest_path, python))
             .transpose()?
             .unwrap_or_default();
+        let rust = optional_table(cargo_package_id, manifest_path, &value, "rust")?
+            .map(|rust| parse_rust_interop_config(cargo_package_id, manifest_path, rust))
+            .transpose()?
+            .unwrap_or_default();
 
         Ok(Self {
             package_name,
@@ -165,6 +184,7 @@ impl SifrManifest {
             dev_dependencies,
             trust,
             python,
+            rust,
             production_schema,
         })
     }
@@ -174,6 +194,16 @@ impl SifrManifest {
         !self.trust.native.is_empty()
             || !self.trust.build_scripts.is_empty()
             || !self.trust.proc_macros.is_empty()
+            || self.rust.bridge_version.is_some()
+            || !self.rust.bridges.is_empty()
+            || self.rust.direct_crate_bindings
+            || !self.trust.rust_build_scripts.is_empty()
+            || !self.trust.rust_proc_macros.is_empty()
+            || !self.trust.native_links.is_empty()
+            || !self.trust.unsafe_rust_bridges.is_empty()
+            || !self.trust.build_env.is_empty()
+            || !self.trust.rust_no_panic.is_empty()
+            || !self.trust.rust_panic_abort.is_empty()
     }
 }
 

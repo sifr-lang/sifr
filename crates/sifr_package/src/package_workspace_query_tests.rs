@@ -8,8 +8,8 @@ use crate::graph::derive::{
 use crate::graph::filters::{apply_package_filters, parse_package_filter};
 use crate::graph::workspace::{explicit_package_selection, select_sifr_workspace_members};
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, SifrEdition, SifrManifest,
-    SifrPackageName, TrustPolicy,
+    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
+    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
 };
 use crate::ops::read::{outdated_query_report, OutdatedPackageSource};
 use sifr_diagnostics::DiagnosticCode;
@@ -330,6 +330,7 @@ fn package(
             dev_dependencies: BTreeMap::new(),
             trust: TrustPolicy::default(),
             python: PythonConfig::default(),
+            rust: RustInteropConfig::default(),
             production_schema: false,
         },
         aliases: BTreeMap::new(),
@@ -342,6 +343,7 @@ fn cargo_package(package: &SifrPackageMetadata) -> CargoPackage {
         name: package.cargo_package_name.clone(),
         version: package.cargo_version.clone(),
         source: package.cargo_source.clone(),
+        links: None,
         manifest_path: package.package_root.join("Cargo.toml"),
         dependencies: Vec::new(),
         targets: Vec::<CargoTarget>::new(),
@@ -356,6 +358,7 @@ fn rust_package(name: &str) -> CargoPackage {
         name: name.to_string(),
         version: "0.1.0".to_string(),
         source: None,
+        links: None,
         manifest_path: PathBuf::from(format!("/ws/{name}/Cargo.toml")),
         dependencies: Vec::new(),
         targets: Vec::<CargoTarget>::new(),

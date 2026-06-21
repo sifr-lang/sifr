@@ -82,6 +82,8 @@ Status: implemented in [PR #2702](https://github.com/sifr-lang/sifr/pull/2702); 
 
 ### milestone_39_2: Cargo Resolution, Trust, Cache, and Probe Infrastructure
 
+Status: implemented in [PR #2703](https://github.com/sifr-lang/sifr/pull/2703); local `create-pr` validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-2-review-round4.md`.
+
 - Scope:
   - Resolve direct Cargo dependency roots, same-workspace crates, shared bridge crates, and package-local bridge roots.
   - Preserve Cargo as the source of truth for package IDs, source IDs, features, target triples, lockfiles, `--locked`, `--offline`, and `--frozen`.
@@ -89,12 +91,14 @@ Status: implemented in [PR #2702](https://github.com/sifr-lang/sifr/pull/2702); 
   - Resolve `rust-no-panic` and `rust-panic-abort` entries through canonical Sifr dotted target paths, not lowered Rust `::` paths.
   - Split trust validation into pre-execution evidence that rejects known build scripts/proc macros before Cargo execution and post-execution evidence for trusted build-script link output before final artifact acceptance.
   - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, bridge-version schema, and declared build environment values in cache keys.
-  - Generate `RustBridgeProbePlan` metadata and isolated probe modules for sync functions, async functions, receiver-mode methods, opaque types, Send/Sync assertions, and Rust item/signature checking.
+  - Generate `RustBridgeProbePlan` metadata and isolated probe modules that run rustc item-existence probes for direct Cargo dependency targets; record async, receiver-mode, opaque, Send, and Sync obligations in the plan for milestone_39_5 signature assertions.
 - Definition of done:
   - Cargo metadata failures become Sifr diagnostics with spans and remediation.
   - Known untrusted build scripts and proc macros are rejected before Cargo execution; native link evidence emitted by trusted build scripts is validated before final artifact acceptance.
   - Cache invalidation changes when any bridge declaration, bridge source, Cargo lock state, target, feature, or trust input changes.
-  - Probe failures map rustc diagnostics to `SIFR-RUST-RESOLVE-*` or `SIFR-RUST-TYPE-*` diagnostics at the original decorator span.
+  - Direct Cargo item-existence probe failures map rustc diagnostics to `SIFR-RUST-RESOLVE-*` or `SIFR-RUST-TYPE-*` diagnostics at the original decorator span.
+- Carry-forward note:
+  - Mixed Rust and Python interop fixtures remain outside M39.2; the first mixed fixture must either declare Python runtime native link evidence in Rust interop trust or add a Python-runtime trust source before native-link validation is considered complete for that combined build shape.
 
 ### milestone_39_3: Package-Local and Shared Bridge Modules
 
@@ -127,7 +131,7 @@ Status: implemented in [PR #2702](https://github.com/sifr-lang/sifr/pull/2702); 
 
 - Scope:
   - Implement direct binding for Cargo dependency functions whose public Rust signatures are bridge-compatible under milestone_39_4.
-  - Validate function existence, visibility, arity, parameter types, return types, receiver mode, asyncness, panic policy, and `Result`/`Option` shape through milestone_39_2 probes.
+  - Extend milestone_39_2 item-existence probes to validate visibility, arity, parameter types, return types, receiver mode, asyncness, panic policy, Send/Sync obligations, and `Result`/`Option` shape.
   - Reject arbitrary lifetimes, borrowed returns, raw pointers, trait objects, unconstrained generics, closures, `unsafe fn`, and unsupported `Pin`/self-referential surfaces.
   - Add direct binding fixtures for simple crates such as `crc32fast`, `blake3`, `sha2`, `uuid`, and `regex`, including compatible direct signatures, incompatible signatures, reserved-root conflicts, no-panic trust, and probe diagnostic mapping.
 - Definition of done:

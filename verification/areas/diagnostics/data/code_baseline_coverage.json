@@ -1591,6 +1591,58 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-RESOLVE-0001",
+      "deferral": {
+        "issue": "rust-interop-rendered-fixtures",
+        "owner": "compiler/package-management",
+        "reason": "covered by crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_rejects_unknown_target_root until package-level diagnostics fixtures cover Rust interop resolution",
+        "removal_target": "add package diagnostics fixture for unresolved Rust interop target roots"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-TRUST-0001",
+      "deferral": {
+        "issue": "rust-interop-rendered-fixtures",
+        "owner": "compiler/package-management",
+        "reason": "covered by crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_rejects_untrusted_build_script until package-level diagnostics fixtures cover Rust interop trust",
+        "removal_target": "add package diagnostics fixture for missing Rust interop trust"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-TYPE-0001",
+      "deferral": {
+        "issue": "rust-interop-probe-rendered-fixtures",
+        "owner": "compiler/package-management",
+        "reason": "covered by crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_rejects_unrepresentable_probe_owner until isolated Rust bridge probe execution has a diagnostics fixture",
+        "removal_target": "add package diagnostics fixture for Rust bridge probe type failures"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-CARGO-0001",
+      "deferral": {
+        "issue": "rust-interop-rendered-fixtures",
+        "owner": "compiler/package-management",
+        "reason": "covered by crates/sifr_driver/src/build/rust_interop_tests.rs::package_rust_interop_requires_cargo_context until package-level diagnostics fixtures cover missing Cargo context",
+        "removal_target": "add package diagnostics fixture for missing Rust interop Cargo context"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "e2e_unused_result",
       "code": "SIFR-RESULT-0001",
       "deferral": null,

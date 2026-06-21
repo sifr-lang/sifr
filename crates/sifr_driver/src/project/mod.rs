@@ -19,7 +19,7 @@ pub(crate) use frontend::{
     compile_single_frontend_module_with_source_and_options, emit_project_frontend_diagnostics,
     ProjectLowering,
 };
-pub(crate) use package_discovery::parse_package_import_closure_source_modules;
+pub(crate) use package_discovery::parse_package_import_closure_source_project;
 pub(crate) use rust_module_layout::{
     namespace_module_files, rust_module_file_path, top_level_module_declarations,
 };
