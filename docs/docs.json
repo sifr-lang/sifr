@@ -72,7 +72,8 @@
               "quickstart",
               "from-python",
               "python-interop",
-              "rust-interop"
+              "rust-interop",
+              "rust-interop-compatibility"
             ]
           },
           {

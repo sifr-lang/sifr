@@ -6,5 +6,5 @@ metadata, requires explicit schema identity through `schema=`, requires explicit
 borrowed or owned view ownership, and enforces the `sifr_arrow_bridge` shared
 bridge crate boundary.
 
-Runtime-observed `arrow` crate record batch exchange remains staged for the
+Runtime-observed `arrow` crate record batch exchange is pending for the
 ecosystem certification fixture pass.

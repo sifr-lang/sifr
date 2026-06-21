@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 import tempfile
@@ -11,6 +12,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
 
 
 def run(command: list[str], *, expect: int = 0) -> subprocess.CompletedProcess[str]:
@@ -23,6 +25,15 @@ def run(command: list[str], *, expect: int = 0) -> subprocess.CompletedProcess[s
     return completed
 
 
+def sifr_command(*args: str) -> list[str]:
+    configured_bin = os.environ.get("SIFR_RULE_SUPPRESSION_BIN")
+    if configured_bin:
+        return [configured_bin, *args]
+    if DEFAULT_SIFR_BIN.is_file():
+        return [str(DEFAULT_SIFR_BIN), *args]
+    return ["cargo", "run", "-q", "-p", "sifr", "--", *args]
+
+
 def run_positive() -> None:
     run(["cargo", "test", "-p", "sifr_lint"])
     with tempfile.TemporaryDirectory() as tmp:
@@ -31,7 +42,7 @@ def run_positive() -> None:
             "def main():  # sifr: ignore[not-a-rule]\n    pass  \n",
             encoding="utf-8",
         )
-        completed = run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(source)], expect=1)
+        completed = run(sifr_command("lint", str(source)), expect=1)
         stderr = completed.stderr
         for expected in [
             "unknown Sifr policy rule id",
@@ -45,7 +56,7 @@ def run_positive() -> None:
             "def main():  # sifr: ignore[trailing-whitespace]  \n    pass\n",
             encoding="utf-8",
         )
-        completed = run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(suppressed)])
+        completed = run(sifr_command("lint", str(suppressed)))
         if "line has trailing whitespace" in completed.stderr:
             raise SystemExit("rule/suppression rules failed: explicit policy suppression did not apply")
     print("rule/suppression rules: PASS")
@@ -55,7 +66,7 @@ def run_self_test() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         source = Path(tmp) / "blanket.sifr"
         source.write_text("def main(): # sifr: ignore\n    pass\n", encoding="utf-8")
-        completed = run(["cargo", "run", "-q", "-p", "sifr", "--", "lint", str(source)], expect=1)
+        completed = run(sifr_command("lint", str(source)), expect=1)
         if "sifr suppression must list explicit policy rule ids" not in completed.stderr:
             raise SystemExit("rule/suppression self-test failed: blanket suppression passed")
     print("rule/suppression rules self-test: PASS")

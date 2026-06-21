@@ -519,7 +519,7 @@ The adapter must be non-async, non-blocking, and shape-checked:
 
 If the mapper panics, generated glue ignores the failed mapper and surfaces the original `RustPanicError` through a stable `SIFR-RUST-PANIC-*` path. If the public error channel cannot represent that original panic after mapper failure, the declaration is rejected.
 
-The initial compile-time panic contract validates the public panic surface and `panic=map_error(path)` shape. Full generated wrapper emission owns mapper signature validation and mapper-panic fallback behavior.
+The initial compile-time panic contract validates the public panic surface and `panic=map_error(path)` shape. Full generated wrapper emission, mapper signature validation, and mapper-panic fallback behavior are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md) through the `panic_boundary_wrapper_emission` compatibility row.
 
 Non-`Result` functions cannot return a recoverable panic without changing their public type. They are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
 
@@ -658,7 +658,7 @@ Rules:
 - fallible downgrade to copying must be a different API name and declaration,
 - views crossing async suspension points must satisfy the same lifetime and pinning requirements as native Sifr borrows.
 
-The initial compile-time zero-copy contract surface enforces explicit `owner=` and `view=` on `@rust.zero_copy(...)`, explicit `owner=`, `lifetime=`, `mutability=`, `send=`, and `sync=` on `@rust.view(...)`, paired view contracts for zero-copy borrowed returns, returned-view rejection for `lifetime=call`, mutable-view rejection for non-exclusive owners, copy-fallback rejection, async borrowed-view suspension rejection, and view Send/Sync probe metadata. View probes now derive Send/Sync obligations from the explicit `@rust.view(...)` contract rather than implicit ABI flags, so contract authors must declare the thread behavior that generated probes certify. Runtime-observed generated wrapper behavior and crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` remain owned by the zero-copy fixture families.
+The initial compile-time zero-copy contract surface enforces explicit `owner=` and `view=` on `@rust.zero_copy(...)`, explicit `owner=`, `lifetime=`, `mutability=`, `send=`, and `sync=` on `@rust.view(...)`, paired view contracts for zero-copy borrowed returns, returned-view rejection for `lifetime=call`, mutable-view rejection for non-exclusive owners, copy-fallback rejection, async borrowed-view suspension rejection, and view Send/Sync probe metadata. View probes now derive Send/Sync obligations from the explicit `@rust.view(...)` contract rather than implicit ABI flags, so contract authors must declare the thread behavior that generated probes certify. Runtime-observed generated wrapper behavior and crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md).
 
 Data-oriented bridges must support explicit contracts for:
 
@@ -676,8 +676,10 @@ bridge crate root; tensor and DLPack views require dtype/shape/layout/strides
 and CPU-only device metadata plus the `sifr_tensor_bridge` shared bridge crate
 root. DLPack handoff must declare `ownership=transfer`, an owned owner
 parameter, and `protocol=` explicitly. Runtime-observed crate-backed
-certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle`
-remains staged for ecosystem certification.
+certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle` is
+future-owned by
+[`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
+until both evidence directions pass.
 
 ## Callbacks
 
@@ -736,8 +738,10 @@ policy requires a later extension. Callable parameters without
 rejected as unsupported bridge types. Runtime-observed call-scoped storage
 rejection, registered subscription handles, cross-thread capture enforcement,
 callback invocation panic mapping, and `tokio-tungstenite`/`redis`/`notify`
-ecosystem certification remain owned by `callbacks_call_scoped` and
-`callback_subscription_matrix`.
+ecosystem certification are future-owned by
+[`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
+through the `callbacks_call_scoped` and `callback_subscription_matrix`
+compatibility rows.
 
 ## Trust Policy
 
@@ -848,7 +852,7 @@ The initial verification scaffold reserves the first code in every family:
 
 ## Tooling
 
-LSP support is staged and must use the same analysis/compiler facts that back `sifr check`:
+LSP support expands through the same analysis/compiler facts that back `sifr check`:
 
 1. Complete canonical Rust interop decorator dotted paths and policy keys (`@rust`, `@rust.async`, `@rust.opaque`, `@rust.zero_copy`, `@rust.view`, `@rust.callback`, and their policy arguments).
 2. Resolve decorator roots from Sifr package metadata and Cargo metadata.
@@ -872,6 +876,7 @@ verification/areas/rust_interop/
   README.md
   data/
     rust_interop_fixture_matrix.json
+    rust_interop_compatibility_matrix.json
     rust_interop_tiers.toml
   fixtures/
     direct_crate_crc32/
@@ -973,3 +978,25 @@ Runtime-service fixtures must declare whether they are compile/probe-only, loopb
 The matrix proves the Rust interop contract and package model. It does not create first-party Sifr wrappers for every listed crate and it does not move game, GUI, embedded, or product-level web framework work into Rust interop.
 
 The area must record positive and negative fixtures for every declared capability. A feature is not complete until its failure mode is as deliberate as its success path.
+
+### Compatibility Matrix
+
+`verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
+is the machine-readable source for Rust interop support statements. Every fixture
+listed in `rust_interop_fixture_matrix.json` must have exactly one compatibility
+row. The compatibility validator rejects any `supported`,
+`supported-through-bridge`, or `unsupported-by-design` row unless both positive
+and negative fixture evidence are `passing`.
+
+Compatibility categories are:
+
+- `supported`: passing positive and negative fixture evidence for the stated
+  execution kind.
+- `supported-through-bridge`: passing evidence when the package author uses an
+  explicit local or shared bridge contract; direct binding is not implied.
+- `unsupported-by-design`: passing diagnostics for a rejected surface with no
+  fallback path.
+- `future-owned-by-separate-phase`: documented separately because at least one
+  evidence direction is not passing. Future-owned rows must reference a concrete
+  active issue or phase; the current active issue is
+  [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md).

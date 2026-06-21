@@ -1,4 +1,4 @@
-"""Validate the Rust interop fixture matrix scaffold."""
+"""Validate the Rust interop fixture matrix inventory."""
 
 from __future__ import annotations
 
@@ -161,6 +161,9 @@ def main() -> int:
     discovered_dirs = {path.name for path in FIXTURES_ROOT.iterdir() if path.is_dir()}
     failures.extend(f"missing fixture directory: {item}" for item in sorted(REQUIRED_FIXTURES - discovered_dirs))
     failures.extend(f"unexpected fixture directory: {item}" for item in sorted(discovered_dirs - REQUIRED_FIXTURES))
+    for fixture_id in sorted(REQUIRED_FIXTURES & discovered_dirs):
+        if not (FIXTURES_ROOT / fixture_id / "README.md").is_file():
+            failures.append(f"{fixture_id}: fixture README.md is required for evidence notes")
 
     covered_crates: set[str] = set()
     for fixture in fixtures:
