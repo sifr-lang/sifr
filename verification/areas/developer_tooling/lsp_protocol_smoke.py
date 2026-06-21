@@ -43,6 +43,12 @@ def main() -> int:
     return 0
 """
 
+EXPLAIN_DIAGNOSTIC_SAMPLE = """\
+def main() -> int:
+    value: int = missing_name
+    return value
+"""
+
 def initialize(
     client: LspClient,
     root: Path,
@@ -94,7 +100,7 @@ def initialize(
     return capabilities
 
 
-def open_document(client: LspClient, path: Path, text: str, version: int = 1) -> None:
+def open_document(client: LspClient, path: Path, text: str, version: int = 1) -> list[dict[str, Any]]:
     client.notify(
         "textDocument/didOpen",
         {
@@ -112,8 +118,10 @@ def open_document(client: LspClient, path: Path, text: str, version: int = 1) ->
         raise LspProtocolError("publishDiagnostics used the wrong document URI")
     if params.get("version") != version:
         raise LspProtocolError("publishDiagnostics did not preserve document version")
-    if not isinstance(params.get("diagnostics"), list):
+    diagnostics = params.get("diagnostics")
+    if not isinstance(diagnostics, list):
         raise LspProtocolError("publishDiagnostics missing diagnostics list")
+    return [item for item in diagnostics if isinstance(item, dict)]
 
 
 def run_queries(client: LspClient, uri: str) -> None:
@@ -161,12 +169,23 @@ def run_queries(client: LspClient, uri: str) -> None:
 
     preview = client.request(
         "workspace/executeCommand",
-        {"command": "sifr.showGeneratedRust", "arguments": [uri]},
+        {"command": "sifr.server.showGeneratedRust", "arguments": [uri]},
     )
     if not isinstance(preview, dict) or "rust" not in preview:
         raise LspProtocolError("generated Rust command did not return preview payload")
 
-    client.request("workspace/executeCommand", {"command": "sifr.runTests", "arguments": []})
+
+def run_explain_diagnostic_check(client: LspClient, path: Path) -> None:
+    diagnostics = open_document(client, path, EXPLAIN_DIAGNOSTIC_SAMPLE)
+    diagnostic_code = next((item.get("code") for item in diagnostics if item.get("code")), None)
+    if diagnostic_code is None:
+        raise LspProtocolError(f"explainDiagnostic sample did not publish a coded diagnostic: {diagnostics}")
+    explanation = client.request(
+        "workspace/executeCommand",
+        {"command": "sifr.server.explainDiagnostic", "arguments": [str(diagnostic_code)]},
+    )
+    if not isinstance(explanation, dict) or not explanation.get("diagnostic"):
+        raise LspProtocolError(f"explainDiagnostic did not return an explanation payload: {explanation}")
 
 
 def run_formatting_checks(client: LspClient, path: Path) -> None:
@@ -313,13 +332,16 @@ def run_smoke() -> None:
         root = Path(raw)
         source = root / "main.sifr"
         formatting_source = root / "formatting.sifr"
+        explain_source = root / "explain.sifr"
         source.write_text(SAMPLE, encoding="utf-8")
         formatting_source.write_text(UNFORMATTED_SAMPLE, encoding="utf-8")
+        explain_source.write_text(EXPLAIN_DIAGNOSTIC_SAMPLE, encoding="utf-8")
         client = LspClient()
         try:
             initialize(client, root)
             open_document(client, source, SAMPLE)
             run_queries(client, file_uri(source))
+            run_explain_diagnostic_check(client, explain_source)
             run_formatting_checks(client, formatting_source)
             client.request("shutdown", {})
             client.notify("exit", {})

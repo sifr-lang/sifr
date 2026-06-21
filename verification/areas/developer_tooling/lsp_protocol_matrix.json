@@ -87,12 +87,8 @@
     {"method": "textDocument/rangeFormatting", "owner": "sifr_lsp::requests::range_formatting", "analysis_owner": "AnalysisHost::format_range", "positive": "range edits match formatter rules using discovered formatter config and LSP options", "negative": "invalid range and disabled formatter setting are rejected", "budget_id": "lsp-formatting"}
   ],
   "required_commands": [
-    {"command": "sifr.restartServer", "owner": "CommandRegistry", "positive": "server restart request is logged", "negative": "restart during shutdown is rejected"},
-    {"command": "sifr.showServerLogs", "owner": "CommandRegistry", "positive": "server log location or content returned", "negative": "missing log file reports actionable error"},
-    {"command": "sifr.explainDiagnostic", "owner": "AnalysisHost::explain_diagnostic", "positive": "diagnostic explanation preserves canonical schema", "negative": "unknown diagnostic id rejected"},
-    {"command": "sifr.showGeneratedRust", "owner": "AnalysisHost::generated_rust_preview", "positive": "preview uses compiler codegen/source maps", "negative": "content-modified cancellation rejects partial output"},
-    {"command": "sifr.checkWorkspace", "owner": "sifr CLI check", "positive": "workspace check command metadata invokes Sifr", "negative": "workspace load failure reports diagnostics"},
-    {"command": "sifr.runTests", "owner": "sifr CLI test metadata", "positive": "test command metadata invokes Sifr test runner", "negative": "project without tests returns empty tree"}
+    {"command": "sifr.server.explainDiagnostic", "owner": "AnalysisHost::explain_diagnostic", "positive": "diagnostic explanation preserves canonical schema", "negative": "unknown diagnostic id rejected"},
+    {"command": "sifr.server.showGeneratedRust", "owner": "AnalysisHost::generated_rust_preview", "positive": "preview uses compiler codegen/source maps", "negative": "content-modified cancellation rejects partial output"}
   ],
   "unsupported_surfaces": [
     {"surface": "notebookDocumentSync", "policy": "do not advertise; reject notebook URIs deterministically"},

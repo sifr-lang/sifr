@@ -96,6 +96,11 @@ The extension must not implement:
 
 All commands delegate to Sifr LSP or CLI surfaces.
 
+The command-palette identifiers above are editor-owned UI commands. When they
+need server analysis, they call internal LSP workspace commands such as
+`sifr.server.showGeneratedRust` and `sifr.server.explainDiagnostic`; they must
+not share identifiers with commands advertised by the LSP server.
+
 ## Versioning Covenant
 
 Before VS Code extension layer closes, the extension must document whether its version is coupled to the Sifr compiler version or declares an explicit supported Sifr version range. Extension releases are gated on the main-repo rules check, `sifr lsp --stdio` smoke tests, extension tests, and `.vsix` packaging.

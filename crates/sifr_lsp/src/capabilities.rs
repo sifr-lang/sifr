@@ -105,12 +105,8 @@ pub(crate) fn server_capabilities(
         },
         "executeCommandProvider": {
             "commands": [
-                "sifr.restartServer",
-                "sifr.showServerLogs",
-                "sifr.explainDiagnostic",
-                "sifr.showGeneratedRust",
-                "sifr.checkWorkspace",
-                "sifr.runTests"
+                "sifr.server.explainDiagnostic",
+                "sifr.server.showGeneratedRust"
             ]
         },
         "workspace": {
@@ -127,7 +123,7 @@ pub(crate) fn server_capabilities(
 
 #[cfg(test)]
 mod tests {
-    use super::negotiated_position_encoding;
+    use super::{negotiated_position_encoding, server_capabilities};
     use serde_json::json;
     use sifr_source::PositionEncoding;
 
@@ -136,6 +132,18 @@ mod tests {
         assert_eq!(
             negotiated_position_encoding(&json!({ "capabilities": {} })),
             PositionEncoding::Utf16
+        );
+    }
+
+    #[test]
+    fn execute_command_provider_only_advertises_server_workspace_commands() {
+        let capabilities = server_capabilities(false, PositionEncoding::Utf16);
+        assert_eq!(
+            capabilities.pointer("/executeCommandProvider/commands"),
+            Some(&json!([
+                "sifr.server.explainDiagnostic",
+                "sifr.server.showGeneratedRust"
+            ]))
         );
     }
 

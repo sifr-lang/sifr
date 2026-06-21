@@ -120,14 +120,10 @@ def replay_initialize_capability_snapshot(_: dict[str, Any]) -> None:
                 raise LspProtocolError("workspace folders are not advertised as supported")
             commands = require_dict(capabilities.get("executeCommandProvider"), "executeCommandProvider").get("commands")
             expected_commands = {
-                "sifr.restartServer",
-                "sifr.showServerLogs",
-                "sifr.explainDiagnostic",
-                "sifr.showGeneratedRust",
-                "sifr.checkWorkspace",
-                "sifr.runTests",
+                "sifr.server.explainDiagnostic",
+                "sifr.server.showGeneratedRust",
             }
-            if not isinstance(commands, list) or expected_commands.difference(commands):
+            if not isinstance(commands, list) or set(commands) != expected_commands:
                 raise LspProtocolError(f"initialize command advertisement drifted: {commands}")
             legend = require_dict(
                 require_dict(capabilities.get("semanticTokensProvider"), "semanticTokensProvider").get("legend"),

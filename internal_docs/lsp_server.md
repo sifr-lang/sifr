@@ -155,16 +155,23 @@ through `sifr_analysis`, and fail closed if the document version changed.
 
 ## Commands
 
-Required command identifiers:
+Required server workspace command identifiers:
 
-- `sifr.restartServer`
-- `sifr.showServerLogs`
-- `sifr.explainDiagnostic`
-- `sifr.showGeneratedRust`
-- `sifr.checkWorkspace`
-- `sifr.runTests`
+- `sifr.server.explainDiagnostic`
+- `sifr.server.showGeneratedRust`
 
-Command payloads are Sifr-owned and versioned through this document and the protocol matrix.
+Only server-executable workspace commands may be advertised through
+`executeCommandProvider`. Editor lifecycle and UI commands such as restart,
+show logs, task execution, and command-palette actions are owned by editor
+integrations and must not be advertised by the LSP server. This avoids global
+command registration collisions in clients such as VS Code and keeps the LSP
+surface portable across editors.
+
+Command payloads are Sifr-owned and versioned through this document and the
+protocol matrix.
+
+- `sifr.server.explainDiagnostic` arguments: `[diagnosticCode: string]`.
+- `sifr.server.showGeneratedRust` arguments: `[uri: string]`.
 
 Lint-related code actions use standard LSP code-action kinds:
 

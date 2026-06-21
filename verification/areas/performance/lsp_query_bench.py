@@ -68,7 +68,7 @@ def run_family(client: LspClient, uri: str) -> None:
     )
     client.request("textDocument/diagnostic", {"textDocument": document})
     client.request("workspace/diagnostic", {})
-    client.request("workspace/executeCommand", {"command": "sifr.showGeneratedRust", "arguments": [uri]})
+    client.request("workspace/executeCommand", {"command": "sifr.server.showGeneratedRust", "arguments": [uri]})
 
 
 def run_completion(client: LspClient, uri: str) -> None:
@@ -157,7 +157,7 @@ def run_workspace_diagnostics(client: LspClient, _uri: str) -> None:
 
 
 def run_generated_rust_preview(client: LspClient, uri: str) -> None:
-    client.request("workspace/executeCommand", {"command": "sifr.showGeneratedRust", "arguments": [uri]})
+    client.request("workspace/executeCommand", {"command": "sifr.server.showGeneratedRust", "arguments": [uri]})
 
 
 WARM_SCENARIOS: dict[str, Callable[[LspClient, str], None]] = {
