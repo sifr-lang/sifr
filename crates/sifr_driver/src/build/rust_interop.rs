@@ -3,15 +3,16 @@ use super::rust_interop_cargo_inputs::{
     bridge_source_digests, cargo_inputs, first_generated_bridge_import,
     generated_bridge_module_path,
 };
+use super::rust_interop_contracts::bridge_contract_diagnostics;
 use super::rust_interop_digest::{normalized_path_string, relative_path_string};
 use super::rust_interop_probe::{execute_direct_cargo_probe, PendingRustBridgeProbe};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::ParsedProjectModule;
 use ruff_text_size::TextRange;
 use sifr_codegen::{
-    RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan, RustGeneratedBridgeModule,
-    RustInteropOwner, RustInteropResolvedRoot, RustInteropResolvedTarget,
-    RustInteropTrustRequirement, RustInteropTrustRequirementKind,
+    RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan, RustBridgeSignatureContract,
+    RustGeneratedBridgeModule, RustInteropOwner, RustInteropResolvedRoot,
+    RustInteropResolvedTarget, RustInteropTrustRequirement, RustInteropTrustRequirementKind,
 };
 use sifr_diagnostics::render::render_sink;
 use sifr_diagnostics::{
@@ -77,6 +78,7 @@ struct RustInteropResolver<'a> {
     seen_trust_requirements: BTreeSet<(String, String, String)>,
     probes: Vec<RustBridgeProbe>,
     pending_direct_probes: Vec<PendingRustBridgeProbe>,
+    signature_contracts: HashMap<String, RustBridgeSignatureContract>,
 }
 
 impl<'a> RustInteropResolver<'a> {
@@ -90,6 +92,7 @@ impl<'a> RustInteropResolver<'a> {
             seen_trust_requirements: BTreeSet::new(),
             probes: Vec::new(),
             pending_direct_probes: Vec::new(),
+            signature_contracts: HashMap::new(),
         }
     }
 
@@ -97,10 +100,23 @@ impl<'a> RustInteropResolver<'a> {
         &mut self,
         generated: &mut GeneratedBinaryProject,
     ) -> Result<(), Vec<RenderedDiagnostic>> {
+        self.signature_contracts = generated
+            .interop
+            .rust
+            .bridge_contracts
+            .signatures
+            .iter()
+            .cloned()
+            .map(|signature| (signature.canonical_target_path.clone(), signature))
+            .collect();
         for declaration in generated.interop.rust.declarations.clone() {
             self.resolve_declaration(&declaration);
         }
 
+        if !self.diagnostics.is_empty() {
+            return Err(std::mem::take(&mut self.diagnostics));
+        }
+        self.validate_bridge_contracts(&generated.interop.rust.bridge_contracts.signatures);
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));
         }
@@ -240,6 +256,10 @@ impl<'a> RustInteropResolver<'a> {
                     declaration: declaration.clone(),
                     path: path.clone(),
                     backend: backend.clone(),
+                    signature: self
+                        .signature_contracts
+                        .get(&canonical_target_path)
+                        .cloned(),
                 });
                 RustInteropResolvedRoot::DirectCargoDependency {
                     dependency_name: backend.dependency_name.clone(),
@@ -527,6 +547,17 @@ impl<'a> RustInteropResolver<'a> {
         }
     }
 
+    fn validate_bridge_contracts(&mut self, signatures: &[RustBridgeSignatureContract]) {
+        for diagnostic in bridge_contract_diagnostics(signatures) {
+            self.push_contract_diagnostic(
+                &diagnostic.signature,
+                "unsupported Rust bridge type `{sifr_type}` in `{target}`",
+                diagnostic.args,
+                diagnostic.notes,
+            );
+        }
+    }
+
     fn package_id_for_module(&self, module_name: Option<&str>) -> Option<SifrPackageId> {
         module_name
             .and_then(|module| self.context.module_packages.get(module))
@@ -569,6 +600,41 @@ impl<'a> RustInteropResolver<'a> {
             &args,
             &notes,
             help,
+        ));
+    }
+
+    fn push_contract_diagnostic(
+        &mut self,
+        signature: &RustBridgeSignatureContract,
+        message_template: &'static str,
+        args: Vec<(&'static str, String)>,
+        notes: Vec<String>,
+    ) {
+        let Some(module_name) = signature.module_name.as_deref() else {
+            self.diagnostics
+                .push(crate::diagnostics::diagnostic_with_code(
+                    render_template(message_template, &args),
+                    DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
+                ));
+            return;
+        };
+        let Some(source) = self.context.module_sources.get(module_name) else {
+            self.diagnostics
+                .push(crate::diagnostics::diagnostic_with_code(
+                    render_template(message_template, &args),
+                    DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
+                ));
+            return;
+        };
+        self.diagnostics.push(source_diagnostic(
+            DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
+            &source.display_path,
+            &source.source,
+            signature.span,
+            message_template,
+            &args,
+            &notes,
+            None,
         ));
     }
 }

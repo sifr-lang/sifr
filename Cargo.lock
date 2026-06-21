@@ -3025,6 +3025,7 @@ dependencies = [
  "icu_decimal",
  "icu_locale",
  "icu_plurals",
+ "indexmap",
  "libc",
  "num-bigint",
  "num-traits",

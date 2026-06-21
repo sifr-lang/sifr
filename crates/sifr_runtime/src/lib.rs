@@ -7,6 +7,7 @@ pub mod http;
 #[cfg(feature = "i18n")]
 pub mod i18n;
 mod int;
+pub mod interop;
 pub mod json;
 #[cfg(feature = "net")]
 pub mod net;

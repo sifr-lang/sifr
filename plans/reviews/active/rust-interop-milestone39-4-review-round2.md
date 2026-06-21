@@ -1,0 +1,18 @@
+## M39.4 — round 2 review
+
+**No blocking findings.** The five round-1 blockers are all addressed; the implementation is satisfactory for M39.4.
+
+### Round-1 blockers — verification
+
+1. **GeneratedGlueToken seal.** Constructor is removed; tokens are minted only via `sifr_runtime::interop::__generated_glue::token()` (`crates/sifr_runtime/src/interop.rs:187-195`, used by tests at `:289,295`). Architecture doc reflects the seal at `internal_docs/rust_interop_architecture.md:462` ("generator-owned"). ✓
+2. **`crate::__sifr_bridge::<module>::…Bridge` materialized.** `rust_interop_bridge_sources.rs:7-39` emits `__sifr_bridge/mod.rs` plus per-module `.rs` files; `materialize.rs:132-148` writes them and prepends `pub mod __sifr_bridge;` to `main.rs`. Snapshot test at `rust_interop_bridge_sources.rs:111-152` covers record + enum rendering. ✓
+3. **Cross-module bridge type paths.** `bridge_type_definition_module` (`generated_types.rs:190-216`) scans `ModuleCatalog` entries; ambiguity returns `Err` and `bridge_type_contract` propagates it as `unsupported_type` (`rust_interop_bridge_contract.rs:372-377,401-408`). Regression `interop_bridge_generated_field_paths_use_declaring_module` (`rust_interop_plan.rs:745-803`) asserts `WrapperBridge.token` points at `crate::__sifr_bridge::models::TokenBridge` across modules. ✓
+4. **Enum discriminants outside `repr(u32)`.** `insert_enum` returns `Err` rather than relabeling (`generated_types.rs:71-84,226-230`); top-level `bridge_type_contract` converts that to `Unsupported` (`rust_interop_bridge_contract.rs:407-409`). Regression `interop_bridge_rejects_enum_discriminants_outside_repr_u32` (`rust_interop_plan.rs:806-837`) asserts `Status` with `Broken = -1` produces an `Unsupported` contract with reason mentioning `repr(u32) range` and emits no generated types. ✓
+5. **`bridge_type_matrix` claims.** `positive_evidence.status` is back to `"planned"`; only `negative_evidence` is `"passing"` (`rust_interop_fixture_matrix.json:60-63`). `bridge_type_matrix/README.md` only claims supporting compiler coverage and the negative driver test. ✓
+
+### Non-blocking follow-ups
+
+- **Nested-field ambiguity swallowed in collector.** `generated_field_rust_type` in `generated_types.rs:130-145` does `bridge_type_definition_module(...).unwrap_or_else(|_| module_name.clone())`. The top-level signature path correctly errors, but a record field whose nested `Type::Class { name }` is ambiguous across modules silently falls back to the current module instead of surfacing the same `Unsupported` diagnostic. Worth tightening for symmetry with the top-level path.
+- **Probe still synthesizes heuristic `…Bridge` stubs under one module.** `rust_interop_probe.rs:167-194` emits `mod __sifr_bridge { pub mod <signature.module_name> { ... } }` only — a cross-module bridge path (`crate::__sifr_bridge::models::TokenBridge` from an `api`-module signature) would not resolve. Current tests do not exercise that shape. This matches the round-1 non-blocking concern about replacing heuristic stubs with reuse of `rust_interop_bridge_sources` output.
+- **Pre-existing round-1 non-blockers still open** as expected for later milestones: `RustInteropConversionError` variants unused until generated glue lands; `Handle<T>` Send/Sync opt-in mechanism not yet designed; `probe_cargo_toml` bakes the source-tree path via `CARGO_MANIFEST_DIR` (not robust for shipped binaries); `unique_probe_nonce` relies on nanos+pid.
+- **Stale review artifacts in tree.** `plans/reviews/active/rust-interop-milestone39-4-review-round1.md`, `…-round2.md` (empty), and `…-round2.stderr` (empty) are untracked. Commit or move to `plans/reviews/archive/` before the milestone PR lands.

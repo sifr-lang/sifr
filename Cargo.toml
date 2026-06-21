@@ -86,6 +86,7 @@ ignore = { version = "0.4.25" }
 insta = { version = "1.47.2" }
 is-macro = { version = "0.3.7" }
 itertools = { version = "0.14.0" }
+indexmap = { version = "2.12.1" }
 lsp-server = { version = "0.7.8" }
 lsp-types = { version = "0.97.0" }
 libc = { version = "0.2.178" }

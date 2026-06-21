@@ -459,7 +459,7 @@ pub struct GeneratedGlueToken {
 }
 ```
 
-Only generated glue can construct `GeneratedGlueToken`, so only generated wrappers can call `mark_closed` and `mark_poisoned`. Package-local bridge code may borrow or consume handles through the accessors but must not manipulate state flags directly.
+Generated wrappers construct the token through the hidden `sifr_runtime::interop::__generated_glue::token()` namespace. That namespace is generator-owned, not part of the package-author bridge API, so only generated wrappers can call `mark_closed` and `mark_poisoned`. Package-local bridge code may borrow or consume handles through the accessors but must not manipulate state flags directly.
 
 `HandleStateError` lives at `sifr_runtime::interop::HandleStateError` and has two variants: `Closed` and `Poisoned(RustPanicError)`. Generated wrappers convert `Closed` into the stable closed-handle error for the Sifr surface and reuse the stored `RustPanicError` for `Poisoned` before propagating into the declared Sifr error channel.
 

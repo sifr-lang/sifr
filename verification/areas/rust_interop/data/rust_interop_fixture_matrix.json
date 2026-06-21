@@ -40,8 +40,8 @@
       "capability": "invalid direct bridge type diagnostics",
       "required_crates": ["regex"],
       "execution_kind": "compiler-diagnostic",
-      "positive_evidence": {"id": "unsupported_type_rejected", "status": "planned"},
-      "negative_evidence": {"id": "unsupported_type_cannot_compile_silently", "status": "planned"}
+      "positive_evidence": {"id": "unsupported_type_rejected", "status": "passing"},
+      "negative_evidence": {"id": "unsupported_type_cannot_compile_silently", "status": "passing"}
     },
     {
       "id": "dotted_path_resolution",
@@ -59,7 +59,7 @@
       "required_crates": ["serde", "serde_json", "thiserror", "bytes", "indexmap"],
       "execution_kind": "cargo-probe",
       "positive_evidence": {"id": "supported_type_roundtrips", "status": "planned"},
-      "negative_evidence": {"id": "unsupported_container_rejections", "status": "planned"}
+      "negative_evidence": {"id": "unsupported_container_rejections", "status": "passing"}
     },
     {
       "id": "local_bridge_blake3",
