@@ -513,7 +513,9 @@ fn completion_kind(kind: &str) -> u32 {
         "function" => 3,
         "type" | "class" => 7,
         "module" => 9,
+        "property" => 10,
         "keyword" => 14,
+        "decorator" => 15,
         _ => 6,
     }
 }
@@ -543,9 +545,10 @@ fn token_modifier_bits(modifiers: &[String]) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{lsp_range_with_encoding, text_range_with_encoding};
+    use super::{completion_item, lsp_range_with_encoding, text_range_with_encoding};
     use ruff_text_size::{TextRange, TextSize};
     use serde_json::json;
+    use sifr_analysis::CompletionItem;
     use sifr_source::PositionEncoding;
 
     #[test]
@@ -571,5 +574,22 @@ mod tests {
             "end": { "line": 0, "character": 3 }
         });
         assert!(lsp_range_with_encoding(&range_json, source, PositionEncoding::Utf16).is_err());
+    }
+
+    #[test]
+    fn completion_conversion_maps_rust_interop_kinds_to_lsp_kinds() {
+        let decorator = completion_item(CompletionItem {
+            label: "rust.callback".to_string(),
+            kind: "decorator".to_string(),
+            detail: Some("Rust interop decorator".to_string()),
+        });
+        assert_eq!(decorator["kind"], json!(15));
+
+        let property = completion_item(CompletionItem {
+            label: "panic".to_string(),
+            kind: "property".to_string(),
+            detail: Some("Rust interop policy key".to_string()),
+        });
+        assert_eq!(property["kind"], json!(10));
     }
 }
