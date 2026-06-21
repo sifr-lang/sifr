@@ -743,7 +743,10 @@ fn set_bridge_version(context: &mut PackageRustInteropContext, bridge_version: O
 }
 
 fn temp_package_root(name: &str) -> PathBuf {
-    let root = std::env::temp_dir().join(format!("sifr_{name}_{}", std::process::id()));
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_nanos());
+    let root = std::env::temp_dir().join(format!("sifr_{name}_{}_{nonce}", std::process::id()));
     if root.exists() {
         std::fs::remove_dir_all(&root).expect("remove stale temp root");
     }

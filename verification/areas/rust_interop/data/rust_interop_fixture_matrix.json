@@ -219,18 +219,18 @@
       "tier": 2,
       "capability": "zero-copy bytes view",
       "required_crates": ["bytes"],
-      "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "borrowed_bytes_view", "status": "planned"},
-      "negative_evidence": {"id": "copy_fallback_rejected", "status": "planned"}
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "borrowed_bytes_view", "status": "passing"},
+      "negative_evidence": {"id": "copy_fallback_rejected", "status": "passing"}
     },
     {
       "id": "zero_copy_view_matrix",
       "tier": 2,
       "capability": "core zero-copy views",
       "required_crates": ["memmap2", "bytemuck", "zerocopy"],
-      "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "owner_lifetime_views", "status": "planned"},
-      "negative_evidence": {"id": "mutable_alias_rejected", "status": "planned"}
+      "execution_kind": "contract-only",
+      "positive_evidence": {"id": "owner_lifetime_views", "status": "passing"},
+      "negative_evidence": {"id": "mutable_alias_rejected", "status": "passing"}
     },
     {
       "id": "arrow_record_batch",

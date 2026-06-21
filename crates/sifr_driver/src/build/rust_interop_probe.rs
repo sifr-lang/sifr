@@ -8,6 +8,9 @@ use sifr_package::BackendCrateMetadata;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static PROBE_NONCE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) enum AsyncThreadAffinity {
@@ -122,10 +125,12 @@ fn probe_cargo_toml(dependency_name: &str, backend_root: &Path) -> String {
     )
 }
 
-fn unique_probe_nonce() -> u128 {
-    std::time::SystemTime::now()
+fn unique_probe_nonce() -> String {
+    let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_nanos())
+        .map_or(0, |duration| duration.as_nanos());
+    let counter = PROBE_NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
+    format!("{timestamp}_{counter}")
 }
 
 fn probe_source(probe: &PendingRustBridgeProbe) -> String {

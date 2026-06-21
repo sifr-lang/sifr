@@ -31,7 +31,7 @@ fn rust_interop_lowers_function_decorators_into_hir() {
         r"
 @rust(bridge.hash.digest, panic=map_error(bridge.hash.map_panic))
 @rust.zero_copy(owner=input, view=bridge.hash.DigestView)
-@rust.view(lifetime=borrowed, mutable=False)
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=False, sync=False)
 def digest(input: bytes) -> int:
     return 1
 ",
