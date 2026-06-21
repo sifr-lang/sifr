@@ -1,5 +1,9 @@
 # Phase 39: Rust Interop
 
+status: completed, audited
+
+> Phase 39 closed on 2026-06-22 through PRs #2702-#2728 and closeout [PR #2729](https://github.com/sifr-lang/sifr/pull/2729). Runtime/ecosystem certification beyond the supported matrix remains tracked by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md), and non-blocking verifier hardening is tracked by [`plans/issues/active/rust-interop-verification-matrix-hardening.md`](../issues/active/rust-interop-verification-matrix-hardening.md).
+
 ## Objective
 Deliver production-grade Rust interop as declaration-level Cargo integration.
 
