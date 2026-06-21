@@ -84,6 +84,7 @@ impl DiagnosticCode {
     pub const RUST_RESOLVE_TARGET_ROOT: Self = Self::new("SIFR-RUST-RESOLVE-0001", Severity::Error);
     pub const RUST_TRUST_MISSING: Self = Self::new("SIFR-RUST-TRUST-0001", Severity::Error);
     pub const RUST_TYPE_PROBE_FAILURE: Self = Self::new("SIFR-RUST-TYPE-0001", Severity::Error);
+    pub const RUST_HANDLE_CONTRACT: Self = Self::new("SIFR-RUST-HANDLE-0001", Severity::Error);
     pub const RUST_CARGO_METADATA: Self = Self::new("SIFR-RUST-CARGO-0001", Severity::Error);
 
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
@@ -704,6 +705,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
     DiagnosticCode::RUST_TRUST_MISSING,
     DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
+    DiagnosticCode::RUST_HANDLE_CONTRACT,
     DiagnosticCode::RUST_CARGO_METADATA,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,

@@ -251,9 +251,48 @@ impl<T> Handle<T> {
     }
 }
 
+#[derive(Debug)]
+pub struct PoisonOnPanic<'a, T> {
+    handle: Option<&'a mut Handle<T>>,
+    token: Option<GeneratedGlueToken>,
+    disarmed: bool,
+}
+
+impl<'a, T> PoisonOnPanic<'a, T> {
+    #[must_use]
+    pub fn new(handle: &'a mut Handle<T>, token: GeneratedGlueToken) -> Self {
+        Self {
+            handle: Some(handle),
+            token: Some(token),
+            disarmed: false,
+        }
+    }
+
+    pub fn disarm(mut self) {
+        self.disarmed = true;
+    }
+}
+
+impl<T> Drop for PoisonOnPanic<'_, T> {
+    fn drop(&mut self) {
+        if self.disarmed || !std::thread::panicking() {
+            return;
+        }
+        let Some(handle) = self.handle.as_deref_mut() else {
+            return;
+        };
+        let Some(token) = self.token.take() else {
+            return;
+        };
+        handle.mark_poisoned(token, RustPanicErrorBridge::redacted());
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Handle, HandleStateError, IndexMap, RustPanicErrorBridge, SifrIntBridge};
+    use super::{
+        Handle, HandleStateError, IndexMap, PoisonOnPanic, RustPanicErrorBridge, SifrIntBridge,
+    };
     use crate::SifrInt;
 
     #[test]
@@ -299,5 +338,55 @@ mod tests {
             poisoned.inner_mut(),
             Err(HandleStateError::Poisoned(_))
         ));
+    }
+
+    #[test]
+    fn handle_poison_guard_marks_open_handle_when_rust_call_unwinds() {
+        let mut handle = Handle::new(1_i64);
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _guard = PoisonOnPanic::new(&mut handle, super::__generated_glue::token());
+            panic!("simulated Rust bridge panic");
+        }));
+
+        assert!(result.is_err());
+        assert!(matches!(
+            handle.inner_ref(),
+            Err(HandleStateError::Poisoned(_))
+        ));
+    }
+
+    #[test]
+    fn handle_poison_guard_can_be_disarmed_after_successful_call() {
+        let mut handle = Handle::new(1_i64);
+        {
+            let guard = PoisonOnPanic::new(&mut handle, super::__generated_glue::token());
+            guard.disarm();
+        }
+
+        assert_eq!(*handle.inner_ref().expect("handle remains open"), 1);
+    }
+
+    #[test]
+    fn poisoned_state_wins_over_closed_state() {
+        let mut handle = Handle::new(1_i64);
+        handle.mark_closed(super::__generated_glue::token());
+        handle.mark_poisoned(
+            super::__generated_glue::token(),
+            RustPanicErrorBridge::redacted(),
+        );
+
+        assert!(matches!(
+            handle.inner_ref(),
+            Err(HandleStateError::Poisoned(_))
+        ));
+    }
+
+    #[test]
+    fn double_close_keeps_stable_closed_state() {
+        let mut handle = Handle::new(1_i64);
+        handle.mark_closed(super::__generated_glue::token());
+        handle.mark_closed(super::__generated_glue::token());
+
+        assert!(matches!(handle.inner_ref(), Err(HandleStateError::Closed)));
     }
 }

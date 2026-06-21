@@ -3,7 +3,7 @@ use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
 };
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::{RustInteropDecoratorKind, RustTargetPath};
+use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
 use std::fs;
 use std::path::Path;
@@ -107,9 +107,7 @@ fn unique_probe_nonce() -> u128 {
 fn probe_source(probe: &PendingRustBridgeProbe) -> String {
     let rust_path = probe.path.segments.join("::");
     match probe.declaration.declaration.kind {
-        RustInteropDecoratorKind::Opaque => {
-            format!("#![allow(dead_code)]\ntype __SifrProbe = {rust_path};\n")
-        }
+        RustInteropDecoratorKind::Opaque => opaque_probe_source(probe, &rust_path),
         RustInteropDecoratorKind::Function
         | RustInteropDecoratorKind::Async
         | RustInteropDecoratorKind::ZeroCopy
@@ -121,6 +119,31 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
             }
         }
     }
+}
+
+fn opaque_probe_source(probe: &PendingRustBridgeProbe, rust_path: &str) -> String {
+    let mut out = format!("#![allow(dead_code)]\ntype __SifrProbe = {rust_path};\n");
+    if opaque_bool_argument(probe, "send") {
+        out.push_str("fn __sifr_assert_send<T: Send>() {}\n");
+    }
+    if opaque_bool_argument(probe, "sync") {
+        out.push_str("fn __sifr_assert_sync<T: Sync>() {}\n");
+    }
+    if opaque_symbol_argument(probe, "clone") == Some("copy") {
+        out.push_str("fn __sifr_assert_copy<T: Copy>() {}\n");
+    }
+    out.push_str("fn __sifr_probe() {\n");
+    if opaque_bool_argument(probe, "send") {
+        out.push_str("    __sifr_assert_send::<__SifrProbe>();\n");
+    }
+    if opaque_bool_argument(probe, "sync") {
+        out.push_str("    __sifr_assert_sync::<__SifrProbe>();\n");
+    }
+    if opaque_symbol_argument(probe, "clone") == Some("copy") {
+        out.push_str("    __sifr_assert_copy::<__SifrProbe>();\n");
+    }
+    out.push_str("}\n");
+    out
 }
 
 fn signature_probe_source(
@@ -192,6 +215,29 @@ fn is_async_probe(probe: &PendingRustBridgeProbe) -> bool {
             .declaration
             .abi_requirements
             .async_boundary
+}
+
+fn opaque_bool_argument(probe: &PendingRustBridgeProbe, name: &str) -> bool {
+    probe
+        .declaration
+        .declaration
+        .arguments
+        .iter()
+        .find(|argument| argument.name.as_deref() == Some(name))
+        .is_some_and(|argument| matches!(argument.value, RustInteropValue::Boolean(true)))
+}
+
+fn opaque_symbol_argument<'a>(probe: &'a PendingRustBridgeProbe, name: &str) -> Option<&'a str> {
+    probe
+        .declaration
+        .declaration
+        .arguments
+        .iter()
+        .find(|argument| argument.name.as_deref() == Some(name))
+        .and_then(|argument| match &argument.value {
+            RustInteropValue::Symbol(symbol) => Some(symbol.as_str()),
+            _ => None,
+        })
 }
 
 fn generated_bridge_type_stubs(signature: &RustBridgeSignatureContract) -> String {
