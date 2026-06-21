@@ -16,6 +16,7 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -28,7 +29,6 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
-
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("(9.0_f64).sqrt()"));
     assert!(
@@ -40,7 +40,6 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
         "expression statement should be emitted through structured stmt path"
     );
 }
-
 #[test]
 fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
     let list_ty = Type::List(Box::new(Type::Int));
@@ -66,6 +65,7 @@ fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -78,7 +78,6 @@ fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
-
     let generated = generate_rust_with_metadata(&module);
     assert!(
         generated.rust_source.contains(".len() as i64"),
@@ -89,7 +88,6 @@ fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
         "set_len should not be emitted as unresolved function call"
     );
 }
-
 #[test]
 fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
     let module = HirModule {
@@ -112,6 +110,7 @@ fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -154,6 +153,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 is_async: false,
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                rust_interop: Vec::new(),
                 type_params: vec![],
             },
             HirFunction {
@@ -170,6 +170,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 is_async: false,
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                rust_interop: Vec::new(),
                 type_params: vec![],
             },
         ],
@@ -221,6 +222,7 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -275,6 +277,7 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -331,6 +334,7 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -377,6 +381,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -418,6 +423,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -458,6 +464,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],
@@ -559,6 +566,7 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
+            rust_interop: Vec::new(),
             type_params: vec![],
         }],
         classes: vec![],

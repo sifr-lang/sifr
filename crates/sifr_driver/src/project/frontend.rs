@@ -159,14 +159,14 @@ pub(crate) fn collect_project_hir_source_modules(
     collect_project_hir_source_modules_with_options(
         parsed_modules,
         external_defs,
-        LoweringOptions::default(),
+        &LoweringOptions::default(),
     )
 }
 
 pub(crate) fn collect_project_hir_source_modules_with_options(
     parsed_modules: &HashMap<String, ParsedProjectModule>,
     mut external_defs: ExternalDefs,
-    lowering_options: LoweringOptions,
+    lowering_options: &LoweringOptions,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
     let suites: HashMap<String, CompileOrderSourceModule<'_>> = parsed_modules
         .iter()

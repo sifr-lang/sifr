@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-RUST-CONFIG-0001 verification/areas/diagnostics/fixtures/diagnostics/rust_interop_malformed_decorator/main.sifr:2:2 malformed Rust interop decorator: `@rust(...)` requires exactly one dotted Rust target path

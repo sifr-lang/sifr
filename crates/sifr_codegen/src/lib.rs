@@ -82,6 +82,10 @@ mod preamble;
 pub use preamble::*;
 mod render;
 pub use render::*;
+mod rust_interop_plan;
+pub use rust_interop_plan::{
+    InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
+};
 mod rust_ir;
 pub use rust_ir::*;
 mod stdlib_filter;

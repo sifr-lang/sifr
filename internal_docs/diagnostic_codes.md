@@ -4,7 +4,7 @@
 
 This file is generated from `crates/sifr_diagnostics/src/codes.rs`.
 
-Codes use per-family local numbering. `SIFR-<FAMILY>-0000` is reserved as the family base and must never be emitted.
+Codes use per-family local numbering. `SIFR-<FAMILY>-0000` is reserved as the family base and must never be emitted. Family names may be hyphenated for scoped interop domains such as `RUST-CONFIG`.
 
 Registry states:
 
@@ -30,6 +30,16 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `PYZC` | `SIFR-PYZC-0000` | Embedded Python zero-copy buffer, Arrow, DLPack, and array-interface diagnostics. |
 | `PYCB` | `SIFR-PYCB-0000` | Python-to-Sifr callback lifetime, dispatch, and closure diagnostics. |
 | `PYTRUST` | `SIFR-PYTRUST-0000` | Embedded Python import and native-extension trust diagnostics. |
+| `RUST-CONFIG` | `SIFR-RUST-CONFIG-0000` | Rust interop declaration and manifest-configuration diagnostics. |
+| `RUST-RESOLVE` | `SIFR-RUST-RESOLVE-0000` | Rust interop target and Cargo item resolution diagnostics. |
+| `RUST-TRUST` | `SIFR-RUST-TRUST-0000` | Rust interop trust-policy diagnostics. |
+| `RUST-TYPE` | `SIFR-RUST-TYPE-0000` | Rust bridge type-contract diagnostics. |
+| `RUST-HANDLE` | `SIFR-RUST-HANDLE-0000` | Rust opaque-handle and resource-lifetime diagnostics. |
+| `RUST-ASYNC` | `SIFR-RUST-ASYNC-0000` | Rust async, blocking, and runtime-affinity diagnostics. |
+| `RUST-ZC` | `SIFR-RUST-ZC-0000` | Rust zero-copy and borrowed-view diagnostics. |
+| `RUST-CB` | `SIFR-RUST-CB-0000` | Rust callback lifetime, threading, and backpressure diagnostics. |
+| `RUST-PANIC` | `SIFR-RUST-PANIC-0000` | Rust panic strategy, mapping, and poisoned-handle diagnostics. |
+| `RUST-CARGO` | `SIFR-RUST-CARGO-0000` | Rust interop Cargo metadata, lockfile, and profile diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
 | `INT` | `SIFR-INT-0000` | Exact and fixed-width integer model diagnostics. |
 | `IO` | `SIFR-IO-0000` | File and stream text/binary boundary diagnostics. |
@@ -67,6 +77,16 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-PYZC-0000` | `PYZC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYCB-0000` | `PYCB` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYTRUST-0000` | `PYTRUST` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-CONFIG-0000` | `RUST-CONFIG` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-RESOLVE-0000` | `RUST-RESOLVE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-TRUST-0000` | `RUST-TRUST` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-TYPE-0000` | `RUST-TYPE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-HANDLE-0000` | `RUST-HANDLE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-ASYNC-0000` | `RUST-ASYNC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-ZC-0000` | `RUST-ZC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-CB-0000` | `RUST-CB` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-PANIC-0000` | `RUST-PANIC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-RUST-CARGO-0000` | `RUST-CARGO` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0000` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-IO-0000` | `IO` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -282,3 +302,4 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-PYTRUST-0002` | `PYTRUST` | Active | Error | `docs/errors/SIFR-PYTRUST-0002.md` | `crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_allowed_roots_to_be_trusted` | `sifr_package::python` | `Python import root is allowed but not trusted: {import_root}` | `import_root (message+json)` | `import_root` | n/a | false |
 | `SIFR-PYTRUST-0003` | `PYTRUST` | Active | Error | `docs/errors/SIFR-PYTRUST-0003.md` | `crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_native_roots_to_be_allowed` | `sifr_package::python` | `native Python import root is trusted without an allow-imports entry: {import_root}` | `import_root (message+json)` | `import_root` | n/a | false |
 | `SIFR-PYTRUST-0004` | `PYTRUST` | Active | Error | `docs/errors/SIFR-PYTRUST-0004.md` | `crates/sifr_lowering/src/lower/python_trust_tests.rs::dynamic_python_import_requires_trust_decorator` | `sifr_lowering` | `dynamic Python import requires @trust_python_dynamic` | n/a | n/a | n/a | false |
+| `SIFR-RUST-CONFIG-0001` | `RUST-CONFIG` | Active | Error | `docs/errors/SIFR-RUST-CONFIG-0001.md` | `crates/sifr_lowering/src/lower/rust_interop_tests.rs::rust_interop_rejects_string_target` | `sifr_lowering::lower::rust_interop` | `malformed Rust interop decorator: {reason}` | `reason (message+json)` | `reason` | n/a | false |

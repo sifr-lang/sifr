@@ -1,0 +1,4 @@
+# verification diagnostics fixture: malformed Rust interop decorators use a stable code.
+@rust(crate=crc32fast, path=hash)
+def digest(input: bytes) -> int:
+    return 1

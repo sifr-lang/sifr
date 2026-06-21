@@ -416,7 +416,7 @@ impl RootedEntrypointPlan {
                         collect_project_hir_source_modules_with_options(
                             &parsed_modules,
                             stdlib.defs.clone(),
-                            lowering_options,
+                            &lowering_options,
                         )
                     })?;
                 (

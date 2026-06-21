@@ -1,5 +1,6 @@
 //! HIR node definitions -- typed versions of AST nodes.
 
+use crate::RustInteropDeclaration;
 use sifr_type_system::{ParamConvention, Type};
 
 /// A complete HIR module (the top-level compilation unit).
@@ -64,6 +65,8 @@ pub struct HirClass {
     /// e.g., RED = 1 -> ("RED", Some(1))
     /// e.g., RED -> ("RED", None)
     pub enum_variants: Vec<(String, Option<i64>)>,
+    /// Structured Rust interop declarations attached to this class.
+    pub rust_interop: Vec<RustInteropDeclaration>,
 }
 
 impl HirClass {
@@ -97,6 +100,8 @@ pub struct HirFunction {
     pub method_kind: MethodKind,
     /// User-defined decorators (excluding classmethod/staticmethod)
     pub decorators: Vec<String>,
+    /// Structured Rust interop declarations attached to this function.
+    pub rust_interop: Vec<RustInteropDeclaration>,
     /// Generic type parameters (e.g., `["T", "K", "V"]` for generic functions)
     pub type_params: Vec<String>,
 }

@@ -11,7 +11,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[4]
 CODES_RS = ROOT / "crates" / "sifr_diagnostics" / "src" / "codes.rs"
-CODE_RE = r"SIFR-[A-Z]+-\d{4}"
+CODE_RE = r"SIFR-(?:[A-Z]+|RUST-[A-Z]+)-\d{4}"
 INCLUDE_RE = re.compile(r'^\s*include!\("([^"]+)"\);\s*$', re.MULTILINE)
 LOCAL_MOD_RE = re.compile(
     r"^\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z0-9_]+);\s*$",

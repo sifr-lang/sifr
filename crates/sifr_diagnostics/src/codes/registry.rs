@@ -79,6 +79,9 @@ impl DiagnosticCode {
     pub const PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST: Self =
         Self::new("SIFR-PYTRUST-0004", Severity::Error);
 
+    pub const RUST_CONFIG_MALFORMED_DECORATOR: Self =
+        Self::new("SIFR-RUST-CONFIG-0001", Severity::Error);
+
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
     pub const DECIMAL_BIGDECIMAL_INVALID_LITERAL: Self =
         Self::new("SIFR-DECIMAL-0002", Severity::Error);
@@ -448,6 +451,56 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-PYTRUST-0000",
     },
     DiagnosticFamily {
+        name: "RUST-CONFIG",
+        summary: "Rust interop declaration and manifest-configuration diagnostics.",
+        reserved_base: "SIFR-RUST-CONFIG-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-RESOLVE",
+        summary: "Rust interop target and Cargo item resolution diagnostics.",
+        reserved_base: "SIFR-RUST-RESOLVE-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-TRUST",
+        summary: "Rust interop trust-policy diagnostics.",
+        reserved_base: "SIFR-RUST-TRUST-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-TYPE",
+        summary: "Rust bridge type-contract diagnostics.",
+        reserved_base: "SIFR-RUST-TYPE-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-HANDLE",
+        summary: "Rust opaque-handle and resource-lifetime diagnostics.",
+        reserved_base: "SIFR-RUST-HANDLE-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-ASYNC",
+        summary: "Rust async, blocking, and runtime-affinity diagnostics.",
+        reserved_base: "SIFR-RUST-ASYNC-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-ZC",
+        summary: "Rust zero-copy and borrowed-view diagnostics.",
+        reserved_base: "SIFR-RUST-ZC-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-CB",
+        summary: "Rust callback lifetime, threading, and backpressure diagnostics.",
+        reserved_base: "SIFR-RUST-CB-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-PANIC",
+        summary: "Rust panic strategy, mapping, and poisoned-handle diagnostics.",
+        reserved_base: "SIFR-RUST-PANIC-0000",
+    },
+    DiagnosticFamily {
+        name: "RUST-CARGO",
+        summary: "Rust interop Cargo metadata, lockfile, and profile diagnostics.",
+        reserved_base: "SIFR-RUST-CARGO-0000",
+    },
+    DiagnosticFamily {
         name: "DECIMAL",
         summary: "Decimal literal and fixed-point arithmetic diagnostics.",
         reserved_base: "SIFR-DECIMAL-0000",
@@ -643,6 +696,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT,
     DiagnosticCode::PYTRUST_UNTRUSTED_NATIVE_IMPORT,
     DiagnosticCode::PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST,
+    DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_FLOAT_MIXED,

@@ -9,6 +9,7 @@ use super::{
     StmtFunctionDef, Type,
 };
 use crate::lower::diagnostics::has_decorator;
+use crate::lower::rust_interop::{collect_rust_interop_declarations, RustInteropOwner};
 pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
@@ -677,6 +678,13 @@ pub(in crate::lower) fn lower_function(
             }
         })
         .collect();
+    let rust_interop = collect_rust_interop_declarations(
+        &func.decorator_list,
+        RustInteropOwner::Function,
+        ctx,
+        has_decorator(func, "blocking_io"),
+        has_decorator(func, "cpu_heavy"),
+    );
 
     // Collect type parameters for generic functions
     let type_params = ctx
@@ -693,6 +701,7 @@ pub(in crate::lower) fn lower_function(
         is_async: effective_is_async,
         method_kind: MethodKind::Regular,
         decorators,
+        rust_interop,
         type_params,
     })
 }
