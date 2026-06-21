@@ -268,7 +268,7 @@ Status: merged in [PR #2726](https://github.com/sifr-lang/sifr/pull/2726); focus
 
 ### milestone_39_13: Ecosystem Certification and Closeout
 
-Status: opened in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`.
+Status: merged in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`. Non-blocking verification-matrix hardening follow-ups are tracked by [`plans/issues/active/rust-interop-verification-matrix-hardening.md`](../issues/active/rust-interop-verification-matrix-hardening.md).
 
 - Scope:
   - Certify representative packages across direct binding, local bridge, shared bridge, opaque handle, zero-copy, async, callbacks, build script, proc macro, native link, and locked/offline Cargo behavior.
