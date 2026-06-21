@@ -41,7 +41,7 @@ in text mode.
 
 `sifr self update` defaults to the channel recorded in the install receipt.
 Use `--channel alpha|beta` to switch preview channels or `--version` to pin an
-exact preview version such as `0.1.0-beta.2`.
+exact preview version such as `0.1.0-beta.9`.
 
 Use `--dry-run` to print the resolved plan without downloading an installer or
 acquiring the install lock. `--format json` is available only with `--dry-run`.
@@ -56,7 +56,7 @@ also rejected before the stable release channel is enabled.
 Same-version reinstalls, downgrades, and channel switches require `--force`:
 
 ```bash
-sifr self update --version 0.1.0-beta.2 --force
+sifr self update --version 0.1.0-beta.9 --force
 sifr self update --channel alpha --force
 ```
 
