@@ -115,7 +115,7 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
         | RustInteropDecoratorKind::ZeroCopy
         | RustInteropDecoratorKind::View => {
             if let Some(signature) = &probe.signature {
-                signature_probe_source(signature, &rust_path)
+                signature_probe_source(probe, signature, &rust_path)
             } else {
                 format!("#![allow(dead_code)]\nfn __sifr_probe() {{ let _ = {rust_path}; }}\n")
             }
@@ -123,14 +123,17 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
     }
 }
 
-fn signature_probe_source(signature: &RustBridgeSignatureContract, rust_path: &str) -> String {
+fn signature_probe_source(
+    probe: &PendingRustBridgeProbe,
+    signature: &RustBridgeSignatureContract,
+    rust_path: &str,
+) -> String {
     let params = signature
         .params
         .iter()
         .map(|param| {
             rust_param_type(param.convention, &param.ty)
-                .unwrap_or("__SifrUnsupportedBridgeType")
-                .to_string()
+                .unwrap_or_else(|| "__SifrUnsupportedBridgeType".to_string())
         })
         .collect::<Vec<_>>()
         .join(", ");
@@ -142,26 +145,53 @@ fn signature_probe_source(signature: &RustBridgeSignatureContract, rust_path: &s
     let mut out = String::new();
     out.push_str("#![allow(dead_code)]\n");
     out.push_str(&generated_bridge_type_stubs(signature));
-    out.push_str("const __SIFR_SIGNATURE_PROBE: fn(");
-    out.push_str(&params);
-    out.push_str(") -> ");
-    out.push_str(return_type);
-    out.push_str(" = ");
-    out.push_str(rust_path);
-    out.push_str(";\n");
+    if is_async_probe(probe) {
+        out.push_str("fn __sifr_assert_async_signature<F, Fut>(_f: F)\nwhere\n    F: Fn(");
+        out.push_str(&params);
+        out.push_str(") -> Fut,\n    Fut: std::future::Future<Output = ");
+        out.push_str(return_type);
+        out.push_str(">,\n{}\nfn __sifr_probe() { __sifr_assert_async_signature(");
+        out.push_str(rust_path);
+        out.push_str("); }\n");
+    } else {
+        out.push_str("fn __sifr_assert_signature(_f: fn(");
+        out.push_str(&params);
+        out.push_str(") -> ");
+        out.push_str(return_type);
+        out.push_str(") {}\nfn __sifr_probe() { __sifr_assert_signature(");
+        out.push_str(rust_path);
+        out.push_str("); }\n");
+    }
     out
 }
 
 fn rust_param_type(
     convention: RustBridgeParamConvention,
     ty: &sifr_codegen::RustBridgeTypeContract,
-) -> Option<&str> {
+) -> Option<String> {
     match convention {
-        RustBridgeParamConvention::Borrow | RustBridgeParamConvention::MutableBorrow => {
-            ty.rust_borrowed_type.as_deref()
+        RustBridgeParamConvention::Borrow => ty.rust_borrowed_type.clone(),
+        RustBridgeParamConvention::MutableBorrow => {
+            ty.rust_borrowed_type.as_deref().map(mutable_borrow_type)
         }
-        RustBridgeParamConvention::Own => ty.rust_owned_type.as_deref(),
+        RustBridgeParamConvention::Own => ty.rust_owned_type.clone(),
     }
+}
+
+fn mutable_borrow_type(rust_type: &str) -> String {
+    rust_type.strip_prefix('&').map_or_else(
+        || rust_type.to_string(),
+        |inner| format!("&mut {}", inner.trim_start()),
+    )
+}
+
+fn is_async_probe(probe: &PendingRustBridgeProbe) -> bool {
+    probe.declaration.declaration.kind == RustInteropDecoratorKind::Async
+        || probe
+            .declaration
+            .declaration
+            .abi_requirements
+            .async_boundary
 }
 
 fn generated_bridge_type_stubs(signature: &RustBridgeSignatureContract) -> String {

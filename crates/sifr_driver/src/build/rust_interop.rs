@@ -6,6 +6,7 @@ use super::rust_interop_cargo_inputs::{
 use super::rust_interop_contracts::bridge_contract_diagnostics;
 use super::rust_interop_digest::{normalized_path_string, relative_path_string};
 use super::rust_interop_probe::{execute_direct_cargo_probe, PendingRustBridgeProbe};
+use super::rust_interop_trust::{build_env_trust_entries, panic_policy};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::ParsedProjectModule;
 use ruff_text_size::TextRange;
@@ -24,6 +25,9 @@ use sifr_package::{BackendCrateMetadata, PackageSourceMap, SifrPackageGraph, Sif
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
+
+#[path = "rust_interop/direct_panic_policy.rs"]
+mod direct_panic_policy;
 
 #[derive(Clone, Debug)]
 pub(super) struct PackageRustInteropContext {
@@ -171,19 +175,17 @@ impl<'a> RustInteropResolver<'a> {
             );
             return;
         };
-        if !self.validate_bridge_version(declaration, package) {
-            return;
+        if uses_bridge_root(&declaration.declaration) {
+            if !self.validate_bridge_version(declaration, package) {
+                return;
+            }
+            self.push_generated_bridge_module(declaration, package);
         }
-        self.push_generated_bridge_module(declaration, package);
 
         for path in declaration_paths(&declaration.declaration) {
             self.resolve_path(declaration, &package_id, package, path);
         }
-        self.validate_declaration_trust(
-            declaration,
-            &canonical_sifr_target_path(declaration),
-            package,
-        );
+        self.validate_declaration_trust(declaration, package);
         self.validate_unsafe_bridge_files(declaration, package);
         self.push_probe(declaration);
     }
@@ -252,14 +254,20 @@ impl<'a> RustInteropResolver<'a> {
                 };
                 self.validate_backend_trust(declaration, &canonical_target_path, package, backend);
                 self.validate_backend_generated_bridge_imports(declaration, backend);
+                let signature = self
+                    .signature_contracts
+                    .get(&canonical_target_path)
+                    .cloned();
+                self.validate_direct_panic_policy(
+                    declaration,
+                    &canonical_target_path,
+                    signature.as_ref(),
+                );
                 self.pending_direct_probes.push(PendingRustBridgeProbe {
                     declaration: declaration.clone(),
                     path: path.clone(),
                     backend: backend.clone(),
-                    signature: self
-                        .signature_contracts
-                        .get(&canonical_target_path)
-                        .cloned(),
+                    signature,
                 });
                 RustInteropResolvedRoot::DirectCargoDependency {
                     dependency_name: backend.dependency_name.clone(),
@@ -267,6 +275,7 @@ impl<'a> RustInteropResolver<'a> {
                     cargo_package_name: backend.cargo_package_name.clone(),
                     cargo_version: backend.cargo_version.clone(),
                     cargo_source: backend.cargo_source.clone(),
+                    cargo_manifest_path: backend.cargo_manifest_path.display().to_string(),
                 }
             }
         };
@@ -403,13 +412,13 @@ impl<'a> RustInteropResolver<'a> {
     fn validate_declaration_trust(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,
-        canonical_target_path: &str,
         package: &sifr_package::SifrPackageMetadata,
     ) {
+        let trust_target_path = canonical_trust_target_path(declaration);
         for build_env in build_env_trust_entries(&declaration.declaration) {
             self.require_trust(
                 declaration,
-                canonical_target_path,
+                &trust_target_path,
                 RustInteropTrustRequirementKind::BuildEnv,
                 &package.manifest.trust.build_env,
                 &build_env,
@@ -420,21 +429,21 @@ impl<'a> RustInteropResolver<'a> {
             Some("trusted_no_panic") => {
                 self.require_trust(
                     declaration,
-                    canonical_target_path,
+                    &trust_target_path,
                     RustInteropTrustRequirementKind::NoPanic,
                     &package.manifest.trust.rust_no_panic,
-                    canonical_target_path,
-                    format!("no-panic contract for `{canonical_target_path}`"),
+                    &trust_target_path,
+                    format!("no-panic contract for `{trust_target_path}`"),
                 );
             }
             Some("abort") => {
                 self.require_trust(
                     declaration,
-                    canonical_target_path,
+                    &trust_target_path,
                     RustInteropTrustRequirementKind::PanicAbort,
                     &package.manifest.trust.rust_panic_abort,
-                    canonical_target_path,
-                    format!("panic-abort contract for `{canonical_target_path}`"),
+                    &trust_target_path,
+                    format!("panic-abort contract for `{trust_target_path}`"),
                 );
             }
             Some(_) | None => {}
@@ -695,39 +704,16 @@ fn canonical_sifr_target_path(declaration: &sifr_codegen::RustInteropPlanDeclara
     }
     path
 }
-
+fn canonical_trust_target_path(declaration: &sifr_codegen::RustInteropPlanDeclaration) -> String {
+    declaration_paths(&declaration.declaration)
+        .first()
+        .map(|path| path.dotted())
+        .unwrap_or_else(|| canonical_sifr_target_path(declaration))
+}
 fn uses_bridge_root(declaration: &RustInteropDeclaration) -> bool {
     declaration_paths(declaration)
         .iter()
         .any(|path| path.segments.first().is_some_and(|root| root == "bridge"))
-}
-
-fn panic_policy(declaration: &RustInteropDeclaration) -> Option<String> {
-    declaration.arguments.iter().find_map(|argument| {
-        if argument.name.as_deref() != Some("panic") {
-            return None;
-        }
-        match &argument.value {
-            RustInteropValue::Symbol(policy) => Some(policy.clone()),
-            _ => None,
-        }
-    })
-}
-
-fn build_env_trust_entries(declaration: &RustInteropDeclaration) -> Vec<String> {
-    declaration
-        .arguments
-        .iter()
-        .filter_map(|argument| {
-            if argument.name.as_deref() != Some("build_env") {
-                return None;
-            }
-            match &argument.value {
-                RustInteropValue::Symbol(name) => Some(name.clone()),
-                _ => None,
-            }
-        })
-        .collect()
 }
 
 fn trust_kind_name(kind: &RustInteropTrustRequirementKind) -> &'static str {

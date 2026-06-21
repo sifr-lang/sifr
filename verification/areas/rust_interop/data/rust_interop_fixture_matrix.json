@@ -22,8 +22,8 @@
       "capability": "direct compatible function binding",
       "required_crates": ["crc32fast"],
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "crc32fast_hash_uint32", "status": "planned"},
-      "negative_evidence": {"id": "crc32fast_missing_panic_policy", "status": "planned"}
+      "positive_evidence": {"id": "crc32fast_hash_uint32", "status": "passing"},
+      "negative_evidence": {"id": "crc32fast_missing_panic_policy", "status": "passing"}
     },
     {
       "id": "direct_crate_matrix",

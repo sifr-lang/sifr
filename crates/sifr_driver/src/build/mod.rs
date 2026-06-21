@@ -15,6 +15,7 @@ mod rust_interop_digest;
 mod rust_interop_probe;
 #[cfg(test)]
 mod rust_interop_tests;
+mod rust_interop_trust;
 mod workspace;
 
 pub use api::{

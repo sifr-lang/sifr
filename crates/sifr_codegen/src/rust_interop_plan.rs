@@ -69,7 +69,6 @@ impl InteropBuildPlan {
         out
     }
 }
-
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RustInteropPlan {
     pub declarations: Vec<RustInteropPlanDeclaration>,
@@ -81,21 +80,18 @@ pub struct RustInteropPlan {
     pub bridge_sources: Vec<RustBridgeSourceDigest>,
     pub cargo_inputs: Option<RustInteropCargoInputs>,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RustInteropPlanDeclaration {
     pub module_name: Option<String>,
     pub owner: RustInteropOwner,
     pub declaration: RustInteropDeclaration,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RustInteropOwner {
     Function { name: String },
     Class { name: String },
     Method { class_name: String, name: String },
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RustInteropResolvedTarget {
     pub module_name: Option<String>,
@@ -121,6 +117,7 @@ pub enum RustInteropResolvedRoot {
         cargo_package_name: String,
         cargo_version: String,
         cargo_source: Option<String>,
+        cargo_manifest_path: String,
     },
     PackageBridge {
         package_id: String,
@@ -395,6 +392,7 @@ fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
             cargo_package_name,
             cargo_version,
             cargo_source,
+            cargo_manifest_path,
         } => {
             out.push_str("cargo:");
             out.push_str(dependency_name);
@@ -406,6 +404,8 @@ fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
             out.push_str(cargo_version);
             out.push(':');
             out.push_str(cargo_source.as_deref().unwrap_or("<path>"));
+            out.push(':');
+            out.push_str(cargo_manifest_path);
         }
         RustInteropResolvedRoot::PackageBridge {
             package_id,

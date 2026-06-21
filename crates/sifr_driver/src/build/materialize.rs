@@ -125,6 +125,7 @@ fn materialize_binary_project_files(
         project_name,
         &generated_project.used_stdlib_modules,
         &generated_project.required_features,
+        &generated_project.interop,
     );
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
@@ -338,7 +339,8 @@ fn binary_project_cache_key(
         generate_dependency_cargo_toml(
             project_name,
             &generated_project.used_stdlib_modules,
-            &generated_project.required_features
+            &generated_project.required_features,
+            &generated_project.interop
         ),
         generated_project.main_rs,
         support_modules,
