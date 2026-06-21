@@ -69,11 +69,18 @@ fn text_document_uri(params: &Value) -> LspResult<String> {
     crate::errors::required_string(params, "/textDocument/uri")
 }
 
-fn position(params: &Value) -> LspResult<sifr_analysis::TextPosition> {
+fn document_position(
+    session: &Session,
+    uri: &str,
+    params: &Value,
+) -> LspResult<sifr_analysis::TextPosition> {
+    let source = session.store().document(uri)?.text();
     params
         .get("position")
         .ok_or_else(|| LspError::invalid_params("request requires position"))
-        .and_then(crate::conversion::lsp_position)
+        .and_then(|position| {
+            crate::conversion::lsp_position_to_utf8(position, source, session.position_encoding())
+        })
 }
 
 fn code_action_context_diagnostics(params: &Value) -> Vec<sifr_analysis::DiagnosticId> {

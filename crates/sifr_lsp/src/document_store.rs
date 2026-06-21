@@ -1,6 +1,7 @@
 use crate::conversion::uri_to_path;
 use crate::document_events::{CompactedDocumentChange, DocumentContentChange};
 use crate::errors::{LspError, LspResult};
+use sifr_source::PositionEncoding;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -84,6 +85,7 @@ impl DocumentStore {
         uri: &str,
         version: Option<i32>,
         change: &CompactedDocumentChange,
+        position_encoding: PositionEncoding,
     ) -> LspResult<bool> {
         let state = self.document_mut(uri)?;
         state.reject_stale(version)?;
@@ -94,7 +96,7 @@ impl DocumentStore {
                     state.text.clone_from(text);
                 }
                 DocumentContentChange::Incremental { range, text } => {
-                    state.apply_incremental_change(range, text)?;
+                    state.apply_incremental_change(range, text, position_encoding)?;
                 }
             }
         }
@@ -174,8 +176,13 @@ impl DocumentState {
         Ok(())
     }
 
-    fn apply_incremental_change(&mut self, range: &serde_json::Value, text: &str) -> LspResult<()> {
-        let range = crate::conversion::lsp_range(range, &self.text)?;
+    fn apply_incremental_change(
+        &mut self,
+        range: &serde_json::Value,
+        text: &str,
+        position_encoding: PositionEncoding,
+    ) -> LspResult<()> {
+        let range = crate::conversion::lsp_range(range, &self.text, position_encoding)?;
         let start = usize::try_from(range.start().to_u32())
             .map_err(|_| LspError::invalid_params("incremental edit start is out of range"))?;
         let end = usize::try_from(range.end().to_u32())

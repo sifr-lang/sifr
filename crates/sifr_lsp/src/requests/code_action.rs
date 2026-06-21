@@ -8,10 +8,11 @@ use sifr_analysis::CodeActionContext;
 pub(crate) fn code_action(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let source = session.store().document(&uri)?.text().to_string();
+    let position_encoding = session.position_encoding();
     let range = params
         .get("range")
         .ok_or_else(|| LspError::invalid_params("codeAction requires range"))
-        .and_then(|range| conversion::lsp_range(range, &source))?;
+        .and_then(|range| conversion::lsp_range(range, &source, position_encoding))?;
     let context = CodeActionContext {
         diagnostics: code_action_context_diagnostics(&params),
     };
@@ -29,6 +30,7 @@ pub(crate) fn code_action(session: &mut Session, params: Value) -> LspResult<Val
                     &uri,
                     |file| file_maps.uri_for(file),
                     |file| file_maps.source_for(file),
+                    position_encoding,
                 )
             })
             .collect::<LspResult<Vec<_>>>()
@@ -70,6 +72,7 @@ pub(crate) fn resolve(session: &mut Session, mut params: Value) -> LspResult<Val
         .to_string();
     let expected_version = data.get("expectedVersion").and_then(Value::as_i64);
     let file_maps = session.file_maps_for_uri(&uri)?;
+    let position_encoding = session.position_encoding();
     if let (Some(expected), Some(current)) =
         (expected_version, session.store().document(&uri)?.version())
     {
@@ -94,6 +97,7 @@ pub(crate) fn resolve(session: &mut Session, mut params: Value) -> LspResult<Val
             edit,
             |file| file_maps.uri_for(file),
             |file| file_maps.source_for(file),
+            position_encoding,
         )
     })?;
     params["edit"] = edit;

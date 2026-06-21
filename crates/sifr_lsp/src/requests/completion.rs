@@ -1,12 +1,12 @@
 use crate::conversion;
 use crate::errors::{LspError, LspResult};
-use crate::requests::{position, text_document_uri};
+use crate::requests::{document_position, text_document_uri};
 use crate::session::Session;
 use serde_json::{json, Value};
 
 pub(crate) fn completion(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
-    let position = position(&params)?;
+    let position = document_position(session, &uri, &params)?;
     session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let result = snapshot
             .completion(host, file, &position)

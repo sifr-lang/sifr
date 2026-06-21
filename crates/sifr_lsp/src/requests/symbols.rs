@@ -8,13 +8,14 @@ use std::collections::BTreeSet;
 
 pub(crate) fn document_symbol(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
+    let position_encoding = session.position_encoding();
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         snapshot
             .document_symbols(host, file)
             .map_err(|error| LspError::internal(error.message))?
             .into_value()
             .into_iter()
-            .map(|symbol| conversion::document_symbol(symbol, source))
+            .map(|symbol| conversion::document_symbol(symbol, source, position_encoding))
             .collect::<LspResult<Vec<_>>>()
             .map(Value::Array)
     })

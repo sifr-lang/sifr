@@ -1,5 +1,6 @@
 use crate::analysis_workspace::{LspAnalysisWorkspace, LspFileMaps, LspWorkspaceSymbol};
 use crate::cancellation::CancellationToken;
+use crate::diagnostic_jobs::{DiagnosticJobs, ScheduledDiagnosticJob};
 use crate::document_events::{compact_content_changes, CompactedDocumentChange};
 use crate::document_store::DocumentStore;
 use crate::errors::{LspError, LspResult};
@@ -13,7 +14,7 @@ use sifr_analysis::{
     WorkspaceTracePhase,
 };
 use sifr_diagnostics::RenderedDiagnostic;
-use std::collections::BTreeMap;
+use sifr_source::PositionEncoding;
 
 const MAX_LSP_TRACE_EVENTS: usize = 256;
 
@@ -24,25 +25,18 @@ pub(crate) struct Session {
     progress: ProgressState,
     active_request: Option<CancellationToken>,
     initialized: bool,
+    position_encoding: PositionEncoding,
     shutdown_requested: bool,
     exit_requested: bool,
     traces: Vec<WorkspaceTraceEvent>,
     next_trace_sequence: u64,
-    diagnostic_jobs: BTreeMap<String, ScheduledDiagnosticJob>,
-    next_diagnostic_sequence: u64,
+    diagnostic_jobs: DiagnosticJobs,
 }
 
 pub(crate) struct DocumentChangeSummary {
     pub(crate) raw_change_count: usize,
     pub(crate) compacted_change_count: usize,
     pub(crate) text_changed: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ScheduledDiagnosticJob {
-    pub(crate) uri: String,
-    pub(crate) version: Option<i32>,
-    sequence: u64,
 }
 
 impl Session {
@@ -54,12 +48,12 @@ impl Session {
             progress: ProgressState::default(),
             active_request: None,
             initialized: false,
+            position_encoding: PositionEncoding::Utf16,
             shutdown_requested: false,
             exit_requested: false,
             traces: Vec::new(),
             next_trace_sequence: 0,
-            diagnostic_jobs: BTreeMap::new(),
-            next_diagnostic_sequence: 0,
+            diagnostic_jobs: DiagnosticJobs::default(),
         }
     }
 
@@ -69,6 +63,14 @@ impl Session {
 
     pub(crate) fn store_mut(&mut self) -> &mut DocumentStore {
         &mut self.store
+    }
+
+    pub(crate) fn position_encoding(&self) -> PositionEncoding {
+        self.position_encoding
+    }
+
+    pub(crate) fn set_position_encoding(&mut self, encoding: PositionEncoding) {
+        self.position_encoding = encoding;
     }
 
     pub(crate) fn open_document(
@@ -102,9 +104,9 @@ impl Session {
         version: Option<i32>,
         compacted: CompactedDocumentChange,
     ) -> LspResult<DocumentChangeSummary> {
-        let text_changed = self
-            .store
-            .apply_compacted_change(uri, version, &compacted)?;
+        let text_changed =
+            self.store
+                .apply_compacted_change(uri, version, &compacted, self.position_encoding)?;
         let document = self.store.document(uri)?;
         if self.analysis.update_document(document) {
             self.analysis.refresh_projects(&self.store);
@@ -354,19 +356,7 @@ impl Session {
         uri: &str,
     ) -> LspResult<ScheduledDiagnosticJob> {
         let version = self.store.document(uri)?.version();
-        let sequence = if let Some(existing) = self.diagnostic_jobs.get(uri) {
-            existing.sequence
-        } else {
-            let sequence = self.next_diagnostic_sequence;
-            self.next_diagnostic_sequence = self.next_diagnostic_sequence.saturating_add(1);
-            sequence
-        };
-        let job = ScheduledDiagnosticJob {
-            uri: uri.to_string(),
-            version,
-            sequence,
-        };
-        self.diagnostic_jobs.insert(uri.to_string(), job.clone());
+        let job = self.diagnostic_jobs.schedule(uri, version);
         self.trace(
             WorkspaceTracePhase::Scheduler,
             format!("scheduled_diagnostics uri={uri} version={:?}", job.version),
@@ -375,12 +365,7 @@ impl Session {
     }
 
     pub(crate) fn take_next_diagnostic_job(&mut self) -> Option<ScheduledDiagnosticJob> {
-        let uri = self
-            .diagnostic_jobs
-            .iter()
-            .min_by_key(|(_, job)| job.sequence)
-            .map(|(uri, _)| uri.clone())?;
-        self.diagnostic_jobs.remove(&uri)
+        self.diagnostic_jobs.take_next()
     }
 
     pub(crate) fn document_version_matches(

@@ -120,25 +120,27 @@ fn publish_progress(connection: &Connection, params: Value) -> LspResult<()> {
 }
 
 pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResult<Vec<Value>> {
+    let position_encoding = session.position_encoding();
+    let source = session.store().document(uri)?.text().to_string();
     // Load-time diagnostics are replaced whenever the document analysis owner is
     // opened or updated. Publication still captures and checks the document
     // version in `DiagnosticsController` before this shortcut can be observed.
     if !session.load_diagnostics(uri).is_empty() {
-        return Ok(session
+        return session
             .load_diagnostics(uri)
             .iter()
             .cloned()
-            .map(conversion::diagnostic)
-            .collect());
+            .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
+            .collect::<LspResult<Vec<_>>>();
     }
-    session.with_document_analysis(uri, |snapshot, host, file, _source| {
+    session.with_document_analysis(uri, |snapshot, host, file, source| {
         let diagnostics = snapshot
             .diagnostics(host, file)
             .map_err(|error| crate::errors::LspError::internal(error.message))?
             .into_value();
-        Ok(diagnostics
+        diagnostics
             .into_iter()
-            .map(conversion::diagnostic)
-            .collect())
+            .map(|diagnostic| conversion::diagnostic(diagnostic, source, position_encoding))
+            .collect::<LspResult<Vec<_>>>()
     })
 }

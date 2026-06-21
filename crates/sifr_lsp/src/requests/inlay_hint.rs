@@ -8,17 +8,20 @@ pub(crate) fn inlay_hint(session: &mut Session, params: Value) -> LspResult<Valu
     let uri = text_document_uri(&params)?;
     let range = params.get("range").cloned();
     let source = session.store().document(&uri)?.text().to_string();
+    let position_encoding = session.position_encoding();
     let range = range
         .as_ref()
-        .map(|range| conversion::lsp_range(range, &source))
+        .map(|range| conversion::lsp_range(range, &source, position_encoding))
         .transpose()?;
-    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
+    session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let hints = snapshot
             .inlay_hints(host, file, range)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
-        Ok(Value::Array(
-            hints.into_iter().map(conversion::inlay_hint).collect(),
-        ))
+        hints
+            .into_iter()
+            .map(|hint| conversion::inlay_hint(hint, source, position_encoding))
+            .collect::<LspResult<Vec<_>>>()
+            .map(Value::Array)
     })
 }

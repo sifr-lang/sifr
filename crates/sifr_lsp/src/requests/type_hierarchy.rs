@@ -1,14 +1,15 @@
 use crate::conversion;
 use crate::errors::{LspError, LspResult};
-use crate::requests::{position, text_document_uri};
+use crate::requests::{document_position, text_document_uri};
 use crate::session::Session;
 use serde_json::Value;
 use sifr_analysis::{AnalysisQueryResult, TypeHierarchyItemId};
 
 pub(crate) fn prepare(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
-    let position = position(&params)?;
+    let position = document_position(session, &uri, &params)?;
     let file_maps = session.file_maps_for_uri(&uri)?;
+    let position_encoding = session.position_encoding();
     session.with_document_analysis(&uri, |snapshot, host, file, source| {
         let item = snapshot
             .prepare_type_hierarchy(host, file, &position)
@@ -18,7 +19,7 @@ pub(crate) fn prepare(session: &mut Session, params: Value) -> LspResult<Value> 
             return Ok(Value::Null);
         };
         let uri = file_maps.uri_for(item.location.file)?;
-        conversion::type_hierarchy_item(item, uri, source)
+        conversion::type_hierarchy_item(item, uri, source, position_encoding)
     })
 }
 
