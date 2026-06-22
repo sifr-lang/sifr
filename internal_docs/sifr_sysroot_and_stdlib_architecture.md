@@ -68,10 +68,9 @@ stdlib/_sifr/*.sifr
 ```
 
 Packaging copies those roots into `lib/sifr/stdlib/**` in the installed
-sysroot. Temporary sync or generation from a legacy location is acceptable only
-during migration. The completed architecture has one canonical stdlib source
-root in the repository so CLI, LSP, packaging, and tests cannot drift across two
-long-lived source trees.
+sysroot. The completed architecture has one canonical stdlib source root in the
+repository so CLI, LSP, packaging, and tests cannot drift across two long-lived
+source trees.
 
 ## Sysroot Manifest
 
@@ -80,30 +79,10 @@ long-lived source trees.
 ```toml
 schema-version = 1
 sifr-version = "0.1.0-beta.N"
-toolchain-id = "sifr-0.1.0-beta.N-x86_64-unknown-linux-gnu"
 target-triple = "x86_64-unknown-linux-gnu"
 built-by-compiler-commit = "<git-sha>"
-rust-edition = "2024"
-rust-version = "<minimum-supported-rust-version>"
+sysroot-content-sha256 = "<sha256-tree>"
 cargo-lock-sha256 = "<sha256>"
-stdlib-public-digest = "<sha256-tree>"
-stdlib-private-digest = "<sha256-tree>"
-runtime-crate-digest = "<sha256-tree>"
-stdlib-crate-digest = "<sha256-tree>"
-vendor-digest = "<sha256-tree>"
-
-[paths]
-workspace-manifest = "Cargo.toml"
-workspace-lock = "Cargo.lock"
-stdlib = "stdlib"
-runtime-crate = "crates/sifr_runtime"
-stdlib-crate = "crates/sifr_stdlib"
-vendor = "vendor"
-cargo-config = ".cargo/config.toml"
-
-[crates]
-sifr-runtime = { name = "sifr_runtime", version = "0.1.0-beta.N" }
-sifr-stdlib = { name = "sifr_stdlib", version = "0.1.0-beta.N" }
 ```
 
 The compiler treats a mismatched or incomplete sysroot as an installation
@@ -111,15 +90,19 @@ error. It reports a Sifr diagnostic that tells the user to reinstall Sifr or set
 `SIFR_SYSROOT`. It must not silently fall back to `env!("CARGO_MANIFEST_DIR")`
 in released builds.
 
-The digest fields are identity metadata for build reports, cache keys,
-`sifr doctor`, release validation, and bug reports. Normal commands do not
+The manifest is identity metadata, not a layout map. Paths and crate names are
+fixed by the sysroot layout and Cargo manifests. `toolchain-id` is derived as
+`{sifr-version}-{target-triple}` where a human-readable identifier is needed.
+Rust edition, minimum Rust version, workspace package data, and sysroot crate
+versions belong to `Cargo.toml`, not to `sysroot.toml`.
+
+`sysroot-content-sha256` covers `stdlib/`, `crates/`, `vendor/`,
+`.cargo/config.toml`, `Cargo.toml`, and `Cargo.lock` for release sysroots.
+`cargo-lock-sha256` is kept as a direct lockfile identity because Cargo
+resolution and bug reports often need it independently. Normal commands do not
 re-hash the entire sysroot or vendor tree on every invocation. They trust the
 manifest after the small boundary check described below; deeper digest
 verification belongs to release validation and `sifr doctor`.
-
-`vendor-digest` is required in release sysroots. Source-tree development mode
-may omit it or mark it as development metadata because the repository Cargo
-workspace is the authoritative dependency source in that mode.
 
 The manifest schema is implementation-owned and documentation-visible. Parser
 tests or snapshots must fail when the accepted schema and this documented schema
@@ -136,6 +119,10 @@ and host-specific packaging metadata are not digest inputs.
 
 ## Sysroot Resolution
 
+Every compiler, CLI, LSP, and build operation starts by resolving a
+`ResolvedSysroot`. After that point, installed and development workflows use the
+same compiler, stdlib inventory, Cargo planning, and tooling paths.
+
 Sysroot resolution is deterministic:
 
 1. An explicit `--sysroot <path>` CLI option, where accepted by developer
@@ -143,26 +130,31 @@ Sysroot resolution is deterministic:
 2. `SIFR_SYSROOT`.
 3. Installed layout relative to the running executable:
    `current_exe()/../lib/sifr`.
-4. Source-tree development layout for unreleased local builds.
+4. Development sysroot auto-resolution for unreleased local builds.
 
-`SIFR_RUNTIME_PATH` remains a development compatibility override for testing a
-runtime crate checkout, but it is not the release mechanism. In release mode,
-missing sysroot assets are surfaced as install corruption, not as Cargo path
-errors.
+Runtime checkout testing uses a source-tree or generated development sysroot
+that contains the desired runtime crate. Released tools and normal development
+flows do not support a runtime-only override environment variable; tests that
+still need old runtime-path behavior during migration should use test-only
+helpers rather than a documented environment variable. In release mode, missing
+sysroot assets are surfaced as install corruption, not as Cargo path errors.
 
-Source-tree development mode is gated by a single predicate:
+Development sysroot auto-resolution is gated by a single predicate:
 
 ```text
 is_source_tree_development_mode()
 ```
 
 That predicate is true only for local development builds under an explicit
-debug/dev build marker or equivalent reviewed build-time configuration. A
-released binary must not enter source-tree mode merely because the current
-directory, an ancestor, or the executable path contains directories named
-`crates/sifr_runtime` or `crates/sifr_stdlib`. Released binaries either resolve
-a valid installed sysroot, honor an explicit sysroot override, or emit a sysroot
-diagnostic.
+debug/dev build marker or equivalent reviewed build-time configuration. It
+answers only whether the tool may auto-resolve or materialize a development
+sysroot. It does not allow different stdlib inventory rules, runtime path
+rules, embedded stdlib fallback, or repository ancestor scanning after
+resolution. A released binary must not auto-resolve a repository sysroot merely
+because the current directory, an ancestor, or the executable path contains
+directories named `crates/sifr_runtime` or `crates/sifr_stdlib`. Released
+binaries either resolve a valid installed sysroot, honor an explicit sysroot
+override, or emit a sysroot diagnostic.
 
 End-user `build`, `run`, `check`, and `emit` commands may support `--sysroot`
 only as an advanced developer override. Diagnostics and help text should mark
@@ -211,10 +203,9 @@ serde = { version = "=...", features = ["derive"] }
 tokio = { version = "=...", features = [...] }
 ```
 
-Distribution packaging may either copy checked-in sysroot-ready manifests or
-materialize release manifests from the development workspace. The released
-result must be self-contained: running `cargo metadata --offline` from the
-sysroot workspace succeeds without the source checkout.
+Distribution packaging produces sysroot-ready manifests in the fixed layout.
+The released result must be self-contained: running `cargo metadata --offline`
+from the sysroot workspace succeeds without the source checkout.
 
 The sysroot Cargo config is stored at `.cargo/config.toml` and uses Cargo's
 standard vendoring model:
@@ -227,8 +218,9 @@ replace-with = "sifr-vendor"
 directory = "vendor"
 ```
 
-Generated projects can either receive a copied `.cargo/config.toml` or invoke
-Cargo with an explicit config path. The implementation must follow this policy:
+Sifr does not copy sysroot Cargo config into user/package project directories.
+It applies sysroot Cargo configuration only through invocation-scoped Cargo
+configuration for Sifr-managed builds where this policy permits it:
 
 - Single-file generated builds using only Sifr stdlib/runtime dependencies
   apply sysroot vendor config.
@@ -249,10 +241,9 @@ The observable guarantee is that Sifr-owned sysroot dependencies resolve from
 the installed sysroot in offline mode without changing ownership of user
 dependencies.
 
-Whichever Cargo config mechanism is selected must be tested directly. The tests
-must prove sysroot vendor config applies to Sifr-owned stdlib/runtime
-dependencies in stdlib-only builds and does not silently replace user registry
-resolution in online package mode.
+Invocation-scoped Cargo config tests prove sysroot vendor config applies to
+Sifr-owned stdlib/runtime dependencies in stdlib-only builds and does not
+silently replace user registry resolution in online package mode.
 
 The sysroot vendor directory is generated from the sysroot workspace lockfile,
 not from an ad hoc dependency list. This prevents stdlib features and runtime
@@ -355,19 +346,16 @@ It owns:
 - private declaration module metadata,
 - mapping from stdlib declarations and codegen requirements to generated Cargo
   dependencies and sysroot crate features,
-- IPC schema/protocol metadata needed by compiler analysis and verification,
-- compatibility shims while old compiler-special intrinsics are removed.
+- IPC schema/protocol metadata needed by compiler analysis and verification.
 
 The name `sifr_stdlib` is reserved for the generated-program stdlib crate. The
 compiler model uses a distinct name so crate names communicate runtime
 responsibility rather than internal implementation history.
 
-`sifr_stdlib_model` may embed fallback stdlib sources for development and
-bootstrap. Released tools must not use embedded fallback sources for normal
-stdlib resolution. If the sysroot is missing or invalid, released tools fail
-with a sysroot diagnostic. Its public API should speak in terms of resolved
-sysroot/module metadata rather than hard-coded include paths so CLI, LSP, and
-tests can exercise installed-layout behavior.
+`sifr_stdlib_model` speaks in terms of resolved sysroot/module metadata rather
+than hard-coded include paths. Released tools must not use embedded fallback
+sources for normal stdlib resolution. If the sysroot is missing or invalid,
+released tools fail with a sysroot diagnostic.
 
 ## Standard Library Source Layers
 
@@ -406,28 +394,19 @@ Rust interop annotations such as direct functions, opaque handles, async
 functions, view/zero-copy contracts, and callback policies.
 
 Private declarations are source files rather than Rust tables so editor tooling
-and compiler behavior share the same signature source. They should be treated
-as internal ABI: stable across one compiler/sysroot version, not public API.
+and compiler behavior share the same signature source. They are ordinary Rust
+interop declarations with a sysroot trust policy and private source origin, not
+a second native ABI. Rust interop owns direct calls, opaque handles, async
+calls, callback policy, views, and error conversion.
 
-Private declaration ABI is specified explicitly before declaration migration.
-The ABI spec defines:
+Stdlib-private rules are limited to:
 
-- allowed Rust interop annotations in private declarations,
-- allowed target crates and module paths,
-- canonical path requirements for sysroot crate targets,
-- Result and error-class conversion rules,
-- opaque handle ownership and close/drop behavior,
-- async, cancellation, and timeout semantics,
-- zero-copy/view lifetime rules,
-- callback thread-safety and reentrancy rules,
-- prohibited declaration shapes,
-- diagnostic attribution for private declarations without exposing `_sifr` as a
-  public API.
-
-Private declarations may target only canonical paths under the resolved sysroot
-crates unless a separate reviewed architecture decision adds another trusted
-crate boundary. User packages cannot shadow `_sifr` declarations or provide a
-same-named crate path that overrides a sysroot target.
+- declarations live under `stdlib/_sifr/`,
+- only sysroot stdlib sources can import `_sifr.*`,
+- targets resolve only to canonical crates under the resolved sysroot,
+- user packages cannot shadow private declarations or sysroot crate targets,
+- diagnostics point to private declarations only in internal/developer
+  contexts.
 
 The compiler's semantic core remains compiler-owned. Parsing, HIR, type
 checking, ownership, borrow analysis, Result/Option enforcement, safe indexing,
@@ -458,17 +437,19 @@ dependencies, explicit Rust interop dependencies, and temporary direct
 third-party dependencies for unmigrated compiler-special paths when the
 corresponding milestone has a deletion plan and validation coverage.
 
-Native stdlib ownership is tracked in a checked registry:
+During migration, native stdlib ownership is tracked in a checked registry:
 
 ```text
 internal_docs/stdlib_native_surface_ownership.toml
 ```
 
 Each native surface records its current owner, final owner, reason,
-certification state, and deletion milestone. Allowed owners are
-`compiler-intrinsic`, `sifr_stdlib`, `sifr_runtime`, `compiler-language-glue`,
-and `unsupported`. Guardrails use this registry to prevent native stdlib
-behavior from moving back into compiler intrinsics without review.
+certification state, and deletion milestone. The registry is a migration
+artifact. By M12 it is deleted or reduced to a tiny retained compiler-language
+glue allowlist. Final ownership is by location: public APIs live in
+`stdlib/sifr`, private native declarations live in `stdlib/_sifr`,
+generated-program implementation lives in `crates/sifr_stdlib` and
+`crates/sifr_runtime`, and compiler intrinsics are language semantics only.
 
 ## Generated Cargo Projects
 
@@ -481,22 +462,33 @@ sifr_stdlib = { path = "<sysroot>/crates/sifr_stdlib", default-features = false,
 sifr_runtime = { path = "<sysroot>/crates/sifr_runtime", default-features = false, features = [...] }
 ```
 
-Generated projects also receive Cargo configuration that points Cargo at the
-sysroot vendor directory for Sifr-owned third-party dependencies. The generated
-project is still a normal Cargo project: user package dependencies, explicit
-Rust interop package dependencies, and user-selected registries remain
-controlled by Cargo and package metadata.
+Sifr-managed Cargo invocations apply sysroot vendor configuration for
+Sifr-owned third-party dependencies when permitted by the Cargo ownership mode.
+The generated project is still a normal Cargo project: user package
+dependencies, explicit Rust interop package dependencies, and user-selected
+registries remain controlled by Cargo and package metadata.
 
 The generated dependency planner is owned by `sifr_stdlib_model`. It maps
 stdlib modules, private declarations, language runtime requirements, and Rust
-interop bridge requirements to sysroot crate dependencies and feature sets.
+interop bridge requirements to one compiler-facing artifact:
+
+```rust
+SysrootDependencyPlan {
+    crates: Vec<SysrootCrateDependency>,
+    features: BTreeMap<SysrootCrate, BTreeSet<Feature>>,
+    cargo_vendor_mode: CargoVendorMode,
+    cache_fingerprint: String,
+}
+```
+
+Generated Cargo, build reports, cache keys, LSP traces, feature expectations,
+and tests consume this plan instead of recomputing sysroot crate dependencies,
+features, vendor mode, or cache fragments independently.
 
 Generated project cache keys include:
 
 - compiler version,
-- sysroot manifest digest,
-- sysroot crate manifest digests,
-- relevant sysroot crate source digests,
+- sysroot content digest,
 - selected sysroot crate features,
 - generated Rust source digests,
 - package dependency graph digests when package mode is active,
@@ -505,9 +497,9 @@ Generated project cache keys include:
 This prevents cached binaries from surviving sysroot updates or stdlib feature
 changes.
 
-Generated build reports include the resolved sysroot path, toolchain id, and
-sysroot manifest digest in human/trace/debug surfaces. This makes CI failures
-and bug reports attributable to a concrete stdlib/runtime bundle.
+Generated build reports include the resolved sysroot path, derived toolchain id,
+and sysroot content digest in human/trace/debug surfaces. This makes CI
+failures and bug reports attributable to a concrete stdlib/runtime bundle.
 
 ## Rust Interop Stdlib Backend
 
@@ -524,24 +516,25 @@ stdlib/sifr/*.sifr public wrappers
   -> sifr_stdlib and sifr_runtime sysroot crates
 ```
 
-Compiler-special codegen intrinsics shrink to language semantics and temporary
-compatibility shims. The old handwritten intrinsic registry is removed once all
-supported private declarations have Rust interop equivalents or explicit
-unsupported-by-design decisions.
+Compiler-special codegen intrinsics are restricted to language semantics. The
+old handwritten intrinsic registry is removed or reduced to a retained
+compiler-language-glue allowlist once supported native stdlib surfaces route
+through private declarations and Rust interop.
 
 Runtime/resource/callback surfaces follow the Rust interop certification gate.
 Surfaces still marked future-owned or uncertified in the compatibility matrix
 must not be claimed as stable stdlib interop support.
 
-Private stdlib Rust interop uses a compiler-owned trust policy. That trust does
-not extend to arbitrary user crates. Sysroot declarations may target only
-version-matched sysroot crates unless an explicit architecture decision adds a
-new trusted crate boundary.
+Private stdlib Rust interop uses the normal Rust interop contract plus a
+compiler-owned sysroot trust policy. That trust does not extend to arbitrary
+user crates. Sysroot declarations may target only version-matched sysroot
+crates unless an explicit architecture decision adds a new trusted crate
+boundary.
 
 ## LSP and Tooling
 
-CLI, LSP, formatter, linter, analysis, and documentation tooling all resolve
-the same sysroot. LSP uses physical sysroot source files for:
+CLI, LSP, formatter, linter, analysis, and documentation tooling all consume
+the same `ResolvedSysroot`. LSP uses physical sysroot source files for:
 
 - hover over stdlib functions and types,
 - completion from public `sifr.*` modules,
@@ -549,14 +542,10 @@ the same sysroot. LSP uses physical sysroot source files for:
 - private `_sifr.*` declaration awareness for stdlib implementation files,
 - version-correct diagnostics.
 
-Embedded stdlib sources may remain available to source-tree development builds,
-tests, and bootstrap tooling, but released tools use the installed sysroot as
-the authoritative stdlib source.
-
-Tooling must surface stdlib locations as sysroot file paths in installed mode.
-For source-tree development mode, it may surface repository paths. Mixed modes
-where LSP reads embedded sources while CLI reads sysroot sources are considered
-configuration bugs.
+Tooling surfaces stdlib locations from the resolved sysroot. Installed sysroots
+produce installed paths; development sysroots may produce repository or
+`target/sifr-dev-sysroot` paths. Mixed modes where LSP and CLI resolve different
+sysroots are configuration bugs.
 
 Source maps distinguish at least these origins:
 
@@ -627,10 +616,23 @@ Generated Cargo builds must never contain build-machine absolute paths in
 release artifacts. Build-time paths are acceptable only in source-tree
 development builds and tests where the source checkout is the intended sysroot.
 
-## Diagnostics and Doctor
+## Diagnostics, Doctor, and Release Validation
 
-Normal commands perform a small sysroot boundary check before they need sysroot
-assets. The check verifies:
+Sysroot validation is a three-level ladder:
+
+```text
+Boundary check:
+  cheap, always run before sysroot use
+
+Doctor:
+  expensive, local install health
+
+Release certification:
+  exhaustive, artifact integrity and no path leakage
+```
+
+Normal commands perform the boundary check before they need sysroot assets. The
+check verifies:
 
 - `sysroot.toml` exists and parses,
 - `Cargo.toml` and `Cargo.lock` exist for the sysroot workspace,
@@ -656,32 +658,39 @@ Hermetic installed-layout fixtures use an isolated environment:
 - run outside the repository,
 - empty `HOME` except the test install directory,
 - isolated Cargo home,
-- no `SIFR_RUNTIME_PATH`,
+- no runtime-only override environment variable,
 - no `SIFR_SYSROOT` unless testing override behavior,
 - generated project outside the source checkout,
 - network disabled for stdlib-only offline cases,
 - failure on any generated source checkout path.
 
-## Source-Tree Development Mode
+## Development Sysroots
 
-Developer builds can use the repository as a sysroot. In that mode:
+Developer builds use a sysroot-shaped tree. That tree may be materialized under
+`target/sifr-dev-sysroot/` or resolved from a repository layout that already has
+the installed shape:
 
-- `lib/sifr` or the canonical sysroot source tree supplies stdlib sources,
-- workspace crates under `crates/` supply `sifr_runtime` and `sifr_stdlib`,
-- normal workspace dependency metadata is allowed,
-- local tests may use embedded source fallbacks to validate bootstrap behavior.
+```text
+target/sifr-dev-sysroot/
+  Cargo.toml
+  Cargo.lock
+  sysroot.toml
+  stdlib/
+  crates/
+  vendor/ or dev Cargo config
+```
 
-Development mode must be explicit in code paths. Released binaries should not
-discover arbitrary parent directories and treat them as a sysroot unless the
-resolved layout contains a valid `sysroot.toml` or is the known source-tree
-layout compiled for development.
+Development only changes how a `ResolvedSysroot` is found or materialized. It
+does not change compiler semantics, stdlib source inventory, runtime dependency
+rules, LSP behavior, Cargo dependency ownership, or generated Cargo ownership.
+Released binaries should not discover arbitrary parent directories and treat
+them as a sysroot unless the resolved layout contains a valid `sysroot.toml`.
 
 ## Versioning and Compatibility
 
 The compiler, sysroot manifest, `sifr_runtime`, `sifr_stdlib`, private
 declarations, and public stdlib sources are versioned as a single toolchain.
-Patch-level sysroot-only updates are not a supported standalone operation until
-the toolchain defines a compatibility policy for them.
+Sysroot-only patching is not a supported standalone operation.
 
 Generated artifacts should record the sysroot version in build reports and
 trace/debug output so users and CI logs can identify which stdlib/runtime
@@ -689,8 +698,9 @@ bundle was used.
 
 Release certification includes feature-tree inspection. Representative programs
 for `sifr.re`, `sifr.json`, `sifr.http`, `sifr.python`, and pure Sifr stdlib
-modules record `cargo tree -e features` snapshots so feature creep is visible
-in review.
+modules derive expected feature sets from `SysrootDependencyPlan`; `cargo tree
+-e features` snapshots are evidence that Cargo resolution matches the planner.
+The planner-owned expectation is the source of truth for minimal features.
 
 ## Compatibility Guarantees
 

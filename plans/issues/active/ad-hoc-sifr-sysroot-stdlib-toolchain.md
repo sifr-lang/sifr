@@ -54,7 +54,7 @@ Tasks:
 - Add an inventory table for current `sifr_runtime::*` call sites in generated
   code and preamble.
 - Create `internal_docs/stdlib_native_surface_ownership.toml` as the checked
-  ownership registry for native stdlib surfaces.
+  migration registry for native stdlib surfaces.
 - Include inventory columns for current implementation owner, final
   implementation owner, migration blocker, and whether the surface can move
   before Rust interop runtime certification.
@@ -70,8 +70,9 @@ Acceptance:
 - Reviewers can see the exact pre-migration ownership boundaries.
 - The inventories identify every native stdlib surface that must be migrated or
   explicitly retained.
-- The ownership registry gives reviewers one mechanical source of truth for
-  supported, compiler-owned, future-owned, and unsupported native surfaces.
+- The migration registry gives reviewers one mechanical inventory for
+  supported, compiler-owned, future-owned, and unsupported native surfaces
+  until M12 deletes it or reduces it to a retained allowlist.
 - Runtime/resource surfaces are tagged with certification status before
   implementation begins.
 
@@ -88,14 +89,15 @@ name and M3 creates the new generated-program crate.
 
 Tasks:
 
-- Add a `SifrSysroot` model with parsed `sysroot.toml` metadata.
-- Define schema-versioned `sysroot.toml` fields for version, stdlib paths,
-  sysroot crate paths, vendor path, and Cargo config path.
-- Add sysroot identity/fingerprint fields: toolchain id, target triple,
-  compiler commit, Cargo lock digest, public/private stdlib digests, runtime
-  crate digest, stdlib crate digest, and vendor digest.
-- Require `vendor-digest` in release sysroots and allow it to be absent or
-  marked as development metadata only in source-tree development mode.
+- Add a `ResolvedSysroot` model with parsed identity-only `sysroot.toml`
+  metadata and fixed-layout paths derived structurally from the sysroot root.
+- Define schema-versioned `sysroot.toml` fields for `sifr-version`,
+  `target-triple`, `built-by-compiler-commit`, `sysroot-content-sha256`, and
+  `cargo-lock-sha256`.
+- Derive `toolchain-id` as `{sifr-version}-{target-triple}` for reports and
+  diagnostics; do not store it in `sysroot.toml`.
+- Keep Rust edition, Rust version, workspace package data, and sysroot crate
+  versions in `Cargo.toml`, not in `sysroot.toml`.
 - Define canonical tree-digest hashing for sysroot assets: path ordering, path
   separator normalization, included file types, excluded metadata, executable
   bit handling where relevant, symlink policy, and line-ending policy.
@@ -103,8 +105,8 @@ Tasks:
   workspace members, workspace dependencies, and resolver version, but defer
   validation of the final `crates/sifr_stdlib` member until M3/M4.
 - Add resolver precedence: explicit developer override, `SIFR_SYSROOT`,
-  installed path relative to `current_exe()`, then source-tree development
-  layout.
+  installed path relative to `current_exe()`, then development sysroot
+  auto-resolution for unreleased local builds.
 - Mark `--sysroot` for end-user commands as an advanced/developer override in
   help text and diagnostics rather than a normal package-management mechanism.
 - Define the command-support matrix for `--sysroot`: advanced/hidden for
@@ -120,12 +122,15 @@ Tasks:
   permits it.
 - Add concise sysroot-boundary diagnostics for missing or mismatched sysroot
   assets.
-- Keep `SIFR_RUNTIME_PATH` only as a development compatibility override.
+- Remove documented runtime-only override behavior; runtime checkout testing
+  must use a source-tree or generated development sysroot, with any
+  migration-only runtime path override kept as a test helper.
 - Remove release-mode fallback to compile-time checkout paths.
 - Add build-mode gates so release binaries cannot silently use source checkout
   paths.
 - Add a single `is_source_tree_development_mode()` predicate gated by explicit
-  dev/debug build configuration.
+  dev/debug build configuration. The predicate only controls whether the tool
+  may auto-resolve or materialize a development sysroot.
 
 Acceptance:
 
@@ -134,9 +139,10 @@ Acceptance:
   environment variables.
 - A missing runtime crate reports a Sifr sysroot diagnostic, not a Cargo error
   containing a build-machine path.
-- Source-tree development still works without installing a sysroot.
+- Source-tree development works by resolving or materializing a sysroot-shaped
+  development tree.
 - Release binaries cannot resolve source-tree layout unless a valid installed
-  sysroot or explicit override is present.
+  sysroot or explicit sysroot override is present.
 - Sysroot diagnostics include binary path, attempted sysroot path, and missing
   asset path.
 
@@ -150,7 +156,7 @@ Validation:
 - Unit tests for deterministic tree-digest canonicalization.
 - Unit tests for missing sysroot `Cargo.toml`, `Cargo.lock`,
   `.cargo/config.toml`, `vendor/`, and runtime crate manifest.
-- Unit tests for release/dev mode separation.
+- Unit tests for release/dev sysroot resolution separation.
 - CLI smoke test for `sifr --print sysroot`.
 - CLI smoke test for `sifr --print sysroot --json`.
 - Installed-layout skeleton fixture that runs outside the repository.
@@ -167,8 +173,8 @@ Tasks:
   stdlib import policy, legacy module suggestions, feature/dependency mapping,
   and IPC schema/protocol metadata.
 - Update tests and docs that refer to the compiler-side crate.
-- Add compatibility re-export only if needed for a short mechanical migration;
-  remove it before the milestone closes.
+- Complete the rename without leaving a legacy re-export in the closed
+  milestone.
 
 Acceptance:
 
@@ -176,8 +182,7 @@ Acceptance:
 - Compiler crates depend on `sifr_stdlib_model` where they previously depended
   on current `sifr_stdlib`.
 - Existing stdlib import, lowering, codegen, and analysis behavior is unchanged.
-- The milestone closes with no compatibility re-export remaining unless a
-  separately documented blocker exists.
+- The milestone closes with no legacy re-export remaining.
 
 Validation:
 
@@ -220,8 +225,8 @@ Acceptance:
   live in `sifr_stdlib`.
 - The crate builds both inside the repository workspace and inside an
   installed-layout sysroot workspace fixture.
-- `cargo tree -e features` snapshots prove representative modules do not enable
-  unrelated feature groups.
+- Dependency-plan expectations and `cargo tree -e features` snapshots prove
+  representative modules do not enable unrelated feature groups.
 
 Validation:
 
@@ -230,8 +235,9 @@ Validation:
 - Feature-combination cargo checks for default, text/data, network, and Python
   groups.
 - Installed-layout cargo check for `lib/sifr/crates/sifr_stdlib`.
-- Feature-tree snapshots for representative `sifr.re`, `sifr.json`,
-  `sifr.http`, `sifr.python`, and pure Sifr stdlib programs.
+- Dependency-plan feature expectation checks plus `cargo tree -e features`
+  snapshots for representative `sifr.re`, `sifr.json`, `sifr.http`,
+  `sifr.python`, and pure Sifr stdlib programs.
 
 ### M4. Full Sysroot Workspace and Source Layout
 
@@ -243,18 +249,11 @@ Tasks:
   boundary checks.
 - Validate `cargo metadata --offline` from the installed-layout sysroot
   workspace.
-- Define repository source layout for public `stdlib/sifr/*.sifr` and private
-  `stdlib/_sifr/*.sifr`, or generate that layout from existing `lib/sifr`
-  during packaging with checked validation.
-- Decide and implement exactly one canonical repository stdlib source root.
-  The preferred final root is `stdlib/sifr/*.sifr` and
-  `stdlib/_sifr/*.sifr`; temporary sync/generation from `lib/sifr` may exist
-  only inside M4.
+- Implement exactly one canonical repository stdlib source root:
+  `stdlib/sifr/*.sifr` and `stdlib/_sifr/*.sifr`.
 - Add private `_sifr` declaration modules for stdlib native surfaces.
-- Preserve public `lib/sifr` compatibility during the transition or replace it
-  with the canonical sysroot source root after all references move.
-- Update `sifr_stdlib_model` source inventory to load from sysroot in released
-  tools and from source-tree layout in development.
+- Update `sifr_stdlib_model` source inventory to load from `ResolvedSysroot` in
+  released and development workflows.
 - Keep user `_sifr.*` imports rejected while allowing sysroot stdlib modules to
   import private declarations.
 - Add source-location metadata so diagnostics and LSP can report physical
@@ -294,8 +293,13 @@ Tasks:
   `<sysroot>/crates/sifr_runtime` and `<sysroot>/crates/sifr_stdlib` with
   `default-features = false`.
 - Move stdlib dependency feature mapping to `sifr_stdlib_model`.
-- Generate or copy Cargo config that points Sifr-owned builds at
-  `<sysroot>/vendor` using standard Cargo source replacement.
+- Add `SysrootDependencyPlan` as the single output for sysroot crate
+  dependencies, feature sets, Cargo vendor mode, and cache fingerprint.
+- Make generated Cargo, build reports, cache keys, LSP traces, feature
+  expectations, and tests consume `SysrootDependencyPlan`.
+- Invoke Cargo with sysroot vendor configuration for Sifr-managed builds where
+  the mode matrix permits it. Do not copy sysroot `.cargo/config.toml` into
+  user/package project directories.
 - Implement an explicit Cargo config mode matrix:
   stdlib-only single-file builds may apply sysroot vendor config; package builds
   with user registry dependencies in online mode must not silently force the
@@ -313,46 +317,48 @@ Tasks:
   must resolve reproducibly from the sysroot-compatible graph, and any
   generated `Cargo.lock` must be checked by offline fixtures.
 - Ensure sysroot crate manifests do not depend on the development workspace
-  unless running in source-tree development mode.
-- Ensure cache keys include sysroot version, sysroot crate fingerprints, and
-  relevant feature sets.
-- Record sysroot path, toolchain id, and sysroot manifest digest in generated
-  build reports and trace/debug output.
+  unless running from a resolved development sysroot.
+- Ensure cache keys include sysroot version, sysroot content digest, and
+  selected feature sets from `SysrootDependencyPlan`.
+- Record sysroot path, derived toolchain id, and sysroot content digest in
+  generated build reports and trace/debug output.
 - Keep user package dependencies and explicit Rust interop package dependencies
   Cargo-owned.
 - Ensure package-mode generated builds do not accidentally force the sysroot
   vendor policy onto user dependencies outside documented offline/frozen modes.
-- Test the selected Cargo config mechanism directly, whether it copies
-  `.cargo/config.toml` into generated projects or passes an explicit Cargo
-  config path.
+- Test invocation-scoped Cargo config directly.
 - Keep temporary direct third-party generated dependencies only for unmigrated
   compiler-special paths with a deletion milestone and validation evidence.
 
 Acceptance:
 
 - `sifr run` for stdlib-using single-file programs does not need a source
-  checkout or `SIFR_RUNTIME_PATH`.
+  checkout or runtime-only override.
 - Generated Cargo manifests contain sysroot paths, not build-machine paths.
 - Standard-library-only generated builds can run with Cargo offline when the
   sysroot vendor directory is present.
 - User dependency resolution behavior remains Cargo-compatible.
 - Generated Cargo projects do not require `Cargo.toml` from the Sifr source
   checkout.
+- Generated project directories are not left with copied sysroot Cargo config
+  that can silently rewrite later user Cargo invocations.
 
 Validation:
 
 - End-to-end `sifr run` fixture using `sifr.random`, `sifr.json`, and
   `sifr.re` from an installed-layout fixture.
 - Offline generated-build fixture for stdlib-only code.
-- Snapshot tests for generated `Cargo.toml` and Cargo config.
+- Snapshot tests for generated `Cargo.toml` and invocation-scoped Cargo config.
 - Snapshot or fixture for generated stdlib-only `Cargo.lock` behavior in
   offline mode.
+- `SysrootDependencyPlan` snapshots for representative stdlib imports and
+  language runtime requirements.
 - Fixture proving a generated project fails with a Sifr sysroot diagnostic when
   the sysroot vendor directory is missing in bundled-dependency mode.
 - Package-mode fixture proving user dependencies remain Cargo-owned.
 - Package-mode fixture proving online user registry resolution is not silently
   replaced by the sysroot vendor config.
-- Fixture covering the chosen Cargo config mechanism for stdlib-only generated
+- Fixture covering invocation-scoped Cargo config for stdlib-only generated
   builds.
 - Offline/frozen package-mode fixture proving user registry dependencies either
   use a complete combined vendor graph or fail with a clear diagnostic.
@@ -410,7 +416,7 @@ Make editor and analysis surfaces use the installed sysroot.
 
 Tasks:
 
-- Load stdlib source and private declaration metadata from `SifrSysroot`.
+- Load stdlib source and private declaration metadata from `ResolvedSysroot`.
 - Add stdlib source locations to the symbol index.
 - Support hover, completion, definition, and type-definition for public stdlib
   files.
@@ -418,8 +424,8 @@ Tasks:
   but not user import completion.
 - Add tooling diagnostics when the editor process sees a broken or mismatched
   sysroot.
-- Add source-tree development behavior so local LSP sessions use repository
-  stdlib sources when running from an unreleased build.
+- Add development sysroot behavior so local LSP sessions use the same resolved
+  sysroot as CLI when running from an unreleased build.
 - Add source origin kinds: `UserSource`, `SysrootPublicStdlib`,
   `SysrootPrivateDeclaration`, `GeneratedSupport`, and `CompilerSynthetic`.
 - Add CLI/LSP sysroot mismatch diagnostics that include the observed sysroot
@@ -447,30 +453,26 @@ Validation:
 
 ### M8. Rust Interop Context for Private Stdlib Declarations
 
-Give embedded/private stdlib declarations a normal interop context.
+Give private stdlib declarations a normal interop context.
 
 Tasks:
 
 - Add a compiler-owned synthetic package context for sysroot stdlib interop.
-- Write the private declaration ABI mini-spec before implementation. It must
-  cover allowed annotations, target crates and module paths, error mapping,
-  Result/error class conversion, opaque ownership, async/cancellation,
-  zero-copy/view lifetimes, callbacks, prohibited declarations, and diagnostic
+- Feed private stdlib declarations through normal Rust interop contracts:
+  `InteropBuildPlan`, trust, probes, bridge generation, dependency planning,
+  cache keys, direct calls, opaque handles, async calls, callbacks, views, and
+  error conversion.
+- Define the sysroot trust policy for Sifr-owned sysroot crates.
+- Define stdlib-private rules only for declaration location, import permission,
+  canonical sysroot crate targets, user shadowing prevention, and diagnostic
   attribution.
-- Feed stdlib declarations through normal `InteropBuildPlan`, trust,
-  probes, bridge generation, dependency planning, and cache keys.
-- Define trust policy for Sifr-owned sysroot crates.
 - Ensure user packages cannot impersonate or override private sysroot
   declarations.
 - Add verification for cache invalidation when private declarations or sysroot
   crates change.
 - Ensure stdlib interop probes use sysroot Cargo config and vendor data.
-- Define how private declaration diagnostics point back to sysroot declaration
+- Test that private declaration diagnostics point back to sysroot declaration
   source without exposing `_sifr` as public API.
-- Require private declarations to target only canonical paths under resolved
-  sysroot crates.
-- Prevent user packages from shadowing `_sifr` declarations or same-named
-  sysroot crate targets.
 
 Acceptance:
 
@@ -486,7 +488,26 @@ Validation:
 - Cache-key tests for sysroot source/crate changes.
 - Negative tests for user `_sifr` access and shadowing.
 - Offline probe fixture for stdlib interop declaration checks.
-- ABI spec review and fixtures for allowed/prohibited declaration shapes.
+- Rust interop contract fixtures for allowed/prohibited declaration shapes under
+  the sysroot trust policy.
+
+### Native Migration Contract
+
+Every migrated native stdlib surface must:
+
+- preserve public `stdlib/sifr` wrapper behavior,
+- route through `stdlib/_sifr` private declaration, normal Rust interop, and a
+  sysroot crate,
+- select only the minimal sysroot crate features described by
+  `SysrootDependencyPlan`,
+- avoid direct third-party implementation dependencies in generated Cargo,
+- avoid data-dependent `unwrap()` and `expect()` in user-triggerable paths,
+- include parity, e2e, and generated-shape evidence,
+- delete old compiler-special dispatch or enter the retained
+  compiler-language-glue allowlist.
+
+M9, M10, and M11 choose migration order. This contract defines the common
+completion bar for every migrated surface.
 
 ### M9. Migrate Stateless Native Leaves
 
@@ -497,35 +518,22 @@ Tasks:
 - Move math leaves to private declarations backed by `sifr_stdlib`.
 - Move base64/base32, hash, UUID, regex, TOML, HTML, platform, and calendar
   leaves.
-- Remove corresponding intrinsic registry lowering paths after parity passes.
-- Keep public `lib/sifr` wrappers behaviorally stable.
-- Update `sifr_stdlib` feature groups and `sifr_stdlib_model` dependency
-  mapping as each leaf migrates.
+- Update `sifr_stdlib` feature groups and `SysrootDependencyPlan` mapping as
+  each leaf migrates.
 - Add explicit unsupported-by-design notes for any stateless leaf deferred due
   to type-system or interop limitations.
-- Capture public wrapper behavior snapshots before and after each module
-  migration.
 
 Acceptance:
 
-- Public APIs are unchanged.
-- Generated Rust calls interop-backed `sifr_stdlib` functions for migrated
-  leaves.
-- Old compiler-special lowering for migrated leaves is deleted or reduced to a
-  compatibility shim with no active callers.
-- Each migrated private declaration has executable evidence from public wrapper
-  calls through generated Rust.
+- Each stateless leaf satisfies the Native Migration Contract.
+- Unsupported-by-design stateless leaves are explicitly recorded with rationale.
 
 Validation:
 
-- Existing stdlib parity/e2e suites.
 - Focused fixtures for every migrated module.
-- Snapshot tests proving generated Cargo deps and generated Rust shape.
 - Code search check that migrated functions no longer appear in active
   intrinsic lowering dispatch tables.
 - Feature-delta snapshots for each migrated module.
-- Generated Rust source check that migrated leaves do not import third-party
-  implementation crates directly.
 
 ### M10. Migrate Fallible Data and Text Modules
 
@@ -538,30 +546,21 @@ Tasks:
 - Standardize bridge error types and conversion to Sifr Result/error classes.
 - Remove duplicated generated preamble where runtime crate functions should own
   behavior.
-- Preserve no-panic guarantees in user-triggerable paths.
 - Ensure large-data and malformed-input cases have bounded-memory and bounded
   diagnostic behavior where applicable.
-- Capture public wrapper behavior snapshots before and after migration.
-- Capture feature-delta snapshots per migrated module.
 
 Acceptance:
 
-- Fallible stdlib APIs return the same Sifr-level Result/error behavior as
-  before.
-- Generated code contains no data-dependent unwrap/expect in migrated paths.
-- Dependency features are selected through sysroot stdlib planning.
+- Each fallible data/text module satisfies the Native Migration Contract.
 - Error values preserve public Sifr API shape and do not leak Rust crate
   internals.
 
 Validation:
 
 - Positive and negative parity suites for each migrated module.
-- Generated-code panic-pattern checks.
 - Cargo feature matrix checks for text/data groups.
 - Large/malformed input fixtures for JSON, Unicode/encoding, URL, gzip, and
   zipfile.
-- Generated Rust source check that migrated modules do not import third-party
-  implementation crates directly.
 
 ### M11. Migrate Stateful and Resource Modules
 
@@ -587,15 +586,13 @@ Tasks for each submilestone:
   certification lands.
 - Add migration blockers back to the certification issue when a resource
   surface depends on uncertified bridge behavior.
-- Capture public wrapper behavior snapshots before and after migration.
-- Capture feature-delta snapshots for the resource family.
 
 Acceptance:
 
+- Each resource family satisfies the Native Migration Contract.
 - Resource lifetimes remain safe and deterministic.
 - Runtime certification rows are updated with executable evidence before stable
   support claims.
-- Public stdlib behavior remains stable.
 - Resource cleanup behavior is deterministic under success, error, early return,
   cancellation, double-close, drop-at-shutdown, and process shutdown paths where
   relevant.
@@ -620,27 +617,26 @@ Tasks:
 - Delete migrated intrinsic registry files and generated preamble modules.
 - Keep only language-owned generated glue: entrypoints, generated error
   wrappers, Sifr task/control-flow glue, cancellation/timeouts where tied to
-  language semantics, and unavoidable compatibility glue.
+  language semantics, and retained compiler-language glue.
 - Update maintainability guardrails so stdlib native behavior cannot drift back
   into monolithic codegen registries.
 - Update architecture docs with final module ownership.
-- Replace ad hoc exceptions with
-  `internal_docs/stdlib_native_surface_ownership.toml` entries for any
-  intentionally retained compiler-owned, unsupported, or future-owned native
-  surfaces.
+- Delete `internal_docs/stdlib_native_surface_ownership.toml` or reduce it to a
+  tiny retained compiler-language-glue allowlist.
 - Add a guardrail that fails when new stdlib-native behavior is added to
-  compiler intrinsics without a matching registry entry.
+  compiler intrinsics without a matching retained-allowlist entry.
 
 Acceptance:
 
 - `crates/sifr_codegen/src/intrinsics/registry` is deleted or reduced to a tiny
-  compatibility shim with explicit owners.
+  retained compiler-language-glue allowlist.
 - `crates/sifr_codegen/src/preamble` contains only language/runtime glue that
   cannot live in sysroot crates.
 - Guardrails prevent reintroducing compiler-special stdlib native leaves without
   review.
 - Architecture docs and code ownership agree on every remaining native surface.
-- The native-surface ownership registry is complete and mechanically checked.
+- The migration ownership registry no longer exists as a broad second source of
+  truth.
 
 Validation:
 
@@ -658,7 +654,8 @@ Tasks:
 - Build release-style artifacts for every supported target.
 - Install each artifact into a clean temporary home.
 - Run CLI smoke tests from outside the repository.
-- Run stdlib-heavy single-file and package fixtures without `SIFR_RUNTIME_PATH`.
+- Run stdlib-heavy single-file and package fixtures without any runtime-only
+  override environment variable.
 - Run stdlib-only fixtures with network disabled to prove sysroot vendor
   completeness.
 - Run LSP request fixtures against the installed sysroot.
@@ -671,8 +668,8 @@ Tasks:
 - Run `cargo metadata --offline` for generated stdlib-only projects.
 - Validate generated stdlib-only `Cargo.lock` behavior under offline/frozen
   installed-layout fixtures.
-- Capture `cargo tree -e features` snapshots for representative stdlib
-  programs.
+- Compare `SysrootDependencyPlan` feature expectations against
+  `cargo tree -e features` snapshots for representative stdlib programs.
 - Capture `sifr doctor` output snapshots for healthy and broken installs.
 - Update public/internal docs and roadmap status.
 
@@ -685,7 +682,8 @@ Acceptance:
 - No stable support claim exceeds Rust interop certification evidence.
 - Generated artifacts and release artifacts contain no source checkout or CI
   path leakage.
-- Feature trees for representative programs match expected minimal features.
+- Feature trees for representative programs match `SysrootDependencyPlan`
+  expected minimal features.
 
 Validation:
 
@@ -693,7 +691,8 @@ Validation:
 - `verification/areas/sysroot_release/check_no_path_leakage.py`
 - `cargo metadata --offline` for generated stdlib-only projects.
 - Generated stdlib-only `Cargo.lock` offline/frozen fixtures.
-- `cargo tree -e features` snapshots.
+- `SysrootDependencyPlan` expected-feature checks plus `cargo tree -e features`
+  snapshots.
 - `sifr doctor` healthy/broken install snapshots.
 - `scripts/run_all_tests.sh --profile create-pr`
 - `scripts/run_all_tests.sh`
@@ -715,14 +714,14 @@ Validation:
 - Preserve Sifr's no-user-triggerable-panic guarantee.
 - Keep generated sysroot crates free of development-workspace-only manifest
   assumptions.
-- Keep `internal_docs/stdlib_native_surface_ownership.toml` updated whenever
-  native stdlib ownership, certification, unsupported status, or deletion
-  milestones change.
+- Keep `internal_docs/stdlib_native_surface_ownership.toml` updated during
+  migration, then delete it or reduce it to the retained compiler-language-glue
+  allowlist in M12.
 - Treat sysroot source, crate, vendor, and Cargo config changes as one
   versioned toolchain unit.
 - Keep all generated diagnostics source-attributed to public stdlib wrappers or
   private declarations where appropriate.
-- Keep source-tree development mode behind the explicit
+- Keep development sysroot auto-resolution behind the explicit
   `is_source_tree_development_mode()` predicate.
 - Add and maintain mechanical path-leakage guardrails for release artifacts and
   generated artifacts.
@@ -733,7 +732,8 @@ Validation:
 ## Completion Criteria
 
 - Fresh Sifr install can compile and run stdlib-using programs without a source
-  checkout, `SIFR_RUNTIME_PATH`, or network access for Sifr-owned dependencies.
+  checkout, runtime-only override, or network access for Sifr-owned
+  dependencies.
 - CLI and LSP resolve stdlib information from the same installed sysroot.
 - Generated Cargo artifacts never contain CI/build-machine paths.
 - Sysroot crates compile outside the development workspace.
