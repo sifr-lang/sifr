@@ -10,3 +10,8 @@ def query_blocking(sql: str) -> list[str]: ...
 @cpu_heavy
 @rust(bridge.compress.deflate, panic=trusted_no_panic)
 def deflate(input: bytes) -> bytes: ...
+
+def verify_classified_sync_rust_effects() -> list[str]:
+    query_blocking_result: list[str] = query_blocking("select 1")
+    deflate_result: bytes = deflate(b"sifr-rust-interop")
+    return query_blocking_result

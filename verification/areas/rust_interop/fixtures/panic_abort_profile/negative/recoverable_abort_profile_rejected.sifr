@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-PANIC-0001
 @rust(bridge.legacy.run, panic=abort)
 def run_legacy_without_trust() -> uint32: ...
+
+def verify_recoverable_abort_profile_rejected() -> uint32:
+    run_legacy_without_trust_result: uint32 = run_legacy_without_trust()
+    return run_legacy_without_trust_result

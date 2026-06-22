@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-TRUST-0001
 @rust(bridge.generated.decode, panic=trusted_no_panic)
 def decode_without_proc_macro_trust(input: bytes) -> bytes: ...
+
+def verify_untrusted_proc_macro_rejected_pre_execution() -> bytes:
+    decode_without_proc_macro_trust_result: bytes = decode_without_proc_macro_trust(b"sifr-rust-interop")
+    return decode_without_proc_macro_trust_result

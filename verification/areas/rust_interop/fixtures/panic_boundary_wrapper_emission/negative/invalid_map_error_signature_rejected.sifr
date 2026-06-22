@@ -4,8 +4,12 @@
 # execution-kind: runtime-observed
 # expected-result: future-owned-diagnostic
 # expected-diagnostic: SIFR-RUST-PANIC-0001
+class PanicMapped(Error):
+    message: str
+
 @rust(bridge.wrapper.may_panic, panic=map_error(bridge.wrapper.invalid_mapper))
 def may_panic(input: str) -> Result[str, PanicMapped | RustPanicError]: ...
 
-class PanicMapped(Error):
-    message: str
+def verify_invalid_map_error_signature_rejected() -> Result[str, PanicMapped | RustPanicError]:
+    may_panic_result: Result[str, PanicMapped | RustPanicError] = may_panic("sifr-rust-interop")
+    return may_panic_result

@@ -6,3 +6,7 @@
 # fixture-cargo: --locked --offline --frozen
 @rust(bridge.locked.cached, panic=trusted_no_panic)
 def cached() -> uint32: ...
+
+def verify_locked_offline_cache_hit() -> uint32:
+    cached_result: uint32 = cached()
+    return cached_result

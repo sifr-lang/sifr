@@ -8,3 +8,7 @@ class HashError(Error):
 
 @rust(bridge.blake3.hash_bytes, panic=map_error(bridge.blake3.map_panic))
 def hash_bytes(input: bytes) -> Result[bytes, HashError | RustPanicError]: ...
+
+def verify_local_bridge_hash_bytes() -> Result[bytes, HashError | RustPanicError]:
+    hash_bytes_result: Result[bytes, HashError | RustPanicError] = hash_bytes(b"sifr-rust-interop")
+    return hash_bytes_result

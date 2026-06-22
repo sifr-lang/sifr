@@ -7,7 +7,8 @@ class PackageExampleError(Error):
     message: str
 
 @rust(indexmap.IndexMap.insert, panic=map_error(bridge.indexmap.map_panic))
-def indexmap_insert(key: str, value: i32) -> Result[i32, PackageExampleError | RustPanicError]: ...
+def indexmap_insert(key: str, value: int32) -> Result[int32, PackageExampleError | RustPanicError]: ...
 
-def verify_indexmap_package() -> Result[i32, PackageExampleError | RustPanicError]:
-    return indexmap_insert("answer", 42)
+def verify_indexmap_package() -> Result[int32, PackageExampleError | RustPanicError]:
+    sample_result: Result[int32, PackageExampleError | RustPanicError] = indexmap_insert("answer", 42)
+    return sample_result

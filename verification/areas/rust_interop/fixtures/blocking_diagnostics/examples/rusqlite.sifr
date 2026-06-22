@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class SqlRows:
-    pass
+    columns: list[str]
+    row_count: uint64
 
 @rust(rusqlite.Connection.open_in_memory, panic=map_error(bridge.rusqlite.map_panic))
 def rusqlite_memory(query: str) -> Result[SqlRows, PackageExampleError | RustPanicError]: ...
 
 def verify_rusqlite_package() -> Result[SqlRows, PackageExampleError | RustPanicError]:
-    return rusqlite_memory("select 1")
+    sample_result: Result[SqlRows, PackageExampleError | RustPanicError] = rusqlite_memory("select 1")
+    return sample_result

@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-TYPE-0001
 @rust(bridge.types.unsupported, panic=trusted_no_panic)
 def unsupported(value: dict[str, list[object]]) -> object: ...
+
+def verify_unsupported_container_rejections() -> object:
+    unsupported_result: object = unsupported({"captures": ["sifr"]})
+    return unsupported_result

@@ -7,7 +7,8 @@ class PackageExampleError(Error):
     message: str
 
 @rust(crc32fast.hash, panic=map_error(bridge.crc32fast.map_panic))
-def crc32fast_hash(input: bytes) -> Result[u32, PackageExampleError | RustPanicError]: ...
+def crc32fast_hash(input: bytes) -> Result[uint32, PackageExampleError | RustPanicError]: ...
 
-def verify_crc32fast_package() -> Result[u32, PackageExampleError | RustPanicError]:
-    return crc32fast_hash(b"sifr-rust-interop")
+def verify_crc32fast_package() -> Result[uint32, PackageExampleError | RustPanicError]:
+    sample_result: Result[uint32, PackageExampleError | RustPanicError] = crc32fast_hash(b"sifr-rust-interop")
+    return sample_result

@@ -29,7 +29,9 @@ Each directory under `fixtures/` is required to contain:
 
 The `matrix` suite validates this layout, verifies that fixture metadata
 matches `data/rust_interop_fixture_matrix.json`, and rejects empty README-only
-fixture directories. Package examples must be referenced from
+fixture directories. Positive and negative evidence files must include a
+`verify_<evidence-id>` function that calls every Rust-decorated binding in the
+file, including opaque-handle methods. Package examples must be referenced from
 `fixture.json.package_examples`, must use the exact `examples/<crate>.sifr`
 path, and must include a concrete `@rust(...)` declaration plus a
 `verify_<crate>_package` function that exercises that binding.

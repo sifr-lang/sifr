@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-TYPE-0001
 @rust(regex.Regex.captures, panic=trusted_no_panic)
 def captures(pattern: str, text: str) -> object: ...
+
+def verify_incompatible_direct_signatures() -> object:
+    captures_result: object = captures("^sifr", "sifr-rust")
+    return captures_result

@@ -7,7 +7,8 @@ class PackageExampleError(Error):
     message: str
 
 @rust(rayon.join, panic=map_error(bridge.rayon.map_panic))
-def rayon_join(left: i32, right: i32) -> Result[i32, PackageExampleError | RustPanicError]: ...
+def rayon_join(left: int32, right: int32) -> Result[int32, PackageExampleError | RustPanicError]: ...
 
-def verify_rayon_package() -> Result[i32, PackageExampleError | RustPanicError]:
-    return rayon_join(40, 2)
+def verify_rayon_package() -> Result[int32, PackageExampleError | RustPanicError]:
+    sample_result: Result[int32, PackageExampleError | RustPanicError] = rayon_join(40, 2)
+    return sample_result

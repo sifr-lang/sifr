@@ -4,6 +4,14 @@
 # execution-kind: contract-only
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-ZC-0001
+class DataFrame:
+    schema: str
+    row_count: uint64
+
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=tensor, dtype=f32, rank=2, shape=[2, 3], schema=bridge.data.Schema, ownership=borrowed)
 @rust(bridge.dataframe.view, panic=trusted_no_panic)
 def mismatched_metadata(input: bytes) -> DataFrame: ...
+
+def verify_dtype_shape_mismatch() -> DataFrame:
+    mismatched_metadata_result: DataFrame = mismatched_metadata(b"sifr-rust-interop")
+    return mismatched_metadata_result

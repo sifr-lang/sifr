@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def flate2_deflate(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 def verify_flate2_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    return flate2_deflate(b"sifr-rust-interop")
+    sample_result: Result[bytes, PackageExampleError | RustPanicError] = flate2_deflate(b"sifr-rust-interop")
+    return sample_result

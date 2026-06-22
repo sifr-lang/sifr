@@ -8,3 +8,7 @@
 class SharedResourceClient:
     @rust(bridge.resources.borrow_exclusive, panic=trusted_no_panic)
     def borrow_exclusive(self) -> bytes: ...
+
+def verify_invalid_resource_aliasing(resource: SharedResourceClient) -> bytes:
+    borrow_exclusive_result: bytes = resource.borrow_exclusive()
+    return borrow_exclusive_result

@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class BindgenBuilder:
-    pass
+    header: str
+    allowlist: list[str]
 
 @rust(bindgen.Builder.default, panic=map_error(bridge.bindgen.map_panic))
 def bindgen_builder(header: str) -> Result[BindgenBuilder, PackageExampleError | RustPanicError]: ...
 
 def verify_bindgen_package() -> Result[BindgenBuilder, PackageExampleError | RustPanicError]:
-    return bindgen_builder("wrapper.h")
+    sample_result: Result[BindgenBuilder, PackageExampleError | RustPanicError] = bindgen_builder("wrapper.h")
+    return sample_result

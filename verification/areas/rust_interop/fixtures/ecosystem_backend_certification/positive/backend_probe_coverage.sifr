@@ -8,3 +8,7 @@ class BackendError(Error):
 
 @rust(bridge.backend.route_probe, panic=map_error(bridge.backend.map_panic))
 async def route_probe(path: str) -> Result[str, BackendError | RustPanicError]: ...
+
+async def verify_backend_probe_coverage() -> Result[str, BackendError | RustPanicError]:
+    route_probe_result: Result[str, BackendError | RustPanicError] = await route_probe("/tmp/sifr-rust-interop.bin")
+    return route_probe_result

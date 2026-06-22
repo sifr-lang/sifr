@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class CppHandle:
-    pass
+    name: str
+    owned: bool
 
 @rust(cxx.UniquePtr.new, panic=map_error(bridge.cxx.map_panic))
 def cxx_unique_ptr(name: str) -> Result[CppHandle, PackageExampleError | RustPanicError]: ...
 
 def verify_cxx_package() -> Result[CppHandle, PackageExampleError | RustPanicError]:
-    return cxx_unique_ptr("sifr")
+    sample_result: Result[CppHandle, PackageExampleError | RustPanicError] = cxx_unique_ptr("sifr")
+    return sample_result

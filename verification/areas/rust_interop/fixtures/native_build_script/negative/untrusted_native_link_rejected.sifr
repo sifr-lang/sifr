@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-TRUST-0001
 @rust(bridge.native.compress, panic=trusted_no_panic)
 def compress_without_native_trust(input: bytes) -> bytes: ...
+
+def verify_untrusted_native_link_rejected() -> bytes:
+    compress_without_native_trust_result: bytes = compress_without_native_trust(b"sifr-rust-interop")
+    return compress_without_native_trust_result

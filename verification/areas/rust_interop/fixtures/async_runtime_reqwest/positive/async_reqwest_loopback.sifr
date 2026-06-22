@@ -8,3 +8,7 @@ class HttpError(Error):
 
 @rust(bridge.http.fetch_text, panic=map_error(bridge.http.map_panic))
 async def fetch_text(url: str) -> Result[str, HttpError | RustPanicError]: ...
+
+async def verify_async_reqwest_loopback() -> Result[str, HttpError | RustPanicError]:
+    fetch_text_result: Result[str, HttpError | RustPanicError] = await fetch_text("https://127.0.0.1/health")
+    return fetch_text_result

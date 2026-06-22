@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-RESOLVE-0001
 @rust(shared_bridge.generated_private_type, panic=trusted_no_panic)
 def imports_package_generated_type(input: bytes) -> bytes: ...
+
+def verify_package_generated_type_import_rejected() -> bytes:
+    imports_package_generated_type_result: bytes = imports_package_generated_type(b"sifr-rust-interop")
+    return imports_package_generated_type_result

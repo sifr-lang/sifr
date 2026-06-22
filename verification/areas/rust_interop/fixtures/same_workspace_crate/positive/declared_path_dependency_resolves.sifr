@@ -5,3 +5,7 @@
 # expected-result: pass
 @rust(workspace_hash.hash, panic=trusted_no_panic)
 def workspace_hash(input: bytes) -> uint64: ...
+
+def verify_declared_path_dependency_resolves() -> uint64:
+    workspace_hash_result: uint64 = workspace_hash(b"sifr-rust-interop")
+    return workspace_hash_result

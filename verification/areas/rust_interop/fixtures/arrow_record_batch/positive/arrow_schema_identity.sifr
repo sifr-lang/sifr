@@ -6,7 +6,15 @@
 class ArrowError(Error):
     message: str
 
+class ArrowRecordBatch:
+    schema: str
+    row_count: uint64
+
 @rust.zero_copy(owner=input, view=sifr_arrow_bridge.record_batch.RecordBatchView)
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=arrow_record_batch, schema=sifr_arrow_bridge.schema.RecordBatch, ownership=borrowed)
 @rust(sifr_arrow_bridge.record_batch_from_bytes, panic=map_error(sifr_arrow_bridge.panic.map))
 def record_batch(input: bytes) -> Result[ArrowRecordBatch, ArrowError | RustPanicError]: ...
+
+def verify_arrow_schema_identity() -> Result[ArrowRecordBatch, ArrowError | RustPanicError]:
+    record_batch_result: Result[ArrowRecordBatch, ArrowError | RustPanicError] = record_batch(b"sifr-rust-interop")
+    return record_batch_result

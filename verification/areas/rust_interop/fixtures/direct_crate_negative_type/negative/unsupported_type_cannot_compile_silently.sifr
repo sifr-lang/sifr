@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-TYPE-0001
 @rust(regex.Regex.captures, panic=trusted_no_panic)
 def captures_without_bridge(pattern: str, text: str) -> object: ...
+
+def verify_unsupported_type_cannot_compile_silently() -> object:
+    captures_without_bridge_result: object = captures_without_bridge("^sifr", "sifr-rust")
+    return captures_without_bridge_result

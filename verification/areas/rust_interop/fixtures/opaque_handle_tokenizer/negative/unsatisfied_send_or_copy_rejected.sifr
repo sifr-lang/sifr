@@ -8,3 +8,11 @@
 class Tokenizer:
     @rust(Self.encode, panic=trusted_no_panic)
     def encode(self, text: str) -> bytes: ...
+
+    @rust(bridge.tokenizer.close, panic=trusted_no_panic)
+    def close(own self) -> None: ...
+
+def verify_unsatisfied_send_or_copy_rejected(resource: Tokenizer) -> bytes:
+    encode_result: bytes = resource.encode("sifr-rust")
+    resource.close()
+    return encode_result

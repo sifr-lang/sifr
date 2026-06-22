@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-TYPE-0001
 @rust(regex.Regex.captures, panic=trusted_no_panic)
 def captures(pattern: str, text: str) -> dict[str, object]: ...
+
+def verify_unsupported_type_rejected() -> dict[str, object]:
+    captures_result: dict[str, object] = captures("^sifr", "sifr-rust")
+    return captures_result

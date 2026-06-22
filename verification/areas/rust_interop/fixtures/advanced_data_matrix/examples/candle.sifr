@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class Tensor:
-    pass
+    shape: list[uint64]
+    dtype: str
 
 @rust(candle.Tensor.from_vec, panic=map_error(bridge.candle.map_panic))
-def candle_tensor_from_vec(input: list[f32]) -> Result[Tensor, PackageExampleError | RustPanicError]: ...
+def candle_tensor_from_vec(input: list[float]) -> Result[Tensor, PackageExampleError | RustPanicError]: ...
 
 def verify_candle_package() -> Result[Tensor, PackageExampleError | RustPanicError]:
-    return candle_tensor_from_vec([1.0, 2.0, 3.0, 4.0])
+    sample_result: Result[Tensor, PackageExampleError | RustPanicError] = candle_tensor_from_vec([1.0, 2.0, 3.0, 4.0])
+    return sample_result

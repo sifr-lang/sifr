@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class TaskHandle:
-    pass
+    task_id: uint64
+    runtime: str
 
 @rust(tokio.spawn, panic=map_error(bridge.tokio.map_panic))
-def tokio_spawn(delay_ms: u64) -> Result[TaskHandle, PackageExampleError | RustPanicError]: ...
+async def tokio_spawn(delay_ms: uint64) -> Result[TaskHandle, PackageExampleError | RustPanicError]: ...
 
-def verify_tokio_package() -> Result[TaskHandle, PackageExampleError | RustPanicError]:
-    return tokio_spawn(1)
+async def verify_tokio_package() -> Result[TaskHandle, PackageExampleError | RustPanicError]:
+    sample_result: Result[TaskHandle, PackageExampleError | RustPanicError] = await tokio_spawn(1)
+    return sample_result

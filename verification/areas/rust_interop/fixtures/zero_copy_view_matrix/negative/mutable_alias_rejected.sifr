@@ -7,3 +7,7 @@
 @rust.view(owner=input, lifetime=owner, mutability=mutable, send=True, sync=True)
 @rust(bridge.views.mutable_from_shared, panic=trusted_no_panic)
 def mutable_from_shared(input: bytes) -> bytes: ...
+
+def verify_mutable_alias_rejected() -> bytes:
+    mutable_from_shared_result: bytes = mutable_from_shared(b"sifr-rust-interop")
+    return mutable_from_shared_result

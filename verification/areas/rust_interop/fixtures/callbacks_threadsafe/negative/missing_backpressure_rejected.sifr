@@ -7,3 +7,10 @@
 @rust.callback(overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe, panic=trusted_no_panic)
 def subscribe(handler: ThreadsafeCallback[[str], None]) -> None: ...
+
+def sample_event_callback(event: str) -> None:
+    return None
+
+def verify_missing_backpressure_rejected() -> None:
+    subscribe(sample_event_callback)
+    return None

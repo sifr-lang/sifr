@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class CliCommand:
-    pass
+    name: str
+    argument_count: uint64
 
 @rust(clap.Command.new, panic=map_error(bridge.clap.map_panic))
 def clap_command(name: str) -> Result[CliCommand, PackageExampleError | RustPanicError]: ...
 
 def verify_clap_package() -> Result[CliCommand, PackageExampleError | RustPanicError]:
-    return clap_command("sifr")
+    sample_result: Result[CliCommand, PackageExampleError | RustPanicError] = clap_command("sifr")
+    return sample_result

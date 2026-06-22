@@ -7,3 +7,7 @@
 @rust.zero_copy(owner=input, view=bridge.bytes.BytesView)
 @rust(bridge.bytes.copies_anyway, panic=trusted_no_panic)
 def copies_anyway(input: bytes) -> bytes: ...
+
+def verify_copy_fallback_rejected() -> bytes:
+    copies_anyway_result: bytes = copies_anyway(b"sifr-rust-interop")
+    return copies_anyway_result

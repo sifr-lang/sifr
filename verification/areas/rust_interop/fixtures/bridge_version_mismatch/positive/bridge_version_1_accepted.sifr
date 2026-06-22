@@ -6,3 +6,7 @@
 # fixture-cargo: rust.bridge-version = 1
 @rust(bridge.version.accepted, panic=trusted_no_panic)
 def accepted() -> uint32: ...
+
+def verify_bridge_version_1_accepted() -> uint32:
+    accepted_result: uint32 = accepted()
+    return accepted_result

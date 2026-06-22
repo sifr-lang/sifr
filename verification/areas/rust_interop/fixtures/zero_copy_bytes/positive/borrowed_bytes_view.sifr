@@ -7,3 +7,7 @@
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True)
 @rust(bridge.bytes.borrowed_view, panic=trusted_no_panic)
 def borrowed_view(input: bytes) -> bytes: ...
+
+def verify_borrowed_bytes_view() -> bytes:
+    borrowed_view_result: bytes = borrowed_view(b"sifr-rust-interop")
+    return borrowed_view_result

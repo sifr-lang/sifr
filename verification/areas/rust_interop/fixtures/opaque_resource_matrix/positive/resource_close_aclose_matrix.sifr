@@ -10,3 +10,7 @@ class ResourceError(Error):
 class ResourceClient:
     @rust(bridge.resources.aclose, panic=map_error(bridge.resources.map_panic))
     async def aclose(own self) -> Result[None, ResourceError | RustPanicError]: ...
+
+async def verify_resource_close_aclose_matrix(resource: ResourceClient) -> Result[None, ResourceError | RustPanicError]:
+    aclose_result: Result[None, ResourceError | RustPanicError] = await resource.aclose()
+    return aclose_result

@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class BuildPlan:
-    pass
+    source: str
+    object: str
 
 @rust(cc.Build.new, panic=map_error(bridge.cc.map_panic))
 def cc_build_new(source: str) -> Result[BuildPlan, PackageExampleError | RustPanicError]: ...
 
 def verify_cc_package() -> Result[BuildPlan, PackageExampleError | RustPanicError]:
-    return cc_build_new("src/native.c")
+    sample_result: Result[BuildPlan, PackageExampleError | RustPanicError] = cc_build_new("src/native.c")
+    return sample_result

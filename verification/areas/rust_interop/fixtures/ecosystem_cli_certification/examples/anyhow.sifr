@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def anyhow_context(message: str) -> Result[str, PackageExampleError | RustPanicError]: ...
 
 def verify_anyhow_package() -> Result[str, PackageExampleError | RustPanicError]:
-    return anyhow_context("sifr error context")
+    sample_result: Result[str, PackageExampleError | RustPanicError] = anyhow_context("sifr error context")
+    return sample_result

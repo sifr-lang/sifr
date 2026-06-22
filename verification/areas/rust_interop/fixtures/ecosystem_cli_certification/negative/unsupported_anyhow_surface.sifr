@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-TYPE-0001
 @rust(anyhow.Error.downcast_ref, panic=trusted_no_panic)
 def expose_anyhow_trait_object(error: object) -> object: ...
+
+def verify_unsupported_anyhow_surface() -> object:
+    expose_anyhow_trait_object_result: object = expose_anyhow_trait_object("sifr-rust-interop")
+    return expose_anyhow_trait_object_result

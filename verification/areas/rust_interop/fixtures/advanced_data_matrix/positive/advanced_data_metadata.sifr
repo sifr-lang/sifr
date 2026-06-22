@@ -6,6 +6,14 @@
 class DataError(Error):
     message: str
 
+class DataFrame:
+    schema: str
+    row_count: uint64
+
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=dataframe, schema=bridge.data.Schema, ownership=borrowed)
 @rust(bridge.dataframe.view, panic=map_error(bridge.dataframe.map_panic))
 def dataframe_view(input: bytes) -> Result[DataFrame, DataError | RustPanicError]: ...
+
+def verify_advanced_data_metadata() -> Result[DataFrame, DataError | RustPanicError]:
+    dataframe_view_result: Result[DataFrame, DataError | RustPanicError] = dataframe_view(b"sifr-rust-interop")
+    return dataframe_view_result

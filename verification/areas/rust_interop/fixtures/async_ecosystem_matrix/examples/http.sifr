@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class HttpRequest:
-    pass
+    method: str
+    uri: str
 
 @rust(http.Request.builder, panic=map_error(bridge.http.map_panic))
 def http_request_builder(url: str) -> Result[HttpRequest, PackageExampleError | RustPanicError]: ...
 
 def verify_http_package() -> Result[HttpRequest, PackageExampleError | RustPanicError]:
-    return http_request_builder("https://127.0.0.1/health")
+    sample_result: Result[HttpRequest, PackageExampleError | RustPanicError] = http_request_builder("https://127.0.0.1/health")
+    return sample_result

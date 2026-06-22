@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-ASYNC-0001
 @rust(bridge.http.hidden_block_on, panic=trusted_no_panic)
 async def hidden_block_on(url: str) -> str: ...
+
+async def verify_hidden_block_on_rejected() -> str:
+    hidden_block_on_result: str = await hidden_block_on("https://127.0.0.1/health")
+    return hidden_block_on_result
