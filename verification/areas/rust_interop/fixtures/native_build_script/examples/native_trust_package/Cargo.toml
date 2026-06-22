@@ -1,0 +1,17 @@
+[workspace]
+members = ["rust/cc", "rust/bindgen", "rust/cxx", "rust/zstd"]
+resolver = "2"
+
+[package]
+name = "native-trust-package"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cc = { path = "rust/cc" }
+bindgen = { path = "rust/bindgen" }
+cxx = { path = "rust/cxx" }
+zstd = { path = "rust/zstd" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

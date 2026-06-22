@@ -1,0 +1,17 @@
+# fixture: bridge_version_mismatch
+# scenario-example: bridge_version_package
+
+[package]
+name = "bridge-version-package"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+direct-crate-bindings = true
+
+[trust]
+rust-no-panic = ["version_bridge.accepted", "version_bridge.schema"]

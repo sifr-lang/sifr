@@ -1,0 +1,16 @@
+[workspace]
+members = [
+  "rust/sifr_shared_hash_bridge",
+]
+resolver = "2"
+
+[package]
+name = "shared-hash-consumer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sifr_shared_hash_bridge = { path = "rust/sifr_shared_hash_bridge" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

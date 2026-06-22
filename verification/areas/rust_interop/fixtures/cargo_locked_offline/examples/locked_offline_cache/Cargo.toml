@@ -1,0 +1,16 @@
+[workspace]
+members = [
+  "rust/locked_bridge",
+]
+resolver = "2"
+
+[package]
+name = "locked-offline-cache"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+locked_bridge = { path = "rust/locked_bridge", features = ["stable"] }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

@@ -1,0 +1,18 @@
+# fixture: ecosystem_cli_certification
+# scenario-example: cli_feature_package
+
+[package]
+name = "cli-feature-package"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true
+
+[trust]
+unsafe-rust-bridges = ["src/bridges/cli.rs"]

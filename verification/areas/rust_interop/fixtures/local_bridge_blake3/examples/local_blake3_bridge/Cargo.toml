@@ -1,0 +1,16 @@
+[workspace]
+members = [
+  "rust/blake3_backend",
+]
+resolver = "2"
+
+[package]
+name = "local-blake3-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+blake3 = { path = "rust/blake3_backend" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

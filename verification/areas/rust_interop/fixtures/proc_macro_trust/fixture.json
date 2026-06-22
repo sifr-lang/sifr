@@ -31,6 +31,9 @@
     "serde_derive",
     "prost-build"
   ],
+  "scenario_examples": {
+    "proc_macro_trust_package": "examples/proc_macro_trust_package"
+  },
   "schema_version": 1,
   "tier": 3
 }

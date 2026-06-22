@@ -1,0 +1,19 @@
+[workspace]
+members = [
+  "rust/legacy_backend",
+]
+resolver = "2"
+
+[package]
+name = "abort-profile-package"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+panic = "abort"
+
+[dependencies]
+legacy_backend = { path = "rust/legacy_backend" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

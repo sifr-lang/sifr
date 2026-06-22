@@ -1,0 +1,14 @@
+# fixture: ecosystem_cli_certification
+# scenario-example: cli_feature_package
+# execution-kind: cargo-probe
+# expected-result: scenario-example
+
+class CliError(Error):
+    message: str
+
+@rust(bridge.cli.parse_and_trace, panic=map_error(bridge.cli.map_panic))
+def parse_and_trace(args: list[str]) -> Result[uint32, CliError | RustPanicError]: ...
+
+def verify_cli_feature_package() -> Result[uint32, CliError | RustPanicError]:
+    parsed_result: Result[uint32, CliError | RustPanicError] = parse_and_trace(["sifr", "--version"])
+    return parsed_result

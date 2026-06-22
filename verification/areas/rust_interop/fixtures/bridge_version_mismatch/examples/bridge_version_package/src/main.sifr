@@ -1,0 +1,16 @@
+# fixture: bridge_version_mismatch
+# scenario-example: bridge_version_package
+# execution-kind: compiler-diagnostic
+# expected-result: scenario-example
+
+@rust(version_bridge.accepted, panic=trusted_no_panic)
+def accepted() -> uint32: ...
+
+@rust(version_bridge.schema, panic=trusted_no_panic)
+def schema() -> uint32: ...
+
+def verify_bridge_version_package() -> uint32:
+    accepted_result: uint32 = accepted()
+    schema_result: uint32 = schema()
+    verified_result: uint32 = accepted_result + schema_result
+    return verified_result

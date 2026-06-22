@@ -38,6 +38,9 @@
     "tower-http",
     "sqlx"
   ],
+  "scenario_examples": {
+    "backend_feature_package": "examples/backend_feature_package"
+  },
   "schema_version": 1,
   "tier": 4
 }

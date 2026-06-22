@@ -1,0 +1,16 @@
+# fixture: panic_abort_profile
+# scenario-example: abort_profile_package
+# execution-kind: contract-only
+# expected-result: scenario-example
+
+@rust(legacy_backend.run, panic=abort)
+def run_legacy() -> uint32: ...
+
+@rust(legacy_backend.run_checked, panic=abort)
+def run_legacy_checked(seed: uint32) -> uint32: ...
+
+def verify_abort_profile_package() -> uint32:
+    run_result: uint32 = run_legacy()
+    checked_result: uint32 = run_legacy_checked(41)
+    verified_result: uint32 = run_result + checked_result
+    return verified_result

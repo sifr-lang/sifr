@@ -1,0 +1,20 @@
+# fixture: native_build_script
+# scenario-example: native_trust_package
+
+[package]
+name = "native-trust-package"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true
+
+[trust]
+rust-build-scripts = ["cc", "bindgen", "cxx", "zstd"]
+native-links = ["zstd"]
+unsafe-rust-bridges = ["src/bridges/native.rs"]

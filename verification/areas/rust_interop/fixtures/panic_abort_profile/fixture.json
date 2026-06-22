@@ -20,6 +20,9 @@
   "features": {},
   "id": "panic_abort_profile",
   "required_crates": [],
+  "scenario_examples": {
+    "abort_profile_package": "examples/abort_profile_package"
+  },
   "schema_version": 1,
   "tier": 2
 }

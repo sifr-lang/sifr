@@ -25,6 +25,9 @@
   "required_crates": [
     "blake3"
   ],
+  "scenario_examples": {
+    "local_blake3_bridge": "examples/local_blake3_bridge"
+  },
   "schema_version": 1,
   "tier": 1
 }

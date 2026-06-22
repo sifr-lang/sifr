@@ -1,0 +1,11 @@
+[package]
+name = "tracing-subscriber"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+env-filter = []
+
+[lib]
+path = "src/lib.rs"
