@@ -1,0 +1,14 @@
+# fixture: native_build_script
+# scenario-example: native_trust_package
+# execution-kind: cargo-probe
+# expected-result: scenario-example
+
+class NativeError(Error):
+    message: str
+
+@rust(bridge.native.compress, panic=map_error(bridge.native.map_panic))
+def compress(input: bytes) -> Result[bytes, NativeError | RustPanicError]: ...
+
+def verify_native_trust_package() -> Result[bytes, NativeError | RustPanicError]:
+    compressed_result: Result[bytes, NativeError | RustPanicError] = compress(b"sifr-rust-interop")
+    return compressed_result

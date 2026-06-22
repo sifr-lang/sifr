@@ -7,6 +7,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_body
+from _binding_helpers import decorated_function_name as _decorated_function_name
+from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
+from _binding_helpers import verifier_binds_call as _verifier_binds_call
+from _scenario_checks import validate_scenario_examples
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AREA_ROOT = REPO_ROOT / "verification" / "areas" / "rust_interop"
 MATRIX_PATH = AREA_ROOT / "data" / "rust_interop_fixture_matrix.json"
@@ -124,7 +130,6 @@ EXPECTED_FEATURE_POLICIES = {
     "tracing-subscriber": {"features": ["env-filter"]},
 }
 
-
 def main() -> int:
     matrix = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
     failures: list[str] = []
@@ -169,6 +174,7 @@ def main() -> int:
 
     covered_crates: set[str] = set()
     package_example_count = 0
+    scenario_example_count = 0
     for fixture in fixtures:
         if not isinstance(fixture, dict):
             failures.append("fixture entries must be objects")
@@ -189,7 +195,9 @@ def main() -> int:
         _validate_feature_policies(failures, fixture_id, fixture.get("features"), crates)
         _validate_evidence(failures, fixture_id, fixture.get("positive_evidence"), "positive_evidence")
         _validate_evidence(failures, fixture_id, fixture.get("negative_evidence"), "negative_evidence")
-        package_example_count += _validate_fixture_files(failures, fixture, crates)
+        package_count, scenario_count = _validate_fixture_files(failures, fixture, crates)
+        package_example_count += package_count
+        scenario_example_count += scenario_count
 
     failures.extend(f"required crate lacks fixture coverage: {crate}" for crate in sorted(REQUIRED_CRATES - covered_crates))
 
@@ -200,7 +208,8 @@ def main() -> int:
     print(
         "rust interop fixture matrix ok: "
         f"fixtures={len(fixture_id_set)} diagnostics={len(diagnostics)} "
-        f"crates={len(covered_crates)} package_examples={package_example_count}"
+        f"crates={len(covered_crates)} package_examples={package_example_count} "
+        f"scenario_examples={scenario_example_count}"
     )
     return 0
 
@@ -240,20 +249,20 @@ def _validate_feature_policies(
             )
 
 
-def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates: list[Any]) -> int:
+def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates: list[Any]) -> tuple[int, int]:
     fixture_id = str(fixture.get("id"))
     fixture_dir = FIXTURES_ROOT / fixture_id
     manifest_path = fixture_dir / "fixture.json"
     if not manifest_path.is_file():
-        return 0
+        return 0, 0
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
         failures.append(f"{fixture_id}: fixture.json is not valid JSON: {error}")
-        return 0
+        return 0, 0
     if not isinstance(manifest, dict):
         failures.append(f"{fixture_id}: fixture.json must be an object")
-        return 0
+        return 0, 0
 
     for field in ("id", "capability", "tier", "execution_kind", "required_crates"):
         if manifest.get(field) != fixture.get(field):
@@ -268,7 +277,7 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
     evidence = manifest.get("evidence")
     if not isinstance(evidence, dict):
         failures.append(f"{fixture_id}: fixture.json evidence must be an object")
-        return 0
+        return 0, 0
     _validate_fixture_evidence_file(
         failures,
         fixture_id,
@@ -287,7 +296,7 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
         fixture.get("execution_kind"),
         "negative",
     )
-    return _validate_package_examples(
+    package_count = _validate_package_examples(
         failures,
         fixture_id,
         fixture_dir,
@@ -295,6 +304,13 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
         crates,
         fixture.get("execution_kind"),
     )
+    scenario_count = validate_scenario_examples(
+        failures,
+        fixture_id,
+        fixture_dir,
+        manifest.get("scenario_examples"),
+    )
+    return package_count, scenario_count
 
 
 def _validate_package_examples(
@@ -408,40 +424,6 @@ def _rust_bound_function_names(text: str, crate_token: str) -> list[str]:
                 names.append(name)
             break
     return names
-
-
-def _verifier_binds_call(verifier_body: str, bound_function: str) -> bool:
-    for line in verifier_body.splitlines():
-        for before_call in _bound_call_prefixes(line, bound_function):
-            if "=" in before_call and not before_call.lstrip().startswith("return "):
-                return True
-    return False
-
-
-def _bound_call_prefixes(line: str, bound_function: str) -> list[str]:
-    prefixes: list[str] = []
-    marker = f"{bound_function}("
-    start = 0
-    while True:
-        index = line.find(marker, start)
-        if index < 0:
-            break
-        if index == 0 or not _is_identifier_or_path_char(line[index - 1]):
-            prefixes.append(line[:index])
-        start = index + len(marker)
-    method_marker = f".{bound_function}("
-    start = 0
-    while True:
-        index = line.find(method_marker, start)
-        if index < 0:
-            break
-        prefixes.append(line[: index + 1])
-        start = index + len(method_marker)
-    return prefixes
-
-
-def _is_identifier_or_path_char(char: str) -> bool:
-    return char.isalnum() or char in {"_", "."}
 
 
 def _has_crate_token_boundary(text: str, index: int) -> bool:
@@ -564,53 +546,6 @@ def _validate_evidence_example_text(
             failures.append(f"{fixture_id}: {raw_path} verifier must call {name}")
         if return_type != "None" and not _verifier_binds_call(verifier_body, name):
             failures.append(f"{fixture_id}: {raw_path} verifier must bind {name} result before returning")
-
-
-def _rust_bound_declaration_names(text: str) -> list[str]:
-    return [name for name, _return_type in _rust_bound_declarations(text)]
-
-
-def _rust_bound_declarations(text: str) -> list[tuple[str, str]]:
-    names: list[str] = []
-    declarations: list[tuple[str, str]] = []
-    decorators: list[str] = []
-    for line in text.splitlines():
-        stripped = line.lstrip()
-        if stripped.startswith("@"):
-            decorators.append(stripped)
-            continue
-        if _is_rust_decorated_binding(stripped, decorators):
-            name = _decorated_function_name(stripped)
-            if name is not None and name not in names:
-                names.append(name)
-                declarations.append((name, _decorated_function_return_type(stripped)))
-        if stripped and not stripped.startswith("@"):
-            decorators = []
-    return declarations
-
-
-def _is_rust_decorated_binding(stripped: str, decorators: list[str]) -> bool:
-    return (
-        any(decorator.startswith("@rust") for decorator in decorators)
-        and (stripped.startswith("def ") or stripped.startswith("async def "))
-        and stripped.endswith(": ...")
-    )
-
-
-def _decorated_function_name(stripped: str) -> str | None:
-    if stripped.startswith("async def "):
-        stripped = stripped.removeprefix("async ")
-    if not stripped.startswith("def "):
-        return None
-    return stripped.removeprefix("def ").split("(", maxsplit=1)[0].strip()
-
-
-def _decorated_function_return_type(stripped: str) -> str:
-    return stripped.split("->", maxsplit=1)[1].rsplit(":", maxsplit=1)[0].strip()
-
-
-def _contains_empty_pass_body(text: str) -> bool:
-    return any(line.strip() == "pass" for line in text.splitlines())
 
 
 if __name__ == "__main__":

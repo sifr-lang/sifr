@@ -1,0 +1,405 @@
+"""Scenario-package validation for the Rust interop fixture matrix."""
+
+from __future__ import annotations
+
+import tomllib
+from pathlib import Path
+from typing import Any
+
+from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_body
+from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
+from _binding_helpers import verifier_binds_call as _verifier_binds_call
+
+REQUIRED_SCENARIO_EXAMPLES = {
+    "bridge_version_mismatch": {
+        "bridge_version_package": {
+            "tokens": ("bridge-version = 1", "version_bridge"),
+        },
+    },
+    "cargo_locked_offline": {
+        "locked_offline_cache": {
+            "tokens": ("locked_bridge", "Cargo.lock", "--locked", "--offline", "--frozen"),
+        },
+    },
+    "local_bridge_blake3": {
+        "local_blake3_bridge": {
+            "tokens": ("bridge.blake3.hash_bytes", "src/bridges", "blake3"),
+        },
+    },
+    "panic_abort_profile": {
+        "abort_profile_package": {
+            "tokens": ("rust-panic-abort", "panic = \"abort\"", "legacy_backend"),
+        },
+    },
+    "proc_macro_trust": {
+        "proc_macro_trust_package": {
+            "tokens": ("rust-proc-macros", "rust-build-scripts", "serde_derive", "prost-build"),
+        },
+    },
+    "same_workspace_crate": {
+        "workspace_hash_crate": {
+            "tokens": ("workspace_hash", "path = \"rust/workspace_hash\"", "members = ["),
+        },
+    },
+    "shared_bridge_crate": {
+        "shared_hash_bridge": {
+            "tokens": ("sifr_shared_hash_bridge", "SharedDigest", "crate::__sifr_bridge"),
+        },
+    },
+    "native_build_script": {
+        "native_trust_package": {
+            "tokens": ("rust-build-scripts", "native-links", "zstd", "bindgen", "cxx"),
+        },
+    },
+    "ecosystem_backend_certification": {
+        "backend_feature_package": {
+            "tokens": ("runtime-tokio-rustls", "postgres", "macros", "tower-http"),
+        },
+    },
+    "ecosystem_cli_certification": {
+        "cli_feature_package": {
+            "tokens": ("env-filter", "tracing-subscriber", "clap"),
+        },
+    },
+}
+
+
+def validate_scenario_examples(
+    failures: list[str],
+    fixture_id: str,
+    fixture_dir: Path,
+    raw_examples: Any,
+) -> int:
+    expected = REQUIRED_SCENARIO_EXAMPLES.get(fixture_id, {})
+    if not expected:
+        if raw_examples not in ({}, None):
+            failures.append(f"{fixture_id}: scenario_examples are not expected for this fixture")
+        return 0
+    if not isinstance(raw_examples, dict):
+        failures.append(f"{fixture_id}: fixture.json scenario_examples must cover every required scenario")
+        return 0
+
+    actual_examples = {str(example) for example in raw_examples}
+    for example in sorted(set(expected) - actual_examples):
+        failures.append(f"{fixture_id}: missing scenario example {example}")
+    for example in sorted(actual_examples - set(expected)):
+        failures.append(f"{fixture_id}: unexpected scenario example {example}")
+
+    valid_examples = 0
+    for example in sorted(set(expected) & actual_examples):
+        raw_path = raw_examples.get(example)
+        if not isinstance(raw_path, str) or not raw_path:
+            failures.append(f"{fixture_id}: scenario_examples.{example} path is required")
+            continue
+        raw_example_path = Path(raw_path)
+        expected_path = Path("examples") / example
+        if raw_example_path.is_absolute() or ".." in raw_example_path.parts:
+            failures.append(f"{fixture_id}: scenario_examples.{example} must stay inside the fixture directory")
+            continue
+        if raw_example_path != expected_path:
+            failures.append(f"{fixture_id}: scenario_examples.{example} must be {expected_path.as_posix()}")
+            continue
+
+        example_dir = fixture_dir / raw_example_path
+        if not example_dir.is_dir():
+            failures.append(f"{fixture_id}: missing scenario example directory {raw_path}")
+            continue
+        _validate_scenario_example_dir(
+            failures,
+            fixture_id,
+            example,
+            raw_path,
+            example_dir,
+            tuple(str(token) for token in expected[example].get("tokens", ())),
+        )
+        valid_examples += 1
+    return valid_examples
+
+
+def _validate_scenario_example_dir(
+    failures: list[str],
+    fixture_id: str,
+    example: str,
+    raw_path: str,
+    example_dir: Path,
+    required_tokens: tuple[str, ...],
+) -> None:
+    readme_path = example_dir / "README.md"
+    sifr_config_path = example_dir / "sifr.toml"
+    cargo_manifest_path = example_dir / "Cargo.toml"
+    if not readme_path.is_file():
+        failures.append(f"{fixture_id}: {raw_path}/README.md is required")
+    if not sifr_config_path.is_file():
+        failures.append(f"{fixture_id}: {raw_path}/sifr.toml is required")
+    if not cargo_manifest_path.is_file():
+        failures.append(f"{fixture_id}: {raw_path}/Cargo.toml is required")
+
+    sifr_sources = sorted(example_dir.rglob("*.sifr"))
+    cargo_manifests = sorted(example_dir.rglob("Cargo.toml"))
+    rust_sources = sorted(example_dir.rglob("*.rs"))
+    if not sifr_sources:
+        failures.append(f"{fixture_id}: {raw_path} must include a Sifr source file")
+    if not cargo_manifests:
+        failures.append(f"{fixture_id}: {raw_path} must include a Cargo.toml")
+    if not rust_sources:
+        failures.append(f"{fixture_id}: {raw_path} must include Rust source")
+
+    _validate_scenario_manifests(failures, fixture_id, raw_path, example_dir)
+    combined_text = _read_scenario_text(readme_path, sifr_config_path, sifr_sources, cargo_manifests, rust_sources)
+    for header in (f"# fixture: {fixture_id}", f"# scenario-example: {example}"):
+        if header not in combined_text:
+            failures.append(f"{fixture_id}: {raw_path} missing header {header!r}")
+    for token in required_tokens:
+        if token not in combined_text:
+            failures.append(f"{fixture_id}: {raw_path} missing scenario token {token!r}")
+    if fixture_id == "shared_bridge_crate":
+        _reject_generated_bridge_imports(failures, fixture_id, raw_path, rust_sources)
+    for source in sifr_sources:
+        text = source.read_text(encoding="utf-8")
+        raw_source_path = source.relative_to(example_dir).as_posix()
+        _validate_scenario_sifr_source(failures, fixture_id, example, f"{raw_path}/{raw_source_path}", text)
+
+
+def _read_scenario_text(
+    readme_path: Path,
+    sifr_config_path: Path,
+    sifr_sources: list[Path],
+    cargo_manifests: list[Path],
+    rust_sources: list[Path],
+) -> str:
+    paths = [readme_path, sifr_config_path, *sifr_sources, *cargo_manifests, *rust_sources]
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths if path.is_file())
+
+
+def _validate_scenario_sifr_source(
+    failures: list[str],
+    fixture_id: str,
+    example: str,
+    raw_path: str,
+    text: str,
+) -> None:
+    if len(text.strip().splitlines()) < 10:
+        failures.append(f"{fixture_id}: {raw_path} must contain a full scenario source")
+    for header in ("# execution-kind:", "# expected-result:"):
+        if header not in text:
+            failures.append(f"{fixture_id}: {raw_path} missing {header} header")
+    if _contains_empty_pass_body(text):
+        failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
+    if not any(line.lstrip().startswith("@rust") for line in text.splitlines()):
+        failures.append(f"{fixture_id}: {raw_path} must exercise a Rust interop declaration")
+    bound_declarations = _rust_bound_declarations(text)
+    if not bound_declarations:
+        failures.append(f"{fixture_id}: {raw_path} must include Rust-decorated binding declarations")
+
+    verifier_markers = (f"def verify_{example}(", f"async def verify_{example}(")
+    verifier_start = min((text.find(marker) for marker in verifier_markers if marker in text), default=-1)
+    if verifier_start < 0:
+        failures.append(f"{fixture_id}: {raw_path} must include verify_{example}")
+        return
+
+    verifier_body = text[verifier_start:]
+    for name, return_type in bound_declarations:
+        if f"{name}(" not in verifier_body and f".{name}(" not in verifier_body:
+            failures.append(f"{fixture_id}: {raw_path} verifier must call {name}")
+        if return_type != "None" and not _verifier_binds_call(verifier_body, name):
+            failures.append(f"{fixture_id}: {raw_path} verifier must bind {name} result before returning")
+
+
+def _reject_generated_bridge_imports(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    rust_sources: list[Path],
+) -> None:
+    for source in rust_sources:
+        for line_number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
+            stripped = line.strip()
+            if "crate::__sifr_bridge" in stripped and not stripped.startswith("//"):
+                relative = source.as_posix().split(f"{raw_path}/", maxsplit=1)[-1]
+                failures.append(f"{fixture_id}: {relative}:{line_number} must not reference crate::__sifr_bridge")
+
+
+def _validate_scenario_manifests(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    example_dir: Path,
+) -> None:
+    sifr = _read_toml(failures, fixture_id, raw_path, example_dir / "sifr.toml")
+    cargo = _read_toml(failures, fixture_id, raw_path, example_dir / "Cargo.toml")
+    if not isinstance(sifr, dict) or not isinstance(cargo, dict):
+        return
+
+    package = sifr.get("package", {})
+    rust = sifr.get("rust", {})
+    trust = sifr.get("trust", {})
+    if not isinstance(package, dict) or not package.get("name"):
+        failures.append(f"{fixture_id}: {raw_path}/sifr.toml must declare [package] name")
+    if not isinstance(package, dict) or not package.get("edition"):
+        failures.append(f"{fixture_id}: {raw_path}/sifr.toml must declare [package] edition")
+    sifr_version = package.get("sifr-version") if isinstance(package, dict) else None
+    if not isinstance(sifr_version, str) or ("0.3" not in sifr_version and sifr_version != "*"):
+        failures.append(f"{fixture_id}: {raw_path}/sifr.toml must declare package.sifr-version for 0.3")
+    if not isinstance(rust, dict) or rust.get("bridge-version") != 1:
+        failures.append(f"{fixture_id}: {raw_path}/sifr.toml must declare [rust] bridge-version = 1")
+    if not isinstance(rust, dict) or rust.get("direct-crate-bindings") is not True:
+        failures.append(f"{fixture_id}: {raw_path}/sifr.toml must enable [rust] direct-crate-bindings")
+    if cargo.get("package", {}).get("metadata", {}).get("sifr", {}).get("manifest") != "sifr.toml":
+        failures.append(f"{fixture_id}: {raw_path}/Cargo.toml must declare package.metadata.sifr.manifest")
+
+    dependencies = cargo.get("dependencies", {})
+    workspace_members = cargo.get("workspace", {}).get("members", [])
+    if fixture_id == "same_workspace_crate":
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "workspace_hash", "rust/workspace_hash")
+        _require_member(failures, fixture_id, raw_path, workspace_members, "rust/workspace_hash")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["workspace_hash.hash", "workspace_hash.hash_pair"])
+    elif fixture_id == "shared_bridge_crate":
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "sifr_shared_hash_bridge", "rust/sifr_shared_hash_bridge")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["sifr_shared_hash_bridge.digest", "sifr_shared_hash_bridge.digest_hex"])
+    elif fixture_id == "cargo_locked_offline":
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "locked_bridge", "rust/locked_bridge")
+        if not (example_dir / "Cargo.lock").is_file():
+            failures.append(f"{fixture_id}: {raw_path}/Cargo.lock is required")
+        _read_toml(failures, fixture_id, raw_path, example_dir / "Cargo.lock")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["locked_bridge.cached_hash", "locked_bridge.lockfile_generation"])
+    elif fixture_id == "bridge_version_mismatch":
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "version_bridge", "rust/version_bridge")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["version_bridge.accepted", "version_bridge.schema"])
+    elif fixture_id == "panic_abort_profile":
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "legacy_backend", "rust/legacy_backend")
+        if cargo.get("profile", {}).get("release", {}).get("panic") != "abort":
+            failures.append(f"{fixture_id}: {raw_path}/Cargo.toml must declare [profile.release] panic = \"abort\"")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-panic-abort", ["legacy_backend.run", "legacy_backend.run_checked"])
+    elif fixture_id == "local_bridge_blake3":
+        if rust.get("bridges") != ["src/bridges"]:
+            failures.append(f"{fixture_id}: {raw_path}/sifr.toml must declare [rust] bridges = [\"src/bridges\"]")
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "blake3", "rust/blake3_backend")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "unsafe-rust-bridges", ["src/bridges/blake3.rs"])
+    elif fixture_id == "proc_macro_trust":
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "serde_derive", "rust/serde_derive")
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "prost-build", "rust/prost_build")
+        _require_proc_macro_lib(failures, fixture_id, raw_path, example_dir, "rust/serde_derive")
+        _require_build_script(failures, fixture_id, raw_path, example_dir, "rust/prost_build")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-proc-macros", ["serde_derive"])
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-build-scripts", ["prost-build"])
+    elif fixture_id == "native_build_script":
+        for dependency in ("cc", "bindgen", "cxx", "zstd"):
+            _require_path_dependency(failures, fixture_id, raw_path, dependencies, dependency, f"rust/{dependency}")
+            _require_build_script(failures, fixture_id, raw_path, example_dir, f"rust/{dependency}")
+        _require_native_links(failures, fixture_id, raw_path, example_dir, "rust/zstd", "zstd")
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-build-scripts", ["cc", "bindgen", "cxx", "zstd"])
+        _require_trust_targets(failures, fixture_id, raw_path, trust, "native-links", ["zstd"])
+    elif fixture_id == "ecosystem_backend_certification":
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "axum", "rust/axum")
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "tower-http", "rust/tower_http")
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "sqlx", "rust/sqlx")
+        _require_dependency_features(failures, fixture_id, raw_path, dependencies, "sqlx", ["runtime-tokio-rustls", "postgres", "macros"], default_features=False)
+    elif fixture_id == "ecosystem_cli_certification":
+        for dependency in ("anyhow", "clap", "tracing"):
+            _require_path_dependency(failures, fixture_id, raw_path, dependencies, dependency, f"rust/{dependency}")
+        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "tracing-subscriber", "rust/tracing_subscriber")
+        _require_dependency_features(failures, fixture_id, raw_path, dependencies, "tracing-subscriber", ["env-filter"])
+
+
+def _read_toml(failures: list[str], fixture_id: str, raw_path: str, path: Path) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    try:
+        return tomllib.loads(path.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError as error:
+        failures.append(f"{fixture_id}: {raw_path}/{path.name} is not valid TOML: {error}")
+        return None
+
+
+def _require_path_dependency(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    dependencies: Any,
+    dependency: str,
+    expected_path: str,
+) -> None:
+    actual = dependencies.get(dependency) if isinstance(dependencies, dict) else None
+    if not isinstance(actual, dict) or actual.get("path") != expected_path:
+        failures.append(f"{fixture_id}: {raw_path}/Cargo.toml must declare {dependency} path {expected_path}")
+
+
+def _require_member(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    members: Any,
+    expected_member: str,
+) -> None:
+    if not isinstance(members, list) or expected_member not in members:
+        failures.append(f"{fixture_id}: {raw_path}/Cargo.toml workspace must include {expected_member}")
+
+
+def _require_proc_macro_lib(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    example_dir: Path,
+    crate_path: str,
+) -> None:
+    manifest = _read_toml(failures, fixture_id, raw_path, example_dir / crate_path / "Cargo.toml")
+    if not isinstance(manifest, dict) or manifest.get("lib", {}).get("proc-macro") is not True:
+        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/Cargo.toml must declare [lib] proc-macro = true")
+
+
+def _require_build_script(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    example_dir: Path,
+    crate_path: str,
+) -> None:
+    manifest = _read_toml(failures, fixture_id, raw_path, example_dir / crate_path / "Cargo.toml")
+    if not isinstance(manifest, dict) or manifest.get("package", {}).get("build") != "build.rs":
+        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/Cargo.toml must declare package build = \"build.rs\"")
+    if not (example_dir / crate_path / "build.rs").is_file():
+        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/build.rs is required")
+
+
+def _require_native_links(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    example_dir: Path,
+    crate_path: str,
+    expected_links: str,
+) -> None:
+    manifest = _read_toml(failures, fixture_id, raw_path, example_dir / crate_path / "Cargo.toml")
+    if not isinstance(manifest, dict) or manifest.get("package", {}).get("links") != expected_links:
+        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/Cargo.toml must declare links = {expected_links!r}")
+
+
+def _require_dependency_features(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    dependencies: Any,
+    dependency: str,
+    expected_features: list[str],
+    default_features: bool | None = None,
+) -> None:
+    actual = dependencies.get(dependency) if isinstance(dependencies, dict) else None
+    features = actual.get("features") if isinstance(actual, dict) else None
+    if not isinstance(features, list) or set(features) != set(expected_features):
+        failures.append(f"{fixture_id}: {raw_path}/Cargo.toml dependency {dependency} features must be {expected_features!r}")
+    if default_features is not None and isinstance(actual, dict) and actual.get("default-features") is not default_features:
+        failures.append(f"{fixture_id}: {raw_path}/Cargo.toml dependency {dependency} default-features mismatch")
+
+
+def _require_trust_targets(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    trust: Any,
+    key: str,
+    expected_targets: list[str],
+) -> None:
+    targets = trust.get(key) if isinstance(trust, dict) else None
+    missing = [target for target in expected_targets if not isinstance(targets, list) or target not in targets]
+    for target in missing:
+        failures.append(f"{fixture_id}: {raw_path}/sifr.toml [trust].{key} missing {target}")

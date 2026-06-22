@@ -1,0 +1,17 @@
+# fixture: panic_abort_profile
+# scenario-example: abort_profile_package
+
+[package]
+name = "abort-profile-package"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+direct-crate-bindings = true
+
+[trust]
+rust-panic-abort = ["legacy_backend.run", "legacy_backend.run_checked"]

@@ -1,0 +1,23 @@
+# fixture: local_bridge_blake3
+# scenario-example: local_blake3_bridge
+# execution-kind: cargo-probe
+# expected-result: scenario-example
+
+class HashError(Error):
+    message: str
+
+class LocalBridgeDigest:
+    bytes: Result[bytes, HashError | RustPanicError]
+    hex: Result[str, HashError | RustPanicError]
+
+@rust(bridge.blake3.hash_bytes, panic=map_error(bridge.blake3.map_panic))
+def hash_bytes(input: bytes) -> Result[bytes, HashError | RustPanicError]: ...
+
+@rust(bridge.blake3.hash_hex, panic=map_error(bridge.blake3.map_panic))
+def hash_hex(input: bytes) -> Result[str, HashError | RustPanicError]: ...
+
+def verify_local_blake3_bridge() -> LocalBridgeDigest:
+    digest_result: Result[bytes, HashError | RustPanicError] = hash_bytes(b"sifr-rust-interop")
+    hex_result: Result[str, HashError | RustPanicError] = hash_hex(b"sifr-rust-interop")
+    bridge_digest: LocalBridgeDigest = LocalBridgeDigest(bytes=digest_result, hex=hex_result)
+    return bridge_digest

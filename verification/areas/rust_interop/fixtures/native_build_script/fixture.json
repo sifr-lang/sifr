@@ -31,6 +31,9 @@
     "cxx",
     "zstd"
   ],
+  "scenario_examples": {
+    "native_trust_package": "examples/native_trust_package"
+  },
   "schema_version": 1,
   "tier": 3
 }

@@ -1,0 +1,20 @@
+# fixture: proc_macro_trust
+# scenario-example: proc_macro_trust_package
+
+[package]
+name = "proc-macro-trust-package"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true
+
+[trust]
+rust-proc-macros = ["serde_derive"]
+rust-build-scripts = ["prost-build"]
+unsafe-rust-bridges = ["src/bridges/generated.rs"]

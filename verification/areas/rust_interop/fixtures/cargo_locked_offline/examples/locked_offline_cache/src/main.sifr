@@ -1,0 +1,16 @@
+# fixture: cargo_locked_offline
+# scenario-example: locked_offline_cache
+# execution-kind: cargo-probe
+# expected-result: scenario-example
+
+@rust(locked_bridge.cached_hash, panic=trusted_no_panic)
+def cached_hash(input: bytes) -> uint32: ...
+
+@rust(locked_bridge.lockfile_generation, panic=trusted_no_panic)
+def lockfile_generation() -> uint32: ...
+
+def verify_locked_offline_cache() -> uint32:
+    hash_result: uint32 = cached_hash(b"sifr-rust-interop")
+    generation_result: uint32 = lockfile_generation()
+    verified_result: uint32 = hash_result + generation_result
+    return verified_result

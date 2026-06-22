@@ -20,6 +20,9 @@
   "features": {},
   "id": "bridge_version_mismatch",
   "required_crates": [],
+  "scenario_examples": {
+    "bridge_version_package": "examples/bridge_version_package"
+  },
   "schema_version": 1,
   "tier": 0
 }

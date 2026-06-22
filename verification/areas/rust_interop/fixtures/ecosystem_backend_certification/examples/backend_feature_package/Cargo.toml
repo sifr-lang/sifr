@@ -1,0 +1,16 @@
+[workspace]
+members = ["rust/axum", "rust/tower_http", "rust/sqlx"]
+resolver = "2"
+
+[package]
+name = "backend-feature-package"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { path = "rust/axum" }
+tower-http = { path = "rust/tower_http" }
+sqlx = { path = "rust/sqlx", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros"] }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

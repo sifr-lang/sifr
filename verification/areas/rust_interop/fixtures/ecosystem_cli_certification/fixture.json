@@ -37,6 +37,9 @@
     "tracing-subscriber",
     "anyhow"
   ],
+  "scenario_examples": {
+    "cli_feature_package": "examples/cli_feature_package"
+  },
   "schema_version": 1,
   "tier": 4
 }

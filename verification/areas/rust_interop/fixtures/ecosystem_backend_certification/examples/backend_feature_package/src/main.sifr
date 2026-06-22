@@ -1,0 +1,14 @@
+# fixture: ecosystem_backend_certification
+# scenario-example: backend_feature_package
+# execution-kind: cargo-probe
+# expected-result: scenario-example
+
+class BackendError(Error):
+    message: str
+
+@rust(bridge.backend.route_probe, panic=map_error(bridge.backend.map_panic))
+async def route_probe(path: str) -> Result[str, BackendError | RustPanicError]: ...
+
+async def verify_backend_feature_package() -> Result[str, BackendError | RustPanicError]:
+    route_result: Result[str, BackendError | RustPanicError] = await route_probe("/tmp/sifr-rust-interop.bin")
+    return route_result

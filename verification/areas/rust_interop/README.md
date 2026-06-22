@@ -26,6 +26,9 @@ Each directory under `fixtures/` is required to contain:
 - `negative/<negative_evidence.id>.sifr`: the negative evidence source.
 - `examples/<crate>.sifr`: one full package example for each crate listed in
   the fixture row's `required_crates`.
+- `examples/<scenario>/`: one full scenario package for fixture families whose
+  evidence depends on package or workspace layout rather than a registry crate
+  list.
 
 The `matrix` suite validates this layout, verifies that fixture metadata
 matches `data/rust_interop_fixture_matrix.json`, and rejects empty README-only
@@ -34,7 +37,11 @@ fixture directories. Positive and negative evidence files must include a
 file, including opaque-handle methods. Package examples must be referenced from
 `fixture.json.package_examples`, must use the exact `examples/<crate>.sifr`
 path, and must include a concrete `@rust(...)` declaration plus a
-`verify_<crate>_package` function that exercises that binding.
+`verify_<crate>_package` function that exercises that binding. Scenario
+examples must be referenced from `fixture.json.scenario_examples`, must use the
+exact `examples/<scenario>/` directory, and must include a README, Sifr package
+config, Sifr source, Cargo manifest, Rust source, and verifier call sites for
+every Rust-decorated binding.
 
 The area-level `network_mode` is `offline` for compile/probe and contract
 checks. Runtime-observed fixtures that need services such as Redis or
@@ -45,7 +52,8 @@ fixture evidence; they must not silently degrade to compile-only coverage.
 
 - `matrix`: verifies the fixture matrix, required fixture directories, crate
   coverage, evidence objects, fixture READMEs, fixture source files, package
-  examples for every required Rust crate, and diagnostic family inventory.
+  examples for every required Rust crate, scenario examples for package-layout
+  fixture families, and diagnostic family inventory.
 - `tiers`: verifies tier definitions and fixture tier assignments.
 - `compatibility-matrix`: verifies that public compatibility rows match fixture
   evidence and that no fixture family is omitted.

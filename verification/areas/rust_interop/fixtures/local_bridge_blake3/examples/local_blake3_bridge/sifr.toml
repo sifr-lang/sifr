@@ -1,0 +1,18 @@
+# fixture: local_bridge_blake3
+# scenario-example: local_blake3_bridge
+
+[package]
+name = "local-blake3-bridge"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true
+
+[trust]
+unsafe-rust-bridges = ["src/bridges/blake3.rs"]

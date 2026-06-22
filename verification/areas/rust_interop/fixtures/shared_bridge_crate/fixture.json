@@ -20,6 +20,9 @@
   "features": {},
   "id": "shared_bridge_crate",
   "required_crates": [],
+  "scenario_examples": {
+    "shared_hash_bridge": "examples/shared_hash_bridge"
+  },
   "schema_version": 1,
   "tier": 1
 }

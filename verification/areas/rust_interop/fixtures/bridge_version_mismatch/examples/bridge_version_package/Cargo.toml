@@ -1,0 +1,16 @@
+[workspace]
+members = [
+  "rust/version_bridge",
+]
+resolver = "2"
+
+[package]
+name = "bridge-version-package"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+version_bridge = { path = "rust/version_bridge" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

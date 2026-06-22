@@ -1,0 +1,12 @@
+[package]
+name = "locked_bridge"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+stable = []
+drift = []
+
+[lib]
+path = "src/lib.rs"

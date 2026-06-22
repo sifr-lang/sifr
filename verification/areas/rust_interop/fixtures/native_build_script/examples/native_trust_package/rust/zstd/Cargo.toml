@@ -1,0 +1,9 @@
+[package]
+name = "zstd"
+version = "0.1.0"
+edition = "2021"
+links = "zstd"
+build = "build.rs"
+
+[lib]
+path = "src/lib.rs"
