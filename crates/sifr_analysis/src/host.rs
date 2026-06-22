@@ -5,6 +5,9 @@ mod file_access;
 mod implementation;
 pub use implementation::*;
 mod overlay_updates;
+mod semantic_editor;
+#[cfg(test)]
+mod semantic_editor_tests;
 mod snapshot_queries;
 #[cfg(test)]
 mod stdlib_tests;

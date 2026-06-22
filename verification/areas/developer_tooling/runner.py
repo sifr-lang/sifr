@@ -101,6 +101,13 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
         ("lsp-transcript-replay", [sys.executable, str(AREA_ROOT / "check_lsp_transcript_replay.py")]),
         ("lsp-transcript-replay-self-test", [sys.executable, str(AREA_ROOT / "check_lsp_transcript_replay.py"), "--self-test"]),
     ],
+    "lsp-semantic-editor": [
+        ("lsp-semantic-editor", [sys.executable, str(AREA_ROOT / "lsp_semantic_editor_corpus.py")]),
+        (
+            "lsp-semantic-editor-self-test",
+            [sys.executable, str(AREA_ROOT / "lsp_semantic_editor_corpus.py"), "--self-test"],
+        ),
+    ],
     "editor-release": [
         ("vscode-extension-rules", [sys.executable, str(AREA_ROOT / "check_vscode_extension_rules.py")]),
         (
@@ -137,6 +144,7 @@ FULL_SUITES = [
     "formatter",
     "analysis",
     "lsp-smoke",
+    "lsp-semantic-editor",
     "editor-release",
     "lsp-stress",
     "tooling-readiness",

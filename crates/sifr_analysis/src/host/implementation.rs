@@ -208,10 +208,7 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Option<HoverInfo>> {
-        let facts = self.editor_facts(file)?;
-        let hover = facts.token_at_position(position).map(|token| HoverInfo {
-            contents: format!("{} ({})", token.text, token.kind),
-        });
+        let hover = self.semantic_hover(file, position)?;
         Ok(self.result(AnalysisQueryKind::Hover, hover))
     }
 
@@ -220,11 +217,7 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Option<SignatureHelp>> {
-        let facts = self.editor_facts(file)?;
-        let help = call_identifier_before_position(&facts, position).map(|label| SignatureHelp {
-            label,
-            active_parameter: Some(0),
-        });
+        let help = self.semantic_signature_help(file, position)?;
         Ok(self.result(AnalysisQueryKind::SignatureHelp, help))
     }
 
@@ -877,23 +870,4 @@ pub(super) fn frontend_diagnostics(diagnostics: &[RenderedDiagnostic]) -> Analys
         .map(|diagnostic| diagnostic.message.clone())
         .unwrap_or_else(|| "frontend query failed without diagnostics".to_string());
     AnalysisError::new(AnalysisErrorKind::FrontendDiagnostic, message)
-}
-
-pub(super) fn call_identifier_before_position(
-    facts: &EditorFacts,
-    position: &TextPosition,
-) -> Option<String> {
-    let token = facts.token_at_position(position)?;
-    if token.text != "(" {
-        return None;
-    }
-    facts
-        .tokens
-        .iter()
-        .rev()
-        .find(|candidate| {
-            candidate.range.end() <= token.range.start()
-                && crate::editor::is_identifier_token(candidate)
-        })
-        .map(|candidate| format!("{}(...)", candidate.text))
 }

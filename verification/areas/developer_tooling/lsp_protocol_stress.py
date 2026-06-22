@@ -231,6 +231,25 @@ def run_project_save_reuses_project_owner() -> None:
             client.wait_for_notification("textDocument/publishDiagnostics")
             client.notify("textDocument/didSave", {"textDocument": {"uri": uri}, "text": saved})
             client.wait_for_notification("textDocument/publishDiagnostics")
+            hover = client.request(
+                "textDocument/hover",
+                {"textDocument": {"uri": uri}, "position": {"line": 4, "character": 18}},
+            )
+            hover_value = hover.get("contents", {}).get("value", "") if isinstance(hover, dict) else ""
+            if "helper" not in hover_value or "-> int" not in hover_value or "(Name)" in hover_value:
+                raise LspProtocolError(f"project hover after save was not semantic: {hover}")
+            signature = client.request(
+                "textDocument/signatureHelp",
+                {"textDocument": {"uri": uri}, "position": {"line": 4, "character": 25}},
+            )
+            signatures = signature.get("signatures", []) if isinstance(signature, dict) else []
+            parameters = signatures[0].get("parameters", []) if signatures else []
+            if (
+                not signatures
+                or "helper" not in signatures[0].get("label", "")
+                or [item.get("label") for item in parameters] != ["value: int"]
+            ):
+                raise LspProtocolError(f"project signatureHelp after save was not semantic: {signature}")
             client.notify(
                 "textDocument/didChange",
                 {

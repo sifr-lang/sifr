@@ -21,6 +21,8 @@ FORBIDDEN_PATTERNS = {
     "lower_frontend_module": "LSP must not lower HIR directly",
     "type_check": "LSP must not type-check directly",
     "HirModule": "LSP must not traverse HIR for semantic answers",
+    "sifr_type_system": "LSP must not construct type-system semantic answers",
+    "FunctionType": "LSP must not construct callable signatures",
     "sifr_codegen::": "LSP must not call codegen directly",
 }
 

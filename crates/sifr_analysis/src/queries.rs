@@ -26,6 +26,7 @@ pub struct HoverInfo {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SignatureHelp {
     pub label: String,
+    pub parameters: Vec<String>,
     pub active_parameter: Option<u32>,
 }
 

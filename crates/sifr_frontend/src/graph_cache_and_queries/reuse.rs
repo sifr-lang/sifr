@@ -99,6 +99,7 @@ impl FrontendContext {
                 .unwrap_or(ModuleAnalysisView {
                     module,
                     symbols: Vec::new(),
+                    editor_semantics: Default::default(),
                 }),
             self.metadata(QueryKind::ModuleAnalysis, cache_status),
         )

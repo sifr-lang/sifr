@@ -90,6 +90,19 @@
       ]
     },
     {
+      "name": "lsp-semantic-editor",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "lsp-semantic-editor",
+          "entry": "verification/areas/developer_tooling/lsp_semantic_editor_corpus.py",
+          "command": "developer-tooling-suite",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "editor-release",
       "kind": "adapter",
       "cases": [

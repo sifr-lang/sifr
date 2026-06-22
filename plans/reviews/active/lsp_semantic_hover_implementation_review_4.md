@@ -1,0 +1,25 @@
+## Blocking risks
+
+1. **LSP position encoding (UTF‑16 vs bytes).** The summary says positions are mapped to byte offsets. LSP defaults to UTF‑16 code units; servers must either advertise/accept `positionEncoding=utf-8` during initialize or translate. If the conversion treats `character` as a byte index, every non‑ASCII source (strings, identifiers, comments) will produce off‑by‑N offsets and pick the wrong "smallest containing" entry. The verification corpus is described in ASCII terms only, so this class of bug won't be caught by the current tests. Confirm: (a) initialize negotiates encoding, (b) the position→offset path matches what was negotiated, (c) at least one test uses a multi‑byte character before the hover/signature target.
+
+2. **Supplementary AST walk is patching a deeper HIR issue.** The justification — "stdlib Result calls inside try/except don't align one‑to‑one with transformed HIR statements" — means the HIR has lost source‑range fidelity for a specific construct, and the editor view re‑derives it from the AST instead. That's a split‑brain in disguise: two range sources, only one of which is the ground truth the rest of the compiler uses, and which one wins depends on the call's syntactic position. The honest fix is to preserve source ranges through `try/except` lowering in HIR. If that's out of scope here, the AST walk needs a sharply‑scoped predicate (only fills gaps where HIR has no range for a call whose callee resolves to a known external), not a general second pass, otherwise future HIR lowering changes will silently re‑introduce overlap or shadow real entries.
+
+3. **`EditorSemanticView` invalidation across incremental edits.** The view is built during frontend analysis from HIR + AST + externals. Confirm that (a) it is rebuilt — not patched — on every analysis revision, (b) the LSP handler reads the view that corresponds to the *exact* document version the request quoted (LSP requests carry `textDocument.version`; serving from a newer or older snapshot will yield wrong ranges with no error), and (c) there is no shared mutable state across requests. The "after‑change refresh" test is necessary but not sufficient — it doesn't catch a request that races a re‑analysis.
+
+4. **`sifr_type_system`/`FunctionType` static guard scope.** Rejecting the symbol in `sifr_analysis` and `sifr_lsp` is good, but HIR almost certainly transitively exposes type‑system types through its own surface (e.g. `hir::Type`, generic parameter info). Confirm the guard isn't bypassable via re‑exports or `pub use`; otherwise the rule reads "don't import directly" rather than "this layer cannot see type‑system data," and the next refactor will quietly re‑introduce the coupling.
+
+## Suggestions
+
+5. **Active‑parameter computation.** Verify behavior for: trailing comma, named/keyword arguments (do parameters get matched by position or name?), nested calls where the cursor is inside an inner arg, lambdas as arguments, and the cursor sitting on the `(` itself vs. after it. The corpus mentions "active parameters" generically — a checklist of these would harden it.
+
+6. **Signature parameter labels.** LSP allows `ParameterInformation.label` to be either a string or `[start, end]` offsets into the signature label. Offsets are more robust for duplicate parameter names and styled labels, but require the same encoding as `positionEncoding` for the label string. Worth pinning down which form is emitted and whether the offsets are bytes or UTF‑16 units.
+
+7. **Partial‑state UX.** "AST walk only runs after successful frontend analysis" and "no fallback" together mean hover/signature go completely dark whenever the user is mid‑edit with a type error. That's consistent with the stated architecture, but unusual for an LSP. If the product wants this, document it; if not, the last successful view per document is a low‑risk concession that doesn't reintroduce placeholders.
+
+8. **Concurrency / memory.** Spell out the ownership story: is `EditorSemanticView` cloned per request or shared `Arc`? For large projects with many open files, per‑file views can add up — worth a back‑of‑envelope number in the issue plan.
+
+9. **Import aliases.** Confirm both sides of `from m import X as Y` resolve: hover on `X` (the original name at the import site) and hover on `Y` (the alias at use sites) should both work, and they should report distinct entries (alias points to original, original points to definition).
+
+10. **Verification gap — recursion and forward references.** Self‑calls and mutually‑recursive functions exercise the case where the signature table must be populated before the body is fully analyzed. Not mentioned in the corpus; one test would be cheap.
+
+11. **Validation list omits `run_all_tests.sh`.** Per AGENTS.md, `scripts/run_all_tests.sh --profile create-pr` is the authoritative pre‑PR gate. The summary lists targeted `cargo` and runner suites but not that script. Run it before opening the PR; CI mirrors it exactly, so skipping it just delays the same failure.
