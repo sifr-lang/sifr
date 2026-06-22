@@ -96,6 +96,9 @@ Tasks:
   crate digest, stdlib crate digest, and vendor digest.
 - Require `vendor-digest` in release sysroots and allow it to be absent or
   marked as development metadata only in source-tree development mode.
+- Define canonical tree-digest hashing for sysroot assets: path ordering, path
+  separator normalization, included file types, excluded metadata, executable
+  bit handling where relevant, symlink policy, and line-ending policy.
 - Define the sysroot Cargo workspace contract: `Cargo.toml`, `Cargo.lock`,
   workspace members, workspace dependencies, and resolver version, but defer
   validation of the final `crates/sifr_stdlib` member until M3/M4.
@@ -104,10 +107,17 @@ Tasks:
   layout.
 - Mark `--sysroot` for end-user commands as an advanced/developer override in
   help text and diagnostics rather than a normal package-management mechanism.
+- Define the command-support matrix for `--sysroot`: advanced/hidden for
+  `check`, `build`, `run`, and `emit`; settings or environment for LSP; visible
+  for `doctor`; ignored or rejected for self-update unless multi-sysroot
+  installs are explicitly designed.
 - Add `sifr --print sysroot`.
 - Add `sifr --print sysroot --json`.
 - Add a schema drift check or snapshot so the documented `sysroot.toml` schema
   and parser-accepted schema cannot diverge silently.
+- Define schema-version compatibility rules: unknown required fields fail, and
+  unknown optional fields may be ignored only when the active schema version
+  permits it.
 - Add concise sysroot-boundary diagnostics for missing or mismatched sysroot
   assets.
 - Keep `SIFR_RUNTIME_PATH` only as a development compatibility override.
@@ -136,6 +146,8 @@ Validation:
 - Unit tests for missing, malformed, and version-mismatched `sysroot.toml`.
 - Snapshot or schema test comparing the documented manifest fields with the
   parser-accepted fields.
+- Unit tests for schema-version unknown-field behavior.
+- Unit tests for deterministic tree-digest canonicalization.
 - Unit tests for missing sysroot `Cargo.toml`, `Cargo.lock`,
   `.cargo/config.toml`, `vendor/`, and runtime crate manifest.
 - Unit tests for release/dev mode separation.
@@ -290,6 +302,9 @@ Tasks:
   sysroot vendor over user dependencies; offline/frozen package builds must use
   a complete combined graph or fail clearly; explicit Rust interop dependencies
   remain package-owned.
+- Allow the first implementation to fail clearly for offline/frozen package
+  builds with user registry dependencies unless a complete combined vendor graph
+  is available.
 - Vendor third-party Cargo dependencies required by `sifr_runtime` and
   `sifr_stdlib`.
 - Generate the sysroot workspace `Cargo.lock` from the sysroot workspace
@@ -307,6 +322,9 @@ Tasks:
   Cargo-owned.
 - Ensure package-mode generated builds do not accidentally force the sysroot
   vendor policy onto user dependencies outside documented offline/frozen modes.
+- Test the selected Cargo config mechanism directly, whether it copies
+  `.cargo/config.toml` into generated projects or passes an explicit Cargo
+  config path.
 - Keep temporary direct third-party generated dependencies only for unmigrated
   compiler-special paths with a deletion milestone and validation evidence.
 
@@ -332,6 +350,12 @@ Validation:
 - Fixture proving a generated project fails with a Sifr sysroot diagnostic when
   the sysroot vendor directory is missing in bundled-dependency mode.
 - Package-mode fixture proving user dependencies remain Cargo-owned.
+- Package-mode fixture proving online user registry resolution is not silently
+  replaced by the sysroot vendor config.
+- Fixture covering the chosen Cargo config mechanism for stdlib-only generated
+  builds.
+- Offline/frozen package-mode fixture proving user registry dependencies either
+  use a complete combined vendor graph or fail with a clear diagnostic.
 - Snapshot proving migrated stdlib leaves do not emit direct third-party
   implementation dependencies.
 - Build-report snapshot containing sysroot identity.

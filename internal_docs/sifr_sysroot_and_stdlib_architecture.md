@@ -125,6 +125,15 @@ The manifest schema is implementation-owned and documentation-visible. Parser
 tests or snapshots must fail when the accepted schema and this documented schema
 drift from each other.
 
+Unknown required fields fail manifest parsing. Unknown optional fields may be
+ignored only when the active `schema-version` explicitly permits that behavior.
+
+Tree digests are canonical. The implementation defines bytewise sorted relative
+paths, `/` path separators, included file types, metadata exclusions, executable
+bit handling where relevant, symlink rejection or canonical target hashing, and
+line-ending policy before release digests are certified. Timestamps, owners,
+and host-specific packaging metadata are not digest inputs.
+
 ## Sysroot Resolution
 
 Sysroot resolution is deterministic:
@@ -160,6 +169,16 @@ only as an advanced developer override. Diagnostics and help text should mark
 it as such rather than presenting it as a normal package-management mechanism.
 LSP may accept a sysroot from settings or environment, but should report
 mismatches with the CLI-observed sysroot when both are available.
+
+Command support for sysroot overrides is intentionally narrow:
+
+```text
+sifr check/build/run/emit: allowed as hidden or advanced help.
+sifr lsp: allowed through settings or environment, not normal CLI UX.
+sifr doctor: allowed and visible for install inspection.
+sifr self update: ignored or rejected unless multi-sysroot installs are
+                  explicitly designed.
+```
 
 ## Sysroot Cargo Workspace
 
@@ -220,12 +239,20 @@ Cargo with an explicit config path. The implementation must follow this policy:
 - Package builds with explicit `--offline`, `--frozen`, or equivalent locked
   offline mode use a complete combined graph/vendor source or fail with a clear
   Cargo/Sifr diagnostic.
+- The initial implementation may choose the clear failure path for
+  offline/frozen package builds with user registry dependencies until a
+  complete combined vendor graph is designed.
 - Explicit Rust interop package dependencies keep the dependency source
   package-owned; Sifr does not hide them behind sysroot vendor policy.
 
 The observable guarantee is that Sifr-owned sysroot dependencies resolve from
 the installed sysroot in offline mode without changing ownership of user
 dependencies.
+
+Whichever Cargo config mechanism is selected must be tested directly. The tests
+must prove sysroot vendor config applies to Sifr-owned stdlib/runtime
+dependencies in stdlib-only builds and does not silently replace user registry
+resolution in online package mode.
 
 The sysroot vendor directory is generated from the sysroot workspace lockfile,
 not from an ad hoc dependency list. This prevents stdlib features and runtime
@@ -336,9 +363,11 @@ compiler model uses a distinct name so crate names communicate runtime
 responsibility rather than internal implementation history.
 
 `sifr_stdlib_model` may embed fallback stdlib sources for development and
-bootstrap, but released tools prefer sysroot files. Its public API should speak
-in terms of resolved sysroot/module metadata rather than hard-coded include
-paths so CLI, LSP, and tests can exercise installed-layout behavior.
+bootstrap. Released tools must not use embedded fallback sources for normal
+stdlib resolution. If the sysroot is missing or invalid, released tools fail
+with a sysroot diagnostic. Its public API should speak in terms of resolved
+sysroot/module metadata rather than hard-coded include paths so CLI, LSP, and
+tests can exercise installed-layout behavior.
 
 ## Standard Library Source Layers
 
