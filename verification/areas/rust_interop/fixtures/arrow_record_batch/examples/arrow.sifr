@@ -1,0 +1,16 @@
+# fixture: arrow_record_batch
+# package-example: arrow
+# required-crate: arrow
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class ArrowRecordBatch:
+    pass
+
+@rust(arrow.array.Int32Array.from, panic=map_error(bridge.arrow.map_panic))
+def arrow_int32_array(input: bytes) -> Result[ArrowRecordBatch, PackageExampleError | RustPanicError]: ...
+
+def verify_arrow_package() -> Result[ArrowRecordBatch, PackageExampleError | RustPanicError]:
+    return arrow_int32_array(b"sifr-rust-interop")

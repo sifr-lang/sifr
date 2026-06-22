@@ -1,0 +1,16 @@
+# fixture: tensor_dlpack_bridge
+# package-example: ndarray
+# required-crate: ndarray
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class NdArray2:
+    pass
+
+@rust(ndarray.Array2.from_shape_vec, panic=map_error(bridge.ndarray.map_panic))
+def ndarray_array2(input: list[f32]) -> Result[NdArray2, PackageExampleError | RustPanicError]: ...
+
+def verify_ndarray_package() -> Result[NdArray2, PackageExampleError | RustPanicError]:
+    return ndarray_array2([1.0, 2.0, 3.0, 4.0])

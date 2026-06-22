@@ -1,0 +1,16 @@
+# fixture: ecosystem_backend_certification
+# package-example: axum
+# required-crate: axum
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class AxumRouter:
+    pass
+
+@rust(axum.Router.new, panic=map_error(bridge.axum.map_panic))
+def axum_router(route: str) -> Result[AxumRouter, PackageExampleError | RustPanicError]: ...
+
+def verify_axum_package() -> Result[AxumRouter, PackageExampleError | RustPanicError]:
+    return axum_router("/health")

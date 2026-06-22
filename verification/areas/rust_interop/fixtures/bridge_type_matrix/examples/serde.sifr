@@ -1,0 +1,13 @@
+# fixture: bridge_type_matrix
+# package-example: serde
+# required-crate: serde
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(serde.Serialize.serialize, panic=map_error(bridge.serde.map_panic))
+def serde_serialize(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_serde_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return serde_serialize(b"sifr-rust-interop")

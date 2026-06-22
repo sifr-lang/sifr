@@ -1,0 +1,16 @@
+# fixture: advanced_data_matrix
+# package-example: datafusion
+# required-crate: datafusion
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class DataFrame:
+    pass
+
+@rust(datafusion.SessionContext.new, panic=map_error(bridge.datafusion.map_panic))
+def datafusion_context(query: str) -> Result[DataFrame, PackageExampleError | RustPanicError]: ...
+
+def verify_datafusion_package() -> Result[DataFrame, PackageExampleError | RustPanicError]:
+    return datafusion_context("select 1")

@@ -1,0 +1,13 @@
+# fixture: blocking_diagnostics
+# package-example: rayon
+# required-crate: rayon
+# execution-kind: compiler-diagnostic
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(rayon.join, panic=map_error(bridge.rayon.map_panic))
+def rayon_join(left: i32, right: i32) -> Result[i32, PackageExampleError | RustPanicError]: ...
+
+def verify_rayon_package() -> Result[i32, PackageExampleError | RustPanicError]:
+    return rayon_join(40, 2)

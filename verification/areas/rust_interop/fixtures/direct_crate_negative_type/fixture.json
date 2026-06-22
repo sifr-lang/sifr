@@ -20,6 +20,9 @@
   "execution_kind": "compiler-diagnostic",
   "features": {},
   "id": "direct_crate_negative_type",
+  "package_examples": {
+    "regex": "examples/regex.sifr"
+  },
   "required_crates": [
     "regex"
   ],

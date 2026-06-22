@@ -1,0 +1,16 @@
+# fixture: bridge_type_matrix
+# package-example: thiserror
+# required-crate: thiserror
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class RustError:
+    pass
+
+@rust(thiserror.Error.from_display, panic=map_error(bridge.thiserror.map_panic))
+def thiserror_from_display(message: str) -> Result[RustError, PackageExampleError | RustPanicError]: ...
+
+def verify_thiserror_package() -> Result[RustError, PackageExampleError | RustPanicError]:
+    return thiserror_from_display("sifr error context")

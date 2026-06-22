@@ -24,10 +24,15 @@ Each directory under `fixtures/` is required to contain:
   matrix row.
 - `positive/<positive_evidence.id>.sifr`: the positive evidence source.
 - `negative/<negative_evidence.id>.sifr`: the negative evidence source.
+- `examples/<crate>.sifr`: one full package example for each crate listed in
+  the fixture row's `required_crates`.
 
 The `matrix` suite validates this layout, verifies that fixture metadata
 matches `data/rust_interop_fixture_matrix.json`, and rejects empty README-only
-fixture directories.
+fixture directories. Package examples must be referenced from
+`fixture.json.package_examples`, must use the exact `examples/<crate>.sifr`
+path, and must include a concrete `@rust(...)` declaration plus a
+`verify_<crate>_package` function that exercises that binding.
 
 The area-level `network_mode` is `offline` for compile/probe and contract
 checks. Runtime-observed fixtures that need services such as Redis or
@@ -37,8 +42,8 @@ fixture evidence; they must not silently degrade to compile-only coverage.
 ## Suites
 
 - `matrix`: verifies the fixture matrix, required fixture directories, crate
-  coverage, evidence objects, fixture READMEs, fixture source files, and
-  diagnostic family inventory.
+  coverage, evidence objects, fixture READMEs, fixture source files, package
+  examples for every required Rust crate, and diagnostic family inventory.
 - `tiers`: verifies tier definitions and fixture tier assignments.
 - `compatibility-matrix`: verifies that public compatibility rows match fixture
   evidence and that no fixture family is omitted.

@@ -1,0 +1,13 @@
+# fixture: blocking_diagnostics
+# package-example: flate2
+# required-crate: flate2
+# execution-kind: compiler-diagnostic
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(flate2.write.ZlibEncoder.new, panic=map_error(bridge.flate2.map_panic))
+def flate2_deflate(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_flate2_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return flate2_deflate(b"sifr-rust-interop")

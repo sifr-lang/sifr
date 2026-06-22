@@ -1,0 +1,16 @@
+# fixture: ecosystem_backend_certification
+# package-example: tower-http
+# required-crate: tower-http
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class TraceLayer:
+    pass
+
+@rust(tower_http.trace.TraceLayer.new, panic=map_error(bridge.tower_http.map_panic))
+def tower_http_trace_layer(name: str) -> Result[TraceLayer, PackageExampleError | RustPanicError]: ...
+
+def verify_tower_http_package() -> Result[TraceLayer, PackageExampleError | RustPanicError]:
+    return tower_http_trace_layer("sifr")

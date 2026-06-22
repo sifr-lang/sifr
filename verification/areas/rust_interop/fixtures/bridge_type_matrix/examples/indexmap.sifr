@@ -1,0 +1,13 @@
+# fixture: bridge_type_matrix
+# package-example: indexmap
+# required-crate: indexmap
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(indexmap.IndexMap.insert, panic=map_error(bridge.indexmap.map_panic))
+def indexmap_insert(key: str, value: i32) -> Result[i32, PackageExampleError | RustPanicError]: ...
+
+def verify_indexmap_package() -> Result[i32, PackageExampleError | RustPanicError]:
+    return indexmap_insert("answer", 42)

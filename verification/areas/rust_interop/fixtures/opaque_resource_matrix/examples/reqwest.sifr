@@ -1,0 +1,16 @@
+# fixture: opaque_resource_matrix
+# package-example: reqwest
+# required-crate: reqwest
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class HttpResponse:
+    pass
+
+@rust(reqwest.Client.get, panic=map_error(bridge.reqwest.map_panic))
+def reqwest_get(url: str) -> Result[HttpResponse, PackageExampleError | RustPanicError]: ...
+
+def verify_reqwest_package() -> Result[HttpResponse, PackageExampleError | RustPanicError]:
+    return reqwest_get("https://127.0.0.1/health")

@@ -19,6 +19,13 @@
   "execution_kind": "cargo-probe",
   "features": {},
   "id": "bridge_type_matrix",
+  "package_examples": {
+    "bytes": "examples/bytes.sifr",
+    "indexmap": "examples/indexmap.sifr",
+    "serde": "examples/serde.sifr",
+    "serde_json": "examples/serde_json.sifr",
+    "thiserror": "examples/thiserror.sifr"
+  },
   "required_crates": [
     "serde",
     "serde_json",

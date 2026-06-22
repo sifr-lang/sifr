@@ -1,0 +1,13 @@
+# fixture: zero_copy_view_matrix
+# package-example: bytemuck
+# required-crate: bytemuck
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(bytemuck.cast_slice, panic=map_error(bridge.bytemuck.map_panic))
+def bytemuck_cast_slice(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_bytemuck_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return bytemuck_cast_slice(b"sifr-rust-interop")

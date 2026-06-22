@@ -19,6 +19,9 @@
   "execution_kind": "contract-only",
   "features": {},
   "id": "zero_copy_bytes",
+  "package_examples": {
+    "bytes": "examples/bytes.sifr"
+  },
   "required_crates": [
     "bytes"
   ],

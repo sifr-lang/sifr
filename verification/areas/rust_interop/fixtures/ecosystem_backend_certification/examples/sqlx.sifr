@@ -1,0 +1,16 @@
+# fixture: ecosystem_backend_certification
+# package-example: sqlx
+# required-crate: sqlx
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class SqlRows:
+    pass
+
+@rust(sqlx.query, panic=map_error(bridge.sqlx.map_panic))
+def sqlx_query(sql: str) -> Result[SqlRows, PackageExampleError | RustPanicError]: ...
+
+def verify_sqlx_package() -> Result[SqlRows, PackageExampleError | RustPanicError]:
+    return sqlx_query("select 1")

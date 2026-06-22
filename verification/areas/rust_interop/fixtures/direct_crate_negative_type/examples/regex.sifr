@@ -1,0 +1,13 @@
+# fixture: direct_crate_negative_type
+# package-example: regex
+# required-crate: regex
+# execution-kind: compiler-diagnostic
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(regex.Regex.is_match, panic=map_error(bridge.regex.map_panic))
+def regex_is_match(pattern: str, text: str) -> Result[bool, PackageExampleError | RustPanicError]: ...
+
+def verify_regex_package() -> Result[bool, PackageExampleError | RustPanicError]:
+    return regex_is_match("^sifr", "sifr-rust")

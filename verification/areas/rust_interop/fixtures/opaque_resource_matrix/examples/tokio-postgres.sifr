@@ -1,0 +1,16 @@
+# fixture: opaque_resource_matrix
+# package-example: tokio-postgres
+# required-crate: tokio-postgres
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class PgClient:
+    pass
+
+@rust(tokio_postgres.connect, panic=map_error(bridge.tokio_postgres.map_panic))
+def tokio_postgres_connect(url: str) -> Result[PgClient, PackageExampleError | RustPanicError]: ...
+
+def verify_tokio_postgres_package() -> Result[PgClient, PackageExampleError | RustPanicError]:
+    return tokio_postgres_connect("postgres://sifr@127.0.0.1:5432/sifr")

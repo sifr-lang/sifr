@@ -1,0 +1,13 @@
+# fixture: direct_crate_matrix
+# package-example: blake3
+# required-crate: blake3
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(blake3.hash, panic=map_error(bridge.blake3.map_panic))
+def blake3_hash(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_blake3_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return blake3_hash(b"sifr-rust-interop")

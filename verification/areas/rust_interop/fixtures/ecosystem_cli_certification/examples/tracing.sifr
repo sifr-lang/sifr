@@ -1,0 +1,13 @@
+# fixture: ecosystem_cli_certification
+# package-example: tracing
+# required-crate: tracing
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(tracing.info, panic=map_error(bridge.tracing.map_panic))
+def tracing_info(message: str) -> Result[None, PackageExampleError | RustPanicError]: ...
+
+def verify_tracing_package() -> Result[None, PackageExampleError | RustPanicError]:
+    return tracing_info("sifr error context")

@@ -1,0 +1,16 @@
+# fixture: callback_subscription_matrix
+# package-example: notify
+# required-crate: notify
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class WatcherHandle:
+    pass
+
+@rust(notify.recommended_watcher, panic=map_error(bridge.notify.map_panic))
+def notify_watcher(path: str) -> Result[WatcherHandle, PackageExampleError | RustPanicError]: ...
+
+def verify_notify_package() -> Result[WatcherHandle, PackageExampleError | RustPanicError]:
+    return notify_watcher("/tmp/sifr-rust-interop.bin")

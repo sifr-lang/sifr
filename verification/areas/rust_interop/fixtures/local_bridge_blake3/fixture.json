@@ -19,6 +19,9 @@
   "execution_kind": "cargo-probe",
   "features": {},
   "id": "local_bridge_blake3",
+  "package_examples": {
+    "blake3": "examples/blake3.sifr"
+  },
   "required_crates": [
     "blake3"
   ],

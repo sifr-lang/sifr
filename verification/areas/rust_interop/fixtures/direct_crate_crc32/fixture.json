@@ -19,6 +19,9 @@
   "execution_kind": "cargo-probe",
   "features": {},
   "id": "direct_crate_crc32",
+  "package_examples": {
+    "crc32fast": "examples/crc32fast.sifr"
+  },
   "required_crates": [
     "crc32fast"
   ],

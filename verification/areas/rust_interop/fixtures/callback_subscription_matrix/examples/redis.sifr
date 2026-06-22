@@ -1,0 +1,16 @@
+# fixture: callback_subscription_matrix
+# package-example: redis
+# required-crate: redis
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class RedisClient:
+    pass
+
+@rust(redis.Client.open, panic=map_error(bridge.redis.map_panic))
+def redis_client(url: str) -> Result[RedisClient, PackageExampleError | RustPanicError]: ...
+
+def verify_redis_package() -> Result[RedisClient, PackageExampleError | RustPanicError]:
+    return redis_client("redis://127.0.0.1:6379/0")

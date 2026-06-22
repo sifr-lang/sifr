@@ -19,6 +19,11 @@
   "execution_kind": "contract-only",
   "features": {},
   "id": "zero_copy_view_matrix",
+  "package_examples": {
+    "bytemuck": "examples/bytemuck.sifr",
+    "memmap2": "examples/memmap2.sifr",
+    "zerocopy": "examples/zerocopy.sifr"
+  },
   "required_crates": [
     "memmap2",
     "bytemuck",

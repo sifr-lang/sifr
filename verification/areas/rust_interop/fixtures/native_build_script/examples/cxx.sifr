@@ -1,0 +1,16 @@
+# fixture: native_build_script
+# package-example: cxx
+# required-crate: cxx
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class CppHandle:
+    pass
+
+@rust(cxx.UniquePtr.new, panic=map_error(bridge.cxx.map_panic))
+def cxx_unique_ptr(name: str) -> Result[CppHandle, PackageExampleError | RustPanicError]: ...
+
+def verify_cxx_package() -> Result[CppHandle, PackageExampleError | RustPanicError]:
+    return cxx_unique_ptr("sifr")

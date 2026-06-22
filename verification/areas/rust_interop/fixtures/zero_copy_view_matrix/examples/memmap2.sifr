@@ -1,0 +1,16 @@
+# fixture: zero_copy_view_matrix
+# package-example: memmap2
+# required-crate: memmap2
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class MmapView:
+    pass
+
+@rust(memmap2.MmapOptions.new, panic=map_error(bridge.memmap2.map_panic))
+def memmap2_view(path: str) -> Result[MmapView, PackageExampleError | RustPanicError]: ...
+
+def verify_memmap2_package() -> Result[MmapView, PackageExampleError | RustPanicError]:
+    return memmap2_view("/tmp/sifr-rust-interop.bin")

@@ -25,6 +25,12 @@
     }
   },
   "id": "advanced_data_matrix",
+  "package_examples": {
+    "candle": "examples/candle.sifr",
+    "datafusion": "examples/datafusion.sifr",
+    "ndarray": "examples/ndarray.sifr",
+    "polars": "examples/polars.sifr"
+  },
   "required_crates": [
     "datafusion",
     "polars",

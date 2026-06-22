@@ -1,0 +1,13 @@
+# fixture: ecosystem_cli_certification
+# package-example: anyhow
+# required-crate: anyhow
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(anyhow.Error.downcast_ref, panic=map_error(bridge.anyhow.map_panic))
+def anyhow_context(message: str) -> Result[str, PackageExampleError | RustPanicError]: ...
+
+def verify_anyhow_package() -> Result[str, PackageExampleError | RustPanicError]:
+    return anyhow_context("sifr error context")

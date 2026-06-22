@@ -1,0 +1,13 @@
+# fixture: async_ecosystem_matrix
+# package-example: http-body
+# required-crate: http-body
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(http_body.Body.size_hint, panic=map_error(bridge.http_body.map_panic))
+def http_body_size_hint(body: bytes) -> Result[u64, PackageExampleError | RustPanicError]: ...
+
+def verify_http_body_package() -> Result[u64, PackageExampleError | RustPanicError]:
+    return http_body_size_hint(b"body")

@@ -19,6 +19,12 @@
   "execution_kind": "cargo-probe",
   "features": {},
   "id": "async_ecosystem_matrix",
+  "package_examples": {
+    "futures": "examples/futures.sifr",
+    "http": "examples/http.sifr",
+    "http-body": "examples/http-body.sifr",
+    "tower": "examples/tower.sifr"
+  },
   "required_crates": [
     "futures",
     "tower",

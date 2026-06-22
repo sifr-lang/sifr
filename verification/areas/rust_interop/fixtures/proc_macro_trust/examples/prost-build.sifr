@@ -1,0 +1,16 @@
+# fixture: proc_macro_trust
+# package-example: prost-build
+# required-crate: prost-build
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class ProstConfig:
+    pass
+
+@rust(prost_build.Config.new, panic=map_error(bridge.prost_build.map_panic))
+def prost_build_config(proto: str) -> Result[ProstConfig, PackageExampleError | RustPanicError]: ...
+
+def verify_prost_build_package() -> Result[ProstConfig, PackageExampleError | RustPanicError]:
+    return prost_build_config("schema.proto")

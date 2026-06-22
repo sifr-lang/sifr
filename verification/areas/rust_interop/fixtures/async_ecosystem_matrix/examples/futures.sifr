@@ -1,0 +1,13 @@
+# fixture: async_ecosystem_matrix
+# package-example: futures
+# required-crate: futures
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(futures.future.join, panic=map_error(bridge.futures.map_panic))
+def futures_join(left: i32, right: i32) -> Result[tuple[i32, i32], PackageExampleError | RustPanicError]: ...
+
+def verify_futures_package() -> Result[tuple[i32, i32], PackageExampleError | RustPanicError]:
+    return futures_join(40, 2)

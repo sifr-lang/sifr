@@ -168,6 +168,7 @@ def main() -> int:
             failures.append(f"{fixture_id}: fixture.json is required for evidence files")
 
     covered_crates: set[str] = set()
+    package_example_count = 0
     for fixture in fixtures:
         if not isinstance(fixture, dict):
             failures.append("fixture entries must be objects")
@@ -188,7 +189,7 @@ def main() -> int:
         _validate_feature_policies(failures, fixture_id, fixture.get("features"), crates)
         _validate_evidence(failures, fixture_id, fixture.get("positive_evidence"), "positive_evidence")
         _validate_evidence(failures, fixture_id, fixture.get("negative_evidence"), "negative_evidence")
-        _validate_fixture_files(failures, fixture)
+        package_example_count += _validate_fixture_files(failures, fixture, crates)
 
     failures.extend(f"required crate lacks fixture coverage: {crate}" for crate in sorted(REQUIRED_CRATES - covered_crates))
 
@@ -198,7 +199,8 @@ def main() -> int:
         return 1
     print(
         "rust interop fixture matrix ok: "
-        f"fixtures={len(fixture_id_set)} diagnostics={len(diagnostics)} crates={len(covered_crates)}"
+        f"fixtures={len(fixture_id_set)} diagnostics={len(diagnostics)} "
+        f"crates={len(covered_crates)} package_examples={package_example_count}"
     )
     return 0
 
@@ -238,20 +240,20 @@ def _validate_feature_policies(
             )
 
 
-def _validate_fixture_files(failures: list[str], fixture: dict[str, Any]) -> None:
+def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates: list[Any]) -> int:
     fixture_id = str(fixture.get("id"))
     fixture_dir = FIXTURES_ROOT / fixture_id
     manifest_path = fixture_dir / "fixture.json"
     if not manifest_path.is_file():
-        return
+        return 0
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
         failures.append(f"{fixture_id}: fixture.json is not valid JSON: {error}")
-        return
+        return 0
     if not isinstance(manifest, dict):
         failures.append(f"{fixture_id}: fixture.json must be an object")
-        return
+        return 0
 
     for field in ("id", "capability", "tier", "execution_kind", "required_crates"):
         if manifest.get(field) != fixture.get(field):
@@ -266,7 +268,7 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any]) -> Non
     evidence = manifest.get("evidence")
     if not isinstance(evidence, dict):
         failures.append(f"{fixture_id}: fixture.json evidence must be an object")
-        return
+        return 0
     _validate_fixture_evidence_file(
         failures,
         fixture_id,
@@ -285,6 +287,123 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any]) -> Non
         fixture.get("execution_kind"),
         "negative",
     )
+    return _validate_package_examples(
+        failures,
+        fixture_id,
+        fixture_dir,
+        manifest.get("package_examples"),
+        crates,
+        fixture.get("execution_kind"),
+    )
+
+
+def _validate_package_examples(
+    failures: list[str],
+    fixture_id: str,
+    fixture_dir: Path,
+    raw_examples: Any,
+    crates: list[Any],
+    execution_kind: Any,
+) -> int:
+    expected_crates = {str(crate) for crate in crates}
+    if not expected_crates:
+        if raw_examples not in ({}, None):
+            failures.append(f"{fixture_id}: package_examples must be empty when required_crates is empty")
+        return 0
+    if not isinstance(raw_examples, dict):
+        failures.append(f"{fixture_id}: fixture.json package_examples must cover every required crate")
+        return 0
+
+    actual_crates = {str(crate) for crate in raw_examples}
+    for crate in sorted(expected_crates - actual_crates):
+        failures.append(f"{fixture_id}: missing package example for crate {crate}")
+    for crate in sorted(actual_crates - expected_crates):
+        failures.append(f"{fixture_id}: unexpected package example for crate {crate}")
+
+    valid_examples = 0
+    for crate in sorted(expected_crates & actual_crates):
+        raw_path = raw_examples.get(crate)
+        if not isinstance(raw_path, str) or not raw_path:
+            failures.append(f"{fixture_id}: package_examples.{crate} path is required")
+            continue
+        raw_source_path = Path(raw_path)
+        expected_path = Path("examples") / f"{crate}.sifr"
+        if raw_source_path.is_absolute() or ".." in raw_source_path.parts:
+            failures.append(f"{fixture_id}: package_examples.{crate} must stay inside the fixture directory")
+            continue
+        if raw_source_path != expected_path:
+            failures.append(f"{fixture_id}: package_examples.{crate} must be {expected_path.as_posix()}")
+            continue
+
+        source_path = fixture_dir / raw_source_path
+        if not source_path.is_file():
+            failures.append(f"{fixture_id}: missing package example source {raw_path}")
+            continue
+        text = source_path.read_text(encoding="utf-8")
+        _validate_package_example_text(failures, fixture_id, raw_path, text, crate, execution_kind)
+        valid_examples += 1
+    return valid_examples
+
+
+def _validate_package_example_text(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    text: str,
+    crate: str,
+    execution_kind: Any,
+) -> None:
+    if len(text.strip().splitlines()) < 10:
+        failures.append(f"{fixture_id}: {raw_path} must contain a full package example")
+    required_headers = (
+        f"# fixture: {fixture_id}",
+        f"# package-example: {crate}",
+        f"# required-crate: {crate}",
+        f"# execution-kind: {execution_kind}",
+        "# expected-result: package-example",
+    )
+    for header in required_headers:
+        if header not in text:
+            failures.append(f"{fixture_id}: {raw_path} missing header {header!r}")
+    crate_token = crate.replace("-", "_")
+    bound_function = _rust_bound_function_name(text, crate_token)
+    if bound_function is None:
+        failures.append(f"{fixture_id}: {raw_path} must declare a Rust binding for crate {crate}")
+        return
+
+    verifier_marker = f"def verify_{crate_token}_package("
+    if verifier_marker not in text:
+        failures.append(f"{fixture_id}: {raw_path} must include verify_{crate_token}_package")
+        return
+    verifier_body = text[text.index(verifier_marker) :]
+    if f"{bound_function}(" not in verifier_body:
+        failures.append(f"{fixture_id}: {raw_path} verifier must call {bound_function}")
+
+
+def _rust_bound_function_name(text: str, crate_token: str) -> str | None:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        stripped = line.lstrip()
+        binding_prefix = f"@rust({crate_token}"
+        if not stripped.startswith(binding_prefix):
+            continue
+        if not _has_crate_token_boundary(stripped, len(binding_prefix)):
+            continue
+        for following in lines[index + 1 :]:
+            following_stripped = following.lstrip()
+            if following_stripped.startswith("@"):
+                continue
+            if not following_stripped.startswith("def "):
+                return None
+            return following_stripped.removeprefix("def ").split("(", maxsplit=1)[0].strip()
+    return None
+
+
+def _has_crate_token_boundary(text: str, index: int) -> bool:
+    if index >= len(text):
+        return True
+    next_char = text[index]
+    return not (next_char.isalnum() or next_char == "_")
 
 
 def _validate_fixture_evidence_file(

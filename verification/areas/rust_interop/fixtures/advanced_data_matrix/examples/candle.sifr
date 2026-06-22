@@ -1,0 +1,16 @@
+# fixture: advanced_data_matrix
+# package-example: candle
+# required-crate: candle
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class Tensor:
+    pass
+
+@rust(candle.Tensor.from_vec, panic=map_error(bridge.candle.map_panic))
+def candle_tensor_from_vec(input: list[f32]) -> Result[Tensor, PackageExampleError | RustPanicError]: ...
+
+def verify_candle_package() -> Result[Tensor, PackageExampleError | RustPanicError]:
+    return candle_tensor_from_vec([1.0, 2.0, 3.0, 4.0])

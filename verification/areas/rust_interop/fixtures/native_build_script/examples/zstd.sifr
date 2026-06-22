@@ -1,0 +1,13 @@
+# fixture: native_build_script
+# package-example: zstd
+# required-crate: zstd
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(zstd.encode_all, panic=map_error(bridge.zstd.map_panic))
+def zstd_encode_all(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_zstd_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return zstd_encode_all(b"sifr-rust-interop")
