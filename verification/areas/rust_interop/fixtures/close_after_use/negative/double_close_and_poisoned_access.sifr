@@ -8,3 +8,7 @@
 class NativeHandle:
     @rust(bridge.handle.close, panic=trusted_no_panic)
     def close(self) -> None: ...
+
+def verify_double_close_and_poisoned_access(resource: NativeHandle) -> None:
+    resource.close()
+    return None

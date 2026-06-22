@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def regex_is_match(pattern: str, text: str) -> Result[bool, PackageExampleError | RustPanicError]: ...
 
 def verify_regex_package() -> Result[bool, PackageExampleError | RustPanicError]:
-    return regex_is_match("^sifr", "sifr-rust")
+    sample_result: Result[bool, PackageExampleError | RustPanicError] = regex_is_match("^sifr", "sifr-rust")
+    return sample_result

@@ -6,3 +6,7 @@
 # fixture-trust: rust-panic-abort = ["bridge.legacy.run"]
 @rust(bridge.legacy.run, panic=abort)
 def run_legacy() -> uint32: ...
+
+def verify_explicit_abort_trust_and_strategy_declared() -> uint32:
+    run_legacy_result: uint32 = run_legacy()
+    return run_legacy_result

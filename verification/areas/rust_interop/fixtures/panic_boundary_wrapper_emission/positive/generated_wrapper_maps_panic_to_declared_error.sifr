@@ -8,3 +8,7 @@ class PanicMapped(Error):
 
 @rust(bridge.wrapper.may_panic, panic=map_error(bridge.wrapper.map_panic))
 def may_panic(input: str) -> Result[str, PanicMapped | RustPanicError]: ...
+
+def verify_generated_wrapper_maps_panic_to_declared_error() -> Result[str, PanicMapped | RustPanicError]:
+    may_panic_result: Result[str, PanicMapped | RustPanicError] = may_panic("sifr-rust-interop")
+    return may_panic_result

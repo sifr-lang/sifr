@@ -8,3 +8,7 @@ def crc32(data: bytes) -> uint32: ...
 
 def main() -> uint32:
     return crc32(b"sifr")
+
+def verify_crc32fast_hash_uint32() -> uint32:
+    crc32_result: uint32 = crc32(b"sifr-rust-interop")
+    return crc32_result

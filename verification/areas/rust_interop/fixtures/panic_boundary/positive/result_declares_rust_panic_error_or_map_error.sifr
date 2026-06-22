@@ -8,3 +8,7 @@ class PanicMapped(Error):
 
 @rust(bridge.panic.safe_result, panic=map_error(bridge.panic.map_panic))
 def safe_result() -> Result[uint32, PanicMapped | RustPanicError]: ...
+
+def verify_result_declares_rust_panic_error_or_map_error() -> Result[uint32, PanicMapped | RustPanicError]:
+    safe_result_result: Result[uint32, PanicMapped | RustPanicError] = safe_result()
+    return safe_result_result

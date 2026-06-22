@@ -4,8 +4,12 @@
 # execution-kind: contract-only
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-PANIC-0001
+class UserError(Error):
+    message: str
+
 @rust(bridge.panic.may_panic)
 def may_panic() -> Result[uint32, UserError]: ...
 
-class UserError(Error):
-    message: str
+def verify_panic_payload_not_exposed() -> Result[uint32, UserError]:
+    may_panic_result: Result[uint32, UserError] = may_panic()
+    return may_panic_result

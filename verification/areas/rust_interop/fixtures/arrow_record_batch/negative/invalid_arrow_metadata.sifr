@@ -4,6 +4,14 @@
 # execution-kind: contract-only
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-ZC-0001
+class ArrowRecordBatch:
+    schema: str
+    row_count: uint64
+
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=arrow_record_batch, ownership=borrowed)
 @rust(sifr_arrow_bridge.record_batch_from_bytes, panic=trusted_no_panic)
 def missing_schema(input: bytes) -> ArrowRecordBatch: ...
+
+def verify_invalid_arrow_metadata() -> ArrowRecordBatch:
+    missing_schema_result: ArrowRecordBatch = missing_schema(b"sifr-rust-interop")
+    return missing_schema_result

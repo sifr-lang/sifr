@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class JsonValue:
-    pass
+    label: str
+    bridge_state: str
 
 @rust(serde_json.from_slice, panic=map_error(bridge.serde_json.map_panic))
 def serde_json_decode(input: bytes) -> Result[JsonValue, PackageExampleError | RustPanicError]: ...
 
 def verify_serde_json_package() -> Result[JsonValue, PackageExampleError | RustPanicError]:
-    return serde_json_decode(b"sifr-rust-interop")
+    sample_result: Result[JsonValue, PackageExampleError | RustPanicError] = serde_json_decode(b"sifr-rust-interop")
+    return sample_result

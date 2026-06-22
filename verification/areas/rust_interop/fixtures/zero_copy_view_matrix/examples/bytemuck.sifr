@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def bytemuck_cast_slice(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 def verify_bytemuck_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    return bytemuck_cast_slice(b"sifr-rust-interop")
+    sample_result: Result[bytes, PackageExampleError | RustPanicError] = bytemuck_cast_slice(b"sifr-rust-interop")
+    return sample_result

@@ -9,3 +9,10 @@ class EventError(Error):
 @rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
 def subscribe(handler: ThreadsafeCallback[[str], Result[None, EventError]]) -> Result[None, EventError | RustPanicError]: ...
+
+def sample_result_callback(event: str) -> Result[None, EventError]:
+    return None
+
+def verify_bounded_callback_policy() -> Result[None, EventError | RustPanicError]:
+    subscribe_result: Result[None, EventError | RustPanicError] = subscribe(sample_result_callback)
+    return subscribe_result

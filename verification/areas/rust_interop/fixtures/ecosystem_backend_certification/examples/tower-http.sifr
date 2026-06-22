@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class TraceLayer:
-    pass
+    name: str
+    target: str
 
 @rust(tower_http.trace.TraceLayer.new, panic=map_error(bridge.tower_http.map_panic))
 def tower_http_trace_layer(name: str) -> Result[TraceLayer, PackageExampleError | RustPanicError]: ...
 
 def verify_tower_http_package() -> Result[TraceLayer, PackageExampleError | RustPanicError]:
-    return tower_http_trace_layer("sifr")
+    sample_result: Result[TraceLayer, PackageExampleError | RustPanicError] = tower_http_trace_layer("sifr")
+    return sample_result

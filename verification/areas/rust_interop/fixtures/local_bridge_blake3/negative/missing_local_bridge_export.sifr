@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-RESOLVE-0001
 @rust(bridge.blake3.missing_export, panic=trusted_no_panic)
 def missing_export(input: bytes) -> bytes: ...
+
+def verify_missing_local_bridge_export() -> bytes:
+    missing_export_result: bytes = missing_export(b"sifr-rust-interop")
+    return missing_export_result

@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class NdArray2:
-    pass
+    shape: list[uint64]
+    dtype: str
 
 @rust(ndarray.Array2.from_shape_vec, panic=map_error(bridge.ndarray.map_panic))
-def ndarray_array2(input: list[f32]) -> Result[NdArray2, PackageExampleError | RustPanicError]: ...
+def ndarray_array2(input: list[float]) -> Result[NdArray2, PackageExampleError | RustPanicError]: ...
 
 def verify_ndarray_package() -> Result[NdArray2, PackageExampleError | RustPanicError]:
-    return ndarray_array2([1.0, 2.0, 3.0, 4.0])
+    sample_result: Result[NdArray2, PackageExampleError | RustPanicError] = ndarray_array2([1.0, 2.0, 3.0, 4.0])
+    return sample_result

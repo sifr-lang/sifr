@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class DataFrame:
-    pass
+    schema: str
+    row_count: uint64
 
 @rust(datafusion.SessionContext.new, panic=map_error(bridge.datafusion.map_panic))
 def datafusion_context(query: str) -> Result[DataFrame, PackageExampleError | RustPanicError]: ...
 
 def verify_datafusion_package() -> Result[DataFrame, PackageExampleError | RustPanicError]:
-    return datafusion_context("select 1")
+    sample_result: Result[DataFrame, PackageExampleError | RustPanicError] = datafusion_context("select 1")
+    return sample_result

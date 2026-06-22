@@ -9,3 +9,10 @@ class EventError(Error):
 @rust.callback(backpressure=bounded(32), overflow=error, shutdown=drain)
 @rust(bridge.callbacks.visit, panic=map_error(bridge.callbacks.map_panic))
 def visit(handler: ThreadsafeCallback[[str], Result[None, EventError]]) -> Result[None, EventError | RustPanicError]: ...
+
+def sample_result_callback(event: str) -> Result[None, EventError]:
+    return None
+
+def verify_callback_valid_during_call() -> Result[None, EventError | RustPanicError]:
+    visit_result: Result[None, EventError | RustPanicError] = visit(sample_result_callback)
+    return visit_result

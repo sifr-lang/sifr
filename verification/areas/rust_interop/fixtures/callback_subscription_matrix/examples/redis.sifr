@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class RedisClient:
-    pass
+    url: str
+    connection_id: uint64
 
 @rust(redis.Client.open, panic=map_error(bridge.redis.map_panic))
 def redis_client(url: str) -> Result[RedisClient, PackageExampleError | RustPanicError]: ...
 
 def verify_redis_package() -> Result[RedisClient, PackageExampleError | RustPanicError]:
-    return redis_client("redis://127.0.0.1:6379/0")
+    sample_result: Result[RedisClient, PackageExampleError | RustPanicError] = redis_client("redis://127.0.0.1:6379/0")
+    return sample_result

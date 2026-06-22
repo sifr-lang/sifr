@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def zstd_encode_all(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 def verify_zstd_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    return zstd_encode_all(b"sifr-rust-interop")
+    sample_result: Result[bytes, PackageExampleError | RustPanicError] = zstd_encode_all(b"sifr-rust-interop")
+    return sample_result

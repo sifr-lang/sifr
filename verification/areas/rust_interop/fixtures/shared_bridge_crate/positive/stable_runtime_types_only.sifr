@@ -8,3 +8,7 @@ class SharedDigest:
 
 @rust(sifr_shared_hash_bridge.digest, panic=trusted_no_panic)
 def digest(input: bytes) -> SharedDigest: ...
+
+def verify_stable_runtime_types_only() -> SharedDigest:
+    digest_result: SharedDigest = digest(b"sifr-rust-interop")
+    return digest_result

@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-ASYNC-0001
 @rust(bridge.async_local.non_send_future, panic=trusted_no_panic)
 async def non_send_without_affinity() -> uint32: ...
+
+async def verify_non_send_future_without_affinity() -> uint32:
+    non_send_without_affinity_result: uint32 = await non_send_without_affinity()
+    return non_send_without_affinity_result

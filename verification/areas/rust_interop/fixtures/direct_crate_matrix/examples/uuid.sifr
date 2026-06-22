@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def uuid_parse(text: str) -> Result[str, PackageExampleError | RustPanicError]: ...
 
 def verify_uuid_package() -> Result[str, PackageExampleError | RustPanicError]:
-    return uuid_parse("550e8400-e29b-41d4-a716-446655440000")
+    sample_result: Result[str, PackageExampleError | RustPanicError] = uuid_parse("550e8400-e29b-41d4-a716-446655440000")
+    return sample_result

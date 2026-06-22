@@ -365,22 +365,32 @@ def _validate_package_example_text(
     for header in required_headers:
         if header not in text:
             failures.append(f"{fixture_id}: {raw_path} missing header {header!r}")
+    if _contains_empty_pass_body(text):
+        failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
     crate_token = crate.replace("-", "_")
-    bound_function = _rust_bound_function_name(text, crate_token)
-    if bound_function is None:
+    bound_functions = _rust_bound_function_names(text, crate_token)
+    if not bound_functions:
         failures.append(f"{fixture_id}: {raw_path} must declare a Rust binding for crate {crate}")
         return
 
     verifier_marker = f"def verify_{crate_token}_package("
-    if verifier_marker not in text:
+    async_verifier_marker = f"async def verify_{crate_token}_package("
+    if verifier_marker not in text and async_verifier_marker not in text:
         failures.append(f"{fixture_id}: {raw_path} must include verify_{crate_token}_package")
         return
-    verifier_body = text[text.index(verifier_marker) :]
-    if f"{bound_function}(" not in verifier_body:
-        failures.append(f"{fixture_id}: {raw_path} verifier must call {bound_function}")
+    verifier_start = min(
+        index for index in (text.find(verifier_marker), text.find(async_verifier_marker)) if index >= 0
+    )
+    verifier_body = text[verifier_start:]
+    for bound_function in bound_functions:
+        if f"{bound_function}(" not in verifier_body:
+            failures.append(f"{fixture_id}: {raw_path} verifier must call {bound_function}")
+        if not _verifier_binds_call(verifier_body, bound_function):
+            failures.append(f"{fixture_id}: {raw_path} verifier must bind {bound_function} result before returning")
 
 
-def _rust_bound_function_name(text: str, crate_token: str) -> str | None:
+def _rust_bound_function_names(text: str, crate_token: str) -> list[str]:
+    names: list[str] = []
     lines = text.splitlines()
     for index, line in enumerate(lines):
         stripped = line.lstrip()
@@ -393,10 +403,45 @@ def _rust_bound_function_name(text: str, crate_token: str) -> str | None:
             following_stripped = following.lstrip()
             if following_stripped.startswith("@"):
                 continue
-            if not following_stripped.startswith("def "):
-                return None
-            return following_stripped.removeprefix("def ").split("(", maxsplit=1)[0].strip()
-    return None
+            name = _decorated_function_name(following_stripped)
+            if name is not None and name not in names:
+                names.append(name)
+            break
+    return names
+
+
+def _verifier_binds_call(verifier_body: str, bound_function: str) -> bool:
+    for line in verifier_body.splitlines():
+        for before_call in _bound_call_prefixes(line, bound_function):
+            if "=" in before_call and not before_call.lstrip().startswith("return "):
+                return True
+    return False
+
+
+def _bound_call_prefixes(line: str, bound_function: str) -> list[str]:
+    prefixes: list[str] = []
+    marker = f"{bound_function}("
+    start = 0
+    while True:
+        index = line.find(marker, start)
+        if index < 0:
+            break
+        if index == 0 or not _is_identifier_or_path_char(line[index - 1]):
+            prefixes.append(line[:index])
+        start = index + len(marker)
+    method_marker = f".{bound_function}("
+    start = 0
+    while True:
+        index = line.find(method_marker, start)
+        if index < 0:
+            break
+        prefixes.append(line[: index + 1])
+        start = index + len(method_marker)
+    return prefixes
+
+
+def _is_identifier_or_path_char(char: str) -> bool:
+    return char.isalnum() or char in {"_", "."}
 
 
 def _has_crate_token_boundary(text: str, index: int) -> bool:
@@ -461,6 +506,7 @@ def _validate_fixture_evidence_file(
             failures.append(f"{fixture_id}: {raw_path} missing header {header!r}")
     if not any(line.lstrip().startswith("@rust") for line in text.splitlines()):
         failures.append(f"{fixture_id}: {raw_path} must exercise a Rust interop declaration")
+    _validate_evidence_example_text(failures, fixture_id, raw_path, text, str(matrix_evidence.get("id")))
 
     expected_result = manifest_evidence.get("expected_result")
     if not isinstance(expected_result, str) or not expected_result:
@@ -486,6 +532,85 @@ def _validate_fixture_evidence_file(
             failures.append(f"{fixture_id}: evidence.{side}.expected_diagnostic must be a reserved SIFR-RUST code")
         elif f"# expected-diagnostic: {expected_diagnostic}" not in text:
             failures.append(f"{fixture_id}: {raw_path} missing expected diagnostic marker {expected_diagnostic}")
+
+
+def _validate_evidence_example_text(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    text: str,
+    evidence_id: str,
+) -> None:
+    if len(text.strip().splitlines()) < 9:
+        failures.append(f"{fixture_id}: {raw_path} must include a binding and concrete verifier call site")
+    if _contains_empty_pass_body(text):
+        failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
+
+    verifier_markers = (
+        f"def verify_{evidence_id}(",
+        f"async def verify_{evidence_id}(",
+    )
+    verifier_start = min((text.find(marker) for marker in verifier_markers if marker in text), default=-1)
+    if verifier_start < 0:
+        failures.append(f"{fixture_id}: {raw_path} must include verify_{evidence_id}")
+        return
+
+    verifier_body = text[verifier_start:]
+    bound_declarations = _rust_bound_declarations(text)
+    if not bound_declarations:
+        failures.append(f"{fixture_id}: {raw_path} must include a Rust-decorated binding declaration")
+    for name, return_type in bound_declarations:
+        if f"{name}(" not in verifier_body and f".{name}(" not in verifier_body:
+            failures.append(f"{fixture_id}: {raw_path} verifier must call {name}")
+        if return_type != "None" and not _verifier_binds_call(verifier_body, name):
+            failures.append(f"{fixture_id}: {raw_path} verifier must bind {name} result before returning")
+
+
+def _rust_bound_declaration_names(text: str) -> list[str]:
+    return [name for name, _return_type in _rust_bound_declarations(text)]
+
+
+def _rust_bound_declarations(text: str) -> list[tuple[str, str]]:
+    names: list[str] = []
+    declarations: list[tuple[str, str]] = []
+    decorators: list[str] = []
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        if stripped.startswith("@"):
+            decorators.append(stripped)
+            continue
+        if _is_rust_decorated_binding(stripped, decorators):
+            name = _decorated_function_name(stripped)
+            if name is not None and name not in names:
+                names.append(name)
+                declarations.append((name, _decorated_function_return_type(stripped)))
+        if stripped and not stripped.startswith("@"):
+            decorators = []
+    return declarations
+
+
+def _is_rust_decorated_binding(stripped: str, decorators: list[str]) -> bool:
+    return (
+        any(decorator.startswith("@rust") for decorator in decorators)
+        and (stripped.startswith("def ") or stripped.startswith("async def "))
+        and stripped.endswith(": ...")
+    )
+
+
+def _decorated_function_name(stripped: str) -> str | None:
+    if stripped.startswith("async def "):
+        stripped = stripped.removeprefix("async ")
+    if not stripped.startswith("def "):
+        return None
+    return stripped.removeprefix("def ").split("(", maxsplit=1)[0].strip()
+
+
+def _decorated_function_return_type(stripped: str) -> str:
+    return stripped.split("->", maxsplit=1)[1].rsplit(":", maxsplit=1)[0].strip()
+
+
+def _contains_empty_pass_body(text: str) -> bool:
+    return any(line.strip() == "pass" for line in text.splitlines())
 
 
 if __name__ == "__main__":

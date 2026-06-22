@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def tracing_subscriber_init(filter: str) -> Result[None, PackageExampleError | RustPanicError]: ...
 
 def verify_tracing_subscriber_package() -> Result[None, PackageExampleError | RustPanicError]:
-    return tracing_subscriber_init("info")
+    sample_result: Result[None, PackageExampleError | RustPanicError] = tracing_subscriber_init("info")
+    return sample_result

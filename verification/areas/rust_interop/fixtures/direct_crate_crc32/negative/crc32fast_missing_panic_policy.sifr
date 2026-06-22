@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-PANIC-0001
 @rust(crc32fast.hash)
 def crc32(data: bytes) -> uint32: ...
+
+def verify_crc32fast_missing_panic_policy() -> uint32:
+    crc32_result: uint32 = crc32(b"sifr-rust-interop")
+    return crc32_result

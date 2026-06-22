@@ -7,3 +7,7 @@
 # fixture-cargo: rust.bridge-version = 999
 @rust(bridge.version.rejected, panic=trusted_no_panic)
 def rejected() -> uint32: ...
+
+def verify_unsupported_bridge_version_rejected() -> uint32:
+    rejected_result: uint32 = rejected()
+    return rejected_result

@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-CONFIG-0001
 @rust("bridge.hash.digest")
 def digest(data: bytes) -> bytes: ...
+
+def verify_string_and_reserved_root_rejection() -> bytes:
+    digest_result: bytes = digest(b"sifr-rust-interop")
+    return digest_result

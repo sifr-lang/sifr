@@ -10,3 +10,7 @@ class HandleError(Error):
 class NativeHandle:
     @rust(bridge.handle.close, panic=map_error(bridge.handle.map_panic))
     def close(own self) -> Result[None, HandleError | RustPanicError]: ...
+
+def verify_closed_handle_error_surface(resource: NativeHandle) -> Result[None, HandleError | RustPanicError]:
+    close_result: Result[None, HandleError | RustPanicError] = resource.close()
+    return close_result

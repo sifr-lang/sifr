@@ -7,7 +7,8 @@ class PackageExampleError(Error):
     message: str
 
 @rust(futures.future.join, panic=map_error(bridge.futures.map_panic))
-def futures_join(left: i32, right: i32) -> Result[tuple[i32, i32], PackageExampleError | RustPanicError]: ...
+async def futures_join(left: int32, right: int32) -> Result[tuple[int32, int32], PackageExampleError | RustPanicError]: ...
 
-def verify_futures_package() -> Result[tuple[i32, i32], PackageExampleError | RustPanicError]:
-    return futures_join(40, 2)
+async def verify_futures_package() -> Result[tuple[int32, int32], PackageExampleError | RustPanicError]:
+    sample_result: Result[tuple[int32, int32], PackageExampleError | RustPanicError] = await futures_join(40, 2)
+    return sample_result

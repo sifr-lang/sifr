@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-CARGO-0001
 @rust(undeclared_workspace_hash.hash, panic=trusted_no_panic)
 def undeclared(input: bytes) -> uint64: ...
+
+def verify_undeclared_workspace_crate_rejected() -> uint64:
+    undeclared_result: uint64 = undeclared(b"sifr-rust-interop")
+    return undeclared_result

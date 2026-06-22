@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def tracing_info(message: str) -> Result[None, PackageExampleError | RustPanicError]: ...
 
 def verify_tracing_package() -> Result[None, PackageExampleError | RustPanicError]:
-    return tracing_info("sifr error context")
+    sample_result: Result[None, PackageExampleError | RustPanicError] = tracing_info("sifr error context")
+    return sample_result

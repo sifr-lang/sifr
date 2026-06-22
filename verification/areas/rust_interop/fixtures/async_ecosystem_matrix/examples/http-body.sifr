@@ -7,7 +7,8 @@ class PackageExampleError(Error):
     message: str
 
 @rust(http_body.Body.size_hint, panic=map_error(bridge.http_body.map_panic))
-def http_body_size_hint(body: bytes) -> Result[u64, PackageExampleError | RustPanicError]: ...
+def http_body_size_hint(body: bytes) -> Result[uint64, PackageExampleError | RustPanicError]: ...
 
-def verify_http_body_package() -> Result[u64, PackageExampleError | RustPanicError]:
-    return http_body_size_hint(b"body")
+def verify_http_body_package() -> Result[uint64, PackageExampleError | RustPanicError]:
+    sample_result: Result[uint64, PackageExampleError | RustPanicError] = http_body_size_hint(b"body")
+    return sample_result

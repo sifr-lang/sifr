@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def sha256_digest(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 def verify_sha2_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    return sha256_digest(b"sifr-rust-interop")
+    sample_result: Result[bytes, PackageExampleError | RustPanicError] = sha256_digest(b"sifr-rust-interop")
+    return sample_result

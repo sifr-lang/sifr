@@ -7,3 +7,7 @@
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True)
 @rust(bridge.views.slice_view, panic=trusted_no_panic)
 def slice_view(input: bytes) -> bytes: ...
+
+def verify_owner_lifetime_views() -> bytes:
+    slice_view_result: bytes = slice_view(b"sifr-rust-interop")
+    return slice_view_result

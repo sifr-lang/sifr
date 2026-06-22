@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def bytes_from_slice(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 def verify_bytes_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    return bytes_from_slice(b"sifr-rust-interop")
+    sample_result: Result[bytes, PackageExampleError | RustPanicError] = bytes_from_slice(b"sifr-rust-interop")
+    return sample_result

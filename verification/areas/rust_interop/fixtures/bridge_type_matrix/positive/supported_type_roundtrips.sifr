@@ -12,3 +12,7 @@ class BridgeError(Error):
 
 @rust(bridge.types.roundtrip, panic=map_error(bridge.types.map_error))
 def roundtrip(value: HashRecord) -> Result[HashRecord, BridgeError | RustPanicError]: ...
+
+def verify_supported_type_roundtrips() -> Result[HashRecord, BridgeError | RustPanicError]:
+    roundtrip_result: Result[HashRecord, BridgeError | RustPanicError] = roundtrip(HashRecord(b"sifr-rust-interop", 18))
+    return roundtrip_result

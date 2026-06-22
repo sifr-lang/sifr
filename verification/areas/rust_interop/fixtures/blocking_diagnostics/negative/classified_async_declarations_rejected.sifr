@@ -6,3 +6,7 @@
 # expected-diagnostic: SIFR-RUST-ASYNC-0001
 @rust(bridge.db.query_blocking, panic=trusted_no_panic)
 async def hidden_blocking_query(sql: str) -> list[str]: ...
+
+async def verify_classified_async_declarations_rejected() -> list[str]:
+    hidden_blocking_query_result: list[str] = await hidden_blocking_query("select 1")
+    return hidden_blocking_query_result

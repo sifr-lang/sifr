@@ -7,3 +7,10 @@
 @rust.callback(backpressure=bounded(32), overflow=error, shutdown=drain)
 @rust(bridge.callbacks.store_for_later, panic=trusted_no_panic)
 def store_for_later(handler: ThreadsafeCallback[[str], None]) -> None: ...
+
+def sample_event_callback(event: str) -> None:
+    return None
+
+def verify_callback_storage_rejected() -> None:
+    store_for_later(sample_event_callback)
+    return None

@@ -8,3 +8,7 @@ class CliError(Error):
 
 @rust(bridge.cli.parse_and_trace, panic=map_error(bridge.cli.map_panic))
 def parse_and_trace(args: list[str]) -> Result[uint32, CliError | RustPanicError]: ...
+
+def verify_cli_tooling_probe_coverage() -> Result[uint32, CliError | RustPanicError]:
+    parse_and_trace_result: Result[uint32, CliError | RustPanicError] = parse_and_trace(["sifr", "--version"])
+    return parse_and_trace_result

@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def serde_serialize(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 def verify_serde_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    return serde_serialize(b"sifr-rust-interop")
+    sample_result: Result[bytes, PackageExampleError | RustPanicError] = serde_serialize(b"sifr-rust-interop")
+    return sample_result

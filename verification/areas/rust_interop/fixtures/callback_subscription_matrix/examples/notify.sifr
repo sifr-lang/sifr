@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class WatcherHandle:
-    pass
+    path: str
+    watch_id: uint64
 
 @rust(notify.recommended_watcher, panic=map_error(bridge.notify.map_panic))
 def notify_watcher(path: str) -> Result[WatcherHandle, PackageExampleError | RustPanicError]: ...
 
 def verify_notify_package() -> Result[WatcherHandle, PackageExampleError | RustPanicError]:
-    return notify_watcher("/tmp/sifr-rust-interop.bin")
+    sample_result: Result[WatcherHandle, PackageExampleError | RustPanicError] = notify_watcher("/tmp/sifr-rust-interop.bin")
+    return sample_result

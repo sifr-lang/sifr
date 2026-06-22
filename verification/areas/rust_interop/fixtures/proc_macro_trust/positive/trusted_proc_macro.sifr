@@ -5,8 +5,16 @@
 # expected-result: future-owned
 # fixture-trust: rust-proc-macros = ["serde_derive"]
 # fixture-trust: rust-build-scripts = ["prost-build"]
+class DecodeError(Error):
+    message: str
+
+class GeneratedMessage:
+    id: uint64
+    payload: bytes
+
 @rust(bridge.generated.decode, panic=map_error(bridge.generated.map_panic))
 def decode(input: bytes) -> Result[GeneratedMessage, DecodeError | RustPanicError]: ...
 
-class DecodeError(Error):
-    message: str
+def verify_trusted_proc_macro() -> Result[GeneratedMessage, DecodeError | RustPanicError]:
+    decode_result: Result[GeneratedMessage, DecodeError | RustPanicError] = decode(b"sifr-rust-interop")
+    return decode_result

@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class MmapView:
-    pass
+    path: str
+    length: uint64
 
 @rust(memmap2.MmapOptions.new, panic=map_error(bridge.memmap2.map_panic))
 def memmap2_view(path: str) -> Result[MmapView, PackageExampleError | RustPanicError]: ...
 
 def verify_memmap2_package() -> Result[MmapView, PackageExampleError | RustPanicError]:
-    return memmap2_view("/tmp/sifr-rust-interop.bin")
+    sample_result: Result[MmapView, PackageExampleError | RustPanicError] = memmap2_view("/tmp/sifr-rust-interop.bin")
+    return sample_result

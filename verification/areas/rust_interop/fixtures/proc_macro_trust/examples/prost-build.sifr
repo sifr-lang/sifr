@@ -7,10 +7,12 @@ class PackageExampleError(Error):
     message: str
 
 class ProstConfig:
-    pass
+    proto: str
+    out_dir: str
 
 @rust(prost_build.Config.new, panic=map_error(bridge.prost_build.map_panic))
 def prost_build_config(proto: str) -> Result[ProstConfig, PackageExampleError | RustPanicError]: ...
 
 def verify_prost_build_package() -> Result[ProstConfig, PackageExampleError | RustPanicError]:
-    return prost_build_config("schema.proto")
+    sample_result: Result[ProstConfig, PackageExampleError | RustPanicError] = prost_build_config("schema.proto")
+    return sample_result

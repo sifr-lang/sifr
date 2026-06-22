@@ -10,4 +10,5 @@ class PackageExampleError(Error):
 def blake3_hash(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 def verify_blake3_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    return blake3_hash(b"sifr-rust-interop")
+    sample_result: Result[bytes, PackageExampleError | RustPanicError] = blake3_hash(b"sifr-rust-interop")
+    return sample_result

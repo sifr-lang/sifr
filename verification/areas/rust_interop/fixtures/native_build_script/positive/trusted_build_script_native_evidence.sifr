@@ -5,8 +5,12 @@
 # expected-result: future-owned
 # fixture-trust: rust-build-scripts = ["zstd", "cc", "bindgen", "cxx"]
 # fixture-trust: native-links = ["zstd"]
+class NativeError(Error):
+    message: str
+
 @rust(bridge.native.compress, panic=map_error(bridge.native.map_panic))
 def compress(input: bytes) -> Result[bytes, NativeError | RustPanicError]: ...
 
-class NativeError(Error):
-    message: str
+def verify_trusted_build_script_native_evidence() -> Result[bytes, NativeError | RustPanicError]:
+    compress_result: Result[bytes, NativeError | RustPanicError] = compress(b"sifr-rust-interop")
+    return compress_result
