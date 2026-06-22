@@ -136,6 +136,7 @@ def run_stress() -> None:
         finally:
             client.close()
     run_project_cross_file_queries()
+    run_project_save_reuses_project_owner()
     run_multi_project_workspace_symbols()
 
 
@@ -183,6 +184,156 @@ def run_project_cross_file_queries() -> None:
             client.notify("exit", {})
         finally:
             client.close()
+
+
+def run_project_save_reuses_project_owner() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-lsp-project-save-") as raw:
+        root = Path(raw)
+        (root / "sifr.toml").write_text(
+            '[package]\nname = "lsp_project_save"\n[source]\nroots = ["."]\n',
+            encoding="utf-8",
+        )
+        main = root / "main.sifr"
+        initial = (
+            "from sifr.random import randint\n\n"
+            "def main() -> int:\n"
+            "    value: int = randint(0, 100)\n"
+            "    if value > 50:\n"
+            "        return value\n"
+            "    return 0\n"
+        )
+        saved = (
+            "def helper(value: int) -> int:\n"
+            "    return value + 1\n\n"
+            "def main() -> int:\n"
+            "    result: int = helper(41)\n"
+            "    return result\n"
+        )
+        shortened = (
+            "from sifr.random import randint\n\n"
+            "def main():\n"
+            "    value = randint(0, 100)\n"
+            "    print(value)\n"
+        )
+        main.write_text(initial, encoding="utf-8")
+        uri = file_uri(main)
+        client = LspClient()
+        try:
+            initialize(client, root)
+            open_document(client, main, initial)
+            client.notify(
+                "textDocument/didChange",
+                {
+                    "textDocument": {"uri": uri, "version": 2},
+                    "contentChanges": [{"text": saved}],
+                },
+            )
+            client.wait_for_notification("textDocument/publishDiagnostics")
+            client.notify("textDocument/didSave", {"textDocument": {"uri": uri}, "text": saved})
+            client.wait_for_notification("textDocument/publishDiagnostics")
+            client.notify(
+                "textDocument/didChange",
+                {
+                    "textDocument": {"uri": uri, "version": 3},
+                    "contentChanges": [{"text": shortened}],
+                },
+            )
+            client.wait_for_notification("textDocument/publishDiagnostics")
+            folding = client.request("textDocument/foldingRange", {"textDocument": {"uri": uri}})
+            if not isinstance(folding, list):
+                raise LspProtocolError(f"project foldingRange after save returned non-list: {folding}")
+            assert_ranges_within_source(folding, shortened, "project foldingRange after save")
+            semantic = client.request("textDocument/semanticTokens/full", {"textDocument": {"uri": uri}})
+            if not isinstance(semantic, dict) or "data" not in semantic:
+                raise LspProtocolError(f"project semantic tokens after save returned invalid payload: {semantic}")
+            assert_semantic_tokens_within_source(semantic["data"], shortened, "project semantic tokens after save")
+            symbols = client.request("textDocument/documentSymbol", {"textDocument": {"uri": uri}})
+            if not isinstance(symbols, list):
+                raise LspProtocolError(f"project documentSymbol after save returned non-list: {symbols}")
+            assert_document_symbols_within_source(symbols, shortened, "project documentSymbol after save")
+            client.request("shutdown", {})
+            client.notify("exit", {})
+        finally:
+            client.close()
+
+
+def line_lengths(source: str) -> list[int]:
+    lines = source.splitlines()
+    if source.endswith("\n"):
+        return [len(line) for line in lines] + [0]
+    return [len(line) for line in lines] or [0]
+
+
+def assert_ranges_within_source(ranges: list[dict], source: str, label: str) -> None:
+    lengths = line_lengths(source)
+    for item in ranges:
+        start_line = item.get("startLine")
+        end_line = item.get("endLine")
+        start_character = item.get("startCharacter", 0)
+        end_character = item.get("endCharacter", lengths[end_line] if isinstance(end_line, int) and end_line < len(lengths) else 0)
+        if not isinstance(start_line, int) or not isinstance(end_line, int):
+            raise LspProtocolError(f"{label} returned non-integer range lines: {item}")
+        if start_line < 0 or end_line < start_line or end_line >= len(lengths):
+            raise LspProtocolError(f"{label} returned range outside source lines: {item}")
+        if not isinstance(start_character, int) or not isinstance(end_character, int):
+            raise LspProtocolError(f"{label} returned non-integer range characters: {item}")
+        if start_character < 0 or start_character > lengths[start_line]:
+            raise LspProtocolError(f"{label} returned start outside source line: {item}")
+        if end_character < 0 or end_character > lengths[end_line]:
+            raise LspProtocolError(f"{label} returned end outside source line: {item}")
+
+
+def assert_lsp_range_within_source(item: dict, source: str, label: str) -> None:
+    lengths = line_lengths(source)
+    start = item.get("start")
+    end = item.get("end")
+    if not isinstance(start, dict) or not isinstance(end, dict):
+        raise LspProtocolError(f"{label} returned invalid LSP range: {item}")
+    start_line = start.get("line")
+    start_character = start.get("character")
+    end_line = end.get("line")
+    end_character = end.get("character")
+    if not all(isinstance(value, int) for value in [start_line, start_character, end_line, end_character]):
+        raise LspProtocolError(f"{label} returned non-integer LSP range: {item}")
+    if start_line < 0 or end_line < start_line or end_line >= len(lengths):
+        raise LspProtocolError(f"{label} returned range outside source lines: {item}")
+    if start_character < 0 or start_character > lengths[start_line]:
+        raise LspProtocolError(f"{label} returned start outside source line: {item}")
+    if end_character < 0 or end_character > lengths[end_line]:
+        raise LspProtocolError(f"{label} returned end outside source line: {item}")
+
+
+def assert_document_symbols_within_source(symbols: list[dict], source: str, label: str) -> None:
+    for symbol in symbols:
+        symbol_range = symbol.get("range")
+        if isinstance(symbol_range, dict):
+            assert_lsp_range_within_source(symbol_range, source, label)
+        selection_range = symbol.get("selectionRange")
+        if isinstance(selection_range, dict):
+            assert_lsp_range_within_source(selection_range, source, label)
+        children = symbol.get("children")
+        if isinstance(children, list):
+            assert_document_symbols_within_source(children, source, label)
+
+
+def assert_semantic_tokens_within_source(data: object, source: str, label: str) -> None:
+    if not isinstance(data, list) or len(data) % 5 != 0:
+        raise LspProtocolError(f"{label} returned invalid semantic token data: {data}")
+    lengths = line_lengths(source)
+    line = 0
+    start = 0
+    for index in range(0, len(data), 5):
+        delta_line, delta_start, length, _token_type, _modifiers = data[index:index + 5]
+        if not all(isinstance(value, int) for value in [delta_line, delta_start, length]):
+            raise LspProtocolError(f"{label} returned non-integer semantic token tuple: {data[index:index + 5]}")
+        if delta_line < 0 or delta_start < 0 or length < 0:
+            raise LspProtocolError(f"{label} returned negative semantic token tuple: {data[index:index + 5]}")
+        line += delta_line
+        start = start + delta_start if delta_line == 0 else delta_start
+        if line >= len(lengths):
+            raise LspProtocolError(f"{label} returned token outside source lines: {data[index:index + 5]}")
+        if start > lengths[line] or start + length > lengths[line]:
+            raise LspProtocolError(f"{label} returned token outside source line: {data[index:index + 5]}")
 
 
 def run_multi_project_workspace_symbols() -> None:
