@@ -1,0 +1,16 @@
+# fixture: advanced_data_matrix
+# package-example: polars
+# required-crate: polars
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class DataFrame:
+    pass
+
+@rust(polars.DataFrame.new, panic=map_error(bridge.polars.map_panic))
+def polars_dataframe(input: bytes) -> Result[DataFrame, PackageExampleError | RustPanicError]: ...
+
+def verify_polars_package() -> Result[DataFrame, PackageExampleError | RustPanicError]:
+    return polars_dataframe(b"sifr-rust-interop")

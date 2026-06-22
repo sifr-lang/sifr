@@ -23,6 +23,10 @@
     }
   },
   "id": "proc_macro_trust",
+  "package_examples": {
+    "prost-build": "examples/prost-build.sifr",
+    "serde_derive": "examples/serde_derive.sifr"
+  },
   "required_crates": [
     "serde_derive",
     "prost-build"

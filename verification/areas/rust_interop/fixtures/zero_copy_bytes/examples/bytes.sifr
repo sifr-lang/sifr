@@ -1,0 +1,13 @@
+# fixture: zero_copy_bytes
+# package-example: bytes
+# required-crate: bytes
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(bytes.Bytes.copy_from_slice, panic=map_error(bridge.bytes.map_panic))
+def bytes_from_slice(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_bytes_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return bytes_from_slice(b"sifr-rust-interop")

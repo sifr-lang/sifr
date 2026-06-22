@@ -28,6 +28,11 @@
     }
   },
   "id": "ecosystem_backend_certification",
+  "package_examples": {
+    "axum": "examples/axum.sifr",
+    "sqlx": "examples/sqlx.sifr",
+    "tower-http": "examples/tower-http.sifr"
+  },
   "required_crates": [
     "axum",
     "tower-http",

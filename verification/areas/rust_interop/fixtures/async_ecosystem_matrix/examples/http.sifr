@@ -1,0 +1,16 @@
+# fixture: async_ecosystem_matrix
+# package-example: http
+# required-crate: http
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class HttpRequest:
+    pass
+
+@rust(http.Request.builder, panic=map_error(bridge.http.map_panic))
+def http_request_builder(url: str) -> Result[HttpRequest, PackageExampleError | RustPanicError]: ...
+
+def verify_http_package() -> Result[HttpRequest, PackageExampleError | RustPanicError]:
+    return http_request_builder("https://127.0.0.1/health")

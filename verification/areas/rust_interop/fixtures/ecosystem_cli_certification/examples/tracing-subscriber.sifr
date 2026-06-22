@@ -1,0 +1,13 @@
+# fixture: ecosystem_cli_certification
+# package-example: tracing-subscriber
+# required-crate: tracing-subscriber
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(tracing_subscriber.fmt.init, panic=map_error(bridge.tracing_subscriber.map_panic))
+def tracing_subscriber_init(filter: str) -> Result[None, PackageExampleError | RustPanicError]: ...
+
+def verify_tracing_subscriber_package() -> Result[None, PackageExampleError | RustPanicError]:
+    return tracing_subscriber_init("info")

@@ -25,6 +25,12 @@
     }
   },
   "id": "ecosystem_cli_certification",
+  "package_examples": {
+    "anyhow": "examples/anyhow.sifr",
+    "clap": "examples/clap.sifr",
+    "tracing": "examples/tracing.sifr",
+    "tracing-subscriber": "examples/tracing-subscriber.sifr"
+  },
   "required_crates": [
     "clap",
     "tracing",

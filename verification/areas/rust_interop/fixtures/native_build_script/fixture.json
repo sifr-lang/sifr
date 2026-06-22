@@ -19,6 +19,12 @@
   "execution_kind": "cargo-probe",
   "features": {},
   "id": "native_build_script",
+  "package_examples": {
+    "bindgen": "examples/bindgen.sifr",
+    "cc": "examples/cc.sifr",
+    "cxx": "examples/cxx.sifr",
+    "zstd": "examples/zstd.sifr"
+  },
   "required_crates": [
     "cc",
     "bindgen",

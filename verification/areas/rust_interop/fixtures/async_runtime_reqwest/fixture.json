@@ -27,6 +27,10 @@
     }
   },
   "id": "async_runtime_reqwest",
+  "package_examples": {
+    "reqwest": "examples/reqwest.sifr",
+    "tokio": "examples/tokio.sifr"
+  },
   "required_crates": [
     "tokio",
     "reqwest"

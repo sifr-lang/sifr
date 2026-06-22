@@ -1,0 +1,13 @@
+# fixture: direct_crate_matrix
+# package-example: sha2
+# required-crate: sha2
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(sha2.Sha256.digest, panic=map_error(bridge.sha2.map_panic))
+def sha256_digest(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_sha2_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return sha256_digest(b"sifr-rust-interop")

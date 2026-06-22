@@ -1,0 +1,16 @@
+# fixture: native_build_script
+# package-example: cc
+# required-crate: cc
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class BuildPlan:
+    pass
+
+@rust(cc.Build.new, panic=map_error(bridge.cc.map_panic))
+def cc_build_new(source: str) -> Result[BuildPlan, PackageExampleError | RustPanicError]: ...
+
+def verify_cc_package() -> Result[BuildPlan, PackageExampleError | RustPanicError]:
+    return cc_build_new("src/native.c")

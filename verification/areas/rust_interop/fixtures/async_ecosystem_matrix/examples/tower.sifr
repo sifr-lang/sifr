@@ -1,0 +1,13 @@
+# fixture: async_ecosystem_matrix
+# package-example: tower
+# required-crate: tower
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(tower.Service.call, panic=map_error(bridge.tower.map_panic))
+def tower_service_call(request: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_tower_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    return tower_service_call(b"GET / HTTP/1.1")

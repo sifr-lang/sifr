@@ -1,0 +1,16 @@
+# fixture: bridge_type_matrix
+# package-example: serde_json
+# required-crate: serde_json
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class JsonValue:
+    pass
+
+@rust(serde_json.from_slice, panic=map_error(bridge.serde_json.map_panic))
+def serde_json_decode(input: bytes) -> Result[JsonValue, PackageExampleError | RustPanicError]: ...
+
+def verify_serde_json_package() -> Result[JsonValue, PackageExampleError | RustPanicError]:
+    return serde_json_decode(b"sifr-rust-interop")

@@ -1,0 +1,16 @@
+# fixture: zero_copy_view_matrix
+# package-example: zerocopy
+# required-crate: zerocopy
+# execution-kind: contract-only
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class ZeroCopyView:
+    pass
+
+@rust(zerocopy.FromBytes.ref_from_bytes, panic=map_error(bridge.zerocopy.map_panic))
+def zerocopy_ref_from_bytes(input: bytes) -> Result[ZeroCopyView, PackageExampleError | RustPanicError]: ...
+
+def verify_zerocopy_package() -> Result[ZeroCopyView, PackageExampleError | RustPanicError]:
+    return zerocopy_ref_from_bytes(b"sifr-rust-interop")

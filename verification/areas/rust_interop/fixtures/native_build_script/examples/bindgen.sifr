@@ -1,0 +1,16 @@
+# fixture: native_build_script
+# package-example: bindgen
+# required-crate: bindgen
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class BindgenBuilder:
+    pass
+
+@rust(bindgen.Builder.default, panic=map_error(bridge.bindgen.map_panic))
+def bindgen_builder(header: str) -> Result[BindgenBuilder, PackageExampleError | RustPanicError]: ...
+
+def verify_bindgen_package() -> Result[BindgenBuilder, PackageExampleError | RustPanicError]:
+    return bindgen_builder("wrapper.h")

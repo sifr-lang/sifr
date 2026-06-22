@@ -29,6 +29,11 @@
     }
   },
   "id": "callback_subscription_matrix",
+  "package_examples": {
+    "notify": "examples/notify.sifr",
+    "redis": "examples/redis.sifr",
+    "tokio-tungstenite": "examples/tokio-tungstenite.sifr"
+  },
   "required_crates": [
     "tokio-tungstenite",
     "redis",

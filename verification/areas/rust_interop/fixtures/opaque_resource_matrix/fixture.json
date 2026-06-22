@@ -44,6 +44,12 @@
     }
   },
   "id": "opaque_resource_matrix",
+  "package_examples": {
+    "redis": "examples/redis.sifr",
+    "reqwest": "examples/reqwest.sifr",
+    "rusqlite": "examples/rusqlite.sifr",
+    "tokio-postgres": "examples/tokio-postgres.sifr"
+  },
   "required_crates": [
     "reqwest",
     "rusqlite",

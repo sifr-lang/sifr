@@ -1,0 +1,16 @@
+# fixture: opaque_resource_matrix
+# package-example: rusqlite
+# required-crate: rusqlite
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class SqlRows:
+    pass
+
+@rust(rusqlite.Connection.open_in_memory, panic=map_error(bridge.rusqlite.map_panic))
+def rusqlite_memory(query: str) -> Result[SqlRows, PackageExampleError | RustPanicError]: ...
+
+def verify_rusqlite_package() -> Result[SqlRows, PackageExampleError | RustPanicError]:
+    return rusqlite_memory("select 1")

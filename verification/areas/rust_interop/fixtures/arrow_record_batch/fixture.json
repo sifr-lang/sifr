@@ -21,6 +21,9 @@
   "execution_kind": "contract-only",
   "features": {},
   "id": "arrow_record_batch",
+  "package_examples": {
+    "arrow": "examples/arrow.sifr"
+  },
   "required_crates": [
     "arrow"
   ],

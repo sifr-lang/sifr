@@ -1,0 +1,16 @@
+# fixture: callback_subscription_matrix
+# package-example: tokio-tungstenite
+# required-crate: tokio-tungstenite
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class WebSocket:
+    pass
+
+@rust(tokio_tungstenite.connect_async, panic=map_error(bridge.tokio_tungstenite.map_panic))
+def tokio_tungstenite_connect(url: str) -> Result[WebSocket, PackageExampleError | RustPanicError]: ...
+
+def verify_tokio_tungstenite_package() -> Result[WebSocket, PackageExampleError | RustPanicError]:
+    return tokio_tungstenite_connect("ws://127.0.0.1:9001/stream")

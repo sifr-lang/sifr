@@ -1,0 +1,16 @@
+# fixture: ecosystem_cli_certification
+# package-example: clap
+# required-crate: clap
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+class CliCommand:
+    pass
+
+@rust(clap.Command.new, panic=map_error(bridge.clap.map_panic))
+def clap_command(name: str) -> Result[CliCommand, PackageExampleError | RustPanicError]: ...
+
+def verify_clap_package() -> Result[CliCommand, PackageExampleError | RustPanicError]:
+    return clap_command("sifr")

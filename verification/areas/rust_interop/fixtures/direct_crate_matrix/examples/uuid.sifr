@@ -1,0 +1,13 @@
+# fixture: direct_crate_matrix
+# package-example: uuid
+# required-crate: uuid
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(uuid.Uuid.parse_str, panic=map_error(bridge.uuid.map_panic))
+def uuid_parse(text: str) -> Result[str, PackageExampleError | RustPanicError]: ...
+
+def verify_uuid_package() -> Result[str, PackageExampleError | RustPanicError]:
+    return uuid_parse("550e8400-e29b-41d4-a716-446655440000")
