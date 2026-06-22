@@ -207,8 +207,13 @@ pub(crate) fn hover(info: HoverInfo) -> Value {
 }
 
 pub(crate) fn signature_help(help: SignatureHelp) -> Value {
+    let parameters = help
+        .parameters
+        .into_iter()
+        .map(|label| json!({ "label": label }))
+        .collect::<Vec<_>>();
     json!({
-        "signatures": [{ "label": help.label, "parameters": [] }],
+        "signatures": [{ "label": help.label, "parameters": parameters }],
         "activeSignature": 0,
         "activeParameter": help.active_parameter.unwrap_or(0)
     })
@@ -545,10 +550,12 @@ fn token_modifier_bits(modifiers: &[String]) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{completion_item, lsp_range_with_encoding, text_range_with_encoding};
+    use super::{
+        completion_item, lsp_range_with_encoding, signature_help, text_range_with_encoding,
+    };
     use ruff_text_size::{TextRange, TextSize};
     use serde_json::json;
-    use sifr_analysis::CompletionItem;
+    use sifr_analysis::{CompletionItem, SignatureHelp};
     use sifr_source::PositionEncoding;
 
     #[test]
@@ -591,5 +598,19 @@ mod tests {
             detail: Some("Rust interop policy key".to_string()),
         });
         assert_eq!(property["kind"], json!(10));
+    }
+
+    #[test]
+    fn signature_help_conversion_includes_parameter_labels() {
+        let help = signature_help(SignatureHelp {
+            label: "combine(left: int, right: int) -> int".to_string(),
+            parameters: vec!["left: int".to_string(), "right: int".to_string()],
+            active_parameter: Some(1),
+        });
+        let signature = &help["signatures"][0];
+        assert_eq!(signature["label"], "combine(left: int, right: int) -> int");
+        assert_eq!(signature["parameters"][0]["label"], "left: int");
+        assert_eq!(signature["parameters"][1]["label"], "right: int");
+        assert_eq!(help["activeParameter"], 1);
     }
 }

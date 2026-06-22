@@ -7,6 +7,10 @@
 
 mod cache_keys;
 pub use cache_keys::*;
+mod analysis_views;
+pub use analysis_views::*;
+mod editor_semantics;
+pub use editor_semantics::*;
 mod frontend_reuse;
 pub use frontend_reuse::{FrontendCacheEntryIdentity, FrontendReuseStats};
 mod graph_cache_and_queries;

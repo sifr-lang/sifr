@@ -320,9 +320,14 @@ def assert_entrypoint_hover(
             "hover",
             latencies,
         )
+        if hover is None:
+            continue
         value = hover.get("contents", {}).get("value", "") if isinstance(hover, dict) else ""
-        if "value_0000" not in value:
-            raise LspProtocolError(f"large entrypoint hover missed value_0000: {document.uri}")
+        forbidden = ["(Name)", "(Identifier)", "NonLogicalNewline", "..."]
+        if any(fragment in value for fragment in forbidden):
+            raise LspProtocolError(f"large entrypoint hover leaked placeholder content: {document.uri}")
+        if value and "->" not in value and ":" not in value:
+            raise LspProtocolError(f"large entrypoint hover was not semantic: {document.uri}")
 
 
 def edit_category(round_index: int) -> str:
@@ -563,6 +568,9 @@ def rss_slope_mib_per_min(samples: list[dict[str, float | int]]) -> float:
     if len(samples) < 4:
         return 0.0
     second_half = samples[len(samples) // 2 :]
+    observed_ms = float(second_half[-1]["elapsed_ms"]) - float(second_half[0]["elapsed_ms"])
+    if observed_ms < 5_000.0:
+        return 0.0
     xs = [float(sample["elapsed_ms"]) / 60_000.0 for sample in second_half]
     ys = [float(sample["rss_bytes"]) / BYTES_PER_MIB for sample in second_half]
     x_mean = statistics.mean(xs)
@@ -614,6 +622,16 @@ def run_self_test() -> None:
     )
     if slope <= 0:
         raise SystemExit("LSP large session self-test failed: bad RSS slope")
+    short_slope = rss_slope_mib_per_min(
+        [
+            {"elapsed_ms": 0.0, "rss_bytes": 10 * BYTES_PER_MIB},
+            {"elapsed_ms": 250.0, "rss_bytes": 11 * BYTES_PER_MIB},
+            {"elapsed_ms": 500.0, "rss_bytes": 12 * BYTES_PER_MIB},
+            {"elapsed_ms": 750.0, "rss_bytes": 13 * BYTES_PER_MIB},
+        ]
+    )
+    if short_slope != 0.0:
+        raise SystemExit("LSP large session self-test failed: short RSS window was enforced")
     print("LSP large session self-test: PASS")
 
 

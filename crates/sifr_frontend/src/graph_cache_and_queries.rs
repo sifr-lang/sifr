@@ -1,13 +1,13 @@
 use super::{
-    collect_module_exports, diagnostic_with_code, hir_diagnostic_to_rendered,
-    local_import_dependencies, module_state, reveal_type_diagnostics, source_hash,
-    symbols_from_hir, warning_diagnostics, CacheFamily, CacheKeyContext, DiagnosticsCacheKey,
-    DiskSourceProvider, DocumentVersion, FileId, HirLoweringCacheKey, ParseCacheKey,
-    SourceDependency, SourceFileView, SourceHash, SourceMapCacheKey, SourceMapView, SourcePath,
-    SourceProvider, SourceRevision, SourceText, SymbolBucketScope, SymbolBucketsCacheKey,
-    TrackingSourceProvider, WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope,
-    WorkspaceDirtyScopeReport, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
-    WorkspaceSingleFileTarget,
+    collect_module_exports, diagnostic_with_code, editor_semantics_from_module,
+    hir_diagnostic_to_rendered, local_import_dependencies, module_state, reveal_type_diagnostics,
+    source_hash, symbols_from_hir, warning_diagnostics, CacheFamily, CacheKeyContext,
+    DiagnosticsCacheKey, DiskSourceProvider, DocumentVersion, FileId, HirLoweringCacheKey,
+    ModuleAnalysisView, ParseCacheKey, ProjectAnalysisView, SourceDependency, SourceFileView,
+    SourceHash, SourceMapCacheKey, SourceMapView, SourcePath, SourceProvider, SourceRevision,
+    SourceText, SymbolBucketScope, SymbolBucketsCacheKey, TrackingSourceProvider,
+    WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport,
+    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
 };
 use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{module_signature, ModuleSignature};
@@ -210,31 +210,6 @@ pub struct ModuleDiagnostics {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProjectDiagnostics {
     pub diagnostics: Vec<RenderedDiagnostic>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SymbolView {
-    pub name: String,
-    pub kind: SymbolKind,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SymbolKind {
-    Function,
-    Class,
-    Constant,
-    Import,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ModuleAnalysisView {
-    pub module: ModuleId,
-    pub symbols: Vec<SymbolView>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ProjectAnalysisView {
-    pub modules: Vec<ModuleAnalysisView>,
 }
 
 pub(super) struct ModuleState {
@@ -808,10 +783,30 @@ impl FrontendContext {
             .as_ref()
             .map(|lowered| symbols_from_hir(&lowered.module))
             .unwrap_or_default();
-        self.modules[index].analysis = Some(
-            self.reuse_caches
-                .insert_index(index_key, ModuleAnalysisView { module, symbols }),
-        );
+        let editor_semantics = self.modules[index]
+            .lowered
+            .as_ref()
+            .and_then(|lowered| {
+                self.modules[index].parsed.as_ref().map(|parsed| {
+                    editor_semantics_from_module(
+                        module,
+                        &self.modules[index].module_name,
+                        self.modules[index].source.as_str(),
+                        parsed.suite(),
+                        &lowered.module,
+                        &self.external_defs,
+                    )
+                })
+            })
+            .unwrap_or_default();
+        self.modules[index].analysis = Some(self.reuse_caches.insert_index(
+            index_key,
+            ModuleAnalysisView {
+                module,
+                symbols,
+                editor_semantics,
+            },
+        ));
         CacheStatus::Miss
     }
 

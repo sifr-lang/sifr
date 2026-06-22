@@ -21,6 +21,10 @@ FORBIDDEN_PATTERNS = {
     "lower_module(": "analysis must not lower HIR directly",
     "compile_module_hir": "analysis must not type-check/lower directly",
     "HirModule": "analysis must not traverse HIR for semantic answers",
+    "sifr_type_system": "analysis must consume frontend semantic views, not construct type-system answers",
+    "FunctionType": "analysis must consume frontend callable views, not construct signatures",
+    'format!("{} ({})"': "analysis hover must not format lexer token kinds as semantic content",
+    'format!("{}(...)"': "analysis signature help must not synthesize heuristic callable labels",
     "sifr_codegen::": "generated Rust preview must use a reviewed compiler handoff",
     "ty_python_semantic": "Python semantic authority is forbidden",
     "ty_project": "Python project semantics are forbidden",
@@ -57,7 +61,7 @@ def run_self_test() -> None:
     with tempfile.TemporaryDirectory(dir=REPO_ROOT / "target") as tmp:
         seed = Path(tmp) / "analysis_bypass.rs"
         seed.write_text(
-            "use sifr_lowering::HirModule;\nfn bypass() { lower_module(&[]); }\n",
+            'use sifr_lowering::HirModule;\nuse sifr_type_system::FunctionType;\nfn bypass() { lower_module(&[]); let _ = format!("{} ({})", "x", "Name"); }\n',
             encoding="utf-8",
         )
         found = violations([seed])
