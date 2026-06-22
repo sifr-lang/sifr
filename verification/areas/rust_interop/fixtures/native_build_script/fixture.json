@@ -1,0 +1,30 @@
+{
+  "capability": "build-script and native-link trust",
+  "diagnostic_family": "SIFR-RUST-TRUST-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TRUST-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "untrusted_native_link_rejected",
+      "path": "negative/untrusted_native_link_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "trusted_build_script_native_evidence",
+      "path": "positive/trusted_build_script_native_evidence.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "native_build_script",
+  "required_crates": [
+    "cc",
+    "bindgen",
+    "cxx",
+    "zstd"
+  ],
+  "schema_version": 1,
+  "tier": 3
+}

@@ -1,0 +1,55 @@
+{
+  "capability": "resource-shaped opaque handles",
+  "diagnostic_family": "SIFR-RUST-HANDLE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "invalid_resource_aliasing",
+      "path": "negative/invalid_resource_aliasing.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "resource_close_aclose_matrix",
+      "path": "positive/resource_close_aclose_matrix.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {
+    "redis": {
+      "default_features": false,
+      "features": [
+        "tokio-comp"
+      ]
+    },
+    "reqwest": {
+      "default_features": false,
+      "features": [
+        "rustls-tls",
+        "json"
+      ]
+    },
+    "rusqlite": {
+      "features": [
+        "bundled"
+      ]
+    },
+    "tokio-postgres": {
+      "default_features": false,
+      "features": [
+        "runtime"
+      ]
+    }
+  },
+  "id": "opaque_resource_matrix",
+  "required_crates": [
+    "reqwest",
+    "rusqlite",
+    "tokio-postgres",
+    "redis"
+  ],
+  "schema_version": 1,
+  "tier": 2
+}

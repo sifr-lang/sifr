@@ -1,0 +1,25 @@
+{
+  "capability": "locked/offline/frozen Cargo behavior",
+  "diagnostic_family": "SIFR-RUST-CARGO-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CARGO-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "lockfile_feature_drift_rejected",
+      "path": "negative/lockfile_feature_drift_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "locked_offline_cache_hit",
+      "path": "positive/locked_offline_cache_hit.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "cargo_locked_offline",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 3
+}

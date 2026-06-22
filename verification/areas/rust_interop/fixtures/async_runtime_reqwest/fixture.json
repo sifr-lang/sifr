@@ -1,0 +1,36 @@
+{
+  "capability": "async Rust bridge on Sifr Tokio runtime",
+  "diagnostic_family": "SIFR-RUST-ASYNC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ASYNC-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "hidden_block_on_rejected",
+      "path": "negative/hidden_block_on_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "async_reqwest_loopback",
+      "path": "positive/async_reqwest_loopback.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {
+    "reqwest": {
+      "default_features": false,
+      "features": [
+        "rustls-tls",
+        "json"
+      ]
+    }
+  },
+  "id": "async_runtime_reqwest",
+  "required_crates": [
+    "tokio",
+    "reqwest"
+  ],
+  "schema_version": 1,
+  "tier": 2
+}

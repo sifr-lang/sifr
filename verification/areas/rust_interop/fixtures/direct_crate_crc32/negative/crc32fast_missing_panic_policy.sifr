@@ -1,0 +1,8 @@
+# fixture: direct_crate_crc32
+# evidence: negative/crc32fast_missing_panic_policy
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-PANIC-0001
+@rust(crc32fast.hash)
+def crc32(data: bytes) -> uint32: ...

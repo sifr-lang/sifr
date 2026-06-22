@@ -1,0 +1,8 @@
+# fixture: local_bridge_blake3
+# evidence: negative/missing_local_bridge_export
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-RESOLVE-0001
+@rust(bridge.blake3.missing_export, panic=trusted_no_panic)
+def missing_export(input: bytes) -> bytes: ...

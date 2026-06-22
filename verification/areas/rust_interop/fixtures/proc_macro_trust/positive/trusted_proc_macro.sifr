@@ -1,0 +1,12 @@
+# fixture: proc_macro_trust
+# evidence: positive/trusted_proc_macro
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned
+# fixture-trust: rust-proc-macros = ["serde_derive"]
+# fixture-trust: rust-build-scripts = ["prost-build"]
+@rust(bridge.generated.decode, panic=map_error(bridge.generated.map_panic))
+def decode(input: bytes) -> Result[GeneratedMessage, DecodeError | RustPanicError]: ...
+
+class DecodeError(Error):
+    message: str

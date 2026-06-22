@@ -1,0 +1,9 @@
+# fixture: bridge_version_mismatch
+# evidence: negative/unsupported_bridge_version_rejected
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-CARGO-0001
+# fixture-cargo: rust.bridge-version = 999
+@rust(bridge.version.rejected, panic=trusted_no_panic)
+def rejected() -> uint32: ...

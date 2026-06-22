@@ -1,0 +1,9 @@
+# fixture: advanced_data_matrix
+# evidence: negative/dtype_shape_mismatch
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ZC-0001
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=tensor, dtype=f32, rank=2, shape=[2, 3], schema=bridge.data.Schema, ownership=borrowed)
+@rust(bridge.dataframe.view, panic=trusted_no_panic)
+def mismatched_metadata(input: bytes) -> DataFrame: ...

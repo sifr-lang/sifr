@@ -1,0 +1,41 @@
+{
+  "capability": "blocking I/O and CPU-heavy classification",
+  "diagnostic_family": "SIFR-RUST-ASYNC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ASYNC-0001",
+      "expected_result": "diagnostic",
+      "id": "classified_async_declarations_rejected",
+      "path": "negative/classified_async_declarations_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "classified_sync_rust_effects",
+      "path": "positive/classified_sync_rust_effects.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "compiler-diagnostic",
+  "features": {
+    "flate2": {
+      "default_features": false,
+      "features": [
+        "rust_backend"
+      ]
+    },
+    "rusqlite": {
+      "features": [
+        "bundled"
+      ]
+    }
+  },
+  "id": "blocking_diagnostics",
+  "required_crates": [
+    "rusqlite",
+    "rayon",
+    "flate2"
+  ],
+  "schema_version": 1,
+  "tier": 0
+}

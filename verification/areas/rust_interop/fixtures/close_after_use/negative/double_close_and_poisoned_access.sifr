@@ -1,0 +1,10 @@
+# fixture: close_after_use
+# evidence: negative/double_close_and_poisoned_access
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-HANDLE-0001
+@rust.opaque(type=bridge.handle.Handle, send=True, sync=False, clone=none, close=close)
+class NativeHandle:
+    @rust(bridge.handle.close, panic=trusted_no_panic)
+    def close(self) -> None: ...

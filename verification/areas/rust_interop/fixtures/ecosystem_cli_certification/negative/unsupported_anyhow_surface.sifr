@@ -1,0 +1,8 @@
+# fixture: ecosystem_cli_certification
+# evidence: negative/unsupported_anyhow_surface
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-TYPE-0001
+@rust(anyhow.Error.downcast_ref, panic=trusted_no_panic)
+def expose_anyhow_trait_object(error: object) -> object: ...

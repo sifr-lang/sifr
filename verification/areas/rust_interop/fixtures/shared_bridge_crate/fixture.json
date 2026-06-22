@@ -1,0 +1,25 @@
+{
+  "capability": "shared bridge crate boundary",
+  "diagnostic_family": "SIFR-RUST-RESOLVE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-RESOLVE-0001",
+      "expected_result": "diagnostic",
+      "id": "package_generated_type_import_rejected",
+      "path": "negative/package_generated_type_import_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "stable_runtime_types_only",
+      "path": "positive/stable_runtime_types_only.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "shared_bridge_crate",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 1
+}

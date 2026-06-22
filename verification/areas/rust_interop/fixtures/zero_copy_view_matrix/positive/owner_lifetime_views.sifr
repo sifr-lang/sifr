@@ -1,0 +1,9 @@
+# fixture: zero_copy_view_matrix
+# evidence: positive/owner_lifetime_views
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+@rust.zero_copy(owner=input, view=bridge.views.SliceView)
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True)
+@rust(bridge.views.slice_view, panic=trusted_no_panic)
+def slice_view(input: bytes) -> bytes: ...

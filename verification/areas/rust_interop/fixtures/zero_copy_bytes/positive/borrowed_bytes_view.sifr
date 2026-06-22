@@ -1,0 +1,9 @@
+# fixture: zero_copy_bytes
+# evidence: positive/borrowed_bytes_view
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+@rust.zero_copy(owner=input, view=bridge.bytes.BytesView)
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True)
+@rust(bridge.bytes.borrowed_view, panic=trusted_no_panic)
+def borrowed_view(input: bytes) -> bytes: ...

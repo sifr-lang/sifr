@@ -1,0 +1,25 @@
+{
+  "capability": "call-scoped callback lifetime",
+  "diagnostic_family": "SIFR-RUST-CB-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CB-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "callback_storage_rejected",
+      "path": "negative/callback_storage_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "callback_valid_during_call",
+      "path": "positive/callback_valid_during_call.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "callbacks_call_scoped",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

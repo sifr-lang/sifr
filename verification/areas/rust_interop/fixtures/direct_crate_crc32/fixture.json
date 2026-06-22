@@ -1,0 +1,27 @@
+{
+  "capability": "direct compatible function binding",
+  "diagnostic_family": "SIFR-RUST-PANIC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-PANIC-0001",
+      "expected_result": "diagnostic",
+      "id": "crc32fast_missing_panic_policy",
+      "path": "negative/crc32fast_missing_panic_policy.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "crc32fast_hash_uint32",
+      "path": "positive/crc32fast_hash_uint32.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "direct_crate_crc32",
+  "required_crates": [
+    "crc32fast"
+  ],
+  "schema_version": 1,
+  "tier": 1
+}

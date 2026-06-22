@@ -1,0 +1,10 @@
+# fixture: shared_bridge_crate
+# evidence: positive/stable_runtime_types_only
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+class SharedDigest:
+    bytes: bytes
+
+@rust(sifr_shared_hash_bridge.digest, panic=trusted_no_panic)
+def digest(input: bytes) -> SharedDigest: ...

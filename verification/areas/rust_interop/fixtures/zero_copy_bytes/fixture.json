@@ -1,0 +1,27 @@
+{
+  "capability": "zero-copy bytes view",
+  "diagnostic_family": "SIFR-RUST-ZC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ZC-0001",
+      "expected_result": "diagnostic",
+      "id": "copy_fallback_rejected",
+      "path": "negative/copy_fallback_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "borrowed_bytes_view",
+      "path": "positive/borrowed_bytes_view.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "zero_copy_bytes",
+  "required_crates": [
+    "bytes"
+  ],
+  "schema_version": 1,
+  "tier": 2
+}

@@ -1,0 +1,8 @@
+# fixture: direct_crate_negative_type
+# evidence: positive/unsupported_type_rejected
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-TYPE-0001
+@rust(regex.Regex.captures, panic=trusted_no_panic)
+def captures(pattern: str, text: str) -> dict[str, object]: ...

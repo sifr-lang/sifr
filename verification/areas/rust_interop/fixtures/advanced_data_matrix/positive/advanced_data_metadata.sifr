@@ -1,0 +1,11 @@
+# fixture: advanced_data_matrix
+# evidence: positive/advanced_data_metadata
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+class DataError(Error):
+    message: str
+
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=dataframe, schema=bridge.data.Schema, ownership=borrowed)
+@rust(bridge.dataframe.view, panic=map_error(bridge.dataframe.map_panic))
+def dataframe_view(input: bytes) -> Result[DataFrame, DataError | RustPanicError]: ...

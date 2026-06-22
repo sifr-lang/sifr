@@ -1,0 +1,12 @@
+# fixture: blocking_diagnostics
+# evidence: positive/classified_sync_rust_effects
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: pass
+@blocking_io
+@rust(bridge.db.query_blocking, panic=trusted_no_panic)
+def query_blocking(sql: str) -> list[str]: ...
+
+@cpu_heavy
+@rust(bridge.compress.deflate, panic=trusted_no_panic)
+def deflate(input: bytes) -> bytes: ...

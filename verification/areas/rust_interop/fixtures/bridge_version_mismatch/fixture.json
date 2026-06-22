@@ -1,0 +1,25 @@
+{
+  "capability": "bridge-version validation",
+  "diagnostic_family": "SIFR-RUST-CARGO-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CARGO-0001",
+      "expected_result": "diagnostic",
+      "id": "unsupported_bridge_version_rejected",
+      "path": "negative/unsupported_bridge_version_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "bridge_version_1_accepted",
+      "path": "positive/bridge_version_1_accepted.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "compiler-diagnostic",
+  "features": {},
+  "id": "bridge_version_mismatch",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 0
+}

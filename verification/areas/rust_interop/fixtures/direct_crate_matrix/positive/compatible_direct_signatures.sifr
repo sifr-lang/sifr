@@ -1,0 +1,16 @@
+# fixture: direct_crate_matrix
+# evidence: positive/compatible_direct_signatures
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: pass
+@rust(blake3.hash, panic=trusted_no_panic)
+def blake3_digest(data: bytes) -> bytes: ...
+
+@rust(sha2.Sha256.digest, panic=trusted_no_panic)
+def sha256_digest(data: bytes) -> bytes: ...
+
+@rust(uuid.Uuid.parse_str)
+def parse_uuid(text: str) -> Result[str, RustPanicError]: ...
+
+@rust(regex.Regex.is_match, panic=trusted_no_panic)
+def is_match(pattern: str, text: str) -> bool: ...

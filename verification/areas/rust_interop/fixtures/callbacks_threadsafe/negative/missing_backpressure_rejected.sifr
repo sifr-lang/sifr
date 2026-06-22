@@ -1,0 +1,9 @@
+# fixture: callbacks_threadsafe
+# evidence: negative/missing_backpressure_rejected
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-CB-0001
+@rust.callback(overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=trusted_no_panic)
+def subscribe(handler: ThreadsafeCallback[[str], None]) -> None: ...

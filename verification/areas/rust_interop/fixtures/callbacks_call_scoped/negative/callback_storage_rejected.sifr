@@ -1,0 +1,9 @@
+# fixture: callbacks_call_scoped
+# evidence: negative/callback_storage_rejected
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-CB-0001
+@rust.callback(backpressure=bounded(32), overflow=error, shutdown=drain)
+@rust(bridge.callbacks.store_for_later, panic=trusted_no_panic)
+def store_for_later(handler: ThreadsafeCallback[[str], None]) -> None: ...

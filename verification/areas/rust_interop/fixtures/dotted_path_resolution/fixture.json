@@ -1,0 +1,25 @@
+{
+  "capability": "structured Rust decorator paths",
+  "diagnostic_family": "SIFR-RUST-CONFIG-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CONFIG-0001",
+      "expected_result": "diagnostic",
+      "id": "string_and_reserved_root_rejection",
+      "path": "negative/string_and_reserved_root_rejection.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "valid_structured_paths",
+      "path": "positive/valid_structured_paths.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "compiler-diagnostic",
+  "features": {},
+  "id": "dotted_path_resolution",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 0
+}

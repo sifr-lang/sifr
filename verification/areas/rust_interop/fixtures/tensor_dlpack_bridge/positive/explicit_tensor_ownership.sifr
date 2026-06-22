@@ -1,0 +1,12 @@
+# fixture: tensor_dlpack_bridge
+# evidence: positive/explicit_tensor_ownership
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+class TensorError(Error):
+    message: str
+
+@rust.zero_copy(owner=input, view=sifr_tensor_bridge.dlpack.DlpackView)
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=dlpack, dtype=f32, rank=2, shape=[2, 3], layout=strided, strides=[3, 1], device=cpu, ownership=transfer, protocol=sifr_tensor_bridge.dlpack.Capsule)
+@rust(sifr_tensor_bridge.dlpack_from_bytes, panic=map_error(sifr_tensor_bridge.panic.map))
+def tensor(own input: bytes) -> Result[Tensor, TensorError | RustPanicError]: ...

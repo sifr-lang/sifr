@@ -1,0 +1,12 @@
+# fixture: native_build_script
+# evidence: positive/trusted_build_script_native_evidence
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned
+# fixture-trust: rust-build-scripts = ["zstd", "cc", "bindgen", "cxx"]
+# fixture-trust: native-links = ["zstd"]
+@rust(bridge.native.compress, panic=map_error(bridge.native.map_panic))
+def compress(input: bytes) -> Result[bytes, NativeError | RustPanicError]: ...
+
+class NativeError(Error):
+    message: str

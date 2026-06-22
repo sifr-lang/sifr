@@ -1,0 +1,8 @@
+# fixture: bridge_version_mismatch
+# evidence: positive/bridge_version_1_accepted
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: pass
+# fixture-cargo: rust.bridge-version = 1
+@rust(bridge.version.accepted, panic=trusted_no_panic)
+def accepted() -> uint32: ...

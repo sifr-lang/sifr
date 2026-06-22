@@ -1,0 +1,29 @@
+{
+  "capability": "tensor and DLPack handoff",
+  "diagnostic_family": "SIFR-RUST-ZC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ZC-0001",
+      "expected_result": "diagnostic",
+      "id": "implicit_dlpack_ownership_rejected",
+      "path": "negative/implicit_dlpack_ownership_rejected.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "explicit_tensor_ownership",
+      "path": "positive/explicit_tensor_ownership.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "tensor_dlpack_bridge",
+  "required_crates": [
+    "ndarray"
+  ],
+  "schema_version": 1,
+  "tier": 4
+}

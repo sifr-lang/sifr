@@ -1,0 +1,38 @@
+{
+  "capability": "backend/service ecosystem certification",
+  "diagnostic_family": "SIFR-RUST-CARGO-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CARGO-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "sqlx_without_offline_artifacts",
+      "path": "negative/sqlx_without_offline_artifacts.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "backend_probe_coverage",
+      "path": "positive/backend_probe_coverage.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {
+    "sqlx": {
+      "default_features": false,
+      "features": [
+        "runtime-tokio-rustls",
+        "postgres",
+        "macros"
+      ]
+    }
+  },
+  "id": "ecosystem_backend_certification",
+  "required_crates": [
+    "axum",
+    "tower-http",
+    "sqlx"
+  ],
+  "schema_version": 1,
+  "tier": 4
+}

@@ -1,0 +1,7 @@
+# fixture: same_workspace_crate
+# evidence: positive/declared_path_dependency_resolves
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+@rust(workspace_hash.hash, panic=trusted_no_panic)
+def workspace_hash(input: bytes) -> uint64: ...

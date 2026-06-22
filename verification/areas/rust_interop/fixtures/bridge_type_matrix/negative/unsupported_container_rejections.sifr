@@ -1,0 +1,8 @@
+# fixture: bridge_type_matrix
+# evidence: negative/unsupported_container_rejections
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-TYPE-0001
+@rust(bridge.types.unsupported, panic=trusted_no_panic)
+def unsupported(value: dict[str, list[object]]) -> object: ...

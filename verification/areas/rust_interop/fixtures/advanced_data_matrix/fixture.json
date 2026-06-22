@@ -1,0 +1,36 @@
+{
+  "capability": "advanced data and tensor ecosystems",
+  "diagnostic_family": "SIFR-RUST-ZC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ZC-0001",
+      "expected_result": "diagnostic",
+      "id": "dtype_shape_mismatch",
+      "path": "negative/dtype_shape_mismatch.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "advanced_data_metadata",
+      "path": "positive/advanced_data_metadata.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {
+    "candle": {
+      "backend": "cpu-only"
+    }
+  },
+  "id": "advanced_data_matrix",
+  "required_crates": [
+    "datafusion",
+    "polars",
+    "ndarray",
+    "candle"
+  ],
+  "schema_version": 1,
+  "tier": 4
+}

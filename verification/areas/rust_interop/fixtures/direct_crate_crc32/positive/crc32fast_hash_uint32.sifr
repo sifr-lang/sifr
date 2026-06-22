@@ -1,0 +1,10 @@
+# fixture: direct_crate_crc32
+# evidence: positive/crc32fast_hash_uint32
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: pass
+@rust(crc32fast.hash, panic=trusted_no_panic)
+def crc32(data: bytes) -> uint32: ...
+
+def main() -> uint32:
+    return crc32(b"sifr")

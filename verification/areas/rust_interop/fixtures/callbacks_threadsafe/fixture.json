@@ -1,0 +1,27 @@
+{
+  "capability": "thread-safe callback policy",
+  "diagnostic_family": "SIFR-RUST-CB-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CB-0001",
+      "expected_result": "diagnostic",
+      "id": "missing_backpressure_rejected",
+      "path": "negative/missing_backpressure_rejected.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "bounded_callback_policy",
+      "path": "positive/bounded_callback_policy.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "callbacks_threadsafe",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

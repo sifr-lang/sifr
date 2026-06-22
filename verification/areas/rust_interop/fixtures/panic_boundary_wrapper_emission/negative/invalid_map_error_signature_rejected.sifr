@@ -1,0 +1,11 @@
+# fixture: panic_boundary_wrapper_emission
+# evidence: negative/invalid_map_error_signature_rejected
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-PANIC-0001
+@rust(bridge.wrapper.may_panic, panic=map_error(bridge.wrapper.invalid_mapper))
+def may_panic(input: str) -> Result[str, PanicMapped | RustPanicError]: ...
+
+class PanicMapped(Error):
+    message: str

@@ -1,0 +1,8 @@
+# fixture: panic_abort_profile
+# evidence: negative/recoverable_abort_profile_rejected
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-PANIC-0001
+@rust(bridge.legacy.run, panic=abort)
+def run_legacy_without_trust() -> uint32: ...

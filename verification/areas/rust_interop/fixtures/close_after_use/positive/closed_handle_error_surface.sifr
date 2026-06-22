@@ -1,0 +1,12 @@
+# fixture: close_after_use
+# evidence: positive/closed_handle_error_surface
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: pass
+class HandleError(Error):
+    message: str
+
+@rust.opaque(type=bridge.handle.Handle, send=True, sync=False, clone=none, close=close)
+class NativeHandle:
+    @rust(bridge.handle.close, panic=map_error(bridge.handle.map_panic))
+    def close(own self) -> Result[None, HandleError | RustPanicError]: ...

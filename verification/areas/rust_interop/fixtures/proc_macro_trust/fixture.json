@@ -1,0 +1,32 @@
+{
+  "capability": "build-script and proc-macro trust",
+  "diagnostic_family": "SIFR-RUST-TRUST-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TRUST-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "untrusted_proc_macro_rejected_pre_execution",
+      "path": "negative/untrusted_proc_macro_rejected_pre_execution.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "trusted_proc_macro",
+      "path": "positive/trusted_proc_macro.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {
+    "prost-build": {
+      "generated_output": "deterministic"
+    }
+  },
+  "id": "proc_macro_trust",
+  "required_crates": [
+    "serde_derive",
+    "prost-build"
+  ],
+  "schema_version": 1,
+  "tier": 3
+}

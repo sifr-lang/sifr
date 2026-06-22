@@ -1,0 +1,8 @@
+# fixture: async_runtime_reqwest
+# evidence: negative/hidden_block_on_rejected
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-ASYNC-0001
+@rust(bridge.http.hidden_block_on, panic=trusted_no_panic)
+async def hidden_block_on(url: str) -> str: ...

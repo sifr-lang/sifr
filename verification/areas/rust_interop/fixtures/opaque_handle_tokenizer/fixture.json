@@ -1,0 +1,25 @@
+{
+  "capability": "opaque Rust handle basics",
+  "diagnostic_family": "SIFR-RUST-HANDLE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
+      "expected_result": "diagnostic",
+      "id": "unsatisfied_send_or_copy_rejected",
+      "path": "negative/unsatisfied_send_or_copy_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "declared_send_sync_copy_handle",
+      "path": "positive/declared_send_sync_copy_handle.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "opaque_handle_tokenizer",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

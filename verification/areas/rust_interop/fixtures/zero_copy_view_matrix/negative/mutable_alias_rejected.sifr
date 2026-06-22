@@ -1,0 +1,9 @@
+# fixture: zero_copy_view_matrix
+# evidence: negative/mutable_alias_rejected
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ZC-0001
+@rust.view(owner=input, lifetime=owner, mutability=mutable, send=True, sync=True)
+@rust(bridge.views.mutable_from_shared, panic=trusted_no_panic)
+def mutable_from_shared(input: bytes) -> bytes: ...

@@ -1,0 +1,9 @@
+# fixture: arrow_record_batch
+# evidence: negative/invalid_arrow_metadata
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ZC-0001
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=arrow_record_batch, ownership=borrowed)
+@rust(sifr_arrow_bridge.record_batch_from_bytes, panic=trusted_no_panic)
+def missing_schema(input: bytes) -> ArrowRecordBatch: ...

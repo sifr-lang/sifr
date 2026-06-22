@@ -164,6 +164,8 @@ def main() -> int:
     for fixture_id in sorted(REQUIRED_FIXTURES & discovered_dirs):
         if not (FIXTURES_ROOT / fixture_id / "README.md").is_file():
             failures.append(f"{fixture_id}: fixture README.md is required for evidence notes")
+        if not (FIXTURES_ROOT / fixture_id / "fixture.json").is_file():
+            failures.append(f"{fixture_id}: fixture.json is required for evidence files")
 
     covered_crates: set[str] = set()
     for fixture in fixtures:
@@ -186,6 +188,7 @@ def main() -> int:
         _validate_feature_policies(failures, fixture_id, fixture.get("features"), crates)
         _validate_evidence(failures, fixture_id, fixture.get("positive_evidence"), "positive_evidence")
         _validate_evidence(failures, fixture_id, fixture.get("negative_evidence"), "negative_evidence")
+        _validate_fixture_files(failures, fixture)
 
     failures.extend(f"required crate lacks fixture coverage: {crate}" for crate in sorted(REQUIRED_CRATES - covered_crates))
 
@@ -233,6 +236,137 @@ def _validate_feature_policies(
             failures.append(
                 f"{fixture_id}: feature policy for {crate} must be {expected!r}, got {actual!r}"
             )
+
+
+def _validate_fixture_files(failures: list[str], fixture: dict[str, Any]) -> None:
+    fixture_id = str(fixture.get("id"))
+    fixture_dir = FIXTURES_ROOT / fixture_id
+    manifest_path = fixture_dir / "fixture.json"
+    if not manifest_path.is_file():
+        return
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        failures.append(f"{fixture_id}: fixture.json is not valid JSON: {error}")
+        return
+    if not isinstance(manifest, dict):
+        failures.append(f"{fixture_id}: fixture.json must be an object")
+        return
+
+    for field in ("id", "capability", "tier", "execution_kind", "required_crates"):
+        if manifest.get(field) != fixture.get(field):
+            failures.append(f"{fixture_id}: fixture.json {field} must match fixture matrix")
+    if manifest.get("features", {}) != fixture.get("features", {}):
+        failures.append(f"{fixture_id}: fixture.json features must match fixture matrix")
+    if manifest.get("schema_version") != 1:
+        failures.append(f"{fixture_id}: fixture.json schema_version must be 1")
+    if manifest.get("diagnostic_family") not in REQUIRED_DIAGNOSTICS:
+        failures.append(f"{fixture_id}: fixture.json diagnostic_family must be a reserved SIFR-RUST code")
+
+    evidence = manifest.get("evidence")
+    if not isinstance(evidence, dict):
+        failures.append(f"{fixture_id}: fixture.json evidence must be an object")
+        return
+    _validate_fixture_evidence_file(
+        failures,
+        fixture_id,
+        fixture_dir,
+        evidence.get("positive"),
+        fixture.get("positive_evidence"),
+        fixture.get("execution_kind"),
+        "positive",
+    )
+    _validate_fixture_evidence_file(
+        failures,
+        fixture_id,
+        fixture_dir,
+        evidence.get("negative"),
+        fixture.get("negative_evidence"),
+        fixture.get("execution_kind"),
+        "negative",
+    )
+
+
+def _validate_fixture_evidence_file(
+    failures: list[str],
+    fixture_id: str,
+    fixture_dir: Path,
+    manifest_evidence: Any,
+    matrix_evidence: Any,
+    execution_kind: Any,
+    side: str,
+) -> None:
+    if not isinstance(manifest_evidence, dict):
+        failures.append(f"{fixture_id}: fixture.json evidence.{side} must be an object")
+        return
+    if not isinstance(matrix_evidence, dict):
+        return
+    for field in ("id", "status"):
+        if manifest_evidence.get(field) != matrix_evidence.get(field):
+            failures.append(f"{fixture_id}: fixture.json evidence.{side}.{field} must match fixture matrix")
+
+    raw_path = manifest_evidence.get("path")
+    if not isinstance(raw_path, str) or not raw_path:
+        failures.append(f"{fixture_id}: fixture.json evidence.{side}.path is required")
+        return
+    raw_source_path = Path(raw_path)
+    if raw_source_path.is_absolute() or ".." in raw_source_path.parts:
+        failures.append(f"{fixture_id}: evidence.{side}.path must stay inside the fixture directory")
+        return
+    expected_path = Path(side) / f"{matrix_evidence.get('id')}.sifr"
+    if raw_source_path != expected_path:
+        failures.append(f"{fixture_id}: evidence.{side}.path must be {expected_path.as_posix()}")
+        return
+    source_path = fixture_dir / raw_path
+    try:
+        source_path.relative_to(fixture_dir)
+    except ValueError:
+        failures.append(f"{fixture_id}: evidence.{side}.path must stay inside the fixture directory")
+        return
+    if source_path.suffix != ".sifr":
+        failures.append(f"{fixture_id}: evidence.{side}.path must point to a .sifr file")
+    if not source_path.is_file():
+        failures.append(f"{fixture_id}: missing evidence source {raw_path}")
+        return
+
+    text = source_path.read_text(encoding="utf-8")
+    if len(text.strip().splitlines()) < 5:
+        failures.append(f"{fixture_id}: {raw_path} must contain a concrete fixture, not an empty stub")
+    required_headers = (
+        f"# fixture: {fixture_id}",
+        f"# evidence: {side}/{matrix_evidence.get('id')}",
+        f"# evidence-status: {matrix_evidence.get('status')}",
+    )
+    for header in required_headers:
+        if header not in text:
+            failures.append(f"{fixture_id}: {raw_path} missing header {header!r}")
+    if not any(line.lstrip().startswith("@rust") for line in text.splitlines()):
+        failures.append(f"{fixture_id}: {raw_path} must exercise a Rust interop declaration")
+
+    expected_result = manifest_evidence.get("expected_result")
+    if not isinstance(expected_result, str) or not expected_result:
+        failures.append(f"{fixture_id}: evidence.{side}.expected_result is required")
+        return
+    expected_headers = (
+        f"# execution-kind: {execution_kind}",
+        f"# expected-result: {expected_result}",
+    )
+    if expected_headers[0] not in text:
+        failures.append(f"{fixture_id}: {raw_path} missing execution-kind header")
+    if expected_headers[1] not in text:
+        failures.append(f"{fixture_id}: {raw_path} missing expected-result header")
+    status = matrix_evidence.get("status")
+    if expected_result.startswith("future-owned") and status == "passing":
+        failures.append(f"{fixture_id}: passing {side} evidence cannot be marked future-owned")
+    if status != "passing" and not expected_result.startswith("future-owned"):
+        failures.append(f"{fixture_id}: non-passing {side} evidence must be marked future-owned")
+
+    expected_diagnostic = manifest_evidence.get("expected_diagnostic")
+    if expected_result in {"diagnostic", "future-owned-diagnostic"}:
+        if expected_diagnostic not in REQUIRED_DIAGNOSTICS:
+            failures.append(f"{fixture_id}: evidence.{side}.expected_diagnostic must be a reserved SIFR-RUST code")
+        elif f"# expected-diagnostic: {expected_diagnostic}" not in text:
+            failures.append(f"{fixture_id}: {raw_path} missing expected diagnostic marker {expected_diagnostic}")
 
 
 if __name__ == "__main__":

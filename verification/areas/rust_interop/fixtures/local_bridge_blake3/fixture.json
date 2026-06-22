@@ -1,0 +1,27 @@
+{
+  "capability": "package-local bridge binding",
+  "diagnostic_family": "SIFR-RUST-RESOLVE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-RESOLVE-0001",
+      "expected_result": "diagnostic",
+      "id": "missing_local_bridge_export",
+      "path": "negative/missing_local_bridge_export.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "local_bridge_hash_bytes",
+      "path": "positive/local_bridge_hash_bytes.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "local_bridge_blake3",
+  "required_crates": [
+    "blake3"
+  ],
+  "schema_version": 1,
+  "tier": 1
+}
