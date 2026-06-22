@@ -1,0 +1,25 @@
+{
+  "capability": "generated panic wrapper emission, mapper signature validation, and mapper-panic fallback behavior",
+  "diagnostic_family": "SIFR-RUST-PANIC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-PANIC-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "invalid_map_error_signature_rejected",
+      "path": "negative/invalid_map_error_signature_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "generated_wrapper_maps_panic_to_declared_error",
+      "path": "positive/generated_wrapper_maps_panic_to_declared_error.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "panic_boundary_wrapper_emission",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

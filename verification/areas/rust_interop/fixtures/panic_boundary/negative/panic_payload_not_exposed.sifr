@@ -1,0 +1,11 @@
+# fixture: panic_boundary
+# evidence: negative/panic_payload_not_exposed
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-PANIC-0001
+@rust(bridge.panic.may_panic)
+def may_panic() -> Result[uint32, UserError]: ...
+
+class UserError(Error):
+    message: str

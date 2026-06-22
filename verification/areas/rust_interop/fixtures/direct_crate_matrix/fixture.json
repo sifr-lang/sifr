@@ -1,0 +1,30 @@
+{
+  "capability": "direct crate matrix",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
+      "expected_result": "diagnostic",
+      "id": "incompatible_direct_signatures",
+      "path": "negative/incompatible_direct_signatures.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "compatible_direct_signatures",
+      "path": "positive/compatible_direct_signatures.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "direct_crate_matrix",
+  "required_crates": [
+    "blake3",
+    "sha2",
+    "uuid",
+    "regex"
+  ],
+  "schema_version": 1,
+  "tier": 1
+}

@@ -1,0 +1,12 @@
+# fixture: arrow_record_batch
+# evidence: positive/arrow_schema_identity
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+class ArrowError(Error):
+    message: str
+
+@rust.zero_copy(owner=input, view=sifr_arrow_bridge.record_batch.RecordBatchView)
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=arrow_record_batch, schema=sifr_arrow_bridge.schema.RecordBatch, ownership=borrowed)
+@rust(sifr_arrow_bridge.record_batch_from_bytes, panic=map_error(sifr_arrow_bridge.panic.map))
+def record_batch(input: bytes) -> Result[ArrowRecordBatch, ArrowError | RustPanicError]: ...

@@ -1,0 +1,28 @@
+{
+  "capability": "invalid direct bridge type diagnostics",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
+      "expected_result": "diagnostic",
+      "id": "unsupported_type_cannot_compile_silently",
+      "path": "negative/unsupported_type_cannot_compile_silently.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
+      "expected_result": "diagnostic",
+      "id": "unsupported_type_rejected",
+      "path": "positive/unsupported_type_rejected.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "compiler-diagnostic",
+  "features": {},
+  "id": "direct_crate_negative_type",
+  "required_crates": [
+    "regex"
+  ],
+  "schema_version": 1,
+  "tier": 0
+}

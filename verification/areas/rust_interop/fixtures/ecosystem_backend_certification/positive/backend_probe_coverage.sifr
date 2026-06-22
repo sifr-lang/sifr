@@ -1,0 +1,10 @@
+# fixture: ecosystem_backend_certification
+# evidence: positive/backend_probe_coverage
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned
+class BackendError(Error):
+    message: str
+
+@rust(bridge.backend.route_probe, panic=map_error(bridge.backend.map_panic))
+async def route_probe(path: str) -> Result[str, BackendError | RustPanicError]: ...

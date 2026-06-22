@@ -1,0 +1,29 @@
+{
+  "capability": "core zero-copy views",
+  "diagnostic_family": "SIFR-RUST-ZC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ZC-0001",
+      "expected_result": "diagnostic",
+      "id": "mutable_alias_rejected",
+      "path": "negative/mutable_alias_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "owner_lifetime_views",
+      "path": "positive/owner_lifetime_views.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "zero_copy_view_matrix",
+  "required_crates": [
+    "memmap2",
+    "bytemuck",
+    "zerocopy"
+  ],
+  "schema_version": 1,
+  "tier": 2
+}

@@ -1,0 +1,29 @@
+{
+  "capability": "Arrow record batch exchange",
+  "diagnostic_family": "SIFR-RUST-ZC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ZC-0001",
+      "expected_result": "diagnostic",
+      "id": "invalid_arrow_metadata",
+      "path": "negative/invalid_arrow_metadata.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "arrow_schema_identity",
+      "path": "positive/arrow_schema_identity.sifr",
+      "scope": "contract-only",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "arrow_record_batch",
+  "required_crates": [
+    "arrow"
+  ],
+  "schema_version": 1,
+  "tier": 4
+}

@@ -1,0 +1,14 @@
+# fixture: bridge_type_matrix
+# evidence: positive/supported_type_roundtrips
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned
+class HashRecord:
+    digest: bytes
+    length: uint64
+
+class BridgeError(Error):
+    message: str
+
+@rust(bridge.types.roundtrip, panic=map_error(bridge.types.map_error))
+def roundtrip(value: HashRecord) -> Result[HashRecord, BridgeError | RustPanicError]: ...

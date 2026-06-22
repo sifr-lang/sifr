@@ -1,0 +1,30 @@
+{
+  "capability": "async ecosystem signature probing",
+  "diagnostic_family": "SIFR-RUST-ASYNC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ASYNC-0001",
+      "expected_result": "diagnostic",
+      "id": "non_send_future_without_affinity",
+      "path": "negative/non_send_future_without_affinity.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "current_thread_non_send_future",
+      "path": "positive/current_thread_non_send_future.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "async_ecosystem_matrix",
+  "required_crates": [
+    "futures",
+    "tower",
+    "http",
+    "http-body"
+  ],
+  "schema_version": 1,
+  "tier": 2
+}

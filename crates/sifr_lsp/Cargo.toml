@@ -21,5 +21,8 @@ url = { workspace = true }
 insta = { workspace = true }
 tempfile = "3.23.0"
 
+[lib]
+doctest = false
+
 [lints]
 workspace = true

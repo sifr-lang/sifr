@@ -1,0 +1,25 @@
+{
+  "capability": "closed and poisoned handle state transitions",
+  "diagnostic_family": "SIFR-RUST-HANDLE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
+      "expected_result": "diagnostic",
+      "id": "double_close_and_poisoned_access",
+      "path": "negative/double_close_and_poisoned_access.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "closed_handle_error_surface",
+      "path": "positive/closed_handle_error_surface.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "close_after_use",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

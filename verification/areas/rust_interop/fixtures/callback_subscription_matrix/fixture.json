@@ -1,0 +1,39 @@
+{
+  "capability": "callback subscriptions and shutdown",
+  "diagnostic_family": "SIFR-RUST-CB-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CB-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "invalid_thread_capture_rejected",
+      "path": "negative/invalid_thread_capture_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "subscription_cancel_shutdown",
+      "path": "positive/subscription_cancel_shutdown.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {
+    "redis": {
+      "default_features": false,
+      "features": [
+        "tokio-comp"
+      ]
+    },
+    "tokio-tungstenite": {
+      "default_features": false
+    }
+  },
+  "id": "callback_subscription_matrix",
+  "required_crates": [
+    "tokio-tungstenite",
+    "redis",
+    "notify"
+  ],
+  "schema_version": 1,
+  "tier": 2
+}

@@ -1,0 +1,10 @@
+# fixture: opaque_resource_matrix
+# evidence: negative/invalid_resource_aliasing
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-HANDLE-0001
+@rust.opaque(type=bridge.resources.Client, send=True, sync=True, clone=arc, close=async_close)
+class SharedResourceClient:
+    @rust(bridge.resources.borrow_exclusive, panic=trusted_no_panic)
+    def borrow_exclusive(self) -> bytes: ...

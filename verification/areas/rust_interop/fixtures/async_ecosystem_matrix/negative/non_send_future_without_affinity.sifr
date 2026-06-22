@@ -1,0 +1,8 @@
+# fixture: async_ecosystem_matrix
+# evidence: negative/non_send_future_without_affinity
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ASYNC-0001
+@rust(bridge.async_local.non_send_future, panic=trusted_no_panic)
+async def non_send_without_affinity() -> uint32: ...

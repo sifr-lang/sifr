@@ -1,0 +1,8 @@
+# fixture: blocking_diagnostics
+# evidence: negative/classified_async_declarations_rejected
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ASYNC-0001
+@rust(bridge.db.query_blocking, panic=trusted_no_panic)
+async def hidden_blocking_query(sql: str) -> list[str]: ...

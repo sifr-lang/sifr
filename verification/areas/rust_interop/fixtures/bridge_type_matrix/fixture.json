@@ -1,0 +1,31 @@
+{
+  "capability": "bridge type generation and conversion",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
+      "expected_result": "diagnostic",
+      "id": "unsupported_container_rejections",
+      "path": "negative/unsupported_container_rejections.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "supported_type_roundtrips",
+      "path": "positive/supported_type_roundtrips.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {},
+  "id": "bridge_type_matrix",
+  "required_crates": [
+    "serde",
+    "serde_json",
+    "thiserror",
+    "bytes",
+    "indexmap"
+  ],
+  "schema_version": 1,
+  "tier": 1
+}

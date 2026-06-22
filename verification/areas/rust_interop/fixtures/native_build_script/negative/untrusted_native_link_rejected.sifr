@@ -1,0 +1,8 @@
+# fixture: native_build_script
+# evidence: negative/untrusted_native_link_rejected
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-TRUST-0001
+@rust(bridge.native.compress, panic=trusted_no_panic)
+def compress_without_native_trust(input: bytes) -> bytes: ...

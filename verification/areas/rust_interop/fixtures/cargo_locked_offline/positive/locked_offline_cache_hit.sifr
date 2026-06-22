@@ -1,0 +1,8 @@
+# fixture: cargo_locked_offline
+# evidence: positive/locked_offline_cache_hit
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned
+# fixture-cargo: --locked --offline --frozen
+@rust(bridge.locked.cached, panic=trusted_no_panic)
+def cached() -> uint32: ...

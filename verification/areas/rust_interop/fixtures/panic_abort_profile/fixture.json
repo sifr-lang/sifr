@@ -1,0 +1,25 @@
+{
+  "capability": "abort-profile rejection and trust",
+  "diagnostic_family": "SIFR-RUST-PANIC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-PANIC-0001",
+      "expected_result": "diagnostic",
+      "id": "recoverable_abort_profile_rejected",
+      "path": "negative/recoverable_abort_profile_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "explicit_abort_trust_and_strategy_declared",
+      "path": "positive/explicit_abort_trust_and_strategy_declared.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "panic_abort_profile",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

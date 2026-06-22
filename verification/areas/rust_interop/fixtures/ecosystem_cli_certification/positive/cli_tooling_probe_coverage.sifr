@@ -1,0 +1,10 @@
+# fixture: ecosystem_cli_certification
+# evidence: positive/cli_tooling_probe_coverage
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned
+class CliError(Error):
+    message: str
+
+@rust(bridge.cli.parse_and_trace, panic=map_error(bridge.cli.map_panic))
+def parse_and_trace(args: list[str]) -> Result[uint32, CliError | RustPanicError]: ...

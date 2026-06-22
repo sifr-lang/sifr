@@ -1,0 +1,9 @@
+# fixture: callback_subscription_matrix
+# evidence: negative/invalid_thread_capture_rejected
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-CB-0001
+@rust.callback(backpressure=bounded(256), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe_non_send_capture, panic=trusted_no_panic)
+def subscribe(handler: ThreadsafeCallback[[str], None]) -> None: ...

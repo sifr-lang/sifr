@@ -1,0 +1,9 @@
+# fixture: cargo_locked_offline
+# evidence: negative/lockfile_feature_drift_rejected
+# evidence-status: planned
+# execution-kind: cargo-probe
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-CARGO-0001
+# fixture-cargo: lockfile omits requested feature
+@rust(bridge.locked.feature_drift, panic=trusted_no_panic)
+def feature_drift() -> uint32: ...

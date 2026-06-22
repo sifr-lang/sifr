@@ -1,0 +1,10 @@
+# fixture: local_bridge_blake3
+# evidence: positive/local_bridge_hash_bytes
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: pass
+class HashError(Error):
+    message: str
+
+@rust(bridge.blake3.hash_bytes, panic=map_error(bridge.blake3.map_panic))
+def hash_bytes(input: bytes) -> Result[bytes, HashError | RustPanicError]: ...

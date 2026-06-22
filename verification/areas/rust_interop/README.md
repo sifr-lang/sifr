@@ -8,9 +8,26 @@ required by the architecture, records tier assignment, reserves diagnostic
 families, and publishes the compatibility matrix used by docs and reviewers.
 
 The fixture matrix is contract-first. Every fixture must declare both positive
-and negative evidence. A compatibility row can use `supported`, `supported-through-bridge`, or
-`unsupported-by-design` only when both evidence directions are `passing`. Rows that are still `planned` or otherwise incomplete
+and negative evidence, and every fixture directory must contain concrete source
+files for those evidence IDs. A compatibility row can use `supported`,
+`supported-through-bridge`, or `unsupported-by-design` only when both evidence
+directions are `passing`. Rows that are still `planned` or otherwise incomplete
 must be categorized as `future-owned-by-separate-phase`.
+
+## Fixture Layout
+
+Each directory under `fixtures/` is required to contain:
+
+- `README.md`: human evidence notes and links to the owning implementation
+  checks.
+- `fixture.json`: machine-readable fixture metadata mirroring the fixture
+  matrix row.
+- `positive/<positive_evidence.id>.sifr`: the positive evidence source.
+- `negative/<negative_evidence.id>.sifr`: the negative evidence source.
+
+The `matrix` suite validates this layout, verifies that fixture metadata
+matches `data/rust_interop_fixture_matrix.json`, and rejects empty README-only
+fixture directories.
 
 The area-level `network_mode` is `offline` for compile/probe and contract
 checks. Runtime-observed fixtures that need services such as Redis or
@@ -20,7 +37,8 @@ fixture evidence; they must not silently degrade to compile-only coverage.
 ## Suites
 
 - `matrix`: verifies the fixture matrix, required fixture directories, crate
-  coverage, evidence objects, fixture READMEs, and diagnostic family inventory.
+  coverage, evidence objects, fixture READMEs, fixture source files, and
+  diagnostic family inventory.
 - `tiers`: verifies tier definitions and fixture tier assignments.
 - `compatibility-matrix`: verifies that public compatibility rows match fixture
   evidence and that no fixture family is omitted.

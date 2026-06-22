@@ -1,0 +1,36 @@
+{
+  "capability": "CLI/tooling ecosystem certification",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "unsupported_anyhow_surface",
+      "path": "negative/unsupported_anyhow_surface.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "cli_tooling_probe_coverage",
+      "path": "positive/cli_tooling_probe_coverage.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "cargo-probe",
+  "features": {
+    "tracing-subscriber": {
+      "features": [
+        "env-filter"
+      ]
+    }
+  },
+  "id": "ecosystem_cli_certification",
+  "required_crates": [
+    "clap",
+    "tracing",
+    "tracing-subscriber",
+    "anyhow"
+  ],
+  "schema_version": 1,
+  "tier": 4
+}

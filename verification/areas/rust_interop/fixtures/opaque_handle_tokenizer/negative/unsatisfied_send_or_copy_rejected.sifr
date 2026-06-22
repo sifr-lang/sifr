@@ -1,0 +1,10 @@
+# fixture: opaque_handle_tokenizer
+# evidence: negative/unsatisfied_send_or_copy_rejected
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-HANDLE-0001
+@rust.opaque(type=bridge.tokenizer.Tokenizer, send=True, sync=True, clone=copy, close=close)
+class Tokenizer:
+    @rust(Self.encode, panic=trusted_no_panic)
+    def encode(self, text: str) -> bytes: ...

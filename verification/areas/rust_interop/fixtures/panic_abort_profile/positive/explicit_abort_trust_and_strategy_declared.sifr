@@ -1,0 +1,8 @@
+# fixture: panic_abort_profile
+# evidence: positive/explicit_abort_trust_and_strategy_declared
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+# fixture-trust: rust-panic-abort = ["bridge.legacy.run"]
+@rust(bridge.legacy.run, panic=abort)
+def run_legacy() -> uint32: ...

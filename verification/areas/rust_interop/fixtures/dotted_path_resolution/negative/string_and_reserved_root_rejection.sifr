@@ -1,0 +1,8 @@
+# fixture: dotted_path_resolution
+# evidence: negative/string_and_reserved_root_rejection
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-CONFIG-0001
+@rust("bridge.hash.digest")
+def digest(data: bytes) -> bytes: ...

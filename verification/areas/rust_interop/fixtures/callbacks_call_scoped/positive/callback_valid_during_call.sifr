@@ -1,0 +1,11 @@
+# fixture: callbacks_call_scoped
+# evidence: positive/callback_valid_during_call
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned
+class EventError(Error):
+    message: str
+
+@rust.callback(backpressure=bounded(32), overflow=error, shutdown=drain)
+@rust(bridge.callbacks.visit, panic=map_error(bridge.callbacks.map_panic))
+def visit(handler: ThreadsafeCallback[[str], Result[None, EventError]]) -> Result[None, EventError | RustPanicError]: ...

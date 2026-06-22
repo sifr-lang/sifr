@@ -1,0 +1,11 @@
+# fixture: callbacks_threadsafe
+# evidence: positive/bounded_callback_policy
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: pass
+class EventError(Error):
+    message: str
+
+@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(handler: ThreadsafeCallback[[str], Result[None, EventError]]) -> Result[None, EventError | RustPanicError]: ...

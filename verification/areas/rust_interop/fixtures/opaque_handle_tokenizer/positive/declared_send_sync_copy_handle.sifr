@@ -1,0 +1,15 @@
+# fixture: opaque_handle_tokenizer
+# evidence: positive/declared_send_sync_copy_handle
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: pass
+class TokenError(Error):
+    message: str
+
+@rust.opaque(type=bridge.tokenizer.Tokenizer, send=True, sync=True, clone=copy, close=close)
+class Tokenizer:
+    @rust(Self.encode, panic=map_error(bridge.tokenizer.map_panic))
+    def encode(self, text: str) -> Result[list[uint32], TokenError | RustPanicError]: ...
+
+    @rust(bridge.tokenizer.close, panic=map_error(bridge.tokenizer.map_panic))
+    def close(own self) -> Result[None, TokenError | RustPanicError]: ...

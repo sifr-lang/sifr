@@ -1,0 +1,25 @@
+{
+  "capability": "panic-to-error behavior",
+  "diagnostic_family": "SIFR-RUST-PANIC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-PANIC-0001",
+      "expected_result": "diagnostic",
+      "id": "panic_payload_not_exposed",
+      "path": "negative/panic_payload_not_exposed.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "result_declares_rust_panic_error_or_map_error",
+      "path": "positive/result_declares_rust_panic_error_or_map_error.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "contract-only",
+  "features": {},
+  "id": "panic_boundary",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

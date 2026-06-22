@@ -1,0 +1,11 @@
+# fixture: async_ecosystem_matrix
+# evidence: positive/current_thread_non_send_future
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: pass
+class AsyncError(Error):
+    message: str
+
+@rust.async(thread_affinity=tokio_current_thread)
+@rust(bridge.async_local.poll_once, panic=map_error(bridge.async_local.map_panic))
+async def poll_once() -> Result[uint32, AsyncError | RustPanicError]: ...

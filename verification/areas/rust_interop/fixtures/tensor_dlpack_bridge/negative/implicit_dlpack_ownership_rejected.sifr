@@ -1,0 +1,9 @@
+# fixture: tensor_dlpack_bridge
+# evidence: negative/implicit_dlpack_ownership_rejected
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ZC-0001
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=dlpack, dtype=f32, rank=2, shape=[2], layout=strided, strides=[3, 1], device=cpu, ownership=transfer, protocol=sifr_tensor_bridge.dlpack.Capsule)
+@rust(sifr_tensor_bridge.dlpack_from_bytes, panic=trusted_no_panic)
+def bad_shape(own input: bytes) -> Tensor: ...

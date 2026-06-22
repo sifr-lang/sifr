@@ -1,0 +1,10 @@
+# fixture: dotted_path_resolution
+# evidence: positive/valid_structured_paths
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: pass
+@rust(bridge.hash.digest, panic=map_error(bridge.hash.map_panic))
+def digest(data: bytes) -> Result[bytes, HashError | RustPanicError]: ...
+
+class HashError(Error):
+    message: str

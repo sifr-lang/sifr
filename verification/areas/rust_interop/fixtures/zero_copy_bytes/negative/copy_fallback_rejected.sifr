@@ -1,0 +1,9 @@
+# fixture: zero_copy_bytes
+# evidence: negative/copy_fallback_rejected
+# evidence-status: passing
+# execution-kind: contract-only
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ZC-0001
+@rust.zero_copy(owner=input, view=bridge.bytes.BytesView)
+@rust(bridge.bytes.copies_anyway, panic=trusted_no_panic)
+def copies_anyway(input: bytes) -> bytes: ...

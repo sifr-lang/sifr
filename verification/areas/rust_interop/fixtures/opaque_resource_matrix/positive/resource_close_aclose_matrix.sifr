@@ -1,0 +1,12 @@
+# fixture: opaque_resource_matrix
+# evidence: positive/resource_close_aclose_matrix
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Client, send=True, sync=False, clone=none, close=async_close)
+class ResourceClient:
+    @rust(bridge.resources.aclose, panic=map_error(bridge.resources.map_panic))
+    async def aclose(own self) -> Result[None, ResourceError | RustPanicError]: ...

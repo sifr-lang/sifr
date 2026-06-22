@@ -1,0 +1,8 @@
+# fixture: direct_crate_matrix
+# evidence: negative/incompatible_direct_signatures
+# evidence-status: passing
+# execution-kind: cargo-probe
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-TYPE-0001
+@rust(regex.Regex.captures, panic=trusted_no_panic)
+def captures(pattern: str, text: str) -> object: ...
