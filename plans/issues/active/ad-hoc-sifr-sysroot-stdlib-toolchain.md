@@ -53,9 +53,13 @@ Tasks:
   are sysroot-owned, vendored third-party, or user/package-owned.
 - Add an inventory table for current `sifr_runtime::*` call sites in generated
   code and preamble.
+- Create `internal_docs/stdlib_native_surface_ownership.toml` as the checked
+  ownership registry for native stdlib surfaces.
 - Include inventory columns for current implementation owner, final
   implementation owner, migration blocker, and whether the surface can move
   before Rust interop runtime certification.
+- For each registry entry, record current owner, final owner, reason,
+  certification state, and deletion milestone.
 - Confirm which Rust interop compatibility matrix rows are certified, active,
   and future-owned before resource migration starts.
 - Add this issue to roadmap/phase tracking as the owner for sysroot and stdlib
@@ -66,6 +70,8 @@ Acceptance:
 - Reviewers can see the exact pre-migration ownership boundaries.
 - The inventories identify every native stdlib surface that must be migrated or
   explicitly retained.
+- The ownership registry gives reviewers one mechanical source of truth for
+  supported, compiler-owned, future-owned, and unsupported native surfaces.
 - Runtime/resource surfaces are tagged with certification status before
   implementation begins.
 
@@ -88,14 +94,20 @@ Tasks:
 - Add sysroot identity/fingerprint fields: toolchain id, target triple,
   compiler commit, Cargo lock digest, public/private stdlib digests, runtime
   crate digest, stdlib crate digest, and vendor digest.
+- Require `vendor-digest` in release sysroots and allow it to be absent or
+  marked as development metadata only in source-tree development mode.
 - Define the sysroot Cargo workspace contract: `Cargo.toml`, `Cargo.lock`,
   workspace members, workspace dependencies, and resolver version, but defer
   validation of the final `crates/sifr_stdlib` member until M3/M4.
 - Add resolver precedence: explicit developer override, `SIFR_SYSROOT`,
   installed path relative to `current_exe()`, then source-tree development
   layout.
+- Mark `--sysroot` for end-user commands as an advanced/developer override in
+  help text and diagnostics rather than a normal package-management mechanism.
 - Add `sifr --print sysroot`.
 - Add `sifr --print sysroot --json`.
+- Add a schema drift check or snapshot so the documented `sysroot.toml` schema
+  and parser-accepted schema cannot diverge silently.
 - Add concise sysroot-boundary diagnostics for missing or mismatched sysroot
   assets.
 - Keep `SIFR_RUNTIME_PATH` only as a development compatibility override.
@@ -122,6 +134,8 @@ Validation:
 
 - Unit tests for resolver precedence.
 - Unit tests for missing, malformed, and version-mismatched `sysroot.toml`.
+- Snapshot or schema test comparing the documented manifest fields with the
+  parser-accepted fields.
 - Unit tests for missing sysroot `Cargo.toml`, `Cargo.lock`,
   `.cargo/config.toml`, `vendor/`, and runtime crate manifest.
 - Unit tests for release/dev mode separation.
@@ -220,9 +234,10 @@ Tasks:
 - Define repository source layout for public `stdlib/sifr/*.sifr` and private
   `stdlib/_sifr/*.sifr`, or generate that layout from existing `lib/sifr`
   during packaging with checked validation.
-- Decide and implement the canonical source location. If compatibility keeps
-  `lib/sifr`, add a checked sync/generation path so repo and sysroot layouts
-  cannot diverge.
+- Decide and implement exactly one canonical repository stdlib source root.
+  The preferred final root is `stdlib/sifr/*.sifr` and
+  `stdlib/_sifr/*.sifr`; temporary sync/generation from `lib/sifr` may exist
+  only inside M4.
 - Add private `_sifr` declaration modules for stdlib native surfaces.
 - Preserve public `lib/sifr` compatibility during the transition or replace it
   with the canonical sysroot source root after all references move.
@@ -241,6 +256,8 @@ Acceptance:
 - Existing public `sifr.*` imports continue to resolve.
 - Public source inventory and private declaration inventory are generated or
   validated from the same canonical sysroot source tree.
+- M4 closes with one canonical stdlib source root; no long-lived dual-root
+  source layout remains.
 - `cargo metadata --offline` from a complete sysroot workspace succeeds in the
   installed-layout fixture.
 
@@ -262,7 +279,8 @@ Sifr-owned dependencies.
 Tasks:
 
 - Update generated Cargo manifest planning to emit path dependencies for
-  `<sysroot>/crates/sifr_runtime` and `<sysroot>/crates/sifr_stdlib`.
+  `<sysroot>/crates/sifr_runtime` and `<sysroot>/crates/sifr_stdlib` with
+  `default-features = false`.
 - Move stdlib dependency feature mapping to `sifr_stdlib_model`.
 - Generate or copy Cargo config that points Sifr-owned builds at
   `<sysroot>/vendor` using standard Cargo source replacement.
@@ -276,6 +294,9 @@ Tasks:
   `sifr_stdlib`.
 - Generate the sysroot workspace `Cargo.lock` from the sysroot workspace
   manifest, then vendor from that lockfile.
+- Define generated-project lockfile behavior: stdlib-only generated projects
+  must resolve reproducibly from the sysroot-compatible graph, and any
+  generated `Cargo.lock` must be checked by offline fixtures.
 - Ensure sysroot crate manifests do not depend on the development workspace
   unless running in source-tree development mode.
 - Ensure cache keys include sysroot version, sysroot crate fingerprints, and
@@ -306,6 +327,8 @@ Validation:
   `sifr.re` from an installed-layout fixture.
 - Offline generated-build fixture for stdlib-only code.
 - Snapshot tests for generated `Cargo.toml` and Cargo config.
+- Snapshot or fixture for generated stdlib-only `Cargo.lock` behavior in
+  offline mode.
 - Fixture proving a generated project fails with a Sifr sysroot diagnostic when
   the sysroot vendor directory is missing in bundled-dependency mode.
 - Package-mode fixture proving user dependencies remain Cargo-owned.
@@ -577,10 +600,12 @@ Tasks:
 - Update maintainability guardrails so stdlib native behavior cannot drift back
   into monolithic codegen registries.
 - Update architecture docs with final module ownership.
-- Add exceptions list for any intentionally retained compiler-owned intrinsic
-  surfaces, with owner and rationale.
+- Replace ad hoc exceptions with
+  `internal_docs/stdlib_native_surface_ownership.toml` entries for any
+  intentionally retained compiler-owned, unsupported, or future-owned native
+  surfaces.
 - Add a guardrail that fails when new stdlib-native behavior is added to
-  compiler intrinsics without an exception entry.
+  compiler intrinsics without a matching registry entry.
 
 Acceptance:
 
@@ -591,6 +616,7 @@ Acceptance:
 - Guardrails prevent reintroducing compiler-special stdlib native leaves without
   review.
 - Architecture docs and code ownership agree on every remaining native surface.
+- The native-surface ownership registry is complete and mechanically checked.
 
 Validation:
 
@@ -619,6 +645,8 @@ Tasks:
   sysroot manifests, release archives, self-update receipts, and binary strings
   where feasible.
 - Run `cargo metadata --offline` for generated stdlib-only projects.
+- Validate generated stdlib-only `Cargo.lock` behavior under offline/frozen
+  installed-layout fixtures.
 - Capture `cargo tree -e features` snapshots for representative stdlib
   programs.
 - Capture `sifr doctor` output snapshots for healthy and broken installs.
@@ -640,6 +668,7 @@ Validation:
 - Targeted installed-layout release certification script.
 - `verification/areas/sysroot_release/check_no_path_leakage.py`
 - `cargo metadata --offline` for generated stdlib-only projects.
+- Generated stdlib-only `Cargo.lock` offline/frozen fixtures.
 - `cargo tree -e features` snapshots.
 - `sifr doctor` healthy/broken install snapshots.
 - `scripts/run_all_tests.sh --profile create-pr`
@@ -662,6 +691,9 @@ Validation:
 - Preserve Sifr's no-user-triggerable-panic guarantee.
 - Keep generated sysroot crates free of development-workspace-only manifest
   assumptions.
+- Keep `internal_docs/stdlib_native_surface_ownership.toml` updated whenever
+  native stdlib ownership, certification, unsupported status, or deletion
+  milestones change.
 - Treat sysroot source, crate, vendor, and Cargo config changes as one
   versioned toolchain unit.
 - Keep all generated diagnostics source-attributed to public stdlib wrappers or

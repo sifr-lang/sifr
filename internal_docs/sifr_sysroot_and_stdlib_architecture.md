@@ -60,6 +60,19 @@ crates. Generated projects use the sysroot Cargo config so normal stdlib usage
 does not require network access after installation. User package dependencies
 remain user-owned Cargo inputs and are not part of the Sifr sysroot contract.
 
+The canonical repository source roots for standard-library Sifr code are:
+
+```text
+stdlib/sifr/*.sifr
+stdlib/_sifr/*.sifr
+```
+
+Packaging copies those roots into `lib/sifr/stdlib/**` in the installed
+sysroot. Temporary sync or generation from a legacy location is acceptable only
+during migration. The completed architecture has one canonical stdlib source
+root in the repository so CLI, LSP, packaging, and tests cannot drift across two
+long-lived source trees.
+
 ## Sysroot Manifest
 
 `sysroot.toml` records the installed toolchain contract:
@@ -104,6 +117,14 @@ re-hash the entire sysroot or vendor tree on every invocation. They trust the
 manifest after the small boundary check described below; deeper digest
 verification belongs to release validation and `sifr doctor`.
 
+`vendor-digest` is required in release sysroots. Source-tree development mode
+may omit it or mark it as development metadata because the repository Cargo
+workspace is the authoritative dependency source in that mode.
+
+The manifest schema is implementation-owned and documentation-visible. Parser
+tests or snapshots must fail when the accepted schema and this documented schema
+drift from each other.
+
 ## Sysroot Resolution
 
 Sysroot resolution is deterministic:
@@ -133,6 +154,12 @@ directory, an ancestor, or the executable path contains directories named
 `crates/sifr_runtime` or `crates/sifr_stdlib`. Released binaries either resolve
 a valid installed sysroot, honor an explicit sysroot override, or emit a sysroot
 diagnostic.
+
+End-user `build`, `run`, `check`, and `emit` commands may support `--sysroot`
+only as an advanced developer override. Diagnostics and help text should mark
+it as such rather than presenting it as a normal package-management mechanism.
+LSP may accept a sysroot from settings or environment, but should report
+mismatches with the CLI-observed sysroot when both are available.
 
 ## Sysroot Cargo Workspace
 
@@ -203,6 +230,12 @@ dependencies.
 The sysroot vendor directory is generated from the sysroot workspace lockfile,
 not from an ad hoc dependency list. This prevents stdlib features and runtime
 features from drifting away from the shipped vendor set.
+
+For stdlib-only generated builds, Cargo resolution must be reproducible from
+the sysroot workspace lock/vendor set. If a generated project needs its own
+`Cargo.lock`, that lockfile is produced from the resolved sysroot-compatible
+graph and validated by offline generated-project fixtures, not only by
+`cargo metadata` from the sysroot workspace.
 
 ## Crate Boundaries
 
@@ -396,6 +429,18 @@ dependencies, explicit Rust interop dependencies, and temporary direct
 third-party dependencies for unmigrated compiler-special paths when the
 corresponding milestone has a deletion plan and validation coverage.
 
+Native stdlib ownership is tracked in a checked registry:
+
+```text
+internal_docs/stdlib_native_surface_ownership.toml
+```
+
+Each native surface records its current owner, final owner, reason,
+certification state, and deletion milestone. Allowed owners are
+`compiler-intrinsic`, `sifr_stdlib`, `sifr_runtime`, `compiler-language-glue`,
+and `unsupported`. Guardrails use this registry to prevent native stdlib
+behavior from moving back into compiler intrinsics without review.
+
 ## Generated Cargo Projects
 
 `sifr run`, `sifr build`, tests, and package builds materialize generated Cargo
@@ -403,8 +448,8 @@ projects. Their manifests are sysroot-driven:
 
 ```toml
 [dependencies]
-sifr_stdlib = { path = "<sysroot>/crates/sifr_stdlib", features = [...] }
-sifr_runtime = { path = "<sysroot>/crates/sifr_runtime", features = [...] }
+sifr_stdlib = { path = "<sysroot>/crates/sifr_stdlib", default-features = false, features = [...] }
+sifr_runtime = { path = "<sysroot>/crates/sifr_runtime", default-features = false, features = [...] }
 ```
 
 Generated projects also receive Cargo configuration that points Cargo at the
