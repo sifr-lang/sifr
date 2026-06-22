@@ -29,6 +29,11 @@ struct LspProjectAnalysis {
     open_uris: BTreeSet<String>,
 }
 
+enum ProjectDocumentFailure {
+    DocumentUnavailable,
+    HostUnavailable,
+}
+
 pub(crate) struct LspFileMaps {
     uri_by_file: BTreeMap<u32, String>,
     source_by_file: BTreeMap<u32, String>,
@@ -45,18 +50,15 @@ impl LspAnalysisWorkspace {
     pub(crate) fn open_document(&mut self, document: &DocumentState) -> bool {
         if let Some(root) = workspace_root_for(document.path()) {
             self.documents.remove(document.uri());
-            match self.projects.get_mut(&root) {
-                Some(project) => {
-                    if project.open_document(document).is_ok() {
-                        false
-                    } else {
-                        let analysis = LspDocumentAnalysis::open(document);
-                        self.documents.insert(document.uri().to_string(), analysis);
-                        false
+            if let Some(project) = self.projects.get_mut(&root) {
+                match project.open_document(document) {
+                    Ok(()) | Err(ProjectDocumentFailure::DocumentUnavailable) => return false,
+                    Err(ProjectDocumentFailure::HostUnavailable) => {
+                        self.projects.remove(&root);
                     }
                 }
-                None => true,
             }
+            true
         } else {
             let analysis = LspDocumentAnalysis::open(document);
             self.documents.insert(document.uri().to_string(), analysis);
@@ -67,22 +69,19 @@ impl LspAnalysisWorkspace {
     pub(crate) fn update_document(&mut self, document: &DocumentState) -> bool {
         let uri = document.uri().to_string();
         if let Some(root) = workspace_root_for(document.path()) {
-            if let Some(analysis) = self.documents.get_mut(&uri) {
-                analysis.update(document);
-                return false;
-            }
-            match self.projects.get_mut(&root) {
-                Some(project) => {
-                    if project.update_document(document).is_ok() {
-                        false
-                    } else {
-                        let analysis = LspDocumentAnalysis::open(document);
-                        self.documents.insert(uri, analysis);
-                        false
+            self.documents.remove(&uri);
+            if let Some(project) = self.projects.get_mut(&root) {
+                if project.update_document(document).is_ok() {
+                    return false;
+                }
+                match project.open_document(document) {
+                    Ok(()) | Err(ProjectDocumentFailure::DocumentUnavailable) => return false,
+                    Err(ProjectDocumentFailure::HostUnavailable) => {
+                        self.projects.remove(&root);
                     }
                 }
-                None => true,
             }
+            true
         } else {
             if let Some(analysis) = self.documents.get_mut(&uri) {
                 analysis.update(document);
@@ -117,12 +116,7 @@ impl LspAnalysisWorkspace {
             }
             let analysis = LspProjectAnalysis::open(root.clone(), &documents);
             for document in &documents {
-                if analysis.files_by_uri.contains_key(document.uri()) {
-                    self.documents.remove(document.uri());
-                } else {
-                    let fallback = LspDocumentAnalysis::open(document);
-                    self.documents.insert(document.uri().to_string(), fallback);
-                }
+                self.documents.remove(document.uri());
             }
             self.projects.insert(root, analysis);
         }
@@ -223,6 +217,11 @@ impl LspAnalysisWorkspace {
             .flat_map(|project| project.files_by_uri.keys().cloned())
             .collect()
     }
+
+    #[cfg(test)]
+    pub(crate) fn has_standalone_document(&self, uri: &str) -> bool {
+        self.documents.contains_key(uri)
+    }
 }
 
 impl LspFileMaps {
@@ -297,44 +296,70 @@ impl LspProjectAnalysis {
         }
     }
 
-    fn open_document(&mut self, document: &DocumentState) -> Result<(), ()> {
+    fn open_document(&mut self, document: &DocumentState) -> Result<(), ProjectDocumentFailure> {
+        self.reload_document(document)
+    }
+
+    fn update_document(&mut self, document: &DocumentState) -> Result<(), ProjectDocumentFailure> {
+        let Some(file) = self.files_by_uri.get(document.uri()).copied() else {
+            return Err(ProjectDocumentFailure::DocumentUnavailable);
+        };
         let Some(host) = self.host.as_mut() else {
-            return Err(());
+            return Err(ProjectDocumentFailure::HostUnavailable);
         };
         let started = Instant::now();
-        host.upsert_overlay_document(
+        if host
+            .update_document(
+                file,
+                document_version(document),
+                SourceText::new(document.text().to_string()),
+            )
+            .is_err()
+        {
+            self.files_by_uri.remove(document.uri());
+            self.load_diagnostics
+                .entry(document.uri().to_string())
+                .or_default();
+            self.open_uris.insert(document.uri().to_string());
+            return Err(ProjectDocumentFailure::DocumentUnavailable);
+        }
+        host.record_update_latency_ms(elapsed_ms(started));
+        self.load_diagnostics.remove(document.uri());
+        Ok(())
+    }
+
+    fn reload_document(&mut self, document: &DocumentState) -> Result<(), ProjectDocumentFailure> {
+        let Some(host) = self.host.as_mut() else {
+            return Err(ProjectDocumentFailure::HostUnavailable);
+        };
+        let started = Instant::now();
+        if let Err(diagnostics) = host.upsert_overlay_document(
             SourcePath::new(document.path().to_path_buf()),
             Some(document.uri().to_string()),
             document_version(document),
             SourceText::new(document.text().to_string()),
-        )
-        .map_err(|_| ())?;
-        let file = host
-            .document_file_for_path(document.path())
-            .map_err(|_| ())?;
+        ) {
+            self.files_by_uri.remove(document.uri());
+            self.load_diagnostics
+                .insert(document.uri().to_string(), diagnostics);
+            self.open_uris.insert(document.uri().to_string());
+            return Err(ProjectDocumentFailure::DocumentUnavailable);
+        }
+        let file = match host.document_file_for_path(document.path()) {
+            Ok(file) => file,
+            Err(_) => {
+                self.files_by_uri.remove(document.uri());
+                self.load_diagnostics
+                    .entry(document.uri().to_string())
+                    .or_default();
+                self.open_uris.insert(document.uri().to_string());
+                return Err(ProjectDocumentFailure::DocumentUnavailable);
+            }
+        };
         host.record_update_latency_ms(elapsed_ms(started));
         self.files_by_uri.insert(document.uri().to_string(), file);
         self.load_diagnostics.remove(document.uri());
         self.open_uris.insert(document.uri().to_string());
-        Ok(())
-    }
-
-    fn update_document(&mut self, document: &DocumentState) -> Result<(), ()> {
-        let Some(file) = self.files_by_uri.get(document.uri()).copied() else {
-            return Err(());
-        };
-        let Some(host) = self.host.as_mut() else {
-            return Err(());
-        };
-        let started = Instant::now();
-        host.update_document(
-            file,
-            document_version(document),
-            SourceText::new(document.text().to_string()),
-        )
-        .map_err(|_| ())?;
-        host.record_update_latency_ms(elapsed_ms(started));
-        self.load_diagnostics.remove(document.uri());
         Ok(())
     }
 
