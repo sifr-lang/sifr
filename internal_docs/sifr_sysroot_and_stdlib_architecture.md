@@ -662,9 +662,9 @@ in source maps for internal analysis, but they are not public completion
 candidates for user code.
 
 Source maps distinguish at least these origins. The editor source map includes
-user, public stdlib, and private declaration sources; production emission for
-generated support and compiler synthetic source files is a separate tooling
-source-map responsibility.
+user, public stdlib, and private declaration sources. Generated Rust preview
+metadata emits production source-map entries for generated support and compiler
+synthetic contexts from the actual Rust source produced by the compiler.
 
 - `UserSource`
 - `SysrootPublicStdlib`

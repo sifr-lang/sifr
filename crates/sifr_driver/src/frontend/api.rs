@@ -2,9 +2,13 @@ use crate::build::{
     compile_single_file_entrypoint_with_metadata,
     compile_single_file_entrypoint_with_metadata_and_options, compile_single_file_frontend,
 };
-use crate::diagnostics::{CompileResult, CompileResultFull, RenderedDiagnostic};
+use crate::diagnostics::{
+    CompileResult, CompileResultFull, GeneratedSourceMapFile, RenderedDiagnostic,
+};
 use crate::stdlib::StdlibCompiled;
-use sifr_frontend::{reveal_type_diagnostics, warning_diagnostics, FrontendSourceContext};
+use sifr_frontend::{
+    reveal_type_diagnostics, warning_diagnostics, FrontendSourceContext, SourceOrigin,
+};
 use sifr_lowering::LoweringOptions;
 use sifr_lowering::LoweringResult;
 use sifr_python_ast::Stmt;
@@ -52,6 +56,7 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     };
 
     CompileResultFull::Success {
+        generated_source_map: generated_source_map_files(&codegen_result.rust_source),
         rust_source: codegen_result.rust_source,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
@@ -71,6 +76,7 @@ pub fn compile_with_metadata_allowing_http_transport_harness(source: &str) -> Co
         };
 
     CompileResultFull::Success {
+        generated_source_map: generated_source_map_files(&codegen_result.rust_source),
         rust_source: codegen_result.rust_source,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
@@ -88,4 +94,29 @@ pub fn compile(source: &str) -> CompileResult {
 
 pub fn check(source: &str) -> Vec<RenderedDiagnostic> {
     type_check_source(source)
+}
+
+fn generated_source_map_files(rust_source: &str) -> Vec<GeneratedSourceMapFile> {
+    let mut files = Vec::new();
+    if let Some(source) = generated_support_source(rust_source) {
+        files.push(GeneratedSourceMapFile {
+            path: "src/main.rs#stdlib-preamble".to_string(),
+            origin: SourceOrigin::GeneratedSupport,
+            source,
+        });
+    }
+    files.push(GeneratedSourceMapFile {
+        path: "src/main.rs".to_string(),
+        origin: SourceOrigin::CompilerSynthetic,
+        source: rust_source.to_string(),
+    });
+    files
+}
+
+fn generated_support_source(rust_source: &str) -> Option<String> {
+    let start = rust_source.find("// --- stdlib:")?;
+    let tail = &rust_source[start..];
+    let end = tail.find("\n// --- end stdlib ---")?;
+    let support = tail[..end].trim_end();
+    (!support.is_empty()).then(|| format!("{support}\n"))
 }

@@ -1,8 +1,8 @@
 use crate::diagnostics::DiagnosticsController;
 use crate::errors::{optional_i32, required_string, LspError, LspResult};
 use crate::session::Session;
-use lsp_server::{Connection, RequestId};
-use serde_json::Value;
+use lsp_server::{Connection, Message, Notification, RequestId};
+use serde_json::{json, Value};
 use sifr_analysis::WorkspaceTracePhase;
 
 pub(crate) fn handle(
@@ -12,7 +12,7 @@ pub(crate) fn handle(
     params: Value,
 ) -> LspResult<()> {
     match method {
-        "initialized" => initialized(session),
+        "initialized" => initialized(session, connection),
         "workspace/didChangeConfiguration" => workspace_did_change_configuration(session, params),
         "workspace/didChangeWatchedFiles" => {
             workspace_did_change_watched_files(session, params, connection)
@@ -35,9 +35,48 @@ pub(crate) fn handle(
     }
 }
 
-fn initialized(session: &mut Session) -> LspResult<()> {
+fn initialized(session: &mut Session, connection: &Connection) -> LspResult<()> {
     session.note_initialized();
+    publish_tooling_sysroot_diagnostic(connection, sifr_analysis::tooling_sysroot_probe())?;
     Ok(())
+}
+
+fn publish_tooling_sysroot_diagnostic(
+    connection: &Connection,
+    probe: sifr_analysis::ToolingSysrootProbe,
+) -> LspResult<()> {
+    let Some(diagnostic) = probe.diagnostic else {
+        return Ok(());
+    };
+    connection
+        .sender
+        .send(Message::Notification(tooling_sysroot_notification(
+            &diagnostic,
+        )))
+        .map_err(|error| {
+            LspError::internal(format!("failed to publish sysroot diagnostic: {error}"))
+        })
+}
+
+pub(crate) fn tooling_sysroot_notification(
+    diagnostic: &sifr_analysis::ToolingSysrootDiagnostic,
+) -> Notification {
+    let mut message = format!(
+        "{}\nbinary: {}\nattempted sysroot: {}",
+        diagnostic.message,
+        diagnostic.binary_path.display(),
+        diagnostic.attempted_sysroot.display()
+    );
+    if let Some(asset_path) = &diagnostic.asset_path {
+        message.push_str(&format!("\ninvalid asset: {}", asset_path.display()));
+    }
+    Notification {
+        method: "window/showMessage".to_string(),
+        params: json!({
+            "type": 1,
+            "message": message,
+        }),
+    }
 }
 
 pub(crate) fn cancel_request_id(params: &Value) -> Option<RequestId> {

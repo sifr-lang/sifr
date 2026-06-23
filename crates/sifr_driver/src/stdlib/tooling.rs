@@ -10,6 +10,20 @@ pub struct ToolingSysrootStatus {
     pub toolchain_id: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ToolingSysrootProbe {
+    pub status: Option<ToolingSysrootStatus>,
+    pub diagnostic: Option<ToolingSysrootDiagnostic>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ToolingSysrootDiagnostic {
+    pub message: String,
+    pub binary_path: PathBuf,
+    pub attempted_sysroot: PathBuf,
+    pub asset_path: Option<PathBuf>,
+}
+
 pub fn sysroot_status() -> Result<ToolingSysrootStatus, Vec<RenderedDiagnostic>> {
     let sysroot = resolve_tooling_sysroot()?;
     let toolchain_id = sysroot.toolchain_id();
@@ -17,6 +31,30 @@ pub fn sysroot_status() -> Result<ToolingSysrootStatus, Vec<RenderedDiagnostic>>
         root: sysroot.root,
         toolchain_id,
     })
+}
+
+pub fn sysroot_probe() -> ToolingSysrootProbe {
+    match sifr_sysroot::resolve_sysroot(None) {
+        Ok(sysroot) => {
+            let toolchain_id = sysroot.toolchain_id();
+            ToolingSysrootProbe {
+                status: Some(ToolingSysrootStatus {
+                    root: sysroot.root,
+                    toolchain_id,
+                }),
+                diagnostic: None,
+            }
+        }
+        Err(error) => ToolingSysrootProbe {
+            status: None,
+            diagnostic: Some(ToolingSysrootDiagnostic {
+                message: error.message,
+                binary_path: error.binary_path,
+                attempted_sysroot: error.attempted_sysroot,
+                asset_path: error.asset_path,
+            }),
+        },
+    }
 }
 
 pub fn tooling_sources() -> Result<Vec<WorkspaceAuxiliarySource>, Vec<RenderedDiagnostic>> {

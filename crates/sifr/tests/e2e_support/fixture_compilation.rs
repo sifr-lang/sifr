@@ -80,6 +80,7 @@ pub(crate) fn compile_source_with_metadata_and_stats(
             used_stdlib_modules,
             required_features,
             lowering_stats,
+            ..
         } => Ok((
             rust_source,
             used_stdlib_modules,

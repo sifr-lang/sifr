@@ -41,15 +41,21 @@ pub use worker_lanes::{
 
 pub use sifr_frontend::{
     DocumentVersion, FileId, FrontendInput, FrontendMode, InvalidationReport, ProjectRoot,
-    SourcePath, SourceText, WorkspaceTraceEvent, WorkspaceTraceLog, WorkspaceTracePhase,
+    SourceOrigin, SourcePath, SourceText, WorkspaceTraceEvent, WorkspaceTraceLog,
+    WorkspaceTracePhase,
 };
 pub use sifr_syntax::TextPosition;
 
-pub use sifr_driver::ToolingSysrootStatus;
+pub use sifr_driver::{ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus};
 
 pub fn tooling_sysroot_status(
 ) -> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
     sifr_driver::stdlib_tooling_sysroot_status()
+}
+
+#[must_use]
+pub fn tooling_sysroot_probe() -> ToolingSysrootProbe {
+    sifr_driver::stdlib_tooling_sysroot_probe()
 }
 
 pub fn format_options_for_path(

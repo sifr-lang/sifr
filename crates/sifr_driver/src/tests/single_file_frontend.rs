@@ -3,6 +3,7 @@ use crate::{
     CompileResult, CompileResultFull,
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+use sifr_frontend::SourceOrigin;
 
 #[test]
 fn test_parse_source_returns_suite_for_valid_program() {
@@ -499,6 +500,44 @@ def main():
                 !main_body.contains(".expect("),
                 "main body must not rely on data-dependent expect for indexing"
             );
+        }
+        CompileResultFull::Errors { errors } => {
+            panic!("compilation failed: {:?}", errors);
+        }
+    }
+}
+
+#[test]
+fn test_compile_metadata_reports_generated_source_map_origins() {
+    let source = r#"
+from sifr.random import randint
+
+def main():
+    try:
+        x: int = randint(1, 3)
+        print(x)
+    except ValueError:
+        print(0)
+"#;
+    match compile_with_metadata(source) {
+        CompileResultFull::Success {
+            generated_source_map,
+            rust_source,
+            ..
+        } => {
+            assert!(
+                generated_source_map.iter().any(|file| {
+                    file.origin == SourceOrigin::GeneratedSupport
+                        && file.path == "src/main.rs#stdlib-preamble"
+                        && file.source.contains("// --- stdlib: sifr.random ---")
+                }),
+                "generated source map: {generated_source_map:#?}"
+            );
+            assert!(generated_source_map.iter().any(|file| {
+                file.origin == SourceOrigin::CompilerSynthetic
+                    && file.path == "src/main.rs"
+                    && file.source == rust_source
+            }));
         }
         CompileResultFull::Errors { errors } => {
             panic!("compilation failed: {:?}", errors);

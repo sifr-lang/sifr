@@ -3,6 +3,8 @@ mod editor_facts;
 #[cfg(test)]
 mod editor_query_corpus_tests;
 mod file_access;
+#[cfg(test)]
+mod generated_rust_preview_tests;
 mod implementation;
 pub use implementation::*;
 mod overlay_updates;
