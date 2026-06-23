@@ -7,7 +7,7 @@ use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
-use sifr_stdlib_model::STDLIB_SOURCES;
+use sifr_stdlib_model::{load_stdlib_sources_from_sysroot, LoadedStdlibSource};
 use sifr_syntax::parse_module_raw;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -21,50 +21,64 @@ pub fn external_defs() -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
 }
 
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
-    compile_stdlib_uncached_impl()
+    let sysroot = sifr_sysroot::resolve_sysroot(None).map_err(|error| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            error.boundary_message(),
+            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+        )]
+    })?;
+    let sources = load_stdlib_sources_from_sysroot(&sysroot).map_err(|error| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            format!("Sifr stdlib source inventory is invalid: {error}"),
+            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+        )]
+    })?;
+    compile_stdlib_sources(&sources)
 }
 
-fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
+pub(crate) fn compile_stdlib_sources(
+    sources: &[LoadedStdlibSource],
+) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
     seed_http_transport_harness_aliases(&mut stdlib_defs, &mut stdlib_code);
 
-    for stdlib_source in STDLIB_SOURCES {
-        let module_name = stdlib_source.module;
-        let parsed =
-            match parse_module_raw(stdlib_source.source, Some(&format!("stdlib:{module_name}"))) {
-                Ok(parsed) => {
-                    if !parsed.has_valid_syntax() {
-                        // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures
-                        // into the precise active parse-code buckets.
-                        let errors: Vec<RenderedDiagnostic> = parsed
-                            .errors()
-                            .iter()
-                            .map(|e| {
-                                crate::diagnostics::diagnostic_with_code(
-                                    format!("[stdlib:{module_name}] {e}"),
-                                    DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
-                                )
-                            })
-                            .collect();
-                        return Err(errors);
-                    }
-                    parsed
-                }
-                Err(errors) => {
-                    // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures into
-                    // the precise active parse-code buckets.
-                    return Err(errors
-                        .into_iter()
-                        .map(|error| {
+    for stdlib_source in sources {
+        let module_name = stdlib_source.module.as_str();
+        let source_name = stdlib_source.path.display().to_string();
+        let parsed = match parse_module_raw(stdlib_source.source.as_str(), Some(&source_name)) {
+            Ok(parsed) => {
+                if !parsed.has_valid_syntax() {
+                    // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures
+                    // into the precise active parse-code buckets.
+                    let errors: Vec<RenderedDiagnostic> = parsed
+                        .errors()
+                        .iter()
+                        .map(|e| {
                             crate::diagnostics::diagnostic_with_code(
-                                format!("[stdlib:{module_name}] {}", error.message),
+                                format!("[stdlib:{module_name}] {e}"),
                                 DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
                             )
                         })
-                        .collect());
+                        .collect();
+                    return Err(errors);
                 }
-            };
+                parsed
+            }
+            Err(errors) => {
+                // TODO(diag_4a_parse_failure_classification): classify Ruff parse failures into
+                // the precise active parse-code buckets.
+                return Err(errors
+                    .into_iter()
+                    .map(|error| {
+                        crate::diagnostics::diagnostic_with_code(
+                            format!("[stdlib:{module_name}] {}", error.message),
+                            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                        )
+                    })
+                    .collect());
+            }
+        };
 
         let result = match lower_module_stdlib_with_externals(parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
@@ -264,11 +278,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
             })?;
             stdlib_code
                 .module_rust_code
-                .insert((*module_name).to_string(), codegen_result.rust_source);
+                .insert(module_name.to_string(), codegen_result.rust_source);
             if !codegen_result.constant_mappings.is_empty() {
                 stdlib_code
                     .module_constants
-                    .insert((*module_name).to_string(), codegen_result.constant_mappings);
+                    .insert(module_name.to_string(), codegen_result.constant_mappings);
             }
             let mut sig_map = HashMap::new();
             for func in &result.module.functions {
@@ -315,7 +329,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
             if !sig_map.is_empty() {
                 stdlib_code
                     .func_signatures
-                    .insert((*module_name).to_string(), sig_map);
+                    .insert(module_name.to_string(), sig_map);
             }
 
             let mut gen_fns = HashSet::new();
@@ -329,7 +343,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
             if !gen_fns.is_empty() {
                 stdlib_code
                     .generator_functions
-                    .insert((*module_name).to_string(), gen_fns);
+                    .insert(module_name.to_string(), gen_fns);
             }
 
             for class in &result.module.classes {
@@ -351,63 +365,63 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
                 .collect();
             stdlib_code
                 .module_class_fields
-                .insert((*module_name).to_string(), class_fields);
+                .insert(module_name.to_string(), class_fields);
         }
 
         stdlib_code
             .intrinsic_names
-            .insert((*module_name).to_string(), intrinsic_names_for_module);
+            .insert(module_name.to_string(), intrinsic_names_for_module);
         if !transitive_deps_for_module.is_empty() {
             stdlib_code
                 .transitive_deps
-                .insert((*module_name).to_string(), transitive_deps_for_module);
+                .insert(module_name.to_string(), transitive_deps_for_module);
         }
 
         stdlib_defs
             .functions
-            .insert((*module_name).to_string(), fn_exports);
+            .insert(module_name.to_string(), fn_exports);
         stdlib_defs
             .classes
-            .insert((*module_name).to_string(), class_exports);
+            .insert(module_name.to_string(), class_exports);
         if !class_type_param_exports.is_empty() {
             stdlib_defs
                 .class_type_params
-                .insert((*module_name).to_string(), class_type_param_exports);
+                .insert(module_name.to_string(), class_type_param_exports);
         }
         if !default_exports.is_empty() {
             stdlib_defs
                 .function_defaults
-                .insert((*module_name).to_string(), default_exports);
+                .insert(module_name.to_string(), default_exports);
         }
         if !vararg_exports.is_empty() {
             stdlib_defs
                 .function_varargs
-                .insert((*module_name).to_string(), vararg_exports);
+                .insert(module_name.to_string(), vararg_exports);
         }
         if !workload_exports.is_empty() {
             stdlib_defs
                 .function_workloads
-                .insert((*module_name).to_string(), workload_exports);
+                .insert(module_name.to_string(), workload_exports);
         }
         if !const_exports.is_empty() {
             stdlib_defs
                 .constants
-                .insert((*module_name).to_string(), const_exports);
+                .insert(module_name.to_string(), const_exports);
         }
         if !const_integer_value_exports.is_empty() {
             stdlib_defs
                 .constant_integer_values
-                .insert((*module_name).to_string(), const_integer_value_exports);
+                .insert(module_name.to_string(), const_integer_value_exports);
         }
         if !result.module.generic_functions.is_empty() {
             stdlib_defs.generic_functions.insert(
-                (*module_name).to_string(),
+                module_name.to_string(),
                 result.module.generic_functions.clone(),
             );
         }
         if !result.module.type_param_bounds.is_empty() {
             stdlib_defs.type_param_bounds.insert(
-                (*module_name).to_string(),
+                module_name.to_string(),
                 result.module.type_param_bounds.clone(),
             );
         }

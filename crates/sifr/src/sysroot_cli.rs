@@ -33,8 +33,12 @@ fn print_sysroot(json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
                     "paths": {
                         "manifest": sysroot.paths.manifest,
                         "stdlib_root": sysroot.paths.stdlib_root,
+                        "stdlib_public_sources": sysroot.paths.stdlib_public_sources,
+                        "stdlib_private_sources": sysroot.paths.stdlib_private_sources,
                         "runtime_crate": sysroot.paths.runtime_crate,
                         "runtime_crate_manifest": sysroot.paths.runtime_crate_manifest,
+                        "stdlib_crate": sysroot.paths.stdlib_crate,
+                        "stdlib_crate_manifest": sysroot.paths.stdlib_crate_manifest,
                         "cargo_manifest": sysroot.paths.cargo_manifest,
                         "cargo_lock": sysroot.paths.cargo_lock,
                         "cargo_config": sysroot.paths.cargo_config,

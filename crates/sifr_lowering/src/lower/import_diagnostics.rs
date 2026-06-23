@@ -141,7 +141,7 @@ pub(in crate::lower) fn bare_stdlib_help(
             stdlib_match.suggested_module, imported_names
         )
     };
-    if stdlib_match.exact_embedded_module_exists {
+    if stdlib_match.exact_public_module_exists {
         return suggestion;
     }
     format!(

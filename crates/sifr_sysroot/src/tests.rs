@@ -5,6 +5,7 @@ use super::{
 };
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 struct TempRoot {
@@ -106,7 +107,7 @@ fn resolver_prefers_explicit_then_environment_then_installed_then_development() 
     let explicit = complete_sysroot("explicit", COMPILER_SIFR_VERSION);
     let env = complete_sysroot("env", COMPILER_SIFR_VERSION);
     let installed = complete_installed_layout("installed", COMPILER_SIFR_VERSION);
-    let development = complete_sysroot("development", COMPILER_SIFR_VERSION);
+    let development = complete_source_tree_sysroot("development", COMPILER_SIFR_VERSION);
     let input = SysrootResolutionInput {
         explicit_sysroot: Some(explicit.path.clone()),
         env_sysroot: Some(env.path.clone()),
@@ -137,7 +138,7 @@ fn resolver_prefers_explicit_then_environment_then_installed_then_development() 
 
 #[test]
 fn source_tree_development_requires_explicit_gate() {
-    let development = complete_sysroot("development_only", COMPILER_SIFR_VERSION);
+    let development = complete_source_tree_sysroot("development_only", COMPILER_SIFR_VERSION);
     let current_dir = development.path.join("nested");
     fs::create_dir_all(&current_dir).expect("nested current dir");
     let denied = SysrootResolutionInput {
@@ -183,9 +184,12 @@ fn layout_validation_checks_all_skeleton_assets() {
         ("cargo_manifest", "Cargo.toml"),
         ("cargo_lock", "Cargo.lock"),
         ("cargo_config", ".cargo/config.toml"),
-        ("stdlib_root", "lib/sifr"),
+        ("stdlib_root", "lib/sifr/stdlib"),
+        ("stdlib_public_sources", "lib/sifr/stdlib/sifr"),
+        ("stdlib_private_sources", "lib/sifr/stdlib/_sifr"),
         ("vendor", "vendor"),
         ("runtime_manifest", "crates/sifr_runtime/Cargo.toml"),
+        ("stdlib_manifest", "crates/sifr_stdlib/Cargo.toml"),
     ] {
         let root = complete_sysroot(label, COMPILER_SIFR_VERSION);
         remove_asset(&root.path.join(path));
@@ -200,6 +204,58 @@ fn layout_validation_checks_all_skeleton_assets() {
         assert_eq!(error.kind, SysrootErrorKind::MissingAsset);
         assert_eq!(error.asset_path, Some(root.path.join(path)));
     }
+}
+
+#[test]
+fn workspace_validation_requires_generated_stdlib_member() {
+    let root = complete_sysroot("missing_stdlib_member", COMPILER_SIFR_VERSION);
+    fs::write(
+        root.path.join("Cargo.toml"),
+        r#"
+[workspace]
+members = ["crates/sifr_runtime"]
+resolver = "2"
+"#,
+    )
+    .expect("workspace manifest");
+    let input = SysrootResolutionInput {
+        explicit_sysroot: Some(root.path.clone()),
+        env_sysroot: None,
+        current_exe: PathBuf::from("/tool/bin/sifr"),
+        current_dir: root.path.clone(),
+        allow_source_tree_development: false,
+    };
+
+    let error = resolve_sysroot_with(&input).expect_err("missing stdlib member should fail");
+
+    assert_eq!(error.kind, SysrootErrorKind::InvalidWorkspace);
+    assert!(error
+        .message
+        .contains("workspace member crates/sifr_stdlib"));
+}
+
+#[test]
+fn installed_layout_workspace_supports_offline_cargo_metadata() {
+    let root = complete_sysroot("offline_metadata", COMPILER_SIFR_VERSION);
+
+    let output = Command::new("cargo")
+        .args([
+            "metadata",
+            "--offline",
+            "--no-deps",
+            "--format-version",
+            "1",
+        ])
+        .current_dir(&root.path)
+        .output()
+        .expect("cargo metadata should run");
+
+    assert!(
+        output.status.success(),
+        "stdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[test]
@@ -237,6 +293,13 @@ fn complete_sysroot(label: &str, version: &str) -> TempRoot {
     root
 }
 
+fn complete_source_tree_sysroot(label: &str, version: &str) -> TempRoot {
+    let root = complete_sysroot(label, version);
+    fs::create_dir_all(root.path.join("stdlib/sifr")).expect("source-tree public stdlib root");
+    fs::create_dir_all(root.path.join("stdlib/_sifr")).expect("source-tree private stdlib root");
+    root
+}
+
 fn write_complete_sysroot(root: &Path, version: &str) {
     fs::write(
         root.join("sysroot.toml"),
@@ -247,7 +310,7 @@ fn write_complete_sysroot(root: &Path, version: &str) {
         root.join("Cargo.toml"),
         r#"
 [workspace]
-members = ["crates/sifr_runtime"]
+members = ["crates/sifr_runtime", "crates/sifr_stdlib"]
 resolver = "2"
 "#,
     )
@@ -256,13 +319,21 @@ resolver = "2"
     fs::create_dir_all(root.join(".cargo")).expect("cargo config dir");
     fs::write(root.join(".cargo/config.toml"), "").expect("cargo config");
     fs::create_dir_all(root.join("vendor")).expect("vendor");
-    fs::create_dir_all(root.join("lib/sifr")).expect("stdlib root");
-    fs::create_dir_all(root.join("crates/sifr_runtime")).expect("runtime dir");
+    fs::create_dir_all(root.join("lib/sifr/stdlib/sifr")).expect("public stdlib root");
+    fs::create_dir_all(root.join("lib/sifr/stdlib/_sifr")).expect("private stdlib root");
+    write_minimal_crate(root, "sifr_runtime");
+    write_minimal_crate(root, "sifr_stdlib");
+}
+
+fn write_minimal_crate(root: &Path, name: &str) {
+    let crate_dir = root.join("crates").join(name);
+    fs::create_dir_all(crate_dir.join("src")).expect("crate src dir");
     fs::write(
-        root.join("crates/sifr_runtime/Cargo.toml"),
-        "[package]\nname = \"sifr_runtime\"\n",
+        crate_dir.join("Cargo.toml"),
+        format!("[package]\nname = \"{name}\"\nversion = \"0.0.0\"\nedition = \"2021\"\n"),
     )
-    .expect("runtime manifest");
+    .expect("crate manifest");
+    fs::write(crate_dir.join("src/lib.rs"), "").expect("crate lib");
 }
 
 fn valid_manifest(version: &str, target: &str) -> String {

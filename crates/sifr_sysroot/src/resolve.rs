@@ -64,12 +64,19 @@ pub fn discover_source_tree_root(start: &Path) -> Option<PathBuf> {
     start
         .ancestors()
         .find(|ancestor| {
-            ancestor
-                .join("crates")
-                .join("sifr_runtime")
-                .join("Cargo.toml")
-                .is_file()
-                && ancestor.join("lib").join("sifr").is_dir()
+            ancestor.join("sysroot.toml").is_file()
+                && ancestor.join("stdlib").join("sifr").is_dir()
+                && ancestor.join("stdlib").join("_sifr").is_dir()
+                && ancestor
+                    .join("crates")
+                    .join("sifr_runtime")
+                    .join("Cargo.toml")
+                    .is_file()
+                && ancestor
+                    .join("crates")
+                    .join("sifr_stdlib")
+                    .join("Cargo.toml")
+                    .is_file()
                 && ancestor.join("Cargo.lock").is_file()
         })
         .map(Path::to_path_buf)

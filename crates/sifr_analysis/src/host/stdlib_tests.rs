@@ -52,7 +52,7 @@ fn assert_stdlib_import_resolves(host: &mut AnalysisHost, file: FileId) {
 }
 
 #[test]
-fn single_file_analysis_resolves_embedded_stdlib_imports() {
+fn single_file_analysis_resolves_sysroot_stdlib_imports() {
     let mut host = AnalysisHost::open_single_file(single_file_input(STDLIB_IMPORT_SAMPLE))
         .expect("single-file analysis host should load with stdlib definitions");
     let file = host.files()[0];
@@ -61,7 +61,7 @@ fn single_file_analysis_resolves_embedded_stdlib_imports() {
 }
 
 #[test]
-fn project_analysis_resolves_embedded_stdlib_imports() {
+fn project_analysis_resolves_sysroot_stdlib_imports() {
     let dir = temp_project_dir("stdlib_project");
     let entrypoint = dir.join("main.sifr");
     std::fs::write(&entrypoint, STDLIB_IMPORT_SAMPLE).expect("project source should be written");

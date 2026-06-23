@@ -80,13 +80,29 @@ fn print_sysroot_json_reports_identity_and_layout_paths() {
             .display()
             .to_string()
     );
+    assert_eq!(
+        value["paths"]["stdlib_crate_manifest"],
+        sysroot
+            .root
+            .join("crates/sifr_stdlib/Cargo.toml")
+            .display()
+            .to_string()
+    );
+    assert_eq!(
+        value["paths"]["stdlib_public_sources"],
+        sysroot
+            .root
+            .join("lib/sifr/stdlib/sifr")
+            .display()
+            .to_string()
+    );
 }
 
 fn write_skeleton(root: &Path) {
     std::fs::create_dir_all(root.join(".cargo")).expect("cargo dir");
     std::fs::create_dir_all(root.join("vendor")).expect("vendor dir");
-    std::fs::create_dir_all(root.join("lib/sifr")).expect("stdlib dir");
-    std::fs::create_dir_all(root.join("crates/sifr_runtime")).expect("runtime dir");
+    std::fs::create_dir_all(root.join("lib/sifr/stdlib/sifr")).expect("public stdlib dir");
+    std::fs::create_dir_all(root.join("lib/sifr/stdlib/_sifr")).expect("private stdlib dir");
     std::fs::write(
         root.join("sysroot.toml"),
         format!(
@@ -104,18 +120,26 @@ fn write_skeleton(root: &Path) {
     std::fs::write(
         root.join("Cargo.toml"),
         r#"[workspace]
-members = ["crates/sifr_runtime"]
+members = ["crates/sifr_runtime", "crates/sifr_stdlib"]
 resolver = "2"
 "#,
     )
     .expect("workspace manifest");
     std::fs::write(root.join("Cargo.lock"), "").expect("lockfile");
     std::fs::write(root.join(".cargo/config.toml"), "").expect("cargo config");
+    write_minimal_crate(root, "sifr_runtime");
+    write_minimal_crate(root, "sifr_stdlib");
+}
+
+fn write_minimal_crate(root: &Path, name: &str) {
+    let crate_dir = root.join("crates").join(name);
+    std::fs::create_dir_all(crate_dir.join("src")).expect("crate src dir");
     std::fs::write(
-        root.join("crates/sifr_runtime/Cargo.toml"),
-        "[package]\nname = \"sifr_runtime\"\nversion = \"0.0.0\"\nedition = \"2021\"\n",
+        crate_dir.join("Cargo.toml"),
+        format!("[package]\nname = \"{name}\"\nversion = \"0.0.0\"\nedition = \"2021\"\n"),
     )
-    .expect("runtime manifest");
+    .expect("crate manifest");
+    std::fs::write(crate_dir.join("src/lib.rs"), "").expect("crate lib");
 }
 
 fn stdout(output: &std::process::Output) -> String {

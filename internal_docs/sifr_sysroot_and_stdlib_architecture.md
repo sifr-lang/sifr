@@ -24,20 +24,20 @@ state. Later implementation stages update the implementation toward the architec
 
 | Surface | Current owner | Final owner | Migration blocker | Can move before runtime certification? |
 | --- | --- | --- | --- | --- |
-| Public Sifr stdlib sources | `lib/sifr/*.sifr`, embedded by `crates/sifr_stdlib_model/src/sources.rs` through `include_str!` | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | sysroot resolver, canonical source-root move | yes |
-| Private stdlib declarations | No physical `stdlib/_sifr` source tree; private modules are represented by compiler intrinsic metadata | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | private declaration files, synthetic stdlib interop context | mixed |
+| Public Sifr stdlib sources | `stdlib/sifr/*.sifr`, validated by `crates/sifr_stdlib_model` and loaded from the resolved source-tree or installed sysroot path | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | complete for source layout; packaging copy remains later | yes |
+| Private stdlib declarations | `stdlib/_sifr/*.sifr` placeholder declaration files exist and are validated against the compiler intrinsic registry; compiler intrinsic metadata remains the current signature owner until Rust interop migration | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context | mixed |
 | Compiler-side stdlib model | `crates/sifr_stdlib_model` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | complete | yes |
 | Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_model` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` in the development workspace; generated Cargo finds it through `SIFR_RUNTIME_PATH`, ancestor scanning, or `env!("CARGO_MANIFEST_DIR")` fallback | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asks `sifr_stdlib_model::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from `sifr_stdlib_model`, consumed by codegen, driver, cache keys, reports, and LSP traces | dependency planner | yes |
 | Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
 | Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no sysroot contract is validated | Release archive contains `bin/sifr` plus the complete sysroot tree and replaces them atomically | installer and release artifact update | yes |
-| CLI stdlib loading | `sifr_driver::compile_stdlib` compiles embedded `STDLIB_SOURCES`; diagnostics use virtual `stdlib:<module>` locations | CLI resolves `ResolvedSysroot` and loads physical sysroot stdlib files | Sysroot resolver, source inventory migration | yes |
-| LSP/tooling stdlib loading | Analysis hosts call `sifr_driver::stdlib_external_defs()`, so tooling observes the same embedded definitions as CLI but not physical files | LSP/tooling load source and declaration metadata from the same `ResolvedSysroot` as CLI | tooling integration | yes |
+| CLI stdlib loading | `sifr_driver::compile_stdlib` resolves `ResolvedSysroot`, validates the public/private stdlib inventory, and compiles physical public stdlib files with source paths | CLI resolves `ResolvedSysroot` and loads physical sysroot stdlib files | complete for public source loading; private declaration lowering remains later | yes |
+| LSP/tooling stdlib loading | Analysis hosts call `sifr_driver::stdlib_external_defs()`, so tooling observes the same sysroot-loaded stdlib definitions as CLI | LSP/tooling load source and declaration metadata from the same `ResolvedSysroot` as CLI | deeper stdlib source navigation | yes |
 
 Current public stdlib sources import private `_sifr.*` modules as follows. User
 code still cannot import `_sifr.*`; these rows describe only stdlib wrapper
-implementation imports under `lib/sifr`.
+implementation imports under `stdlib/sifr`.
 
 | Private module | Current public wrappers |
 | --- | --- |
@@ -398,7 +398,7 @@ that are not compiler semantics:
   stateless native leaves,
 - filesystem, environment, platform, path, process, signal, compression, URL,
   HTTP, net, TLS, Python, Unicode, and i18n stdlib-facing functions where the
-  surface is exposed through `lib/sifr`,
+  surface is exposed through `stdlib/sifr`,
 - stdlib-specific error adapters and result types used by private `_sifr`
   declarations.
 

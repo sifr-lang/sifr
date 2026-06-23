@@ -3,7 +3,7 @@
 //! Orchestrates the full compilation pipeline:
 //! parse -> type-check/HIR -> codegen -> build
 //!
-//! Stdlib `.sifr` files are embedded in the compiler binary via `include_str!`.
+//! Stdlib `.sifr` files are loaded from the resolved Sifr sysroot.
 //! They are compiled before user code (two-phase compilation).
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
