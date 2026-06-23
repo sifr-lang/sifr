@@ -1,8 +1,9 @@
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
 use sifr_stdlib_model::{
-    try_sysroot_dependency_plan, CargoVendorMode, StdlibFeature, SysrootDependencyPlan,
+    try_sysroot_dependency_plan, CargoVendorMode, StdlibFeature, SysrootCrate,
+    SysrootCrateDependency, SysrootDependencyPlan,
 };
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::Path;
 
 use sifr_sysroot::SysrootError;
@@ -28,7 +29,9 @@ pub(crate) fn try_generate_sysroot_dependency_plan(
     } else {
         CargoVendorMode::SysrootOnly
     };
-    try_sysroot_dependency_plan(stdlib_modules, required_features, vendor_mode)
+    let mut plan = try_sysroot_dependency_plan(stdlib_modules, required_features, vendor_mode)?;
+    add_sysroot_interop_crates(&mut plan, interop);
+    Ok(plan)
 }
 
 pub(crate) fn sysroot_cargo_config_args(dependency_plan: &SysrootDependencyPlan) -> Vec<String> {
@@ -91,10 +94,87 @@ fn rust_interop_path_dependencies(interop: &InteropBuildPlan) -> BTreeMap<String
                 ..
             } => direct_dependency_line(dependency_name, cargo_package_name, cargo_manifest_path)
                 .map(|line| (dependency_name.clone(), line)),
+            RustInteropResolvedRoot::SysrootCrate { .. } => None,
             RustInteropResolvedRoot::PackageBridge { .. }
             | RustInteropResolvedRoot::SelfMethod { .. } => None,
         })
         .collect()
+}
+
+fn add_sysroot_interop_crates(
+    dependency_plan: &mut SysrootDependencyPlan,
+    interop: &InteropBuildPlan,
+) {
+    let mut added_crates = Vec::new();
+    for krate in sysroot_interop_crates(interop) {
+        if dependency_plan
+            .crates
+            .iter()
+            .any(|dependency| dependency.krate == krate)
+        {
+            continue;
+        }
+        dependency_plan.crates.push(SysrootCrateDependency {
+            krate,
+            path: dependency_plan
+                .sysroot_root
+                .join("crates")
+                .join(krate.package_name()),
+            features: BTreeSet::new(),
+        });
+        added_crates.push(krate);
+    }
+    dependency_plan
+        .crates
+        .sort_by_key(|dependency| dependency.krate);
+    if !added_crates.is_empty() {
+        append_sysroot_interop_cache_fingerprint(dependency_plan, &added_crates);
+    }
+}
+
+fn sysroot_interop_crates(interop: &InteropBuildPlan) -> BTreeSet<SysrootCrate> {
+    interop
+        .rust
+        .resolved_targets
+        .iter()
+        .filter_map(|target| match &target.root {
+            RustInteropResolvedRoot::SysrootCrate {
+                dependency_name, ..
+            } => match dependency_name.as_str() {
+                "sifr_runtime" => Some(SysrootCrate::SifrRuntime),
+                "sifr_stdlib" => Some(SysrootCrate::SifrStdlib),
+                _ => None,
+            },
+            RustInteropResolvedRoot::DirectCargoDependency { .. }
+            | RustInteropResolvedRoot::PackageBridge { .. }
+            | RustInteropResolvedRoot::SelfMethod { .. } => None,
+        })
+        .collect()
+}
+
+fn append_sysroot_interop_cache_fingerprint(
+    dependency_plan: &mut SysrootDependencyPlan,
+    added_crates: &[SysrootCrate],
+) {
+    dependency_plan
+        .cache_fingerprint
+        .push_str("[sysroot-interop-crates]\n");
+    for krate in added_crates {
+        let path = dependency_plan
+            .sysroot_root
+            .join("crates")
+            .join(krate.package_name());
+        dependency_plan
+            .cache_fingerprint
+            .push_str(krate.fingerprint_key());
+        dependency_plan.cache_fingerprint.push('\n');
+        dependency_plan.cache_fingerprint.push_str("path=");
+        dependency_plan
+            .cache_fingerprint
+            .push_str(&path.display().to_string());
+        dependency_plan.cache_fingerprint.push('\n');
+        dependency_plan.cache_fingerprint.push_str("features=\n");
+    }
 }
 
 fn direct_dependency_line(

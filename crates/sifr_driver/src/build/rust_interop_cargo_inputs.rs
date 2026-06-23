@@ -2,6 +2,7 @@ use super::rust_interop::PackageRustInteropContext;
 use super::rust_interop_digest::{
     digest_file, digest_path, fnv1a64_hex, normalized_path_string, push_cache_bytes,
 };
+use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
 use sifr_package::{digest_package_graph, digest_package_source_map, TrustPolicy};
 use std::collections::BTreeMap;
@@ -34,6 +35,13 @@ pub(super) fn cargo_inputs(
     context: &PackageRustInteropContext,
     package: &sifr_package::SifrPackageMetadata,
 ) -> RustInteropCargoInputs {
+    if let Some(trust) = context
+        .sysroot_trust
+        .as_ref()
+        .filter(|trust| trust.package_id == package.package_id)
+    {
+        return sysroot_cargo_inputs(trust, &package.manifest.trust);
+    }
     let graph_digest = digest_package_graph(&context.graph);
     let source_map_digest = digest_package_source_map(&context.source_map);
     let trust_policy_digest = trust_policy_digest(&package.manifest.trust);
@@ -53,6 +61,60 @@ pub(super) fn cargo_inputs(
         cargo_version: tool_version("cargo"),
         rustc_version: tool_version("rustc"),
         bridge_version: package.manifest.rust.bridge_version,
+        trust_policy_digest,
+        declared_build_env,
+    }
+}
+
+pub(super) fn combined_cargo_inputs(
+    mut primary: RustInteropCargoInputs,
+    secondary: RustInteropCargoInputs,
+) -> RustInteropCargoInputs {
+    let digest = combined_cargo_inputs_digest(&primary, &secondary);
+    primary.package_id = format!("{}+{}", primary.package_id, secondary.package_id);
+    primary.cargo_metadata_digest = Some(digest.clone());
+    primary.package_graph_digest = Some(digest);
+    primary.package_source_map_digest = combine_optional_digest(
+        primary.package_source_map_digest.take(),
+        secondary.package_source_map_digest,
+    );
+    primary.cargo_lock_digest = combine_optional_digest(
+        primary.cargo_lock_digest.take(),
+        secondary.cargo_lock_digest,
+    );
+    primary.trust_policy_digest = combined_digest(&[
+        primary.trust_policy_digest.as_str(),
+        secondary.trust_policy_digest.as_str(),
+    ]);
+    primary
+        .declared_build_env
+        .extend(secondary.declared_build_env);
+    primary.declared_build_env.sort();
+    primary.declared_build_env.dedup();
+    primary
+}
+
+fn sysroot_cargo_inputs(
+    trust: &SysrootRustInteropTrust,
+    policy: &TrustPolicy,
+) -> RustInteropCargoInputs {
+    let trust_policy_digest = trust_policy_digest(policy);
+    let mut declared_build_env = policy.build_env.clone();
+    declared_build_env.sort();
+    RustInteropCargoInputs {
+        package_id: format!("sifr-sysroot-stdlib@{}", trust.toolchain_id),
+        cargo_metadata_digest: Some(sysroot_metadata_digest(trust)),
+        package_graph_digest: Some(trust.sysroot_content_sha256.clone()),
+        package_source_map_digest: Some(digest_path(&trust.stdlib_private_sources)),
+        cargo_lock_digest: digest_file(&trust.cargo_lock),
+        target_triple: target_triple(),
+        target_features: target_features(),
+        cargo_profile: "release".to_string(),
+        panic_strategy: std::env::var("SIFR_RUST_PANIC_STRATEGY").ok(),
+        profile_codegen_settings: profile_codegen_settings(&trust.sysroot_root, "release"),
+        cargo_version: tool_version("cargo"),
+        rustc_version: tool_version("rustc"),
+        bridge_version: Some(1),
         trust_policy_digest,
         declared_build_env,
     }
@@ -220,6 +282,43 @@ fn cargo_lock_digest(package_root: &Path) -> Option<String> {
     nearest_ancestor_file(package_root, "Cargo.lock").and_then(|path| digest_file(&path))
 }
 
+fn combined_cargo_inputs_digest(
+    primary: &RustInteropCargoInputs,
+    secondary: &RustInteropCargoInputs,
+) -> String {
+    combined_digest(&[&format!("{primary:?}"), &format!("{secondary:?}")])
+}
+
+fn combine_optional_digest(left: Option<String>, right: Option<String>) -> Option<String> {
+    match (left, right) {
+        (None, None) => None,
+        (Some(value), None) | (None, Some(value)) => Some(value),
+        (Some(left), Some(right)) => Some(combined_digest(&[left.as_str(), right.as_str()])),
+    }
+}
+
+fn combined_digest(parts: &[&str]) -> String {
+    let mut bytes = Vec::new();
+    for part in parts {
+        push_cache_bytes(&mut bytes, part);
+    }
+    fnv1a64_hex(&bytes)
+}
+
+fn sysroot_metadata_digest(trust: &SysrootRustInteropTrust) -> String {
+    let mut bytes = Vec::new();
+    push_cache_bytes(&mut bytes, &trust.sysroot_root.display().to_string());
+    push_cache_bytes(&mut bytes, &trust.toolchain_id);
+    push_cache_bytes(&mut bytes, &trust.sysroot_content_sha256);
+    push_cache_bytes(&mut bytes, &digest_path(&trust.stdlib_private_sources));
+    push_cache_bytes(&mut bytes, &digest_path(&trust.stdlib_crate));
+    push_cache_bytes(&mut bytes, &digest_path(&trust.runtime_crate));
+    if let Some(lock_digest) = digest_file(&trust.cargo_lock) {
+        push_cache_bytes(&mut bytes, &lock_digest);
+    }
+    fnv1a64_hex(&bytes)
+}
+
 fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
     for ancestor in start.ancestors() {
         let candidate = ancestor.join(file_name);
@@ -338,7 +437,10 @@ fn tool_version(tool: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{generated_bridge_module_path, imports_generated_bridge_namespace};
+    use super::{
+        combined_cargo_inputs, generated_bridge_module_path, imports_generated_bridge_namespace,
+    };
+    use sifr_codegen::RustInteropCargoInputs;
 
     #[test]
     fn generated_bridge_module_path_keeps_binary_entry_distinct_from_main_module() {
@@ -366,5 +468,50 @@ mod tests {
         assert!(imports_generated_bridge_namespace(
             "use __sifr_bridge :: app :: TokenBridge;\n"
         ));
+    }
+
+    #[test]
+    fn combined_cargo_inputs_fold_secondary_cache_material() {
+        let primary = cargo_inputs_fixture("user-package", Some("user-source"));
+        let secondary = cargo_inputs_fixture("sifr-sysroot-stdlib", Some("sysroot-source"));
+
+        let combined = combined_cargo_inputs(primary.clone(), secondary.clone());
+
+        assert_eq!(combined.package_id, "user-package+sifr-sysroot-stdlib");
+        assert_ne!(
+            combined.cargo_metadata_digest,
+            primary.cargo_metadata_digest
+        );
+        assert_ne!(
+            combined.package_source_map_digest,
+            primary.package_source_map_digest
+        );
+        assert_ne!(
+            combined.package_source_map_digest,
+            secondary.package_source_map_digest
+        );
+    }
+
+    fn cargo_inputs_fixture(
+        package_id: &str,
+        package_source_map_digest: Option<&str>,
+    ) -> RustInteropCargoInputs {
+        RustInteropCargoInputs {
+            package_id: package_id.to_string(),
+            cargo_metadata_digest: Some(format!("{package_id}-metadata")),
+            package_graph_digest: Some(format!("{package_id}-graph")),
+            package_source_map_digest: package_source_map_digest.map(str::to_string),
+            cargo_lock_digest: Some(format!("{package_id}-lock")),
+            target_triple: Some("test-target".to_string()),
+            target_features: Vec::new(),
+            cargo_profile: "release".to_string(),
+            panic_strategy: None,
+            profile_codegen_settings: Vec::new(),
+            cargo_version: Some("cargo 1.0.0".to_string()),
+            rustc_version: Some("rustc 1.0.0".to_string()),
+            bridge_version: Some(1),
+            trust_policy_digest: format!("{package_id}-trust"),
+            declared_build_env: Vec::new(),
+        }
     }
 }

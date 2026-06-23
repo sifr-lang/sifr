@@ -33,6 +33,21 @@ fn package_rust_interop_requires_cargo_context() {
 }
 
 #[test]
+fn package_rust_interop_rejects_private_stdlib_impersonation() {
+    let mut entry = declaration_entry("native.hash", RustInteropDecoratorKind::Function);
+    entry.module_name = Some("_sifr.crypto".to_string());
+    let generated = base_project(vec![entry]);
+    let context = package_context(TrustPolicy::default(), vec![backend("native", false)]);
+
+    let diagnostics = interop_errors(generated, Some(context), "private module must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CARGO-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("compiler-owned sysroot context"));
+}
+
+#[test]
 fn package_rust_interop_rejects_unknown_target_root() {
     let generated = base_project(vec![declaration_entry(
         "missing.hash",
@@ -681,6 +696,7 @@ fn package_context_with_root(
                 display_path: "/ws/app/sifr/app.sifr".to_string(),
             },
         )]),
+        sysroot_trust: None,
     }
 }
 

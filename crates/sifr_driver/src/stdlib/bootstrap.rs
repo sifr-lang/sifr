@@ -1,14 +1,18 @@
 use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
+use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
 use crate::stdlib::re_exports::{re_export_stdlib_imports, ReExportMaps};
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
-use sifr_stdlib_model::{load_stdlib_sources_from_sysroot, LoadedStdlibSource};
+use sifr_stdlib_model::{
+    load_stdlib_tooling_sources_from_sysroot, LoadedStdlibSource, LoadedStdlibSourceKind,
+};
 use sifr_syntax::parse_module_raw;
+use sifr_sysroot::ResolvedSysroot;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
@@ -27,20 +31,22 @@ pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDi
             DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
         )]
     })?;
-    let sources = load_stdlib_sources_from_sysroot(&sysroot).map_err(|error| {
+    let sources = load_stdlib_tooling_sources_from_sysroot(&sysroot).map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
             format!("Sifr stdlib source inventory is invalid: {error}"),
             DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
         )]
     })?;
-    compile_stdlib_sources(&sources)
+    compile_stdlib_sources_with_sysroot(&sources, Some(sysroot))
 }
 
-pub(crate) fn compile_stdlib_sources(
+fn compile_stdlib_sources_with_sysroot(
     sources: &[LoadedStdlibSource],
+    sysroot: Option<ResolvedSysroot>,
 ) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
+    let mut private_interop_modules = Vec::new();
     seed_http_transport_harness_aliases(&mut stdlib_defs, &mut stdlib_code);
 
     for stdlib_source in sources {
@@ -79,7 +85,6 @@ pub(crate) fn compile_stdlib_sources(
                     .collect());
             }
         };
-
         let result = match lower_module_stdlib_with_externals(parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
             Err(errors) => {
@@ -99,6 +104,12 @@ pub(crate) fn compile_stdlib_sources(
                 return Err(diagnostics);
             }
         };
+        if let Some(module) = pending_private_interop_module(stdlib_source, &result.module) {
+            private_interop_modules.push(module);
+        }
+        if stdlib_source.kind == LoadedStdlibSourceKind::PrivateDeclaration {
+            continue;
+        }
 
         let mut intrinsic_names_for_module = HashSet::new();
         let mut transitive_deps_for_module = HashSet::new();
@@ -430,6 +441,7 @@ pub(crate) fn compile_stdlib_sources(
     Ok(StdlibCompiled {
         defs: stdlib_defs,
         code: stdlib_code,
+        interop: build_stdlib_rust_interop(sysroot, private_interop_modules),
     })
 }
 
