@@ -20,7 +20,7 @@ The runtime backing is internal:
 | HTTP | `http`, `http-body`, `http-body-util`, `hyper`, `h2`, `hyper-util`, `tower-service` | no Hyper/H2/Tower types leak |
 | Observability | `tracing` events/spans | no subscriber/exporter setup |
 
-Generated Cargo dependencies are feature-gated in `sifr_stdlib` and snapshot-tested in `crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs`.
+Generated Cargo dependencies are feature-gated in `sifr_stdlib_model` and snapshot-tested in `crates/sifr_stdlib_model/tests/network_http_dependency_snapshots.rs`.
 
 ## Provider Consumption
 

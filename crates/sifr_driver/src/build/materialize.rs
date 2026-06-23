@@ -8,7 +8,7 @@ use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;

@@ -172,23 +172,23 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         required_features: {
             let mut features = emitter.intrinsic_registry_features;
             if emitter.runtime_needs.bigint() || import_needs.runtime.numeric.needs_bigint {
-                features.insert(sifr_stdlib::StdlibFeature::NumBigint);
-                features.insert(sifr_stdlib::StdlibFeature::NumTraits);
+                features.insert(sifr_stdlib_model::StdlibFeature::NumBigint);
+                features.insert(sifr_stdlib_model::StdlibFeature::NumTraits);
             }
             if import_needs.runtime.numeric.needs_decimal {
-                features.insert(sifr_stdlib::StdlibFeature::RustDecimal);
+                features.insert(sifr_stdlib_model::StdlibFeature::RustDecimal);
             }
             if import_needs.runtime.numeric.needs_bigdecimal {
-                features.insert(sifr_stdlib::StdlibFeature::BigDecimal);
+                features.insert(sifr_stdlib_model::StdlibFeature::BigDecimal);
             }
             if import_needs.runtime.needs_sifr_int {
-                features.insert(sifr_stdlib::StdlibFeature::SifrRuntime);
+                features.insert(sifr_stdlib_model::StdlibFeature::SifrRuntime);
             }
             if uses_task_sleep {
-                features.insert(sifr_stdlib::StdlibFeature::Tokio);
+                features.insert(sifr_stdlib_model::StdlibFeature::Tokio);
             }
             if needs_python_runtime {
-                features.insert(sifr_stdlib::StdlibFeature::PythonRuntime);
+                features.insert(sifr_stdlib_model::StdlibFeature::PythonRuntime);
             }
             features
         },

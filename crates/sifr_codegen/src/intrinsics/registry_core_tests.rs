@@ -65,11 +65,11 @@ pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
         lower_intrinsic("json_loads", &["payload".to_string()]).expect("json_loads should lower");
     assert_eq!(
         loads.required_feature,
-        Some(sifr_stdlib::StdlibFeature::SerdeJson)
+        Some(sifr_stdlib_model::StdlibFeature::SerdeJson)
     );
     assert!(loads
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::SifrRuntime));
+        .contains(&sifr_stdlib_model::StdlibFeature::SifrRuntime));
     let loads_rendered = render_expr(&loads.expr);
     assert!(loads_rendered.contains("serde_json::from_str"));
     assert!(loads_rendered.contains("validate_json_integer_digit_limits"));
@@ -82,14 +82,14 @@ pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
     assert_eq!(validate.required_feature, None);
     assert!(validate
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::SifrRuntime));
+        .contains(&sifr_stdlib_model::StdlibFeature::SifrRuntime));
     assert!(render_expr(&validate.expr).contains("JsonLimitError"));
 
     let dumps =
         lower_intrinsic("json_dumps", &["value".to_string()]).expect("json_dumps should lower");
     assert_eq!(
         dumps.required_feature,
-        Some(sifr_stdlib::StdlibFeature::SerdeJson)
+        Some(sifr_stdlib_model::StdlibFeature::SerdeJson)
     );
     assert_eq!(
         render_expr(&dumps.expr),
@@ -113,10 +113,10 @@ pub(crate) fn lowers_runtime_diagnostic_intrinsic_with_observability_metadata() 
     assert_eq!(lowered.required_feature, None);
     assert!(lowered
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::Metrics));
+        .contains(&sifr_stdlib_model::StdlibFeature::Metrics));
     assert!(lowered
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::Tracing));
+        .contains(&sifr_stdlib_model::StdlibFeature::Tracing));
     let rendered = render_expr(&lowered.expr);
     assert!(rendered.contains("tracing::event!"));
     assert!(rendered.contains("metrics::counter!"));
@@ -142,7 +142,7 @@ pub(crate) fn runtime_diagnostic_intrinsic_rejects_wrong_arity() {
 
 #[test]
 pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades() {
-    let deps = sifr_stdlib::generated_cargo_dependencies(
+    let deps = sifr_stdlib_model::generated_cargo_dependencies(
         &std::collections::HashSet::from(["sifr.runtime".to_string()]),
         &std::collections::HashSet::new(),
     );
@@ -166,17 +166,17 @@ pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
     .expect("unicode_normalize should lower");
     assert_eq!(
         normalized.required_feature,
-        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
     );
     assert!(normalized
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::UnicodeNames));
+        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeNames));
     assert!(normalized
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::UnicodeNormalization));
+        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeNormalization));
     assert!(normalized
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::UnicodeSegmentation));
+        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeSegmentation));
     let rendered = render_expr(&normalized.expr);
     assert!(rendered.contains("sifr_runtime::unicode::normalize"));
     assert!(rendered.contains("UnicodeDataError"));
@@ -191,11 +191,11 @@ pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
         lower_intrinsic("unicode_graphemes", &["text".to_string()]).expect("graphemes lower");
     assert_eq!(
         graphemes.required_feature,
-        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
     );
     assert!(graphemes
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::UnicodeSegmentation));
+        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeSegmentation));
     assert!(render_expr(&graphemes.expr).contains("sifr_runtime::unicode::graphemes"));
 }
 
@@ -205,14 +205,14 @@ pub(crate) fn lowers_i18n_intrinsics_with_dependency_metadata() {
         .expect("locale canonicalize should lower");
     assert_eq!(
         canonical.required_feature,
-        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
     );
     assert!(canonical
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::IcuLocale));
+        .contains(&sifr_stdlib_model::StdlibFeature::IcuLocale));
     assert!(canonical
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::IcuDatetime));
+        .contains(&sifr_stdlib_model::StdlibFeature::IcuDatetime));
     let canonical_rendered = render_expr(&canonical.expr);
     assert!(canonical_rendered.contains("sifr_runtime::i18n::canonicalize_locale"));
     assert!(canonical_rendered.contains("LocaleIdError"));
@@ -262,11 +262,11 @@ pub(crate) fn lowers_i18n_intrinsics_with_dependency_metadata() {
     .expect("catalog plural lookup should lower");
     assert_eq!(
         lookup.required_feature,
-        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
     );
     assert!(lookup
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::IcuPlurals));
+        .contains(&sifr_stdlib_model::StdlibFeature::IcuPlurals));
     let lookup_rendered = render_expr(&lookup.expr);
     assert!(lookup_rendered.contains("sifr_runtime::i18n::mo_lookup_context_plural"));
     assert!(lookup_rendered.contains("CatalogError"));
@@ -333,7 +333,7 @@ pub(crate) fn lowers_signal_intrinsics_via_registry() {
     let ctrl_c = lower_intrinsic("signal_ctrl_c", &[]).expect("signal_ctrl_c");
     assert_eq!(
         ctrl_c.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Tokio)
+        Some(sifr_stdlib_model::StdlibFeature::Tokio)
     );
     let ctrl_c_rendered = render_expr(&ctrl_c.expr);
     assert!(ctrl_c_rendered.contains("tokio::signal::ctrl_c().await"));
@@ -342,7 +342,7 @@ pub(crate) fn lowers_signal_intrinsics_via_registry() {
     let terminate = lower_intrinsic("signal_terminate", &[]).expect("signal_terminate");
     assert_eq!(
         terminate.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Tokio)
+        Some(sifr_stdlib_model::StdlibFeature::Tokio)
     );
     let terminate_rendered = render_expr(&terminate.expr);
     assert!(terminate_rendered.contains("#[cfg(unix)]"));
@@ -353,7 +353,7 @@ pub(crate) fn lowers_signal_intrinsics_via_registry() {
     let shutdown = lower_intrinsic("signal_shutdown", &[]).expect("signal_shutdown");
     assert_eq!(
         shutdown.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Tokio)
+        Some(sifr_stdlib_model::StdlibFeature::Tokio)
     );
     let shutdown_rendered = render_expr(&shutdown.expr);
     assert!(shutdown_rendered.contains("#[cfg(unix)]"));
@@ -403,7 +403,7 @@ pub(crate) fn lowers_pathlib_intrinsics_via_registry() {
         .expect("glob_pattern lowers");
     assert_eq!(
         glob.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Regex)
+        Some(sifr_stdlib_model::StdlibFeature::Regex)
     );
     assert!(render_expr(&glob.expr).contains("regex::Regex::new"));
     assert!(render_expr(&glob.expr).contains("__re.is_match(&__name)"));
@@ -412,7 +412,7 @@ pub(crate) fn lowers_pathlib_intrinsics_via_registry() {
         .expect("rglob_pattern lowers");
     assert_eq!(
         rglob.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Regex)
+        Some(sifr_stdlib_model::StdlibFeature::Regex)
     );
     assert!(render_expr(&rglob.expr).contains("__stack.pop()"));
     assert!(render_expr(&rglob.expr).contains("__re.is_match(&__name)"));
@@ -496,11 +496,11 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
     assert!(render_expr(&enc_result.expr).contains("sifr_runtime::encoding::encode_bytes"));
     assert_eq!(
         enc_result.required_feature,
-        Some(sifr_stdlib::StdlibFeature::SifrRuntime)
+        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
     );
     assert!(enc_result
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::EncodingRs));
+        .contains(&sifr_stdlib_model::StdlibFeature::EncodingRs));
 
     let enc_with_codec = lower_intrinsic(
         "str_encode_utf8_result_with_encoding",
@@ -536,7 +536,7 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
     assert!(render_expr(&process_text.expr).contains("sifr_runtime::encoding::decode_text"));
     assert!(process_text
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::EncodingRs));
+        .contains(&sifr_stdlib_model::StdlibFeature::EncodingRs));
 
     let with_size =
         lower_intrinsic("bytes_with_size", &["n".to_string()]).expect("bytes_with_size");
@@ -578,7 +578,7 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
         .expect("time_format");
     assert_eq!(
         fmt.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&fmt.expr).contains("DateTime::from_timestamp"));
 
@@ -591,21 +591,21 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
     let parse = lower_intrinsic("strptime", &["s".to_string(), "f".to_string()]).expect("strptime");
     assert_eq!(
         parse.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&parse.expr).contains("NaiveDateTime::parse_from_str"));
 
     let gmt = lower_intrinsic("gmtime", &["ts".to_string()]).expect("gmtime");
     assert_eq!(
         gmt.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&gmt.expr).contains("chrono::DateTime::<chrono::Utc>::from_timestamp"));
 
     let local = lower_intrinsic("localtime", &["ts".to_string()]).expect("localtime");
     assert_eq!(
         local.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&local.expr).contains("with_timezone(&chrono::Local)"));
 
@@ -613,7 +613,7 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
         .expect("_strptime_intrinsic");
     assert_eq!(
         parse_alias.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
 
@@ -621,21 +621,21 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
         .expect("time_strptime");
     assert_eq!(
         parsed_parts.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&parsed_parts.expr).contains("Result<Vec<i64>, ValueError>"));
 
     let gmtime_parts = lower_intrinsic("time_gmtime", &[]).expect("time_gmtime");
     assert_eq!(
         gmtime_parts.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&gmtime_parts.expr).contains("Utc::now().naive_utc()"));
 
     let localtime_parts = lower_intrinsic("time_localtime", &[]).expect("time_localtime");
     assert_eq!(
         localtime_parts.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Chrono)
+        Some(sifr_stdlib_model::StdlibFeature::Chrono)
     );
     assert!(render_expr(&localtime_parts.expr).contains("Local::now().naive_local()"));
 }
@@ -646,14 +646,14 @@ pub(crate) fn lowers_random_intrinsics_via_registry() {
         lower_intrinsic("random_int", &["1".to_string(), "9".to_string()]).expect("random_int");
     assert_eq!(
         rint.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Rand)
+        Some(sifr_stdlib_model::StdlibFeature::Rand)
     );
     assert!(render_expr(&rint.expr).contains("rand::RngExt::random_range"));
 
     let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
     assert_eq!(
         rfloat.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Rand)
+        Some(sifr_stdlib_model::StdlibFeature::Rand)
     );
     assert!(render_expr(&rfloat.expr).contains("rand::random::<f64>()"));
 
@@ -682,7 +682,7 @@ pub(crate) fn lowers_random_intrinsics_via_registry() {
         .expect("random_gauss");
     assert!(gauss
         .additional_required_features
-        .contains(&sifr_stdlib::StdlibFeature::RandDistr));
+        .contains(&sifr_stdlib_model::StdlibFeature::RandDistr));
     assert!(render_expr(&gauss.expr).contains("rand_distr"));
 
     let state_words =
@@ -718,7 +718,10 @@ pub(crate) fn lowers_random_intrinsics_via_registry() {
 #[test]
 pub(crate) fn lowers_re_intrinsics_via_registry() {
     let m = lower_intrinsic("re_match", &["pat".to_string(), "txt".to_string()]).expect("re_match");
-    assert_eq!(m.required_feature, Some(sifr_stdlib::StdlibFeature::Regex));
+    assert_eq!(
+        m.required_feature,
+        Some(sifr_stdlib_model::StdlibFeature::Regex)
+    );
     assert!(render_expr(&m.expr).contains("is_match"));
 
     let f = lower_intrinsic("re_find", &["pat".to_string(), "txt".to_string()]).expect("re_find");
@@ -764,19 +767,28 @@ pub(crate) fn lowers_re_intrinsics_via_registry() {
         ],
     )
     .expect("re_replace_flags");
-    assert_eq!(rf.required_feature, Some(sifr_stdlib::StdlibFeature::Regex));
+    assert_eq!(
+        rf.required_feature,
+        Some(sifr_stdlib_model::StdlibFeature::Regex)
+    );
     assert!(render_expr(&rf.expr).contains("replace_all"));
 }
 
 #[test]
 pub(crate) fn lowers_hash_intrinsics_via_registry() {
     let sha = lower_intrinsic("sha256", &["payload".to_string()]).expect("sha256");
-    assert_eq!(sha.required_feature, Some(sifr_stdlib::StdlibFeature::Sha2));
+    assert_eq!(
+        sha.required_feature,
+        Some(sifr_stdlib_model::StdlibFeature::Sha2)
+    );
     assert!(render_expr(&sha.expr).contains("<sha2::Sha256 as sha2::Digest>::digest"));
     assert!(render_expr(&sha.expr).contains(".as_bytes()"));
 
     let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
-    assert_eq!(md5.required_feature, Some(sifr_stdlib::StdlibFeature::Md5));
+    assert_eq!(
+        md5.required_feature,
+        Some(sifr_stdlib_model::StdlibFeature::Md5)
+    );
     assert!(render_expr(&md5.expr).contains("md5::compute"));
     assert!(render_expr(&md5.expr).contains(".as_bytes()"));
 
@@ -784,14 +796,14 @@ pub(crate) fn lowers_hash_intrinsics_via_registry() {
         lower_intrinsic("sha256_bytes", &["payload".to_string()]).expect("sha256_bytes");
     assert_eq!(
         sha_bytes.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Sha2)
+        Some(sifr_stdlib_model::StdlibFeature::Sha2)
     );
     assert!(render_expr(&sha_bytes.expr).contains("to_vec"));
 
     let md5_bytes = lower_intrinsic("md5_bytes", &["payload".to_string()]).expect("md5_bytes");
     assert_eq!(
         md5_bytes.required_feature,
-        Some(sifr_stdlib::StdlibFeature::Md5)
+        Some(sifr_stdlib_model::StdlibFeature::Md5)
     );
     assert!(render_expr(&md5_bytes.expr).contains("md5::compute"));
     assert!(render_expr(&md5_bytes.expr).contains(".0"));

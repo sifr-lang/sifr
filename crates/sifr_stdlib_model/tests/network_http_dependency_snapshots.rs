@@ -1,5 +1,5 @@
 use serde_json::Value;
-use sifr_stdlib::{generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_model::{generated_cargo_dependencies, StdlibFeature};
 use std::collections::HashSet;
 
 const SNAPSHOT_JSON: &str = include_str!(
@@ -264,7 +264,7 @@ fn network_http_net_module_emits_locked_runtime_dependencies() {
         ]
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("tokio"),
+        sifr_stdlib_model::feature_for_codegen_requirement("tokio"),
         Some(StdlibFeature::Tokio)
     );
 }
@@ -304,15 +304,15 @@ fn network_http_tls_module_emits_locked_runtime_dependencies() {
     assert!(!deps.iter().any(|dep| dep.contains("webpki-roots")));
     assert!(!deps.iter().any(|dep| dep.contains("x509-parser")));
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("rustls"),
+        sifr_stdlib_model::feature_for_codegen_requirement("rustls"),
         Some(StdlibFeature::Rustls)
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("tokio-rustls"),
+        sifr_stdlib_model::feature_for_codegen_requirement("tokio-rustls"),
         Some(StdlibFeature::TokioRustls)
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("rustls-platform-verifier"),
+        sifr_stdlib_model::feature_for_codegen_requirement("rustls-platform-verifier"),
         Some(StdlibFeature::RustlsPlatformVerifier)
     );
 }
@@ -329,11 +329,11 @@ fn network_http_url_module_emits_locked_parser_dependencies() {
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.starts_with("http = ")));
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("url"),
+        sifr_stdlib_model::feature_for_codegen_requirement("url"),
         Some(StdlibFeature::Url)
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("percent-encoding"),
+        sifr_stdlib_model::feature_for_codegen_requirement("percent-encoding"),
         Some(StdlibFeature::PercentEncoding)
     );
 }
@@ -348,11 +348,11 @@ fn network_http_http_module_emits_locked_header_dependencies_without_cookie_crat
     assert!(!deps.iter().any(|dep| dep.starts_with("url = ")));
     assert!(!deps.iter().any(|dep| dep.contains("percent-encoding")));
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("http"),
+        sifr_stdlib_model::feature_for_codegen_requirement("http"),
         Some(StdlibFeature::Http)
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("cookie"),
+        sifr_stdlib_model::feature_for_codegen_requirement("cookie"),
         Some(StdlibFeature::Cookie)
     );
 }
@@ -397,19 +397,19 @@ fn network_http_url_and_http_modules_emit_locked_dependencies() {
     assert!(!deps.iter().any(|dep| dep.starts_with("serde = ")));
     assert!(!deps.iter().any(|dep| dep.contains("x509-parser")));
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("url"),
+        sifr_stdlib_model::feature_for_codegen_requirement("url"),
         Some(StdlibFeature::Url)
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("percent-encoding"),
+        sifr_stdlib_model::feature_for_codegen_requirement("percent-encoding"),
         Some(StdlibFeature::PercentEncoding)
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("http"),
+        sifr_stdlib_model::feature_for_codegen_requirement("http"),
         Some(StdlibFeature::Http)
     );
     assert_eq!(
-        sifr_stdlib::feature_for_codegen_requirement("cookie"),
+        sifr_stdlib_model::feature_for_codegen_requirement("cookie"),
         Some(StdlibFeature::Cookie)
     );
 }

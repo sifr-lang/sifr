@@ -24,12 +24,12 @@ state. Later implementation stages update the implementation toward the architec
 
 | Surface | Current owner | Final owner | Migration blocker | Can move before runtime certification? |
 | --- | --- | --- | --- | --- |
-| Public Sifr stdlib sources | `lib/sifr/*.sifr`, embedded by `crates/sifr_stdlib/src/sources.rs` through `include_str!` | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | sysroot resolver, canonical source-root move | yes |
+| Public Sifr stdlib sources | `lib/sifr/*.sifr`, embedded by `crates/sifr_stdlib_model/src/sources.rs` through `include_str!` | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | sysroot resolver, canonical source-root move | yes |
 | Private stdlib declarations | No physical `stdlib/_sifr` source tree; private modules are represented by compiler intrinsic metadata | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | private declaration files, synthetic stdlib interop context | mixed |
-| Compiler-side stdlib model | `crates/sifr_stdlib` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | compiler stdlib-model crate rename | yes |
+| Compiler-side stdlib model | `crates/sifr_stdlib_model` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | complete | yes |
 | Generated-program stdlib implementation crate | Does not exist as a distinct crate | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | compiler stdlib-model rename frees the name, then generated-program crate creation adds the new crate | yes |
 | Runtime crate | `crates/sifr_runtime` in the development workspace; generated Cargo finds it through `SIFR_RUNTIME_PATH`, ancestor scanning, or `env!("CARGO_MANIFEST_DIR")` fallback | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
-| Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asks `sifr_stdlib::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from `sifr_stdlib_model`, consumed by codegen, driver, cache keys, reports, and LSP traces | dependency planner | yes |
+| Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asks `sifr_stdlib_model::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from `sifr_stdlib_model`, consumed by codegen, driver, cache keys, reports, and LSP traces | dependency planner | yes |
 | Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
 | Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no sysroot contract is validated | Release archive contains `bin/sifr` plus the complete sysroot tree and replaces them atomically | installer and release artifact update | yes |
 | CLI stdlib loading | `sifr_driver::compile_stdlib` compiles embedded `STDLIB_SOURCES`; diagnostics use virtual `stdlib:<module>` locations | CLI resolves `ResolvedSysroot` and loads physical sysroot stdlib files | Sysroot resolver, source inventory migration | yes |
@@ -439,7 +439,7 @@ does not enable unrelated capability groups.
 
 `sifr_stdlib_model` is the compiler-side model of the standard library. It is
 linked into the compiler and is not shipped as a generated-program dependency.
-This is the successor of the current compiler crate named `sifr_stdlib`.
+It was renamed from the compiler crate previously named `sifr_stdlib`.
 
 It owns:
 

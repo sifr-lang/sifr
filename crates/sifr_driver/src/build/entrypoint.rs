@@ -578,7 +578,7 @@ impl RootedEntrypointPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sifr_stdlib::StdlibFeature;
+    use sifr_stdlib_model::StdlibFeature;
 
     fn mktemp_dir(name: &str) -> PathBuf {
         let unique = format!(

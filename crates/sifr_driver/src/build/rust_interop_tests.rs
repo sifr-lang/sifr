@@ -16,7 +16,7 @@ use sifr_package::{
     PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph,
     SifrPackageId, SifrPackageMetadata, SifrPackageName, TrustPolicy,
 };
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 

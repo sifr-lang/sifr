@@ -138,7 +138,7 @@
         "test",
         "--locked",
         "-p",
-        "sifr_stdlib",
+        "sifr_stdlib_model",
         "ipc_connection::tests::shutdown_drains_and_rejects_new_runs"
       ],
       "skip_reason": "requires nightly Rust thread sanitizer support and llvm-symbolizer for async/concurrency fixtures",
@@ -193,7 +193,7 @@
         "test",
         "--locked",
         "-p",
-        "sifr_stdlib",
+        "sifr_stdlib_model",
         "ipc_request_tracker"
       ],
       "skip_reason": "no Loom/Shuttle-style deterministic concurrency model is currently vendored; this structured skip records the required reproduction boundary",

@@ -2,7 +2,7 @@ use sifr_diagnostics::codes::registry_entry;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 pub(crate) use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
 use sifr_package::{PackageDiagnostic, PackageDiagnosticOrigin};
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::io::Write;

@@ -12,7 +12,7 @@ sifr_diagnostics = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_lowering = { workspace = true }
 sifr_ir = { workspace = true }
-sifr_stdlib = { workspace = true }
+sifr_stdlib_model = { workspace = true }
 sifr_frontend = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_codegen = { workspace = true }

@@ -44,7 +44,7 @@ mod uuid;
 mod zipfile;
 
 use crate::RustExpr;
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 
 pub(crate) use requirements::additional_required_features;
 

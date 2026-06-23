@@ -12,7 +12,7 @@ use sifr_frontend::{
     compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
 };
 use sifr_lowering::HirModule;
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
