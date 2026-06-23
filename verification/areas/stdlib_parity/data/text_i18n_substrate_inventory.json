@@ -330,7 +330,7 @@
     ],
     "dependency_snapshots": [
       "verification/areas/stdlib_parity/data/text_i18n_dependency_snapshots.json",
-      "crates/sifr_stdlib/src/features.rs::text_i18n_feature_dependency_snapshots_cover_feature_combinations"
+      "crates/sifr_stdlib_model/src/features.rs::text_i18n_feature_dependency_snapshots_cover_feature_combinations"
     ],
     "generated_code_quality": [
       "verification/areas/generated_code_quality/data/corpus_manifest.json"

@@ -10,12 +10,14 @@ In progress.
 | --- | --- | --- |
 | M0. Architecture Baseline and Inventory | completed, merged | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`; local create-pr validation and Opus review were satisfied in merged [PR #2741](https://github.com/sifr-lang/sifr/pull/2741). |
 | M1. Sysroot Identity and Resolver Skeleton | completed, merged | `crates/sifr_sysroot` adds manifest parsing, layout validation, resolver precedence, digest canonicalization, development source-tree sysroot resolution, and CLI `sifr --print sysroot` support in merged [PR #2743](https://github.com/sifr-lang/sifr/pull/2743). |
-| M2-M13 | not started | M1 is merged; crate movement can begin with M2. |
+| M2. Rename Current Compiler Stdlib Crate | in progress | Renaming the compiler-side `crates/sifr_stdlib` crate to `crates/sifr_stdlib_model` to free `sifr_stdlib` for the generated-program crate. |
+| M3-M13 | not started | Await M2 review/merge before creating the generated-program `sifr_stdlib` crate. |
 
 ## PR Log
 
 - M0 baseline/inventory: [PR #2741](https://github.com/sifr-lang/sifr/pull/2741) merged.
 - M1 sysroot identity/resolver: [PR #2743](https://github.com/sifr-lang/sifr/pull/2743) merged.
+- M2 compiler stdlib model rename: in progress.
 
 ## Design Reference
 

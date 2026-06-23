@@ -439,10 +439,10 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     assert!(result.rust_source.contains("use num_bigint::BigInt;"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib::StdlibFeature::NumBigint));
+        .contains(&sifr_stdlib_model::StdlibFeature::NumBigint));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib::StdlibFeature::NumTraits));
+        .contains(&sifr_stdlib_model::StdlibFeature::NumTraits));
 }
 
 #[test]

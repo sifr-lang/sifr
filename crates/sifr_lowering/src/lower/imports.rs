@@ -20,7 +20,7 @@ pub(in crate::lower) fn report_unknown_stdlib_module(
     imported_names: &str,
     range: TextRange,
 ) {
-    if let Some(legacy_module) = sifr_stdlib::unsupported_legacy_stdlib_module(module) {
+    if let Some(legacy_module) = sifr_stdlib_model::unsupported_legacy_stdlib_module(module) {
         import_diagnostics::unsupported_legacy_stdlib_module(
             ctx,
             &legacy_module,

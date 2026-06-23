@@ -3,7 +3,7 @@ use crate::build::generate_dependency_cargo_toml;
 use crate::build::generate_dependency_cargo_toml_for_cache_key;
 use crate::project::top_level_module_declarations;
 use sifr_codegen::InteropBuildPlan;
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 use sifr_sysroot::SysrootError;
 use std::collections::HashSet;
 

@@ -1,7 +1,7 @@
 #![cfg(unix)]
 #![allow(clippy::expect_used)]
 
-use sifr_stdlib::{
+use sifr_stdlib_model::{
     read_frame, write_frame, IpcConnectionConfig, IpcConnectionState, IpcEnvelope,
     IpcMalformedKind, IpcShutdownMode, IpcTerminationReason, IpcWireSchema,
     IPC_DEFAULT_MAX_FRAME_BYTES,
@@ -39,7 +39,7 @@ impl WorkerProcess {
         let repo_root = manifest_dir
             .parent()
             .and_then(Path::parent)
-            .expect("stdlib crate lives under crates/sifr_stdlib");
+            .expect("stdlib model crate lives under crates/sifr_stdlib_model");
         let target_dir = repo_root
             .join("target")
             .join("ipc_process_pipe_fixture_worker");
@@ -230,7 +230,10 @@ fn unix_child_process_pipes_report_backpressure_full() {
     connection
         .apply_established_frame(&malformed)
         .expect("parent closes on backpressure protocol error");
-    assert_eq!(connection.phase(), sifr_stdlib::IpcConnectionPhase::Closed);
+    assert_eq!(
+        connection.phase(),
+        sifr_stdlib_model::IpcConnectionPhase::Closed
+    );
 
     worker.finish();
 }
@@ -261,7 +264,10 @@ fn unix_child_process_pipes_report_unsupported_payload() {
     connection
         .apply_established_frame(&unsupported)
         .expect("parent closes on unsupported payload");
-    assert_eq!(connection.phase(), sifr_stdlib::IpcConnectionPhase::Closed);
+    assert_eq!(
+        connection.phase(),
+        sifr_stdlib_model::IpcConnectionPhase::Closed
+    );
 
     worker.finish();
 }
@@ -292,7 +298,10 @@ fn unix_child_process_pipes_report_malformed_frame() {
     connection
         .apply_established_frame(&malformed)
         .expect("parent closes on protocol error frame");
-    assert_eq!(connection.phase(), sifr_stdlib::IpcConnectionPhase::Closed);
+    assert_eq!(
+        connection.phase(),
+        sifr_stdlib_model::IpcConnectionPhase::Closed
+    );
 
     let output = worker
         .child

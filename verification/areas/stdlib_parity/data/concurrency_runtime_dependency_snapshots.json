@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "readiness-pending-pr",
-  "source": "sifr_stdlib::generated_cargo_dependencies",
+  "source": "sifr_stdlib_model::generated_cargo_dependencies",
   "runtime_path_placeholder": "<sifr_runtime_path>",
   "snapshots": [
     {

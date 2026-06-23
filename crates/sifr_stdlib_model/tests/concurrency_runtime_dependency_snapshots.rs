@@ -1,5 +1,5 @@
 use serde_json::Value;
-use sifr_stdlib::{feature_for_codegen_requirement, generated_cargo_dependencies};
+use sifr_stdlib_model::{feature_for_codegen_requirement, generated_cargo_dependencies};
 use std::collections::HashSet;
 
 const SNAPSHOT_JSON: &str = include_str!(
@@ -37,7 +37,7 @@ fn concurrency_runtime_dependency_snapshots_match_codegen_resolver() {
     );
     assert_eq!(
         payload.get("source").and_then(Value::as_str),
-        Some("sifr_stdlib::generated_cargo_dependencies")
+        Some("sifr_stdlib_model::generated_cargo_dependencies")
     );
 
     let snapshots = payload

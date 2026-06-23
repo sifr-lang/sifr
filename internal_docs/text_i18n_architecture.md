@@ -12,7 +12,7 @@ Invalid byte sequences, lone surrogates, and byte-preserving recovery are not hi
 
 `sifr.encoding`, `str.encode(...)`, `bytes.decode(...)`, `sifr.io.open_text(...)`, and builtin `open(..., encoding=..., errors=...)` share the static encoding registry. The registry is immutable; codec and error-handler registration APIs are unsupported.
 
-The generated Cargo dependency source is `sifr_stdlib::generated_cargo_dependencies`. Text/i18n features request:
+The generated Cargo dependency source is `sifr_stdlib_model::generated_cargo_dependencies`. Text/i18n features request:
 
 - `encoding_rs` plus `sifr_runtime` for `sifr.encoding`
 - `sifr_runtime` with `unicode` for `sifr.unicode`

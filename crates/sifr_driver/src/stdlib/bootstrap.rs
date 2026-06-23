@@ -7,7 +7,7 @@ use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
-use sifr_stdlib::STDLIB_SOURCES;
+use sifr_stdlib_model::STDLIB_SOURCES;
 use sifr_syntax::parse_module_raw;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -134,7 +134,8 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<RenderedDiagnost
         for import in &result.module.imports {
             if import.module.starts_with("_sifr.") {
                 transitive_deps_for_module.insert(import.module.clone());
-                if let Some(intrinsic_mod) = sifr_stdlib::get_intrinsic_module(&import.module) {
+                if let Some(intrinsic_mod) = sifr_stdlib_model::get_intrinsic_module(&import.module)
+                {
                     for name in &import.names {
                         if let Some(ft) = intrinsic_mod.functions.get(name) {
                             if !fn_exports.contains_key(name) {
@@ -515,7 +516,7 @@ fn seed_http_transport_harness_aliases(
     stdlib_defs: &mut ExternalDefs,
     stdlib_code: &mut StdlibCode,
 ) {
-    let Some(intrinsic_http) = sifr_stdlib::get_intrinsic_module("_sifr.http") else {
+    let Some(intrinsic_http) = sifr_stdlib_model::get_intrinsic_module("_sifr.http") else {
         return;
     };
 

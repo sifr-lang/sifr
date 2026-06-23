@@ -5,7 +5,7 @@ use crate::project::{
 };
 use sifr_codegen::{generate_rust_multi_with_metadata, StdlibCode};
 use sifr_ir::HirModule;
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 use std::collections::{BTreeMap, HashSet};
 
 pub(super) struct GeneratedBinaryProject {

@@ -1,6 +1,6 @@
 # Network HTTP Dependency Audit
 
-Status: closed, audited through network/HTTP readiness implementation. Generated dependency snapshots are resolver-backed by `crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs`; current lockfile deltas are recorded below.
+Status: closed, audited through network/HTTP readiness implementation. Generated dependency snapshots are resolver-backed by `crates/sifr_stdlib_model/tests/network_http_dependency_snapshots.rs`; current lockfile deltas are recorded below.
 
 | Crate family | Accepted features | Sifr abstraction hiding crate | Typed error mapping | Panic/unsafe audit | License/MSRV/binary/platform impact | Deterministic tests and conformance | Maintenance signal |
 | --- | --- | --- | --- | --- | --- | --- | --- |

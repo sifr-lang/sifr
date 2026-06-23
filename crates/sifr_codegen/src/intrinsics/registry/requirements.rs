@@ -1,4 +1,4 @@
-use sifr_stdlib::StdlibFeature;
+use sifr_stdlib_model::StdlibFeature;
 
 use super::tls;
 

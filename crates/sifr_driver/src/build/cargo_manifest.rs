@@ -1,5 +1,7 @@
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
-use sifr_stdlib::{generated_cargo_dependencies, try_generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_model::{
+    generated_cargo_dependencies, try_generated_cargo_dependencies, StdlibFeature,
+};
 use sifr_sysroot::SysrootError;
 use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
