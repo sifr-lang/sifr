@@ -16,6 +16,106 @@ paths, gives CLI and LSP the same view of the installed standard library, and
 provides a stable substrate for moving compiler-special native stdlib plumbing
 onto Rust interop.
 
+## Pre-Migration Baseline
+
+This section records the current implementation boundary before sysroot and
+stdlib crate movement starts. It is intentionally descriptive, not a target
+state. Later implementation stages update the implementation toward the architecture below.
+
+| Surface | Current owner | Final owner | Migration blocker | Can move before runtime certification? |
+| --- | --- | --- | --- | --- |
+| Public Sifr stdlib sources | `lib/sifr/*.sifr`, embedded by `crates/sifr_stdlib/src/sources.rs` through `include_str!` | `stdlib/sifr/*.sifr` copied into `<sysroot>/stdlib/sifr` and loaded through `ResolvedSysroot` | sysroot resolver, canonical source-root move | yes |
+| Private stdlib declarations | No physical `stdlib/_sifr` source tree; private modules are represented by compiler intrinsic metadata | `stdlib/_sifr/*.sifr` declarations loaded through the same sysroot source inventory | private declaration files, synthetic stdlib interop context | mixed |
+| Compiler-side stdlib model | `crates/sifr_stdlib` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | compiler stdlib-model crate rename | yes |
+| Generated-program stdlib implementation crate | Does not exist as a distinct crate | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | compiler stdlib-model rename frees the name, then generated-program crate creation adds the new crate | yes |
+| Runtime crate | `crates/sifr_runtime` in the development workspace; generated Cargo finds it through `SIFR_RUNTIME_PATH`, ancestor scanning, or `env!("CARGO_MANIFEST_DIR")` fallback | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
+| Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asks `sifr_stdlib::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from `sifr_stdlib_model`, consumed by codegen, driver, cache keys, reports, and LSP traces | dependency planner | yes |
+| Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
+| Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no `lib/sifr` sysroot contract is validated | Release archive contains `bin/sifr` plus complete `lib/sifr` sysroot and replaces them atomically | installer and release artifact update | yes |
+| CLI stdlib loading | `sifr_driver::compile_stdlib` compiles embedded `STDLIB_SOURCES`; diagnostics use virtual `stdlib:<module>` locations | CLI resolves `ResolvedSysroot` and loads physical sysroot stdlib files | Sysroot resolver, source inventory migration | yes |
+| LSP/tooling stdlib loading | Analysis hosts call `sifr_driver::stdlib_external_defs()`, so tooling observes the same embedded definitions as CLI but not physical files | LSP/tooling load source and declaration metadata from the same `ResolvedSysroot` as CLI | tooling integration | yes |
+
+Current public stdlib sources import private `_sifr.*` modules as follows. User
+code still cannot import `_sifr.*`; these rows describe only stdlib wrapper
+implementation imports under `lib/sifr`.
+
+| Private module | Current public wrappers |
+| --- | --- |
+| `_sifr.bytes` | `bytes.sifr`, `hashlib.sifr` |
+| `_sifr.calendar` | `calendar.sifr` |
+| `_sifr.collections` | `collections.sifr` |
+| `_sifr.compress` | `gzip.sifr`, `zipfile.sifr` |
+| `_sifr.crypto` | `base64.sifr`, `hashlib.sifr`, `random.sifr`, `secrets.sifr`, `tempfile.sifr` |
+| `_sifr.datetime` | `datetime.sifr` |
+| `_sifr.encoding` | `encoding.sifr` |
+| `_sifr.fs` | `glob.sifr`, `hashlib.sifr`, `io.sifr`, `json.sifr`, `os.sifr`, `pathlib.sifr`, `shutil.sifr`, `tempfile.sifr` |
+| `_sifr.html` | `html.sifr` |
+| `_sifr.http` | `http.sifr` |
+| `_sifr.i18n` | `i18n.sifr` |
+| `_sifr.json` | `json.sifr` |
+| `_sifr.logging` | `logging.sifr` |
+| `_sifr.math` | `math.sifr` |
+| `_sifr.net` | `net.sifr` |
+| `_sifr.platform` | `platform.sifr` |
+| `_sifr.process` | `process.sifr` |
+| `_sifr.python` | `python.sifr`, `python_core.sifr` |
+| `_sifr.regex` | `re.sifr` |
+| `_sifr.runtime` | `runtime.sifr` |
+| `_sifr.signal` | `signal.sifr` |
+| `_sifr.sys` | `env.sifr`, `os.sifr`, `sys.sifr` |
+| `_sifr.task` | `task.sifr` |
+| `_sifr.time` | `datetime.sifr`, `random.sifr`, `time.sifr`, `timeit.sifr` |
+| `_sifr.tls` | `tls.sifr` |
+| `_sifr.toml` | `tomllib.sifr` |
+| `_sifr.unicode` | `unicode.sifr` |
+| `_sifr.url` | `url.sifr` |
+| `_sifr.uuid` | `uuid.sifr` |
+
+Current generated dependency ownership is mixed. The generated dependency target is for
+Sifr-owned dependencies to come from sysroot path crates and sysroot vendor
+data, while user/package dependencies remain package-owned Cargo inputs.
+
+| Current generated dependency group | Current owner | Final owner | Migration blocker |
+| --- | --- | --- | --- |
+| `sifr_runtime` | Sifr-owned path dependency discovered from `SIFR_RUNTIME_PATH`, source-tree ancestors, executable ancestors, or compile-time checkout fallback | Sysroot-owned path dependency under `<sysroot>/crates/sifr_runtime` | Sysroot resolver and `SysrootDependencyPlan` |
+| `base64`, `blake2`, `md5`, `sha1`, `sha2`, `regex`, `toml`, `url`, `uuid`, `zip`, `flate2`, `chrono`, `encoding_rs`, `rand`, `rand_distr`, `rayon`, `rust_decimal`, `bigdecimal`, `num-bigint`, `num-traits`, `percent-encoding`, `unicode_names2`, `unicode-normalization`, `unicode-segmentation` | Sifr-owned implementation details emitted directly into generated project manifests | Vendored third-party inputs of sysroot crates; generated manifests should not expose them after migration | generated-program stdlib crate implementation and vendor/dependency planning |
+| `serde`, `serde_json`, `postcard`, `bytes`, `tokio`, `tokio-rustls`, `rustls`, `rustls-pemfile`, `rustls-platform-verifier`, `http`, `http-body`, `http-body-util`, `hyper`, `hyper-util`, `h2`, `tower-service`, `metrics`, `tracing`, ICU crates | Sifr-owned runtime/stdlib implementation details emitted directly when selected features require them | Vendored third-party inputs of sysroot crates; direct generated dependencies remain only for retained compiler-language glue with an allowlist | generated-program stdlib crate, dependency-plan, fallible-data, and retained-glue decisions |
+| User package dependencies and explicit Rust interop dependencies | Package-owned Cargo graph | Package-owned Cargo graph | None; sysroot vendor policy must not silently replace normal package resolution |
+
+Current generated code and preamble call into `sifr_runtime::*` from these
+families. This table groups the call sites by migration concern; the complete
+surface-by-surface ownership decision remains the TOML registry.
+
+| Call-site family | Current call sites | Final owner |
+| --- | --- | --- |
+| Exact integer/runtime bridge | Entry-point imports, module constants, SifrInt render helpers, Rust interop bridge generated types | Retained compiler-language glue backed by `sifr_runtime` |
+| JSON exact-int/value helpers | `crates/sifr_codegen/src/intrinsics/registry/json/**` | `sifr_stdlib` JSON implementation with only shared primitives retained in `sifr_runtime` |
+| Encoding, Unicode, and i18n helpers | `registry/encoding.rs`, `registry/unicode.rs`, `registry/i18n.rs` | `sifr_stdlib` text/data implementations with shared primitives retained only when justified |
+| Network handles | `preamble/net_runtime.rs` | `sifr_stdlib` net resource implementation through certified interop, backed by `sifr_runtime` substrates |
+| TLS handles | `preamble/tls_runtime.rs` | `sifr_stdlib` TLS resource implementation through certified interop, backed by `sifr_runtime` substrates |
+| HTTP transport | `preamble/url_http_runtime.rs` | `sifr_stdlib` HTTP resource implementation through certified interop, backed by `sifr_runtime` substrates |
+| Python objects, buffers, callbacks, and contexts | `registry/python.rs` | `sifr_stdlib` Python interop surface through certified object/resource/callback interop, backed by `sifr_runtime` substrates |
+
+The native migration registry for these surfaces is
+`internal_docs/stdlib_native_surface_ownership.toml`. It records current owner,
+final owner, reason, certification state, migration blocker, whether a surface
+can move before runtime certification, and deletion stage for each broad
+native surface. It is a temporary migration artifact and must be deleted or
+reduced to a retained compiler-language-glue allowlist by the final intrinsic-registry cleanup stage.
+
+Rust interop runtime certification is not fully complete for resource-shaped
+surfaces. The active matrix
+`verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
+currently has 14 supported rows, 5 bridge-supported rows, 1
+unsupported-by-design row, and 11 rows owned by separate certification work. The
+separately owned rows are `bridge_type_matrix`, `opaque_resource_matrix`,
+`panic_boundary_wrapper_emission`, `async_runtime_reqwest`,
+`callbacks_call_scoped`, `callback_subscription_matrix`,
+`ecosystem_backend_certification`, `ecosystem_cli_certification`,
+`native_build_script`, `proc_macro_trust`, and `cargo_locked_offline`. Resource
+migrations must not claim stable support for any row that remains separately
+owned by certification work.
+
 ## Installed Layout
 
 The canonical standalone installation layout is:
@@ -246,7 +346,7 @@ Sifr-owned stdlib/runtime dependencies in stdlib-only builds and does not
 silently replace user registry resolution in online package mode.
 
 The sysroot vendor directory is generated from the sysroot workspace lockfile,
-not from an ad hoc dependency list. This prevents stdlib features and runtime
+not from a manually curated dependency list. This prevents stdlib features and runtime
 features from drifting away from the shipped vendor set.
 
 For stdlib-only generated builds, Cargo resolution must be reproducible from
@@ -435,7 +535,7 @@ Generated Cargo must not expose third-party crates that are implementation
 details of Sifr-owned stdlib/runtime behavior. It may still emit user/package
 dependencies, explicit Rust interop dependencies, and temporary direct
 third-party dependencies for unmigrated compiler-special paths when the
-corresponding milestone has a deletion plan and validation coverage.
+corresponding migration stage has a deletion plan and validation coverage.
 
 During migration, native stdlib ownership is tracked in a checked registry:
 
@@ -444,8 +544,8 @@ internal_docs/stdlib_native_surface_ownership.toml
 ```
 
 Each native surface records its current owner, final owner, reason,
-certification state, and deletion milestone. The registry is a migration
-artifact. By M12 it is deleted or reduced to a tiny retained compiler-language
+certification state, and deletion stage. The registry is a migration
+artifact. By the final intrinsic-registry cleanup stage it is deleted or reduced to a tiny retained compiler-language
 glue allowlist. Final ownership is by location: public APIs live in
 `stdlib/sifr`, private native declarations live in `stdlib/_sifr`,
 generated-program implementation lives in `crates/sifr_stdlib` and

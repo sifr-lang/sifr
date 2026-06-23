@@ -2,7 +2,18 @@
 
 ## Status
 
-Planned.
+In progress.
+
+## Implementation Status
+
+| Milestone | Status | Evidence |
+| --- | --- | --- |
+| M0. Architecture Baseline and Inventory | implemented, PR open | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`; local create-pr validation and Opus review are satisfied in [PR #2741](https://github.com/sifr-lang/sifr/pull/2741). |
+| M1-M13 | not started | Await M0 merge before code movement. |
+
+## PR Log
+
+- M0 baseline/inventory: [PR #2741](https://github.com/sifr-lang/sifr/pull/2741) open.
 
 ## Design Reference
 
@@ -59,7 +70,7 @@ Tasks:
   implementation owner, migration blocker, and whether the surface can move
   before Rust interop runtime certification.
 - For each registry entry, record current owner, final owner, reason,
-  certification state, and deletion milestone.
+  certification state, and deletion stage (`deletion_stage` field).
 - Confirm which Rust interop compatibility matrix rows are certified, active,
   and future-owned before resource migration starts.
 - Add this issue to roadmap/phase tracking as the owner for sysroot and stdlib
