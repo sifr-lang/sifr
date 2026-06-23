@@ -12,10 +12,12 @@ trap cleanup EXIT HUP INT TERM
 
 site_repo="${tmp_dir}/site"
 binary="${tmp_dir}/sifr"
+sysroot_root="${tmp_dir}/mock-sysroot"
 work_dir="${tmp_dir}/work"
 version="0.1.0-beta.4"
 make_site_repo_fixture "${site_repo}"
 make_mock_binary "${binary}" "attribution fixture"
+make_mock_sysroot_root "${sysroot_root}"
 
 "${REPO_ROOT}/scripts/distribution/create_new_version.sh" \
   --channel beta \
@@ -24,6 +26,7 @@ make_mock_binary "${binary}" "attribution fixture"
   --site-repo "${site_repo}" \
   --work-dir "${work_dir}" \
   --binary "${binary}" \
+  --sysroot-root "${sysroot_root}" \
   --mutation-mode local >/dev/null
 
 checklist="${work_dir}/release-checklist.md"

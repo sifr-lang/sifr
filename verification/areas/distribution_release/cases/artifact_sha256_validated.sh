@@ -14,15 +14,13 @@ version="0.1.0-beta.8"
 binary="${tmp_dir}/sifr"
 artifact_dir="${tmp_dir}/artifacts"
 installer="${tmp_dir}/installer.sh"
-install_dir="${tmp_dir}/install"
+install_root="${tmp_dir}/install"
+install_dir="${install_root}/bin"
 target="x86_64-unknown-linux-gnu"
 archive="${artifact_dir}/sifr-${version}-${target}.tar.gz"
 
 make_mock_binary "${binary}" "new binary"
-"${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
-  --version "${version}" \
-  --output-dir "${artifact_dir}" \
-  --binary "${binary}" >/dev/null
+build_mock_preview_artifacts "${version}" "${artifact_dir}" "${binary}"
 "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
   --version "${version}" \
   --artifact-dir "${artifact_dir}" \
@@ -30,15 +28,16 @@ make_mock_binary "${binary}" "new binary"
   --artifact-base-url "file://${artifact_dir}" >/dev/null
 
 mkdir -p "${install_dir}"
-make_mock_binary "${install_dir}/sifr" "old binary"
+mkdir "${install_dir}/sifr"
+chmod 755 "${install_dir}/sifr"
+touch "${install_dir}/sifr/old-marker"
 printf 'corruption' >>"${archive}"
 
 require_failure_contains \
   "checksum mismatch" \
   env SIFR_TARGET="${target}" SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" SIFR_INSTALL_DIR="${install_dir}" sh "${installer}"
 
-output="$("${install_dir}/sifr")"
-if [[ "${output}" != "old binary" ]]; then
+if [[ ! -d "${install_dir}/sifr" || ! -f "${install_dir}/sifr/old-marker" ]]; then
   echo "installer replaced existing binary despite checksum failure" >&2
   exit 1
 fi

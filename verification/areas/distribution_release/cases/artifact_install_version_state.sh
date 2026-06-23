@@ -32,14 +32,15 @@ run_installer() {
     sh "${installer}" --no-modify-path "$@"
 }
 
-fresh_install_dir="${tmp_dir}/fresh/bin"
+fresh_install_root="${tmp_dir}/fresh"
+fresh_install_dir="${fresh_install_root}/bin"
 fresh_output="$(run_installer "${fresh_install_dir}")"
 [[ "${fresh_output}" == *"Installing Sifr ${version}"* ]] || {
   echo "fresh install did not report installation" >&2
   echo "${fresh_output}" >&2
   exit 1
 }
-grep -F "\"version\": \"${version}\"" "${fresh_install_dir}/install.json" >/dev/null
+grep -F "\"version\": \"${version}\"" "${fresh_install_root}/install.json" >/dev/null
 
 same_output="$(run_installer "${fresh_install_dir}")"
 [[ "${same_output}" == *"Sifr ${version} is already installed"* ]] || {
@@ -79,7 +80,7 @@ grep -F "\"version\": \"${version}\"" "${custom_manifest_dir}/install.json" >/de
 known_old_dir="${tmp_dir}/known-old/bin"
 mkdir -p "${known_old_dir}"
 make_mock_binary "${known_old_dir}/sifr" "old known fixture"
-printf '%s\n' '{"name":"sifr","version":"0.1.0-beta.2"}' >"${known_old_dir}/install.json"
+printf '%s\n' '{"name":"sifr","version":"0.1.0-beta.2"}' >"${tmp_dir}/known-old/install.json"
 known_old_output="$(run_installer "${known_old_dir}")"
 [[ "${known_old_output}" == *"Updating Sifr 0.1.0-beta.2 -> ${version}"* ]] || {
   echo "known older install did not report update" >&2
@@ -89,15 +90,7 @@ known_old_output="$(run_installer "${known_old_dir}")"
 
 unknown_old_dir="${tmp_dir}/unknown-old/bin"
 mkdir -p "${unknown_old_dir}"
-cat >"${unknown_old_dir}/sifr" <<'EOF'
-#!/usr/bin/env sh
-set -eu
-if [ "${1:-}" = "--version" ]; then
-  echo "sifr 0.0.0"
-else
-  echo "legacy fixture"
-fi
-EOF
+mkdir "${unknown_old_dir}/sifr"
 chmod 755 "${unknown_old_dir}/sifr"
 unknown_old_output="$(run_installer "${unknown_old_dir}")"
 [[ "${unknown_old_output}" == *"Updating existing Sifr installation (version unknown) -> ${version}"* ]] || {
@@ -109,7 +102,7 @@ unknown_old_output="$(run_installer "${unknown_old_dir}")"
 newer_dir="${tmp_dir}/newer/bin"
 mkdir -p "${newer_dir}"
 make_mock_binary "${newer_dir}/sifr" "newer fixture"
-cat >"${newer_dir}/install.json" <<'EOF'
+cat >"${tmp_dir}/newer/install.json" <<'EOF'
 {
   "name": "sifr",
   "version": "0.1.0-beta.4"

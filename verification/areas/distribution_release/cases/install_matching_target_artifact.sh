@@ -13,7 +13,8 @@ trap cleanup EXIT HUP INT TERM
 version="0.1.0-alpha.9"
 artifact_dir="${tmp_dir}/artifacts"
 installer="${tmp_dir}/installer.sh"
-install_dir="${tmp_dir}/install"
+install_root="${tmp_dir}/install"
+install_dir="${install_root}/bin"
 target="aarch64-unknown-linux-gnu"
 
 make_target_specific_artifacts "${version}" "${artifact_dir}"
@@ -28,8 +29,7 @@ SIFR_TARGET="${target}" \
   SIFR_INSTALL_DIR="${install_dir}" \
   sh "${installer}" >/dev/null
 
-output="$("${install_dir}/sifr")"
-if [[ "${output}" != "target=${target}" ]]; then
-  echo "installer selected wrong target artifact: ${output}" >&2
+if ! grep -F "target=${target}" "${install_dir}/sifr" >/dev/null; then
+  echo "installer selected wrong target artifact payload" >&2
   exit 1
 fi

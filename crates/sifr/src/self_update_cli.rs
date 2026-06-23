@@ -219,6 +219,7 @@ fn render_dry_run_text(plan: &UpdatePlan, discovered: &DiscoveredReceipt) -> Str
         format!("resolved_channel: {}", plan.resolved_channel.as_str()),
         format!("install_dir: {}", discovered.receipt.install_dir),
         format!("binary_path: {}", discovered.receipt.binary_path),
+        format!("sysroot_path: {}", discovered.receipt.sysroot_path),
         format!("installer_url: {}", plan.target_version.installer_url()),
         format!("action: {}", plan.action.as_str()),
         format!("force: {}", plan.force),
@@ -231,7 +232,7 @@ fn render_dry_run_text(plan: &UpdatePlan, discovered: &DiscoveredReceipt) -> Str
 fn render_dry_run_json(plan: &UpdatePlan, discovered: &DiscoveredReceipt) -> String {
     let requested_channel = json_optional_channel(plan.requested_channel);
     format!(
-        "{{\n  \"schema_version\": 1,\n  \"current_version\": {},\n  \"target_version\": {},\n  \"receipt_channel\": {},\n  \"requested_channel\": {},\n  \"resolved_channel\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"installer_url\": {},\n  \"action\": {},\n  \"force\": {},\n  \"would_run_installer\": {},\n  \"warnings\": []\n}}",
+        "{{\n  \"schema_version\": 1,\n  \"current_version\": {},\n  \"target_version\": {},\n  \"receipt_channel\": {},\n  \"requested_channel\": {},\n  \"resolved_channel\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"sysroot_path\": {},\n  \"installer_url\": {},\n  \"action\": {},\n  \"force\": {},\n  \"would_run_installer\": {},\n  \"warnings\": []\n}}",
         json_string(&plan.current_version.text),
         json_string(&plan.target_version.text),
         json_string(plan.receipt_channel.as_str()),
@@ -239,6 +240,7 @@ fn render_dry_run_json(plan: &UpdatePlan, discovered: &DiscoveredReceipt) -> Str
         json_string(plan.resolved_channel.as_str()),
         json_string(&discovered.receipt.install_dir),
         json_string(&discovered.receipt.binary_path),
+        json_string(&discovered.receipt.sysroot_path),
         json_string(&plan.target_version.installer_url()),
         json_string(plan.action.as_str()),
         plan.force,
@@ -265,6 +267,19 @@ fn render_version_text(discovered: &DiscoveredReceipt) -> String {
         format!("receipt_path: {}", discovered.receipt_path.display()),
         format!("install_dir: {}", discovered.receipt.install_dir),
         format!("binary_path: {}", discovered.receipt.binary_path),
+        format!("sysroot_path: {}", discovered.receipt.sysroot_path),
+        format!(
+            "sysroot_schema_version: {}",
+            discovered.receipt.sysroot_schema_version
+        ),
+        format!(
+            "sysroot_sifr_version: {}",
+            discovered.receipt.sysroot_sifr_version
+        ),
+        format!(
+            "sysroot_target_triple: {}",
+            discovered.receipt.sysroot_target_triple
+        ),
         format!("channel: {}", discovered.receipt.channel),
         format!("target: {}", discovered.receipt.target),
         format!("matches_receipt: {}", discovered.matches_receipt),
@@ -275,12 +290,16 @@ fn render_version_text(discovered: &DiscoveredReceipt) -> String {
 
 fn render_version_json(discovered: &DiscoveredReceipt) -> String {
     format!(
-        "{{\n  \"schema_version\": 1,\n  \"current_executable\": {},\n  \"current_version\": {},\n  \"receipt_version\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"channel\": {},\n  \"target\": {},\n  \"matches_receipt\": {},\n  \"warnings\": []\n}}",
+        "{{\n  \"schema_version\": 1,\n  \"current_executable\": {},\n  \"current_version\": {},\n  \"receipt_version\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"sysroot_path\": {},\n  \"sysroot_schema_version\": {},\n  \"sysroot_sifr_version\": {},\n  \"sysroot_target_triple\": {},\n  \"channel\": {},\n  \"target\": {},\n  \"matches_receipt\": {},\n  \"warnings\": []\n}}",
         json_string(&discovered.current_executable.display().to_string()),
         json_string(SIFR_BUILD_VERSION),
         json_string(&discovered.receipt.version),
         json_string(&discovered.receipt.install_dir),
         json_string(&discovered.receipt.binary_path),
+        json_string(&discovered.receipt.sysroot_path),
+        discovered.receipt.sysroot_schema_version,
+        json_string(&discovered.receipt.sysroot_sifr_version),
+        json_string(&discovered.receipt.sysroot_target_triple),
         json_string(&discovered.receipt.channel),
         json_string(&discovered.receipt.target),
         discovered.matches_receipt,
@@ -356,6 +375,12 @@ mod tests {
                 target: "aarch64-apple-darwin".to_owned(),
                 install_dir: "/Users/example/.sifr/bin".to_owned(),
                 binary_path: "/Users/example/.sifr/bin/sifr".to_owned(),
+                sysroot_path: "/Users/example/.sifr".to_owned(),
+                sysroot_schema_version: 1,
+                sysroot_sifr_version: "0.1.0-beta.1".to_owned(),
+                sysroot_target_triple: "aarch64-apple-darwin".to_owned(),
+                sysroot_content_sha256:
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".to_owned(),
                 artifact: "sifr-0.1.0-beta.1-aarch64-apple-darwin.tar.gz".to_owned(),
                 modify_path: true,
             },
@@ -411,6 +436,7 @@ mod tests {
   "resolved_channel": "beta",
   "install_dir": "/Users/example/.sifr/bin",
   "binary_path": "/Users/example/.sifr/bin/sifr",
+  "sysroot_path": "/Users/example/.sifr",
   "installer_url": "https://github.com/sifr-lang/sifr/releases/download/0.1.0-beta.2/sifr-installer-0.1.0-beta.2",
   "action": "update",
   "force": false,

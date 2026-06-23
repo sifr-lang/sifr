@@ -16,10 +16,7 @@ binary="${tmp_dir}/sifr"
 target="x86_64-unknown-linux-gnu"
 
 make_mock_binary "${binary}" "checksum generator fixture"
-"${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
-  --version "${version}" \
-  --output-dir "${artifact_dir}" \
-  --binary "${binary}" >/dev/null
+build_mock_preview_artifacts "${version}" "${artifact_dir}" "${binary}"
 printf '0000000000000000000000000000000000000000000000000000000000000000\n' \
   >"${artifact_dir}/sifr-${version}-${target}.tar.gz.sha256"
 

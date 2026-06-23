@@ -9,16 +9,20 @@ TARGETS=(
   "aarch64-unknown-linux-gnu"
 )
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 usage() {
   cat <<'EOF'
 Usage: scripts/distribution/build_preview_artifacts.sh --version <preview> --output-dir <dir> [options]
 
-Build or package preview artifacts for every preview release target.
+Build or package preview toolchain artifacts for every preview release target.
 
 Options:
   --version <preview>       Semver prerelease version, for example 0.1.0-beta.1
   --output-dir <dir>        Directory where archives and .sha256 files are written
   --binary <path>           Existing sifr binary to package for all targets; intended for local validation fixtures
+  --sysroot-root <dir>      Source sysroot root to package (default: current repository)
+  --target <triple>         Package only one preview target; can repeat
   --cargo-build             Build target binaries with cargo instead of using --binary
   --help                    Show this help
 EOF
@@ -28,6 +32,8 @@ VERSION=""
 OUTPUT_DIR=""
 BINARY=""
 CARGO_BUILD=0
+SYSROOT_ROOT="$(pwd)"
+SELECTED_TARGETS=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -41,6 +47,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --binary)
       BINARY="${2:-}"
+      shift 2
+      ;;
+    --sysroot-root)
+      SYSROOT_ROOT="${2:-}"
+      shift 2
+      ;;
+    --target)
+      SELECTED_TARGETS+=("${2:-}")
       shift 2
       ;;
     --cargo-build)
@@ -85,6 +99,29 @@ if [[ -n "${BINARY}" && ! -f "${BINARY}" ]]; then
   exit 2
 fi
 
+if [[ ! -d "${SYSROOT_ROOT}" ]]; then
+  echo "sysroot root not found: ${SYSROOT_ROOT}" >&2
+  exit 2
+fi
+
+if [[ "${#SELECTED_TARGETS[@]}" -eq 0 ]]; then
+  SELECTED_TARGETS=("${TARGETS[@]}")
+fi
+
+for selected_target in "${SELECTED_TARGETS[@]}"; do
+  found=0
+  for supported_target in "${TARGETS[@]}"; do
+    if [[ "${selected_target}" = "${supported_target}" ]]; then
+      found=1
+      break
+    fi
+  done
+  if [[ "${found}" -ne 1 ]]; then
+    echo "unsupported preview target: ${selected_target}" >&2
+    exit 2
+  fi
+done
+
 sha256_file() {
   local path="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -94,12 +131,89 @@ sha256_file() {
   fi
 }
 
-package_binary() {
+sha256_stream() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | awk '{print $1}'
+  else
+    shasum -a 256 | awk '{print $1}'
+  fi
+}
+
+sysroot_content_sha256() {
+  local root="$1"
+  (
+    cd "${root}"
+    find Cargo.toml Cargo.lock .cargo/config.toml crates lib vendor -type f -print |
+      LC_ALL=C sort |
+      while IFS= read -r path; do
+        printf '%s\n' "${path}"
+        sha256_file "${path}"
+      done
+  ) | sha256_stream
+}
+
+require_sysroot_asset() {
+  local relative="$1"
+  if [[ ! -e "${SYSROOT_ROOT}/${relative}" ]]; then
+    echo "sysroot root ${SYSROOT_ROOT} is missing ${relative}" >&2
+    exit 2
+  fi
+}
+
+copy_sysroot_dir() {
+  local relative="$1"
+  local destination="$2"
+  require_sysroot_asset "${relative}"
+  mkdir -p "$(dirname "${destination}")"
+  cp -R "${SYSROOT_ROOT}/${relative}" "${destination}"
+}
+
+copy_sysroot_file() {
+  local relative="$1"
+  local destination="$2"
+  require_sysroot_asset "${relative}"
+  mkdir -p "$(dirname "${destination}")"
+  cp "${SYSROOT_ROOT}/${relative}" "${destination}"
+}
+
+write_installed_cargo_config() {
+  local root="$1"
+  mkdir -p "${root}/.cargo"
+  cat >"${root}/.cargo/config.toml" <<'EOF'
+[source.crates-io]
+replace-with = "sifr-vendor"
+
+[source.sifr-vendor]
+directory = "vendor"
+EOF
+}
+
+write_sysroot_manifest() {
+  local root="$1"
+  local target="$2"
+  local cargo_lock_sha
+  local sysroot_sha
+  local commit
+  cargo_lock_sha="$(sha256_file "${root}/Cargo.lock")"
+  sysroot_sha="$(sysroot_content_sha256 "${root}")"
+  commit="$(git -C "${SYSROOT_ROOT}" rev-parse --verify HEAD 2>/dev/null || printf '%s' unknown)"
+  cat >"${root}/sysroot.toml" <<EOF
+"schema-version" = 1
+"sifr-version" = "${VERSION}"
+"target-triple" = "${target}"
+"built-by-compiler-commit" = "${commit}"
+"sysroot-content-sha256" = "${sysroot_sha}"
+"cargo-lock-sha256" = "${cargo_lock_sha}"
+EOF
+}
+
+package_toolchain() {
   local target="$1"
   local binary_path="$2"
   local archive_name="sifr-${VERSION}-${target}.tar.gz"
   local archive_path="${OUTPUT_DIR}/${archive_name}"
   local tmp_dir
+  local package_root
 
   tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/sifr-artifact.XXXXXX")"
   cleanup_package() {
@@ -107,21 +221,39 @@ package_binary() {
   }
   trap cleanup_package RETURN
 
-  cp "${binary_path}" "${tmp_dir}/sifr"
-  chmod 755 "${tmp_dir}/sifr"
-  tar -C "${tmp_dir}" -czf "${archive_path}" sifr
+  package_root="${tmp_dir}/package-root"
+  mkdir -p "${package_root}/bin" "${package_root}/crates" "${package_root}/lib/sifr/stdlib"
+  cp "${binary_path}" "${package_root}/bin/sifr"
+  chmod 755 "${package_root}/bin/sifr"
+
+  copy_sysroot_file "Cargo.toml" "${package_root}/Cargo.toml"
+  copy_sysroot_file "Cargo.lock" "${package_root}/Cargo.lock"
+  copy_sysroot_dir "crates/sifr_runtime" "${package_root}/crates/sifr_runtime"
+  copy_sysroot_dir "crates/sifr_stdlib" "${package_root}/crates/sifr_stdlib"
+  copy_sysroot_dir "stdlib/sifr" "${package_root}/lib/sifr/stdlib/sifr"
+  copy_sysroot_dir "stdlib/_sifr" "${package_root}/lib/sifr/stdlib/_sifr"
+  copy_sysroot_dir "vendor" "${package_root}/vendor"
+  write_installed_cargo_config "${package_root}"
+  write_sysroot_manifest "${package_root}" "${target}"
+
+  COPYFILE_DISABLE=1 tar -C "${package_root}" -czf "${archive_path}" \
+    bin Cargo.toml Cargo.lock sysroot.toml .cargo vendor crates lib
+  python3 "${SCRIPT_DIR}/verify_release_archive.py" \
+    "${archive_path}" \
+    --version "${VERSION}" \
+    --target "${target}"
   sha256_file "${archive_path}" >"${archive_path}.sha256"
   echo "${archive_name}"
 }
 
 mkdir -p "${OUTPUT_DIR}"
 
-for target in "${TARGETS[@]}"; do
+for target in "${SELECTED_TARGETS[@]}"; do
   if [[ "${CARGO_BUILD}" -eq 1 ]]; then
     SIFR_RELEASE_VERSION="${VERSION}" cargo build --release -p sifr --target "${target}"
     binary_path="target/${target}/release/sifr"
   else
     binary_path="${BINARY}"
   fi
-  package_binary "${target}" "${binary_path}"
+  package_toolchain "${target}" "${binary_path}"
 done

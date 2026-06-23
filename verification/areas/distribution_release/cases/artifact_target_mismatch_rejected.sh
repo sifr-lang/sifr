@@ -16,10 +16,7 @@ binary="${tmp_dir}/sifr"
 installer="${tmp_dir}/installer.sh"
 
 make_mock_binary "${binary}" "target mismatch fixture"
-"${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
-  --version "${version}" \
-  --output-dir "${artifact_dir}" \
-  --binary "${binary}" >/dev/null
+build_mock_preview_artifacts "${version}" "${artifact_dir}" "${binary}"
 "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
   --version "${version}" \
   --artifact-dir "${artifact_dir}" \

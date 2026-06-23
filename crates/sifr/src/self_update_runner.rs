@@ -119,6 +119,7 @@ impl SelfUpdateRunner {
             command.arg("--force");
         }
         command.env("SIFR_INSTALL_DIR", &discovered.receipt.install_dir);
+        command.env("SIFR_SYSROOT_INSTALL_DIR", &discovered.receipt.sysroot_path);
         command.env("SIFR_INSTALL_LOCK_HELD", "1");
         if !discovered.receipt.modify_path {
             command.env("SIFR_NO_MODIFY_PATH", "1");
@@ -159,7 +160,13 @@ impl SelfUpdateRunner {
                 return home_dir.join(".sifr/install.json");
             }
         }
-        Path::new(install_dir).join("install.json")
+        let install_dir = Path::new(install_dir);
+        if install_dir.file_name().is_some_and(|name| name == "bin") {
+            if let Some(sysroot_root) = install_dir.parent() {
+                return sysroot_root.join("install.json");
+            }
+        }
+        install_dir.join("install.json")
     }
 }
 
@@ -398,7 +405,9 @@ mod tests {
         let install_dir = root.join("home/.sifr/bin");
         fs::create_dir_all(&install_dir).expect("create install dir");
         let binary_path = install_dir.join("sifr");
+        let sysroot_path = root.join("home/.sifr");
         fs::write(&binary_path, "sifr").expect("write binary");
+        fs::write(sysroot_path.join("sysroot.toml"), "").expect("write sysroot manifest");
         let receipt_path = if default_manifest {
             root.join("home/.sifr/install.json")
         } else {
@@ -415,6 +424,12 @@ mod tests {
                 target: "aarch64-apple-darwin".to_owned(),
                 install_dir: install_dir.display().to_string(),
                 binary_path: binary_path.display().to_string(),
+                sysroot_path: sysroot_path.display().to_string(),
+                sysroot_schema_version: 1,
+                sysroot_sifr_version: "0.1.0-beta.1".to_owned(),
+                sysroot_target_triple: "aarch64-apple-darwin".to_owned(),
+                sysroot_content_sha256:
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".to_owned(),
                 artifact: "sifr-0.1.0-beta.1-aarch64-apple-darwin.tar.gz".to_owned(),
                 modify_path,
             },
@@ -475,8 +490,8 @@ cp "{}" "$out"
         let installer = write_installer(
             root.path(),
             &format!(
-                r#"printf 'dir=%s\nmanifest=%s\nno_path=%s\nlock=%s\nargs=%s\n' \
-  "$SIFR_INSTALL_DIR" "${{SIFR_INSTALL_MANIFEST_DIR:-}}" "${{SIFR_NO_MODIFY_PATH:-}}" "${{SIFR_INSTALL_LOCK_HELD:-}}" "$*" > "{}"
+                r#"printf 'dir=%s\nsysroot=%s\nmanifest=%s\nno_path=%s\nlock=%s\nargs=%s\n' \
+  "$SIFR_INSTALL_DIR" "${{SIFR_SYSROOT_INSTALL_DIR:-}}" "${{SIFR_INSTALL_MANIFEST_DIR:-}}" "${{SIFR_NO_MODIFY_PATH:-}}" "${{SIFR_INSTALL_LOCK_HELD:-}}" "$*" > "{}"
 "#,
                 record.display()
             ),
@@ -491,6 +506,7 @@ cp "{}" "$out"
         assert_eq!(exit, 0);
         let output = fs::read_to_string(record).expect("read record");
         assert!(output.contains(&format!("dir={}", discovered.receipt.install_dir)));
+        assert!(output.contains(&format!("sysroot={}", discovered.receipt.sysroot_path)));
         let expected_manifest_dir = discovered
             .receipt_path
             .parent()

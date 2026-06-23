@@ -14,6 +14,7 @@ version="0.1.0-beta.12"
 artifact_dir="${tmp_dir}/artifacts"
 installer="${tmp_dir}/installer.sh"
 install_dir="${tmp_dir}/managed/bin"
+install_root="${tmp_dir}/managed"
 target="x86_64-unknown-linux-gnu"
 
 make_target_specific_artifacts "${version}" "${artifact_dir}"
@@ -29,28 +30,31 @@ SIFR_TARGET="${target}" \
   SIFR_NO_MODIFY_PATH=1 \
   sh "${installer}" --no-modify-path >/dev/null
 
-receipt_path="${install_dir}/install.json"
+receipt_path="${install_root}/install.json"
 schema_path="${REPO_ROOT}/verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json"
 
-python3 - "${receipt_path}" "${schema_path}" "${install_dir}" "${version}" "${target}" <<'PY'
+python3 - "${receipt_path}" "${schema_path}" "${install_dir}" "${install_root}" "${version}" "${target}" <<'PY'
 import json
 import pathlib
 import sys
+import tomllib
 
 receipt = json.loads(pathlib.Path(sys.argv[1]).read_text())
 schema = json.loads(pathlib.Path(sys.argv[2]).read_text())
 install_dir_text = sys.argv[3]
 install_dir = pathlib.Path(install_dir_text)
-version = sys.argv[4]
-target = sys.argv[5]
+install_root_text = sys.argv[4]
+install_root = pathlib.Path(install_root_text)
+version = sys.argv[5]
+target = sys.argv[6]
 expected_keys = schema["required"]
 
 if list(receipt.keys()) != expected_keys:
     raise SystemExit(f"receipt field order drifted: {list(receipt.keys())}")
 if set(receipt) != set(expected_keys):
     raise SystemExit(f"receipt fields do not match schema: {sorted(receipt)}")
-if receipt["schema_version"] != 1:
-    raise SystemExit("schema_version must be 1")
+if receipt["schema_version"] != 2:
+    raise SystemExit("schema_version must be 2")
 if receipt["name"] != "sifr":
     raise SystemExit("name must be sifr")
 if receipt["version"] != version:
@@ -63,13 +67,28 @@ if receipt["install_dir"] != install_dir_text:
     raise SystemExit("install_dir drifted")
 if receipt["binary_path"] != str((install_dir / "sifr").resolve()):
     raise SystemExit(f"binary_path was not canonicalized: {receipt['binary_path']}")
+if receipt["sysroot_path"] != str(install_root.resolve()):
+    raise SystemExit(f"sysroot_path was not canonicalized: {receipt['sysroot_path']}")
+if receipt["sysroot_schema_version"] != 1:
+    raise SystemExit("sysroot_schema_version must be 1")
+if receipt["sysroot_sifr_version"] != version:
+    raise SystemExit("sysroot_sifr_version drifted")
+if receipt["sysroot_target_triple"] != target:
+    raise SystemExit("sysroot_target_triple drifted")
+if len(receipt["sysroot_content_sha256"]) != 64:
+    raise SystemExit("sysroot_content_sha256 must be a sha256 hex string")
+if receipt["sysroot_content_sha256"] == "0" * 64:
+    raise SystemExit("sysroot_content_sha256 must not be the placeholder digest")
+manifest = tomllib.loads((install_root / "sysroot.toml").read_text())
+if receipt["sysroot_content_sha256"] != manifest["sysroot-content-sha256"]:
+    raise SystemExit("receipt sysroot_content_sha256 must match sysroot.toml")
 if receipt["artifact"] != f"sifr-{version}-{target}.tar.gz":
     raise SystemExit("artifact drifted")
 if receipt["modify_path"] is not False:
     raise SystemExit("modify_path must reflect SIFR_NO_MODIFY_PATH")
 PY
 
-if compgen -G "${install_dir}/.install.json.*" >/dev/null; then
+if compgen -G "${install_root}/.install.json.*" >/dev/null; then
   echo "temporary manifest file was not atomically renamed away" >&2
   exit 1
 fi
@@ -78,6 +97,32 @@ if [[ -e "${install_dir}/.sifr-update.lock" ]]; then
   echo "installer lock was not released" >&2
   exit 1
 fi
+
+flat_install_dir="${tmp_dir}/flat-managed"
+SIFR_TARGET="${target}" \
+  SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
+  SIFR_INSTALL_DIR="${flat_install_dir}" \
+  SIFR_NO_MODIFY_PATH=1 \
+  sh "${installer}" --no-modify-path >/dev/null
+
+python3 - "${flat_install_dir}/install.json" "${flat_install_dir}" <<'PY'
+import json
+import pathlib
+import sys
+
+receipt = json.loads(pathlib.Path(sys.argv[1]).read_text())
+install_dir_text = sys.argv[2]
+install_dir = pathlib.Path(install_dir_text)
+install_dir_resolved = install_dir.resolve()
+if receipt["install_dir"] != install_dir_text:
+    raise SystemExit("flat install_dir drifted")
+if receipt["binary_path"] != str((install_dir / "sifr").resolve()):
+    raise SystemExit("flat binary_path drifted")
+if receipt["sysroot_path"] != str(install_dir_resolved):
+    raise SystemExit("flat sysroot_path must equal install_dir")
+if not (install_dir / "sysroot.toml").is_file():
+    raise SystemExit("flat install did not install sysroot.toml")
+PY
 
 external_lock_install_dir="${tmp_dir}/external-lock/bin"
 mkdir -p "${external_lock_install_dir}"
@@ -111,7 +156,7 @@ HOME="${home_dir}" \
   SIFR_INSTALL_DIR="${path_install_dir}" \
   sh "${installer}" >/dev/null
 
-python3 - "${path_install_dir}/install.json" <<'PY'
+python3 - "${tmp_dir}/path-managed/install.json" <<'PY'
 import json
 import pathlib
 import sys

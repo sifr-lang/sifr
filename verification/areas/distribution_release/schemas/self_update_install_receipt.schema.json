@@ -11,11 +11,16 @@
     "target",
     "install_dir",
     "binary_path",
+    "sysroot_path",
+    "sysroot_schema_version",
+    "sysroot_sifr_version",
+    "sysroot_target_triple",
+    "sysroot_content_sha256",
     "artifact",
     "modify_path"
   ],
   "properties": {
-    "schema_version": { "const": 1 },
+    "schema_version": { "const": 2 },
     "name": { "const": "sifr" },
     "version": {
       "type": "string",
@@ -28,6 +33,18 @@
     "target": { "type": "string", "minLength": 1 },
     "install_dir": { "type": "string", "minLength": 1 },
     "binary_path": { "type": "string", "minLength": 1 },
+    "sysroot_path": { "type": "string", "minLength": 1 },
+    "sysroot_schema_version": { "const": 1 },
+    "sysroot_sifr_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+-(alpha|beta|rc)\\.[0-9]+$"
+    },
+    "sysroot_target_triple": { "type": "string", "minLength": 1 },
+    "sysroot_content_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" }
+    },
     "artifact": { "type": "string", "minLength": 1 },
     "modify_path": { "type": "boolean" }
   }

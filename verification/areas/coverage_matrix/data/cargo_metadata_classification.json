@@ -149,7 +149,10 @@
     {
       "name": "sifr_sysroot",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_sysroot", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [
+        {"name": "sifr_sysroot", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
+      ],
       "features": []
     },
     {
