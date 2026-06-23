@@ -9,6 +9,8 @@ TARGETS=(
   "aarch64-unknown-linux-gnu"
 )
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 usage() {
   cat <<'EOF'
 Usage: scripts/distribution/generate_version_installer.sh --version <preview> --artifact-dir <dir> --out <path> [options]
@@ -102,6 +104,10 @@ for target in "${TARGETS[@]}"; do
     echo "checksum mismatch for ${archive_name}: expected ${expected}, got ${actual}" >&2
     exit 2
   fi
+  python3 "${SCRIPT_DIR}/verify_release_archive.py" \
+    "${archive_path}" \
+    --version "${VERSION}" \
+    --target "${target}"
   case_entries="${case_entries}
     ${target})
       archive_name=\"${archive_name}\"
@@ -141,6 +147,8 @@ Options:
 
 Environment:
   SIFR_INSTALL_DIR        Install directory (default: \$HOME/.sifr/bin)
+  SIFR_SYSROOT_INSTALL_DIR
+                          Sysroot/toolchain root (default: parent of SIFR_INSTALL_DIR when it ends in /bin)
   SIFR_INSTALL_MANIFEST_DIR
                           Install manifest directory (default: \$HOME/.sifr for the default install dir,
                           otherwise SIFR_INSTALL_DIR)
@@ -312,10 +320,40 @@ canonical_path() {
   printf '%s/%s\n' "\${physical_dir}" "\${file}"
 }
 
+toml_string_field() {
+  field="\$1"
+  path="\$2"
+  awk -F= -v field="\${field}" '
+    {
+      key = \$1
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", key)
+      gsub(/^"|"$/, "", key)
+      if (key != field) {
+        next
+      }
+      value = \$2
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]*$/, "", value)
+      if (value ~ /^"/) {
+        sub(/^"/, "", value)
+        sub(/"$/, "", value)
+      }
+      print value
+      exit
+    }
+  ' "\${path}"
+}
+
 write_install_manifest() {
   mkdir -p "\${manifest_dir}"
   manifest_tmp="\$(mktemp "\${manifest_dir}/.install.json.XXXXXX")"
   canonical_binary_path="\$(canonical_path "\${installed_binary}" || printf '%s\n' "\${installed_binary}")"
+  canonical_sysroot_path="\$(canonical_path "\${sysroot_dir}/sysroot.toml" || printf '%s/sysroot.toml\n' "\${sysroot_dir}")"
+  canonical_sysroot_path="\$(dirname "\${canonical_sysroot_path}")"
+  sysroot_schema_version="\$(toml_string_field "schema-version" "\${sysroot_dir}/sysroot.toml")"
+  sysroot_sifr_version="\$(toml_string_field "sifr-version" "\${sysroot_dir}/sysroot.toml")"
+  sysroot_target_triple="\$(toml_string_field "target-triple" "\${sysroot_dir}/sysroot.toml")"
+  sysroot_content_sha256="\$(toml_string_field "sysroot-content-sha256" "\${sysroot_dir}/sysroot.toml")"
   if [ "\${NO_MODIFY_PATH}" = "1" ]; then
     modify_path=false
   else
@@ -323,13 +361,18 @@ write_install_manifest() {
   fi
   {
     printf '%s\n' '{'
-    printf '  "schema_version": 1,\n'
+    printf '  "schema_version": 2,\n'
     printf '  "name": "%s",\n' "\${APP_NAME}"
     printf '  "version": "%s",\n' "\${APP_VERSION}"
     printf '  "channel": "%s",\n' "\${APP_CHANNEL}"
     printf '  "target": "%s",\n' "\${target}"
     printf '  "install_dir": "%s",\n' "\${install_dir}"
     printf '  "binary_path": "%s",\n' "\${canonical_binary_path}"
+    printf '  "sysroot_path": "%s",\n' "\${canonical_sysroot_path}"
+    printf '  "sysroot_schema_version": %s,\n' "\${sysroot_schema_version}"
+    printf '  "sysroot_sifr_version": "%s",\n' "\${sysroot_sifr_version}"
+    printf '  "sysroot_target_triple": "%s",\n' "\${sysroot_target_triple}"
+    printf '  "sysroot_content_sha256": "%s",\n' "\${sysroot_content_sha256}"
     printf '  "artifact": "%s",\n' "\${archive_name}"
     printf '  "modify_path": %s\n' "\${modify_path}"
     printf '%s\n' '}'
@@ -526,18 +569,51 @@ if [ -z "\${install_dir}" ]; then
 fi
 
 manifest_dir="\${SIFR_INSTALL_MANIFEST_DIR:-}"
+default_sysroot_dir=""
+if [ "\$(basename "\${install_dir}")" = "bin" ]; then
+  default_sysroot_dir="\$(dirname "\${install_dir}")"
+else
+  default_sysroot_dir="\${install_dir}"
+fi
 if [ -z "\${manifest_dir}" ]; then
   if [ -n "\${HOME:-}" ] && [ "\${install_dir}" = "\${HOME}/.sifr/bin" ]; then
     manifest_dir="\${HOME}/.sifr"
+  elif [ "\$(basename "\${install_dir}")" = "bin" ]; then
+    manifest_dir="\$(dirname "\${install_dir}")"
   else
     manifest_dir="\${install_dir}"
   fi
 fi
 manifest_path="\${manifest_dir}/install.json"
+sysroot_dir="\${SIFR_SYSROOT_INSTALL_DIR:-\${default_sysroot_dir}}"
 installed_binary="\${install_dir}/sifr"
 install_lock_path=""
 manifest_tmp=""
+backup_root=""
+rollback_active=0
 installed_version="\$(detect_installed_version)"
+
+rollback_install_transaction() {
+  if [ "\${rollback_active}" != "1" ] || [ -z "\${backup_root}" ] || [ ! -d "\${backup_root}" ]; then
+    return 0
+  fi
+  for relative in .cargo vendor crates lib Cargo.toml Cargo.lock sysroot.toml bin/sifr; do
+    case "\${relative}" in
+      bin/sifr)
+        destination="\${installed_binary}"
+        ;;
+      *)
+        destination="\${sysroot_dir}/\${relative}"
+        ;;
+    esac
+    rm -rf "\${destination}"
+    if [ -e "\${backup_root}/\${relative}" ]; then
+      mkdir -p "\$(dirname "\${destination}")"
+      mv "\${backup_root}/\${relative}" "\${destination}"
+    fi
+  done
+  rm -rf "\${backup_root}"
+}
 
 if [ -x "\${installed_binary}" ] && [ -n "\${installed_version}" ]; then
   version_order="\$(compare_versions "\${installed_version}" "\${APP_VERSION}")" || version_order=""
@@ -575,6 +651,7 @@ fi
 
 tmp_dir="\$(mktemp -d "\${TMPDIR:-/tmp}/sifr-install.XXXXXX")"
 cleanup() {
+  rollback_install_transaction
   release_install_lock
   if [ -n "\${manifest_tmp:-}" ] && [ -f "\${manifest_tmp}" ]; then
     rm -f "\${manifest_tmp}"
@@ -593,17 +670,122 @@ if [ "\${actual_sha256}" != "\${archive_sha256}" ]; then
   fail "checksum mismatch for \${archive_name}: expected \${archive_sha256}, got \${actual_sha256}"
 fi
 
+validate_archive_listing() {
+  listing_path="\${tmp_dir}/archive.list"
+  tar -tzf "\${archive_path}" >"\${listing_path}"
+  while IFS= read -r member; do
+    case "\${member}" in
+      ""|/*|../*|*/../*|*/..|..)
+        fail "artifact \${archive_name} contains unsafe path \${member}"
+        ;;
+    esac
+  done <"\${listing_path}"
+}
+
+validate_archive_listing
 tar -xzf "\${archive_path}" -C "\${extract_dir}"
-if [ ! -f "\${extract_dir}/sifr" ]; then
-  fail "artifact \${archive_name} does not contain sifr at archive root"
+if find "\${extract_dir}" -type l -print -quit | grep . >/dev/null 2>&1; then
+  fail "artifact \${archive_name} contains symlinks"
 fi
 
+require_extracted_file() {
+  relative="\$1"
+  if [ ! -f "\${extract_dir}/\${relative}" ]; then
+    fail "artifact \${archive_name} is missing \${relative}"
+  fi
+}
+
+require_extracted_dir() {
+  relative="\$1"
+  if [ ! -d "\${extract_dir}/\${relative}" ]; then
+    fail "artifact \${archive_name} is missing \${relative}"
+  fi
+}
+
+validate_extracted_toolchain() {
+  require_extracted_file "bin/sifr"
+  require_extracted_file "Cargo.toml"
+  require_extracted_file "Cargo.lock"
+  require_extracted_file "sysroot.toml"
+  require_extracted_file ".cargo/config.toml"
+  require_extracted_dir "vendor"
+  require_extracted_file "crates/sifr_runtime/Cargo.toml"
+  require_extracted_file "crates/sifr_stdlib/Cargo.toml"
+  require_extracted_dir "lib/sifr/stdlib/sifr"
+  require_extracted_dir "lib/sifr/stdlib/_sifr"
+  extracted_target="\$(toml_string_field "target-triple" "\${extract_dir}/sysroot.toml")"
+  if [ "\${extracted_target}" != "\${target}" ]; then
+    fail "artifact \${archive_name} sysroot target \${extracted_target} does not match installer target \${target}"
+  fi
+}
+
+begin_install_transaction() {
+  rollback_active=1
+  backup_root="\${sysroot_dir}/.sifr-install-backup.\$\$"
+  rm -rf "\${backup_root}"
+  mkdir -p "\${backup_root}"
+}
+
+backup_path() {
+  relative="\$1"
+  destination="\$2"
+  backup="\${backup_root}/\${relative}"
+  if [ -e "\${destination}" ]; then
+    mkdir -p "\$(dirname "\${backup}")"
+    mv "\${destination}" "\${backup}"
+  fi
+}
+
+backup_managed_toolchain() {
+  backup_path ".cargo" "\${sysroot_dir}/.cargo"
+  backup_path "vendor" "\${sysroot_dir}/vendor"
+  backup_path "crates" "\${sysroot_dir}/crates"
+  backup_path "lib" "\${sysroot_dir}/lib"
+  backup_path "Cargo.toml" "\${sysroot_dir}/Cargo.toml"
+  backup_path "Cargo.lock" "\${sysroot_dir}/Cargo.lock"
+  backup_path "sysroot.toml" "\${sysroot_dir}/sysroot.toml"
+  backup_path "bin/sifr" "\${installed_binary}"
+}
+
+replace_sysroot_path() {
+  relative="\$1"
+  source="\${extract_dir}/\${relative}"
+  destination="\${sysroot_dir}/\${relative}"
+  backup_path "\${relative}" "\${destination}"
+  mkdir -p "\$(dirname "\${destination}")"
+  mv "\${source}" "\${destination}"
+}
+
+install_binary_from_stage() {
+  tmp_binary="\${install_dir}/.sifr.\$\$.tmp"
+  mkdir -p "\${install_dir}"
+  cp "\${extract_dir}/bin/sifr" "\${tmp_binary}"
+  chmod 755 "\${tmp_binary}"
+  backup_path "bin/sifr" "\${installed_binary}"
+  mv "\${tmp_binary}" "\${installed_binary}"
+}
+
+commit_install_transaction() {
+  rollback_active=0
+  rm -rf "\${backup_root}"
+}
+
+validate_extracted_toolchain
+
 acquire_install_lock
-tmp_binary="\${install_dir}/.sifr.\$\$.tmp"
-cp "\${extract_dir}/sifr" "\${tmp_binary}"
-chmod 755 "\${tmp_binary}"
-mv "\${tmp_binary}" "\${install_dir}/sifr"
+mkdir -p "\${install_dir}" "\${sysroot_dir}"
+begin_install_transaction
+backup_managed_toolchain
+replace_sysroot_path ".cargo"
+replace_sysroot_path "vendor"
+replace_sysroot_path "crates"
+replace_sysroot_path "lib"
+replace_sysroot_path "Cargo.toml"
+replace_sysroot_path "Cargo.lock"
+replace_sysroot_path "sysroot.toml"
+install_binary_from_stage
 write_install_manifest
+commit_install_transaction
 
 echo "installed sifr \${APP_VERSION} to \${install_dir}/sifr"
 configure_path

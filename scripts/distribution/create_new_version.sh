@@ -26,6 +26,7 @@ Options:
   --site-repo <path>         Site repo path (default: SIFR_SITE_REPO)
   --artifact-dir <dir>       Existing artifact directory for real-run validation/publication
   --binary <path>            Existing binary packaged for all targets in local validation
+  --sysroot-root <dir>       Source sysroot root for local binary packaging
   --work-dir <dir>           Work/evidence directory (default: target/preview-release/<version>)
   --mutation-mode <mode>     local only; GitHub publication is handled by preview-release.yml
   --help                     Show this help
@@ -39,6 +40,7 @@ BASE_REF="HEAD"
 SITE_REPO="${SIFR_SITE_REPO:-}"
 ARTIFACT_DIR=""
 BINARY=""
+SYSROOT_ROOT=""
 WORK_DIR=""
 MUTATION_MODE="local"
 
@@ -76,6 +78,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --binary)
       BINARY="${2:-}"
+      shift 2
+      ;;
+    --sysroot-root)
+      SYSROOT_ROOT="${2:-}"
       shift 2
       ;;
     --work-dir)
@@ -318,7 +324,15 @@ real_run() {
   printf '%s\nplan_sha256=%s\n' "${PLAN_TEXT}" "${PLAN_SHA}" >"${PLAN_FILE}"
 
   if [[ -n "${BINARY}" ]]; then
-    "${SCRIPT_DIR}/build_preview_artifacts.sh" --version "${VERSION}" --output-dir "${ARTIFACT_DIR}" --binary "${BINARY}" >/dev/null
+    package_args=(
+      --version "${VERSION}"
+      --output-dir "${ARTIFACT_DIR}"
+      --binary "${BINARY}"
+    )
+    if [[ -n "${SYSROOT_ROOT}" ]]; then
+      package_args+=(--sysroot-root "${SYSROOT_ROOT}")
+    fi
+    "${SCRIPT_DIR}/build_preview_artifacts.sh" "${package_args[@]}" >/dev/null
   elif [[ -d "${ARTIFACT_DIR}" ]]; then
     verify_artifact_dir
   else

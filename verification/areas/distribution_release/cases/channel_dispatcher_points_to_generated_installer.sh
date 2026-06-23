@@ -12,16 +12,13 @@ trap cleanup EXIT HUP INT TERM
 
 version="0.1.0-beta.10"
 artifact_dir="${tmp_dir}/artifacts"
-install_root="${tmp_dir}/install-root"
 release_root="${tmp_dir}/github-releases"
-install_dir="${tmp_dir}/installed"
+install_root="${tmp_dir}/installed"
+install_dir="${install_root}/bin"
 binary="${tmp_dir}/sifr"
 
 make_mock_binary "${binary}" "dispatcher generated installer fixture"
-"${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
-  --version "${version}" \
-  --output-dir "${artifact_dir}" \
-  --binary "${binary}" >/dev/null
+build_mock_preview_artifacts "${version}" "${artifact_dir}" "${binary}"
 "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
   --version "${version}" \
   --artifact-dir "${artifact_dir}" \
@@ -44,8 +41,7 @@ SIFR_INSTALLER_RELEASE_BASE_URL="file://${release_root}" \
   SIFR_INSTALL_DIR="${install_dir}" \
   sh "${install_root}/index" >/dev/null
 
-output="$("${install_dir}/sifr")"
-if [[ "${output}" != "dispatcher generated installer fixture" ]]; then
-  echo "dispatcher did not delegate to generated installer: ${output}" >&2
+if ! grep -F 'dispatcher generated installer fixture' "${install_dir}/sifr" >/dev/null; then
+  echo "dispatcher did not delegate to generated installer payload" >&2
   exit 1
 fi

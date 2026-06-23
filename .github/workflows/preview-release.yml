@@ -108,16 +108,11 @@ jobs:
           set -euo pipefail
           version="${{ needs.validate.outputs.version }}"
           target="${{ matrix.target }}"
-          archive="sifr-${version}-${target}.tar.gz"
-          mkdir -p dist package-root
-          cp "target/${target}/release/sifr" "package-root/sifr"
-          chmod 755 "package-root/sifr"
-          tar -C package-root -czf "dist/${archive}" sifr
-          if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum "dist/${archive}" | awk '{print $1}' >"dist/${archive}.sha256"
-          else
-            shasum -a 256 "dist/${archive}" | awk '{print $1}' >"dist/${archive}.sha256"
-          fi
+          scripts/distribution/build_preview_artifacts.sh \
+            --version "${version}" \
+            --output-dir dist \
+            --binary "target/${target}/release/sifr" \
+            --target "${target}"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -168,6 +163,10 @@ jobs:
               echo "::error::checksum mismatch for ${archive}"
               exit 2
             fi
+            scripts/distribution/verify_release_archive.py \
+              "${archive}" \
+              --version "${VERSION}" \
+              --target "${target}"
           done
 
       - name: Generate immutable installer asset

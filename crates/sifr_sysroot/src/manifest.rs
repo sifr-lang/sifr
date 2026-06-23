@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub const SUPPORTED_SYSROOT_SCHEMA_VERSION: u64 = 1;
-pub const COMPILER_SIFR_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const COMPILER_SIFR_VERSION: &str = env!("SIFR_SYSROOT_COMPILER_VERSION");
 
 pub const SYSROOT_MANIFEST_FIELDS: &[&str] = &[
     "schema-version",

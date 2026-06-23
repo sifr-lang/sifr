@@ -18,10 +18,7 @@ home_dir="${tmp_dir}/home"
 target="x86_64-unknown-linux-gnu"
 
 make_mock_binary "${binary}" "no path fixture"
-"${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
-  --version "${version}" \
-  --output-dir "${artifact_dir}" \
-  --binary "${binary}" >/dev/null
+build_mock_preview_artifacts "${version}" "${artifact_dir}" "${binary}"
 "${REPO_ROOT}/scripts/distribution/generate_version_installer.sh" \
   --version "${version}" \
   --artifact-dir "${artifact_dir}" \
@@ -75,7 +72,7 @@ if [[ -e "${home_dir}/.sifr/env" || -e "${home_dir}/.profile" || -e "${home_dir}
   exit 1
 fi
 
-if [[ "$("${home_dir}/.sifr/bin/sifr")" != "no path fixture" ]]; then
+if ! grep -F 'no path fixture' "${home_dir}/.sifr/bin/sifr" >/dev/null; then
   echo "installer did not install binary when PATH modification was disabled" >&2
   exit 1
 fi

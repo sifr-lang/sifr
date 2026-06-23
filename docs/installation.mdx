@@ -67,10 +67,14 @@ curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.11
 
 ### Install to a custom directory
 
-Set `SIFR_INSTALL_DIR` to place the binary somewhere other than `~/.sifr/bin`:
+Set `SIFR_INSTALL_DIR` to place the managed binary directory somewhere other
+than `~/.sifr/bin`. The installer writes the binary to
+`SIFR_INSTALL_DIR/sifr` and, when the directory ends in `/bin`, installs the
+sysroot next to that `bin` directory. For legacy flat custom directories that
+do not end in `/bin`, the same directory is used as the sysroot root.
 
 ```bash
-curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/.local/sifr/bin" sh
 ```
 
 ### Disable PATH modification
@@ -131,7 +135,8 @@ Regular updates to a newer version within your current channel do not need `--fo
 
 ### Check your install details
 
-`sifr self version` reports the current executable path, install directory, channel, and receipt status:
+`sifr self version` reports the current executable path, install directory,
+sysroot path, channel, and receipt status:
 
 ```bash
 sifr self version
@@ -144,7 +149,7 @@ sifr self version --short   # prints only the version string
 
 ## Uninstall Sifr
 
-Sifr does not currently include a `sifr self uninstall` command. To remove a standalone install created by the official installer, delete the installed binary and receipt directory:
+Sifr does not currently include a `sifr self uninstall` command. To remove a standalone install created by the official installer, delete the installed toolchain root:
 
 ```bash
 rm -rf "$HOME/.sifr"
@@ -175,7 +180,7 @@ Restart your shell, then confirm that `sifr` is no longer on your PATH:
 command -v sifr
 ```
 
-If you installed Sifr to a custom directory with `SIFR_INSTALL_DIR`, remove that directory's `sifr` binary and its `install.json` receipt instead. If you installed Sifr through Cargo, Homebrew, or a system package manager, uninstall it with that same tool.
+If you installed Sifr to a custom directory with `SIFR_INSTALL_DIR`, remove that toolchain root. If you installed Sifr through Cargo, Homebrew, or a system package manager, uninstall it with that same tool.
 
 ## Troubleshooting
 
@@ -188,12 +193,12 @@ curl -fsSL https://sifr.sh/install | sh
 For a custom install directory, rerun the installer with the same environment variable:
 
 ```bash
-curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/.local/sifr/bin" sh
 ```
 
 **Wrong binary found on PATH.** If the diagnostic says the receipt belongs to a different executable, your `PATH` is resolving a different `sifr` binary. Run `command -v sifr` to see which one your shell finds, then either fix your PATH or reinstall the standalone binary so the receipt and executable match.
 
-**Network failure mid-update.** If a metadata or installer download fails, retry after your network recovers. The existing binary is never replaced until the delegated installer validates and installs the target artifact, so a failed update leaves your working install intact.
+**Network failure mid-update.** If a metadata or installer download fails, retry after your network recovers. The existing binary and sysroot are not replaced until the delegated installer validates and stages the target artifact, so a failed update leaves your working toolchain intact.
 
 <Tip>
   Stable channels and release-candidate channels are not yet available in the self-update command. During the current preview release channel, only `alpha` and `beta` channels are accepted.

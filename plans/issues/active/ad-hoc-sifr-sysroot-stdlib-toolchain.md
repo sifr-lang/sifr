@@ -14,7 +14,8 @@ In progress.
 | M3. Create Generated-Program `sifr_stdlib` Crate | completed, merged | `crates/sifr_stdlib` now provides the generated-program crate foundation with narrow feature gates, runtime-backed wrapper APIs, feature-plan expectations, installed-layout checks, and representative feature-tree snapshots in merged [PR #2747](https://github.com/sifr-lang/sifr/pull/2747). |
 | M4. Full Sysroot Workspace and Source Layout | completed, merged | Merged in [PR #2750](https://github.com/sifr-lang/sifr/pull/2750). Public stdlib sources now live under `stdlib/sifr`, private `_sifr` placeholders are present under `stdlib/_sifr`, sysroot validation covers both stdlib crates and source roots, and CLI/LSP definitions load from the resolved sysroot source inventory. |
 | M5. Generated Cargo Uses Sysroot Crates and Vendor | completed, merged | Merged in [PR #2752](https://github.com/sifr-lang/sifr/pull/2752). Generated Cargo now consumes `SysrootDependencyPlan`, emits sysroot `sifr_runtime`/`sifr_stdlib` path dependencies with `default-features = false`, applies sysroot vendor config invocation-scoped for Sifr-managed builds, reports sysroot identity, and vendors the sysroot workspace graph. Local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory; Opus review pass 2 was satisfied for PR readiness with non-blocking package/offline fixture follow-ups. |
-| M6-M13 | not started | M6 distribution artifact and installer update is next. |
+| M6. Distribution Artifact and Installer Update | completed, merged | Merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753). Release artifacts now package `bin/sifr` plus the complete sysroot, validate archive contents before checksums/installer generation, write schema-2 receipts with `sysroot_path`, and preserve binary/sysroot pairing through self-update. Focused validation passed: `cargo test -p sifr self_update`, `cargo test -p sifr_sysroot`, distribution release representative suite, and developer tooling TypeScript-Go transfer suite. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
+| M7-M13 | not started | M7 LSP/tooling sysroot integration is next. |
 
 ## PR Log
 
@@ -24,6 +25,7 @@ In progress.
 - M3 generated-program stdlib crate: merged in [PR #2747](https://github.com/sifr-lang/sifr/pull/2747).
 - M4 full sysroot workspace/source layout: merged in [PR #2750](https://github.com/sifr-lang/sifr/pull/2750).
 - M5 generated Cargo sysroot/vendor planning: merged in [PR #2752](https://github.com/sifr-lang/sifr/pull/2752).
+- M6 distribution artifact and installer update: merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753).
 
 ## Design Reference
 

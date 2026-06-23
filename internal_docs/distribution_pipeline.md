@@ -139,7 +139,24 @@ sifr-<version>-<target>.tar.gz
 sifr-<version>-<target>.tar.gz.sha256
 ```
 
-The archive contains exactly one executable at the archive root: `sifr`.
+The archive contains the full toolchain root:
+
+```text
+bin/sifr
+Cargo.toml
+Cargo.lock
+sysroot.toml
+.cargo/config.toml
+lib/sifr/stdlib/sifr/*.sifr
+lib/sifr/stdlib/_sifr/*.sifr
+crates/sifr_runtime/**
+crates/sifr_stdlib/**
+vendor/**
+```
+
+Archive validation rejects absolute paths, traversal paths, links, special
+files, and archives missing required sysroot assets before checksums or
+immutable installers are published.
 
 The preview-release pipeline target set is:
 
@@ -189,13 +206,19 @@ The generated installer embeds:
 - the default GitHub Release asset base URL,
 - platform detection for the preview-release pipeline targets,
 - checksum validation before extraction or replacement,
-- atomic replacement of the installed `sifr` binary after validation,
+- archive path/link validation before extraction,
+- staged binary and sysroot replacement under the install lock after validation,
 - schema-versioned install receipt writing through a temporary file and atomic rename,
 - update locking at `<install_dir>/.sifr-update.lock` before binary or receipt mutation,
 - shell profile wiring through `~/.sifr/env`, unless `SIFR_NO_MODIFY_PATH=1`
   or `--no-modify-path` is used.
 
-The generated installer honors `SIFR_ARTIFACT_BASE_URL`, `SIFR_TARGET`, `SIFR_INSTALL_DIR`, and `SIFR_NO_MODIFY_PATH` for local validation.
+The generated installer honors `SIFR_ARTIFACT_BASE_URL`, `SIFR_TARGET`,
+`SIFR_INSTALL_DIR`, `SIFR_SYSROOT_INSTALL_DIR`, and `SIFR_NO_MODIFY_PATH` for
+local validation. `SIFR_INSTALL_DIR` remains the binary directory; when it ends
+in `/bin`, the default sysroot root is its parent. Otherwise the binary
+directory itself is the flat sysroot root for compatibility with older custom
+install examples.
 
 ## Self-Update Receipt Rules
 
@@ -203,21 +226,26 @@ Official standalone installers write a schema-versioned `install.json` receipt:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "sifr",
   "version": "0.1.0-beta.2",
   "channel": "beta",
   "target": "aarch64-apple-darwin",
   "install_dir": "/Users/example/.sifr/bin",
   "binary_path": "/Users/example/.sifr/bin/sifr",
+  "sysroot_path": "/Users/example/.sifr",
+  "sysroot_schema_version": 1,
+  "sysroot_sifr_version": "0.1.0-beta.2",
+  "sysroot_target_triple": "aarch64-apple-darwin",
+  "sysroot_content_sha256": "<sha256-tree>",
   "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
   "modify_path": true
 }
 ```
 
-The authoritative field enumeration lives at `verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json`. Receipts must use `schema_version: 1`, include every listed field, and reject unknown fields. Pre-schema, partial, malformed, or mismatched receipts are treated as unmanaged installs by `sifr self update`; the diagnostic tells users to re-run `curl -LsSf https://sifr.sh/install | sh` if they want standalone self-update management.
+The authoritative field enumeration lives at `verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json`. Receipts must use `schema_version: 2`, include every listed field, and reject unknown fields. Pre-schema, partial, malformed, or mismatched receipts are treated as unmanaged installs by `sifr self update`; the diagnostic tells users to re-run `curl -LsSf https://sifr.sh/install | sh` if they want standalone self-update management.
 
-`channel` is derived from the installer version prerelease label. `modify_path` records the actual installer request, including `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` records the canonical installed binary path when the platform can resolve it.
+`channel` is derived from the installer version prerelease label. `modify_path` records the actual installer request, including `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` and `sysroot_path` record canonical installed paths when the platform can resolve them. `sifr self update` validates that `binary_path` is paired with either `sysroot_path/bin/sifr` for toolchain-root installs or `sysroot_path/sifr` for legacy flat custom installs, and delegates to the immutable installer with both paths under the same install lock.
 
 ## Self-Update TLS And Delegation Policy
 

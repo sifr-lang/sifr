@@ -19,6 +19,11 @@ pub(crate) struct InstallReceipt {
     pub(crate) target: String,
     pub(crate) install_dir: String,
     pub(crate) binary_path: String,
+    pub(crate) sysroot_path: String,
+    pub(crate) sysroot_schema_version: u64,
+    pub(crate) sysroot_sifr_version: String,
+    pub(crate) sysroot_target_triple: String,
+    pub(crate) sysroot_content_sha256: String,
     pub(crate) artifact: String,
     pub(crate) modify_path: bool,
 }
@@ -91,8 +96,16 @@ fn discover_receipt_path(env: &ReceiptDiscoveryEnv) -> Result<PathBuf, Box<Rende
         )));
     }
 
-    if let Some(parent) = env.current_executable.parent() {
-        let receipt_path = parent.join("install.json");
+    if let Some(bin_dir) = env.current_executable.parent() {
+        if bin_dir.file_name().is_some_and(|name| name == "bin") {
+            if let Some(sysroot_root) = bin_dir.parent() {
+                let receipt_path = sysroot_root.join("install.json");
+                if receipt_path.is_file() {
+                    return Ok(receipt_path);
+                }
+            }
+        }
+        let receipt_path = bin_dir.join("install.json");
         if receipt_path.is_file() {
             return Ok(receipt_path);
         }
@@ -157,6 +170,45 @@ fn validate_receipt_eligibility(
             receipt.binary_path, receipt.install_dir
         )));
     }
+    let sysroot_path = canonicalize_for_receipt(Path::new(&receipt.sysroot_path), "sysroot_path")?;
+    let expected_binary_parent = sysroot_path.join("bin");
+    if !paths_same_after_canonicalization(&expected_binary_parent, binary_parent)
+        && !paths_same_after_canonicalization(&sysroot_path, binary_parent)
+    {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt binary_path {} is not paired with sysroot_path {}",
+            receipt.binary_path, receipt.sysroot_path
+        )));
+    }
+    if !sysroot_path.join("sysroot.toml").is_file() {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt sysroot_path {} is missing sysroot.toml",
+            receipt.sysroot_path
+        )));
+    }
+    if receipt.sysroot_schema_version != 1 {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt sysroot_schema_version {} is unsupported",
+            receipt.sysroot_schema_version
+        )));
+    }
+    if receipt.sysroot_sifr_version != receipt.version {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt version {} does not match sysroot_sifr_version {}",
+            receipt.version, receipt.sysroot_sifr_version
+        )));
+    }
+    if receipt.sysroot_target_triple != receipt.target {
+        return Err(unmanaged_receipt_diagnostic(format!(
+            "standalone install receipt target {} does not match sysroot_target_triple {}",
+            receipt.target, receipt.sysroot_target_triple
+        )));
+    }
+    if !is_sha256_hex(&receipt.sysroot_content_sha256) {
+        return Err(unmanaged_receipt_diagnostic(
+            "standalone install receipt sysroot_content_sha256 is not a lowercase sha256 hex string",
+        ));
+    }
     if !receipt_path.is_file() {
         return Err(missing_receipt_diagnostic(format!(
             "standalone install receipt is missing at {}",
@@ -184,6 +236,15 @@ fn paths_same_after_canonicalization(left: &Path, right: &Path) -> bool {
     {
         left == right
     }
+}
+
+fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        // Reject the placeholder used before release artifacts computed real sysroot tree hashes.
+        && value != "0000000000000000000000000000000000000000000000000000000000000000"
+        && value
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
 }
 
 fn same_file(left: &Path, right: &Path) -> Result<bool, std::io::Error> {
@@ -214,6 +275,11 @@ const RECEIPT_FIELDS: &[&str] = &[
     "target",
     "install_dir",
     "binary_path",
+    "sysroot_path",
+    "sysroot_schema_version",
+    "sysroot_sifr_version",
+    "sysroot_target_triple",
+    "sysroot_content_sha256",
     "artifact",
     "modify_path",
 ];
@@ -244,7 +310,7 @@ pub(crate) fn parse_install_receipt_json(
         .get("schema_version")
         .and_then(Value::as_u64)
         .ok_or_else(|| malformed_field("schema_version"))?;
-    if schema_version != 1 {
+    if schema_version != 2 {
         return Err(unmanaged_receipt_diagnostic(format!(
             "standalone install receipt schema_version {schema_version} is unsupported; re-run `curl -LsSf https://sifr.sh/install | sh` to enter the managed install rules"
         )));
@@ -264,6 +330,14 @@ pub(crate) fn parse_install_receipt_json(
         target: string_field(object, "target")?.to_owned(),
         install_dir: string_field(object, "install_dir")?.to_owned(),
         binary_path: string_field(object, "binary_path")?.to_owned(),
+        sysroot_path: string_field(object, "sysroot_path")?.to_owned(),
+        sysroot_schema_version: object
+            .get("sysroot_schema_version")
+            .and_then(Value::as_u64)
+            .ok_or_else(|| malformed_field("sysroot_schema_version"))?,
+        sysroot_sifr_version: string_field(object, "sysroot_sifr_version")?.to_owned(),
+        sysroot_target_triple: string_field(object, "sysroot_target_triple")?.to_owned(),
+        sysroot_content_sha256: sha256_field(object, "sysroot_content_sha256")?.to_owned(),
         artifact: string_field(object, "artifact")?.to_owned(),
         modify_path: object
             .get("modify_path")
@@ -281,6 +355,18 @@ fn string_field<'a>(
         .and_then(Value::as_str)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| malformed_field(field))
+}
+
+fn sha256_field<'a>(
+    object: &'a serde_json::Map<String, Value>,
+    field: &str,
+) -> Result<&'a str, Box<RenderedDiagnostic>> {
+    let value = string_field(object, field)?;
+    if is_sha256_hex(value) {
+        Ok(value)
+    } else {
+        Err(malformed_field(field))
+    }
 }
 
 fn malformed_field(field: &str) -> Box<RenderedDiagnostic> {
@@ -329,13 +415,18 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     const VALID_RECEIPT: &str = r#"{
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "sifr",
   "version": "0.1.0-beta.2",
   "channel": "beta",
   "target": "aarch64-apple-darwin",
   "install_dir": "/Users/example/.sifr/bin",
   "binary_path": "/Users/example/.sifr/bin/sifr",
+  "sysroot_path": "/Users/example/.sifr",
+  "sysroot_schema_version": 1,
+  "sysroot_sifr_version": "0.1.0-beta.2",
+  "sysroot_target_triple": "aarch64-apple-darwin",
+  "sysroot_content_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
   "modify_path": true
 }"#;
@@ -380,14 +471,20 @@ mod tests {
         install_dir: &Path,
         binary_path: &Path,
     ) -> String {
+        let sysroot_path = install_dir.parent().expect("install dir parent");
         serde_json::json!({
-            "schema_version": 1,
+            "schema_version": 2,
             "name": "sifr",
             "version": version,
             "channel": channel,
             "target": "aarch64-apple-darwin",
             "install_dir": install_dir.display().to_string(),
             "binary_path": binary_path.display().to_string(),
+            "sysroot_path": sysroot_path.display().to_string(),
+            "sysroot_schema_version": 1,
+            "sysroot_sifr_version": version,
+            "sysroot_target_triple": "aarch64-apple-darwin",
+            "sysroot_content_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
             "artifact": format!("sifr-{version}-aarch64-apple-darwin.tar.gz"),
             "modify_path": true,
         })
@@ -396,7 +493,9 @@ mod tests {
 
     fn write_receipt(path: &Path, version: &str, channel: &str, binary_path: &Path) {
         let install_dir = binary_path.parent().expect("binary parent");
+        let sysroot_path = install_dir.parent().expect("sysroot parent");
         fs::create_dir_all(path.parent().expect("receipt parent")).expect("create receipt parent");
+        fs::write(sysroot_path.join("sysroot.toml"), "").expect("write sysroot manifest");
         fs::write(
             path,
             receipt_json(version, channel, install_dir, binary_path),
@@ -416,6 +515,12 @@ mod tests {
                 target: "aarch64-apple-darwin".to_owned(),
                 install_dir: "/Users/example/.sifr/bin".to_owned(),
                 binary_path: "/Users/example/.sifr/bin/sifr".to_owned(),
+                sysroot_path: "/Users/example/.sifr".to_owned(),
+                sysroot_schema_version: 1,
+                sysroot_sifr_version: "0.1.0-beta.2".to_owned(),
+                sysroot_target_triple: "aarch64-apple-darwin".to_owned(),
+                sysroot_content_sha256:
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".to_owned(),
                 artifact: "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz".to_owned(),
                 modify_path: true,
             }
@@ -438,25 +543,14 @@ mod tests {
 
     #[test]
     fn rejects_unsupported_schema_version() {
-        let error = parse_install_receipt_json(
-            r#"{
-  "schema_version": 2,
-  "name": "sifr",
-  "version": "0.1.0-beta.2",
-  "channel": "beta",
-  "target": "aarch64-apple-darwin",
-  "install_dir": "/Users/example/.sifr/bin",
-  "binary_path": "/Users/example/.sifr/bin/sifr",
-  "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
-  "modify_path": true
-}"#,
-        )
-        .expect_err("unsupported schema versions are rejected");
+        let input = VALID_RECEIPT.replace(r#""schema_version": 2"#, r#""schema_version": 3"#);
+        let error = parse_install_receipt_json(&input)
+            .expect_err("unsupported schema versions are rejected");
         assert_eq!(
             error.code,
             DiagnosticCode::SELF_UPDATE_UNMANAGED_RECEIPT.code()
         );
-        assert!(error.message.contains("schema_version 2 is unsupported"));
+        assert!(error.message.contains("schema_version 3 is unsupported"));
     }
 
     #[test]
@@ -481,21 +575,14 @@ mod tests {
 
     #[test]
     fn rejects_unknown_fields() {
-        let error = parse_install_receipt_json(
-            r#"{
-  "schema_version": 1,
-  "name": "sifr",
-  "version": "0.1.0-beta.2",
-  "channel": "beta",
-  "target": "aarch64-apple-darwin",
-  "install_dir": "/Users/example/.sifr/bin",
-  "binary_path": "/Users/example/.sifr/bin/sifr",
-  "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
-  "modify_path": true,
+        let input = VALID_RECEIPT.replace(
+            r#"  "modify_path": true
+}"#,
+            r#"  "modify_path": true,
   "installer_url": "https://example.invalid"
 }"#,
-        )
-        .expect_err("unknown fields are rejected");
+        );
+        let error = parse_install_receipt_json(&input).expect_err("unknown fields are rejected");
         assert_eq!(
             error.code,
             DiagnosticCode::SELF_UPDATE_UNMANAGED_RECEIPT.code()
@@ -504,21 +591,20 @@ mod tests {
 
     #[test]
     fn rejects_wrong_field_types() {
-        let error = parse_install_receipt_json(
-            r#"{
-  "schema_version": 1,
-  "name": "sifr",
-  "version": "0.1.0-beta.2",
-  "channel": "beta",
-  "target": "aarch64-apple-darwin",
-  "install_dir": "/Users/example/.sifr/bin",
-  "binary_path": "/Users/example/.sifr/bin/sifr",
-  "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
-  "modify_path": "false"
-}"#,
-        )
-        .expect_err("wrong field types are rejected");
+        let input = VALID_RECEIPT.replace(r#""modify_path": true"#, r#""modify_path": "false""#);
+        let error = parse_install_receipt_json(&input).expect_err("wrong field types are rejected");
         assert!(error.message.contains("modify_path"));
+    }
+
+    #[test]
+    fn rejects_malformed_sysroot_content_sha256() {
+        let input = VALID_RECEIPT.replace(
+            r#""sysroot_content_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef""#,
+            r#""sysroot_content_sha256": "not-a-sha256""#,
+        );
+        let error =
+            parse_install_receipt_json(&input).expect_err("malformed sysroot digest is rejected");
+        assert!(error.message.contains("sysroot_content_sha256"));
     }
 
     #[test]
@@ -572,6 +658,73 @@ mod tests {
         .expect("default receipt discovers");
 
         assert_eq!(discovered.receipt.version, "0.1.0-beta.2");
+    }
+
+    #[test]
+    fn discovers_sysroot_root_manifest_for_custom_bin_layout() {
+        let tmp = TestDir::new("custom-bin");
+        let binary = tmp.path().join("toolchain/bin/sifr");
+        touch(&binary);
+        write_receipt(
+            &tmp.path().join("toolchain/install.json"),
+            "0.1.0-beta.2",
+            "beta",
+            &binary,
+        );
+
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: binary,
+            manifest_dir: None,
+            home_dir: None,
+        })
+        .expect("custom sysroot receipt discovers");
+
+        assert!(discovered
+            .receipt_path
+            .ends_with(Path::new("toolchain/install.json")));
+    }
+
+    #[test]
+    fn accepts_flat_custom_install_layout() {
+        let tmp = TestDir::new("flat-custom");
+        let install_dir = tmp.path().join("toolchain");
+        let binary = install_dir.join("sifr");
+        let receipt_path = install_dir.join("install.json");
+        touch(&binary);
+        fs::write(install_dir.join("sysroot.toml"), "").expect("write flat sysroot manifest");
+        fs::write(
+            &receipt_path,
+            serde_json::json!({
+                "schema_version": 2,
+                "name": "sifr",
+                "version": "0.1.0-beta.2",
+                "channel": "beta",
+                "target": "aarch64-apple-darwin",
+                "install_dir": install_dir.display().to_string(),
+                "binary_path": binary.display().to_string(),
+                "sysroot_path": install_dir.display().to_string(),
+                "sysroot_schema_version": 1,
+                "sysroot_sifr_version": "0.1.0-beta.2",
+                "sysroot_target_triple": "aarch64-apple-darwin",
+                "sysroot_content_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                "artifact": "sifr-0.1.0-beta.2-aarch64-apple-darwin.tar.gz",
+                "modify_path": true,
+            })
+            .to_string(),
+        )
+        .expect("write flat receipt");
+
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: binary,
+            manifest_dir: Some(install_dir),
+            home_dir: None,
+        })
+        .expect("flat install receipt discovers");
+
+        assert_eq!(
+            discovered.receipt.sysroot_path,
+            discovered.receipt.install_dir
+        );
     }
 
     #[test]
