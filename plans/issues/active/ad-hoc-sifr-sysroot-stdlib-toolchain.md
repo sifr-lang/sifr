@@ -13,7 +13,7 @@ In progress.
 | M2. Rename Current Compiler Stdlib Crate | completed, merged | Merged in [PR #2745](https://github.com/sifr-lang/sifr/pull/2745). The compiler-side crate is now `crates/sifr_stdlib_model`, freeing `sifr_stdlib` for the generated-program crate. |
 | M3. Create Generated-Program `sifr_stdlib` Crate | completed, merged | `crates/sifr_stdlib` now provides the generated-program crate foundation with narrow feature gates, runtime-backed wrapper APIs, feature-plan expectations, installed-layout checks, and representative feature-tree snapshots in merged [PR #2747](https://github.com/sifr-lang/sifr/pull/2747). |
 | M4. Full Sysroot Workspace and Source Layout | completed, merged | Merged in [PR #2750](https://github.com/sifr-lang/sifr/pull/2750). Public stdlib sources now live under `stdlib/sifr`, private `_sifr` placeholders are present under `stdlib/_sifr`, sysroot validation covers both stdlib crates and source roots, and CLI/LSP definitions load from the resolved sysroot source inventory. |
-| M5. Generated Cargo Uses Sysroot Crates and Vendor | implemented, PR pending | Generated Cargo now consumes `SysrootDependencyPlan`, emits sysroot `sifr_runtime`/`sifr_stdlib` path dependencies with `default-features = false`, applies sysroot vendor config invocation-scoped for Sifr-managed builds, reports sysroot identity, and vendors the sysroot workspace graph. Local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory; Opus review pass 2 was satisfied for PR readiness with non-blocking package/offline fixture follow-ups. |
+| M5. Generated Cargo Uses Sysroot Crates and Vendor | in review | Generated Cargo now consumes `SysrootDependencyPlan`, emits sysroot `sifr_runtime`/`sifr_stdlib` path dependencies with `default-features = false`, applies sysroot vendor config invocation-scoped for Sifr-managed builds, reports sysroot identity, and vendors the sysroot workspace graph. Local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory; Opus review pass 2 was satisfied for PR readiness with non-blocking package/offline fixture follow-ups. Draft [PR #2752](https://github.com/sifr-lang/sifr/pull/2752) opened for milestone review. |
 | M6-M13 | not started | Await M5 implementation/review/merge. |
 
 ## PR Log
@@ -23,7 +23,7 @@ In progress.
 - M2 compiler stdlib model rename: merged in [PR #2745](https://github.com/sifr-lang/sifr/pull/2745).
 - M3 generated-program stdlib crate: merged in [PR #2747](https://github.com/sifr-lang/sifr/pull/2747).
 - M4 full sysroot workspace/source layout: merged in [PR #2750](https://github.com/sifr-lang/sifr/pull/2750).
-- M5 generated Cargo sysroot/vendor planning: implemented locally; PR pending.
+- M5 generated Cargo sysroot/vendor planning: in review in draft [PR #2752](https://github.com/sifr-lang/sifr/pull/2752).
 
 ## Design Reference
 
