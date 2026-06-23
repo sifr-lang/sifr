@@ -1,4 +1,7 @@
-use super::{feature_for_codegen_requirement, generated_cargo_dependencies, StdlibFeature};
+use super::{
+    feature_for_codegen_requirement, generated_cargo_dependencies, planned_sifr_stdlib_features,
+    StdlibFeature,
+};
 use std::collections::HashSet;
 
 #[test]
@@ -151,4 +154,52 @@ fn python_runtime_feature_enables_sifr_runtime_python_feature() {
         feature_for_codegen_requirement("python-runtime"),
         Some(StdlibFeature::PythonRuntime)
     );
+}
+
+#[test]
+fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
+    let cases = [
+        ("sifr.re", &["regex"][..], &["json", "http", "python"][..]),
+        ("sifr.json", &["json"][..], &["regex", "http", "python"][..]),
+        ("sifr.http", &["http"][..], &["json", "regex", "python"][..]),
+        (
+            "sifr.python",
+            &["python"][..],
+            &["json", "regex", "http"][..],
+        ),
+        (
+            "sifr.math",
+            &[][..],
+            &["json", "regex", "http", "python"][..],
+        ),
+    ];
+
+    for (module, expected, must_not_include) in cases {
+        let planned =
+            planned_sifr_stdlib_features(&HashSet::from([module.to_string()]), &HashSet::new());
+        let expected = expected.iter().copied().collect();
+        assert_eq!(planned, expected, "unexpected features for {module}");
+        for unexpected in must_not_include {
+            assert!(
+                !planned.contains(unexpected),
+                "{module} unexpectedly enabled {unexpected}"
+            );
+        }
+    }
+}
+
+#[test]
+fn planned_sysroot_stdlib_features_include_codegen_requirements_without_umbrellas() {
+    let planned = planned_sifr_stdlib_features(
+        &HashSet::new(),
+        &HashSet::from([
+            StdlibFeature::Regex,
+            StdlibFeature::SerdeJson,
+            StdlibFeature::PythonRuntime,
+        ]),
+    );
+
+    assert_eq!(planned, ["json", "python", "regex"].into_iter().collect());
+    assert!(!planned.contains("text-data"));
+    assert!(!planned.contains("network-stack"));
 }

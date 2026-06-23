@@ -105,6 +105,38 @@
       ]
     },
     {
+      "name": "sifr_stdlib",
+      "classification": "first_party_runtime",
+      "targets": [
+        {"name": "sifr_stdlib", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"},
+        {"name": "api_behavior", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
+      ],
+      "features": [
+        {"name": "default", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "base64", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "fs", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "gzip", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "hash", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "json", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "http", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "process", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "python", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "regex", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "signals", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "toml", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "url", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "uuid", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "unicode", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "i18n", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "net", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "network-stack", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "tls", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "runtime-observability", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "text-data", "profile_assignment": "nightly", "classification": "first_party_runtime"},
+        {"name": "zipfile", "profile_assignment": "nightly", "classification": "first_party_runtime"}
+      ]
+    },
+    {
       "name": "sifr_source",
       "classification": "first_party_compiler",
       "targets": [{"name": "sifr_source", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],

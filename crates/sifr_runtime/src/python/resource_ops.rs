@@ -3,7 +3,7 @@ use super::object_ops::clone_handle;
 use super::object_ops::store_object;
 use super::{ObjectHandle, PythonError};
 use pyo3::exceptions::PyRuntimeError;
-use pyo3::types::{PyAnyMethods, PyModule};
+use pyo3::types::PyAnyMethods;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PythonResourceDiagnostics {

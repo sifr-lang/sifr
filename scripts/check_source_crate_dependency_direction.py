@@ -34,6 +34,7 @@ ALL_SIFR_CRATES = {
     "sifr_package",
     "sifr_runtime",
     "sifr_source",
+    "sifr_stdlib",
     "sifr_stdlib_model",
     "sifr_sysroot",
     "sifr_syntax",
@@ -50,6 +51,7 @@ IR_FORBIDDEN_DEPENDENCIES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
+    "sifr_stdlib",
     "sifr_stdlib_model",
     "sifr_syntax",
 }
@@ -64,6 +66,24 @@ STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
+    "sifr_stdlib_model",
+}
+
+GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES = {
+    "sifr",
+    "sifr_analysis",
+    "sifr_codegen",
+    "sifr_driver",
+    "sifr_frontend",
+    "sifr_ir",
+    "sifr_lint",
+    "sifr_lowering",
+    "sifr_lsp",
+    "sifr_package",
+    "sifr_stdlib_model",
+    "sifr_syntax",
+    "sifr_sysroot",
+    "sifr_type_system",
 }
 
 PARSER_CRATES = {
@@ -110,6 +130,15 @@ RULES = (
         ),
         forbidden_source_references=frozenset(
             STDLIB_FORBIDDEN_DEPENDENCIES | PARSER_CRATES | {"sifr_syntax"}
+        ),
+    ),
+    CrateRule(
+        crate="sifr_stdlib",
+        forbidden_normal_dependencies=frozenset(
+            GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES | PARSER_CRATES
+        ),
+        forbidden_source_references=frozenset(
+            GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES | PARSER_CRATES
         ),
     ),
     CrateRule(
@@ -259,6 +288,7 @@ def seed_valid_repo(root: Path) -> None:
     allowed_deps = {
         "sifr_source": ["ruff_text_size"],
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
+        "sifr_stdlib": ["sifr_runtime"],
         "sifr_stdlib_model": ["sifr_type_system"],
         "sifr_codegen": ["sifr_ir", "sifr_stdlib_model"],
         "sifr_lint": ["sifr_frontend", "sifr_ir"],

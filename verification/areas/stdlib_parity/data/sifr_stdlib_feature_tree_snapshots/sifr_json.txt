@@ -1,0 +1,34 @@
+sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
+└── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
+    ├── encoding_rs feature "default"
+    │   ├── encoding_rs v0.8.35
+    │   │   └── cfg-if feature "default"
+    │   │       └── cfg-if v1.0.4
+    │   └── encoding_rs feature "alloc"
+    │       └── encoding_rs v0.8.35 (*)
+    ├── indexmap feature "default"
+    │   ├── indexmap v2.14.0
+    │   │   ├── equivalent v1.0.2
+    │   │   └── hashbrown v0.17.0
+    │   └── indexmap feature "std"
+    │       └── indexmap v2.14.0 (*)
+    ├── num-bigint feature "default"
+    │   ├── num-bigint v0.4.6
+    │   │   ├── num-integer feature "i128"
+    │   │   │   └── num-integer v0.1.46
+    │   │   │       └── num-traits feature "i128"
+    │   │   │           └── num-traits v0.2.19
+    │   │   │               [build-dependencies]
+    │   │   │               └── autocfg feature "default"
+    │   │   │                   └── autocfg v1.5.0
+    │   │   └── num-traits feature "i128" (*)
+    │   └── num-bigint feature "std"
+    │       ├── num-bigint v0.4.6 (*)
+    │       ├── num-integer feature "std"
+    │       │   ├── num-integer v0.1.46 (*)
+    │       │   └── num-traits feature "std"
+    │       │       └── num-traits v0.2.19 (*)
+    │       └── num-traits feature "std" (*)
+    └── num-traits feature "default"
+        ├── num-traits v0.2.19 (*)
+        └── num-traits feature "std" (*)
