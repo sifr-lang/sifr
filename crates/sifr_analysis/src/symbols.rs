@@ -1,5 +1,6 @@
-use crate::queries::{DocumentSymbol, WorkspaceSymbol};
+use crate::queries::{DocumentSymbol, Location, WorkspaceSymbol};
 use crate::snapshot::AnalysisRevision;
+use ruff_text_size::TextRange;
 use sifr_frontend::{FileId, ModuleGraphView, ModuleId, ProjectAnalysisView, SymbolKind};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -19,7 +20,19 @@ pub struct SymbolIndexEntry {
     pub name: String,
     pub kind: String,
     pub file: FileId,
-    pub module: ModuleId,
+    pub module: Option<ModuleId>,
+    pub container_name: String,
+    pub range: Option<TextRange>,
+    pub ordinal: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StdlibSymbolInput {
+    pub module_name: String,
+    pub name: String,
+    pub kind: String,
+    pub file: FileId,
+    pub range: Option<TextRange>,
     pub ordinal: usize,
 }
 
@@ -125,6 +138,51 @@ impl SymbolIndex {
         &self.entries
     }
 
+    pub fn replace_stdlib_symbols(
+        &mut self,
+        revision: AnalysisRevision,
+        symbols: Vec<StdlibSymbolInput>,
+    ) {
+        let id = SymbolBucketId {
+            kind: SymbolBucketKind::Stdlib,
+            module: None,
+        };
+        let mut entries = symbols
+            .into_iter()
+            .map(|symbol| {
+                let kind = symbol.kind;
+                SymbolIndexEntry {
+                    id: SymbolId(format!(
+                        "stdlib:{}:{kind}:{}:{}",
+                        symbol.module_name, symbol.name, symbol.ordinal
+                    )),
+                    name: symbol.name,
+                    kind,
+                    file: symbol.file,
+                    module: None,
+                    container_name: symbol.module_name,
+                    range: symbol.range,
+                    ordinal: symbol.ordinal,
+                }
+            })
+            .collect::<Vec<_>>();
+        entries.sort_by(symbol_entry_order);
+        self.buckets.insert(
+            id.clone(),
+            SymbolBucket {
+                id,
+                readiness: if entries.is_empty() {
+                    SymbolBucketReadinessState::Unavailable
+                } else {
+                    SymbolBucketReadinessState::Exact
+                },
+                entries,
+            },
+        );
+        self.revision = revision;
+        self.entries = flatten_buckets(&self.buckets);
+    }
+
     #[must_use]
     pub fn bucket_readiness(&self) -> Vec<SymbolBucketReadiness> {
         self.buckets
@@ -192,7 +250,7 @@ impl SymbolIndex {
                 name: entry.name,
                 kind: entry.kind,
                 file: entry.file,
-                container_name: Some(format!("module:{}", entry.module.as_u32())),
+                container_name: Some(entry.container_name),
             })
             .collect()
     }
@@ -202,6 +260,22 @@ impl SymbolIndex {
         let mut matches = self.workspace_symbols(name);
         matches.retain(|symbol| symbol.name == name);
         (matches.len() == 1).then(|| matches.remove(0))
+    }
+
+    #[must_use]
+    pub fn stdlib_symbol_location(&self, module_name: &str, name: &str) -> Option<Location> {
+        self.buckets
+            .get(&SymbolBucketId {
+                kind: SymbolBucketKind::Stdlib,
+                module: None,
+            })?
+            .entries
+            .iter()
+            .find(|entry| entry.container_name == module_name && entry.name == name)
+            .map(|entry| Location {
+                file: entry.file,
+                range: entry.range,
+            })
     }
 }
 
@@ -236,7 +310,9 @@ fn build_buckets(
                 name: symbol.name.clone(),
                 kind,
                 file,
-                module: module.module,
+                module: Some(module.module),
+                container_name: format!("module:{}", module.module.as_u32()),
+                range: None,
                 ordinal,
             });
         }
@@ -307,7 +383,8 @@ mod tests {
     use crate::snapshot::AnalysisRevision;
     use sifr_frontend::{
         FileId, GraphRevision, ModuleAnalysisView, ModuleGraphNode, ModuleGraphView, ModuleId,
-        ProjectAnalysisView, SourceHash, SourcePath, SourceRevision, SymbolKind, SymbolView,
+        ProjectAnalysisView, SourceHash, SourceOrigin, SourcePath, SourceRevision, SymbolKind,
+        SymbolView,
     };
 
     fn revision(graph: u64, source: u64) -> AnalysisRevision {
@@ -325,12 +402,14 @@ mod tests {
                     file: FileId::new(0),
                     canonical_path: SourcePath::new("main.sifr"),
                     source_hash: SourceHash::new("main"),
+                    origin: SourceOrigin::UserSource,
                 },
                 ModuleGraphNode {
                     id: ModuleId::new(2),
                     file: FileId::new(2),
                     canonical_path: SourcePath::new("helper.sifr"),
                     source_hash: SourceHash::new("helper"),
+                    origin: SourceOrigin::UserSource,
                 },
             ],
             edges: Vec::new(),
@@ -471,18 +550,21 @@ mod tests {
                     file: FileId::new(0),
                     canonical_path: SourcePath::new("main.sifr"),
                     source_hash: SourceHash::new("main"),
+                    origin: SourceOrigin::UserSource,
                 },
                 ModuleGraphNode {
                     id: ModuleId::new(2),
                     file: FileId::new(2),
                     canonical_path: SourcePath::new("helper.sifr"),
                     source_hash: SourceHash::new("helper"),
+                    origin: SourceOrigin::UserSource,
                 },
                 ModuleGraphNode {
                     id: ModuleId::new(3),
                     file: FileId::new(3),
                     canonical_path: SourcePath::new("extra.sifr"),
                     source_hash: SourceHash::new("extra"),
+                    origin: SourceOrigin::UserSource,
                 },
             ],
             edges: Vec::new(),

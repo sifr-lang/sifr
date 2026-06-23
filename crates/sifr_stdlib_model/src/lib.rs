@@ -75,8 +75,9 @@ use python::intrinsic_python;
 use runtime::intrinsic_runtime;
 use signal::intrinsic_signal;
 pub use sources::{
-    load_stdlib_sources_from_sysroot, validate_stdlib_source_inventory, LoadedStdlibSource,
-    StdlibSource, StdlibSourceInventoryError, PRIVATE_STDLIB_MODULES, STDLIB_SOURCES,
+    load_stdlib_sources_from_sysroot, load_stdlib_tooling_sources_from_sysroot,
+    validate_stdlib_source_inventory, LoadedStdlibSource, LoadedStdlibSourceKind, StdlibSource,
+    StdlibSourceInventoryError, PRIVATE_STDLIB_MODULES, STDLIB_SOURCES,
 };
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use task::intrinsic_task;

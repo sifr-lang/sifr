@@ -3,9 +3,9 @@ use super::{
     FrontendContext, FrontendInput, FrontendMode, ModuleGraphView, OverlayDocument,
     OverlaySourceProvider, ProjectRoot, SifrBuildInfoCandidate, SifrBuildInfoVerification,
     SourceDependency, SourceMapView, SourcePath, SourceText, TrackingSourceProvider,
-    WorkspaceCacheStatus, WorkspaceDebugSnapshot, WorkspaceIndexReadinessStatus,
-    WorkspaceMemoryCounters, WorkspaceResidencySnapshot, WorkspaceResidencyState,
-    WorkspaceStatusSnapshot, WorkspaceTracePhase, WorkspaceTraceState,
+    WorkspaceAuxiliarySource, WorkspaceCacheStatus, WorkspaceDebugSnapshot,
+    WorkspaceIndexReadinessStatus, WorkspaceMemoryCounters, WorkspaceResidencySnapshot,
+    WorkspaceResidencyState, WorkspaceStatusSnapshot, WorkspaceTracePhase, WorkspaceTraceState,
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_lowering::ExternalDefs;
@@ -214,6 +214,7 @@ pub struct WorkspaceSession {
     snapshot_compiler_options: Arc<WorkspaceCompilerOptions>,
     snapshot_package_config_identity: Arc<WorkspacePackageConfigIdentity>,
     base_external_defs: ExternalDefs,
+    auxiliary_sources: Vec<WorkspaceAuxiliarySource>,
     dirty_scope_report: WorkspaceDirtyScopeReport,
     cache_registry: WorkspaceCacheRegistryHandles,
     residency: WorkspaceResidencyState,
@@ -231,7 +232,22 @@ impl WorkspaceSession {
         root: ProjectRoot,
         external_defs: ExternalDefs,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let mut session = Self::project_with_external_defs(root, external_defs);
+        let mut session =
+            Self::project_with_external_defs_and_auxiliary_sources(root, external_defs, Vec::new());
+        session.reload()?;
+        Ok(session)
+    }
+
+    pub fn open_project_with_external_defs_and_auxiliary_sources(
+        root: ProjectRoot,
+        external_defs: ExternalDefs,
+        auxiliary_sources: Vec<WorkspaceAuxiliarySource>,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let mut session = Self::project_with_external_defs_and_auxiliary_sources(
+            root,
+            external_defs,
+            auxiliary_sources,
+        );
         session.reload()?;
         Ok(session)
     }
@@ -243,6 +259,15 @@ impl WorkspaceSession {
 
     #[must_use]
     pub fn project_with_external_defs(root: ProjectRoot, external_defs: ExternalDefs) -> Self {
+        Self::project_with_external_defs_and_auxiliary_sources(root, external_defs, Vec::new())
+    }
+
+    #[must_use]
+    pub fn project_with_external_defs_and_auxiliary_sources(
+        root: ProjectRoot,
+        external_defs: ExternalDefs,
+        auxiliary_sources: Vec<WorkspaceAuxiliarySource>,
+    ) -> Self {
         let compiler_options = WorkspaceCompilerOptions {
             mode: FrontendMode::ProjectEntrypoint,
         };
@@ -256,6 +281,7 @@ impl WorkspaceSession {
             compiler_options,
             package_config_identity,
             external_defs,
+            auxiliary_sources,
         )
     }
 
@@ -267,13 +293,32 @@ impl WorkspaceSession {
         input: FrontendInput,
         external_defs: ExternalDefs,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let mut session =
-            Self::single_file_with_external_defs(input.path.clone(), input.mode, external_defs);
-        session.single_file_source = Some(input.source.clone());
-        session.context = Some(FrontendContext::load_single_file_with_external_defs(
+        Self::open_single_file_with_external_defs_and_auxiliary_sources(
             input,
-            session.base_external_defs.clone(),
-        )?);
+            external_defs,
+            Vec::new(),
+        )
+    }
+
+    pub fn open_single_file_with_external_defs_and_auxiliary_sources(
+        input: FrontendInput,
+        external_defs: ExternalDefs,
+        auxiliary_sources: Vec<WorkspaceAuxiliarySource>,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let mut session = Self::single_file_with_external_defs_and_auxiliary_sources(
+            input.path.clone(),
+            input.mode,
+            external_defs,
+            auxiliary_sources,
+        );
+        session.single_file_source = Some(input.source.clone());
+        session.context = Some(
+            FrontendContext::load_single_file_with_external_defs_and_auxiliary_sources(
+                input,
+                session.base_external_defs.clone(),
+                session.auxiliary_sources.clone(),
+            )?,
+        );
         session.refresh_residency();
         session.record_compiler_phase_trace();
         Ok(session)
@@ -290,6 +335,21 @@ impl WorkspaceSession {
         mode: FrontendMode,
         external_defs: ExternalDefs,
     ) -> Self {
+        Self::single_file_with_external_defs_and_auxiliary_sources(
+            path,
+            mode,
+            external_defs,
+            Vec::new(),
+        )
+    }
+
+    #[must_use]
+    pub fn single_file_with_external_defs_and_auxiliary_sources(
+        path: SourcePath,
+        mode: FrontendMode,
+        external_defs: ExternalDefs,
+        auxiliary_sources: Vec<WorkspaceAuxiliarySource>,
+    ) -> Self {
         let compiler_options = WorkspaceCompilerOptions { mode };
         let package_config_identity = WorkspacePackageConfigIdentity::default();
         let target = WorkspaceSessionTarget::SingleFile(WorkspaceSingleFileTarget { path, mode });
@@ -298,6 +358,7 @@ impl WorkspaceSession {
             compiler_options,
             package_config_identity,
             external_defs,
+            auxiliary_sources,
         )
     }
 
@@ -306,6 +367,7 @@ impl WorkspaceSession {
         compiler_options: WorkspaceCompilerOptions,
         package_config_identity: WorkspacePackageConfigIdentity,
         base_external_defs: ExternalDefs,
+        auxiliary_sources: Vec<WorkspaceAuxiliarySource>,
     ) -> Self {
         let residency = WorkspaceResidencyState::for_target(&target);
         let mut trace = WorkspaceTraceState::default();
@@ -324,6 +386,7 @@ impl WorkspaceSession {
             snapshot_compiler_options: Arc::new(compiler_options),
             snapshot_package_config_identity: Arc::new(package_config_identity),
             base_external_defs,
+            auxiliary_sources,
             snapshot_overlays: None,
             snapshot_source_dependencies: None,
             dirty_scope_report: WorkspaceDirtyScopeReport::default(),
@@ -342,10 +405,12 @@ impl WorkspaceSession {
                     overlay_provider.insert_overlay(overlay);
                 }
                 let mut provider = TrackingSourceProvider::new(overlay_provider);
-                let context = FrontendContext::load_project_with_provider_and_external_defs(
+                let context =
+                    FrontendContext::load_project_with_provider_external_defs_and_auxiliary_sources(
                     root,
                     &mut provider,
                     self.base_external_defs.clone(),
+                    self.auxiliary_sources.clone(),
                 )?;
                 let (_, dependencies) = provider.into_parts();
                 self.context = Some(context);
@@ -354,10 +419,13 @@ impl WorkspaceSession {
             }
             WorkspaceSessionTarget::SingleFile(target) => {
                 let input = self.single_file_input(target);
-                self.context = Some(FrontendContext::load_single_file_with_external_defs(
-                    input,
-                    self.base_external_defs.clone(),
-                )?);
+                self.context = Some(
+                    FrontendContext::load_single_file_with_external_defs_and_auxiliary_sources(
+                        input,
+                        self.base_external_defs.clone(),
+                        self.auxiliary_sources.clone(),
+                    )?,
+                );
                 self.source_dependencies = Vec::new();
                 self.snapshot_source_dependencies = None;
             }

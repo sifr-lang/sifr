@@ -72,6 +72,16 @@ impl SourcePath {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceUri(String);
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SourceOrigin {
+    #[default]
+    UserSource,
+    SysrootPublicStdlib,
+    SysrootPrivateDeclaration,
+    GeneratedSupport,
+    CompilerSynthetic,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DocumentVersion(i64);
 
@@ -91,9 +101,41 @@ impl DocumentVersion {
 pub struct SourceFileView {
     pub id: FileId,
     pub canonical_path: SourcePath,
+    pub module_name: Option<String>,
+    pub origin: SourceOrigin,
     pub uri: Option<SourceUri>,
     pub source_hash: SourceHash,
     pub source: SourceText,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WorkspaceAuxiliarySource {
+    pub module_name: Option<String>,
+    pub path: SourcePath,
+    pub source: SourceText,
+    pub origin: SourceOrigin,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct AuxiliarySourceState {
+    pub source_file: SourceFileView,
+}
+
+impl AuxiliarySourceState {
+    pub(crate) fn new(file: FileId, source: WorkspaceAuxiliarySource) -> Self {
+        let source_hash = SourceHash::from_source_text(source.source.as_str());
+        Self {
+            source_file: SourceFileView {
+                id: file,
+                canonical_path: source.path,
+                module_name: source.module_name,
+                origin: source.origin,
+                uri: None,
+                source_hash,
+                source: source.source,
+            },
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -147,6 +189,8 @@ mod tests {
             files: vec![SourceFileView {
                 id: FileId::new(0),
                 canonical_path: SourcePath::new("main.sifr"),
+                module_name: Some("main".to_string()),
+                origin: super::SourceOrigin::UserSource,
                 uri: None,
                 source_hash: SourceHash("hash".to_string()),
                 source: SourceText::new(source),
@@ -206,5 +250,41 @@ mod tests {
             ),
             None
         );
+    }
+
+    #[test]
+    fn source_map_views_distinguish_generated_and_synthetic_origins() {
+        let map = SourceMapView {
+            files: vec![
+                SourceFileView {
+                    id: FileId::new(1),
+                    canonical_path: SourcePath::new("<generated-support>"),
+                    module_name: None,
+                    origin: super::SourceOrigin::GeneratedSupport,
+                    uri: None,
+                    source_hash: SourceHash("generated".to_string()),
+                    source: SourceText::new(""),
+                },
+                SourceFileView {
+                    id: FileId::new(2),
+                    canonical_path: SourcePath::new("<compiler-synthetic>"),
+                    module_name: None,
+                    origin: super::SourceOrigin::CompilerSynthetic,
+                    uri: None,
+                    source_hash: SourceHash("synthetic".to_string()),
+                    source: SourceText::new(""),
+                },
+            ],
+            revision: SourceRevision(0),
+        };
+
+        assert!(map
+            .files
+            .iter()
+            .any(|file| file.origin == super::SourceOrigin::GeneratedSupport));
+        assert!(map
+            .files
+            .iter()
+            .any(|file| file.origin == super::SourceOrigin::CompilerSynthetic));
     }
 }

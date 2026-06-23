@@ -3,8 +3,8 @@ use super::{
     FrontendContext, FrontendDiagnosticStyle, HirLoweringCacheKey, LoweredModuleView,
     ModuleAnalysisView, ModuleDiagnostics, ModuleGraphNode, ModuleGraphView, ModuleId,
     ModuleSignature, ParseCacheKey, ParsedModuleView, ProjectAnalysisView, ProjectDiagnostics,
-    QueryKind, QueryResult, SourceFileView, SourceMapCacheKey, SourceMapView, SourceText,
-    SymbolBucketScope, SymbolBucketsCacheKey,
+    QueryKind, QueryResult, SourceFileView, SourceMapCacheKey, SourceMapView, SourceOrigin,
+    SourceText, SymbolBucketScope, SymbolBucketsCacheKey,
 };
 use crate::cache_keys::stable_cache_fingerprint;
 use crate::{empty_hir_module, QueryPolicyFingerprint};
@@ -162,9 +162,14 @@ impl FrontendContext {
         if let Some(source_map) = &self.source_map_cache {
             return Arc::clone(source_map);
         }
-        let files = (0..self.modules.len())
+        let mut files = (0..self.modules.len())
             .map(|index| self.cached_source_file_view(index).as_ref().clone())
-            .collect();
+            .collect::<Vec<_>>();
+        files.extend(
+            self.auxiliary_sources
+                .iter()
+                .map(|source| source.source_file.clone()),
+        );
         let source_map = Arc::new(SourceMapView {
             files,
             revision: self.source_revision,
@@ -232,6 +237,8 @@ impl FrontendContext {
             SourceFileView {
                 id: module.file,
                 canonical_path: module.path.clone(),
+                module_name: Some(module.module_name.clone()),
+                origin: SourceOrigin::UserSource,
                 uri: None,
                 source_hash: module.source_hash.clone(),
                 source: module.source.clone(),
@@ -251,6 +258,7 @@ impl FrontendContext {
                     file: module.file,
                     canonical_path: module.path.clone(),
                     source_hash: module.source_hash.clone(),
+                    origin: SourceOrigin::UserSource,
                 })
                 .collect(),
             edges: self.edges.clone(),
@@ -267,10 +275,17 @@ impl FrontendContext {
                 .map(|module| SourceFileView {
                     id: module.file,
                     canonical_path: module.path.clone(),
+                    module_name: Some(module.module_name.clone()),
+                    origin: SourceOrigin::UserSource,
                     uri: None,
                     source_hash: module.source_hash.clone(),
                     source: module.source.clone(),
                 })
+                .chain(
+                    self.auxiliary_sources
+                        .iter()
+                        .map(|source| source.source_file.clone()),
+                )
                 .collect(),
             revision: self.source_revision,
         }

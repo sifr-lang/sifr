@@ -15,7 +15,9 @@ In progress.
 | M4. Full Sysroot Workspace and Source Layout | completed, merged | Merged in [PR #2750](https://github.com/sifr-lang/sifr/pull/2750). Public stdlib sources now live under `stdlib/sifr`, private `_sifr` placeholders are present under `stdlib/_sifr`, sysroot validation covers both stdlib crates and source roots, and CLI/LSP definitions load from the resolved sysroot source inventory. |
 | M5. Generated Cargo Uses Sysroot Crates and Vendor | completed, merged | Merged in [PR #2752](https://github.com/sifr-lang/sifr/pull/2752). Generated Cargo now consumes `SysrootDependencyPlan`, emits sysroot `sifr_runtime`/`sifr_stdlib` path dependencies with `default-features = false`, applies sysroot vendor config invocation-scoped for Sifr-managed builds, reports sysroot identity, and vendors the sysroot workspace graph. Local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory; Opus review pass 2 was satisfied for PR readiness with non-blocking package/offline fixture follow-ups. |
 | M6. Distribution Artifact and Installer Update | completed, merged | Merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753). Release artifacts now package `bin/sifr` plus the complete sysroot, validate archive contents before checksums/installer generation, write schema-2 receipts with `sysroot_path`, and preserve binary/sysroot pairing through self-update. Focused validation passed: `cargo test -p sifr self_update`, `cargo test -p sifr_sysroot`, distribution release representative suite, and developer tooling TypeScript-Go transfer suite. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M7-M13 | not started | M7 LSP/tooling sysroot integration is next. |
+| M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
+| M7b. Tooling Sysroot Diagnostics and Synthetic Origins | not started | Follow-up for Opus pass 2 blockers: proactive editor diagnostics for broken/mismatched sysroots with observed paths, LSP/CLI mismatch comparison coverage, development sysroot LSP tests, and production emission/tests for `GeneratedSupport` and `CompilerSynthetic` source origins. |
+| M8-M13 | not started | M8 Rust interop context for private stdlib declarations is next after M7b is reviewed and merged. |
 
 ## PR Log
 
@@ -26,6 +28,7 @@ In progress.
 - M4 full sysroot workspace/source layout: merged in [PR #2750](https://github.com/sifr-lang/sifr/pull/2750).
 - M5 generated Cargo sysroot/vendor planning: merged in [PR #2752](https://github.com/sifr-lang/sifr/pull/2752).
 - M6 distribution artifact and installer update: merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753).
+- M7 LSP/tooling sysroot source/navigation integration: merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754).
 
 ## Design Reference
 
@@ -433,9 +436,11 @@ Validation:
 - Platform-specific installer fixtures or documented simulation coverage for
   replacement, permissions, symlinks, and cleanup behavior.
 
-### M7. LSP and Tooling Sysroot Integration
+### M7. LSP and Tooling Sysroot Source/Navigation Integration
 
-Make editor and analysis surfaces use the installed sysroot.
+Make editor and analysis source/navigation surfaces use the installed sysroot.
+Proactive sysroot mismatch diagnostics and production generated/synthetic origin
+emission are split to M7b so this PR stays reviewable.
 
 Tasks:
 
@@ -445,34 +450,67 @@ Tasks:
   files.
 - Keep private `_sifr` declarations visible to sysroot implementation analysis
   but not user import completion.
-- Add tooling diagnostics when the editor process sees a broken or mismatched
-  sysroot.
-- Add development sysroot behavior so local LSP sessions use the same resolved
-  sysroot as CLI when running from an unreleased build.
 - Add source origin kinds: `UserSource`, `SysrootPublicStdlib`,
   `SysrootPrivateDeclaration`, `GeneratedSupport`, and `CompilerSynthetic`.
-- Add CLI/LSP sysroot mismatch diagnostics that include the observed sysroot
-  paths where available.
+- Add an inspectable LSP sysroot status request that reports the same resolved
+  sysroot root/toolchain id as analysis/CLI resolution for the current process.
 - Make go-to-definition prefer public wrappers for user code and expose private
   declaration links only in internal/developer contexts.
 
 Acceptance:
 
 - LSP go-to-definition for a `sifr.*` import lands in installed sysroot source.
+- LSP go-to-definition for a `sifr.*` call site lands in installed sysroot
+  source when the binding comes from a public stdlib import.
 - Hover and completion reflect the installed stdlib version.
 - `_sifr.*` internals are not offered to user code as public modules.
-- CLI and LSP report the same sysroot path for the same installation.
-- Source maps correctly distinguish public stdlib, private declarations,
-  generated support, compiler synthetic, and user files.
+- LSP exposes the resolved sysroot root/toolchain id through `sifr/sysroot`.
+- Source maps correctly distinguish user files, public stdlib files, private
+  declaration files, and reserve generated/synthetic origin kinds for M7b
+  production emission.
 
 Validation:
 
-- LSP request tests for hover/completion/definition against sysroot fixtures.
-- Editor corpus snapshots updated for sysroot-backed stdlib locations.
+- LSP request tests for hover/completion/definition/type-definition against
+  sysroot fixtures.
 - Negative completion tests proving private declarations do not appear in user
   import completions.
 - Source-map origin tests for user files, public stdlib files, private
-  declarations, generated support, and compiler synthetic sources.
+  declarations, generated support, and compiler synthetic source variants.
+- Analysis test for internal public-stdlib source navigation to private
+  declaration files.
+
+### M7b. Tooling Sysroot Diagnostics and Synthetic Origins
+
+Close the editor-visible sysroot diagnostics and production synthetic-origin
+pieces split from M7.
+
+Tasks:
+
+- Add tooling diagnostics when the editor process sees a broken or mismatched
+  sysroot.
+- Add development sysroot behavior tests proving local LSP sessions use the same
+  resolved sysroot as CLI when running from an unreleased build.
+- Add CLI/LSP sysroot mismatch diagnostics that include observed sysroot paths
+  where available.
+- Emit `GeneratedSupport` and `CompilerSynthetic` source origins from real
+  production source-map paths rather than only defining the enum variants.
+
+Acceptance:
+
+- CLI and LSP report the same sysroot path for the same installation and expose
+  actionable diagnostics when they do not.
+- Broken-sysroot editor diagnostics include the resolver-observed binary,
+  attempted sysroot, and invalid asset paths where available.
+- Source maps include production files tagged as `GeneratedSupport` and
+  `CompilerSynthetic` when those sources are present.
+
+Validation:
+
+- LSP-level tests for broken-sysroot diagnostics and mismatch diagnostics.
+- Development-sysroot LSP/CLI path equivalence test.
+- Production-path source-map tests for generated support and compiler synthetic
+  origins.
 
 ### M8. Rust Interop Context for Private Stdlib Declarations
 

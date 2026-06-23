@@ -4,13 +4,15 @@ use super::{
     source_hash, symbols_from_hir, warning_diagnostics, CacheFamily, CacheKeyContext,
     DiagnosticsCacheKey, DiskSourceProvider, DocumentVersion, FileId, HirLoweringCacheKey,
     ModuleAnalysisView, ParseCacheKey, ProjectAnalysisView, SourceDependency, SourceFileView,
-    SourceHash, SourceMapCacheKey, SourceMapView, SourcePath, SourceProvider, SourceRevision,
-    SourceText, SymbolBucketScope, SymbolBucketsCacheKey, TrackingSourceProvider,
-    WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport,
-    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
+    SourceHash, SourceMapCacheKey, SourceMapView, SourceOrigin, SourcePath, SourceProvider,
+    SourceRevision, SourceText, SymbolBucketScope, SymbolBucketsCacheKey, TrackingSourceProvider,
+    WorkspaceAuxiliarySource, WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope,
+    WorkspaceDirtyScopeReport, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
+    WorkspaceSingleFileTarget,
 };
 use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{module_signature, ModuleSignature};
+use crate::source_maps::AuxiliarySourceState;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
     lower_module_with_externals_name_and_options, ExternalDefs, HirModule, LoweringOptions,
@@ -23,6 +25,7 @@ use std::hash::Hash;
 use std::path::Path;
 use std::sync::Arc;
 
+mod loaders;
 mod reuse;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -135,6 +138,7 @@ pub struct ModuleGraphNode {
     pub file: FileId,
     pub canonical_path: SourcePath,
     pub source_hash: SourceHash,
+    pub origin: SourceOrigin,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -236,6 +240,7 @@ pub struct FrontendContext {
     reverse_edges: BTreeMap<ModuleId, Vec<ModuleId>>,
     graph_revision: GraphRevision,
     source_revision: SourceRevision,
+    auxiliary_sources: Vec<AuxiliarySourceState>,
     module_graph_cache: Option<Arc<ModuleGraphView>>,
     source_map_cache: Option<Arc<SourceMapView>>,
     reuse_caches: FrontendReuseCaches,
@@ -305,179 +310,6 @@ pub fn compile_module_hir_with_source_and_options(
 }
 
 impl FrontendContext {
-    pub fn load_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
-        Self::load_single_file_with_external_defs(input, ExternalDefs::default())
-    }
-
-    pub fn load_single_file_with_external_defs(
-        input: FrontendInput,
-        external_defs: ExternalDefs,
-    ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let cache_target = WorkspaceSessionTarget::SingleFile(WorkspaceSingleFileTarget {
-            path: input.path.clone(),
-            mode: input.mode,
-        });
-        let compiler_options = WorkspaceCompilerOptions { mode: input.mode };
-        let module = module_state(
-            ModuleId(0),
-            FileId(0),
-            "main",
-            input.path,
-            input.source,
-            None,
-        );
-        let mut context = Self {
-            modules: vec![module],
-            module_by_id: BTreeMap::from([(ModuleId(0), 0)]),
-            entrypoint: ModuleId(0),
-            edges: Vec::new(),
-            reverse_edges: BTreeMap::new(),
-            graph_revision: GraphRevision(0),
-            source_revision: SourceRevision(0),
-            module_graph_cache: None,
-            source_map_cache: None,
-            reuse_caches: FrontendReuseCaches::new(),
-            cache_target,
-            compiler_options,
-            package_config_identity: WorkspacePackageConfigIdentity::default(),
-            base_external_defs: external_defs.clone(),
-            external_defs,
-            lowering_modules: BTreeSet::new(),
-        };
-        context.rebuild_edges();
-        Ok(context)
-    }
-
-    pub fn load_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let mut provider = TrackingSourceProvider::new(DiskSourceProvider::new());
-        Self::load_project_with_provider(root, &mut provider)
-    }
-
-    pub fn load_project_tracked(
-        root: &ProjectRoot,
-    ) -> Result<(Self, Vec<SourceDependency>), Vec<RenderedDiagnostic>> {
-        let mut provider = TrackingSourceProvider::new(DiskSourceProvider::new());
-        let context = Self::load_project_with_provider(root, &mut provider)?;
-        let (_, dependencies) = provider.into_parts();
-        Ok((context, dependencies))
-    }
-
-    pub fn load_project_with_provider(
-        root: &ProjectRoot,
-        provider: &mut impl SourceProvider,
-    ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        Self::load_project_with_provider_and_external_defs(root, provider, ExternalDefs::default())
-    }
-
-    pub fn load_project_with_provider_and_external_defs(
-        root: &ProjectRoot,
-        provider: &mut impl SourceProvider,
-        external_defs: ExternalDefs,
-    ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let entrypoint = root.entrypoint.as_path();
-        let project_dir = root.root.as_path();
-        let entry_source = provider.read_file(entrypoint).map_err(|error| {
-            vec![diagnostic_with_code(
-                format!(
-                    "failed to read project entrypoint '{}': {error}",
-                    entrypoint.display()
-                ),
-                DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
-            )]
-        })?;
-        let mut files = vec![entrypoint.to_path_buf()];
-        for entry in provider.read_dir(project_dir).map_err(|error| {
-            vec![diagnostic_with_code(
-                format!(
-                    "failed to read project root '{}': {error}",
-                    project_dir.display()
-                ),
-                DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
-            )]
-        })? {
-            let path = entry.path;
-            if path.extension().is_some_and(|ext| ext == "sifr") && path != entrypoint {
-                files.push(path);
-            }
-        }
-        files.sort();
-        files.dedup();
-        files.retain(|path| path != entrypoint);
-        files.insert(0, entrypoint.to_path_buf());
-
-        let mut modules = Vec::with_capacity(files.len());
-        for (idx, path) in files.into_iter().enumerate() {
-            let numeric_id = u32::try_from(idx).map_err(|_| {
-                vec![diagnostic_with_code(
-                    "project has too many modules for frontend module identity space",
-                    DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
-                )]
-            })?;
-            let source = if path == entrypoint {
-                entry_source.clone()
-            } else {
-                provider.read_file(&path).map_err(|error| {
-                    vec![diagnostic_with_code(
-                        format!(
-                            "failed to read project module '{}': {error}",
-                            path.display()
-                        ),
-                        DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
-                    )]
-                })?
-            };
-            let module_name = if path == entrypoint {
-                "main".to_string()
-            } else {
-                path.file_stem()
-                    .map(|stem| stem.to_string_lossy().to_string())
-                    .unwrap_or_else(|| format!("module_{idx}"))
-            };
-            modules.push(module_state(
-                ModuleId(numeric_id),
-                FileId(numeric_id),
-                module_name,
-                SourcePath::new(path),
-                source,
-                None,
-            ));
-        }
-
-        let module_by_id = modules
-            .iter()
-            .enumerate()
-            .map(|(index, module)| (module.id, index))
-            .collect();
-        let cache_target = WorkspaceSessionTarget::Project(root.clone());
-        let compiler_options = WorkspaceCompilerOptions {
-            mode: FrontendMode::ProjectEntrypoint,
-        };
-        let package_config_identity = WorkspacePackageConfigIdentity {
-            workspace_root: Some(root.root.clone()),
-            entrypoint: Some(root.entrypoint.clone()),
-        };
-        let mut context = Self {
-            modules,
-            module_by_id,
-            entrypoint: ModuleId(0),
-            edges: Vec::new(),
-            reverse_edges: BTreeMap::new(),
-            graph_revision: GraphRevision(0),
-            source_revision: SourceRevision(0),
-            module_graph_cache: None,
-            source_map_cache: None,
-            reuse_caches: FrontendReuseCaches::new(),
-            cache_target,
-            compiler_options,
-            package_config_identity,
-            base_external_defs: external_defs.clone(),
-            external_defs,
-            lowering_modules: BTreeSet::new(),
-        };
-        context.rebuild_edges();
-        Ok(context)
-    }
-
     pub fn update_module_source(
         &mut self,
         module: ModuleId,
@@ -609,16 +441,38 @@ impl FrontendContext {
 
     #[must_use]
     pub fn source_text_for_file(&self, file: FileId) -> Option<&str> {
-        let module = self.module_for_file(file)?;
-        let index = self.module_by_id.get(&module).copied()?;
-        Some(self.modules[index].source.as_str())
+        if let Some(module) = self.module_for_file(file) {
+            let index = self.module_by_id.get(&module).copied()?;
+            return Some(self.modules[index].source.as_str());
+        }
+        self.auxiliary_sources
+            .iter()
+            .find(|source| source.source_file.id == file)
+            .map(|source| source.source_file.source.as_str())
     }
 
     #[must_use]
     pub fn path_for_file(&self, file: FileId) -> Option<&Path> {
-        let module = self.module_for_file(file)?;
-        let index = self.module_by_id.get(&module).copied()?;
-        Some(self.modules[index].path.as_path())
+        if let Some(module) = self.module_for_file(file) {
+            let index = self.module_by_id.get(&module).copied()?;
+            return Some(self.modules[index].path.as_path());
+        }
+        self.auxiliary_sources
+            .iter()
+            .find(|source| source.source_file.id == file)
+            .map(|source| source.source_file.canonical_path.as_path())
+    }
+
+    #[must_use]
+    pub fn source_file_for_file(&self, file: FileId) -> Option<&SourceFileView> {
+        if let Some(module) = self.module_for_file(file) {
+            let index = self.module_by_id.get(&module).copied()?;
+            return self.modules[index].source_file_view.as_deref();
+        }
+        self.auxiliary_sources
+            .iter()
+            .find(|source| source.source_file.id == file)
+            .map(|source| &source.source_file)
     }
 
     #[must_use]

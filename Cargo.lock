@@ -3257,6 +3257,7 @@ dependencies = [
 name = "sifr_analysis"
 version = "0.0.0"
 dependencies = [
+ "ruff_python_ast",
  "ruff_text_size",
  "sifr_diagnostics",
  "sifr_driver",

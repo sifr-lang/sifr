@@ -16,6 +16,13 @@ pub struct LoadedStdlibSource {
     pub module: String,
     pub source: String,
     pub path: PathBuf,
+    pub kind: LoadedStdlibSourceKind,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LoadedStdlibSourceKind {
+    Public,
+    PrivateDeclaration,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -343,9 +350,33 @@ pub fn load_stdlib_sources_from_sysroot(
                 module: source.module.to_string(),
                 source: loaded,
                 path,
+                kind: LoadedStdlibSourceKind::Public,
             })
         })
         .collect()
+}
+
+pub fn load_stdlib_tooling_sources_from_sysroot(
+    sysroot: &ResolvedSysroot,
+) -> Result<Vec<LoadedStdlibSource>, StdlibSourceInventoryError> {
+    validate_stdlib_source_inventory(sysroot)?;
+    let mut sources = load_stdlib_sources_from_sysroot(sysroot)?;
+    for module in PRIVATE_STDLIB_MODULES {
+        let path = private_module_path(&sysroot.paths.stdlib_private_sources, module);
+        let loaded = std::fs::read_to_string(&path).map_err(|error| {
+            StdlibSourceInventoryError::new(
+                format!("failed to read private stdlib module {module}: {error}"),
+                Some(path.clone()),
+            )
+        })?;
+        sources.push(LoadedStdlibSource {
+            module: (*module).to_string(),
+            source: loaded,
+            path,
+            kind: LoadedStdlibSourceKind::PrivateDeclaration,
+        });
+    }
+    Ok(sources)
 }
 
 pub fn validate_stdlib_source_inventory(
@@ -436,6 +467,10 @@ fn validate_module_files<'a>(
 
 fn public_module_path(root: &Path, module: &str) -> PathBuf {
     module_path(root, module, "sifr")
+}
+
+fn private_module_path(root: &Path, module: &str) -> PathBuf {
+    module_path(root, module, "_sifr")
 }
 
 fn module_path(root: &Path, module: &str, prefix: &str) -> PathBuf {
