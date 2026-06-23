@@ -10,16 +10,17 @@ In progress.
 | --- | --- | --- |
 | M0. Architecture Baseline and Inventory | completed, merged | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`; local create-pr validation and Opus review were satisfied in merged [PR #2741](https://github.com/sifr-lang/sifr/pull/2741). |
 | M1. Sysroot Identity and Resolver Skeleton | completed, merged | `crates/sifr_sysroot` adds manifest parsing, layout validation, resolver precedence, digest canonicalization, development source-tree sysroot resolution, and CLI `sifr --print sysroot` support in merged [PR #2743](https://github.com/sifr-lang/sifr/pull/2743). |
-| M2. Rename Current Compiler Stdlib Crate | complete | Merged in PR #2745. The compiler-side crate is now `crates/sifr_stdlib_model`, freeing `sifr_stdlib` for the generated-program crate. |
-| M3. Create Generated-Program `sifr_stdlib` Crate | in progress | Adding the generated-program stdlib crate with narrow feature gates, runtime-backed wrapper APIs, and dependency-plan feature expectations. |
-| M4-M13 | not started | Await M3 review/merge before enabling full sysroot workspace validation and source layout migration. |
+| M2. Rename Current Compiler Stdlib Crate | completed, merged | Merged in [PR #2745](https://github.com/sifr-lang/sifr/pull/2745). The compiler-side crate is now `crates/sifr_stdlib_model`, freeing `sifr_stdlib` for the generated-program crate. |
+| M3. Create Generated-Program `sifr_stdlib` Crate | completed, merged | `crates/sifr_stdlib` now provides the generated-program crate foundation with narrow feature gates, runtime-backed wrapper APIs, feature-plan expectations, installed-layout checks, and representative feature-tree snapshots in merged [PR #2747](https://github.com/sifr-lang/sifr/pull/2747). |
+| M4. Full Sysroot Workspace and Source Layout | next | Enable full sysroot workspace validation and begin canonical source layout migration now that the generated-program stdlib crate exists. |
+| M5-M13 | not started | Await M4 review/merge. |
 
 ## PR Log
 
 - M0 baseline/inventory: [PR #2741](https://github.com/sifr-lang/sifr/pull/2741) merged.
 - M1 sysroot identity/resolver: [PR #2743](https://github.com/sifr-lang/sifr/pull/2743) merged.
-- M2 compiler stdlib model rename: merged in PR #2745, <https://github.com/sifr-lang/sifr/pull/2745>.
-- M3 generated-program stdlib crate: in progress.
+- M2 compiler stdlib model rename: merged in [PR #2745](https://github.com/sifr-lang/sifr/pull/2745).
+- M3 generated-program stdlib crate: merged in [PR #2747](https://github.com/sifr-lang/sifr/pull/2747).
 
 ## Design Reference
 
