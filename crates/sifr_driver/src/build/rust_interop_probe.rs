@@ -71,6 +71,7 @@ pub(super) fn execute_direct_cargo_probe(
             &probe.backend.dependency_name,
             backend_root,
             probe.sysroot_runtime_crate_manifest.as_deref(),
+            &dependency_features(&probe.backend.dependency_name, backend_root, &probe.path),
         ),
     )
     .map_err(|error| probe_io_failure(format!("failed to write Rust probe manifest: {error}")))?;
@@ -125,6 +126,7 @@ fn probe_cargo_toml(
     dependency_name: &str,
     backend_root: &Path,
     sysroot_runtime_crate_manifest: Option<&Path>,
+    dependency_features: &[String],
 ) -> String {
     let runtime_root = sysroot_runtime_crate_manifest
         .and_then(Path::parent)
@@ -138,13 +140,67 @@ fn probe_cargo_toml(
     let mut cargo_toml =
         "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[dependencies]\n"
             .to_string();
-    cargo_toml.push_str(&format!(
-        "{dependency_name} = {{ path = {backend_root:?} }}\n"
+    cargo_toml.push_str(&dependency_line(
+        dependency_name,
+        backend_root,
+        dependency_features,
     ));
     if dependency_name != "sifr_runtime" {
         cargo_toml.push_str(&format!("sifr_runtime = {{ path = {runtime_root:?} }}\n"));
     }
     cargo_toml
+}
+
+fn dependency_line(dependency_name: &str, backend_root: &Path, features: &[String]) -> String {
+    let default_features = if dependency_name == "sifr_stdlib" {
+        ", default-features = false"
+    } else {
+        ""
+    };
+    if features.is_empty() {
+        return format!("{dependency_name} = {{ path = {backend_root:?}{default_features} }}\n");
+    }
+    let features = features
+        .iter()
+        .map(|feature| toml_quote_string(feature))
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{dependency_name} = {{ path = {backend_root:?}{default_features}, features = [{features}] }}\n"
+    )
+}
+
+fn dependency_features(
+    dependency_name: &str,
+    backend_root: &Path,
+    path: &RustTargetPath,
+) -> Vec<String> {
+    if dependency_name != "sifr_stdlib" {
+        return Vec::new();
+    }
+    let Some(feature) = path.segments.get(1) else {
+        return Vec::new();
+    };
+    if !crate_feature_exists(backend_root, feature) {
+        return Vec::new();
+    }
+    vec![feature.clone()]
+}
+
+/// Return whether `feature` is declared by the probed crate. This deliberately
+/// treats undeclared path segments as no feature so sysroot-interop tests can use
+/// minimal temp crates and future flat targets can still probe without a feature.
+fn crate_feature_exists(backend_root: &Path, feature: &str) -> bool {
+    let Ok(manifest) = fs::read_to_string(backend_root.join("Cargo.toml")) else {
+        return false;
+    };
+    let Ok(value) = manifest.parse::<toml::Table>() else {
+        return false;
+    };
+    value
+        .get("features")
+        .and_then(toml::Value::as_table)
+        .is_some_and(|features| features.contains_key(feature))
 }
 
 fn cargo_vendor_args(vendor_dir: Option<&Path>) -> Vec<String> {
@@ -434,7 +490,9 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
 
 #[cfg(test)]
 mod tests {
-    use super::{cargo_vendor_args, probe_cargo_toml};
+    use super::{cargo_vendor_args, dependency_features, probe_cargo_toml};
+    use ruff_text_size::TextRange;
+    use sifr_ir::RustTargetPath;
     use std::path::Path;
 
     #[test]
@@ -443,9 +501,12 @@ mod tests {
             "sifr_stdlib",
             Path::new("/opt/sifr/crates/sifr_stdlib"),
             Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+            &[],
         );
 
-        assert!(manifest.contains("sifr_stdlib = { path = \"/opt/sifr/crates/sifr_stdlib\" }"));
+        assert!(manifest.contains(
+            "sifr_stdlib = { path = \"/opt/sifr/crates/sifr_stdlib\", default-features = false }"
+        ));
         assert!(manifest.contains("sifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"));
     }
 
@@ -455,9 +516,61 @@ mod tests {
             "sifr_runtime",
             Path::new("/opt/sifr/crates/sifr_runtime"),
             Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+            &[],
         );
 
         assert_eq!(manifest.matches("sifr_runtime =").count(), 1);
+    }
+
+    #[test]
+    fn sysroot_probe_manifest_enables_declared_stdlib_features() {
+        let manifest = probe_cargo_toml(
+            "sifr_stdlib",
+            Path::new("/opt/sifr/crates/sifr_stdlib"),
+            Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+            &["platform".to_string()],
+        );
+
+        assert!(manifest.contains(
+            "sifr_stdlib = { path = \"/opt/sifr/crates/sifr_stdlib\", default-features = false, features = [\"platform\"] }"
+        ));
+    }
+
+    #[test]
+    fn sysroot_stdlib_probe_features_follow_target_module_segment() {
+        let stdlib_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("driver crate should have crates parent")
+            .join("sifr_stdlib");
+        let path = RustTargetPath {
+            segments: ["sifr_stdlib", "platform", "platform_system"]
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+            span: TextRange::default(),
+        };
+
+        assert_eq!(
+            dependency_features("sifr_stdlib", &stdlib_root, &path),
+            vec!["platform".to_string()]
+        );
+    }
+
+    #[test]
+    fn sysroot_stdlib_probe_features_ignore_undeclared_target_segment() {
+        let stdlib_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("driver crate should have crates parent")
+            .join("sifr_stdlib");
+        let path = RustTargetPath {
+            segments: ["sifr_stdlib", "not_a_feature", "leaf"]
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+            span: TextRange::default(),
+        };
+
+        assert!(dependency_features("sifr_stdlib", &stdlib_root, &path).is_empty());
     }
 
     #[test]

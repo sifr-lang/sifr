@@ -310,10 +310,12 @@ pub fn generate_rust_with_stdlib_for_module(
     for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             for dep in deps.iter().collect::<BTreeSet<_>>() {
-                if dep.starts_with("sifr.") && !all_needed.contains(dep) {
+                if (dep.starts_with("sifr.") || dep.starts_with("_sifr."))
+                    && !all_needed.contains(dep)
+                {
                     all_needed.push(dep.clone());
                 }
-                if dep.starts_with("sifr.") {
+                if dep.starts_with("sifr.") || dep.starts_with("_sifr.") {
                     transitive_dependency_modules.insert(dep.clone());
                 }
             }

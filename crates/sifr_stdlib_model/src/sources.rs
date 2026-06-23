@@ -360,7 +360,7 @@ pub fn load_stdlib_tooling_sources_from_sysroot(
     sysroot: &ResolvedSysroot,
 ) -> Result<Vec<LoadedStdlibSource>, StdlibSourceInventoryError> {
     validate_stdlib_source_inventory(sysroot)?;
-    let mut sources = load_stdlib_sources_from_sysroot(sysroot)?;
+    let mut sources = Vec::new();
     for module in PRIVATE_STDLIB_MODULES {
         let path = private_module_path(&sysroot.paths.stdlib_private_sources, module);
         let loaded = std::fs::read_to_string(&path).map_err(|error| {
@@ -376,6 +376,7 @@ pub fn load_stdlib_tooling_sources_from_sysroot(
             kind: LoadedStdlibSourceKind::PrivateDeclaration,
         });
     }
+    sources.extend(load_stdlib_sources_from_sysroot(sysroot)?);
     Ok(sources)
 }
 

@@ -11,7 +11,6 @@ mod file_handles;
 mod gzip;
 mod hash;
 mod hashlib;
-mod html;
 mod i18n;
 mod io;
 mod json;
@@ -21,7 +20,6 @@ mod net;
 mod open_text_handles;
 mod os;
 mod pathlib;
-mod platform;
 mod process;
 mod process_async;
 mod process_child_lifecycle;
@@ -558,12 +556,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "md5" => (hash::lower_md5(args), Some(StdlibFeature::Md5)),
         "sha256_bytes" => (hashlib::lower_sha256_bytes(args), Some(StdlibFeature::Sha2)),
         "md5_bytes" => (hashlib::lower_md5_bytes(args), Some(StdlibFeature::Md5)),
-        "platform_system" => (platform::lower_platform_system(args), None),
-        "platform_arch" => (platform::lower_platform_arch(args), None),
-        "platform_node" => (platform::lower_platform_node(args), None),
-        "platform_release" => (platform::lower_platform_release(args), None),
-        "platform_version" => (platform::lower_platform_version(args), None),
-        "platform_processor" => (platform::lower_platform_processor(args), None),
         "uuid4" => (uuid::lower_uuid4(args), Some(StdlibFeature::Rand)),
         "uuid3_text" => (uuid::lower_uuid3(args), Some(StdlibFeature::Uuid)),
         "uuid5_text" => (uuid::lower_uuid5(args), Some(StdlibFeature::Uuid)),
@@ -797,8 +789,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),
         ),
-        "html_escape" => (html::lower_html_escape(args), None),
-        "html_unescape" => (html::lower_html_unescape(args), None),
         "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),
         "calendar_weekday" => (calendar::lower_calendar_weekday(args), None),
         "calendar_monthrange" => (calendar::lower_calendar_monthrange(args), None),

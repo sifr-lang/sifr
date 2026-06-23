@@ -287,7 +287,7 @@ fn run_cargo_build(
 }
 
 fn trusted_native_links(generated_project: &GeneratedBinaryProject) -> BTreeSet<String> {
-    generated_project
+    let mut trusted = generated_project
         .interop
         .rust
         .trust_requirements
@@ -296,7 +296,11 @@ fn trusted_native_links(generated_project: &GeneratedBinaryProject) -> BTreeSet<
             requirement.trusted && requirement.kind == RustInteropTrustRequirementKind::NativeLinks
         })
         .map(|requirement| requirement.required_entry.clone())
-        .collect()
+        .collect::<BTreeSet<_>>();
+    if let Some(python_runtime) = &generated_project.python_runtime {
+        trusted.extend(python_runtime.trusted_native_link_names());
+    }
+    trusted
 }
 
 fn should_validate_native_link_evidence(generated_project: &GeneratedBinaryProject) -> bool {
@@ -431,10 +435,11 @@ fn sorted_feature_lines(values: &std::collections::HashSet<StdlibFeature>) -> Ve
 #[cfg(test)]
 mod tests {
     use super::{
-        binary_project_cache_key, should_validate_native_link_evidence,
+        binary_project_cache_key, should_validate_native_link_evidence, trusted_native_links,
         validate_native_link_evidence,
     };
     use crate::build::project_codegen::GeneratedBinaryProject;
+    use crate::build::python_runtime::PackagePythonRuntime;
     use sifr_codegen::{
         InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
         RustInteropTrustRequirement, RustInteropTrustRequirementKind,
@@ -541,6 +546,30 @@ mod tests {
                 evidence: "links=ssl".to_string(),
             });
         assert!(should_validate_native_link_evidence(&project));
+    }
+
+    #[test]
+    fn python_runtime_libpython_link_is_trusted_when_interop_validation_runs() {
+        let mut project = base_project();
+        let mut python_runtime =
+            PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
+        python_runtime.set_libpython_for_tests("/opt/python/lib/libpython3.13.dylib");
+        project.python_runtime = Some(python_runtime);
+        project
+            .interop
+            .rust
+            .trust_requirements
+            .push(RustInteropTrustRequirement {
+                canonical_target_path: "sifr_stdlib::html::html_escape".to_string(),
+                kind: RustInteropTrustRequirementKind::NativeLinks,
+                trusted: true,
+                required_entry: "ssl".to_string(),
+                evidence: "links=ssl".to_string(),
+            });
+
+        let stdout = br#"{"reason":"build-script-executed","linked_libs":["dylib=python3.13"]}"#;
+        validate_native_link_evidence(stdout, &trusted_native_links(&project))
+            .expect("selected Python runtime link should be trusted");
     }
 
     fn base_project() -> GeneratedBinaryProject {

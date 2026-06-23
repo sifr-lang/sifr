@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from env import RunnerPaths
+from env import RunnerPaths, cargo_env_for_repo_manifest
 
 LIVE_EXAMPLE_SOURCES = {
     "redis": "redis/redis_live_roundtrip.sifr",
@@ -222,6 +222,7 @@ def run_sifr_source_checks(paths: RunnerPaths) -> list[dict[str, Any]]:
                 str(source_path),
             ],
             cwd=package_root,
+            env=cargo_env_for_repo_manifest(paths.repo_root),
             text=True,
             capture_output=True,
             check=False,

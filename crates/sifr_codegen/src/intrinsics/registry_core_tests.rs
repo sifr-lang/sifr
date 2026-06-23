@@ -817,34 +817,10 @@ pub(crate) fn lowers_hash_intrinsics_via_registry() {
 
 #[test]
 pub(crate) fn lowers_platform_intrinsics_via_registry() {
-    let system = lower_intrinsic("platform_system", &[]).expect("platform_system");
-    assert!(render_expr(&system.expr).contains("target_os = \"windows\""));
-    assert!(render_expr(&system.expr).contains("\"Windows\""));
-    assert!(render_expr(&system.expr).contains("\"Darwin\""));
-    assert!(render_expr(&system.expr).contains("\"Linux\""));
-
-    let arch = lower_intrinsic("platform_arch", &[]).expect("platform_arch");
-    assert_eq!(
-        render_expr(&arch.expr),
-        "std::env::consts::ARCH.to_string()"
-    );
-
-    let node = lower_intrinsic("platform_node", &[]).expect("platform_node");
-    assert!(render_expr(&node.expr).contains("std::env::var(\"HOSTNAME\")"));
-    assert!(render_expr(&node.expr).contains("COMPUTERNAME"));
-    assert!(render_expr(&node.expr).contains("localhost"));
-
-    let rel = lower_intrinsic("platform_release", &[]).expect("platform_release");
-    assert!(render_expr(&rel.expr).contains("Command::new(\"uname\").arg(\"-r\")"));
-    assert!(render_expr(&rel.expr).contains("std::env::consts::OS.to_string()"));
-
-    let ver = lower_intrinsic("platform_version", &[]).expect("platform_version");
-    assert!(render_expr(&ver.expr).contains("Command::new(\"uname\").arg(\"-v\")"));
-    assert!(render_expr(&ver.expr).contains("std::env::consts::OS.to_string()"));
-
-    let proc = lower_intrinsic("platform_processor", &[]).expect("platform_processor");
-    assert_eq!(
-        render_expr(&proc.expr),
-        "std::env::consts::ARCH.to_string()"
-    );
+    assert!(lower_intrinsic("platform_system", &[]).is_none());
+    assert!(lower_intrinsic("platform_arch", &[]).is_none());
+    assert!(lower_intrinsic("platform_node", &[]).is_none());
+    assert!(lower_intrinsic("platform_release", &[]).is_none());
+    assert!(lower_intrinsic("platform_version", &[]).is_none());
+    assert!(lower_intrinsic("platform_processor", &[]).is_none());
 }

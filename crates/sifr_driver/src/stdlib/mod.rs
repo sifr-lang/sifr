@@ -3,6 +3,8 @@ mod cache;
 mod interop;
 mod intrinsics;
 mod re_exports;
+#[cfg(test)]
+mod stateless_private_codegen_tests;
 mod tooling;
 mod types;
 

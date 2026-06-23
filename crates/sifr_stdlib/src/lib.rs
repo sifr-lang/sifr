@@ -14,6 +14,8 @@ pub mod fs;
 pub mod gzip;
 #[cfg(feature = "hash")]
 pub mod hash;
+#[cfg(feature = "html")]
+pub mod html;
 #[cfg(feature = "http")]
 pub mod http;
 #[cfg(feature = "i18n")]
@@ -22,6 +24,8 @@ pub mod i18n;
 pub mod json;
 #[cfg(feature = "net")]
 pub mod net;
+#[cfg(feature = "platform")]
+pub mod platform;
 #[cfg(feature = "process")]
 pub mod process;
 #[cfg(feature = "python")]
