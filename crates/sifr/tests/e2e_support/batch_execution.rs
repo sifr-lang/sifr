@@ -76,6 +76,10 @@ pub(crate) fn build_batch_group(
                 .args(["build", "--quiet", "-j"])
                 .arg(config.cargo_build_jobs.to_string())
                 .current_dir(&group_root);
+            // Batch crates are cached by their own `target/` artifact paths.
+            // An inherited outer CARGO_TARGET_DIR moves binaries away from the
+            // recorded cache location and makes the run phase miss them.
+            build_command.env_remove("CARGO_TARGET_DIR");
             let build_capture = run_capture(build_command);
             if !build_capture.status_ok {
                 let log_path = group_root.join("build.log");

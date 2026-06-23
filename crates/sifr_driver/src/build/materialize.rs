@@ -207,6 +207,10 @@ fn run_cargo_build(
             "--message-format=json-render-diagnostics",
         ])
         .current_dir(project_path);
+    // Generated projects are materialized and cached with their own `target/`
+    // directory. Inheriting an outer CARGO_TARGET_DIR moves binaries away from
+    // the reported artifact paths and breaks cache completeness checks.
+    command.env_remove("CARGO_TARGET_DIR");
     if let Some(python_interpreter) = python_interpreter {
         command.env("PYO3_PYTHON", python_interpreter);
     }
