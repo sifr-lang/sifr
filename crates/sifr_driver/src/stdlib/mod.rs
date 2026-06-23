@@ -1,5 +1,6 @@
 mod bootstrap;
 mod cache;
+mod interop;
 mod intrinsics;
 mod re_exports;
 mod tooling;
@@ -11,7 +12,9 @@ pub use tooling::{
     sysroot_probe, sysroot_status, tooling_sources, ToolingSysrootDiagnostic, ToolingSysrootProbe,
     ToolingSysrootStatus,
 };
-pub(crate) use types::StdlibCompiled;
+#[cfg(test)]
+pub(crate) use types::StdlibRustInteropModuleSource;
+pub(crate) use types::{StdlibCompiled, StdlibRustInterop};
 
 #[cfg(test)]
 pub(crate) use bootstrap::compile_stdlib_uncached;

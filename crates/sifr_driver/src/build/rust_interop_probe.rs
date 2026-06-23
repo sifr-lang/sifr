@@ -6,7 +6,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -26,6 +26,8 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) backend: BackendCrateMetadata,
     pub(super) signature: Option<RustBridgeSignatureContract>,
     pub(super) async_thread_affinity: AsyncThreadAffinity,
+    pub(super) sysroot_runtime_crate_manifest: Option<PathBuf>,
+    pub(super) sysroot_vendor_dir: Option<PathBuf>,
 }
 
 pub(super) struct ProbeExecutionFailure {
@@ -65,13 +67,18 @@ pub(super) fn execute_direct_cargo_probe(
     })?;
     fs::write(
         probe_root.join("Cargo.toml"),
-        probe_cargo_toml(&probe.backend.dependency_name, backend_root),
+        probe_cargo_toml(
+            &probe.backend.dependency_name,
+            backend_root,
+            probe.sysroot_runtime_crate_manifest.as_deref(),
+        ),
     )
     .map_err(|error| probe_io_failure(format!("failed to write Rust probe manifest: {error}")))?;
     fs::write(probe_root.join("src/lib.rs"), probe_source(probe))
         .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
 
     let output = Command::new("cargo")
+        .args(cargo_vendor_args(probe.sysroot_vendor_dir.as_deref()))
         .args(["check", "--quiet"])
         .current_dir(&probe_root)
         .output()
@@ -114,15 +121,62 @@ pub(super) fn execute_direct_cargo_probe(
     })
 }
 
-fn probe_cargo_toml(dependency_name: &str, backend_root: &Path) -> String {
-    let runtime_root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .map(|crates_dir| crates_dir.join("sifr_runtime"))
-        .unwrap_or_else(|| Path::new("crates/sifr_runtime").to_path_buf());
-    format!(
-        "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[dependencies]\n{} = {{ path = {:?} }}\nsifr_runtime = {{ path = {:?} }}\n",
-        dependency_name, backend_root, runtime_root
-    )
+fn probe_cargo_toml(
+    dependency_name: &str,
+    backend_root: &Path,
+    sysroot_runtime_crate_manifest: Option<&Path>,
+) -> String {
+    let runtime_root = sysroot_runtime_crate_manifest
+        .and_then(Path::parent)
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| {
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .map(|crates_dir| crates_dir.join("sifr_runtime"))
+                .unwrap_or_else(|| Path::new("crates/sifr_runtime").to_path_buf())
+        });
+    let mut cargo_toml =
+        "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[dependencies]\n"
+            .to_string();
+    cargo_toml.push_str(&format!(
+        "{dependency_name} = {{ path = {backend_root:?} }}\n"
+    ));
+    if dependency_name != "sifr_runtime" {
+        cargo_toml.push_str(&format!("sifr_runtime = {{ path = {runtime_root:?} }}\n"));
+    }
+    cargo_toml
+}
+
+fn cargo_vendor_args(vendor_dir: Option<&Path>) -> Vec<String> {
+    let Some(vendor_dir) = vendor_dir else {
+        return Vec::new();
+    };
+    vec![
+        "--config".to_string(),
+        "source.crates-io.replace-with=\"sifr-vendor\"".to_string(),
+        "--config".to_string(),
+        format!(
+            "source.sifr-vendor.directory={}",
+            toml_quote_string(&vendor_dir.display().to_string())
+        ),
+    ]
+}
+
+fn toml_quote_string(value: &str) -> String {
+    let mut quoted = String::with_capacity(value.len() + 2);
+    quoted.push('"');
+    for ch in value.chars() {
+        match ch {
+            '\\' => quoted.push_str("\\\\"),
+            '"' => quoted.push_str("\\\""),
+            '\n' => quoted.push_str("\\n"),
+            '\r' => quoted.push_str("\\r"),
+            '\t' => quoted.push_str("\\t"),
+            ch => quoted.push(ch),
+        }
+    }
+    quoted.push('"');
+    quoted
 }
 
 fn unique_probe_nonce() -> String {
@@ -376,4 +430,48 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
         }
     }
     path
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{cargo_vendor_args, probe_cargo_toml};
+    use std::path::Path;
+
+    #[test]
+    fn sysroot_probe_manifest_uses_sysroot_runtime_crate() {
+        let manifest = probe_cargo_toml(
+            "sifr_stdlib",
+            Path::new("/opt/sifr/crates/sifr_stdlib"),
+            Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+        );
+
+        assert!(manifest.contains("sifr_stdlib = { path = \"/opt/sifr/crates/sifr_stdlib\" }"));
+        assert!(manifest.contains("sifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"));
+    }
+
+    #[test]
+    fn sysroot_runtime_probe_manifest_does_not_duplicate_runtime_dependency() {
+        let manifest = probe_cargo_toml(
+            "sifr_runtime",
+            Path::new("/opt/sifr/crates/sifr_runtime"),
+            Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+        );
+
+        assert_eq!(manifest.matches("sifr_runtime =").count(), 1);
+    }
+
+    #[test]
+    fn sysroot_probe_vendor_args_use_invocation_scoped_config() {
+        let args = cargo_vendor_args(Some(Path::new("/opt/sifr sysroot/vendor")));
+
+        assert_eq!(
+            args,
+            vec![
+                "--config",
+                "source.crates-io.replace-with=\"sifr-vendor\"",
+                "--config",
+                "source.sifr-vendor.directory=\"/opt/sifr sysroot/vendor\"",
+            ]
+        );
+    }
 }

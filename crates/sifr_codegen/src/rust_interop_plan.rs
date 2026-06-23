@@ -119,6 +119,15 @@ pub enum RustInteropResolvedRoot {
         cargo_source: Option<String>,
         cargo_manifest_path: String,
     },
+    SysrootCrate {
+        dependency_name: String,
+        cargo_package_name: String,
+        cargo_version: String,
+        cargo_manifest_path: String,
+        sysroot_root: String,
+        toolchain_id: String,
+        sysroot_content_sha256: String,
+    },
     PackageBridge {
         package_id: String,
         bridge_roots: Vec<String>,
@@ -204,7 +213,7 @@ pub(crate) fn interop_build_plan_for_module(module: &HirModule) -> InteropBuildP
     interop_build_plan_for_named_modules([(None, module)])
 }
 
-pub(crate) fn interop_build_plan_for_named_modules<'a>(
+pub fn interop_build_plan_for_named_modules<'a>(
     modules: impl IntoIterator<Item = (Option<&'a str>, &'a HirModule)>,
 ) -> InteropBuildPlan {
     let module_entries = modules.into_iter().collect::<Vec<_>>();
@@ -407,6 +416,30 @@ fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
             out.push_str(cargo_source.as_deref().unwrap_or("<path>"));
             out.push(':');
             out.push_str(cargo_manifest_path);
+        }
+        RustInteropResolvedRoot::SysrootCrate {
+            dependency_name,
+            cargo_package_name,
+            cargo_version,
+            cargo_manifest_path,
+            sysroot_root,
+            toolchain_id,
+            sysroot_content_sha256,
+        } => {
+            out.push_str("sysroot:");
+            out.push_str(dependency_name);
+            out.push(':');
+            out.push_str(cargo_package_name);
+            out.push('@');
+            out.push_str(cargo_version);
+            out.push(':');
+            out.push_str(cargo_manifest_path);
+            out.push(':');
+            out.push_str(sysroot_root);
+            out.push(':');
+            out.push_str(toolchain_id);
+            out.push(':');
+            out.push_str(sysroot_content_sha256);
         }
         RustInteropResolvedRoot::PackageBridge {
             package_id,

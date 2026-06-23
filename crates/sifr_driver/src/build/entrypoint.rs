@@ -11,6 +11,7 @@ use super::report::{BuildCompilationMode, BuildReport, BuildStageReport};
 use super::rust_interop::{
     apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
 };
+use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
@@ -457,6 +458,7 @@ impl RootedEntrypointPlan {
                     source_map: entrypoint.source_map.clone(),
                     module_packages: package_project.module_packages.clone(),
                     module_sources,
+                    sysroot_trust: None,
                 };
                 let module_count = package_project.parsed_modules.len();
                 stages.push(BuildStageReport::new(
@@ -580,6 +582,7 @@ impl RootedEntrypointPlan {
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
         let python_runtime = self.python_runtime.clone();
         let rust_interop_context = self.rust_interop_context.clone();
+        let stdlib_interop = self.stdlib.interop.clone();
         let generated = match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;
@@ -589,6 +592,8 @@ impl RootedEntrypointPlan {
                 generated_project_binary_project(&self.stdlib.code, self.project_lowering)?
             }
         };
+        let (generated, rust_interop_context) =
+            attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
         let generated = apply_package_rust_interop_metadata(generated, rust_interop_context)?;
         apply_package_runtime_metadata(generated, python_runtime)
     }

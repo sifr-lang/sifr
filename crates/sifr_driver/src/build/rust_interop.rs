@@ -1,14 +1,20 @@
 use super::project_codegen::GeneratedBinaryProject;
+use super::rust_interop_bridge_audit::unsafe_bridge_files;
 use super::rust_interop_cargo_inputs::{
-    bridge_source_digests, cargo_inputs, first_generated_bridge_import,
+    bridge_source_digests, cargo_inputs, combined_cargo_inputs, first_generated_bridge_import,
     generated_bridge_module_path,
 };
 use super::rust_interop_contracts::bridge_contract_diagnostics;
-use super::rust_interop_digest::{normalized_path_string, relative_path_string};
+use super::rust_interop_diagnostics::{render_template, source_diagnostic};
+use super::rust_interop_digest::normalized_path_string;
 use super::rust_interop_probe::{
     execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
 };
 use super::rust_interop_trust::{build_env_trust_entries, panic_policy};
+use super::sysroot_interop::{
+    is_trusted_sysroot_package, resolved_sysroot_crate_root, sysroot_crate_for_dependency_name,
+    SysrootRustInteropTrust,
+};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::ParsedProjectModule;
 use opaque_contract::OpaqueContract;
@@ -19,16 +25,10 @@ use sifr_codegen::{
     RustInteropOwner, RustInteropResolvedRoot, RustInteropResolvedTarget,
     RustInteropTrustRequirement, RustInteropTrustRequirementKind,
 };
-use sifr_diagnostics::render::render_sink;
-use sifr_diagnostics::{
-    ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, Severity,
-    SourceMap, SourceSpan,
-};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDeclaration, RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::{BackendCrateMetadata, PackageSourceMap, SifrPackageGraph, SifrPackageId};
 use std::collections::{BTreeSet, HashMap};
-use std::fs;
-use std::path::Path;
 
 #[path = "rust_interop/advanced_data_validation.rs"]
 mod advanced_data_validation;
@@ -54,6 +54,7 @@ pub(super) struct PackageRustInteropContext {
     pub(super) source_map: PackageSourceMap,
     pub(super) module_packages: HashMap<String, SifrPackageId>,
     pub(super) module_sources: HashMap<String, RustInteropModuleSource>,
+    pub(super) sysroot_trust: Option<SysrootRustInteropTrust>,
 }
 
 #[derive(Clone, Debug)]
@@ -181,7 +182,18 @@ impl<'a> RustInteropResolver<'a> {
             probes: std::mem::take(&mut self.probes),
         };
         generated.interop.rust.bridge_sources = bridge_source_digests(self.context, package);
-        generated.interop.rust.cargo_inputs = Some(cargo_inputs(self.context, package));
+        let mut cargo_input = cargo_inputs(self.context, package);
+        if let Some(trust) = &self.context.sysroot_trust {
+            if trust.package_id != self.context.package_id {
+                if let Some(sysroot_package) = self.context.graph.packages.get(&trust.package_id) {
+                    cargo_input = combined_cargo_inputs(
+                        cargo_input,
+                        cargo_inputs(self.context, sysroot_package),
+                    );
+                }
+            }
+        }
+        generated.interop.rust.cargo_inputs = Some(cargo_input);
         Ok(())
     }
 
@@ -199,6 +211,9 @@ impl<'a> RustInteropResolver<'a> {
             );
             return;
         };
+        if !self.validate_private_declaration_context(declaration, module_name, &package_id) {
+            return;
+        }
         let Some(package) = self.context.graph.packages.get(&package_id) else {
             self.push_diagnostic(
                 declaration,
@@ -251,6 +266,19 @@ impl<'a> RustInteropResolver<'a> {
         let Some(root) = path.segments.first() else {
             return;
         };
+        let sysroot_trust = self.sysroot_trust_for_package(package_id).cloned();
+        if sysroot_trust.is_some() && sysroot_crate_for_dependency_name(root).is_none() {
+            self.push_diagnostic(
+                    declaration,
+                    path.span,
+                    DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
+                    "private stdlib Rust interop target must use canonical sysroot crate `{root}`",
+                    vec![("root", root.clone()), ("target", path.dotted())],
+                    vec!["allowed sysroot crates: sifr_runtime, sifr_stdlib".to_string()],
+                    Some("Private _sifr declarations may target only Sifr-owned crates in the resolved sysroot.".to_string()),
+                );
+            return;
+        }
         let canonical_target_path = canonical_sifr_target_path(declaration);
         let resolved_root = match root.as_str() {
             "bridge" => RustInteropResolvedRoot::PackageBridge {
@@ -303,7 +331,13 @@ impl<'a> RustInteropResolver<'a> {
                     );
                     return;
                 };
-                self.validate_backend_trust(declaration, &canonical_target_path, package, backend);
+                self.validate_backend_trust(
+                    declaration,
+                    &canonical_target_path,
+                    package,
+                    backend,
+                    sysroot_trust.is_some(),
+                );
                 self.validate_backend_generated_bridge_imports(declaration, backend);
                 let signature = self
                     .signature_contracts
@@ -316,14 +350,32 @@ impl<'a> RustInteropResolver<'a> {
                     backend: backend.clone(),
                     signature,
                     async_thread_affinity,
+                    sysroot_runtime_crate_manifest: sysroot_trust
+                        .as_ref()
+                        .map(|trust| trust.runtime_crate_manifest.clone()),
+                    sysroot_vendor_dir: sysroot_trust
+                        .as_ref()
+                        .map(|trust| trust.vendor_dir.clone()),
                 });
-                RustInteropResolvedRoot::DirectCargoDependency {
-                    dependency_name: backend.dependency_name.clone(),
-                    cargo_package_id: backend.cargo_package_id.0.clone(),
-                    cargo_package_name: backend.cargo_package_name.clone(),
-                    cargo_version: backend.cargo_version.clone(),
-                    cargo_source: backend.cargo_source.clone(),
-                    cargo_manifest_path: backend.cargo_manifest_path.display().to_string(),
+                if let Some(trust) = &sysroot_trust {
+                    resolved_sysroot_crate_root(&backend.dependency_name, backend, trust)
+                        .unwrap_or_else(|| RustInteropResolvedRoot::DirectCargoDependency {
+                            dependency_name: backend.dependency_name.clone(),
+                            cargo_package_id: backend.cargo_package_id.0.clone(),
+                            cargo_package_name: backend.cargo_package_name.clone(),
+                            cargo_version: backend.cargo_version.clone(),
+                            cargo_source: backend.cargo_source.clone(),
+                            cargo_manifest_path: backend.cargo_manifest_path.display().to_string(),
+                        })
+                } else {
+                    RustInteropResolvedRoot::DirectCargoDependency {
+                        dependency_name: backend.dependency_name.clone(),
+                        cargo_package_id: backend.cargo_package_id.0.clone(),
+                        cargo_package_name: backend.cargo_package_name.clone(),
+                        cargo_version: backend.cargo_version.clone(),
+                        cargo_source: backend.cargo_source.clone(),
+                        cargo_manifest_path: backend.cargo_manifest_path.display().to_string(),
+                    }
                 }
             }
         };
@@ -344,6 +396,7 @@ impl<'a> RustInteropResolver<'a> {
         canonical_target_path: &str,
         package: &sifr_package::SifrPackageMetadata,
         backend: &BackendCrateMetadata,
+        trusted_by_sysroot_policy: bool,
     ) {
         if backend.has_build_script {
             self.require_trust(
@@ -356,6 +409,7 @@ impl<'a> RustInteropResolver<'a> {
                     "build script in Cargo dependency `{}`",
                     backend.dependency_name
                 ),
+                trusted_by_sysroot_policy,
             );
         }
         if backend.has_proc_macro {
@@ -369,6 +423,7 @@ impl<'a> RustInteropResolver<'a> {
                     "proc-macro target in Cargo dependency `{}`",
                     backend.dependency_name
                 ),
+                trusted_by_sysroot_policy,
             );
         }
         if let Some(links) = &backend.links {
@@ -382,6 +437,7 @@ impl<'a> RustInteropResolver<'a> {
                     "native links `{links}` declared by Cargo dependency `{}`",
                     backend.dependency_name
                 ),
+                trusted_by_sysroot_policy,
             );
         }
     }
@@ -471,6 +527,7 @@ impl<'a> RustInteropResolver<'a> {
                 &package.manifest.trust.build_env,
                 &build_env,
                 format!("build environment variable `{build_env}`"),
+                is_trusted_sysroot_package(self.context, &package.package_id),
             );
         }
         match panic_policy(&declaration.declaration).as_deref() {
@@ -482,6 +539,7 @@ impl<'a> RustInteropResolver<'a> {
                     &package.manifest.trust.rust_no_panic,
                     &trust_target_path,
                     format!("no-panic contract for `{trust_target_path}`"),
+                    is_trusted_sysroot_package(self.context, &package.package_id),
                 );
             }
             Some("abort") => {
@@ -492,6 +550,7 @@ impl<'a> RustInteropResolver<'a> {
                     &package.manifest.trust.rust_panic_abort,
                     &trust_target_path,
                     format!("panic-abort contract for `{trust_target_path}`"),
+                    is_trusted_sysroot_package(self.context, &package.package_id),
                 );
             }
             Some(_) | None => {}
@@ -514,6 +573,7 @@ impl<'a> RustInteropResolver<'a> {
                 &package.manifest.trust.unsafe_rust_bridges,
                 &bridge_file,
                 format!("unsafe package-local Rust bridge file `{bridge_file}`"),
+                is_trusted_sysroot_package(self.context, &package.package_id),
             );
         }
     }
@@ -526,6 +586,7 @@ impl<'a> RustInteropResolver<'a> {
         trusted_entries: &[String],
         required_entry: &str,
         evidence: String,
+        trusted_by_sysroot_policy: bool,
     ) {
         let key = (
             canonical_target_path.to_string(),
@@ -535,7 +596,8 @@ impl<'a> RustInteropResolver<'a> {
         if !self.seen_trust_requirements.insert(key) {
             return;
         }
-        let trusted = trusted_entries.iter().any(|entry| entry == required_entry);
+        let trusted = trusted_by_sysroot_policy
+            || trusted_entries.iter().any(|entry| entry == required_entry);
         self.trust_requirements.push(RustInteropTrustRequirement {
             canonical_target_path: canonical_target_path.to_string(),
             kind: kind.clone(),
@@ -601,7 +663,6 @@ impl<'a> RustInteropResolver<'a> {
             span: declaration.declaration.span,
         });
     }
-
     fn execute_pending_direct_probes(&mut self) {
         for probe in self.pending_direct_probes.clone() {
             if let Err(failure) = execute_direct_cargo_probe(&probe) {
@@ -617,7 +678,6 @@ impl<'a> RustInteropResolver<'a> {
             }
         }
     }
-
     fn validate_bridge_contracts(&mut self, signatures: &[RustBridgeSignatureContract]) {
         for diagnostic in bridge_contract_diagnostics(signatures) {
             self.push_contract_diagnostic(
@@ -628,14 +688,60 @@ impl<'a> RustInteropResolver<'a> {
             );
         }
     }
-
-    fn package_id_for_module(&self, module_name: Option<&str>) -> Option<SifrPackageId> {
-        module_name
-            .and_then(|module| self.context.module_packages.get(module))
-            .or(Some(&self.context.package_id))
-            .cloned()
+    fn validate_private_declaration_context(
+        &mut self,
+        declaration: &sifr_codegen::RustInteropPlanDeclaration,
+        module_name: Option<&str>,
+        package_id: &SifrPackageId,
+    ) -> bool {
+        let is_private = module_name.is_some_and(|module| module.starts_with("_sifr."));
+        let is_sysroot_package = self.sysroot_trust_for_package(package_id).is_some();
+        if is_private == is_sysroot_package {
+            return true;
+        }
+        let message = if is_private {
+            "private _sifr Rust interop declarations require the compiler-owned sysroot context"
+        } else {
+            "sysroot Rust interop context accepts only private _sifr declarations"
+        };
+        self.push_diagnostic(
+            declaration,
+            declaration.declaration.span,
+            DiagnosticCode::RUST_CARGO_METADATA,
+            message,
+            Vec::new(),
+            Vec::new(),
+            Some(
+                "User packages cannot impersonate or override private stdlib declaration modules."
+                    .to_string(),
+            ),
+        );
+        false
     }
-
+    fn package_id_for_module(&self, module_name: Option<&str>) -> Option<SifrPackageId> {
+        if let Some(module) = module_name {
+            return self
+                .context
+                .module_packages
+                .get(module)
+                .or(Some(&self.context.package_id))
+                .cloned();
+        }
+        if is_trusted_sysroot_package(self.context, &self.context.package_id) {
+            None
+        } else {
+            Some(self.context.package_id.clone())
+        }
+    }
+    fn sysroot_trust_for_package(
+        &self,
+        package_id: &SifrPackageId,
+    ) -> Option<&SysrootRustInteropTrust> {
+        self.context
+            .sysroot_trust
+            .as_ref()
+            .filter(|trust| &trust.package_id == package_id)
+    }
     fn push_diagnostic(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,
@@ -790,86 +896,4 @@ fn trust_kind_name(kind: &RustInteropTrustRequirementKind) -> &'static str {
         RustInteropTrustRequirementKind::NoPanic => "no_panic",
         RustInteropTrustRequirementKind::PanicAbort => "panic_abort",
     }
-}
-
-fn unsafe_bridge_files(package: &sifr_package::SifrPackageMetadata) -> Vec<String> {
-    let mut files = Vec::new();
-    for bridge_root in &package.manifest.rust.bridges {
-        let root = package.package_root.join(bridge_root);
-        collect_unsafe_bridge_files(&package.package_root, &root, &mut files);
-    }
-    files.sort();
-    files.dedup();
-    files
-}
-
-fn collect_unsafe_bridge_files(package_root: &Path, path: &Path, files: &mut Vec<String>) {
-    if path.is_file() {
-        if path.extension().and_then(|extension| extension.to_str()) != Some("rs") {
-            return;
-        }
-        let Ok(source) = fs::read_to_string(path) else {
-            return;
-        };
-        if source.contains("unsafe") {
-            files.push(relative_path_string(package_root, path));
-        }
-        return;
-    }
-    let Ok(read_dir) = fs::read_dir(path) else {
-        return;
-    };
-    for entry in read_dir.flatten() {
-        collect_unsafe_bridge_files(package_root, &entry.path(), files);
-    }
-}
-
-fn source_diagnostic(
-    code: DiagnosticCode,
-    display_path: &str,
-    source: &str,
-    range: TextRange,
-    message_template: &'static str,
-    args: &[(&'static str, String)],
-    notes: &[String],
-    help: Option<String>,
-) -> RenderedDiagnostic {
-    let mut source_map = SourceMap::new();
-    let source_id = source_map.register_source(display_path, source);
-    let span = match SourceSpan::new_validated(&source_map, source_id, range) {
-        Ok(span) => span,
-        Err(error) => {
-            return crate::diagnostics::diagnostic_with_code(
-                format!("internal compiler error: invalid Rust interop diagnostic span: {error:?}"),
-                DiagnosticCode::INTERNAL_COMPILER_PANIC,
-            );
-        }
-    };
-    let mut builder =
-        DiagnosticBuilder::source(code, Severity::Error, span).message_template(message_template);
-    for (name, value) in args {
-        builder = builder.arg(name, DiagnosticArg::String(value.clone()));
-    }
-    for note in notes {
-        builder = builder.child(ChildSeverity::Note, note.clone());
-    }
-    if let Some(help) = help {
-        builder = builder.help(help);
-    }
-    let mut sink = DiagnosticSink::new();
-    sink.emit_error(builder.build());
-    match render_sink(&sink, &source_map) {
-        Ok(mut envelope) => envelope.diagnostics.remove(0),
-        Err(error) => crate::diagnostics::diagnostic_with_code(
-            format!("internal compiler error: failed to render Rust interop diagnostic: {error:?}"),
-            DiagnosticCode::INTERNAL_COMPILER_PANIC,
-        ),
-    }
-}
-
-fn render_template(template: &str, args: &[(&'static str, String)]) -> String {
-    args.iter()
-        .fold(template.to_string(), |message, (name, value)| {
-            message.replace(&format!("{{{name}}}"), value)
-        })
 }

@@ -718,6 +718,7 @@ pub(super) fn package_context(
                 display_path: "/ws/app/sifr/app.sifr".to_string(),
             },
         )]),
+        sysroot_trust: None,
     }
 }
 

@@ -640,6 +640,22 @@ user crates. Sysroot declarations may target only version-matched sysroot
 crates unless an explicit architecture decision adds a new trusted crate
 boundary.
 
+Private `_sifr` declaration interop uses a synthetic compiler-owned package
+context rather than a user package. The context maps private declaration
+modules to the resolved sysroot, exposes only canonical `sifr_stdlib` and
+`sifr_runtime` backend roots, records sysroot trust requirements as satisfied by
+the compiler-owned sysroot policy, and keeps generated Cargo planning in
+sysroot-only vendor mode for those roots. Rust bridge probes for private
+declarations use the resolved sysroot runtime crate and invocation-scoped
+sysroot vendor configuration.
+
+When stdlib private declarations are merged with user package declarations, the
+trust boundary is still package-keyed: private `_sifr` declarations must resolve
+to the synthetic sysroot package id, and normal user declarations continue to
+resolve against the user package. Sysroot interop crates injected after stdlib
+feature planning are recorded in both generated Cargo dependencies and the
+dependency-plan cache fingerprint.
+
 ## LSP and Tooling
 
 CLI, LSP, formatter, linter, analysis, and documentation tooling all consume

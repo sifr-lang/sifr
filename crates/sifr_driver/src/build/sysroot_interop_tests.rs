@@ -1,0 +1,263 @@
+use super::cargo_manifest::{
+    generate_dependency_cargo_toml_for_cache_key, try_generate_sysroot_dependency_plan,
+};
+use super::project_codegen::GeneratedBinaryProject;
+use super::rust_interop::{
+    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+};
+use super::sysroot_interop::attach_stdlib_rust_interop;
+use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
+use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
+use sifr_package::{
+    CargoPackageId, ImportRoot, PackageClassification, PackageSourceMap, PackageSourceRoot,
+    RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph, SifrPackageId,
+    SifrPackageMetadata, SifrPackageName, TrustPolicy,
+};
+use sifr_stdlib_model::{CargoVendorMode, SysrootCrate};
+use sifr_sysroot::{
+    ResolvedSysroot, SysrootManifest, SysrootPaths, COMPILER_SIFR_VERSION,
+    SUPPORTED_SYSROOT_SCHEMA_VERSION,
+};
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::path::PathBuf;
+
+#[test]
+fn private_stdlib_interop_resolves_sysroot_crate_target() {
+    let interop = private_stdlib_interop(
+        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+    );
+
+    let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
+    let generated =
+        apply_package_rust_interop_metadata(generated, context).expect("sysroot interop resolves");
+
+    assert_eq!(generated.interop.rust.resolved_targets.len(), 1);
+    assert!(matches!(
+        &generated.interop.rust.resolved_targets[0].root,
+        RustInteropResolvedRoot::SysrootCrate {
+            dependency_name,
+            sysroot_root,
+            ..
+        } if dependency_name == "sifr_stdlib" && sysroot_root == "/opt/sifr"
+    ));
+    assert_eq!(generated.interop.rust.trust_requirements.len(), 1);
+    assert!(generated.interop.rust.trust_requirements[0].trusted);
+    assert!(generated.interop.rust.cargo_inputs.is_some());
+}
+
+#[test]
+fn private_stdlib_interop_rejects_non_sysroot_target_root() {
+    let interop = private_stdlib_interop(
+        "@rust(user_backend.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+    );
+
+    let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
+    let diagnostics = match apply_package_rust_interop_metadata(generated, context) {
+        Ok(_) => panic!("private stdlib target root must be canonical"),
+        Err(diagnostics) => diagnostics,
+    };
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
+    assert!(diagnostics[0].message.contains("canonical sysroot crate"));
+    assert_eq!(
+        diagnostics[0].spans[0].file.as_deref(),
+        Some("/opt/sifr/stdlib/_sifr/m8.sifr")
+    );
+}
+
+#[test]
+fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
+    let interop = private_stdlib_interop(
+        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+    );
+    let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
+    let generated =
+        apply_package_rust_interop_metadata(generated, context).expect("sysroot interop resolves");
+
+    let plan = try_generate_sysroot_dependency_plan(
+        &HashSet::new(),
+        &HashSet::new(),
+        &generated.interop,
+        CargoVendorMode::SysrootOnly,
+    )
+    .expect("source-tree sysroot resolves");
+
+    assert_eq!(plan.cargo_vendor_mode, CargoVendorMode::SysrootOnly);
+    assert!(plan
+        .crates
+        .iter()
+        .any(|dependency| dependency.krate == SysrootCrate::SifrStdlib));
+    assert!(plan
+        .cache_fingerprint
+        .contains("[sysroot-interop-crates]\nsifr_stdlib\n"));
+
+    let cargo_toml =
+        generate_dependency_cargo_toml_for_cache_key("sifr_output", &plan, &generated.interop);
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("default-features = false"));
+}
+
+#[test]
+fn merged_user_and_private_stdlib_interop_both_resolve() {
+    let stdlib_interop = private_stdlib_interop(
+        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+    );
+    let mut generated = base_project();
+    generated.interop = user_interop(
+        "app",
+        "@rust(bridge.user_noop, panic=trusted_no_panic)\ndef user_noop() -> None:\n    pass\n",
+    );
+
+    let (generated, context) =
+        attach_stdlib_rust_interop(generated, Some(user_context()), &stdlib_interop);
+    let generated =
+        apply_package_rust_interop_metadata(generated, context).expect("merged interop resolves");
+
+    assert_eq!(generated.interop.rust.resolved_targets.len(), 2);
+    assert!(generated
+        .interop
+        .rust
+        .resolved_targets
+        .iter()
+        .any(|target| target.written_path == "bridge.user_noop"));
+    assert!(generated
+        .interop
+        .rust
+        .resolved_targets
+        .iter()
+        .any(|target| matches!(
+            &target.root,
+            RustInteropResolvedRoot::SysrootCrate {
+                dependency_name, ..
+            } if dependency_name == "sifr_stdlib"
+        )));
+}
+
+fn private_stdlib_interop(source: &str) -> StdlibRustInterop {
+    let parsed = sifr_syntax::parse_module_raw(source, Some("/opt/sifr/stdlib/_sifr/m8.sifr"))
+        .expect("private declaration parses");
+    assert!(parsed.has_valid_syntax());
+    let lowered = sifr_lowering::lower_module_stdlib_with_externals(
+        parsed.suite(),
+        &sifr_lowering::ExternalDefs::default(),
+    )
+    .expect("private declaration lowers");
+    let plan =
+        sifr_codegen::interop_build_plan_for_named_modules([(Some("_sifr.m8"), &lowered.module)]);
+    assert_eq!(plan.rust.declarations.len(), 1);
+    StdlibRustInterop {
+        plan,
+        module_sources: HashMap::from([(
+            "_sifr.m8".to_string(),
+            StdlibRustInteropModuleSource {
+                source: source.to_string(),
+                display_path: "/opt/sifr/stdlib/_sifr/m8.sifr".to_string(),
+            },
+        )]),
+        sysroot: Some(fake_sysroot()),
+    }
+}
+
+fn user_interop(module_name: &str, source: &str) -> InteropBuildPlan {
+    let parsed = sifr_syntax::parse_module_raw(source, Some("/ws/app/sifr/app.sifr"))
+        .expect("user declaration parses");
+    assert!(parsed.has_valid_syntax());
+    let lowered = sifr_lowering::lower_module_stdlib_with_externals(
+        parsed.suite(),
+        &sifr_lowering::ExternalDefs::default(),
+    )
+    .expect("user declaration lowers");
+    sifr_codegen::interop_build_plan_for_named_modules([(Some(module_name), &lowered.module)])
+}
+
+fn user_context() -> PackageRustInteropContext {
+    let package_id = SifrPackageId("sifr-app@0.1.0#path".to_string());
+    let cargo_package_id = CargoPackageId("path+file:///ws/app#sifr-app@0.1.0".to_string());
+    let package = SifrPackageMetadata {
+        package_id: package_id.clone(),
+        cargo_package_id: cargo_package_id.clone(),
+        cargo_package_name: "sifr-app".to_string(),
+        cargo_version: "0.1.0".to_string(),
+        cargo_source: None,
+        package_root: PathBuf::from("/ws/app"),
+        sifr_manifest: PathBuf::from("/ws/app/sifr.toml"),
+        sifr_name: SifrPackageName("app".to_string()),
+        manifest: SifrManifest {
+            package_name: SifrPackageName("app".to_string()),
+            edition: SifrEdition("2026".to_string()),
+            compiler_requirement: sifr_package::CompilerRequirement(">=0.3,<0.4".to_string()),
+            default_run: None,
+            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
+            exports: vec![ImportRoot("app".to_string())],
+            source_features: BTreeMap::new(),
+            scripts: BTreeMap::new(),
+            dependencies: BTreeMap::new(),
+            dev_dependencies: BTreeMap::new(),
+            trust: TrustPolicy {
+                rust_no_panic: vec!["bridge.user_noop".to_string()],
+                ..TrustPolicy::default()
+            },
+            python: sifr_package::PythonConfig::default(),
+            rust: RustInteropConfig {
+                bridge_version: Some(1),
+                bridges: Vec::new(),
+                direct_crate_bindings: true,
+            },
+            production_schema: false,
+        },
+        aliases: BTreeMap::new(),
+    };
+    PackageRustInteropContext {
+        package_id: package_id.clone(),
+        graph: SifrPackageGraph {
+            packages: BTreeMap::from([(package_id.clone(), package)]),
+            cargo_edges: BTreeMap::new(),
+            direct_dependency_scopes: BTreeMap::new(),
+            backend_crates: BTreeMap::from([(package_id.clone(), Vec::new())]),
+            classifications: BTreeMap::from([(
+                cargo_package_id,
+                PackageClassification::SifrSource(package_id.clone()),
+            )]),
+        },
+        source_map: PackageSourceMap::default(),
+        module_packages: HashMap::from([("app".to_string(), package_id)]),
+        module_sources: HashMap::from([(
+            "app".to_string(),
+            RustInteropModuleSource {
+                source:
+                    "@rust(bridge.user_noop, panic=trusted_no_panic)\ndef user_noop() -> None:\n    pass\n"
+                        .to_string(),
+                display_path: "/ws/app/sifr/app.sifr".to_string(),
+            },
+        )]),
+        sysroot_trust: None,
+    }
+}
+
+fn base_project() -> GeneratedBinaryProject {
+    GeneratedBinaryProject {
+        main_rs: "fn main() {}\n".to_string(),
+        support_modules: BTreeMap::new(),
+        used_stdlib_modules: HashSet::new(),
+        required_features: HashSet::new(),
+        interop: InteropBuildPlan::default(),
+        cache_key_fragment: None,
+        python_runtime: None,
+    }
+}
+
+fn fake_sysroot() -> ResolvedSysroot {
+    let root = PathBuf::from("/opt/sifr");
+    ResolvedSysroot {
+        root: root.clone(),
+        manifest: SysrootManifest {
+            schema_version: SUPPORTED_SYSROOT_SCHEMA_VERSION,
+            sifr_version: COMPILER_SIFR_VERSION.to_string(),
+            target_triple: "test-target".to_string(),
+            built_by_compiler_commit: "abcdef0".to_string(),
+            sysroot_content_sha256: "0".repeat(64),
+            cargo_lock_sha256: "1".repeat(64),
+        },
+        paths: SysrootPaths::from_root(&root),
+    }
+}

@@ -92,9 +92,9 @@ pub use rust_interop_bridge_contract::{
     RustGeneratedBridgeVariant,
 };
 pub use rust_interop_plan::{
-    InteropBuildPlan, RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan,
-    RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs, RustInteropOwner,
-    RustInteropPlan, RustInteropPlanDeclaration, RustInteropResolvedRoot,
+    interop_build_plan_for_named_modules, InteropBuildPlan, RustBridgeProbe, RustBridgeProbeKind,
+    RustBridgeProbePlan, RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs,
+    RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration, RustInteropResolvedRoot,
     RustInteropResolvedTarget, RustInteropTrustRequirement, RustInteropTrustRequirementKind,
 };
 mod rust_ir;
