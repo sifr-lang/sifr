@@ -1,6 +1,7 @@
 use std::collections::{BTreeSet, HashSet};
-use std::env;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+use sifr_sysroot::{resolve_sysroot, ResolvedSysroot, SysrootError};
 
 mod runtime_features;
 use runtime_features::RuntimeFeatures;
@@ -680,6 +681,42 @@ pub fn generated_cargo_dependencies(
     stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
 ) -> Vec<String> {
+    let runtime_path = resolve_sysroot(None)
+        .map(|sysroot| sysroot.paths.runtime_crate)
+        .unwrap_or_else(|_| legacy_development_runtime_path());
+    generated_cargo_dependencies_with_runtime_path(stdlib_modules, required_features, runtime_path)
+}
+
+pub fn try_generated_cargo_dependencies(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> Result<Vec<String>, SysrootError> {
+    let sysroot = resolve_sysroot(None)?;
+    Ok(generated_cargo_dependencies_with_sysroot(
+        stdlib_modules,
+        required_features,
+        &sysroot,
+    ))
+}
+
+#[must_use]
+pub fn generated_cargo_dependencies_with_sysroot(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+    sysroot: &ResolvedSysroot,
+) -> Vec<String> {
+    generated_cargo_dependencies_with_runtime_path(
+        stdlib_modules,
+        required_features,
+        sysroot.paths.runtime_crate.clone(),
+    )
+}
+
+fn generated_cargo_dependencies_with_runtime_path(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+    runtime_path: PathBuf,
+) -> Vec<String> {
     let mut deps = Vec::new();
     let mut packages = BTreeSet::new();
     let runtime_features = RuntimeFeatures::from_requirements(stdlib_modules, required_features);
@@ -690,12 +727,24 @@ pub fn generated_cargo_dependencies(
         .collect::<BTreeSet<_>>()
     {
         for feature in features_for_stdlib_module(module_name) {
-            push_feature_dependencies(&mut deps, &mut packages, *feature, runtime_features);
+            push_feature_dependencies(
+                &mut deps,
+                &mut packages,
+                *feature,
+                runtime_features,
+                &runtime_path,
+            );
         }
     }
 
     for feature in required_features.iter().copied().collect::<BTreeSet<_>>() {
-        push_feature_dependencies(&mut deps, &mut packages, feature, runtime_features);
+        push_feature_dependencies(
+            &mut deps,
+            &mut packages,
+            feature,
+            runtime_features,
+            &runtime_path,
+        );
     }
 
     deps
@@ -706,6 +755,7 @@ fn push_feature_dependencies(
     packages: &mut BTreeSet<&'static str>,
     feature: StdlibFeature,
     runtime_features: RuntimeFeatures,
+    runtime_path: &PathBuf,
 ) {
     if let Some(spec) = STDLIB_FEATURE_SPECS
         .iter()
@@ -713,7 +763,11 @@ fn push_feature_dependencies(
     {
         for dependency in spec.cargo_dependencies {
             if packages.insert(dependency.package) {
-                deps.push(render_dependency_spec(dependency, runtime_features));
+                deps.push(render_dependency_spec(
+                    dependency,
+                    runtime_features,
+                    runtime_path,
+                ));
             }
         }
     }
@@ -722,9 +776,10 @@ fn push_feature_dependencies(
 fn render_dependency_spec(
     dependency: &GeneratedCargoDependency,
     runtime_features: RuntimeFeatures,
+    runtime_path: &PathBuf,
 ) -> String {
     if dependency.package == "sifr_runtime" {
-        return sifr_runtime_dependency_spec(runtime_features);
+        return sifr_runtime_dependency_spec(runtime_features, runtime_path);
     }
     if dependency.package == "tokio" {
         return tokio_dependency_spec(runtime_features);
@@ -741,8 +796,10 @@ fn tokio_dependency_spec(runtime_features: RuntimeFeatures) -> String {
     format!("tokio = {{ version = \"1.52.3\", features = [{features}] }}")
 }
 
-fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
-    let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
+fn sifr_runtime_dependency_spec(
+    runtime_features: RuntimeFeatures,
+    runtime_path: &PathBuf,
+) -> String {
     let escaped_path = runtime_path
         .to_string_lossy()
         .replace('\\', "\\\\")
@@ -775,38 +832,10 @@ fn sifr_runtime_dependency_spec(runtime_features: RuntimeFeatures) -> String {
     )
 }
 
-fn discover_sifr_runtime_path() -> Option<PathBuf> {
-    env::var_os("SIFR_RUNTIME_PATH")
-        .map(PathBuf::from)
-        .filter(|path| path.join("Cargo.toml").is_file())
-        .or_else(discover_sifr_runtime_path_from_current_dir)
-        .or_else(discover_sifr_runtime_path_from_current_exe)
-}
-
-fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
-    env::current_dir()
-        .ok()
-        .and_then(|dir| find_sifr_runtime_ancestor(&dir))
-}
-
-fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
-    env::current_exe()
-        .ok()
-        .and_then(|exe| exe.parent().map(Path::to_path_buf))
-        .and_then(|dir| find_sifr_runtime_ancestor(&dir))
-}
-
-fn find_sifr_runtime_ancestor(start: &Path) -> Option<PathBuf> {
-    for ancestor in start.ancestors() {
-        let candidate = ancestor.join("crates").join("sifr_runtime");
-        if candidate.join("Cargo.toml").is_file() {
-            return Some(candidate);
-        }
+fn legacy_development_runtime_path() -> PathBuf {
+    if !sifr_sysroot::is_source_tree_development_mode() {
+        return PathBuf::from("SIFR_SYSROOT_UNRESOLVED");
     }
-    None
-}
-
-fn compile_time_sifr_runtime_path() -> PathBuf {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     match manifest_dir.parent() {
         Some(parent) => parent.join("sifr_runtime"),

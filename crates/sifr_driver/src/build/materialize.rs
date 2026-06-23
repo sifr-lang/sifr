@@ -1,4 +1,6 @@
-use super::cargo_manifest::generate_dependency_cargo_toml;
+use super::cargo_manifest::{
+    generate_dependency_cargo_toml, generate_dependency_cargo_toml_for_cache_key,
+};
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop_bridge_sources::generated_bridge_sources;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
@@ -126,7 +128,8 @@ fn materialize_binary_project_files(
         &generated_project.used_stdlib_modules,
         &generated_project.required_features,
         &generated_project.interop,
-    );
+    )
+    .map_err(|error| vec![build_error(error.boundary_message())])?;
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
@@ -336,7 +339,7 @@ fn binary_project_cache_key(
         .join("\n===\n");
     format!(
         "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}\n[interop]\n{}\n[cache-key-fragment]\n{}",
-        generate_dependency_cargo_toml(
+        generate_dependency_cargo_toml_for_cache_key(
             project_name,
             &generated_project.used_stdlib_modules,
             &generated_project.required_features,

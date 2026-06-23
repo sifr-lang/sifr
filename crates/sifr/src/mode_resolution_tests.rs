@@ -1,10 +1,10 @@
 use crate::check_and_package_commands::cmd_check;
 use crate::cli_model_and_entrypoint::{
-    cmd_init, cmd_repair, diagnostic_explanation, diagnostic_with_code, resolve_compilation_mode,
-    Cli, Commands, CompilationMode, DiagnosticFormat, InvocationWorkspace, EXIT_SUCCESS,
-    EXIT_USER_DIAGNOSTIC,
+    cmd_init, cmd_repair, diagnostic_with_code, resolve_compilation_mode, Cli, Commands,
+    CompilationMode, DiagnosticFormat, InvocationWorkspace, EXIT_SUCCESS, EXIT_USER_DIAGNOSTIC,
 };
 use crate::diagnostic_rendering_and_run::{cmd_run, fetch_success_message};
+use crate::explain_cli::diagnostic_explanation;
 use clap::Parser;
 use sifr_diagnostics::{DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity};
 use std::collections::BTreeMap;

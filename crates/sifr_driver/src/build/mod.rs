@@ -38,6 +38,8 @@ pub use python_runtime::PackagePythonRuntime;
 pub use report::{BuildCompilationMode, BuildReport, BuildStageReport};
 
 pub(crate) use cargo_manifest::generate_dependency_cargo_toml;
+#[cfg(test)]
+pub(crate) use cargo_manifest::generate_dependency_cargo_toml_for_cache_key;
 pub(crate) use entrypoint::{
     build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,

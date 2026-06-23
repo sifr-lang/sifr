@@ -40,6 +40,7 @@ use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_t
 use crypto_regex_uuid::{intrinsic_crypto, intrinsic_regex, intrinsic_uuid};
 pub use features::{
     feature_for_codegen_requirement, features_for_stdlib_module, generated_cargo_dependencies,
+    generated_cargo_dependencies_with_sysroot, try_generated_cargo_dependencies,
     GeneratedCargoDependency, StdlibFeature, StdlibFeatureSpec, STDLIB_FEATURE_SPECS,
 };
 use http::intrinsic_http;

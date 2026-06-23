@@ -35,6 +35,7 @@ ALL_SIFR_CRATES = {
     "sifr_runtime",
     "sifr_source",
     "sifr_stdlib",
+    "sifr_sysroot",
     "sifr_syntax",
     "sifr_type_system",
 }

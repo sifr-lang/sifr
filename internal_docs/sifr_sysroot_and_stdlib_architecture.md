@@ -24,14 +24,14 @@ state. Later implementation stages update the implementation toward the architec
 
 | Surface | Current owner | Final owner | Migration blocker | Can move before runtime certification? |
 | --- | --- | --- | --- | --- |
-| Public Sifr stdlib sources | `lib/sifr/*.sifr`, embedded by `crates/sifr_stdlib/src/sources.rs` through `include_str!` | `stdlib/sifr/*.sifr` copied into `<sysroot>/stdlib/sifr` and loaded through `ResolvedSysroot` | sysroot resolver, canonical source-root move | yes |
-| Private stdlib declarations | No physical `stdlib/_sifr` source tree; private modules are represented by compiler intrinsic metadata | `stdlib/_sifr/*.sifr` declarations loaded through the same sysroot source inventory | private declaration files, synthetic stdlib interop context | mixed |
+| Public Sifr stdlib sources | `lib/sifr/*.sifr`, embedded by `crates/sifr_stdlib/src/sources.rs` through `include_str!` | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | sysroot resolver, canonical source-root move | yes |
+| Private stdlib declarations | No physical `stdlib/_sifr` source tree; private modules are represented by compiler intrinsic metadata | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | private declaration files, synthetic stdlib interop context | mixed |
 | Compiler-side stdlib model | `crates/sifr_stdlib` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | compiler stdlib-model crate rename | yes |
 | Generated-program stdlib implementation crate | Does not exist as a distinct crate | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | compiler stdlib-model rename frees the name, then generated-program crate creation adds the new crate | yes |
 | Runtime crate | `crates/sifr_runtime` in the development workspace; generated Cargo finds it through `SIFR_RUNTIME_PATH`, ancestor scanning, or `env!("CARGO_MANIFEST_DIR")` fallback | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asks `sifr_stdlib::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from `sifr_stdlib_model`, consumed by codegen, driver, cache keys, reports, and LSP traces | dependency planner | yes |
 | Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
-| Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no `lib/sifr` sysroot contract is validated | Release archive contains `bin/sifr` plus complete `lib/sifr` sysroot and replaces them atomically | installer and release artifact update | yes |
+| Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no sysroot contract is validated | Release archive contains `bin/sifr` plus the complete sysroot tree and replaces them atomically | installer and release artifact update | yes |
 | CLI stdlib loading | `sifr_driver::compile_stdlib` compiles embedded `STDLIB_SOURCES`; diagnostics use virtual `stdlib:<module>` locations | CLI resolves `ResolvedSysroot` and loads physical sysroot stdlib files | Sysroot resolver, source inventory migration | yes |
 | LSP/tooling stdlib loading | Analysis hosts call `sifr_driver::stdlib_external_defs()`, so tooling observes the same embedded definitions as CLI but not physical files | LSP/tooling load source and declaration metadata from the same `ResolvedSysroot` as CLI | tooling integration | yes |
 
@@ -124,31 +124,31 @@ The canonical standalone installation layout is:
 ~/.sifr/
   bin/
     sifr
+  Cargo.toml
+  Cargo.lock
+  sysroot.toml
+  .cargo/
+    config.toml
+  vendor/
+  crates/
+    sifr_runtime/
+      Cargo.toml
+      src/
+    sifr_stdlib/
+      Cargo.toml
+      src/
   lib/
     sifr/
-      Cargo.toml
-      Cargo.lock
-      sysroot.toml
       stdlib/
         sifr/
           *.sifr
         _sifr/
           *.sifr
-      crates/
-        sifr_runtime/
-          Cargo.toml
-          src/
-        sifr_stdlib/
-          Cargo.toml
-          src/
-      vendor/
-      .cargo/
-        config.toml
 ```
 
-`~/.sifr/lib/sifr` is the Sifr sysroot. The sysroot is versioned as one unit
-with `~/.sifr/bin/sifr`. Release archives contain the executable and the full
-sysroot tree. The installer replaces them together.
+`~/.sifr/` is the Sifr sysroot and toolchain root. The sysroot is versioned as
+one unit with `~/.sifr/bin/sifr`. Release archives contain the executable and
+the full sysroot tree. The installer replaces them together.
 
 The sysroot is also a self-contained Cargo workspace. `Cargo.toml` owns
 workspace package metadata and dependency versions for shipped sysroot crates.
@@ -167,22 +167,22 @@ stdlib/sifr/*.sifr
 stdlib/_sifr/*.sifr
 ```
 
-Packaging copies those roots into `lib/sifr/stdlib/**` in the installed
-sysroot. The completed architecture has one canonical stdlib source root in the
-repository so CLI, LSP, packaging, and tests cannot drift across two long-lived
-source trees.
+Packaging copies those roots into `<sysroot>/lib/sifr/stdlib/**` in the
+installed sysroot. The completed architecture has one canonical stdlib source
+root in the repository so CLI, LSP, packaging, and tests cannot drift across two
+long-lived source trees.
 
 ## Sysroot Manifest
 
 `sysroot.toml` records the installed toolchain contract:
 
 ```toml
-schema-version = 1
-sifr-version = "0.1.0-beta.N"
-target-triple = "x86_64-unknown-linux-gnu"
-built-by-compiler-commit = "<git-sha>"
-sysroot-content-sha256 = "<sha256-tree>"
-cargo-lock-sha256 = "<sha256>"
+"schema-version" = 1
+"sifr-version" = "0.1.0-beta.N"
+"target-triple" = "x86_64-unknown-linux-gnu"
+"built-by-compiler-commit" = "<git-sha>"
+"sysroot-content-sha256" = "<sha256-tree>"
+"cargo-lock-sha256" = "<sha256>"
 ```
 
 The compiler treats a mismatched or incomplete sysroot as an installation
@@ -196,7 +196,7 @@ fixed by the sysroot layout and Cargo manifests. `toolchain-id` is derived as
 Rust edition, minimum Rust version, workspace package data, and sysroot crate
 versions belong to `Cargo.toml`, not to `sysroot.toml`.
 
-`sysroot-content-sha256` covers `stdlib/`, `crates/`, `vendor/`,
+`sysroot-content-sha256` covers `lib/sifr/`, `crates/`, `vendor/`,
 `.cargo/config.toml`, `Cargo.toml`, and `Cargo.lock` for release sysroots.
 `cargo-lock-sha256` is kept as a direct lockfile identity because Cargo
 resolution and bug reports often need it independently. Normal commands do not
@@ -210,12 +210,13 @@ drift from each other.
 
 Unknown required fields fail manifest parsing. Unknown optional fields may be
 ignored only when the active `schema-version` explicitly permits that behavior.
+Schema version 1 permits keys prefixed with `optional-`.
 
-Tree digests are canonical. The implementation defines bytewise sorted relative
-paths, `/` path separators, included file types, metadata exclusions, executable
-bit handling where relevant, symlink rejection or canonical target hashing, and
-line-ending policy before release digests are certified. Timestamps, owners,
-and host-specific packaging metadata are not digest inputs.
+Tree digests are canonical. `crates/sifr_sysroot` sorts normalized relative
+paths bytewise, uses `/` path separators, includes `.toml`, `.lock`, `.rs`, and
+`.sifr` files by default, excludes timestamps/owners/host packaging metadata,
+normalizes line endings to LF, skips symlinks unless a caller opts into
+following them, and includes executable-bit state where the host reports it.
 
 ## Sysroot Resolution
 
@@ -229,8 +230,10 @@ Sysroot resolution is deterministic:
    tooling.
 2. `SIFR_SYSROOT`.
 3. Installed layout relative to the running executable:
-   `current_exe()/../lib/sifr`.
-4. Development sysroot auto-resolution for unreleased local builds.
+   if the executable is under `<toolchain>/bin/`, the sysroot root is
+   `<toolchain>/`.
+4. Development sysroot auto-resolution for unreleased local builds when a source
+   checkout itself contains the skeleton layout.
 
 Runtime checkout testing uses a source-tree or generated development sysroot
 that contains the desired runtime crate. Released tools and normal development
@@ -277,7 +280,7 @@ sifr self update: ignored or rejected unless multi-sysroot installs are
 The sysroot Cargo workspace exists so shipped sysroot crates are independent of
 the source checkout. Sysroot crate manifests may use workspace-inherited
 dependency versions, lints, edition, and metadata, but that inheritance must
-resolve inside `~/.sifr/lib/sifr/Cargo.toml`, not the development repository.
+resolve inside `~/.sifr/Cargo.toml`, not the development repository.
 
 The distributed sysroot workspace manifest has this shape:
 
@@ -462,7 +465,7 @@ released tools fail with a sysroot diagnostic.
 The public standard library remains Sifr source:
 
 ```text
-stdlib/sifr/*.sifr
+<sysroot>/lib/sifr/stdlib/sifr/*.sifr
 ```
 
 These modules define the user-facing APIs:
@@ -485,7 +488,7 @@ behavior.
 Private declaration modules live under:
 
 ```text
-stdlib/_sifr/*.sifr
+<sysroot>/lib/sifr/stdlib/_sifr/*.sifr
 ```
 
 Only sysroot stdlib modules may import `_sifr.*`. User code importing `_sifr.*`
@@ -664,16 +667,16 @@ request is operating on sysroot implementation files.
 Release archives contain:
 
 ```text
-sifr
-lib/sifr/Cargo.toml
-lib/sifr/Cargo.lock
-lib/sifr/sysroot.toml
+bin/sifr
+Cargo.toml
+Cargo.lock
+sysroot.toml
 lib/sifr/stdlib/sifr/*.sifr
 lib/sifr/stdlib/_sifr/*.sifr
-lib/sifr/crates/sifr_runtime/**
-lib/sifr/crates/sifr_stdlib/**
-lib/sifr/vendor/**
-lib/sifr/.cargo/config.toml
+crates/sifr_runtime/**
+crates/sifr_stdlib/**
+vendor/**
+.cargo/config.toml
 ```
 
 The installer verifies the archive contains the executable and required sysroot
@@ -775,7 +778,7 @@ target/sifr-dev-sysroot/
   Cargo.toml
   Cargo.lock
   sysroot.toml
-  stdlib/
+  lib/sifr/
   crates/
   vendor/ or dev Cargo config
 ```

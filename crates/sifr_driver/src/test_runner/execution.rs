@@ -1,4 +1,4 @@
-use super::artifacts::{compose_test_runner_lib, generate_test_runner_cargo_toml};
+use super::artifacts::{compose_test_runner_lib, try_generate_test_runner_cargo_toml};
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{prepare_cached_artifact, ArtifactCacheReport, PreparedArtifactCache};
 use crate::diagnostics::{write_stderr, write_stderr_line, RenderedDiagnostic};
@@ -15,10 +15,16 @@ pub(crate) struct TestRunnerExecutionOutcome {
 pub(crate) fn execute_test_runner_project(
     generated_project: &GeneratedTestRunnerProject,
 ) -> Result<TestRunnerExecutionOutcome, Vec<RenderedDiagnostic>> {
-    let cargo_toml = generate_test_runner_cargo_toml(
+    let cargo_toml = try_generate_test_runner_cargo_toml(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_features,
-    );
+    )
+    .map_err(|error| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            error.boundary_message(),
+            DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+        )]
+    })?;
     let test_lib = compose_test_runner_lib(
         &generated_project.support_module_names,
         &generated_project.all_rust_code,

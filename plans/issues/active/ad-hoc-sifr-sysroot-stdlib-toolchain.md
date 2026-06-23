@@ -9,11 +9,13 @@ In progress.
 | Milestone | Status | Evidence |
 | --- | --- | --- |
 | M0. Architecture Baseline and Inventory | completed, merged | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`; local create-pr validation and Opus review were satisfied in merged [PR #2741](https://github.com/sifr-lang/sifr/pull/2741). |
-| M1-M13 | not started | M1 is next. |
+| M1. Sysroot Identity and Resolver Skeleton | implemented, review satisfied, PR open | `crates/sifr_sysroot` adds manifest parsing, layout validation, resolver precedence, digest canonicalization, development source-tree sysroot resolution, and CLI `sifr --print sysroot` support in [PR #2743](https://github.com/sifr-lang/sifr/pull/2743). |
+| M2-M13 | not started | Await M1 review/merge before crate movement. |
 
 ## PR Log
 
 - M0 baseline/inventory: [PR #2741](https://github.com/sifr-lang/sifr/pull/2741) merged.
+- M1 sysroot identity/resolver: [PR #2743](https://github.com/sifr-lang/sifr/pull/2743) open.
 
 ## Design Reference
 

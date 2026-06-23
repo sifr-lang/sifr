@@ -1,0 +1,6 @@
+"schema-version" = 1
+"sifr-version" = "0.0.0-dev"
+"target-triple" = "source-tree"
+"built-by-compiler-commit" = "development-checkout"
+"sysroot-content-sha256" = "0000000000000000000000000000000000000000000000000000000000000000"
+"cargo-lock-sha256" = "0000000000000000000000000000000000000000000000000000000000000000"

@@ -1,7 +1,10 @@
 use crate::build::generate_dependency_cargo_toml;
+#[cfg(test)]
+use crate::build::generate_dependency_cargo_toml_for_cache_key;
 use crate::project::top_level_module_declarations;
 use sifr_codegen::InteropBuildPlan;
 use sifr_stdlib::StdlibFeature;
+use sifr_sysroot::SysrootError;
 use std::collections::HashSet;
 
 pub(crate) fn compose_test_runner_lib(
@@ -21,10 +24,23 @@ pub(crate) fn compose_test_runner_lib(
     test_lib
 }
 
+#[cfg(test)]
 pub(crate) fn generate_test_runner_cargo_toml(
     stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
 ) -> String {
+    generate_dependency_cargo_toml_for_cache_key(
+        "sifr_tests",
+        stdlib_modules,
+        required_features,
+        &InteropBuildPlan::default(),
+    )
+}
+
+pub(crate) fn try_generate_test_runner_cargo_toml(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> Result<String, SysrootError> {
     generate_dependency_cargo_toml(
         "sifr_tests",
         stdlib_modules,
