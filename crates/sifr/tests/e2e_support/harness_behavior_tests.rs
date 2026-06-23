@@ -516,8 +516,11 @@ pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features
 pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features() {
     let platform_modules = normalize_dependency_set(vec!["sifr.platform".to_string()].into_iter());
     let html_modules = normalize_dependency_set(vec!["_sifr.html".to_string()].into_iter());
+    let calendar_modules = normalize_dependency_set(vec!["sifr.calendar".to_string()].into_iter());
     let combined_modules = normalize_dependency_set(
-        vec!["sifr.platform".to_string(), "sifr.html".to_string()].into_iter(),
+        ["sifr.platform", "sifr.html", "_sifr.calendar"]
+            .into_iter()
+            .map(str::to_string),
     );
     let required_crates = BTreeSet::new();
 
@@ -528,9 +531,11 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
 
     let html_toml = generate_cargo_toml(&html_modules, &required_crates, "sifr_output");
     assert!(html_toml.contains("features = [\"html\"]"));
+    let calendar_toml = generate_cargo_toml(&calendar_modules, &required_crates, "sifr_output");
+    assert!(calendar_toml.contains("features = [\"calendar\"]"));
 
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
-    assert!(combined_toml.contains("features = [\"html\", \"platform\"]"));
+    assert!(combined_toml.contains("features = [\"html\", \"calendar\", \"platform\"]"));
     assert_eq!(combined_toml.matches("sifr_stdlib = ").count(), 1);
 }
 

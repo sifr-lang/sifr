@@ -5,6 +5,7 @@ pub const LEAF_FEATURES: &[&str] = &[
     "hash",
     "base64",
     "html",
+    "calendar",
     "platform",
     "toml",
     "url",

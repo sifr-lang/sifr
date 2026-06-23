@@ -1,7 +1,6 @@
 mod base32;
 mod base64;
 mod bytes;
-mod calendar;
 mod collections;
 mod datetime;
 mod digest_format;
@@ -789,9 +788,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),
         ),
-        "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),
-        "calendar_weekday" => (calendar::lower_calendar_weekday(args), None),
-        "calendar_monthrange" => (calendar::lower_calendar_monthrange(args), None),
         "gzip_compress" => (gzip::lower_gzip_compress(args), Some(StdlibFeature::Flate2)),
         "gzip_decompress" => (
             gzip::lower_gzip_decompress(args),

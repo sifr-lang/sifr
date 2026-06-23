@@ -341,7 +341,12 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
     stdlib_modules.iter().any(|module| {
         matches!(
             module.as_str(),
-            "sifr.html" | "_sifr.html" | "sifr.platform" | "_sifr.platform"
+            "sifr.html"
+                | "_sifr.html"
+                | "sifr.calendar"
+                | "_sifr.calendar"
+                | "sifr.platform"
+                | "_sifr.platform"
         )
     })
 }

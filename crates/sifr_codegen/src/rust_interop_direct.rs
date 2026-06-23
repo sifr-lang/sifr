@@ -1,6 +1,9 @@
-use sifr_ir::{HirFunction, RustInteropDeclaration, RustInteropDecoratorKind, RustTargetPath};
+use sifr_ir::{
+    HirFunction, HirParam, RustInteropDeclaration, RustInteropDecoratorKind, RustTargetPath,
+};
+use sifr_type_system::Type;
 
-use crate::{RustExpr, RustStmt};
+use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 const BRIDGE_ROOT: &str = "bridge";
 const SELF_ROOT: &str = "Self";
@@ -10,11 +13,7 @@ pub(crate) fn direct_rust_function_body(func: &HirFunction) -> Option<Vec<RustSt
     let target = declaration.target.as_ref()?;
     let call = RustExpr::FnCall {
         func: Box::new(RustExpr::Path(target.segments.clone())),
-        args: func
-            .params
-            .iter()
-            .map(|param| RustExpr::Ident(param.name.clone()))
-            .collect(),
+        args: func.params.iter().map(direct_rust_arg_expr).collect(),
     };
     let value = if direct_rust_function_is_async(func, declaration) {
         RustExpr::Await(Box::new(call))
@@ -24,8 +23,73 @@ pub(crate) fn direct_rust_function_body(func: &HirFunction) -> Option<Vec<RustSt
     if func.return_type == sifr_type_system::Type::None {
         Some(vec![RustStmt::Expr(value)])
     } else {
-        Some(vec![RustStmt::Return(Some(value))])
+        Some(vec![RustStmt::Return(Some(direct_rust_return_expr(
+            value,
+            &func.return_type,
+        )))])
     }
+}
+
+fn direct_rust_arg_expr(param: &HirParam) -> RustExpr {
+    let value = RustExpr::Ident(param.name.clone());
+    if param.ty == Type::Int {
+        RustExpr::FnCall {
+            func: Box::new(sifr_int_bridge_path("from")),
+            args: vec![value],
+        }
+    } else {
+        value
+    }
+}
+
+fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
+    match return_type {
+        Type::Int => bridge_int_to_i64_expr(value),
+        Type::List(inner) if inner.as_ref() == &Type::Int => bridge_int_vec_to_i64_vec_expr(value),
+        _ => value,
+    }
+}
+
+fn bridge_int_to_i64_expr(value: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(value),
+        method: "to_i64_saturating".to_string(),
+        args: Vec::new(),
+    }
+}
+
+fn bridge_int_vec_to_i64_vec_expr(value: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(value),
+                method: "into_iter".to_string(),
+                args: Vec::new(),
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "__sifr_bridge_value".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(bridge_int_to_i64_expr(RustExpr::Ident(
+                    "__sifr_bridge_value".to_string(),
+                ))),
+                is_move: false,
+            }],
+        }),
+        method: "collect".to_string(),
+        args: Vec::new(),
+    }
+}
+
+fn sifr_int_bridge_path(method: &str) -> RustExpr {
+    RustExpr::Path(vec![
+        "sifr_runtime".to_string(),
+        "interop".to_string(),
+        "SifrIntBridge".to_string(),
+        method.to_string(),
+    ])
 }
 
 fn direct_rust_function_declaration(func: &HirFunction) -> Option<&RustInteropDeclaration> {
@@ -59,6 +123,7 @@ fn direct_rust_function_is_async(func: &HirFunction, declaration: &RustInteropDe
 
 #[cfg(test)]
 mod tests {
+    use crate::render_expr;
     use ruff_text_size::TextRange;
     use sifr_ir::{
         HirParam, MethodKind, RustInteropAbiRequirements, RustInteropEffect, RustTargetPath,
@@ -99,6 +164,76 @@ mod tests {
                 ])),
                 args: vec![RustExpr::Ident("data".to_string())],
             }))])
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_converts_int_arguments_and_return() {
+        let func = HirFunction {
+            name: "weekday".to_string(),
+            params: vec![HirParam {
+                name: "year".to_string(),
+                ty: Type::Int,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::Int,
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "calendar", "calendar_weekday"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body =
+            direct_rust_function_body(&func).expect("direct int interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct int interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::calendar::calendar_weekday(sifr_runtime::interop::SifrIntBridge::from(year)).to_i64_saturating()"
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_converts_integer_list_return() {
+        let func = HirFunction {
+            name: "monthrange".to_string(),
+            params: vec![HirParam {
+                name: "month".to_string(),
+                ty: Type::Int,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::List(Box::new(Type::Int)),
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "calendar", "calendar_monthrange"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body = direct_rust_function_body(&func)
+            .expect("direct integer-list interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct integer-list interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::calendar::calendar_monthrange(sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
         );
     }
 

@@ -391,11 +391,15 @@ runtime primitives that already live in `sifr_runtime`. Later migration stages
 move individual native leaves out of compiler/codegen surfaces and into this
 crate behind the same feature names.
 
-Current migrated leaves include the stateless `_sifr.platform` and `_sifr.html`
-private declaration modules. Their public wrappers continue to live in
-`stdlib/sifr/platform.sifr` and `stdlib/sifr/html.sifr`, while generated code
-emits the private preamble functions and calls `sifr_stdlib::platform::*` /
-`sifr_stdlib::html::*` through feature-gated sysroot dependencies.
+Current migrated leaves include the stateless `_sifr.platform`, `_sifr.html`,
+and `_sifr.calendar` private declaration modules. Their public wrappers continue
+to live in `stdlib/sifr/platform.sifr`, `stdlib/sifr/html.sifr`, and
+`stdlib/sifr/calendar.sifr`, while generated code emits the private preamble
+functions and calls `sifr_stdlib::platform::*`, `sifr_stdlib::html::*`, and
+`sifr_stdlib::calendar::*` through feature-gated sysroot dependencies. Direct
+Rust interop wrappers bridge Sifr `int` values through
+`sifr_runtime::interop::SifrIntBridge` at this boundary, including `list[int]`
+calendar returns.
 
 When sysroot Rust interop activates native-link evidence validation in a
 generated project that also embeds Python, the selected packaged Python runtime

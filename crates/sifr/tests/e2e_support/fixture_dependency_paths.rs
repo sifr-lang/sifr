@@ -53,6 +53,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.html", "_sifr.html"]) {
         features.push("html");
     }
+    if has_module(&["sifr.calendar", "_sifr.calendar"]) {
+        features.push("calendar");
+    }
     if has_module(&["sifr.platform", "_sifr.platform"]) {
         features.push("platform");
     }

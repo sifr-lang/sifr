@@ -66,6 +66,40 @@ fn platform_leaf_returns_non_empty_host_strings() {
     assert_eq!(sifr_stdlib::platform::feature_name(), "platform");
 }
 
+#[cfg(feature = "calendar")]
+#[test]
+fn calendar_leaf_matches_gregorian_helpers() {
+    use sifr_runtime::interop::SifrIntBridge;
+
+    let int = SifrIntBridge::from;
+
+    assert!(sifr_stdlib::calendar::calendar_isleap(int(2000)));
+    assert!(!sifr_stdlib::calendar::calendar_isleap(int(1900)));
+    assert_eq!(
+        sifr_stdlib::calendar::calendar_weekday(int(2024), int(2), int(29)),
+        int(3)
+    );
+    assert_eq!(
+        sifr_stdlib::calendar::calendar_monthrange(int(2024), int(2)),
+        [int(3), int(29)]
+    );
+    assert_eq!(
+        sifr_stdlib::calendar::calendar_monthrange(int(2023), int(2)),
+        [int(2), int(28)]
+    );
+    assert_eq!(
+        sifr_stdlib::calendar::calendar_monthrange(int(2024), int(13)),
+        [int(2), int(30)]
+    );
+    let min_weekday =
+        sifr_stdlib::calendar::calendar_weekday(int(i64::MIN), int(1), int(1)).to_i64_saturating();
+    let max_weekday = sifr_stdlib::calendar::calendar_weekday(int(i64::MAX), int(12), int(31))
+        .to_i64_saturating();
+    assert!((0..=6).contains(&min_weekday));
+    assert!((0..=6).contains(&max_weekday));
+    assert_eq!(sifr_stdlib::calendar::feature_name(), "calendar");
+}
+
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {
@@ -79,6 +113,7 @@ fn runtime_observability_emits_diagnostic_without_subscriber() {
 
 #[cfg(all(
     feature = "base64",
+    feature = "calendar",
     feature = "fs",
     feature = "gzip",
     feature = "hash",
@@ -99,6 +134,7 @@ fn runtime_observability_emits_diagnostic_without_subscriber() {
 fn marker_modules_report_leaf_names() {
     let markers = [
         sifr_stdlib::base64::feature_name(),
+        sifr_stdlib::calendar::feature_name(),
         sifr_stdlib::fs::feature_name(),
         sifr_stdlib::gzip::feature_name(),
         sifr_stdlib::hash::feature_name(),
