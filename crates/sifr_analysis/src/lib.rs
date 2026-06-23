@@ -45,6 +45,13 @@ pub use sifr_frontend::{
 };
 pub use sifr_syntax::TextPosition;
 
+pub use sifr_driver::ToolingSysrootStatus;
+
+pub fn tooling_sysroot_status(
+) -> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
+    sifr_driver::stdlib_tooling_sysroot_status()
+}
+
 pub fn format_options_for_path(
     path: &std::path::Path,
 ) -> Result<FormatOptions, Vec<sifr_diagnostics::RenderedDiagnostic>> {

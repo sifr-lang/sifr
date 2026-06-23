@@ -656,7 +656,15 @@ produce installed paths; development sysroots may produce repository or
 `target/sifr-dev-sysroot` paths. Mixed modes where LSP and CLI resolve different
 sysroots are configuration bugs.
 
-Source maps distinguish at least these origins:
+The editor symbol index has a distinct stdlib bucket populated from public
+`sifr.*` sysroot sources. Private `_sifr.*` declaration files are still present
+in source maps for internal analysis, but they are not public completion
+candidates for user code.
+
+Source maps distinguish at least these origins. The editor source map includes
+user, public stdlib, and private declaration sources; production emission for
+generated support and compiler synthetic source files is a separate tooling
+source-map responsibility.
 
 - `UserSource`
 - `SysrootPublicStdlib`

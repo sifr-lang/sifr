@@ -355,7 +355,8 @@ fn project_symbol_index_refreshes_dirty_module_buckets_only() {
     }));
     assert!(readiness_before.iter().any(|bucket| {
         bucket.id.kind == SymbolBucketKind::Stdlib
-            && bucket.state == SymbolBucketReadinessState::Unavailable
+            && bucket.state == SymbolBucketReadinessState::Exact
+            && bucket.entry_count > 0
     }));
     assert_eq!(
         host.workspace_import_symbols(&SymbolQuery {

@@ -8,6 +8,7 @@ license = { workspace = true }
 
 [dependencies]
 ruff_text_size = { workspace = true }
+sifr_python_ast = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_format = { workspace = true }
 sifr_frontend = { workspace = true }

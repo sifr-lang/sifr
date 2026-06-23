@@ -388,6 +388,8 @@ mod tests {
 
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
+    #[path = "sysroot_request_tests.rs"]
+    mod sysroot_request_tests;
 
     #[test]
     fn open_document_analysis_uses_unsaved_overlay_text() {

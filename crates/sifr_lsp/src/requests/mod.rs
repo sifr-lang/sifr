@@ -14,7 +14,7 @@ mod type_hierarchy;
 use crate::commands::CommandRegistry;
 use crate::errors::{LspError, LspResult};
 use crate::session::Session;
-use serde_json::Value;
+use serde_json::{json, Value};
 
 pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspResult<Value> {
     match method {
@@ -46,10 +46,28 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "codeAction/resolve" => code_action::resolve(session, params),
         "textDocument/formatting" => formatting::formatting(session, params),
         "textDocument/rangeFormatting" => formatting::range_formatting(session, params),
+        "sifr/sysroot" => sysroot_status(),
         "sifr/debugTrace" => Ok(Value::String(session.trace_snapshot().render_text())),
         _ => Err(LspError::method_not_found(format!(
             "unsupported Sifr LSP request: {method}"
         ))),
+    }
+}
+
+fn sysroot_status() -> LspResult<Value> {
+    match sifr_analysis::tooling_sysroot_status() {
+        Ok(status) => Ok(json!({
+            "ok": true,
+            "root": status.root,
+            "toolchainId": status.toolchain_id,
+        })),
+        Err(diagnostics) => Ok(json!({
+            "ok": false,
+            "diagnostics": diagnostics
+                .into_iter()
+                .map(|diagnostic| diagnostic.message)
+                .collect::<Vec<_>>(),
+        })),
     }
 }
 

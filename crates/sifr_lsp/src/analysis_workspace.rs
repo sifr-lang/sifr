@@ -398,7 +398,7 @@ impl LspProjectAnalysis {
         };
         let uri_by_file = Self::uri_by_file(&self.files_by_uri, host);
         let source_by_file = host
-            .files()
+            .all_files()
             .into_iter()
             .filter_map(|file| {
                 host.source_text_for_file(file)
@@ -420,7 +420,7 @@ impl LspProjectAnalysis {
         for (uri, file) in files_by_uri {
             uri_by_file.insert(file.as_u32(), uri.clone());
         }
-        for file in host.files() {
+        for file in host.all_files() {
             if uri_by_file.contains_key(&file.as_u32()) {
                 continue;
             }
@@ -557,10 +557,32 @@ impl LspDocumentAnalysis {
                 "analysis is unavailable for standalone document {uri}"
             ))
         })?;
-        let source = documents.document(uri)?.text().to_string();
+        let Some(host) = self.host.as_ref() else {
+            return Err(LspError::internal(format!(
+                "analysis is unavailable for standalone document {uri}"
+            )));
+        };
+        let mut uri_by_file = BTreeMap::from([(file.as_u32(), uri.to_string())]);
+        let mut source_by_file =
+            BTreeMap::from([(file.as_u32(), documents.document(uri)?.text().to_string())]);
+        for mapped_file in host.all_files() {
+            if mapped_file == file {
+                continue;
+            }
+            if let Some(mapped_uri) = host
+                .path_for_file(mapped_file)
+                .ok()
+                .and_then(file_uri_for_path)
+            {
+                uri_by_file.insert(mapped_file.as_u32(), mapped_uri);
+            }
+            if let Ok(source) = host.source_text_for_file(mapped_file) {
+                source_by_file.insert(mapped_file.as_u32(), source.to_string());
+            }
+        }
         Ok(LspFileMaps {
-            uri_by_file: BTreeMap::from([(file.as_u32(), uri.to_string())]),
-            source_by_file: BTreeMap::from([(file.as_u32(), source)]),
+            uri_by_file,
+            source_by_file,
         })
     }
 

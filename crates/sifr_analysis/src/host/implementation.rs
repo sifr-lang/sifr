@@ -2,7 +2,7 @@ use super::text_edits::{fixed_source_edits, full_range, ranges_overlap, source_e
 use crate::completion::{
     rank_completion_candidates, rust_interop_completion_candidates, CompletionCandidate,
 };
-use crate::editor::{line_end_insert_range, EditorFacts, EditorToken};
+use crate::editor::line_end_insert_range;
 use crate::queries::{
     CodeAction, CodeActionContext, CodeActionData, CompletionItem, CompletionItems,
     DeferredCodeAction, DiagnosticClass, DiagnosticExplanation, DiagnosticId, DocumentHighlight,
@@ -37,17 +37,19 @@ pub struct AnalysisHost {
 
 impl AnalysisHost {
     pub fn open_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let session = WorkspaceSession::open_project_with_external_defs(
+        let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
             sifr_driver::stdlib_external_defs()?,
+            sifr_driver::stdlib_tooling_sources()?,
         )?;
         Self::new(session)
     }
 
     pub fn open_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let session = WorkspaceSession::open_single_file_with_external_defs(
+        let session = WorkspaceSession::open_single_file_with_external_defs_and_auxiliary_sources(
             input,
             sifr_driver::stdlib_external_defs()?,
+            sifr_driver::stdlib_tooling_sources()?,
         )?;
         Self::new(session)
     }
@@ -145,6 +147,20 @@ impl AnalysisHost {
     #[must_use]
     pub fn files(&self) -> Vec<FileId> {
         self.file_to_module.keys().copied().collect()
+    }
+
+    #[must_use]
+    pub fn all_files(&self) -> Vec<FileId> {
+        self.context()
+            .map(|context| {
+                context
+                    .source_map()
+                    .files
+                    .into_iter()
+                    .map(|file| file.id)
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     pub fn diagnostics(&mut self, file: FileId) -> QueryResult<Vec<RenderedDiagnostic>> {
@@ -637,6 +653,7 @@ impl AnalysisHost {
                 source: analysis.metadata().source_revision,
             };
             self.symbol_index = Some(SymbolIndex::build(query_revision, &graph, analysis.value()));
+            self.refresh_stdlib_symbol_bucket()?;
         }
         self.symbol_index.as_ref().ok_or_else(|| {
             AnalysisError::new(
@@ -662,6 +679,7 @@ impl AnalysisHost {
         if let Some(index) = self.symbol_index.as_mut() {
             index.refresh_modules(query_revision, &graph, analysis.value(), dirty_modules);
         }
+        self.refresh_stdlib_symbol_bucket()?;
         Ok(())
     }
 
@@ -669,27 +687,6 @@ impl AnalysisHost {
         let source = self.source_text(file)?;
         let path = self.context()?.path_for_file(file);
         Ok(sifr_lint::lint_source(&source, path, &sifr_lint::LintOptions::default()).diagnostics)
-    }
-
-    fn editor_facts(&mut self, file: FileId) -> Result<EditorFacts, AnalysisError> {
-        let module = self.module_for_file(file)?;
-        let source = self.source_text(file)?;
-        let parsed = self.context_mut()?.parse_module(module).into_value().parsed;
-        let tokens = parsed
-            .tokens()
-            .iter()
-            .filter_map(|token| {
-                let start = usize::try_from(token.range.start().to_u32()).ok()?;
-                let end = usize::try_from(token.range.end().to_u32()).ok()?;
-                let text = source.get(start..end)?.to_string();
-                Some(EditorToken {
-                    kind: token.kind.as_str().to_string(),
-                    text,
-                    range: token.range,
-                })
-            })
-            .collect();
-        Ok(EditorFacts { source, tokens })
     }
 
     fn locations_for_identifier_at(
@@ -702,6 +699,11 @@ impl AnalysisHost {
         let Some(token) = facts.identifier_at_position(position) else {
             return Ok(Vec::new());
         };
+        if first_only {
+            if let Some(location) = self.stdlib_import_location_for_token(file, token)? {
+                return Ok(vec![location]);
+            }
+        }
         self.locations_for_name(&token.text, first_only)
     }
 
@@ -752,21 +754,21 @@ impl AnalysisHost {
         Ok(edits)
     }
 
-    fn source_text(&self, file: FileId) -> Result<String, AnalysisError> {
+    pub(super) fn source_text(&self, file: FileId) -> Result<String, AnalysisError> {
         self.context()?
             .source_text_for_file(file)
             .map(str::to_owned)
             .ok_or_else(|| unknown_file(file))
     }
 
-    fn module_for_file(&self, file: FileId) -> Result<ModuleId, AnalysisError> {
+    pub(super) fn module_for_file(&self, file: FileId) -> Result<ModuleId, AnalysisError> {
         self.file_to_module
             .get(&file)
             .copied()
             .ok_or_else(|| unknown_file(file))
     }
 
-    fn context(&self) -> Result<&sifr_frontend::FrontendContext, AnalysisError> {
+    pub(super) fn context(&self) -> Result<&sifr_frontend::FrontendContext, AnalysisError> {
         self.session.context().ok_or_else(|| {
             AnalysisError::new(
                 AnalysisErrorKind::FrontendDiagnostic,
@@ -775,7 +777,9 @@ impl AnalysisHost {
         })
     }
 
-    fn context_mut(&mut self) -> Result<&mut sifr_frontend::FrontendContext, AnalysisError> {
+    pub(super) fn context_mut(
+        &mut self,
+    ) -> Result<&mut sifr_frontend::FrontendContext, AnalysisError> {
         self.session.context_mut().ok_or_else(|| {
             AnalysisError::new(
                 AnalysisErrorKind::FrontendDiagnostic,
