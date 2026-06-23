@@ -4,6 +4,8 @@ use super::object_ops::store_object;
 use super::{ObjectHandle, PythonError};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::types::PyAnyMethods;
+#[cfg(test)]
+use pyo3::types::PyModule;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PythonResourceDiagnostics {
