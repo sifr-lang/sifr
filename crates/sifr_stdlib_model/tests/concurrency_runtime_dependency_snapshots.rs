@@ -1,5 +1,7 @@
 use serde_json::Value;
-use sifr_stdlib_model::{feature_for_codegen_requirement, generated_cargo_dependencies};
+use sifr_stdlib_model::{
+    feature_for_codegen_requirement, try_generated_cargo_dependencies, StdlibFeature,
+};
 use std::collections::HashSet;
 
 const SNAPSHOT_JSON: &str = include_str!(
@@ -21,10 +23,43 @@ fn string_array<'a>(snapshot: &'a Value, field: &str) -> Vec<&'a str> {
 }
 
 fn normalize_runtime_dependency(dependency: &str) -> String {
-    if dependency.starts_with("sifr_runtime = ") {
-        return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
+    normalize_path_dependency(
+        normalize_path_dependency(
+            dependency.to_string(),
+            "sifr_runtime",
+            "<sifr_runtime_path>",
+        ),
+        "sifr_stdlib",
+        "<sifr_stdlib_path>",
+    )
+}
+
+fn normalize_path_dependency(dependency: String, package: &str, placeholder: &str) -> String {
+    if !dependency.starts_with(&format!("{package} = ")) {
+        return dependency;
     }
-    dependency.to_string()
+    let Some(path_start) = dependency.find("path = \"") else {
+        return dependency;
+    };
+    let value_start = path_start + "path = \"".len();
+    let Some(value_end_offset) = dependency[value_start..].find('"') else {
+        return dependency;
+    };
+    let value_end = value_start + value_end_offset;
+    format!(
+        "{}{}{}",
+        &dependency[..value_start],
+        placeholder,
+        &dependency[value_end..]
+    )
+}
+
+fn generated_cargo_dependencies(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> Vec<String> {
+    try_generated_cargo_dependencies(stdlib_modules, required_features)
+        .expect("source-tree sysroot dependencies should resolve")
 }
 
 #[test]
@@ -37,7 +72,7 @@ fn concurrency_runtime_dependency_snapshots_match_codegen_resolver() {
     );
     assert_eq!(
         payload.get("source").and_then(Value::as_str),
-        Some("sifr_stdlib_model::generated_cargo_dependencies")
+        Some("sifr_stdlib_model::try_generated_cargo_dependencies")
     );
 
     let snapshots = payload

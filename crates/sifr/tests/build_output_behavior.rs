@@ -111,6 +111,9 @@ fn build_output_default_is_phase_aware_and_stderr_only() {
     assert!(capture.stderr.contains("input:  "));
     assert!(capture.stderr.contains("mode:   single-file"));
     assert!(capture.stderr.contains("target: release native"));
+    assert!(capture.stderr.contains("sysroot:"));
+    assert!(capture.stderr.contains("toolchain:"));
+    assert!(capture.stderr.contains("digest:"));
     assert!(capture.stderr.contains("Loading Sifr standard library"));
     assert!(capture.stderr.contains("Parsing source (1 module)"));
     assert!(capture.stderr.contains("Analyzing 1 module"));

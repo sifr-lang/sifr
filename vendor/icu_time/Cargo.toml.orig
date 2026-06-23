@@ -1,0 +1,69 @@
+# This file is part of ICU4X. For terms of use, please see the file
+# called LICENSE at the top level of the ICU4X source tree
+# (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
+
+[package]
+name = "icu_time"
+description = "Processing of dates, times, and time zones with a focus on i18n and interop"
+categories.workspace = true
+keywords = ["unicode", "formatting", "date"]
+
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+
+[package.metadata.cargo-all-features]
+max_combination_size = 3
+
+[dependencies]
+calendrical_calculations = { workspace = true }
+displaydoc = { workspace = true }
+icu_calendar = { workspace = true }
+icu_provider = { workspace = true }
+icu_locale_core = { workspace = true, features = ["zerovec"] }
+ixdtf = { workspace = true, optional = true }
+zerotrie = { workspace = true, features = ["yoke", "zerofrom"] }
+zerovec = { workspace = true, features = ["derive", "yoke"] }
+
+databake = { workspace = true, optional = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"], optional = true }
+
+chrono = { workspace = true, optional = true }
+jiff = { workspace = true, optional = true }
+time = { workspace = true, optional = true }
+chrono-tz = { workspace = true, optional = true }
+
+icu_time_data = { workspace = true, optional = true }
+
+[dev-dependencies]
+icu = { path = "../../components/icu", default-features = false }
+icu_datetime = { path = "../../components/datetime", features = ["compiled_data"] }
+icu_provider_blob = { path = "../../provider/blob" }
+tinystr = { workspace = true }
+writeable = { workspace = true }
+
+[features]
+default = ["compiled_data", "ixdtf"]
+unstable = []
+ixdtf = ["dep:ixdtf", "icu_calendar/ixdtf"]
+serde = ["dep:serde", "zerovec/serde", "zerotrie/serde", "icu_provider/serde", "icu_locale_core/serde", "alloc"]
+datagen = ["serde", "dep:databake", "zerovec/databake", "zerotrie/databake", "icu_provider/export", "icu_locale_core/databake", "alloc"]
+compiled_data = ["dep:icu_time_data", "icu_calendar/compiled_data", "icu_provider/baked"]
+alloc = ["zerotrie/alloc", "serde?/alloc", "zerovec/alloc"]
+unstable_jiff_0_2 = ["dep:jiff", "icu_calendar/unstable_jiff_0_2"]
+unstable_chrono_0_4 = ["dep:chrono", "dep:chrono-tz", "icu_calendar/unstable_chrono_0_4"]
+unstable_time_0_3 = ["dep:time", "icu_calendar/unstable_time_0_3"]
+
+[package.metadata.cargo-semver-checks.lints]
+workspace = true
+
+[lints]
+workspace = true

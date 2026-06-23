@@ -25,6 +25,33 @@ impl RuntimeFeatures {
             unicode: needs_sifr_runtime_unicode(stdlib_modules, required_features),
         }
     }
+
+    pub(super) const fn requires_runtime_crate(self) -> bool {
+        self.http || self.i18n || self.net || self.python || self.tls || self.unicode
+    }
+
+    pub(super) fn feature_names(self) -> std::collections::BTreeSet<String> {
+        let mut features = std::collections::BTreeSet::new();
+        if self.i18n {
+            features.insert("i18n".to_string());
+        }
+        if self.net || self.tls || self.http {
+            features.insert("net".to_string());
+        }
+        if self.python {
+            features.insert("python".to_string());
+        }
+        if self.tls || self.http {
+            features.insert("tls".to_string());
+        }
+        if self.http {
+            features.insert("http".to_string());
+        }
+        if self.unicode {
+            features.insert("unicode".to_string());
+        }
+        features
+    }
 }
 
 fn needs_sifr_runtime_http(

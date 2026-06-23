@@ -44,10 +44,44 @@ impl BuildStageReport {
 }
 
 #[derive(Clone, Debug)]
+pub struct BuildSysrootReport {
+    root: PathBuf,
+    toolchain_id: String,
+    content_sha256: String,
+}
+
+impl BuildSysrootReport {
+    pub fn new(
+        root: PathBuf,
+        toolchain_id: impl Into<String>,
+        content_sha256: impl Into<String>,
+    ) -> Self {
+        Self {
+            root,
+            toolchain_id: toolchain_id.into(),
+            content_sha256: content_sha256.into(),
+        }
+    }
+
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    pub fn toolchain_id(&self) -> &str {
+        &self.toolchain_id
+    }
+
+    pub fn content_sha256(&self) -> &str {
+        &self.content_sha256
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct BuildReport {
     entrypoint_path: PathBuf,
     mode: BuildCompilationMode,
     target: &'static str,
+    sysroot: BuildSysrootReport,
     binary_path: PathBuf,
     binary_size_bytes: Option<u64>,
     total_elapsed: Duration,
@@ -60,6 +94,7 @@ impl BuildReport {
     pub fn new(
         entrypoint_path: PathBuf,
         mode: BuildCompilationMode,
+        sysroot: BuildSysrootReport,
         binary_path: PathBuf,
         total_elapsed: Duration,
         stages: Vec<BuildStageReport>,
@@ -70,6 +105,7 @@ impl BuildReport {
             entrypoint_path,
             mode,
             target: "release native",
+            sysroot,
             binary_size_bytes: binary_size(&binary_path),
             binary_path,
             total_elapsed,
@@ -89,6 +125,10 @@ impl BuildReport {
 
     pub const fn target(&self) -> &'static str {
         self.target
+    }
+
+    pub const fn sysroot(&self) -> &BuildSysrootReport {
+        &self.sysroot
     }
 
     pub fn binary_path(&self) -> &Path {

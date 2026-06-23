@@ -327,6 +327,11 @@ def main():\n    print(parse_json())\n",
 
     let artifact = build_cached_package_project(&entrypoint)
         .expect("package namespace root project should build");
+    let generated_project_root = generated_project_root(artifact.binary_path());
+    assert!(
+        !generated_project_root.join(".cargo/config.toml").exists(),
+        "package-owned generated builds should not copy sysroot Cargo config"
+    );
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("package binary should run");
@@ -334,6 +339,15 @@ def main():\n    print(parse_json())\n",
     assert!(output.status.success());
     assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "7");
     let _ = std::fs::remove_dir_all(dir);
+}
+
+fn generated_project_root(binary_path: &Path) -> PathBuf {
+    binary_path
+        .parent()
+        .and_then(Path::parent)
+        .and_then(Path::parent)
+        .expect("cached binary path should be <project>/target/release/<bin>")
+        .to_path_buf()
 }
 
 #[test]

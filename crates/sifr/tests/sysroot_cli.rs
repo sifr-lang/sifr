@@ -98,6 +98,30 @@ fn print_sysroot_json_reports_identity_and_layout_paths() {
     );
 }
 
+#[test]
+fn explicit_sysroot_missing_vendor_reports_boundary_error() {
+    let sysroot = TestSysroot::new("missing_vendor");
+    std::fs::remove_dir_all(sysroot.root.join("vendor")).expect("remove vendor dir");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .args([
+            "--sysroot",
+            &sysroot.root.display().to_string(),
+            "--print",
+            "sysroot",
+        ])
+        .current_dir(std::env::temp_dir())
+        .output()
+        .expect("sifr should run");
+
+    assert!(!output.status.success(), "stdout: {}", stdout(&output));
+    let stderr = stderr(&output);
+    assert!(stderr.contains("Sifr sysroot is missing vendor"));
+    assert!(stderr.contains("binary path:"));
+    assert!(stderr.contains("attempted sysroot:"));
+    assert!(stderr.contains(&sysroot.root.join("vendor").display().to_string()));
+}
+
 fn write_skeleton(root: &Path) {
     std::fs::create_dir_all(root.join(".cargo")).expect("cargo dir");
     std::fs::create_dir_all(root.join("vendor")).expect("vendor dir");

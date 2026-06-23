@@ -142,14 +142,19 @@ pub(crate) fn runtime_diagnostic_intrinsic_rejects_wrong_arity() {
 
 #[test]
 pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades() {
-    let deps = sifr_stdlib_model::generated_cargo_dependencies(
+    let deps = sifr_stdlib_model::try_generated_cargo_dependencies(
         &std::collections::HashSet::from(["sifr.runtime".to_string()]),
         &std::collections::HashSet::new(),
-    );
+    )
+    .expect("source-tree sysroot dependencies should resolve");
 
+    assert_eq!(deps.len(), 3);
+    assert!(deps[0].starts_with("sifr_stdlib = "));
+    assert!(deps[0].contains("default-features = false"));
+    assert!(deps[0].contains("features = [\"runtime-observability\"]"));
     assert_eq!(
-        deps,
-        vec![
+        &deps[1..],
+        [
             "metrics = \"0.24.6\"".to_string(),
             "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
                 .to_string()

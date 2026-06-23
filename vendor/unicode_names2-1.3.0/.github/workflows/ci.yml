@@ -1,0 +1,164 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Test on nightly
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rust:
+        - nightly
+
+        features:
+        - '--all-features'
+        - '--no-default-features'
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install rust (${{ matrix.rust }})
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+
+      - name: Build unicode_names2
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose ${{ matrix.features }}
+
+      - name: Test unicode_names2
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose ${{ matrix.features }}
+
+      - name: Bench unicode_names2
+        uses: actions-rs/cargo@v1
+        with:
+          command: bench
+          args: --verbose ${{ matrix.features }}
+
+      - name: Doc unicode_names2
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --verbose ${{ matrix.features }}
+
+      - name: Build unicode_names2_macros
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose ${{ matrix.features }} --manifest-path=unicode_names2_macros/Cargo.toml
+
+      - name: Test unicode_names2_macros
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose ${{ matrix.features }} --manifest-path=unicode_names2_macros/Cargo.toml
+
+      - name: Doc unicode_names2_macros
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --verbose ${{ matrix.features }} --manifest-path=unicode_names2_macros/Cargo.toml
+
+  build:
+    # We cannot test on these versions, because tests and bench rely on
+    # features that are still unstable.
+    name: Build on non-nightly
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rust:
+        - stable
+        - beta
+        - 1.63.0
+
+        features:
+        - ''
+        - '--no-default-features'
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install rust (${{ matrix.rust }})
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+
+      - name: Build crates
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose ${{ matrix.features }}
+
+  test-generator:
+    name: Test generator
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rust:
+        - nightly
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install rust (${{ matrix.rust }})
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+
+      - name: Build generator
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose ${{ matrix.features }} --manifest-path=generator/Cargo.toml
+
+      - name: Test generator
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose ${{ matrix.features }} --manifest-path=generator/Cargo.toml
+
+      - name: Doc generator
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --verbose ${{ matrix.features }} --manifest-path=generator/Cargo.toml
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        components: rustfmt
+        override: true
+    - name: rustfmt
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --all -- --check
+    - name: clippy
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: ${{ matrix.default }} -- -Dwarnings

@@ -1,6 +1,8 @@
-use super::artifacts::{compose_test_runner_lib, try_generate_test_runner_cargo_toml};
+use super::artifacts::{compose_test_runner_lib, try_generate_test_runner_cargo_plan};
 use super::orchestrator::GeneratedTestRunnerProject;
-use crate::build::{prepare_cached_artifact, ArtifactCacheReport, PreparedArtifactCache};
+use crate::build::{
+    prepare_cached_artifact, sysroot_cargo_config_args, ArtifactCacheReport, PreparedArtifactCache,
+};
 use crate::diagnostics::{write_stderr, write_stderr_line, RenderedDiagnostic};
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
@@ -15,7 +17,7 @@ pub(crate) struct TestRunnerExecutionOutcome {
 pub(crate) fn execute_test_runner_project(
     generated_project: &GeneratedTestRunnerProject,
 ) -> Result<TestRunnerExecutionOutcome, Vec<RenderedDiagnostic>> {
-    let cargo_toml = try_generate_test_runner_cargo_toml(
+    let cargo_plan = try_generate_test_runner_cargo_plan(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_features,
     )
@@ -29,7 +31,12 @@ pub(crate) fn execute_test_runner_project(
         &generated_project.support_module_names,
         &generated_project.all_rust_code,
     );
-    let cache_key = test_runner_cache_key(generated_project, &cargo_toml, &test_lib);
+    let cache_key = test_runner_cache_key(
+        generated_project,
+        &cargo_plan.cargo_toml,
+        &test_lib,
+        &cargo_plan.dependency_plan.cache_fingerprint,
+    );
     let required_paths = [
         Path::new("Cargo.toml"),
         Path::new("src/lib.rs"),
@@ -51,12 +58,14 @@ pub(crate) fn execute_test_runner_project(
             )]
         })?;
 
-        std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|error| {
-            vec![crate::diagnostics::diagnostic_with_code(
-                format!("failed to write Cargo.toml: {error}"),
-                DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
-            )]
-        })?;
+        std::fs::write(project_dir.join("Cargo.toml"), &cargo_plan.cargo_toml).map_err(
+            |error| {
+                vec![crate::diagnostics::diagnostic_with_code(
+                    format!("failed to write Cargo.toml: {error}"),
+                    DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
+                )]
+            },
+        )?;
 
         for module_name in &generated_project.support_module_names {
             if let Some(code) = generated_project.support_rust_files.get(module_name) {
@@ -123,16 +132,18 @@ pub(crate) fn execute_test_runner_project(
         })?;
     }
 
-    let output = std::process::Command::new("cargo")
+    let mut command = std::process::Command::new("cargo");
+    command
+        .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
         .args(["test"])
-        .current_dir(&project_dir)
-        .output()
-        .map_err(|error| {
-            vec![crate::diagnostics::diagnostic_with_code(
-                format!("failed to run cargo test: {error}"),
-                DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
-            )]
-        })?;
+        .current_dir(&project_dir);
+    command.env_remove("CARGO_TARGET_DIR");
+    let output = command.output().map_err(|error| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            format!("failed to run cargo test: {error}"),
+            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+        )]
+    })?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -159,6 +170,7 @@ fn test_runner_cache_key(
     generated_project: &GeneratedTestRunnerProject,
     cargo_toml: &str,
     test_lib: &str,
+    dependency_plan_fingerprint: &str,
 ) -> String {
     let mut support_modules: Vec<(&str, &str)> = generated_project
         .support_rust_files
@@ -184,7 +196,7 @@ fn test_runner_cache_key(
         .collect();
     required_features.sort_unstable();
     format!(
-        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[stdlib]\n{}\n[crates]\n{}",
+        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[stdlib]\n{}\n[crates]\n{}\n[sysroot-dependency-plan]\n{dependency_plan_fingerprint}",
         generated_project.cache_scope.display(),
         stdlib_modules.join("\n"),
         required_features.join("\n")

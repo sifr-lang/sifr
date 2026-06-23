@@ -23,6 +23,13 @@ pub(super) fn render_build_success(
     push_key_value(&mut output, "input:", &quote_path(report.entrypoint_path()));
     push_key_value(&mut output, "mode:", report.mode().as_str());
     push_key_value(&mut output, "target:", report.target());
+    push_key_value(
+        &mut output,
+        "sysroot:",
+        &quote_path(report.sysroot().root()),
+    );
+    push_key_value(&mut output, "toolchain:", report.sysroot().toolchain_id());
+    push_key_value(&mut output, "digest:", report.sysroot().content_sha256());
     output.push('\n');
 
     let label_width = report
@@ -128,12 +135,17 @@ fn quote_path(path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sifr_driver::{BuildCompilationMode, BuildStageReport};
+    use sifr_driver::{BuildCompilationMode, BuildStageReport, BuildSysrootReport};
 
     fn report(cache_hit: bool) -> BuildReport {
         BuildReport::new(
             Path::new("demo main.sifr").to_path_buf(),
             BuildCompilationMode::Project,
+            BuildSysrootReport::new(
+                Path::new("/opt/sifr").to_path_buf(),
+                "0.1.0-test-x86_64-test",
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            ),
             Path::new("./sifr_output/target/release/sifr_output").to_path_buf(),
             Duration::from_millis(54),
             vec![
@@ -167,6 +179,11 @@ mod tests {
         assert!(rendered.contains("input:  'demo main.sifr'\n"));
         assert!(rendered.contains("mode:   project\n"));
         assert!(rendered.contains("target: release native\n"));
+        assert!(rendered.contains("sysroot:/opt/sifr\n"));
+        assert!(rendered.contains("toolchain:0.1.0-test-x86_64-test\n"));
+        assert!(rendered.contains(
+            "digest: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n"
+        ));
         assert!(rendered.contains("Loading Sifr standard library"));
         assert!(rendered.contains("Parsing import closure (4 modules)"));
         assert!(rendered.contains("Finished release build in 54 ms\n"));

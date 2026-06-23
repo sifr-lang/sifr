@@ -1,0 +1,32 @@
+[package]
+name = "collection_literals"
+version = "1.0.3"
+edition = "2021"
+description = "Easy-to-use macros for initializing any collection"
+readme = "README.md"
+repository = "https://github.com/staedoix/collection_literals"
+license = "MIT"
+keywords = ["literal", "macro", "hashmap", "collection", "maplit"]
+categories = ["rust-patterns"]
+include = ["/src/", "/tests/", "/README.md", "/LICENSE"]
+
+[badges]
+maintenance.status = "passively-maintained"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[[test]]
+name = "collection"
+path = "tests/collection.rs"
+
+[[test]]
+name = "hash"
+path = "tests/hash.rs"
+
+[[test]]
+name = "btree"
+path = "tests/btree.rs"
+
+
+[dependencies]

@@ -1,0 +1,53 @@
+Here is my review of the M5 implementation.
+
+## M5 Code Review — Findings ordered by severity
+
+### High
+
+1. **Workspace `.cargo/config.toml` unconditionally replaces crates-io workspace-wide** — `.cargo/config.toml:1-5` (new content) sets `[source.crates-io] replace-with = "sifr-vendor"` with `directory = "vendor"`. Any Cargo invocation that walks up to this config rewrites all crates-io traffic to `<workspace>/vendor`. The generated-project path correctly omits `--config` in `PackageOwned` mode (`crates/sifr_driver/src/build/cargo_manifest.rs:31-44`), but Cargo's own config discovery re-introduces the same effect when the generated project is materialized inside the source checkout. M5 explicitly forbids this: "package builds with user registry dependencies in online mode must not silently force the sysroot vendor over user dependencies." Cached projects under `std::env::temp_dir()` (`crates/sifr_driver/src/build/workspace.rs:272-274`) escape this leak, but `sifr build <output_dir>` does not when `output_dir` lives under the workspace. Recommend: keep this config out of the workspace tree (move under a developer-only path that the compiler's own `cargo build` opts into) and rely solely on the invocation-scoped `--config` for Sifr-owned builds. A package-mode fixture that depends on a crates-io crate not present in `vendor/` would surface this immediately.
+
+### Medium
+
+2. **`generated_cargo_dependencies` silently falls back to compile-time source paths** — `crates/sifr_stdlib_model/src/features/dependency_plan.rs:163-170, 223-256, 363-372`. The top-level non-fallible API `unwrap_or_else`s into `legacy_development_dependency_lines`, which calls `legacy_development_crate_path` → `env!("CARGO_MANIFEST_DIR")` (i.e., the compile-time path of the compiler source tree). In release builds `is_source_tree_development_mode()` (`crates/sifr_sysroot/src/resolve.rs:58-60`, gated on `debug_assertions`) returns false, so the helper emits the sentinel `SIFR_SYSROOT_UNRESOLVED/<crate>` and Cargo fails with a non-Sifr error rather than the boundary diagnostic the issue mandates ("Sifr diagnostics include binary path, attempted sysroot path, and missing asset path"). Production sites (`materialize.rs:53-79, 108-114`, `test_runner/artifacts.rs:52-65`) all use `try_generate_sysroot_dependency_plan` and propagate `SysrootError::boundary_message()`, so the fallback is dead in the binary, but it remains a public, easily-misused API on the model crate. Recommend deleting `generated_cargo_dependencies`, `generated_cargo_dependencies_with_sysroot`, `legacy_development_dependency_lines`, and `legacy_development_crate_path` and porting the few remaining test callers (`crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:144-162`, `crates/sifr_stdlib_model/src/features_tests.rs`) to the `try_*` variants.
+
+3. **Vendor-mode selection only looks at Rust interop `DirectCargoDependency`** — `crates/sifr_driver/src/build/cargo_manifest.rs:18-29`. The planner picks `SysrootOnly` whenever `rust_interop_path_dependencies(interop).is_empty()`. A package build that has user crates.io deps but no `RustInteropResolvedRoot::DirectCargoDependency` (e.g., they come in through `cargo_inputs` / `bridge_sources` only, or simply as regular Sifr package deps not tied to interop) gets `SysrootOnly` and forces the sysroot vendor onto them. The decision should also account for `BuildCompilationMode::PackageProject` (`crates/sifr_driver/src/build/report.rs:7-21`), which is never threaded into the cargo-manifest layer today — every mode looks identical to the planner. This is the same risk as finding #1, but driven from inside the planner instead of from Cargo config discovery.
+
+4. **M5 validation matrix is not satisfied in tests** — The acceptance block under M5 in `plans/issues/active/ad-hoc-sifr-sysroot-stdlib-toolchain.md:366-388` lists multiple fixtures that are not present in this diff:
+   - Snapshot of the rendered generated `Cargo.toml` (`binary_project_cache_key_includes_sysroot_dependency_plan` in `crates/sifr_driver/src/build/materialize.rs:492-500` proves the fingerprint changes but does not pin the TOML output).
+   - Generated stdlib-only `Cargo.lock` offline-mode fixture.
+   - Fixture proving a missing-vendor sysroot triggers a Sifr boundary diagnostic.
+   - Package-mode fixture proving user dependencies remain Cargo-owned.
+   - Package-mode fixture proving online user-registry resolution is not silently replaced by the sysroot vendor config (matches #1).
+   - Offline/frozen package-mode fixture proving user deps either use a combined graph or fail clearly.
+   - Snapshot proving migrated stdlib leaves do not emit direct third-party deps.
+   - End-to-end `BuildSysrootReport` snapshot wired from `sysroot_report(&dependency_plan)` (`crates/sifr/src/build_output.rs:140-191` only exercises a hand-built report).
+
+   These are explicit acceptance gates; the milestone PR should add them before merge.
+
+### Low / nits
+
+5. **`execute_test_runner_project` does not strip inherited `CARGO_TARGET_DIR`** — `crates/sifr_driver/src/test_runner/execution.rs:135-145` spawns `cargo test` without `env_remove("CARGO_TARGET_DIR")`, while the binary path does (`crates/sifr_driver/src/build/materialize.rs:240-253`, with an explicit comment about cache completeness). With `CARGO_TARGET_DIR` set externally, the test runner's `target/` lands outside the cached project, the `required_paths = [..., "target"]` completeness check (`execution.rs:40-50`) fails, and every `sifr test` becomes a cache miss. Pre-existing behavior — not an M5 regression — but worth fixing now since this PR is reworking the same code.
+
+6. **Retained direct deps lack per-feature attribution** — `crates/sifr_stdlib_model/src/features/dependency_plan.rs:258-302`. Every feature unconditionally emits its direct third-party deps alongside the sysroot crate dep, with no marking of which exist only because intrinsics still emit direct `serde_json::*`/`regex::*`/etc. calls. The M5 task language ("Keep temporary direct third-party generated dependencies only for unmigrated compiler-special paths with a deletion milestone") and the "Snapshot proving migrated stdlib leaves do not emit direct third-party implementation dependencies" validation both require attribution to the migration registry. Without it, M9+ cannot mechanically drop a leaf's bridge dep. Add per-feature retention reasons and a way for `retained_direct_dependencies` to filter out migrated leaves.
+
+7. **`TOML_DEPS` enables `preserve_order` but workspace dep does not** — `crates/sifr_stdlib_model/src/features.rs:303-306` emits `toml = { ..., features = ["preserve_order"] }`, but workspace `Cargo.toml:131` declares `toml = { version = "1.1.2" }` and `crates/sifr_stdlib/Cargo.toml:42` inherits it. Feature unification still enables `preserve_order` at runtime, so behavior is correct, but `cargo metadata` on the sysroot crate alone reports a different feature set than the generated project. Align the workspace dep so the sysroot crate and the generated project agree.
+
+8. **`SysrootCrate::package_name()` and `fingerprint_key()` return identical strings** — `crates/sifr_stdlib_model/src/features/dependency_plan.rs:18-34`. Either collapse them or document the planned divergence (likely a content-digest in M6/M8).
+
+9. **TOML path escaping covers only `\` and `"`** — `crates/sifr_stdlib_model/src/features/dependency_plan.rs:355-361` and `crates/sifr_driver/src/build/cargo_manifest.rs:113-115`. Newline / tab / NUL in a sysroot path produces invalid TOML. Practically improbable for an installed sysroot, but `toml::Value::from(...).to_string()` is a one-liner.
+
+10. **`materialize_binary_project_at_path` resolves the dependency plan twice** — `crates/sifr_driver/src/build/materialize.rs:53-79` then `108-114`. Both paths call `try_generate_sysroot_dependency_plan` → `resolve_sysroot()`. The cache-miss path re-resolves the sysroot and re-reads the manifest. Thread the already-resolved plan through `materialize_binary_project_at_path`.
+
+11. **`required_features.iter().copied().collect::<BTreeSet<_>>()` is correct but `StdlibFeature` derives `Ord`** — confirmed deterministic; no action.
+
+### Focus-question summary
+
+1. **Correctness bugs in dependency planning / manifest / vendor / cache-report wiring** — see #1, #2, #3; #1 is the most architecturally significant. The actual SysrootDependencyPlan plumbing (cache fingerprint, sysroot identity threading through `BuildSysrootReport`, vendor-mode-aware cargo args) is correct.
+2. **Package-owned mode and explicit Rust interop path deps** — `sysroot_cargo_config_args` correctly returns empty in `PackageOwned` (`cargo_manifest.rs:31-44`), so the cargo manifest layer does not force vendor onto interop path deps. But the workspace `.cargo/config.toml` (#1) re-introduces the same vendor replacement when discovered by Cargo. So: yes via the manifest layer, no in practice when the project sits inside the source tree.
+3. **Retained direct third-party deps as a temporary bridge** — Acceptable per the M5 task language, but contradicts the "sysroot-owned dependency resolution" outcome unless paired with per-feature deletion linkage to the migration registry (#6). The "no direct third-party deps from migrated leaves" snapshot cannot exist until that attribution lands.
+4. **Missing tests that should block the milestone PR** — Yes, see #4. At minimum: rendered-Cargo.toml snapshot, vendor-missing diagnostic fixture, package-mode user-dep fixture, source-tree-leak negative fixture, end-to-end `BuildSysrootReport` snapshot.
+5. **Accidental source-tree / CARGO_HOME / copied-config / cache-key gaps** — CARGO_HOME is not mutated (good); no `.cargo/config.toml` is copied into project dirs (good — uses `--config` CLI); cache keys include sysroot identity, content digest, lockfile digest, vendor mode, and features (good — `dependency_plan.rs:323-353`). Source-tree paths only leak via the deprecated `legacy_development_*` fallback (#2). The single workspace-level config leak (#1) is the residual hazard.
+
+### Verdict
+
+Not satisfied. The core plumbing is in good shape — `SysrootDependencyPlan` is the single source of truth, the cache fingerprint covers sysroot identity, and build/test-runner/report surfaces all consume it. But two issues should land before merge: the workspace `.cargo/config.toml` policy leak (#1) and removal of the source-tree fallback API (#2). The missing M5 validation fixtures (#4) are explicit acceptance gates in the issue and should be added as part of this PR. #3 is the next-most-important gap because it determines whether the implementation actually delivers the documented mode matrix.
