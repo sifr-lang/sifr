@@ -28,8 +28,7 @@ fn unicode_wrapper_normalizes_text() {
 fn i18n_wrapper_canonicalizes_locale() {
     let locale = sifr_stdlib::i18n::canonicalize_locale("EN-us").expect("canonical locale");
     assert_eq!(locale, "en-US");
-    let formatted =
-        sifr_stdlib::i18n::format_number("en-US", "12345.5").expect("formatted number");
+    let formatted = sifr_stdlib::i18n::format_number("en-US", "12345.5").expect("formatted number");
     assert!(formatted.contains("12"));
 }
 

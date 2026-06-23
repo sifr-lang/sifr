@@ -2,7 +2,7 @@
 //!
 //! Defines type signatures for all `_sifr.*` intrinsic modules.
 //! These are compiler-provided primitives that map directly to Rust code.
-//! User-facing stdlib modules live in `lib/sifr/*.sifr` files.
+//! User-facing stdlib modules live in `stdlib/sifr/*.sifr` files.
 
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
@@ -73,7 +73,10 @@ use process::intrinsic_process;
 use python::intrinsic_python;
 use runtime::intrinsic_runtime;
 use signal::intrinsic_signal;
-pub use sources::{StdlibSource, STDLIB_SOURCES};
+pub use sources::{
+    load_stdlib_sources_from_sysroot, validate_stdlib_source_inventory, LoadedStdlibSource,
+    StdlibSource, StdlibSourceInventoryError, PRIVATE_STDLIB_MODULES, STDLIB_SOURCES,
+};
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
@@ -88,7 +91,7 @@ pub struct BareStdlibMatch {
     pub bare_module: String,
     pub matched_tail: String,
     pub suggested_module: String,
-    pub exact_embedded_module_exists: bool,
+    pub exact_public_module_exists: bool,
 }
 
 /// Match data for a CPython-shaped `sifr.*` module that is no longer a public
@@ -171,8 +174,8 @@ pub fn is_stdlib_module(module_name: &str) -> bool {
     module_name.starts_with("sifr.")
 }
 
-/// Returns bare-stdlib match data when `module_name` names the tail of an
-/// embedded `sifr.*` module, or starts with one.
+/// Returns bare-stdlib match data when `module_name` names the tail of a
+/// canonical public `sifr.*` module, or starts with one.
 pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
     if module_name.is_empty() || module_name.starts_with("sifr.") || module_name.starts_with('_') {
         return None;
@@ -183,24 +186,24 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
             bare_module: module_name.to_string(),
             matched_tail: matched_tail.to_string(),
             suggested_module: suggested_module.to_string(),
-            exact_embedded_module_exists: embedded_stdlib_module_exists(suggested_module),
+            exact_public_module_exists: public_stdlib_module_exists(suggested_module),
         });
     }
-    if embedded_stdlib_tail_exists(module_name) {
+    if public_stdlib_tail_exists(module_name) {
         return Some(BareStdlibMatch {
             bare_module: module_name.to_string(),
             matched_tail: module_name.to_string(),
             suggested_module: format!("sifr.{module_name}"),
-            exact_embedded_module_exists: true,
+            exact_public_module_exists: true,
         });
     }
     let root = module_name.split('.').next()?;
-    if !embedded_stdlib_tail_exists(root) {
+    if !public_stdlib_tail_exists(root) {
         return None;
     }
     let exact_suggestion = format!("sifr.{module_name}");
-    let exact_embedded_module_exists = embedded_stdlib_module_exists(&exact_suggestion);
-    let suggested_module = if exact_embedded_module_exists {
+    let exact_public_module_exists = public_stdlib_module_exists(&exact_suggestion);
+    let suggested_module = if exact_public_module_exists {
         exact_suggestion
     } else {
         format!("sifr.{root}")
@@ -209,7 +212,7 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
         bare_module: module_name.to_string(),
         matched_tail: root.to_string(),
         suggested_module,
-        exact_embedded_module_exists,
+        exact_public_module_exists,
     })
 }
 
@@ -356,13 +359,13 @@ fn cpython_stdlib_reserved_suggestion(module_name: &str) -> Option<&'static str>
     }
 }
 
-fn embedded_stdlib_tail_exists(tail: &str) -> bool {
+fn public_stdlib_tail_exists(tail: &str) -> bool {
     STDLIB_SOURCES
         .iter()
         .any(|source| source.module.strip_prefix("sifr.") == Some(tail))
 }
 
-fn embedded_stdlib_module_exists(module_name: &str) -> bool {
+fn public_stdlib_module_exists(module_name: &str) -> bool {
     STDLIB_SOURCES
         .iter()
         .any(|source| source.module == module_name)
@@ -393,7 +396,7 @@ mod tests {
         let json = STDLIB_SOURCES
             .iter()
             .find(|source| source.module == "sifr.json")
-            .expect("sifr.json should be embedded in the stdlib inventory");
+            .expect("sifr.json should be in the stdlib inventory");
 
         assert!(json.source.contains("from _sifr.json import"));
     }
@@ -407,13 +410,13 @@ mod tests {
     }
 
     #[test]
-    fn bare_stdlib_tail_matches_exact_embedded_module() {
+    fn bare_stdlib_tail_matches_exact_public_module() {
         let matched = is_bare_stdlib_tail("math").expect("math should match sifr.math");
 
         assert_eq!(matched.bare_module, "math");
         assert_eq!(matched.matched_tail, "math");
         assert_eq!(matched.suggested_module, "sifr.math");
-        assert!(matched.exact_embedded_module_exists);
+        assert!(matched.exact_public_module_exists);
     }
 
     #[test]
@@ -424,7 +427,7 @@ mod tests {
         assert_eq!(matched.bare_module, "collections.abc");
         assert_eq!(matched.matched_tail, "collections");
         assert_eq!(matched.suggested_module, "sifr.collections");
-        assert!(!matched.exact_embedded_module_exists);
+        assert!(!matched.exact_public_module_exists);
     }
 
     #[test]
@@ -442,9 +445,9 @@ mod tests {
         assert_eq!(encodings_utf8.suggested_module, "sifr.encoding");
         assert_eq!(unicodedata.suggested_module, "sifr.unicode");
         assert_eq!(gettext.suggested_module, "sifr.i18n");
-        assert!(codecs.exact_embedded_module_exists);
-        assert!(unicodedata.exact_embedded_module_exists);
-        assert!(gettext.exact_embedded_module_exists);
+        assert!(codecs.exact_public_module_exists);
+        assert!(unicodedata.exact_public_module_exists);
+        assert!(gettext.exact_public_module_exists);
     }
 
     #[test]

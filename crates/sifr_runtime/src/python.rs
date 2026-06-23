@@ -10,6 +10,7 @@ mod arrow_ops;
 mod buffer_ops;
 mod call_depth;
 mod callback_ops;
+mod config_verify;
 mod coroutine_ops;
 mod dlpack_ops;
 mod object_ops;
@@ -25,6 +26,7 @@ pub use callback_ops::{
     close_callback, local_callback, local_callback_echo, threadsafe_callback,
     threadsafe_callback_echo, CallbackHandle, PythonCallbackMetadata,
 };
+use config_verify::verify_interpreter_config;
 pub use coroutine_ops::run_coroutine_blocking;
 pub use dlpack_ops::{dlpack_tensor, release_dlpack, DlpackHandle, PythonDlpackTensorMetadata};
 pub use object_ops::{
@@ -262,7 +264,6 @@ pub fn validate_shutdown() -> Result<(), PythonRuntimeError> {
 
 fn configure_interpreter(config: &PythonRuntimeConfig) -> Result<(), PythonRuntimeError> {
     attach_initialized(|py| {
-        verify_interpreter_version(py, config)?;
         verify_interpreter_config(py, config)?;
         let sys = py.import("sys").map_err(|error| py_error(&error))?;
         let path = sys.getattr("path").map_err(|error| py_error(&error))?;
@@ -460,57 +461,6 @@ fn py_status_message(status: ffi::PyStatus) -> String {
     unsafe { CStr::from_ptr(status.err_msg) }
         .to_string_lossy()
         .into_owned()
-}
-
-fn verify_interpreter_version(
-    py: Python<'_>,
-    config: &PythonRuntimeConfig,
-) -> Result<(), PythonRuntimeError> {
-    if config.cpython_version_tuple.len() < 2 {
-        return Ok(());
-    }
-    let version = py.version_info();
-    let expected_major = config.cpython_version_tuple[0];
-    let expected_minor = config.cpython_version_tuple[1];
-    if u64::from(version.major) == expected_major && u64::from(version.minor) == expected_minor {
-        return Ok(());
-    }
-    Err(PythonRuntimeError::InterpreterVersionMismatch {
-        expected: format!("{expected_major}.{expected_minor}"),
-        actual: format!("{}.{}", version.major, version.minor),
-    })
-}
-
-fn verify_interpreter_config(
-    py: Python<'_>,
-    config: &PythonRuntimeConfig,
-) -> Result<(), PythonRuntimeError> {
-    let sys = py.import("sys").map_err(|error| py_error(&error))?;
-    verify_sys_attr(&sys, "executable", &config.executable)?;
-    verify_sys_attr(&sys, "prefix", &config.sys_prefix)?;
-    verify_sys_attr(&sys, "base_prefix", &config.sys_base_prefix)
-}
-
-fn verify_sys_attr(
-    sys: &Bound<'_, PyAny>,
-    field: &'static str,
-    expected: &str,
-) -> Result<(), PythonRuntimeError> {
-    if expected.is_empty() {
-        return Ok(());
-    }
-    let actual = sys
-        .getattr(field)
-        .and_then(|value| value.extract::<String>())
-        .map_err(|error| py_error(&error))?;
-    if actual == expected {
-        return Ok(());
-    }
-    Err(PythonRuntimeError::InterpreterConfigMismatch {
-        field,
-        expected: expected.to_string(),
-        actual,
-    })
 }
 
 fn attach_initialized<F, R>(f: F) -> Result<R, PythonRuntimeError>

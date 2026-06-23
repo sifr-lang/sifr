@@ -12,7 +12,7 @@ In progress.
 | M1. Sysroot Identity and Resolver Skeleton | completed, merged | `crates/sifr_sysroot` adds manifest parsing, layout validation, resolver precedence, digest canonicalization, development source-tree sysroot resolution, and CLI `sifr --print sysroot` support in merged [PR #2743](https://github.com/sifr-lang/sifr/pull/2743). |
 | M2. Rename Current Compiler Stdlib Crate | completed, merged | Merged in [PR #2745](https://github.com/sifr-lang/sifr/pull/2745). The compiler-side crate is now `crates/sifr_stdlib_model`, freeing `sifr_stdlib` for the generated-program crate. |
 | M3. Create Generated-Program `sifr_stdlib` Crate | completed, merged | `crates/sifr_stdlib` now provides the generated-program crate foundation with narrow feature gates, runtime-backed wrapper APIs, feature-plan expectations, installed-layout checks, and representative feature-tree snapshots in merged [PR #2747](https://github.com/sifr-lang/sifr/pull/2747). |
-| M4. Full Sysroot Workspace and Source Layout | next | Enable full sysroot workspace validation and begin canonical source layout migration now that the generated-program stdlib crate exists. |
+| M4. Full Sysroot Workspace and Source Layout | in progress | Moving public sources to `stdlib/sifr`, adding private `_sifr` declaration placeholders, validating both sysroot crates and stdlib source roots, and loading CLI/LSP stdlib definitions from the resolved sysroot source inventory. |
 | M5-M13 | not started | Await M4 review/merge. |
 
 ## PR Log
@@ -252,7 +252,7 @@ Validation:
 - `cargo clippy -p sifr_stdlib -- -D warnings`
 - Feature-combination cargo checks for default, text/data, network, and Python
   groups.
-- Installed-layout cargo check for `lib/sifr/crates/sifr_stdlib`.
+- Installed-layout cargo check for `<sysroot>/crates/sifr_stdlib`.
 - Dependency-plan feature expectation checks plus `cargo tree -e features`
   snapshots for representative `sifr.re`, `sifr.json`, `sifr.http`,
   `sifr.python`, and pure Sifr stdlib programs.
