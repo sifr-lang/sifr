@@ -1,0 +1,52 @@
+[workspace]
+
+[package]
+categories = [
+  "rust-patterns",
+  "development-tools::procedural-macro-helpers",
+  "parsing",
+]
+description = "Support `use` in procmacros hygienically"
+documentation = "https://docs.rs/quote-use"
+include = ["src/**/*", "LICENSE", "README.md"]
+keywords = ["macro"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ModProg/quote-use"
+version = "0.8.4"
+edition = "2021"
+name = "quote-use"
+
+[dependencies]
+syn = { version = "2", default-features = false, features = ["parsing", "printing"], optional = true }
+quote = "1"
+quote-use-macros = { version = "0.8.4", path = "quote-use-macros" }
+
+[features]
+
+[dev-dependencies]
+pretty_assertions = "1"
+proc-macro2 = "1.0.60"
+syn = { version = "2", features = ["derive"] }
+trybuild2 = "1.2.0"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[package.metadata.release]
+shared-version = true
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = '## \[Unreleased\]'
+replace = """
+<!-- ## [Unreleased] -->
+## [{{version}}] - {{date}}\
+"""
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = '\[unreleased\]: (.*)/(v.*)\.\.\.HEAD'
+replace = """
+[unreleased]: $1/{{tag_name}}...HEAD
+[{{version}}]: $1/$2...{{tag_name}}\
+"""

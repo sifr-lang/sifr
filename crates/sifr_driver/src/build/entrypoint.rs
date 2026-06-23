@@ -27,6 +27,7 @@ use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
 use sifr_ir::LoweringResult;
 use sifr_lowering::LoweringOptions;
 use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
+use sifr_stdlib_model::CargoVendorMode;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -214,8 +215,13 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
         plan.into_generated_binary_project()
     })?;
-    let materialized =
-        materialize_binary_project_with_report(output_dir, "sifr_output", generated_project)?;
+    let requested_vendor_mode = requested_vendor_mode_for_build(mode);
+    let materialized = materialize_binary_project_with_report(
+        output_dir,
+        "sifr_output",
+        generated_project,
+        requested_vendor_mode,
+    )?;
     stages.push(BuildStageReport::new(
         "Materializing Cargo project",
         materialized.materialize_elapsed,
@@ -227,6 +233,7 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
     Ok(BuildReport::new(
         entrypoint_path,
         mode,
+        materialized.sysroot,
         materialized.binary_path,
         total_start.elapsed(),
         stages,
@@ -284,11 +291,13 @@ fn build_cached_rooted_entrypoint_binary(
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
         plan.into_generated_binary_project()
     })?;
-    let (cache_entry, native_report) = materialize_cached_binary_project_with_report(
+    let requested_vendor_mode = requested_vendor_mode_for_build(mode);
+    let (cache_entry, native_report, sysroot) = materialize_cached_binary_project_with_report(
         cache_namespace,
         cache_scope,
         "sifr_output",
         generated_project,
+        requested_vendor_mode,
     )?;
     if let Some(native_report) = native_report {
         stages.push(BuildStageReport::new(
@@ -304,6 +313,7 @@ fn build_cached_rooted_entrypoint_binary(
     let build_report = BuildReport::new(
         entrypoint_path,
         mode,
+        sysroot,
         binary_path.clone(),
         total_start.elapsed(),
         stages,
@@ -314,6 +324,15 @@ fn build_cached_rooted_entrypoint_binary(
         binary_path,
         build_report,
     })
+}
+
+fn requested_vendor_mode_for_build(mode: BuildCompilationMode) -> CargoVendorMode {
+    match mode {
+        BuildCompilationMode::SingleFile | BuildCompilationMode::Project => {
+            CargoVendorMode::SysrootOnly
+        }
+        BuildCompilationMode::PackageProject => CargoVendorMode::PackageOwned,
+    }
 }
 
 impl RootedEntrypointPlan {

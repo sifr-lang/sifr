@@ -1,0 +1,63 @@
+[package]
+name = "get-size2"
+description = "Determine the size in bytes an object occupies inside RAM."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+readme = "README.md"
+repository = "https://github.com/bircni/get-size2"
+keywords = ["size", "heap", "ram", "memory", "get-size"]
+categories = ["memory-management", "caching"]
+exclude = ["examples/*", "tests/*"]
+
+[lints]
+workspace = true
+
+[dependencies]
+get-size-derive2 = { workspace = true, optional = true }
+
+bytes = { version = "1", default-features = false, optional = true }
+chrono = { version = "0.4", default-features = false, optional = true }
+chrono-tz = { version = "0.10", default-features = false, optional = true }
+compact_str = { version = "0.9", default-features = false, optional = true }
+hashbrown = { version = "0.17", default-features = false, optional = true }
+indexmap = { version = "2.14", default-features = false, optional = true }
+ordermap = { version = "1.2", default-features = false, optional = true }
+smallvec = { version = "1", default-features = false, optional = true }
+thin-vec = { version = "0.2", default-features = false, optional = true }
+url = { version = "2", default-features = false, optional = true }
+
+[dev-dependencies]
+get-size2 = { path = ".", features = [
+    "derive",
+    "bytes",
+    "chrono",
+    "chrono-tz",
+    "compact-str",
+    "hashbrown",
+    "indexmap",
+    "ordermap",
+    "smallvec",
+    "thin-vec",
+    "url",
+] }
+
+[features]
+default = []
+derive = ["get-size-derive2"]
+
+bytes = ["dep:bytes"]
+chrono = ["dep:chrono"]
+chrono-tz = ["dep:chrono-tz"]
+compact-str = ["dep:compact_str"]
+hashbrown = ["dep:hashbrown"]
+indexmap = ["dep:indexmap"]
+ordermap = ["dep:ordermap"]
+smallvec = ["dep:smallvec"]
+thin-vec = ["dep:thin-vec"]
+url = ["dep:url"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

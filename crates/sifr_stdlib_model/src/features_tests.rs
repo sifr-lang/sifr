@@ -1,8 +1,16 @@
 use super::{
-    feature_for_codegen_requirement, generated_cargo_dependencies, planned_sifr_stdlib_features,
-    StdlibFeature,
+    feature_for_codegen_requirement, planned_sifr_stdlib_features,
+    try_generated_cargo_dependencies, try_sysroot_dependency_plan, CargoVendorMode, StdlibFeature,
 };
 use std::collections::HashSet;
+
+fn generated_cargo_dependencies(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> Vec<String> {
+    try_generated_cargo_dependencies(stdlib_modules, required_features)
+        .expect("source-tree sysroot dependencies should resolve")
+}
 
 #[test]
 fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
@@ -14,21 +22,23 @@ fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
     let required_features = HashSet::from([StdlibFeature::SerdeJson, StdlibFeature::Rand]);
 
     let deps = generated_cargo_dependencies(&stdlib_modules, &required_features);
+    assert!(deps[0].contains("features = [\"json\", \"random\"]"));
 
     assert_eq!(
         deps,
         vec![
-            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }",
-            "serde = { version = \"1.0.228\", features = [\"derive\"] }",
-            "rand = \"0.10.1\"",
-            "rand_distr = \"0.6.0\"",
+            deps[0].clone(),
+            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
+            "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
+            "rand = \"0.10.1\"".to_string(),
+            "rand_distr = \"0.6.0\"".to_string(),
         ]
     );
 }
 
 #[test]
 fn unknown_modules_and_empty_features_do_not_emit_dependencies() {
-    let stdlib_modules = HashSet::from(["sifr.io".to_string()]);
+    let stdlib_modules = HashSet::from(["sifr.not_real".to_string()]);
     let required_features = HashSet::new();
 
     assert!(generated_cargo_dependencies(&stdlib_modules, &required_features).is_empty());
@@ -41,9 +51,9 @@ fn runtime_and_tokio_features_render_owned_dependency_specs() {
         &HashSet::from([StdlibFeature::SifrRuntime, StdlibFeature::Tokio]),
     );
 
-    assert!(deps
-        .iter()
-        .any(|dep| dep.starts_with("sifr_runtime = ") && !dep.contains("features")));
+    assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")
+        && dep.contains("default-features = false")
+        && !dep.contains("features = [")));
     assert!(deps.iter().any(|dep| dep.starts_with("tokio = ")));
 }
 
@@ -82,6 +92,9 @@ fn unicode_module_emits_runtime_and_unicode_dependencies() {
     assert!(deps
         .iter()
         .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"unicode\"]")));
+    assert!(deps.iter().any(|dep| dep.starts_with("sifr_stdlib = ")
+        && dep.contains("default-features = false")
+        && dep.contains("features = [\"unicode\"]")));
     assert!(deps.contains(&"unicode_names2 = \"3.1.0\"".to_string()));
     assert!(deps.contains(&"unicode-normalization = \"0.1.25\"".to_string()));
     assert!(deps.contains(&"unicode-segmentation = \"1.13.3\"".to_string()));
@@ -112,6 +125,9 @@ fn i18n_module_emits_runtime_and_icu_dependencies() {
     assert!(deps
         .iter()
         .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"i18n\"]")));
+    assert!(deps.iter().any(|dep| dep.starts_with("sifr_stdlib = ")
+        && dep.contains("default-features = false")
+        && dep.contains("features = [\"i18n\"]")));
     assert!(deps.contains(&"icu_collator = \"2.2.0\"".to_string()));
     assert!(deps.contains(&"icu_datetime = \"2.2.0\"".to_string()));
     assert!(deps.contains(&"icu_decimal = \"2.2.0\"".to_string()));
@@ -202,4 +218,28 @@ fn planned_sysroot_stdlib_features_include_codegen_requirements_without_umbrella
     assert_eq!(planned, ["json", "python", "regex"].into_iter().collect());
     assert!(!planned.contains("text-data"));
     assert!(!planned.contains("network-stack"));
+}
+
+#[test]
+fn sysroot_dependency_plan_captures_identity_features_and_vendor_mode() {
+    let plan = try_sysroot_dependency_plan(
+        &HashSet::from(["sifr.json".to_string()]),
+        &HashSet::new(),
+        CargoVendorMode::SysrootOnly,
+    )
+    .expect("source-tree sysroot should resolve");
+
+    assert_eq!(plan.cargo_vendor_mode, CargoVendorMode::SysrootOnly);
+    assert_eq!(plan.sysroot_content_sha256.len(), 64);
+    assert!(plan.cargo_config.ends_with(".cargo/config.toml"));
+    assert!(plan.vendor_dir.ends_with("vendor"));
+    assert!(plan.cache_fingerprint.contains("vendor_mode=sysroot-only"));
+    assert!(plan
+        .cache_fingerprint
+        .contains(&format!("content_sha256={}", plan.sysroot_content_sha256)));
+    assert!(plan.cargo_dependency_lines().iter().any(|dep| {
+        dep.starts_with("sifr_stdlib = ")
+            && dep.contains("default-features = false")
+            && dep.contains("features = [\"json\"]")
+    }));
 }

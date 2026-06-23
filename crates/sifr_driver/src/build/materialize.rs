@@ -1,14 +1,16 @@
 use super::cargo_manifest::{
-    generate_dependency_cargo_toml, generate_dependency_cargo_toml_for_cache_key,
+    generate_dependency_cargo_toml_for_cache_key, sysroot_cargo_config_args,
+    try_generate_sysroot_dependency_plan,
 };
 use super::project_codegen::GeneratedBinaryProject;
+use super::report::BuildSysrootReport;
 use super::rust_interop_bridge_sources::generated_bridge_sources;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_stdlib_model::StdlibFeature;
+use sifr_stdlib_model::{CargoVendorMode, StdlibFeature, SysrootDependencyPlan};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -16,6 +18,7 @@ use std::time::Duration;
 
 pub(super) struct MaterializedBinaryProject {
     pub(super) binary_path: PathBuf,
+    pub(super) sysroot: BuildSysrootReport,
     pub(super) materialize_elapsed: Duration,
     pub(super) cargo_elapsed: Duration,
 }
@@ -24,14 +27,26 @@ pub(super) fn materialize_binary_project_with_report(
     output_dir: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
+    requested_vendor_mode: CargoVendorMode,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let project_path = output_dir.join(project_name);
-    materialize_binary_project_at_path(&project_path, project_name, generated_project).map(
-        |mut report| {
-            report.binary_path = cached_binary_path(output_dir, project_name);
-            report
-        },
+    let dependency_plan = try_generate_sysroot_dependency_plan(
+        &generated_project.used_stdlib_modules,
+        &generated_project.required_features,
+        &generated_project.interop,
+        requested_vendor_mode,
     )
+    .map_err(|error| vec![build_error(error.boundary_message())])?;
+    materialize_binary_project_at_path(
+        &project_path,
+        project_name,
+        generated_project,
+        dependency_plan,
+    )
+    .map(|mut report| {
+        report.binary_path = cached_binary_path(output_dir, project_name);
+        report
+    })
 }
 
 pub(super) fn materialize_cached_binary_project_with_report(
@@ -39,8 +54,24 @@ pub(super) fn materialize_cached_binary_project_with_report(
     cache_scope: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
-) -> Result<(CachedArtifactEntry, Option<MaterializedBinaryProject>), Vec<RenderedDiagnostic>> {
-    let cache_key = binary_project_cache_key(project_name, &generated_project);
+    requested_vendor_mode: CargoVendorMode,
+) -> Result<
+    (
+        CachedArtifactEntry,
+        Option<MaterializedBinaryProject>,
+        BuildSysrootReport,
+    ),
+    Vec<RenderedDiagnostic>,
+> {
+    let dependency_plan = try_generate_sysroot_dependency_plan(
+        &generated_project.used_stdlib_modules,
+        &generated_project.required_features,
+        &generated_project.interop,
+        requested_vendor_mode,
+    )
+    .map_err(|error| vec![build_error(error.boundary_message())])?;
+    let sysroot = sysroot_report(&dependency_plan);
+    let cache_key = binary_project_cache_key(project_name, &generated_project, &dependency_plan);
     let required_paths = [
         Path::new(project_name).join("target"),
         binary_relative_path(project_name),
@@ -49,14 +80,18 @@ pub(super) fn materialize_cached_binary_project_with_report(
     let prepared =
         prepare_cached_artifact(cache_namespace, cache_scope, &cache_key, &required_refs)?;
     match prepared {
-        PreparedArtifactCache::Hit(entry) => Ok((entry, None)),
+        PreparedArtifactCache::Hit(entry) => Ok((entry, None, sysroot)),
         PreparedArtifactCache::Miss(pending) => {
             let project_root = pending.workspace_root().join(project_name);
-            let report =
-                materialize_binary_project_at_path(&project_root, project_name, generated_project)?;
+            let report = materialize_binary_project_at_path(
+                &project_root,
+                project_name,
+                generated_project,
+                dependency_plan,
+            )?;
             pending
                 .commit(&required_refs)
-                .map(|entry| (entry, Some(report)))
+                .map(|entry| (entry, Some(report), sysroot))
         }
     }
 }
@@ -81,6 +116,7 @@ fn materialize_binary_project_at_path(
     project_path: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
+    dependency_plan: SysrootDependencyPlan,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let python_interpreter = generated_project
         .python_runtime
@@ -88,8 +124,14 @@ fn materialize_binary_project_at_path(
         .map(|runtime| runtime.interpreter().to_path_buf());
     let validate_native_links = should_validate_native_link_evidence(&generated_project);
     let trusted_native_links = trusted_native_links(&generated_project);
+    let sysroot = sysroot_report(&dependency_plan);
     let materialize_start = std::time::Instant::now();
-    materialize_binary_project_files(project_path, project_name, generated_project)?;
+    materialize_binary_project_files(
+        project_path,
+        project_name,
+        generated_project,
+        &dependency_plan,
+    )?;
     let materialize_elapsed = materialize_start.elapsed();
 
     let cargo_start = std::time::Instant::now();
@@ -98,6 +140,7 @@ fn materialize_binary_project_at_path(
         python_interpreter.as_deref(),
         validate_native_links,
         &trusted_native_links,
+        &dependency_plan,
     )?;
     let cargo_elapsed = cargo_start.elapsed();
 
@@ -106,15 +149,25 @@ fn materialize_binary_project_at_path(
             project_path.parent().unwrap_or(Path::new(".")),
             project_name,
         ),
+        sysroot,
         materialize_elapsed,
         cargo_elapsed,
     })
+}
+
+fn sysroot_report(dependency_plan: &SysrootDependencyPlan) -> BuildSysrootReport {
+    BuildSysrootReport::new(
+        dependency_plan.sysroot_root.clone(),
+        dependency_plan.toolchain_id.clone(),
+        dependency_plan.sysroot_content_sha256.clone(),
+    )
 }
 
 fn materialize_binary_project_files(
     project_path: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
+    dependency_plan: &SysrootDependencyPlan,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let src_dir = project_path.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|error| {
@@ -123,13 +176,11 @@ fn materialize_binary_project_files(
         ))]
     })?;
 
-    let cargo_toml = generate_dependency_cargo_toml(
+    let cargo_toml = generate_dependency_cargo_toml_for_cache_key(
         project_name,
-        &generated_project.used_stdlib_modules,
-        &generated_project.required_features,
+        dependency_plan,
         &generated_project.interop,
-    )
-    .map_err(|error| vec![build_error(error.boundary_message())])?;
+    );
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
@@ -197,8 +248,10 @@ fn run_cargo_build(
     python_interpreter: Option<&Path>,
     validate_native_links: bool,
     trusted_native_links: &BTreeSet<String>,
+    dependency_plan: &SysrootDependencyPlan,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let mut command = Command::new("cargo");
+    command.args(sysroot_cargo_config_args(dependency_plan));
     command
         .args([
             "build",
@@ -332,6 +385,7 @@ fn cargo_build_error(message: String) -> RenderedDiagnostic {
 fn binary_project_cache_key(
     project_name: &str,
     generated_project: &GeneratedBinaryProject,
+    dependency_plan: &SysrootDependencyPlan,
 ) -> String {
     let stdlib_modules = sorted_lines(&generated_project.used_stdlib_modules);
     let required_features = sorted_feature_lines(&generated_project.required_features);
@@ -342,11 +396,10 @@ fn binary_project_cache_key(
         .collect::<Vec<_>>()
         .join("\n===\n");
     format!(
-        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}\n[interop]\n{}\n[cache-key-fragment]\n{}",
+        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}\n[interop]\n{}\n[cache-key-fragment]\n{}\n[sysroot-dependency-plan]\n{}",
         generate_dependency_cargo_toml_for_cache_key(
             project_name,
-            &generated_project.used_stdlib_modules,
-            &generated_project.required_features,
+            dependency_plan,
             &generated_project.interop
         ),
         generated_project.main_rs,
@@ -354,7 +407,8 @@ fn binary_project_cache_key(
         stdlib_modules.join("\n"),
         required_features.join("\n"),
         generated_project.interop.cache_key_fragment(),
-        generated_project.cache_key_fragment.as_deref().unwrap_or("")
+        generated_project.cache_key_fragment.as_deref().unwrap_or(""),
+        dependency_plan.cache_fingerprint
     )
 }
 
@@ -389,6 +443,7 @@ mod tests {
         RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
         RustInteropEffect, RustTargetPath,
     };
+    use sifr_stdlib_model::{CargoVendorMode, SysrootDependencyPlan};
     use std::collections::{BTreeMap, BTreeSet, HashSet};
 
     #[test]
@@ -398,9 +453,10 @@ mod tests {
             cache_key_fragment: Some("python-probe-a".to_string()),
             ..base
         };
-        let first = binary_project_cache_key("sifr_output", &with_python_probe);
+        let dependency_plan = test_dependency_plan("fingerprint-a");
+        let first = binary_project_cache_key("sifr_output", &with_python_probe, &dependency_plan);
         with_python_probe.cache_key_fragment = Some("python-probe-b".to_string());
-        let second = binary_project_cache_key("sifr_output", &with_python_probe);
+        let second = binary_project_cache_key("sifr_output", &with_python_probe, &dependency_plan);
 
         assert_ne!(first, second);
     }
@@ -437,8 +493,22 @@ mod tests {
         };
 
         assert_ne!(
-            binary_project_cache_key("sifr_output", &base),
-            binary_project_cache_key("sifr_output", &with_interop)
+            binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-a")),
+            binary_project_cache_key(
+                "sifr_output",
+                &with_interop,
+                &test_dependency_plan("fingerprint-a")
+            )
+        );
+    }
+
+    #[test]
+    fn binary_project_cache_key_includes_sysroot_dependency_plan() {
+        let base = base_project();
+
+        assert_ne!(
+            binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-a")),
+            binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-b"))
         );
     }
 
@@ -482,6 +552,20 @@ mod tests {
             interop: InteropBuildPlan::default(),
             cache_key_fragment: None,
             python_runtime: None,
+        }
+    }
+
+    fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
+        SysrootDependencyPlan {
+            sysroot_root: "/sysroot".into(),
+            toolchain_id: "0.1.0-test-aarch64-test".to_string(),
+            sysroot_content_sha256: "0".repeat(64),
+            cargo_config: "/sysroot/.cargo/config.toml".into(),
+            vendor_dir: "/sysroot/vendor".into(),
+            crates: Vec::new(),
+            retained_direct_dependencies: Vec::new(),
+            cargo_vendor_mode: CargoVendorMode::SysrootOnly,
+            cache_fingerprint: cache_fingerprint.to_string(),
         }
     }
 }

@@ -1,28 +1,37 @@
 use serde_json::Value;
-use sifr_stdlib_model::{generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_model::{try_generated_cargo_dependencies, StdlibFeature};
 use std::collections::HashSet;
 
 const SNAPSHOT_JSON: &str = include_str!(
     "../../../verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json"
 );
 
-fn normalize_runtime_path(dependency: String) -> String {
-    if dependency.starts_with("sifr_runtime = ") {
-        if dependency.contains("features = [\"net\", \"tls\", \"http\"]") {
-            return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\", \"http\"] }"
-                .to_string();
-        }
-        if dependency.contains("features = [\"net\", \"tls\"]") {
-            return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\"] }"
-                .to_string();
-        }
-        if dependency.contains("features = [\"net\"]") {
-            return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\"] }"
-                .to_string();
-        }
-        return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
+fn normalize_sysroot_paths(dependency: String) -> String {
+    normalize_path_dependency(
+        normalize_path_dependency(dependency, "sifr_runtime", "<sifr_runtime_path>"),
+        "sifr_stdlib",
+        "<sifr_stdlib_path>",
+    )
+}
+
+fn normalize_path_dependency(dependency: String, package: &str, placeholder: &str) -> String {
+    if !dependency.starts_with(&format!("{package} = ")) {
+        return dependency;
     }
-    dependency
+    let Some(path_start) = dependency.find("path = \"") else {
+        return dependency;
+    };
+    let value_start = path_start + "path = \"".len();
+    let Some(value_end_offset) = dependency[value_start..].find('"') else {
+        return dependency;
+    };
+    let value_end = value_start + value_end_offset;
+    format!(
+        "{}{}{}",
+        &dependency[..value_start],
+        placeholder,
+        &dependency[value_end..]
+    )
 }
 
 fn normalized_generated_dependencies(
@@ -34,8 +43,16 @@ fn normalized_generated_dependencies(
         &extra_features.iter().copied().collect(),
     )
     .into_iter()
-    .map(normalize_runtime_path)
+    .map(normalize_sysroot_paths)
     .collect()
+}
+
+fn generated_cargo_dependencies(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+) -> Vec<String> {
+    try_generated_cargo_dependencies(stdlib_modules, required_features)
+        .expect("source-tree sysroot dependencies should resolve")
 }
 
 fn snapshot_field_strings(payload: &Value, snapshot_id: &str, field: &str) -> Vec<String> {
@@ -238,27 +255,17 @@ fn network_http_snapshot_json_matches_generated_dependency_output() {
 
 #[test]
 fn network_http_net_module_emits_locked_runtime_dependencies() {
-    let deps = generated_cargo_dependencies(
-        &HashSet::from(["sifr.net".to_string()]),
-        &HashSet::new(),
-    )
-    .into_iter()
-    .map(|dependency| {
-        if dependency.starts_with("sifr_runtime = ") {
-            if dependency.contains("features = [\"net\"]") {
-                return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\"] }"
-                    .to_string();
-            }
-            return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
-        }
-        dependency
-    })
-    .collect::<Vec<_>>();
+    let deps =
+        generated_cargo_dependencies(&HashSet::from(["sifr.net".to_string()]), &HashSet::new())
+            .into_iter()
+            .map(normalize_sysroot_paths)
+            .collect::<Vec<_>>();
 
     assert_eq!(
         deps,
         vec![
-            "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\"] }",
+            "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"net\"] }",
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"net\"] }",
             "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
             "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }",
         ]
@@ -271,27 +278,17 @@ fn network_http_net_module_emits_locked_runtime_dependencies() {
 
 #[test]
 fn network_http_tls_module_emits_locked_runtime_dependencies() {
-    let deps = generated_cargo_dependencies(
-        &HashSet::from(["sifr.tls".to_string()]),
-        &HashSet::new(),
-    )
-    .into_iter()
-    .map(|dependency| {
-        if dependency.starts_with("sifr_runtime = ") {
-            if dependency.contains("features = [\"net\", \"tls\"]") {
-                return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\"] }"
-                    .to_string();
-            }
-            return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
-        }
-        dependency
-    })
-    .collect::<Vec<_>>();
+    let deps =
+        generated_cargo_dependencies(&HashSet::from(["sifr.tls".to_string()]), &HashSet::new())
+            .into_iter()
+            .map(normalize_sysroot_paths)
+            .collect::<Vec<_>>();
 
     assert_eq!(
         deps,
         vec![
-            "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\"] }",
+            "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"net\", \"tls\"] }",
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"tls\"] }",
             "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
             "tokio-rustls = \"0.26.4\"",
             "rustls = \"=0.23.35\"",
@@ -320,11 +317,18 @@ fn network_http_tls_module_emits_locked_runtime_dependencies() {
 #[test]
 fn network_http_url_module_emits_locked_parser_dependencies() {
     let deps =
-        generated_cargo_dependencies(&HashSet::from(["sifr.url".to_string()]), &HashSet::new());
+        generated_cargo_dependencies(&HashSet::from(["sifr.url".to_string()]), &HashSet::new())
+            .into_iter()
+            .map(normalize_sysroot_paths)
+            .collect::<Vec<_>>();
 
     assert_eq!(
         deps,
-        vec!["url = \"2.5.8\"", "percent-encoding = \"2.3.2\"",]
+        vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"url\"] }",
+            "url = \"2.5.8\"",
+            "percent-encoding = \"2.3.2\"",
+        ]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.starts_with("http = ")));
@@ -341,9 +345,18 @@ fn network_http_url_module_emits_locked_parser_dependencies() {
 #[test]
 fn network_http_http_module_emits_locked_header_dependencies_without_cookie_crate() {
     let deps =
-        generated_cargo_dependencies(&HashSet::from(["sifr.http".to_string()]), &HashSet::new());
+        generated_cargo_dependencies(&HashSet::from(["sifr.http".to_string()]), &HashSet::new())
+            .into_iter()
+            .map(normalize_sysroot_paths)
+            .collect::<Vec<_>>();
 
-    assert_eq!(deps, vec!["http = \"1.4.1\""]);
+    assert_eq!(
+        deps,
+        vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\"] }",
+            "http = \"1.4.1\"",
+        ]
+    );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.starts_with("url = ")));
     assert!(!deps.iter().any(|dep| dep.contains("percent-encoding")));
@@ -362,11 +375,15 @@ fn network_http_combined_modules_emit_all_locked_url_http_dependencies_without_r
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.url".to_string(), "sifr.http".to_string()]),
         &HashSet::new(),
-    );
+    )
+    .into_iter()
+    .map(normalize_sysroot_paths)
+    .collect::<Vec<_>>();
 
     assert_eq!(
         deps,
         vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",
             "http = \"1.4.1\"",
             "url = \"2.5.8\"",
             "percent-encoding = \"2.3.2\"",
@@ -382,11 +399,15 @@ fn network_http_url_and_http_modules_emit_locked_dependencies() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.url".to_string(), "sifr.http".to_string()]),
         &HashSet::new(),
-    );
+    )
+    .into_iter()
+    .map(normalize_sysroot_paths)
+    .collect::<Vec<_>>();
 
     assert_eq!(
         deps,
         vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",
             "http = \"1.4.1\"",
             "url = \"2.5.8\"",
             "percent-encoding = \"2.3.2\"",
@@ -437,21 +458,14 @@ fn network_http_transport_intrinsics_emit_locked_hyper_runtime_dependencies() {
         ]),
     )
     .into_iter()
-    .map(|dependency| {
-        if dependency.starts_with("sifr_runtime = ") {
-            if dependency.contains("features = [\"net\", \"tls\", \"http\"]") {
-                return "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\", \"http\"] }"
-                    .to_string();
-            }
-            return "sifr_runtime = { path = \"<sifr_runtime_path>\" }".to_string();
-        }
-        dependency
-    })
+    .map(normalize_sysroot_paths)
     .collect::<Vec<_>>();
 
     assert_eq!(
         deps,
         vec![
+            "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"http\", \"net\", \"tls\"] }",
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"runtime-observability\", \"tls\"] }",
             "http = \"1.4.1\"",
             "bytes = \"1.11.1\"",
             "h2 = \"0.4.14\"",
@@ -462,7 +476,6 @@ fn network_http_transport_intrinsics_emit_locked_hyper_runtime_dependencies() {
             "rustls = \"=0.23.35\"",
             "rustls-pemfile = \"2.2.0\"",
             "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
-            "sifr_runtime = { path = \"<sifr_runtime_path>\", features = [\"net\", \"tls\", \"http\"] }",
             "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
             "tokio-rustls = \"0.26.4\"",
             "tower-service = \"0.3.3\"",

@@ -1,1 +1,2 @@
-# Placeholder sysroot Cargo config. M4 wires vendor source replacement.
+# Source-tree sysroot placeholder. Sifr-managed generated builds pass
+# invocation-scoped vendor configuration with `cargo --config`.

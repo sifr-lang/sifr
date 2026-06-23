@@ -39,9 +39,10 @@ mod url;
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
 use crypto_regex_uuid::{intrinsic_crypto, intrinsic_regex, intrinsic_uuid};
 pub use features::{
-    feature_for_codegen_requirement, features_for_stdlib_module, generated_cargo_dependencies,
-    generated_cargo_dependencies_with_sysroot, planned_sifr_stdlib_features,
-    try_generated_cargo_dependencies, GeneratedCargoDependency, StdlibFeature, StdlibFeatureSpec,
+    feature_for_codegen_requirement, features_for_stdlib_module, planned_sifr_stdlib_features,
+    sysroot_dependency_plan_with_sysroot, try_generated_cargo_dependencies,
+    try_sysroot_dependency_plan, CargoVendorMode, GeneratedCargoDependency, StdlibFeature,
+    StdlibFeatureSpec, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
     STDLIB_FEATURE_SPECS,
 };
 use http::intrinsic_http;

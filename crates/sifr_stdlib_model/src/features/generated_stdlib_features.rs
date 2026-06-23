@@ -42,6 +42,9 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.io" | "sifr.os" | "sifr.shutil" | "sifr.tempfile" => &["fs"],
         "sifr.signal" | "_sifr.signal" => &["signals"],
         "sifr.runtime" | "_sifr.runtime" => &["runtime-observability"],
+        "sifr.random" | "_sifr.crypto" => &["random"],
+        "sifr.time" | "sifr.datetime" | "_sifr.time" | "_sifr.datetime" => &["time"],
+        "sifr.encoding" | "_sifr.encoding" => &["encoding"],
         _ => &[],
     }
 }
@@ -80,18 +83,17 @@ fn features_for_requirement(feature: StdlibFeature) -> &'static [&'static str] {
         | StdlibFeature::UnicodeSegmentation => &["unicode"],
         StdlibFeature::Uuid => &["uuid"],
         StdlibFeature::Zip => &["zipfile"],
+        StdlibFeature::Chrono => &["time"],
+        StdlibFeature::Rand | StdlibFeature::RandDistr => &["random"],
         StdlibFeature::BigDecimal
-        | StdlibFeature::Bytes
-        | StdlibFeature::Chrono
-        | StdlibFeature::Cookie
-        | StdlibFeature::EncodingRs
-        | StdlibFeature::Ipc
         | StdlibFeature::NumBigint
         | StdlibFeature::NumTraits
-        | StdlibFeature::Rand
-        | StdlibFeature::RandDistr
         | StdlibFeature::Rayon
-        | StdlibFeature::RustDecimal
+        | StdlibFeature::RustDecimal => &["numeric"],
+        StdlibFeature::EncodingRs => &["encoding"],
+        StdlibFeature::Bytes
+        | StdlibFeature::Cookie
+        | StdlibFeature::Ipc
         | StdlibFeature::SifrRuntime
         | StdlibFeature::Tokio => &[],
     }

@@ -3,7 +3,7 @@ use super::{
     publicize_generated_module_source, HashMap, HashSet, HirModule, MultiModuleCodegenResult,
     Renderer, RustFile, RustItem, StdlibCode,
 };
-use sifr_stdlib_model::{generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_model::{try_generated_cargo_dependencies, StdlibFeature};
 pub(super) fn render_local_module_imports(module: &HirModule) -> String {
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {
@@ -107,6 +107,10 @@ pub fn generate_project_with_deps(
 }
 
 /// Generate a complete Rust project with stdlib and explicit crate dependencies.
+#[allow(
+    clippy::expect_used,
+    reason = "legacy codegen project helper has a tuple return type; driver build paths use fallible sysroot planning"
+)]
 pub fn generate_project_with_deps_and_crates(
     module: &HirModule,
     project_name: &str,
@@ -123,7 +127,8 @@ edition = "2021"
 "#
     );
 
-    let deps = generated_cargo_dependencies(stdlib_modules, required_features);
+    let deps = try_generated_cargo_dependencies(stdlib_modules, required_features)
+        .expect("legacy project generation should resolve the Sifr sysroot");
 
     if !deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");
