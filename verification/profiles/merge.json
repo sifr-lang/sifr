@@ -53,6 +53,7 @@
       {"id": "sifr_format", "package": "sifr_format", "command": ["test", "-p", "sifr_format"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_lint", "package": "sifr_lint", "command": ["test", "-p", "sifr_lint"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_source", "package": "sifr_source", "command": ["test", "-p", "sifr_source"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_sysroot", "package": "sifr_sysroot", "command": ["test", "-p", "sifr_sysroot"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_ir", "package": "sifr_ir", "command": ["test", "-p", "sifr_ir"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_cli_bin", "package": "sifr", "command": ["test", "-p", "sifr", "--bin", "sifr"], "modes": ["smoke"], "status": "blocking", "executed_in_merge": false},
       {"id": "sifr_cli_full", "package": "sifr", "command": ["test", "-p", "sifr", "--", "--skip", "test_e2e_pass"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},

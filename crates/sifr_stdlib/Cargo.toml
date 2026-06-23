@@ -9,6 +9,7 @@ license = { workspace = true }
 [dependencies]
 postcard = { workspace = true }
 serde = { workspace = true }
+sifr_sysroot = { workspace = true }
 sifr_type_system = { workspace = true }
 
 [dev-dependencies]

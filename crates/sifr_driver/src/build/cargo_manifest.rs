@@ -1,5 +1,6 @@
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
-use sifr_stdlib::{generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib::{generated_cargo_dependencies, try_generated_cargo_dependencies, StdlibFeature};
+use sifr_sysroot::SysrootError;
 use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
@@ -7,6 +8,29 @@ pub(crate) fn generate_dependency_cargo_toml(
     project_name: &str,
     stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
+    interop: &InteropBuildPlan,
+) -> Result<String, SysrootError> {
+    let stdlib_deps = try_generated_cargo_dependencies(stdlib_modules, required_features)?;
+    Ok(render_dependency_cargo_toml(
+        project_name,
+        &stdlib_deps,
+        interop,
+    ))
+}
+
+pub(crate) fn generate_dependency_cargo_toml_for_cache_key(
+    project_name: &str,
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+    interop: &InteropBuildPlan,
+) -> String {
+    let stdlib_deps = generated_cargo_dependencies(stdlib_modules, required_features);
+    render_dependency_cargo_toml(project_name, &stdlib_deps, interop)
+}
+
+fn render_dependency_cargo_toml(
+    project_name: &str,
+    stdlib_deps: &[String],
     interop: &InteropBuildPlan,
 ) -> String {
     let mut cargo_toml = format!(
@@ -19,11 +43,10 @@ edition = "2021"
 "#
     );
 
-    let stdlib_deps = generated_cargo_dependencies(stdlib_modules, required_features);
     let interop_deps = rust_interop_path_dependencies(interop);
     if !stdlib_deps.is_empty() || !interop_deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");
-        for dep in &stdlib_deps {
+        for dep in stdlib_deps {
             cargo_toml.push_str(dep);
             cargo_toml.push('\n');
         }

@@ -18,12 +18,14 @@ pub(crate) use cli_model_and_entrypoint::main;
 mod build_output;
 mod check_and_package_commands;
 mod diagnostic_rendering_and_run;
+mod explain_cli;
 mod formatter_cli;
 mod lint_cli;
 mod self_update_cli;
 mod self_update_metadata;
 mod self_update_receipt;
 mod self_update_runner;
+mod sysroot_cli;
 mod trace_cli;
 mod workspace_run_selection;
 
