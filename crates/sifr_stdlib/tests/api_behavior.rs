@@ -42,6 +42,30 @@ fn http_header_name_canonicalizes_and_rejects_invalid_names() {
     assert!(sifr_stdlib::http::HeaderName::new("x-\u{e9}").is_err());
 }
 
+#[cfg(feature = "html")]
+#[test]
+fn html_leaf_escapes_and_unescapes_common_entities() {
+    assert_eq!(
+        sifr_stdlib::html::html_escape("<a href=\"x\">'ok' & done</a>"),
+        "&lt;a href=&quot;x&quot;&gt;&#x27;ok&#x27; &amp; done&lt;/a&gt;"
+    );
+    assert_eq!(
+        sifr_stdlib::html::html_unescape("&lt;b&gt;safe &amp; sound&lt;/b&gt;"),
+        "<b>safe & sound</b>"
+    );
+    assert_eq!(sifr_stdlib::html::feature_name(), "html");
+}
+
+#[cfg(feature = "platform")]
+#[test]
+fn platform_leaf_returns_non_empty_host_strings() {
+    assert!(!sifr_stdlib::platform::platform_system().is_empty());
+    assert!(!sifr_stdlib::platform::platform_arch().is_empty());
+    assert!(!sifr_stdlib::platform::platform_node().is_empty());
+    assert!(!sifr_stdlib::platform::platform_processor().is_empty());
+    assert_eq!(sifr_stdlib::platform::feature_name(), "platform");
+}
+
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {
@@ -58,7 +82,9 @@ fn runtime_observability_emits_diagnostic_without_subscriber() {
     feature = "fs",
     feature = "gzip",
     feature = "hash",
+    feature = "html",
     feature = "net",
+    feature = "platform",
     feature = "process",
     feature = "python",
     feature = "regex",
@@ -76,7 +102,9 @@ fn marker_modules_report_leaf_names() {
         sifr_stdlib::fs::feature_name(),
         sifr_stdlib::gzip::feature_name(),
         sifr_stdlib::hash::feature_name(),
+        sifr_stdlib::html::feature_name(),
         sifr_stdlib::net::feature_name(),
+        sifr_stdlib::platform::feature_name(),
         sifr_stdlib::process::feature_name(),
         sifr_stdlib::python::feature_name(),
         sifr_stdlib::regex::feature_name(),

@@ -356,11 +356,8 @@ pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
 
 #[test]
 pub(crate) fn lowers_html_intrinsics_via_registry() {
-    let esc = lower_intrinsic("html_escape", &["s".to_string()]).expect("html_escape");
-    assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\")"));
-
-    let unesc = lower_intrinsic("html_unescape", &["s".to_string()]).expect("html_unescape");
-    assert!(render_expr(&unesc.expr).contains("replace(\"&amp;\", \"&\")"));
+    assert!(lower_intrinsic("html_escape", &["s".to_string()]).is_none());
+    assert!(lower_intrinsic("html_unescape", &["s".to_string()]).is_none());
 }
 
 #[test]

@@ -177,7 +177,13 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
     let cases = [
         ("sifr.re", &["regex"][..], &["json", "http", "python"][..]),
         ("sifr.json", &["json"][..], &["regex", "http", "python"][..]),
+        ("sifr.html", &["html"][..], &["json", "regex", "http"][..]),
         ("sifr.http", &["http"][..], &["json", "regex", "python"][..]),
+        (
+            "sifr.platform",
+            &["platform"][..],
+            &["json", "regex", "http"][..],
+        ),
         (
             "sifr.python",
             &["python"][..],
@@ -201,6 +207,26 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
                 "{module} unexpectedly enabled {unexpected}"
             );
         }
+    }
+}
+
+#[test]
+fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
+    for (module, expected_feature) in [("sifr.html", "html"), ("sifr.platform", "platform")] {
+        let deps =
+            generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());
+        assert_eq!(deps.len(), 1, "{module} should only emit sifr_stdlib");
+        assert!(
+            deps[0].starts_with("sifr_stdlib = "),
+            "{module} dependency: {}",
+            deps[0]
+        );
+        assert!(
+            deps[0].contains("default-features = false")
+                && deps[0].contains(&format!("features = [\"{expected_feature}\"]")),
+            "{module} dependency: {}",
+            deps[0]
+        );
     }
 }
 

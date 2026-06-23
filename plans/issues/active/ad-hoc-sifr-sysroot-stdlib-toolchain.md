@@ -17,8 +17,8 @@ In progress.
 | M6. Distribution Artifact and Installer Update | completed, merged | Merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753). Release artifacts now package `bin/sifr` plus the complete sysroot, validate archive contents before checksums/installer generation, write schema-2 receipts with `sysroot_path`, and preserve binary/sysroot pairing through self-update. Focused validation passed: `cargo test -p sifr self_update`, `cargo test -p sifr_sysroot`, distribution release representative suite, and developer tooling TypeScript-Go transfer suite. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M8. Rust Interop Context for Private Stdlib Declarations | completed, pending merge | Open in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | not started | M9 native leaf migration is next after M8 is reviewed and merged. |
+| M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
+| M9-M13 | in progress | M9 wave 1 is open in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features; remaining M9 stateless leaves continue in follow-up waves. |
 
 ## PR Log
 
@@ -31,6 +31,7 @@ In progress.
 - M6 distribution artifact and installer update: merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753).
 - M7 LSP/tooling sysroot source/navigation integration: merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754).
 - M7b tooling sysroot diagnostics and synthetic origins: merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755).
+- M9 wave 1 stateless platform/html leaves: open in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757).
 
 ## Design Reference
 
@@ -594,15 +595,69 @@ completion bar for every migrated surface.
 
 Remove low-risk compiler-special native stdlib plumbing first.
 
+Wave 1 status: `_sifr.platform` and `_sifr.html` are migrated to private
+`@rust(sifr_stdlib.*)` declarations backed by narrow `platform` and `html`
+features in `sifr_stdlib`. Public wrappers still expose the existing
+`sifr.platform` and `sifr.html` APIs, including public-module re-exported
+private leaf names, but codegen no longer routes these leaves through active
+intrinsic dispatch. Sysroot Rust probes now enable declared `sifr_stdlib`
+features for feature-gated private targets. The wave also records the adjacent
+Python interop integration fix exposed by native-link evidence validation:
+generated projects that combine sysroot Rust interop with embedded Python trust
+only the selected packaged runtime's `libpython` link, and Python example
+runners normalize relative `CARGO_TARGET_DIR` before invoking generated package
+builds from package working directories. Sysroot Rust probe manifests now match
+generated manifests by disabling `sifr_stdlib` default features, and the e2e
+fixture harness emits the matching feature-gated `sifr_stdlib` dependency for
+migrated `html`/`platform` modules.
+
 Tasks:
 
 - Move math leaves to private declarations backed by `sifr_stdlib`.
-- Move base64/base32, hash, UUID, regex, TOML, HTML, platform, and calendar
-  leaves.
+- Move base64/base32, hash, UUID, regex, TOML, and calendar leaves.
+- Move HTML and platform leaves. (wave 1 complete)
 - Update `sifr_stdlib` feature groups and `SysrootDependencyPlan` mapping as
-  each leaf migrates.
+  each leaf migrates. (wave 1 complete for `html` and `platform`)
 - Add explicit unsupported-by-design notes for any stateless leaf deferred due
   to type-system or interop limitations.
+
+Wave 1 implementation evidence:
+
+- `stdlib/_sifr/platform.sifr` and `stdlib/_sifr/html.sifr` declare private
+  `@rust(sifr_stdlib.platform.*)` / `@rust(sifr_stdlib.html.*)` leaves.
+- `crates/sifr_stdlib/src/platform.rs` and `crates/sifr_stdlib/src/html.rs`
+  own the Rust implementations behind `platform` and `html` Cargo features.
+- `sifr_codegen` no longer registers platform/html names in the active
+  intrinsic dispatch table; registry tests assert these names do not lower as
+  compiler intrinsics.
+- `sifr_stdlib_model` keeps platform/html intrinsic-module signatures only as
+  stdlib-lowering bootstrap metadata until later M9 waves remove the remaining
+  dependency on that fallback; those entries are no longer active codegen
+  lowerers.
+- The e2e fixture harness now adds one `sifr_stdlib` path dependency with
+  `default-features = false` and the migrated leaf features for fixtures that
+  import `sifr.html`, `_sifr.html`, `sifr.platform`, or `_sifr.platform`.
+- Focused validation passed:
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_driver stateless_private_codegen_tests -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features --locked`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_driver python_runtime --locked`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_driver python_runtime_libpython_link_is_trusted_when_interop_validation_runs --locked`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_driver sysroot_probe_manifest -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_driver sysroot_stdlib_probe_features_follow_target_module_segment -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_codegen lowers_platform_intrinsics_via_registry -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_codegen lowers_html_intrinsics_via_registry -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo test -p sifr_stdlib_model planned_sysroot_stdlib_features_are_minimal_for_representative_modules -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo run -q -p sifr -- run demos/platform/main.sifr`;
+  `CARGO_TARGET_DIR=target/m9-stateless-leaves cargo run -q -p sifr -- run demos/html_and_textwrap/main.sifr`;
+  `CARGO_TARGET_DIR=target/m9-create-pr CARGO_BUILD_JOBS=1 uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite self-test --suite scaffold --suite env --suite tier1 --suite callbacks --suite dataframes --suite ml --suite libraries --suite cloud-boto3`.
+- Local create-pr validation passed with zero failures across freshly written
+  area results: `CARGO_TARGET_DIR=target/m9-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+- Opus review passes 3, 4, and 5 returned `VERDICT: PASS`; non-blocking feedback was
+  addressed by documenting/testing sysroot probe feature derivation,
+  documenting the retained stdlib-model bootstrap signatures, and adding the
+  Python-runtime/native-link follow-up validation plus probe manifest
+  `default-features = false` parity before the final wave review; pass 5
+  separately reviewed the e2e fixture `sifr_stdlib` dependency emission.
 
 Acceptance:
 

@@ -19,6 +19,7 @@ pub struct PackagePythonRuntime {
     trusted_import_roots: Vec<String>,
     native_import_roots: Vec<String>,
     trusted_native_roots: Vec<String>,
+    libpython: Option<String>,
 }
 
 impl PackagePythonRuntime {
@@ -47,6 +48,7 @@ impl PackagePythonRuntime {
             trusted_import_roots,
             native_import_roots: detected_native_import_roots(probe),
             trusted_native_roots,
+            libpython: probe.libpython.clone(),
         }
     }
 
@@ -89,7 +91,50 @@ impl PackagePythonRuntime {
             trusted_import_roots: vec!["math".to_string()],
             native_import_roots: Vec::new(),
             trusted_native_roots: Vec::new(),
+            libpython: None,
         }
+    }
+
+    #[must_use]
+    pub(super) fn trusted_native_link_names(&self) -> Vec<String> {
+        let mut links = Vec::new();
+        if let Some(libpython) = &self.libpython {
+            if let Some(link_name) = native_link_name_from_libpython(libpython) {
+                links.push(link_name);
+            }
+        }
+        if links.is_empty()
+            && self.implementation_name.eq_ignore_ascii_case("cpython")
+            && self.cpython_version_tuple.len() >= 2
+        {
+            links.push(format!(
+                "python{}.{}",
+                self.cpython_version_tuple[0], self.cpython_version_tuple[1]
+            ));
+        }
+        links.sort();
+        links.dedup();
+        links
+    }
+
+    #[cfg(test)]
+    pub(super) fn set_libpython_for_tests(&mut self, libpython: &str) {
+        self.libpython = Some(libpython.to_string());
+    }
+}
+
+fn native_link_name_from_libpython(libpython: &str) -> Option<String> {
+    let file_name = std::path::Path::new(libpython).file_name()?.to_str()?;
+    let without_prefix = file_name.strip_prefix("lib").unwrap_or(file_name);
+    let without_suffix = without_prefix
+        .strip_suffix(".dylib")
+        .or_else(|| without_prefix.strip_suffix(".a"))
+        .or_else(|| without_prefix.split_once(".so").map(|(name, _)| name))
+        .unwrap_or(without_prefix);
+    if without_suffix.is_empty() {
+        None
+    } else {
+        Some(without_suffix.to_string())
     }
 }
 
@@ -279,6 +324,21 @@ mod tests {
 
         assert!(rendered.contains("native_import_roots: vec![\"numpy\".to_string()]"));
         assert!(rendered.contains("trusted_native_roots: vec![]"));
+    }
+
+    #[test]
+    fn trusted_native_link_names_include_selected_libpython() {
+        let mut metadata = metadata();
+        metadata.set_libpython_for_tests("/opt/python/lib/libpython3.13.dylib");
+
+        assert_eq!(metadata.trusted_native_link_names(), ["python3.13"]);
+    }
+
+    #[test]
+    fn trusted_native_link_names_fall_back_to_cpython_version() {
+        let metadata = metadata();
+
+        assert_eq!(metadata.trusted_native_link_names(), ["python3.13"]);
     }
 
     #[test]

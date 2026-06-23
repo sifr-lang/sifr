@@ -24,35 +24,29 @@ fn toml_decode_error_ty() -> Type {
     }
 }
 
-/// _sifr.platform — Platform information intrinsics
+/// _sifr.platform — Platform information bootstrap signatures.
 pub(super) fn intrinsic_platform() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    // platform_system() -> str (e.g., "Linux", "Darwin", "Windows")
     functions.insert(
         "platform_system".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
     );
-    // platform_arch() -> str (e.g., "x86_64", "aarch64")
     functions.insert(
         "platform_arch".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
     );
-    // platform_node() -> str (hostname)
     functions.insert(
         "platform_node".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
     );
-    // platform_release() -> str (OS release version)
     functions.insert(
         "platform_release".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
     );
-    // platform_version() -> str (OS version string)
     functions.insert(
         "platform_version".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
     );
-    // platform_processor() -> str (processor type)
     functions.insert(
         "platform_processor".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
@@ -139,15 +133,13 @@ pub(super) fn intrinsic_datetime() -> IntrinsicModule {
     }
 }
 
-/// _sifr.html — HTML escaping intrinsics
+/// _sifr.html — HTML escaping bootstrap signatures.
 pub(super) fn intrinsic_html() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    // html_escape(s: str) -> str
     functions.insert(
         "html_escape".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
     );
-    // html_unescape(s: str) -> str
     functions.insert(
         "html_unescape".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),

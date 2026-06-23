@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from env import RunnerPaths
+from env import RunnerPaths, cargo_env_for_repo_manifest
 
 EXAMPLE_TIMEOUT_SECONDS = 600
 
@@ -242,6 +242,7 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
                 "run",
             ],
             cwd=package_root,
+            env=cargo_env_for_repo_manifest(paths.repo_root),
             text=True,
             capture_output=True,
             check=False,

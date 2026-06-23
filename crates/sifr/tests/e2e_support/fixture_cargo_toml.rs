@@ -141,6 +141,14 @@ pub(crate) fn generate_cargo_toml(
         deps.insert(sifr_runtime_dependency_spec_for_modules(stdlib_modules));
     }
 
+    if needs_sifr_stdlib_module_dependency(stdlib_modules)
+        && !deps
+            .iter()
+            .any(|dependency| dependency.starts_with("sifr_stdlib = "))
+    {
+        deps.insert(sifr_stdlib_dependency_spec_for_modules(stdlib_modules));
+    }
+
     if needs_sifr_runtime_http_dependency(required_crates)
         && !deps
             .iter()
@@ -325,6 +333,15 @@ fn needs_sifr_runtime_module_dependency(stdlib_modules: &BTreeSet<String>) -> bo
                 | "_sifr.net"
                 | "sifr.tls"
                 | "_sifr.tls"
+        )
+    })
+}
+
+fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> bool {
+    stdlib_modules.iter().any(|module| {
+        matches!(
+            module.as_str(),
+            "sifr.html" | "_sifr.html" | "sifr.platform" | "_sifr.platform"
         )
     })
 }

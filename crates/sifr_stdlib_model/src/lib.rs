@@ -146,6 +146,8 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.crypto" => Some(intrinsic_crypto()),
         "_sifr.regex" => Some(intrinsic_regex()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
+        // Retained as a stdlib-lowering bootstrap fallback while these leaves
+        // migrate to compiled private declarations.
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.net" => Some(intrinsic_net()),
         "_sifr.tls" => Some(intrinsic_tls()),
@@ -158,6 +160,8 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.task" => Some(intrinsic_task()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
+        // Retained as a stdlib-lowering bootstrap fallback while these leaves
+        // migrate to compiled private declarations.
         "_sifr.html" => Some(intrinsic_html()),
         "_sifr.calendar" => Some(intrinsic_calendar()),
         "_sifr.compress" => Some(intrinsic_compress()),

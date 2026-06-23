@@ -28,6 +28,8 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.uuid" | "_sifr.uuid" => &["uuid"],
         "sifr.hash" | "sifr.hashlib" => &["hash"],
         "sifr.base64" => &["base64"],
+        "sifr.html" | "_sifr.html" => &["html"],
+        "sifr.platform" | "_sifr.platform" => &["platform"],
         "sifr.tomllib" | "_sifr.toml" => &["toml"],
         "sifr.url" | "_sifr.url" => &["url"],
         "sifr.gzip" | "_sifr.compress" => &["gzip"],
