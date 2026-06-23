@@ -8,12 +8,12 @@ In progress.
 
 | Milestone | Status | Evidence |
 | --- | --- | --- |
-| M0. Architecture Baseline and Inventory | implemented, pending review/PR | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`. |
-| M1-M13 | not started | Await M0 review/merge before code movement. |
+| M0. Architecture Baseline and Inventory | implemented, PR open | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`; local create-pr validation and Opus review are satisfied in [PR #2741](https://github.com/sifr-lang/sifr/pull/2741). |
+| M1-M13 | not started | Await M0 merge before code movement. |
 
 ## PR Log
 
-- M0 baseline/inventory: pending.
+- M0 baseline/inventory: [PR #2741](https://github.com/sifr-lang/sifr/pull/2741) open.
 
 ## Design Reference
 
