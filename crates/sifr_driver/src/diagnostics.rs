@@ -1,6 +1,7 @@
 use sifr_diagnostics::codes::registry_entry;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 pub(crate) use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
+use sifr_frontend::SourceOrigin;
 use sifr_package::{PackageDiagnostic, PackageDiagnosticOrigin};
 use sifr_stdlib_model::StdlibFeature;
 use std::any::Any;
@@ -17,6 +18,7 @@ pub enum CompileResult {
 pub enum CompileResultFull {
     Success {
         rust_source: String,
+        generated_source_map: Vec<GeneratedSourceMapFile>,
         used_stdlib_modules: HashSet<String>,
         required_features: HashSet<StdlibFeature>,
         lowering_stats: sifr_codegen::LoweringStats,
@@ -24,6 +26,13 @@ pub enum CompileResultFull {
     Errors {
         errors: Vec<RenderedDiagnostic>,
     },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GeneratedSourceMapFile {
+    pub path: String,
+    pub origin: SourceOrigin,
+    pub source: String,
 }
 
 /// Creates a rendered error diagnostic with canonical diagnostic identity.

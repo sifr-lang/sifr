@@ -812,6 +812,7 @@ pub fn generate_rust_with_stdlib_for_module(
             source.push_str("\n\n");
         }
         source.push_str(stdlib_preamble.trim_end());
+        source.push_str("\n// --- end stdlib ---");
         if !assembled_body_items.is_empty() {
             let body_source = Renderer::new().render_file(&RustFile {
                 items: assembled_body_items.clone(),

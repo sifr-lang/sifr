@@ -469,8 +469,25 @@ pub(crate) fn generated_rust_preview(preview: GeneratedRustPreview) -> Value {
     json!({
         "file": preview.file.as_u32(),
         "rust": preview.rust,
+        "sourceMapFiles": preview.source_map_files.into_iter().map(|file| {
+            json!({
+                "path": file.path,
+                "origin": source_origin_name(file.origin),
+                "source": file.source,
+            })
+        }).collect::<Vec<_>>(),
         "unavailableReason": preview.unavailable_reason
     })
+}
+
+fn source_origin_name(origin: sifr_analysis::SourceOrigin) -> &'static str {
+    match origin {
+        sifr_analysis::SourceOrigin::UserSource => "UserSource",
+        sifr_analysis::SourceOrigin::SysrootPublicStdlib => "SysrootPublicStdlib",
+        sifr_analysis::SourceOrigin::SysrootPrivateDeclaration => "SysrootPrivateDeclaration",
+        sifr_analysis::SourceOrigin::GeneratedSupport => "GeneratedSupport",
+        sifr_analysis::SourceOrigin::CompilerSynthetic => "CompilerSynthetic",
+    }
 }
 
 fn diagnostic_span_range(
