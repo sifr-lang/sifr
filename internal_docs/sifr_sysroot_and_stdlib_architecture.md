@@ -27,7 +27,7 @@ state. Later implementation stages update the implementation toward the architec
 | Public Sifr stdlib sources | `lib/sifr/*.sifr`, embedded by `crates/sifr_stdlib_model/src/sources.rs` through `include_str!` | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | sysroot resolver, canonical source-root move | yes |
 | Private stdlib declarations | No physical `stdlib/_sifr` source tree; private modules are represented by compiler intrinsic metadata | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | private declaration files, synthetic stdlib interop context | mixed |
 | Compiler-side stdlib model | `crates/sifr_stdlib_model` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | complete | yes |
-| Generated-program stdlib implementation crate | Does not exist as a distinct crate | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | compiler stdlib-model rename frees the name, then generated-program crate creation adds the new crate | yes |
+| Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_model` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` in the development workspace; generated Cargo finds it through `SIFR_RUNTIME_PATH`, ancestor scanning, or `env!("CARGO_MANIFEST_DIR")` fallback | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asks `sifr_stdlib_model::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from `sifr_stdlib_model`, consumed by codegen, driver, cache keys, reports, and LSP traces | dependency planner | yes |
 | Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
@@ -384,6 +384,12 @@ runtime glue.
 `sifr_stdlib` is the Rust-native implementation crate for Sifr standard library
 operations. It is a generated-program dependency, shipped in the sysroot, and
 versioned with the compiler.
+
+The initial implementation crate exists in the development workspace with
+`default-features = false`, narrow leaf features, and small wrapper APIs around
+runtime primitives that already live in `sifr_runtime`. Later migration stages
+move individual native leaves out of compiler/codegen surfaces and into this
+crate behind the same feature names.
 
 It owns Rust implementations for stdlib native leaves and resource operations
 that are not compiler semantics:

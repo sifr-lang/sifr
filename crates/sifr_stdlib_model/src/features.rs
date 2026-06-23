@@ -3,7 +3,9 @@ use std::path::PathBuf;
 
 use sifr_sysroot::{resolve_sysroot, ResolvedSysroot, SysrootError};
 
+mod generated_stdlib_features;
 mod runtime_features;
+pub use generated_stdlib_features::planned_sifr_stdlib_features;
 use runtime_features::RuntimeFeatures;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]

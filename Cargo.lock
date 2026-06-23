@@ -3111,6 +3111,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_stdlib"
+version = "0.0.0"
+dependencies = [
+ "sifr_runtime",
+ "tracing",
+]
+
+[[package]]
 name = "sifr_stdlib_model"
 version = "0.0.0"
 dependencies = [

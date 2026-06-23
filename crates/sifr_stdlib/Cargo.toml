@@ -1,0 +1,42 @@
+[package]
+name = "sifr_stdlib"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+sifr_runtime = { path = "../sifr_runtime", default-features = false, optional = true }
+tracing = { workspace = true, optional = true }
+
+[features]
+default = []
+json = ["dep:sifr_runtime"]
+regex = []
+uuid = []
+hash = []
+base64 = []
+toml = []
+url = []
+gzip = []
+# Zip archive support owns the zip leaf and enables gzip for deflate streams.
+zipfile = ["gzip"]
+unicode = ["dep:sifr_runtime", "sifr_runtime/unicode"]
+i18n = ["dep:sifr_runtime", "sifr_runtime/i18n"]
+net = ["dep:sifr_runtime", "sifr_runtime/net"]
+tls = ["net", "sifr_runtime/tls"]
+http = ["tls", "sifr_runtime/http"]
+python = ["dep:sifr_runtime", "sifr_runtime/python"]
+process = []
+fs = []
+signals = []
+runtime-observability = ["dep:tracing"]
+
+# Maintenance aliases. Generated Cargo planning must prefer the leaf features
+# above so one stdlib module does not enable unrelated capability groups.
+text-data = ["json", "base64", "toml", "url", "gzip", "zipfile", "unicode", "i18n"]
+network-stack = ["net", "tls", "http"]
+
+[lints]
+workspace = true

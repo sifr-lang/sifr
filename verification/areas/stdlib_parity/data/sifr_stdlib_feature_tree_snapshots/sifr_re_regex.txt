@@ -1,0 +1,1 @@
+sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
