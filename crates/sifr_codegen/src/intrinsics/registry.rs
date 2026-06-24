@@ -1,5 +1,3 @@
-mod base32;
-mod base64;
 mod bytes;
 mod collections;
 mod datetime;
@@ -734,32 +732,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             Some(StdlibFeature::Zip),
         ),
         "zip_namelist" => (zipfile::lower_zip_namelist(args), Some(StdlibFeature::Zip)),
-        "base64_decode" => (
-            base64::lower_base64_decode(args),
-            Some(StdlibFeature::Base64),
-        ),
-        "base64_decode_bytes" => (
-            base64::lower_base64_decode_bytes(args),
-            Some(StdlibFeature::Base64),
-        ),
-        "base64_encode_opts" => (
-            base64::lower_base64_encode_opts(args),
-            Some(StdlibFeature::Base64),
-        ),
-        "base64_decode_opts" => (
-            base64::lower_base64_decode_opts(args),
-            Some(StdlibFeature::Base64),
-        ),
-        "urlsafe_b64decode" => (
-            base64::lower_urlsafe_b64decode(args),
-            Some(StdlibFeature::Base64),
-        ),
-        "urlsafe_b64decode_bytes" => (
-            base64::lower_urlsafe_b64decode_bytes(args),
-            Some(StdlibFeature::Base64),
-        ),
-        "b32decode" => (base32::lower_b32decode(args), None),
-        "b32hexdecode" => (base32::lower_b32hexdecode(args), None),
         "set_global_level" => (logging::lower_set_global_level(args), None),
         "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,
