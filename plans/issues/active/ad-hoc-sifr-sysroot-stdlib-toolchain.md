@@ -18,7 +18,7 @@ In progress.
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. Remaining M9 stateless leaves continue in follow-up waves. |
+| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 is locally validated for PR, migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. Remaining M9 stateless leaves continue in follow-up waves. |
 
 ## PR Log
 
@@ -35,6 +35,7 @@ In progress.
 - M9 wave 2 stateless calendar leaf: merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759).
 - M9 wave 3 stateless UUID leaf: merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761).
 - M9 wave 4 stateless math leaf: merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763).
+- M9 wave 5 stateless hash leaf: locally validated for PR.
 
 ## Design Reference
 
@@ -616,15 +617,15 @@ migrated `html`/`platform` modules.
 
 Tasks:
 
-- Move math leaves to private declarations backed by `sifr_stdlib`. (wave 4 complete in current branch)
-- Move base64/base32, hash, regex, and TOML leaves.
+- Move math leaves to private declarations backed by `sifr_stdlib`. (wave 4 complete)
+- Move base64/base32, hash, regex, and TOML leaves. (hash wave 5 in local review)
 - Move UUID leaf. (wave 3 complete)
 - Move calendar leaf. (wave 2 complete)
 - Move HTML and platform leaves. (wave 1 complete)
 - Update `sifr_stdlib` feature groups and `SysrootDependencyPlan` mapping as
-  each leaf migrates. (wave 4 complete for `math`; wave 3 complete for
-  `uuid`; wave 2 complete for `calendar`; wave 1 complete for `html` and
-  `platform`)
+  each leaf migrates. (wave 5 complete for `hash`; wave 4 complete for
+  `math`; wave 3 complete for `uuid`; wave 2 complete for `calendar`; wave 1
+  complete for `html` and `platform`)
 - Add explicit unsupported-by-design notes for any stateless leaf deferred due
   to type-system or interop limitations.
 
@@ -790,6 +791,63 @@ Wave 4 implementation evidence:
 - Local create-pr validation passed with zero failures:
   `scripts/run_all_tests.sh --profile create-pr`. The run reported the warm
   wall-time advisory only.
+
+Wave 5 status: `_sifr.crypto` hash helpers used by `sifr.hashlib` are migrated
+to private `@rust(sifr_stdlib.hash.*)` declarations backed by the narrow
+`hash` feature in `sifr_stdlib`. The active compiler intrinsic registry no
+longer owns SHA, MD5, or Blake2 hash lowering. Because `_sifr.crypto` is shared
+with base64/base32 and random helpers that have not migrated yet, bootstrap now
+re-exports missing intrinsic fallbacks for names that the compiled private
+module does not provide.
+
+Wave 5 implementation evidence:
+
+- `stdlib/_sifr/crypto.sifr` declares private
+  `@rust(sifr_stdlib.hash.*)` leaves for string and byte forms of SHA-256,
+  MD5, SHA-1, SHA-224, SHA-384, SHA-512, Blake2b, and Blake2s helpers.
+- `crates/sifr_stdlib/src/hash.rs` owns the hash helper behavior behind the
+  `hash` Cargo feature, returning lowercase hex strings for text helpers and
+  raw digest byte vectors for bytes helpers.
+- `stdlib/sifr/hashlib.sifr` keeps public owned `str`/`bytes` helper APIs by
+  wrapping private underscored aliases such as `_sha256_impl`, so borrowed Rust
+  interop parameter conventions do not leak into generated public call sites.
+- `crates/sifr_driver/src/stdlib/bootstrap.rs` preserves partial `_sifr.crypto`
+  migration by adding intrinsic fallback declarations only for requested names
+  that compiled private exports did not provide.
+- `sifr_codegen` no longer registers hash names in the active intrinsic
+  dispatch table; registry tests assert core and extended hash names do not
+  lower as compiler intrinsics.
+- The e2e fixture harness enables the `hash` feature for fixtures that import
+  `sifr.hash`, `sifr.hashlib`, or `_sifr.crypto` and no longer emits direct
+  hash-crate dependencies for `sifr.hashlib` fixtures.
+- Rust interop probes now normalize inherited relative `CARGO_TARGET_DIR`
+  values against the original compiler invocation directory before running
+  temp-project cargo probes, so local validation lanes reuse the intended shared
+  target directory instead of rebuilding probe dependencies under
+  `/tmp/sifr_rust_probe_*`.
+- Focused validation passed:
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib --features hash hash_leaf_matches_known_digest_vectors --locked`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen hash_intrinsics --locked`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 cargo test -p sifr_driver rust_interop_probe --locked`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 cargo test -p sifr_driver crypto_hash_private_declarations_codegen_through_sifr_stdlib --locked`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model planned_sysroot_stdlib_features_are_minimal_for_representative_modules --locked`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies --locked`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features --locked`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 target/m9-hash/debug/sifr run crates/sifr/tests/e2e/pass/stdlib_hash.sifr`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 target/m9-hash/debug/sifr run crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 target/m9-hash/debug/sifr run crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 target/m9-hash/debug/sifr run crates/sifr/tests/e2e/pass/bytes_hashing_and_base64.sifr`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 target/m9-hash/debug/sifr run crates/sifr/tests/e2e/pass/stdlib_hashlib_intrinsics.sifr`;
+  `CARGO_TARGET_DIR=$(pwd)/target/m9-hash CARGO_BUILD_JOBS=1 target/m9-hash/debug/sifr run crates/sifr/tests/e2e/pass/cpython_rng_additional_subset.sifr`;
+  `cargo fmt --check`;
+  `git diff --check`;
+  `python3 scripts/check_file_size_guardrails.py`.
+- Opus review pass 1 returned `VERDICT: PASS` for the hash migration,
+  including the public `sifr.hashlib` wrapper aliases and partial
+  `_sifr.crypto` fallback behavior.
+- Local create-pr validation passed with zero failures:
+  `CARGO_TARGET_DIR=target/m9-hash-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The run reported the warm wall-time advisory only.
 
 Acceptance:
 

@@ -21,7 +21,7 @@ deletion_stage = "stateless-native-leaf migration"
 [[surface]]
 id = "_sifr.crypto"
 public_modules = ["sifr.base64", "sifr.hashlib", "sifr.random", "sifr.secrets", "sifr.tempfile"]
-current_owner = "compiler intrinsic registry: crypto/hash/base64/base32/random modules plus direct generated dependencies"
+current_owner = "mixed: hash helpers via crates/sifr_stdlib private declarations; base64/base32/random helpers still use compiler intrinsic fallback plus direct generated dependencies"
 final_owner = "crates/sifr_stdlib for base encodings, hash, UUID/random-facing helpers; crates/sifr_runtime only for language/runtime state that remains shared"
 reason = "Stateless encodings and hashes are stdlib leaves; random module state requires explicit retained or migrated ownership."
 certification_state = "mixed-stateless-supported-resource-state-needs-review"

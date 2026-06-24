@@ -46,12 +46,6 @@ pub(crate) fn generate_cargo_toml(
             "sifr.re" | "_sifr.regex" => {
                 deps.insert("regex = \"1.12.3\"".to_string());
             }
-            "sifr.hash" | "sifr.hashlib" => {
-                deps.insert("sha2 = \"0.11.0\"".to_string());
-                deps.insert("md5 = \"0.8.0\"".to_string());
-                deps.insert("sha1 = \"0.11.0\"".to_string());
-                deps.insert("blake2 = \"0.10.6\"".to_string());
-            }
             "sifr.encoding" | "_sifr.encoding" => {
                 deps.insert("encoding_rs = \"0.8.35\"".to_string());
             }
@@ -343,6 +337,9 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.uuid"
                 | "sifr.math"
                 | "_sifr.math"
+                | "sifr.hash"
+                | "sifr.hashlib"
+                | "_sifr.crypto"
                 | "sifr.platform"
                 | "_sifr.platform"
         )

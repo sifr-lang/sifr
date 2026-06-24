@@ -65,6 +65,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.math", "_sifr.math"]) {
         features.push("math");
     }
+    if has_module(&["sifr.hash", "sifr.hashlib", "_sifr.crypto"]) {
+        features.push("hash");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 

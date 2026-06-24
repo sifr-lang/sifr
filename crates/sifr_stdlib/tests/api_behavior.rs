@@ -162,6 +162,29 @@ fn math_leaf_matches_public_math_helpers() {
     assert_eq!(sifr_stdlib::math::feature_name(), "math");
 }
 
+#[cfg(feature = "hash")]
+#[test]
+fn hash_leaf_matches_known_digest_vectors() {
+    assert_eq!(
+        sifr_stdlib::hash::sha256("abc"),
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    );
+    assert_eq!(
+        sifr_stdlib::hash::md5("abc"),
+        "900150983cd24fb0d6963f7d28e17f72"
+    );
+    assert_eq!(
+        sifr_stdlib::hash::sha1("abc"),
+        "a9993e364706816aba3e25717850c26c9cd0d89d"
+    );
+    assert_eq!(sifr_stdlib::hash::sha224_bytes(b"abc").len(), 28);
+    assert_eq!(sifr_stdlib::hash::sha384_bytes(b"abc").len(), 48);
+    assert_eq!(sifr_stdlib::hash::sha512_bytes(b"abc").len(), 64);
+    assert_eq!(sifr_stdlib::hash::blake2b_bytes(b"abc").len(), 64);
+    assert_eq!(sifr_stdlib::hash::blake2s_bytes(b"abc").len(), 32);
+    assert_eq!(sifr_stdlib::hash::feature_name(), "hash");
+}
+
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {

@@ -5,10 +5,10 @@ use sifr_codegen::{
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::{env, fs};
 
 static PROBE_NONCE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -78,10 +78,17 @@ pub(super) fn execute_direct_cargo_probe(
     fs::write(probe_root.join("src/lib.rs"), probe_source(probe))
         .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
 
-    let output = Command::new("cargo")
+    let invocation_cwd = env::current_dir()
+        .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
+    let mut command = Command::new("cargo");
+    command
         .args(cargo_vendor_args(probe.sysroot_vendor_dir.as_deref()))
         .args(["check", "--quiet"])
-        .current_dir(&probe_root)
+        .current_dir(&probe_root);
+    if let Some(target_dir) = inherited_cargo_target_dir(&invocation_cwd) {
+        command.env("CARGO_TARGET_DIR", target_dir);
+    }
+    let output = command
         .output()
         .map_err(|error| probe_io_failure(format!("failed to run Rust probe: {error}")))?;
     let _ = fs::remove_dir_all(&probe_root);
@@ -216,6 +223,22 @@ fn cargo_vendor_args(vendor_dir: Option<&Path>) -> Vec<String> {
             toml_quote_string(&vendor_dir.display().to_string())
         ),
     ]
+}
+
+fn inherited_cargo_target_dir(invocation_cwd: &Path) -> Option<PathBuf> {
+    let target_dir = env::var_os("CARGO_TARGET_DIR")?;
+    Some(normalize_cargo_target_dir(
+        invocation_cwd,
+        PathBuf::from(target_dir),
+    ))
+}
+
+fn normalize_cargo_target_dir(invocation_cwd: &Path, target_dir: PathBuf) -> PathBuf {
+    if target_dir.is_absolute() {
+        target_dir
+    } else {
+        invocation_cwd.join(target_dir)
+    }
 }
 
 fn toml_quote_string(value: &str) -> String {
@@ -496,7 +519,8 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
 #[cfg(test)]
 mod tests {
     use super::{
-        cargo_vendor_args, dependency_features, generated_bridge_type_stubs, probe_cargo_toml,
+        cargo_vendor_args, dependency_features, generated_bridge_type_stubs,
+        normalize_cargo_target_dir, probe_cargo_toml,
     };
     use ruff_text_size::TextRange;
     use sifr_codegen::{
@@ -623,6 +647,28 @@ mod tests {
                 "--config",
                 "source.sifr-vendor.directory=\"/opt/sifr sysroot/vendor\"",
             ]
+        );
+    }
+
+    #[test]
+    fn relative_probe_target_dir_is_anchored_to_invocation_cwd() {
+        assert_eq!(
+            normalize_cargo_target_dir(
+                Path::new("/workspace/sifr"),
+                Path::new("target/create-pr").to_path_buf()
+            ),
+            Path::new("/workspace/sifr/target/create-pr")
+        );
+    }
+
+    #[test]
+    fn absolute_probe_target_dir_is_preserved() {
+        assert_eq!(
+            normalize_cargo_target_dir(
+                Path::new("/workspace/sifr"),
+                Path::new("/tmp/sifr-target").to_path_buf()
+            ),
+            Path::new("/tmp/sifr-target")
         );
     }
 }

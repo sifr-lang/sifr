@@ -175,3 +175,44 @@ fn math_private_declarations_codegen_through_sifr_stdlib() {
         );
     }
 }
+
+#[test]
+fn crypto_hash_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.crypto")
+        .expect("_sifr.crypto should generate private Rust code");
+
+    assert!(private_code.contains("sifr_stdlib::hash::sha256(s)"));
+    assert!(private_code.contains("sifr_stdlib::hash::sha256_bytes(data)"));
+    assert!(private_code.contains("sifr_stdlib::hash::blake2s_bytes(data)"));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.crypto")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.hashlib")
+        .is_some_and(|deps| deps.contains("_sifr.crypto")));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("sifr.hashlib")
+        .is_some_and(|names| !names.contains("sha256") && !names.contains("_sha256_impl")));
+    let hashlib_exports = compiled
+        .defs
+        .functions
+        .get("sifr.hashlib")
+        .expect("sifr.hashlib exports should be collected");
+    assert!(hashlib_exports.contains_key("sha256"));
+    assert!(!hashlib_exports.contains_key("_sha256_impl"));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("sifr.base64")
+        .is_some_and(|names| names.contains("base64_encode")));
+}
