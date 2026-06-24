@@ -1,2 +1,11 @@
-# Private _sifr.uuid native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+@rust(sifr_stdlib.uuid.uuid4, panic=trusted_no_panic)
+def uuid4() -> str:
+    return ""
+
+@rust(sifr_stdlib.uuid.uuid3_text, panic=trusted_no_panic)
+def uuid3_text(namespace: str, name: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.uuid.uuid5_text, panic=trusted_no_panic)
+def uuid5_text(namespace: str, name: str) -> str:
+    return ""

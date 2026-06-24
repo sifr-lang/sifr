@@ -37,7 +37,6 @@ mod tls;
 mod toml;
 mod unicode;
 mod url_http;
-mod uuid;
 mod zipfile;
 
 use crate::RustExpr;
@@ -555,9 +554,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "md5" => (hash::lower_md5(args), Some(StdlibFeature::Md5)),
         "sha256_bytes" => (hashlib::lower_sha256_bytes(args), Some(StdlibFeature::Sha2)),
         "md5_bytes" => (hashlib::lower_md5_bytes(args), Some(StdlibFeature::Md5)),
-        "uuid4" => (uuid::lower_uuid4(args), Some(StdlibFeature::Rand)),
-        "uuid3_text" => (uuid::lower_uuid3(args), Some(StdlibFeature::Uuid)),
-        "uuid5_text" => (uuid::lower_uuid5(args), Some(StdlibFeature::Uuid)),
         "toml_parse" => (toml::lower_toml_parse(args), Some(StdlibFeature::Toml)),
         "datetime_now" => (
             datetime::lower_datetime_now(args),

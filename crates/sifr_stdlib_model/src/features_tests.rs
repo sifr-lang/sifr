@@ -183,6 +183,7 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
             &["calendar"][..],
             &["json", "regex", "http"][..],
         ),
+        ("sifr.uuid", &["uuid"][..], &["json", "regex", "http"][..]),
         ("sifr.http", &["http"][..], &["json", "regex", "python"][..]),
         (
             "sifr.platform",
@@ -221,6 +222,7 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("sifr.html", "html"),
         ("sifr.platform", "platform"),
         ("sifr.calendar", "calendar"),
+        ("sifr.uuid", "uuid"),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());

@@ -100,6 +100,31 @@ fn calendar_leaf_matches_gregorian_helpers() {
     assert_eq!(sifr_stdlib::calendar::feature_name(), "calendar");
 }
 
+#[cfg(feature = "uuid")]
+#[test]
+fn uuid_leaf_matches_public_uuid_helpers() {
+    let generated = sifr_stdlib::uuid::uuid4();
+    assert_eq!(generated.len(), 36);
+    assert_eq!(generated.as_bytes()[14], b'4');
+    assert!(matches!(
+        generated.as_bytes()[19],
+        b'8' | b'9' | b'a' | b'b'
+    ));
+    assert_eq!(
+        sifr_stdlib::uuid::uuid3_text("6ba7b810-9dad-11d1-80b4-00c04fd430c8", "python.org"),
+        "6fa459ea-ee8a-3ca4-894e-db77e160355e"
+    );
+    assert_eq!(
+        sifr_stdlib::uuid::uuid5_text("6ba7b810-9dad-11d1-80b4-00c04fd430c8", "python.org"),
+        "886313e1-3b8a-5372-9b90-0c9aee199e5d"
+    );
+    assert_eq!(
+        sifr_stdlib::uuid::uuid3_text("not-a-uuid", "python.org"),
+        "0421fac3-a9c6-3ea3-aee8-8f20aff3f278"
+    );
+    assert_eq!(sifr_stdlib::uuid::feature_name(), "uuid");
+}
+
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {

@@ -199,31 +199,12 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
 
 #[test]
 pub(crate) fn lowers_uuid_intrinsic_via_registry() {
-    let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
-    assert_eq!(
-        uuid.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Rand)
-    );
-    assert!(render_expr(&uuid.expr).contains("rand::random::<u32>()"));
-    assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}\""));
-    assert!(render_expr(&uuid.expr).contains("(rand::random::<u16>() & 4095)"));
-
-    let uuid3 =
-        lower_intrinsic("uuid3_text", &["ns".to_string(), "name".to_string()]).expect("uuid3");
-    assert_eq!(
-        uuid3.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Uuid)
-    );
-    assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::parse_str"));
-    assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::new_v3"));
-
-    let uuid5 =
-        lower_intrinsic("uuid5_text", &["ns".to_string(), "name".to_string()]).expect("uuid5");
-    assert_eq!(
-        uuid5.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Uuid)
-    );
-    assert!(render_expr(&uuid5.expr).contains("uuid::Uuid::new_v5"));
+    for removed in ["uuid4", "uuid3_text", "uuid5_text"] {
+        assert!(
+            lower_intrinsic(removed, &["ns".to_string(), "name".to_string()]).is_none(),
+            "{removed} must lower through private stdlib Rust interop, not active intrinsics"
+        );
+    }
 }
 
 #[test]
