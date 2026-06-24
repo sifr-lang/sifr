@@ -393,16 +393,18 @@ crate behind the same feature names.
 
 Current migrated leaves include the stateless `_sifr.platform`, `_sifr.html`,
 `_sifr.calendar`, `_sifr.uuid`, and `_sifr.math` private declaration modules,
-plus the hash helper subset of the shared `_sifr.crypto` private module used by
-`sifr.hashlib`. Their public wrappers continue to live in
+plus the hash helper subset and infallible base encoding encoder subset of the
+shared `_sifr.crypto` private module used by `sifr.hashlib` and `sifr.base64`.
+Their public wrappers continue to live in
 `stdlib/sifr/platform.sifr`, `stdlib/sifr/html.sifr`,
 `stdlib/sifr/calendar.sifr`, `stdlib/sifr/uuid.sifr`,
-`stdlib/sifr/math.sifr`, and `stdlib/sifr/hashlib.sifr`, while generated code
-emits the private preamble functions and calls `sifr_stdlib::platform::*`,
-`sifr_stdlib::html::*`, `sifr_stdlib::calendar::*`,
-`sifr_stdlib::uuid::*`, `sifr_stdlib::math::*`, and
-`sifr_stdlib::hash::*` through feature-gated sysroot dependencies. Direct Rust
-interop wrappers bridge Sifr `int` values through
+`stdlib/sifr/math.sifr`, `stdlib/sifr/hashlib.sifr`, and
+`stdlib/sifr/base64.sifr`, while generated code emits the private preamble
+functions and calls `sifr_stdlib::platform::*`, `sifr_stdlib::html::*`,
+`sifr_stdlib::calendar::*`, `sifr_stdlib::uuid::*`,
+`sifr_stdlib::math::*`, `sifr_stdlib::hash::*`, and
+`sifr_stdlib::base64::*` through feature-gated sysroot dependencies. Direct
+Rust interop wrappers bridge Sifr `int` values through
 `sifr_runtime::interop::SifrIntBridge` at this boundary, including `list[int]`
 calendar returns. Public math aggregate helpers such as `dist`, `fsum`, and
 `sumprod` keep read-only list parameters in `stdlib/sifr/math.sifr` and copy
@@ -411,9 +413,12 @@ does not leak into the public API. `stdlib/sifr/hashlib.sifr` uses the same
 boundary pattern for string and bytes helpers: public `sha*`, `md5`, and
 `blake2*` functions wrap private underscored aliases imported from
 `_sifr.crypto`, keeping borrowed Rust interop parameters out of public generated
-call sites. During the incremental `_sifr.crypto` migration, base64/base32 and
-random helpers still use compiler intrinsic fallback declarations for names not
-supplied by the compiled private module.
+call sites. `stdlib/sifr/base64.sifr` uses the same pattern for infallible
+base64, URL-safe base64, base32, and base32hex encoders. Fallible
+base64/base32 decode and option helpers still use compiler intrinsic fallback
+declarations until the typed error bridge standardizes conversion for
+`Result[..., ParseError]`; random helpers also remain on intrinsic fallback
+until their stateful surface is migrated.
 
 When sysroot Rust interop activates native-link evidence validation in a
 generated project that also embeds Python, the selected packaged Python runtime

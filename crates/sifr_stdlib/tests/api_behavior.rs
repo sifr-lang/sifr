@@ -185,6 +185,62 @@ fn hash_leaf_matches_known_digest_vectors() {
     assert_eq!(sifr_stdlib::hash::feature_name(), "hash");
 }
 
+#[cfg(feature = "base64")]
+#[test]
+fn base64_leaf_matches_rfc_vectors_and_error_paths() {
+    assert_eq!(sifr_stdlib::base64::base64_encode(""), "");
+    assert_eq!(sifr_stdlib::base64::base64_encode("f"), "Zg==");
+    assert_eq!(sifr_stdlib::base64::base64_encode("fo"), "Zm8=");
+    assert_eq!(sifr_stdlib::base64::base64_encode("foo"), "Zm9v");
+    assert_eq!(sifr_stdlib::base64::base64_encode("foobar"), "Zm9vYmFy");
+    assert_eq!(
+        sifr_stdlib::base64::base64_decode("Zm9v").expect("decode foo"),
+        "foo"
+    );
+    assert_eq!(
+        sifr_stdlib::base64::base64_encode_bytes(b"foo"),
+        b"Zm9v".to_vec()
+    );
+    assert_eq!(
+        sifr_stdlib::base64::base64_decode_bytes(b"Zm9v").expect("decode bytes"),
+        b"foo".to_vec()
+    );
+    assert!(sifr_stdlib::base64::base64_decode("@@@@").is_err());
+    assert_eq!(
+        sifr_stdlib::base64::base64_encode_opts("foo", "-_", 0).expect("alt encode"),
+        "Zm9v"
+    );
+    assert_eq!(
+        sifr_stdlib::base64::base64_encode_opts("foobar", "", 4).expect("wrapped"),
+        "Zm9v\nYmFy"
+    );
+    assert!(sifr_stdlib::base64::base64_encode_opts("x", "+", 0).is_err());
+    assert!(sifr_stdlib::base64::base64_encode_opts("x", "", -1).is_err());
+    assert!(sifr_stdlib::base64::base64_decode_opts("YWJj!", "", true, "").is_err());
+    assert_eq!(
+        sifr_stdlib::base64::base64_decode_opts("Y W\nJj!", "", false, " \n!")
+            .expect("ignore decode"),
+        "abc"
+    );
+    assert_eq!(sifr_stdlib::base64::urlsafe_b64encode("hello"), "aGVsbG8=");
+    assert_eq!(
+        sifr_stdlib::base64::urlsafe_b64decode("aGVsbG8=").expect("urlsafe decode"),
+        "hello"
+    );
+    assert_eq!(sifr_stdlib::base64::b32encode("foo"), "MZXW6===");
+    assert_eq!(
+        sifr_stdlib::base64::b32decode("mzxw6===").expect("base32 casefold"),
+        "foo"
+    );
+    assert_eq!(sifr_stdlib::base64::b32hexencode("foo"), "CPNMU===");
+    assert_eq!(
+        sifr_stdlib::base64::b32hexdecode("cpnmu===").expect("base32hex casefold"),
+        "foo"
+    );
+    assert!(sifr_stdlib::base64::b32decode("@").is_err());
+    assert_eq!(sifr_stdlib::base64::feature_name(), "base64");
+}
+
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {

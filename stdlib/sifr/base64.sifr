@@ -1,11 +1,35 @@
 # sifr.base64 — Base64 encoding/decoding (renamed from sifr.encoding)
+from _sifr.crypto import base64_encode as _base64_encode_impl
+from _sifr.crypto import base64_encode_bytes as _base64_encode_bytes_impl
+from _sifr.crypto import urlsafe_b64encode as _urlsafe_b64encode_impl
+from _sifr.crypto import urlsafe_b64encode_bytes as _urlsafe_b64encode_bytes_impl
+from _sifr.crypto import b32encode as _b32encode_impl
+from _sifr.crypto import b32hexencode as _b32hexencode_impl
 from _sifr.crypto import (
-    base64_encode, base64_decode, base64_encode_opts, base64_decode_opts,
-    base64_encode_bytes, base64_decode_bytes,
-    urlsafe_b64encode, urlsafe_b64decode, urlsafe_b64encode_bytes, urlsafe_b64decode_bytes,
-    b32encode, b32decode, b32hexencode, b32hexdecode
+    base64_decode, base64_encode_opts, base64_decode_opts,
+    base64_decode_bytes,
+    urlsafe_b64decode, urlsafe_b64decode_bytes,
+    b32decode, b32hexdecode
 )
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
+
+def base64_encode(s: str) -> str:
+    return _base64_encode_impl(s)
+
+def base64_encode_bytes(data: bytes) -> bytes:
+    return _base64_encode_bytes_impl(data)
+
+def urlsafe_b64encode(s: str) -> str:
+    return _urlsafe_b64encode_impl(s)
+
+def urlsafe_b64encode_bytes(data: bytes) -> bytes:
+    return _urlsafe_b64encode_bytes_impl(data)
+
+def b32encode(s: str) -> str:
+    return _b32encode_impl(s)
+
+def b32hexencode(s: str) -> str:
+    return _b32hexencode_impl(s)
 
 # CPython-compatible aliases
 def b64encode(s: str) -> str:

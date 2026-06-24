@@ -205,6 +205,11 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
             &["hash"][..],
             &["json", "regex", "http", "python"][..],
         ),
+        (
+            "sifr.base64",
+            &["base64"][..],
+            &["json", "regex", "http", "python"][..],
+        ),
     ];
 
     for (module, expected, must_not_include) in cases {
