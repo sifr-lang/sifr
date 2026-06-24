@@ -548,92 +548,26 @@ pub(crate) fn lowers_base32_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_hashlib_intrinsics_with_dependency_metadata() {
-    let sha1 = lower_intrinsic("sha1", &["s".to_string()]).expect("sha1");
-    assert_eq!(
-        sha1.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha1)
-    );
-    assert!(render_expr(&sha1.expr).contains("<sha1::Sha1 as sha1::Digest>::digest"));
-
-    let sha1_bytes = lower_intrinsic("sha1_bytes", &["b".to_string()]).expect("sha1_bytes");
-    assert_eq!(
-        sha1_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha1)
-    );
-    assert!(render_expr(&sha1_bytes.expr).contains("to_vec"));
-
-    let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
-    assert_eq!(
-        sha512.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha512.expr).contains("<sha2::Sha512 as sha2::Digest>::digest"));
-
-    let sha512_bytes = lower_intrinsic("sha512_bytes", &["b".to_string()]).expect("sha512_bytes");
-    assert_eq!(
-        sha512_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha512_bytes.expr).contains("to_vec"));
-
-    let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
-    assert_eq!(
-        sha224.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha224.expr).contains("<sha2::Sha224 as sha2::Digest>::digest"));
-
-    let sha224_bytes = lower_intrinsic("sha224_bytes", &["b".to_string()]).expect("sha224_bytes");
-    assert_eq!(
-        sha224_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha224_bytes.expr).contains("to_vec"));
-
-    let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
-    assert_eq!(
-        sha384.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha384.expr).contains("<sha2::Sha384 as sha2::Digest>::digest"));
-
-    let sha384_bytes = lower_intrinsic("sha384_bytes", &["b".to_string()]).expect("sha384_bytes");
-    assert_eq!(
-        sha384_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha384_bytes.expr).contains("to_vec"));
-
-    let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
-    assert_eq!(
-        blake2b.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Blake2)
-    );
-    assert!(render_expr(&blake2b.expr).contains("Blake2b512"));
-
-    let blake2b_bytes =
-        lower_intrinsic("blake2b_bytes", &["b".to_string()]).expect("blake2b_bytes");
-    assert_eq!(
-        blake2b_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Blake2)
-    );
-    assert!(render_expr(&blake2b_bytes.expr).contains("to_vec"));
-
-    let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
-    assert_eq!(
-        blake2s.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Blake2)
-    );
-    assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
-
-    let blake2s_bytes =
-        lower_intrinsic("blake2s_bytes", &["b".to_string()]).expect("blake2s_bytes");
-    assert_eq!(
-        blake2s_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Blake2)
-    );
-    assert!(render_expr(&blake2s_bytes.expr).contains("to_vec"));
+pub(crate) fn extended_hash_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in [
+        "sha1",
+        "sha1_bytes",
+        "sha224",
+        "sha224_bytes",
+        "sha384",
+        "sha384_bytes",
+        "sha512",
+        "sha512_bytes",
+        "blake2b",
+        "blake2b_bytes",
+        "blake2s",
+        "blake2s_bytes",
+    ] {
+        assert!(
+            lower_intrinsic(name, &["payload".to_string()]).is_none(),
+            "{name} should lower through _sifr.crypto private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

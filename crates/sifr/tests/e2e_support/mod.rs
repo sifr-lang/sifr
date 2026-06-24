@@ -20,3 +20,4 @@ pub(crate) use batch_execution::*;
 mod e2e_entrypoints;
 mod harness_behavior_tests;
 mod network_http_dependency_rules_tests;
+mod stateless_sysroot_cargo_toml_tests;

@@ -1,2 +1,67 @@
 # Private _sifr.crypto native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+# Random and base encoding helpers still use compiler intrinsics during the
+# incremental stateless-leaf migration.
+
+@rust(sifr_stdlib.hash.sha256, panic=trusted_no_panic)
+def sha256(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.sha256_bytes, panic=trusted_no_panic)
+def sha256_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.hash.md5, panic=trusted_no_panic)
+def md5(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.md5_bytes, panic=trusted_no_panic)
+def md5_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.hash.sha1, panic=trusted_no_panic)
+def sha1(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.sha1_bytes, panic=trusted_no_panic)
+def sha1_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.hash.sha224, panic=trusted_no_panic)
+def sha224(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.sha224_bytes, panic=trusted_no_panic)
+def sha224_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.hash.sha384, panic=trusted_no_panic)
+def sha384(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.sha384_bytes, panic=trusted_no_panic)
+def sha384_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.hash.sha512, panic=trusted_no_panic)
+def sha512(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.sha512_bytes, panic=trusted_no_panic)
+def sha512_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.hash.blake2b, panic=trusted_no_panic)
+def blake2b(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.blake2b_bytes, panic=trusted_no_panic)
+def blake2b_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.hash.blake2s, panic=trusted_no_panic)
+def blake2s(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.hash.blake2s_bytes, panic=trusted_no_panic)
+def blake2s_bytes(data: bytes) -> bytes:
+    return b""

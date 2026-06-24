@@ -513,32 +513,6 @@ pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features
 }
 
 #[test]
-pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features() {
-    let combined_modules = normalize_dependency_set(
-        [
-            "sifr.platform",
-            "sifr.html",
-            "_sifr.calendar",
-            "sifr.uuid",
-            "sifr.math",
-        ]
-        .map(str::to_string),
-    );
-    let required_crates = BTreeSet::new();
-    let uuid_modules = normalize_dependency_set(vec!["_sifr.uuid".to_string()].into_iter());
-    let uuid_toml = generate_cargo_toml(&uuid_modules, &required_crates, "sifr_output");
-    assert!(uuid_toml.contains("sifr_stdlib = { path = "));
-    assert!(uuid_toml.contains("default-features = false"));
-    assert!(uuid_toml.contains("features = [\"uuid\"]"));
-    assert!(!uuid_toml.contains("rand = "));
-    assert!(!uuid_toml.contains("uuid = { version"));
-    let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
-    assert!(combined_toml
-        .contains("features = [\"html\", \"calendar\", \"platform\", \"uuid\", \"math\"]"));
-    assert_eq!(combined_toml.matches("sifr_stdlib = ").count(), 1);
-}
-
-#[test]
 pub(crate) fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
     let stdlib_modules = BTreeSet::new();
     let required_crates = normalize_dependency_set(vec!["tokio".to_string()]);

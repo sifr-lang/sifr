@@ -771,39 +771,13 @@ pub(crate) fn lowers_re_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_hash_intrinsics_via_registry() {
-    let sha = lower_intrinsic("sha256", &["payload".to_string()]).expect("sha256");
-    assert_eq!(
-        sha.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha.expr).contains("<sha2::Sha256 as sha2::Digest>::digest"));
-    assert!(render_expr(&sha.expr).contains(".as_bytes()"));
-
-    let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
-    assert_eq!(
-        md5.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Md5)
-    );
-    assert!(render_expr(&md5.expr).contains("md5::compute"));
-    assert!(render_expr(&md5.expr).contains(".as_bytes()"));
-
-    let sha_bytes =
-        lower_intrinsic("sha256_bytes", &["payload".to_string()]).expect("sha256_bytes");
-    assert_eq!(
-        sha_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Sha2)
-    );
-    assert!(render_expr(&sha_bytes.expr).contains("to_vec"));
-
-    let md5_bytes = lower_intrinsic("md5_bytes", &["payload".to_string()]).expect("md5_bytes");
-    assert_eq!(
-        md5_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Md5)
-    );
-    assert!(render_expr(&md5_bytes.expr).contains("md5::compute"));
-    assert!(render_expr(&md5_bytes.expr).contains(".0"));
-    assert!(render_expr(&md5_bytes.expr).contains("to_vec"));
+pub(crate) fn core_hash_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in ["sha256", "sha256_bytes", "md5", "md5_bytes"] {
+        assert!(
+            lower_intrinsic(name, &["payload".to_string()]).is_none(),
+            "{name} should lower through _sifr.crypto private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

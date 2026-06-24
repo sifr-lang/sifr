@@ -188,7 +188,8 @@ fn compile_stdlib_sources_with_sysroot(
                         &import.module,
                         &import.names,
                     );
-                    re_export_intrinsic_constants(
+                    re_export_intrinsic_fallbacks(
+                        &mut fn_exports,
                         &mut const_exports,
                         &mut intrinsic_names_for_module,
                         &mut stdlib_code,
@@ -536,7 +537,8 @@ fn signature_params(
         .collect()
 }
 
-fn re_export_intrinsic_constants(
+fn re_export_intrinsic_fallbacks(
+    fn_exports: &mut HashMap<String, FunctionType>,
     const_exports: &mut HashMap<String, Type>,
     intrinsic_names_for_module: &mut HashSet<String>,
     stdlib_code: &mut StdlibCode,
@@ -547,20 +549,24 @@ fn re_export_intrinsic_constants(
         return;
     };
     for name in import_names {
-        if const_exports.contains_key(name) {
-            continue;
+        if !fn_exports.contains_key(name) {
+            if let Some(ft) = intrinsic_mod.functions.get(name) {
+                fn_exports.insert(name.clone(), ft.clone());
+                intrinsic_names_for_module.insert(name.clone());
+            }
         }
-        let Some(const_ty) = intrinsic_mod.constants.get(name) else {
-            continue;
-        };
-        const_exports.insert(name.clone(), const_ty.clone());
-        intrinsic_names_for_module.insert(name.clone());
-        if let Some(rust_expr) = intrinsic_constant_rust_expr(import_module, name) {
-            stdlib_code
-                .module_constants
-                .entry(import_module.to_string())
-                .or_default()
-                .insert(name.clone(), (const_ty.clone(), rust_expr.to_string()));
+        if !const_exports.contains_key(name) {
+            if let Some(const_ty) = intrinsic_mod.constants.get(name) {
+                const_exports.insert(name.clone(), const_ty.clone());
+                intrinsic_names_for_module.insert(name.clone());
+                if let Some(rust_expr) = intrinsic_constant_rust_expr(import_module, name) {
+                    stdlib_code
+                        .module_constants
+                        .entry(import_module.to_string())
+                        .or_default()
+                        .insert(name.clone(), (const_ty.clone(), rust_expr.to_string()));
+                }
+            }
         }
     }
 }

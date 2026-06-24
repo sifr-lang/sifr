@@ -200,6 +200,11 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
             &["math"][..],
             &["json", "regex", "http", "python"][..],
         ),
+        (
+            "sifr.hashlib",
+            &["hash"][..],
+            &["json", "regex", "http", "python"][..],
+        ),
     ];
 
     for (module, expected, must_not_include) in cases {
@@ -224,6 +229,7 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("sifr.calendar", "calendar"),
         ("sifr.uuid", "uuid"),
         ("sifr.math", "math"),
+        ("sifr.hashlib", "hash"),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());

@@ -3,13 +3,10 @@ mod base64;
 mod bytes;
 mod collections;
 mod datetime;
-mod digest_format;
 mod encoding;
 mod env;
 mod file_handles;
 mod gzip;
-mod hash;
-mod hashlib;
 mod i18n;
 mod io;
 mod json;
@@ -490,10 +487,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "re_replace_flags" => (re::lower_re_replace_flags(args), Some(StdlibFeature::Regex)),
         "re_findall_flags" => (re::lower_re_findall_flags(args), Some(StdlibFeature::Regex)),
         "re_split_flags" => (re::lower_re_split_flags(args), Some(StdlibFeature::Regex)),
-        "sha256" => (hash::lower_sha256(args), Some(StdlibFeature::Sha2)),
-        "md5" => (hash::lower_md5(args), Some(StdlibFeature::Md5)),
-        "sha256_bytes" => (hashlib::lower_sha256_bytes(args), Some(StdlibFeature::Sha2)),
-        "md5_bytes" => (hashlib::lower_md5_bytes(args), Some(StdlibFeature::Md5)),
         "toml_parse" => (toml::lower_toml_parse(args), Some(StdlibFeature::Toml)),
         "datetime_now" => (
             datetime::lower_datetime_now(args),
@@ -785,24 +778,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "b32decode" => (base32::lower_b32decode(args), None),
         "b32hexencode" => (base32::lower_b32hexencode(args), None),
         "b32hexdecode" => (base32::lower_b32hexdecode(args), None),
-        "sha1" => (hashlib::lower_sha1(args), Some(StdlibFeature::Sha1)),
-        "sha1_bytes" => (hashlib::lower_sha1_bytes(args), Some(StdlibFeature::Sha1)),
-        "sha512" => (hashlib::lower_sha512(args), Some(StdlibFeature::Sha2)),
-        "sha512_bytes" => (hashlib::lower_sha512_bytes(args), Some(StdlibFeature::Sha2)),
-        "sha224" => (hashlib::lower_sha224(args), Some(StdlibFeature::Sha2)),
-        "sha224_bytes" => (hashlib::lower_sha224_bytes(args), Some(StdlibFeature::Sha2)),
-        "sha384" => (hashlib::lower_sha384(args), Some(StdlibFeature::Sha2)),
-        "sha384_bytes" => (hashlib::lower_sha384_bytes(args), Some(StdlibFeature::Sha2)),
-        "blake2b" => (hashlib::lower_blake2b(args), Some(StdlibFeature::Blake2)),
-        "blake2b_bytes" => (
-            hashlib::lower_blake2b_bytes(args),
-            Some(StdlibFeature::Blake2),
-        ),
-        "blake2s" => (hashlib::lower_blake2s(args), Some(StdlibFeature::Blake2)),
-        "blake2s_bytes" => (
-            hashlib::lower_blake2s_bytes(args),
-            Some(StdlibFeature::Blake2),
-        ),
         "set_global_level" => (logging::lower_set_global_level(args), None),
         "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,

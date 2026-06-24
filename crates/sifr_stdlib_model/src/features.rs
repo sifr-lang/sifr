@@ -604,15 +604,11 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             &[StdlibFeature::SerdeJson]
         }
         "sifr.time" | "_sifr.time" => &[StdlibFeature::Chrono],
-        "sifr.random" | "_sifr.crypto" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],
+        "sifr.random" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],
+        "_sifr.crypto" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],
         "sifr.uuid" | "_sifr.uuid" => &[],
         "sifr.re" | "_sifr.regex" | "sifr.pathlib" => &[StdlibFeature::Regex],
-        "sifr.hash" | "sifr.hashlib" => &[
-            StdlibFeature::Sha2,
-            StdlibFeature::Md5,
-            StdlibFeature::Sha1,
-            StdlibFeature::Blake2,
-        ],
+        "sifr.hash" | "sifr.hashlib" => &[],
         "sifr.encoding" | "_sifr.encoding" => {
             &[StdlibFeature::EncodingRs, StdlibFeature::SifrRuntime]
         }

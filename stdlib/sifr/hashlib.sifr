@@ -1,9 +1,21 @@
 # sifr.hashlib — Hashing functions and hash object model
 from _sifr.bytes import encode_utf8, bytes_to_hex_strict
-from _sifr.crypto import (
-    sha256, md5, sha1, sha512, sha224, sha384, blake2b, blake2s,
-    sha256_bytes, md5_bytes, sha1_bytes, sha512_bytes, sha224_bytes, sha384_bytes, blake2b_bytes, blake2s_bytes
-)
+from _sifr.crypto import sha256 as _sha256_impl
+from _sifr.crypto import md5 as _md5_impl
+from _sifr.crypto import sha1 as _sha1_impl
+from _sifr.crypto import sha512 as _sha512_impl
+from _sifr.crypto import sha224 as _sha224_impl
+from _sifr.crypto import sha384 as _sha384_impl
+from _sifr.crypto import blake2b as _blake2b_impl
+from _sifr.crypto import blake2s as _blake2s_impl
+from _sifr.crypto import sha256_bytes as _sha256_bytes_impl
+from _sifr.crypto import md5_bytes as _md5_bytes_impl
+from _sifr.crypto import sha1_bytes as _sha1_bytes_impl
+from _sifr.crypto import sha512_bytes as _sha512_bytes_impl
+from _sifr.crypto import sha224_bytes as _sha224_bytes_impl
+from _sifr.crypto import sha384_bytes as _sha384_bytes_impl
+from _sifr.crypto import blake2b_bytes as _blake2b_bytes_impl
+from _sifr.crypto import blake2s_bytes as _blake2s_bytes_impl
 from _sifr.fs import read_text
 
 
@@ -40,6 +52,70 @@ class HashObject:
 
     def digest_bytes(self) -> bytes:
         return self.digest()
+
+
+def sha256(s: str) -> str:
+    return _sha256_impl(s)
+
+
+def sha256_bytes(data: bytes) -> bytes:
+    return _sha256_bytes_impl(data)
+
+
+def md5(s: str) -> str:
+    return _md5_impl(s)
+
+
+def md5_bytes(data: bytes) -> bytes:
+    return _md5_bytes_impl(data)
+
+
+def sha1(s: str) -> str:
+    return _sha1_impl(s)
+
+
+def sha1_bytes(data: bytes) -> bytes:
+    return _sha1_bytes_impl(data)
+
+
+def sha224(s: str) -> str:
+    return _sha224_impl(s)
+
+
+def sha224_bytes(data: bytes) -> bytes:
+    return _sha224_bytes_impl(data)
+
+
+def sha384(s: str) -> str:
+    return _sha384_impl(s)
+
+
+def sha384_bytes(data: bytes) -> bytes:
+    return _sha384_bytes_impl(data)
+
+
+def sha512(s: str) -> str:
+    return _sha512_impl(s)
+
+
+def sha512_bytes(data: bytes) -> bytes:
+    return _sha512_bytes_impl(data)
+
+
+def blake2b(s: str) -> str:
+    return _blake2b_impl(s)
+
+
+def blake2b_bytes(data: bytes) -> bytes:
+    return _blake2b_bytes_impl(data)
+
+
+def blake2s(s: str) -> str:
+    return _blake2s_impl(s)
+
+
+def blake2s_bytes(data: bytes) -> bytes:
+    return _blake2s_bytes_impl(data)
 
 
 def _build_hash(algorithm: str, data: bytes) -> HashObject:
