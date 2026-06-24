@@ -145,9 +145,9 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.time" => Some(intrinsic_time()),
         "_sifr.crypto" => Some(intrinsic_crypto()),
         "_sifr.regex" => Some(intrinsic_regex()),
-        "_sifr.uuid" => Some(intrinsic_uuid()),
         // Retained as a stdlib-lowering bootstrap fallback while these leaves
         // migrate to compiled private declarations.
+        "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.net" => Some(intrinsic_net()),
         "_sifr.tls" => Some(intrinsic_tls()),

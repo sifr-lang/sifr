@@ -43,12 +43,6 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert("rand = \"0.10.1\"".to_string());
                 deps.insert("rand_distr = \"0.6.0\"".to_string());
             }
-            "sifr.uuid" | "_sifr.uuid" => {
-                deps.insert("rand = \"0.10.1\"".to_string());
-                deps.insert(
-                    "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }".to_string(),
-                );
-            }
             "sifr.re" | "_sifr.regex" => {
                 deps.insert("regex = \"1.12.3\"".to_string());
             }
@@ -345,6 +339,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.html"
                 | "sifr.calendar"
                 | "_sifr.calendar"
+                | "sifr.uuid"
+                | "_sifr.uuid"
                 | "sifr.platform"
                 | "_sifr.platform"
         )

@@ -514,28 +514,19 @@ pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features
 
 #[test]
 pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features() {
-    let platform_modules = normalize_dependency_set(vec!["sifr.platform".to_string()].into_iter());
-    let html_modules = normalize_dependency_set(vec!["_sifr.html".to_string()].into_iter());
-    let calendar_modules = normalize_dependency_set(vec!["sifr.calendar".to_string()].into_iter());
     let combined_modules = normalize_dependency_set(
-        ["sifr.platform", "sifr.html", "_sifr.calendar"]
-            .into_iter()
-            .map(str::to_string),
+        ["sifr.platform", "sifr.html", "_sifr.calendar", "sifr.uuid"].map(str::to_string),
     );
     let required_crates = BTreeSet::new();
-
-    let platform_toml = generate_cargo_toml(&platform_modules, &required_crates, "sifr_output");
-    assert!(platform_toml.contains("sifr_stdlib = { path = "));
-    assert!(platform_toml.contains("default-features = false"));
-    assert!(platform_toml.contains("features = [\"platform\"]"));
-
-    let html_toml = generate_cargo_toml(&html_modules, &required_crates, "sifr_output");
-    assert!(html_toml.contains("features = [\"html\"]"));
-    let calendar_toml = generate_cargo_toml(&calendar_modules, &required_crates, "sifr_output");
-    assert!(calendar_toml.contains("features = [\"calendar\"]"));
-
+    let uuid_modules = normalize_dependency_set(vec!["_sifr.uuid".to_string()].into_iter());
+    let uuid_toml = generate_cargo_toml(&uuid_modules, &required_crates, "sifr_output");
+    assert!(uuid_toml.contains("sifr_stdlib = { path = "));
+    assert!(uuid_toml.contains("default-features = false"));
+    assert!(uuid_toml.contains("features = [\"uuid\"]"));
+    assert!(!uuid_toml.contains("rand = "));
+    assert!(!uuid_toml.contains("uuid = { version"));
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
-    assert!(combined_toml.contains("features = [\"html\", \"calendar\", \"platform\"]"));
+    assert!(combined_toml.contains("features = [\"html\", \"calendar\", \"platform\", \"uuid\"]"));
     assert_eq!(combined_toml.matches("sifr_stdlib = ").count(), 1);
 }
 

@@ -59,6 +59,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.platform", "_sifr.platform"]) {
         features.push("platform");
     }
+    if has_module(&["sifr.uuid", "_sifr.uuid"]) {
+        features.push("uuid");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 
