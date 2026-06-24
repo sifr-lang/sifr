@@ -62,6 +62,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.uuid", "_sifr.uuid"]) {
         features.push("uuid");
     }
+    if has_module(&["sifr.math", "_sifr.math"]) {
+        features.push("math");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 

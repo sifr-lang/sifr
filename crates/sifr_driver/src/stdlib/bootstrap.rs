@@ -188,6 +188,13 @@ fn compile_stdlib_sources_with_sysroot(
                         &import.module,
                         &import.names,
                     );
+                    re_export_intrinsic_constants(
+                        &mut const_exports,
+                        &mut intrinsic_names_for_module,
+                        &mut stdlib_code,
+                        &import.module,
+                        &import.names,
+                    );
                 } else if let Some(intrinsic_mod) =
                     sifr_stdlib_model::get_intrinsic_module(&import.module)
                 {
@@ -246,6 +253,15 @@ fn compile_stdlib_sources_with_sysroot(
                 const_exports.insert(name.clone(), ty.clone());
             }
         }
+        fn_exports.retain(|name, _| should_export_callable(module_name, name));
+        default_exports.retain(|name, _| should_export_callable(module_name, name));
+        vararg_exports.retain(|name, _| should_export_callable(module_name, name));
+        workload_exports.retain(|name, _| {
+            let owner_name = name
+                .split_once('.')
+                .map_or(name.as_str(), |(owner, _)| owner);
+            should_export_callable(module_name, owner_name)
+        });
         let const_integer_value_exports = collect_public_constant_integer_value_exports(
             result
                 .module
@@ -518,6 +534,35 @@ fn signature_params(
             )
         })
         .collect()
+}
+
+fn re_export_intrinsic_constants(
+    const_exports: &mut HashMap<String, Type>,
+    intrinsic_names_for_module: &mut HashSet<String>,
+    stdlib_code: &mut StdlibCode,
+    import_module: &str,
+    import_names: &[String],
+) {
+    let Some(intrinsic_mod) = sifr_stdlib_model::get_intrinsic_module(import_module) else {
+        return;
+    };
+    for name in import_names {
+        if const_exports.contains_key(name) {
+            continue;
+        }
+        let Some(const_ty) = intrinsic_mod.constants.get(name) else {
+            continue;
+        };
+        const_exports.insert(name.clone(), const_ty.clone());
+        intrinsic_names_for_module.insert(name.clone());
+        if let Some(rust_expr) = intrinsic_constant_rust_expr(import_module, name) {
+            stdlib_code
+                .module_constants
+                .entry(import_module.to_string())
+                .or_default()
+                .insert(name.clone(), (const_ty.clone(), rust_expr.to_string()));
+        }
+    }
 }
 
 fn collect_public_constant_integer_value_exports<'a, T: Clone>(

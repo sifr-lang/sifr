@@ -31,32 +31,23 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
 }
 
 #[test]
-pub(crate) fn lowers_math_intrinsics_via_registry() {
-    let lowered = lower_intrinsic("sqrt", &["x".to_string()]).expect("sqrt should lower");
-    assert_eq!(render_expr(&lowered.expr), "(x).sqrt()");
-
-    let lowered = lower_intrinsic("pow_val", &["a".to_string(), "b".to_string()])
-        .expect("pow_val should lower");
-    assert_eq!(render_expr(&lowered.expr), "(a).powf(b)");
-
-    let lowered =
-        lower_intrinsic("atan2", &["y".to_string(), "x".to_string()]).expect("atan2 should lower");
-    assert_eq!(render_expr(&lowered.expr), "(y).atan2(x)");
-
-    let lowered = lower_intrinsic("round_val", &["n".to_string()]).expect("round_val should lower");
-    assert_eq!(render_expr(&lowered.expr), "(n).round() as i64");
-
-    let lowered = lower_intrinsic("floor", &["n".to_string()]).expect("floor should lower");
-    assert_eq!(render_expr(&lowered.expr), "(n).floor() as i64");
-
-    let lowered = lower_intrinsic("ceil", &["n".to_string()]).expect("ceil should lower");
-    assert_eq!(render_expr(&lowered.expr), "(n).ceil() as i64");
-
-    let lowered = lower_intrinsic("isfinite", &["f".to_string()]).expect("isfinite should lower");
-    assert_eq!(render_expr(&lowered.expr), "(f).is_finite()");
-
-    let lowered = lower_intrinsic("isqrt", &["v".to_string()]).expect("isqrt should lower");
-    assert_eq!(render_expr(&lowered.expr), "((v) as f64).sqrt() as i64");
+pub(crate) fn math_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    let retired = [
+        "sqrt",
+        "pow_val",
+        "atan2",
+        "round_val",
+        "floor",
+        "ceil",
+        "isfinite",
+        "isqrt",
+    ];
+    for name in retired {
+        assert!(
+            lower_intrinsic(name, &["x".to_string(), "y".to_string(), "z".to_string()]).is_none(),
+            "{name} should lower through _sifr.math private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

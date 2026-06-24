@@ -18,7 +18,7 @@ In progress.
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. Remaining M9 stateless leaves continue in follow-up waves. |
+| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 is open in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. Remaining M9 stateless leaves continue in follow-up waves. |
 
 ## PR Log
 
@@ -34,6 +34,7 @@ In progress.
 - M9 wave 1 stateless platform/html leaves: merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757).
 - M9 wave 2 stateless calendar leaf: merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759).
 - M9 wave 3 stateless UUID leaf: merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761).
+- M9 wave 4 stateless math leaf: open in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763).
 
 ## Design Reference
 
@@ -615,14 +616,15 @@ migrated `html`/`platform` modules.
 
 Tasks:
 
-- Move math leaves to private declarations backed by `sifr_stdlib`.
+- Move math leaves to private declarations backed by `sifr_stdlib`. (wave 4 complete in current branch)
 - Move base64/base32, hash, regex, and TOML leaves.
 - Move UUID leaf. (wave 3 complete)
 - Move calendar leaf. (wave 2 complete)
 - Move HTML and platform leaves. (wave 1 complete)
 - Update `sifr_stdlib` feature groups and `SysrootDependencyPlan` mapping as
-  each leaf migrates. (wave 3 complete for `uuid`; wave 2 complete for
-  `calendar`; wave 1 complete for `html` and `platform`)
+  each leaf migrates. (wave 4 complete for `math`; wave 3 complete for
+  `uuid`; wave 2 complete for `calendar`; wave 1 complete for `html` and
+  `platform`)
 - Add explicit unsupported-by-design notes for any stateless leaf deferred due
   to type-system or interop limitations.
 
@@ -746,6 +748,48 @@ Wave 3 implementation evidence:
   `CARGO_TARGET_DIR=target/m9-uuid-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
   The run reported warm wall-time and cache-hit advisories only.
 - Opus review pass 1 returned `VERDICT: PASS` for the UUID migration.
+
+Wave 4 status: `_sifr.math` is migrated to private
+`@rust(sifr_stdlib.math.*)` declarations backed by the narrow `math` feature in
+`sifr_stdlib`. The active compiler intrinsic registry no longer owns math
+lowering. Public aggregate helpers that accept lists keep borrowed public
+semantics in `stdlib/sifr/math.sifr` and copy into private owned-vector bridge
+helpers so Rust interop ownership does not leak into the public API.
+
+Wave 4 implementation evidence:
+
+- `stdlib/_sifr/math.sifr` declares private
+  `@rust(sifr_stdlib.math.*)` leaves for scalar math helpers, predicates,
+  constants, aggregate helpers, gamma/error functions, and decomposition
+  helpers.
+- `crates/sifr_stdlib/src/math.rs` owns the math helper behavior behind the
+  `math` Cargo feature and uses `sifr_runtime::interop::SifrIntBridge` for
+  Sifr `int` boundary returns/arguments.
+- `stdlib/sifr/math.sifr` preserves the public `dist`, `fsum`, and `sumprod`
+  borrowed-list API with wrappers around internal private bridge helpers
+  `dist_impl`, `fsum_impl`, and `sumprod_impl`.
+- `sifr_codegen` no longer registers math names in the active intrinsic
+  dispatch table; registry tests assert core and extended math names do not
+  lower as compiler intrinsics.
+- The e2e fixture harness enables the `math` feature for fixtures that import
+  `sifr.math` or `_sifr.math`.
+- Focused validation passed:
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr_driver math_private_declarations_codegen_through_sifr_stdlib --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr_frontend frontend_export_policy_hides_math_bridge_helpers --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib --features math math_leaf_matches_public_math_helpers --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen math_intrinsics_are_owned_by_compiled_stdlib_declarations --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen lowers_extended_math_intrinsics_via_registry --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model planned_sysroot_stdlib_features_are_minimal_for_representative_modules --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features --locked`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_import_test.sifr`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr`;
+  `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_parity_expanded_matrix.sifr`.
+- Opus review pass 2 returned `VERDICT: PASS` after mirroring the math bridge
+  helper export filter into frontend query diagnostics.
+- Local create-pr validation passed with zero failures:
+  `scripts/run_all_tests.sh --profile create-pr`. The run reported the warm
+  wall-time advisory only.
 
 Acceptance:
 

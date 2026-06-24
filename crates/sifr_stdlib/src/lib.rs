@@ -24,6 +24,8 @@ pub mod http;
 pub mod i18n;
 #[cfg(feature = "json")]
 pub mod json;
+#[cfg(feature = "math")]
+pub mod math;
 #[cfg(feature = "net")]
 pub mod net;
 #[cfg(feature = "platform")]

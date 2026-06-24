@@ -4,6 +4,34 @@ use crate::{
 };
 
 #[test]
+fn frontend_export_policy_hides_math_bridge_helpers() {
+    assert!(!crate::query_diagnostics::should_export_callable(
+        "sifr.math",
+        "dist_impl"
+    ));
+    assert!(!crate::query_diagnostics::should_export_callable(
+        "sifr.math",
+        "fsum_impl"
+    ));
+    assert!(!crate::query_diagnostics::should_export_callable(
+        "sifr.math",
+        "sumprod_impl"
+    ));
+    assert!(crate::query_diagnostics::should_export_callable(
+        "sifr.math",
+        "dist"
+    ));
+    assert!(crate::query_diagnostics::should_export_callable(
+        "sifr.heapq",
+        "_heapify_max"
+    ));
+    assert!(!crate::query_diagnostics::should_export_callable(
+        "sifr.math",
+        "_copy_float_list"
+    ));
+}
+
+#[test]
 fn public_constant_value_update_invalidates_reverse_dependents() {
     let dir = temp_project_dir("constant_export_signature_invalidation");
     std::fs::write(

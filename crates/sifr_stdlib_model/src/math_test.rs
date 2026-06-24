@@ -1,5 +1,5 @@
 use super::IntrinsicModule;
-use sifr_type_system::{FunctionType, Type};
+use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
 
 pub(super) fn intrinsic_math() -> IntrinsicModule {
@@ -366,6 +366,24 @@ pub(super) fn intrinsic_math() -> IntrinsicModule {
             Type::Float,
         ),
     );
+    functions.insert(
+        "dist_impl".to_string(),
+        FunctionType {
+            params: vec![
+                (
+                    "p".to_string(),
+                    Type::List(Box::new(Type::Float)),
+                    ParamConvention::own(),
+                ),
+                (
+                    "q".to_string(),
+                    Type::List(Box::new(Type::Float)),
+                    ParamConvention::own(),
+                ),
+            ],
+            return_type: Box::new(Type::Float),
+        },
+    );
 
     // fsum(data: list[float]) -> float
     functions.insert(
@@ -374,6 +392,17 @@ pub(super) fn intrinsic_math() -> IntrinsicModule {
             vec![("data".to_string(), Type::List(Box::new(Type::Float)))],
             Type::Float,
         ),
+    );
+    functions.insert(
+        "fsum_impl".to_string(),
+        FunctionType {
+            params: vec![(
+                "data".to_string(),
+                Type::List(Box::new(Type::Float)),
+                ParamConvention::own(),
+            )],
+            return_type: Box::new(Type::Float),
+        },
     );
 
     // sumprod(p: list[float], q: list[float]) -> float
@@ -386,6 +415,24 @@ pub(super) fn intrinsic_math() -> IntrinsicModule {
             ],
             Type::Float,
         ),
+    );
+    functions.insert(
+        "sumprod_impl".to_string(),
+        FunctionType {
+            params: vec![
+                (
+                    "p".to_string(),
+                    Type::List(Box::new(Type::Float)),
+                    ParamConvention::own(),
+                ),
+                (
+                    "q".to_string(),
+                    Type::List(Box::new(Type::Float)),
+                    ParamConvention::own(),
+                ),
+            ],
+            return_type: Box::new(Type::Float),
+        },
     );
 
     // erf(x: float) -> float
