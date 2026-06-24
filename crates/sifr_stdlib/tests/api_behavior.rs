@@ -245,6 +245,49 @@ fn base64_leaf_matches_rfc_vectors_and_error_paths() {
     assert_eq!(sifr_stdlib::base64::feature_name(), "base64");
 }
 
+#[cfg(feature = "regex")]
+#[test]
+fn regex_leaf_matches_public_re_helpers() {
+    use sifr_runtime::interop::SifrIntBridge;
+
+    assert!(sifr_stdlib::regex::re_match("[0-9]+", "abc123").expect("match"));
+    assert!(!sifr_stdlib::regex::re_match("[0-9]+", "abc").expect("no match"));
+    assert_eq!(
+        sifr_stdlib::regex::re_find("[0-9]+", "abc123def").expect("find"),
+        Some("123".to_string())
+    );
+    assert_eq!(
+        sifr_stdlib::regex::re_replace("[0-9]+", "#", "abc123def").expect("replace"),
+        "abc#def"
+    );
+    assert_eq!(
+        sifr_stdlib::regex::re_findall("[0-9]+", "x1y22z333").expect("findall"),
+        vec!["1".to_string(), "22".to_string(), "333".to_string()]
+    );
+    assert_eq!(
+        sifr_stdlib::regex::re_split(",", "a,b,c").expect("split"),
+        vec!["a".to_string(), "b".to_string(), "c".to_string()]
+    );
+    assert_eq!(
+        sifr_stdlib::regex::re_find_start("[0-9]+", "abc123")
+            .expect("start")
+            .to_i64_saturating(),
+        3
+    );
+    assert_eq!(
+        sifr_stdlib::regex::re_find_end("[0-9]+", "abc123")
+            .expect("end")
+            .to_i64_saturating(),
+        6
+    );
+    assert!(
+        sifr_stdlib::regex::re_match_flags("abc", "ABC", SifrIntBridge::from(2),)
+            .expect("ignorecase")
+    );
+    assert!(sifr_stdlib::regex::re_match("(", "abc").is_err());
+    assert_eq!(sifr_stdlib::regex::feature_name(), "regex");
+}
+
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {

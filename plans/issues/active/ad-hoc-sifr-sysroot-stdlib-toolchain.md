@@ -18,7 +18,7 @@ In progress.
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. Remaining stateless/fallible leaves continue in follow-up waves. |
+| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 is in progress in this branch, migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. Remaining fallible leaves continue in follow-up waves. |
 
 ## PR Log
 
@@ -38,6 +38,7 @@ In progress.
 - M9 wave 5 stateless hash leaf: merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765).
 - M9 wave 6 stateless base encoding encoder subset: merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767).
 - M10 wave 1 fallible base encoding error bridge: merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769).
+- M10 wave 2 regex interop migration: in progress in this branch.
 
 ## Design Reference
 
@@ -983,6 +984,59 @@ Wave 1 implementation evidence:
 - Local create-pr validation passed:
   `CARGO_TARGET_DIR=target/m10-base64-error-bridge-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
   The runner reported only the warm wall-time budget advisory.
+
+Wave 2 status: in progress in this branch.
+The `_sifr.regex` private module and public `sifr.re` wrappers are migrated to
+private `@rust(sifr_stdlib.regex.*)` declarations backed by the narrow
+`regex` feature in `sifr_stdlib`. Direct Rust interop now also maps
+`Result[..., E: Display]` errors into Sifr error subclasses that carry a
+`message` field plus additional string detail fields, which preserves
+`RegexError { message, detail }` without leaking the Rust regex crate type. The
+active compiler intrinsic registry no longer owns the public regex helpers
+used by `sifr.re`. The generated dependency planner still retains a direct
+`regex` crate dependency for `sifr.pathlib`, whose path-glob lowering remains a
+separate compiler-special path until that surface migrates.
+
+Wave 2 implementation evidence:
+
+- `stdlib/_sifr/regex.sifr` declares regex match, find, replace, findall,
+  split, start/end, and flag variants as private
+  `@rust(sifr_stdlib.regex.*)` leaves.
+- `stdlib/sifr/re.sifr` wraps each private declaration behind public functions
+  and aliases imports with underscored names so borrowed private interop
+  conventions stay out of public call sites.
+- `crates/sifr_stdlib/src/regex.rs` owns regex behavior behind the `regex`
+  feature, including CPython-compatible flag bits used by the previous
+  intrinsic implementation.
+- `crates/sifr_codegen/src/rust_interop_direct.rs` extends the typed
+  result-error bridge for error subclasses whose fields are all strings,
+  populating `message` and `detail` from the Rust error display text.
+- `sifr_stdlib_model` no longer retains a direct generated `regex` crate
+  dependency for `sifr.re` or `_sifr.regex`; generated projects depend on
+  `sifr_stdlib` with `features = ["regex"]` instead. `sifr.pathlib` remains
+  the intentional direct-regex exception.
+- Focused validation passed:
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib --features regex --locked regex_leaf_matches_public_re_helpers`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies --locked`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_driver regex_private_declarations_codegen_through_sifr_stdlib --locked`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen re_intrinsics_are_owned_by_compiled_stdlib_declarations --locked`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen direct_rust_function_body_maps_string_error_fields --locked`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo build -p sifr --locked`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features --locked`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model planned_sysroot_stdlib_features_are_minimal_for_representative_modules --locked`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/cpython_re_subset.sifr`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/stdlib_re_consolidated.sifr`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/cpython_re.sifr`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/parse_safety_error_paths.sifr`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/panic_free_stdlib_errors.sifr`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/regex_filesystem_iterators.sifr`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/datetime_regex_math_and_hashing.sifr`;
+  `CARGO_TARGET_DIR=target/m10-regex-interop CARGO_BUILD_JOBS=1 target/m10-regex-interop/debug/sifr run crates/sifr/tests/e2e/pass/error_subclass_handling.sifr`;
+  `cargo fmt --check`;
+  `git diff --check`;
+  `python3 scripts/check_file_size_guardrails.py`.
+- Opus review pass 1 returned `VERDICT: PASS` for the M10 wave 2 regex
+  interop migration.
 
 Acceptance:
 
