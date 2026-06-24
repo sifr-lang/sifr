@@ -29,6 +29,7 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.hash" | "sifr.hashlib" => &["hash"],
         "sifr.base64" => &["base64"],
         "sifr.html" | "_sifr.html" => &["html"],
+        "sifr.calendar" | "_sifr.calendar" => &["calendar"],
         "sifr.platform" | "_sifr.platform" => &["platform"],
         "sifr.tomllib" | "_sifr.toml" => &["toml"],
         "sifr.url" | "_sifr.url" => &["url"],

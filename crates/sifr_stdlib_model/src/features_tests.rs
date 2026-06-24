@@ -178,6 +178,11 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
         ("sifr.re", &["regex"][..], &["json", "http", "python"][..]),
         ("sifr.json", &["json"][..], &["regex", "http", "python"][..]),
         ("sifr.html", &["html"][..], &["json", "regex", "http"][..]),
+        (
+            "sifr.calendar",
+            &["calendar"][..],
+            &["json", "regex", "http"][..],
+        ),
         ("sifr.http", &["http"][..], &["json", "regex", "python"][..]),
         (
             "sifr.platform",
@@ -212,7 +217,11 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
 
 #[test]
 fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
-    for (module, expected_feature) in [("sifr.html", "html"), ("sifr.platform", "platform")] {
+    for (module, expected_feature) in [
+        ("sifr.html", "html"),
+        ("sifr.platform", "platform"),
+        ("sifr.calendar", "calendar"),
+    ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());
         assert_eq!(deps.len(), 1, "{module} should only emit sifr_stdlib");

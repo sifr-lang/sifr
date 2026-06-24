@@ -423,15 +423,20 @@ fn generated_bridge_type_stubs(signature: &RustBridgeSignatureContract) -> Strin
     }
     let mut out = String::new();
     out.push_str("mod __sifr_bridge {\n");
-    out.push_str("pub mod ");
-    out.push_str(module_name);
-    out.push_str(" {\n");
+    for segment in module_name.split('.') {
+        out.push_str("pub mod ");
+        out.push_str(segment);
+        out.push_str(" {\n");
+    }
     for name in names {
         out.push_str("#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ");
         out.push_str(&name);
         out.push_str(";\n");
     }
-    out.push_str("}\n}\n");
+    for _ in module_name.split('.') {
+        out.push_str("}\n");
+    }
+    out.push_str("}\n");
     out
 }
 
@@ -490,8 +495,13 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
 
 #[cfg(test)]
 mod tests {
-    use super::{cargo_vendor_args, dependency_features, probe_cargo_toml};
+    use super::{
+        cargo_vendor_args, dependency_features, generated_bridge_type_stubs, probe_cargo_toml,
+    };
     use ruff_text_size::TextRange;
+    use sifr_codegen::{
+        RustBridgeSignatureContract, RustBridgeTypeContract, RustBridgeTypeKind, RustInteropOwner,
+    };
     use sifr_ir::RustTargetPath;
     use std::path::Path;
 
@@ -571,6 +581,34 @@ mod tests {
         };
 
         assert!(dependency_features("sifr_stdlib", &stdlib_root, &path).is_empty());
+    }
+
+    #[test]
+    fn generated_bridge_type_stubs_split_dotted_module_names() {
+        let signature = RustBridgeSignatureContract {
+            canonical_target_path: "_sifr.calendar.calendar_monthrange".to_string(),
+            module_name: Some("_sifr.calendar".to_string()),
+            owner: RustInteropOwner::Function {
+                name: "calendar_monthrange".to_string(),
+            },
+            params: Vec::new(),
+            return_type: RustBridgeTypeContract {
+                sifr_type: "list[int]".to_string(),
+                rust_borrowed_type: None,
+                rust_owned_type: None,
+                rust_return_type: Some(
+                    "__sifr_bridge::_sifr::calendar::CalendarBridge".to_string(),
+                ),
+                kind: RustBridgeTypeKind::GeneratedRecord,
+                unsupported_reason: None,
+            },
+            span: TextRange::default(),
+        };
+        let source = generated_bridge_type_stubs(&signature);
+
+        assert!(source.contains("pub mod _sifr {\npub mod calendar {\n"));
+        assert!(source.contains("pub struct CalendarBridge;"));
+        assert!(!source.contains("pub mod _sifr.calendar"));
     }
 
     #[test]

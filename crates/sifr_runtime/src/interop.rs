@@ -52,6 +52,17 @@ impl SifrIntBridge {
         self.0.try_to_i64()
     }
 
+    #[must_use]
+    pub fn to_i64_saturating(&self) -> i64 {
+        self.try_to_i64().unwrap_or_else(|_| {
+            if self.0 < SifrInt::from_i64(0) {
+                i64::MIN
+            } else {
+                i64::MAX
+            }
+        })
+    }
+
     pub fn try_to_u8(&self) -> Result<u8, IntegerRangeError> {
         self.0.try_to_u8()
     }
@@ -339,6 +350,16 @@ mod tests {
                 .target(),
             "i64"
         );
+    }
+
+    #[test]
+    fn exact_integer_bridge_saturates_i64_conversion() {
+        let too_large = SifrIntBridge::from(SifrInt::from_i128(i128::from(i64::MAX) + 1));
+        let too_small = SifrIntBridge::from(SifrInt::from_i128(i128::from(i64::MIN) - 1));
+
+        assert_eq!(SifrIntBridge::from(42_i64).to_i64_saturating(), 42);
+        assert_eq!(too_large.to_i64_saturating(), i64::MAX);
+        assert_eq!(too_small.to_i64_saturating(), i64::MIN);
     }
 
     #[test]

@@ -18,7 +18,7 @@ In progress.
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features; remaining M9 stateless leaves continue in follow-up waves. |
+| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 migrates `_sifr.calendar` the same way and is implemented in the current branch; remaining M9 stateless leaves continue in follow-up waves. |
 
 ## PR Log
 
@@ -32,6 +32,7 @@ In progress.
 - M7 LSP/tooling sysroot source/navigation integration: merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754).
 - M7b tooling sysroot diagnostics and synthetic origins: merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755).
 - M9 wave 1 stateless platform/html leaves: merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757).
+- M9 wave 2 stateless calendar leaf: implemented in current branch; PR link pending.
 
 ## Design Reference
 
@@ -614,10 +615,12 @@ migrated `html`/`platform` modules.
 Tasks:
 
 - Move math leaves to private declarations backed by `sifr_stdlib`.
-- Move base64/base32, hash, UUID, regex, TOML, and calendar leaves.
+- Move base64/base32, hash, UUID, regex, and TOML leaves.
+- Move calendar leaf. (wave 2 complete)
 - Move HTML and platform leaves. (wave 1 complete)
 - Update `sifr_stdlib` feature groups and `SysrootDependencyPlan` mapping as
-  each leaf migrates. (wave 1 complete for `html` and `platform`)
+  each leaf migrates. (wave 2 complete for `calendar`; wave 1 complete for
+  `html` and `platform`)
 - Add explicit unsupported-by-design notes for any stateless leaf deferred due
   to type-system or interop limitations.
 
@@ -658,6 +661,52 @@ Wave 1 implementation evidence:
   Python-runtime/native-link follow-up validation plus probe manifest
   `default-features = false` parity before the final wave review; pass 5
   separately reviewed the e2e fixture `sifr_stdlib` dependency emission.
+
+Wave 2 status: `_sifr.calendar` is migrated to private
+`@rust(sifr_stdlib.calendar.*)` declarations backed by the narrow `calendar`
+feature in `sifr_stdlib`. The active compiler intrinsic registry no longer
+owns calendar lowering. Direct Rust interop wrappers now bridge Sifr `int`
+arguments through `sifr_runtime::interop::SifrIntBridge` and convert returned
+bridge integers, including `list[int]`, back to generated-code integer values at
+the wrapper boundary. Sysroot probe bridge stubs now split dotted module names
+such as `_sifr.calendar` into nested Rust modules.
+
+Wave 2 implementation evidence:
+
+- `stdlib/_sifr/calendar.sifr` declares private
+  `@rust(sifr_stdlib.calendar.*)` leaves for `calendar_isleap`,
+  `calendar_weekday`, and `calendar_monthrange`.
+- `crates/sifr_stdlib/src/calendar.rs` owns the Gregorian helper behavior
+  behind the `calendar` Cargo feature and uses the runtime `SifrIntBridge`
+  boundary type.
+- `sifr_codegen` no longer registers calendar names in the active intrinsic
+  dispatch table; registry tests assert these names do not lower as compiler
+  intrinsics.
+- Direct Rust interop codegen bridges `int` arguments/returns and `list[int]`
+  returns for feature-gated stdlib targets, with runtime coverage for
+  saturating bridge-to-`i64` conversion.
+- The e2e fixture harness enables the `calendar` feature for fixtures that
+  import `sifr.calendar` or `_sifr.calendar`.
+- Focused validation passed:
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_runtime exact_integer_bridge --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen direct_rust_function_body --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen lowers_calendar_intrinsics_via_registry --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_driver stateless_private_codegen_tests --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_driver generated_bridge_type_stubs_split_dotted_module_names --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib --features calendar calendar_leaf_matches_gregorian_helpers --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model planned_sysroot_stdlib_features_are_minimal_for_representative_modules --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features --locked`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_calendar.sifr`;
+  `CARGO_TARGET_DIR=target/m9-calendar CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr`;
+  `cargo fmt --check`;
+  `git diff --check`;
+  `python3 scripts/check_file_size_guardrails.py`.
+- Local create-pr validation passed with zero failures:
+  `CARGO_TARGET_DIR=target/m9-calendar-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The run reported the existing warm wall-time budget advisory only.
+- Opus review passes 1 and 2 returned `VERDICT: PASS`. Pass 2 reviewed the
+  follow-up `i128` weekday arithmetic hardening for extreme `i64` years.
 
 Acceptance:
 

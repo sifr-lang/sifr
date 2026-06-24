@@ -163,6 +163,8 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         // Retained as a stdlib-lowering bootstrap fallback while these leaves
         // migrate to compiled private declarations.
         "_sifr.html" => Some(intrinsic_html()),
+        // Retained as a stdlib-lowering bootstrap fallback while this leaf
+        // migrates to compiled private declarations.
         "_sifr.calendar" => Some(intrinsic_calendar()),
         "_sifr.compress" => Some(intrinsic_compress()),
         "_sifr.logging" => Some(intrinsic_logging()),

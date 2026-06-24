@@ -362,22 +362,13 @@ pub(crate) fn lowers_html_intrinsics_via_registry() {
 
 #[test]
 pub(crate) fn lowers_calendar_intrinsics_via_registry() {
-    let leap = lower_intrinsic("calendar_isleap", &["year".to_string()]).expect("calendar_isleap");
-    let rendered = render_expr(&leap.expr);
-    // Structured IR adds parentheses around binop comparisons
-    assert!(rendered.contains("((__y % 4) == 0)"));
-
-    let weekday = lower_intrinsic(
+    assert!(lower_intrinsic("calendar_isleap", &["year".to_string()]).is_none());
+    assert!(lower_intrinsic(
         "calendar_weekday",
         &["y".to_string(), "m".to_string(), "d".to_string()],
     )
-    .expect("calendar_weekday");
-    assert!(render_expr(&weekday.expr).contains("__t = vec![0, 3, 2, 5"));
-    assert!(render_expr(&weekday.expr).contains("__t[(__m0 - 1) as usize]"));
-
-    let monthrange = lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()])
-        .expect("calendar_monthrange");
-    assert!(render_expr(&monthrange.expr).contains("vec![__wd, __days]"));
+    .is_none());
+    assert!(lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()]).is_none());
 }
 
 #[test]
