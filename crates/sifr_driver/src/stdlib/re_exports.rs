@@ -38,7 +38,10 @@ fn copy_named_exports(
             .get(import_module)
             .and_then(|module_fns| module_fns.get(name))
         {
-            exports.functions.insert(name.clone(), ft.clone());
+            exports
+                .functions
+                .entry(name.clone())
+                .or_insert_with(|| ft.clone());
             continue;
         }
         if let Some(class_ty) = stdlib_defs
@@ -46,15 +49,26 @@ fn copy_named_exports(
             .get(import_module)
             .and_then(|module_classes| module_classes.get(name))
         {
-            exports.classes.insert(name.clone(), class_ty.clone());
-            if let Some(type_params) = stdlib_defs
+            if !exports.classes.contains_key(name) {
+                exports.classes.insert(name.clone(), class_ty.clone());
+                if let Some(type_params) = stdlib_defs
+                    .class_type_params
+                    .get(import_module)
+                    .and_then(|module_type_params| module_type_params.get(name))
+                {
+                    exports
+                        .class_type_params
+                        .insert(name.clone(), type_params.clone());
+                }
+            } else if let Some(type_params) = stdlib_defs
                 .class_type_params
                 .get(import_module)
                 .and_then(|module_type_params| module_type_params.get(name))
             {
                 exports
                     .class_type_params
-                    .insert(name.clone(), type_params.clone());
+                    .entry(name.clone())
+                    .or_insert_with(|| type_params.clone());
             }
             continue;
         }
@@ -63,7 +77,10 @@ fn copy_named_exports(
             .get(import_module)
             .and_then(|module_constants| module_constants.get(name))
         {
-            exports.constants.insert(name.clone(), const_ty.clone());
+            exports
+                .constants
+                .entry(name.clone())
+                .or_insert_with(|| const_ty.clone());
         }
     }
 }
@@ -79,14 +96,18 @@ fn copy_callable_metadata(
             if is_imported_callable(callable_name, imported_names) {
                 exports
                     .defaults
-                    .insert(callable_name.clone(), defaults.clone());
+                    .entry(callable_name.clone())
+                    .or_insert_with(|| defaults.clone());
             }
         }
     }
     if let Some(module_varargs) = stdlib_defs.function_varargs.get(import_module) {
         for (callable_name, vararg_index) in module_varargs {
             if is_imported_callable(callable_name, imported_names) {
-                exports.varargs.insert(callable_name.clone(), *vararg_index);
+                exports
+                    .varargs
+                    .entry(callable_name.clone())
+                    .or_insert(*vararg_index);
             }
         }
     }
@@ -95,7 +116,8 @@ fn copy_callable_metadata(
             if is_imported_callable(callable_name, imported_names) {
                 exports
                     .workloads
-                    .insert(callable_name.clone(), label.clone());
+                    .entry(callable_name.clone())
+                    .or_insert_with(|| label.clone());
             }
         }
     }

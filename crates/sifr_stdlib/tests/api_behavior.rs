@@ -125,6 +125,43 @@ fn uuid_leaf_matches_public_uuid_helpers() {
     assert_eq!(sifr_stdlib::uuid::feature_name(), "uuid");
 }
 
+#[cfg(feature = "math")]
+#[test]
+fn math_leaf_matches_public_math_helpers() {
+    use sifr_runtime::interop::SifrIntBridge;
+
+    fn assert_close(actual: f64, expected: f64) {
+        assert!(
+            (actual - expected).abs() < 0.000_000_1,
+            "expected {actual} to be close to {expected}"
+        );
+    }
+
+    assert_close(sifr_stdlib::math::sqrt(9.0), 3.0);
+    assert_close(sifr_stdlib::math::pow_val(2.0, 5.0), 32.0);
+    assert_close(sifr_stdlib::math::dist(vec![0.0, 0.0], vec![3.0, 4.0]), 5.0);
+    assert_close(
+        sifr_stdlib::math::sumprod(vec![1.5, 2.0], vec![2.0, 3.0]),
+        9.0,
+    );
+    assert_close(sifr_stdlib::math::frexp(8.0)[0], 0.5);
+    assert_close(sifr_stdlib::math::modf(-1.25)[0], -0.25);
+    assert_close(sifr_stdlib::math::gamma(5.0), 24.0);
+    assert_close(sifr_stdlib::math::lgamma(5.0).exp(), 24.0);
+    assert_eq!(sifr_stdlib::math::ulp(0.0), f64::from_bits(1));
+    assert!(sifr_stdlib::math::ulp(f64::MAX).is_finite());
+    assert!(sifr_stdlib::math::isnan(f64::NAN));
+    assert!(sifr_stdlib::math::isinf(f64::INFINITY));
+    assert_eq!(sifr_stdlib::math::floor(3.9), SifrIntBridge::from(3));
+    assert_eq!(sifr_stdlib::math::ceil(3.1), SifrIntBridge::from(4));
+    assert_eq!(sifr_stdlib::math::round_val(2.6), SifrIntBridge::from(3));
+    assert_eq!(
+        sifr_stdlib::math::isqrt(SifrIntBridge::from(10)),
+        SifrIntBridge::from(3)
+    );
+    assert_eq!(sifr_stdlib::math::feature_name(), "math");
+}
+
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {
@@ -143,6 +180,7 @@ fn runtime_observability_emits_diagnostic_without_subscriber() {
     feature = "gzip",
     feature = "hash",
     feature = "html",
+    feature = "math",
     feature = "net",
     feature = "platform",
     feature = "process",
@@ -164,6 +202,7 @@ fn marker_modules_report_leaf_names() {
         sifr_stdlib::gzip::feature_name(),
         sifr_stdlib::hash::feature_name(),
         sifr_stdlib::html::feature_name(),
+        sifr_stdlib::math::feature_name(),
         sifr_stdlib::net::feature_name(),
         sifr_stdlib::platform::feature_name(),
         sifr_stdlib::process::feature_name(),

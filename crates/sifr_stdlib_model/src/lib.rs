@@ -135,7 +135,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.json" => Some(intrinsic_json()),
         "_sifr.sys" => Some(intrinsic_sys()),
         "_sifr.fs" => Some(intrinsic_fs()),
-        "_sifr.math" => Some(intrinsic_math()),
         "_sifr.test" => Some(intrinsic_test()),
         "_sifr.collections" => Some(intrinsic_collections()),
         "_sifr.bytes" => Some(intrinsic_bytes()),
@@ -147,6 +146,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.regex" => Some(intrinsic_regex()),
         // Retained as a stdlib-lowering bootstrap fallback while these leaves
         // migrate to compiled private declarations.
+        "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.net" => Some(intrinsic_net()),

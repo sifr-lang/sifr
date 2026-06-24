@@ -1,5 +1,6 @@
 # sifr.math — Math functions and constants
-from _sifr.math import sqrt, floor, ceil, abs_val, log, cbrt, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, exp2, degrees, radians, isnan, isinf, trunc, copysign, signbit, fmod, remainder, hypot, fma, fmax, fmin, tau, inf, nan, exp, expm1, log1p, fabs, isfinite, isnormal, issubnormal, acosh, asinh, atanh, isqrt, dist, fsum, sumprod, erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
+from _sifr.math import sqrt, floor, ceil, abs_val, log, cbrt, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, exp2, degrees, radians, isnan, isinf, trunc, copysign, signbit, fmod, remainder, hypot, fma, fmax, fmin, tau, inf, nan, exp, expm1, log1p, fabs, isfinite, isnormal, issubnormal, acosh, asinh, atanh, isqrt, erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
+from _sifr.math import dist_impl, fsum_impl, sumprod_impl
 
 def factorial(n: int) -> int:
     if n < 0:
@@ -103,6 +104,21 @@ def prod(data: list[int]) -> int:
     for val in data:
         result = result * val
     return result
+
+def _copy_float_list(data: list[float]) -> list[float]:
+    out: list[float] = []
+    for value in data:
+        out.append(value)
+    return out
+
+def dist(p: list[float], q: list[float]) -> float:
+    return dist_impl(_copy_float_list(p), _copy_float_list(q))
+
+def fsum(data: list[float]) -> float:
+    return fsum_impl(_copy_float_list(data))
+
+def sumprod(p: list[float], q: list[float]) -> float:
+    return sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 
 # Tuple-style adapters for pair-returning math intrinsics.
 # Sifr currently models these as list pairs.

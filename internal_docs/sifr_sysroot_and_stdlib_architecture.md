@@ -392,15 +392,19 @@ move individual native leaves out of compiler/codegen surfaces and into this
 crate behind the same feature names.
 
 Current migrated leaves include the stateless `_sifr.platform`, `_sifr.html`,
-`_sifr.calendar`, and `_sifr.uuid` private declaration modules. Their public
-wrappers continue to live in `stdlib/sifr/platform.sifr`,
-`stdlib/sifr/html.sifr`, `stdlib/sifr/calendar.sifr`, and
-`stdlib/sifr/uuid.sifr`, while generated code emits the private preamble
-functions and calls `sifr_stdlib::platform::*`, `sifr_stdlib::html::*`,
-`sifr_stdlib::calendar::*`, and `sifr_stdlib::uuid::*` through feature-gated
-sysroot dependencies. Direct Rust interop wrappers bridge Sifr `int` values through
-`sifr_runtime::interop::SifrIntBridge` at this boundary, including `list[int]`
-calendar returns.
+`_sifr.calendar`, `_sifr.uuid`, and `_sifr.math` private declaration modules.
+Their public wrappers continue to live in `stdlib/sifr/platform.sifr`,
+`stdlib/sifr/html.sifr`, `stdlib/sifr/calendar.sifr`,
+`stdlib/sifr/uuid.sifr`, and `stdlib/sifr/math.sifr`, while generated code
+emits the private preamble functions and calls `sifr_stdlib::platform::*`,
+`sifr_stdlib::html::*`, `sifr_stdlib::calendar::*`,
+`sifr_stdlib::uuid::*`, and `sifr_stdlib::math::*` through feature-gated
+sysroot dependencies. Direct Rust interop wrappers bridge Sifr `int` values
+through `sifr_runtime::interop::SifrIntBridge` at this boundary, including
+`list[int]` calendar returns. Public math aggregate helpers such as `dist`,
+`fsum`, and `sumprod` keep read-only list parameters in `stdlib/sifr/math.sifr`
+and copy into private owned-vector Rust interop helpers, so private bridge
+ownership does not leak into the public API.
 
 When sysroot Rust interop activates native-link evidence validation in a
 generated project that also embeds Python, the selected packaged Python runtime

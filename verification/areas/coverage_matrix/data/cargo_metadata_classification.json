@@ -121,6 +121,7 @@
         {"name": "hash", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "html", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "json", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "math", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "http", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "platform", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "process", "profile_assignment": "merge", "classification": "first_party_runtime"},

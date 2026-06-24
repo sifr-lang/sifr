@@ -7,6 +7,7 @@ pub const LEAF_FEATURES: &[&str] = &[
     "html",
     "calendar",
     "platform",
+    "math",
     "toml",
     "url",
     "gzip",

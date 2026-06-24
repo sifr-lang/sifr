@@ -341,6 +341,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.calendar"
                 | "sifr.uuid"
                 | "_sifr.uuid"
+                | "sifr.math"
+                | "_sifr.math"
                 | "sifr.platform"
                 | "_sifr.platform"
         )

@@ -170,6 +170,11 @@ def audit_fixture_command_prefix() -> list[str]:
     configured_bin = os.environ.get("SIFR_AUDIT_FIXTURE_BIN")
     if configured_bin:
         return [configured_bin]
+    configured_target_dir = os.environ.get("CARGO_TARGET_DIR")
+    if configured_target_dir:
+        target_bin = Path(configured_target_dir) / "debug" / "sifr"
+        if target_bin.is_file():
+            return [str(target_bin)]
     if DEFAULT_SIFR_BIN.is_file():
         return [str(DEFAULT_SIFR_BIN)]
     return ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]

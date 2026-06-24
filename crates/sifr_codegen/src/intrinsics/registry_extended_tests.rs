@@ -638,46 +638,26 @@ pub(crate) fn lowers_hashlib_intrinsics_with_dependency_metadata() {
 
 #[test]
 pub(crate) fn lowers_extended_math_intrinsics_via_registry() {
-    let remainder =
-        lower_intrinsic("remainder", &["x".to_string(), "y".to_string()]).expect("remainder");
-    assert!(render_expr(&remainder.expr).contains("__abs_frac < 0.5"));
-
-    let dist = lower_intrinsic("dist", &["p".to_string(), "q".to_string()]).expect("dist");
-    assert!(render_expr(&dist.expr).contains("__p.len() != __q.len()"));
-
-    let fsum = lower_intrinsic("fsum", &["vals".to_string()]).expect("fsum");
-    assert!(render_expr(&fsum.expr).contains("__sum + __comp"));
-
-    let sumprod = lower_intrinsic("sumprod", &["a".to_string(), "b".to_string()]).expect("sumprod");
-    assert!(render_expr(&sumprod.expr).contains("__p.len().min(__q.len())"));
-
-    let ldexp = lower_intrinsic("ldexp", &["m".to_string(), "e".to_string()]).expect("ldexp");
-    assert!(render_expr(&ldexp.expr).contains("(2.0_f64).powi"));
-
-    let modf = lower_intrinsic("modf", &["x".to_string()]).expect("modf");
-    assert!(render_expr(&modf.expr).contains("__x.is_nan()"));
-
-    let ulp = lower_intrinsic("ulp", &["x".to_string()]).expect("ulp");
-    assert!(render_expr(&ulp.expr).contains("__x.is_infinite()"));
-
-    let nextafter =
-        lower_intrinsic("nextafter", &["x".to_string(), "y".to_string()]).expect("nextafter");
-    assert!(render_expr(&nextafter.expr).contains("__x == __y"));
-
-    let erf = lower_intrinsic("erf", &["x".to_string()]).expect("erf");
-    assert!(render_expr(&erf.expr).contains("__x >= 0.0"));
-
-    let erfc = lower_intrinsic("erfc", &["x".to_string()]).expect("erfc");
-    assert!(render_expr(&erfc.expr).contains("2.0 - __r"));
-
-    let frexp = lower_intrinsic("frexp", &["x".to_string()]).expect("frexp");
-    assert!(render_expr(&frexp.expr).contains("__x == 0.0"));
-
-    let gamma = lower_intrinsic("gamma", &["x".to_string()]).expect("gamma");
-    assert!(render_expr(&gamma.expr).contains("__x <= 0.0"));
-
-    let lgamma = lower_intrinsic("lgamma", &["x".to_string()]).expect("lgamma");
-    assert!(render_expr(&lgamma.expr).contains("__r.exp()"));
+    for name in [
+        "remainder",
+        "dist",
+        "fsum",
+        "sumprod",
+        "ldexp",
+        "modf",
+        "ulp",
+        "nextafter",
+        "erf",
+        "erfc",
+        "frexp",
+        "gamma",
+        "lgamma",
+    ] {
+        assert!(
+            lower_intrinsic(name, &["x".to_string(), "y".to_string()]).is_none(),
+            "{name} must lower through private stdlib Rust interop, not active intrinsics"
+        );
+    }
 }
 
 #[test]
