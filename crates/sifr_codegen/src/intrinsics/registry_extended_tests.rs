@@ -437,114 +437,47 @@ pub(crate) fn lowers_zip_intrinsics_with_dependency_metadata() {
 }
 
 #[test]
-pub(crate) fn lowers_base64_intrinsics_with_dependency_metadata() {
-    let enc = lower_intrinsic("base64_encode", &["text".to_string()]).expect("base64_encode");
-    assert_eq!(
-        enc.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&enc.expr).contains("base64::Engine::encode"));
-    assert!(render_expr(&enc.expr).contains("general_purpose::STANDARD"));
+pub(crate) fn base_encoding_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for (name, args) in [
+        ("base64_encode", &["payload"][..]),
+        ("base64_encode_bytes", &["payload"][..]),
+        ("urlsafe_b64encode", &["payload"][..]),
+        ("urlsafe_b64encode_bytes", &["payload"][..]),
+        ("b32encode", &["payload"][..]),
+        ("b32hexencode", &["payload"][..]),
+    ] {
+        let args = args
+            .iter()
+            .map(|arg| (*arg).to_string())
+            .collect::<Vec<_>>();
+        assert!(
+            lower_intrinsic(name, &args).is_none(),
+            "{name} should lower through _sifr.crypto private Rust interop declarations"
+        );
+    }
 
-    let dec = lower_intrinsic("base64_decode", &["s".to_string()]).expect("base64_decode");
-    assert_eq!(
-        dec.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&dec.expr).contains("base64::Engine::decode"));
-    assert!(render_expr(&dec.expr).contains("general_purpose::STANDARD"));
-
-    let enc_bytes =
-        lower_intrinsic("base64_encode_bytes", &["b".to_string()]).expect("base64_encode_bytes");
-    assert_eq!(
-        enc_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&enc_bytes.expr).contains("into_bytes"));
-
-    let dec_bytes =
-        lower_intrinsic("base64_decode_bytes", &["b".to_string()]).expect("base64_decode_bytes");
-    assert_eq!(
-        dec_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&dec_bytes.expr).contains("base64::Engine::decode"));
-
-    let enc_opts = lower_intrinsic(
-        "base64_encode_opts",
-        &["s".to_string(), "alt".to_string(), "wrap".to_string()],
-    )
-    .expect("base64_encode_opts");
-    assert_eq!(
-        enc_opts.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&enc_opts.expr).contains("wrapcol must be >= 0"));
-
-    let dec_opts = lower_intrinsic(
-        "base64_decode_opts",
-        &[
-            "s".to_string(),
-            "alt".to_string(),
-            "validate".to_string(),
-            "ignore".to_string(),
-        ],
-    )
-    .expect("base64_decode_opts");
-    assert_eq!(
-        dec_opts.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&dec_opts.expr).contains("invalid base64 character"));
-
-    let url_enc =
-        lower_intrinsic("urlsafe_b64encode", &["s".to_string()]).expect("urlsafe_b64encode");
-    assert_eq!(
-        url_enc.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&url_enc.expr).contains("base64::Engine::encode"));
-    assert!(render_expr(&url_enc.expr).contains("general_purpose::URL_SAFE"));
-
-    let url_dec =
-        lower_intrinsic("urlsafe_b64decode", &["s".to_string()]).expect("urlsafe_b64decode");
-    assert_eq!(
-        url_dec.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&url_dec.expr).contains("base64::Engine::decode"));
-    assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE"));
-
-    let url_enc_bytes = lower_intrinsic("urlsafe_b64encode_bytes", &["b".to_string()])
-        .expect("urlsafe_b64encode_bytes");
-    assert_eq!(
-        url_enc_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&url_enc_bytes.expr).contains("into_bytes"));
-
-    let url_dec_bytes = lower_intrinsic("urlsafe_b64decode_bytes", &["b".to_string()])
-        .expect("urlsafe_b64decode_bytes");
-    assert_eq!(
-        url_dec_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Base64)
-    );
-    assert!(render_expr(&url_dec_bytes.expr).contains("base64::Engine::decode"));
-}
-
-#[test]
-pub(crate) fn lowers_base32_intrinsics_via_registry() {
-    let b32e = lower_intrinsic("b32encode", &["s".to_string()]).expect("b32encode");
-    assert!(render_expr(&b32e.expr).contains("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"));
-
-    let b32d = lower_intrinsic("b32decode", &["s".to_string()]).expect("b32decode");
-    assert!(render_expr(&b32d.expr).contains("invalid base32 char"));
-
-    let b32he = lower_intrinsic("b32hexencode", &["s".to_string()]).expect("b32hexencode");
-    assert!(render_expr(&b32he.expr).contains("0123456789ABCDEFGHIJKLMNOPQRSTUV"));
-
-    let b32hd = lower_intrinsic("b32hexdecode", &["s".to_string()]).expect("b32hexdecode");
-    assert!(render_expr(&b32hd.expr).contains("invalid base32hex char"));
+    for (name, args) in [
+        ("base64_decode", &["payload"][..]),
+        ("base64_decode_bytes", &["payload"][..]),
+        ("base64_encode_opts", &["payload", "alt", "wrap"][..]),
+        (
+            "base64_decode_opts",
+            &["payload", "alt", "validate", "ignore"][..],
+        ),
+        ("urlsafe_b64decode", &["payload"][..]),
+        ("urlsafe_b64decode_bytes", &["payload"][..]),
+        ("b32decode", &["payload"][..]),
+        ("b32hexdecode", &["payload"][..]),
+    ] {
+        let args = args
+            .iter()
+            .map(|arg| (*arg).to_string())
+            .collect::<Vec<_>>();
+        assert!(
+            lower_intrinsic(name, &args).is_some(),
+            "{name} should keep intrinsic fallback until typed error bridge work"
+        );
+    }
 }
 
 #[test]

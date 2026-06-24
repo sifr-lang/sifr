@@ -10,6 +10,7 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
             "sifr.uuid",
             "sifr.math",
             "sifr.hashlib",
+            "sifr.base64",
         ]
         .map(str::to_string),
     );
@@ -28,9 +29,15 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     assert!(hash_toml.contains("features = [\"hash\"]"));
     assert!(!hash_toml.contains("sha2 = "));
     assert!(!hash_toml.contains("md5 = "));
+    let base64_modules = normalize_dependency_set(vec!["sifr.base64".to_string()].into_iter());
+    let base64_toml = generate_cargo_toml(&base64_modules, &required_crates, "sifr_output");
+    assert!(base64_toml.contains("sifr_stdlib = { path = "));
+    assert!(base64_toml.contains("default-features = false"));
+    assert!(base64_toml.contains("features = [\"base64\"]"));
+    assert!(base64_toml.contains("base64 = \"0.22.1\""));
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
     assert!(combined_toml.contains(
-        "features = [\"html\", \"calendar\", \"platform\", \"uuid\", \"math\", \"hash\"]"
+        "features = [\"html\", \"calendar\", \"platform\", \"uuid\", \"math\", \"hash\", \"base64\"]"
     ));
     assert_eq!(combined_toml.matches("sifr_stdlib = ").count(), 1);
 }

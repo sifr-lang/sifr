@@ -1,6 +1,30 @@
 # Private _sifr.crypto native declaration module.
-# Random and base encoding helpers still use compiler intrinsics during the
-# incremental stateless-leaf migration.
+# Random helpers and fallible base encoding helpers still use compiler
+# intrinsics during the incremental stateless-leaf migration.
+
+@rust(sifr_stdlib.base64.base64_encode, panic=trusted_no_panic)
+def base64_encode(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.base64.base64_encode_bytes, panic=trusted_no_panic)
+def base64_encode_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.base64.urlsafe_b64encode, panic=trusted_no_panic)
+def urlsafe_b64encode(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.base64.urlsafe_b64encode_bytes, panic=trusted_no_panic)
+def urlsafe_b64encode_bytes(data: bytes) -> bytes:
+    return b""
+
+@rust(sifr_stdlib.base64.b32encode, panic=trusted_no_panic)
+def b32encode(s: str) -> str:
+    return ""
+
+@rust(sifr_stdlib.base64.b32hexencode, panic=trusted_no_panic)
+def b32hexencode(s: str) -> str:
+    return ""
 
 @rust(sifr_stdlib.hash.sha256, panic=trusted_no_panic)
 def sha256(s: str) -> str:

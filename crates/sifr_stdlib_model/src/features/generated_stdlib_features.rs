@@ -47,7 +47,7 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.signal" | "_sifr.signal" => &["signals"],
         "sifr.runtime" | "_sifr.runtime" => &["runtime-observability"],
         "sifr.random" => &["random"],
-        "_sifr.crypto" => &["hash", "random"],
+        "_sifr.crypto" => &["base64", "hash", "random"],
         "sifr.time" | "sifr.datetime" | "_sifr.time" | "_sifr.datetime" => &["time"],
         "sifr.encoding" | "_sifr.encoding" => &["encoding"],
         _ => &[],
