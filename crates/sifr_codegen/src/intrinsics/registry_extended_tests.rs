@@ -441,10 +441,21 @@ pub(crate) fn base_encoding_intrinsics_are_owned_by_compiled_stdlib_declarations
     for (name, args) in [
         ("base64_encode", &["payload"][..]),
         ("base64_encode_bytes", &["payload"][..]),
+        ("base64_decode", &["payload"][..]),
+        ("base64_decode_bytes", &["payload"][..]),
+        ("base64_encode_opts", &["payload", "alt", "wrap"][..]),
+        (
+            "base64_decode_opts",
+            &["payload", "alt", "validate", "ignore"][..],
+        ),
         ("urlsafe_b64encode", &["payload"][..]),
         ("urlsafe_b64encode_bytes", &["payload"][..]),
+        ("urlsafe_b64decode", &["payload"][..]),
+        ("urlsafe_b64decode_bytes", &["payload"][..]),
         ("b32encode", &["payload"][..]),
+        ("b32decode", &["payload"][..]),
         ("b32hexencode", &["payload"][..]),
+        ("b32hexdecode", &["payload"][..]),
     ] {
         let args = args
             .iter()
@@ -453,29 +464,6 @@ pub(crate) fn base_encoding_intrinsics_are_owned_by_compiled_stdlib_declarations
         assert!(
             lower_intrinsic(name, &args).is_none(),
             "{name} should lower through _sifr.crypto private Rust interop declarations"
-        );
-    }
-
-    for (name, args) in [
-        ("base64_decode", &["payload"][..]),
-        ("base64_decode_bytes", &["payload"][..]),
-        ("base64_encode_opts", &["payload", "alt", "wrap"][..]),
-        (
-            "base64_decode_opts",
-            &["payload", "alt", "validate", "ignore"][..],
-        ),
-        ("urlsafe_b64decode", &["payload"][..]),
-        ("urlsafe_b64decode_bytes", &["payload"][..]),
-        ("b32decode", &["payload"][..]),
-        ("b32hexdecode", &["payload"][..]),
-    ] {
-        let args = args
-            .iter()
-            .map(|arg| (*arg).to_string())
-            .collect::<Vec<_>>();
-        assert!(
-            lower_intrinsic(name, &args).is_some(),
-            "{name} should keep intrinsic fallback until typed error bridge work"
         );
     }
 }

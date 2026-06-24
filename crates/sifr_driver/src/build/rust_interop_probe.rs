@@ -5,6 +5,7 @@ use sifr_codegen::{
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -325,36 +326,78 @@ fn signature_probe_source(
         })
         .collect::<Vec<_>>()
         .join(", ");
-    let return_type = signature
-        .return_type
-        .rust_return_type
-        .as_deref()
-        .unwrap_or("__SifrUnsupportedBridgeType");
+    let return_type = signature_return_probe_type(&signature.return_type);
     let mut out = String::new();
     out.push_str("#![allow(dead_code)]\n");
     out.push_str(&generated_bridge_type_stubs(signature));
     if is_async_probe(probe) {
-        out.push_str("fn __sifr_assert_async_signature<F, Fut>(_f: F)\nwhere\n    F: Fn(");
+        out.push_str("fn __sifr_assert_async_signature<F, Fut");
+        if return_type.display_error_generic {
+            out.push_str(", __SifrBridgeError");
+        }
+        out.push_str(">(_f: F)\nwhere\n    F: Fn(");
         out.push_str(&params);
         out.push_str(") -> Fut,\n    Fut: std::future::Future<Output = ");
-        out.push_str(return_type);
+        out.push_str(&return_type.ty);
         out.push('>');
         if async_future_requires_send(probe) {
             out.push_str(" + Send");
+        }
+        if return_type.display_error_generic {
+            out.push_str(",\n    __SifrBridgeError: std::fmt::Display");
         }
         out.push_str(",\n{}\nfn __sifr_probe() { __sifr_assert_async_signature(");
         out.push_str(rust_path);
         out.push_str("); }\n");
     } else {
-        out.push_str("fn __sifr_assert_signature(_f: fn(");
+        out.push_str("fn __sifr_assert_signature");
+        if return_type.display_error_generic {
+            out.push_str("<__SifrBridgeError: std::fmt::Display>");
+        }
+        out.push_str("(_f: fn(");
         out.push_str(&params);
         out.push_str(") -> ");
-        out.push_str(return_type);
+        out.push_str(&return_type.ty);
         out.push_str(") {}\nfn __sifr_probe() { __sifr_assert_signature(");
         out.push_str(rust_path);
         out.push_str("); }\n");
     }
     out
+}
+
+struct SignatureReturnProbeType {
+    ty: String,
+    display_error_generic: bool,
+}
+
+fn signature_return_probe_type(
+    return_type: &sifr_codegen::RustBridgeTypeContract,
+) -> SignatureReturnProbeType {
+    let ty = return_type
+        .rust_return_type
+        .as_deref()
+        .unwrap_or("__SifrUnsupportedBridgeType");
+    if let Some(mapped) = display_error_result_probe_type(ty) {
+        return SignatureReturnProbeType {
+            ty: mapped,
+            display_error_generic: true,
+        };
+    }
+    SignatureReturnProbeType {
+        ty: ty.to_string(),
+        display_error_generic: false,
+    }
+}
+
+fn display_error_result_probe_type(return_type: &str) -> Option<String> {
+    let inner = return_type
+        .strip_prefix("Result<")
+        .and_then(|value| value.strip_suffix('>'))?;
+    let (ok_type, err_type) = inner.rsplit_once(", ")?;
+    if !err_type.contains("__sifr_bridge") || !err_type.ends_with("Bridge") {
+        return None;
+    }
+    Some(format!("Result<{ok_type}, __SifrBridgeError>"))
 }
 
 fn rust_param_type(
@@ -430,42 +473,62 @@ fn opaque_symbol_argument<'a>(probe: &'a PendingRustBridgeProbe, name: &str) -> 
 }
 
 fn generated_bridge_type_stubs(signature: &RustBridgeSignatureContract) -> String {
-    let module_name = signature
-        .module_name
-        .as_deref()
-        .unwrap_or("__sifr_binary_entry");
-    let mut names = Vec::new();
+    let mut root = BridgeStubModule::default();
     for param in &signature.params {
-        collect_generated_bridge_names(&param.ty, &mut names);
+        collect_generated_bridge_paths(&param.ty, &mut root);
     }
-    collect_generated_bridge_names(&signature.return_type, &mut names);
-    names.sort();
-    names.dedup();
-    if names.is_empty() {
+    collect_generated_bridge_paths(&signature.return_type, &mut root);
+    if root.is_empty() {
         return String::new();
     }
     let mut out = String::new();
     out.push_str("mod __sifr_bridge {\n");
-    for segment in module_name.split('.') {
-        out.push_str("pub mod ");
-        out.push_str(segment);
-        out.push_str(" {\n");
-    }
-    for name in names {
-        out.push_str("#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ");
-        out.push_str(&name);
-        out.push_str(";\n");
-    }
-    for _ in module_name.split('.') {
-        out.push_str("}\n");
-    }
+    render_bridge_stub_module(&mut out, &root);
     out.push_str("}\n");
     out
 }
 
-fn collect_generated_bridge_names(
+#[derive(Default)]
+struct BridgeStubModule {
+    children: BTreeMap<String, BridgeStubModule>,
+    structs: BTreeSet<String>,
+}
+
+impl BridgeStubModule {
+    fn is_empty(&self) -> bool {
+        self.children.is_empty() && self.structs.is_empty()
+    }
+
+    fn insert_path(&mut self, path: &[String]) {
+        let Some((bridge_name, modules)) = path.split_last() else {
+            return;
+        };
+        let mut module = self;
+        for segment in modules {
+            module = module.children.entry(segment.clone()).or_default();
+        }
+        module.structs.insert(bridge_name.clone());
+    }
+}
+
+fn render_bridge_stub_module(out: &mut String, module: &BridgeStubModule) {
+    for (name, child) in &module.children {
+        out.push_str("pub mod ");
+        out.push_str(name);
+        out.push_str(" {\n");
+        render_bridge_stub_module(out, child);
+        out.push_str("}\n");
+    }
+    for name in &module.structs {
+        out.push_str("#[derive(Clone, Debug, PartialEq, Eq)]\npub struct ");
+        out.push_str(name);
+        out.push_str(";\n");
+    }
+}
+
+fn collect_generated_bridge_paths(
     ty: &sifr_codegen::RustBridgeTypeContract,
-    names: &mut Vec<String>,
+    root: &mut BridgeStubModule,
 ) {
     for candidate in [
         ty.rust_borrowed_type.as_deref(),
@@ -475,9 +538,22 @@ fn collect_generated_bridge_names(
     .into_iter()
     .flatten()
     {
-        for segment in candidate.split(|ch: char| !(ch.is_ascii_alphanumeric() || ch == '_')) {
-            if segment.ends_with("Bridge") && !segment.starts_with("__") {
-                names.push(segment.to_string());
+        let segments = candidate
+            .split(|ch: char| !(ch.is_ascii_alphanumeric() || ch == '_'))
+            .filter(|segment| !segment.is_empty())
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        for (index, segment) in segments.iter().enumerate() {
+            if segment != "__sifr_bridge" {
+                continue;
+            }
+            let mut path = Vec::new();
+            for bridge_segment in &segments[index + 1..] {
+                path.push(bridge_segment.clone());
+                if bridge_segment.ends_with("Bridge") && !bridge_segment.starts_with("__") {
+                    root.insert_path(&path);
+                    break;
+                }
             }
         }
     }
@@ -520,7 +596,7 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
 mod tests {
     use super::{
         cargo_vendor_args, dependency_features, generated_bridge_type_stubs,
-        normalize_cargo_target_dir, probe_cargo_toml,
+        normalize_cargo_target_dir, probe_cargo_toml, signature_return_probe_type,
     };
     use ruff_text_size::TextRange;
     use sifr_codegen::{
@@ -608,7 +684,7 @@ mod tests {
     }
 
     #[test]
-    fn generated_bridge_type_stubs_split_dotted_module_names() {
+    fn generated_bridge_type_stubs_follow_sanitized_bridge_type_paths() {
         let signature = RustBridgeSignatureContract {
             canonical_target_path: "_sifr.calendar.calendar_monthrange".to_string(),
             module_name: Some("_sifr.calendar".to_string()),
@@ -620,9 +696,7 @@ mod tests {
                 sifr_type: "list[int]".to_string(),
                 rust_borrowed_type: None,
                 rust_owned_type: None,
-                rust_return_type: Some(
-                    "__sifr_bridge::_sifr::calendar::CalendarBridge".to_string(),
-                ),
+                rust_return_type: Some("__sifr_bridge::_sifr_calendar::CalendarBridge".to_string()),
                 kind: RustBridgeTypeKind::GeneratedRecord,
                 unsupported_reason: None,
             },
@@ -630,9 +704,31 @@ mod tests {
         };
         let source = generated_bridge_type_stubs(&signature);
 
-        assert!(source.contains("pub mod _sifr {\npub mod calendar {\n"));
+        assert!(source.contains("pub mod _sifr_calendar {\n"));
         assert!(source.contains("pub struct CalendarBridge;"));
         assert!(!source.contains("pub mod _sifr.calendar"));
+    }
+
+    #[test]
+    fn result_error_bridge_return_probes_display_error_generic() {
+        let return_type = RustBridgeTypeContract {
+            sifr_type: "Result[str, ParseError]".to_string(),
+            rust_borrowed_type: None,
+            rust_owned_type: None,
+            rust_return_type: Some(
+                "Result<String, crate::__sifr_bridge::_sifr_crypto::ParseErrorBridge>".to_string(),
+            ),
+            kind: RustBridgeTypeKind::Result,
+            unsupported_reason: None,
+        };
+
+        let probe_type = signature_return_probe_type(&return_type);
+
+        assert_eq!(
+            probe_type.ty,
+            "Result<String, __SifrBridgeError>".to_string()
+        );
+        assert!(probe_type.display_error_generic);
     }
 
     #[test]

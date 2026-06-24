@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose, Engine as _};
+use sifr_runtime::interop::SifrIntBridge;
 use std::collections::HashSet;
 
 #[must_use]
@@ -27,7 +28,12 @@ pub fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, String> {
         .map_err(|error| error.to_string())
 }
 
-pub fn base64_encode_opts(input: &str, altchars: &str, wrapcol: i64) -> Result<String, String> {
+pub fn base64_encode_opts(
+    input: &str,
+    altchars: &str,
+    wrapcol: SifrIntBridge,
+) -> Result<String, String> {
+    let wrapcol = wrapcol.to_i64_saturating();
     if wrapcol < 0 {
         return Err("wrapcol must be >= 0".to_string());
     }

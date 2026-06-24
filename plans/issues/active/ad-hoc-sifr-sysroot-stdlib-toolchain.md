@@ -18,7 +18,7 @@ In progress.
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. Remaining M9 stateless leaves continue in follow-up waves. |
+| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 in this branch migrates fallible base64/base32 decode/options through typed result-error direct interop. Remaining stateless/fallible leaves continue in follow-up waves. |
 
 ## PR Log
 
@@ -621,7 +621,8 @@ Tasks:
 - Move math leaves to private declarations backed by `sifr_stdlib`. (wave 4 complete)
 - Move base64/base32, hash, regex, and TOML leaves. (hash wave 5 complete;
   base64/base32 encoder wave 6 merged in PR #2767; fallible base64/base32
-  decode/options, regex, and TOML are deferred to the M10 typed error bridge)
+  decode/options migrated in M10 wave 1; regex and TOML are deferred to the
+  typed error bridge follow-up waves)
 - Move UUID leaf. (wave 3 complete)
 - Move calendar leaf. (wave 2 complete)
 - Move HTML and platform leaves. (wave 1 complete)
@@ -857,9 +858,9 @@ Wave 6 status: the infallible base64/base32 encoder subset of
 declarations backed by the narrow `base64` feature in `sifr_stdlib`. The
 active compiler intrinsic registry no longer owns `base64_encode`,
 `base64_encode_bytes`, `urlsafe_b64encode`, `urlsafe_b64encode_bytes`,
-`b32encode`, or `b32hexencode`. Fallible base64/base32 decode and option
-helpers still use compiler intrinsic fallback declarations until M10
-standardizes bridge error conversion for `Result[..., ParseError]`.
+`b32encode`, or `b32hexencode`. At the end of wave 6, fallible base64/base32
+decode and option helpers still used compiler intrinsic fallback declarations;
+M10 wave 1 below migrates them through typed result-error direct interop.
 
 Wave 6 implementation evidence:
 
@@ -924,6 +925,62 @@ Tasks:
   behavior.
 - Ensure large-data and malformed-input cases have bounded-memory and bounded
   diagnostic behavior where applicable.
+
+Wave 1 status: the fallible base64/base32 decode and option subset of
+`_sifr.crypto` is migrated to private `@rust(sifr_stdlib.base64.*)`
+declarations backed by the narrow `base64` feature in `sifr_stdlib`. Direct
+Rust interop now maps Rust `Result[..., E: Display]` return errors into
+message-shaped Sifr error classes when the Sifr return type is
+`Result[..., ErrorSubclass]`; this wave exercises that bridge with
+`ParseError`. The active compiler intrinsic registry no longer owns any
+base64/base32 encoder, decoder, or option helper, and the duplicate
+`registry/base64.rs` / `registry/base32.rs` lowerers are deleted.
+
+Wave 1 implementation evidence:
+
+- `stdlib/_sifr/crypto.sifr` declares fallible base64, URL-safe base64, base32,
+  and base32hex decode/option helpers as private
+  `@rust(sifr_stdlib.base64.*)` leaves.
+- `stdlib/sifr/base64.sifr` wraps every migrated private base encoding helper
+  behind public functions so borrowed Rust interop parameter conventions do not
+  leak into user call sites.
+- `crates/sifr_codegen/src/rust_interop_direct.rs` maps direct Rust
+  `Result` returns through existing ok-value bridge conversions and constructs
+  message-shaped Sifr error classes from Rust errors via `to_string()`.
+- Rust interop signature probes accept direct Rust result errors that implement
+  `Display` when the Sifr return error is a generated error bridge type, and
+  probe bridge stubs now follow sanitized `__sifr_bridge` module paths.
+- `crates/sifr_stdlib/src/base64.rs` accepts `SifrIntBridge` for `wrapcol`,
+  matching direct interop `int` argument lowering for `base64_encode_opts`.
+- `sifr_stdlib_model` no longer retains a direct generated `base64` crate
+  dependency for `sifr.base64`; generated projects depend on
+  `sifr_stdlib` with `features = ["base64"]` instead.
+- `internal_docs/typescript_go_architecture_transfer_guardrails.md` inventories
+  the intentional Rust interop probe manifest checks/read added while enabling
+  sysroot feature-aware direct probes.
+- Focused validation passed:
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen direct_rust_function_body_maps_result_error_return --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen base_encoding_intrinsics_are_owned_by_compiled_stdlib_declarations --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr_driver generated_bridge_type_stubs_follow_sanitized_bridge_type_paths --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr_driver result_error_bridge_return_probes_display_error_generic --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr_driver crypto_hash_private_declarations_codegen_through_sifr_stdlib --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib --features base64 --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features --locked`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 target/m10-base64-error-bridge/debug/sifr run crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 target/m10-base64-error-bridge/debug/sifr run crates/sifr/tests/e2e/pass/cpython_base64_strictness_subset.sifr`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 target/m10-base64-error-bridge/debug/sifr run crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 target/m10-base64-error-bridge/debug/sifr run crates/sifr/tests/e2e/pass/cpython_base64_subset.sifr`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 target/m10-base64-error-bridge/debug/sifr run crates/sifr/tests/e2e/pass/stdlib_encoding.sifr`;
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge CARGO_BUILD_JOBS=1 target/m10-base64-error-bridge/debug/sifr run crates/sifr/tests/e2e/pass/parse_safety_error_paths.sifr`;
+  `cargo fmt --check`;
+  `git diff --check`;
+  `python3 scripts/check_file_size_guardrails.py`.
+- Opus review pass 1 returned `VERDICT: PASS` for the M10 wave 1
+  implementation.
+- Local create-pr validation passed:
+  `CARGO_TARGET_DIR=target/m10-base64-error-bridge-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The runner reported only the warm wall-time budget advisory.
 
 Acceptance:
 

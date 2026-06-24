@@ -43,11 +43,72 @@ fn direct_rust_arg_expr(param: &HirParam) -> RustExpr {
 }
 
 fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
-    match return_type {
+    match return_type.resolve_alias() {
         Type::Int => bridge_int_to_i64_expr(value),
-        Type::List(inner) if inner.as_ref() == &Type::Int => bridge_int_vec_to_i64_vec_expr(value),
+        Type::List(inner) if inner.resolve_alias() == &Type::Int => {
+            bridge_int_vec_to_i64_vec_expr(value)
+        }
+        Type::Result(ok, err) => bridge_result_expr(value, ok, err),
         _ => value,
     }
+}
+
+fn bridge_result_expr(value: RustExpr, ok_type: &Type, err_type: &Type) -> RustExpr {
+    let ok = "__sifr_bridge_ok";
+    let err = "__sifr_bridge_error";
+    let mapped_ok = RustExpr::MethodCall {
+        receiver: Box::new(value),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: ok.to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(direct_rust_return_expr(
+                RustExpr::Ident(ok.to_string()),
+                ok_type,
+            )),
+            is_move: false,
+        }],
+    };
+    RustExpr::MethodCall {
+        receiver: Box::new(mapped_ok),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: err.to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(bridge_error_expr(
+                RustExpr::Ident(err.to_string()),
+                err_type,
+            )),
+            is_move: false,
+        }],
+    }
+}
+
+fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
+    match err_type.resolve_alias() {
+        Type::Class {
+            name,
+            fields,
+            parent_class,
+            ..
+        } if parent_class.as_deref() == Some("Error") && has_message_field(fields) => {
+            RustExpr::StructInit {
+                name: name.clone(),
+                fields: vec![("message".to_string(), to_string_expr(value))],
+            }
+        }
+        _ => value,
+    }
+}
+
+fn has_message_field(fields: &[(String, Type)]) -> bool {
+    fields
+        .iter()
+        .any(|(name, ty)| name == "message" && ty.resolve_alias() == &Type::Str)
 }
 
 fn bridge_int_to_i64_expr(value: RustExpr) -> RustExpr {
@@ -79,6 +140,14 @@ fn bridge_int_vec_to_i64_vec_expr(value: RustExpr) -> RustExpr {
             }],
         }),
         method: "collect".to_string(),
+        args: Vec::new(),
+    }
+}
+
+fn to_string_expr(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "to_string".to_string(),
         args: Vec::new(),
     }
 }
@@ -234,6 +303,47 @@ mod tests {
         assert_eq!(
             render_expr(&expr),
             "sifr_stdlib::calendar::calendar_monthrange(sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_maps_result_error_return() {
+        let parse_error = Type::Class {
+            name: "ParseError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let func = HirFunction {
+            name: "base64_decode".to_string(),
+            params: vec![HirParam {
+                name: "s".to_string(),
+                ty: Type::Str,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::Result(Box::new(Type::Str), Box::new(parse_error)),
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "base64", "base64_decode"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body =
+            direct_rust_function_body(&func).expect("direct result interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct result interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::base64::base64_decode(s).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
         );
     }
 

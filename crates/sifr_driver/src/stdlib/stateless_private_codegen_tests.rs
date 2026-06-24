@@ -194,7 +194,7 @@ fn crypto_hash_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.contains("sifr_stdlib::base64::urlsafe_b64encode_bytes(data)"));
     assert!(private_code.contains("sifr_stdlib::base64::b32encode(s)"));
     assert!(private_code.contains("sifr_stdlib::base64::b32hexencode(s)"));
-    for fallback_name in [
+    for fallible_name in [
         "base64_decode",
         "base64_decode_bytes",
         "base64_encode_opts",
@@ -205,10 +205,13 @@ fn crypto_hash_private_declarations_codegen_through_sifr_stdlib() {
         "b32hexdecode",
     ] {
         assert!(
-            !private_code.contains(&format!("sifr_stdlib::base64::{fallback_name}")),
-            "{fallback_name} should stay on intrinsic fallback until typed error bridge work"
+            private_code.contains(&format!("sifr_stdlib::base64::{fallible_name}(")),
+            "{fallible_name} should lower through _sifr.crypto private Rust interop declarations"
         );
     }
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+    ));
     assert!(compiled
         .code
         .intrinsic_names
@@ -233,13 +236,7 @@ fn crypto_hash_private_declarations_codegen_through_sifr_stdlib() {
         .code
         .intrinsic_names
         .get("sifr.base64")
-        .is_some_and(|names| names.contains("base64_decode")
-            && names.contains("base64_encode_opts")
-            && names.contains("b32decode")
-            && !names.contains("base64_encode")
-            && !names.contains("_base64_encode_impl")
-            && !names.contains("b32encode")
-            && !names.contains("_b32encode_impl")));
+        .is_some_and(std::collections::HashSet::is_empty));
     let hashlib_exports = compiled
         .defs
         .functions

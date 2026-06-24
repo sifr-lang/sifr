@@ -188,6 +188,10 @@ fn hash_leaf_matches_known_digest_vectors() {
 #[cfg(feature = "base64")]
 #[test]
 fn base64_leaf_matches_rfc_vectors_and_error_paths() {
+    fn wrapcol(value: i64) -> sifr_runtime::interop::SifrIntBridge {
+        sifr_runtime::interop::SifrIntBridge::from(value)
+    }
+
     assert_eq!(sifr_stdlib::base64::base64_encode(""), "");
     assert_eq!(sifr_stdlib::base64::base64_encode("f"), "Zg==");
     assert_eq!(sifr_stdlib::base64::base64_encode("fo"), "Zm8=");
@@ -207,15 +211,15 @@ fn base64_leaf_matches_rfc_vectors_and_error_paths() {
     );
     assert!(sifr_stdlib::base64::base64_decode("@@@@").is_err());
     assert_eq!(
-        sifr_stdlib::base64::base64_encode_opts("foo", "-_", 0).expect("alt encode"),
+        sifr_stdlib::base64::base64_encode_opts("foo", "-_", wrapcol(0)).expect("alt encode"),
         "Zm9v"
     );
     assert_eq!(
-        sifr_stdlib::base64::base64_encode_opts("foobar", "", 4).expect("wrapped"),
+        sifr_stdlib::base64::base64_encode_opts("foobar", "", wrapcol(4)).expect("wrapped"),
         "Zm9v\nYmFy"
     );
-    assert!(sifr_stdlib::base64::base64_encode_opts("x", "+", 0).is_err());
-    assert!(sifr_stdlib::base64::base64_encode_opts("x", "", -1).is_err());
+    assert!(sifr_stdlib::base64::base64_encode_opts("x", "+", wrapcol(0)).is_err());
+    assert!(sifr_stdlib::base64::base64_encode_opts("x", "", wrapcol(-1)).is_err());
     assert!(sifr_stdlib::base64::base64_decode_opts("YWJj!", "", true, "").is_err());
     assert_eq!(
         sifr_stdlib::base64::base64_decode_opts("Y W\nJj!", "", false, " \n!")

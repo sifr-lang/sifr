@@ -235,6 +235,7 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("sifr.uuid", "uuid"),
         ("sifr.math", "math"),
         ("sifr.hashlib", "hash"),
+        ("sifr.base64", "base64"),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());

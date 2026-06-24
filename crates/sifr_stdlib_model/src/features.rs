@@ -130,10 +130,7 @@ pub struct StdlibFeatureSpec {
     pub cargo_dependencies: &'static [GeneratedCargoDependency],
 }
 
-const BASE64_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
-    package: "base64",
-    spec: "base64 = \"0.22.1\"",
-}];
+const BASE64_DEPS: &[GeneratedCargoDependency] = &[];
 const BIGDECIMAL_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "bigdecimal",
     spec: "bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }",
@@ -626,7 +623,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::IcuLocale,
             StdlibFeature::IcuPlurals,
         ],
-        "sifr.base64" => &[StdlibFeature::Base64],
+        "sifr.base64" => &[],
         "sifr.ipc" | "_sifr.ipc" => &[StdlibFeature::Ipc],
         "sifr.net" | "_sifr.net" => &[
             StdlibFeature::SifrRuntime,

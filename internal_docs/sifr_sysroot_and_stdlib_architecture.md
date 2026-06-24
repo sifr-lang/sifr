@@ -393,8 +393,8 @@ crate behind the same feature names.
 
 Current migrated leaves include the stateless `_sifr.platform`, `_sifr.html`,
 `_sifr.calendar`, `_sifr.uuid`, and `_sifr.math` private declaration modules,
-plus the hash helper subset and infallible base encoding encoder subset of the
-shared `_sifr.crypto` private module used by `sifr.hashlib` and `sifr.base64`.
+plus the hash helper subset and full base encoding helper subset of the shared
+`_sifr.crypto` private module used by `sifr.hashlib` and `sifr.base64`.
 Their public wrappers continue to live in
 `stdlib/sifr/platform.sifr`, `stdlib/sifr/html.sifr`,
 `stdlib/sifr/calendar.sifr`, `stdlib/sifr/uuid.sifr`,
@@ -413,12 +413,12 @@ does not leak into the public API. `stdlib/sifr/hashlib.sifr` uses the same
 boundary pattern for string and bytes helpers: public `sha*`, `md5`, and
 `blake2*` functions wrap private underscored aliases imported from
 `_sifr.crypto`, keeping borrowed Rust interop parameters out of public generated
-call sites. `stdlib/sifr/base64.sifr` uses the same pattern for infallible
-base64, URL-safe base64, base32, and base32hex encoders. Fallible
-base64/base32 decode and option helpers still use compiler intrinsic fallback
-declarations until the typed error bridge standardizes conversion for
-`Result[..., ParseError]`; random helpers also remain on intrinsic fallback
-until their stateful surface is migrated.
+call sites. `stdlib/sifr/base64.sifr` uses the same pattern for base64,
+URL-safe base64, base32, and base32hex encoders, decoders, and option helpers.
+Direct Rust interop maps Rust `Result[..., E: Display]` returns into
+message-shaped Sifr error classes such as `ParseError` at the generated wrapper
+boundary; random helpers remain on intrinsic fallback until their stateful
+surface is migrated.
 
 When sysroot Rust interop activates native-link evidence validation in a
 generated project that also embeds Python, the selected packaged Python runtime
