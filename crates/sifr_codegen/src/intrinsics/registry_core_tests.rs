@@ -712,62 +712,30 @@ pub(crate) fn lowers_random_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_re_intrinsics_via_registry() {
-    let m = lower_intrinsic("re_match", &["pat".to_string(), "txt".to_string()]).expect("re_match");
-    assert_eq!(
-        m.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Regex)
-    );
-    assert!(render_expr(&m.expr).contains("is_match"));
-
-    let f = lower_intrinsic("re_find", &["pat".to_string(), "txt".to_string()]).expect("re_find");
-    assert!(render_expr(&f.expr).contains("re.find"));
-
-    let rep = lower_intrinsic(
-        "re_replace",
-        &["pat".to_string(), "repl".to_string(), "txt".to_string()],
-    )
-    .expect("re_replace");
-    assert!(render_expr(&rep.expr).contains("replace_all"));
-
-    let all =
-        lower_intrinsic("re_findall", &["pat".to_string(), "txt".to_string()]).expect("re_findall");
-    assert!(render_expr(&all.expr).contains("find_iter"));
-
-    let split =
-        lower_intrinsic("re_split", &["pat".to_string(), "txt".to_string()]).expect("re_split");
-    assert!(render_expr(&split.expr).contains("re.split"));
-
-    let s = lower_intrinsic("re_find_start", &["pat".to_string(), "txt".to_string()])
-        .expect("re_find_start");
-    assert!(render_expr(&s.expr).contains("m.start()"));
-
-    let e = lower_intrinsic("re_find_end", &["pat".to_string(), "txt".to_string()])
-        .expect("re_find_end");
-    assert!(render_expr(&e.expr).contains("m.end()"));
-
-    let mf = lower_intrinsic(
-        "re_match_flags",
-        &["pat".to_string(), "txt".to_string(), "flags".to_string()],
-    )
-    .expect("re_match_flags");
-    assert!(render_expr(&mf.expr).contains("__flags_val"));
-
-    let rf = lower_intrinsic(
-        "re_replace_flags",
-        &[
-            "pat".to_string(),
-            "repl".to_string(),
-            "txt".to_string(),
-            "flags".to_string(),
-        ],
-    )
-    .expect("re_replace_flags");
-    assert_eq!(
-        rf.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Regex)
-    );
-    assert!(render_expr(&rf.expr).contains("replace_all"));
+pub(crate) fn re_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for (name, args) in [
+        ("re_match", &["pat", "txt"][..]),
+        ("re_find", &["pat", "txt"][..]),
+        ("re_replace", &["pat", "repl", "txt"][..]),
+        ("re_findall", &["pat", "txt"][..]),
+        ("re_split", &["pat", "txt"][..]),
+        ("re_find_start", &["pat", "txt"][..]),
+        ("re_find_end", &["pat", "txt"][..]),
+        ("re_match_flags", &["pat", "txt", "flags"][..]),
+        ("re_find_flags", &["pat", "txt", "flags"][..]),
+        ("re_replace_flags", &["pat", "repl", "txt", "flags"][..]),
+        ("re_findall_flags", &["pat", "txt", "flags"][..]),
+        ("re_split_flags", &["pat", "txt", "flags"][..]),
+    ] {
+        let args = args
+            .iter()
+            .map(|arg| (*arg).to_string())
+            .collect::<Vec<_>>();
+        assert!(
+            lower_intrinsic(name, &args).is_none(),
+            "{name} should lower through _sifr.regex private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

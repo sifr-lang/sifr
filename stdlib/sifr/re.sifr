@@ -1,11 +1,58 @@
 # sifr.re — Regular expressions
-from _sifr.regex import re_match, re_find, re_replace, re_findall, re_split, re_find_start, re_find_end, re_match_flags, re_find_flags, re_replace_flags, re_findall_flags, re_split_flags
+from _sifr.regex import re_match as _re_match_impl
+from _sifr.regex import re_find as _re_find_impl
+from _sifr.regex import re_replace as _re_replace_impl
+from _sifr.regex import re_findall as _re_findall_impl
+from _sifr.regex import re_split as _re_split_impl
+from _sifr.regex import re_find_start as _re_find_start_impl
+from _sifr.regex import re_find_end as _re_find_end_impl
+from _sifr.regex import re_match_flags as _re_match_flags_impl
+from _sifr.regex import re_find_flags as _re_find_flags_impl
+from _sifr.regex import re_replace_flags as _re_replace_flags_impl
+from _sifr.regex import re_findall_flags as _re_findall_flags_impl
+from _sifr.regex import re_split_flags as _re_split_flags_impl
 
 # Flag constants (CPython-compatible values)
 IGNORECASE: int = 2
 MULTILINE: int = 8
 DOTALL: int = 16
 VERBOSE: int = 64
+
+def re_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    return _re_match_impl(pattern, text)
+
+def re_find(pattern: str, text: str) -> Result[str | None, RegexError]:
+    return _re_find_impl(pattern, text)
+
+def re_replace(pattern: str, replacement: str, text: str) -> Result[str, RegexError]:
+    return _re_replace_impl(pattern, replacement, text)
+
+def re_findall(pattern: str, text: str) -> Result[list[str], RegexError]:
+    return _re_findall_impl(pattern, text)
+
+def re_split(pattern: str, text: str) -> Result[list[str], RegexError]:
+    return _re_split_impl(pattern, text)
+
+def re_find_start(pattern: str, text: str) -> Result[int, RegexError]:
+    return _re_find_start_impl(pattern, text)
+
+def re_find_end(pattern: str, text: str) -> Result[int, RegexError]:
+    return _re_find_end_impl(pattern, text)
+
+def re_match_flags(pattern: str, text: str, flags: int) -> Result[bool, RegexError]:
+    return _re_match_flags_impl(pattern, text, flags)
+
+def re_find_flags(pattern: str, text: str, flags: int) -> Result[str | None, RegexError]:
+    return _re_find_flags_impl(pattern, text, flags)
+
+def re_replace_flags(pattern: str, replacement: str, text: str, flags: int) -> Result[str, RegexError]:
+    return _re_replace_flags_impl(pattern, replacement, text, flags)
+
+def re_findall_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
+    return _re_findall_flags_impl(pattern, text, flags)
+
+def re_split_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
+    return _re_split_flags_impl(pattern, text, flags)
 
 class Match:
     _matched: str

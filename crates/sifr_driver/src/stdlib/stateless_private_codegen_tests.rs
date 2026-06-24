@@ -254,3 +254,60 @@ fn crypto_hash_private_declarations_codegen_through_sifr_stdlib() {
     assert!(!base64_exports.contains_key("_base64_encode_impl"));
     assert!(!base64_exports.contains_key("_b32encode_impl"));
 }
+
+#[test]
+fn regex_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.regex")
+        .expect("_sifr.regex should generate private Rust code");
+
+    for name in [
+        "re_match",
+        "re_find",
+        "re_replace",
+        "re_findall",
+        "re_split",
+        "re_find_start",
+        "re_find_end",
+        "re_match_flags",
+        "re_find_flags",
+        "re_replace_flags",
+        "re_findall_flags",
+        "re_split_flags",
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::regex::{name}(")),
+            "{name} should lower through _sifr.regex private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| RegexError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(private_code.contains("sifr_runtime::interop::SifrIntBridge::from(flags)"));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.regex")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.re")
+        .is_some_and(|deps| deps.contains("_sifr.regex")));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("sifr.re")
+        .is_some_and(std::collections::HashSet::is_empty));
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.re")
+        .expect("sifr.re exports should be collected");
+    assert!(exports.contains_key("re_match"));
+    assert!(exports.contains_key("search"));
+    assert!(!exports.contains_key("_re_match_impl"));
+}

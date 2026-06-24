@@ -19,7 +19,6 @@ mod process_child_lifecycle;
 mod process_pipes;
 mod python;
 mod random;
-mod re;
 mod requirements;
 mod runtime;
 mod signal;
@@ -473,18 +472,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             (random::lower_random_module_state_gauss_next(args), None)
         }
         "random_module_set_state" => (random::lower_random_module_set_state(args), None),
-        "re_match" => (re::lower_re_match(args), Some(StdlibFeature::Regex)),
-        "re_find" => (re::lower_re_find(args), Some(StdlibFeature::Regex)),
-        "re_replace" => (re::lower_re_replace(args), Some(StdlibFeature::Regex)),
-        "re_findall" => (re::lower_re_findall(args), Some(StdlibFeature::Regex)),
-        "re_split" => (re::lower_re_split(args), Some(StdlibFeature::Regex)),
-        "re_find_start" => (re::lower_re_find_start(args), Some(StdlibFeature::Regex)),
-        "re_find_end" => (re::lower_re_find_end(args), Some(StdlibFeature::Regex)),
-        "re_match_flags" => (re::lower_re_match_flags(args), Some(StdlibFeature::Regex)),
-        "re_find_flags" => (re::lower_re_find_flags(args), Some(StdlibFeature::Regex)),
-        "re_replace_flags" => (re::lower_re_replace_flags(args), Some(StdlibFeature::Regex)),
-        "re_findall_flags" => (re::lower_re_findall_flags(args), Some(StdlibFeature::Regex)),
-        "re_split_flags" => (re::lower_re_split_flags(args), Some(StdlibFeature::Regex)),
         "toml_parse" => (toml::lower_toml_parse(args), Some(StdlibFeature::Toml)),
         "datetime_now" => (
             datetime::lower_datetime_now(args),

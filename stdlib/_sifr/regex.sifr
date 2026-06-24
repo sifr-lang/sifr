@@ -1,2 +1,49 @@
 # Private _sifr.regex native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.regex.re_match, panic=trusted_no_panic)
+def re_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_find, panic=trusted_no_panic)
+def re_find(pattern: str, text: str) -> Result[str | None, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_replace, panic=trusted_no_panic)
+def re_replace(pattern: str, replacement: str, text: str) -> Result[str, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_findall, panic=trusted_no_panic)
+def re_findall(pattern: str, text: str) -> Result[list[str], RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_split, panic=trusted_no_panic)
+def re_split(pattern: str, text: str) -> Result[list[str], RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_find_start, panic=trusted_no_panic)
+def re_find_start(pattern: str, text: str) -> Result[int, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_find_end, panic=trusted_no_panic)
+def re_find_end(pattern: str, text: str) -> Result[int, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_match_flags, panic=trusted_no_panic)
+def re_match_flags(pattern: str, text: str, flags: int) -> Result[bool, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_find_flags, panic=trusted_no_panic)
+def re_find_flags(pattern: str, text: str, flags: int) -> Result[str | None, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_replace_flags, panic=trusted_no_panic)
+def re_replace_flags(pattern: str, replacement: str, text: str, flags: int) -> Result[str, RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_findall_flags, panic=trusted_no_panic)
+def re_findall_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
+    raise RegexError("")
+
+@rust(sifr_stdlib.regex.re_split_flags, panic=trusted_no_panic)
+def re_split_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
+    raise RegexError("")

@@ -95,20 +95,39 @@ fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
             fields,
             parent_class,
             ..
-        } if parent_class.as_deref() == Some("Error") && has_message_field(fields) => {
-            RustExpr::StructInit {
-                name: name.clone(),
-                fields: vec![("message".to_string(), to_string_expr(value))],
+        } if parent_class.as_deref() == Some("Error") => {
+            if let Some(error_fields) = message_error_fields(fields) {
+                RustExpr::StructInit {
+                    name: name.clone(),
+                    fields: error_fields
+                        .into_iter()
+                        .map(|field| (field, to_string_expr(value.clone())))
+                        .collect(),
+                }
+            } else {
+                value
             }
         }
         _ => value,
     }
 }
 
-fn has_message_field(fields: &[(String, Type)]) -> bool {
-    fields
+fn message_error_fields(fields: &[(String, Type)]) -> Option<Vec<String>> {
+    let all_fields_are_strings = fields
         .iter()
-        .any(|(name, ty)| name == "message" && ty.resolve_alias() == &Type::Str)
+        .all(|(_name, ty)| ty.resolve_alias() == &Type::Str);
+    if !all_fields_are_strings {
+        return None;
+    }
+    let field_names = fields
+        .iter()
+        .map(|(name, _ty)| name.clone())
+        .collect::<Vec<_>>();
+    if field_names.iter().any(|name| name == "message") {
+        Some(field_names)
+    } else {
+        None
+    }
 }
 
 fn bridge_int_to_i64_expr(value: RustExpr) -> RustExpr {
@@ -344,6 +363,50 @@ mod tests {
         assert_eq!(
             render_expr(&expr),
             "sifr_stdlib::base64::base64_decode(s).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_maps_string_error_fields() {
+        let regex_error = Type::Class {
+            name: "RegexError".to_string(),
+            fields: vec![
+                ("message".to_string(), Type::Str),
+                ("detail".to_string(), Type::Str),
+            ],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let func = HirFunction {
+            name: "re_match".to_string(),
+            params: vec![HirParam {
+                name: "pattern".to_string(),
+                ty: Type::Str,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::Result(Box::new(Type::Bool), Box::new(regex_error)),
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "regex", "re_match"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body =
+            direct_rust_function_body(&func).expect("direct result interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct result interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::regex::re_match(pattern).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| RegexError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() })"
         );
     }
 
