@@ -105,6 +105,30 @@ def encode(text: str) -> Result[Tokenized, TokenizeError | RustPanicError]: ...
 
 `bridge.tokenizer.encode` resolves to `crate::bridges::tokenizer::encode` in the generated package crate. Sifr owns projection entries for `src/bridges/mod.rs`, but user-authored bridge files remain user files and must never be overwritten silently.
 
+Package-local bridge bindings are also the adapter boundary for Rust APIs whose
+native shape is not already Sifr-compatible. A bridge function may reshape
+generated Sifr bridge types into backend Rust types, call one or more Rust
+implementation functions, reshape outputs back into generated Sifr bridge
+types, and map `Result`-typed Rust errors into the declared Sifr error channel.
+The compiler still validates only the bridge-compatible signature named by
+`@rust(...)`; it does not interpret per-function input/output converter chains.
+
+Direct bindings are for exact bridge-compatible Rust signatures. Anything that
+needs adaptation targets an adapter function owned by the package (`bridge.*`),
+a shared bridge crate, or a sysroot crate such as `sifr_stdlib`; sysroot stdlib
+adapters are still targeted through direct `@rust(sifr_stdlib.<path>)` bindings.
+Decorator-level converter pipelines are intentionally not part of bridge version
+1.
+
+If a Rust crate exposes unsupported lifetimes, borrowed returns, trait objects,
+generics, closure-valued APIs, or error types whose mapping needs more than
+display-text shaping, the package or stdlib author writes a bridge adapter and
+targets that adapter.
+
+Bridge code does not install its own panic guard. Panics from the bridge and
+from any Rust function it calls are caught at the generated wrapper according
+to the declaration's `panic=` policy.
+
 ### Shared Bridge Crate Binding
 
 ```sifr
@@ -180,6 +204,7 @@ Allowed symbolic values are:
 | Cargo dependency name | Direct binding to an ordinary Cargo dependency. |
 | `bridge` | Package-local bridge module under `src/bridges`. |
 | Shared bridge crate name | Direct binding to a bridge crate declared as a Cargo dependency. |
+| Sysroot-owned crate root | Private stdlib binding to canonical sysroot crates such as `sifr_stdlib` or `sifr_runtime`, resolved only under the compiler-owned synthetic private `_sifr.*` package context. |
 | `Self` | Method binding inside a `@rust.opaque` class. |
 
 Resolution is compiler-owned and deterministic:
@@ -371,6 +396,20 @@ const _: () = {
 };
 ```
 
+Message-shaped error probes assert the Rust error's display contract when the
+Sifr error type is eligible for generated message construction:
+
+```rust
+fn assert_result_signature<__SifrBridgeError: std::fmt::Display>(
+    f: fn(&str) -> Result<String, __SifrBridgeError>,
+) {
+}
+
+const _: () = {
+    assert_result_signature(sifr_stdlib::regex::re_find);
+};
+```
+
 ## Bridge Type Contract
 
 Sifr-facing Rust bridge signatures are intentionally small and explicit.
@@ -400,6 +439,15 @@ Exact `int` is not a native ABI integer. `SifrIntBridge` lives in `sifr_runtime:
 `dict[str, T]` preserves Sifr/Python insertion order through `sifr_runtime::interop::IndexMap`, a runtime re-export of the pinned `indexmap::IndexMap` version used by generated bridge glue. Non-`str` dict keys are not bridge-compatible until a later design defines stable hashing/equality and ordering semantics for those key types.
 
 Nested borrowed forms are generated from the outer ownership mode. For example, borrowed `list[str]` is not `&[&str]`; it is a generated list view whose elements are borrowed string views with the same lifetime as the list view. `Option[str]` and `Option[bytes]` use generated optional borrowed views for borrowed parameters and owned `Option<String>` / `Option<Vec<u8>>` for owned parameters and returns.
+
+For `Result[T, E]`, the error position may be either the generated bridge error
+type or a Rust error type that implements `std::fmt::Display` when the Sifr
+error class can be constructed from strings. A message-shaped Sifr error class
+receives `error.to_string()` as `message`; an error subclass whose fields are
+all strings receives the same display text for `message` and its extra string
+fields. Any richer error mapping requires an explicit adapter function that
+returns a bridge-compatible error shape. This is a single generated wrapper
+rule, not a per-declaration converter pipeline.
 
 Sifr container types not listed above, including `set[T]`, `tuple[...]`, and arbitrary iterator/generator types, are not bridge-compatible in the initial Rust interop contract and produce `SIFR-RUST-TYPE-*` diagnostics. No implicit conversion is allowed.
 
@@ -491,6 +539,21 @@ Before moving an owned opaque value into Rust, generated glue creates a `PoisonO
 Package-local bridges compile inside the generated package crate and may use package-generated `crate::__sifr_bridge::<module>::<Name>Bridge` types.
 
 Shared bridge crates are ordinary Cargo dependencies and cannot import package-specific generated bridge modules. They may expose only stable Rust types, `sifr_runtime::interop` helper types, or their own opaque handle types. Generated glue adapts package-local Sifr records, enums, and errors to the shared bridge crate's public types outside the shared bridge crate.
+
+### Future Callee Injection
+
+Bridge version 1 does not support callee injection. Sifr source must not store,
+return, capture, or dynamically dispatch Rust functions; Rust functions are not
+Sifr values. Any future callee-injection form requires a new bridge-versioned
+design that proves its ownership, lifetime, panic, trust, and cache-key
+behavior.
+
+The current stdlib rewrite does not require this extension. For migrated
+stdlib leaves, direct binding is used both for exact-shape `sifr_stdlib`
+functions and for `sifr_stdlib` adapter functions that own input reshaping,
+output reshaping, and typed error mapping. In both cases the private `_sifr.*`
+declaration binds via `@rust(sifr_stdlib.<path>)`; there is no `bridge.*`
+package-local module for sysroot stdlib.
 
 ## Error Semantics
 

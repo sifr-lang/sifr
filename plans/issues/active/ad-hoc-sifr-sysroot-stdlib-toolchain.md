@@ -45,7 +45,12 @@ In progress.
 Authoritative target architecture:
 [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]
 
+The [stdlib Rust interop adapter policy][stdlib-interop-adapter-policy] is
+locked: direct binding for exact-shape `sifr_stdlib` signatures, `sifr_stdlib`
+adapters for reshaping or error mapping, and no callee injection in M9-M13.
+
 [sysroot-stdlib-architecture]: ../../../internal_docs/sifr_sysroot_and_stdlib_architecture.md
+[stdlib-interop-adapter-policy]: ../../../internal_docs/sifr_sysroot_and_stdlib_architecture.md#stdlib-rust-interop-adapter-policy
 
 ## Objective
 
