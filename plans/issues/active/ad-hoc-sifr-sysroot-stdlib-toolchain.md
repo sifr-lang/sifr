@@ -19,6 +19,7 @@ In progress.
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. Remaining fallible leaves continue in follow-up waves. |
+| Post-M10 Adapter Policy Adherence Audit | pending | Blocking checkpoint before additional M10/M11 migration waves. Audit completed M9/M10 work against the locked stdlib Rust interop adapter policy; fix any completed migrated surface that still relies on fallback, unowned adapters, converter pipelines, or undocumented trust/error behavior. |
 
 ## PR Log
 
@@ -45,7 +46,12 @@ In progress.
 Authoritative target architecture:
 [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]
 
+The [stdlib Rust interop adapter policy][stdlib-interop-adapter-policy] is
+locked: direct binding for exact-shape `sifr_stdlib` signatures, `sifr_stdlib`
+adapters for reshaping or error mapping, and no callee injection in M9-M13.
+
 [sysroot-stdlib-architecture]: ../../../internal_docs/sifr_sysroot_and_stdlib_architecture.md
+[stdlib-interop-adapter-policy]: ../../../internal_docs/sifr_sysroot_and_stdlib_architecture.md#stdlib-rust-interop-adapter-policy
 
 ## Objective
 
@@ -1050,6 +1056,58 @@ Validation:
 - Cargo feature matrix checks for text/data groups.
 - Large/malformed input fixtures for JSON, Unicode/encoding, URL, gzip, and
   zipfile.
+
+### Post-M10 Adapter Policy Adherence Audit
+
+Before opening additional M10 or M11 migration waves, audit the already-merged
+M9/M10 work against the [stdlib Rust interop adapter policy][stdlib-interop-adapter-policy].
+This is a checkpoint inside this phase, not a separate ad hoc phase.
+
+Scope:
+
+- Completed M9 waves: platform/html, calendar, UUID, math, hash, and
+  base64/base32 encoders.
+- Completed M10 waves: fallible base64/base32 decode/options and regex.
+- Compiler and driver support that those waves depend on:
+  `rust_interop_direct`, Rust interop probes, stdlib bootstrap, feature planning,
+  and private stdlib codegen tests.
+- No new native stdlib surface migration.
+
+Required checks:
+
+- Classify each completed private `_sifr.*` declaration as exact-shape direct
+  binding, `sifr_stdlib` adapter binding, or global `E: Display` error bridge.
+- Prove completed migrated names lower through `sifr_stdlib::*` and no longer
+  rely on compiler intrinsic fallback.
+- Keep fallback declarations only for explicitly unmigrated names, such as
+  stateful random/crypto surfaces, and document that boundary where tested.
+- Prove `Result<_, E: Display>` handling for `ParseError` and `RegexError` is
+  the normative bridge rule, not a per-declaration converter pipeline.
+- Prove generated projects use `sifr_stdlib` features rather than direct
+  third-party dependencies for completed migrated modules, except documented
+  compiler-owned exceptions such as `sifr.pathlib` path-glob regex lowering.
+- Prove private stdlib trust remains compiler-owned and does not extend
+  `trusted_no_panic` privileges to user packages.
+- Search completed migration paths for `@rust.via`, callee injection,
+  `bridge.*` sysroot adapters, or converter-pipeline metadata; all must be
+  absent.
+
+Acceptance:
+
+- The audit lands as one focused PR unless it uncovers a real implementation
+  defect that needs a narrower fix PR.
+- Any stale fallback wording or tests for completed migrated names are removed
+  or rewritten.
+- The active issue records the adherence result and any residuals as concrete
+  follow-up tasks before further M10/M11 waves proceed.
+
+Validation:
+
+- Focused tests for touched codegen, driver, stdlib-model, and `sifr_stdlib`
+  modules.
+- `git diff --check`
+- `python3 scripts/check_hir_maintainability_guardrails.py`
+- `scripts/run_all_tests.sh --profile create-pr` before PR.
 
 ### M11. Migrate Stateful and Resource Modules
 

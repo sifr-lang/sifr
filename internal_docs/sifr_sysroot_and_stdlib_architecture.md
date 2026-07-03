@@ -116,6 +116,33 @@ separately owned rows are `bridge_type_matrix`, `opaque_resource_matrix`,
 migrations must not claim stable support for any row that remains separately
 owned by certification work.
 
+## Stdlib Rust Interop Adapter Policy
+
+Native stdlib migration uses the same two-level Rust interop model as packages.
+Private `_sifr.*` declarations may bind directly to `sifr_stdlib` functions
+only when the Rust signature is already bridge-compatible and exposes the
+intended Sifr-shaped error surface. When a stdlib operation needs input
+normalization, output conversion, preservation of existing public semantics, or
+typed error shaping, the targeted Rust function is a `sifr_stdlib` adapter that
+owns those conversions before calling lower-level backend code.
+
+The compiler should not add per-declaration converter pipelines for the stdlib
+rewrite. Generated glue validates the single `@rust(...)` target signature,
+records the sysroot interop dependency and trust metadata, and lets
+`sifr_stdlib` own backend-specific adaptation. M9-M13 migrations are committed
+to `bridge-version = 1`; any future callee-injection form requires a new
+bridge-versioned design and must not add fallback conversion behavior to
+existing sysroot interop declarations.
+
+Private stdlib declarations rely on the compiler-owned sysroot trust policy and
+`sifr_stdlib` crate-level no-panic conventions for public APIs whose error
+surface does not include `RustPanicError`; user packages do not inherit that
+trust.
+
+Resource, async, callback, and runtime-state surfaces stay behind the active
+Rust interop runtime certification gate until their lifecycle behavior is
+executable evidence, not just adapter code.
+
 ## Installed Layout
 
 The canonical standalone installation layout is:
@@ -422,12 +449,10 @@ URL-safe base64, base32, and base32hex encoders, decoders, and option helpers.
 replace, findall, split, match start/end, and flag variants. `sifr.pathlib`
 still retains a direct `regex` implementation dependency for path-glob lowering
 until the filesystem/path surface migrates.
-Direct Rust interop maps Rust `Result[..., E: Display]` returns into
-message-shaped Sifr error classes such as `ParseError` at the generated wrapper
-boundary. It also supports error subclasses whose fields are all strings by
-filling `message` and detail fields from the Rust error display text, which
-covers `RegexError { message, detail }`. Random helpers remain on intrinsic
-fallback until their stateful surface is migrated.
+Direct Rust interop uses the Bridge Type Contract's `E: Display` rule for
+message-shaped Sifr error classes and all-string-field error subclasses such as
+`RegexError { message, detail }`. Random helpers remain on intrinsic fallback
+until their stateful surface is migrated.
 
 When sysroot Rust interop activates native-link evidence validation in a
 generated project that also embeds Python, the selected packaged Python runtime
