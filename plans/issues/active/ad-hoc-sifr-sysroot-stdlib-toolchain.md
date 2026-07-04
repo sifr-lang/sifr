@@ -19,7 +19,7 @@ In progress.
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. Remaining fallible leaves continue in follow-up waves. |
-| Post-M10 Adapter Policy Adherence Audit | pending | Blocking checkpoint before additional M10/M11 migration waves. Audit completed M9/M10 work against the locked stdlib Rust interop adapter policy; fix any completed migrated surface that still relies on fallback, unowned adapters, converter pipelines, or undocumented trust/error behavior. |
+| Post-M10 Adapter Policy Adherence Audit | in progress | Blocking checkpoint before additional M10/M11 migration waves. Audit completed M9/M10 work against the locked stdlib Rust interop adapter policy; fix any completed migrated surface that still relies on fallback, unowned adapters, converter pipelines, or undocumented trust/error behavior. |
 
 ## PR Log
 
@@ -1100,6 +1100,58 @@ Acceptance:
   or rewritten.
 - The active issue records the adherence result and any residuals as concrete
   follow-up tasks before further M10/M11 waves proceed.
+
+Audit result:
+
+- `_sifr.platform` and `_sifr.html`: exact-shape direct bindings to
+  `sifr_stdlib::platform` / `sifr_stdlib::html`; generated private code has no
+  active intrinsic names for these modules and public imports depend only on
+  `sifr_stdlib` features `platform` / `html`.
+- `_sifr.uuid`: exact-shape direct binding to `sifr_stdlib::uuid`; generated
+  private code routes `uuid4`, `uuid3_text`, and `uuid5_text` through
+  `sifr_stdlib::uuid::*`, with no active UUID intrinsic fallback.
+- `_sifr.calendar`: `sifr_stdlib` adapter binding. `sifr_stdlib::calendar`
+  owns Gregorian behavior and `SifrIntBridge` adaptation; generated private
+  code only performs the generic integer bridge calls required by direct Rust
+  interop.
+- `_sifr.math`: mixed exact-shape and `sifr_stdlib` adapter binding. Scalar
+  float helpers bind directly; integer-returning, list-returning, and aggregate
+  helpers rely on `sifr_stdlib::math` adapters plus the generic integer/list
+  bridge.
+- `_sifr.crypto` hash helpers and infallible base64/base32 encoders:
+  exact-shape direct bindings to `sifr_stdlib::hash` and
+  `sifr_stdlib::base64`. Public `sifr.hashlib` and `sifr.base64` wrappers keep
+  borrowed private interop conventions out of user call sites.
+- `_sifr.crypto` fallible base64/base32 decode/options:
+  `sifr_stdlib` adapter bindings plus the global `Result<_, E: Display>` error
+  bridge into `ParseError { message }`; no base encoding helper remains an
+  active compiler intrinsic.
+- `_sifr.regex`: `sifr_stdlib` adapter bindings plus the global
+  `Result<_, E: Display>` error bridge into `RegexError { message, detail }`.
+  `sifr.pathlib` path-glob lowering remains the documented direct-`regex`
+  compiler-owned exception.
+- `_sifr.crypto` remains a partial private module because stateful random
+  helpers are not part of completed M9/M10 migration scope. The completed
+  public migrated surfaces (`sifr.hashlib` and `sifr.base64`) have no direct
+  third-party generated dependencies; direct `_sifr.crypto` feature planning may
+  still account for random until the stateful random surface migrates.
+- Private sysroot `trusted_no_panic` remains compiler-owned. User package Rust
+  interop still requires package manifest trust, even when merged with trusted
+  private stdlib interop in the same generated project.
+- Completed migrated private declaration sources contain only direct
+  `@rust(sifr_stdlib..., panic=trusted_no_panic)` declarations. The audit found
+  no `@rust.via`, callee injection, `bridge.*` sysroot adapter target,
+  converter-pipeline metadata, or completed-name intrinsic fallback.
+
+Audit evidence added in this checkpoint:
+
+- `completed_private_declarations_follow_adapter_policy_syntax` guards the
+  completed private declaration sources against `@rust.via`, `bridge.*`, and
+  converter-pipeline syntax while requiring direct `sifr_stdlib` targets.
+- `stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies` now
+  covers completed private migrated modules as well as public modules.
+- `merged_user_and_private_stdlib_interop_keeps_user_trust_separate` proves
+  sysroot `trusted_no_panic` does not satisfy user package Rust interop trust.
 
 Validation:
 

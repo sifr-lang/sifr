@@ -319,6 +319,9 @@ def run_self_test() -> None:
     validate_trend_policy(manifest, trend_baselines, policy, manifest_path=DEFAULT_MANIFEST)
 
     stale = copy.deepcopy(trend_baselines)
+    stale["deferrals"] = [
+        deferral for deferral in stale.get("deferrals", []) if "benchmark_ids" not in deferral
+    ]
     stale["results"][0]["baseline_captured_at_unix"] = 1
     assert_fails(
         lambda: validate_trend_policy(manifest, stale, policy, manifest_path=DEFAULT_MANIFEST),
@@ -326,7 +329,13 @@ def run_self_test() -> None:
     )
 
     missing = copy.deepcopy(trend_baselines)
+    missing["deferrals"] = [
+        deferral for deferral in missing.get("deferrals", []) if "benchmark_ids" not in deferral
+    ]
     missing["results"] = missing["results"][1:]
+    fresh_timestamp = int(datetime.now(UTC).timestamp())
+    for result in missing["results"]:
+        result["baseline_captured_at_unix"] = fresh_timestamp
     assert_fails(
         lambda: validate_trend_policy(manifest, missing, policy, manifest_path=DEFAULT_MANIFEST),
         "missing current trend baselines",

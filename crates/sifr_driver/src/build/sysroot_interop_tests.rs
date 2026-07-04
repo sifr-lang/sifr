@@ -133,6 +133,41 @@ fn merged_user_and_private_stdlib_interop_both_resolve() {
         )));
 }
 
+#[test]
+fn merged_user_and_private_stdlib_interop_keeps_user_trust_separate() {
+    let stdlib_interop = private_stdlib_interop(
+        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+    );
+    let mut generated = base_project();
+    generated.interop = user_interop(
+        "app",
+        "@rust(bridge.user_noop, panic=trusted_no_panic)\ndef user_noop() -> None:\n    pass\n",
+    );
+    let mut context = user_context();
+    let app_package_id = context
+        .module_packages
+        .get("app")
+        .expect("app module should have a package")
+        .clone();
+    context
+        .graph
+        .packages
+        .get_mut(&app_package_id)
+        .expect("app package should exist")
+        .manifest
+        .trust = TrustPolicy::default();
+
+    let (generated, context) =
+        attach_stdlib_rust_interop(generated, Some(context), &stdlib_interop);
+    let diagnostics = match apply_package_rust_interop_metadata(generated, context) {
+        Ok(_) => panic!("sysroot trust must not satisfy user package no-panic trust"),
+        Err(diagnostics) => diagnostics,
+    };
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+    assert!(diagnostics[0].message.contains("bridge.user_noop"));
+}
+
 fn private_stdlib_interop(source: &str) -> StdlibRustInterop {
     let parsed = sifr_syntax::parse_module_raw(source, Some("/opt/sifr/stdlib/_sifr/m8.sifr"))
         .expect("private declaration parses");
