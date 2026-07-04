@@ -71,6 +71,12 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.base64", "_sifr.crypto"]) {
         features.push("base64");
     }
+    if has_module(&["sifr.re", "_sifr.regex"]) {
+        features.push("regex");
+    }
+    if has_module(&["sifr.url", "_sifr.url"]) {
+        features.push("url");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 

@@ -37,9 +37,47 @@ fn direct_rust_arg_expr(param: &HirParam) -> RustExpr {
             func: Box::new(sifr_int_bridge_path("from")),
             args: vec![value],
         }
+    } else if is_optional_str(&param.ty) {
+        RustExpr::MethodCall {
+            receiver: Box::new(value),
+            method: "clone".to_string(),
+            args: Vec::new(),
+        }
+    } else if is_optional_int(&param.ty) {
+        RustExpr::MethodCall {
+            receiver: Box::new(value),
+            method: "map".to_string(),
+            args: vec![sifr_int_bridge_path("from")],
+        }
     } else {
         value
     }
+}
+
+fn is_optional_str(ty: &Type) -> bool {
+    let Type::Union(members) = ty.resolve_alias() else {
+        return false;
+    };
+    members.len() == 2
+        && members
+            .iter()
+            .any(|member| member.resolve_alias() == &Type::None)
+        && members
+            .iter()
+            .any(|member| member.resolve_alias() == &Type::Str)
+}
+
+fn is_optional_int(ty: &Type) -> bool {
+    let Type::Union(members) = ty.resolve_alias() else {
+        return false;
+    };
+    members.len() == 2
+        && members
+            .iter()
+            .any(|member| member.resolve_alias() == &Type::None)
+        && members
+            .iter()
+            .any(|member| member.resolve_alias() == &Type::Int)
 }
 
 fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
@@ -287,6 +325,50 @@ mod tests {
         assert_eq!(
             render_expr(&expr),
             "sifr_stdlib::calendar::calendar_weekday(sifr_runtime::interop::SifrIntBridge::from(year)).to_i64_saturating()"
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_converts_optional_int_arguments() {
+        let func = HirFunction {
+            name: "url_build".to_string(),
+            params: vec![
+                HirParam {
+                    name: "query".to_string(),
+                    ty: Type::Union(vec![Type::Str, Type::None]),
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::borrow(),
+                },
+                HirParam {
+                    name: "port".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::borrow(),
+                },
+            ],
+            return_type: Type::Str,
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "url", "url_build_parts"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body = direct_rust_function_body(&func)
+            .expect("direct optional-int interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct optional-int interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::url::url_build_parts(query.clone(), port.map(sifr_runtime::interop::SifrIntBridge::from))"
         );
     }
 

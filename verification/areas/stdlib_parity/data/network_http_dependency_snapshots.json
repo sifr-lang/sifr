@@ -76,16 +76,13 @@
         "network_http_url_header_cookie"
       ],
       "required_features": [
-        "url/std",
-        "percent-encoding/std",
+        "sifr_stdlib/url",
         "http/std",
         "sifr-owned-cookie-header-validation"
       ],
       "production_dependencies": [
         "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",
-        "http = \"1.4.1\"",
-        "url = \"2.5.8\"",
-        "percent-encoding = \"2.3.2\""
+        "http = \"1.4.1\""
       ],
       "must_not_include": [
         "proptest",

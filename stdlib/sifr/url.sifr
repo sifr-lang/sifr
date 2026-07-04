@@ -99,8 +99,82 @@ class UrlQuery:
         return None
 
 
+def _url_part(parts: list[str], index: int) -> str:
+    value: str | None = parts[index]
+    if value is not None:
+        return value + ""
+    return ""
+
+
+def _optional_part(value: str, marker: str) -> str | None:
+    if marker == "1":
+        return value + ""
+    return None
+
+
+def _optional_port(value: str) -> int | None:
+    if value == "":
+        return None
+    try:
+        parsed: int = int(value)
+        return parsed
+    except ParseError:
+        return None
+
+
+def _url_from_parts(parts: list[str]) -> Result[Url, UrlError]:
+    if len(parts) != 12:
+        raise UrlError("URL bridge payload has invalid field count")
+    scheme: str = _url_part(parts, 0)
+    username: str = _url_part(parts, 1)
+    password_value: str = _url_part(parts, 2)
+    password_marker: str = _url_part(parts, 3)
+    host: str = _url_part(parts, 4)
+    port_value: str = _url_part(parts, 5)
+    path: str = _url_part(parts, 6)
+    query_value: str = _url_part(parts, 7)
+    query_marker: str = _url_part(parts, 8)
+    fragment_value: str = _url_part(parts, 9)
+    fragment_marker: str = _url_part(parts, 10)
+    serialized: str = _url_part(parts, 11)
+    return Url(
+        scheme,
+        username,
+        _optional_part(password_value, password_marker),
+        host,
+        _optional_port(port_value),
+        path,
+        _optional_part(query_value, query_marker),
+        _optional_part(fragment_value, fragment_marker),
+        serialized,
+    )
+
+
+def _pairs_from_flat(flat: list[str]) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    i: int = 0
+    while i < len(flat):
+        key: str = _url_part(flat, i)
+        value: str = _url_part(flat, i + 1)
+        pairs.append((key, value))
+        i = i + 2
+    return pairs
+
+
+def _flatten_pairs(pairs: list[tuple[str, str]]) -> list[str]:
+    flat: list[str] = []
+    for pair in pairs:
+        flat.append(pair[0])
+        flat.append(pair[1])
+    return flat
+
+
 def parse(value: str) -> Result[Url, UrlError]:
-    return url_parse(value)
+    try:
+        parts: list[str] = url_parse(value)
+        return _url_from_parts(parts)
+    except ParseError as e:
+        raise UrlError(e.message)
 
 
 def parse_url(value: str) -> Result[Url, UrlError]:
@@ -114,7 +188,11 @@ def build(
     query: str | None = None,
     port: int | None = None,
 ) -> Result[Url, UrlError]:
-    return url_build(scheme, host, path, query, port)
+    try:
+        parts: list[str] = url_build(scheme, host, path, query, port)
+        return _url_from_parts(parts)
+    except ParseError as e:
+        raise UrlError(e.message)
 
 
 def build_url(
@@ -132,7 +210,11 @@ def percent_encode(value: str) -> str:
 
 
 def percent_decode(value: str) -> Result[str, UrlError]:
-    return url_percent_decode(value)
+    try:
+        decoded: str = url_percent_decode(value)
+        return decoded
+    except ParseError as e:
+        raise UrlError(e.message)
 
 
 def percent_encode_bytes(value: bytes) -> str:
@@ -140,20 +222,33 @@ def percent_encode_bytes(value: bytes) -> str:
 
 
 def percent_decode_bytes(value: str) -> Result[bytes, UrlError]:
-    return url_percent_decode_bytes(value)
+    try:
+        decoded: bytes = url_percent_decode_bytes(value)
+        return decoded
+    except ParseError as e:
+        raise UrlError(e.message)
 
 
 def normalize_path(path: str) -> Result[str, UrlError]:
-    return url_normalize_path(path)
+    try:
+        normalized: str = url_normalize_path(path)
+        return normalized
+    except ParseError as e:
+        raise UrlError(e.message)
 
 
 def parse_query(query: str) -> Result[UrlQuery, UrlError]:
     try:
-        pairs: list[tuple[str, str]] = url_query_parse(query)
+        flat: list[str] = url_query_parse(query)
+        pairs: list[tuple[str, str]] = _pairs_from_flat(flat)
         return UrlQuery(pairs)
-    except UrlError as e:
-        raise e
+    except ParseError as e:
+        raise UrlError(e.message)
 
 
 def build_query(pairs: list[tuple[str, str]]) -> Result[str, UrlError]:
-    return url_query_build(pairs)
+    try:
+        query: str = url_query_build(_flatten_pairs(pairs))
+        return query
+    except ParseError as e:
+        raise UrlError(e.message)

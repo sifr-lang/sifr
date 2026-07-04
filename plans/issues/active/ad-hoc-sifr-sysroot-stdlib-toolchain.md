@@ -18,7 +18,7 @@ In progress.
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. Remaining fallible leaves continue in follow-up waves. |
+| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. M10 wave 3 is in progress on this branch, migrating `_sifr.url`/`sifr.url` through private Rust interop backed by `sifr_stdlib::url`. Remaining fallible leaves continue in follow-up waves. |
 | Post-M10 Adapter Policy Adherence Audit | completed, merged | Merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774). The audit classified completed M9/M10 private bindings, added executable guards for direct `sifr_stdlib` targets and trust separation, documented residual `_sifr.crypto` random scope, and passed Opus review pass 2 plus local `scripts/run_all_tests.sh --profile create-pr` with only the warm wall-time advisory. |
 
 ## PR Log
@@ -41,6 +41,7 @@ In progress.
 - M10 wave 1 fallible base encoding error bridge: merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769).
 - M10 wave 2 regex interop migration: merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771).
 - Post-M10 adapter policy adherence audit: merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774).
+- M10 wave 3 URL interop migration: in progress on branch `sifr-sysroot-stdlib-m10-url-interop`.
 
 ## Design Reference
 
@@ -1044,6 +1045,70 @@ Wave 2 implementation evidence:
   `python3 scripts/check_file_size_guardrails.py`.
 - Opus review pass 1 returned `VERDICT: PASS` for the M10 wave 2 regex
   interop migration.
+
+Wave 3 status: in progress on branch `sifr-sysroot-stdlib-m10-url-interop`.
+The `_sifr.url` private module and public `sifr.url` wrappers are migrated to
+private `@rust(sifr_stdlib.url.*)` declarations backed by the narrow `url`
+feature in `sifr_stdlib`. Public `Url` and `UrlQuery` records remain defined in
+`stdlib/sifr/url.sifr`; the private Rust bridge returns flat `list[str]`
+payloads for URL parts and query pairs because generated tuple/record bridge
+types are not sysroot crate API. The public wrapper reconstructs the typed
+public objects and translates private `ParseError` bridge failures into public
+`UrlError`. The active compiler intrinsic registry no longer owns URL parse,
+build, percent, path-normalization, or query helpers; HTTP helpers in the same
+legacy file remain active until the runtime/resource HTTP surface migrates.
+
+Wave 3 implementation evidence:
+
+- `stdlib/_sifr/url.sifr` declares URL parse/build, percent encode/decode,
+  path normalization, and query parse/build helpers as private
+  `@rust(sifr_stdlib.url.*)` leaves returning `ParseError` for fallible bridge
+  calls.
+- `stdlib/sifr/url.sifr` wraps private URL helpers, preserves public
+  `UrlError`, `Url`, and `UrlQuery`, and reconstructs public values from flat
+  bridge payloads.
+- `crates/sifr_stdlib/src/url.rs` owns URL behavior behind the `url` feature,
+  including URL size bounds, non-ASCII host guardrails, percent validation,
+  IPv4/IPv6 host handling, path normalization, and query pair serialization.
+- `crates/sifr_codegen/src/rust_interop_direct.rs` now maps direct Rust
+  `int | None` arguments through `SifrIntBridge` and clones `str | None`
+  arguments so private Rust declarations can accept `Option<SifrIntBridge>` and
+  `Option<String>` at the sysroot crate boundary.
+- `sifr_stdlib_model` no longer retains a direct generated `url` or
+  `percent-encoding` crate dependency for `sifr.url` or `_sifr.url`; generated
+  projects depend on `sifr_stdlib` with `features = ["url"]` instead.
+- E2E grouped-crate dependency inference now treats migrated `_sifr.url` and
+  `_sifr.regex` adapter calls as `sifr_stdlib` feature dependencies, matching
+  the sysroot dependency planner used by normal generated projects.
+- Focused validation passed:
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib --features url --locked url_leaf_matches_public_url_helpers`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies --locked`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen url_intrinsics_are_owned_by_compiled_stdlib_declarations --locked`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen direct_rust_function_body_converts_optional_int_arguments --locked`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo test -p sifr_driver url_private_declarations_codegen_through_sifr_stdlib --locked`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo build -p sifr --locked`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 target/m10-url-interop/debug/sifr run crates/sifr/tests/e2e/pass/network_http_url_query_percent.sifr`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo test -p sifr --locked test_generate_cargo_toml_migrated_url_regex_modules_enable_stdlib_features`;
+  `CARGO_TARGET_DIR=target/m10-url-interop CARGO_BUILD_JOBS=1 cargo test -p sifr --locked test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features`;
+  single-fixture create-pr e2e batch harness for `network_http_url_query_percent`.
+- Runtime platform validation exposed that `install-distribution-smoke` used an
+  internal 60s subprocess timeout even though the manifest owns evidence
+  budgets. The evidence runner now passes the manifest timeout into built-ins
+  and the install/distribution smoke budget is `300s`; focused runtime platform
+  create-pr suites passed with `variants=28`, `failures=0`, `skipped=1`.
+- Create-pr validation status: the first full rerun after stash restoration
+  failed only in e2e because the grouped `network_http_url_query_percent` crate
+  omitted `sifr_stdlib`; that root cause is fixed and the full create-pr e2e
+  pass now reports `132 passed, 0 failed`. A subsequent full
+  `scripts/run_all_tests.sh --profile create-pr` run passed through Python
+  interop and generated-code quality but was reaped mid-crate-smoke without a
+  failure report; the remaining create-pr tail was validated directly:
+  `sifr_lsp`, `sifr_package`, `sifr_stdlib_model`, default and feature
+  `sifr_stdlib`, default and HTTP `sifr_runtime`, `sifr --bin sifr`,
+  `sifr_driver --lib`, runtime platform create-pr suites, and full create-pr
+  e2e all passed. Final hygiene passed: `cargo fmt --check`, `git diff
+  --check`, `python3 scripts/check_file_size_guardrails.py`, and
+  `python3 scripts/check_hir_maintainability_guardrails.py`.
 
 Acceptance:
 

@@ -42,6 +42,84 @@ fn http_header_name_canonicalizes_and_rejects_invalid_names() {
     assert!(sifr_stdlib::http::HeaderName::new("x-\u{e9}").is_err());
 }
 
+#[cfg(feature = "url")]
+#[test]
+fn url_leaf_matches_public_url_helpers() {
+    use sifr_runtime::interop::SifrIntBridge;
+
+    let parsed =
+        sifr_stdlib::url::url_parse_parts("https://user:pass@example.com:8443/a/../b?x=1&x=2#frag")
+            .unwrap_or_else(|err| panic!("valid URL: {err}"));
+    assert_eq!(parsed[0], "https");
+    assert_eq!(parsed[1], "user");
+    assert_eq!(parsed[2], "pass");
+    assert_eq!(parsed[3], "1");
+    assert_eq!(parsed[4], "example.com");
+    assert_eq!(parsed[5], "8443");
+    assert_eq!(parsed[6], "/b");
+    assert_eq!(parsed[7], "x=1&x=2");
+    assert_eq!(parsed[8], "1");
+    assert_eq!(parsed[9], "frag");
+    assert_eq!(parsed[10], "1");
+
+    let built = sifr_stdlib::url::url_build_parts(
+        "http",
+        "::1",
+        "/ready",
+        None,
+        Some(SifrIntBridge::from(8080)),
+    )
+    .unwrap_or_else(|err| panic!("build IPv6 URL: {err}"));
+    assert_eq!(built[4], "[::1]");
+    assert_eq!(built[5], "8080");
+    assert_eq!(built[6], "/ready");
+
+    assert_eq!(
+        sifr_stdlib::url::url_percent_encode("a b/ç"),
+        "a%20b%2F%C3%A7"
+    );
+    assert_eq!(
+        sifr_stdlib::url::url_percent_decode("a%20b%2F%C3%A7")
+            .unwrap_or_else(|err| panic!("decode text: {err}")),
+        "a b/ç"
+    );
+    assert_eq!(
+        sifr_stdlib::url::url_percent_encode_bytes(b"\xff /"),
+        "%FF%20%2F"
+    );
+    assert_eq!(
+        sifr_stdlib::url::url_percent_decode_bytes("%FF%20%2F")
+            .unwrap_or_else(|err| panic!("decode bytes: {err}")),
+        b"\xff /".to_vec()
+    );
+    assert_eq!(
+        sifr_stdlib::url::url_normalize_path("/a/b/../c/./")
+            .unwrap_or_else(|err| panic!("normalize path: {err}")),
+        "/a/c/"
+    );
+
+    let flat = sifr_stdlib::url::url_query_parse_flat("a=1&b=two+words&a=3")
+        .unwrap_or_else(|err| panic!("parse query: {err}"));
+    assert_eq!(flat, vec!["a", "1", "b", "two words", "a", "3"]);
+    assert_eq!(
+        sifr_stdlib::url::url_query_build_flat(&flat)
+            .unwrap_or_else(|err| panic!("build query: {err}")),
+        "a=1&b=two+words&a=3"
+    );
+
+    assert!(sifr_stdlib::url::url_percent_decode("%zz").is_err());
+    assert!(sifr_stdlib::url::url_parse_parts("https://é.example/").is_err());
+    assert!(sifr_stdlib::url::url_build_parts(
+        "https",
+        "example.com",
+        "/",
+        None,
+        Some(SifrIntBridge::from(70_000)),
+    )
+    .is_err());
+    assert_eq!(sifr_stdlib::url::feature_name(), "url");
+}
+
 #[cfg(feature = "html")]
 #[test]
 fn html_leaf_escapes_and_unescapes_common_entities() {

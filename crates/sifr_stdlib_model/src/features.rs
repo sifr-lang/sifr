@@ -640,7 +640,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
             StdlibFeature::RustlsPlatformVerifier,
             StdlibFeature::Tracing,
         ],
-        "sifr.url" | "_sifr.url" => &[StdlibFeature::Url, StdlibFeature::PercentEncoding],
+        "sifr.url" | "_sifr.url" => &[],
         "sifr.http" | "_sifr.http" => &[StdlibFeature::Http],
         "sifr.python" | "sifr.python_core" | "_sifr.python" => &[StdlibFeature::PythonRuntime],
         "sifr.http_transport" => &[

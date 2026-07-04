@@ -739,6 +739,33 @@ pub(crate) fn re_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
+pub(crate) fn url_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for (name, args) in [
+        ("url_parse", &["value"][..]),
+        (
+            "url_build",
+            &["scheme", "host", "path", "query", "port"][..],
+        ),
+        ("url_percent_encode", &["value"][..]),
+        ("url_percent_decode", &["value"][..]),
+        ("url_percent_encode_bytes", &["value"][..]),
+        ("url_percent_decode_bytes", &["value"][..]),
+        ("url_normalize_path", &["path"][..]),
+        ("url_query_parse", &["query"][..]),
+        ("url_query_build", &["pairs"][..]),
+    ] {
+        let args = args
+            .iter()
+            .map(|arg| (*arg).to_string())
+            .collect::<Vec<_>>();
+        assert!(
+            lower_intrinsic(name, &args).is_none(),
+            "{name} should lower through _sifr.url private Rust interop declarations"
+        );
+    }
+}
+
+#[test]
 pub(crate) fn core_hash_intrinsics_are_owned_by_compiled_stdlib_declarations() {
     for name in ["sha256", "sha256_bytes", "md5", "md5_bytes"] {
         assert!(
