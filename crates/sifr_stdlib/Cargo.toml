@@ -11,7 +11,6 @@ base64 = { workspace = true, optional = true }
 bigdecimal = { workspace = true, optional = true }
 blake2 = { workspace = true, optional = true }
 chrono = { workspace = true, optional = true }
-encoding_rs = { workspace = true, optional = true }
 flate2 = { workspace = true, optional = true }
 h2 = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
@@ -100,12 +99,12 @@ math = ["dep:sifr_runtime"]
 signals = []
 random = ["dep:rand", "dep:rand_distr"]
 time = ["dep:chrono"]
-encoding = ["dep:encoding_rs"]
+encoding = ["dep:sifr_runtime"]
 runtime-observability = ["dep:metrics", "dep:tracing"]
 
 # Maintenance aliases. Generated Cargo planning must prefer the leaf features
 # above so one stdlib module does not enable unrelated capability groups.
-text-data = ["json", "base64", "toml", "url", "gzip", "zipfile", "unicode", "i18n"]
+text-data = ["json", "base64", "toml", "url", "gzip", "zipfile", "encoding", "unicode", "i18n"]
 network-stack = ["net", "tls", "http"]
 numeric = ["dep:bigdecimal", "dep:num-bigint", "dep:num-traits", "dep:rayon", "dep:rust_decimal"]
 

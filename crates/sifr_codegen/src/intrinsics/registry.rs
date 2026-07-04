@@ -159,46 +159,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             collections::lower_defaultdict_set(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "encoding_is_supported" => (
-            encoding::lower_encoding_is_supported(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_canonical_label" => (
-            encoding::lower_encoding_canonical_label(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_decode_text" => (
-            encoding::lower_encoding_decode_text(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_decode_recoveries" => (
-            encoding::lower_encoding_decode_recoveries(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_decode_outcome" => (
-            encoding::lower_encoding_decode_outcome(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_decode_incremental_outcome" => (
-            encoding::lower_encoding_decode_incremental_outcome(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_decode_incremental_pending" => (
-            encoding::lower_encoding_decode_incremental_pending(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_encode_bytes" => (
-            encoding::lower_encoding_encode_bytes(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_encode_recoveries" => (
-            encoding::lower_encoding_encode_recoveries(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "encoding_encode_outcome" => (
-            encoding::lower_encoding_encode_outcome(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
         "unicode_data_version" => (
             unicode::lower_unicode_data_version(args),
             Some(StdlibFeature::SifrRuntime),

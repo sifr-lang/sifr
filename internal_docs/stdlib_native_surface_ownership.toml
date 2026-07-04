@@ -164,13 +164,13 @@ deletion_stage = "runtime-state migration"
 [[surface]]
 id = "_sifr.encoding"
 public_modules = ["sifr.encoding"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/encoding.rs plus sifr_runtime::encoding helpers"
+current_owner = "migrated to stdlib/_sifr/encoding.sifr private Rust interop backed by crates/sifr_stdlib/src/encoding.rs; sifr_runtime::encoding retains shared text codec primitives"
 final_owner = "crates/sifr_stdlib encoding feature backed by sifr_runtime only for shared text primitives"
 reason = "Text codec operations are fallible stdlib behavior."
 certification_state = "supported-through-bridge-requires-error-shaping"
 can_move_before_runtime_certification = true
-migration_blocker = "Typed error conversion for malformed input and codec labels."
-deletion_stage = "fallible-data-text migration"
+migration_blocker = "none; private stdlib interop uses a ParseError message bridge and public Sifr wrappers preserve DecodeError/EncodeError API shape"
+deletion_stage = "migrated-to-sysroot-stdlib"
 
 [[surface]]
 id = "_sifr.unicode"

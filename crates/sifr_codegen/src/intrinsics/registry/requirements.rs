@@ -28,17 +28,7 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
     match name {
         // random_gauss uses rand_distr::Normal in addition to rand::rng.
         "random_gauss" => &[StdlibFeature::RandDistr],
-        "encoding_is_supported"
-        | "encoding_canonical_label"
-        | "encoding_decode_text"
-        | "encoding_decode_recoveries"
-        | "encoding_decode_outcome"
-        | "encoding_decode_incremental_outcome"
-        | "encoding_decode_incremental_pending"
-        | "encoding_encode_bytes"
-        | "encoding_encode_recoveries"
-        | "encoding_encode_outcome"
-        | "str_encode_utf8_result"
+        "str_encode_utf8_result"
         | "str_encode_utf8_result_with_encoding"
         | "decode_utf8"
         | "decode_utf8_with_encoding"

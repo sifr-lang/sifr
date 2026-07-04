@@ -46,9 +46,7 @@ pub(crate) fn generate_cargo_toml(
             "sifr.re" | "_sifr.regex" => {
                 deps.insert("regex = \"1.12.3\"".to_string());
             }
-            "sifr.encoding" | "_sifr.encoding" => {
-                deps.insert("encoding_rs = \"0.8.35\"".to_string());
-            }
+            "sifr.encoding" | "_sifr.encoding" => {}
             "sifr.unicode" | "_sifr.unicode" => {
                 deps.insert("unicode_names2 = \"3.1.0\"".to_string());
                 deps.insert("unicode-normalization = \"0.1.25\"".to_string());
@@ -307,9 +305,7 @@ fn needs_sifr_runtime_module_dependency(stdlib_modules: &BTreeSet<String>) -> bo
     stdlib_modules.iter().any(|module| {
         matches!(
             module.as_str(),
-            "sifr.encoding"
-                | "_sifr.encoding"
-                | "sifr.unicode"
+            "sifr.unicode"
                 | "_sifr.unicode"
                 | "sifr.i18n"
                 | "_sifr.i18n"
@@ -339,6 +335,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.json"
                 | "sifr.tomllib"
                 | "_sifr.toml"
+                | "sifr.encoding"
+                | "_sifr.encoding"
                 | "sifr.url"
                 | "_sifr.url"
                 | "sifr.hash"

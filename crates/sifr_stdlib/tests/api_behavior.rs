@@ -380,6 +380,7 @@ fn runtime_observability_emits_diagnostic_without_subscriber() {
 #[cfg(all(
     feature = "base64",
     feature = "calendar",
+    feature = "encoding",
     feature = "fs",
     feature = "gzip",
     feature = "hash",
@@ -402,6 +403,7 @@ fn marker_modules_report_leaf_names() {
     let markers = [
         sifr_stdlib::base64::feature_name(),
         sifr_stdlib::calendar::feature_name(),
+        sifr_stdlib::encoding::feature_name(),
         sifr_stdlib::fs::feature_name(),
         sifr_stdlib::gzip::feature_name(),
         sifr_stdlib::hash::feature_name(),

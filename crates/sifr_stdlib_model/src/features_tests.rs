@@ -215,6 +215,11 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
             &["toml"][..],
             &["json", "regex", "http", "python"][..],
         ),
+        (
+            "sifr.encoding",
+            &["encoding"][..],
+            &["json", "regex", "http", "python"][..],
+        ),
     ];
 
     for (module, expected, must_not_include) in cases {
@@ -252,6 +257,8 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("_sifr.url", "url"),
         ("sifr.tomllib", "toml"),
         ("_sifr.toml", "toml"),
+        ("sifr.encoding", "encoding"),
+        ("_sifr.encoding", "encoding"),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());
