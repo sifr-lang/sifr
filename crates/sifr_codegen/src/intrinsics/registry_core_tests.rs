@@ -168,45 +168,33 @@ pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades(
 }
 
 #[test]
-pub(crate) fn lowers_unicode_intrinsics_with_dependency_metadata() {
-    let normalized = lower_intrinsic(
+pub(crate) fn unicode_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in [
+        "unicode_data_version",
         "unicode_normalize",
-        &["form".to_string(), "text".to_string()],
-    )
-    .expect("unicode_normalize should lower");
-    assert_eq!(
-        normalized.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
-    );
-    assert!(normalized
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeNames));
-    assert!(normalized
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeNormalization));
-    assert!(normalized
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeSegmentation));
-    let rendered = render_expr(&normalized.expr);
-    assert!(rendered.contains("sifr_runtime::unicode::normalize"));
-    assert!(rendered.contains("UnicodeDataError"));
-
-    let folded = lower_intrinsic("unicode_case_fold", &["text".to_string()]).expect("case fold");
-    assert_eq!(
-        render_expr(&folded.expr),
-        "sifr_runtime::unicode::case_fold(&text)"
-    );
-
-    let graphemes =
-        lower_intrinsic("unicode_graphemes", &["text".to_string()]).expect("graphemes lower");
-    assert_eq!(
-        graphemes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
-    );
-    assert!(graphemes
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::UnicodeSegmentation));
-    assert!(render_expr(&graphemes.expr).contains("sifr_runtime::unicode::graphemes"));
+        "unicode_is_normalized",
+        "unicode_name",
+        "unicode_lookup",
+        "unicode_category",
+        "unicode_bidirectional",
+        "unicode_combining",
+        "unicode_east_asian_width",
+        "unicode_mirrored",
+        "unicode_decomposition",
+        "unicode_decimal",
+        "unicode_digit",
+        "unicode_numeric_value",
+        "unicode_case_fold",
+        "unicode_graphemes",
+        "unicode_grapheme_indices",
+        "unicode_words",
+        "unicode_word_boundaries",
+    ] {
+        assert!(
+            lower_intrinsic(name, &["text".to_string()]).is_none(),
+            "{name} should lower through _sifr.unicode private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

@@ -600,12 +600,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         "sifr.pathlib" => &[StdlibFeature::Regex],
         "sifr.hash" | "sifr.hashlib" => &[],
         "sifr.encoding" | "_sifr.encoding" => &[],
-        "sifr.unicode" | "_sifr.unicode" => &[
-            StdlibFeature::SifrRuntime,
-            StdlibFeature::UnicodeNames,
-            StdlibFeature::UnicodeNormalization,
-            StdlibFeature::UnicodeSegmentation,
-        ],
+        "sifr.unicode" | "_sifr.unicode" => &[],
         "sifr.i18n" | "_sifr.i18n" => &[
             StdlibFeature::SifrRuntime,
             StdlibFeature::IcuCollator,

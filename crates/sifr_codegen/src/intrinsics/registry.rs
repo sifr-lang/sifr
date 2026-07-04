@@ -26,7 +26,6 @@ mod task;
 mod test;
 mod time;
 mod tls;
-mod unicode;
 mod url_http;
 mod zipfile;
 
@@ -158,82 +157,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "defaultdict_set" => (
             collections::lower_defaultdict_set(args),
             Some(StdlibFeature::SerdeJson),
-        ),
-        "unicode_data_version" => (
-            unicode::lower_unicode_data_version(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_normalize" => (
-            unicode::lower_unicode_normalize(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_is_normalized" => (
-            unicode::lower_unicode_is_normalized(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_name" => (
-            unicode::lower_unicode_name(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_lookup" => (
-            unicode::lower_unicode_lookup(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_category" => (
-            unicode::lower_unicode_category(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_bidirectional" => (
-            unicode::lower_unicode_bidirectional(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_combining" => (
-            unicode::lower_unicode_combining(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_east_asian_width" => (
-            unicode::lower_unicode_east_asian_width(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_mirrored" => (
-            unicode::lower_unicode_mirrored(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_decomposition" => (
-            unicode::lower_unicode_decomposition(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_decimal" => (
-            unicode::lower_unicode_decimal(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_digit" => (
-            unicode::lower_unicode_digit(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_numeric_value" => (
-            unicode::lower_unicode_numeric_value(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_case_fold" => (
-            unicode::lower_unicode_case_fold(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_graphemes" => (
-            unicode::lower_unicode_graphemes(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_grapheme_indices" => (
-            unicode::lower_unicode_grapheme_indices(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_words" => (
-            unicode::lower_unicode_words(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "unicode_word_boundaries" => (
-            unicode::lower_unicode_word_boundaries(args),
-            Some(StdlibFeature::SifrRuntime),
         ),
         "i18n_locale_canonicalize" => (
             i18n::lower_i18n_locale_canonicalize(args),

@@ -55,11 +55,7 @@ fn text_i18n_feature_dependency_snapshots_cover_feature_combinations() {
             "unicode",
             HashSet::from(["sifr.unicode".to_string()]),
             vec![
-                "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"unicode\"] }",
                 "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"unicode\"] }",
-                "unicode_names2 = \"3.1.0\"",
-                "unicode-normalization = \"0.1.25\"",
-                "unicode-segmentation = \"1.13.3\"",
             ],
         ),
         (
@@ -79,11 +75,7 @@ fn text_i18n_feature_dependency_snapshots_cover_feature_combinations() {
             "encoding-and-unicode",
             HashSet::from(["sifr.encoding".to_string(), "sifr.unicode".to_string()]),
             vec![
-                "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"unicode\"] }",
                 "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"unicode\"] }",
-                "unicode_names2 = \"3.1.0\"",
-                "unicode-normalization = \"0.1.25\"",
-                "unicode-segmentation = \"1.13.3\"",
             ],
         ),
         (
@@ -103,16 +95,13 @@ fn text_i18n_feature_dependency_snapshots_cover_feature_combinations() {
             "unicode-and-i18n",
             HashSet::from(["sifr.unicode".to_string(), "sifr.i18n".to_string()]),
             vec![
-                "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }",
+                "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
                 "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }",
                 "icu_collator = \"2.2.0\"",
                 "icu_datetime = \"2.2.0\"",
                 "icu_decimal = \"2.2.0\"",
                 "icu_locale = \"2.2.0\"",
                 "icu_plurals = \"2.2.0\"",
-                "unicode_names2 = \"3.1.0\"",
-                "unicode-normalization = \"0.1.25\"",
-                "unicode-segmentation = \"1.13.3\"",
             ],
         ),
         (
@@ -123,16 +112,13 @@ fn text_i18n_feature_dependency_snapshots_cover_feature_combinations() {
                 "sifr.unicode".to_string(),
             ]),
             vec![
-                "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }",
+                "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
                 "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"i18n\", \"unicode\"] }",
                 "icu_collator = \"2.2.0\"",
                 "icu_datetime = \"2.2.0\"",
                 "icu_decimal = \"2.2.0\"",
                 "icu_locale = \"2.2.0\"",
                 "icu_plurals = \"2.2.0\"",
-                "unicode_names2 = \"3.1.0\"",
-                "unicode-normalization = \"0.1.25\"",
-                "unicode-segmentation = \"1.13.3\"",
             ],
         ),
     ];

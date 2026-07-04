@@ -45,6 +45,10 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         "_sifr.encoding",
         include_str!("../../../../stdlib/_sifr/encoding.sifr"),
     ),
+    (
+        "_sifr.unicode",
+        include_str!("../../../../stdlib/_sifr/unicode.sifr"),
+    ),
 ];
 
 #[test]
@@ -612,4 +616,82 @@ fn encoding_private_declarations_codegen_through_sifr_stdlib() {
     assert!(exports.contains_key("encoding_encode_outcome"));
     assert!(!exports.contains_key("_encoding_decode_text_impl"));
     assert!(!exports.contains_key("_encoding_encode_bytes_impl"));
+}
+
+#[test]
+fn unicode_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.unicode")
+        .expect("_sifr.unicode should generate private Rust code");
+
+    for name in [
+        "data_version",
+        "normalize",
+        "is_normalized",
+        "name",
+        "lookup",
+        "category",
+        "bidirectional",
+        "combining",
+        "east_asian_width",
+        "mirrored",
+        "decomposition",
+        "decimal",
+        "digit",
+        "numeric_value",
+        "case_fold",
+        "graphemes",
+        "grapheme_indices_flat",
+        "words",
+        "word_boundaries_flat",
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::unicode::{name}(")),
+            "{name} should lower through _sifr.unicode private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.unicode")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.unicode")
+        .is_some_and(|deps| deps.contains("_sifr.unicode")));
+    let public_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("sifr.unicode")
+        .expect("sifr.unicode intrinsic names should be tracked");
+    for name in [
+        "unicode_normalize",
+        "unicode_is_normalized",
+        "unicode_name",
+        "unicode_lookup",
+        "unicode_case_fold",
+        "unicode_graphemes",
+    ] {
+        assert!(
+            !public_intrinsics.contains(name),
+            "{name} should not remain a public sifr.unicode compiler intrinsic"
+        );
+    }
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.unicode")
+        .expect("sifr.unicode exports should be collected");
+    assert!(exports.contains_key("normalize"));
+    assert!(exports.contains_key("grapheme_indices"));
+    assert!(!exports.contains_key("_unicode_normalize_impl"));
+    assert!(!exports.contains_key("_unicode_graphemes_impl"));
+    assert!(!exports.contains_key("_unicode_grapheme_indices_flat_impl"));
 }

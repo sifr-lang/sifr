@@ -53,29 +53,6 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         name if name.starts_with("net_") => &[StdlibFeature::SifrRuntime],
         name if name.starts_with("tls_") => tls::TLS_REQUIRED_FEATURES,
         name if name.starts_with("http_") => HTTP_HEADER_REQUIRED_FEATURES,
-        "unicode_data_version"
-        | "unicode_normalize"
-        | "unicode_is_normalized"
-        | "unicode_name"
-        | "unicode_lookup"
-        | "unicode_category"
-        | "unicode_bidirectional"
-        | "unicode_combining"
-        | "unicode_east_asian_width"
-        | "unicode_mirrored"
-        | "unicode_decomposition"
-        | "unicode_decimal"
-        | "unicode_digit"
-        | "unicode_numeric_value"
-        | "unicode_case_fold"
-        | "unicode_graphemes"
-        | "unicode_grapheme_indices"
-        | "unicode_words"
-        | "unicode_word_boundaries" => &[
-            StdlibFeature::UnicodeNames,
-            StdlibFeature::UnicodeNormalization,
-            StdlibFeature::UnicodeSegmentation,
-        ],
         "i18n_locale_canonicalize"
         | "i18n_locale_maximize"
         | "i18n_locale_minimize"

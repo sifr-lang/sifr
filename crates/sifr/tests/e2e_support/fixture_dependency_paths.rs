@@ -12,9 +12,6 @@ pub(crate) fn sifr_runtime_dependency_spec_for_modules(
     if has_module(&["sifr.i18n", "_sifr.i18n"]) {
         features.push("i18n");
     }
-    if has_module(&["sifr.unicode", "_sifr.unicode"]) {
-        features.push("unicode");
-    }
     let needs_net = has_module(&["sifr.net", "_sifr.net"]);
     let needs_tls = has_module(&["sifr.tls", "_sifr.tls"]);
     if needs_net || needs_tls {
@@ -85,6 +82,12 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     }
     if has_module(&["sifr.encoding", "_sifr.encoding"]) {
         features.push("encoding");
+    }
+    if has_module(&["sifr.i18n", "_sifr.i18n"]) {
+        features.push("i18n");
+    }
+    if has_module(&["sifr.unicode", "_sifr.unicode"]) {
+        features.push("unicode");
     }
     sifr_stdlib_dependency_spec_with_features(&features)
 }

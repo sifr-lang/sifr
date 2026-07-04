@@ -47,11 +47,7 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert("regex = \"1.12.3\"".to_string());
             }
             "sifr.encoding" | "_sifr.encoding" => {}
-            "sifr.unicode" | "_sifr.unicode" => {
-                deps.insert("unicode_names2 = \"3.1.0\"".to_string());
-                deps.insert("unicode-normalization = \"0.1.25\"".to_string());
-                deps.insert("unicode-segmentation = \"1.13.3\"".to_string());
-            }
+            "sifr.unicode" | "_sifr.unicode" => {}
             "sifr.i18n" | "_sifr.i18n" => {
                 deps.insert("icu_collator = \"2.2.0\"".to_string());
                 deps.insert("icu_datetime = \"2.2.0\"".to_string());
@@ -305,14 +301,7 @@ fn needs_sifr_runtime_module_dependency(stdlib_modules: &BTreeSet<String>) -> bo
     stdlib_modules.iter().any(|module| {
         matches!(
             module.as_str(),
-            "sifr.unicode"
-                | "_sifr.unicode"
-                | "sifr.i18n"
-                | "_sifr.i18n"
-                | "sifr.net"
-                | "_sifr.net"
-                | "sifr.tls"
-                | "_sifr.tls"
+            "sifr.i18n" | "_sifr.i18n" | "sifr.net" | "_sifr.net" | "sifr.tls" | "_sifr.tls"
         )
     })
 }
@@ -337,6 +326,10 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.toml"
                 | "sifr.encoding"
                 | "_sifr.encoding"
+                | "sifr.i18n"
+                | "_sifr.i18n"
+                | "sifr.unicode"
+                | "_sifr.unicode"
                 | "sifr.url"
                 | "_sifr.url"
                 | "sifr.hash"

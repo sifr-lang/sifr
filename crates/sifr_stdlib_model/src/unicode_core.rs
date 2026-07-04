@@ -7,112 +7,112 @@ pub(super) fn intrinsic_unicode() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     functions.insert(
-        "unicode_data_version".to_string(),
+        "_unicode_data_version_impl".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
     );
     functions.insert(
-        "unicode_normalize".to_string(),
+        "_unicode_normalize_impl".to_string(),
         FunctionType::all_borrow(
             vec![
                 ("form".to_string(), Type::Str),
                 ("text".to_string(), Type::Str),
             ],
-            result_ty(Type::Str, "UnicodeDataError"),
+            result_ty(Type::Str, "ParseError"),
         ),
     );
     functions.insert(
-        "unicode_is_normalized".to_string(),
+        "_unicode_is_normalized_impl".to_string(),
         FunctionType::all_borrow(
             vec![
                 ("form".to_string(), Type::Str),
                 ("text".to_string(), Type::Str),
             ],
-            result_ty(Type::Bool, "UnicodeDataError"),
+            result_ty(Type::Bool, "ParseError"),
         ),
     );
 
     for name in [
-        "unicode_name",
-        "unicode_lookup",
-        "unicode_category",
-        "unicode_bidirectional",
-        "unicode_east_asian_width",
-        "unicode_decomposition",
+        "_unicode_name_impl",
+        "_unicode_lookup_impl",
+        "_unicode_category_impl",
+        "_unicode_bidirectional_impl",
+        "_unicode_east_asian_width_impl",
+        "_unicode_decomposition_impl",
     ] {
         functions.insert(
             name.to_string(),
             FunctionType::all_borrow(
                 vec![("text".to_string(), Type::Str)],
-                result_ty(Type::Str, "UnicodeDataError"),
+                result_ty(Type::Str, "ParseError"),
             ),
         );
     }
 
     functions.insert(
-        "unicode_combining".to_string(),
+        "_unicode_combining_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
-            result_ty(Type::Int, "UnicodeDataError"),
+            result_ty(Type::Int, "ParseError"),
         ),
     );
     functions.insert(
-        "unicode_mirrored".to_string(),
+        "_unicode_mirrored_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
-            result_ty(Type::Bool, "UnicodeDataError"),
+            result_ty(Type::Bool, "ParseError"),
         ),
     );
     functions.insert(
-        "unicode_decimal".to_string(),
+        "_unicode_decimal_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
-            result_ty(Type::Int, "UnicodeDataError"),
+            result_ty(Type::Int, "ParseError"),
         ),
     );
     functions.insert(
-        "unicode_digit".to_string(),
+        "_unicode_digit_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
-            result_ty(Type::Int, "UnicodeDataError"),
+            result_ty(Type::Int, "ParseError"),
         ),
     );
     functions.insert(
-        "unicode_numeric_value".to_string(),
+        "_unicode_numeric_value_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
-            result_ty(Type::Float, "UnicodeDataError"),
+            result_ty(Type::Float, "ParseError"),
         ),
     );
     functions.insert(
-        "unicode_case_fold".to_string(),
+        "_unicode_case_fold_impl".to_string(),
         FunctionType::all_borrow(vec![("text".to_string(), Type::Str)], Type::Str),
     );
     functions.insert(
-        "unicode_graphemes".to_string(),
+        "_unicode_graphemes_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
             Type::List(Box::new(Type::Str)),
         ),
     );
     functions.insert(
-        "unicode_grapheme_indices".to_string(),
-        FunctionType::all_borrow(
-            vec![("text".to_string(), Type::Str)],
-            Type::List(Box::new(Type::Tuple(vec![Type::Int, Type::Str]))),
-        ),
-    );
-    functions.insert(
-        "unicode_words".to_string(),
+        "_unicode_grapheme_indices_flat_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
             Type::List(Box::new(Type::Str)),
         ),
     );
     functions.insert(
-        "unicode_word_boundaries".to_string(),
+        "_unicode_words_impl".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
-            Type::List(Box::new(Type::Tuple(vec![Type::Int, Type::Int, Type::Str]))),
+            Type::List(Box::new(Type::Str)),
+        ),
+    );
+    functions.insert(
+        "_unicode_word_boundaries_flat_impl".to_string(),
+        FunctionType::all_borrow(
+            vec![("text".to_string(), Type::Str)],
+            Type::List(Box::new(Type::Str)),
         ),
     );
 

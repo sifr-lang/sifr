@@ -1,24 +1,24 @@
 # sifr.unicode — Unicode normalization, data, and case mapping
 from _sifr.unicode import (
-    unicode_bidirectional,
-    unicode_case_fold,
-    unicode_category,
-    unicode_combining,
-    unicode_data_version,
-    unicode_decimal,
-    unicode_decomposition,
-    unicode_digit,
-    unicode_east_asian_width,
-    unicode_grapheme_indices,
-    unicode_graphemes,
-    unicode_is_normalized,
-    unicode_lookup,
-    unicode_mirrored,
-    unicode_name,
-    unicode_normalize,
-    unicode_numeric_value,
-    unicode_word_boundaries,
-    unicode_words,
+    _unicode_bidirectional_impl,
+    _unicode_case_fold_impl,
+    _unicode_category_impl,
+    _unicode_combining_impl,
+    _unicode_data_version_impl,
+    _unicode_decimal_impl,
+    _unicode_decomposition_impl,
+    _unicode_digit_impl,
+    _unicode_east_asian_width_impl,
+    _unicode_grapheme_indices_flat_impl,
+    _unicode_graphemes_impl,
+    _unicode_is_normalized_impl,
+    _unicode_lookup_impl,
+    _unicode_mirrored_impl,
+    _unicode_name_impl,
+    _unicode_normalize_impl,
+    _unicode_numeric_value_impl,
+    _unicode_word_boundaries_flat_impl,
+    _unicode_words_impl,
 )
 
 NFC: str = "NFC"
@@ -31,116 +31,156 @@ class UnicodeDataError(Error):
     message: str
 
 
+def _trusted_int(value: str) -> int:
+    try:
+        parsed: int = int(value)
+        return parsed
+    except ParseError:
+        return 0
+
+
+def _flat_part(flat: list[str], index: int) -> str:
+    value: str | None = flat[index]
+    if value is not None:
+        return value + ""
+    return ""
+
+
 def data_version() -> str:
-    return unicode_data_version()
+    return _unicode_data_version_impl()
 
 
 def normalize(form: str, text: str) -> Result[str, UnicodeDataError]:
     try:
-        return unicode_normalize(form, text)
-    except UnicodeDataError as e:
+        normalized: str = _unicode_normalize_impl(form, text)
+        return normalized
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def is_normalized(form: str, text: str) -> Result[bool, UnicodeDataError]:
     try:
-        return unicode_is_normalized(form, text)
-    except UnicodeDataError as e:
+        normalized: bool = _unicode_is_normalized_impl(form, text)
+        return normalized
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def name(ch: str) -> Result[str, UnicodeDataError]:
     try:
-        return unicode_name(ch)
-    except UnicodeDataError as e:
+        value: str = _unicode_name_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def lookup(character_name: str) -> Result[str, UnicodeDataError]:
     try:
-        return unicode_lookup(character_name)
-    except UnicodeDataError as e:
+        value: str = _unicode_lookup_impl(character_name)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def category(ch: str) -> Result[str, UnicodeDataError]:
     try:
-        return unicode_category(ch)
-    except UnicodeDataError as e:
+        value: str = _unicode_category_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def bidirectional(ch: str) -> Result[str, UnicodeDataError]:
     try:
-        return unicode_bidirectional(ch)
-    except UnicodeDataError as e:
+        value: str = _unicode_bidirectional_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def combining(ch: str) -> Result[int, UnicodeDataError]:
     try:
-        return unicode_combining(ch)
-    except UnicodeDataError as e:
+        value: int = _unicode_combining_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def east_asian_width(ch: str) -> Result[str, UnicodeDataError]:
     try:
-        return unicode_east_asian_width(ch)
-    except UnicodeDataError as e:
+        value: str = _unicode_east_asian_width_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def mirrored(ch: str) -> Result[bool, UnicodeDataError]:
     try:
-        return unicode_mirrored(ch)
-    except UnicodeDataError as e:
+        value: bool = _unicode_mirrored_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def decomposition(ch: str) -> Result[str, UnicodeDataError]:
     try:
-        return unicode_decomposition(ch)
-    except UnicodeDataError as e:
+        value: str = _unicode_decomposition_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def decimal(ch: str) -> Result[int, UnicodeDataError]:
     try:
-        return unicode_decimal(ch)
-    except UnicodeDataError as e:
+        value: int = _unicode_decimal_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def digit(ch: str) -> Result[int, UnicodeDataError]:
     try:
-        return unicode_digit(ch)
-    except UnicodeDataError as e:
+        value: int = _unicode_digit_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def numeric_value(ch: str) -> Result[float, UnicodeDataError]:
     try:
-        return unicode_numeric_value(ch)
-    except UnicodeDataError as e:
+        value: float = _unicode_numeric_value_impl(ch)
+        return value
+    except ParseError as e:
         raise UnicodeDataError(e.message)
 
 
 def case_fold(text: str) -> str:
-    return unicode_case_fold(text)
+    return _unicode_case_fold_impl(text)
 
 
 def graphemes(text: str) -> list[str]:
-    return unicode_graphemes(text)
+    return _unicode_graphemes_impl(text)
 
 
 def grapheme_indices(text: str) -> list[tuple[int, str]]:
-    return unicode_grapheme_indices(text)
+    flat: list[str] = _unicode_grapheme_indices_flat_impl(text)
+    pairs: list[tuple[int, str]] = []
+    i: int = 0
+    while i < len(flat):
+        pairs.append((_trusted_int(_flat_part(flat, i)), _flat_part(flat, i + 1)))
+        i = i + 2
+    return pairs
 
 
 def words(text: str) -> list[str]:
-    return unicode_words(text)
+    return _unicode_words_impl(text)
 
 
 def word_boundaries(text: str) -> list[tuple[int, int, str]]:
-    return unicode_word_boundaries(text)
+    flat: list[str] = _unicode_word_boundaries_flat_impl(text)
+    boundaries: list[tuple[int, int, str]] = []
+    i: int = 0
+    while i < len(flat):
+        boundaries.append((_trusted_int(_flat_part(flat, i)), _trusted_int(_flat_part(flat, i + 1)), _flat_part(flat, i + 2)))
+        i = i + 3
+    return boundaries
