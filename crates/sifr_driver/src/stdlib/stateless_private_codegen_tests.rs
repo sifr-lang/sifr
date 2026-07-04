@@ -29,6 +29,10 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         "_sifr.regex",
         include_str!("../../../../stdlib/_sifr/regex.sifr"),
     ),
+    (
+        "_sifr.url",
+        include_str!("../../../../stdlib/_sifr/url.sifr"),
+    ),
 ];
 
 #[test]
@@ -368,4 +372,59 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
     assert!(exports.contains_key("re_match"));
     assert!(exports.contains_key("search"));
     assert!(!exports.contains_key("_re_match_impl"));
+}
+
+#[test]
+fn url_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.url")
+        .expect("_sifr.url should generate private Rust code");
+
+    for name in [
+        "url_parse_parts",
+        "url_build_parts",
+        "url_percent_encode",
+        "url_percent_decode",
+        "url_percent_encode_bytes",
+        "url_percent_decode_bytes",
+        "url_normalize_path",
+        "url_query_parse_flat",
+        "url_query_build_flat",
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::url::{name}(")),
+            "{name} should lower through _sifr.url private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains("port.map(sifr_runtime::interop::SifrIntBridge::from)"));
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.url")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.url")
+        .is_some_and(|deps| deps.contains("_sifr.url")));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("sifr.url")
+        .is_some_and(std::collections::HashSet::is_empty));
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.url")
+        .expect("sifr.url exports should be collected");
+    assert!(exports.contains_key("parse_url"));
+    assert!(exports.contains_key("build_query"));
+    assert!(!exports.contains_key("_url_parse_parts"));
+    assert!(!exports.contains_key("_url_query_build_flat"));
 }

@@ -197,12 +197,12 @@ deletion_stage = "fallible-data-text migration"
 [[surface]]
 id = "_sifr.url"
 public_modules = ["sifr.url"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/url_http.rs with url/percent-encoding dependency planning"
+current_owner = "private stdlib Rust interop declarations backed by crates/sifr_stdlib url feature; HTTP helpers in url_http.rs remain compiler-owned until the HTTP/resource surface migrates"
 final_owner = "crates/sifr_stdlib url feature via stdlib/_sifr/url.sifr"
 reason = "URL validation/building is fallible stdlib behavior."
 certification_state = "supported-through-bridge-requires-error-shaping"
 can_move_before_runtime_certification = true
-migration_blocker = "Typed error conversion and URL substrate parity fixtures."
+migration_blocker = "none for sifr.url; HTTP/resource URL-adjacent helpers are tracked under their own runtime/resource surface"
 deletion_stage = "fallible-data-text migration"
 
 [[surface]]

@@ -513,6 +513,29 @@ pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features
 }
 
 #[test]
+pub(crate) fn test_generate_cargo_toml_migrated_url_regex_modules_enable_stdlib_features() {
+    let url_modules = normalize_dependency_set(vec!["sifr.url".to_string()].into_iter());
+    let regex_modules = normalize_dependency_set(vec!["sifr.re".to_string()].into_iter());
+    let private_modules = normalize_dependency_set(
+        vec!["_sifr.url".to_string(), "_sifr.regex".to_string()].into_iter(),
+    );
+    let required_crates = BTreeSet::new();
+
+    let url_toml = generate_cargo_toml(&url_modules, &required_crates, "sifr_output");
+    assert!(url_toml.contains("sifr_stdlib = { path = "));
+    assert!(url_toml.contains("features = [\"url\"]"));
+
+    let regex_toml = generate_cargo_toml(&regex_modules, &required_crates, "sifr_output");
+    assert!(regex_toml.contains("sifr_stdlib = { path = "));
+    assert!(regex_toml.contains("features = [\"regex\"]"));
+
+    let private_toml = generate_cargo_toml(&private_modules, &required_crates, "sifr_output");
+    assert!(private_toml.contains("sifr_stdlib = { path = "));
+    assert!(private_toml.contains("features = [\"regex\", \"url\"]"));
+    assert!(private_toml.matches("sifr_stdlib = ").count() == 1);
+}
+
+#[test]
 pub(crate) fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
     let stdlib_modules = BTreeSet::new();
     let required_crates = normalize_dependency_set(vec!["tokio".to_string()]);

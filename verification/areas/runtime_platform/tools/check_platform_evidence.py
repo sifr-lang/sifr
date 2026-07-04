@@ -383,15 +383,15 @@ def run_evidence_case(case: dict[str, Any], host: dict[str, str], host_row: dict
         return fail_variant(case_id, argv, [failure], host, elapsed_ms=elapsed_ms)
 
 
-def run_and_check_duration(callback: Callable[[], None], timeout_seconds: int) -> None:
+def run_and_check_duration(callback: Callable[[int], None], timeout_seconds: int) -> None:
     started = time.monotonic()
-    callback()
+    callback(timeout_seconds)
     elapsed = time.monotonic() - started
     if elapsed > timeout_seconds:
         raise EvidenceFailure(f"case exceeded timeout: {elapsed:.3f}s > {timeout_seconds}s")
 
 
-def check_filesystem_paths() -> None:
+def check_filesystem_paths(_timeout_seconds: int) -> None:
     with tempfile.TemporaryDirectory() as temp:
         root = Path(temp)
         nested = root / "nested dir" / "child"
@@ -407,7 +407,7 @@ def check_filesystem_paths() -> None:
             raise EvidenceFailure("relative path readback failed")
 
 
-def check_unicode_paths() -> None:
+def check_unicode_paths(_timeout_seconds: int) -> None:
     with tempfile.TemporaryDirectory() as temp:
         path = Path(temp) / "sifr-unicode-\u00e5-\u03bb-\U0001f642.txt"
         payload = "unicode-path-evidence".encode()
@@ -416,7 +416,7 @@ def check_unicode_paths() -> None:
             raise EvidenceFailure("Unicode path payload mismatch")
 
 
-def check_symlink_roundtrip() -> None:
+def check_symlink_roundtrip(_timeout_seconds: int) -> None:
     with tempfile.TemporaryDirectory() as temp:
         root = Path(temp)
         target = root / "target.txt"
@@ -431,7 +431,7 @@ def check_symlink_roundtrip() -> None:
             raise EvidenceFailure("symlink target resolution mismatch")
 
 
-def check_file_permissions() -> None:
+def check_file_permissions(_timeout_seconds: int) -> None:
     with tempfile.TemporaryDirectory() as temp:
         path = Path(temp) / "permissions.txt"
         path.write_text("permissions", encoding="utf-8")
@@ -441,7 +441,7 @@ def check_file_permissions() -> None:
             raise EvidenceFailure(f"chmod mode mismatch: {oct(observed)}")
 
 
-def check_tempdir_cleanup() -> None:
+def check_tempdir_cleanup(_timeout_seconds: int) -> None:
     marker: Path
     with tempfile.TemporaryDirectory() as temp:
         marker = Path(temp)
@@ -452,7 +452,7 @@ def check_tempdir_cleanup() -> None:
         raise EvidenceFailure("tempdir still exists after cleanup")
 
 
-def check_line_endings() -> None:
+def check_line_endings(_timeout_seconds: int) -> None:
     with tempfile.TemporaryDirectory() as temp:
         path = Path(temp) / "line-endings.txt"
         payload = b"one\n two\r\nthree\r\n"
@@ -461,7 +461,7 @@ def check_line_endings() -> None:
             raise EvidenceFailure("line ending bytes changed on binary readback")
 
 
-def check_subprocess_exit_code() -> None:
+def check_subprocess_exit_code(_timeout_seconds: int) -> None:
     result = subprocess.run(
         [sys.executable, "-c", "import sys; print('platform-subprocess'); sys.exit(7)"],
         text=True,
@@ -475,7 +475,7 @@ def check_subprocess_exit_code() -> None:
         raise EvidenceFailure("stdout capture missing")
 
 
-def check_subprocess_stdio() -> None:
+def check_subprocess_stdio(_timeout_seconds: int) -> None:
     script = "import sys; data=sys.stdin.buffer.read(); sys.stdout.buffer.write(data[::-1]); sys.stderr.write('stderr-ok')"
     result = subprocess.run(
         [sys.executable, "-c", script],
@@ -492,7 +492,7 @@ def check_subprocess_stdio() -> None:
         raise EvidenceFailure("stderr capture missing")
 
 
-def check_loopback_networking() -> None:
+def check_loopback_networking(_timeout_seconds: int) -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.bind(("127.0.0.1", 0))
         server.listen(1)
@@ -510,7 +510,7 @@ def check_loopback_networking() -> None:
                     raise EvidenceFailure("client did not receive loopback payload")
 
 
-def check_signals_process_control() -> None:
+def check_signals_process_control(_timeout_seconds: int) -> None:
     if platform.system().lower() == "windows":
         raise EvidenceFailure("POSIX signal evidence is not available on Windows")
     proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
@@ -525,7 +525,7 @@ def check_signals_process_control() -> None:
         raise EvidenceFailure(f"unexpected SIGTERM exit status: {exit_code}")
 
 
-def check_locale_unicode_assumptions() -> None:
+def check_locale_unicode_assumptions(_timeout_seconds: int) -> None:
     encoding = locale.getpreferredencoding(False)
     if not encoding:
         raise EvidenceFailure("preferred encoding is empty")
@@ -537,7 +537,7 @@ def check_locale_unicode_assumptions() -> None:
         raise EvidenceFailure("explicit UTF-8 round trip failed")
 
 
-def check_install_distribution_smoke() -> None:
+def check_install_distribution_smoke(timeout_seconds: int) -> None:
     if shutil.which("cargo") is None:
         raise EvidenceFailure("cargo is not available")
     result = subprocess.run(
@@ -546,7 +546,7 @@ def check_install_distribution_smoke() -> None:
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        timeout=60,
+        timeout=timeout_seconds,
         check=False,
     )
     if result.returncode != 0:
@@ -556,7 +556,7 @@ def check_install_distribution_smoke() -> None:
         raise EvidenceFailure("sifr help output did not render expected text")
 
 
-BUILTINS: dict[str, Callable[[], None]] = {
+BUILTINS: dict[str, Callable[[int], None]] = {
     "builtin:filesystem-paths": check_filesystem_paths,
     "builtin:unicode-paths": check_unicode_paths,
     "builtin:symlink-roundtrip": check_symlink_roundtrip,

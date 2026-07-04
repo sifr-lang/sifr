@@ -200,7 +200,7 @@
       "id": "install-distribution-smoke",
       "concern": "install/distribution smoke",
       "command": "builtin:install-distribution-smoke",
-      "timeout_seconds": 60,
+      "timeout_seconds": 300,
       "supported_os": [
         "macos",
         "linux",

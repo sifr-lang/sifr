@@ -243,6 +243,8 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("sifr.base64", "base64"),
         ("sifr.re", "regex"),
         ("_sifr.regex", "regex"),
+        ("sifr.url", "url"),
+        ("_sifr.url", "url"),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());

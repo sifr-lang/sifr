@@ -354,36 +354,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             i18n::lower_i18n_mo_lookup_context_plural(args),
             Some(StdlibFeature::SifrRuntime),
         ),
-        "url_parse" => (url_http::lower_url_parse(args), Some(StdlibFeature::Url)),
-        "url_build" => (url_http::lower_url_build(args), Some(StdlibFeature::Url)),
-        "url_percent_encode" => (
-            url_http::lower_url_percent_encode(args),
-            Some(StdlibFeature::PercentEncoding),
-        ),
-        "url_percent_decode" => (
-            url_http::lower_url_percent_decode(args),
-            Some(StdlibFeature::PercentEncoding),
-        ),
-        "url_percent_encode_bytes" => (
-            url_http::lower_url_percent_encode_bytes(args),
-            Some(StdlibFeature::PercentEncoding),
-        ),
-        "url_percent_decode_bytes" => (
-            url_http::lower_url_percent_decode_bytes(args),
-            Some(StdlibFeature::PercentEncoding),
-        ),
-        "url_normalize_path" => (
-            url_http::lower_url_normalize_path(args),
-            Some(StdlibFeature::Url),
-        ),
-        "url_query_parse" => (
-            url_http::lower_url_query_parse(args),
-            Some(StdlibFeature::Url),
-        ),
-        "url_query_build" => (
-            url_http::lower_url_query_build(args),
-            Some(StdlibFeature::Url),
-        ),
         "http_validate_header_name" => (
             url_http::lower_http_validate_header_name(args),
             Some(StdlibFeature::Http),
@@ -664,10 +634,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         name if name.starts_with("tls_") => (
             tls::lower_tls_intrinsic(name, args),
             Some(StdlibFeature::Tokio),
-        ),
-        name if name.starts_with("url_") => (
-            url_http::lower_url_intrinsic(name, args),
-            Some(StdlibFeature::Url),
         ),
         name if name.starts_with("http_") => (
             url_http::lower_http_intrinsic(name, args),

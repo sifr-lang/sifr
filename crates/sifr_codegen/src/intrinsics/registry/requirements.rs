@@ -50,15 +50,6 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "process_output_text"
         | "process_shell_output_text" => &[StdlibFeature::EncodingRs],
         "runtime_emit_diagnostic" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
-        "url_parse"
-        | "url_build"
-        | "url_normalize_path"
-        | "url_query_parse"
-        | "url_query_build"
-        | "url_percent_encode"
-        | "url_percent_decode"
-        | "url_percent_encode_bytes"
-        | "url_percent_decode_bytes" => &[StdlibFeature::Url, StdlibFeature::PercentEncoding],
         "http_validate_method" | "http_validate_status" | "http_validate_version" => {
             HTTP_PRIMITIVE_REQUIRED_FEATURES
         }
@@ -76,7 +67,6 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "http2_server_respond_tls" => HTTP_TRANSPORT_REQUIRED_FEATURES,
         name if name.starts_with("net_") => &[StdlibFeature::SifrRuntime],
         name if name.starts_with("tls_") => tls::TLS_REQUIRED_FEATURES,
-        name if name.starts_with("url_") => &[StdlibFeature::Url, StdlibFeature::PercentEncoding],
         name if name.starts_with("http_") => HTTP_HEADER_REQUIRED_FEATURES,
         "unicode_data_version"
         | "unicode_normalize"
