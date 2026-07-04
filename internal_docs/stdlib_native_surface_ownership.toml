@@ -76,13 +76,13 @@ deletion_stage = "stateless-native-leaf migration"
 [[surface]]
 id = "_sifr.toml"
 public_modules = ["sifr.tomllib"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/toml.rs with direct toml dependency planning"
+current_owner = "migrated to stdlib/_sifr/toml.sifr private Rust interop backed by crates/sifr_stdlib/src/toml.rs"
 final_owner = "crates/sifr_stdlib toml feature via stdlib/_sifr/toml.sifr"
 reason = "TOML parsing is fallible stdlib behavior, not compiler semantics."
 certification_state = "can-move-before-runtime-certification"
 can_move_before_runtime_certification = true
-migration_blocker = "Typed Result/error conversion through private stdlib interop."
-deletion_stage = "stateless-native-leaf migration"
+migration_blocker = "none; private stdlib interop owns flat token payload reconstruction"
+deletion_stage = "migrated-to-sysroot-stdlib"
 
 [[surface]]
 id = "_sifr.html"

@@ -1,2 +1,5 @@
 # Private _sifr.toml native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.toml.toml_parse_tokens, panic=trusted_no_panic)
+def toml_parse_tokens(text: str) -> Result[list[str], ParseError]:
+    raise ParseError("")

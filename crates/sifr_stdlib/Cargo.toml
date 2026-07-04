@@ -39,7 +39,7 @@ sha2_0_11 = { workspace = true, optional = true }
 sifr_runtime = { path = "../sifr_runtime", default-features = false, optional = true }
 tokio = { workspace = true, optional = true }
 tokio-rustls = { workspace = true, optional = true }
-toml = { workspace = true, optional = true }
+toml = { workspace = true, optional = true, features = ["preserve_order"] }
 tower-service = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
 unicode-normalization = { workspace = true, optional = true }

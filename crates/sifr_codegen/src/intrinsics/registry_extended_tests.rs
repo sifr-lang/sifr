@@ -208,14 +208,15 @@ pub(crate) fn lowers_uuid_intrinsic_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_toml_intrinsic_with_dependency_metadata() {
-    let parsed = lower_intrinsic("toml_parse", &["payload".to_string()]).expect("toml_parse");
-    assert_eq!(
-        parsed.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Toml)
+pub(crate) fn toml_intrinsic_is_owned_by_compiled_stdlib_declaration() {
+    assert!(
+        lower_intrinsic("toml_parse_tokens", &["payload".to_string()]).is_none(),
+        "TOML should lower through _sifr.toml private Rust interop declarations"
     );
-    assert!(render_expr(&parsed.expr).contains("parse::<toml::Table>()"));
-    assert!(render_expr(&parsed.expr).contains("TOMLDecodeError"));
+    assert!(
+        lower_intrinsic("toml_parse", &["payload".to_string()]).is_none(),
+        "legacy TOML parse intrinsic must stay retired"
+    );
 }
 
 #[test]

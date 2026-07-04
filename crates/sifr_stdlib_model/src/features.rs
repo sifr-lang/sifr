@@ -296,10 +296,7 @@ const TOKIO_RUSTLS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependenc
     package: "tokio-rustls",
     spec: "tokio-rustls = \"0.26.4\"",
 }];
-const TOML_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
-    package: "toml",
-    spec: "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }",
-}];
+const TOML_DEPS: &[GeneratedCargoDependency] = &[];
 const TOWER_SERVICE_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "tower-service",
     spec: "tower-service = \"0.3.3\"",

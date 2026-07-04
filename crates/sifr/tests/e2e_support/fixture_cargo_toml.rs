@@ -75,11 +75,7 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert(POSTCARD_DEP.to_string());
                 deps.insert(SERDE_DEP.to_string());
             }
-            "sifr.tomllib" | "_sifr.toml" => {
-                deps.insert(
-                    "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string(),
-                );
-            }
+            "sifr.tomllib" | "_sifr.toml" => {}
             "sifr.url" | "_sifr.url" => {
                 deps.insert(URL_DEP.to_string());
                 deps.insert(PERCENT_ENCODING_DEP.to_string());
@@ -339,6 +335,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.math"
                 | "sifr.re"
                 | "_sifr.regex"
+                | "sifr.tomllib"
+                | "_sifr.toml"
                 | "sifr.url"
                 | "_sifr.url"
                 | "sifr.hash"

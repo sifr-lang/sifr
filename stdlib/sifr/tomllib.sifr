@@ -1,4 +1,4 @@
-from _sifr.toml import toml_parse
+from _sifr.toml import toml_parse_tokens
 from sifr.io import FileHandle, read_text
 
 
@@ -123,13 +123,119 @@ class TomlValue:
         return result
 
 
+def _token_at(tokens: list[str], index: int) -> Result[str, TOMLDecodeError]:
+    value: str | None = tokens[index]
+    if value is None:
+        raise TOMLDecodeError("TOML bridge payload ended unexpectedly")
+    return value + ""
+
+
+def _token_int(tokens: list[str], index: int) -> Result[int, TOMLDecodeError]:
+    try:
+        token: str = _token_at(tokens, index)
+        parsed: int = int(token)
+        return parsed
+    except ParseError:
+        raise TOMLDecodeError("TOML bridge payload has invalid integer metadata")
+    except TOMLDecodeError as e:
+        raise TOMLDecodeError(e.message)
+
+
+def _token_float(tokens: list[str], index: int) -> Result[float, TOMLDecodeError]:
+    try:
+        token: str = _token_at(tokens, index)
+        parsed: float = float(token)
+        return parsed
+    except ParseError:
+        raise TOMLDecodeError("TOML bridge payload has invalid float metadata")
+    except TOMLDecodeError as e:
+        raise TOMLDecodeError(e.message)
+
+
+def _decode_bool_token(value: str) -> Result[bool, TOMLDecodeError]:
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+    raise TOMLDecodeError("TOML bridge payload has invalid bool metadata")
+
+
+def _decode_toml_value_at(
+    tokens: list[str],
+    index: int,
+) -> Result[tuple[TomlValue, int], TOMLDecodeError]:
+    try:
+        tag: str = _token_at(tokens, index)
+        payload_index: int = index + 1
+        if tag == "bool":
+            bool_token: str = _token_at(tokens, payload_index)
+            bool_value: bool = _decode_bool_token(bool_token)
+            return (TomlValue("bool", bool_value=bool_value), payload_index + 1)
+        if tag == "int":
+            int_value: int = _token_int(tokens, payload_index)
+            return (TomlValue("int", int_value=int_value), payload_index + 1)
+        if tag == "float":
+            float_value: float = _token_float(tokens, payload_index)
+            return (TomlValue("float", float_value=float_value), payload_index + 1)
+        if tag == "str":
+            str_value: str = _token_at(tokens, payload_index)
+            return (TomlValue("str", str_value=str_value), payload_index + 1)
+        if tag == "datetime":
+            datetime_value: str = _token_at(tokens, payload_index)
+            return (TomlValue("datetime", datetime_value=datetime_value), payload_index + 1)
+        if tag == "array":
+            array_count: int = _token_int(tokens, payload_index)
+            if array_count < 0:
+                raise TOMLDecodeError("TOML bridge payload has invalid array length")
+            array_value: TomlValue = TomlValue("array")
+            next_index: int = payload_index + 1
+            consumed: int = 0
+            while consumed < array_count:
+                item_result: tuple[TomlValue, int] = _decode_toml_value_at(tokens, next_index)
+                array_value.array_items.append(item_result[0])
+                next_index = item_result[1]
+                consumed = consumed + 1
+            return (array_value, next_index)
+        if tag == "table":
+            table_count: int = _token_int(tokens, payload_index)
+            if table_count < 0:
+                raise TOMLDecodeError("TOML bridge payload has invalid table length")
+            table_value: TomlValue = TomlValue("table")
+            next_index: int = payload_index + 1
+            consumed: int = 0
+            while consumed < table_count:
+                key: str = _token_at(tokens, next_index)
+                item_result: tuple[TomlValue, int] = _decode_toml_value_at(tokens, next_index + 1)
+                table_value.table_items.append((key, item_result[0]))
+                next_index = item_result[1]
+                consumed = consumed + 1
+            return (table_value, next_index)
+        raise TOMLDecodeError("TOML bridge payload has unknown value tag: " + tag)
+    except TOMLDecodeError as e:
+        raise TOMLDecodeError(e.message)
+
+
+def _decode_toml_tokens(tokens: list[str]) -> Result[TomlValue, TOMLDecodeError]:
+    try:
+        decoded: tuple[TomlValue, int] = _decode_toml_value_at(tokens, 0)
+        if decoded[1] != len(tokens):
+            raise TOMLDecodeError("TOML bridge payload has trailing data")
+        return decoded[0]
+    except TOMLDecodeError as e:
+        raise TOMLDecodeError(e.message)
+
+
 def loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
-    return toml_parse(text)
+    try:
+        tokens: list[str] = toml_parse_tokens(text)
+        return _decode_toml_tokens(tokens)
+    except ParseError as e:
+        raise TOMLDecodeError(e.message)
 
 
 def _decode_loaded_toml(content: str) -> Result[TomlValue, Error]:
     try:
-        value: TomlValue = toml_parse(content)
+        value: TomlValue = loads(content)
         return value
     except TOMLDecodeError as e:
         raise Error(e.message)
