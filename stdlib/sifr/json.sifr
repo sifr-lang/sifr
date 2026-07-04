@@ -1,11 +1,10 @@
 from _sifr.fs import read_text, write_text
 from _sifr.json import (
-    json_dumps,
-    json_dumps_value,
-    json_dumps_value_exact,
-    json_dumps_value_string_ints,
-    json_dumps_value_web,
-    json_loads,
+    json_dump_tokens,
+    json_dump_tokens_exact,
+    json_dump_tokens_string_ints,
+    json_dump_tokens_web,
+    json_load_tokens,
     json_validate_integer_digit_limits,
 )
 from sifr.io import FileHandle
@@ -37,7 +36,7 @@ class JsonValue:
         self.object_items = []
 
     def __str__(self) -> str:
-        return json_dumps_value(self)
+        return dumps(self)
 
     def is_null(self) -> bool:
         return self.kind == "null"
@@ -223,8 +222,160 @@ def from_object(items: list[tuple[str, JsonValue]]) -> JsonValue:
     return value
 
 
+def _json_token_at(tokens: list[str], index: int) -> Result[str, JSONDecodeError]:
+    value: str | None = tokens[index]
+    if value is None:
+        raise JSONDecodeError("JSON bridge payload ended unexpectedly")
+    return value + ""
+
+
+def _json_token_int(tokens: list[str], index: int) -> Result[int, JSONDecodeError]:
+    try:
+        token: str = _json_token_at(tokens, index)
+        parsed: int = int(token)
+        return parsed
+    except ParseError:
+        raise JSONDecodeError("JSON bridge payload has invalid integer metadata")
+    except JSONDecodeError as e:
+        raise JSONDecodeError(e.message)
+
+
+def _json_token_float(tokens: list[str], index: int) -> Result[float, JSONDecodeError]:
+    try:
+        token: str = _json_token_at(tokens, index)
+        parsed: float = float(token)
+        return parsed
+    except ParseError:
+        raise JSONDecodeError("JSON bridge payload has invalid float metadata")
+    except JSONDecodeError as e:
+        raise JSONDecodeError(e.message)
+
+
+def _json_decode_bool_token(value: str) -> Result[bool, JSONDecodeError]:
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+    raise JSONDecodeError("JSON bridge payload has invalid bool metadata")
+
+
+def _json_decode_value_at(
+    tokens: list[str],
+    index: int,
+) -> Result[tuple[JsonValue, int], JSONDecodeError]:
+    try:
+        tag: str = _json_token_at(tokens, index)
+        payload_index: int = index + 1
+        if tag == "null":
+            return (JsonValue("null"), payload_index)
+        if tag == "bool":
+            bool_token: str = _json_token_at(tokens, payload_index)
+            bool_value: bool = _json_decode_bool_token(bool_token)
+            return (JsonValue("bool", bool_value=bool_value), payload_index + 1)
+        if tag == "int":
+            int_value: int = _json_token_int(tokens, payload_index)
+            return (JsonValue("int", int_value=int_value), payload_index + 1)
+        if tag == "float":
+            float_value: float = _json_token_float(tokens, payload_index)
+            return (JsonValue("float", float_value=float_value), payload_index + 1)
+        if tag == "str":
+            str_value: str = _json_token_at(tokens, payload_index)
+            return (JsonValue("str", str_value=str_value), payload_index + 1)
+        if tag == "array":
+            array_count: int = _json_token_int(tokens, payload_index)
+            if array_count < 0:
+                raise JSONDecodeError("JSON bridge payload has invalid array length")
+            array_value: JsonValue = JsonValue("array")
+            next_index: int = payload_index + 1
+            consumed: int = 0
+            while consumed < array_count:
+                item_result: tuple[JsonValue, int] = _json_decode_value_at(tokens, next_index)
+                array_value.array_items.append(item_result[0])
+                next_index = item_result[1]
+                consumed = consumed + 1
+            return (array_value, next_index)
+        if tag == "object":
+            object_count: int = _json_token_int(tokens, payload_index)
+            if object_count < 0:
+                raise JSONDecodeError("JSON bridge payload has invalid object length")
+            object_value: JsonValue = JsonValue("object")
+            next_index: int = payload_index + 1
+            consumed: int = 0
+            while consumed < object_count:
+                key: str = _json_token_at(tokens, next_index)
+                item_result: tuple[JsonValue, int] = _json_decode_value_at(tokens, next_index + 1)
+                object_value.object_items.append((key, item_result[0]))
+                next_index = item_result[1]
+                consumed = consumed + 1
+            return (object_value, next_index)
+        raise JSONDecodeError("JSON bridge payload has unknown value tag: " + tag)
+    except JSONDecodeError as e:
+        raise JSONDecodeError(e.message)
+
+
+def _json_decode_tokens(tokens: list[str]) -> Result[JsonValue, JSONDecodeError]:
+    try:
+        decoded: tuple[JsonValue, int] = _json_decode_value_at(tokens, 0)
+        if decoded[1] != len(tokens):
+            raise JSONDecodeError("JSON bridge payload has trailing data")
+        return decoded[0]
+    except JSONDecodeError as e:
+        raise JSONDecodeError(e.message)
+
+
+def _json_append_tokens(own mut tokens: list[str], value: JsonValue) -> list[str]:
+    tokens.append(value.kind + "")
+    if value.kind == "bool":
+        bool_value: bool | None = value.bool_value
+        if bool_value is None:
+            tokens.append("false")
+        else:
+            tokens.append(str(bool_value).lower())
+    elif value.kind == "int":
+        int_value: int | None = value.int_value
+        if int_value is None:
+            tokens.append("0")
+        else:
+            tokens.append(str(int_value))
+    elif value.kind == "float":
+        float_value: float | None = value.float_value
+        if float_value is None:
+            tokens.append("0.0")
+        else:
+            tokens.append(str(float_value))
+    elif value.kind == "str":
+        str_value: str | None = value.as_str()
+        if str_value is None:
+            tokens.append("")
+        else:
+            tokens.append(str_value)
+    elif value.kind == "array":
+        tokens.append(str(len(value.array_items)))
+        for item in value.array_items:
+            tokens = _json_append_tokens(tokens, item)
+    elif value.kind == "object":
+        tokens.append(str(len(value.object_items)))
+        for key, item_value in value.object_items:
+            tokens.append(key)
+            tokens = _json_append_tokens(tokens, item_value)
+    return tokens
+
+
+def _json_bridge_tokens(value: JsonValue) -> list[str]:
+    tokens: list[str] = []
+    return _json_append_tokens(tokens, value)
+
+
 def loads(s: str) -> Result[JsonValue, JSONDecodeError]:
-    return json_loads(s)
+    try:
+        tokens: list[str] = json_load_tokens(s)
+        return _json_decode_tokens(tokens)
+    except JSONDecodeError as e:
+        raise e
+
+
+def json_loads(s: str) -> Result[JsonValue, JSONDecodeError]:
+    return loads(s)
 
 
 def validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]:
@@ -233,7 +384,7 @@ def validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]:
 
 def _decode_loaded_json(content: str) -> Result[JsonValue, Error]:
     try:
-        value: JsonValue = json_loads(content)
+        value: JsonValue = loads(content)
         return value
     except JSONDecodeError as e:
         raise Error(e.message)
@@ -258,19 +409,50 @@ def load(path: str) -> Result[JsonValue, Error]:
 
 
 def dumps(value: JsonValue) -> str:
-    return json_dumps_value(value)
+    return json_dump_tokens(_json_bridge_tokens(value))
 
 
 def dumps_exact(value: JsonValue) -> str:
-    return json_dumps_value_exact(value)
+    return json_dump_tokens_exact(_json_bridge_tokens(value))
 
 
 def dumps_web(value: JsonValue) -> Result[str, JsonIntegerRangeError]:
-    return json_dumps_value_web(value)
+    return json_dump_tokens_web(_json_bridge_tokens(value))
 
 
 def dumps_string_ints(value: JsonValue) -> str:
-    return json_dumps_value_string_ints(value)
+    return json_dump_tokens_string_ints(_json_bridge_tokens(value))
+
+
+def json_dumps(
+    own value: JsonValue | bool | int | float | str | decimal | bigdecimal,
+) -> str:
+    if isinstance(value, JsonValue):
+        return dumps(value)
+    elif isinstance(value, bool):
+        return dumps(from_bool(value))
+    elif isinstance(value, int):
+        return dumps(from_int(value))
+    elif isinstance(value, float):
+        return dumps(from_float(value))
+    else:
+        return dumps(from_str(str(value)))
+
+
+def json_dumps_value(value: JsonValue) -> str:
+    return dumps(value)
+
+
+def json_dumps_value_exact(value: JsonValue) -> str:
+    return dumps_exact(value)
+
+
+def json_dumps_value_web(value: JsonValue) -> Result[str, JsonIntegerRangeError]:
+    return dumps_web(value)
+
+
+def json_dumps_value_string_ints(value: JsonValue) -> str:
+    return dumps_string_ints(value)
 
 
 def dump_handle(value: JsonValue, fh: FileHandle) -> Result[None, IOError]:

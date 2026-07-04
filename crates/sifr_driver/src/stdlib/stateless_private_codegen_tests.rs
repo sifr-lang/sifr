@@ -37,6 +37,10 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         "_sifr.toml",
         include_str!("../../../../stdlib/_sifr/toml.sifr"),
     ),
+    (
+        "_sifr.json",
+        include_str!("../../../../stdlib/_sifr/json.sifr"),
+    ),
 ];
 
 #[test]
@@ -469,4 +473,70 @@ fn toml_private_declarations_codegen_through_sifr_stdlib() {
     assert!(exports.contains_key("loads"));
     assert!(!exports.contains_key("_decode_toml_tokens"));
     assert!(!exports.contains_key("_decode_toml_value_at"));
+}
+
+#[test]
+fn json_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.json")
+        .expect("_sifr.json should generate private Rust code");
+
+    for name in [
+        "json_load_tokens",
+        "json_validate_integer_digit_limits",
+        "json_dump_tokens",
+        "json_dump_tokens_exact",
+        "json_dump_tokens_string_ints",
+        "json_dump_tokens_web",
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::json::{name}(")),
+            "{name} should lower through _sifr.json private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains("JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: __sifr_bridge_error.line() as i64, column: __sifr_bridge_error.column() as i64 }"));
+    assert!(private_code.contains("JsonLimitError { message: __sifr_bridge_error.message().to_string(), limit: __sifr_bridge_error.limit() as i64 }"));
+    assert!(private_code.contains("JsonIntegerRangeError { message: __sifr_bridge_error.message().to_string(), path: __sifr_bridge_error.path().to_string(), profile: __sifr_bridge_error.profile().to_string() }"));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.json")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.json")
+        .is_some_and(|deps| deps.contains("_sifr.json")));
+    let public_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("sifr.json")
+        .expect("sifr.json intrinsic names should be tracked");
+    for name in [
+        "json_loads",
+        "json_validate_integer_digit_limits",
+        "json_dumps",
+        "json_dumps_value",
+        "json_dumps_value_exact",
+        "json_dumps_value_web",
+        "json_dumps_value_string_ints",
+    ] {
+        assert!(
+            !public_intrinsics.contains(name),
+            "{name} should not remain a public sifr.json compiler intrinsic"
+        );
+    }
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.json")
+        .expect("sifr.json exports should be collected");
+    assert!(exports.contains_key("loads"));
+    assert!(exports.contains_key("json_loads"));
+    assert!(exports.contains_key("json_dumps"));
+    assert!(!exports.contains_key("_decode_json_tokens"));
+    assert!(!exports.contains_key("_decode_json_value_at"));
 }

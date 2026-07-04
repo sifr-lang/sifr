@@ -15,8 +15,8 @@ fn generated_cargo_dependencies(
 #[test]
 fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
     let stdlib_modules = HashSet::from([
-        "sifr.json".to_string(),
-        "_sifr.json".to_string(),
+        "sifr.collections".to_string(),
+        "_sifr.collections".to_string(),
         "sifr.random".to_string(),
     ]);
     let required_features = HashSet::from([StdlibFeature::SerdeJson, StdlibFeature::Rand]);

@@ -74,6 +74,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.re", "_sifr.regex"]) {
         features.push("regex");
     }
+    if has_module(&["sifr.json", "_sifr.json"]) {
+        features.push("json");
+    }
     if has_module(&["sifr.tomllib", "_sifr.toml"]) {
         features.push("toml");
     }

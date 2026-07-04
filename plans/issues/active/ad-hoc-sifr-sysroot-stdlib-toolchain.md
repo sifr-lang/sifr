@@ -18,7 +18,7 @@ In progress.
 | M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. M10 wave 3 merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776), migrating `_sifr.url`/`sifr.url` through private Rust interop backed by `sifr_stdlib::url`. M10 wave 4 merged in [PR #2778](https://github.com/sifr-lang/sifr/pull/2778), migrating `_sifr.toml`/`sifr.tomllib` through private Rust interop backed by `sifr_stdlib::toml`; local create-pr validation and Opus review pass 3 are satisfied. Remaining fallible leaves continue in follow-up waves. |
+| M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. M10 wave 3 merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776), migrating `_sifr.url`/`sifr.url` through private Rust interop backed by `sifr_stdlib::url`. M10 wave 4 merged in [PR #2778](https://github.com/sifr-lang/sifr/pull/2778), migrating `_sifr.toml`/`sifr.tomllib` through private Rust interop backed by `sifr_stdlib::toml`. M10 wave 5 merged in [PR #2780](https://github.com/sifr-lang/sifr/pull/2780), migrating `_sifr.json`/`sifr.json` through private Rust interop backed by `sifr_stdlib::json` token adapters while preserving `JSONDecodeError` location fields and JSON integer profile errors. Remaining fallible leaves continue in follow-up waves. |
 | Post-M10 Adapter Policy Adherence Audit | completed, merged | Merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774). The audit classified completed M9/M10 private bindings, added executable guards for direct `sifr_stdlib` targets and trust separation, documented residual `_sifr.crypto` random scope, and passed Opus review pass 2 plus local `scripts/run_all_tests.sh --profile create-pr` with only the warm wall-time advisory. |
 
 ## PR Log
@@ -43,6 +43,7 @@ In progress.
 - Post-M10 adapter policy adherence audit: merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774).
 - M10 wave 3 URL interop migration: merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776).
 - M10 wave 4 TOML interop migration: merged in [PR #2778](https://github.com/sifr-lang/sifr/pull/2778).
+- M10 wave 5 JSON interop migration: merged in [PR #2780](https://github.com/sifr-lang/sifr/pull/2780).
 
 ## Design Reference
 
@@ -1172,6 +1173,93 @@ Wave 4 implementation evidence:
   errors. Rebuilding/pinning the LSP command to
   `target/m10-toml-create-pr/debug/sifr lsp --stdio` made the focused
   `developer_tooling` static/LSP suites pass before the full create-pr rerun.
+
+Wave 5 status: in progress on branch `m10-json-interop`.
+The `_sifr.json` private module and public `sifr.json` wrappers are migrated
+off the active JSON intrinsic registry and onto private
+`@rust(sifr_stdlib.json.*)` declarations backed by the narrow `json` feature
+in `sifr_stdlib`. The public `JsonValue` class remains Sifr-owned; the private
+Rust bridge accepts and returns flat `list[str]` token streams so generated
+Sifr classes do not become sysroot crate API. Rust owns JSON parsing, string
+escaping, and integer-profile emission; Sifr owns conversion between public
+`JsonValue` objects and the token stream.
+
+Wave 5 implementation evidence:
+
+- `stdlib/_sifr/json.sifr` declares private `json_load_tokens`,
+  `json_validate_integer_digit_limits`, and JSON dump token helpers as direct
+  `sifr_stdlib::json` interop leaves.
+- `stdlib/sifr/json.sifr` reconstructs public `JsonValue` values from bridge
+  tokens, serializes `JsonValue` into bridge tokens for default/exact/web and
+  string-int profiles, and preserves the existing primitive `json_dumps`
+  subset through an owned union wrapper.
+- `crates/sifr_stdlib/src/json.rs` owns JSON parse/emit behavior behind the
+  `json` feature, preserves `JSONDecodeError` line/column fields through a
+  bridge error type, delegates integer digit and profile policy to shared
+  `sifr_runtime::json` primitives, and returns typed range/limit errors through
+  direct interop mapping.
+- `sifr_codegen` no longer registers the legacy JSON active intrinsic lowerer;
+  the direct interop bridge now maps sysroot JSON error structs with
+  `message/line/column`, `message/limit`, and `message/path/profile` accessors
+  into the generated public Sifr error structs.
+- `sifr_stdlib_model` and E2E/test-runner dependency planning no longer retain
+  direct generated `serde_json` dependencies for `sifr.json` or `_sifr.json`;
+  generated projects depend on `sifr_stdlib` with `features` containing
+  `"json"` instead. Direct `serde_json` remains available for retained
+  compiler-owned collection glue until that surface migrates.
+- Create-pr generated-code quality found that auxiliary `_sifr.json` generated
+  bridge error structs can reference `sifr_runtime::interop::SifrIntBridge`
+  even in generated projects whose primary stdlib module is unrelated to JSON.
+  `crates/sifr_driver/src/build/cargo_manifest.rs` now scans bridge contract
+  and generated bridge field Rust types when adding sysroot interop crates, so
+  generated auxiliary bridge sources and generated Cargo dependencies stay in
+  sync.
+- Opus review pass 1 found that the batch E2E harness still planned direct
+  JSON `serde_json` dependencies and that the primitive `json_dumps` wrapper
+  had dropped Decimal/BigDecimal behavior. Both blockers were fixed: the batch
+  harness now routes `sifr.json` and `_sifr.json` through `sifr_stdlib` with the
+  `json` feature, `json_dumps` preserves the prior primitive/decimal subset,
+  and mixed JSON/TOML pass fixtures import the explicit `toml_loads` wrapper to
+  avoid flattened public `loads` name collisions in grouped builds.
+- Opus review pass 2 returned `VERDICT: PASS` with no blockers. Non-blocking
+  follow-ups were limited to future bridge-corruption ergonomics, qualified
+  typed-error dispatch, richer limit/range runtime assertions, and documenting
+  that `json_dumps` now exposes the supported primitive/decimal union instead
+  of the old intrinsic `Any` signature.
+- Opus review pass 3 returned `VERDICT: PASS` after the generated-Cargo
+  manifest fix for auxiliary JSON bridge error structs that reference
+  `sifr_runtime::interop::SifrIntBridge`. Non-blocking follow-ups were limited
+  to future tightening of scan invariants and tests, plus previously recorded
+  post-M10 cleanup items.
+- Focused validation passed:
+  `cargo fmt --check`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr_stdlib --features json json::tests -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr_codegen rust_interop_direct::tests::direct_rust_function_body_maps_json_decode_error_fields -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr_codegen intrinsics::registry_core_tests::json_intrinsics_are_owned_by_compiled_stdlib_declarations -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr_driver stdlib::stateless_private_codegen_tests::json_private_declarations_codegen_through_sifr_stdlib -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr_driver dependency_plan_includes_runtime_for_generated_bridge_int_fields -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr_stdlib_model features_tests -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr_driver test_generate_test_runner_cargo_toml_preserves_stdlib_deps -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr test_generate_cargo_toml_json_uses_stdlib_json_feature -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo run -q -p sifr -- build demos/async_subprocess_pipeline_demo/main.sifr -o target/m10-json-focused/repro-async-subprocess-pipeline`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_json_consolidated.sifr`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/json_integer_profiles.sifr`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_json_subset.sifr`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/error_subclass_handling.sifr`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/decimal_conversions.sifr`;
+  `CARGO_TARGET_DIR=target/m10-json-focused cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/decimal_runtime_operations.sifr`;
+  targeted uncached grouped E2E for `panic_free_stdlib_errors`,
+  `parse_safety_error_paths`, and `structured_data_formats` with
+  `SIFR_E2E_FIXTURE_MANIFEST=/tmp/sifr-m10-json-target-fixtures.json`; and
+  `SIFR_E2E_DISABLE_CACHE=1 CARGO_TARGET_DIR=target/m10-json-focused cargo test -p sifr --test e2e test_e2e_pass -- --nocapture`
+  (`651` pass fixtures, `0` failures).
+- Local create-pr validation passed with zero failures:
+  `SIFR_LSP_COMMAND="$(pwd)/target/m10-json-create-pr/debug/sifr lsp --stdio" CARGO_TARGET_DIR=target/m10-json-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The run reported only the warm wall-time advisory and wrote
+  `target/validation_lane_reports/create-pr.latest.json`; slowest validated
+  steps were Python interop (`1781345ms`), generated-code quality
+  (`1006493ms`), crate tests (`961811ms`), runtime platform (`683300ms`), and
+  e2e pass (`382955ms`).
 
 Acceptance:
 

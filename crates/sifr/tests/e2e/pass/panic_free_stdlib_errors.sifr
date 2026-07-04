@@ -7,7 +7,7 @@ from sifr.io import read_text, read_lines
 from sifr.os import listdir, rmdir, remove_file, rename
 from sifr.shutil import copy
 from sifr.json import JsonValue, json_loads
-from sifr.tomllib import TomlValue, loads
+from sifr.tomllib import TomlValue, toml_loads
 from sifr.re import re_match, search, findall, split, sub
 from sifr.base64 import b64decode
 from sifr.random import randint
@@ -74,7 +74,7 @@ def main():
         parse_errors = parse_errors + 1
 
     try:
-        t1: TomlValue = loads("not toml [[[" )
+        t1: TomlValue = toml_loads("not toml [[[" )
     except TOMLDecodeError as e:
         parse_errors = parse_errors + 1
 

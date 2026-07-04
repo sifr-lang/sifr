@@ -2,15 +2,6 @@ use super::{result_ty, IntrinsicModule};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
-fn json_value_stub() -> Type {
-    Type::Class {
-        name: "JsonValue".to_string(),
-        fields: vec![],
-        methods: vec![],
-        parent_class: None,
-    }
-}
-
 fn json_decode_error_ty() -> Type {
     Type::Class {
         name: "JSONDecodeError".to_string(),
@@ -99,58 +90,61 @@ pub(super) fn intrinsic_io() -> IntrinsicModule {
 pub(super) fn intrinsic_json() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // json_loads(s: str) -> Result[JsonValue, JSONDecodeError]
+    // json_load_tokens(text: str) -> Result[list[str], JSONDecodeError]
     functions.insert(
-        "json_loads".to_string(),
+        "json_load_tokens".to_string(),
         FunctionType::all_borrow(
-            vec![("s".to_string(), Type::Str)],
+            vec![("text".to_string(), Type::Str)],
             Type::Result(
-                Box::new(json_value_stub()),
+                Box::new(Type::List(Box::new(Type::Str))),
                 Box::new(json_decode_error_ty()),
             ),
         ),
     );
 
-    // json_validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]
+    // json_validate_integer_digit_limits(text: str) -> Result[None, JsonLimitError]
     functions.insert(
         "json_validate_integer_digit_limits".to_string(),
         FunctionType::all_borrow(
-            vec![("s".to_string(), Type::Str)],
+            vec![("text".to_string(), Type::Str)],
             Type::Result(Box::new(Type::None), Box::new(json_limit_error_ty())),
         ),
     );
 
-    // json_dumps(obj: Any) -> str
+    // json_dump_tokens(tokens: list[str]) -> str
     functions.insert(
-        "json_dumps".to_string(),
-        FunctionType::all_borrow(vec![("obj".to_string(), Type::Any)], Type::Str),
-    );
-
-    // json_dumps_value(obj: JsonValue) -> str
-    functions.insert(
-        "json_dumps_value".to_string(),
-        FunctionType::all_borrow(vec![("obj".to_string(), json_value_stub())], Type::Str),
-    );
-
-    // json_dumps_value_exact(obj: JsonValue) -> str
-    functions.insert(
-        "json_dumps_value_exact".to_string(),
-        FunctionType::all_borrow(vec![("obj".to_string(), json_value_stub())], Type::Str),
-    );
-
-    // json_dumps_value_web(obj: JsonValue) -> Result[str, JsonIntegerRangeError]
-    functions.insert(
-        "json_dumps_value_web".to_string(),
+        "json_dump_tokens".to_string(),
         FunctionType::all_borrow(
-            vec![("obj".to_string(), json_value_stub())],
-            Type::Result(Box::new(Type::Str), Box::new(json_integer_range_error_ty())),
+            vec![("tokens".to_string(), Type::List(Box::new(Type::Str)))],
+            Type::Str,
         ),
     );
 
-    // json_dumps_value_string_ints(obj: JsonValue) -> str
+    // json_dump_tokens_exact(tokens: list[str]) -> str
     functions.insert(
-        "json_dumps_value_string_ints".to_string(),
-        FunctionType::all_borrow(vec![("obj".to_string(), json_value_stub())], Type::Str),
+        "json_dump_tokens_exact".to_string(),
+        FunctionType::all_borrow(
+            vec![("tokens".to_string(), Type::List(Box::new(Type::Str)))],
+            Type::Str,
+        ),
+    );
+
+    // json_dump_tokens_string_ints(tokens: list[str]) -> str
+    functions.insert(
+        "json_dump_tokens_string_ints".to_string(),
+        FunctionType::all_borrow(
+            vec![("tokens".to_string(), Type::List(Box::new(Type::Str)))],
+            Type::Str,
+        ),
+    );
+
+    // json_dump_tokens_web(tokens: list[str]) -> Result[str, JsonIntegerRangeError]
+    functions.insert(
+        "json_dump_tokens_web".to_string(),
+        FunctionType::all_borrow(
+            vec![("tokens".to_string(), Type::List(Box::new(Type::Str)))],
+            Type::Result(Box::new(Type::Str), Box::new(json_integer_range_error_ty())),
+        ),
     );
 
     IntrinsicModule {

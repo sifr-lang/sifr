@@ -594,9 +594,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
 #[must_use]
 pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature] {
     match module_name {
-        "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
-            &[StdlibFeature::SerdeJson]
-        }
+        "sifr.collections" | "_sifr.collections" => &[StdlibFeature::SerdeJson],
         "sifr.time" | "_sifr.time" => &[StdlibFeature::Chrono],
         "sifr.random" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],
         "_sifr.crypto" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],
