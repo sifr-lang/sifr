@@ -1,6 +1,6 @@
 # Test parse safety error paths — all parse/decode intrinsics return Result
 from sifr.json import JsonValue, json_loads
-from sifr.tomllib import TomlValue, loads
+from sifr.tomllib import TomlValue, toml_loads
 from sifr.re import re_match
 from sifr.base64 import base64_decode
 from sifr.bytes import decode_utf8, bytes_from_hex
@@ -29,7 +29,7 @@ def main():
 
     # 3. TOML: invalid input returns TOMLDecodeError
     try:
-        tval: TomlValue = loads("invalid [toml")
+        tval: TomlValue = toml_loads("invalid [toml")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except TOMLDecodeError as e:
@@ -38,7 +38,7 @@ def main():
 
     # 4. TOML: valid input succeeds
     try:
-        tdata: TomlValue = loads("key = \"value\"")
+        tdata: TomlValue = toml_loads("key = \"value\"")
         value: TomlValue | None = tdata.get("key")
         value_ok: bool = False
         if value is not None:

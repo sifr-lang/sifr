@@ -89,7 +89,7 @@ surface-by-surface ownership decision remains the TOML registry.
 | Call-site family | Current call sites | Final owner |
 | --- | --- | --- |
 | Exact integer/runtime bridge | Entry-point imports, module constants, SifrInt render helpers, Rust interop bridge generated types | Retained compiler-language glue backed by `sifr_runtime` |
-| JSON exact-int/value helpers | `crates/sifr_codegen/src/intrinsics/registry/json/**` | `sifr_stdlib` JSON implementation with only shared primitives retained in `sifr_runtime` |
+| JSON exact-int/value helpers | `sifr_stdlib` JSON token adapters reached through `_sifr.json` private Rust interop declarations; shared integer policy primitives remain in `sifr_runtime::json` | `sifr_stdlib` JSON implementation with only shared primitives retained in `sifr_runtime` |
 | Encoding, Unicode, and i18n helpers | `registry/encoding.rs`, `registry/unicode.rs`, `registry/i18n.rs` | `sifr_stdlib` text/data implementations with shared primitives retained only when justified |
 | Network handles | `preamble/net_runtime.rs` | `sifr_stdlib` net resource implementation through certified interop, backed by `sifr_runtime` substrates |
 | TLS handles | `preamble/tls_runtime.rs` | `sifr_stdlib` TLS resource implementation through certified interop, backed by `sifr_runtime` substrates |

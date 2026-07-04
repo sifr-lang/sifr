@@ -51,41 +51,25 @@ pub(crate) fn math_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
-pub(crate) fn lowers_json_intrinsics_with_dependency_metadata() {
-    let loads =
-        lower_intrinsic("json_loads", &["payload".to_string()]).expect("json_loads should lower");
-    assert_eq!(
-        loads.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::SerdeJson)
-    );
-    assert!(loads
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::SifrRuntime));
-    let loads_rendered = render_expr(&loads.expr);
-    assert!(loads_rendered.contains("serde_json::from_str"));
-    assert!(loads_rendered.contains("validate_json_integer_digit_limits"));
-
-    let validate = lower_intrinsic(
+pub(crate) fn json_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    let retired = [
+        "json_loads",
         "json_validate_integer_digit_limits",
-        &["payload".to_string()],
-    )
-    .expect("json_validate_integer_digit_limits should lower");
-    assert_eq!(validate.required_feature, None);
-    assert!(validate
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::SifrRuntime));
-    assert!(render_expr(&validate.expr).contains("JsonLimitError"));
-
-    let dumps =
-        lower_intrinsic("json_dumps", &["value".to_string()]).expect("json_dumps should lower");
-    assert_eq!(
-        dumps.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::SerdeJson)
-    );
-    assert_eq!(
-        render_expr(&dumps.expr),
-        "serde_json::to_string(&value).unwrap_or_default()"
-    );
+        "json_dumps",
+        "json_dumps_value",
+        "json_dumps_value_exact",
+        "json_dumps_value_web",
+        "json_dumps_value_string_ints",
+        "json_load_tokens",
+        "json_dump_tokens",
+        "json_dump_tokens_web",
+    ];
+    for name in retired {
+        assert!(
+            lower_intrinsic(name, &["payload".to_string()]).is_none(),
+            "{name} should lower through _sifr.json private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

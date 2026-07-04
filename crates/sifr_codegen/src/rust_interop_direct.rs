@@ -130,6 +130,30 @@ fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
     match err_type.resolve_alias() {
         Type::Class {
             name,
+            fields: _,
+            parent_class,
+            ..
+        } if parent_class.as_deref() == Some("Error") && name == "JSONDecodeError" => {
+            json_decode_error_expr(name, value)
+        }
+        Type::Class {
+            name,
+            fields: _,
+            parent_class,
+            ..
+        } if parent_class.as_deref() == Some("Error") && name == "JsonLimitError" => {
+            json_limit_error_expr(name, value)
+        }
+        Type::Class {
+            name,
+            fields: _,
+            parent_class,
+            ..
+        } if parent_class.as_deref() == Some("Error") && name == "JsonIntegerRangeError" => {
+            json_integer_range_error_expr(name, value)
+        }
+        Type::Class {
+            name,
             fields,
             parent_class,
             ..
@@ -147,6 +171,78 @@ fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
             }
         }
         _ => value,
+    }
+}
+
+fn json_decode_error_expr(name: &str, value: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: name.to_string(),
+        fields: vec![
+            (
+                "message".to_string(),
+                bridge_error_method_string(value.clone(), "message"),
+            ),
+            (
+                "line".to_string(),
+                bridge_error_method_i64(value.clone(), "line"),
+            ),
+            (
+                "column".to_string(),
+                bridge_error_method_i64(value, "column"),
+            ),
+        ],
+    }
+}
+
+fn json_limit_error_expr(name: &str, value: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: name.to_string(),
+        fields: vec![
+            (
+                "message".to_string(),
+                bridge_error_method_string(value.clone(), "message"),
+            ),
+            ("limit".to_string(), bridge_error_method_i64(value, "limit")),
+        ],
+    }
+}
+
+fn json_integer_range_error_expr(name: &str, value: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: name.to_string(),
+        fields: vec![
+            (
+                "message".to_string(),
+                bridge_error_method_string(value.clone(), "message"),
+            ),
+            (
+                "path".to_string(),
+                bridge_error_method_string(value.clone(), "path"),
+            ),
+            (
+                "profile".to_string(),
+                bridge_error_method_string(value, "profile"),
+            ),
+        ],
+    }
+}
+
+fn bridge_error_method_string(value: RustExpr, method: &str) -> RustExpr {
+    to_string_expr(RustExpr::MethodCall {
+        receiver: Box::new(value),
+        method: method.to_string(),
+        args: Vec::new(),
+    })
+}
+
+fn bridge_error_method_i64(value: RustExpr, method: &str) -> RustExpr {
+    RustExpr::Cast {
+        expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(value),
+            method: method.to_string(),
+            args: Vec::new(),
+        }),
+        ty: RustType::I64,
     }
 }
 
@@ -489,6 +585,54 @@ mod tests {
         assert_eq!(
             render_expr(&expr),
             "sifr_stdlib::regex::re_match(pattern).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| RegexError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() })"
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_maps_json_decode_error_fields() {
+        let json_decode_error = Type::Class {
+            name: "JSONDecodeError".to_string(),
+            fields: vec![
+                ("message".to_string(), Type::Str),
+                ("line".to_string(), Type::Int),
+                ("column".to_string(), Type::Int),
+            ],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let func = HirFunction {
+            name: "json_load_tokens".to_string(),
+            params: vec![HirParam {
+                name: "text".to_string(),
+                ty: Type::Str,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::Result(
+                Box::new(Type::List(Box::new(Type::Str))),
+                Box::new(json_decode_error),
+            ),
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "json", "json_load_tokens"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body =
+            direct_rust_function_body(&func).expect("direct result interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct result interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::json::json_load_tokens(text).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: __sifr_bridge_error.line() as i64, column: __sifr_bridge_error.column() as i64 })"
         );
     }
 

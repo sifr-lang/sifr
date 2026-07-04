@@ -420,9 +420,10 @@ fn test_generate_test_runner_cargo_toml_preserves_stdlib_deps() {
     let required_features = HashSet::new();
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_features);
-    assert!(cargo_toml
-        .contains("serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"));
-    assert!(cargo_toml.contains("serde = { version = \"1.0.228\", features = [\"derive\"] }"));
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("default-features = false"));
+    assert!(cargo_toml.contains("features = [\"json\"]"));
+    assert!(!cargo_toml.contains("serde_json = "));
 }
 
 #[test]

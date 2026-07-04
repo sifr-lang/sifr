@@ -133,7 +133,7 @@ fn add_sysroot_interop_crates(
 }
 
 fn sysroot_interop_crates(interop: &InteropBuildPlan) -> BTreeSet<SysrootCrate> {
-    interop
+    let mut crates: BTreeSet<SysrootCrate> = interop
         .rust
         .resolved_targets
         .iter()
@@ -149,7 +149,47 @@ fn sysroot_interop_crates(interop: &InteropBuildPlan) -> BTreeSet<SysrootCrate> 
             | RustInteropResolvedRoot::PackageBridge { .. }
             | RustInteropResolvedRoot::SelfMethod { .. } => None,
         })
-        .collect()
+        .collect();
+
+    for signature in &interop.rust.bridge_contracts.signatures {
+        for param in &signature.params {
+            collect_sysroot_crates_from_bridge_type(&mut crates, &param.ty);
+        }
+        collect_sysroot_crates_from_bridge_type(&mut crates, &signature.return_type);
+    }
+    for bridge_type in &interop.rust.bridge_contracts.generated_types {
+        collect_sysroot_crates_from_rust_path(&mut crates, &bridge_type.rust_type_path);
+        for field in &bridge_type.fields {
+            collect_sysroot_crates_from_rust_path(&mut crates, &field.rust_type);
+        }
+    }
+
+    crates
+}
+
+fn collect_sysroot_crates_from_bridge_type(
+    crates: &mut BTreeSet<SysrootCrate>,
+    ty: &sifr_codegen::RustBridgeTypeContract,
+) {
+    for rust_type in [
+        ty.rust_borrowed_type.as_deref(),
+        ty.rust_owned_type.as_deref(),
+        ty.rust_return_type.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        collect_sysroot_crates_from_rust_path(crates, rust_type);
+    }
+}
+
+fn collect_sysroot_crates_from_rust_path(crates: &mut BTreeSet<SysrootCrate>, rust_type: &str) {
+    if rust_type.contains("sifr_runtime::") {
+        crates.insert(SysrootCrate::SifrRuntime);
+    }
+    if rust_type.contains("sifr_stdlib::") {
+        crates.insert(SysrootCrate::SifrStdlib);
+    }
 }
 
 fn append_sysroot_interop_cache_fingerprint(
@@ -227,6 +267,10 @@ fn push_unicode_escape(output: &mut String, value: u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sifr_codegen::{
+        RustBridgeContractPlan, RustGeneratedBridgeField, RustGeneratedBridgeType,
+        RustGeneratedBridgeTypeKind,
+    };
     use sifr_stdlib_model::{SysrootCrate, SysrootCrateDependency};
     use std::path::PathBuf;
 
@@ -295,6 +339,38 @@ mod tests {
         .expect("source-tree sysroot should resolve");
 
         assert_eq!(plan.cargo_vendor_mode, CargoVendorMode::PackageOwned);
+    }
+
+    #[test]
+    fn dependency_plan_includes_runtime_for_generated_bridge_int_fields() {
+        let mut dependency_plan = test_dependency_plan(
+            CargoVendorMode::SysrootOnly,
+            PathBuf::from("/opt/sifr/vendor"),
+        );
+        let mut interop = InteropBuildPlan::default();
+        interop.rust.bridge_contracts = RustBridgeContractPlan {
+            signatures: Vec::new(),
+            generated_types: vec![RustGeneratedBridgeType {
+                module_name: Some("_sifr.json".to_string()),
+                name: "JSONDecodeErrorBridge".to_string(),
+                rust_type_path: "crate::__sifr_bridge::_sifr_json::JSONDecodeErrorBridge"
+                    .to_string(),
+                kind: RustGeneratedBridgeTypeKind::Error,
+                fields: vec![RustGeneratedBridgeField {
+                    name: "line".to_string(),
+                    sifr_type: "int".to_string(),
+                    rust_type: "sifr_runtime::interop::SifrIntBridge".to_string(),
+                }],
+                variants: Vec::new(),
+            }],
+        };
+
+        add_sysroot_interop_crates(&mut dependency_plan, &interop);
+
+        assert!(dependency_plan
+            .crates
+            .iter()
+            .any(|dependency| dependency.krate == SysrootCrate::SifrRuntime));
     }
 
     #[test]

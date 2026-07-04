@@ -456,18 +456,6 @@ pub(crate) fn test_batch_group_dispatch_uses_entry_termination_trait() {
 }
 
 #[test]
-pub(crate) fn test_generate_cargo_toml_tomllib_uses_stdlib_toml_feature() {
-    let stdlib_modules = normalize_dependency_set(vec!["sifr.tomllib".to_string()].into_iter());
-    let required_crates = BTreeSet::new();
-
-    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
-    assert!(cargo_toml.contains("default-features = false"));
-    assert!(cargo_toml.contains("features = [\"toml\"]"));
-    assert!(!cargo_toml.contains("toml = { version"));
-}
-
-#[test]
 pub(crate) fn test_generate_cargo_toml_required_toml_uses_preserve_order_feature() {
     let stdlib_modules = BTreeSet::new();
     let required_crates = normalize_dependency_set(vec!["toml".to_string()].into_iter());

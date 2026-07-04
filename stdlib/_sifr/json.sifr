@@ -1,2 +1,30 @@
 # Private _sifr.json native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.json.json_load_tokens, panic=trusted_no_panic)
+def json_load_tokens(text: str) -> Result[list[str], JSONDecodeError]:
+    raise JSONDecodeError("")
+
+
+@rust(sifr_stdlib.json.json_validate_integer_digit_limits, panic=trusted_no_panic)
+def json_validate_integer_digit_limits(text: str) -> Result[None, JsonLimitError]:
+    raise JsonLimitError("")
+
+
+@rust(sifr_stdlib.json.json_dump_tokens, panic=trusted_no_panic)
+def json_dump_tokens(tokens: list[str]) -> str:
+    return ""
+
+
+@rust(sifr_stdlib.json.json_dump_tokens_exact, panic=trusted_no_panic)
+def json_dump_tokens_exact(tokens: list[str]) -> str:
+    return ""
+
+
+@rust(sifr_stdlib.json.json_dump_tokens_string_ints, panic=trusted_no_panic)
+def json_dump_tokens_string_ints(tokens: list[str]) -> str:
+    return ""
+
+
+@rust(sifr_stdlib.json.json_dump_tokens_web, panic=trusted_no_panic)
+def json_dump_tokens_web(tokens: list[str]) -> Result[str, JsonIntegerRangeError]:
+    raise JsonIntegerRangeError("")

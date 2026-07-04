@@ -225,7 +225,7 @@ def _decode_toml_tokens(tokens: list[str]) -> Result[TomlValue, TOMLDecodeError]
         raise TOMLDecodeError(e.message)
 
 
-def loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
+def toml_loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
     try:
         tokens: list[str] = toml_parse_tokens(text)
         return _decode_toml_tokens(tokens)
@@ -233,9 +233,13 @@ def loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
         raise TOMLDecodeError(e.message)
 
 
+def loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
+    return toml_loads(text)
+
+
 def _decode_loaded_toml(content: str) -> Result[TomlValue, Error]:
     try:
-        value: TomlValue = loads(content)
+        value: TomlValue = toml_loads(content)
         return value
     except TOMLDecodeError as e:
         raise Error(e.message)

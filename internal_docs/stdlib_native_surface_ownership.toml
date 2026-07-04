@@ -142,12 +142,12 @@ deletion_stage = "fallible-data-text migration"
 [[surface]]
 id = "_sifr.json"
 public_modules = ["sifr.json"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/json plus sifr_runtime::json helpers"
-final_owner = "crates/sifr_stdlib json feature backed by sifr_runtime only for shared integer/value primitives"
+current_owner = "crates/sifr_stdlib json feature reached through _sifr.json private Rust interop declarations; sifr_runtime::json retains shared integer policy primitives"
+final_owner = "crates/sifr_stdlib json feature backed by sifr_runtime only for shared integer primitives"
 reason = "JSON parsing/serialization is fallible stdlib behavior; shared exact-int value helpers may remain runtime-owned."
-certification_state = "supported-through-bridge-requires-error-shaping"
+certification_state = "supported-through-bridge"
 can_move_before_runtime_certification = true
-migration_blocker = "Typed error conversion and preservation of existing integer-profile behavior."
+migration_blocker = "Runtime shared integer policy primitives remain recorded here until final registry cleanup decides whether this row is removed or reduced to retained policy ownership notes."
 deletion_stage = "fallible-data-text migration"
 
 [[surface]]

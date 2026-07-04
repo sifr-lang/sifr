@@ -7,7 +7,6 @@ mod file_handles;
 mod gzip;
 mod i18n;
 mod io;
-mod json;
 mod logging;
 mod net;
 mod open_text_handles;
@@ -104,27 +103,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "file_close" => (file_handles::lower_file_close(args), None),
         "file_read_bytes" => (file_handles::lower_file_read_bytes(args), None),
         "file_write_bytes" => (file_handles::lower_file_write_bytes(args), None),
-        "json_loads" => (json::lower_json_loads(args), Some(StdlibFeature::SerdeJson)),
-        "json_validate_integer_digit_limits" => {
-            (json::lower_json_validate_integer_digit_limits(args), None)
-        }
-        "json_dumps" => (json::lower_json_dumps(args), Some(StdlibFeature::SerdeJson)),
-        "json_dumps_value" => (
-            json::lower_json_dumps_value(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        "json_dumps_value_exact" => (
-            json::lower_json_dumps_value_exact(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        "json_dumps_value_web" => (
-            json::lower_json_dumps_value_web(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        "json_dumps_value_string_ints" => (
-            json::lower_json_dumps_value_string_ints(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
         "assert_eq" => (test::lower_assert_eq(args), None),
         "assert_ne" => (test::lower_assert_ne(args), None),
         "assert_true" => (test::lower_assert_true(args), None),

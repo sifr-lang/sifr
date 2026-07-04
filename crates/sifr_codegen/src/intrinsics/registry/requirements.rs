@@ -28,11 +28,6 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
     match name {
         // random_gauss uses rand_distr::Normal in addition to rand::rng.
         "random_gauss" => &[StdlibFeature::RandDistr],
-        "json_loads"
-        | "json_validate_integer_digit_limits"
-        | "json_dumps_value_exact"
-        | "json_dumps_value_web"
-        | "json_dumps_value_string_ints" => &[StdlibFeature::SifrRuntime],
         "encoding_is_supported"
         | "encoding_canonical_label"
         | "encoding_decode_text"
