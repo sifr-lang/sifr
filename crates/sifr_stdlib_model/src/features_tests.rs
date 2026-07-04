@@ -230,13 +230,19 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
 fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
     for (module, expected_feature) in [
         ("sifr.html", "html"),
+        ("_sifr.html", "html"),
         ("sifr.platform", "platform"),
+        ("_sifr.platform", "platform"),
         ("sifr.calendar", "calendar"),
+        ("_sifr.calendar", "calendar"),
         ("sifr.uuid", "uuid"),
+        ("_sifr.uuid", "uuid"),
         ("sifr.math", "math"),
+        ("_sifr.math", "math"),
         ("sifr.hashlib", "hash"),
         ("sifr.base64", "base64"),
         ("sifr.re", "regex"),
+        ("_sifr.regex", "regex"),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());

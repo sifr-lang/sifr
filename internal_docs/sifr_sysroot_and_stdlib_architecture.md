@@ -124,15 +124,15 @@ only when the Rust signature is already bridge-compatible and exposes the
 intended Sifr-shaped error surface. When a stdlib operation needs input
 normalization, output conversion, preservation of existing public semantics, or
 typed error shaping, the targeted Rust function is a `sifr_stdlib` adapter that
-owns those conversions before calling lower-level backend code.
+owns those conversions before calling lower-level implementation code.
 
 The compiler should not add per-declaration converter pipelines for the stdlib
 rewrite. Generated glue validates the single `@rust(...)` target signature,
 records the sysroot interop dependency and trust metadata, and lets
-`sifr_stdlib` own backend-specific adaptation. M9-M13 migrations are committed
-to `bridge-version = 1`; any future callee-injection form requires a new
-bridge-versioned design and must not add fallback conversion behavior to
-existing sysroot interop declarations.
+`sifr_stdlib` own implementation adaptation. These migrations are committed to
+`bridge-version = 1`; any future callee-injection form requires a new
+bridge-versioned design and must not add fallback conversion behavior to existing
+sysroot interop declarations.
 
 Private stdlib declarations rely on the compiler-owned sysroot trust policy and
 `sifr_stdlib` crate-level no-panic conventions for public APIs whose error
