@@ -27,7 +27,6 @@ mod task;
 mod test;
 mod time;
 mod tls;
-mod toml;
 mod unicode;
 mod url_http;
 mod zipfile;
@@ -442,7 +441,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             (random::lower_random_module_state_gauss_next(args), None)
         }
         "random_module_set_state" => (random::lower_random_module_set_state(args), None),
-        "toml_parse" => (toml::lower_toml_parse(args), Some(StdlibFeature::Toml)),
         "datetime_now" => (
             datetime::lower_datetime_now(args),
             Some(StdlibFeature::Chrono),

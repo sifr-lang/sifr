@@ -426,12 +426,15 @@ fn test_generate_test_runner_cargo_toml_preserves_stdlib_deps() {
 }
 
 #[test]
-fn test_generate_test_runner_cargo_toml_preserves_tomllib_ordering_deps() {
+fn test_generate_test_runner_cargo_toml_uses_stdlib_toml_feature() {
     let stdlib_modules = HashSet::from(["sifr.tomllib".to_string()]);
     let required_features = HashSet::new();
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_features);
-    assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("default-features = false"));
+    assert!(cargo_toml.contains("features = [\"toml\"]"));
+    assert!(!cargo_toml.contains("toml = { version"));
 }
 
 #[test]

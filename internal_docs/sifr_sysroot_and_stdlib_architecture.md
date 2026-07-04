@@ -419,20 +419,20 @@ move individual native leaves out of compiler/codegen surfaces and into this
 crate behind the same feature names.
 
 Current migrated leaves include the stateless `_sifr.platform`, `_sifr.html`,
-`_sifr.calendar`, `_sifr.uuid`, `_sifr.math`, `_sifr.regex`, and `_sifr.url`
-private declaration modules, plus the hash helper subset and full base encoding
-helper subset of the shared `_sifr.crypto` private module used by
+`_sifr.calendar`, `_sifr.uuid`, `_sifr.math`, `_sifr.regex`, `_sifr.url`, and
+`_sifr.toml` private declaration modules, plus the hash helper subset and full
+base encoding helper subset of the shared `_sifr.crypto` private module used by
 `sifr.hashlib` and `sifr.base64`.
 Their public wrappers continue to live in
 `stdlib/sifr/platform.sifr`, `stdlib/sifr/html.sifr`,
 `stdlib/sifr/calendar.sifr`, `stdlib/sifr/uuid.sifr`,
 `stdlib/sifr/math.sifr`, `stdlib/sifr/re.sifr`,
-`stdlib/sifr/url.sifr`, `stdlib/sifr/hashlib.sifr`, and
-`stdlib/sifr/base64.sifr`, while generated code emits the private preamble
-functions and calls `sifr_stdlib::platform::*`, `sifr_stdlib::html::*`,
-`sifr_stdlib::calendar::*`, `sifr_stdlib::uuid::*`,
-`sifr_stdlib::math::*`, `sifr_stdlib::regex::*`,
-`sifr_stdlib::url::*`, `sifr_stdlib::hash::*`, and
+`stdlib/sifr/url.sifr`, `stdlib/sifr/tomllib.sifr`,
+`stdlib/sifr/hashlib.sifr`, and `stdlib/sifr/base64.sifr`, while generated code
+emits the private preamble functions and calls `sifr_stdlib::platform::*`,
+`sifr_stdlib::html::*`, `sifr_stdlib::calendar::*`,
+`sifr_stdlib::uuid::*`, `sifr_stdlib::math::*`, `sifr_stdlib::regex::*`,
+`sifr_stdlib::url::*`, `sifr_stdlib::toml::*`, `sifr_stdlib::hash::*`, and
 `sifr_stdlib::base64::*` through feature-gated sysroot dependencies. Direct
 Rust interop wrappers bridge Sifr `int` values through
 `sifr_runtime::interop::SifrIntBridge` at this boundary, including `list[int]`
@@ -451,7 +451,10 @@ regex match, find, replace, findall, split, match start/end, and flag variants.
 `stdlib/sifr/url.sifr` keeps public `Url` and `UrlQuery` records in Sifr and
 reconstructs them from flat private `list[str]` bridge payloads returned by
 `sifr_stdlib::url`, because generated tuple and record bridge types are not
-sysroot crate API. `sifr.pathlib` still retains a direct `regex`
+sysroot crate API. `stdlib/sifr/tomllib.sifr` keeps public `TomlValue` in Sifr
+and reconstructs it from flat private `list[str]` bridge tokens returned by
+`sifr_stdlib::toml`, for the same sysroot API boundary reason. `sifr.pathlib`
+still retains a direct `regex`
 implementation dependency for path-glob lowering until the filesystem/path
 surface migrates.
 Direct Rust interop maps Rust `Result[..., E: Display]` returns into

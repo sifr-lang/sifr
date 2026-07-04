@@ -439,7 +439,12 @@ def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"f
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("default-features = false"));
+    assert!(cargo_toml
+        .lines()
+        .any(|line| line.starts_with("sifr_stdlib = ") && line.contains("\"toml\"")));
+    assert!(!cargo_toml.contains("toml = { version"));
 
     let _ = std::fs::remove_dir_all(dir);
 }

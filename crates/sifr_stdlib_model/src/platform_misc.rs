@@ -2,28 +2,6 @@ use super::{result_ty, IntrinsicModule};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
-fn toml_value_stub() -> Type {
-    Type::Class {
-        name: "TomlValue".to_string(),
-        fields: vec![],
-        methods: vec![],
-        parent_class: None,
-    }
-}
-
-fn toml_decode_error_ty() -> Type {
-    Type::Class {
-        name: "TOMLDecodeError".to_string(),
-        fields: vec![
-            ("message".to_string(), Type::Str),
-            ("line".to_string(), Type::Int),
-            ("column".to_string(), Type::Int),
-        ],
-        methods: vec![],
-        parent_class: Some("Error".to_string()),
-    }
-}
-
 /// _sifr.platform — Platform information bootstrap signatures.
 pub(super) fn intrinsic_platform() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -60,14 +38,19 @@ pub(super) fn intrinsic_platform() -> IntrinsicModule {
 /// _sifr.toml — TOML parsing intrinsics
 pub(super) fn intrinsic_toml() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    // toml_parse(text: str) -> Result[TomlValue, TOMLDecodeError]
+    // toml_parse_tokens(text: str) -> Result[list[str], ParseError>
     functions.insert(
-        "toml_parse".to_string(),
+        "toml_parse_tokens".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
             Type::Result(
-                Box::new(toml_value_stub()),
-                Box::new(toml_decode_error_ty()),
+                Box::new(Type::List(Box::new(Type::Str))),
+                Box::new(Type::Class {
+                    name: "ParseError".to_string(),
+                    fields: vec![("message".to_string(), Type::Str)],
+                    methods: vec![],
+                    parent_class: Some("Error".to_string()),
+                }),
             ),
         ),
     );

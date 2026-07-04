@@ -33,6 +33,10 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         "_sifr.url",
         include_str!("../../../../stdlib/_sifr/url.sifr"),
     ),
+    (
+        "_sifr.toml",
+        include_str!("../../../../stdlib/_sifr/toml.sifr"),
+    ),
 ];
 
 #[test]
@@ -427,4 +431,42 @@ fn url_private_declarations_codegen_through_sifr_stdlib() {
     assert!(exports.contains_key("build_query"));
     assert!(!exports.contains_key("_url_parse_parts"));
     assert!(!exports.contains_key("_url_query_build_flat"));
+}
+
+#[test]
+fn toml_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.toml")
+        .expect("_sifr.toml should generate private Rust code");
+
+    assert!(private_code.contains("sifr_stdlib::toml::toml_parse_tokens(text)"));
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.toml")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.tomllib")
+        .is_some_and(|deps| deps.contains("_sifr.toml")));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("sifr.tomllib")
+        .is_some_and(std::collections::HashSet::is_empty));
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.tomllib")
+        .expect("sifr.tomllib exports should be collected");
+    assert!(exports.contains_key("loads"));
+    assert!(!exports.contains_key("_decode_toml_tokens"));
+    assert!(!exports.contains_key("_decode_toml_value_at"));
 }
