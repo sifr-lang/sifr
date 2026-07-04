@@ -1,2 +1,50 @@
 # Private _sifr.encoding native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+
+@rust(sifr_stdlib.encoding.encoding_is_supported, panic=trusted_no_panic)
+def _encoding_is_supported_impl(label: str) -> bool:
+    return False
+
+@rust(sifr_stdlib.encoding.encoding_canonical_label, panic=trusted_no_panic)
+def _encoding_canonical_label_impl(label: str) -> Result[str, ParseError]:
+    raise ParseError("")
+
+@rust(sifr_stdlib.encoding.encoding_decode_text, panic=trusted_no_panic)
+def _encoding_decode_text_impl(data: bytes, encoding: str, errors: str) -> Result[str, ParseError]:
+    raise ParseError("")
+
+@rust(sifr_stdlib.encoding.encoding_decode_recoveries, panic=trusted_no_panic)
+def _encoding_decode_recoveries_impl(data: bytes, encoding: str, errors: str) -> Result[list[str], ParseError]:
+    raise ParseError("")
+
+@rust(sifr_stdlib.encoding.encoding_decode_incremental_text, panic=trusted_no_panic)
+def _encoding_decode_incremental_text_impl(
+    data: bytes,
+    pending: bytes,
+    encoding: str,
+    errors: str,
+    final: bool,
+) -> Result[str, ParseError]:
+    raise ParseError("")
+
+@rust(sifr_stdlib.encoding.encoding_decode_incremental_recoveries, panic=trusted_no_panic)
+def _encoding_decode_incremental_recoveries_impl(
+    data: bytes,
+    pending: bytes,
+    encoding: str,
+    errors: str,
+    final: bool,
+) -> Result[list[str], ParseError]:
+    raise ParseError("")
+
+@rust(sifr_stdlib.encoding.encoding_decode_incremental_pending, panic=trusted_no_panic)
+def _encoding_decode_incremental_pending_impl(data: bytes, pending: bytes, encoding: str, final: bool) -> Result[bytes, ParseError]:
+    raise ParseError("")
+
+@rust(sifr_stdlib.encoding.encoding_encode_bytes, panic=trusted_no_panic)
+def _encoding_encode_bytes_impl(text: str, encoding: str, errors: str) -> Result[bytes, ParseError]:
+    raise ParseError("")
+
+@rust(sifr_stdlib.encoding.encoding_encode_recoveries, panic=trusted_no_panic)
+def _encoding_encode_recoveries_impl(text: str, encoding: str, errors: str) -> Result[list[str], ParseError]:
+    raise ParseError("")

@@ -150,10 +150,7 @@ const CHRONO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
 // Cookie-header helpers are Sifr-owned string/header validation; no cookie jar
 // or signing dependency is emitted for the URL-header-cookie substrate.
 const COOKIE_DEPS: &[GeneratedCargoDependency] = &[];
-const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
-    package: "encoding_rs",
-    spec: "encoding_rs = \"0.8.35\"",
-}];
+const ENCODING_RS_DEPS: &[GeneratedCargoDependency] = &[];
 const FLATE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "flate2",
     spec: "flate2 = \"1.1.9\"",
@@ -602,9 +599,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         "sifr.re" | "_sifr.regex" => &[],
         "sifr.pathlib" => &[StdlibFeature::Regex],
         "sifr.hash" | "sifr.hashlib" => &[],
-        "sifr.encoding" | "_sifr.encoding" => {
-            &[StdlibFeature::EncodingRs, StdlibFeature::SifrRuntime]
-        }
+        "sifr.encoding" | "_sifr.encoding" => &[],
         "sifr.unicode" | "_sifr.unicode" => &[
             StdlibFeature::SifrRuntime,
             StdlibFeature::UnicodeNames,

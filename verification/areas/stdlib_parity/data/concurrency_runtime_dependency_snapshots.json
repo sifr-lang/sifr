@@ -71,11 +71,9 @@
         "demos/structured_concurrency_demo/main.sifr"
       ],
       "stdlib_modules": [],
-      "required_features": ["encoding_rs", "sifr_runtime", "tokio"],
+      "required_features": ["sifr_runtime", "tokio"],
       "dependencies": [
         "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false }",
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\"] }",
-        "encoding_rs = \"0.8.35\"",
         "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
       ]
     },

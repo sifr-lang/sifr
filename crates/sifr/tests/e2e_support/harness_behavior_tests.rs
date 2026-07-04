@@ -499,7 +499,9 @@ pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features
 
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
     assert!(combined_toml.contains("features = [\"i18n\", \"unicode\"]"));
-    assert!(combined_toml.contains("encoding_rs = \"0.8.35\""));
+    assert!(combined_toml.contains("sifr_stdlib = { path = "));
+    assert!(combined_toml.contains("features = [\"encoding\"]"));
+    assert!(!combined_toml.contains("encoding_rs = \"0.8.35\""));
     assert!(combined_toml.matches("sifr_runtime = ").count() == 1);
 }
 

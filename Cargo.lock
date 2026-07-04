@@ -3464,7 +3464,6 @@ dependencies = [
  "bigdecimal",
  "blake2",
  "chrono",
- "encoding_rs",
  "flate2",
  "h2",
  "http",

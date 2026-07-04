@@ -10,6 +10,8 @@ pub mod feature_contract;
 pub mod base64;
 #[cfg(feature = "calendar")]
 pub mod calendar;
+#[cfg(feature = "encoding")]
+pub mod encoding;
 #[cfg(feature = "fs")]
 pub mod fs;
 #[cfg(feature = "gzip")]

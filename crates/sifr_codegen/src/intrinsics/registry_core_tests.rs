@@ -73,6 +73,36 @@ pub(crate) fn json_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
+pub(crate) fn encoding_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    let retired = [
+        "encoding_is_supported",
+        "encoding_canonical_label",
+        "encoding_decode_text",
+        "encoding_decode_recoveries",
+        "encoding_decode_outcome",
+        "encoding_decode_incremental_outcome",
+        "encoding_decode_incremental_pending",
+        "encoding_encode_bytes",
+        "encoding_encode_recoveries",
+        "encoding_encode_outcome",
+    ];
+    for name in retired {
+        assert!(
+            lower_intrinsic(
+                name,
+                &[
+                    "payload".to_string(),
+                    "codec".to_string(),
+                    "errors".to_string()
+                ]
+            )
+            .is_none(),
+            "{name} should lower through _sifr.encoding private Rust interop declarations"
+        );
+    }
+}
+
+#[test]
 pub(crate) fn lowers_runtime_diagnostic_intrinsic_with_observability_metadata() {
     let lowered = lower_intrinsic(
         "runtime_emit_diagnostic",

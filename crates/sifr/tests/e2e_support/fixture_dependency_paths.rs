@@ -83,6 +83,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.url", "_sifr.url"]) {
         features.push("url");
     }
+    if has_module(&["sifr.encoding", "_sifr.encoding"]) {
+        features.push("encoding");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 

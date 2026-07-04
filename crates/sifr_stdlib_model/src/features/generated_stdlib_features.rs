@@ -95,7 +95,7 @@ fn features_for_requirement(feature: StdlibFeature) -> &'static [&'static str] {
         | StdlibFeature::NumTraits
         | StdlibFeature::Rayon
         | StdlibFeature::RustDecimal => &["numeric"],
-        StdlibFeature::EncodingRs => &["encoding"],
+        StdlibFeature::EncodingRs => &[],
         StdlibFeature::Bytes
         | StdlibFeature::Cookie
         | StdlibFeature::Ipc

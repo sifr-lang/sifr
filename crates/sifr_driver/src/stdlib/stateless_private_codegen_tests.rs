@@ -41,6 +41,10 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         "_sifr.json",
         include_str!("../../../../stdlib/_sifr/json.sifr"),
     ),
+    (
+        "_sifr.encoding",
+        include_str!("../../../../stdlib/_sifr/encoding.sifr"),
+    ),
 ];
 
 #[test]
@@ -539,4 +543,73 @@ fn json_private_declarations_codegen_through_sifr_stdlib() {
     assert!(exports.contains_key("json_dumps"));
     assert!(!exports.contains_key("_decode_json_tokens"));
     assert!(!exports.contains_key("_decode_json_value_at"));
+}
+
+#[test]
+fn encoding_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.encoding")
+        .expect("_sifr.encoding should generate private Rust code");
+
+    for name in [
+        "encoding_is_supported",
+        "encoding_canonical_label",
+        "encoding_decode_text",
+        "encoding_decode_recoveries",
+        "encoding_decode_incremental_text",
+        "encoding_decode_incremental_recoveries",
+        "encoding_decode_incremental_pending",
+        "encoding_encode_bytes",
+        "encoding_encode_recoveries",
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::encoding::{name}(")),
+            "{name} should lower through _sifr.encoding private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.encoding")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.encoding")
+        .is_some_and(|deps| deps.contains("_sifr.encoding")));
+    let public_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("sifr.encoding")
+        .expect("sifr.encoding intrinsic names should be tracked");
+    for name in [
+        "encoding_decode_text",
+        "encoding_decode_recoveries",
+        "encoding_decode_outcome",
+        "encoding_decode_incremental_outcome",
+        "encoding_decode_incremental_pending",
+        "encoding_encode_bytes",
+        "encoding_encode_recoveries",
+        "encoding_encode_outcome",
+    ] {
+        assert!(
+            !public_intrinsics.contains(name),
+            "{name} should not remain a public sifr.encoding compiler intrinsic"
+        );
+    }
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.encoding")
+        .expect("sifr.encoding exports should be collected");
+    assert!(exports.contains_key("encoding_decode_outcome"));
+    assert!(exports.contains_key("encoding_encode_outcome"));
+    assert!(!exports.contains_key("_encoding_decode_text_impl"));
+    assert!(!exports.contains_key("_encoding_encode_bytes_impl"));
 }
