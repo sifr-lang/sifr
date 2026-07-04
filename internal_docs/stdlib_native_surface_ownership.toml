@@ -175,13 +175,13 @@ deletion_stage = "migrated-to-sysroot-stdlib"
 [[surface]]
 id = "_sifr.unicode"
 public_modules = ["sifr.unicode"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/unicode.rs plus sifr_runtime::unicode helpers"
+current_owner = "compiled private Rust interop declarations backed by crates/sifr_stdlib unicode feature and sifr_runtime::unicode helpers"
 final_owner = "crates/sifr_stdlib unicode feature backed by sifr_runtime only for shared Unicode data primitives"
 reason = "Unicode normalization/segmentation/name lookup is fallible stdlib behavior with pinned data dependencies."
 certification_state = "supported-through-bridge-requires-error-shaping"
 can_move_before_runtime_certification = true
-migration_blocker = "Typed error conversion and Unicode data version evidence."
-deletion_stage = "fallible-data-text migration"
+migration_blocker = "none; private stdlib interop uses a ParseError message bridge and public Sifr wrappers preserve UnicodeDataError API shape"
+deletion_stage = "migrated-to-sysroot-stdlib"
 
 [[surface]]
 id = "_sifr.i18n"

@@ -3,14 +3,14 @@
   "status": "readiness-complete",
   "source": "sifr_stdlib_model::try_generated_cargo_dependencies",
   "runtime_path_placeholder": "<sifr_runtime_path>",
+  "stdlib_path_placeholder": "<sifr_stdlib_path>",
   "snapshots": [
     {
       "id": "encoding",
       "stdlib_modules": ["sifr.encoding"],
       "required_features": [],
       "dependencies": [
-        "encoding_rs = \"0.8.35\"",
-        "sifr_runtime = { path = \"<sifr_runtime_path>\" }"
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\"] }"
       ]
     },
     {
@@ -18,10 +18,7 @@
       "stdlib_modules": ["sifr.unicode"],
       "required_features": [],
       "dependencies": [
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"unicode\"] }",
-        "unicode_names2 = \"3.1.0\"",
-        "unicode-normalization = \"0.1.25\"",
-        "unicode-segmentation = \"1.13.3\""
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"unicode\"] }"
       ]
     },
     {
@@ -30,6 +27,7 @@
       "required_features": [],
       "dependencies": [
         "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"i18n\"] }",
         "icu_collator = \"2.2.0\"",
         "icu_datetime = \"2.2.0\"",
         "icu_decimal = \"2.2.0\"",
@@ -42,11 +40,7 @@
       "stdlib_modules": ["sifr.encoding", "sifr.unicode"],
       "required_features": [],
       "dependencies": [
-        "encoding_rs = \"0.8.35\"",
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"unicode\"] }",
-        "unicode_names2 = \"3.1.0\"",
-        "unicode-normalization = \"0.1.25\"",
-        "unicode-segmentation = \"1.13.3\""
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"unicode\"] }"
       ]
     },
     {
@@ -54,8 +48,8 @@
       "stdlib_modules": ["sifr.encoding", "sifr.i18n"],
       "required_features": [],
       "dependencies": [
-        "encoding_rs = \"0.8.35\"",
         "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"i18n\"] }",
         "icu_collator = \"2.2.0\"",
         "icu_datetime = \"2.2.0\"",
         "icu_decimal = \"2.2.0\"",
@@ -68,15 +62,13 @@
       "stdlib_modules": ["sifr.i18n", "sifr.unicode"],
       "required_features": [],
       "dependencies": [
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }",
+        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }",
         "icu_collator = \"2.2.0\"",
         "icu_datetime = \"2.2.0\"",
         "icu_decimal = \"2.2.0\"",
         "icu_locale = \"2.2.0\"",
-        "icu_plurals = \"2.2.0\"",
-        "unicode_names2 = \"3.1.0\"",
-        "unicode-normalization = \"0.1.25\"",
-        "unicode-segmentation = \"1.13.3\""
+        "icu_plurals = \"2.2.0\""
       ]
     },
     {
@@ -84,16 +76,13 @@
       "stdlib_modules": ["sifr.encoding", "sifr.i18n", "sifr.unicode"],
       "required_features": [],
       "dependencies": [
-        "encoding_rs = \"0.8.35\"",
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }",
+        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"i18n\", \"unicode\"] }",
         "icu_collator = \"2.2.0\"",
         "icu_datetime = \"2.2.0\"",
         "icu_decimal = \"2.2.0\"",
         "icu_locale = \"2.2.0\"",
-        "icu_plurals = \"2.2.0\"",
-        "unicode_names2 = \"3.1.0\"",
-        "unicode-normalization = \"0.1.25\"",
-        "unicode-segmentation = \"1.13.3\""
+        "icu_plurals = \"2.2.0\""
       ]
     }
   ]

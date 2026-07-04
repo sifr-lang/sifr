@@ -41,9 +41,6 @@ tokio-rustls = { workspace = true, optional = true }
 toml = { workspace = true, optional = true, features = ["preserve_order"] }
 tower-service = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
-unicode-normalization = { workspace = true, optional = true }
-unicode-segmentation = { workspace = true, optional = true }
-unicode_names2 = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
 uuid = { workspace = true, optional = true }
 zip_8_6 = { workspace = true, optional = true }
@@ -60,13 +57,7 @@ url = ["dep:percent-encoding", "dep:sifr_runtime", "dep:url"]
 gzip = ["dep:flate2"]
 # Zip archive support owns the zip leaf and enables gzip for deflate streams.
 zipfile = ["dep:zip_8_6", "gzip"]
-unicode = [
-    "dep:sifr_runtime",
-    "dep:unicode-normalization",
-    "dep:unicode-segmentation",
-    "dep:unicode_names2",
-    "sifr_runtime/unicode",
-]
+unicode = ["dep:sifr_runtime", "sifr_runtime/unicode"]
 i18n = ["dep:sifr_runtime", "sifr_runtime/i18n"]
 net = ["dep:sifr_runtime", "sifr_runtime/net"]
 tls = [

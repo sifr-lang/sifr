@@ -115,13 +115,10 @@ fn needs_sifr_runtime_i18n(
 }
 
 fn needs_sifr_runtime_unicode(
-    stdlib_modules: &HashSet<String>,
+    _stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
 ) -> bool {
-    stdlib_modules
-        .iter()
-        .any(|module| matches!(module.as_str(), "sifr.unicode" | "_sifr.unicode"))
-        || required_features.contains(&StdlibFeature::UnicodeNames)
+    required_features.contains(&StdlibFeature::UnicodeNames)
         || required_features.contains(&StdlibFeature::UnicodeNormalization)
         || required_features.contains(&StdlibFeature::UnicodeSegmentation)
 }

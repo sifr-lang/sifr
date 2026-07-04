@@ -83,21 +83,17 @@ fn ipc_feature_renders_locked_postcard_specs_without_json() {
 }
 
 #[test]
-fn unicode_module_emits_runtime_and_unicode_dependencies() {
+fn unicode_module_emits_only_sysroot_stdlib_dependency() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.unicode".to_string()]),
         &HashSet::new(),
     );
 
-    assert!(deps
-        .iter()
-        .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"unicode\"]")));
-    assert!(deps.iter().any(|dep| dep.starts_with("sifr_stdlib = ")
-        && dep.contains("default-features = false")
-        && dep.contains("features = [\"unicode\"]")));
-    assert!(deps.contains(&"unicode_names2 = \"3.1.0\"".to_string()));
-    assert!(deps.contains(&"unicode-normalization = \"0.1.25\"".to_string()));
-    assert!(deps.contains(&"unicode-segmentation = \"1.13.3\"".to_string()));
+    assert_eq!(deps.len(), 1);
+    assert!(deps[0].starts_with("sifr_stdlib = "));
+    assert!(deps[0].contains("default-features = false"));
+    assert!(deps[0].contains("features = [\"unicode\"]"));
+    assert!(!deps[0].starts_with("sifr_runtime = "));
 }
 
 #[test]
@@ -220,6 +216,11 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
             &["encoding"][..],
             &["json", "regex", "http", "python"][..],
         ),
+        (
+            "sifr.unicode",
+            &["unicode"][..],
+            &["json", "regex", "http", "python"][..],
+        ),
     ];
 
     for (module, expected, must_not_include) in cases {
@@ -259,6 +260,8 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("_sifr.toml", "toml"),
         ("sifr.encoding", "encoding"),
         ("_sifr.encoding", "encoding"),
+        ("sifr.unicode", "unicode"),
+        ("_sifr.unicode", "unicode"),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());

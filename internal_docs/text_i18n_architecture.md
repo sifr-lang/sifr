@@ -14,10 +14,10 @@ Invalid byte sequences, lone surrogates, and byte-preserving recovery are not hi
 
 The generated Cargo dependency source is `sifr_stdlib_model::try_generated_cargo_dependencies`. Text/i18n features request:
 
-- `encoding_rs` plus `sifr_runtime` for `sifr.encoding`
-- `sifr_runtime` with `unicode` for `sifr.unicode`
-- `sifr_runtime` with `i18n` for `sifr.i18n`
-- both runtime features when Unicode and i18n APIs are used together
+- `sifr_stdlib` with `encoding` for `sifr.encoding`
+- `sifr_stdlib` with `unicode` for `sifr.unicode`; this transitively enables `sifr_runtime/unicode`
+- `sifr_stdlib` with `i18n` plus direct `sifr_runtime` with `i18n` for `sifr.i18n`
+- `sifr_stdlib` feature unions plus only the still-needed direct runtime features when text/i18n APIs are used together
 
 Text I/O never derives an encoding from process locale state. Text-mode `open` without `encoding=` and dynamic mode strings are compile-time diagnostics.
 
