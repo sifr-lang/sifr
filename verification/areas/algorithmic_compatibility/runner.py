@@ -25,6 +25,9 @@ LEETCODE_ROOT = AREA_ROOT / "corpora" / "leetcode" / "src"
 TAXONOMY_SMOKE_RESULTS = AREA_ROOT / "data" / "taxonomy_smoke_results.json"
 PROFILE_MANIFEST = AREA_ROOT / "data" / "leetcode_profile_manifest.json"
 DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
+sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -322,23 +325,26 @@ def required_string(payload: dict[str, Any], key: str) -> str:
 
 def run_representative_subset() -> list[dict[str, Any]]:
     payload = load_profile_manifest()
-    ensure_sifr_bin(DEFAULT_SIFR_BIN)
+    sifr_bin = resolve_default_sifr_bin()
     result_path = REPO_ROOT / payload["representative_subset"][0]["result_artifact"]
     results = []
     variants = []
     for row in payload["representative_subset"]:
-        variant, result_entry = run_manifest_fixture(row)
+        variant, result_entry = run_manifest_fixture(row, sifr_bin)
         variants.append(variant)
         results.append(result_entry)
     write_results_artifact(result_path, results)
     return variants
 
 
-def run_manifest_fixture(row: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+def run_manifest_fixture(
+    row: dict[str, Any],
+    sifr_bin: Path,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     path = REPO_ROOT / str(row["path"])
     started = time.perf_counter()
     try:
-        result = run_fixture(DEFAULT_SIFR_BIN, path, timeout_seconds=int(row["timeout_seconds"]))
+        result = run_fixture(sifr_bin, path, timeout_seconds=int(row["timeout_seconds"]))
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         status = "pass" if result.returncode == 0 else "fail"
         failures = [] if result.returncode == 0 else [f"exit={result.returncode} expected=0"]
@@ -351,7 +357,7 @@ def run_manifest_fixture(row: dict[str, Any]) -> tuple[dict[str, Any], dict[str,
     result_entry = result_entry_for_fixture(path, result)
     variant = {
         "label": str(row["id"]),
-        "argv": ["target/debug/sifr", "check", str(path.relative_to(REPO_ROOT))],
+        "argv": [str(sifr_bin), "check", str(path.relative_to(REPO_ROOT))],
         "status": status,
         "mismatches": failures,
         "expected_exit_code": 0,
@@ -372,12 +378,12 @@ def run_leetcode_full() -> list[dict[str, Any]]:
     taxonomy_path = REPO_ROOT / str(full_corpus["taxonomy_artifact"])
     taxonomy_md = REPO_ROOT / str(full_corpus["taxonomy_markdown"])
     delta_md = REPO_ROOT / str(full_corpus["delta_markdown"])
-    ensure_sifr_bin(DEFAULT_SIFR_BIN)
+    sifr_bin = resolve_default_sifr_bin()
     variants = []
     results = []
     for path in sorted(LEETCODE_ROOT.glob("*.sifr")):
         started = time.perf_counter()
-        result = run_fixture(DEFAULT_SIFR_BIN, path, timeout_seconds=30)
+        result = run_fixture(sifr_bin, path, timeout_seconds=30)
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         status = "pass" if result.returncode == 0 else "fail"
         failures = [] if result.returncode == 0 else [f"exit={result.returncode} expected=0"]
@@ -385,7 +391,7 @@ def run_leetcode_full() -> list[dict[str, Any]]:
         variants.append(
             {
                 "label": path.stem,
-                "argv": ["target/debug/sifr", "check", str(path.relative_to(REPO_ROOT))],
+                "argv": [str(sifr_bin), "check", str(path.relative_to(REPO_ROOT))],
                 "status": status,
                 "mismatches": failures,
                 "expected_exit_code": 0,
@@ -518,12 +524,12 @@ def run_leetcode_check() -> tuple[list[str], subprocess.CompletedProcess[str]]:
     paths = sorted(LEETCODE_ROOT.glob("*.sifr"))
     if not paths:
         raise SystemExit(f"no LeetCode fixtures found under {LEETCODE_ROOT.relative_to(REPO_ROOT)}")
-    ensure_sifr_bin(DEFAULT_SIFR_BIN)
+    sifr_bin = resolve_default_sifr_bin()
     failures: list[tuple[Path, subprocess.CompletedProcess[str]]] = []
     stdout_lines = [f"validating {len(paths)} LeetCode fixture(s) with sifr check"]
     started = time.monotonic()
     for index, path in enumerate(paths, start=1):
-        result = run_fixture(DEFAULT_SIFR_BIN, path)
+        result = run_fixture(sifr_bin, path)
         if result.returncode == 0:
             stdout_lines.append(f"[{index}/{len(paths)}] PASS {path.relative_to(REPO_ROOT)}")
             continue
@@ -534,7 +540,7 @@ def run_leetcode_check() -> tuple[list[str], subprocess.CompletedProcess[str]]:
         f"LeetCode corpus check completed: {len(paths) - len(failures)}/{len(paths)} passed in {elapsed:.1f}s"
     )
     stderr = render_failures(failures)
-    argv = [str(DEFAULT_SIFR_BIN), "check", str(LEETCODE_ROOT.relative_to(REPO_ROOT))]
+    argv = [str(sifr_bin), "check", str(LEETCODE_ROOT.relative_to(REPO_ROOT))]
     return argv, subprocess.CompletedProcess(
         args=argv,
         returncode=1 if failures else 0,
@@ -543,11 +549,8 @@ def run_leetcode_check() -> tuple[list[str], subprocess.CompletedProcess[str]]:
     )
 
 
-def ensure_sifr_bin(sifr_bin: Path) -> None:
-    if sifr_bin == DEFAULT_SIFR_BIN:
-        subprocess.run(["cargo", "build", "--locked", "-q", "-p", "sifr"], cwd=REPO_ROOT, check=True)
-    elif not sifr_bin.exists():
-        raise SystemExit(f"missing Sifr CLI binary: {sifr_bin}")
+def resolve_default_sifr_bin() -> Path:
+    return resolve_sifr_binary(REPO_ROOT, default_binary=DEFAULT_SIFR_BIN)
 
 
 def run_fixture(sifr_bin: Path, path: Path, *, timeout_seconds: int | None = None) -> subprocess.CompletedProcess[str]:
