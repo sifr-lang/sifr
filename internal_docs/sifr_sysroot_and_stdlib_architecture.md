@@ -148,6 +148,14 @@ boundary during validation by comparing
 compatibility matrix. A resource-sensitive stdlib surface cannot be marked
 movable while its required matrix rows remain `future-owned-by-separate-phase`.
 
+Retained compiler-native stdlib glue is guarded separately by
+`internal_docs/stdlib_retained_compiler_intrinsics.toml` and
+`scripts/check_stdlib_native_intrinsic_allowlist.py`. The guard compares the
+active `sifr_codegen` intrinsic dispatcher, registry module files, and preamble
+module files against the allowlist so new compiler-native stdlib behavior must
+be reviewed as retained language/runtime glue instead of drifting back into
+generic stdlib intrinsics.
+
 ## Installed Layout
 
 The canonical standalone installation layout is:
@@ -738,6 +746,10 @@ must not be claimed as stable stdlib interop support.
 The sysroot stdlib resource certification gate is part of core validation so
 resource migration cannot advance a resource-shaped surface ahead of the
 runtime evidence recorded by the Rust interop matrix.
+The stdlib native intrinsic allowlist guard is also part of core validation:
+it freezes every retained compiler intrinsic name, prefix dispatcher, registry
+file, and preamble file until that entry is migrated, deleted, or explicitly
+kept as compiler-language glue.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
 compiler-owned sysroot trust policy. That trust does not extend to arbitrary

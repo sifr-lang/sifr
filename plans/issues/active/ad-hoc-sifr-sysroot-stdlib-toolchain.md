@@ -26,6 +26,9 @@ Latest merged wave: M11 certification-gate audit merged in
 surfaces remain compiler-owned or explicitly deferred while their Rust interop
 compatibility rows are still future-owned by
 `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
+Current local wave: M12 wave 1 retained intrinsic allowlist guard on
+`m12-retained-intrinsic-allowlist`; Opus review pass 2 returned
+`VERDICT: PASS` with no blockers, and local create-pr validation passed.
 
 ## PR Log
 
@@ -58,6 +61,7 @@ compatibility rows are still future-owned by
 - M10 wave 11 bytes helper interop split: merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789).
 - M10 wave 12 collections helper interop split: merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791).
 - M11 certification-gate audit: [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) merged.
+- M12 wave 1 retained intrinsic allowlist guard: local implementation, Opus review pass 2, and create-pr validation complete on `m12-retained-intrinsic-allowlist`; PR creation is next.
 
 ## Design Reference
 
@@ -1936,6 +1940,74 @@ Validation:
 - Full stdlib parity suites.
 - `scripts/run_all_tests.sh --profile create-pr`
 - `scripts/run_all_tests.sh`
+
+M12 wave 1 status: local implementation, Opus review pass 2, and create-pr
+validation complete on `m12-retained-intrinsic-allowlist`; PR creation is next.
+
+This wave adds the retained compiler-native stdlib allowlist before deleting or
+reducing registry/preamble files. The allowlist is deliberately broad at this
+stage because M11 proved the resource/runtime/callback surfaces cannot safely
+move yet; it freezes the current compiler-owned surface so later M12 waves can
+delete or split files with a mechanical drift check in place.
+
+M12 wave 1 implementation evidence:
+
+- `internal_docs/stdlib_retained_compiler_intrinsics.toml` records the current
+  retained intrinsic names, prefix dispatchers, registry module files, preamble
+  module files, and retention reasons grouped by surface.
+- `scripts/check_stdlib_native_intrinsic_allowlist.py` compares the active
+  `sifr_codegen` intrinsic dispatcher, registry directory, and preamble
+  directory against that allowlist. It fails on missing entries, stale entries,
+  duplicate ownership, empty retention reasons, and new files.
+- `verification/runner/sifr_verify/profile_runner.py` runs the guard and
+  `--self-test` as part of core guardrails, so create-pr and merge profiles
+  execute it.
+- `verification/policy/guardrails.json` records the guard in the policy
+  inventory.
+- The first full create-pr attempt caught a validation harness issue before
+  user-facing suites ran: audit fixtures used stale `target/debug/sifr` when a
+  fresh `CARGO_TARGET_DIR` did not yet contain `debug/sifr`. The harness now
+  builds the configured target binary once and then runs smoke fixtures through
+  that binary.
+- Opus review pass 1 in
+  `plans/reviews/active/m12-retained-intrinsic-allowlist-review-pass1.md`
+  returned `VERDICT: PASS` with no blockers. Low-severity notes were limited
+  to documentation-registry self-test drift, pre-existing collections helper
+  file naming, intentional scope caveats, regex/parser fragility if the
+  dispatcher shape changes, broader self-test coverage opportunities, and a
+  cosmetic duplicate reason check.
+- Opus review pass 2 in
+  `plans/reviews/active/m12-retained-intrinsic-allowlist-review-pass2.md`
+  returned `VERDICT: PASS` with no blockers after the audit-fixture harness
+  fix. The only new low-severity note was a pre-existing stale-binary risk in
+  other verification helpers that still reference default `target/debug/sifr`;
+  that cleanup is follow-up scope.
+- Focused validation passed:
+  `python3 -m py_compile scripts/check_stdlib_native_intrinsic_allowlist.py`;
+  `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`;
+  `python3 scripts/check_stdlib_native_intrinsic_allowlist.py --self-test`;
+  `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`;
+  `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py --self-test`;
+  `CARGO_TARGET_DIR=target/m12-audit-fresh-check CARGO_BUILD_JOBS=1 uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite audit-fixtures`;
+  `uv run --project verification --locked python verification/areas/coverage_matrix/runner.py --suite readiness`;
+  `git diff --check`;
+  `rg -n "M11|M12|M13" internal_docs scripts crates verification docs stdlib || true`.
+- Local create-pr validation passed with zero failures:
+  `SIFR_LSP_COMMAND="$(pwd)/target/m12-retained-allowlist-create-pr/debug/sifr lsp --stdio" CARGO_TARGET_DIR=target/m12-retained-allowlist-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The lane wrote `target/validation_lane_reports/create-pr.latest.json`;
+  profile `create-pr`, real time `6172.37s`, CPU `4412.02s`, max RSS
+  `613.1MiB`, hardening variants `6`, blocking failures `0`, and advisory
+  `warm wall-time budget exceeded`. Slowest step was `python_interop`
+  (`2270685ms`); other long steps were `crate_tests` (`1182836ms`),
+  `generated_code_quality_checks` (`1133607ms`), `runtime_platform_suites`
+  (`756602ms`), and `e2e_pass_suite` (`399560ms`, 132/132 pass).
+- The long pre-PR stall was diagnosed as validation runtime rather than a
+  code/test deadlock. In addition to the expected Python interop and
+  generated-code/runtime-platform costs, this run used a relative
+  `CARGO_TARGET_DIR`, so nested validation commands launched from crate
+  subdirectories rebuilt under crate-local target roots. Future long validation
+  reruns for this wave should prefer an absolute `CARGO_TARGET_DIR` while
+  preserving the same `SIFR_LSP_COMMAND` binary pairing.
 
 ### M13. Release Candidate Certification
 

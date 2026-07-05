@@ -49,6 +49,13 @@
       "args": [],
       "timeout_seconds": 60,
       "report": "stdout"
+    },
+    {
+      "name": "stdlib-native-intrinsic-allowlist",
+      "entrypoint": "scripts/check_stdlib_native_intrinsic_allowlist.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
     }
   ]
 }
