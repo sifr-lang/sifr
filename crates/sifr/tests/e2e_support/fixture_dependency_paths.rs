@@ -9,9 +9,6 @@ pub(crate) fn sifr_runtime_dependency_spec_for_modules(
             .iter()
             .any(|module| names.contains(&module.as_str()))
     };
-    if has_module(&["sifr.i18n", "_sifr.i18n"]) {
-        features.push("i18n");
-    }
     let needs_net = has_module(&["sifr.net", "_sifr.net"]);
     let needs_tls = has_module(&["sifr.tls", "_sifr.tls"]);
     if needs_net || needs_tls {

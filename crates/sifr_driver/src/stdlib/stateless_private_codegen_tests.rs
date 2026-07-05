@@ -49,6 +49,10 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         "_sifr.unicode",
         include_str!("../../../../stdlib/_sifr/unicode.sifr"),
     ),
+    (
+        "_sifr.i18n",
+        include_str!("../../../../stdlib/_sifr/i18n.sifr"),
+    ),
 ];
 
 #[test]
@@ -694,4 +698,81 @@ fn unicode_private_declarations_codegen_through_sifr_stdlib() {
     assert!(!exports.contains_key("_unicode_normalize_impl"));
     assert!(!exports.contains_key("_unicode_graphemes_impl"));
     assert!(!exports.contains_key("_unicode_grapheme_indices_flat_impl"));
+}
+
+#[test]
+fn i18n_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.i18n")
+        .expect("_sifr.i18n should generate private Rust code");
+
+    for name in [
+        "i18n_locale_canonicalize",
+        "i18n_locale_maximize",
+        "i18n_locale_minimize",
+        "i18n_host_locale",
+        "i18n_format_number",
+        "i18n_format_datetime",
+        "i18n_plural_category",
+        "i18n_collate",
+        "i18n_mo_validate",
+        "i18n_mo_load_file",
+        "i18n_mo_lookup",
+        "i18n_mo_lookup_context",
+        "i18n_mo_lookup_plural",
+        "i18n_mo_lookup_context_plural",
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::i18n::{name}(")),
+            "{name} should lower through _sifr.i18n private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains(
+        "sifr_stdlib::i18n::i18n_format_datetime(locale, style, sifr_runtime::interop::SifrIntBridge::from(year)"
+    ));
+    assert!(private_code.contains(
+        "sifr_stdlib::i18n::i18n_collate(locale, strength, left, right).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
+    ));
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.i18n")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.i18n")
+        .is_some_and(|deps| deps.contains("_sifr.i18n")));
+    let public_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("sifr.i18n")
+        .expect("sifr.i18n intrinsic names should be tracked");
+    for name in [
+        "i18n_locale_canonicalize",
+        "i18n_format_number",
+        "i18n_format_datetime",
+        "i18n_plural_category",
+        "i18n_mo_lookup_context_plural",
+    ] {
+        assert!(
+            !public_intrinsics.contains(name),
+            "{name} should not remain a public sifr.i18n compiler intrinsic"
+        );
+    }
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.i18n")
+        .expect("sifr.i18n exports should be collected");
+    assert!(exports.contains_key("canonicalize_locale"));
+    assert!(exports.contains_key("i18n_format_number"));
+    assert!(!exports.contains_key("_i18n_format_number_impl"));
+    assert!(!exports.contains_key("_i18n_mo_lookup_context_plural_impl"));
 }

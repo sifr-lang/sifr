@@ -26,13 +26,7 @@
       "stdlib_modules": ["sifr.i18n"],
       "required_features": [],
       "dependencies": [
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"i18n\"] }",
-        "icu_collator = \"2.2.0\"",
-        "icu_datetime = \"2.2.0\"",
-        "icu_decimal = \"2.2.0\"",
-        "icu_locale = \"2.2.0\"",
-        "icu_plurals = \"2.2.0\""
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"i18n\"] }"
       ]
     },
     {
@@ -48,13 +42,7 @@
       "stdlib_modules": ["sifr.encoding", "sifr.i18n"],
       "required_features": [],
       "dependencies": [
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"i18n\"] }",
-        "icu_collator = \"2.2.0\"",
-        "icu_datetime = \"2.2.0\"",
-        "icu_decimal = \"2.2.0\"",
-        "icu_locale = \"2.2.0\"",
-        "icu_plurals = \"2.2.0\""
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"i18n\"] }"
       ]
     },
     {
@@ -62,13 +50,7 @@
       "stdlib_modules": ["sifr.i18n", "sifr.unicode"],
       "required_features": [],
       "dependencies": [
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }",
-        "icu_collator = \"2.2.0\"",
-        "icu_datetime = \"2.2.0\"",
-        "icu_decimal = \"2.2.0\"",
-        "icu_locale = \"2.2.0\"",
-        "icu_plurals = \"2.2.0\""
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"i18n\", \"unicode\"] }"
       ]
     },
     {
@@ -76,13 +58,7 @@
       "stdlib_modules": ["sifr.encoding", "sifr.i18n", "sifr.unicode"],
       "required_features": [],
       "dependencies": [
-        "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"i18n\"] }",
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"i18n\", \"unicode\"] }",
-        "icu_collator = \"2.2.0\"",
-        "icu_datetime = \"2.2.0\"",
-        "icu_decimal = \"2.2.0\"",
-        "icu_locale = \"2.2.0\"",
-        "icu_plurals = \"2.2.0\""
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"encoding\", \"i18n\", \"unicode\"] }"
       ]
     }
   ]

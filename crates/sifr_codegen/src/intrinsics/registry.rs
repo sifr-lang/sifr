@@ -5,7 +5,6 @@ mod encoding;
 mod env;
 mod file_handles;
 mod gzip;
-mod i18n;
 mod io;
 mod logging;
 mod net;
@@ -157,62 +156,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "defaultdict_set" => (
             collections::lower_defaultdict_set(args),
             Some(StdlibFeature::SerdeJson),
-        ),
-        "i18n_locale_canonicalize" => (
-            i18n::lower_i18n_locale_canonicalize(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_locale_maximize" => (
-            i18n::lower_i18n_locale_maximize(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_locale_minimize" => (
-            i18n::lower_i18n_locale_minimize(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_host_locale" => (
-            i18n::lower_i18n_host_locale(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_format_number" => (
-            i18n::lower_i18n_format_number(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_format_datetime" => (
-            i18n::lower_i18n_format_datetime(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_plural_category" => (
-            i18n::lower_i18n_plural_category(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_collate" => (
-            i18n::lower_i18n_collate(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_mo_validate" => (
-            i18n::lower_i18n_mo_validate(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_mo_load_file" => (
-            i18n::lower_i18n_mo_load_file(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_mo_lookup" => (
-            i18n::lower_i18n_mo_lookup(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_mo_lookup_context" => (
-            i18n::lower_i18n_mo_lookup_context(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_mo_lookup_plural" => (
-            i18n::lower_i18n_mo_lookup_plural(args),
-            Some(StdlibFeature::SifrRuntime),
-        ),
-        "i18n_mo_lookup_context_plural" => (
-            i18n::lower_i18n_mo_lookup_context_plural(args),
-            Some(StdlibFeature::SifrRuntime),
         ),
         "http_validate_header_name" => (
             url_http::lower_http_validate_header_name(args),
