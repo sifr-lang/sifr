@@ -28,7 +28,8 @@ compatibility rows are still future-owned by
 `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
 Current local wave: M12 wave 1 retained intrinsic allowlist guard on
 `m12-retained-intrinsic-allowlist`; Opus review pass 2 returned
-`VERDICT: PASS` with no blockers, and local create-pr validation passed.
+`VERDICT: PASS` with no blockers, local create-pr validation passed, and
+[PR #2795](https://github.com/sifr-lang/sifr/pull/2795) is open.
 
 ## PR Log
 
@@ -61,7 +62,7 @@ Current local wave: M12 wave 1 retained intrinsic allowlist guard on
 - M10 wave 11 bytes helper interop split: merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789).
 - M10 wave 12 collections helper interop split: merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791).
 - M11 certification-gate audit: [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) merged.
-- M12 wave 1 retained intrinsic allowlist guard: local implementation, Opus review pass 2, and create-pr validation complete on `m12-retained-intrinsic-allowlist`; PR creation is next.
+- M12 wave 1 retained intrinsic allowlist guard: [PR #2795](https://github.com/sifr-lang/sifr/pull/2795) opened after local implementation, Opus review pass 2, and create-pr validation completed on `m12-retained-intrinsic-allowlist`.
 
 ## Design Reference
 
@@ -1942,7 +1943,8 @@ Validation:
 - `scripts/run_all_tests.sh`
 
 M12 wave 1 status: local implementation, Opus review pass 2, and create-pr
-validation complete on `m12-retained-intrinsic-allowlist`; PR creation is next.
+validation complete on `m12-retained-intrinsic-allowlist`;
+[PR #2795](https://github.com/sifr-lang/sifr/pull/2795) is open.
 
 This wave adds the retained compiler-native stdlib allowlist before deleting or
 reducing registry/preamble files. The allowlist is deliberately broad at this
