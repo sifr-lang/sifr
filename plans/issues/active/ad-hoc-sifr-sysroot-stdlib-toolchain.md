@@ -21,15 +21,11 @@ In progress.
 | M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. M10 wave 3 merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776), migrating `_sifr.url`/`sifr.url` through private Rust interop backed by `sifr_stdlib::url`. M10 wave 4 merged in [PR #2778](https://github.com/sifr-lang/sifr/pull/2778), migrating `_sifr.toml`/`sifr.tomllib` through private Rust interop backed by `sifr_stdlib::toml`. M10 wave 5 merged in [PR #2780](https://github.com/sifr-lang/sifr/pull/2780), migrating `_sifr.json`/`sifr.json` through private Rust interop backed by `sifr_stdlib::json` token adapters while preserving `JSONDecodeError` location fields and JSON integer profile errors. M10 wave 6 merged in [PR #2781](https://github.com/sifr-lang/sifr/pull/2781), migrating `_sifr.encoding`/`sifr.encoding` through private Rust interop backed by `sifr_stdlib::encoding` while preserving public `DecodeError`/`EncodeError` wrappers. M10 wave 7 merged in [PR #2782](https://github.com/sifr-lang/sifr/pull/2782), migrating `_sifr.unicode`/`sifr.unicode` through private Rust interop backed by `sifr_stdlib::unicode` while preserving public `UnicodeDataError` wrappers and Unicode segmentation tuple payloads. M10 wave 8 merged in [PR #2784](https://github.com/sifr-lang/sifr/pull/2784), migrating `_sifr.i18n`/`sifr.i18n` through private Rust interop backed by `sifr_stdlib::i18n` while preserving public i18n error wrappers. M10 wave 9 merged in [PR #2785](https://github.com/sifr-lang/sifr/pull/2785), migrating `_sifr.compress`/`sifr.gzip`/`sifr.zipfile` through private Rust interop backed by `sifr_stdlib` gzip and zipfile adapters. M10 wave 10 merged in [PR #2787](https://github.com/sifr-lang/sifr/pull/2787), migrating `_sifr.datetime` through private Rust interop backed by the `sifr_stdlib` time feature and fixing grouped E2E fixture planning for datetime/compression stdlib features. M10 wave 11 merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789), splitting `_sifr.bytes` so `encode_utf8` and `bytes_to_hex` move to private `sifr_stdlib::bytes` adapters while first-class bytes constructors, hex parsing, strict hex formatting, and encode/decode method glue remain compiler-owned. M10 wave 12 merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791), splitting `_sifr.collections` so set helpers and legacy JSON-string `defaultdict_*` helpers move to private `sifr_stdlib::collections` adapters while Counter/defaultdict language glue and core collection behavior remain compiler-owned. |
 | Post-M10 Adapter Policy Adherence Audit | completed, merged | Merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774). The audit classified completed M9/M10 private bindings, added executable guards for direct `sifr_stdlib` targets and trust separation, documented residual `_sifr.crypto` random scope, and passed Opus review pass 2 plus local `scripts/run_all_tests.sh --profile create-pr` with only the warm wall-time advisory. |
 
-Latest merged wave: M11 certification-gate audit merged in
-[PR #2793](https://github.com/sifr-lang/sifr/pull/2793). Resource/runtime/callback
-surfaces remain compiler-owned or explicitly deferred while their Rust interop
-compatibility rows are still future-owned by
-`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
-Current local wave: M12 wave 1 retained intrinsic allowlist guard on
-`m12-retained-intrinsic-allowlist`; Opus review pass 2 returned
-`VERDICT: PASS` with no blockers, local create-pr validation passed, and
-[PR #2795](https://github.com/sifr-lang/sifr/pull/2795) is open.
+Latest merged wave: M12 wave 1 retained intrinsic allowlist guard merged in
+[PR #2795](https://github.com/sifr-lang/sifr/pull/2795). Retained
+compiler-native intrinsic names, prefix dispatchers, registry files, and
+preamble files are now frozen by a core guardrail while follow-up M12 waves
+delete, split, or explicitly retain remaining compiler-language glue.
 
 ## PR Log
 
@@ -62,7 +58,7 @@ Current local wave: M12 wave 1 retained intrinsic allowlist guard on
 - M10 wave 11 bytes helper interop split: merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789).
 - M10 wave 12 collections helper interop split: merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791).
 - M11 certification-gate audit: [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) merged.
-- M12 wave 1 retained intrinsic allowlist guard: [PR #2795](https://github.com/sifr-lang/sifr/pull/2795) opened after local implementation, Opus review pass 2, and create-pr validation completed on `m12-retained-intrinsic-allowlist`.
+- M12 wave 1 retained intrinsic allowlist guard: [PR #2795](https://github.com/sifr-lang/sifr/pull/2795) merged after local implementation, Opus review pass 2, and create-pr validation completed on `m12-retained-intrinsic-allowlist`.
 
 ## Design Reference
 
@@ -1944,7 +1940,7 @@ Validation:
 
 M12 wave 1 status: local implementation, Opus review pass 2, and create-pr
 validation complete on `m12-retained-intrinsic-allowlist`;
-[PR #2795](https://github.com/sifr-lang/sifr/pull/2795) is open.
+[PR #2795](https://github.com/sifr-lang/sifr/pull/2795) is merged.
 
 This wave adds the retained compiler-native stdlib allowlist before deleting or
 reducing registry/preamble files. The allowlist is deliberately broad at this
