@@ -32,10 +32,7 @@ pub(crate) fn generate_cargo_toml(
     let mut deps = BTreeSet::new();
     for module_name in stdlib_modules {
         match module_name.as_str() {
-            "sifr.collections" | "_sifr.collections" => {
-                deps.insert(SERDE_JSON_DEP.to_string());
-                deps.insert(SERDE_DEP.to_string());
-            }
+            "sifr.collections" | "_sifr.collections" => {}
             "sifr.time" | "_sifr.time" => {
                 deps.insert("chrono = \"0.4.44\"".to_string());
             }
@@ -308,6 +305,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.calendar"
                 | "sifr.uuid"
                 | "_sifr.uuid"
+                | "sifr.collections"
+                | "_sifr.collections"
                 | "sifr.math"
                 | "_sifr.math"
                 | "sifr.re"

@@ -43,13 +43,13 @@ deletion_stage = "partial-migrated-to-sysroot-stdlib-retained-glue"
 [[surface]]
 id = "_sifr.collections"
 public_modules = ["sifr.collections"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/collections"
+current_owner = "split: private stdlib Rust interop declarations backed by crates/sifr_stdlib collections feature for set/defaultdict helper leaves; compiler intrinsic registry retains Counter/defaultdict language glue and core collection behavior"
 final_owner = "compiler language glue for built-in collection representation plus crates/sifr_stdlib for CPython-shaped collection helpers"
 reason = "Core collection layout is compiler-owned, but defaultdict/set helper leaves are stdlib behavior."
 certification_state = "retained-compiler-glue-plus-migratable-helpers"
 can_move_before_runtime_certification = true
-migration_blocker = "Separate language collection primitives from stdlib helper behavior."
-deletion_stage = "final retained allowlist"
+migration_blocker = "Retained compiler-language glue allowlist remains for Counter/defaultdict semantics and built-in collection behavior."
+deletion_stage = "partial-migrated-to-sysroot-stdlib-retained-glue"
 
 [[surface]]
 id = "_sifr.regex"

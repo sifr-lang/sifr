@@ -21,6 +21,11 @@ In progress.
 | M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. M10 wave 3 merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776), migrating `_sifr.url`/`sifr.url` through private Rust interop backed by `sifr_stdlib::url`. M10 wave 4 merged in [PR #2778](https://github.com/sifr-lang/sifr/pull/2778), migrating `_sifr.toml`/`sifr.tomllib` through private Rust interop backed by `sifr_stdlib::toml`. M10 wave 5 merged in [PR #2780](https://github.com/sifr-lang/sifr/pull/2780), migrating `_sifr.json`/`sifr.json` through private Rust interop backed by `sifr_stdlib::json` token adapters while preserving `JSONDecodeError` location fields and JSON integer profile errors. M10 wave 6 merged in [PR #2781](https://github.com/sifr-lang/sifr/pull/2781), migrating `_sifr.encoding`/`sifr.encoding` through private Rust interop backed by `sifr_stdlib::encoding` while preserving public `DecodeError`/`EncodeError` wrappers. M10 wave 7 merged in [PR #2782](https://github.com/sifr-lang/sifr/pull/2782), migrating `_sifr.unicode`/`sifr.unicode` through private Rust interop backed by `sifr_stdlib::unicode` while preserving public `UnicodeDataError` wrappers and Unicode segmentation tuple payloads. M10 wave 8 merged in [PR #2784](https://github.com/sifr-lang/sifr/pull/2784), migrating `_sifr.i18n`/`sifr.i18n` through private Rust interop backed by `sifr_stdlib::i18n` while preserving public i18n error wrappers. M10 wave 9 merged in [PR #2785](https://github.com/sifr-lang/sifr/pull/2785), migrating `_sifr.compress`/`sifr.gzip`/`sifr.zipfile` through private Rust interop backed by `sifr_stdlib` gzip and zipfile adapters. M10 wave 10 merged in [PR #2787](https://github.com/sifr-lang/sifr/pull/2787), migrating `_sifr.datetime` through private Rust interop backed by the `sifr_stdlib` time feature and fixing grouped E2E fixture planning for datetime/compression stdlib features. M10 wave 11 merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789), splitting `_sifr.bytes` so `encode_utf8` and `bytes_to_hex` move to private `sifr_stdlib::bytes` adapters while first-class bytes constructors, hex parsing, strict hex formatting, and encode/decode method glue remain compiler-owned. |
 | Post-M10 Adapter Policy Adherence Audit | completed, merged | Merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774). The audit classified completed M9/M10 private bindings, added executable guards for direct `sifr_stdlib` targets and trust separation, documented residual `_sifr.crypto` random scope, and passed Opus review pass 2 plus local `scripts/run_all_tests.sh --profile create-pr` with only the warm wall-time advisory. |
 
+Current local wave: M10 wave 12 splits `_sifr.collections` helper leaves so set
+helpers and legacy JSON-string `defaultdict_*` helpers move to private
+`sifr_stdlib::collections` adapters while Counter/defaultdict language glue and
+core collection behavior remain compiler-owned.
+
 ## PR Log
 
 - M0 baseline/inventory: [PR #2741](https://github.com/sifr-lang/sifr/pull/2741) merged.
@@ -50,6 +55,7 @@ In progress.
 - M10 wave 9 compression interop migration: merged in [PR #2785](https://github.com/sifr-lang/sifr/pull/2785).
 - M10 wave 10 datetime interop migration: merged in [PR #2787](https://github.com/sifr-lang/sifr/pull/2787).
 - M10 wave 11 bytes helper interop split: merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789).
+- M10 wave 12 collections helper interop split: opened in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791); PR validation/review satisfied.
 
 ## Design Reference
 
@@ -1616,6 +1622,68 @@ Wave 11 implementation evidence:
   reported `failures=0`, `blocking_failures=0`, `e2e=132 passed, 0 failed`,
   and kept only the warm wall-time budget advisory; slowest step was
   `python_interop` (`2059399ms`).
+
+Wave 12 status: opened in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791);
+PR validation/review satisfied on `m10-collections-helper-interop`.
+The `_sifr.collections` helper surface is split between sysroot stdlib helper
+leaves and retained compiler-language glue. Set helpers and legacy JSON-string
+`defaultdict_*` helpers now lower through private
+`@rust(sifr_stdlib.collections.*)` declarations backed by the `sifr_stdlib`
+`collections` feature. Counter behavior, deque/Sifr-level collection code, the
+typed defaultdict language alias machinery, and core collection layout remain
+compiler-owned.
+
+Wave 12 implementation evidence:
+
+- `stdlib/_sifr/collections.sifr` declares underscored private adapter helpers
+  for set/defaultdict leaves targeting `sifr_stdlib::collections`.
+- `stdlib/sifr/collections.sifr` keeps the public API wrappers and copies
+  borrowed list inputs before calling owned adapter leaves, so public read-only
+  list parameters do not inherit owned Rust interop signatures.
+- `crates/sifr_stdlib/src/collections.rs` owns the generated-program helper
+  behavior behind the additive `collections` feature; the feature reuses
+  `json` internally for the legacy serialized defaultdict helper format.
+- `sifr_codegen` no longer registers active lowerers for set/defaultdict helper
+  leaves; Counter and compiler-owned collection/defaultdict glue stay in the
+  registry.
+- `sifr_stdlib_model`, grouped E2E fixture planning, and coverage-matrix
+  classification enable only the `sifr_stdlib` `collections` feature for
+  `sifr.collections` and `_sifr.collections` instead of leaking direct raw
+  third-party dependencies into generated programs.
+- Focused validation passed:
+  `cargo fmt --check`;
+  `CARGO_TARGET_DIR=target/m10-collections-stdlib CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib --features collections collections::tests -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-collections-model CARGO_BUILD_JOBS=1 cargo test -p sifr_stdlib_model features_tests -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-collections-driver CARGO_BUILD_JOBS=1 cargo test -p sifr_driver collections_private_declarations_codegen_through_sifr_stdlib -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-collections-codegen CARGO_BUILD_JOBS=1 cargo test -p sifr_codegen lowers_collections_counter_intrinsics_via_registry -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-collections-harness CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features -- --nocapture`;
+  `CARGO_TARGET_DIR=target/m10-collections-driver CARGO_BUILD_JOBS=1 cargo test -p sifr_driver completed_private_declarations_follow_adapter_policy_syntax -- --nocapture`;
+  `SIFR_E2E_FIXTURE_MANIFEST=/Users/yaseralnajjar/work/sifr/codebase/target/m10-collections-fixtures/manifest.json SIFR_E2E_SIFR_JOBS=1 SIFR_E2E_RUST_JOBS=1 SIFR_E2E_RUN_JOBS=1 SIFR_E2E_CARGO_BUILD_JOBS=1 CARGO_TARGET_DIR=target/m10-collections-harness CARGO_BUILD_JOBS=1 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture`
+  (`5 pass tests completed`, report signature `b3333f3bdb8a0884`);
+  `uv run --project verification --locked python verification/areas/coverage_matrix/runner.py --suite readiness`.
+- A direct `sifr run` loop over the same collections fixtures was stopped
+  before completion because repeated cold Rust interop probes made it much
+  slower than the grouped E2E harness; the grouped harness is the validation
+  evidence for fixture behavior.
+- The first full create-pr run caught a real Rust interop bridge mismatch:
+  Python interop probes rejected `Vec<i64>`/`&[i64]` list signatures for
+  `sifr_stdlib::collections` where `list[int]` private declarations require
+  `Vec<SifrIntBridge>`/`&[SifrIntBridge]`. The stdlib adapter boundary now uses
+  bridge types and converts internally before collection logic.
+- Local create-pr validation passed after that fix with zero failures:
+  `SIFR_LSP_COMMAND="$(pwd)/target/m10-collections-create-pr/debug/sifr lsp --stdio" CARGO_TARGET_DIR=target/m10-collections-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The lane wrote `target/validation_lane_reports/create-pr.latest.json`,
+  reported `failures=0`, `blocking_failures=0`, `e2e=132 passed, 0 failed`,
+  and kept only the warm wall-time budget advisory. The slowest step was
+  `python_interop` (`2808916ms`); the full lane wall time was `7588.01s`.
+- Opus review pass 1 returned `PASS` with follow-up asks to remove stale
+  old-name model entries and confirm new files are staged before PR. The stale
+  `new_set`/`set_*`/`defaultdict_*` model entries were removed, leaving only
+  private `_*_impl` adapter names plus retained Counter metadata. Opus review
+  pass 2 returned `PASS` with an optional convention cleanup for `item: int`;
+  `_set_add_impl` and `_set_remove_impl` now mark `own item: int` in
+  `stdlib/_sifr/collections.sifr`. Opus review pass 3 returned `PASS` and
+  cleared the wave for merge.
 
 Acceptance:
 

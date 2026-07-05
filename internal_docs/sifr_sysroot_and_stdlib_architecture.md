@@ -651,6 +651,12 @@ glue allowlist. Final ownership is by location: public APIs live in
 generated-program implementation lives in `crates/sifr_stdlib` and
 `crates/sifr_runtime`, and compiler intrinsics are language semantics only.
 
+Some surfaces are intentionally split while migration is underway. For example,
+`_sifr.collections` set helpers and legacy JSON-string defaultdict helper
+leaves now use private `@rust(sifr_stdlib.collections.*)` declarations backed
+by `crates/sifr_stdlib`, while Counter behavior, defaultdict language glue, and
+core collection layout remain compiler-owned language semantics.
+
 ## Generated Cargo Projects
 
 `sifr run`, `sifr build`, tests, and package builds materialize generated Cargo

@@ -383,20 +383,6 @@ pub(crate) fn lowers_test_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_collections_set_intrinsics_via_registry() {
-    let new_set = lower_intrinsic("new_set", &[]).expect("new_set lowers");
-    assert_eq!(render_expr(&new_set.expr), "Vec::<i64>::new()");
-
-    let add =
-        lower_intrinsic("set_add", &["s".to_string(), "v".to_string()]).expect("set_add lowers");
-    assert!(render_expr(&add.expr).contains("s.push(v)"));
-
-    let inter = lower_intrinsic("set_intersection", &["a".to_string(), "b".to_string()])
-        .expect("set_intersection lowers");
-    assert!(render_expr(&inter.expr).contains("collect::<Vec<i64>>()"));
-}
-
-#[test]
 pub(crate) fn lowers_collections_counter_intrinsics_via_registry() {
     let from_list =
         lower_intrinsic("counter_from_list", &["vals".to_string()]).expect("counter_from_list");
@@ -415,21 +401,24 @@ pub(crate) fn lowers_collections_counter_intrinsics_via_registry() {
     assert!(render_expr(&incr.expr).contains("let __key = k;"));
     assert!(render_expr(&incr.expr).contains("__key.to_string()"));
 
-    let dd_set = lower_intrinsic(
+    for retired in [
+        "new_set",
+        "set_from_list",
+        "set_add",
+        "set_contains",
+        "set_remove",
+        "set_len",
+        "set_union",
+        "set_intersection",
+        "defaultdict_new",
+        "defaultdict_get",
         "defaultdict_set",
-        &["dd".to_string(), "key".to_string(), "v".to_string()],
-    )
-    .expect("defaultdict_set");
-    assert!(render_expr(&dd_set.expr).contains("serde_json::json!"));
-    assert!(render_expr(&dd_set.expr).contains("let __defaultdict_json = dd;"));
-    assert!(render_expr(&dd_set.expr).contains("let __key = key;"));
-    assert!(render_expr(&dd_set.expr).contains("__key.to_string()"));
-
-    let dd_get = lower_intrinsic("defaultdict_get", &["dd".to_string(), "key".to_string()])
-        .expect("defaultdict_get");
-    assert!(render_expr(&dd_get.expr).contains("let __defaultdict_json = dd;"));
-    assert!(render_expr(&dd_get.expr).contains("let __key = key;"));
-    assert!(!render_expr(&dd_get.expr).contains("from_str(&(dd))"));
+    ] {
+        assert!(
+            lower_intrinsic(retired, &["value".to_string()]).is_none(),
+            "{retired} should lower through _sifr.collections private Rust interop declarations"
+        );
+    }
 }
 
 #[test]
