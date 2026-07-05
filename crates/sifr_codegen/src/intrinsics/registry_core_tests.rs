@@ -198,80 +198,28 @@ pub(crate) fn unicode_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
-pub(crate) fn lowers_i18n_intrinsics_with_dependency_metadata() {
-    let canonical = lower_intrinsic("i18n_locale_canonicalize", &["locale".to_string()])
-        .expect("locale canonicalize should lower");
-    assert_eq!(
-        canonical.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
-    );
-    assert!(canonical
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::IcuLocale));
-    assert!(canonical
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::IcuDatetime));
-    let canonical_rendered = render_expr(&canonical.expr);
-    assert!(canonical_rendered.contains("sifr_runtime::i18n::canonicalize_locale"));
-    assert!(canonical_rendered.contains("LocaleIdError"));
-
-    let formatted = lower_intrinsic(
+pub(crate) fn i18n_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in [
+        "i18n_locale_canonicalize",
+        "i18n_locale_maximize",
+        "i18n_locale_minimize",
+        "i18n_host_locale",
+        "i18n_format_number",
         "i18n_format_datetime",
-        &[
-            "locale".to_string(),
-            "style".to_string(),
-            "2025".to_string(),
-            "1".to_string(),
-            "15".to_string(),
-            "16".to_string(),
-            "9".to_string(),
-            "35".to_string(),
-        ],
-    )
-    .expect("date/time formatter should lower");
-    let formatted_rendered = render_expr(&formatted.expr);
-    assert!(formatted_rendered.contains("sifr_runtime::i18n::format_datetime"));
-    assert!(formatted_rendered.contains("FormatError"));
-
-    let plural = lower_intrinsic(
         "i18n_plural_category",
-        &[
-            "locale".to_string(),
-            "rule_type".to_string(),
-            "value".to_string(),
-        ],
-    )
-    .expect("plural category should lower");
-    assert!(render_expr(&plural.expr).contains("PluralRulesError"));
-
-    let host = lower_intrinsic("i18n_host_locale", &[]).expect("host locale should lower");
-    assert_eq!(render_expr(&host.expr), "sifr_runtime::i18n::host_locale()");
-
-    let lookup = lower_intrinsic(
+        "i18n_collate",
+        "i18n_mo_validate",
+        "i18n_mo_load_file",
+        "i18n_mo_lookup",
+        "i18n_mo_lookup_context",
+        "i18n_mo_lookup_plural",
         "i18n_mo_lookup_context_plural",
-        &[
-            "catalog".to_string(),
-            "context".to_string(),
-            "singular".to_string(),
-            "plural".to_string(),
-            "2".to_string(),
-        ],
-    )
-    .expect("catalog plural lookup should lower");
-    assert_eq!(
-        lookup.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::SifrRuntime)
-    );
-    assert!(lookup
-        .additional_required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::IcuPlurals));
-    let lookup_rendered = render_expr(&lookup.expr);
-    assert!(lookup_rendered.contains("sifr_runtime::i18n::mo_lookup_context_plural"));
-    assert!(lookup_rendered.contains("CatalogError"));
-
-    let load_file =
-        lower_intrinsic("i18n_mo_load_file", &["path".to_string()]).expect("load should lower");
-    assert!(render_expr(&load_file.expr).contains("read_mo_catalog_file"));
+    ] {
+        assert!(
+            lower_intrinsic(name, &["value".to_string()]).is_none(),
+            "{name} should lower through _sifr.i18n private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

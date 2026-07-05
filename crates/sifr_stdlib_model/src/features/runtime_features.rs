@@ -18,7 +18,7 @@ impl RuntimeFeatures {
     ) -> Self {
         Self {
             http: needs_sifr_runtime_http(stdlib_modules, required_features),
-            i18n: needs_sifr_runtime_i18n(stdlib_modules, required_features),
+            i18n: needs_sifr_runtime_i18n(required_features),
             net: needs_sifr_runtime_net(stdlib_modules),
             python: needs_sifr_runtime_python(stdlib_modules, required_features),
             tls: needs_sifr_runtime_tls(stdlib_modules, required_features),
@@ -100,14 +100,8 @@ fn needs_sifr_runtime_tls(
         || required_features.contains(&StdlibFeature::TokioRustls)
 }
 
-fn needs_sifr_runtime_i18n(
-    stdlib_modules: &HashSet<String>,
-    required_features: &HashSet<StdlibFeature>,
-) -> bool {
-    stdlib_modules
-        .iter()
-        .any(|module| matches!(module.as_str(), "sifr.i18n" | "_sifr.i18n"))
-        || required_features.contains(&StdlibFeature::IcuCollator)
+fn needs_sifr_runtime_i18n(required_features: &HashSet<StdlibFeature>) -> bool {
+    required_features.contains(&StdlibFeature::IcuCollator)
         || required_features.contains(&StdlibFeature::IcuDatetime)
         || required_features.contains(&StdlibFeature::IcuDecimal)
         || required_features.contains(&StdlibFeature::IcuLocale)

@@ -494,18 +494,18 @@ pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features
     assert!(!unicode_toml.contains("unicode-segmentation = \"1.13.3\""));
 
     let i18n_toml = generate_cargo_toml(&i18n_modules, &required_crates, "sifr_output");
-    assert!(i18n_toml.contains("sifr_runtime = { path = "));
+    assert!(!i18n_toml.contains("sifr_runtime = { path = "));
+    assert!(i18n_toml.contains("sifr_stdlib = { path = "));
     assert!(i18n_toml.contains("features = [\"i18n\"]"));
-    assert!(i18n_toml.contains("icu_locale = \"2.2.0\""));
+    assert!(!i18n_toml.contains("icu_locale = \"2.2.0\""));
 
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
-    assert!(combined_toml.contains("sifr_runtime = { path = "));
-    assert!(combined_toml.contains("features = [\"i18n\"]"));
+    assert!(!combined_toml.contains("sifr_runtime = { path = "));
     assert!(combined_toml.contains("sifr_stdlib = { path = "));
     assert!(combined_toml.contains("features = [\"encoding\", \"i18n\", \"unicode\"]"));
     assert!(!combined_toml.contains("encoding_rs = \"0.8.35\""));
     assert!(!combined_toml.contains("unicode-segmentation = \"1.13.3\""));
-    assert!(combined_toml.matches("sifr_runtime = ").count() == 1);
+    assert!(!combined_toml.contains("icu_locale = \"2.2.0\""));
 }
 
 #[test]

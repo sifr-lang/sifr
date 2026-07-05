@@ -186,13 +186,13 @@ deletion_stage = "migrated-to-sysroot-stdlib"
 [[surface]]
 id = "_sifr.i18n"
 public_modules = ["sifr.i18n"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/i18n.rs plus sifr_runtime::i18n helpers"
+current_owner = "compiled private Rust interop declarations in stdlib/_sifr/i18n.sifr targeting crates/sifr_stdlib/src/i18n.rs"
 final_owner = "crates/sifr_stdlib i18n feature backed by sifr_runtime only for shared locale/data primitives"
 reason = "Locale and gettext helpers are fallible stdlib behavior with bounded diagnostic requirements."
 certification_state = "supported-through-bridge-requires-error-shaping"
 can_move_before_runtime_certification = true
-migration_blocker = "Typed error conversion and host-locale support matrix retention."
-deletion_stage = "fallible-data-text migration"
+migration_blocker = "none; private stdlib interop uses a ParseError message bridge and public Sifr wrappers preserve LocaleIdError/FormatError/PluralRulesError/CatalogError API shapes"
+deletion_stage = "migrated-to-sysroot-stdlib"
 
 [[surface]]
 id = "_sifr.url"

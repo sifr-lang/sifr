@@ -114,21 +114,15 @@ fn unicode_intrinsic_features_enable_runtime_unicode_feature() {
 }
 
 #[test]
-fn i18n_module_emits_runtime_and_icu_dependencies() {
+fn i18n_module_emits_only_stdlib_feature_dependency() {
     let deps =
         generated_cargo_dependencies(&HashSet::from(["sifr.i18n".to_string()]), &HashSet::new());
 
-    assert!(deps
-        .iter()
-        .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"i18n\"]")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")));
     assert!(deps.iter().any(|dep| dep.starts_with("sifr_stdlib = ")
         && dep.contains("default-features = false")
         && dep.contains("features = [\"i18n\"]")));
-    assert!(deps.contains(&"icu_collator = \"2.2.0\"".to_string()));
-    assert!(deps.contains(&"icu_datetime = \"2.2.0\"".to_string()));
-    assert!(deps.contains(&"icu_decimal = \"2.2.0\"".to_string()));
-    assert!(deps.contains(&"icu_locale = \"2.2.0\"".to_string()));
-    assert!(deps.contains(&"icu_plurals = \"2.2.0\"".to_string()));
+    assert!(!deps.iter().any(|dep| dep.starts_with("icu_")));
 }
 
 #[test]

@@ -16,7 +16,7 @@ The generated Cargo dependency source is `sifr_stdlib_model::try_generated_cargo
 
 - `sifr_stdlib` with `encoding` for `sifr.encoding`
 - `sifr_stdlib` with `unicode` for `sifr.unicode`; this transitively enables `sifr_runtime/unicode`
-- `sifr_stdlib` with `i18n` plus direct `sifr_runtime` with `i18n` for `sifr.i18n`
+- `sifr_stdlib` with `i18n` for `sifr.i18n`; this transitively enables `sifr_runtime/i18n`
 - `sifr_stdlib` feature unions plus only the still-needed direct runtime features when text/i18n APIs are used together
 
 Text I/O never derives an encoding from process locale state. Text-mode `open` without `encoding=` and dynamic mode strings are compile-time diagnostics.

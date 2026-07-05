@@ -1,19 +1,19 @@
 # sifr.i18n — explicit locale identifiers and ICU-backed formatting
 from _sifr.i18n import (
-    i18n_collate,
-    i18n_format_datetime,
-    i18n_format_number,
-    i18n_host_locale,
-    i18n_locale_canonicalize,
-    i18n_locale_maximize,
-    i18n_locale_minimize,
-    i18n_mo_load_file,
-    i18n_mo_lookup,
-    i18n_mo_lookup_context,
-    i18n_mo_lookup_context_plural,
-    i18n_mo_lookup_plural,
-    i18n_mo_validate,
-    i18n_plural_category,
+    _i18n_collate_impl,
+    _i18n_format_datetime_impl,
+    _i18n_format_number_impl,
+    _i18n_host_locale_impl,
+    _i18n_locale_canonicalize_impl,
+    _i18n_locale_maximize_impl,
+    _i18n_locale_minimize_impl,
+    _i18n_mo_load_file_impl,
+    _i18n_mo_lookup_context_impl,
+    _i18n_mo_lookup_context_plural_impl,
+    _i18n_mo_lookup_impl,
+    _i18n_mo_lookup_plural_impl,
+    _i18n_mo_validate_impl,
+    _i18n_plural_category_impl,
 )
 
 DATETIME_SHORT: str = "short"
@@ -47,6 +47,138 @@ class CatalogError(Error):
 
 class TranslationError(Error):
     message: str
+
+
+def i18n_locale_canonicalize(locale: str) -> Result[str, LocaleIdError]:
+    try:
+        value: str = _i18n_locale_canonicalize_impl(locale)
+        return value
+    except ParseError as e:
+        raise LocaleIdError(e.message)
+
+
+def i18n_locale_maximize(locale: str) -> Result[str, LocaleIdError]:
+    try:
+        value: str = _i18n_locale_maximize_impl(locale)
+        return value
+    except ParseError as e:
+        raise LocaleIdError(e.message)
+
+
+def i18n_locale_minimize(locale: str) -> Result[str, LocaleIdError]:
+    try:
+        value: str = _i18n_locale_minimize_impl(locale)
+        return value
+    except ParseError as e:
+        raise LocaleIdError(e.message)
+
+
+def i18n_host_locale() -> str | None:
+    return _i18n_host_locale_impl()
+
+
+def i18n_format_number(locale: str, value: str) -> Result[str, FormatError]:
+    try:
+        formatted: str = _i18n_format_number_impl(locale, value)
+        return formatted
+    except ParseError as e:
+        raise FormatError(e.message)
+
+
+def i18n_format_datetime(
+    locale: str,
+    style: str,
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    second: int,
+) -> Result[str, FormatError]:
+    try:
+        formatted: str = _i18n_format_datetime_impl(
+            locale,
+            style,
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+        )
+        return formatted
+    except ParseError as e:
+        raise FormatError(e.message)
+
+
+def i18n_plural_category(locale: str, rule_type: str, value: str) -> Result[str, PluralRulesError]:
+    try:
+        category: str = _i18n_plural_category_impl(locale, rule_type, value)
+        return category
+    except ParseError as e:
+        raise PluralRulesError(e.message)
+
+
+def i18n_collate(locale: str, strength: str, left: str, right: str) -> Result[int, FormatError]:
+    try:
+        value: int = _i18n_collate_impl(locale, strength, left, right)
+        return value
+    except ParseError as e:
+        raise FormatError(e.message)
+
+
+def i18n_mo_validate(catalog: bytes) -> Result[str, CatalogError]:
+    try:
+        value: str = _i18n_mo_validate_impl(catalog)
+        return value
+    except ParseError as e:
+        raise CatalogError(e.message)
+
+
+def i18n_mo_load_file(path: str) -> Result[bytes, CatalogError]:
+    try:
+        catalog: bytes = _i18n_mo_load_file_impl(path)
+        return catalog
+    except ParseError as e:
+        raise CatalogError(e.message)
+
+
+def i18n_mo_lookup(catalog: bytes, message_id: str) -> Result[str | None, CatalogError]:
+    try:
+        value: str | None = _i18n_mo_lookup_impl(catalog, message_id)
+        return value
+    except ParseError as e:
+        raise CatalogError(e.message)
+
+
+def i18n_mo_lookup_context(
+    catalog: bytes, context: str, message_id: str
+) -> Result[str | None, CatalogError]:
+    try:
+        value: str | None = _i18n_mo_lookup_context_impl(catalog, context, message_id)
+        return value
+    except ParseError as e:
+        raise CatalogError(e.message)
+
+
+def i18n_mo_lookup_plural(
+    catalog: bytes, singular: str, plural: str, count: int
+) -> Result[str | None, CatalogError]:
+    try:
+        value: str | None = _i18n_mo_lookup_plural_impl(catalog, singular, plural, count)
+        return value
+    except ParseError as e:
+        raise CatalogError(e.message)
+
+
+def i18n_mo_lookup_context_plural(
+    catalog: bytes, context: str, singular: str, plural: str, count: int
+) -> Result[str | None, CatalogError]:
+    try:
+        value: str | None = _i18n_mo_lookup_context_plural_impl(catalog, context, singular, plural, count)
+        return value
+    except ParseError as e:
+        raise CatalogError(e.message)
 
 
 class LocaleId:

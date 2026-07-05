@@ -53,26 +53,6 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         name if name.starts_with("net_") => &[StdlibFeature::SifrRuntime],
         name if name.starts_with("tls_") => tls::TLS_REQUIRED_FEATURES,
         name if name.starts_with("http_") => HTTP_HEADER_REQUIRED_FEATURES,
-        "i18n_locale_canonicalize"
-        | "i18n_locale_maximize"
-        | "i18n_locale_minimize"
-        | "i18n_host_locale"
-        | "i18n_format_number"
-        | "i18n_format_datetime"
-        | "i18n_plural_category"
-        | "i18n_collate"
-        | "i18n_mo_validate"
-        | "i18n_mo_load_file"
-        | "i18n_mo_lookup"
-        | "i18n_mo_lookup_context"
-        | "i18n_mo_lookup_plural"
-        | "i18n_mo_lookup_context_plural" => &[
-            StdlibFeature::IcuCollator,
-            StdlibFeature::IcuDatetime,
-            StdlibFeature::IcuDecimal,
-            StdlibFeature::IcuLocale,
-            StdlibFeature::IcuPlurals,
-        ],
         _ => &[],
     }
 }

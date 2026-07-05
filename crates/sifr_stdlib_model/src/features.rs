@@ -601,14 +601,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         "sifr.hash" | "sifr.hashlib" => &[],
         "sifr.encoding" | "_sifr.encoding" => &[],
         "sifr.unicode" | "_sifr.unicode" => &[],
-        "sifr.i18n" | "_sifr.i18n" => &[
-            StdlibFeature::SifrRuntime,
-            StdlibFeature::IcuCollator,
-            StdlibFeature::IcuDatetime,
-            StdlibFeature::IcuDecimal,
-            StdlibFeature::IcuLocale,
-            StdlibFeature::IcuPlurals,
-        ],
+        "sifr.i18n" | "_sifr.i18n" => &[],
         "sifr.base64" => &[],
         "sifr.ipc" | "_sifr.ipc" => &[StdlibFeature::Ipc],
         "sifr.net" | "_sifr.net" => &[

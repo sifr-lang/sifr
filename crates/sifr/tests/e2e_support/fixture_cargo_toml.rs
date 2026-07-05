@@ -48,13 +48,7 @@ pub(crate) fn generate_cargo_toml(
             }
             "sifr.encoding" | "_sifr.encoding" => {}
             "sifr.unicode" | "_sifr.unicode" => {}
-            "sifr.i18n" | "_sifr.i18n" => {
-                deps.insert("icu_collator = \"2.2.0\"".to_string());
-                deps.insert("icu_datetime = \"2.2.0\"".to_string());
-                deps.insert("icu_decimal = \"2.2.0\"".to_string());
-                deps.insert("icu_locale = \"2.2.0\"".to_string());
-                deps.insert("icu_plurals = \"2.2.0\"".to_string());
-            }
+            "sifr.i18n" | "_sifr.i18n" => {}
             "sifr.base64" => {
                 deps.insert("base64 = \"0.22.1\"".to_string());
             }
@@ -301,7 +295,7 @@ fn needs_sifr_runtime_module_dependency(stdlib_modules: &BTreeSet<String>) -> bo
     stdlib_modules.iter().any(|module| {
         matches!(
             module.as_str(),
-            "sifr.i18n" | "_sifr.i18n" | "sifr.net" | "_sifr.net" | "sifr.tls" | "_sifr.tls"
+            "sifr.net" | "_sifr.net" | "sifr.tls" | "_sifr.tls"
         )
     })
 }

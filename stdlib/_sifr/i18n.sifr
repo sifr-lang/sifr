@@ -1,2 +1,85 @@
 # Private _sifr.i18n native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.i18n.i18n_locale_canonicalize, panic=trusted_no_panic)
+def _i18n_locale_canonicalize_impl(locale: str) -> Result[str, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_locale_maximize, panic=trusted_no_panic)
+def _i18n_locale_maximize_impl(locale: str) -> Result[str, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_locale_minimize, panic=trusted_no_panic)
+def _i18n_locale_minimize_impl(locale: str) -> Result[str, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_host_locale, panic=trusted_no_panic)
+def _i18n_host_locale_impl() -> str | None:
+    return None
+
+
+@rust(sifr_stdlib.i18n.i18n_format_number, panic=trusted_no_panic)
+def _i18n_format_number_impl(locale: str, value: str) -> Result[str, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_format_datetime, panic=trusted_no_panic)
+def _i18n_format_datetime_impl(
+    locale: str,
+    style: str,
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    second: int,
+) -> Result[str, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_plural_category, panic=trusted_no_panic)
+def _i18n_plural_category_impl(locale: str, rule_type: str, value: str) -> Result[str, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_collate, panic=trusted_no_panic)
+def _i18n_collate_impl(locale: str, strength: str, left: str, right: str) -> Result[int, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_mo_validate, panic=trusted_no_panic)
+def _i18n_mo_validate_impl(catalog: bytes) -> Result[str, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_mo_load_file, panic=trusted_no_panic)
+def _i18n_mo_load_file_impl(path: str) -> Result[bytes, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_mo_lookup, panic=trusted_no_panic)
+def _i18n_mo_lookup_impl(catalog: bytes, message_id: str) -> Result[str | None, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_mo_lookup_context, panic=trusted_no_panic)
+def _i18n_mo_lookup_context_impl(
+    catalog: bytes, context: str, message_id: str
+) -> Result[str | None, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_mo_lookup_plural, panic=trusted_no_panic)
+def _i18n_mo_lookup_plural_impl(
+    catalog: bytes, singular: str, plural: str, count: int
+) -> Result[str | None, ParseError]:
+    raise ParseError("")
+
+
+@rust(sifr_stdlib.i18n.i18n_mo_lookup_context_plural, panic=trusted_no_panic)
+def _i18n_mo_lookup_context_plural_impl(
+    catalog: bytes, context: str, singular: str, plural: str, count: int
+) -> Result[str | None, ParseError]:
+    raise ParseError("")
