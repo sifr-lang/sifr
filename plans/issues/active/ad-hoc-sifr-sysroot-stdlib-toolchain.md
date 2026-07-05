@@ -64,6 +64,7 @@ verification binary resolution. Current branch:
 - M11 certification-gate audit: [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) merged.
 - M12 wave 1 retained intrinsic allowlist guard: [PR #2795](https://github.com/sifr-lang/sifr/pull/2795) merged after local implementation, Opus review pass 2, and create-pr validation completed on `m12-retained-intrinsic-allowlist`.
 - M12 wave 2 verification target-binary normalization: [PR #2797](https://github.com/sifr-lang/sifr/pull/2797) merged after local implementation, Opus review pass 2, and create-pr validation completed on `m12-target-binary-normalization`.
+- M12 wave 3 native ownership registry retirement: [PR #2799](https://github.com/sifr-lang/sifr/pull/2799) merged after local implementation, Opus review pass 1, and create-pr validation completed on `m12-remove-native-ownership-registry`.
 
 ## Design Reference
 
@@ -2074,9 +2075,9 @@ M12 wave 2 implementation evidence:
   absolute `CARGO_TARGET_DIR`, avoiding the earlier relative target-dir rebuild
   hazard while preserving LSP/binary pairing.
 
-M12 wave 3 status: local implementation, focused validation, Opus review pass
-1, and full create-pr validation completed on
-`m12-remove-native-ownership-registry`.
+M12 wave 3 status: merged in [PR #2799](https://github.com/sifr-lang/sifr/pull/2799)
+after local implementation, focused validation, Opus review pass 1, and full
+create-pr validation completed on `m12-remove-native-ownership-registry`.
 
 This wave deletes the broad native-surface ownership registry now that M9-M10
 stateless and fallible-data migrations have closed and M12 wave 1 introduced
