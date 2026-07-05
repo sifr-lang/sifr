@@ -35,6 +35,27 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     assert!(base64_toml.contains("default-features = false"));
     assert!(base64_toml.contains("features = [\"base64\"]"));
     assert!(base64_toml.contains("base64 = \"0.22.1\""));
+    let datetime_modules = normalize_dependency_set(vec!["sifr.datetime".to_string()].into_iter());
+    let datetime_toml = generate_cargo_toml(&datetime_modules, &required_crates, "sifr_output");
+    assert!(datetime_toml.contains("sifr_stdlib = { path = "));
+    assert!(datetime_toml.contains("features = [\"time\"]"));
+    assert!(!datetime_toml.contains("chrono = "));
+    let gzip_modules = normalize_dependency_set(vec!["sifr.gzip".to_string()].into_iter());
+    let gzip_toml = generate_cargo_toml(&gzip_modules, &required_crates, "sifr_output");
+    assert!(gzip_toml.contains("sifr_stdlib = { path = "));
+    assert!(gzip_toml.contains("features = [\"gzip\"]"));
+    assert!(!gzip_toml.contains("flate2 = "));
+    let zip_modules = normalize_dependency_set(vec!["sifr.zipfile".to_string()].into_iter());
+    let zip_toml = generate_cargo_toml(&zip_modules, &required_crates, "sifr_output");
+    assert!(zip_toml.contains("sifr_stdlib = { path = "));
+    assert!(zip_toml.contains("features = [\"zipfile\"]"));
+    assert!(!zip_toml.contains("zip = "));
+    let private_compress_modules =
+        normalize_dependency_set(vec!["_sifr.compress".to_string()].into_iter());
+    let private_compress_toml =
+        generate_cargo_toml(&private_compress_modules, &required_crates, "sifr_output");
+    assert!(private_compress_toml.contains("sifr_stdlib = { path = "));
+    assert!(private_compress_toml.contains("features = [\"gzip\", \"zipfile\"]"));
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
     assert!(combined_toml.contains(
         "features = [\"html\", \"calendar\", \"platform\", \"uuid\", \"math\", \"hash\", \"base64\"]"

@@ -89,7 +89,7 @@ platform = []
 math = ["dep:sifr_runtime"]
 signals = []
 random = ["dep:rand", "dep:rand_distr"]
-time = ["dep:chrono"]
+time = ["dep:chrono", "dep:sifr_runtime"]
 encoding = ["dep:sifr_runtime"]
 runtime-observability = ["dep:metrics", "dep:tracing"]
 

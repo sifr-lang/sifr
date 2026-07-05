@@ -1,6 +1,5 @@
 mod bytes;
 mod collections;
-mod datetime;
 mod encoding;
 mod env;
 mod file_handles;
@@ -243,19 +242,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             (random::lower_random_module_state_gauss_next(args), None)
         }
         "random_module_set_state" => (random::lower_random_module_set_state(args), None),
-        "datetime_now" => (
-            datetime::lower_datetime_now(args),
-            Some(StdlibFeature::Chrono),
-        ),
-        "datetime_now_struct" => (
-            datetime::lower_datetime_now_struct(args),
-            Some(StdlibFeature::Chrono),
-        ),
-        "datetime_format" => (datetime::lower_datetime_format(args), None),
-        "datetime_from_timestamp" => (
-            datetime::lower_datetime_from_timestamp(args),
-            Some(StdlibFeature::Chrono),
-        ),
         "sys_exit" => (sys::lower_sys_exit(args), None),
         "sys_version" => (sys::lower_sys_version(args), None),
         "sys_platform" => (sys::lower_sys_platform(args), None),
