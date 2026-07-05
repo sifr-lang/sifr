@@ -23,7 +23,8 @@ pub fn planned_sifr_stdlib_features(
 
 fn features_for_module(module_name: &str) -> &'static [&'static str] {
     match module_name {
-        "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => &["json"],
+        "sifr.json" | "_sifr.json" => &["json"],
+        "sifr.collections" | "_sifr.collections" => &["collections"],
         "sifr.re" | "_sifr.regex" | "sifr.pathlib" => &["regex"],
         "sifr.uuid" | "_sifr.uuid" => &["uuid"],
         "sifr.hash" => &["hash"],

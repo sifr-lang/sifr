@@ -4,6 +4,7 @@ pub const LEAF_FEATURES: &[&str] = &[
     "uuid",
     "hash",
     "base64",
+    "collections",
     "html",
     "calendar",
     "encoding",

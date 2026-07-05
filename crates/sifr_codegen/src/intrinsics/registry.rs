@@ -105,14 +105,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "assert_almost_eq" => (test::lower_assert_almost_eq(args), None),
         "assert_gt" => (test::lower_assert_gt(args), None),
         "assert_lt" => (test::lower_assert_lt(args), None),
-        "new_set" => (collections::lower_new_set(args), None),
-        "set_from_list" => (collections::lower_set_from_list(args), None),
-        "set_add" => (collections::lower_set_add(args), None),
-        "set_contains" => (collections::lower_set_contains(args), None),
-        "set_remove" => (collections::lower_set_remove(args), None),
-        "set_len" => (collections::lower_set_len(args), None),
-        "set_union" => (collections::lower_set_union(args), None),
-        "set_intersection" => (collections::lower_set_intersection(args), None),
         "counter_from_list" => (
             collections::lower_counter_from_list(args),
             Some(StdlibFeature::SerdeJson),
@@ -143,15 +135,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         ),
         "counter_increment" => (
             collections::lower_counter_increment(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        "defaultdict_new" => (collections::lower_defaultdict_new(args), None),
-        "defaultdict_get" => (
-            collections::lower_defaultdict_get(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        "defaultdict_set" => (
-            collections::lower_defaultdict_set(args),
             Some(StdlibFeature::SerdeJson),
         ),
         "http_validate_header_name" => (

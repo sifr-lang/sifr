@@ -12,6 +12,8 @@ pub mod base64;
 pub mod bytes;
 #[cfg(feature = "calendar")]
 pub mod calendar;
+#[cfg(feature = "collections")]
+pub mod collections;
 #[cfg(feature = "encoding")]
 pub mod encoding;
 #[cfg(feature = "fs")]

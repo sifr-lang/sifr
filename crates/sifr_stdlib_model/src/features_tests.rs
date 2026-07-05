@@ -22,16 +22,16 @@ fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
     let required_features = HashSet::from([StdlibFeature::SerdeJson, StdlibFeature::Rand]);
 
     let deps = generated_cargo_dependencies(&stdlib_modules, &required_features);
-    assert!(deps[0].contains("features = [\"json\", \"random\"]"));
+    assert!(deps[0].contains("features = [\"collections\", \"json\", \"random\"]"));
 
     assert_eq!(
         deps,
         vec![
             deps[0].clone(),
-            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
-            "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
             "rand = \"0.10.1\"".to_string(),
             "rand_distr = \"0.6.0\"".to_string(),
+            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
+            "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
         ]
     );
 }
@@ -253,6 +253,8 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("sifr.base64", &["base64", "bytes"][..]),
         ("sifr.bytes", &["bytes"][..]),
         ("_sifr.bytes", &["bytes"][..]),
+        ("sifr.collections", &["collections"][..]),
+        ("_sifr.collections", &["collections"][..]),
         ("sifr.re", &["regex"][..]),
         ("_sifr.regex", &["regex"][..]),
         ("sifr.url", &["url"][..]),
