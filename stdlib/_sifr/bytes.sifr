@@ -1,2 +1,10 @@
 # Private _sifr.bytes native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.bytes.encode_utf8, panic=trusted_no_panic)
+def encode_utf8(s: str) -> bytes:
+    return b""
+
+
+@rust(sifr_stdlib.bytes.bytes_to_hex, panic=trusted_no_panic)
+def bytes_to_hex(bytes: bytes) -> Result[str, ParseError]:
+    raise ParseError("")

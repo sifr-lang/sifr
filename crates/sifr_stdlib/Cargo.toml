@@ -52,6 +52,7 @@ regex = ["dep:regex", "dep:sifr_runtime"]
 uuid = ["dep:uuid"]
 hash = ["dep:blake2", "dep:md5", "dep:sha1", "dep:sha2_0_11"]
 base64 = ["dep:base64", "dep:sifr_runtime"]
+bytes = []
 toml = ["dep:toml"]
 url = ["dep:percent-encoding", "dep:sifr_runtime", "dep:url"]
 gzip = ["dep:flate2"]
@@ -95,7 +96,7 @@ runtime-observability = ["dep:metrics", "dep:tracing"]
 
 # Maintenance aliases. Generated Cargo planning must prefer the leaf features
 # above so one stdlib module does not enable unrelated capability groups.
-text-data = ["json", "base64", "toml", "url", "gzip", "zipfile", "encoding", "unicode", "i18n"]
+text-data = ["json", "base64", "bytes", "toml", "url", "gzip", "zipfile", "encoding", "unicode", "i18n"]
 network-stack = ["net", "tls", "http"]
 numeric = ["dep:bigdecimal", "dep:num-bigint", "dep:num-traits", "dep:rayon", "dep:rust_decimal"]
 

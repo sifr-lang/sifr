@@ -599,6 +599,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         "sifr.re" | "_sifr.regex" => &[],
         "sifr.pathlib" => &[StdlibFeature::Regex],
         "sifr.hash" | "sifr.hashlib" => &[],
+        "sifr.bytes" | "_sifr.bytes" => &[],
         "sifr.encoding" | "_sifr.encoding" => &[],
         "sifr.unicode" | "_sifr.unicode" => &[],
         "sifr.i18n" | "_sifr.i18n" => &[],
