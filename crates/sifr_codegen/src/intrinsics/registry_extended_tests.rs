@@ -354,87 +354,29 @@ pub(crate) fn lowers_calendar_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_gzip_intrinsics_with_dependency_metadata() {
-    let compress = lower_intrinsic("gzip_compress", &["data".to_string()]).expect("gzip_compress");
-    assert_eq!(
-        compress.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Flate2)
-    );
-    assert!(render_expr(&compress.expr).contains("GzEncoder"));
-
-    let decompress =
-        lower_intrinsic("gzip_decompress", &["bytes".to_string()]).expect("gzip_decompress");
-    assert_eq!(
-        decompress.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Flate2)
-    );
-    assert!(render_expr(&decompress.expr).contains("GzDecoder"));
-}
-
-#[test]
-pub(crate) fn lowers_zip_intrinsics_with_dependency_metadata() {
-    let create = lower_intrinsic("zip_create", &["path".to_string()]).expect("zip_create");
-    assert_eq!(
-        create.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Zip)
-    );
-    assert!(render_expr(&create.expr).contains("ZipWriter::new"));
-
-    let add = lower_intrinsic(
-        "zip_add_file",
-        &[
-            "path".to_string(),
-            "name".to_string(),
-            "content".to_string(),
-        ],
-    )
-    .expect("zip_add_file");
-    assert_eq!(
-        add.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Zip)
-    );
-    assert!(render_expr(&add.expr).contains("start_file"));
-
-    let add_bytes = lower_intrinsic(
-        "zip_add_file_bytes",
-        &[
-            "path".to_string(),
-            "name".to_string(),
-            "content_bytes".to_string(),
-        ],
-    )
-    .expect("zip_add_file_bytes");
-    assert_eq!(
-        add_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Zip)
-    );
-    assert!(render_expr(&add_bytes.expr).contains("write_all"));
-
-    let read = lower_intrinsic("zip_read_file", &["path".to_string(), "name".to_string()])
-        .expect("zip_read_file");
-    assert_eq!(
-        read.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Zip)
-    );
-    assert!(render_expr(&read.expr).contains("ZipArchive::new"));
-
-    let read_bytes = lower_intrinsic(
-        "zip_read_file_bytes",
-        &["path".to_string(), "name".to_string()],
-    )
-    .expect("zip_read_file_bytes");
-    assert_eq!(
-        read_bytes.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Zip)
-    );
-    assert!(render_expr(&read_bytes.expr).contains("read_to_end"));
-
-    let names = lower_intrinsic("zip_namelist", &["path".to_string()]).expect("zip_namelist");
-    assert_eq!(
-        names.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Zip)
-    );
-    assert!(render_expr(&names.expr).contains("__zip.by_index"));
+pub(crate) fn compression_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for (name, args) in [
+        ("_gzip_compress_bytes_impl", &["data"][..]),
+        ("_gzip_decompress_bytes_impl", &["bytes"][..]),
+        ("zip_create", &["path"][..]),
+        ("zip_add_file", &["path", "name", "content"][..]),
+        ("zip_add_file_bytes", &["path", "name", "content_bytes"][..]),
+        ("zip_read_file", &["path", "name"][..]),
+        ("zip_read_file_bytes", &["path", "name"][..]),
+        ("zip_namelist", &["path"][..]),
+    ] {
+        assert!(
+            lower_intrinsic(
+                name,
+                &args
+                    .iter()
+                    .map(|arg| (*arg).to_string())
+                    .collect::<Vec<_>>()
+            )
+            .is_none(),
+            "{name} should be provided by _sifr.compress private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

@@ -4,7 +4,6 @@ mod datetime;
 mod encoding;
 mod env;
 mod file_handles;
-mod gzip;
 mod io;
 mod logging;
 mod net;
@@ -26,7 +25,6 @@ mod test;
 mod time;
 mod tls;
 mod url_http;
-mod zipfile;
 
 use crate::RustExpr;
 use sifr_stdlib_model::StdlibFeature;
@@ -470,23 +468,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),
         ),
-        "gzip_compress" => (gzip::lower_gzip_compress(args), Some(StdlibFeature::Flate2)),
-        "gzip_decompress" => (
-            gzip::lower_gzip_decompress(args),
-            Some(StdlibFeature::Flate2),
-        ),
-        "zip_create" => (zipfile::lower_zip_create(args), Some(StdlibFeature::Zip)),
-        "zip_add_file" => (zipfile::lower_zip_add_file(args), Some(StdlibFeature::Zip)),
-        "zip_add_file_bytes" => (
-            zipfile::lower_zip_add_file_bytes(args),
-            Some(StdlibFeature::Zip),
-        ),
-        "zip_read_file" => (zipfile::lower_zip_read_file(args), Some(StdlibFeature::Zip)),
-        "zip_read_file_bytes" => (
-            zipfile::lower_zip_read_file_bytes(args),
-            Some(StdlibFeature::Zip),
-        ),
-        "zip_namelist" => (zipfile::lower_zip_namelist(args), Some(StdlibFeature::Zip)),
         "set_global_level" => (logging::lower_set_global_level(args), None),
         "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,

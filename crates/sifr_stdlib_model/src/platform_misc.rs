@@ -173,19 +173,16 @@ pub(super) fn intrinsic_calendar() -> IntrinsicModule {
 /// _sifr.compress — Compression intrinsics (gzip + zip)
 pub(super) fn intrinsic_compress() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    // gzip_compress(data: str) -> list[int] (compressed bytes)
+    // _gzip_compress_bytes_impl(data: str) -> bytes (compressed bytes)
     functions.insert(
-        "gzip_compress".to_string(),
-        FunctionType::all_borrow(
-            vec![("data".to_string(), Type::Str)],
-            Type::List(Box::new(Type::Int)),
-        ),
+        "_gzip_compress_bytes_impl".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Str)], Type::Bytes),
     );
-    // gzip_decompress(data: list[int]) -> Result[str, IOError]
+    // _gzip_decompress_bytes_impl(data: bytes) -> Result[str, IOError]
     functions.insert(
-        "gzip_decompress".to_string(),
+        "_gzip_decompress_bytes_impl".to_string(),
         FunctionType::all_borrow(
-            vec![("data".to_string(), Type::List(Box::new(Type::Int)))],
+            vec![("data".to_string(), Type::Bytes)],
             result_ty(Type::Str, "IOError"),
         ),
     );

@@ -208,13 +208,13 @@ deletion_stage = "fallible-data-text migration"
 [[surface]]
 id = "_sifr.compress"
 public_modules = ["sifr.gzip", "sifr.zipfile"]
-current_owner = "compiler intrinsic registry: gzip/zipfile modules with direct flate2/zip dependency planning"
+current_owner = "private stdlib Rust interop declarations backed by crates/sifr_stdlib gzip and zipfile features"
 final_owner = "crates/sifr_stdlib gzip and zipfile features via stdlib/_sifr/compress.sifr"
 reason = "Compression and archive operations are fallible stdlib behavior."
 certification_state = "supported-through-bridge-requires-error-shaping"
 can_move_before_runtime_certification = true
-migration_blocker = "Large/malformed input bounds and typed error conversion."
-deletion_stage = "fallible-data-text migration"
+migration_blocker = "none"
+deletion_stage = "migrated-to-sysroot-stdlib"
 
 [[surface]]
 id = "_sifr.fs"

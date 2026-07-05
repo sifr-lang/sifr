@@ -26,6 +26,10 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         include_str!("../../../../stdlib/_sifr/crypto.sifr"),
     ),
     (
+        "_sifr.compress",
+        include_str!("../../../../stdlib/_sifr/compress.sifr"),
+    ),
+    (
         "_sifr.regex",
         include_str!("../../../../stdlib/_sifr/regex.sifr"),
     ),
@@ -698,6 +702,91 @@ fn unicode_private_declarations_codegen_through_sifr_stdlib() {
     assert!(!exports.contains_key("_unicode_normalize_impl"));
     assert!(!exports.contains_key("_unicode_graphemes_impl"));
     assert!(!exports.contains_key("_unicode_grapheme_indices_flat_impl"));
+}
+
+#[test]
+fn compression_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.compress")
+        .expect("_sifr.compress should generate private Rust code");
+
+    for (module, name) in [
+        ("gzip", "gzip_compress_bytes"),
+        ("gzip", "gzip_decompress_bytes"),
+        ("zipfile", "zip_create"),
+        ("zipfile", "zip_add_file"),
+        ("zipfile", "zip_add_file_bytes"),
+        ("zipfile", "zip_read_file"),
+        ("zipfile", "zip_read_file_bytes"),
+        ("zipfile", "zip_namelist"),
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::{module}::{name}(")),
+            "{name} should lower through _sifr.compress private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains("sifr_stdlib::gzip::gzip_compress_bytes(data)"));
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| IOError { message: __sifr_bridge_error.to_string(), kind: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.compress")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.gzip")
+        .is_some_and(|deps| deps.contains("_sifr.compress")));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.zipfile")
+        .is_some_and(|deps| deps.contains("_sifr.compress")));
+
+    for module in ["sifr.gzip", "sifr.zipfile"] {
+        let public_intrinsics = compiled
+            .code
+            .intrinsic_names
+            .get(module)
+            .expect("public compression intrinsic names should be tracked");
+        for name in [
+            "gzip_compress",
+            "gzip_decompress",
+            "zip_create",
+            "zip_add_file",
+            "zip_add_file_bytes",
+            "zip_read_file",
+            "zip_read_file_bytes",
+            "zip_namelist",
+        ] {
+            assert!(
+                !public_intrinsics.contains(name),
+                "{name} should not remain a public {module} compiler intrinsic"
+            );
+        }
+    }
+
+    let gzip_exports = compiled
+        .defs
+        .functions
+        .get("sifr.gzip")
+        .expect("sifr.gzip exports should be collected");
+    assert!(gzip_exports.contains_key("compress"));
+    assert!(gzip_exports.contains_key("decompress"));
+    assert!(!gzip_exports.contains_key("_gzip_compress_bytes_impl"));
+    assert!(!gzip_exports.contains_key("_gzip_decompress_bytes_impl"));
+    let zip_exports = compiled
+        .defs
+        .functions
+        .get("sifr.zipfile")
+        .expect("sifr.zipfile exports should be collected");
+    assert!(zip_exports.contains_key("is_zipfile"));
+    assert!(zip_exports.contains_key("zip_namelist"));
 }
 
 #[test]
