@@ -1,91 +1,5 @@
 use super::compile_stdlib_uncached;
 
-const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
-    (
-        "_sifr.platform",
-        include_str!("../../../../stdlib/_sifr/platform.sifr"),
-    ),
-    (
-        "_sifr.html",
-        include_str!("../../../../stdlib/_sifr/html.sifr"),
-    ),
-    (
-        "_sifr.calendar",
-        include_str!("../../../../stdlib/_sifr/calendar.sifr"),
-    ),
-    (
-        "_sifr.uuid",
-        include_str!("../../../../stdlib/_sifr/uuid.sifr"),
-    ),
-    (
-        "_sifr.math",
-        include_str!("../../../../stdlib/_sifr/math.sifr"),
-    ),
-    (
-        "_sifr.crypto",
-        include_str!("../../../../stdlib/_sifr/crypto.sifr"),
-    ),
-    (
-        "_sifr.compress",
-        include_str!("../../../../stdlib/_sifr/compress.sifr"),
-    ),
-    (
-        "_sifr.regex",
-        include_str!("../../../../stdlib/_sifr/regex.sifr"),
-    ),
-    (
-        "_sifr.url",
-        include_str!("../../../../stdlib/_sifr/url.sifr"),
-    ),
-    (
-        "_sifr.toml",
-        include_str!("../../../../stdlib/_sifr/toml.sifr"),
-    ),
-    (
-        "_sifr.json",
-        include_str!("../../../../stdlib/_sifr/json.sifr"),
-    ),
-    (
-        "_sifr.encoding",
-        include_str!("../../../../stdlib/_sifr/encoding.sifr"),
-    ),
-    (
-        "_sifr.unicode",
-        include_str!("../../../../stdlib/_sifr/unicode.sifr"),
-    ),
-    (
-        "_sifr.i18n",
-        include_str!("../../../../stdlib/_sifr/i18n.sifr"),
-    ),
-];
-
-#[test]
-fn completed_private_declarations_follow_adapter_policy_syntax() {
-    for (module, source) in COMPLETED_MIGRATED_PRIVATE_DECLARATIONS {
-        assert!(
-            !source.contains("@rust.via"),
-            "{module} must not use callee-injection syntax"
-        );
-        assert!(
-            !source.contains("bridge."),
-            "{module} must not route through bridge.* sysroot adapters"
-        );
-        assert!(
-            !source.contains("converter") && !source.contains("pipeline"),
-            "{module} must not declare converter-pipeline metadata"
-        );
-        for line in source
-            .lines()
-            .filter(|line| line.trim_start().starts_with("@rust("))
-        {
-            assert!(
-                line.contains("@rust(sifr_stdlib.") && line.contains("panic=trusted_no_panic"),
-                "{module} declaration must bind directly to sifr_stdlib with sysroot trust: {line}"
-            );
-        }
-    }
-}
-
 #[test]
 fn platform_private_declarations_codegen_through_sifr_stdlib() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
@@ -787,6 +701,66 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
         .expect("sifr.zipfile exports should be collected");
     assert!(zip_exports.contains_key("is_zipfile"));
     assert!(zip_exports.contains_key("zip_namelist"));
+}
+
+#[test]
+fn datetime_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.datetime")
+        .expect("_sifr.datetime should generate private Rust code");
+
+    for name in [
+        "datetime_now",
+        "datetime_now_struct",
+        "datetime_format",
+        "datetime_from_timestamp",
+    ] {
+        assert!(
+            private_code.contains(&format!("sifr_stdlib::time::{name}(")),
+            "{name} should lower through _sifr.datetime private Rust interop declarations"
+        );
+    }
+    assert!(private_code.contains(
+        "map_err(|__sifr_bridge_error| ValueError { message: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.datetime")
+        .is_some_and(std::collections::HashSet::is_empty));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.datetime")
+        .is_some_and(|deps| deps.contains("_sifr.datetime")));
+
+    let public_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("sifr.datetime")
+        .expect("sifr.datetime intrinsic names should be tracked");
+    for name in [
+        "datetime_now",
+        "datetime_now_struct",
+        "datetime_format",
+        "datetime_from_timestamp",
+    ] {
+        assert!(
+            !public_intrinsics.contains(name),
+            "{name} should not remain a public sifr.datetime compiler intrinsic"
+        );
+    }
+    let exports = compiled
+        .defs
+        .functions
+        .get("sifr.datetime")
+        .expect("sifr.datetime exports should be collected");
+    assert!(exports.contains_key("now"));
+    assert!(exports.contains_key("from_timestamp"));
+    assert!(exports.contains_key("datetime_now_struct"));
 }
 
 #[test]

@@ -42,6 +42,8 @@ pub mod regex;
 pub mod runtime_observability;
 #[cfg(feature = "signals")]
 pub mod signals;
+#[cfg(feature = "time")]
+pub mod time;
 #[cfg(feature = "tls")]
 pub mod tls;
 #[cfg(feature = "toml")]

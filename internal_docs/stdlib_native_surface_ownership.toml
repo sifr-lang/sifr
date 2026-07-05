@@ -120,13 +120,13 @@ deletion_stage = "stateless-native-leaf migration"
 [[surface]]
 id = "_sifr.datetime"
 public_modules = ["sifr.datetime"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/datetime.rs with chrono dependency planning"
-final_owner = "crates/sifr_stdlib datetime/calendar feature via stdlib/_sifr/datetime.sifr"
+current_owner = "private stdlib Rust interop declarations backed by crates/sifr_stdlib time feature"
+final_owner = "crates/sifr_stdlib time feature via stdlib/_sifr/datetime.sifr"
 reason = "Datetime formatting/conversion is stdlib implementation backed by pinned sysroot dependencies."
 certification_state = "can-move-before-runtime-certification"
 can_move_before_runtime_certification = true
-migration_blocker = "generated-program stdlib crate creation and private declaration interop context"
-deletion_stage = "stateless-native-leaf migration"
+migration_blocker = "none"
+deletion_stage = "migrated-to-sysroot-stdlib"
 
 [[surface]]
 id = "_sifr.time"

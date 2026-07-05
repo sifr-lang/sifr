@@ -220,35 +220,18 @@ pub(crate) fn toml_intrinsic_is_owned_by_compiled_stdlib_declaration() {
 }
 
 #[test]
-pub(crate) fn lowers_datetime_intrinsics_via_registry() {
-    let now = lower_intrinsic("datetime_now", &[]).expect("datetime_now");
-    assert_eq!(
-        now.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&now.expr).contains("chrono::Local::now()"));
-
-    let now_struct = lower_intrinsic("datetime_now_struct", &[]).expect("datetime_now_struct");
-    assert_eq!(
-        now_struct.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&now_struct.expr).contains("chrono::Datelike::year(&__dt) as i64"));
-    assert!(render_expr(&now_struct.expr).contains("chrono::Timelike::second(&__dt) as i64"));
-
-    let fmt = lower_intrinsic("datetime_format", &["dt".to_string(), "mask".to_string()])
-        .expect("datetime_format");
-    assert!(render_expr(&fmt.expr).contains("NaiveDateTime::parse_from_str"));
-
-    let from_ts =
-        lower_intrinsic("datetime_from_timestamp", &["ts".to_string()]).expect("from_timestamp");
-    assert_eq!(
-        from_ts.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&from_ts.expr).contains("DateTime::from_timestamp"));
-    assert!(render_expr(&from_ts.expr).contains("ok_or_else"));
-    assert!(render_expr(&from_ts.expr).contains("\"invalid timestamp\".to_string()"));
+pub(crate) fn datetime_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for removed in [
+        "datetime_now",
+        "datetime_now_struct",
+        "datetime_format",
+        "datetime_from_timestamp",
+    ] {
+        assert!(
+            lower_intrinsic(removed, &["dt".to_string(), "fmt".to_string()]).is_none(),
+            "{removed} must lower through private stdlib Rust interop, not active intrinsics"
+        );
+    }
 }
 
 #[test]

@@ -36,7 +36,7 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert(SERDE_JSON_DEP.to_string());
                 deps.insert(SERDE_DEP.to_string());
             }
-            "sifr.time" | "_sifr.time" | "sifr.datetime" | "_sifr.datetime" => {
+            "sifr.time" | "_sifr.time" => {
                 deps.insert("chrono = \"0.4.44\"".to_string());
             }
             "sifr.random" | "_sifr.crypto" => {
@@ -321,6 +321,11 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.i18n"
                 | "sifr.unicode"
                 | "_sifr.unicode"
+                | "sifr.datetime"
+                | "_sifr.datetime"
+                | "sifr.gzip"
+                | "sifr.zipfile"
+                | "_sifr.compress"
                 | "sifr.url"
                 | "_sifr.url"
                 | "sifr.hash"
