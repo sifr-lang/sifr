@@ -23,7 +23,8 @@ In progress.
 
 Current local wave: M11 certification-gate audit. Local implementation, Opus
 review, and create-pr validation are complete on
-`m11-resource-certification-gate`; PR publication is next.
+`m11-resource-certification-gate`; [PR #2793](https://github.com/sifr-lang/sifr/pull/2793)
+is open.
 Runtime/resource/callback surfaces remain compiler-owned or explicitly
 deferred while their Rust interop compatibility rows are still future-owned by
 `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
@@ -58,7 +59,7 @@ deferred while their Rust interop compatibility rows are still future-owned by
 - M10 wave 10 datetime interop migration: merged in [PR #2787](https://github.com/sifr-lang/sifr/pull/2787).
 - M10 wave 11 bytes helper interop split: merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789).
 - M10 wave 12 collections helper interop split: merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791).
-- M11 certification-gate audit: local implementation/review/create-pr validation complete on `m11-resource-certification-gate`; PR publication is next.
+- M11 certification-gate audit: opened [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) after local implementation, Opus review, and create-pr validation passed.
 
 ## Design Reference
 
@@ -1851,8 +1852,8 @@ Validation:
 - Per-family compatibility matrix updates before each submilestone closes.
 
 M11 gate audit status: local implementation, Opus review, and create-pr
-validation complete on `m11-resource-certification-gate`; PR publication is
-next.
+validation complete on `m11-resource-certification-gate`;
+[PR #2793](https://github.com/sifr-lang/sifr/pull/2793) is open.
 
 The M11 resource submilestones are not safe to migrate yet. The Rust interop
 compatibility matrix still marks `opaque_resource_matrix`,
