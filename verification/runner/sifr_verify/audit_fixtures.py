@@ -172,12 +172,37 @@ def audit_fixture_command_prefix() -> list[str]:
         return [configured_bin]
     configured_target_dir = os.environ.get("CARGO_TARGET_DIR")
     if configured_target_dir:
-        target_bin = Path(configured_target_dir) / "debug" / "sifr"
+        target_dir = Path(configured_target_dir)
+        if not target_dir.is_absolute():
+            target_dir = REPO_ROOT / target_dir
+        target_bin = target_dir / "debug" / "sifr"
         if target_bin.is_file():
             return [str(target_bin)]
+        build_configured_target_binary(target_bin)
+        return [str(target_bin)]
     if DEFAULT_SIFR_BIN.is_file():
         return [str(DEFAULT_SIFR_BIN)]
     return ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
+
+
+def build_configured_target_binary(target_bin: Path) -> None:
+    proc = subprocess.run(
+        ["cargo", "build", "--locked", "-q", "-p", "sifr"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        print("failed to build configured audit fixture binary", file=sys.stderr)
+        if proc.stdout:
+            print(proc.stdout, file=sys.stderr)
+        if proc.stderr:
+            print(proc.stderr, file=sys.stderr)
+        raise SystemExit(proc.returncode)
+    if not target_bin.is_file():
+        print(f"configured audit fixture binary was not produced: {target_bin}", file=sys.stderr)
+        raise SystemExit(1)
 
 
 def emit_failures(area: str, failures: list[str]) -> None:

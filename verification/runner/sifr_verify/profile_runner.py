@@ -290,6 +290,10 @@ class ProfileRunner:
         run_python("scripts/check_sysroot_stdlib_resource_certification_gate.py")
         run_python("scripts/check_sysroot_stdlib_resource_certification_gate.py", "--self-test")
 
+        print("Running stdlib native intrinsic allowlist guard")
+        run_python("scripts/check_stdlib_native_intrinsic_allowlist.py")
+        run_python("scripts/check_stdlib_native_intrinsic_allowlist.py", "--self-test")
+
         print("Running audit fixture smoke suites")
         run_command(uv_area_command("--area", "core_language", "--suite", "audit-fixtures"))
         run_command(uv_area_command("--area", "project_workspace", "--suite", "audit-fixtures"))
