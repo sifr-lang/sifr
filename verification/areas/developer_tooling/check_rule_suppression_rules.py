@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import subprocess
 import sys
 import tempfile
@@ -13,6 +12,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
+sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 
 def run(command: list[str], *, expect: int = 0) -> subprocess.CompletedProcess[str]:
@@ -26,12 +28,12 @@ def run(command: list[str], *, expect: int = 0) -> subprocess.CompletedProcess[s
 
 
 def sifr_command(*args: str) -> list[str]:
-    configured_bin = os.environ.get("SIFR_RULE_SUPPRESSION_BIN")
-    if configured_bin:
-        return [configured_bin, *args]
-    if DEFAULT_SIFR_BIN.is_file():
-        return [str(DEFAULT_SIFR_BIN), *args]
-    return ["cargo", "run", "-q", "-p", "sifr", "--", *args]
+    binary = resolve_sifr_binary(
+        REPO_ROOT,
+        explicit_env_var="SIFR_RULE_SUPPRESSION_BIN",
+        default_binary=DEFAULT_SIFR_BIN,
+    )
+    return [str(binary), *args]
 
 
 def run_positive() -> None:

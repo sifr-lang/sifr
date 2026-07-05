@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
@@ -18,6 +17,9 @@ DEFAULT_TIMEOUT_SECONDS = 15
 DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
 SUPPORTED_STATUSES = {"supported", "known_gap", "zero_example_inventory"}
 SUPPORTED_PROFILES = {"merge", "full", "inventory-only"}
+sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -229,17 +231,12 @@ def run_entries(entries: list[dict[str, Any]]) -> list[str]:
 
 
 def stdlib_module_command_prefix() -> list[str]:
-    configured_bin = os.environ.get("SIFR_STDLIB_MODULE_BIN")
-    if configured_bin:
-        return [configured_bin]
-    configured_target_dir = os.environ.get("CARGO_TARGET_DIR")
-    if configured_target_dir:
-        target_bin = Path(configured_target_dir) / "debug" / "sifr"
-        if target_bin.is_file():
-            return [str(target_bin)]
-    if DEFAULT_SIFR_BIN.is_file():
-        return [str(DEFAULT_SIFR_BIN)]
-    return ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
+    binary = resolve_sifr_binary(
+        REPO_ROOT,
+        explicit_env_var="SIFR_STDLIB_MODULE_BIN",
+        default_binary=DEFAULT_SIFR_BIN,
+    )
+    return [str(binary)]
 
 
 def string_field(entry: dict[str, Any], field: str, failures: list[str]) -> str | None:

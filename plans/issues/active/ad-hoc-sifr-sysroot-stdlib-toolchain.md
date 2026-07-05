@@ -26,6 +26,9 @@ Latest merged wave: M12 wave 1 retained intrinsic allowlist guard merged in
 compiler-native intrinsic names, prefix dispatchers, registry files, and
 preamble files are now frozen by a core guardrail while follow-up M12 waves
 delete, split, or explicitly retain remaining compiler-language glue.
+Current local wave: M12 wave 2 verification target-binary normalization on
+`m12-target-binary-normalization`; local implementation, Opus review pass 2,
+and full create-pr validation are complete.
 
 ## PR Log
 
@@ -2006,6 +2009,68 @@ M12 wave 1 implementation evidence:
   subdirectories rebuilt under crate-local target roots. Future long validation
   reruns for this wave should prefer an absolute `CARGO_TARGET_DIR` while
   preserving the same `SIFR_LSP_COMMAND` binary pairing.
+
+M12 wave 2 status: local implementation, focused validation, Opus review pass
+2, and full create-pr validation complete on
+`m12-target-binary-normalization`; PR is next.
+
+This wave closes the stale `target/debug/sifr` hazard found during M12 wave 1
+review. The affected verification helpers now resolve an explicit tool env var
+first, then build or use `<CARGO_TARGET_DIR>/debug/sifr` with relative target
+dirs normalized against the repo root, and only then fall back to the default
+repo target.
+
+M12 wave 2 implementation evidence:
+
+- `verification/areas/common/sifr_binary.py` centralizes Sifr binary
+  resolution/building for direct verification tools.
+- `verification/areas/developer_tooling/check_rule_suppression_rules.py`
+  uses the shared resolver for `SIFR_RULE_SUPPRESSION_BIN` and
+  `CARGO_TARGET_DIR`.
+- `verification/areas/stdlib_parity/tools/check_stdlib_module_parity.py` uses
+  the shared resolver for `SIFR_STDLIB_MODULE_BIN` and `CARGO_TARGET_DIR`.
+- `verification/areas/stdlib_parity/tools/run_stdlib_namespace_corpus_validation.py`
+  uses the shared resolver when its default Sifr binary is selected.
+- `verification/areas/algorithmic_compatibility/runner.py` uses the shared
+  resolver for representative, full-corpus, and leetcode-check suites instead
+  of forcing `target/debug/sifr`.
+- Opus review pass 1 in
+  `plans/reviews/active/m12-target-binary-normalization-review-pass1.md`
+  returned `VERDICT: PASS` with no blockers. Low-severity findings requested
+  recording the actual resolved binary in algorithmic result `argv` fields and
+  preserving explicit `--sifr-bin target/debug/sifr` intent when
+  `CARGO_TARGET_DIR` is also set; both were fixed before pass 2.
+- Opus review pass 2 in
+  `plans/reviews/active/m12-target-binary-normalization-review-pass2.md`
+  returned `VERDICT: PASS` with no blockers.
+- Focused validation passed:
+  `python3 -m py_compile verification/areas/common/sifr_binary.py verification/areas/developer_tooling/check_rule_suppression_rules.py verification/areas/stdlib_parity/tools/check_stdlib_module_parity.py verification/areas/stdlib_parity/tools/run_stdlib_namespace_corpus_validation.py verification/areas/algorithmic_compatibility/runner.py`;
+  `CARGO_TARGET_DIR="$(pwd)/target/m12-target-bin-normalization-check" CARGO_BUILD_JOBS=1 python3 verification/areas/developer_tooling/check_rule_suppression_rules.py --self-test`;
+  `CARGO_TARGET_DIR="$(pwd)/target/m12-target-bin-normalization-check" CARGO_BUILD_JOBS=1 python3 verification/areas/developer_tooling/check_rule_suppression_rules.py`;
+  `CARGO_TARGET_DIR="$(pwd)/target/m12-target-bin-normalization-check" CARGO_BUILD_JOBS=1 python3 verification/areas/stdlib_parity/tools/check_stdlib_module_parity.py --scope merge`;
+  `CARGO_TARGET_DIR="$(pwd)/target/m12-target-bin-normalization-check" CARGO_BUILD_JOBS=1 python3 verification/areas/stdlib_parity/tools/run_stdlib_namespace_corpus_validation.py --scope leetcode --command check --fail-fast`;
+  `CARGO_TARGET_DIR="$(pwd)/target/m12-target-bin-normalization-check" CARGO_BUILD_JOBS=1 uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite representative-subset`;
+  reruns after the pass-1 fixes of
+  `CARGO_TARGET_DIR="$(pwd)/target/m12-target-bin-normalization-check" CARGO_BUILD_JOBS=1 python3 verification/areas/stdlib_parity/tools/run_stdlib_namespace_corpus_validation.py --scope leetcode --command check --fail-fast`
+  and
+  `CARGO_TARGET_DIR="$(pwd)/target/m12-target-bin-normalization-check" CARGO_BUILD_JOBS=1 uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite representative-subset`;
+  `python3 scripts/check_file_size_guardrails.py`;
+  `git diff --check`.
+- Local create-pr validation passed with zero failures:
+  `ABS_TARGET="$(pwd)/target/m12-target-bin-normalization-create-pr"; SIFR_LSP_COMMAND="${ABS_TARGET}/debug/sifr lsp --stdio" CARGO_TARGET_DIR="${ABS_TARGET}" CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The lane wrote `target/validation_lane_reports/create-pr.latest.json`;
+  profile `create-pr`, real time `6644.10s`, CPU `4824.79s`, max RSS
+  `613.7MiB`, hardening variants `6`, blocking failures `0`, and advisory
+  `warm wall-time budget exceeded`. Slowest step was `python_interop`
+  (`2239993ms`); other long steps were `crate_tests` (`1369637ms`),
+  `generated_code_quality_checks` (`1148774ms`), `runtime_platform_suites`
+  (`872230ms`), and `e2e_pass_suite` (`401748ms`, 132/132 pass).
+- The apparent long no-commit period was validation runtime, not an idle loop:
+  Python interop library examples took `1373594ms`, generated-code determinism
+  took `814734ms`, runtime-platform golden locale formatting took `270443ms`,
+  and crate/e2e suites performed repeated nested Cargo builds. This run used an
+  absolute `CARGO_TARGET_DIR`, avoiding the earlier relative target-dir rebuild
+  hazard while preserving LSP/binary pairing.
 
 ### M13. Release Candidate Certification
 

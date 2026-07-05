@@ -23,6 +23,9 @@ LEETCODE_ROOT = (
 )
 DEMOS_ROOT = REPO_ROOT / "demos"
 DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
+sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 BARE_STDLIB_ATTR_RE = re.compile(
     r"(?<!sifr\.)\b(?P<module>math|heapq|collections)\.[A-Za-z_]"
@@ -45,8 +48,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--sifr-bin",
-        default=str(DEFAULT_SIFR_BIN),
-        help="Path to the Sifr CLI binary. Built with cargo if missing.",
+        default=None,
+        help=(
+            "Path to the Sifr CLI binary. Defaults to the configured "
+            "CARGO_TARGET_DIR binary, or the repository default target."
+        ),
     )
     parser.add_argument(
         "--fail-fast",
@@ -96,11 +102,13 @@ def scan_bare_stdlib_attrs(paths: list[Path]) -> list[str]:
     return failures
 
 
-def ensure_sifr_bin(sifr_bin: Path) -> None:
-    if sifr_bin == DEFAULT_SIFR_BIN:
-        subprocess.run(["cargo", "build", "-q", "-p", "sifr"], cwd=REPO_ROOT, check=True)
-    elif not sifr_bin.exists():
+def resolve_requested_sifr_bin(raw_sifr_bin: str | None) -> Path:
+    if raw_sifr_bin is None:
+        return resolve_sifr_binary(REPO_ROOT, default_binary=DEFAULT_SIFR_BIN)
+    sifr_bin = Path(raw_sifr_bin)
+    if not sifr_bin.exists():
         raise SystemExit(f"missing Sifr CLI binary: {sifr_bin}")
+    return sifr_bin
 
 
 def run_fixture(sifr_bin: Path, command: str, path: Path) -> subprocess.CompletedProcess[str]:
@@ -137,8 +145,7 @@ def main() -> int:
             print(f"  {failure}", file=sys.stderr)
         return 1
 
-    sifr_bin = Path(args.sifr_bin)
-    ensure_sifr_bin(sifr_bin)
+    sifr_bin = resolve_requested_sifr_bin(args.sifr_bin)
 
     start = time.monotonic()
     failures: list[tuple[Path, subprocess.CompletedProcess[str]]] = []
