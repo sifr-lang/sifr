@@ -1,2 +1,40 @@
 # Private _sifr.compress native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.gzip.gzip_compress_bytes, panic=trusted_no_panic)
+def _gzip_compress_bytes_impl(data: str) -> bytes:
+    return b""
+
+
+@rust(sifr_stdlib.gzip.gzip_decompress_bytes, panic=trusted_no_panic)
+def _gzip_decompress_bytes_impl(data: bytes) -> Result[str, IOError]:
+    raise IOError("")
+
+
+@rust(sifr_stdlib.zipfile.zip_create, panic=trusted_no_panic)
+def zip_create(path: str) -> Result[None, IOError]:
+    raise IOError("")
+
+
+@rust(sifr_stdlib.zipfile.zip_add_file, panic=trusted_no_panic)
+def zip_add_file(zip_path: str, name: str, content: str) -> Result[None, IOError]:
+    raise IOError("")
+
+
+@rust(sifr_stdlib.zipfile.zip_add_file_bytes, panic=trusted_no_panic)
+def zip_add_file_bytes(zip_path: str, name: str, content: bytes) -> Result[None, IOError]:
+    raise IOError("")
+
+
+@rust(sifr_stdlib.zipfile.zip_read_file, panic=trusted_no_panic)
+def zip_read_file(zip_path: str, name: str) -> Result[str, IOError]:
+    raise IOError("")
+
+
+@rust(sifr_stdlib.zipfile.zip_read_file_bytes, panic=trusted_no_panic)
+def zip_read_file_bytes(zip_path: str, name: str) -> Result[bytes, IOError]:
+    raise IOError("")
+
+
+@rust(sifr_stdlib.zipfile.zip_namelist, panic=trusted_no_panic)
+def zip_namelist(zip_path: str) -> Result[list[str], IOError]:
+    raise IOError("")

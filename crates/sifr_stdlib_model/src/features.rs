@@ -642,9 +642,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[StdlibFeature::Chrono],
-        "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
-            &[StdlibFeature::Flate2, StdlibFeature::Zip]
-        }
+        "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => &[],
         "_bigint" => &[StdlibFeature::NumBigint, StdlibFeature::NumTraits],
         _ => &[],
     }

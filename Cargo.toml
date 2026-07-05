@@ -141,7 +141,7 @@ unicode-segmentation = { version = "1.13.3" }
 url = { version = "2.5.8" }
 uuid = { version = "1.23.1", features = ["v3", "v4", "v5"] }
 walkdir = { version = "2.5.0" }
-zip_8_6 = { package = "zip", version = "8.6.0" }
+zip_8_6 = { package = "zip", version = "8.6.0", default-features = false, features = ["deflate"] }
 
 [workspace.lints.rust]
 unsafe_code = "warn"

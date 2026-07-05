@@ -93,10 +93,7 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert(TOWER_SERVICE_DEP.to_string());
                 deps.insert(TRACING_DEP.to_string());
             }
-            "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
-                deps.insert("flate2 = \"1.1.9\"".to_string());
-                deps.insert("zip = \"8.6.0\"".to_string());
-            }
+            "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {}
             "_bigint" => {
                 deps.insert("num-bigint = \"0.4.6\"".to_string());
                 deps.insert("num-traits = \"0.2.19\"".to_string());
