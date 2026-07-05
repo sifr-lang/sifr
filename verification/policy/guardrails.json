@@ -42,6 +42,13 @@
       "args": [],
       "timeout_seconds": 60,
       "report": "stdout"
+    },
+    {
+      "name": "sysroot-stdlib-resource-certification-gate",
+      "entrypoint": "scripts/check_sysroot_stdlib_resource_certification_gate.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
     }
   ]
 }

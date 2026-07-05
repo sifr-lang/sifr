@@ -21,10 +21,13 @@ In progress.
 | M9-M13 | in progress | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. M10 wave 3 merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776), migrating `_sifr.url`/`sifr.url` through private Rust interop backed by `sifr_stdlib::url`. M10 wave 4 merged in [PR #2778](https://github.com/sifr-lang/sifr/pull/2778), migrating `_sifr.toml`/`sifr.tomllib` through private Rust interop backed by `sifr_stdlib::toml`. M10 wave 5 merged in [PR #2780](https://github.com/sifr-lang/sifr/pull/2780), migrating `_sifr.json`/`sifr.json` through private Rust interop backed by `sifr_stdlib::json` token adapters while preserving `JSONDecodeError` location fields and JSON integer profile errors. M10 wave 6 merged in [PR #2781](https://github.com/sifr-lang/sifr/pull/2781), migrating `_sifr.encoding`/`sifr.encoding` through private Rust interop backed by `sifr_stdlib::encoding` while preserving public `DecodeError`/`EncodeError` wrappers. M10 wave 7 merged in [PR #2782](https://github.com/sifr-lang/sifr/pull/2782), migrating `_sifr.unicode`/`sifr.unicode` through private Rust interop backed by `sifr_stdlib::unicode` while preserving public `UnicodeDataError` wrappers and Unicode segmentation tuple payloads. M10 wave 8 merged in [PR #2784](https://github.com/sifr-lang/sifr/pull/2784), migrating `_sifr.i18n`/`sifr.i18n` through private Rust interop backed by `sifr_stdlib::i18n` while preserving public i18n error wrappers. M10 wave 9 merged in [PR #2785](https://github.com/sifr-lang/sifr/pull/2785), migrating `_sifr.compress`/`sifr.gzip`/`sifr.zipfile` through private Rust interop backed by `sifr_stdlib` gzip and zipfile adapters. M10 wave 10 merged in [PR #2787](https://github.com/sifr-lang/sifr/pull/2787), migrating `_sifr.datetime` through private Rust interop backed by the `sifr_stdlib` time feature and fixing grouped E2E fixture planning for datetime/compression stdlib features. M10 wave 11 merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789), splitting `_sifr.bytes` so `encode_utf8` and `bytes_to_hex` move to private `sifr_stdlib::bytes` adapters while first-class bytes constructors, hex parsing, strict hex formatting, and encode/decode method glue remain compiler-owned. M10 wave 12 merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791), splitting `_sifr.collections` so set helpers and legacy JSON-string `defaultdict_*` helpers move to private `sifr_stdlib::collections` adapters while Counter/defaultdict language glue and core collection behavior remain compiler-owned. |
 | Post-M10 Adapter Policy Adherence Audit | completed, merged | Merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774). The audit classified completed M9/M10 private bindings, added executable guards for direct `sifr_stdlib` targets and trust separation, documented residual `_sifr.crypto` random scope, and passed Opus review pass 2 plus local `scripts/run_all_tests.sh --profile create-pr` with only the warm wall-time advisory. |
 
-Latest merged wave: M10 wave 12 split `_sifr.collections` helper leaves so set
-helpers and legacy JSON-string `defaultdict_*` helpers move to private
-`sifr_stdlib::collections` adapters while Counter/defaultdict language glue and
-core collection behavior remain compiler-owned.
+Current local wave: M11 certification-gate audit. Local implementation, Opus
+review, and create-pr validation are complete on
+`m11-resource-certification-gate`; [PR #2793](https://github.com/sifr-lang/sifr/pull/2793)
+is open.
+Runtime/resource/callback surfaces remain compiler-owned or explicitly
+deferred while their Rust interop compatibility rows are still future-owned by
+`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
 
 ## PR Log
 
@@ -56,6 +59,7 @@ core collection behavior remain compiler-owned.
 - M10 wave 10 datetime interop migration: merged in [PR #2787](https://github.com/sifr-lang/sifr/pull/2787).
 - M10 wave 11 bytes helper interop split: merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789).
 - M10 wave 12 collections helper interop split: merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791).
+- M11 certification-gate audit: opened [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) after local implementation, Opus review, and create-pr validation passed.
 
 ## Design Reference
 
@@ -1846,6 +1850,57 @@ Validation:
 - Leak/close/error-path fixtures for file, process, net, TLS, HTTP, and Python
   object handles.
 - Per-family compatibility matrix updates before each submilestone closes.
+
+M11 gate audit status: local implementation, Opus review, and create-pr
+validation complete on `m11-resource-certification-gate`;
+[PR #2793](https://github.com/sifr-lang/sifr/pull/2793) is open.
+
+The M11 resource submilestones are not safe to migrate yet. The Rust interop
+compatibility matrix still marks `opaque_resource_matrix`,
+`async_runtime_reqwest`, `callbacks_call_scoped`, and
+`callback_subscription_matrix` as `future-owned-by-separate-phase`, with
+positive or negative executable evidence still planned. Those rows are owned by
+`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
+
+M11 gate audit implementation evidence:
+
+- `scripts/check_sysroot_stdlib_resource_certification_gate.py` compares
+  `internal_docs/stdlib_native_surface_ownership.toml` against
+  `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
+  and fails if an M11 resource-sensitive stdlib surface is marked movable while
+  its required matrix rows remain future-owned.
+- The guard covers `_sifr.crypto`, `_sifr.time`, `_sifr.logging`, `_sifr.fs`,
+  `_sifr.process`, `_sifr.sys`, `_sifr.signal`, `_sifr.net`, `_sifr.tls`,
+  `_sifr.http`, and `_sifr.python`.
+- `verification/runner/sifr_verify/profile_runner.py` runs the guard as part
+  of the core guardrails used by `scripts/run_all_tests.sh --profile create-pr`.
+- `verification/policy/guardrails.json` records the guardrail in the policy
+  inventory.
+- Focused validation passed:
+  `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`;
+  `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py --self-test`;
+  `uv run --project verification --locked python -m sifr_verify areas run --area rust_interop --suite matrix`;
+  `python3 scripts/check_hir_maintainability_guardrails.py`;
+  `python3 scripts/check_file_size_guardrails.py`;
+  `git diff --check`.
+- Opus review pass 1 and pass 2 returned `VERDICT: PASS` with no required
+  fixes. Pass 2 left only cosmetic/non-blocking suggestions; the script now
+  includes the blank-line cleanup noted there.
+- The first full create-pr attempt caught delivery-plan taxonomy wording in
+  durable docs/scripts. The script and architecture prose now use
+  lifecycle-neutral "resource certification" wording outside the issue plan,
+  and the coverage-matrix readiness check passed after that fix.
+- Local create-pr validation passed with zero failures:
+  `SIFR_LSP_COMMAND="$(pwd)/target/m10-collections-create-pr/debug/sifr lsp --stdio" CARGO_TARGET_DIR=target/m10-collections-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The lane wrote `target/validation_lane_reports/create-pr.latest.json`;
+  profile `create-pr`, real time `8992.08s`, CPU `5870.36s`, max RSS
+  `698.1MiB`, hardening `variants=6 failures=0 blocking_failures=0`, e2e
+  pass suite `132 passed, 0 failed`, and only the warm wall-time advisory was
+  reported. The slowest lane step was `python_interop` at `3737804ms`; the
+  slowest recorded cases were `python_interop:library-examples` at `2313688ms`,
+  `generated_code_quality:smoke/determinism` at `1420088ms`, and
+  `runtime_platform:platform-golden/locale_host_limited_formatting.sifr` at
+  `383799ms`.
 
 ### M12. Preamble and Intrinsic Registry Deletion
 

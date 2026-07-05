@@ -142,6 +142,11 @@ trust.
 Resource, async, callback, and runtime-state surfaces stay behind the active
 Rust interop runtime certification gate until their lifecycle behavior is
 executable evidence, not just adapter code.
+`scripts/check_sysroot_stdlib_resource_certification_gate.py` enforces this
+boundary during validation by comparing
+`internal_docs/stdlib_native_surface_ownership.toml` with the Rust interop
+compatibility matrix. A resource-sensitive stdlib surface cannot be marked
+movable while its required matrix rows remain `future-owned-by-separate-phase`.
 
 ## Installed Layout
 
@@ -730,6 +735,9 @@ through private declarations and Rust interop.
 Runtime/resource/callback surfaces follow the Rust interop certification gate.
 Surfaces still marked future-owned or uncertified in the compatibility matrix
 must not be claimed as stable stdlib interop support.
+The sysroot stdlib resource certification gate is part of core validation so
+resource migration cannot advance a resource-shaped surface ahead of the
+runtime evidence recorded by the Rust interop matrix.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
 compiler-owned sysroot trust policy. That trust does not extend to arbitrary
