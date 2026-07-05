@@ -2,11 +2,20 @@
 # decode_utf8 returns Result[str, ParseError]
 # bytes_to_hex returns Result[str, ParseError]
 # bytes_from_hex returns Result[bytes, ParseError]
-from _sifr.bytes import encode_utf8, bytes_to_hex
+from _sifr.bytes import encode_utf8 as _encode_utf8_impl
+from _sifr.bytes import bytes_to_hex as _bytes_to_hex_impl
+
+
+def encode_utf8(s: str) -> bytes:
+    return _encode_utf8_impl(s)
 
 
 def decode_utf8(data: bytes) -> Result[str, ParseError]:
     return data.decode()
+
+
+def bytes_to_hex(data: bytes) -> Result[str, ParseError]:
+    return _bytes_to_hex_impl(data)
 
 
 def bytes_from_hex(s: str) -> Result[bytes, ParseError]:

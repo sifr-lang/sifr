@@ -419,21 +419,27 @@ move individual native leaves out of compiler/codegen surfaces and into this
 crate behind the same feature names.
 
 Current migrated leaves include the stateless `_sifr.platform`, `_sifr.html`,
-`_sifr.calendar`, `_sifr.uuid`, `_sifr.math`, `_sifr.regex`, `_sifr.url`, and
-`_sifr.toml` private declaration modules, plus the hash helper subset and full
-base encoding helper subset of the shared `_sifr.crypto` private module used by
-`sifr.hashlib` and `sifr.base64`.
+`_sifr.calendar`, `_sifr.uuid`, `_sifr.math`, `_sifr.regex`, `_sifr.url`,
+`_sifr.toml`, `_sifr.datetime`, and `_sifr.compress` private declaration
+modules, plus the hash helper subset and full base encoding helper subset of
+the shared `_sifr.crypto` private module used by `sifr.hashlib` and
+`sifr.base64`, and the `encode_utf8`/`bytes_to_hex` helper subset of
+`_sifr.bytes`.
 Their public wrappers continue to live in
 `stdlib/sifr/platform.sifr`, `stdlib/sifr/html.sifr`,
 `stdlib/sifr/calendar.sifr`, `stdlib/sifr/uuid.sifr`,
 `stdlib/sifr/math.sifr`, `stdlib/sifr/re.sifr`,
 `stdlib/sifr/url.sifr`, `stdlib/sifr/tomllib.sifr`,
-`stdlib/sifr/hashlib.sifr`, and `stdlib/sifr/base64.sifr`, while generated code
+`stdlib/sifr/hashlib.sifr`, `stdlib/sifr/base64.sifr`,
+`stdlib/sifr/datetime.sifr`, `stdlib/sifr/gzip.sifr`,
+`stdlib/sifr/zipfile.sifr`, and `stdlib/sifr/bytes.sifr`, while generated code
 emits the private preamble functions and calls `sifr_stdlib::platform::*`,
 `sifr_stdlib::html::*`, `sifr_stdlib::calendar::*`,
 `sifr_stdlib::uuid::*`, `sifr_stdlib::math::*`, `sifr_stdlib::regex::*`,
-`sifr_stdlib::url::*`, `sifr_stdlib::toml::*`, `sifr_stdlib::hash::*`, and
-`sifr_stdlib::base64::*` through feature-gated sysroot dependencies. Direct
+`sifr_stdlib::url::*`, `sifr_stdlib::toml::*`, `sifr_stdlib::hash::*`,
+`sifr_stdlib::base64::*`, `sifr_stdlib::time::*`,
+`sifr_stdlib::gzip::*`, `sifr_stdlib::zipfile::*`, and
+`sifr_stdlib::bytes::*` through feature-gated sysroot dependencies. Direct
 Rust interop wrappers bridge Sifr `int` values through
 `sifr_runtime::interop::SifrIntBridge` at this boundary, including `list[int]`
 calendar returns and `int | None` URL ports; `str | None` URL query arguments
@@ -444,7 +450,13 @@ so private bridge ownership does not leak into the public API.
 `stdlib/sifr/hashlib.sifr` uses the same boundary pattern for string and bytes
 helpers: public `sha*`, `md5`, and `blake2*` functions wrap private underscored
 aliases imported from `_sifr.crypto`, keeping borrowed Rust interop parameters
-out of public generated call sites. `stdlib/sifr/base64.sifr` uses the same
+out of public generated call sites. `stdlib/sifr/bytes.sifr` also wraps
+`_sifr.bytes` helper declarations so public `encode_utf8` and `bytes_to_hex`
+calls with literals and owned bytes do not expose private borrowed Rust
+interop signatures. `bytes.from_hex`, `bytes.from_ints`, `bytes(size)`,
+`bytes_to_hex_strict`, `str.encode`, and `bytes.decode` remain retained
+compiler-owned language glue covered by the retained native-surface allowlist.
+`stdlib/sifr/base64.sifr` uses the same
 pattern for base64, URL-safe base64, base32, and base32hex encoders, decoders,
 and option helpers. `stdlib/sifr/re.sifr` uses the same wrapper pattern for
 regex match, find, replace, findall, split, match start/end, and flag variants.

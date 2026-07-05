@@ -32,13 +32,13 @@ deletion_stage = "stateless-native-leaf migration"
 [[surface]]
 id = "_sifr.bytes"
 public_modules = ["sifr.bytes", "sifr.hashlib"]
-current_owner = "compiler intrinsic registry: crates/sifr_codegen/src/intrinsics/registry/bytes.rs"
+current_owner = "mixed: encode_utf8 and bytes_to_hex via stdlib/_sifr/bytes.sifr private Rust interop backed by crates/sifr_stdlib bytes feature; first-class bytes constructors, bytes_from_hex, bytes_to_hex_strict, str.encode, and bytes.decode remain compiler language glue"
 final_owner = "compiler language glue for first-class bytes plus crates/sifr_stdlib for stdlib-facing helpers"
 reason = "First-class bytes representation is language-owned; helper conversion leaves should not stay in generic stdlib intrinsic dispatch."
 certification_state = "retained-compiler-glue-plus-migratable-helpers"
 can_move_before_runtime_certification = true
-migration_blocker = "Split language-owned bytes representation from stdlib helper functions."
-deletion_stage = "final retained allowlist"
+migration_blocker = "Retained compiler-language glue allowlist remains for first-class bytes constructors, hex parsing, strict hex formatting, and encode/decode methods."
+deletion_stage = "partial-migrated-to-sysroot-stdlib-retained-glue"
 
 [[surface]]
 id = "_sifr.collections"

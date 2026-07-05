@@ -52,6 +52,7 @@ pub(crate) fn generate_cargo_toml(
             "sifr.base64" => {
                 deps.insert("base64 = \"0.22.1\"".to_string());
             }
+            "sifr.bytes" | "_sifr.bytes" => {}
             "sifr.parallel" => {
                 deps.insert("rayon = \"1.12.0\"".to_string());
             }
@@ -323,6 +324,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.unicode"
                 | "sifr.datetime"
                 | "_sifr.datetime"
+                | "sifr.bytes"
+                | "_sifr.bytes"
                 | "sifr.gzip"
                 | "sifr.zipfile"
                 | "_sifr.compress"

@@ -174,7 +174,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             url_http::lower_http_build_cookie_header(args),
             Some(StdlibFeature::Http),
         ),
-        "encode_utf8" => (bytes::lower_encode_utf8(args), None),
         "str_encode_utf8_result" => (
             encoding::lower_str_encode_result(args),
             Some(StdlibFeature::SifrRuntime),
@@ -191,7 +190,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             encoding::lower_bytes_decode_result(args),
             Some(StdlibFeature::SifrRuntime),
         ),
-        "bytes_to_hex" => (bytes::lower_bytes_to_hex(args), None),
         "bytes_to_hex_strict" => (bytes::lower_bytes_to_hex_strict(args), None),
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),

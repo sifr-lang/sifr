@@ -434,8 +434,12 @@ pub(crate) fn lowers_collections_counter_intrinsics_via_registry() {
 
 #[test]
 pub(crate) fn lowers_bytes_intrinsics_via_registry() {
-    let enc = lower_intrinsic("encode_utf8", &["s".to_string()]).expect("encode_utf8");
-    assert!(render_expr(&enc.expr).contains("as_bytes()"));
+    for retired in ["encode_utf8", "bytes_to_hex"] {
+        assert!(
+            lower_intrinsic(retired, &["value".to_string()]).is_none(),
+            "{retired} should lower through _sifr.bytes private Rust interop declarations"
+        );
+    }
 
     let enc_result = lower_intrinsic("str_encode_utf8_result", &["s".to_string()])
         .expect("str_encode_utf8_result");
@@ -495,10 +499,6 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
     let from_ints_rendered = render_expr(&from_ints.expr);
     assert!(from_ints_rendered.contains("byte out of range at index"));
     assert!(from_ints_rendered.contains("Ok::<Vec<u8>, ValueError>"));
-
-    let to_hex = lower_intrinsic("bytes_to_hex", &["vals".to_string()]).expect("bytes_to_hex");
-    assert!(render_expr(&to_hex.expr).contains("{:02x}"));
-    assert!(render_expr(&to_hex.expr).contains("Ok"));
 
     let to_hex_strict =
         lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()]).expect("bytes_to_hex_strict");
