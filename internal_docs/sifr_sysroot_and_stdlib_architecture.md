@@ -96,12 +96,13 @@ surface-by-surface ownership decision remains the TOML registry.
 | HTTP transport | `preamble/url_http_runtime.rs` | `sifr_stdlib` HTTP resource implementation through certified interop, backed by `sifr_runtime` substrates |
 | Python objects, buffers, callbacks, and contexts | `registry/python.rs` | `sifr_stdlib` Python interop surface through certified object/resource/callback interop, backed by `sifr_runtime` substrates |
 
-The native migration registry for these surfaces is
-`internal_docs/stdlib_native_surface_ownership.toml`. It records current owner,
-final owner, reason, certification state, migration blocker, whether a surface
-can move before runtime certification, and deletion stage for each broad
-native surface. It is a temporary migration artifact and must be deleted or
-reduced to a retained compiler-language-glue allowlist by the final intrinsic-registry cleanup stage.
+The broad native migration registry used during earlier migration work has been
+retired. Final ownership is now determined by location: public APIs live in
+`stdlib/sifr`, private native declarations live in `stdlib/_sifr`,
+generated-program implementation lives in `crates/sifr_stdlib` and
+`crates/sifr_runtime`, and compiler intrinsics are language/runtime semantics
+only. Remaining compiler-native stdlib glue is explicitly allowlisted in
+`internal_docs/stdlib_retained_compiler_intrinsics.toml`.
 
 Rust interop runtime certification is not fully complete for resource-shaped
 surfaces. The active matrix
@@ -143,10 +144,10 @@ Resource, async, callback, and runtime-state surfaces stay behind the active
 Rust interop runtime certification gate until their lifecycle behavior is
 executable evidence, not just adapter code.
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` enforces this
-boundary during validation by comparing
-`internal_docs/stdlib_native_surface_ownership.toml` with the Rust interop
-compatibility matrix. A resource-sensitive stdlib surface cannot be marked
-movable while its required matrix rows remain `future-owned-by-separate-phase`.
+boundary during validation by pinning each resource-sensitive stdlib surface to
+its required Rust interop compatibility matrix rows. Those rows must remain
+`future-owned-by-separate-phase` and owned by the runtime ecosystem
+certification issue until that separate work updates the gate deliberately.
 
 Retained compiler-native stdlib glue is guarded separately by
 `internal_docs/stdlib_retained_compiler_intrinsics.toml` and
@@ -650,19 +651,12 @@ dependencies, explicit Rust interop dependencies, and temporary direct
 third-party dependencies for unmigrated compiler-special paths when the
 corresponding migration stage has a deletion plan and validation coverage.
 
-During migration, native stdlib ownership is tracked in a checked registry:
-
-```text
-internal_docs/stdlib_native_surface_ownership.toml
-```
-
-Each native surface records its current owner, final owner, reason,
-certification state, and deletion stage. The registry is a migration
-artifact. By the final intrinsic-registry cleanup stage it is deleted or reduced to a tiny retained compiler-language
-glue allowlist. Final ownership is by location: public APIs live in
-`stdlib/sifr`, private native declarations live in `stdlib/_sifr`,
-generated-program implementation lives in `crates/sifr_stdlib` and
-`crates/sifr_runtime`, and compiler intrinsics are language semantics only.
+The broad native stdlib migration registry has been deleted. Current ownership
+is checked by location and by targeted guardrails: retained compiler-native
+glue is listed in `internal_docs/stdlib_retained_compiler_intrinsics.toml`, and
+resource-shaped surfaces stay blocked by
+`scripts/check_sysroot_stdlib_resource_certification_gate.py` until their Rust
+interop lifecycle evidence lands.
 
 Some surfaces are intentionally split while migration is underway. For example,
 `_sifr.collections` set helpers and legacy JSON-string defaultdict helper

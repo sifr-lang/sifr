@@ -28,7 +28,8 @@ env vars, repo-normalized `CARGO_TARGET_DIR`, or the repo default target
 instead of silently falling back to stale `target/debug/sifr`.
 Next local wave: continue M12 registry/preamble deletion or explicit-retention
 reduction using the retained intrinsic allowlist guard and normalized
-verification binary resolution.
+verification binary resolution. Current branch:
+`m12-remove-native-ownership-registry`.
 
 ## PR Log
 
@@ -1867,11 +1868,11 @@ positive or negative executable evidence still planned. Those rows are owned by
 
 M11 gate audit implementation evidence:
 
-- `scripts/check_sysroot_stdlib_resource_certification_gate.py` compares
-  `internal_docs/stdlib_native_surface_ownership.toml` against
+- `scripts/check_sysroot_stdlib_resource_certification_gate.py` pins each
+  M11 resource-sensitive stdlib surface to the required rows in
   `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-  and fails if an M11 resource-sensitive stdlib surface is marked movable while
-  its required matrix rows remain future-owned.
+  and fails if any required row stops being future-owned by the runtime
+  ecosystem certification issue before the gate is deliberately updated.
 - The guard covers `_sifr.crypto`, `_sifr.time`, `_sifr.logging`, `_sifr.fs`,
   `_sifr.process`, `_sifr.sys`, `_sifr.signal`, `_sifr.net`, `_sifr.tls`,
   `_sifr.http`, and `_sifr.python`.
@@ -2073,6 +2074,55 @@ M12 wave 2 implementation evidence:
   absolute `CARGO_TARGET_DIR`, avoiding the earlier relative target-dir rebuild
   hazard while preserving LSP/binary pairing.
 
+M12 wave 3 status: local implementation, focused validation, Opus review pass
+1, and full create-pr validation completed on
+`m12-remove-native-ownership-registry`.
+
+This wave deletes the broad native-surface ownership registry now that M9-M10
+stateless and fallible-data migrations have closed and M12 wave 1 introduced
+the retained compiler-native intrinsic allowlist. Resource-sensitive surfaces
+remain blocked by the M11 certification gate, but the gate now pins directly to
+the Rust interop compatibility matrix instead of carrying a second broad TOML
+inventory.
+
+M12 wave 3 implementation evidence:
+
+- `internal_docs/stdlib_native_surface_ownership.toml` is deleted as an active
+  source of truth.
+- `scripts/check_sysroot_stdlib_resource_certification_gate.py` now validates
+  the required resource/callback/runtime matrix rows directly and fails if a
+  protected row is no longer `future-owned-by-separate-phase` or is no longer
+  owned by `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
+- `internal_docs/sifr_sysroot_and_stdlib_architecture.md` now states that final
+  ownership is by location, retained compiler-native glue is allowlisted in
+  `internal_docs/stdlib_retained_compiler_intrinsics.toml`, and
+  resource-shaped migration is blocked by the matrix-backed certification gate.
+- `internal_docs/architecture.md` no longer links to the deleted registry.
+- Opus review pass 1 in
+  `plans/reviews/active/m12-remove-native-ownership-registry-review-pass1.md`
+  returned `VERDICT: PASS` with no findings. The reviewer confirmed the M11
+  invariant remains intact and M12's broad-registry cleanup goal is met.
+- Focused validation passed:
+  `python3 -m py_compile scripts/check_sysroot_stdlib_resource_certification_gate.py scripts/check_stdlib_native_intrinsic_allowlist.py`;
+  `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`;
+  `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py --self-test`;
+  `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`;
+  `python3 scripts/check_stdlib_native_intrinsic_allowlist.py --self-test`;
+  `uv run --project verification --locked python -m sifr_verify areas run --area rust_interop --suite matrix`;
+  `uv run --project verification --locked python verification/areas/coverage_matrix/runner.py --suite readiness`;
+  `python3 scripts/check_file_size_guardrails.py`;
+  `git diff --check`.
+- Full create-pr validation passed with zero failures:
+  `ABS_TARGET="$(pwd)/target/m12-remove-native-ownership-create-pr"; SIFR_LSP_COMMAND="${ABS_TARGET}/debug/sifr lsp --stdio" CARGO_TARGET_DIR="${ABS_TARGET}" CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
+  The lane wrote `target/validation_lane_reports/create-pr.latest.json`;
+  profile `create-pr`, real time `6541.97s`, CPU `4654.19s`, max RSS
+  `613.1MiB`, hardening variants `6`, failures `0`. Advisory-only findings:
+  warm wall-time budget exceeded and warm-cache hit rate below advisory target.
+  Slowest lane steps were `python_interop` (`2275383ms`), `crate_tests`
+  (`1357537ms`), `generated_code_quality_checks` (`1157909ms`), and
+  `runtime_platform_suites` (`859326ms`). The e2e pass suite completed
+  `132/132` fixtures with report signature `5edef8cd4b961ef8`.
+
 ### M13. Release Candidate Certification
 
 Close the phase with an installed-toolchain certification pass.
@@ -2142,9 +2192,11 @@ Validation:
 - Preserve Sifr's no-user-triggerable-panic guarantee.
 - Keep generated sysroot crates free of development-workspace-only manifest
   assumptions.
-- Keep `internal_docs/stdlib_native_surface_ownership.toml` updated during
-  migration, then delete it or reduce it to the retained compiler-language-glue
-  allowlist in M12.
+- Keep retained compiler-native glue tracked in
+  `internal_docs/stdlib_retained_compiler_intrinsics.toml`, and keep
+  resource-sensitive stdlib migration blocked by
+  `scripts/check_sysroot_stdlib_resource_certification_gate.py` until the
+  runtime ecosystem certification issue lands executable lifecycle evidence.
 - Treat sysroot source, crate, vendor, and Cargo config changes as one
   versioned toolchain unit.
 - Keep all generated diagnostics source-attributed to public stdlib wrappers or

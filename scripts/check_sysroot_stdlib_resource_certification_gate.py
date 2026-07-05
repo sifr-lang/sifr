@@ -5,12 +5,10 @@ from __future__ import annotations
 
 import json
 import sys
-import tomllib
 from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-OWNERSHIP_PATH = REPO_ROOT / "internal_docs" / "stdlib_native_surface_ownership.toml"
 MATRIX_PATH = (
     REPO_ROOT
     / "verification"
@@ -21,16 +19,6 @@ MATRIX_PATH = (
 )
 CERTIFICATION_ISSUE = "plans/issues/active/rust-interop-runtime-ecosystem-certification.md"
 FUTURE_OWNED = "future-owned-by-separate-phase"
-MIXED_CERTIFICATION_STATES = {
-    "mixed-stateless-supported-resource-state-needs-review",
-    "mixed-stateless-supported-runtime-sensitive",
-    "mixed-stdlib-leaf-plus-runtime-sensitive",
-}
-RETAINED_COMPILER_GLUE_SURFACES = (
-    "_sifr.runtime",
-    "_sifr.task",
-    "generated-runtime-integer-glue",
-)
 
 SURFACE_CERTIFICATION_ROWS: dict[str, tuple[str, ...]] = {
     "_sifr.crypto": ("opaque_resource_matrix",),
@@ -52,13 +40,12 @@ SURFACE_CERTIFICATION_ROWS: dict[str, tuple[str, ...]] = {
 
 
 def main() -> int:
-    ownership = tomllib.loads(OWNERSHIP_PATH.read_text(encoding="utf-8"))
     matrix = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
-    return _run(ownership, matrix)
+    return _run(matrix)
 
 
-def _run(ownership: dict[str, Any], matrix: dict[str, Any]) -> int:
-    failures = _validate(ownership, matrix)
+def _run(matrix: dict[str, Any]) -> int:
+    failures = _validate(matrix)
 
     if failures:
         for failure in failures:
@@ -73,58 +60,28 @@ def _run(ownership: dict[str, Any], matrix: dict[str, Any]) -> int:
     return 0
 
 
-def _validate(ownership: dict[str, Any], matrix: dict[str, Any]) -> list[str]:
+def _validate(matrix: dict[str, Any]) -> list[str]:
     failures: list[str] = []
     rows_by_id = _rows_by_id(failures, matrix)
-    surfaces_by_id = _surfaces_by_id(failures, ownership)
 
     for surface_id, required_rows in SURFACE_CERTIFICATION_ROWS.items():
-        surface = surfaces_by_id.get(surface_id)
-        if surface is None:
-            failures.append(f"{surface_id}: missing native surface ownership entry")
-            continue
+        for row_id in required_rows:
+            row = rows_by_id.get(row_id)
+            if row is None:
+                failures.append(f"{surface_id}: missing Rust interop compatibility matrix row {row_id}")
+                continue
 
-        future_rows = [
-            row_id
-            for row_id in required_rows
-            if _matrix_category(failures, rows_by_id, row_id) == FUTURE_OWNED
-        ]
-        if not future_rows:
-            continue
-
-        if surface.get("can_move_before_runtime_certification") is not False:
-            failures.append(
-                f"{surface_id}: must not be movable while matrix rows remain future-owned: "
-                + ", ".join(future_rows)
-            )
-
-        state = str(surface.get("certification_state", ""))
-        if not (
-            state.startswith("future-owned-by-runtime-resource-certification")
-            or state in MIXED_CERTIFICATION_STATES
-            or state == "retained-compiler-language-glue"
-        ):
-            failures.append(
-                f"{surface_id}: certification_state must record runtime/resource retention "
-                f"while {', '.join(future_rows)} remain future-owned"
-            )
-
-        blocker = str(surface.get("migration_blocker", "")).strip().lower()
-        if not blocker or blocker == "none":
-            failures.append(
-                f"{surface_id}: migration_blocker must name the certification blocker "
-                f"while {', '.join(future_rows)} remain future-owned"
-            )
-
-    for surface_id in RETAINED_COMPILER_GLUE_SURFACES:
-        surface = surfaces_by_id.get(surface_id)
-        if surface is None:
-            failures.append(f"{surface_id}: missing retained compiler-language surface entry")
-            continue
-        if surface.get("certification_state") != "retained-compiler-language-glue":
-            failures.append(f"{surface_id}: retained compiler glue must keep retained certification_state")
-        if surface.get("can_move_before_runtime_certification") is not False:
-            failures.append(f"{surface_id}: retained compiler glue must not be movable before certification")
+            category = str(row.get("category", ""))
+            if category != FUTURE_OWNED:
+                failures.append(
+                    f"{surface_id}: {row_id} is {category or '<missing category>'}; "
+                    "update this gate when resource certification lands"
+                )
+            future_owner = row.get("future_owner")
+            if future_owner != CERTIFICATION_ISSUE:
+                failures.append(
+                    f"{surface_id}: {row_id} future_owner must remain {CERTIFICATION_ISSUE}"
+                )
 
     future_runtime_rows = _future_runtime_rows(matrix)
     if not future_runtime_rows:
@@ -157,53 +114,7 @@ def _rows_by_id(failures: list[str], matrix: dict[str, Any]) -> dict[str, dict[s
     return rows
 
 
-def _surfaces_by_id(failures: list[str], ownership: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    surfaces: dict[str, dict[str, Any]] = {}
-    for surface in ownership.get("surface", []):
-        if not isinstance(surface, dict):
-            failures.append("native surface ownership entries must be objects")
-            continue
-        surface_id = surface.get("id")
-        if not isinstance(surface_id, str) or not surface_id:
-            failures.append("native surface ownership id is required")
-            continue
-        surfaces[surface_id] = surface
-    return surfaces
-
-
-def _matrix_category(
-    failures: list[str],
-    rows_by_id: dict[str, dict[str, Any]],
-    row_id: str,
-) -> str:
-    row = rows_by_id.get(row_id)
-    if row is None:
-        failures.append(f"{row_id}: missing Rust interop compatibility matrix row")
-        return ""
-    return str(row.get("category", ""))
-
-
 def _self_test() -> int:
-    base_ownership = {
-        "surface": [
-            {
-                "id": surface_id,
-                "certification_state": "future-owned-by-runtime-resource-certification",
-                "can_move_before_runtime_certification": False,
-                "migration_blocker": "certification evidence required",
-            }
-            for surface_id in SURFACE_CERTIFICATION_ROWS
-        ]
-        + [
-            {
-                "id": surface_id,
-                "certification_state": "retained-compiler-language-glue",
-                "can_move_before_runtime_certification": False,
-                "migration_blocker": "final retained allowlist decision",
-            }
-            for surface_id in RETAINED_COMPILER_GLUE_SURFACES
-        ]
-    }
     base_matrix = {
         "rows": [
             {"id": row_id, "category": FUTURE_OWNED, "future_owner": CERTIFICATION_ISSUE}
@@ -211,23 +122,20 @@ def _self_test() -> int:
         ]
     }
 
-    if _validate(base_ownership, base_matrix):
+    if _validate(base_matrix):
         print("self-test seed should pass", file=sys.stderr)
         return 1
 
-    movable_ownership = json.loads(json.dumps(base_ownership))
-    movable_ownership["surface"][0]["can_move_before_runtime_certification"] = True
-    if not any("must not be movable" in failure for failure in _validate(movable_ownership, base_matrix)):
-        print("self-test movable future-owned surface was not rejected", file=sys.stderr)
+    certified_matrix = json.loads(json.dumps(base_matrix))
+    certified_matrix["rows"][0]["category"] = "supported"
+    if not any("update this gate when resource certification lands" in failure for failure in _validate(certified_matrix)):
+        print("self-test supported resource row was not rejected", file=sys.stderr)
         return 1
 
-    retained_ownership = json.loads(json.dumps(base_ownership))
-    retained_ownership["surface"][-1]["can_move_before_runtime_certification"] = True
-    if not any(
-        "retained compiler glue must not be movable" in failure
-        for failure in _validate(retained_ownership, base_matrix)
-    ):
-        print("self-test movable retained compiler glue was not rejected", file=sys.stderr)
+    wrong_owner_matrix = json.loads(json.dumps(base_matrix))
+    wrong_owner_matrix["rows"][0]["future_owner"] = "plans/issues/active/other.md"
+    if not any("future_owner must remain" in failure for failure in _validate(wrong_owner_matrix)):
+        print("self-test wrong future owner was not rejected", file=sys.stderr)
         return 1
 
     completed_matrix = json.loads(json.dumps(base_matrix))
@@ -235,7 +143,7 @@ def _self_test() -> int:
         row["category"] = "supported"
     if not any(
         "expected at least one runtime/resource compatibility row" in failure
-        for failure in _validate(base_ownership, completed_matrix)
+        for failure in _validate(completed_matrix)
     ):
         print("self-test missing future-owned backstop was not rejected", file=sys.stderr)
         return 1
