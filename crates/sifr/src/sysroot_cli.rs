@@ -17,6 +17,78 @@ pub(super) fn cmd_print(print: PrintKind, json: bool, diagnostic_format: Diagnos
     }
 }
 
+pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+    match sifr_sysroot::resolve_sysroot(None) {
+        Ok(sysroot) => {
+            if json {
+                let value = serde_json::json!({
+                    "schema_version": 1,
+                    "status": "ok",
+                    "root": sysroot.root,
+                    "toolchain_id": sysroot.toolchain_id(),
+                    "sifr_version": sysroot.manifest.sifr_version,
+                    "target_triple": sysroot.manifest.target_triple,
+                    "checks": [
+                        {"name": "manifest", "status": "ok", "path": sysroot.paths.manifest},
+                        {"name": "stdlib_public_sources", "status": "ok", "path": sysroot.paths.stdlib_public_sources},
+                        {"name": "stdlib_private_sources", "status": "ok", "path": sysroot.paths.stdlib_private_sources},
+                        {"name": "runtime_crate", "status": "ok", "path": sysroot.paths.runtime_crate},
+                        {"name": "stdlib_crate", "status": "ok", "path": sysroot.paths.stdlib_crate},
+                        {"name": "cargo_lock", "status": "ok", "path": sysroot.paths.cargo_lock},
+                        {"name": "vendor", "status": "ok", "path": sysroot.paths.vendor},
+                    ],
+                });
+                let _ = writeln!(
+                    io::stdout(),
+                    "{}",
+                    serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string())
+                );
+            } else {
+                let _ = writeln!(io::stdout(), "Sifr doctor: ok");
+                let _ = writeln!(io::stdout(), "sysroot: {}", sysroot.root.display());
+                let _ = writeln!(io::stdout(), "toolchain: {}", sysroot.toolchain_id());
+                let _ = writeln!(io::stdout(), "target: {}", sysroot.manifest.target_triple);
+                let _ = writeln!(
+                    io::stdout(),
+                    "runtime crate: {}",
+                    sysroot.paths.runtime_crate.display()
+                );
+                let _ = writeln!(
+                    io::stdout(),
+                    "stdlib crate: {}",
+                    sysroot.paths.stdlib_crate.display()
+                );
+                let _ = writeln!(io::stdout(), "vendor: {}", sysroot.paths.vendor.display());
+            }
+            EXIT_SUCCESS
+        }
+        Err(error) => {
+            if json {
+                let value = serde_json::json!({
+                    "schema_version": 1,
+                    "status": "error",
+                    "error_kind": format!("{:?}", error.kind),
+                    "message": error.message,
+                    "binary_path": error.binary_path,
+                    "attempted_sysroot": error.attempted_sysroot,
+                    "asset_path": error.asset_path,
+                });
+                let _ = writeln!(
+                    io::stdout(),
+                    "{}",
+                    serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string())
+                );
+            }
+            let diagnostic = diagnostic_with_code(
+                error.boundary_message(),
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            );
+            render_diagnostics(&[diagnostic], diagnostic_format);
+            EXIT_USAGE_OR_CONFIG
+        }
+    }
+}
+
 fn print_sysroot(json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
     match sifr_sysroot::resolve_sysroot(None) {
         Ok(sysroot) => {

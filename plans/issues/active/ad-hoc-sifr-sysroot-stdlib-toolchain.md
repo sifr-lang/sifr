@@ -27,9 +27,9 @@ Latest merged wave: M12 wave 4 migrated-intrinsic closure guard merged in
 active migrated native intrinsic names are blocked from reappearing in the
 compiler dispatcher, and stale deleted-registry architecture wording is guarded
 by create-pr core guardrails.
-Current local wave: M13 wave 1 installed toolchain certification on branch
-`m13-installed-toolchain-certification`, fast-forwarded to `origin/main`
-commit `16f920f9f` before final validation.
+Current local wave: M13 wave 2 doctor and self-update certification on branch
+`m13-doctor-self-update-certification`, based on M13 wave 1 merged in
+[PR #2808](https://github.com/sifr-lang/sifr/pull/2808).
 
 ## PR Log
 
@@ -2282,6 +2282,34 @@ M13 wave 1 focused validation:
   `39749ms`/`120000ms` pass. Advisory only: warm wall-time budget exceeded.
 - Opus review pass 4 reported no blocking findings and one cleanup; pass 5
   confirmed the cleanup and marked the wave ready to proceed.
+
+M13 wave 2 status: local implementation, installed smoke validation, Opus
+review pass 2, and full create-pr validation are complete on
+`m13-doctor-self-update-certification`; PR publication is next.
+
+This wave adds `sifr doctor` as the user-facing installed sysroot health
+command and extends the installed smoke certification to capture healthy text
+and JSON doctor snapshots plus a broken-sysroot diagnostic snapshot. The same
+suite now writes a schema-2 standalone install receipt for the extracted
+archive and verifies `sifr self version --format json` and version-pinned
+`sifr self update --dry-run --format json` preserve the installed binary and
+sysroot pairing without fetching channel metadata.
+
+M13 wave 2 focused validation:
+
+- `CARGO_TARGET_DIR=target/validation-m13-wave2 CARGO_INCREMENTAL=0 cargo check -q -p sifr`
+- `python3 -m py_compile verification/areas/sysroot_release/runner.py`
+- `cargo fmt --check`
+- `CARGO_TARGET_DIR=target/validation-m13-wave2 CARGO_INCREMENTAL=0 uv run --project verification --locked python -m sifr_verify areas run --area sysroot_release --suite host-installed-smoke` passed with installed doctor/self-update snapshots, broken `doctor --json`, installed LSP, installed emit, and repo/home path-leakage scans; elapsed `104168ms`, repository scan covered 10 artifacts.
+- Opus review pass 1 reported no blockers and suggested three tightening checks; pass 2 confirmed those checks and marked the wave ready for PR.
+- Full create-pr validation:
+  `CARGO_TARGET_DIR=target/validation-create-pr-m13-wave2 CARGO_INCREMENTAL=0
+  scripts/run_all_tests.sh --profile create-pr` passed all blocking checks.
+  Lane report: wall time `327.23s`, max RSS `750.2MiB`, slowest step
+  `crate_tests` `102216ms`/`600000ms` pass, `runtime_platform_suites`
+  `40523ms`/`120000ms` pass, and e2e pass suite `132/132` fixtures with
+  report signature `5edef8cd4b961ef8`. Advisory only: warm wall-time budget
+  exceeded.
 
 Tasks:
 
