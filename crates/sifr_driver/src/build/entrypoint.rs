@@ -619,6 +619,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "generated build integration coverage runs in full validation profiles"]
     fn test_single_file_entrypoint_plan_generates_main_only_project() {
         let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
             source: "def main():\n    print(\"ok\")\n",
@@ -638,6 +639,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "generated build integration coverage runs in full validation profiles"]
     fn test_project_entrypoint_plan_generates_support_modules() {
         let dir = mktemp_dir("project_positive");
         let main_file = dir.join("main.sifr");
@@ -704,6 +706,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "generated build integration coverage runs in full validation profiles"]
     fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
         let dir = mktemp_dir("project_metadata_positive");
         let main_file = dir.join("main.sifr");
@@ -742,6 +745,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
     }
 
     #[test]
+    #[ignore = "generated build integration coverage runs in full validation profiles"]
     fn test_project_entrypoint_plan_ignores_unreachable_dependency_metadata() {
         let dir = mktemp_dir("project_metadata_negative");
         let main_file = dir.join("main.sifr");
@@ -778,6 +782,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
     }
 
     #[test]
+    #[ignore = "generated build integration coverage runs in full validation profiles"]
     fn test_cached_project_binary_reuses_workspace_for_unchanged_input() {
         let dir = mktemp_dir("cached_project_reuse");
         let main_file = dir.join("main.sifr");
@@ -818,6 +823,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
     }
 
     #[test]
+    #[ignore = "generated build integration coverage runs in full validation profiles"]
     fn test_cached_project_binary_invalidates_when_sources_change() {
         let dir = mktemp_dir("cached_project_invalidation");
         let main_file = dir.join("main.sifr");

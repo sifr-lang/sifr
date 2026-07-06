@@ -487,7 +487,7 @@ class ProfileRunner:
             if not isinstance(command, list) or not all(isinstance(arg, str) for arg in command):
                 raise ProfileRunnerError(f"crate test suite {suite_id} has invalid command")
             print(f"Running crate test suite {suite_id}")
-            run_command(cargo_command(*command))
+            run_command(cargo_command(*command), env=self.env)
 
     def run_validation_suites(self) -> None:
         if not self.matrix_suites:

@@ -59,7 +59,9 @@
       {"id": "sifr_ir", "package": "sifr_ir", "command": ["test", "-p", "sifr_ir"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_cli_bin", "package": "sifr", "command": ["test", "-p", "sifr", "--bin", "sifr"], "modes": ["smoke"], "status": "blocking", "executed_in_merge": false},
       {"id": "sifr_cli_full", "package": "sifr", "command": ["test", "-p", "sifr", "--", "--skip", "test_e2e_pass"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_cli_generated_builds", "package": "sifr", "command": ["test", "-p", "sifr", "--bin", "sifr", "--", "--ignored", "--test-threads=1"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_driver_lib", "package": "sifr_driver", "command": ["test", "-p", "sifr_driver", "--lib"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_driver_generated_builds", "package": "sifr_driver", "command": ["test", "-p", "sifr_driver", "--lib", "--", "--ignored", "--test-threads=1"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_codegen", "package": "sifr_codegen", "command": ["test", "-p", "sifr_codegen"], "modes": ["full"], "status": "blocking", "executed_in_merge": true}
     ]
   },

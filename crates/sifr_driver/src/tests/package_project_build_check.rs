@@ -296,6 +296,7 @@ def main():\n    assert parse_json() == 1\n    assert decode_json() == 2\n",
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_cached_package_project_materializes_namespace_roots() {
     let dir = mktemp_dir("package_namespace_build");
     let mut app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
@@ -351,6 +352,7 @@ fn generated_project_root(binary_path: &Path) -> PathBuf {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_cached_package_project_links_direct_rust_interop_dependency() {
     let dir = mktemp_dir("package_direct_rust_interop");
     let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");

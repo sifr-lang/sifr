@@ -378,6 +378,7 @@ pub(super) fn test_check_entrypoint_project_mode_error_parity_with_compile_entry
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 pub(super) fn test_compile_entrypoint_single_file_ignores_unrelated_sibling_parse_errors() {
     let dir = mktemp_dir("single_file_sibling_isolation");
     let main = dir.join("main.sifr");
@@ -396,6 +397,7 @@ pub(super) fn test_compile_entrypoint_single_file_ignores_unrelated_sibling_pars
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 pub(super) fn test_compile_entrypoint_non_main_input_stays_single_file() {
     let dir = mktemp_dir("non_main_single_file_boundary");
     let app = dir.join("app.sifr");
@@ -416,6 +418,7 @@ pub(super) fn test_compile_entrypoint_non_main_input_stays_single_file() {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 pub(super) fn test_emit_entrypoint_uses_project_mode_for_project_like_main() {
     let dir = mktemp_dir("emit_project_boundary");
     let main = dir.join("main.sifr");

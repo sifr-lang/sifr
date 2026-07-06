@@ -105,6 +105,7 @@ fn test_check_project_resolves_workspace_source_import_for_non_main_entry() {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_materializes_dotted_workspace_modules() {
     let dir = mktemp_dir("workspace_dotted_build");
     let main_file = dir.join("cases/app.sifr");
@@ -140,6 +141,7 @@ fn test_build_project_materializes_dotted_workspace_modules() {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_preserves_imported_class_constructors_and_signatures() {
     let dir = mktemp_dir("workspace_imported_class_codegen");
     let main_file = dir.join("cases/app.sifr");
@@ -197,6 +199,7 @@ def node_value(node: LinkedNode | None) -> int:
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_emit_project_includes_workspace_support_modules() {
     let dir = mktemp_dir("workspace_emit");
     let main_file = dir.join("cases/app.sifr");
@@ -228,6 +231,7 @@ fn test_emit_project_includes_workspace_support_modules() {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_cached_project_invalidates_when_workspace_helper_changes() {
     let dir = mktemp_dir("workspace_cache_invalidation");
     let main_file = dir.join("cases/app.sifr");
@@ -356,6 +360,7 @@ def broken() -> int:
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_includes_support_module_required_features_in_manifest() {
     let dir = mktemp_dir("manifest_positive");
     let main_file = dir.join("main.sifr");
@@ -384,6 +389,7 @@ fn test_build_project_includes_support_module_required_features_in_manifest() {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_manifest_ignores_unreachable_required_features() {
     let dir = mktemp_dir("manifest_negative");
     let main_file = dir.join("main.sifr");
@@ -417,6 +423,7 @@ fn test_build_project_manifest_ignores_unreachable_required_features() {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest() {
     let dir = mktemp_dir("stdlib_positive");
     let main_file = dir.join("main.sifr");
@@ -450,6 +457,7 @@ def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"f
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates() {
     let dir = mktemp_dir("stdlib_negative");
     let main_file = dir.join("main.sifr");
@@ -483,6 +491,7 @@ def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_includes_transitive_dependency_closure_in_manifest() {
     let dir = mktemp_dir("transitive_positive");
     let main_file = dir.join("main.sifr");
@@ -517,6 +526,7 @@ def render() -> str:\n    return render_value()\n",
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_manifest_ignores_unreachable_transitive_dependency_chain() {
     let dir = mktemp_dir("transitive_negative");
     let main_file = dir.join("main.sifr");

@@ -374,6 +374,7 @@ pub(super) fn test_package_cli_parses_run_script_bin_and_app_args() {
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 pub(super) fn test_package_cli_run_selects_workspace_package_from_root() {
     let project = TestProject::new("package_cli_workspace_run_selection");
     project.write(
