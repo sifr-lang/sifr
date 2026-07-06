@@ -133,15 +133,29 @@ owns those conversions before calling lower-level implementation code.
 The compiler should not add per-declaration converter pipelines for the stdlib
 rewrite. Generated glue validates the single `@rust(...)` target signature,
 records the sysroot interop dependency and trust metadata, and lets
-`sifr_stdlib` own implementation adaptation. These migrations are committed to
+`sifr_stdlib` own implementation adaptation. Sysroot stdlib interop uses
 `bridge-version = 1`; any future callee-injection form requires a new
-bridge-versioned design and must not add fallback conversion behavior to existing
+bridge-versioned design and must not add fallback conversion behavior to
 sysroot interop declarations.
 
 Private stdlib declarations rely on the compiler-owned sysroot trust policy and
-`sifr_stdlib` crate-level no-panic conventions for public APIs whose error
-surface does not include `RustPanicError`; user packages do not inherit that
-trust.
+`sifr_stdlib` crate-level no-panic conventions. User packages do not inherit
+that trust.
+
+Canonical private stdlib Rust interop declarations use an ellipsis-only stub
+body and target direct `sifr_stdlib.*` paths:
+
+```sifr
+@rust(sifr_stdlib.math.sqrt)
+def sqrt(x: float) -> float: ...
+```
+
+For private `_sifr.*` declarations loaded from the resolved sysroot, a direct
+`sifr_stdlib.*` target has an effective compiler-owned no-panic policy. The
+compiler records that effective policy in trust metadata and dependency-plan
+fingerprints even though the source declaration remains a pure declaration
+stub. This rule is package-keyed to the synthetic sysroot package context and
+does not extend to user packages or non-stdlib Rust targets.
 
 Resource, async, callback, and runtime-state surfaces stay behind the active
 Rust interop runtime certification gate until their lifecycle behavior is
@@ -756,10 +770,12 @@ file, and preamble file until that entry is migrated, deleted, or explicitly
 kept as compiler-language glue.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
-compiler-owned sysroot trust policy. That trust does not extend to arbitrary
-user crates. Sysroot declarations may target only version-matched sysroot
-crates unless an explicit architecture decision adds a new trusted crate
-boundary.
+compiler-owned sysroot trust policy. A canonical private `_sifr.*` declaration
+that targets direct `sifr_stdlib.*` uses the sysroot no-panic policy as its
+effective panic surface and is written as an ellipsis-only declaration stub.
+That trust does not extend to arbitrary user crates. Sysroot declarations may
+target only version-matched sysroot crates unless an explicit architecture
+decision adds a new trusted crate boundary.
 
 Private `_sifr` declaration interop uses a synthetic compiler-owned package
 context rather than a user package. The context maps private declaration

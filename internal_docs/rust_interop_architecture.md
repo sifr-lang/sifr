@@ -96,6 +96,12 @@ def crc32(data: bytes) -> uint32: ...
 
 Direct binding is allowed only when the target signature is bridge-compatible without adaptation. If the Rust crate exposes a non-compatible API, the package author must write a package-local bridge. Non-`Result` direct bindings require an explicit panic policy such as `panic=trusted_no_panic`; otherwise they must expose `Result[..., RustPanicError]`.
 
+The body of a Rust interop declaration is an ellipsis-only stub body: exactly
+one ellipsis statement. The compiler derives generated behavior from the
+validated Rust interop metadata rather than from Sifr statements in the
+declaration body. Ellipsis is public Rust interop declaration syntax, not a
+general Sifr function body form.
+
 ### Package-Local Bridge Binding
 
 ```sifr
@@ -561,7 +567,8 @@ Every fallible Rust call exposed to Sifr returns `Result`. Panics are not user e
 
 ## Panic Surface Policy
 
-Every `@rust` declaration has an explicit panic surface.
+Every package-authored `@rust` declaration declares its panic surface in the
+Sifr source.
 
 Result-returning functions convert caught Rust panics to `RustPanicError`, and that error must enter the declared Sifr error channel through one of:
 
@@ -584,7 +591,7 @@ If the mapper panics, generated glue ignores the failed mapper and surfaces the 
 
 The initial compile-time panic contract validates the public panic surface and `panic=map_error(path)` shape. Full generated wrapper emission, mapper signature validation, and mapper-panic fallback behavior are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md) through the `panic_boundary_wrapper_emission` compatibility row.
 
-Non-`Result` functions cannot return a recoverable panic without changing their public type. They are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
+Non-`Result` functions cannot return a recoverable panic without changing their public type. Package-authored declarations are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
 
 Generated wrappers catch panics at the boundary:
 
@@ -604,7 +611,16 @@ pub fn call_encode(text: &str) -> Result<Tokenized, NativeErrorOr<TokenizeError>
 
 Generated wrappers use `AssertUnwindSafe` at the boundary because opaque handles and mutable bridge state are commonly not `UnwindSafe`. The generated wrapper marks the opaque receiver plus any mutable or owned opaque handles passed to the Rust call as poisoned automatically when `catch_unwind` returns `Err`; bridge authors do not implement poisoning manually and must not depend on additional bridge code running after a panic. Re-entering a poisoned handle returns a stable `SIFR-RUST-PANIC-*` error instead of calling Rust again.
 
-The initial panic-boundary contract surface enforces that Result-returning Rust interop declarations either expose `RustPanicError`, declare `panic=map_error(path)`, or use an explicit trusted/abort panic policy. Non-Result declarations require `panic=trusted_no_panic` or `panic=abort`; `panic=abort` requires both `[trust].rust-panic-abort` evidence and a selected Cargo profile whose panic strategy is `abort`. Runtime bridge helpers redact panic payloads when converting caught panics into `RustPanicErrorBridge`.
+The initial panic-boundary contract surface enforces that package-authored Result-returning Rust interop declarations either expose `RustPanicError`, declare `panic=map_error(path)`, or use an explicit trusted/abort panic policy. Package-authored non-`Result` declarations require `panic=trusted_no_panic` or `panic=abort`; `panic=abort` requires both `[trust].rust-panic-abort` evidence and a selected Cargo profile whose panic strategy is `abort`. Runtime bridge helpers redact panic payloads when converting caught panics into `RustPanicErrorBridge`.
+
+Private sysroot stdlib declarations are compiled in a synthetic compiler-owned
+package context. A private `_sifr.*` declaration that targets a direct
+`sifr_stdlib.*` path uses the compiler-owned sysroot no-panic trust policy as
+its effective panic surface. The effective policy is recorded in Rust interop
+trust metadata, bridge probes, dependency-plan cache fingerprints, and audit
+diagnostics. This sysroot policy is restricted to canonical private stdlib
+declarations and does not apply to user packages, package-local bridges,
+`Self`, `sifr_runtime`, or arbitrary Cargo dependency roots.
 
 `Drop` panics are backend contract violations. Fallible cleanup must be modeled as explicit `close` or `aclose`, not as hidden destructor failure.
 
