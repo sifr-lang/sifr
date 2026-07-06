@@ -4,7 +4,8 @@ Status: active
 
 Sifr local validation uses four profiles:
 
-- `create-pr`: fast local create-PR signal, target <=120s warm and <=300s cold.
+- `create-pr`: fast local create-PR signal, target <=5m warm and <=15m cold,
+  with blocking per-step budgets for regression control.
 - `merge`: authoritative merge gate for compiler correctness.
 - `nightly`: broad hardening, full generated-code quality, and full e2e pass corpus.
 - `release`: highest-confidence release qualification profile.
@@ -68,6 +69,13 @@ crate commands fast. They are not disabled tests: full profiles run the
 `--ignored --test-threads=1`. Do not use `#[ignore]` in the `sifr` binary or
 `sifr_driver` lib suites for broken/quarantined tests; add a separate explicit
 profile suite instead.
+
+Create-pr also carries blocking per-step budgets in `step_budgets`. These
+budgets are intentionally broader than the long-term wall-time target while the
+fast lane is being restored, but they make each step's cost a contract instead
+of a decorative observation. Local investigation may temporarily set
+`SIFR_VERIFY_DISABLE_STEP_BUDGETS=1`; PR validation must not rely on that escape
+hatch.
 
 ## Merge Profile
 

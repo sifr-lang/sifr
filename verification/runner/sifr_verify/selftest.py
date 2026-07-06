@@ -84,6 +84,20 @@ def _profile_schema_self_test() -> None:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
     if profiles["python-interop-live"].get("execution_mode") != "selected-areas-only":
         raise AssertionError("python-interop-live must use selected-areas-only execution")
+    create_pr_step_budgets = profiles["create-pr"].get("step_budgets", {})
+    required_blocking_steps = {
+        "generated_code_quality_checks",
+        "crate_tests",
+        "runtime_platform_suites",
+        "e2e_pass_suite",
+    }
+    missing_step_budgets = sorted(required_blocking_steps.difference(create_pr_step_budgets))
+    if missing_step_budgets:
+        raise AssertionError(f"create-pr step budgets missing: {missing_step_budgets}")
+    for step in sorted(required_blocking_steps):
+        budget = create_pr_step_budgets[step]
+        if budget.get("enforcement") != "blocking" or int(budget.get("budget_ms", 0)) <= 0:
+            raise AssertionError(f"create-pr step budget is not blocking/positive: {step}={budget}")
 
 
 def _crate_membership_self_test() -> None:

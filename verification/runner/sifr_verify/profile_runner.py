@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, TextIO
 
@@ -34,6 +35,12 @@ class CommandFailed(Exception):
     def __init__(self, returncode: int) -> None:
         super().__init__(f"command failed with exit code {returncode}")
         self.returncode = returncode
+
+
+@dataclass(frozen=True)
+class StepResult:
+    status: int
+    elapsed_ms: int
 
 
 class Tee:
@@ -103,7 +110,7 @@ def now_ms() -> int:
     return time.monotonic_ns() // 1_000_000
 
 
-def timed_step(name: str, callback: Callable[[], None]) -> int:
+def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
     start_ms = now_ms()
     status = 0
     try:
@@ -117,7 +124,7 @@ def timed_step(name: str, callback: Callable[[], None]) -> int:
     elapsed_ms = end_ms - start_ms
     label = "pass" if status == 0 else "fail"
     print(f"[sifr-lane-step] name={name} elapsed_ms={elapsed_ms} status={label}")
-    return status
+    return StepResult(status=status, elapsed_ms=elapsed_ms)
 
 
 class ProfileRunner:
@@ -179,9 +186,12 @@ class ProfileRunner:
         )
 
         for name, callback in steps:
-            status = timed_step(name, callback)
-            if status != 0:
-                return status
+            result = timed_step(name, callback)
+            if result.status != 0:
+                return result.status
+            budget_status = self.enforce_step_budget(name, result.elapsed_ms)
+            if budget_status != 0:
+                return budget_status
         return 0
 
     @property
@@ -191,6 +201,11 @@ class ProfileRunner:
     @property
     def budgets(self) -> dict[str, Any]:
         return self.profile["budgets"]
+
+    @property
+    def step_budgets(self) -> dict[str, Any]:
+        budgets = self.profile.get("step_budgets", {})
+        return budgets if isinstance(budgets, dict) else {}
 
     @property
     def matrix_suites(self) -> list[str]:
@@ -253,6 +268,33 @@ class ProfileRunner:
                 suites.extend(str(suite) for suite in raw_suites)
         return suites
 
+    def enforce_step_budget(self, name: str, elapsed_ms: int) -> int:
+        raw_budget = self.step_budgets.get(name)
+        if not isinstance(raw_budget, dict):
+            return 0
+        budget_ms = int(raw_budget.get("budget_ms", 0) or 0)
+        enforcement = str(raw_budget.get("enforcement", "advisory"))
+        exceeded = budget_ms > 0 and elapsed_ms > budget_ms
+        budget_status = "fail" if exceeded else "pass"
+        print(
+            "[sifr-lane-step-budget] "
+            f"name={name} elapsed_ms={elapsed_ms} budget_ms={budget_ms} "
+            f"enforcement={enforcement} status={budget_status}"
+        )
+        disabled = os.environ.get("SIFR_VERIFY_DISABLE_STEP_BUDGETS", "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if exceeded and enforcement == "blocking" and not disabled:
+            print(
+                f"sifr_verify: step budget exceeded for {name}: "
+                f"{elapsed_ms}ms > {budget_ms}ms",
+                file=sys.stderr,
+            )
+            return 124
+        return 0
+
     def run_selected_areas_only(self) -> int:
         selections = [
             selection
@@ -266,9 +308,9 @@ class ProfileRunner:
             area = str(selection["area"])
             suites = [str(suite) for suite in selection.get("suites", [])]
             step_name = f"{area}_selected_suites"
-            status = timed_step(step_name, lambda area=area, suites=suites: self.run_area_suites(area, suites))
-            if status != 0:
-                return status
+            result = timed_step(step_name, lambda area=area, suites=suites: self.run_area_suites(area, suites))
+            if result.status != 0:
+                return result.status
         return 0
 
     def run_area_suites(self, area: str, suites: list[str]) -> None:
@@ -487,7 +529,21 @@ class ProfileRunner:
             if not isinstance(command, list) or not all(isinstance(arg, str) for arg in command):
                 raise ProfileRunnerError(f"crate test suite {suite_id} has invalid command")
             print(f"Running crate test suite {suite_id}")
-            run_command(cargo_command(*command), env=self.env)
+            start_ms = now_ms()
+            status = 0
+            try:
+                run_command(cargo_command(*command), env=self.env)
+            except CommandFailed as exc:
+                status = exc.returncode
+            elapsed_ms = now_ms() - start_ms
+            case_status = "pass" if status == 0 else "fail"
+            print(
+                "[sifr-case-timing] "
+                f"bucket=crate_tests case={suite_id} "
+                f"elapsed_ms={elapsed_ms} status={case_status}"
+            )
+            if status != 0:
+                raise CommandFailed(status)
 
     def run_validation_suites(self) -> None:
         if not self.matrix_suites:

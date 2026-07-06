@@ -46,6 +46,10 @@
         }
       }
     },
+    "step_budgets": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "resource_policy": {
       "type": "object",
       "required": ["classes", "max_parallel"],
