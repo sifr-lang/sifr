@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -107,11 +108,14 @@ def build_release_binary(manifest: dict[str, Any], failures: list[str]) -> dict[
     release = manifest["release_binary"]
     build_command = [str(part) for part in release["build_command"]]
     timeout = int(release["build_timeout_seconds"])
+    env = os.environ.copy()
+    env.pop("CARGO_TARGET_DIR", None)
     started = time.perf_counter()
     try:
         completed = subprocess.run(
             build_command,
             cwd=REPO_ROOT,
+            env=env,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -184,7 +188,16 @@ def run_case(
     )
     timeout = int(suite["per_program_timeout_seconds"])
     cpython = run_command([sys.executable, str(python_path)], timeout)
-    sifr = run_command([str(REPO_ROOT / "target" / "release" / "sifr"), "run", str(sifr_path)], timeout)
+    sifr = run_command(
+        [
+            str(REPO_ROOT / "target" / "release" / "sifr"),
+            "--sysroot",
+            str(REPO_ROOT),
+            "run",
+            str(sifr_path),
+        ],
+        timeout,
+    )
     print(
         f"[cpython-generated] suite={suite_name} case={case_id} "
         f"python_exit={cpython.exit_code} sifr_exit={sifr.exit_code} "

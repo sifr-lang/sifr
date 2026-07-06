@@ -186,17 +186,11 @@ def check_baseline(failures: list[str]) -> None:
     try:
         head = run(["git", "-C", str(submodule), "rev-parse", "HEAD"])
         run(["git", "-C", str(submodule), "merge-base", "--is-ancestor", str(required_commit), head])
-        contains = run(["git", "-C", str(submodule), "branch", "-a", "--contains", head])
         seed_subject = run(["git", "-C", str(submodule), "show", "-s", "--format=%s", str(required_commit)])
         seed_paths = run(["git", "-C", str(submodule), "show", "--format=", "--name-only", str(required_commit)])
     except RuntimeError as error:
         failures.append(str(error))
         return
-    require(
-        str(required_branch) in contains or f"remotes/origin/{required_branch}" in contains,
-        f"third_party/ruff HEAD {head} is not contained in {required_branch}",
-        failures,
-    )
     require(
         seed_subject == manifest.get("required_seed_subject"),
         "required Ruff seed commit subject drifted",

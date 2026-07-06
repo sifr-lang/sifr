@@ -1,7 +1,7 @@
 use super::implementation::AnalysisHost;
 use crate::editor::{EditorFacts, EditorToken};
 use crate::snapshot::{AnalysisError, AnalysisErrorKind};
-use sifr_frontend::FileId;
+use sifr_frontend::{parse_source_module, FileId};
 
 impl AnalysisHost {
     pub(super) fn editor_facts(&mut self, file: FileId) -> Result<EditorFacts, AnalysisError> {
@@ -13,7 +13,7 @@ impl AnalysisHost {
                 .context()?
                 .source_file_for_file(file)
                 .and_then(|source_file| source_file.module_name.as_deref());
-            sifr_syntax::parse_module(&source, module_name).map_err(|diagnostics| {
+            parse_source_module(&source, module_name).map_err(|diagnostics| {
                 AnalysisError::new(
                     AnalysisErrorKind::FrontendDiagnostic,
                     diagnostics.first().map_or_else(

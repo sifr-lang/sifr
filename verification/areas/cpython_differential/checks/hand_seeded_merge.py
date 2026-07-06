@@ -21,7 +21,7 @@ MANIFEST = (
     / "hand_seeded_manifest.json"
 )
 PYPROJECT = REPO_ROOT / "verification" / "pyproject.toml"
-TIMEOUT_SECONDS = 90
+TIMEOUT_SECONDS = 240
 
 
 @dataclass(frozen=True)

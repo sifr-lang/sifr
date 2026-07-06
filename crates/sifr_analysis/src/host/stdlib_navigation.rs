@@ -4,7 +4,7 @@ use crate::queries::Location;
 use crate::snapshot::AnalysisError;
 use crate::symbols::StdlibSymbolInput;
 use ruff_text_size::{Ranged as _, TextRange};
-use sifr_frontend::{FileId, SourceFileView, SourceOrigin};
+use sifr_frontend::{parse_source, FileId, SourceFileView, SourceOrigin};
 use sifr_python_ast::{Expr, Stmt};
 
 impl AnalysisHost {
@@ -110,11 +110,10 @@ fn stdlib_symbols_from_file(file: &SourceFileView) -> Vec<StdlibSymbolInput> {
     let Some(module_name) = file.module_name.as_ref() else {
         return Vec::new();
     };
-    let Ok(parsed) = sifr_syntax::parse_module(file.source.as_str(), Some(module_name)) else {
+    let Ok(stmts) = parse_source(file.source.as_str(), Some(module_name)) else {
         return Vec::new();
     };
-    let mut symbols = parsed
-        .suite()
+    let mut symbols = stmts
         .iter()
         .enumerate()
         .filter_map(|(ordinal, stmt)| symbol_from_stmt(module_name, file.id, stmt, ordinal))

@@ -34,4 +34,6 @@ mod performance_nested_mutation_codegen_tests;
 #[cfg(test)]
 mod recursive_node_codegen_tests;
 #[cfg(test)]
+mod structured_intrinsic_codegen_tests;
+#[cfg(test)]
 mod structured_lowering_codegen_tests;

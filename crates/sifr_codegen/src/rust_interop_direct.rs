@@ -37,6 +37,16 @@ fn direct_rust_arg_expr(param: &HirParam) -> RustExpr {
             func: Box::new(sifr_int_bridge_path("from")),
             args: vec![value],
         }
+    } else if is_int_list(&param.ty) {
+        let bridged = i64_vec_to_bridge_int_vec_expr(value, param.convention.is_borrowed());
+        if param.convention.is_borrowed() {
+            RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(bridged),
+            }
+        } else {
+            bridged
+        }
     } else if is_optional_str(&param.ty) {
         RustExpr::MethodCall {
             receiver: Box::new(value),
@@ -52,6 +62,10 @@ fn direct_rust_arg_expr(param: &HirParam) -> RustExpr {
     } else {
         value
     }
+}
+
+fn is_int_list(ty: &Type) -> bool {
+    matches!(ty.resolve_alias(), Type::List(inner) if inner.resolve_alias() == &Type::Int)
 }
 
 fn is_optional_str(ty: &Type) -> bool {
@@ -297,6 +311,36 @@ fn bridge_int_vec_to_i64_vec_expr(value: RustExpr) -> RustExpr {
     }
 }
 
+fn i64_vec_to_bridge_int_vec_expr(value: RustExpr, borrowed: bool) -> RustExpr {
+    let iter = RustExpr::MethodCall {
+        receiver: Box::new(value),
+        method: if borrowed {
+            "iter".to_string()
+        } else {
+            "into_iter".to_string()
+        },
+        args: Vec::new(),
+    };
+    let values = if borrowed {
+        RustExpr::MethodCall {
+            receiver: Box::new(iter),
+            method: "copied".to_string(),
+            args: Vec::new(),
+        }
+    } else {
+        iter
+    };
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(values),
+            method: "map".to_string(),
+            args: vec![sifr_int_bridge_path("from")],
+        }),
+        method: "collect::<Vec<_>>".to_string(),
+        args: Vec::new(),
+    }
+}
+
 fn to_string_expr(expr: RustExpr) -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(expr),
@@ -386,6 +430,76 @@ mod tests {
                 ])),
                 args: vec![RustExpr::Ident("data".to_string())],
             }))])
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_converts_owned_integer_list_arguments() {
+        let func = HirFunction {
+            name: "set_from_list".to_string(),
+            params: vec![HirParam {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::own(),
+            }],
+            return_type: Type::List(Box::new(Type::Int)),
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "collections", "set_from_list"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body = direct_rust_function_body(&func)
+            .expect("direct integer-list interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct integer-list interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::collections::set_from_list(items.into_iter().map(sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_converts_borrowed_integer_list_arguments() {
+        let func = HirFunction {
+            name: "set_len".to_string(),
+            params: vec![HirParam {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::Int,
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "collections", "set_len"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body = direct_rust_function_body(&func)
+            .expect("direct borrowed integer-list interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct borrowed integer-list interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::collections::set_len(&items.iter().copied().map(sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).to_i64_saturating()"
         );
     }
 

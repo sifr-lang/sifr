@@ -459,7 +459,8 @@ emits the private preamble functions and calls `sifr_stdlib::platform::*`,
 `sifr_stdlib::bytes::*` through feature-gated sysroot dependencies. Direct
 Rust interop wrappers bridge Sifr `int` values through
 `sifr_runtime::interop::SifrIntBridge` at this boundary, including `list[int]`
-calendar returns and `int | None` URL ports; `str | None` URL query arguments
+calendar returns, owned `list[int]` collection inputs, borrowed `list[int]`
+collection inputs, and `int | None` URL ports; `str | None` URL query arguments
 clone into `Option<String>` at the sysroot crate boundary. Public math aggregate
 helpers such as `dist`, `fsum`, and `sumprod` keep read-only list parameters in
 `stdlib/sifr/math.sifr` and copy into private owned-vector Rust interop helpers,
@@ -498,6 +499,12 @@ generated project that also embeds Python, the selected packaged Python runtime
 contributes its own `libpython` link name to the trusted set. That trust is tied
 to the interpreter selected by the Python runtime probe and does not make
 arbitrary Rust build-script native links trusted.
+When generated code selects the sysroot TLS stack, the compiler-owned native
+link trust set includes the exact Rustls provider link emitted by the locked
+`aws-lc-sys` dependency: `aws_lc_0_41_0_crypto`. This is dependency-plan gated;
+stdlib `http` selection inherits the same trust because the shipped stdlib
+`http` feature enables TLS. Unrelated build-script native links remain
+rejected.
 
 It owns Rust implementations for stdlib native leaves and resource operations
 that are not compiler semantics:

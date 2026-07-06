@@ -259,6 +259,13 @@ pub fn parse_source(
     sifr_syntax::parse_module_suite(source, context)
 }
 
+pub fn parse_source_module(
+    source: &str,
+    context: Option<&str>,
+) -> Result<sifr_syntax::ParsedModule, Vec<RenderedDiagnostic>> {
+    sifr_syntax::parse_module(source, context)
+}
+
 pub fn compile_module_hir(
     module_name: &str,
     stmts: &[Stmt],
