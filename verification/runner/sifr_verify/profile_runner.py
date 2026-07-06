@@ -19,6 +19,10 @@ from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profiles import crate_test_suites_for_mode, legacy_facade, load_profile, resolve_fixture_manifest
 
+sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
+
 
 class ProfileRunnerError(VerificationError):
     """Profile execution failed before a validation command could run."""
@@ -125,6 +129,15 @@ class ProfileRunner:
         self.legacy = legacy_facade(self.profile)
         self.forward_args = forward_args
         self.env = os.environ.copy()
+        configured_sifr_binary = self.env.get("SIFR_GCQ_BIN") or self.env.get("SIFR_RUNTIME_PLATFORM_BIN")
+        sifr_binary = Path(configured_sifr_binary) if configured_sifr_binary else resolve_sifr_binary(
+            REPO_ROOT,
+            default_binary=REPO_ROOT / "target" / "debug" / "sifr",
+        )
+        self.env.setdefault("SIFR_GCQ_BIN", str(sifr_binary))
+        self.env.setdefault("SIFR_RUNTIME_PLATFORM_BIN", str(sifr_binary))
+        os.environ.setdefault("SIFR_GCQ_BIN", str(sifr_binary))
+        os.environ.setdefault("SIFR_RUNTIME_PLATFORM_BIN", str(sifr_binary))
         probe_cache_root = REPO_ROOT / "target" / "sifr_rust_bridge_probe_cache" / self.profile_name
         self.env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
         os.environ["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)

@@ -7,6 +7,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+FRESHNESS_INPUTS = (
+    "Cargo.lock",
+    "Cargo.toml",
+    "crates",
+    "stdlib",
+    "third_party/ruff/crates",
+)
+
 
 def resolve_sifr_binary(
     repo_root: Path,
@@ -22,12 +30,12 @@ def resolve_sifr_binary(
 
     target_bin = _configured_target_binary(repo_root)
     if target_bin is not None:
-        if not target_bin.is_file():
+        if not target_bin.is_file() or _binary_is_stale(repo_root, target_bin):
             _build_sifr_binary(repo_root, target_bin)
         return target_bin
 
     fallback = default_binary or repo_root / "target" / "debug" / "sifr"
-    if not fallback.is_file():
+    if not fallback.is_file() or _binary_is_stale(repo_root, fallback):
         _build_sifr_binary(repo_root, fallback)
     return fallback
 
@@ -40,6 +48,19 @@ def _configured_target_binary(repo_root: Path) -> Path | None:
     if not target_dir.is_absolute():
         target_dir = repo_root / target_dir
     return target_dir / "debug" / "sifr"
+
+
+def _binary_is_stale(repo_root: Path, binary: Path) -> bool:
+    binary_mtime = binary.stat().st_mtime
+    for relative in FRESHNESS_INPUTS:
+        path = repo_root / relative
+        if path.is_file() and path.stat().st_mtime > binary_mtime:
+            return True
+        if path.is_dir():
+            for child in path.rglob("*"):
+                if child.is_file() and child.stat().st_mtime > binary_mtime:
+                    return True
+    return False
 
 
 def _build_sifr_binary(repo_root: Path, expected_binary: Path) -> None:

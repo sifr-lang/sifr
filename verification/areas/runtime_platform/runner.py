@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -14,12 +15,18 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
+COMMON_ROOT = REPO_ROOT / "verification" / "areas" / "common"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 GOLDEN_MANIFEST = AREA_ROOT / "golden" / "manifest.json"
 PLATFORM_RULES = AREA_ROOT / "platform_rules.json"
 SANITIZER_MANIFEST = AREA_ROOT / "sanitizer_manifest.json"
 PLATFORM_EVIDENCE_TOOL = AREA_ROOT / "tools" / "check_platform_evidence.py"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "runtime-platform-results.json"
+DEFAULT_SIFR_BIN = REPO_ROOT / "target" / "debug" / "sifr"
+
+sys.path.insert(0, str(COMMON_ROOT))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -219,11 +226,16 @@ def run_platform_evidence_suite(suite_name: str) -> list[dict[str, Any]]:
 def run_platform_golden() -> list[dict[str, Any]]:
     manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
     closed = {item.strip() for item in os.environ.get("SIFR_PLATFORM_CLOSED_CAPABILITIES", "").split(",") if item.strip()}
+    sifr_binary = resolve_sifr_binary(
+        REPO_ROOT,
+        explicit_env_var="SIFR_RUNTIME_PLATFORM_BIN",
+        default_binary=DEFAULT_SIFR_BIN,
+    )
     variants = []
     passed = 0
     skipped = 0
     for entry in manifest.get("entries", []):
-        variant = run_platform_entry(entry, closed)
+        variant = run_platform_entry(entry, closed, sifr_binary)
         variants.append(variant)
         if variant["status"] == "skip":
             skipped += 1
@@ -233,14 +245,15 @@ def run_platform_golden() -> list[dict[str, Any]]:
     return variants
 
 
-def run_platform_entry(entry: dict[str, Any], closed: set[str]) -> dict[str, Any]:
+def run_platform_entry(entry: dict[str, Any], closed: set[str], sifr_binary: Path) -> dict[str, Any]:
     program = str(entry["program"])
+    command = platform_entry_command(str(entry["command"]), sifr_binary)
     missing = [capability for capability in entry.get("blocked_until_capabilities", []) if capability not in closed]
     if missing:
         print(f"[platform-golden] skip {program} blocked_until_capabilities={','.join(missing)}", flush=True)
         return {
             "label": program,
-            "argv": [str(entry.get("command", ""))],
+            "argv": command,
             "status": "skip",
             "mismatches": [],
             "expected_exit_code": int(entry.get("expected_exit", 0)),
@@ -251,9 +264,9 @@ def run_platform_entry(entry: dict[str, Any], closed: set[str]) -> dict[str, Any
 
     started = time.perf_counter()
     result = subprocess.run(
-        str(entry["command"]),
+        command,
         cwd=REPO_ROOT,
-        shell=True,
+        env=platform_command_env(),
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -280,13 +293,30 @@ def run_platform_entry(entry: dict[str, Any], closed: set[str]) -> dict[str, Any
     print_case_timing("platform-golden", program, elapsed_ms, status)
     return {
         "label": program,
-        "argv": [str(entry["command"])],
+        "argv": command,
         "status": status,
         "mismatches": failures,
         "expected_exit_code": expected_exit,
         "actual_exit_code": result.returncode,
         "duration_ms": round(elapsed_ms, 3),
     }
+
+
+def platform_entry_command(raw_command: str, sifr_binary: Path) -> list[str]:
+    argv = shlex.split(raw_command)
+    if not argv or argv[0] != "{sifr}":
+        raise SystemExit("runtime platform golden commands must start with {sifr}")
+    return [str(sifr_binary), *argv[1:]]
+
+
+def platform_command_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env.setdefault("CARGO_TARGET_DIR", str(REPO_ROOT / "target" / "runtime_platform" / "cargo-target"))
+    env.setdefault(
+        "SIFR_RUST_BRIDGE_PROBE_CACHE_DIR",
+        str(REPO_ROOT / "target" / "sifr_rust_bridge_probe_cache" / "runtime-platform"),
+    )
+    return env
 
 
 def run_sanitizer_suite(suite_name: str) -> list[dict[str, Any]]:

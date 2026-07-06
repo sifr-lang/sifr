@@ -22,6 +22,10 @@ GCQ_ROOT = REPO_ROOT / "verification" / "areas" / "generated_code_quality"
 MANIFEST = GCQ_ROOT / "data" / "corpus_manifest.json"
 TARGET_ROOT = REPO_ROOT / "target" / "sifr_generated_code_quality"
 EVIDENCE_ROOT = TARGET_ROOT / "evidence"
+sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
+
 # Inputs that change generated Rust or its compile environment. Manifest metadata
 # remains part of per-entry selection, not producer cache invalidation.
 PRODUCER_FINGERPRINT_INPUTS = [
@@ -456,7 +460,7 @@ def run_command(
 ) -> subprocess.CompletedProcess[str]:
     env = command_env()
     shared_root = shared_artifact_root()
-    if shared_root is not None and args and args[0] == "cargo":
+    if shared_root is not None:
         env["CARGO_TARGET_DIR"] = str(shared_root / "cargo-target")
     result = subprocess.run(
         args,
@@ -474,6 +478,12 @@ def run_command(
             f"--- stdout ---\n{result.stdout}\n--- stderr ---\n{result.stderr}"
         )
     return result
+
+
+@functools.cache
+def sifr_binary() -> str:
+    default = REPO_ROOT / "target" / "debug" / "sifr"
+    return str(resolve_sifr_binary(REPO_ROOT, explicit_env_var="SIFR_GCQ_BIN", default_binary=default))
 
 
 def materialize_entry(entry: Entry, run_root: Path) -> Path:
@@ -498,12 +508,7 @@ def materialize_entry(entry: Entry, run_root: Path) -> Path:
         )
         run_command(
             [
-                "cargo",
-                "run",
-                "-q",
-                "-p",
-                "sifr",
-                "--",
+                sifr_binary(),
                 "build",
                 entry.source_path,
                 "-o",
@@ -618,7 +623,7 @@ def compare_bytes(left: bytes, right: bytes) -> bool:
 
 def emit_source(entry: Entry) -> bytes:
     result = run_command(
-        ["cargo", "run", "-q", "-p", "sifr", "--", "emit", entry.source_path],
+        [sifr_binary(), "emit", entry.source_path],
     )
     return result.stdout.encode("utf-8")
 
