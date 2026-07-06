@@ -66,7 +66,7 @@ ordinary Sifr expression body.
 | Milestone | Status | Evidence |
 | --- | --- | --- |
 | M0. Contract and Guardrail Documentation | completed | PR #2812 documented the canonical declaration form and validation boundaries. |
-| M1. Lowering Support for Ellipsis Interop Stubs | in review | Lowering implementation and focused tests are complete; Opus M1 pass 2 has no unresolved actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_lowering rust_interop`, `cargo test -p sifr -- rust_interop`. |
+| M1. Lowering Support for Ellipsis Interop Stubs | in review | PR #2813. Lowering implementation and focused tests are complete; Opus M1 pass 2 has no unresolved actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_lowering rust_interop`, `cargo test -p sifr -- rust_interop`, `scripts/run_all_tests.sh --profile create-pr` in a clean detached worktree. |
 | M2. Effective Sysroot Panic Policy | planned | Pending. |
 | M3. Codegen and Plan Hardening | planned | Pending. |
 | M4. Stdlib Source Migration and Executable Guards | planned | Pending. |
