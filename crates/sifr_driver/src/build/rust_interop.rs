@@ -26,7 +26,7 @@ use sifr_codegen::{
     RustInteropTrustRequirement, RustInteropTrustRequirementKind,
 };
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::{RustInteropDeclaration, RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
+use sifr_ir::{RustInteropDecoratorKind, RustTargetPath};
 use sifr_package::{BackendCrateMetadata, PackageSourceMap, SifrPackageGraph, SifrPackageId};
 use std::collections::{BTreeSet, HashMap};
 
@@ -44,8 +44,15 @@ mod opaque_validation;
 mod panic_validation;
 #[path = "rust_interop/probe_planning.rs"]
 mod probe_planning;
+#[path = "rust_interop/target_resolution.rs"]
+mod target_resolution;
 #[path = "rust_interop/zero_copy_validation.rs"]
 mod zero_copy_validation;
+
+use target_resolution::{
+    backend_for_root, canonical_sifr_target_path, canonical_trust_target_path, declaration_paths,
+    trust_kind_name, uses_bridge_root,
+};
 
 #[derive(Clone, Debug)]
 pub(super) struct PackageRustInteropContext {
@@ -54,6 +61,7 @@ pub(super) struct PackageRustInteropContext {
     pub(super) source_map: PackageSourceMap,
     pub(super) module_packages: HashMap<String, SifrPackageId>,
     pub(super) module_sources: HashMap<String, RustInteropModuleSource>,
+    pub(super) sysroot_runtime_crate: Option<std::path::PathBuf>,
     pub(super) sysroot_trust: Option<SysrootRustInteropTrust>,
 }
 
@@ -344,15 +352,25 @@ impl<'a> RustInteropResolver<'a> {
                     .get(&canonical_target_path)
                     .cloned();
                 let async_thread_affinity = self.async_thread_affinity_for_probe(declaration);
+                let Some(sysroot_runtime_crate) = self.context.sysroot_runtime_crate.clone() else {
+                    self.push_diagnostic(
+                        declaration,
+                        path.span,
+                        DiagnosticCode::RUST_CARGO_METADATA,
+                        "Rust bridge probe requires a resolved Sifr sysroot runtime crate",
+                        vec![("target", path.dotted())],
+                        vec!["Direct Rust bridge probes must use the same resolved sysroot runtime crate as generated Cargo projects.".to_string()],
+                        None,
+                    );
+                    return;
+                };
                 self.pending_direct_probes.push(PendingRustBridgeProbe {
                     declaration: declaration.clone(),
                     path: path.clone(),
                     backend: backend.clone(),
                     signature,
                     async_thread_affinity,
-                    sysroot_runtime_crate_manifest: sysroot_trust
-                        .as_ref()
-                        .map(|trust| trust.runtime_crate_manifest.clone()),
+                    sysroot_runtime_crate,
                     sysroot_vendor_dir: sysroot_trust
                         .as_ref()
                         .map(|trust| trust.vendor_dir.clone()),
@@ -813,87 +831,5 @@ impl<'a> RustInteropResolver<'a> {
             &notes,
             None,
         ));
-    }
-}
-
-fn declaration_paths(declaration: &RustInteropDeclaration) -> Vec<&RustTargetPath> {
-    let mut paths = Vec::new();
-    if let Some(target) = &declaration.target {
-        paths.push(target);
-    }
-    for argument in &declaration.arguments {
-        collect_value_paths(&argument.value, &mut paths);
-    }
-    paths
-}
-
-fn collect_value_paths<'a>(value: &'a RustInteropValue, paths: &mut Vec<&'a RustTargetPath>) {
-    match value {
-        RustInteropValue::TargetPath(path) => paths.push(path),
-        RustInteropValue::PolicyCall { argument, .. } => collect_value_paths(argument, paths),
-        RustInteropValue::Boolean(_)
-        | RustInteropValue::Symbol(_)
-        | RustInteropValue::Integer(_)
-        | RustInteropValue::IntegerList(_) => {}
-    }
-}
-
-fn backend_for_root<'a>(
-    graph: &'a SifrPackageGraph,
-    package_id: &SifrPackageId,
-    root: &str,
-) -> Option<&'a BackendCrateMetadata> {
-    graph
-        .backend_crates
-        .get(package_id)?
-        .iter()
-        .find(|backend| backend.dependency_name == root)
-}
-
-fn canonical_sifr_target_path(declaration: &sifr_codegen::RustInteropPlanDeclaration) -> String {
-    let mut path = declaration
-        .module_name
-        .clone()
-        .unwrap_or_else(|| "main".to_string());
-    match &declaration.owner {
-        RustInteropOwner::Function { name } => {
-            path.push('.');
-            path.push_str(name);
-        }
-        RustInteropOwner::Class { name } => {
-            path.push('.');
-            path.push_str(name);
-        }
-        RustInteropOwner::Method { class_name, name } => {
-            path.push('.');
-            path.push_str(class_name);
-            path.push('.');
-            path.push_str(name);
-        }
-    }
-    path
-}
-
-fn canonical_trust_target_path(declaration: &sifr_codegen::RustInteropPlanDeclaration) -> String {
-    declaration_paths(&declaration.declaration)
-        .first()
-        .map(|path| path.dotted())
-        .unwrap_or_else(|| canonical_sifr_target_path(declaration))
-}
-fn uses_bridge_root(declaration: &RustInteropDeclaration) -> bool {
-    declaration_paths(declaration)
-        .iter()
-        .any(|path| path.segments.first().is_some_and(|root| root == "bridge"))
-}
-
-fn trust_kind_name(kind: &RustInteropTrustRequirementKind) -> &'static str {
-    match kind {
-        RustInteropTrustRequirementKind::BuildScript => "build_script",
-        RustInteropTrustRequirementKind::ProcMacro => "proc_macro",
-        RustInteropTrustRequirementKind::NativeLinks => "native_links",
-        RustInteropTrustRequirementKind::BuildEnv => "build_env",
-        RustInteropTrustRequirementKind::UnsafeBridge => "unsafe_bridge",
-        RustInteropTrustRequirementKind::NoPanic => "no_panic",
-        RustInteropTrustRequirementKind::PanicAbort => "panic_abort",
     }
 }

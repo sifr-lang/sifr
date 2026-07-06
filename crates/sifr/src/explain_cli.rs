@@ -2,9 +2,12 @@ use super::cli_model_and_entrypoint::{
     diagnostic_with_code, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
 };
 use super::diagnostic_rendering_and_run::render_diagnostics;
+use sifr_diagnostics::codes::registry_entry;
 use sifr_diagnostics::DiagnosticCode;
+#[cfg(debug_assertions)]
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::io::{self, Write as _};
+#[cfg(debug_assertions)]
 use std::path::PathBuf;
 
 pub(super) fn cmd_explain(code: &str, diagnostic_format: DiagnosticFormat) -> i32 {
@@ -41,6 +44,19 @@ pub(crate) fn diagnostic_explanation(code: &str) -> Option<String> {
                 .to_string(),
         );
     }
+    if let Some(explanation) = source_tree_diagnostic_explanation(code) {
+        return Some(explanation);
+    }
+    registry_entry(code).map(|entry| {
+        format!(
+            "{}\n\n{}\n\nDocs: https://docs.sifr.sh/errors/{code}",
+            entry.id, entry.summary
+        )
+    })
+}
+
+#[cfg(debug_assertions)]
+fn source_tree_diagnostic_explanation(code: &str) -> Option<String> {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()?
         .parent()?
@@ -58,4 +74,9 @@ pub(crate) fn diagnostic_explanation(code: &str) -> Option<String> {
         title.trim_start_matches("# "),
         summary,
     ))
+}
+
+#[cfg(not(debug_assertions))]
+fn source_tree_diagnostic_explanation(_code: &str) -> Option<String> {
+    None
 }

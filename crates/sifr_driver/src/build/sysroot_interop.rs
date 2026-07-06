@@ -18,7 +18,6 @@ pub(super) struct SysrootRustInteropTrust {
     pub(super) sysroot_root: PathBuf,
     pub(super) stdlib_private_sources: PathBuf,
     pub(super) stdlib_crate: PathBuf,
-    pub(super) runtime_crate_manifest: PathBuf,
     pub(super) runtime_crate: PathBuf,
     pub(super) cargo_lock: PathBuf,
     pub(super) vendor_dir: PathBuf,
@@ -122,6 +121,9 @@ fn merge_contexts(
     package_context
         .module_sources
         .extend(stdlib_context.module_sources);
+    if package_context.sysroot_runtime_crate.is_none() {
+        package_context.sysroot_runtime_crate = stdlib_context.sysroot_runtime_crate;
+    }
     package_context.sysroot_trust = stdlib_context.sysroot_trust;
     Some(package_context)
 }
@@ -158,7 +160,6 @@ fn stdlib_context(stdlib_interop: &StdlibRustInterop) -> Option<PackageRustInter
         sysroot_root: sysroot.root.clone(),
         stdlib_private_sources: sysroot.paths.stdlib_private_sources.clone(),
         stdlib_crate: sysroot.paths.stdlib_crate.clone(),
-        runtime_crate_manifest: sysroot.paths.runtime_crate_manifest.clone(),
         runtime_crate: sysroot.paths.runtime_crate.clone(),
         cargo_lock: sysroot.paths.cargo_lock.clone(),
         vendor_dir: sysroot.paths.vendor.clone(),
@@ -180,6 +181,7 @@ fn stdlib_context(stdlib_interop: &StdlibRustInterop) -> Option<PackageRustInter
         source_map: PackageSourceMap::default(),
         module_packages,
         module_sources,
+        sysroot_runtime_crate: Some(sysroot.paths.runtime_crate.clone()),
         sysroot_trust: Some(trust),
     })
 }

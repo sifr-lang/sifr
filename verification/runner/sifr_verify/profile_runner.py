@@ -171,6 +171,7 @@ class ProfileRunner:
             ("fuzz_property_checks", self.run_fuzz_property_suites),
             ("algorithmic_compatibility_checks", self.run_algorithmic_compatibility_suites),
             ("distribution_validation", self.run_distribution_checks),
+            ("sysroot_release_certification", self.run_sysroot_release_checks),
         ]
         if self.generated_code_quality_mode != "none":
             steps.append(("generated_code_quality_checks", self.run_generated_code_quality_checks))
@@ -490,6 +491,17 @@ class ProfileRunner:
         if self.distribution_mode not in {"representative", "full"}:
             raise ProfileRunnerError(f"unknown distribution validation mode: {self.distribution_mode}")
         run_command(uv_area_command("--area", "distribution_release", "--suite", self.distribution_mode))
+
+    def run_sysroot_release_checks(self) -> None:
+        suites = self.selected_suites_for_area("sysroot_release")
+        if not suites:
+            print(f"Skipping sysroot release certification for lane {self.profile_name}")
+            return
+        print("Running sysroot release certification")
+        args = ["--area", "sysroot_release"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        run_command(uv_area_command(*args))
 
     def run_generated_code_quality_checks(self) -> None:
         print("Running Generated Code Quality Checks")

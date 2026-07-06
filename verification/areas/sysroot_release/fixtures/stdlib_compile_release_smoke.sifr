@@ -1,0 +1,8 @@
+from sifr.html import escape, unescape
+
+
+def main() -> None:
+    escaped: str = escape("<sifr&sysroot>")
+    assert escaped == "&lt;sifr&amp;sysroot&gt;"
+    assert unescape(escaped) == "<sifr&sysroot>"
+    print("sysroot release compile smoke: pass")

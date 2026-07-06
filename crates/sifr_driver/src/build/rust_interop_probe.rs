@@ -28,7 +28,7 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) backend: BackendCrateMetadata,
     pub(super) signature: Option<RustBridgeSignatureContract>,
     pub(super) async_thread_affinity: AsyncThreadAffinity,
-    pub(super) sysroot_runtime_crate_manifest: Option<PathBuf>,
+    pub(super) sysroot_runtime_crate: PathBuf,
     pub(super) sysroot_vendor_dir: Option<PathBuf>,
 }
 
@@ -53,7 +53,7 @@ pub(super) fn execute_direct_cargo_probe(
     let probe_manifest = probe_cargo_toml(
         &probe.backend.dependency_name,
         backend_root,
-        probe.sysroot_runtime_crate_manifest.as_deref(),
+        &probe.sysroot_runtime_crate,
         &dependency_features,
     );
     let probe_source = probe_source(probe);
@@ -144,18 +144,9 @@ pub(super) fn execute_direct_cargo_probe(
 fn probe_cargo_toml(
     dependency_name: &str,
     backend_root: &Path,
-    sysroot_runtime_crate_manifest: Option<&Path>,
+    sysroot_runtime_crate: &Path,
     dependency_features: &[String],
 ) -> String {
-    let runtime_root = sysroot_runtime_crate_manifest
-        .and_then(Path::parent)
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| {
-            Path::new(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .map(|crates_dir| crates_dir.join("sifr_runtime"))
-                .unwrap_or_else(|| Path::new("crates/sifr_runtime").to_path_buf())
-        });
     let mut cargo_toml =
         "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[dependencies]\n"
             .to_string();
@@ -165,7 +156,9 @@ fn probe_cargo_toml(
         dependency_features,
     ));
     if dependency_name != "sifr_runtime" {
-        cargo_toml.push_str(&format!("sifr_runtime = {{ path = {runtime_root:?} }}\n"));
+        cargo_toml.push_str(&format!(
+            "sifr_runtime = {{ path = {sysroot_runtime_crate:?} }}\n"
+        ));
     }
     cargo_toml
 }
@@ -621,7 +614,7 @@ mod tests {
         let manifest = probe_cargo_toml(
             "sifr_stdlib",
             Path::new("/opt/sifr/crates/sifr_stdlib"),
-            Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+            Path::new("/opt/sifr/crates/sifr_runtime"),
             &[],
         );
 
@@ -636,7 +629,7 @@ mod tests {
         let manifest = probe_cargo_toml(
             "sifr_runtime",
             Path::new("/opt/sifr/crates/sifr_runtime"),
-            Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+            Path::new("/opt/sifr/crates/sifr_runtime"),
             &[],
         );
 
@@ -648,7 +641,7 @@ mod tests {
         let manifest = probe_cargo_toml(
             "sifr_stdlib",
             Path::new("/opt/sifr/crates/sifr_stdlib"),
-            Some(Path::new("/opt/sifr/crates/sifr_runtime/Cargo.toml")),
+            Path::new("/opt/sifr/crates/sifr_runtime"),
             &["platform".to_string()],
         );
 

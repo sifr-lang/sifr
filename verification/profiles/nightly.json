@@ -194,6 +194,18 @@
       ]
     },
     {
+      "area": "sysroot_release",
+      "suites": [
+        "host-installed-smoke",
+        "host-installed-stdlib-heavy"
+      ],
+      "resource_classes": [
+        "default-local",
+        "platform-specific",
+        "long-running"
+      ]
+    },
+    {
       "area": "project_workspace",
       "suites": [
         "frontend_mode_parity",

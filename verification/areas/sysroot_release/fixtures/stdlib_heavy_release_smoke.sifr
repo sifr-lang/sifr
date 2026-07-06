@@ -1,0 +1,31 @@
+from sifr.base64 import b64decode_bytes, b64encode_bytes
+from sifr.bytes import encode_utf8
+from sifr.hashlib import HashObject, new_bytes
+from sifr.json import JsonValue, json_dumps, loads
+from sifr.test import assert_eq, assert_true
+
+
+def main() -> None:
+    try:
+        payload: bytes = encode_utf8("sysroot-release")
+        encoded: bytes = b64encode_bytes(payload)
+        decoded: bytes = b64decode_bytes(encoded)
+        assert_eq(decoded, payload)
+
+        digest: HashObject = new_bytes("sha256", decoded)
+        assert_eq(
+            digest.hexdigest(),
+            "05b6055d80fedc2bfba6a2c77afe8cb364a4b25a0d5b37455862d4b91b705855",
+        )
+
+        parsed: JsonValue = loads("{\"release\":true,\"count\":2}")
+        assert_true(str(parsed) == "{\"release\":true,\"count\":2}")
+        assert_eq(json_dumps("installed"), "\"installed\"")
+    except ValueError as e:
+        assert_true(len(e.message) == 0)
+    except ParseError as e:
+        assert_true(len(e.message) == 0)
+    except JSONDecodeError as e:
+        assert_true(len(e.message) == 0)
+
+    print("sysroot release stdlib smoke: pass")

@@ -28,7 +28,7 @@ state. Later implementation stages update the implementation toward the architec
 | Private stdlib declarations | `stdlib/_sifr/*.sifr` declaration files are loaded from the resolved sysroot; completed stateless/data leaves bind through private Rust interop while retained runtime/resource/callback leaves remain compiler-owned and allowlisted | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context, retained-glue allowlist | mixed |
 | Compiler-side stdlib model | `crates/sifr_stdlib_model` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | complete | yes |
 | Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_model` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
-| Runtime crate | `crates/sifr_runtime` in the development workspace; generated Cargo finds it through `SIFR_RUNTIME_PATH`, ancestor scanning, or `env!("CARGO_MANIFEST_DIR")` fallback | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
+| Runtime crate | `crates/sifr_runtime` under the resolved development or installed sysroot; generated Cargo and Rust interop probes receive the explicit `ResolvedSysroot` runtime crate path | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asked `sifr_stdlib_model::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from `sifr_stdlib_model`, consumed by codegen, driver, cache keys, reports, and LSP traces | dependency planner | yes |
 | Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
 | Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no sysroot contract is validated | Release archive contains `bin/sifr` plus the complete sysroot tree and replaces them atomically | installer and release artifact update | yes |
@@ -77,7 +77,7 @@ data, while user/package dependencies remain package-owned Cargo inputs.
 
 | Current generated dependency group | Current owner | Final owner | Migration blocker |
 | --- | --- | --- | --- |
-| `sifr_runtime` | Sifr-owned path dependency discovered from `SIFR_RUNTIME_PATH`, source-tree ancestors, executable ancestors, or compile-time checkout fallback | Sysroot-owned path dependency under `<sysroot>/crates/sifr_runtime` | Sysroot resolver and `SysrootDependencyPlan` |
+| `sifr_runtime` | Sifr-owned path dependency selected from the resolved development or installed sysroot and passed explicitly to generated Cargo plus Rust interop probes | Sysroot-owned path dependency under `<sysroot>/crates/sifr_runtime` | Sysroot resolver and `SysrootDependencyPlan` |
 | `base64`, `blake2`, `md5`, `sha1`, `sha2`, `regex`, `toml`, `url`, `uuid`, `zip`, `flate2`, `chrono`, `rand`, `rand_distr`, `rayon`, `rust_decimal`, `bigdecimal`, `num-bigint`, `num-traits`, `percent-encoding` | Sifr-owned implementation details emitted directly into generated project manifests | Vendored third-party inputs of sysroot crates; generated manifests should not expose them after migration | generated-program stdlib crate implementation and vendor/dependency planning |
 | `serde`, `serde_json`, `postcard`, `bytes`, `tokio`, `tokio-rustls`, `rustls`, `rustls-pemfile`, `rustls-platform-verifier`, `http`, `http-body`, `http-body-util`, `hyper`, `hyper-util`, `h2`, `tower-service`, `metrics`, `tracing`, ICU crates | Sifr-owned runtime/stdlib implementation details emitted directly when selected features require them | Vendored third-party inputs of sysroot crates; direct generated dependencies remain only for retained compiler-language glue with an allowlist | generated-program stdlib crate, dependency-plan, fallible-data, and retained-glue decisions |
 | User package dependencies and explicit Rust interop dependencies | Package-owned Cargo graph | Package-owned Cargo graph | None; sysroot vendor policy must not silently replace normal package resolution |
@@ -761,7 +761,10 @@ modules to the resolved sysroot, exposes only canonical `sifr_stdlib` and
 the compiler-owned sysroot policy, and keeps generated Cargo planning in
 sysroot-only vendor mode for those roots. Rust bridge probes for private
 declarations use the resolved sysroot runtime crate and invocation-scoped
-sysroot vendor configuration.
+sysroot vendor configuration. If the resolved sysroot runtime crate is absent,
+probe planning emits a typed compiler diagnostic; it must not infer a
+source-tree checkout, guess an installed layout, or use a cache sentinel for
+missing runtime context.
 
 When stdlib private declarations are merged with user package declarations, the
 trust boundary is still package-keyed: private `_sifr` declarations must resolve
@@ -856,8 +859,17 @@ checks generated `Cargo.toml`, `Cargo.lock`, generated Rust sources, build
 reports, LSP trace snapshots, installed sysroot manifests, release archives,
 self-update receipts, and binary strings where feasible. It rejects build or CI
 paths such as `/home/runner/`, `/workspace/`, checkout-root
-`crates/sifr_runtime`, checkout-root `crates/sifr_stdlib`, and other
-`CARGO_MANIFEST_DIR`-derived source paths in release artifacts.
+`crates/sifr_runtime`, checkout-root `crates/sifr_stdlib`, local home-directory
+paths, and other `CARGO_MANIFEST_DIR`-derived source paths in release artifacts.
+
+The installed-toolchain certification area owns the executable version of this
+contract. Its fast merge suite extracts a version-matched release archive
+outside the repository, verifies installed sysroot JSON, emits a migrated
+stdlib fixture from the installed sysroot, runs the installed LSP lifecycle, and
+scans those artifacts plus the archive. Its long-running suite adds broad
+stdlib check/emit coverage, a real installed stdlib build/run, and offline
+Cargo `metadata`, `tree -e features`, and frozen build checks for the generated
+project.
 
 Generated Cargo builds must never contain build-machine absolute paths in
 release artifacts. Build-time paths are acceptable only in source-tree

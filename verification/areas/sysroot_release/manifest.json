@@ -1,0 +1,98 @@
+{
+  "schema_version": 2,
+  "name": "sysroot_release",
+  "owner": "release/distribution",
+  "description": "Installed sysroot release certification for source-checkout-independent CLI, LSP, offline Cargo, and path-leakage behavior.",
+  "parallel_safe": false,
+  "resource_classes": [
+    "default-local",
+    "platform-specific",
+    "long-running"
+  ],
+  "timeout_seconds": 2400,
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_rules": {
+    "required": false,
+    "source": "not-applicable"
+  },
+  "artifact_declarations": [
+    {
+      "id": "sysroot-release-results",
+      "path": "target/verification/areas/sysroot-release-results.json",
+      "retention": "latest-local"
+    },
+    {
+      "id": "sysroot-release-actual",
+      "path": "target/verification/actual/sysroot_release",
+      "retention": "latest-local"
+    }
+  ],
+  "suites": [
+    {
+      "name": "host-installed-smoke",
+      "kind": "adapter",
+      "resource_classes": [
+        "default-local",
+        "platform-specific"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "host-installed-toolchain",
+          "entry": "verification/areas/sysroot_release/runner.py",
+          "command": "sysroot-release-host-installed-smoke",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "host-installed-stdlib-heavy",
+      "kind": "adapter",
+      "resource_classes": [
+        "default-local",
+        "platform-specific",
+        "long-running"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 2400,
+      "cases": [
+        {
+          "id": "host-installed-stdlib-heavy",
+          "entry": "verification/areas/sysroot_release/runner.py",
+          "command": "sysroot-release-host-installed-stdlib-heavy",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "path-leakage-self-test",
+      "kind": "adapter",
+      "resource_classes": [
+        "default-local"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 60,
+      "cases": [
+        {
+          "id": "path-leakage-self-test",
+          "entry": "verification/areas/sysroot_release/check_no_path_leakage.py",
+          "command": "sysroot-release-path-leakage-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,580 @@
+"""Installed sysroot release certification area adapter."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+import time
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+AREA_ROOT = Path(__file__).resolve().parent
+MANIFEST_PATH = AREA_ROOT / "manifest.json"
+HEAVY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_heavy_release_smoke.sifr"
+COMPILE_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_compile_release_smoke.sifr"
+RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "sysroot-release-results.json"
+ACTUAL_ROOT = REPO_ROOT / "target" / "verification" / "actual" / "sysroot_release"
+RELEASE_VERSION = "0.1.0-beta.1300"
+BUILT_ARCHIVES: dict[str, Path] = {}
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--suite", action="append", default=[], help="Suite filter; can repeat.")
+    parser.add_argument("--bless", action="store_true", help="Accepted for area runner parity; unused.")
+    parser.add_argument(
+        "--result-json",
+        default=str(RESULT_JSON.relative_to(REPO_ROOT)),
+        help="Path for machine-readable sysroot release result summary.",
+    )
+    parser.add_argument(
+        "--hardening-summary",
+        action="store_true",
+        help="Emit a legacy verification summary line for direct area invocations.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    if args.bless:
+        raise SystemExit("sysroot_release area does not support --bless")
+    selected = select_suites(set(args.suite))
+
+    print("Running sysroot release verification area", flush=True)
+    print(f"  manifest={MANIFEST_PATH.relative_to(REPO_ROOT)}", flush=True)
+    print("  bless=no", flush=True)
+
+    ACTUAL_ROOT.mkdir(parents=True, exist_ok=True)
+    suite_results = [run_suite(suite) for suite in selected]
+    total_variants = sum(int(result["total_variants"]) for result in suite_results)
+    total_failures = sum(int(result["total_failures"]) for result in suite_results)
+    payload = {
+        "schema_version": 1,
+        "area": "sysroot_release",
+        "bless": False,
+        "manifest": str(MANIFEST_PATH.relative_to(REPO_ROOT)),
+        "suites": suite_results,
+        "summary": {
+            "total_variants": total_variants,
+            "total_failures": total_failures,
+            "blocking_failures": total_failures,
+            "non_blocking_failures": 0,
+        },
+    }
+    result_path = REPO_ROOT / args.result_json
+    result_path.parent.mkdir(parents=True, exist_ok=True)
+    result_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    print(f"result_json={result_path.relative_to(REPO_ROOT)}", flush=True)
+
+    if total_failures:
+        print(
+            f"verification failed: variants={total_variants}, failures={total_failures}, "
+            f"blocking_failures={total_failures}, non_blocking_failures=0",
+            file=sys.stderr,
+            flush=True,
+        )
+        return 1
+    prefix = "verification ok" if args.hardening_summary else "sysroot release verification ok"
+    print(
+        f"{prefix}: variants={total_variants}, failures={total_failures}, "
+        "blocking_failures=0, non_blocking_failures=0",
+        flush=True,
+    )
+    return 0
+
+
+def select_suites(requested: set[str]) -> list[str]:
+    available = {"host-installed-smoke", "host-installed-stdlib-heavy", "path-leakage-self-test"}
+    if requested:
+        missing = sorted(requested.difference(available))
+        if missing:
+            raise SystemExit(f"unknown sysroot_release suite filter(s): {', '.join(missing)}")
+        return [suite for suite in sorted(available) if suite in requested]
+    return ["host-installed-smoke"]
+
+
+def run_suite(suite: str) -> dict[str, Any]:
+    started = time.perf_counter()
+    if suite == "path-leakage-self-test":
+        status, mismatches = run_path_leakage_self_test()
+    elif suite == "host-installed-stdlib-heavy":
+        status, mismatches = run_host_installed_stdlib_heavy()
+    else:
+        status, mismatches = run_host_installed_smoke()
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    label = "pass" if status == 0 else "fail"
+    print(
+        f"[sifr-case-timing] bucket=sysroot_release case={suite} "
+        f"elapsed_ms={int(elapsed_ms)} status={label}",
+        flush=True,
+    )
+    return {
+        "name": suite,
+        "owner": "release/distribution",
+        "blocking": True,
+        "runner": "sysroot-release",
+        "cases": [
+            {
+                "id": suite,
+                "entry": str(MANIFEST_PATH.relative_to(REPO_ROOT)),
+                "command": f"sysroot-release:{suite}",
+                "variants": [
+                    {
+                        "label": suite,
+                        "argv": ["sysroot_release", suite],
+                        "status": label,
+                        "mismatches": mismatches,
+                        "expected_exit_code": 0,
+                        "actual_exit_code": status,
+                        "duration_ms": round(elapsed_ms, 3),
+                    }
+                ],
+            }
+        ],
+        "failed_cases": 0 if status == 0 else 1,
+        "total_variants": 1,
+        "total_failures": 0 if status == 0 else 1,
+    }
+
+
+def run_path_leakage_self_test() -> tuple[int, list[str]]:
+    result = run_command(
+        [sys.executable, str(AREA_ROOT / "check_no_path_leakage.py"), "--self-test"],
+        cwd=REPO_ROOT,
+        env=base_env(),
+    )
+    return result.returncode, [] if result.returncode == 0 else [result.summary()]
+
+
+def run_host_installed_smoke() -> tuple[int, list[str]]:
+    try:
+        host = host_triple()
+        archive_path = archive_for_host(host)
+
+        with tempfile.TemporaryDirectory(prefix="sifr-installed-cert.") as temp:
+            temp_root = Path(temp)
+            install_root = temp_root / "install"
+            work_root = temp_root / "outside-repo"
+            build_root = temp_root / "build-output"
+            lsp_trace = ACTUAL_ROOT / "lsp-trace.jsonl"
+            sysroot_json_path = ACTUAL_ROOT / "installed-sysroot.json"
+            emit_path = ACTUAL_ROOT / "installed-smoke-emit.rs"
+            extract_archive(archive_path, install_root)
+            work_root.mkdir()
+            build_root.mkdir()
+
+            installed_sifr = install_root / "bin" / "sifr"
+            compile_fixture = work_root / "stdlib_compile_release_smoke.sifr"
+            compile_fixture.write_text(COMPILE_FIXTURE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+            env = installed_env(temp_root)
+
+            sysroot_output = run_checked(
+                [str(installed_sifr), "--print", "sysroot", "--json"],
+                cwd=work_root,
+                env=env,
+                label="installed sysroot json",
+            )
+            sysroot_json_path.write_text(sysroot_output.stdout, encoding="utf-8")
+            validate_sysroot_json(sysroot_output.stdout, install_root, host)
+
+            emit = run_checked(
+                [str(installed_sifr), "emit", str(compile_fixture)],
+                cwd=work_root,
+                env=env,
+                label="emit migrated stdlib smoke",
+                stdout_path=emit_path,
+                echo_output=False,
+            )
+            if "sifr_stdlib" not in emit.stdout:
+                return 1, ["installed migrated stdlib emit output did not reference sifr_stdlib"]
+            run_lsp_smoke(installed_sifr, work_root, env, lsp_trace)
+
+            leakage = run_command(
+                [
+                    sys.executable,
+                    str(AREA_ROOT / "check_no_path_leakage.py"),
+                    "--forbidden-path",
+                    str(REPO_ROOT),
+                    str(archive_path),
+                    str(sysroot_json_path),
+                    str(emit_path),
+                    str(lsp_trace),
+                ],
+                cwd=REPO_ROOT,
+                env=env,
+                timeout=120,
+            )
+            if leakage.returncode != 0:
+                return leakage.returncode, [leakage.summary()]
+            home_leakage = run_command(
+                [
+                    sys.executable,
+                    str(AREA_ROOT / "check_no_path_leakage.py"),
+                    "--forbidden-path",
+                    str(Path.home()),
+                    str(archive_path),
+                    str(emit_path),
+                ],
+                cwd=REPO_ROOT,
+                env=env,
+                timeout=120,
+            )
+            if home_leakage.returncode != 0:
+                return home_leakage.returncode, [home_leakage.summary()]
+    except CertificationError as error:
+        return 1, [str(error)]
+    return 0, []
+
+
+def run_host_installed_stdlib_heavy() -> tuple[int, list[str]]:
+    try:
+        host = host_triple()
+        archive_path = archive_for_host(host)
+
+        with tempfile.TemporaryDirectory(prefix="sifr-installed-heavy.") as temp:
+            temp_root = Path(temp)
+            install_root = temp_root / "install"
+            work_root = temp_root / "outside-repo"
+            build_root = temp_root / "build-output"
+            sysroot_json_path = ACTUAL_ROOT / "installed-heavy-sysroot.json"
+            emit_path = ACTUAL_ROOT / "installed-heavy-emit.rs"
+            tree_path = ACTUAL_ROOT / "installed-heavy-cargo-tree-features.txt"
+            extract_archive(archive_path, install_root)
+            work_root.mkdir()
+            build_root.mkdir()
+
+            installed_sifr = install_root / "bin" / "sifr"
+            heavy_fixture = work_root / "stdlib_heavy_release_smoke.sifr"
+            heavy_fixture.write_text(HEAVY_FIXTURE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+            compile_fixture = work_root / "stdlib_compile_release_smoke.sifr"
+            compile_fixture.write_text(COMPILE_FIXTURE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+            env = installed_env(temp_root)
+
+            sysroot_output = run_checked(
+                [str(installed_sifr), "--print", "sysroot", "--json"],
+                cwd=work_root,
+                env=env,
+                label="installed sysroot json",
+            )
+            sysroot_json_path.write_text(sysroot_output.stdout, encoding="utf-8")
+            validate_sysroot_json(sysroot_output.stdout, install_root, host)
+
+            run_checked(
+                [str(installed_sifr), "check", str(heavy_fixture)],
+                cwd=work_root,
+                env=env,
+                label="heavy check",
+                timeout=1200,
+            )
+            emit = run_checked(
+                [str(installed_sifr), "emit", str(heavy_fixture)],
+                cwd=work_root,
+                env=env,
+                label="heavy emit",
+                stdout_path=emit_path,
+                echo_output=False,
+                timeout=1200,
+            )
+            if "sifr_stdlib" not in emit.stdout:
+                return 1, ["installed heavy emit output did not reference sifr_stdlib"]
+
+            run_checked(
+                [str(installed_sifr), "build", str(compile_fixture), "-o", str(build_root), "--quiet"],
+                cwd=work_root,
+                env=env,
+                label="build",
+                timeout=1200,
+            )
+            generated = build_root / "sifr_output"
+            binary = generated / "target" / "release" / "sifr_output"
+            run_output = run_checked([str(binary)], cwd=work_root, env=env, label="run built binary")
+            if "sysroot release compile smoke: pass" not in run_output.stdout:
+                return 1, ["built stdlib compile fixture did not execute successfully"]
+            run_checked(
+                [
+                    "cargo",
+                    "metadata",
+                    "--offline",
+                    "--locked",
+                    "--manifest-path",
+                    str(generated / "Cargo.toml"),
+                    "--format-version",
+                    "1",
+                    "--no-deps",
+                ],
+                cwd=work_root,
+                env=env,
+                label="cargo metadata offline",
+                echo_output=False,
+            )
+            run_checked(
+                [
+                    "cargo",
+                    "tree",
+                    "-e",
+                    "features",
+                    "--offline",
+                    "--locked",
+                    "--manifest-path",
+                    str(generated / "Cargo.toml"),
+                ],
+                cwd=work_root,
+                env=env,
+                label="cargo tree features",
+                stdout_path=tree_path,
+                echo_output=False,
+            )
+            run_checked(
+                [
+                    "cargo",
+                    "build",
+                    "--offline",
+                    "--frozen",
+                    "--manifest-path",
+                    str(generated / "Cargo.toml"),
+                    "--quiet",
+                ],
+                cwd=work_root,
+                env=env,
+                label="cargo build offline frozen",
+                timeout=1200,
+            )
+
+            leakage = run_command(
+                [
+                    sys.executable,
+                    str(AREA_ROOT / "check_no_path_leakage.py"),
+                    "--forbidden-path",
+                    str(REPO_ROOT),
+                    str(archive_path),
+                    str(sysroot_json_path),
+                    str(emit_path),
+                    str(generated / "Cargo.toml"),
+                    str(generated / "Cargo.lock"),
+                    str(generated / "src"),
+                    str(tree_path),
+                ],
+                cwd=REPO_ROOT,
+                env=env,
+                timeout=120,
+            )
+            if leakage.returncode != 0:
+                return leakage.returncode, [leakage.summary()]
+            home_leakage = run_command(
+                [
+                    sys.executable,
+                    str(AREA_ROOT / "check_no_path_leakage.py"),
+                    "--forbidden-path",
+                    str(Path.home()),
+                    str(archive_path),
+                    str(emit_path),
+                ],
+                cwd=REPO_ROOT,
+                env=env,
+                timeout=120,
+            )
+            if home_leakage.returncode != 0:
+                return home_leakage.returncode, [home_leakage.summary()]
+    except CertificationError as error:
+        return 1, [str(error)]
+    return 0, []
+
+
+def archive_for_host(host: str) -> Path:
+    artifact_dir = ACTUAL_ROOT / "artifacts"
+    archive_path = artifact_dir / f"sifr-{RELEASE_VERSION}-{host}.tar.gz"
+    cached = BUILT_ARCHIVES.get(host)
+    if cached == archive_path and archive_path.is_file():
+        return archive_path
+    if artifact_dir.exists():
+        shutil.rmtree(artifact_dir)
+    artifact_dir.mkdir(parents=True)
+    build_artifact(host, artifact_dir)
+    if not archive_path.is_file():
+        raise CertificationError(f"expected archive was not produced: {archive_path}")
+    BUILT_ARCHIVES[host] = archive_path
+    return archive_path
+
+
+def build_artifact(host: str, artifact_dir: Path) -> None:
+    env = base_env()
+    env["CARGO_TARGET_DIR"] = str((REPO_ROOT / "target" / "sysroot_release" / "cargo-target").resolve())
+    env["SIFR_RELEASE_VERSION"] = RELEASE_VERSION
+    run_checked(
+        [
+            "scripts/distribution/build_preview_artifacts.sh",
+            "--version",
+            RELEASE_VERSION,
+            "--output-dir",
+            str(artifact_dir),
+            "--target",
+            host,
+            "--cargo-build",
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        label="build preview artifact",
+        timeout=900,
+    )
+
+
+def host_triple() -> str:
+    result = run_checked(["rustc", "-vV"], cwd=REPO_ROOT, env=base_env(), label="rustc host")
+    for line in result.stdout.splitlines():
+        if line.startswith("host: "):
+            return line.removeprefix("host: ").strip()
+    raise CertificationError("rustc -vV did not report host triple")
+
+
+def extract_archive(archive_path: Path, install_root: Path) -> None:
+    install_root.mkdir(parents=True)
+    with tarfile.open(archive_path, "r:gz") as archive:
+        for member in archive.getmembers():
+            pure = PurePosixPath(member.name)
+            if pure.is_absolute() or ".." in pure.parts or member.issym() or member.islnk():
+                raise CertificationError(f"unsafe archive member: {member.name}")
+        try:
+            archive.extractall(install_root, filter="data")
+        except TypeError:
+            archive.extractall(install_root)
+
+
+def validate_sysroot_json(raw: str, install_root: Path, host: str) -> None:
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise CertificationError(f"sysroot json did not parse: {error}") from error
+    if Path(str(payload.get("root"))).resolve() != install_root.resolve():
+        raise CertificationError("installed sifr resolved a sysroot outside the extracted archive")
+    if payload.get("sifr_version") != RELEASE_VERSION:
+        raise CertificationError("installed sysroot version did not match packaged compiler version")
+    if payload.get("target_triple") != host:
+        raise CertificationError("installed sysroot target triple did not match host")
+
+
+def run_lsp_smoke(installed_sifr: Path, work_root: Path, env: dict[str, str], trace_path: Path) -> None:
+    messages = [
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {"processId": None, "rootUri": work_root.as_uri(), "capabilities": {}},
+        },
+        {"jsonrpc": "2.0", "method": "initialized", "params": {}},
+        {"jsonrpc": "2.0", "id": 2, "method": "shutdown", "params": None},
+        {"jsonrpc": "2.0", "method": "exit", "params": None},
+    ]
+    stdin = "".join(encode_lsp_message(message) for message in messages)
+    result = run_command(
+        [str(installed_sifr), "lsp", "--stdio"],
+        cwd=work_root,
+        env=env,
+        input_text=stdin,
+        timeout=60,
+    )
+    trace_path.write_text(result.stdout + result.stderr, encoding="utf-8")
+    if result.returncode != 0:
+        raise CertificationError(f"installed LSP exited with {result.returncode}: {result.summary()}")
+    if '"id":1' not in result.stdout.replace(" ", ""):
+        raise CertificationError("installed LSP did not answer initialize request")
+
+
+def encode_lsp_message(message: dict[str, Any]) -> str:
+    body = json.dumps(message, separators=(",", ":"))
+    return f"Content-Length: {len(body.encode('utf-8'))}\r\n\r\n{body}"
+
+
+def installed_env(temp_root: Path) -> dict[str, str]:
+    env = base_env()
+    env.pop("SIFR_SYSROOT", None)
+    env.pop("SIFR_RUNTIME_PATH", None)
+    env["CARGO_NET_OFFLINE"] = "true"
+    probe_cache_root = ACTUAL_ROOT / "probe-cache"
+    probe_cache_root.mkdir(parents=True, exist_ok=True)
+    env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
+    return env
+
+
+def base_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env.setdefault("CARGO_NET_OFFLINE", "true")
+    return env
+
+
+def run_checked(
+    command: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str],
+    label: str,
+    timeout: int = 120,
+    stdout_path: Path | None = None,
+    echo_output: bool = True,
+) -> CommandResult:
+    result = run_command(command, cwd=cwd, env=env, timeout=timeout, echo_output=echo_output)
+    if stdout_path is not None:
+        stdout_path.write_text(result.stdout, encoding="utf-8")
+    if result.returncode != 0:
+        raise CertificationError(f"{label} failed with exit={result.returncode}: {result.summary()}")
+    return result
+
+
+def run_command(
+    command: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str],
+    timeout: int = 120,
+    input_text: str | None = None,
+    echo_output: bool = True,
+) -> CommandResult:
+    print(f"  $ {' '.join(command)}", flush=True)
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            env=env,
+            input=input_text,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as error:
+        return CommandResult(command, 124, error.stdout or "", error.stderr or f"timeout after {timeout}s")
+    if echo_output and completed.stdout:
+        sys.stdout.write(completed.stdout)
+    if echo_output and completed.stderr:
+        sys.stderr.write(completed.stderr)
+    return CommandResult(command, completed.returncode, completed.stdout, completed.stderr)
+
+
+class CertificationError(Exception):
+    """A sysroot release certification assertion failed."""
+
+
+class CommandResult:
+    def __init__(self, command: list[str], returncode: int, stdout: str, stderr: str) -> None:
+        self.command = command
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def summary(self) -> str:
+        combined = "\n".join(part for part in (self.stdout, self.stderr) if part)
+        if len(combined) > 2000:
+            combined = combined[-2000:]
+        return combined.strip() or "no output"
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

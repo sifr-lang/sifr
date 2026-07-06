@@ -40,7 +40,7 @@ pub(super) fn probe_cache_key(
         probe_source,
         &cached_digest_path(backend_root),
         &nearest_lock_digest(backend_root),
-        &optional_manifest_root_digest(probe.sysroot_runtime_crate_manifest.as_deref()),
+        &cached_digest_path(&probe.sysroot_runtime_crate),
         &optional_vendor_identity(probe.sysroot_vendor_dir.as_deref()),
     ] {
         push_cache_bytes(&mut input, value);
@@ -94,12 +94,6 @@ fn cached_digest_path(path: &Path) -> String {
         return digest;
     }
     digest_path(path)
-}
-
-fn optional_manifest_root_digest(manifest: Option<&Path>) -> String {
-    manifest
-        .and_then(Path::parent)
-        .map_or_else(|| "<no-sysroot-runtime>".to_string(), cached_digest_path)
 }
 
 fn optional_vendor_identity(vendor_dir: Option<&Path>) -> String {

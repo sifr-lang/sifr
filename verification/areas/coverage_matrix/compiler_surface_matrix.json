@@ -356,6 +356,17 @@
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full"
     },
     {
+      "surface_id": "sysroot_release_installed_toolchain",
+      "guarantee_id": "distribution-release-rule",
+      "support_status": "stable",
+      "owner": "release/distribution",
+      "status": "blocking",
+      "merge_suite": "sysroot_release:host-installed-smoke",
+      "nightly_release_suite": "sysroot_release:host-installed-smoke,sysroot_release:host-installed-stdlib-heavy",
+      "regression_suite": "regression:fixedbugs",
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area sysroot_release --suite host-installed-smoke --suite host-installed-stdlib-heavy"
+    },
+    {
       "surface_id": "first_party_crate_tests",
       "guarantee_id": "project-workspace-package-rule",
       "support_status": "stable",
