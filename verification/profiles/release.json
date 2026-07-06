@@ -120,6 +120,7 @@
         "tier4",
         "callbacks",
         "dataframes",
+        "dataframe-examples",
         "ml",
         "libraries",
         "cloud-boto3"
