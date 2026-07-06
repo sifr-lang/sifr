@@ -67,6 +67,7 @@ Current local wave: M13 wave 2 doctor and self-update certification on branch
 - M12 wave 3 native ownership registry retirement: [PR #2799](https://github.com/sifr-lang/sifr/pull/2799) merged after local implementation, Opus review pass 1, and create-pr validation completed on `m12-remove-native-ownership-registry`.
 - M12 wave 4 migrated-intrinsic closure guard: [PR #2803](https://github.com/sifr-lang/sifr/pull/2803) merged after local implementation, Opus review pass 4, and create-pr validation completed on `m12-migration-closure-guard`.
 - M13 wave 1 installed toolchain certification: [PR #2808](https://github.com/sifr-lang/sifr/pull/2808) opened after post-main local implementation, Opus review pass 5, installed sysroot smoke/heavy certification, and create-pr validation completed on `m13-installed-toolchain-certification`.
+- M13 wave 2 doctor and self-update certification: [PR #2809](https://github.com/sifr-lang/sifr/pull/2809) opened after local implementation, Opus review pass 2, installed smoke certification, and create-pr validation completed on `m13-doctor-self-update-certification`.
 
 ## Design Reference
 
@@ -2284,8 +2285,9 @@ M13 wave 1 focused validation:
   confirmed the cleanup and marked the wave ready to proceed.
 
 M13 wave 2 status: local implementation, installed smoke validation, Opus
-review pass 2, and full create-pr validation are complete on
-`m13-doctor-self-update-certification`; PR publication is next.
+review pass 2, and full create-pr validation are complete in
+[PR #2809](https://github.com/sifr-lang/sifr/pull/2809) on
+`m13-doctor-self-update-certification`.
 
 This wave adds `sifr doctor` as the user-facing installed sysroot health
 command and extends the installed smoke certification to capture healthy text
