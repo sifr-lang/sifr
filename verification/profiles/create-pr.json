@@ -91,8 +91,6 @@
         "tier1",
         "callbacks",
         "dataframes",
-        "ml",
-        "libraries",
         "cloud-boto3"
       ],
       "resource_classes": [
