@@ -5,13 +5,85 @@ use sifr_ir::{
     RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
     RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,
 };
-use sifr_python_ast::{Decorator, Expr, ExprCall, Number, UnaryOp};
+use sifr_python_ast::{Decorator, Expr, ExprCall, Number, Stmt, UnaryOp};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::lower) enum RustInteropOwner {
     Function,
     Method,
     Class,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::lower) enum RustInteropStubBody {
+    Bodyless,
+    Invalid,
+    Normal,
+}
+
+impl RustInteropStubBody {
+    pub(in crate::lower) const fn skips_normal_body_lowering(self) -> bool {
+        matches!(self, Self::Bodyless | Self::Invalid)
+    }
+}
+
+pub(in crate::lower) fn classify_rust_interop_stub_body(
+    body: &[Stmt],
+    has_rust_interop_decorator: bool,
+    ctx: &mut LowerCtx,
+) -> RustInteropStubBody {
+    let is_exact_ellipsis = is_exact_ellipsis_body(body);
+    let contains_ellipsis = body.iter().any(is_ellipsis_stmt);
+
+    if is_exact_ellipsis {
+        if has_rust_interop_decorator {
+            return RustInteropStubBody::Bodyless;
+        }
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
+            "ellipsis is only supported as the complete body of a Rust interop declaration"
+                .to_string(),
+            body[0].range(),
+        );
+        return RustInteropStubBody::Invalid;
+    }
+
+    if contains_ellipsis && has_rust_interop_decorator {
+        let span = body
+            .iter()
+            .find(|stmt| is_ellipsis_stmt(stmt))
+            .map_or_else(TextRange::default, Ranged::range);
+        ctx.error_with_code_at(
+            DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR,
+            "Rust interop declaration stubs must contain exactly one ellipsis statement and no other statements"
+                .to_string(),
+            span,
+        );
+        return RustInteropStubBody::Invalid;
+    }
+
+    RustInteropStubBody::Normal
+}
+
+pub(in crate::lower) fn has_rust_interop_decorator_syntax(decorators: &[Decorator]) -> bool {
+    decorators
+        .iter()
+        .any(|decorator| uses_rust_decorator_namespace(&decorator.expression))
+}
+
+fn is_exact_ellipsis_body(body: &[Stmt]) -> bool {
+    matches!(body, [stmt] if is_ellipsis_stmt(stmt))
+}
+
+fn is_ellipsis_stmt(stmt: &Stmt) -> bool {
+    matches!(stmt, Stmt::Expr(expr_stmt) if matches!(expr_stmt.value.as_ref(), Expr::EllipsisLiteral(_)))
+}
+
+fn uses_rust_decorator_namespace(expr: &Expr) -> bool {
+    match expr {
+        Expr::Call(call) => starts_with_rust_namespace(&call.func),
+        _ => starts_with_rust_namespace(expr),
+    }
 }
 
 pub(in crate::lower) fn collect_rust_interop_declarations(

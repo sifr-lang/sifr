@@ -26,7 +26,10 @@ use super::{
     lower_while, str,
 };
 use crate::hir_nodes::{HirExceptHandler, HirFunction, HirParam, HirStmt, MethodKind};
-use crate::lower::rust_interop::{collect_rust_interop_declarations, RustInteropOwner};
+use crate::lower::rust_interop::{
+    classify_rust_interop_stub_body, collect_rust_interop_declarations,
+    has_rust_interop_decorator_syntax, RustInteropOwner,
+};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
@@ -679,10 +682,28 @@ pub(in crate::lower) fn lower_stmt(
                 });
             }
 
+            let rust_interop = collect_rust_interop_declarations(
+                &func.decorator_list,
+                RustInteropOwner::Function,
+                ctx,
+                has_decorator(func, "blocking_io"),
+                has_decorator(func, "cpu_heavy"),
+                func.is_async,
+            );
+            let stub_body = classify_rust_interop_stub_body(
+                &func.body,
+                has_rust_interop_decorator_syntax(&func.decorator_list),
+                ctx,
+            );
+
             let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
             ctx.current_function_trusts_dynamic_python =
                 has_decorator(func, "trust_python_dynamic");
-            let body = lower_stmts(&func.body, &ft, ctx);
+            let body = if stub_body.skips_normal_body_lowering() {
+                Vec::new()
+            } else {
+                lower_stmts(&func.body, &ft, ctx)
+            };
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.exit_function_scope();
 
@@ -699,20 +720,24 @@ pub(in crate::lower) fn lower_stmt(
                 .returns
                 .as_ref()
                 .map_or_else(|| func.name.range(), |returns| returns.range());
-            let inferred_return_type = infer_function_return_type(
-                func.name.as_ref(),
-                func.is_async,
-                ft.return_type.as_ref(),
-                func.returns.is_some(),
-                &body,
-                |message| {
-                    ctx.error_with_code_at(
-                        DiagnosticCode::TYPE_MISMATCH,
-                        message,
-                        return_annotation_range,
-                    );
-                },
-            );
+            let inferred_return_type = if stub_body.skips_normal_body_lowering() {
+                ft.return_type.as_ref().clone()
+            } else {
+                infer_function_return_type(
+                    func.name.as_ref(),
+                    func.is_async,
+                    ft.return_type.as_ref(),
+                    func.returns.is_some(),
+                    &body,
+                    |message| {
+                        ctx.error_with_code_at(
+                            DiagnosticCode::TYPE_MISMATCH,
+                            message,
+                            return_annotation_range,
+                        );
+                    },
+                )
+            };
 
             // Collect user-defined decorators
             let decorators: Vec<String> = func
@@ -731,15 +756,6 @@ pub(in crate::lower) fn lower_stmt(
                     }
                 })
                 .collect();
-            let rust_interop = collect_rust_interop_declarations(
-                &func.decorator_list,
-                RustInteropOwner::Function,
-                ctx,
-                has_decorator(func, "blocking_io"),
-                has_decorator(func, "cpu_heavy"),
-                func.is_async,
-            );
-
             Some(HirStmt::NestedFunction {
                 func: HirFunction {
                     name: func.name.to_string(),
