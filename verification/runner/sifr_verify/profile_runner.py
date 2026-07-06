@@ -125,6 +125,9 @@ class ProfileRunner:
         self.legacy = legacy_facade(self.profile)
         self.forward_args = forward_args
         self.env = os.environ.copy()
+        probe_cache_root = REPO_ROOT / "target" / "sifr_rust_bridge_probe_cache" / self.profile_name
+        self.env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
+        os.environ["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
         if self.profile.get("cargo_policy", {}).get("offline") is True:
             self.env["CARGO_NET_OFFLINE"] = "true"
             os.environ["CARGO_NET_OFFLINE"] = "true"
@@ -437,7 +440,6 @@ class ProfileRunner:
                 f"unsupported generated-code quality mode: {self.generated_code_quality_mode}"
             )
         shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{self.profile_name}.shared"
-        shutil.rmtree(shared_root, ignore_errors=True)
         env = self.env | {"SIFR_GCQ_SHARED_ROOT": str(shared_root.relative_to(REPO_ROOT))}
         run_command(
             uv_area_command(

@@ -1,4 +1,5 @@
 use super::rust_interop_digest::fnv1a64_hex;
+use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
 };
@@ -47,6 +48,22 @@ pub(super) fn execute_direct_cargo_probe(
     let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
         return Ok(());
     };
+    let dependency_features =
+        dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);
+    let probe_manifest = probe_cargo_toml(
+        &probe.backend.dependency_name,
+        backend_root,
+        probe.sysroot_runtime_crate_manifest.as_deref(),
+        &dependency_features,
+    );
+    let probe_source = probe_source(probe);
+    let invocation_cwd = env::current_dir()
+        .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
+    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source);
+    let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
+    if cache_file.as_ref().is_some_and(|path| path.is_file()) {
+        return Ok(());
+    }
     let probe_root = std::env::temp_dir().join(format!(
         "sifr_rust_probe_{}_{}_{}",
         std::process::id(),
@@ -66,21 +83,12 @@ pub(super) fn execute_direct_cargo_probe(
     fs::create_dir_all(probe_root.join("src")).map_err(|error| {
         probe_io_failure(format!("failed to create Rust probe project: {error}"))
     })?;
-    fs::write(
-        probe_root.join("Cargo.toml"),
-        probe_cargo_toml(
-            &probe.backend.dependency_name,
-            backend_root,
-            probe.sysroot_runtime_crate_manifest.as_deref(),
-            &dependency_features(&probe.backend.dependency_name, backend_root, &probe.path),
-        ),
-    )
-    .map_err(|error| probe_io_failure(format!("failed to write Rust probe manifest: {error}")))?;
-    fs::write(probe_root.join("src/lib.rs"), probe_source(probe))
+    fs::write(probe_root.join("Cargo.toml"), probe_manifest).map_err(|error| {
+        probe_io_failure(format!("failed to write Rust probe manifest: {error}"))
+    })?;
+    fs::write(probe_root.join("src/lib.rs"), probe_source)
         .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
 
-    let invocation_cwd = env::current_dir()
-        .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
     let mut command = Command::new("cargo");
     command
         .args(cargo_vendor_args(probe.sysroot_vendor_dir.as_deref()))
@@ -94,6 +102,9 @@ pub(super) fn execute_direct_cargo_probe(
         .map_err(|error| probe_io_failure(format!("failed to run Rust probe: {error}")))?;
     let _ = fs::remove_dir_all(&probe_root);
     if output.status.success() {
+        if let Some(path) = cache_file {
+            mark_probe_cache_hit(&path);
+        }
         return Ok(());
     }
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -234,7 +245,7 @@ fn inherited_cargo_target_dir(invocation_cwd: &Path) -> Option<PathBuf> {
     ))
 }
 
-fn normalize_cargo_target_dir(invocation_cwd: &Path, target_dir: PathBuf) -> PathBuf {
+pub(super) fn normalize_cargo_target_dir(invocation_cwd: &Path, target_dir: PathBuf) -> PathBuf {
     if target_dir.is_absolute() {
         target_dir
     } else {
