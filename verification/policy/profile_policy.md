@@ -60,7 +60,14 @@ not part of the current stable readiness surface.
 - generated-code quality smoke over a bounded fixture subset
 - library crate unit tests, CLI unit tests, and representative e2e pass fixtures
 
-It intentionally excludes editor packaging, editor asset release checks, distribution/self-update checks, LSP stress, LSP large-session smoke, broad verification hardening, broad project-mode matrices, full generated clippy/corpus, full performance budgets, and the slower `sifr` integration/e2e-support crate tests.
+It intentionally excludes editor packaging, editor asset release checks, distribution/self-update checks, LSP stress, LSP large-session smoke, broad verification hardening, broad project-mode matrices, full generated clippy/corpus, full performance budgets, and the slower generated-build crate integration tests.
+
+Generated-build crate tests use Rust `#[ignore]` only to keep the default smoke
+crate commands fast. They are not disabled tests: full profiles run the
+`sifr_cli_generated_builds` and `sifr_driver_generated_builds` suites with
+`--ignored --test-threads=1`. Do not use `#[ignore]` in the `sifr` binary or
+`sifr_driver` lib suites for broken/quarantined tests; add a separate explicit
+profile suite instead.
 
 ## Merge Profile
 
@@ -73,7 +80,7 @@ It intentionally excludes editor packaging, editor asset release checks, distrib
 - representative generated-code quality checks with shared generated artifacts and Cargo target reuse
 - distribution representative checks
 - formatter, analysis, static tooling, and LSP smoke checks
-- full crate tests, including the slower `sifr` integration/e2e-support tests
+- full crate tests, including the slower generated-build crate integration suites
 
 ## Change-Aware Ownership
 

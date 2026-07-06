@@ -109,6 +109,7 @@ def _crate_membership_self_test() -> None:
     for profile_name in ("create-pr", "merge", "nightly", "release"):
         profile = profiles[profile_name]
         profile_full_suites = crate_test_suites_for_mode(profile, "full")
+        profile_smoke_suites = crate_test_suites_for_mode(profile, "smoke")
         profile_by_id = {str(suite.get("id")): suite for suite in profile_full_suites}
         codegen = profile_by_id.get("sifr_codegen")
         if not isinstance(codegen, dict):
@@ -116,6 +117,29 @@ def _crate_membership_self_test() -> None:
         if codegen.get("status") != "blocking" or codegen.get("executed_in_merge") is not True:
             raise AssertionError(
                 f"sifr_codegen is not blocking/executed in {profile_name}: {codegen}",
+            )
+        generated_build_suites = {
+            "sifr_cli_generated_builds",
+            "sifr_driver_generated_builds",
+        }
+        missing_generated = sorted(generated_build_suites.difference(profile_by_id))
+        if missing_generated:
+            raise AssertionError(
+                f"generated-build crate suites missing from {profile_name}: {missing_generated}",
+            )
+        for suite_id in sorted(generated_build_suites):
+            suite = profile_by_id[suite_id]
+            if suite.get("status") != "blocking" or suite.get("executed_in_merge") is not True:
+                raise AssertionError(
+                    f"generated-build crate suite is not blocking/executed in {profile_name}: "
+                    f"{suite}",
+                )
+        smoke_ids = {str(suite.get("id")) for suite in profile_smoke_suites}
+        misplaced_generated = sorted(generated_build_suites.intersection(smoke_ids))
+        if misplaced_generated:
+            raise AssertionError(
+                f"generated-build crate suites must not run in smoke for {profile_name}: "
+                f"{misplaced_generated}",
             )
 
     duplicate_profile = {
