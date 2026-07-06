@@ -25,7 +25,7 @@ state. Later implementation stages update the implementation toward the architec
 | Surface | Current owner | Final owner | Migration blocker | Can move before runtime certification? |
 | --- | --- | --- | --- | --- |
 | Public Sifr stdlib sources | `stdlib/sifr/*.sifr`, validated by `crates/sifr_stdlib_model` and loaded from the resolved source-tree or installed sysroot path | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | complete for source layout; packaging copy remains later | yes |
-| Private stdlib declarations | `stdlib/_sifr/*.sifr` placeholder declaration files exist and are validated against the compiler intrinsic registry; compiler intrinsic metadata remains the current signature owner until Rust interop migration | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context | mixed |
+| Private stdlib declarations | `stdlib/_sifr/*.sifr` declaration files are loaded from the resolved sysroot; completed stateless/data leaves bind through private Rust interop while retained runtime/resource/callback leaves remain compiler-owned and allowlisted | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context, retained-glue allowlist | mixed |
 | Compiler-side stdlib model | `crates/sifr_stdlib_model` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions | `crates/sifr_stdlib_model` | complete | yes |
 | Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_model` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` in the development workspace; generated Cargo finds it through `SIFR_RUNTIME_PATH`, ancestor scanning, or `env!("CARGO_MANIFEST_DIR")` fallback | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
@@ -83,8 +83,11 @@ data, while user/package dependencies remain package-owned Cargo inputs.
 | User package dependencies and explicit Rust interop dependencies | Package-owned Cargo graph | Package-owned Cargo graph | None; sysroot vendor policy must not silently replace normal package resolution |
 
 Current generated code and preamble call into `sifr_runtime::*` from these
-families. This table groups the call sites by migration concern; the complete
-surface-by-surface ownership decision remains the TOML registry.
+families. This table groups retained call sites by migration concern; active
+compiler-owned stdlib glue is frozen by
+`internal_docs/stdlib_retained_compiler_intrinsics.toml`, and migrated native
+leaves are protected from reappearing in the dispatcher by
+`scripts/check_stdlib_migration_closure.py`.
 
 | Call-site family | Current call sites | Final owner |
 | --- | --- | --- |
@@ -729,10 +732,10 @@ stdlib/sifr/*.sifr public wrappers
   -> sifr_stdlib and sifr_runtime sysroot crates
 ```
 
-Compiler-special codegen intrinsics are restricted to language semantics. The
-old handwritten intrinsic registry is removed or reduced to a retained
-compiler-language-glue allowlist once supported native stdlib surfaces route
-through private declarations and Rust interop.
+Compiler-special codegen intrinsics are restricted to language semantics and
+allowlisted retained runtime/resource glue. Completed native stdlib leaves must
+route through private declarations and Rust interop, and the migration closure
+guard fails if those retired intrinsic names reappear in the active dispatcher.
 
 Runtime/resource/callback surfaces follow the Rust interop certification gate.
 Surfaces still marked future-owned or uncertified in the compatibility matrix
