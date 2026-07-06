@@ -2320,7 +2320,8 @@ M13 wave 2 focused validation:
 
 M13 phase closeout status: local implementation, no-fallback audit, Opus
 review pass 2, full create-pr validation, and full merge-gate validation are
-complete on `m13-phase-closeout`. PR link pending.
+complete in [PR #2810](https://github.com/sifr-lang/sifr/pull/2810) on
+`m13-phase-closeout`.
 
 This closeout removes remaining development-workspace fallback assumptions from
 the E2E harness, keeps analysis parsing routed through the frontend boundary,
