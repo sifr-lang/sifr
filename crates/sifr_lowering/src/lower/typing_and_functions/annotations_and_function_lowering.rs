@@ -9,7 +9,10 @@ use super::{
     StmtFunctionDef, Type,
 };
 use crate::lower::diagnostics::has_decorator;
-use crate::lower::rust_interop::{collect_rust_interop_declarations, RustInteropOwner};
+use crate::lower::rust_interop::{
+    classify_rust_interop_stub_body, collect_rust_interop_declarations,
+    has_rust_interop_decorator_syntax, RustInteropOwner,
+};
 pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
@@ -527,9 +530,26 @@ pub(in crate::lower) fn lower_function(
             ctx.borrowed_params.insert(param.name.clone());
         }
     }
-    let is_async_generator = effective_is_async && function_body_contains_yield(&func.body);
+    let rust_interop = collect_rust_interop_declarations(
+        &func.decorator_list,
+        RustInteropOwner::Function,
+        ctx,
+        has_decorator(func, "blocking_io"),
+        has_decorator(func, "cpu_heavy"),
+        effective_is_async,
+    );
+    let stub_body = classify_rust_interop_stub_body(
+        &func.body,
+        has_rust_interop_decorator_syntax(&func.decorator_list),
+        ctx,
+    );
+
+    let is_async_generator = !stub_body.skips_normal_body_lowering()
+        && effective_is_async
+        && function_body_contains_yield(&func.body);
     workload_annotations::reject_async_function_annotation(ctx, func, effective_is_async);
-    if effective_is_async
+    if !stub_body.skips_normal_body_lowering()
+        && effective_is_async
         && matches!(
             ctx.async_suspension_summaries.get(func.name.as_str()),
             Some(super::async_effects::AsyncSuspensionSummary::NoSuspend)
@@ -544,7 +564,7 @@ pub(in crate::lower) fn lower_function(
             func.name.range(),
         );
     }
-    if effective_is_async {
+    if !stub_body.skips_normal_body_lowering() && effective_is_async {
         if is_async_generator {
             if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
                 for param in &params {
@@ -598,7 +618,11 @@ pub(in crate::lower) fn lower_function(
     ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     ctx.current_function_trusts_dynamic_python = has_decorator(func, "trust_python_dynamic");
-    let body = lower_stmts(&func.body, &ft, ctx);
+    let body = if stub_body.skips_normal_body_lowering() {
+        Vec::new()
+    } else {
+        lower_stmts(&func.body, &ft, ctx)
+    };
     reject_live_join_sets_at_function_exit(func, ctx);
     ctx.live_join_set_bindings = previous_live_join_sets;
     ctx.join_set_terminal_awaitables = previous_join_set_terminal_awaitables;
@@ -613,7 +637,10 @@ pub(in crate::lower) fn lower_function(
     ctx.exit_function_scope();
 
     let has_yield = !collect_yield_types(&body).is_empty();
-    if !has_yield && requires_exhaustive_return_annotation(func, ft.return_type.as_ref()) {
+    if !stub_body.skips_normal_body_lowering()
+        && !has_yield
+        && requires_exhaustive_return_annotation(func, ft.return_type.as_ref())
+    {
         match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             crate::cfg::flow_facts(&body).always_exits()
         })) {
@@ -646,20 +673,24 @@ pub(in crate::lower) fn lower_function(
         .returns
         .as_ref()
         .map_or_else(|| func.name.range(), |returns| returns.range());
-    let inferred_return_type = infer_function_return_type(
-        func.name.as_ref(),
-        effective_is_async,
-        ft.return_type.as_ref(),
-        func.returns.is_some(),
-        &body,
-        |message| {
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                message,
-                return_annotation_range,
-            );
-        },
-    );
+    let inferred_return_type = if stub_body.skips_normal_body_lowering() {
+        ft.return_type.as_ref().clone()
+    } else {
+        infer_function_return_type(
+            func.name.as_ref(),
+            effective_is_async,
+            ft.return_type.as_ref(),
+            func.returns.is_some(),
+            &body,
+            |message| {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    message,
+                    return_annotation_range,
+                );
+            },
+        )
+    };
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)
     let decorators: Vec<String> = func
@@ -678,15 +709,6 @@ pub(in crate::lower) fn lower_function(
             }
         })
         .collect();
-    let rust_interop = collect_rust_interop_declarations(
-        &func.decorator_list,
-        RustInteropOwner::Function,
-        ctx,
-        has_decorator(func, "blocking_io"),
-        has_decorator(func, "cpu_heavy"),
-        effective_is_async,
-    );
-
     // Collect type parameters for generic functions
     let type_params = ctx
         .generic_functions

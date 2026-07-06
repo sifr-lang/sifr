@@ -43,6 +43,15 @@ pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<Hi
         }
         Expr::BooleanLiteral(b) => Some(HirExpr::BoolLiteral(b.value)),
         Expr::NoneLiteral(_) => Some(HirExpr::NoneLiteral),
+        Expr::EllipsisLiteral(ellipsis) => {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
+                "ellipsis is only supported as the complete body of a Rust interop declaration"
+                    .to_string(),
+                ellipsis.range(),
+            );
+            None
+        }
         Expr::Name(name) => lower_name(name, ctx),
         Expr::BinOp(binop) => lower_binop(binop, ctx),
         Expr::UnaryOp(unary) => lower_unaryop(unary, ctx),

@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic, HirModule};
+use crate::{lower_module, HirDiagnostic, HirModule, HirStmt};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropEffect, RustInteropValue};
 use sifr_python_parser::parse_module;
@@ -23,6 +23,173 @@ fn assert_malformed(errors: &[HirDiagnostic]) {
     assert!(errors
         .iter()
         .any(|error| error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)));
+}
+
+#[test]
+fn rust_interop_accepts_ellipsis_only_function_stub() {
+    let module = lower_ok(
+        r"
+@rust(bridge.hash.digest, panic=trusted_no_panic)
+def digest(input: bytes) -> int:
+    ...
+",
+    );
+
+    let function = &module.functions[0];
+    assert!(function.body.is_empty());
+    assert_eq!(function.return_type, Type::Int);
+    assert_eq!(
+        function.rust_interop[0]
+            .target
+            .as_ref()
+            .expect("target")
+            .dotted(),
+        "bridge.hash.digest"
+    );
+}
+
+#[test]
+fn rust_interop_accepts_ellipsis_only_async_function_stub() {
+    let module = lower_ok(
+        r"
+@rust(bridge.http.fetch)
+async def fetch() -> str:
+    ...
+",
+    );
+
+    let function = &module.functions[0];
+    assert!(function.is_async);
+    assert!(function.body.is_empty());
+    assert_eq!(function.return_type, Type::Str);
+    assert_eq!(
+        function.rust_interop[0]
+            .target
+            .as_ref()
+            .expect("target")
+            .dotted(),
+        "bridge.http.fetch"
+    );
+}
+
+#[test]
+fn rust_interop_accepts_ellipsis_only_nested_function_stub() {
+    let module = lower_ok(
+        r"
+def outer() -> int:
+    @rust(bridge.hash.digest, panic=trusted_no_panic)
+    def digest(input: bytes) -> int:
+        ...
+    return 1
+",
+    );
+
+    let HirStmt::NestedFunction { func } = &module.functions[0].body[0] else {
+        panic!("expected nested function");
+    };
+    assert!(func.body.is_empty());
+    assert_eq!(func.return_type, Type::Int);
+    assert_eq!(
+        func.rust_interop[0]
+            .target
+            .as_ref()
+            .expect("target")
+            .dotted(),
+        "bridge.hash.digest"
+    );
+}
+
+#[test]
+fn rust_interop_accepts_ellipsis_only_method_stub() {
+    let module = lower_ok(
+        r"
+@rust.opaque(type=bridge.kafka.Consumer)
+class Consumer:
+    @rust(Self.poll)
+    def poll(self) -> int:
+        ...
+",
+    );
+
+    let method = &module.classes[0].methods[0];
+    assert!(method.body.is_empty());
+    assert_eq!(method.return_type, Type::Int);
+    assert_eq!(
+        method.rust_interop[0]
+            .target
+            .as_ref()
+            .expect("target")
+            .dotted(),
+        "Self.poll"
+    );
+}
+
+#[test]
+fn rust_interop_rejects_non_interop_ellipsis_function_body() {
+    let errors = lower_errors(
+        r"
+def placeholder() -> int:
+    ...
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM)
+            && error
+                .message
+                .contains("complete body of a Rust interop declaration")
+    }));
+}
+
+#[test]
+fn rust_interop_does_not_report_non_interop_ellipsis_for_malformed_rust_decorator() {
+    let errors = lower_errors(
+        r#"
+@rust("bridge.hash.digest")
+def digest(input: bytes) -> int:
+    ...
+"#,
+    );
+
+    assert_malformed(&errors);
+    assert!(errors.iter().all(|error| !error
+        .message
+        .contains("complete body of a Rust interop declaration")));
+}
+
+#[test]
+fn rust_interop_rejects_mixed_ellipsis_stub_body() {
+    let errors = lower_errors(
+        r"
+@rust(bridge.hash.digest, panic=trusted_no_panic)
+def digest(input: bytes) -> int:
+    ...
+    return 1
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)
+            && error.message.contains("exactly one ellipsis statement")
+    }));
+}
+
+#[test]
+fn rust_interop_rejects_ellipsis_expression_outside_stub_path() {
+    let errors = lower_errors(
+        r"
+def placeholder() -> int:
+    value = ...
+    return 1
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM)
+            && error
+                .message
+                .contains("complete body of a Rust interop declaration")
+    }));
 }
 
 #[test]
