@@ -167,6 +167,12 @@ def run_host_installed_smoke() -> tuple[int, list[str]]:
             lsp_trace = ACTUAL_ROOT / "lsp-trace.jsonl"
             sysroot_json_path = ACTUAL_ROOT / "installed-sysroot.json"
             emit_path = ACTUAL_ROOT / "installed-smoke-emit.rs"
+            doctor_text_path = ACTUAL_ROOT / "installed-doctor-healthy.txt"
+            doctor_json_path = ACTUAL_ROOT / "installed-doctor-healthy.json"
+            broken_doctor_path = ACTUAL_ROOT / "installed-doctor-broken.txt"
+            broken_doctor_json_path = ACTUAL_ROOT / "installed-doctor-broken.json"
+            self_version_path = ACTUAL_ROOT / "installed-self-version.json"
+            self_update_dry_run_path = ACTUAL_ROOT / "installed-self-update-dry-run.json"
             extract_archive(archive_path, install_root)
             work_root.mkdir()
             build_root.mkdir()
@@ -183,7 +189,27 @@ def run_host_installed_smoke() -> tuple[int, list[str]]:
                 label="installed sysroot json",
             )
             sysroot_json_path.write_text(sysroot_output.stdout, encoding="utf-8")
-            validate_sysroot_json(sysroot_output.stdout, install_root, host)
+            sysroot_payload = validate_sysroot_json(sysroot_output.stdout, install_root, host)
+            write_install_receipt(install_root, host, sysroot_payload)
+            run_self_update_snapshots(
+                installed_sifr,
+                install_root,
+                work_root,
+                env,
+                self_version_path,
+                self_update_dry_run_path,
+            )
+            run_doctor_snapshots(
+                installed_sifr,
+                install_root,
+                temp_root,
+                work_root,
+                env,
+                doctor_text_path,
+                doctor_json_path,
+                broken_doctor_path,
+                broken_doctor_json_path,
+            )
 
             emit = run_checked(
                 [str(installed_sifr), "emit", str(compile_fixture)],
@@ -207,6 +233,12 @@ def run_host_installed_smoke() -> tuple[int, list[str]]:
                     str(sysroot_json_path),
                     str(emit_path),
                     str(lsp_trace),
+                    str(doctor_text_path),
+                    str(doctor_json_path),
+                    str(broken_doctor_path),
+                    str(broken_doctor_json_path),
+                    str(self_version_path),
+                    str(self_update_dry_run_path),
                 ],
                 cwd=REPO_ROOT,
                 env=env,
@@ -447,7 +479,7 @@ def extract_archive(archive_path: Path, install_root: Path) -> None:
             archive.extractall(install_root)
 
 
-def validate_sysroot_json(raw: str, install_root: Path, host: str) -> None:
+def validate_sysroot_json(raw: str, install_root: Path, host: str) -> dict[str, Any]:
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as error:
@@ -458,6 +490,177 @@ def validate_sysroot_json(raw: str, install_root: Path, host: str) -> None:
         raise CertificationError("installed sysroot version did not match packaged compiler version")
     if payload.get("target_triple") != host:
         raise CertificationError("installed sysroot target triple did not match host")
+    if not isinstance(payload.get("sysroot_content_sha256"), str):
+        raise CertificationError("installed sysroot json omitted sysroot_content_sha256")
+    return payload
+
+
+def write_install_receipt(install_root: Path, host: str, sysroot_payload: dict[str, Any]) -> None:
+    receipt = {
+        "schema_version": 2,
+        "name": "sifr",
+        "version": RELEASE_VERSION,
+        "channel": "beta",
+        "target": host,
+        "install_dir": str(install_root / "bin"),
+        "binary_path": str(install_root / "bin" / "sifr"),
+        "sysroot_path": str(install_root),
+        "sysroot_schema_version": 1,
+        "sysroot_sifr_version": RELEASE_VERSION,
+        "sysroot_target_triple": host,
+        "sysroot_content_sha256": str(sysroot_payload.get("sysroot_content_sha256")),
+        "artifact": f"sifr-{RELEASE_VERSION}-{host}.tar.gz",
+        "modify_path": False,
+    }
+    (install_root / "install.json").write_text(json.dumps(receipt, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def run_self_update_snapshots(
+    installed_sifr: Path,
+    install_root: Path,
+    work_root: Path,
+    env: dict[str, str],
+    self_version_path: Path,
+    self_update_dry_run_path: Path,
+) -> None:
+    version = run_checked(
+        [str(installed_sifr), "self", "version", "--format", "json"],
+        cwd=work_root,
+        env=env,
+        label="self version json",
+        stdout_path=self_version_path,
+        echo_output=False,
+    )
+    validate_self_version_json(version.stdout, install_root)
+    dry_run = run_checked(
+        [
+            str(installed_sifr),
+            "self",
+            "update",
+            "--dry-run",
+            "--version",
+            "0.1.0-beta.1301",
+            "--format",
+            "json",
+        ],
+        cwd=work_root,
+        env=env,
+        label="self update dry-run json",
+        stdout_path=self_update_dry_run_path,
+        echo_output=False,
+    )
+    validate_self_update_dry_run_json(dry_run.stdout, install_root)
+
+
+def validate_self_version_json(raw: str, install_root: Path) -> None:
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise CertificationError(f"self version json did not parse: {error}") from error
+    if payload.get("current_version") != RELEASE_VERSION or payload.get("receipt_version") != RELEASE_VERSION:
+        raise CertificationError("self version json did not preserve the installed receipt version")
+    if Path(str(payload.get("sysroot_path"))).resolve() != install_root.resolve():
+        raise CertificationError("self version json did not preserve the installed sysroot path")
+    if Path(str(payload.get("binary_path"))).resolve() != (install_root / "bin" / "sifr").resolve():
+        raise CertificationError("self version json did not preserve the installed binary path")
+    if payload.get("matches_receipt") is not True:
+        raise CertificationError("self version json did not report a matching receipt")
+
+
+def validate_self_update_dry_run_json(raw: str, install_root: Path) -> None:
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise CertificationError(f"self update dry-run json did not parse: {error}") from error
+    if payload.get("current_version") != RELEASE_VERSION or payload.get("target_version") != "0.1.0-beta.1301":
+        raise CertificationError("self update dry-run json did not preserve requested version transition")
+    if payload.get("action") != "update" or payload.get("would_run_installer") is not True:
+        raise CertificationError("self update dry-run json did not plan an update action")
+    if Path(str(payload.get("sysroot_path"))).resolve() != install_root.resolve():
+        raise CertificationError("self update dry-run json did not preserve the installed sysroot path")
+    if Path(str(payload.get("binary_path"))).resolve() != (install_root / "bin" / "sifr").resolve():
+        raise CertificationError("self update dry-run json did not preserve the installed binary path")
+
+
+def run_doctor_snapshots(
+    installed_sifr: Path,
+    install_root: Path,
+    temp_root: Path,
+    work_root: Path,
+    env: dict[str, str],
+    doctor_text_path: Path,
+    doctor_json_path: Path,
+    broken_doctor_path: Path,
+    broken_doctor_json_path: Path,
+) -> None:
+    text = run_checked(
+        [str(installed_sifr), "doctor"],
+        cwd=work_root,
+        env=env,
+        label="doctor healthy",
+        stdout_path=doctor_text_path,
+        echo_output=False,
+    )
+    if "Sifr doctor: ok" not in text.stdout or str(install_root) not in text.stdout:
+        raise CertificationError("installed doctor text output did not report the extracted sysroot")
+    raw_json = run_checked(
+        [str(installed_sifr), "doctor", "--json"],
+        cwd=work_root,
+        env=env,
+        label="doctor healthy json",
+        stdout_path=doctor_json_path,
+        echo_output=False,
+    )
+    validate_doctor_json(raw_json.stdout, install_root)
+
+    broken_root = temp_root / "broken-install"
+    shutil.copytree(install_root, broken_root)
+    broken_runtime_manifest = broken_root / "crates" / "sifr_runtime" / "Cargo.toml"
+    broken_runtime_manifest.unlink()
+    broken_sifr = broken_root / "bin" / "sifr"
+    broken = run_command([str(broken_sifr), "doctor"], cwd=work_root, env=env, timeout=60)
+    broken_doctor_path.write_text(broken.stdout + broken.stderr, encoding="utf-8")
+    if broken.returncode == 0:
+        raise CertificationError("doctor unexpectedly accepted a broken installed sysroot")
+    if "missing or invalid asset" not in broken.stderr or "sifr_runtime/Cargo.toml" not in broken.stderr:
+        raise CertificationError("broken doctor output did not identify the missing runtime manifest")
+    broken_json = run_command([str(broken_sifr), "doctor", "--json"], cwd=work_root, env=env, timeout=60)
+    broken_doctor_json_path.write_text(broken_json.stdout + broken_json.stderr, encoding="utf-8")
+    if broken_json.returncode == 0:
+        raise CertificationError("doctor --json unexpectedly accepted a broken installed sysroot")
+    validate_broken_doctor_json(broken_json.stdout)
+
+
+def validate_doctor_json(raw: str, install_root: Path) -> None:
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise CertificationError(f"doctor json did not parse: {error}") from error
+    if payload.get("status") != "ok":
+        raise CertificationError("doctor json did not report ok status")
+    if Path(str(payload.get("root"))).resolve() != install_root.resolve():
+        raise CertificationError("doctor json root did not match the extracted archive")
+    check_names = {
+        str(check.get("name"))
+        for check in payload.get("checks", [])
+        if isinstance(check, dict) and check.get("status") == "ok"
+    }
+    required = {"manifest", "runtime_crate", "stdlib_crate", "cargo_lock", "vendor"}
+    missing = sorted(required.difference(check_names))
+    if missing:
+        raise CertificationError(f"doctor json omitted required ok check(s): {', '.join(missing)}")
+
+
+def validate_broken_doctor_json(raw: str) -> None:
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise CertificationError(f"broken doctor json did not parse: {error}") from error
+    if payload.get("status") != "error":
+        raise CertificationError("broken doctor json did not report error status")
+    asset_path = str(payload.get("asset_path"))
+    if "sifr_runtime/Cargo.toml" not in asset_path:
+        raise CertificationError("broken doctor json did not identify the missing runtime manifest")
 
 
 def run_lsp_smoke(installed_sifr: Path, work_root: Path, env: dict[str, str], trace_path: Path) -> None:
@@ -496,6 +699,7 @@ def installed_env(temp_root: Path) -> dict[str, str]:
     env = base_env()
     env.pop("SIFR_SYSROOT", None)
     env.pop("SIFR_RUNTIME_PATH", None)
+    env.pop("SIFR_INSTALL_MANIFEST_DIR", None)
     env["CARGO_NET_OFFLINE"] = "true"
     probe_cache_root = ACTUAL_ROOT / "probe-cache"
     probe_cache_root.mkdir(parents=True, exist_ok=True)

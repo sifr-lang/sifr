@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "sysroot_release",
   "owner": "release/distribution",
-  "description": "Installed sysroot release certification for source-checkout-independent CLI, LSP, offline Cargo, and path-leakage behavior.",
+  "description": "Installed sysroot release certification for source-checkout-independent CLI, doctor, self-update pairing, LSP, offline Cargo, and path-leakage behavior.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local",

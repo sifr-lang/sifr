@@ -8,7 +8,7 @@ use super::explain_cli::cmd_explain;
 use super::formatter_cli::FmtArgs;
 use super::lint_cli::{cmd_lint, LintArgs};
 use super::self_update_cli::{cmd_self, SelfArgs};
-use super::sysroot_cli::{cmd_print, PrintKind};
+use super::sysroot_cli::{cmd_doctor, cmd_print, PrintKind};
 use super::trace_cli::cmd_trace;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
@@ -118,6 +118,12 @@ pub(crate) enum Commands {
         /// Combine --locked and --offline
         #[arg(long)]
         frozen: bool,
+    },
+    /// Inspect the resolved Sifr sysroot and install health
+    Doctor {
+        /// Print doctor output as JSON
+        #[arg(long)]
+        json: bool,
     },
     /// Create a new Sifr package
     Init {
@@ -441,6 +447,7 @@ fn run_cli(cli: Cli) -> i32 {
             lock_mode_from_flags(locked, offline, frozen),
             diagnostic_format,
         ),
+        Commands::Doctor { json } => cmd_doctor(json, diagnostic_format),
         Commands::Init {
             path,
             lib,

@@ -865,8 +865,10 @@ paths, and other `CARGO_MANIFEST_DIR`-derived source paths in release artifacts.
 The installed-toolchain certification area owns the executable version of this
 contract. Its fast merge suite extracts a version-matched release archive
 outside the repository, verifies installed sysroot JSON, emits a migrated
-stdlib fixture from the installed sysroot, runs the installed LSP lifecycle, and
-scans those artifacts plus the archive. Its long-running suite adds broad
+stdlib fixture from the installed sysroot, runs the installed LSP lifecycle,
+captures healthy and broken `sifr doctor` snapshots, verifies standalone
+self-update receipt/version/dry-run output preserves binary/sysroot pairing,
+and scans those artifacts plus the archive. Its long-running suite adds broad
 stdlib check/emit coverage, a real installed stdlib build/run, and offline
 Cargo `metadata`, `tree -e features`, and frozen build checks for the generated
 project.
