@@ -36,7 +36,11 @@ HARDENING_OK_RE = re.compile(
 )
 CACHE_DIR_RE = re.compile(r"^\s*cache_dir=(.+)$")
 LANE_STEP_RE = re.compile(
-    r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail)$"
+    r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail)$"
+)
+LANE_STEP_BUDGET_RE = re.compile(
+    r"^\[sifr-lane-step-budget\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+"
+    r"budget_ms=(\d+)\s+enforcement=(advisory|blocking)\s+status=(pass|fail)$"
 )
 CASE_TIMING_RE = re.compile(
     r"^\[sifr-case-timing\]\s+bucket=([A-Za-z0-9_-]+)\s+case=([A-Za-z0-9_.:/+-]+)"
@@ -81,6 +85,7 @@ def resolve_profile(profile: str) -> tuple[str, dict[str, Any]]:
         "warm_wall_time_target_minutes": budgets["warm_wall_time_minutes"],
         "cold_wall_time_target_minutes": budgets["cold_wall_time_minutes"],
         **legacy,
+        "step_budgets": payload.get("step_budgets", {}),
     }
     return str(payload["name"]), lane
 
@@ -183,8 +188,9 @@ def directory_stats(path: Path) -> dict[str, int | str]:
 def parse_log(path: Path) -> dict[str, Any]:
     suite_filters: list[dict[str, int | str]] = []
     lane_steps: list[dict[str, int | str]] = []
+    lane_step_budgets: dict[str, dict[str, int | str]] = {}
     case_timings: list[dict[str, int | str]] = []
-    artifact_cache: dict[str, dict[str, int]] = {}
+    artifact_cache: dict[str, dict[str, Any]] = {}
     hardening_summary: dict[str, int] | None = None
     e2e_metrics: dict[str, int] | None = None
     cache_dir: str | None = None
@@ -201,6 +207,14 @@ def parse_log(path: Path) -> dict[str, Any]:
                     "status": match.group(3),
                 }
             )
+            continue
+        if match := LANE_STEP_BUDGET_RE.match(line):
+            lane_step_budgets[match.group(1)] = {
+                "elapsed_ms": int(match.group(2)),
+                "budget_ms": int(match.group(3)),
+                "enforcement": match.group(4),
+                "status": match.group(5),
+            }
             continue
         if match := CASE_TIMING_RE.match(line):
             case_timings.append(
@@ -253,11 +267,16 @@ def parse_log(path: Path) -> dict[str, Any]:
             continue
         if match := ARTIFACT_CACHE_RE.match(line):
             namespace = match.group(1)
-            entry = artifact_cache.setdefault(namespace, {"hits": 0, "misses": 0})
+            entry = artifact_cache.setdefault(namespace, {"hits": 0, "misses": 0, "miss_reasons": {}})
             if match.group(3) == "true":
                 entry["hits"] += 1
             else:
                 entry["misses"] += 1
+                miss_reason = match.group(5)
+                if miss_reason:
+                    miss_reasons = entry["miss_reasons"]
+                    assert isinstance(miss_reasons, dict)
+                    miss_reasons[miss_reason] = int(miss_reasons.get(miss_reason, 0)) + 1
             continue
         if match := HARDENING_OK_RE.match(line):
             entry = {
@@ -278,6 +297,7 @@ def parse_log(path: Path) -> dict[str, Any]:
 
     return {
         "lane_steps": lane_steps,
+        "lane_step_budgets": lane_step_budgets,
         "case_timings": case_timings,
         "suite_filters": suite_filters,
         "artifact_cache": artifact_cache,
@@ -327,6 +347,21 @@ def summarize(args: argparse.Namespace) -> int:
         median_group = int(e2e_metrics.get("median_group_fixtures", 0))
         group_skew_ratio = largest_group / max(median_group, 1) if largest_group > 0 else 0.0
     advisories = build_advisories(profile, warm_target_minutes, real_seconds, time_metrics, e2e_metrics)
+    lane_steps = list(parsed_log["lane_steps"])
+    lane_step_budgets = parsed_log["lane_step_budgets"]
+    if isinstance(lane_step_budgets, dict):
+        for step in lane_steps:
+            budget = lane_step_budgets.get(str(step["name"]))
+            if isinstance(budget, dict):
+                step["budget_ms"] = int(budget["budget_ms"])
+                step["budget_enforcement"] = str(budget["enforcement"])
+                step["budget_status"] = str(budget["status"])
+    case_timings = list(parsed_log["case_timings"])
+    slowest_cases = sorted(
+        case_timings,
+        key=lambda timing: int(timing["elapsed_ms"]),
+        reverse=True,
+    )[:10]
 
     payload = {
         "profile": profile,
@@ -350,10 +385,12 @@ def summarize(args: argparse.Namespace) -> int:
             "cache_hit_rate": cache_hit_rate,
             "rebuild_groups": rebuild_groups,
             "group_skew_ratio": group_skew_ratio,
+            "slowest_cases": slowest_cases,
         },
         "advisories": advisories,
-        "lane_steps": parsed_log["lane_steps"],
-        "case_timings": parsed_log["case_timings"],
+        "lane_steps": lane_steps,
+        "lane_step_budgets": lane_step_budgets,
+        "case_timings": case_timings,
         "suite_filters": parsed_log["suite_filters"],
         "artifact_cache": parsed_log["artifact_cache"],
         "hardening_summary": parsed_log["hardening_summary"],
@@ -413,7 +450,6 @@ def summarize(args: argparse.Namespace) -> int:
         f"run={workers['run_jobs']} "
         f"cargo_build={workers['cargo_build_jobs']}"
     )
-    lane_steps = parsed_log["lane_steps"]
     if lane_steps:
         slowest_step = max(lane_steps, key=lambda step: int(step["elapsed_ms"]))
         print(
@@ -421,7 +457,21 @@ def summarize(args: argparse.Namespace) -> int:
             f"{slowest_step['name']} {int(slowest_step['elapsed_ms'])}ms "
             f"status={slowest_step['status']}"
         )
-    case_timings = parsed_log["case_timings"]
+        slowest_steps = sorted(
+            lane_steps,
+            key=lambda step: int(step["elapsed_ms"]),
+            reverse=True,
+        )[:5]
+        step_summaries = [
+            f"{step['name']}={int(step['elapsed_ms'])}ms"
+            + (
+                f"/budget={int(step['budget_ms'])}ms/{step['budget_status']}"
+                if "budget_ms" in step
+                else ""
+            )
+            for step in slowest_steps
+        ]
+        print("  slowest_steps=" + " ".join(step_summaries))
     if case_timings:
         by_bucket: dict[str, dict[str, int | str]] = {}
         for timing in case_timings:
@@ -434,10 +484,29 @@ def summarize(args: argparse.Namespace) -> int:
             for bucket, timing in sorted(by_bucket.items())
         ]
         print("  slowest_cases=" + " ".join(slowest_cases))
+        top_cases = [
+            f"{timing['bucket']}:{timing['case']}={int(timing['elapsed_ms'])}ms"
+            for timing in sorted(
+                case_timings,
+                key=lambda timing: int(timing["elapsed_ms"]),
+                reverse=True,
+            )[:10]
+        ]
+        print("  top_slowest_cases=" + " ".join(top_cases))
     if parsed_log["artifact_cache"]:
         summaries = []
         for namespace, stats in sorted(parsed_log["artifact_cache"].items()):
-            summaries.append(f"{namespace}:hits={stats['hits']},misses={stats['misses']}")
+            reason_suffix = ""
+            miss_reasons = stats.get("miss_reasons")
+            if isinstance(miss_reasons, dict) and miss_reasons:
+                reasons = ",".join(
+                    f"{reason}={count}"
+                    for reason, count in sorted(miss_reasons.items())
+                )
+                reason_suffix = f",miss_reasons={reasons}"
+            summaries.append(
+                f"{namespace}:hits={stats['hits']},misses={stats['misses']}{reason_suffix}"
+            )
         print("  generated_artifact_cache=" + " ".join(summaries))
     if e2e_cache_stats is not None:
         print(
@@ -458,7 +527,12 @@ def summarize(args: argparse.Namespace) -> int:
     else:
         print("  advisories=none")
     if args.json_out:
-        print(f"  json={Path(args.json_out).resolve().relative_to(REPO_ROOT)}")
+        json_path = Path(args.json_out).resolve()
+        try:
+            display_json_path = json_path.relative_to(REPO_ROOT)
+        except ValueError:
+            display_json_path = json_path
+        print(f"  json={display_json_path}")
     return 0
 
 

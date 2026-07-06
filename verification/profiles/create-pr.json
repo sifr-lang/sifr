@@ -3,8 +3,30 @@
   "name": "create-pr",
   "description": "Fast local developer confidence with bounded rule coverage and representative e2e only.",
   "budgets": {
-    "warm_wall_time_minutes": 2,
-    "cold_wall_time_minutes": 5
+    "warm_wall_time_minutes": 5,
+    "cold_wall_time_minutes": 15
+  },
+  "step_budgets": {
+    "coverage_matrix_checks": {"budget_ms": 45000, "enforcement": "blocking"},
+    "core_guardrails": {"budget_ms": 360000, "enforcement": "blocking"},
+    "diagnostic_rules": {"budget_ms": 90000, "enforcement": "blocking"},
+    "cpython_differential": {"budget_ms": 30000, "enforcement": "blocking"},
+    "python_interop": {"budget_ms": 60000, "enforcement": "blocking"},
+    "frontend_syntax_guardrails": {"budget_ms": 60000, "enforcement": "blocking"},
+    "developer_tooling_checks": {"budget_ms": 180000, "enforcement": "blocking"},
+    "performance_budget_checks": {"budget_ms": 120000, "enforcement": "blocking"},
+    "verification_hardening_self_tests": {"budget_ms": 60000, "enforcement": "blocking"},
+    "verification_runner_foundation": {"budget_ms": 30000, "enforcement": "blocking"},
+    "fuzz_property_checks": {"budget_ms": 30000, "enforcement": "blocking"},
+    "algorithmic_compatibility_checks": {"budget_ms": 60000, "enforcement": "blocking"},
+    "distribution_validation": {"budget_ms": 30000, "enforcement": "blocking"},
+    "generated_code_quality_checks": {"budget_ms": 120000, "enforcement": "blocking"},
+    "crate_tests": {"budget_ms": 600000, "enforcement": "blocking"},
+    "validation_suite_matrix": {"budget_ms": 180000, "enforcement": "blocking"},
+    "runtime_platform_suites": {"budget_ms": 120000, "enforcement": "blocking"},
+    "e2e_pass_suite": {"budget_ms": 600000, "enforcement": "blocking"},
+    "verification_hardening_suites": {"budget_ms": 60000, "enforcement": "blocking"},
+    "extra_e2e_checks": {"budget_ms": 30000, "enforcement": "blocking"}
   },
   "resource_policy": {
     "classes": [

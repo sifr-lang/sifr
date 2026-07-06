@@ -21,6 +21,28 @@ class ProfileError(VerificationError):
 
 _WORKSPACE_PACKAGE_NAMES: set[str] | None = None
 E2E_PASS_FIXTURE_DIR = REPO_ROOT / "crates" / "sifr" / "tests" / "e2e" / "pass"
+PROFILE_STEP_NAMES = {
+    "coverage_matrix_checks",
+    "core_guardrails",
+    "diagnostic_rules",
+    "cpython_differential",
+    "python_interop",
+    "frontend_syntax_guardrails",
+    "developer_tooling_checks",
+    "performance_budget_checks",
+    "verification_hardening_self_tests",
+    "verification_runner_foundation",
+    "fuzz_property_checks",
+    "algorithmic_compatibility_checks",
+    "distribution_validation",
+    "generated_code_quality_checks",
+    "crate_tests",
+    "validation_suite_matrix",
+    "runtime_platform_suites",
+    "e2e_pass_suite",
+    "verification_hardening_suites",
+    "extra_e2e_checks",
+}
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -44,6 +66,7 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
         raise ProfileError(f"profile name '{payload.get('name')}' must match file stem '{profile}'")
     validate_selected_area_suites(payload)
     validate_crate_test_membership(payload)
+    validate_step_budgets(payload)
     return payload
 
 
@@ -176,6 +199,30 @@ def validate_crate_test_membership(profile: dict[str, Any]) -> None:
                 f"profile {profile.get('name')} full-mode crate test {suite_id} "
                 "must execute in merge unless it is a red-blocker"
             )
+
+
+def validate_step_budgets(profile: dict[str, Any]) -> None:
+    raw_budgets = profile.get("step_budgets")
+    if raw_budgets is None:
+        return
+    if not isinstance(raw_budgets, dict):
+        raise ProfileError(f"profile {profile.get('name')} step_budgets must be an object")
+    for step_name, budget in raw_budgets.items():
+        if step_name not in PROFILE_STEP_NAMES:
+            raise ProfileError(f"profile {profile.get('name')} step_budgets has unknown step {step_name}")
+        if not isinstance(budget, dict):
+            raise ProfileError(f"profile {profile.get('name')} step budget {step_name} must be an object")
+        if set(budget) != {"budget_ms", "enforcement"}:
+            raise ProfileError(
+                f"profile {profile.get('name')} step budget {step_name} "
+                "must contain only budget_ms and enforcement"
+            )
+        budget_ms = budget.get("budget_ms")
+        if isinstance(budget_ms, bool) or not isinstance(budget_ms, int) or budget_ms <= 0:
+            raise ProfileError(f"profile {profile.get('name')} step budget {step_name} has invalid budget_ms")
+        enforcement = budget.get("enforcement")
+        if enforcement not in {"advisory", "blocking"}:
+            raise ProfileError(f"profile {profile.get('name')} step budget {step_name} has invalid enforcement")
 
 
 def workspace_package_names() -> set[str]:
@@ -339,6 +386,7 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
         "reference_host": profile.get("reference_host", {}),
         "execution_sandbox": profile.get("execution_sandbox", {}),
         "budgets": profile["budgets"],
+        "step_budgets": profile.get("step_budgets", {}),
         "selected_areas": selected_areas,
         "legacy_facade": {
             "matrix_suites": list(legacy["matrix_suites"]),
@@ -383,6 +431,7 @@ def compare_plans(local_path: str, ci_path: str) -> int:
         "cargo_policy",
         "reference_host",
         "execution_sandbox",
+        "step_budgets",
     ]
     mismatches = [key for key in keys if local.get(key) != ci.get(key)]
     if mismatches:
