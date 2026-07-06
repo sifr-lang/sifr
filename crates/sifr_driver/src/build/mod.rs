@@ -23,6 +23,7 @@ mod rust_interop_digest;
 #[cfg(test)]
 mod rust_interop_panic_contract_tests;
 mod rust_interop_probe;
+mod rust_interop_probe_cache;
 #[cfg(test)]
 mod rust_interop_tests;
 mod rust_interop_trust;

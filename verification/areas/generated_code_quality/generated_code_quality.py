@@ -351,6 +351,22 @@ def load_manifest(path: Path) -> list[Entry]:
 
 
 def selected_positive_entries(entries: list[Entry], groups: Iterable[str]) -> list[Entry]:
+    explicit_ids = explicit_entry_ids()
+    if explicit_ids:
+        if os.environ.get("SIFR_GCQ_MAX_ENTRIES"):
+            raise SystemExit("SIFR_GCQ_ENTRY_IDS cannot be combined with SIFR_GCQ_MAX_ENTRIES")
+        if list(groups):
+            raise SystemExit("SIFR_GCQ_ENTRY_IDS cannot be combined with --group filters")
+        entries_by_id = {entry.id: entry for entry in entries}
+        missing = [entry_id for entry_id in explicit_ids if entry_id not in entries_by_id]
+        if missing:
+            raise SystemExit(f"unknown SIFR_GCQ_ENTRY_IDS entries: {missing}")
+        selected = [entries_by_id[entry_id] for entry_id in explicit_ids]
+        non_positive = [entry.id for entry in selected if entry.group not in POSITIVE_GROUPS]
+        if non_positive:
+            raise SystemExit(f"SIFR_GCQ_ENTRY_IDS must select positive entries: {non_positive}")
+        return selected
+
     selected_groups = set(groups)
     limit_raw = os.environ.get("SIFR_GCQ_MAX_ENTRIES")
     limit = int(limit_raw) if limit_raw else 0
@@ -364,6 +380,19 @@ def selected_positive_entries(entries: list[Entry], groups: Iterable[str]) -> li
     if not selected:
         raise SystemExit("no positive manifest entries selected")
     return selected
+
+
+def explicit_entry_ids() -> list[str]:
+    raw = os.environ.get("SIFR_GCQ_ENTRY_IDS", "")
+    if not raw.strip():
+        return []
+    ids = [entry_id.strip() for entry_id in raw.split(",")]
+    if any(not entry_id for entry_id in ids):
+        raise SystemExit("SIFR_GCQ_ENTRY_IDS contains an empty entry id")
+    duplicates = sorted({entry_id for entry_id in ids if ids.count(entry_id) > 1})
+    if duplicates:
+        raise SystemExit(f"SIFR_GCQ_ENTRY_IDS contains duplicate entries: {duplicates}")
+    return ids
 
 
 def run_id(mode: str) -> str:
@@ -427,12 +456,7 @@ def run_command(
 ) -> subprocess.CompletedProcess[str]:
     env = command_env()
     shared_root = shared_artifact_root()
-    if (
-        shared_root is not None
-        and len(args) >= 2
-        and args[0] == "cargo"
-        and args[1] in {"check", "clippy"}
-    ):
+    if shared_root is not None and args and args[0] == "cargo":
         env["CARGO_TARGET_DIR"] = str(shared_root / "cargo-target")
     result = subprocess.run(
         args,
