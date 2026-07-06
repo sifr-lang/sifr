@@ -66,6 +66,7 @@ commit `16f920f9f` before final validation.
 - M12 wave 2 verification target-binary normalization: [PR #2797](https://github.com/sifr-lang/sifr/pull/2797) merged after local implementation, Opus review pass 2, and create-pr validation completed on `m12-target-binary-normalization`.
 - M12 wave 3 native ownership registry retirement: [PR #2799](https://github.com/sifr-lang/sifr/pull/2799) merged after local implementation, Opus review pass 1, and create-pr validation completed on `m12-remove-native-ownership-registry`.
 - M12 wave 4 migrated-intrinsic closure guard: [PR #2803](https://github.com/sifr-lang/sifr/pull/2803) merged after local implementation, Opus review pass 4, and create-pr validation completed on `m12-migration-closure-guard`.
+- M13 wave 1 installed toolchain certification: [PR #2808](https://github.com/sifr-lang/sifr/pull/2808) opened after post-main local implementation, Opus review pass 5, installed sysroot smoke/heavy certification, and create-pr validation completed on `m13-installed-toolchain-certification`.
 
 ## Design Reference
 
@@ -2196,8 +2197,8 @@ M12 wave 4 implementation evidence:
 Close the phase with an installed-toolchain certification pass.
 
 M13 wave 1 status: local implementation, post-main validation, and Opus review
-pass 5 are complete on `m13-installed-toolchain-certification`; PR publication
-is next.
+pass 5 are complete in [PR #2808](https://github.com/sifr-lang/sifr/pull/2808)
+on `m13-installed-toolchain-certification`.
 
 This wave adds the executable installed-toolchain certification area and splits
 it into a merge-safe `host-installed-smoke` suite and a long-running
