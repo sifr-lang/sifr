@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 import tempfile
@@ -47,6 +48,8 @@ TEXT_EXTENSIONS = {
     ".yaml",
 }
 
+SKIP_DIR_NAMES = {".git", ".venv", "__pycache__", "node_modules", "target", "third_party"}
+
 FILENAME_PATTERNS = (
     re.compile(r"(^|[-_])(?:" + "|".join(DELIVERY_TERMS) + r")([-_]|$)", re.IGNORECASE),
     re.compile(r"(^|[-_])work[-_]item([-_]|$)", re.IGNORECASE),
@@ -77,6 +80,40 @@ ALLOW_TEXT_PATTERNS = (
         re.IGNORECASE,
     ),
 )
+
+TEXT_TRIGGER_TERMS = (
+    DELIVERY_STAGE,
+    DELIVERY_STEP,
+    DELIVERY_BATCH,
+    DELIVERY_MAP,
+    DELIVERY_DONE,
+    DELIVERY_QUEUE,
+    "ad hoc",
+    "ad-hoc",
+    "backlog",
+    "capabilities",
+    "capability",
+    "closed from a local validation standpoint",
+    "closure",
+    RULES_ALIAS,
+    "conversion set",
+    "follow-up",
+    "future phases",
+    "gate-closure",
+    "implementation slice",
+    "later phases",
+    "reference:",
+    "slice",
+    "source issue:",
+    "surface",
+    "successor-" + DELIVERY_STAGE,
+    "task ownership",
+    "todo(",
+    "work item",
+    "work-item",
+    "work-on-item",
+)
+M_TOKEN_TRIGGER = re.compile(r"(?:^|[^A-Za-z0-9])m\d|[/_-]m\d|\bm_[a-z]", re.IGNORECASE)
 
 LEGACY_FIELD_PATTERNS = (
     "implementation_" + DELIVERY_STEP,
@@ -258,19 +295,30 @@ def collect_failures(roots: tuple[Path, ...]) -> list[Failure]:
                 failures.extend(validate_filename(root))
                 failures.extend(validate_text(root))
             continue
-        for path in root.rglob("*"):
-            if path in seen or should_skip(path):
+        for path in walk_text_candidates(root):
+            if path in seen:
                 continue
             seen.add(path)
-            if path.is_file():
-                failures.extend(validate_filename(path))
-                failures.extend(validate_text(path))
+            failures.extend(validate_filename(path))
+            failures.extend(validate_text(path))
     return failures
+
+
+def walk_text_candidates(root: Path) -> list[Path]:
+    candidates: list[Path] = []
+    for current_root, dirnames, filenames in os.walk(root):
+        dirnames[:] = [dirname for dirname in dirnames if dirname not in SKIP_DIR_NAMES]
+        current = Path(current_root)
+        for filename in filenames:
+            path = current / filename
+            if not should_skip(path):
+                candidates.append(path)
+    return candidates
 
 
 def should_skip(path: Path) -> bool:
     parts = set(path.relative_to(REPO_ROOT).parts) if path.is_relative_to(REPO_ROOT) else set(path.parts)
-    if parts & {".git", ".venv", "__pycache__", "node_modules", "target", "third_party"}:
+    if parts & SKIP_DIR_NAMES:
         return True
     return path.is_file() and path.suffix not in TEXT_EXTENSIONS
 
@@ -293,6 +341,8 @@ def validate_text(path: Path) -> list[Failure]:
         return []
     failures: list[Failure] = []
     for line_number, line in enumerate(text.splitlines(), start=1):
+        if not has_taxonomy_trigger(line):
+            continue
         checked_line = line
         for pattern in ALLOW_TEXT_PATTERNS:
             checked_line = pattern.sub("", checked_line)
@@ -303,6 +353,11 @@ def validate_text(path: Path) -> list[Failure]:
                 )
                 break
     return failures
+
+
+def has_taxonomy_trigger(line: str) -> bool:
+    lower = line.lower()
+    return any(term in lower for term in TEXT_TRIGGER_TERMS) or M_TOKEN_TRIGGER.search(line) is not None
 
 
 def run_self_test(*, quiet: bool = False) -> int:

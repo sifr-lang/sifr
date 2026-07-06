@@ -458,6 +458,11 @@ impl RootedEntrypointPlan {
                     source_map: entrypoint.source_map.clone(),
                     module_packages: package_project.module_packages.clone(),
                     module_sources,
+                    sysroot_runtime_crate: stdlib
+                        .interop
+                        .sysroot
+                        .as_ref()
+                        .map(|sysroot| sysroot.paths.runtime_crate.clone()),
                     sysroot_trust: None,
                 };
                 let module_count = package_project.parsed_modules.len();

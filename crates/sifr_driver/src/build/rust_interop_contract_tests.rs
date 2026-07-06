@@ -718,8 +718,16 @@ pub(super) fn package_context(
                 display_path: "/ws/app/sifr/app.sifr".to_string(),
             },
         )]),
+        sysroot_runtime_crate: Some(test_runtime_crate()),
         sysroot_trust: None,
     }
+}
+
+fn test_runtime_crate() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("driver crate should have crates parent")
+        .join("sifr_runtime")
 }
 
 pub(super) fn backend_with_manifest(

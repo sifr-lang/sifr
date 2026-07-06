@@ -215,6 +215,16 @@
       ]
     },
     {
+      "area": "sysroot_release",
+      "suites": [
+        "host-installed-smoke"
+      ],
+      "resource_classes": [
+        "default-local",
+        "platform-specific"
+      ]
+    },
+    {
       "area": "project_workspace",
       "suites": [
         "frontend_mode_parity",

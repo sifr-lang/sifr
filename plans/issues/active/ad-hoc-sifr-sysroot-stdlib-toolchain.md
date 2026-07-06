@@ -27,8 +27,9 @@ Latest merged wave: M12 wave 4 migrated-intrinsic closure guard merged in
 active migrated native intrinsic names are blocked from reappearing in the
 compiler dispatcher, and stale deleted-registry architecture wording is guarded
 by create-pr core guardrails.
-Next local wave: M13 release-candidate certification. Current branch:
-`m12-migration-closure-close`.
+Current local wave: M13 wave 1 installed toolchain certification on branch
+`m13-installed-toolchain-certification`, fast-forwarded to `origin/main`
+commit `16f920f9f` before final validation.
 
 ## PR Log
 
@@ -2193,6 +2194,93 @@ M12 wave 4 implementation evidence:
 ### M13. Release Candidate Certification
 
 Close the phase with an installed-toolchain certification pass.
+
+M13 wave 1 status: local implementation, post-main validation, and Opus review
+pass 5 are complete on `m13-installed-toolchain-certification`; PR publication
+is next.
+
+This wave adds the executable installed-toolchain certification area and splits
+it into a merge-safe `host-installed-smoke` suite and a long-running
+`host-installed-stdlib-heavy` suite. The smoke suite builds a version-matched
+release archive, extracts it outside the repository, verifies installed
+`--print sysroot --json`, emits a migrated stdlib fixture from the installed
+sysroot, runs the installed LSP initialize/initialized/shutdown lifecycle, and
+scans the archive/sysroot/emit/LSP artifacts for repository and local-home path
+leakage. The heavy suite additionally runs a broad stdlib check/emit fixture,
+performs a real installed `sifr build`, executes the built binary, and validates
+generated Cargo `metadata --offline --locked`, `tree -e features --offline
+--locked`, and `build --offline --frozen`.
+
+The certification exposed two release-path leaks that are fixed in this wave:
+release `--explain` no longer embeds a source checkout `docs/errors` path, and
+Rust bridge probes now require the resolved sysroot `sifr_runtime` crate root
+as explicit build context. Missing runtime probe context is a typed compiler
+diagnostic; there is no source-tree, installed-layout guess, or sentinel fallback
+path. Release packaging now remaps repository,
+sysroot, Cargo-home, and rustup-home prefixes, and the installed certification
+rejects both the repository root and local home directory in scanned artifacts.
+The release archive verifier was also changed to read gzip archives once while
+preserving the canonical sorted digest calculation, reducing direct archive
+verification from multi-minute CPU work to a short check.
+
+M13 wave 1 implementation evidence:
+
+- New verification area `verification/areas/sysroot_release/` with
+  `host-installed-smoke`, `host-installed-stdlib-heavy`, and
+  `path-leakage-self-test` suites.
+- `verification/profiles/merge.json` includes only
+  `sysroot_release:host-installed-smoke`; nightly/release include both smoke
+  and `host-installed-stdlib-heavy`.
+- Coverage matrices track the installed-toolchain surface with merge versus
+  nightly/release suite assignment.
+- `scripts/distribution/build_preview_artifacts.sh` production builds use
+  release remap flags for checkout/sysroot/Cargo/rustup paths and honor
+  `CARGO_TARGET_DIR` when locating the target binary.
+- `scripts/distribution/verify_release_archive.py` performs one-pass archive
+  member hashing before canonical digest calculation.
+- Release-mode `--explain` uses diagnostic registry summaries instead of
+  reading source-tree Markdown through `CARGO_MANIFEST_DIR`; debug builds keep
+  the source-tree Markdown extraction behavior.
+- Rust bridge probe manifests use the resolved sysroot `sifr_runtime` crate root
+  passed through `PackageRustInteropContext`; missing sysroot probe context is a
+  typed Rust interop metadata error, not an implicit fallback.
+- The previous Rust bridge target-resolution helper block was split into
+  `crates/sifr_driver/src/build/rust_interop/target_resolution.rs`, keeping the
+  hand-maintained `rust_interop.rs` file under the 900-line guardrail.
+
+M13 wave 1 focused validation:
+
+- `python3 -m py_compile verification/areas/sysroot_release/runner.py verification/areas/sysroot_release/check_no_path_leakage.py verification/runner/sifr_verify/profile_runner.py`
+- `python3 -m json.tool` for `verification/areas/sysroot_release/manifest.json`,
+  merge/nightly/release profiles, and coverage matrices.
+- `bash -n scripts/distribution/build_preview_artifacts.sh`
+- `python3 verification/areas/sysroot_release/check_no_path_leakage.py --self-test`
+- `uv run --project verification --locked python -m sifr_verify areas check`
+- `uv run --project verification --locked python verification/areas/coverage_matrix/runner.py --suite readiness`
+- `uv run --project verification --locked python -m sifr_verify areas run --area sysroot_release --suite path-leakage-self-test`
+- `uv run --project verification --locked python -m sifr_verify areas run --area sysroot_release --suite host-installed-smoke` passed with strict repository/home leakage scanning.
+- `CARGO_TARGET_DIR=target/validation-m13-post-main CARGO_INCREMENTAL=0 uv run --project verification --locked python -m sifr_verify areas run --area sysroot_release --suite host-installed-stdlib-heavy` passed after the no-fallback audit; installed build completed in `66.7s`, the full suite in `204977ms`, and repo/home path-leakage scans passed.
+- `python3 scripts/distribution/verify_release_archive.py target/verification/actual/sysroot_release/artifacts/sifr-0.1.0-beta.1300-aarch64-apple-darwin.tar.gz --version 0.1.0-beta.1300 --target aarch64-apple-darwin`
+- `cargo check -q -p sifr_driver`
+- Post-main no-fallback validation: text scan found no legacy runtime-probe
+  helper, manifest-fallback wording, or missing-runtime cache sentinel in
+  touched runtime/probe/docs paths.
+- Post-main coverage-matrix validation: `python3 -m py_compile
+  verification/areas/coverage_matrix/checks/verification_taxonomy.py`,
+  `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+  --self-test`, and `uv run --project verification --locked python
+  verification/areas/coverage_matrix/runner.py --suite readiness` passed after
+  pruning skipped directories and removing the reviewer-noted unreachable
+  expression.
+- Post-main full create-pr validation:
+  `CARGO_TARGET_DIR=target/validation-create-pr-post-main CARGO_INCREMENTAL=0
+  scripts/run_all_tests.sh --profile create-pr` passed all blocking checks.
+  Lane report: wall time `644.47s`, max RSS `731.3MiB`,
+  slowest step `e2e_pass_suite` `357186ms`/`600000ms` pass, `crate_tests`
+  `102910ms`/`600000ms` pass, `runtime_platform_suites`
+  `39749ms`/`120000ms` pass. Advisory only: warm wall-time budget exceeded.
+- Opus review pass 4 reported no blocking findings and one cleanup; pass 5
+  confirmed the cleanup and marked the wave ready to proceed.
 
 Tasks:
 

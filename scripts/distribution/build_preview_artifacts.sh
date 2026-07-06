@@ -139,6 +139,35 @@ sha256_stream() {
   fi
 }
 
+release_rustflags() {
+  local flags="${RUSTFLAGS:-}"
+  local repo_root
+  local sysroot_abs
+  local target_dir_abs
+  local cargo_home
+  local rustup_home
+  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  repo_root="$(cd "${repo_root}" && pwd)"
+  sysroot_abs="$(cd "${SYSROOT_ROOT}" && pwd)"
+  flags="${flags} --remap-path-prefix=${repo_root}=."
+  if [[ "${sysroot_abs}" != "${repo_root}" ]]; then
+    flags="${flags} --remap-path-prefix=${sysroot_abs}=."
+  fi
+  if [[ -n "${CARGO_TARGET_DIR:-}" ]]; then
+    target_dir_abs="$(mkdir -p "${CARGO_TARGET_DIR}" && cd "${CARGO_TARGET_DIR}" && pwd)"
+    flags="${flags} --remap-path-prefix=${target_dir_abs}=cargo-target"
+  fi
+  cargo_home="${CARGO_HOME:-${HOME:-}/.cargo}"
+  if [[ -n "${cargo_home}" && -d "${cargo_home}" ]]; then
+    flags="${flags} --remap-path-prefix=${cargo_home}=cargo-home"
+  fi
+  rustup_home="${RUSTUP_HOME:-${HOME:-}/.rustup}"
+  if [[ -n "${rustup_home}" && -d "${rustup_home}" ]]; then
+    flags="${flags} --remap-path-prefix=${rustup_home}=rustup-home"
+  fi
+  printf '%s' "${flags# }"
+}
+
 sysroot_content_sha256() {
   local root="$1"
   (
@@ -250,8 +279,8 @@ mkdir -p "${OUTPUT_DIR}"
 
 for target in "${SELECTED_TARGETS[@]}"; do
   if [[ "${CARGO_BUILD}" -eq 1 ]]; then
-    SIFR_RELEASE_VERSION="${VERSION}" cargo build --release -p sifr --target "${target}"
-    binary_path="target/${target}/release/sifr"
+    RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --release -p sifr --target "${target}"
+    binary_path="${CARGO_TARGET_DIR:-target}/${target}/release/sifr"
   else
     binary_path="${BINARY}"
   fi

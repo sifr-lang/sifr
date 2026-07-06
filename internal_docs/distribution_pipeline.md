@@ -186,6 +186,17 @@ scripts/distribution/build_preview_artifacts.sh \
 ```
 
 The production path runs `cargo build --release -p sifr --target <target>` for every preview-release pipeline target and fails if any target cannot be built. It does not fall back to another binary or another target.
+Production builds remap repository, sysroot, Cargo-home, and rustup-home path
+prefixes before packaging so release binaries do not embed local checkout,
+Cargo registry, or rustup source paths. Archive verification is required before
+checksums are written.
+
+Installed-toolchain certification lives in `verification/areas/sysroot_release`.
+The merge-safe suite checks a real packaged archive from outside the repository,
+installed sysroot JSON, installed migrated-stdlib emit, installed LSP lifecycle,
+and release artifact path leakage. Nightly/release also run the long suite with
+broad installed stdlib check/emit, a real installed `sifr build`, the built
+binary, and offline/frozen Cargo checks for the generated project.
 
 ## Immutable Version Installer Generation
 

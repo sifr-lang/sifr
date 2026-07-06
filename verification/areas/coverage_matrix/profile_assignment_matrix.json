@@ -102,6 +102,21 @@
       }
     },
     {
+      "surface_id": "sysroot_release_installed_toolchain",
+      "profiles": {
+        "create-pr": [],
+        "merge": ["sysroot_release:host-installed-smoke"],
+        "nightly": [
+          "sysroot_release:host-installed-smoke",
+          "sysroot_release:host-installed-stdlib-heavy"
+        ],
+        "release": [
+          "sysroot_release:host-installed-smoke",
+          "sysroot_release:host-installed-stdlib-heavy"
+        ]
+      }
+    },
+    {
       "surface_id": "project_workspace_package",
       "profiles": {
         "create-pr": [],

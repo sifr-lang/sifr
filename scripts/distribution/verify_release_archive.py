@@ -58,13 +58,12 @@ def validate_member(member: tarfile.TarInfo) -> str:
 
 
 def validate_manifest(
-    archive: tarfile.TarFile, name_to_member: dict[str, tarfile.TarInfo], version: str, target: str
+    manifest_source: str,
+    sysroot_file_digests: dict[str, str],
+    version: str,
+    target: str,
 ) -> None:
-    manifest_member = name_to_member["sysroot.toml"]
-    manifest_file = archive.extractfile(manifest_member)
-    if manifest_file is None:
-        raise SystemExit("sysroot.toml could not be read from archive")
-    manifest = parse_sysroot_manifest(manifest_file.read().decode("utf-8"))
+    manifest = parse_sysroot_manifest(manifest_source)
     if manifest.get("schema-version") != 1:
         raise SystemExit("sysroot.toml schema-version must be 1")
     if manifest.get("sifr-version") != version:
@@ -80,7 +79,7 @@ def validate_manifest(
         raise SystemExit("sysroot.toml sysroot-content-sha256 must be a lowercase sha256 hex string")
     if content_sha == ZERO_SHA256:
         raise SystemExit("sysroot.toml sysroot-content-sha256 must not be the zero placeholder")
-    actual_content_sha = sysroot_content_sha256(archive, name_to_member)
+    actual_content_sha = sysroot_content_sha256(sysroot_file_digests)
     if content_sha != actual_content_sha:
         raise SystemExit(
             "sysroot.toml sysroot-content-sha256 mismatch: "
@@ -88,24 +87,12 @@ def validate_manifest(
         )
 
 
-def sysroot_content_sha256(
-    archive: tarfile.TarFile, name_to_member: dict[str, tarfile.TarInfo]
-) -> str:
-    paths = sorted(
-        name
-        for name, member in name_to_member.items()
-        if member.isfile() and is_sysroot_content_path(name)
-    )
+def sysroot_content_sha256(sysroot_file_digests: dict[str, str]) -> str:
     digest = hashlib.sha256()
-    for name in paths:
+    for name in sorted(sysroot_file_digests):
         digest.update(name.encode("utf-8"))
         digest.update(b"\n")
-        file_digest = hashlib.sha256()
-        extracted = archive.extractfile(name_to_member[name])
-        if extracted is None:
-            raise SystemExit(f"archive member could not be read for hashing: {name}")
-        file_digest.update(extracted.read())
-        digest.update(file_digest.hexdigest().encode("ascii"))
+        digest.update(sysroot_file_digests[name].encode("ascii"))
         digest.update(b"\n")
     return digest.hexdigest()
 
@@ -138,12 +125,23 @@ def verify_archive(path: str, version: str, target: str) -> None:
     with tarfile.open(path, "r:gz") as archive:
         names: set[str] = set()
         name_to_member: dict[str, tarfile.TarInfo] = {}
-        for member in archive.getmembers():
+        sysroot_file_digests: dict[str, str] = {}
+        manifest_source: str | None = None
+        for member in archive:
             name = validate_member(member)
             if not name:
                 continue
             names.add(name)
             name_to_member[name] = member
+            if member.isfile() and (name == "sysroot.toml" or is_sysroot_content_path(name)):
+                extracted = archive.extractfile(member)
+                if extracted is None:
+                    raise SystemExit(f"archive member could not be read: {name}")
+                content = extracted.read()
+                if name == "sysroot.toml":
+                    manifest_source = content.decode("utf-8")
+                if is_sysroot_content_path(name):
+                    sysroot_file_digests[name] = hashlib.sha256(content).hexdigest()
 
         for required in REQUIRED_FILES:
             member = name_to_member.get(required)
@@ -161,7 +159,9 @@ def verify_archive(path: str, version: str, target: str) -> None:
         ):
             raise SystemExit("stdlib private root contains no .sifr files")
 
-        validate_manifest(archive, name_to_member, version, target)
+        if manifest_source is None:
+            raise SystemExit("sysroot.toml could not be read from archive")
+        validate_manifest(manifest_source, sysroot_file_digests, version, target)
 
 
 def main() -> int:
