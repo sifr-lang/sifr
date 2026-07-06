@@ -66,7 +66,7 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 """
-    sifr_source = f"""from sifr.json import json_dumps
+    sifr_source = f"""from sifr.json import dumps, from_array, from_int
 
 
 def adjust(value: int, flag: bool) -> int:
@@ -81,8 +81,17 @@ def main() -> None:
     threshold: int = {threshold}
     flag: bool = base > threshold
     scaled: int = adjust(base, flag) * {multiplier}
-    values: list[int] = [adjust(base, flag), scaled // {divisor}, scaled % {modulo}]
-    print(json_dumps(values))
+    print(
+        dumps(
+            from_array(
+                [
+                    from_int(adjust(base, flag)),
+                    from_int(scaled // {divisor}),
+                    from_int(scaled % {modulo}),
+                ]
+            )
+        )
+    )
 """
     return GeneratedProgram(
         python_source=python_source,
@@ -126,7 +135,7 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 """
-    sifr_source = f"""from sifr.json import json_dumps
+    sifr_source = f"""from sifr.json import dumps, from_array, from_str
 
 
 def choose(flag: bool, left: str, right: str) -> str:
@@ -140,8 +149,16 @@ def main() -> None:
     left: str = "{left}"
     right: str = "{right}"
     probe: str = "{probe}"
-    values: list[str] = [choose(probe == left, left, right), left + ":" + right]
-    print(json_dumps(values))
+    print(
+        dumps(
+            from_array(
+                [
+                    from_str(choose(probe == left, left, right)),
+                    from_str(left + ":" + right),
+                ]
+            )
+        )
+    )
 """
     return GeneratedProgram(
         python_source=python_source,
@@ -172,7 +189,7 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 """
-    sifr_source = f"""from sifr.json import json_dumps
+    sifr_source = f"""from sifr.json import dumps, from_array, from_int
 
 
 def main() -> None:
@@ -181,8 +198,18 @@ def main() -> None:
     total: int = 0
     for value in items:
         total = total + value
-    values: list[int] = [pair[0], pair[1], total, len(items)]
-    print(json_dumps(values))
+    print(
+        dumps(
+            from_array(
+                [
+                    from_int(pair[0]),
+                    from_int(pair[1]),
+                    from_int(total),
+                    from_int(len(items)),
+                ]
+            )
+        )
+    )
 """
     return GeneratedProgram(
         python_source=python_source,
@@ -213,18 +240,23 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 """
-    sifr_source = f"""from sifr.json import json_dumps
+    sifr_source = f"""from sifr.json import dumps, from_array, from_bool
 
 
 def main() -> None:
     values: dict[str, int] = {{"alpha": {alpha}, "beta": {beta}, "gamma": {gamma}}}
-    result: list[bool] = [
-        values["alpha"] == {alpha},
-        values["beta"] == {beta},
-        values["gamma"] == {gamma},
-        len(values) == 3,
-    ]
-    print(json_dumps(result))
+    print(
+        dumps(
+            from_array(
+                [
+                    from_bool(values["alpha"] == {alpha}),
+                    from_bool(values["beta"] == {beta}),
+                    from_bool(values["gamma"] == {gamma}),
+                    from_bool(len(values) == 3),
+                ]
+            )
+        )
+    )
 """
     return GeneratedProgram(
         python_source=python_source,
@@ -258,7 +290,7 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 """,
-            sifr_source="""from sifr.json import json_dumps
+            sifr_source="""from sifr.json import dumps, from_array, from_int
 
 
 def adjust(value: int, flag: bool) -> int:
@@ -269,8 +301,7 @@ def adjust(value: int, flag: bool) -> int:
 
 
 def main() -> None:
-    values: list[int] = [adjust(2, True)]
-    print(json_dumps(values))
+    print(dumps(from_array([from_int(adjust(2, True))])))
 """,
             grammar_shape=shape,
             parameters={"minimized": True},

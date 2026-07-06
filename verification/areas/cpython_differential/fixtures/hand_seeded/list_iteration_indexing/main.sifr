@@ -1,4 +1,4 @@
-from sifr.json import json_dumps
+from sifr.json import dumps, from_array, from_bool
 
 
 def main() -> None:
@@ -6,5 +6,15 @@ def main() -> None:
     total: int = 0
     for value in items:
         total = total + value
-    values: list[bool] = [len(items) == 5, items[0] == 3, items[2] == 4, total == 14]
-    print(json_dumps(values))
+    print(
+        dumps(
+            from_array(
+                [
+                    from_bool(len(items) == 5),
+                    from_bool(items[0] == 3),
+                    from_bool(items[2] == 4),
+                    from_bool(total == 14),
+                ]
+            )
+        )
+    )

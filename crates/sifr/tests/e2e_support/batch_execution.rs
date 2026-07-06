@@ -356,7 +356,12 @@ pub(crate) fn build_and_run_capture_with_deps(
     std::fs::write(src_dir.join("main.rs"), rust_source)
         .map_err(|err| format!("failed to write main.rs: {err}"))?;
 
-    let build_capture = command_with_capture("cargo", &["build", "--quiet"], Some(&tmp_dir));
+    let mut build_command = Command::new("cargo");
+    build_command
+        .args(["build", "--quiet"])
+        .current_dir(&tmp_dir);
+    build_command.env_remove("CARGO_TARGET_DIR");
+    let build_capture = run_capture(build_command);
     if !build_capture.status_ok {
         return Err(format!(
             "Rust compilation failed.\n\nGenerated Rust:\n{}\n\nrustc errors:\n{}",

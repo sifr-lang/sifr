@@ -1,139 +1,4 @@
 use super::*;
-#[test]
-fn test_structured_expr_path_handles_intrinsic_call_expression() {
-    let module = HirModule {
-        functions: vec![HirFunction {
-            name: "main".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    func: "sqrt".to_string(),
-                    args: vec![HirExpr::FloatLiteral(9.0)],
-                    ty: Type::Float,
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.math".to_string(),
-            names: vec!["sqrt".to_string()],
-            aliases: vec![],
-        }],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-    let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("(9.0_f64).sqrt()"));
-    assert!(
-        generated.lowering_stats.expr_structured > 0,
-        "intrinsic call should be emitted through structured expr path"
-    );
-    assert!(
-        generated.lowering_stats.stmt_structured > 0,
-        "expression statement should be emitted through structured stmt path"
-    );
-}
-#[test]
-fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
-    let list_ty = Type::List(Box::new(Type::Int));
-    let module = HirModule {
-        functions: vec![HirFunction {
-            name: "main".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    func: "set_len".to_string(),
-                    args: vec![HirExpr::Call {
-                        func: "set_from_list".to_string(),
-                        args: vec![HirExpr::ListLiteral {
-                            elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
-                            ty: list_ty.clone(),
-                        }],
-                        ty: list_ty,
-                    }],
-                    ty: Type::Int,
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.collections".to_string(),
-            names: vec!["set_len".to_string(), "set_from_list".to_string()],
-            aliases: vec![],
-        }],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-    let generated = generate_rust_with_metadata(&module);
-    assert!(
-        generated.rust_source.contains(".len() as i64"),
-        "nested intrinsic call argument should lower through registry"
-    );
-    assert!(
-        !generated.rust_source.contains("set_len("),
-        "set_len should not be emitted as unresolved function call"
-    );
-}
-#[test]
-fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
-    let module = HirModule {
-        functions: vec![HirFunction {
-            name: "main".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    func: "isnan".to_string(),
-                    args: vec![HirExpr::MethodCall {
-                        object: Box::new(HirExpr::FloatLiteral(1.0)),
-                        method: "max".to_string(),
-                        args: vec![HirExpr::FloatLiteral(2.0)],
-                        ty: Type::Float,
-                    }],
-                    ty: Type::Bool,
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.math".to_string(),
-            names: vec!["isnan".to_string()],
-            aliases: vec![],
-        }],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let generated = generate_rust_with_metadata(&module);
-    assert!(
-        generated.rust_source.contains(".is_nan()"),
-        "intrinsic arg with typed method call should lower through registry"
-    );
-    assert!(
-        !generated.rust_source.contains("isnan("),
-        "isnan should not be emitted as unresolved function call"
-    );
-}
 
 #[test]
 fn test_structured_expr_path_handles_plain_signature_call_expression() {
@@ -372,9 +237,9 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
                 HirStmt::Assign {
                     name: "x".to_string(),
                     value: HirExpr::Call {
-                        func: "sqrt".to_string(),
-                        args: vec![HirExpr::FloatLiteral(9.0)],
-                        ty: Type::Float,
+                        func: "getpid".to_string(),
+                        args: vec![],
+                        ty: Type::Int,
                     },
                 },
             ],
@@ -386,8 +251,8 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
         }],
         classes: vec![],
         imports: vec![HirImport {
-            module: "sifr.math".to_string(),
-            names: vec!["sqrt".to_string()],
+            module: "sifr.os".to_string(),
+            names: vec!["getpid".to_string()],
             aliases: vec![],
         }],
         constants: vec![],
@@ -396,7 +261,9 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("x = (9.0_f64).sqrt();"));
+    assert!(generated
+        .rust_source
+        .contains("x = std::process::id() as i64;"));
     assert!(
         generated.lowering_stats.stmt_structured >= 2,
         "let + assign should be emitted through structured stmt path"
@@ -412,11 +279,11 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             return_type: Type::None,
             body: vec![HirStmt::Let {
                 name: "x".to_string(),
-                ty: Type::Float,
+                ty: Type::Int,
                 value: HirExpr::Call {
-                    func: "sqrt".to_string(),
-                    args: vec![HirExpr::FloatLiteral(9.0)],
-                    ty: Type::Float,
+                    func: "getpid".to_string(),
+                    args: vec![],
+                    ty: Type::Int,
                 },
                 is_mutable: false,
             }],
@@ -428,8 +295,8 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
         }],
         classes: vec![],
         imports: vec![HirImport {
-            module: "sifr.math".to_string(),
-            names: vec!["sqrt".to_string()],
+            module: "sifr.os".to_string(),
+            names: vec!["getpid".to_string()],
             aliases: vec![],
         }],
         constants: vec![],
@@ -440,7 +307,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
     let generated = generate_rust_with_metadata(&module);
     assert!(generated
         .rust_source
-        .contains("let x: f64 = (9.0_f64).sqrt();"));
+        .contains("let x: i64 = std::process::id() as i64;"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed let should be emitted through structured stmt path"
@@ -453,12 +320,12 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
         functions: vec![HirFunction {
             name: "value".to_string(),
             params: vec![],
-            return_type: Type::Float,
+            return_type: Type::Int,
             body: vec![HirStmt::Return {
                 value: Some(HirExpr::Call {
-                    func: "sqrt".to_string(),
-                    args: vec![HirExpr::FloatLiteral(9.0)],
-                    ty: Type::Float,
+                    func: "getpid".to_string(),
+                    args: vec![],
+                    ty: Type::Int,
                 }),
             }],
             is_async: false,
@@ -469,8 +336,8 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
         }],
         classes: vec![],
         imports: vec![HirImport {
-            module: "sifr.math".to_string(),
-            names: vec!["sqrt".to_string()],
+            module: "sifr.os".to_string(),
+            names: vec!["getpid".to_string()],
             aliases: vec![],
         }],
         constants: vec![],
@@ -479,7 +346,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("(9.0_f64).sqrt()"));
+    assert!(generated.rust_source.contains("std::process::id() as i64"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt path"

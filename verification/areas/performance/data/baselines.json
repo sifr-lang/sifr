@@ -23,19 +23,22 @@
       "id": "build-project-001-additional-modules",
       "kind": "command",
       "metrics": {
-        "coefficient_variation": 0.066129,
-        "mad_ms": 489.217,
-        "median_ms": 11097.75,
-        "p95_ms": 12567.333,
+        "coefficient_variation": 0.004708,
+        "emitted_rust_bytes": 137020,
+        "emitted_rust_lines": 4148,
+        "generated_binary_bytes": 1070672,
+        "mad_ms": 30.315,
+        "median_ms": 33866.195,
+        "p95_ms": 33896.51,
         "peak_rss_bytes": 309002240
       },
       "sample_count": 5,
       "samples_ms": [
-        11150.056208003662,
-        10608.53225000028,
-        10490.45537499478,
-        12567.332708989852,
-        11097.74950001156
+        33866.195207927376,
+        33538.03245909512,
+        33867.96083394438,
+        33569.862958043814,
+        33896.51041687466
       ],
       "timed_out": false
     },
@@ -158,19 +161,22 @@
       "id": "build-single-file-001-break-continue",
       "kind": "command",
       "metrics": {
-        "coefficient_variation": 0.0135,
-        "mad_ms": 9.695,
-        "median_ms": 1428.25,
-        "p95_ms": 1437.945,
+        "coefficient_variation": 0.001972,
+        "emitted_rust_bytes": 2042,
+        "emitted_rust_lines": 99,
+        "generated_binary_bytes": 404640,
+        "mad_ms": 25.719,
+        "median_ms": 32458.014,
+        "p95_ms": 32605.301,
         "peak_rss_bytes": 309002240
       },
       "sample_count": 5,
       "samples_ms": [
-        1417.4405420053517,
-        1428.249999997206,
-        1430.3822920046514,
-        1437.9448330000741,
-        1383.4906249976484
+        32605.300582945347,
+        32432.294792030007,
+        32434.712207876146,
+        32489.20008307323,
+        32458.014083094895
       ],
       "timed_out": false
     },

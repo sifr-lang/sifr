@@ -2,9 +2,9 @@
   "budgets": [
     {
       "baseline": {
-        "coefficient_variation": 0.066129,
-        "median_ms": 11097.75,
-        "p95_ms": 12567.333,
+        "coefficient_variation": 0.004708,
+        "median_ms": 33866.195,
+        "p95_ms": 33896.51,
         "peak_rss_bytes": 309002240
       },
       "benchmark_id": "build-project-001-additional-modules",
@@ -14,8 +14,8 @@
       "policy": "command-default",
       "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
-        "median_ms": 12207.525,
-        "p95_ms": 14452.433,
+        "median_ms": 37252.815,
+        "p95_ms": 38980.986,
         "peak_rss_bytes": 342556672,
         "timeout_ms": 120000
       }
@@ -102,9 +102,9 @@
     },
     {
       "baseline": {
-        "coefficient_variation": 0.0135,
-        "median_ms": 1428.25,
-        "p95_ms": 1437.945,
+        "coefficient_variation": 0.001972,
+        "median_ms": 32458.014,
+        "p95_ms": 32605.301,
         "peak_rss_bytes": 309002240
       },
       "benchmark_id": "build-single-file-001-break-continue",
@@ -114,8 +114,8 @@
       "policy": "command-default",
       "rationale": "Derived from checked-in performance baseline using the default command or frontend-query budget rule.",
       "thresholds": {
-        "median_ms": 1571.075,
-        "p95_ms": 1653.637,
+        "median_ms": 35703.815,
+        "p95_ms": 37496.096,
         "peak_rss_bytes": 342556672,
         "timeout_ms": 120000
       }

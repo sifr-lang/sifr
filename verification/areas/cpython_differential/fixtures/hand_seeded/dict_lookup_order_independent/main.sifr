@@ -1,7 +1,16 @@
-from sifr.json import json_dumps
+from sifr.json import dumps, from_array, from_bool
 
 
 def main() -> None:
     payload: dict[str, int] = {"first": 2, "second": 3, "third": 5}
-    values: list[bool] = [len(payload) == 3, payload["first"] == 2, payload["third"] == 5]
-    print(json_dumps(values))
+    print(
+        dumps(
+            from_array(
+                [
+                    from_bool(len(payload) == 3),
+                    from_bool(payload["first"] == 2),
+                    from_bool(payload["third"] == 5),
+                ]
+            )
+        )
+    )

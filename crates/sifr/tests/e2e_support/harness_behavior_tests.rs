@@ -467,10 +467,19 @@ pub(crate) fn test_generate_cargo_toml_required_toml_uses_preserve_order_feature
 #[test]
 pub(crate) fn test_generate_cargo_toml_required_sifr_runtime_uses_path_dependency() {
     let stdlib_modules = BTreeSet::new();
-    let required_crates = BTreeSet::new();
+    let required_crates = normalize_dependency_set(vec!["sifr_runtime".to_string()].into_iter());
 
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
     assert!(cargo_toml.contains("sifr_runtime = { path = "));
+}
+
+#[test]
+pub(crate) fn test_generate_cargo_toml_empty_dependencies_do_not_pull_runtime() {
+    let stdlib_modules = BTreeSet::new();
+    let required_crates = BTreeSet::new();
+
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
+    assert!(!cargo_toml.contains("sifr_runtime = "));
 }
 
 #[test]

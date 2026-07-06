@@ -21,7 +21,7 @@ pub(crate) fn sifr_runtime_dependency_spec_for_modules(
 }
 
 pub(crate) fn sifr_runtime_dependency_spec_with_features(features: &[&str]) -> String {
-    let runtime_path = discover_sifr_runtime_path().unwrap_or_else(compile_time_sifr_runtime_path);
+    let runtime_path = compile_time_sifr_runtime_path();
     let escaped_path = runtime_path
         .to_string_lossy()
         .replace('\\', "\\\\")
@@ -105,7 +105,7 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
 }
 
 pub(crate) fn sifr_stdlib_dependency_spec_with_features(features: &[&str]) -> String {
-    let stdlib_path = discover_sifr_stdlib_path().unwrap_or_else(compile_time_sifr_stdlib_path);
+    let stdlib_path = compile_time_sifr_stdlib_path();
     let escaped_path = stdlib_path
         .to_string_lossy()
         .replace('\\', "\\\\")
@@ -128,70 +128,16 @@ pub(crate) fn tokio_dependency_spec() -> String {
         .to_string()
 }
 
-pub(crate) fn discover_sifr_stdlib_path() -> Option<PathBuf> {
-    env::var_os("SIFR_STDLIB_PATH")
-        .map(PathBuf::from)
-        .filter(|path| path.join("Cargo.toml").is_file())
-        .or_else(discover_sifr_stdlib_path_from_current_dir)
-        .or_else(discover_sifr_stdlib_path_from_current_exe)
-}
-
-pub(crate) fn discover_sifr_stdlib_path_from_current_dir() -> Option<PathBuf> {
-    env::current_dir()
-        .ok()
-        .and_then(|path| discover_sifr_stdlib_path_from_ancestors(&path))
-}
-
-pub(crate) fn discover_sifr_stdlib_path_from_current_exe() -> Option<PathBuf> {
-    env::current_exe()
-        .ok()
-        .and_then(|path| discover_sifr_stdlib_path_from_ancestors(&path))
-}
-
-pub(crate) fn discover_sifr_stdlib_path_from_ancestors(start: &Path) -> Option<PathBuf> {
-    start.ancestors().find_map(|ancestor| {
-        let candidate = ancestor.join("crates").join("sifr_stdlib");
-        candidate.join("Cargo.toml").is_file().then_some(candidate)
-    })
-}
-
 pub(crate) fn compile_time_sifr_stdlib_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
-        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")))
+        .expect("sifr crate manifest directory must have workspace parent")
         .join("sifr_stdlib")
-}
-
-pub(crate) fn discover_sifr_runtime_path() -> Option<PathBuf> {
-    env::var_os("SIFR_RUNTIME_PATH")
-        .map(PathBuf::from)
-        .filter(|path| path.join("Cargo.toml").is_file())
-        .or_else(discover_sifr_runtime_path_from_current_dir)
-        .or_else(discover_sifr_runtime_path_from_current_exe)
-}
-
-pub(crate) fn discover_sifr_runtime_path_from_current_dir() -> Option<PathBuf> {
-    env::current_dir()
-        .ok()
-        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
-}
-
-pub(crate) fn discover_sifr_runtime_path_from_current_exe() -> Option<PathBuf> {
-    env::current_exe()
-        .ok()
-        .and_then(|path| discover_sifr_runtime_path_from_ancestors(&path))
-}
-
-pub(crate) fn discover_sifr_runtime_path_from_ancestors(start: &Path) -> Option<PathBuf> {
-    start.ancestors().find_map(|ancestor| {
-        let candidate = ancestor.join("crates").join("sifr_runtime");
-        candidate.join("Cargo.toml").is_file().then_some(candidate)
-    })
 }
 
 pub(crate) fn compile_time_sifr_runtime_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
-        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")))
+        .expect("sifr crate manifest directory must have workspace parent")
         .join("sifr_runtime")
 }

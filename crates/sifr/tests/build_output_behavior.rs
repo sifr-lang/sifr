@@ -327,7 +327,12 @@ fn failed_cargo_invocation_does_not_print_success_footer() {
 
     assert_ne!(capture.status_code, 0);
     assert!(capture.stdout.is_empty());
-    assert!(capture.stderr.contains("failed to run cargo build"));
+    assert!(
+        capture.stderr.contains("SIFR-RUST-CARGO-0001")
+            && capture.stderr.contains("failed to run Rust probe"),
+        "stderr:\n{}",
+        capture.stderr
+    );
     assert!(!capture.stderr.contains("Finished release build"));
     assert!(!capture.stderr.contains("Binary: "));
 }
