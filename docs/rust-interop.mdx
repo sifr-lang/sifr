@@ -51,6 +51,9 @@ sifr repair
 ## Direct Bindings
 
 Use `@rust(...)` when a public Rust function has a bridge-compatible signature. The target is a dotted path, not a string.
+Package-authored Rust interop declarations use an ellipsis-only stub body:
+exactly `...`. Generated behavior comes from the validated Rust interop
+metadata.
 
 ```sifr
 @rust(crc32fast.hash, panic=trusted_no_panic)
