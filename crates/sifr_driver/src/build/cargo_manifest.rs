@@ -94,9 +94,15 @@ fn rust_interop_path_dependencies(interop: &InteropBuildPlan) -> BTreeMap<String
                 ..
             } => direct_dependency_line(dependency_name, cargo_package_name, cargo_manifest_path)
                 .map(|line| (dependency_name.clone(), line)),
+            RustInteropResolvedRoot::PackageBridge {
+                dependency_name,
+                cargo_package_name,
+                cargo_manifest_path,
+                ..
+            } => direct_dependency_line(dependency_name, cargo_package_name, cargo_manifest_path)
+                .map(|line| (dependency_name.clone(), line)),
             RustInteropResolvedRoot::SysrootCrate { .. } => None,
-            RustInteropResolvedRoot::PackageBridge { .. }
-            | RustInteropResolvedRoot::SelfMethod { .. } => None,
+            RustInteropResolvedRoot::SelfMethod { .. } => None,
         })
         .collect()
 }
@@ -146,8 +152,8 @@ fn sysroot_interop_crates(interop: &InteropBuildPlan) -> BTreeSet<SysrootCrate> 
                 _ => None,
             },
             RustInteropResolvedRoot::DirectCargoDependency { .. }
-            | RustInteropResolvedRoot::PackageBridge { .. }
             | RustInteropResolvedRoot::SelfMethod { .. } => None,
+            RustInteropResolvedRoot::PackageBridge { .. } => None,
         })
         .collect();
 
@@ -269,7 +275,8 @@ mod tests {
     use super::*;
     use sifr_codegen::{
         RustBridgeContractPlan, RustGeneratedBridgeField, RustGeneratedBridgeType,
-        RustGeneratedBridgeTypeKind,
+        RustGeneratedBridgeTypeKind, RustInteropOwner, RustInteropResolvedRoot,
+        RustInteropResolvedTarget,
     };
     use sifr_stdlib_model::{SysrootCrate, SysrootCrateDependency};
     use std::path::PathBuf;
@@ -371,6 +378,38 @@ mod tests {
             .crates
             .iter()
             .any(|dependency| dependency.krate == SysrootCrate::SifrRuntime));
+    }
+
+    #[test]
+    fn generated_cargo_toml_includes_package_bridge_dependency_alias() {
+        let dependency_plan = test_dependency_plan(
+            CargoVendorMode::PackageOwned,
+            PathBuf::from("/opt/sifr/vendor"),
+        );
+        let mut interop = InteropBuildPlan::default();
+        interop.rust.resolved_targets = vec![RustInteropResolvedTarget {
+            module_name: Some("main".to_string()),
+            owner: RustInteropOwner::Function {
+                name: "hash_bytes".to_string(),
+            },
+            written_path: "bridge.blake3.hash_bytes".to_string(),
+            canonical_target_path: "main::hash_bytes".to_string(),
+            root: RustInteropResolvedRoot::PackageBridge {
+                package_id: "local-blake3-bridge@0.1.0#path".to_string(),
+                dependency_name: "__sifr_bridge_package_local_blake3_bridge".to_string(),
+                cargo_package_name: "local-blake3-bridge".to_string(),
+                cargo_manifest_path: "/ws/local_blake3_bridge/Cargo.toml".to_string(),
+                bridge_roots: vec!["src/bridges".to_string()],
+            },
+            span: Default::default(),
+        }];
+
+        let cargo_toml =
+            generate_dependency_cargo_toml_for_cache_key("sifr_output", &dependency_plan, &interop);
+
+        assert!(cargo_toml.contains(
+            "__sifr_bridge_package_local_blake3_bridge = { package = \"local-blake3-bridge\", path = \"/ws/local_blake3_bridge\" }"
+        ));
     }
 
     #[test]

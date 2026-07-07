@@ -36,6 +36,8 @@ use std::collections::{BTreeSet, HashMap};
 mod advanced_data_validation;
 #[path = "rust_interop/async_validation.rs"]
 mod async_validation;
+#[path = "rust_interop/bridge_aliases.rs"]
+mod bridge_aliases;
 #[path = "rust_interop/callback_validation.rs"]
 mod callback_validation;
 #[path = "rust_interop/opaque_contract.rs"]
@@ -51,6 +53,7 @@ mod target_resolution;
 #[path = "rust_interop/zero_copy_validation.rs"]
 mod zero_copy_validation;
 
+use bridge_aliases::{inject_package_bridge_aliases, package_bridge_dependency_name};
 use target_resolution::{
     backend_for_root, canonical_sifr_target_path, canonical_trust_target_path, declaration_paths,
     trust_kind_name, uses_bridge_root,
@@ -204,6 +207,7 @@ impl<'a> RustInteropResolver<'a> {
             }
         }
         generated.interop.rust.cargo_inputs = Some(cargo_input);
+        inject_package_bridge_aliases(generated);
         Ok(())
     }
 
@@ -293,6 +297,13 @@ impl<'a> RustInteropResolver<'a> {
         let resolved_root = match root.as_str() {
             "bridge" => RustInteropResolvedRoot::PackageBridge {
                 package_id: package_id.0.clone(),
+                dependency_name: package_bridge_dependency_name(package),
+                cargo_package_name: package.cargo_package_name.clone(),
+                cargo_manifest_path: package
+                    .package_root
+                    .join("Cargo.toml")
+                    .display()
+                    .to_string(),
                 bridge_roots: package
                     .manifest
                     .rust
@@ -302,10 +313,35 @@ impl<'a> RustInteropResolver<'a> {
                     .collect(),
             },
             "Self" => match &declaration.owner {
-                RustInteropOwner::Method { class_name, .. } => {
+                RustInteropOwner::Method { class_name, .. }
+                    if self.opaque_contracts.contains_key(&format!(
+                        "{}.{}",
+                        declaration.module_name.as_deref().unwrap_or("main"),
+                        class_name
+                    )) =>
+                {
                     RustInteropResolvedRoot::SelfMethod {
                         class_name: class_name.clone(),
                     }
+                }
+                RustInteropOwner::Method { class_name, .. } => {
+                    self.push_diagnostic(
+                        declaration,
+                        path.span,
+                        DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
+                        "unresolved Rust target root `{root}`",
+                        vec![
+                            ("root", root.clone()),
+                            ("target", path.dotted()),
+                            ("class", class_name.clone()),
+                        ],
+                        vec![
+                            "`Self` target roots are valid only on methods for classes declared with `@rust.opaque(...)`"
+                                .to_string(),
+                        ],
+                        None,
+                    );
+                    return;
                 }
                 _ => {
                     self.push_diagnostic(

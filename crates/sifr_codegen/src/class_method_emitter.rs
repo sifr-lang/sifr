@@ -2,6 +2,7 @@ use crate::{
     function_emitter::{is_result_int_type, result_int_return_type_to_sifr_int, result_method_key},
     helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
     hir_analysis::traversal::{self, TraversalConfig},
+    rust_interop_direct::rust_interop_method_body,
     RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
@@ -668,7 +669,9 @@ impl RustEmitter {
             );
         }
 
-        let mut body = if method.method_kind == MethodKind::Regular && method.name == "new" {
+        let mut body = if let Some(interop_body) = rust_interop_method_body(method) {
+            interop_body
+        } else if method.method_kind == MethodKind::Regular && method.name == "new" {
             self.lower_constructor_body(method, class)
         } else {
             let mut lowered = Vec::new();

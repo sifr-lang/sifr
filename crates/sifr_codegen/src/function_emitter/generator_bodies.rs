@@ -3,7 +3,7 @@ use super::{
     HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt,
     RustType, Type, Visibility,
 };
-use crate::rust_interop_direct::direct_rust_function_body;
+use crate::rust_interop_direct::rust_interop_function_body;
 impl RustEmitter {
     pub(crate) fn lower_generator_function_body(
         &mut self,
@@ -321,8 +321,10 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
 
-        let mut lowered_body = if let Some(direct_body) = direct_rust_function_body(func) {
-            direct_body
+        let interop_body = rust_interop_function_body(func);
+        let interop_body_supplied = interop_body.is_some();
+        let mut lowered_body = if let Some(interop_body) = interop_body {
+            interop_body
         } else if is_async_generator {
             self.lower_async_generator_function_body(func, &mutable_param_shadows)
         } else if is_generator {
@@ -339,6 +341,7 @@ impl RustEmitter {
         };
 
         if !is_generator
+            && !interop_body_supplied
             && Self::returns_result_none(&func.return_type)
             && !matches!(
                 func.body.last(),

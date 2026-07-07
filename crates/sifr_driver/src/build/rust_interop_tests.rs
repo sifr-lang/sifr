@@ -157,6 +157,58 @@ fn package_rust_interop_resolves_bridge_root() {
         generated.interop.rust.generated_bridge_modules[0].bridge_version,
         1
     );
+    assert!(generated
+        .interop
+        .cache_key_fragment()
+        .contains("__sifr_bridge_package_sifr_app"));
+}
+
+#[test]
+fn package_rust_interop_injects_bridge_alias_into_declaring_module() {
+    let mut generated = base_project(vec![declaration_entry(
+        "bridge.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    generated
+        .support_modules
+        .insert("app".to_string(), "pub fn hash() {}\n".to_string());
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("bridge root should resolve");
+
+    assert_eq!(
+        generated.support_modules.get("app").map(String::as_str),
+        Some("use __sifr_bridge_package_sifr_app::bridges as bridge;\npub fn hash() {}\n")
+    );
+}
+
+#[test]
+fn package_rust_interop_injects_one_bridge_alias_per_module() {
+    let mut generated = base_project(vec![
+        declaration_entry("bridge.hash", RustInteropDecoratorKind::Function),
+        declaration_entry("bridge.codec", RustInteropDecoratorKind::Function),
+    ]);
+    generated
+        .support_modules
+        .insert("app".to_string(), "pub fn hash() {}\n".to_string());
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("bridge roots should resolve");
+
+    let support_module = generated
+        .support_modules
+        .get("app")
+        .expect("support module should remain");
+    assert_eq!(
+        support_module
+            .matches("use __sifr_bridge_package_sifr_app::bridges as bridge;")
+            .count(),
+        1
+    );
 }
 
 #[test]
@@ -279,19 +331,45 @@ fn package_rust_interop_resolves_same_workspace_path_dependency() {
 
 #[test]
 fn package_rust_interop_resolves_self_method_root() {
+    let generated = base_project(vec![
+        opaque_class_declaration_entry(),
+        method_declaration_entry("Self.poll", RustInteropDecoratorKind::Function),
+    ]);
+    let context = package_context(TrustPolicy::default(), Vec::new());
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("Self method root should resolve");
+
+    assert!(generated
+        .interop
+        .rust
+        .resolved_targets
+        .iter()
+        .any(|target| matches!(
+            target.root,
+            sifr_codegen::RustInteropResolvedRoot::SelfMethod { .. }
+        )));
+}
+
+#[test]
+fn package_rust_interop_rejects_self_method_root_without_opaque_class() {
     let generated = base_project(vec![method_declaration_entry(
         "Self.poll",
         RustInteropDecoratorKind::Function,
     )]);
     let context = package_context(TrustPolicy::default(), Vec::new());
 
-    let generated = apply_package_rust_interop_metadata(generated, Some(context))
-        .expect("Self method root should resolve");
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "Self root without opaque class should fail",
+    );
 
-    assert!(matches!(
-        generated.interop.rust.resolved_targets[0].root,
-        sifr_codegen::RustInteropResolvedRoot::SelfMethod { .. }
-    ));
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
+    assert!(diagnostics[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("@rust.opaque")));
 }
 
 #[test]
@@ -598,6 +676,40 @@ fn method_declaration_entry(
     entry
 }
 
+fn opaque_class_declaration_entry() -> RustInteropPlanDeclaration {
+    RustInteropPlanDeclaration {
+        module_name: Some("app".to_string()),
+        owner: RustInteropOwner::Class {
+            name: "Consumer".to_string(),
+        },
+        declaration: RustInteropDeclaration {
+            kind: RustInteropDecoratorKind::Opaque,
+            target: None,
+            arguments: vec![
+                RustInteropArgument {
+                    name: Some("type".to_string()),
+                    value: RustInteropValue::TargetPath(target_path("bridge.consumer.Consumer")),
+                    span: span(),
+                },
+                RustInteropArgument {
+                    name: Some("send".to_string()),
+                    value: RustInteropValue::Boolean(false),
+                    span: span(),
+                },
+                RustInteropArgument {
+                    name: Some("sync".to_string()),
+                    value: RustInteropValue::Boolean(false),
+                    span: span(),
+                },
+                symbol_arg("clone", "none"),
+            ],
+            span: span(),
+            effect: RustInteropEffect::Sync,
+            abi_requirements: RustInteropAbiRequirements::default(),
+        },
+    }
+}
+
 fn declaration_entry_with_args(
     target: &str,
     kind: RustInteropDecoratorKind,
@@ -610,15 +722,19 @@ fn declaration_entry_with_args(
         },
         declaration: RustInteropDeclaration {
             kind,
-            target: Some(RustTargetPath {
-                segments: target.split('.').map(str::to_string).collect(),
-                span: span(),
-            }),
+            target: Some(target_path(target)),
             arguments,
             span: span(),
             effect: RustInteropEffect::Sync,
             abi_requirements: RustInteropAbiRequirements::default(),
         },
+    }
+}
+
+fn target_path(target: &str) -> RustTargetPath {
+    RustTargetPath {
+        segments: target.split('.').map(str::to_string).collect(),
+        span: span(),
     }
 }
 
