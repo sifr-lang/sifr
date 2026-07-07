@@ -3,9 +3,18 @@
 # This file is intentionally explicit. Core validation uses it to prevent new
 # compiler intrinsic or preamble stdlib behavior from appearing without review
 # while the remaining resource/runtime surfaces are certified or reduced.
+#
+# State values:
+# - retained: still compiler-native for now and scheduled for migration or final classification.
+# - pilot: selected pilot implementation is underway while retained compiler glue remains.
+# - migrated: behavior routes through checked stdlib source and sysroot Rust interop.
+# - closed: old surface was removed, rejected, or replaced with a different supported API.
+# - retained-by-design: permanently compiler-owned language, bridge, entrypoint,
+#   exact-int, test-harness, or runtime substrate glue.
 
 [[surface]]
 id = "_sifr.sys"
+state = "retained"
 reason = "Process environment, argv, platform constants, and process-exit semantics remain compiler/runtime-owned pending the final retained-glue decision."
 registry_files = ["env.rs", "os.rs", "sys.rs"]
 exact_intrinsics = [
@@ -34,6 +43,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.fs"
+state = "retained"
 reason = "Filesystem paths, open handles, and IOError shaping remain compiler/runtime-owned until file-handle lifecycle certification is complete."
 registry_files = [
   "file_handles.rs",
@@ -80,6 +90,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "generated-test-glue"
+state = "retained-by-design"
 reason = "Sifr test assertions are generated harness glue, not public stdlib-native behavior."
 registry_files = ["test.rs"]
 exact_intrinsics = [
@@ -94,6 +105,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.collections"
+state = "retained"
 reason = "Counter/defaultdict semantics and core collection behavior remain language-owned after helper-leaf migration."
 registry_files = [
   "collections.rs",
@@ -113,6 +125,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.http"
+state = "retained"
 reason = "HTTP transport, protocol, and handle behavior remains behind runtime/resource certification; header helper shims still route through generated glue."
 registry_files = ["url_http.rs"]
 preamble_files = ["url_http_runtime.rs"]
@@ -127,6 +140,7 @@ prefix_intrinsics = ["http_", "http1_", "http2_"]
 
 [[surface]]
 id = "_sifr.encoding"
+state = "retained"
 reason = "UTF-8 encode/decode result glue is tied to first-class bytes/string wrapper behavior and shared runtime error shaping."
 registry_files = ["encoding.rs"]
 exact_intrinsics = [
@@ -138,6 +152,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.bytes"
+state = "retained"
 reason = "First-class bytes constructors, strict hex parsing/formatting, and method glue remain compiler-language behavior."
 registry_files = ["bytes.rs"]
 exact_intrinsics = [
@@ -149,6 +164,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.time"
+state = "retained"
 reason = "Clock, sleep, and struct_time compatibility glue remains runtime-sensitive until async/runtime certification closes."
 registry_files = ["time.rs"]
 exact_intrinsics = [
@@ -170,6 +186,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.crypto"
+state = "retained"
 reason = "Random module state and random distribution helpers remain compiler/runtime-owned until resource/state semantics are certified."
 registry_files = ["random.rs"]
 exact_intrinsics = [
@@ -189,6 +206,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.process"
+state = "retained"
 reason = "Process children, pipes, shell execution, async process handles, and timeout behavior remain resource/runtime-owned pending certification."
 registry_files = [
   "process.rs",
@@ -247,6 +265,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.net"
+state = "retained"
 reason = "Network handles and split stream lifecycle behavior remain resource/runtime-owned pending certification."
 registry_files = ["net.rs"]
 preamble_files = ["net_runtime.rs"]
@@ -275,6 +294,7 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.tls"
+state = "retained"
 reason = "TLS configuration, handshakes, stream handles, and certificate state remain resource/runtime-owned pending certification."
 registry_files = ["tls.rs"]
 preamble_files = ["tls_runtime.rs"]
@@ -282,6 +302,7 @@ prefix_intrinsics = ["tls_"]
 
 [[surface]]
 id = "_sifr.signal"
+state = "retained"
 reason = "Signal streams and shutdown coordination remain runtime-sensitive pending callback/resource certification."
 registry_files = ["signal.rs"]
 exact_intrinsics = [
@@ -292,12 +313,14 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.runtime"
+state = "retained"
 reason = "Runtime diagnostics and observability metadata are retained compiler/runtime glue rather than stdlib leaf behavior."
 registry_files = ["runtime.rs"]
 exact_intrinsics = ["runtime_emit_diagnostic"]
 
 [[surface]]
 id = "_sifr.python"
+state = "retained"
 reason = "Python object handles, callback adapters, and runtime initialization remain behind Python resource/callback certification."
 registry_files = ["python.rs"]
 exact_intrinsics = ["local_callback", "threadsafe_callback"]
@@ -305,6 +328,7 @@ prefix_intrinsics = ["py_"]
 
 [[surface]]
 id = "_sifr.task"
+state = "retained"
 reason = "Task, cancellation, offload, join-set, and context propagation semantics are language/runtime glue."
 registry_files = ["task.rs"]
 preamble_files = [
@@ -319,21 +343,25 @@ exact_intrinsics = ["task_current_context"]
 
 [[surface]]
 id = "_sifr.logging"
+state = "retained"
 reason = "Global logging level state remains compiler/runtime glue until final observability ownership is settled."
 registry_files = ["logging.rs"]
 exact_intrinsics = ["get_global_level", "set_global_level"]
 
 [[surface]]
 id = "generated-feature-planning-glue"
+state = "retained-by-design"
 reason = "Additional feature planning is compiler-owned glue that selects retained runtime/sysroot dependencies for generated projects."
 registry_files = ["requirements.rs"]
 
 [[surface]]
 id = "shared-language-preamble"
+state = "retained-by-design"
 reason = "Generated Rust type conversion and error wrapper helpers are shared language/runtime glue."
 preamble_files = ["types_and_errors.rs"]
 
 [[surface]]
 id = "mixed-io-logging-random-preamble"
+state = "retained"
 reason = "Legacy generated preamble file contains mixed IOError, file-handle, logging, and random module state glue pending final decomposition."
 preamble_files = ["io_logging_random.rs"]
