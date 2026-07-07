@@ -1,17 +1,9 @@
 use super::{canonical_sifr_target_path, canonical_trust_target_path, RustInteropResolver};
+use crate::build::rust_interop_trust::{effective_panic_policy, EffectivePanicPolicy};
 use sifr_codegen::{RustBridgeSignatureContract, RustBridgeTypeKind};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::{RustInteropDeclaration, RustInteropDecoratorKind, RustInteropValue};
+use sifr_ir::RustInteropDecoratorKind;
 use sifr_package::SifrPackageMetadata;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum PanicSurface {
-    None,
-    TrustedNoPanic,
-    Abort,
-    MapError,
-    Invalid,
-}
 
 impl<'a> RustInteropResolver<'a> {
     pub(super) fn validate_panic_declaration(
@@ -22,15 +14,27 @@ impl<'a> RustInteropResolver<'a> {
         if declaration.declaration.kind != RustInteropDecoratorKind::Function {
             return;
         }
-        let surface = panic_surface(&declaration.declaration);
-        if surface == PanicSurface::Invalid {
+        let surface = effective_panic_policy(
+            declaration,
+            package,
+            self.sysroot_trust_for_package(&package.package_id)
+                .is_some(),
+        );
+        if surface == EffectivePanicPolicy::Invalid {
             self.push_panic_diagnostic(
                 declaration,
                 "unsupported panic policy; use `trusted_no_panic`, `abort`, or `map_error(path)`",
             );
             return;
         }
-        if surface == PanicSurface::Abort {
+        if surface == EffectivePanicPolicy::InvalidSysrootImplicitTarget {
+            self.push_panic_diagnostic(
+                declaration,
+                "sysroot no-panic policy applies only to canonical private `sifr_stdlib.*` targets; declare an explicit panic policy for other Rust interop targets",
+            );
+            return;
+        }
+        if surface.is_abort() {
             self.validate_abort_panic_strategy(declaration, package);
             if !self.diagnostics.is_empty() {
                 return;
@@ -49,7 +53,7 @@ impl<'a> RustInteropResolver<'a> {
 
         match signature.return_type.kind {
             RustBridgeTypeKind::Result => {
-                if result_carries_rust_panic_error(signature) || surface != PanicSurface::None {
+                if result_carries_rust_panic_error(signature) || surface.is_some() {
                     return;
                 }
                 self.push_panic_diagnostic(
@@ -59,20 +63,21 @@ impl<'a> RustInteropResolver<'a> {
             }
             RustBridgeTypeKind::Unsupported => {}
             _ => match surface {
-                PanicSurface::TrustedNoPanic | PanicSurface::Abort => {}
-                PanicSurface::MapError => {
+                EffectivePanicPolicy::TrustedNoPanic | EffectivePanicPolicy::Abort => {}
+                EffectivePanicPolicy::MapError => {
                     self.push_panic_diagnostic(
                             declaration,
                             "`panic=map_error(path)` requires a Result-returning Sifr declaration so mapped panic errors have a public error channel",
                         );
                 }
-                PanicSurface::None => {
+                EffectivePanicPolicy::None => {
                     self.push_panic_diagnostic(
                             declaration,
                             "non-Result Rust interop declarations must declare `panic=trusted_no_panic` or `panic=abort` because recoverable panics cannot be returned through the public type",
                         );
                 }
-                PanicSurface::Invalid => {}
+                EffectivePanicPolicy::Invalid
+                | EffectivePanicPolicy::InvalidSysrootImplicitTarget => {}
             },
         }
     }
@@ -118,34 +123,6 @@ impl<'a> RustInteropResolver<'a> {
             "`panic=abort` requires the selected Cargo panic strategy to be `abort`",
         );
     }
-}
-
-fn panic_surface(declaration: &RustInteropDeclaration) -> PanicSurface {
-    let mut surface = PanicSurface::None;
-    for argument in declaration
-        .arguments
-        .iter()
-        .filter(|argument| argument.name.as_deref() == Some("panic"))
-    {
-        let next = match &argument.value {
-            RustInteropValue::Symbol(policy) if policy == "trusted_no_panic" => {
-                PanicSurface::TrustedNoPanic
-            }
-            RustInteropValue::Symbol(policy) if policy == "abort" => PanicSurface::Abort,
-            RustInteropValue::PolicyCall { name, argument, .. }
-                if name == "map_error"
-                    && matches!(argument.as_ref(), RustInteropValue::TargetPath(_)) =>
-            {
-                PanicSurface::MapError
-            }
-            _ => PanicSurface::Invalid,
-        };
-        if surface != PanicSurface::None || next == PanicSurface::Invalid {
-            return PanicSurface::Invalid;
-        }
-        surface = next;
-    }
-    surface
 }
 
 fn result_carries_rust_panic_error(signature: &RustBridgeSignatureContract) -> bool {
