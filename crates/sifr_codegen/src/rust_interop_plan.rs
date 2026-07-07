@@ -130,6 +130,9 @@ pub enum RustInteropResolvedRoot {
     },
     PackageBridge {
         package_id: String,
+        dependency_name: String,
+        cargo_package_name: String,
+        cargo_manifest_path: String,
         bridge_roots: Vec<String>,
     },
     SelfMethod {
@@ -443,10 +446,19 @@ fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
         }
         RustInteropResolvedRoot::PackageBridge {
             package_id,
+            dependency_name,
+            cargo_package_name,
+            cargo_manifest_path,
             bridge_roots,
         } => {
             out.push_str("bridge:");
             out.push_str(package_id);
+            out.push(':');
+            out.push_str(dependency_name);
+            out.push(':');
+            out.push_str(cargo_package_name);
+            out.push(':');
+            out.push_str(cargo_manifest_path);
             out.push(':');
             out.push_str(&bridge_roots.join(","));
         }

@@ -1,0 +1,17 @@
+Reviewing the summary without touching the tree. Findings ordered by likely severity:
+
+**1. `use <alias>::bridges as bridge` collides when a module has bridge targets from two different packages.** The bind name is fixed as `bridge`, so a second `use other_alias::bridges as bridge` in the same generated module is a duplicate-import error. Worth confirming the emitter either deduplicates by alias per module or scopes the rename per call site (e.g., `<alias>::bridges::…` inline). The listed tests only cover single-alias injection.
+
+**2. Synthetic `Ok(())` suppression may be too eager for `Result[None, E]` bodies whose interop expression doesn't itself yield a `Result`.** If the interop body was supplied but ends in a `()` expression (e.g., a void FFI call) rather than an `Ok(())` / `Result` expression, suppressing the tail leaves a type mismatch against the declared `Result[None, E]` return. The rule should be "suppress only when the interop body already returns a Result-typed tail," not "suppress whenever an interop body was supplied." Test named "direct Result[None,E] no extra Ok tail" likely covers the good case but not this failure mode.
+
+**3. `self._handle.<method>(args)` assumes every `Self`-targeted class has a `_handle` field of the opaque wrapper shape.** Classes generated without `_handle` (e.g., value-type wrappers, classmethods dispatched on `Self`, or future shapes) will emit an unresolved field access. Worth verifying (a) HIR guarantees `_handle` exists for every class reachable as a Rust-interop `Self` target, and (b) `cls`/staticmethod paths are routed elsewhere and don't fall into this branch.
+
+**4. Result-error mapping from annotated return types depends on the annotation, not the interop signature.** If the annotated return type is `Result[T, E]` but the interop function returns `T` directly (or vice-versa), the emitted `.map_err(…)` / wrap will not compile. This should be validated in HIR (annotation must match interop signature shape) before codegen, otherwise the failure surfaces as a rustc error rather than a Sifr diagnostic. Tests don't appear to cover annotation/signature-shape mismatch.
+
+**5. Dependency alias dedupe in `Cargo.toml`.** Two `PackageBridge` roots resolving to the same package via the same alias should collapse to one `[dependencies]` entry; two roots with the same package but *different* aliases must both be emitted and must not clobber each other. Also worth confirming: alias sanitization (Cargo dependency-key rules — hyphens, leading digits) matches whatever the `use <alias>::bridges` path expects.
+
+**6. Cache fragment uniqueness.** If two roots share package name + alias but differ by manifest path (e.g., path-dep vs. registry, or two workspaces), the cache fragment must key on manifest path, not just package name, to avoid cross-project cache poisoning. Summary lists manifest path in the resolved-root record — worth confirming the fragment derivation includes it.
+
+**7. Bodyless top-level call + panic policy.** Recent commit `61d3b5c90` added an effective sysroot panic policy. Bodyless emission that forwards straight to the interop function bypasses any wrapper — confirm the panic-policy assertions still fire on the direct-root path (the "driver panic focused suite passes" line suggests coverage but doesn't specify the direct-root variant).
+
+If those seven all hold under inspection, no further actionable findings from the summary alone — the rest reads as mechanical plumbing with matching tests.

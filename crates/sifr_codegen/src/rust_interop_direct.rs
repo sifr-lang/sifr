@@ -8,11 +8,18 @@ use crate::{RustExpr, RustParam, RustStmt, RustType};
 const BRIDGE_ROOT: &str = "bridge";
 const SELF_ROOT: &str = "Self";
 
-pub(crate) fn direct_rust_function_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
-    let declaration = direct_rust_function_declaration(func)?;
+pub(crate) fn rust_interop_function_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
+    let declaration = rust_interop_function_declaration(func)?;
     let target = declaration.target.as_ref()?;
+    if target
+        .segments
+        .first()
+        .is_some_and(|root| root == SELF_ROOT)
+    {
+        return None;
+    }
     let call = RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(target.segments.clone())),
+        func: Box::new(RustExpr::Path(rust_function_path(target))),
         args: func.params.iter().map(direct_rust_arg_expr).collect(),
     };
     let value = if direct_rust_function_is_async(func, declaration) {
@@ -20,14 +27,21 @@ pub(crate) fn direct_rust_function_body(func: &HirFunction) -> Option<Vec<RustSt
     } else {
         call
     };
-    if func.return_type == sifr_type_system::Type::None {
-        Some(vec![RustStmt::Expr(value)])
-    } else {
-        Some(vec![RustStmt::Return(Some(direct_rust_return_expr(
-            value,
-            &func.return_type,
-        )))])
+    Some(return_stmt_for_type(value, &func.return_type))
+}
+
+#[cfg(test)]
+fn direct_rust_function_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
+    let declaration = rust_interop_function_declaration(func)?;
+    let target = declaration.target.as_ref()?;
+    if target
+        .segments
+        .first()
+        .is_some_and(|root| root == BRIDGE_ROOT || root == SELF_ROOT)
+    {
+        return None;
     }
+    rust_interop_function_body(func)
 }
 
 fn direct_rust_arg_expr(param: &HirParam) -> RustExpr {
@@ -102,6 +116,53 @@ fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
         }
         Type::Result(ok, err) => bridge_result_expr(value, ok, err),
         _ => value,
+    }
+}
+
+pub(crate) fn rust_interop_method_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
+    let declaration = rust_interop_function_declaration(func)?;
+    let target = declaration.target.as_ref()?;
+    let root = target.segments.first()?;
+    let value = if root == SELF_ROOT {
+        self_method_call(func, declaration, target)?
+    } else {
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(rust_function_path(target))),
+            args: func.params.iter().map(direct_rust_arg_expr).collect(),
+        }
+    };
+    let value = if direct_rust_function_is_async(func, declaration) {
+        RustExpr::Await(Box::new(value))
+    } else {
+        value
+    };
+    Some(return_stmt_for_type(value, &func.return_type))
+}
+
+fn self_method_call(
+    func: &HirFunction,
+    _declaration: &RustInteropDeclaration,
+    target: &RustTargetPath,
+) -> Option<RustExpr> {
+    let method = target.segments.get(1)?.clone();
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Field {
+            expr: Box::new(RustExpr::Ident("self".to_string())),
+            field: "_handle".to_string(),
+        }),
+        method,
+        args: func.params.iter().map(direct_rust_arg_expr).collect(),
+    })
+}
+
+fn return_stmt_for_type(value: RustExpr, return_type: &Type) -> Vec<RustStmt> {
+    if return_type == &sifr_type_system::Type::None {
+        vec![RustStmt::Expr(value)]
+    } else {
+        vec![RustStmt::Return(Some(direct_rust_return_expr(
+            value,
+            return_type,
+        )))]
     }
 }
 
@@ -358,27 +419,27 @@ fn sifr_int_bridge_path(method: &str) -> RustExpr {
     ])
 }
 
-fn direct_rust_function_declaration(func: &HirFunction) -> Option<&RustInteropDeclaration> {
+fn rust_interop_function_declaration(func: &HirFunction) -> Option<&RustInteropDeclaration> {
     func.rust_interop
         .iter()
-        .find(|declaration| is_direct_function_declaration(declaration))
+        .find(|declaration| is_function_declaration(declaration))
 }
 
-fn is_direct_function_declaration(declaration: &RustInteropDeclaration) -> bool {
+fn is_function_declaration(declaration: &RustInteropDeclaration) -> bool {
     matches!(
         declaration.kind,
         RustInteropDecoratorKind::Function | RustInteropDecoratorKind::Async
-    ) && declaration
-        .target
-        .as_ref()
-        .is_some_and(is_direct_cargo_target)
+    ) && declaration.target.is_some()
 }
 
-fn is_direct_cargo_target(target: &RustTargetPath) -> bool {
-    target
-        .segments
-        .first()
-        .is_some_and(|root| root != BRIDGE_ROOT && root != SELF_ROOT)
+fn rust_function_path(target: &RustTargetPath) -> Vec<String> {
+    let Some(root) = target.segments.first() else {
+        return Vec::new();
+    };
+    if root == BRIDGE_ROOT {
+        return target.segments.clone();
+    }
+    target.segments.clone()
 }
 
 fn direct_rust_function_is_async(func: &HirFunction, declaration: &RustInteropDeclaration) -> bool {
