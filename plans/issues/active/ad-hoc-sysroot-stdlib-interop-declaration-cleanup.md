@@ -2,7 +2,7 @@
 
 ## Status
 
-Active planning phase.
+Closeout in progress.
 
 ## Objective
 
@@ -69,8 +69,8 @@ ordinary Sifr expression body.
 | M1. Lowering Support for Ellipsis Interop Stubs | completed | PR #2813 merged. Lowering implementation and focused tests are complete; Opus M1 pass 2 has no unresolved actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_lowering rust_interop`, `cargo test -p sifr -- rust_interop`, `scripts/run_all_tests.sh --profile create-pr` in a clean detached worktree. |
 | M2. Effective Sysroot Panic Policy | completed | PR #2814 merged. Effective panic policy implementation and focused tests are complete; Opus M2 pass 1 has no actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_driver -- sysroot_interop`, `cargo test -p sifr_driver -- rust_interop_panic`, `cargo test -p sifr_driver -- rust_interop_tests`, `cargo test -p sifr -- sysroot_interop`, `cargo test -p sifr -- rust_interop_panic`, `python3 scripts/check_hir_maintainability_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
 | M3. Codegen and Plan Hardening | completed | PR #2816 merged. Bodyless direct/package-bridge/`Self` codegen and package bridge Cargo/cache metadata are complete; Opus M3 final pass is satisfied. Validation: `cargo fmt --check`, `cargo test -p sifr_driver rust_interop_tests`, `cargo test -p sifr_codegen rust_interop_direct`, `cargo test -p sifr_driver sysroot_interop`, `cargo test -p sifr_driver rust_interop_panic`, `cargo test -p sifr_driver generated_cargo_toml_includes_package_bridge_dependency_alias`, `python3 scripts/check_hir_maintainability_guardrails.py`, `python3 scripts/check_file_size_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
-| M4. Stdlib Source Migration and Executable Guards | in progress | Canonical private stdlib source migration and drift guard underway. |
-| M5. Closeout Validation and Review | planned | Pending. |
+| M4. Stdlib Source Migration and Executable Guards | completed | PR #2817 merged. Completed private stdlib `sifr_stdlib.*` declarations now use ellipsis-only stubs without explicit `panic=trusted_no_panic`; the stateless private adapter guard prevents drift. Validation: `cargo fmt --check`, focused stateless private adapter/codegen tests, representative migrated-demo checks, guardrails, and `scripts/run_all_tests.sh --profile create-pr`. |
+| M5. Closeout Validation and Review | in progress | Final closeout PR and phase-level Opus review pending. |
 
 ## Affected Inventory
 
@@ -403,32 +403,33 @@ Validation:
 
 ## Review Checklist
 
-- [ ] Ellipsis is accepted only for complete Rust interop stubs.
-- [ ] Ellipsis in a non-interop function body produces a targeted diagnostic.
-- [ ] Lowering handles top-level, nested, and method declarations consistently.
-- [ ] User/package missing panic policy remains rejected.
-- [ ] Private sysroot `sifr_stdlib.*` omitted policy records effective no-panic
+- [x] Ellipsis is accepted only for complete Rust interop stubs.
+- [x] Ellipsis in a non-interop function body produces a targeted diagnostic.
+- [x] Lowering handles top-level, nested, and method declarations consistently.
+- [x] User/package missing panic policy remains rejected.
+- [x] Private sysroot `sifr_stdlib.*` omitted policy records effective no-panic
       trust metadata.
-- [ ] `sifr_runtime.*`, `bridge.*`, `Self`, and arbitrary package roots do not
+- [x] `sifr_runtime.*`, `bridge.*`, `Self`, and arbitrary package roots do not
       receive implicit sysroot no-panic policy.
-- [ ] Bodyless direct interop codegen does not append synthetic `Ok(())`.
-- [ ] Direct-interop `Result[None, E]` declarations do not double-emit
+- [x] Bodyless direct interop codegen does not append synthetic `Ok(())`.
+- [x] Direct-interop `Result[None, E]` declarations do not double-emit
       `Ok(())`.
-- [ ] Bodyless package-local bridge and accepted `Self` targets emit from
+- [x] Bodyless package-local bridge and accepted `Self` targets emit from
       metadata, not lowered Sifr statements.
-- [ ] Unsupported Rust interop targets fail before Rust IR lowering.
-- [ ] Cache fingerprints change when a declaration uses explicit package panic
+- [x] Unsupported Rust interop targets fail before Rust IR lowering.
+- [x] Cache fingerprints change when a declaration uses explicit package panic
       policy versus effective sysroot policy.
-- [ ] Completed private stdlib declarations are guarded against drift.
-- [ ] Architecture docs describe only the durable declaration contract.
-- [ ] Public user docs do not expose sysroot-only shorthand as package syntax.
+- [x] Completed private stdlib declarations are guarded against drift.
+- [x] Architecture docs describe only the durable declaration contract.
+- [x] Public user docs do not expose sysroot-only shorthand as package syntax.
 
 ## Closeout Notes
 
-Populate after implementation:
-
-- PR:
-- Opus review:
-- Create-pr validation:
-- Full validation:
-- Remaining follow-up:
+- PR: final closeout PR pending.
+- Opus review: pending final phase-level review.
+- Create-pr validation: pending final closeout run.
+- Full validation: not run for M5; the closeout change is documentation and
+  review evidence only after M1-M4 each passed local `create-pr` validation.
+- Remaining follow-up: none for this phase. Runtime/resource/callback stdlib
+  migrations remain owned by
+  `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.
