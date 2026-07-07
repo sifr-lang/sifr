@@ -1,10 +1,10 @@
 # Private _sifr.url native declaration module.
 
-@rust(sifr_stdlib.url.url_parse_parts, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_parse_parts)
 def url_parse(value: str) -> Result[list[str], ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.url.url_build_parts, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_build_parts)
 def url_build(
     scheme: str,
     host: str,
@@ -12,32 +12,32 @@ def url_build(
     query: str | None,
     port: int | None,
 ) -> Result[list[str], ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.url.url_percent_encode, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_percent_encode)
 def url_percent_encode(value: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.url.url_percent_decode, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_percent_decode)
 def url_percent_decode(value: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.url.url_percent_encode_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_percent_encode_bytes)
 def url_percent_encode_bytes(value: bytes) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.url.url_percent_decode_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_percent_decode_bytes)
 def url_percent_decode_bytes(value: str) -> Result[bytes, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.url.url_normalize_path, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_normalize_path)
 def url_normalize_path(path: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.url.url_query_parse_flat, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_query_parse_flat)
 def url_query_parse(query: str) -> Result[list[str], ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.url.url_query_build_flat, panic=trusted_no_panic)
+@rust(sifr_stdlib.url.url_query_build_flat)
 def url_query_build(pairs: list[str]) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...

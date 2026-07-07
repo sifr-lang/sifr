@@ -4,238 +4,238 @@ tau: float = 6.283185307179586
 inf: float = 1.0 / 0.0
 nan: float = 0.0 / 0.0
 
-@rust(sifr_stdlib.math.sqrt, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.sqrt)
 def sqrt(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.floor, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.floor)
 def floor(x: float) -> int:
-    return 0
+    ...
 
-@rust(sifr_stdlib.math.ceil, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.ceil)
 def ceil(x: float) -> int:
-    return 0
+    ...
 
-@rust(sifr_stdlib.math.abs_val, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.abs_val)
 def abs_val(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.log, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.log)
 def log(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.cbrt, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.cbrt)
 def cbrt(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.sin, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.sin)
 def sin(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.cos, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.cos)
 def cos(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.tan, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.tan)
 def tan(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.pow_val, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.pow_val)
 def pow_val(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.min_val, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.min_val)
 def min_val(a: float, b: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.max_val, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.max_val)
 def max_val(a: float, b: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.round_val, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.round_val)
 def round_val(x: float) -> int:
-    return 0
+    ...
 
-@rust(sifr_stdlib.math.asin, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.asin)
 def asin(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.acos, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.acos)
 def acos(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.atan, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.atan)
 def atan(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.atan2, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.atan2)
 def atan2(y: float, x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.sinh, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.sinh)
 def sinh(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.cosh, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.cosh)
 def cosh(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.tanh, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.tanh)
 def tanh(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.log10, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.log10)
 def log10(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.log2, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.log2)
 def log2(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.exp2, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.exp2)
 def exp2(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.degrees, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.degrees)
 def degrees(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.radians, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.radians)
 def radians(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.isnan, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.isnan)
 def isnan(x: float) -> bool:
-    return False
+    ...
 
-@rust(sifr_stdlib.math.isinf, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.isinf)
 def isinf(x: float) -> bool:
-    return False
+    ...
 
-@rust(sifr_stdlib.math.trunc, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.trunc)
 def trunc(x: float) -> int:
-    return 0
+    ...
 
-@rust(sifr_stdlib.math.copysign, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.copysign)
 def copysign(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.signbit, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.signbit)
 def signbit(x: float) -> bool:
-    return False
+    ...
 
-@rust(sifr_stdlib.math.fmod, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.fmod)
 def fmod(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.remainder, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.remainder)
 def remainder(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.hypot, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.hypot)
 def hypot(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.fma, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.fma)
 def fma(x: float, y: float, z: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.fmax, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.fmax)
 def fmax(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.fmin, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.fmin)
 def fmin(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.exp, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.exp)
 def exp(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.expm1, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.expm1)
 def expm1(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.log1p, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.log1p)
 def log1p(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.fabs, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.fabs)
 def fabs(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.isfinite, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.isfinite)
 def isfinite(x: float) -> bool:
-    return False
+    ...
 
-@rust(sifr_stdlib.math.isnormal, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.isnormal)
 def isnormal(x: float) -> bool:
-    return False
+    ...
 
-@rust(sifr_stdlib.math.issubnormal, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.issubnormal)
 def issubnormal(x: float) -> bool:
-    return False
+    ...
 
-@rust(sifr_stdlib.math.acosh, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.acosh)
 def acosh(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.asinh, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.asinh)
 def asinh(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.atanh, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.atanh)
 def atanh(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.isqrt, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.isqrt)
 def isqrt(n: int) -> int:
-    return 0
+    ...
 
-@rust(sifr_stdlib.math.dist, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.dist)
 def dist_impl(own p: list[float], own q: list[float]) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.fsum, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.fsum)
 def fsum_impl(own data: list[float]) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.sumprod, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.sumprod)
 def sumprod_impl(own p: list[float], own q: list[float]) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.erf, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.erf)
 def erf(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.erfc, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.erfc)
 def erfc(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.gamma, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.gamma)
 def gamma(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.lgamma, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.lgamma)
 def lgamma(x: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.frexp, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.frexp)
 def frexp(x: float) -> list[float]:
-    return []
+    ...
 
-@rust(sifr_stdlib.math.ldexp, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.ldexp)
 def ldexp(m: float, e: int) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.modf, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.modf)
 def modf(x: float) -> list[float]:
-    return []
+    ...
 
-@rust(sifr_stdlib.math.nextafter, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.nextafter)
 def nextafter(x: float, y: float) -> float:
-    return 0.0
+    ...
 
-@rust(sifr_stdlib.math.ulp, panic=trusted_no_panic)
+@rust(sifr_stdlib.math.ulp)
 def ulp(x: float) -> float:
-    return 0.0
+    ...

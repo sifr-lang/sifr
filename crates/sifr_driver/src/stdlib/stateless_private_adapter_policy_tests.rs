@@ -70,7 +70,7 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
 ];
 
 #[test]
-fn completed_private_declarations_follow_adapter_policy_syntax() {
+fn completed_private_declarations_use_ellipsis_stub_and_no_panic_policy() {
     for (module, source) in COMPLETED_MIGRATED_PRIVATE_DECLARATIONS {
         assert!(
             !source.contains("@rust.via"),
@@ -84,13 +84,33 @@ fn completed_private_declarations_follow_adapter_policy_syntax() {
             !source.contains("converter") && !source.contains("pipeline"),
             "{module} must not declare converter-pipeline metadata"
         );
+        let declaration_count = source
+            .lines()
+            .filter(|line| line.trim_start().starts_with("@rust("))
+            .count();
+        let ellipsis_body_count = source.lines().filter(|line| line.trim() == "...").count();
+        assert_eq!(
+            ellipsis_body_count, declaration_count,
+            "{module} must use exactly one ellipsis-only body for each Rust interop declaration"
+        );
+        assert!(
+            !source.contains("panic=trusted_no_panic"),
+            "{module} must rely on the compiler-owned sysroot no-panic policy"
+        );
+        assert!(
+            !source
+                .lines()
+                .any(|line| line.trim_start().starts_with("return ")
+                    || line.trim_start().starts_with("raise ")),
+            "{module} must not use implementation-shaped placeholder bodies"
+        );
         for line in source
             .lines()
             .filter(|line| line.trim_start().starts_with("@rust("))
         {
             assert!(
-                line.contains("@rust(sifr_stdlib.") && line.contains("panic=trusted_no_panic"),
-                "{module} declaration must bind directly to sifr_stdlib with sysroot trust: {line}"
+                line.contains("@rust(sifr_stdlib."),
+                "{module} declaration must bind directly to sifr_stdlib: {line}"
             );
         }
     }
