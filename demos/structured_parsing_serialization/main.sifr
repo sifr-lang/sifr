@@ -4,7 +4,7 @@ from sifr.csv import DictReader, DictWriter, Dialect, QUOTE_ALL, format_row
 from sifr.io import write_text
 from sifr.json import JsonValue, dumps, from_array, from_bool, from_int, from_object, from_str, load
 from sifr.configparser import ConfigParser, ParsingError
-from sifr.tomllib import TomlValue, loads
+from sifr.tomllib import TomlValue, toml_loads
 
 
 def main() -> None:
@@ -30,7 +30,7 @@ def main() -> None:
     print(dumps(from_object([("name", from_str("sifr")), ("items", from_array([from_int(1), from_bool(True)]))])))
 
     try:
-        toml_value: TomlValue = loads("title = \"sifr\"\n[owner]\nactive = true\n")
+        toml_value: TomlValue = toml_loads("title = \"sifr\"\n[owner]\nactive = true\n")
         owner: TomlValue | None = toml_value.get("owner")
         title: TomlValue | None = toml_value.get("title")
         if owner is not None:

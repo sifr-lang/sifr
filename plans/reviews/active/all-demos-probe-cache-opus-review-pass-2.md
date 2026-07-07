@@ -1,0 +1,1 @@
+No actionable findings survived pass 2. The `toml_loads` demo edits are acceptable for this PR — they follow the codebase's established e2e convention and don't mask the underlying flat-helper collision (which is independently reproducible and belongs in a separate compiler fix). The probe cache defaults, demo assertion fixes, and doc anchor updates all check out.

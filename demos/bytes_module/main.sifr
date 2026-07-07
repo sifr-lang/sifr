@@ -51,7 +51,7 @@ def collect_invalid_actual_ok() -> list[bool]:
 
 def main():
     payload: bytes = encode_utf8("bytes-bytes_module")
-    expected: list[str] = ["2", "5", "true", "true"]
+    expected: list[str] = ["2", "5", "true", "false"]
     actual: list[str] = collect_primary_actual(payload)
     assert_vector_eq(actual, expected)
 

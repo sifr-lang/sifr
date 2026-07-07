@@ -269,7 +269,7 @@ pub(crate) fn prepare_cached_artifact(
     }))
 }
 
-fn artifact_cache_root() -> PathBuf {
+pub(super) fn artifact_cache_root() -> PathBuf {
     std::env::temp_dir().join(ARTIFACT_CACHE_ROOT_DIR)
 }
 

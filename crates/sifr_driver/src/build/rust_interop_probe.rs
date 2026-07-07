@@ -1,5 +1,6 @@
 use super::rust_interop_digest::fnv1a64_hex;
 use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
+use super::workspace::artifact_cache_root;
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
 };
@@ -7,12 +8,14 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
 use std::collections::{BTreeMap, BTreeSet};
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::{env, fs};
 
 static PROBE_NONCE_COUNTER: AtomicU64 = AtomicU64::new(0);
+const RUST_BRIDGE_PROBE_TARGET_DIR: &str = "rust_bridge_probe_target";
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) enum AsyncThreadAffinity {
@@ -61,7 +64,7 @@ pub(super) fn execute_direct_cargo_probe(
         .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
     let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source);
     let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
-    if cache_file.as_ref().is_some_and(|path| path.is_file()) {
+    if cache_file.is_file() {
         return Ok(());
     }
     let probe_root = std::env::temp_dir().join(format!(
@@ -94,17 +97,13 @@ pub(super) fn execute_direct_cargo_probe(
         .args(cargo_vendor_args(probe.sysroot_vendor_dir.as_deref()))
         .args(["check", "--quiet"])
         .current_dir(&probe_root);
-    if let Some(target_dir) = inherited_cargo_target_dir(&invocation_cwd) {
-        command.env("CARGO_TARGET_DIR", target_dir);
-    }
+    command.env("CARGO_TARGET_DIR", probe_cargo_target_dir(&invocation_cwd));
     let output = command
         .output()
         .map_err(|error| probe_io_failure(format!("failed to run Rust probe: {error}")))?;
     let _ = fs::remove_dir_all(&probe_root);
     if output.status.success() {
-        if let Some(path) = cache_file {
-            mark_probe_cache_hit(&path);
-        }
+        mark_probe_cache_hit(&cache_file);
         return Ok(());
     }
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -230,12 +229,15 @@ fn cargo_vendor_args(vendor_dir: Option<&Path>) -> Vec<String> {
     ]
 }
 
-fn inherited_cargo_target_dir(invocation_cwd: &Path) -> Option<PathBuf> {
-    let target_dir = env::var_os("CARGO_TARGET_DIR")?;
-    Some(normalize_cargo_target_dir(
-        invocation_cwd,
-        PathBuf::from(target_dir),
-    ))
+fn probe_cargo_target_dir(invocation_cwd: &Path) -> PathBuf {
+    probe_cargo_target_dir_with_env(env::var_os("CARGO_TARGET_DIR"), invocation_cwd)
+}
+
+fn probe_cargo_target_dir_with_env(configured: Option<OsString>, invocation_cwd: &Path) -> PathBuf {
+    configured.map_or_else(
+        || artifact_cache_root().join(RUST_BRIDGE_PROBE_TARGET_DIR),
+        |target_dir| normalize_cargo_target_dir(invocation_cwd, PathBuf::from(target_dir)),
+    )
 }
 
 pub(super) fn normalize_cargo_target_dir(invocation_cwd: &Path, target_dir: PathBuf) -> PathBuf {
@@ -599,8 +601,9 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
 #[cfg(test)]
 mod tests {
     use super::{
-        cargo_vendor_args, dependency_features, generated_bridge_type_stubs,
-        normalize_cargo_target_dir, probe_cargo_toml, signature_return_probe_type,
+        artifact_cache_root, cargo_vendor_args, dependency_features, generated_bridge_type_stubs,
+        normalize_cargo_target_dir, probe_cargo_target_dir_with_env, probe_cargo_toml,
+        signature_return_probe_type, RUST_BRIDGE_PROBE_TARGET_DIR,
     };
     use ruff_text_size::TextRange;
     use sifr_codegen::{
@@ -769,6 +772,25 @@ mod tests {
                 Path::new("/tmp/sifr-target").to_path_buf()
             ),
             Path::new("/tmp/sifr-target")
+        );
+    }
+
+    #[test]
+    fn probe_target_dir_defaults_to_stable_artifact_cache_subdir() {
+        assert_eq!(
+            probe_cargo_target_dir_with_env(None, Path::new("/workspace/sifr")),
+            artifact_cache_root().join(RUST_BRIDGE_PROBE_TARGET_DIR)
+        );
+    }
+
+    #[test]
+    fn probe_target_dir_honors_relative_env_override() {
+        assert_eq!(
+            probe_cargo_target_dir_with_env(
+                Some(std::ffi::OsString::from("target/create-pr")),
+                Path::new("/workspace/sifr")
+            ),
+            Path::new("/workspace/sifr/target/create-pr")
         );
     }
 }

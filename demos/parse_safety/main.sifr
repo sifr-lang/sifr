@@ -9,7 +9,7 @@
 #   - ParseError for base64_decode, urlsafe_b64decode, decode_utf8, bytes_from_hex
 
 from sifr.json import JsonValue, json_loads, json_dumps
-from sifr.tomllib import TomlValue, loads
+from sifr.tomllib import TomlValue, toml_loads
 from sifr.re import re_match, re_find, re_replace, re_findall, re_split
 from sifr.base64 import base64_encode, base64_decode
 from sifr.bytes import encode_utf8, decode_utf8, bytes_from_hex
@@ -45,14 +45,14 @@ def demo_toml():
 
     # Success path
     try:
-        toml_data: TomlValue = loads("name = \"sifr\"\nversion = 1")
+        toml_data: TomlValue = toml_loads("name = \"sifr\"\nversion = 1")
         print(f"toml parsed: {len(toml_data.keys()) > 0}")
     except TOMLDecodeError as e:
         print(f"error: {e.message}")
 
     # Error path — invalid TOML
     try:
-        bad_toml: TomlValue = loads("[broken toml ===")
+        bad_toml: TomlValue = toml_loads("[broken toml ===")
         _ = bad_toml
         print("should not reach here")
     except TOMLDecodeError as e:
