@@ -1,3 +1,4 @@
+use std::fmt::Write as _;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -35,10 +36,11 @@ impl SysrootError {
             self.attempted_sysroot.display()
         );
         if let Some(asset_path) = &self.asset_path {
-            message.push_str(&format!(
+            let _ = write!(
+                message,
                 "; missing or invalid asset: {}",
                 asset_path.display()
-            ));
+            );
         }
         message
     }

@@ -2,7 +2,7 @@
 
 ## Status
 
-Closeout in progress.
+Closeout review in progress.
 
 ## Objective
 
@@ -70,7 +70,7 @@ ordinary Sifr expression body.
 | M2. Effective Sysroot Panic Policy | completed | PR #2814 merged. Effective panic policy implementation and focused tests are complete; Opus M2 pass 1 has no actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_driver -- sysroot_interop`, `cargo test -p sifr_driver -- rust_interop_panic`, `cargo test -p sifr_driver -- rust_interop_tests`, `cargo test -p sifr -- sysroot_interop`, `cargo test -p sifr -- rust_interop_panic`, `python3 scripts/check_hir_maintainability_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
 | M3. Codegen and Plan Hardening | completed | PR #2816 merged. Bodyless direct/package-bridge/`Self` codegen and package bridge Cargo/cache metadata are complete; Opus M3 final pass is satisfied. Validation: `cargo fmt --check`, `cargo test -p sifr_driver rust_interop_tests`, `cargo test -p sifr_codegen rust_interop_direct`, `cargo test -p sifr_driver sysroot_interop`, `cargo test -p sifr_driver rust_interop_panic`, `cargo test -p sifr_driver generated_cargo_toml_includes_package_bridge_dependency_alias`, `python3 scripts/check_hir_maintainability_guardrails.py`, `python3 scripts/check_file_size_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
 | M4. Stdlib Source Migration and Executable Guards | completed | PR #2817 merged. Completed private stdlib `sifr_stdlib.*` declarations now use ellipsis-only stubs without explicit `panic=trusted_no_panic`; the stateless private adapter guard prevents drift. Validation: `cargo fmt --check`, focused stateless private adapter/codegen tests, representative migrated-demo checks, guardrails, and `scripts/run_all_tests.sh --profile create-pr`. |
-| M5. Closeout Validation and Review | in progress | Final closeout PR and phase-level Opus review pending. |
+| M5. Closeout Validation and Review | in progress | Final closeout PR #2818 opened; create-pr and merge validation passed; phase-level Opus follow-up review pending. |
 
 ## Affected Inventory
 
@@ -425,11 +425,41 @@ Validation:
 
 ## Closeout Notes
 
-- PR: final closeout PR pending.
-- Opus review: pending final phase-level review.
-- Create-pr validation: pending final closeout run.
-- Full validation: not run for M5; the closeout change is documentation and
-  review evidence only after M1-M4 each passed local `create-pr` validation.
+- PR: final closeout PR #2818.
+- Opus review: pass 1 is recorded in
+  `plans/reviews/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup-m5-opus-review-pass-1.md`;
+  follow-up review is pending after the pass 1 findings were addressed.
+- Opus pass 1 findings: the reviewer blocked closure until the local lint
+  cleanup is committed with PR #2818 and this closeout record calls out the
+  lint-driven changes that are not purely mechanical. The requested doc
+  clarifications are recorded here before the follow-up review pass.
+- Create-pr validation: passed on M5 closeout with final rerun of
+  `scripts/run_all_tests.sh --profile create-pr`; e2e pass suite completed
+  132/132 fixtures, blocking lanes passed, and there were no advisories
+  (`wall_time=147.97s`, `cache_hits=44/44`).
+- Additional M5 validation: `cargo fmt --check`,
+  `cargo clippy --workspace -- -D warnings`,
+  `python3 scripts/check_hir_maintainability_guardrails.py`,
+  `python3 scripts/check_file_size_guardrails.py`, and
+  `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`.
+- M5 lint sweep: current workspace `clippy -D warnings` required cleanup beyond
+  the original phase implementation surfaces, touching analysis, LSP,
+  package/sysroot helpers, frontend loaders, driver build-report construction,
+  interop diagnostics, and bridge-contract helper signatures. Most changes are
+  signature/borrowing or formatting cleanup. Two behavior-visible cleanups are
+  intentional: a driver package-context invariant now returns an internal
+  compiler diagnostic instead of panicking, and the Rust interop probe now uses
+  the existing TOML string escaper for path dependencies instead of `Path`
+  debug formatting.
+- Merge-gate fixes exposed by M5 validation: package Python runtime native-link
+  trust now includes the selected CPython framework's versioned link name
+  (`python3.13` on the local runner), and the vendored `cc 1.2.63`
+  `src/target` checksum files are restored so generated-code TLS builds can
+  validate vendored checksums.
+- Full validation: passed on M5 closeout with `scripts/run_all_tests.sh`;
+  merge e2e completed 651/651 fixtures, blocking lanes passed, and the only
+  advisories were warm wall-time budget exceeded and high e2e group skew
+  (`wall_time=2222.06s`, `report_signature=ee5e5d44306f270c`).
 - Remaining follow-up: none for this phase. Runtime/resource/callback stdlib
   migrations remain owned by
   `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`.

@@ -183,7 +183,7 @@ fn is_decorator_start_boundary(source: &str, index: usize) -> bool {
     source[..index]
         .chars()
         .next_back()
-        .is_none_or(|character| character.is_whitespace())
+        .is_none_or(char::is_whitespace)
 }
 
 fn parse_decorator_suffix(after_rust: &str) -> Option<(RustInteropCompletionDecorator, &str)> {
@@ -273,7 +273,7 @@ fn rust_interop_policy_key_candidates(
             ("shutdown", "Rust callback shutdown policy"),
         ],
     }
-    .into_iter()
+    .iter()
     .map(|(label, detail)| CompletionCandidate {
         label: label.to_string(),
         kind: "property".to_string(),

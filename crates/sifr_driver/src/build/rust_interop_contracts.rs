@@ -15,7 +15,7 @@ pub(super) fn bridge_contract_diagnostics(
     for signature in signatures {
         for param in &signature.params {
             let selected = rust_param_type(param.convention, &param.ty);
-            if let Some(reason) = unsupported_bridge_type_reason(&param.ty, selected) {
+            if let Some(reason) = unsupported_bridge_type_reason(&param.ty, selected.as_ref()) {
                 diagnostics.push(RustBridgeContractDiagnostic {
                     signature: signature.clone(),
                     args: vec![
@@ -33,7 +33,7 @@ pub(super) fn bridge_contract_diagnostics(
         }
         if let Some(reason) = unsupported_bridge_type_reason(
             &signature.return_type,
-            signature.return_type.rust_return_type.clone(),
+            signature.return_type.rust_return_type.as_ref(),
         ) {
             diagnostics.push(RustBridgeContractDiagnostic {
                 signature: signature.clone(),
@@ -72,7 +72,7 @@ fn mutable_borrow_type(rust_type: &str) -> String {
 
 fn unsupported_bridge_type_reason(
     ty: &RustBridgeTypeContract,
-    selected_rust_type: Option<String>,
+    selected_rust_type: Option<&String>,
 ) -> Option<String> {
     ty.unsupported_reason.clone().or_else(|| {
         selected_rust_type

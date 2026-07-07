@@ -488,7 +488,7 @@ fn compile_stdlib_sources_with_sysroot(
     Ok(StdlibCompiled {
         defs: stdlib_defs,
         code: stdlib_code,
-        interop: build_stdlib_rust_interop(sysroot, private_interop_modules),
+        interop: build_stdlib_rust_interop(sysroot, &private_interop_modules),
     })
 }
 

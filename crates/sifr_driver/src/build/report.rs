@@ -90,17 +90,30 @@ pub struct BuildReport {
     cache_hit: bool,
 }
 
+#[derive(Clone, Debug)]
+pub struct BuildReportInput {
+    pub entrypoint_path: PathBuf,
+    pub mode: BuildCompilationMode,
+    pub sysroot: BuildSysrootReport,
+    pub binary_path: PathBuf,
+    pub total_elapsed: Duration,
+    pub stages: Vec<BuildStageReport>,
+    pub frontend_diagnostics: Vec<RenderedDiagnostic>,
+    pub cache_hit: bool,
+}
+
 impl BuildReport {
-    pub fn new(
-        entrypoint_path: PathBuf,
-        mode: BuildCompilationMode,
-        sysroot: BuildSysrootReport,
-        binary_path: PathBuf,
-        total_elapsed: Duration,
-        stages: Vec<BuildStageReport>,
-        frontend_diagnostics: Vec<RenderedDiagnostic>,
-        cache_hit: bool,
-    ) -> Self {
+    pub fn new(input: BuildReportInput) -> Self {
+        let BuildReportInput {
+            entrypoint_path,
+            mode,
+            sysroot,
+            binary_path,
+            total_elapsed,
+            stages,
+            frontend_diagnostics,
+            cache_hit,
+        } = input;
         Self {
             entrypoint_path,
             mode,

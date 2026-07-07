@@ -3,6 +3,7 @@ use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::SifrManifest;
 use crate::projection_rust_keywords::is_rust_keyword;
 use std::collections::BTreeSet;
+use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -257,10 +258,10 @@ fn render_lib_rs(manifest: &SifrManifest) -> String {
         .collect::<BTreeSet<_>>();
     let mut source = format!("{MANAGED_BEGIN}\n");
     for module in modules {
-        source.push_str(&format!("pub mod {module};\n"));
+        let _ = writeln!(source, "pub mod {module};");
     }
     source.push_str("pub mod __sifr_bridge;\n");
-    source.push_str(&format!("{MANAGED_END}\n"));
+    let _ = writeln!(source, "{MANAGED_END}");
     source
 }
 
@@ -289,9 +290,9 @@ fn render_bridge_mod_rs(
     }
     let mut source = format!("{MANAGED_BEGIN}\n");
     for module in modules {
-        source.push_str(&format!("pub mod {module};\n"));
+        let _ = writeln!(source, "pub mod {module};");
     }
-    source.push_str(&format!("{MANAGED_END}\n"));
+    let _ = writeln!(source, "{MANAGED_END}");
     Ok(source)
 }
 

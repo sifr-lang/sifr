@@ -29,7 +29,7 @@ pub(crate) fn pending_private_interop_module(
 
 pub(crate) fn build_stdlib_rust_interop(
     sysroot: Option<ResolvedSysroot>,
-    modules: Vec<PendingStdlibInteropModule>,
+    modules: &[PendingStdlibInteropModule],
 ) -> StdlibRustInterop {
     if modules.is_empty() {
         return StdlibRustInterop {

@@ -35,7 +35,7 @@ struct AdvancedDataContract {
     protocol: Option<String>,
 }
 
-impl<'a> RustInteropResolver<'a> {
+impl RustInteropResolver<'_> {
     pub(super) fn validate_advanced_data_contracts(
         &mut self,
         declarations: &[sifr_codegen::RustInteropPlanDeclaration],
@@ -69,13 +69,12 @@ impl<'a> RustInteropResolver<'a> {
         else {
             return;
         };
-        let Some(contract) = parse_advanced_data_contract(view_declaration).map_or_else(
-            |reason| {
+        let Some(contract) =
+            parse_advanced_data_contract(view_declaration).unwrap_or_else(|reason| {
                 self.push_advanced_data_diagnostic(view_declaration, reason);
                 None
-            },
-            |contract| contract,
-        ) else {
+            })
+        else {
             return;
         };
 

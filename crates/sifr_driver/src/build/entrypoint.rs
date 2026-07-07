@@ -7,7 +7,7 @@ use super::project_codegen::{
     generated_single_file_binary_project, GeneratedBinaryProject,
 };
 use super::python_runtime::PackagePythonRuntime;
-use super::report::{BuildCompilationMode, BuildReport, BuildStageReport};
+use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
 use super::rust_interop::{
     apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
 };
@@ -231,16 +231,16 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
         "Building release binary",
         materialized.cargo_elapsed,
     ));
-    Ok(BuildReport::new(
+    Ok(BuildReport::new(BuildReportInput {
         entrypoint_path,
         mode,
-        materialized.sysroot,
-        materialized.binary_path,
-        total_start.elapsed(),
+        sysroot: materialized.sysroot,
+        binary_path: materialized.binary_path,
+        total_elapsed: total_start.elapsed(),
         stages,
         frontend_diagnostics,
-        false,
-    ))
+        cache_hit: false,
+    }))
 }
 
 pub(crate) fn build_cached_project_binary(
@@ -311,16 +311,16 @@ fn build_cached_rooted_entrypoint_binary(
         ));
     }
     let binary_path = cached_binary_path(cache_entry.workspace_root(), "sifr_output");
-    let build_report = BuildReport::new(
+    let build_report = BuildReport::new(BuildReportInput {
         entrypoint_path,
         mode,
         sysroot,
-        binary_path.clone(),
-        total_start.elapsed(),
+        binary_path: binary_path.clone(),
+        total_elapsed: total_start.elapsed(),
         stages,
         frontend_diagnostics,
-        cache_entry.report().cache_hit(),
-    );
+        cache_hit: cache_entry.report().cache_hit(),
+    });
     Ok(CachedBinaryArtifact {
         binary_path,
         build_report,

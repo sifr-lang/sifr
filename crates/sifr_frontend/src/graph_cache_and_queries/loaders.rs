@@ -1,4 +1,11 @@
-use super::*;
+use super::{
+    diagnostic_with_code, module_state, AuxiliarySourceState, BTreeMap, BTreeSet, DiagnosticCode,
+    DiskSourceProvider, ExternalDefs, FileId, FrontendContext, FrontendInput, FrontendMode,
+    FrontendReuseCaches, GraphRevision, ModuleId, ProjectRoot, RenderedDiagnostic,
+    SourceDependency, SourcePath, SourceProvider, SourceRevision, TrackingSourceProvider,
+    WorkspaceAuxiliarySource, WorkspaceCompilerOptions, WorkspacePackageConfigIdentity,
+    WorkspaceSessionTarget, WorkspaceSingleFileTarget,
+};
 
 fn auxiliary_source_states(
     module_count: usize,
@@ -11,7 +18,7 @@ fn auxiliary_source_states(
             let file_id = u32::try_from(
                 module_count
                     .checked_add(offset)
-                    .ok_or_else(|| too_many_source_files_diagnostic())?,
+                    .ok_or_else(too_many_source_files_diagnostic)?,
             )
             .map_err(|_| too_many_source_files_diagnostic())?;
             Ok(AuxiliarySourceState::new(FileId(file_id), source))

@@ -130,7 +130,7 @@ pub(in crate::lower) fn collect_rust_interop_declarations(
             "invalid Rust async contract: Rust async interop cannot be combined with blocking or CPU-heavy classification".to_string(),
             decorators
                 .first()
-                .map_or(TextRange::default(), |decorator| decorator.range()),
+                .map_or(TextRange::default(), Ranged::range),
         );
     }
 
@@ -546,11 +546,10 @@ fn declaration_effect(
         RustInteropEffect::BlockingIo
     } else if cpu_heavy {
         RustInteropEffect::CpuHeavy
-    } else if is_async_decl && !declarations.is_empty() {
-        RustInteropEffect::Async
-    } else if declarations
-        .iter()
-        .any(|declaration| declaration.kind == RustInteropDecoratorKind::Async)
+    } else if (is_async_decl && !declarations.is_empty())
+        || declarations
+            .iter()
+            .any(|declaration| declaration.kind == RustInteropDecoratorKind::Async)
     {
         RustInteropEffect::Async
     } else {

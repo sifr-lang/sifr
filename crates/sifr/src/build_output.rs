@@ -135,20 +135,22 @@ fn quote_path(path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sifr_driver::{BuildCompilationMode, BuildStageReport, BuildSysrootReport};
+    use sifr_driver::{
+        BuildCompilationMode, BuildReportInput, BuildStageReport, BuildSysrootReport,
+    };
 
     fn report(cache_hit: bool) -> BuildReport {
-        BuildReport::new(
-            Path::new("demo main.sifr").to_path_buf(),
-            BuildCompilationMode::Project,
-            BuildSysrootReport::new(
+        BuildReport::new(BuildReportInput {
+            entrypoint_path: Path::new("demo main.sifr").to_path_buf(),
+            mode: BuildCompilationMode::Project,
+            sysroot: BuildSysrootReport::new(
                 Path::new("/opt/sifr").to_path_buf(),
                 "0.1.0-test-x86_64-test",
                 "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
             ),
-            Path::new("./sifr_output/target/release/sifr_output").to_path_buf(),
-            Duration::from_millis(54),
-            vec![
+            binary_path: Path::new("./sifr_output/target/release/sifr_output").to_path_buf(),
+            total_elapsed: Duration::from_millis(54),
+            stages: vec![
                 BuildStageReport::new("Loading Sifr standard library", Duration::from_millis(8)),
                 BuildStageReport::new(
                     "Parsing import closure (4 modules)",
@@ -159,9 +161,9 @@ mod tests {
                 BuildStageReport::new("Materializing Cargo project", Duration::from_millis(1)),
                 BuildStageReport::new("Building release binary", Duration::from_millis(26)),
             ],
-            Vec::new(),
+            frontend_diagnostics: Vec::new(),
             cache_hit,
-        )
+        })
     }
 
     #[test]

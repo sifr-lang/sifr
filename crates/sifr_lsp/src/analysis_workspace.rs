@@ -345,16 +345,13 @@ impl LspProjectAnalysis {
             self.open_uris.insert(document.uri().to_string());
             return Err(ProjectDocumentFailure::DocumentUnavailable);
         }
-        let file = match host.document_file_for_path(document.path()) {
-            Ok(file) => file,
-            Err(_) => {
-                self.files_by_uri.remove(document.uri());
-                self.load_diagnostics
-                    .entry(document.uri().to_string())
-                    .or_default();
-                self.open_uris.insert(document.uri().to_string());
-                return Err(ProjectDocumentFailure::DocumentUnavailable);
-            }
+        let Ok(file) = host.document_file_for_path(document.path()) else {
+            self.files_by_uri.remove(document.uri());
+            self.load_diagnostics
+                .entry(document.uri().to_string())
+                .or_default();
+            self.open_uris.insert(document.uri().to_string());
+            return Err(ProjectDocumentFailure::DocumentUnavailable);
         };
         host.record_update_latency_ms(elapsed_ms(started));
         self.files_by_uri.insert(document.uri().to_string(), file);

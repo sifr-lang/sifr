@@ -6,14 +6,15 @@ use sifr_diagnostics::{
     SourceMap, SourceSpan,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn source_diagnostic(
     code: DiagnosticCode,
     display_path: &str,
     source: &str,
     range: TextRange,
     message_template: &'static str,
-    args: &[(&'static str, String)],
-    notes: &[String],
+    args: Vec<(&'static str, String)>,
+    notes: Vec<String>,
     help: Option<String>,
 ) -> RenderedDiagnostic {
     let mut source_map = SourceMap::new();
@@ -30,10 +31,10 @@ pub(super) fn source_diagnostic(
     let mut builder =
         DiagnosticBuilder::source(code, Severity::Error, span).message_template(message_template);
     for (name, value) in args {
-        builder = builder.arg(name, DiagnosticArg::String(value.clone()));
+        builder = builder.arg(name, DiagnosticArg::String(value));
     }
     for note in notes {
-        builder = builder.child(ChildSeverity::Note, note.clone());
+        builder = builder.child(ChildSeverity::Note, note);
     }
     if let Some(help) = help {
         builder = builder.help(help);
