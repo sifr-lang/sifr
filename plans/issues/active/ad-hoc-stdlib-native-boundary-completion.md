@@ -46,11 +46,15 @@ merged, and documented before the next milestone starts.
   in source, not in fallback compiler tables.
 - `internal_docs/stdlib_retained_compiler_intrinsics.toml` is the only
   compiler-native stdlib exception ledger.
-- Every `_sifr.*` family and every compiler-native exception appears exactly
-  once in the retained-glue manifest until it is migrated, closed, or
-  explicitly retained by design.
+- Every compiler-native stdlib surface appears exactly once in the retained-glue
+  manifest until it is migrated, closed, or explicitly retained by design. Row
+  granularity is leaf or subfamily level when a `_sifr.*` module mixes migrated
+  and retained leaves.
 - Manifest states are `retained`, `pilot`, `migrated`, `closed`, and
-  `retained-by-design`.
+  `retained-by-design`. `migrated` and `closed` rows remain as audit
+  tombstones with evidence after compiler-native entries are deleted.
+- The retained-glue manifest is machine-parseable, schema-versioned, and
+  rejects unknown fields after M0 installs the schema validator.
 - Generated Cargo for stdlib usage emits only Sifr sysroot crates. Third-party
   crates used by stdlib behavior are transitive implementation details of the
   sysroot crates.
@@ -60,6 +64,10 @@ merged, and documented before the next milestone starts.
   produced from checked Sifr stdlib source. Handwritten stdlib Rust string
   injection is forbidden except for manifest-tracked temporary migration
   exceptions.
+- Direct generated `sifr_runtime::*` calls are allowed only for language,
+  bridge, entrypoint, exact-int, test-harness, or retained-by-design runtime
+  substrate glue. Stdlib behavior routes through `stdlib/_sifr` declarations
+  and `sifr_stdlib`.
 - No backward-compatibility shims, fallback paths, duplicate registries, or
   compatibility aliases are introduced. Unsupported or removed surfaces receive
   diagnostics instead of hidden fallback behavior.
@@ -90,10 +98,13 @@ merged, and documented before the next milestone starts.
 | M9. Process Family | planned |  |
 | M10. Network and TLS Families | planned |  |
 | M11. HTTP Family and Harness Relocation | planned |  |
-| M12. Callback and Subscription Pilot | planned |  |
+| M12. Signal Callback and Subscription Pilot | planned |  |
 | M13. Python Interop Adapters | planned |  |
 | M14. Task, Signal, Runtime Observability, and Test Helpers | planned |  |
 | M15. Final Closure | planned |  |
+
+Evidence cells use this format after each milestone lands:
+`PR #<n> · sha=<hex7> · manifest: <id old_state -> new_state>`.
 
 ## Affected Inventory
 
@@ -109,8 +120,8 @@ Architecture and planning:
 Compiler manifest, sysroot, and dependency planning:
 
 - `crates/sifr_stdlib_model/**`
-- target `crates/sifr_stdlib_manifest/**` or `crates/sifr_sysroot_manifest/**`
-- target `crates/sifr_ipc/**` if IPC remains shared
+- target `crates/sifr_stdlib_manifest/**`
+- target `crates/sifr_ipc/**`
 - `crates/sifr_driver/src/stdlib/**`
 - `crates/sifr_driver/src/build/**`
 - `crates/sifr_codegen/src/rust_interop_plan.rs`
@@ -140,6 +151,8 @@ Validation and guardrails:
 
 - `scripts/check_stdlib_native_intrinsic_allowlist.py`
 - `scripts/check_stdlib_migration_closure.py`
+- target `scripts/check_stdlib_manifest_schema.py`
+- target `scripts/check_stdlib_bootstrap_ordering.py`
 - `scripts/check_sysroot_stdlib_resource_certification_gate.py`
 - `scripts/check_hir_maintainability_guardrails.py`
 - `scripts/check_file_size_guardrails.py`
@@ -157,13 +170,39 @@ Tasks:
 - Update architecture docs with the final stdlib/compiler/runtime boundary.
 - Extend the retained-glue manifest schema with migration states, owner or
   issue fields, evidence links, registry entries, preamble entries, raw
-  injection entries, and certification rows.
+  injection entries, declaration files, `retired_prefix_intrinsics`, and
+  certification rows.
+- Reject unknown top-level and per-surface manifest fields in
+  `scripts/check_stdlib_manifest_schema.py`; the validator owns one explicit
+  allowed-field set.
 - Classify every existing retained surface as `retained`,
   `retained-by-design`, `pilot`, `migrated`, or `closed`.
+- Split mixed-family rows into leaf or subfamily rows, for example
+  `_sifr.collections::counter_defaultdict` rather than `_sifr.collections`.
+- Add tombstone-row support so `migrated` and `closed` entries can remain in the
+  manifest after their compiler-native registry, preamble, raw-injection, or
+  signature entries are deleted.
+- Backfill `migrated` tombstone rows for every already-migrated stdlib family
+  and subfamily currently described in the sysroot architecture doc, including
+  calendar, UUID, HTML, platform, math, regex, URL, TOML, datetime, compression,
+  `_sifr.crypto::hash`, `_sifr.crypto::base64`,
+  `_sifr.bytes::encode_utf8`, and `_sifr.bytes::bytes_to_hex`.
+- Collapse the migrated-leaf prose inventory in
+  `internal_docs/sifr_sysroot_and_stdlib_architecture.md` into a pointer to the
+  manifest after the tombstone backfill lands.
 - Add validation that every manifest entry has a valid state and every observed
   compiler-native stdlib exception is owned exactly once.
+- Add validation that manifest state transitions are monotonic by comparing the
+  current manifest with `main`.
 - Add validation that no `_sifr.*` family exists outside the manifest or the
   migrated declaration inventory.
+- Add validation that raw handwritten stdlib Rust injections are either absent
+  or named in the manifest.
+- Migrate `scripts/check_sysroot_stdlib_resource_certification_gate.py` to read
+  `certification_rows` from the manifest and delete its hardcoded
+  surface-to-matrix table. The gate aggregates subfamily rows by their `_sifr.*`
+  family prefix so rows such as `_sifr.crypto::random` satisfy family-level
+  gating without requiring a parallel family registry.
 - Record the sequential milestone order in this phase document and update
   status after each milestone lands.
 
@@ -175,11 +214,19 @@ Acceptance:
   migration state.
 - `retained-by-design` entries are narrow compiler-language or harness glue,
   not stdlib behavior.
+- `migrated` and `closed` entries are reachable states with evidence, not dead
+  schema values.
+- Wide prefix rows define how exact migrated names shrink out of the prefix.
+- Unknown manifest fields are rejected.
+- The resource certification gate consumes manifest `certification_rows`
+  instead of a parallel table, and its family/subfamily join is deterministic.
 
 Validation:
 
+- `python3 scripts/check_stdlib_manifest_schema.py`
 - `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`
 - `python3 scripts/check_stdlib_migration_closure.py --self-test`
+- `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`
 - `python3 scripts/check_hir_maintainability_guardrails.py`
 - `python3 scripts/check_file_size_guardrails.py`
 - `scripts/run_all_tests.sh --profile create-pr`
@@ -190,18 +237,18 @@ Turn the compiler-side stdlib model into a manifest/sysroot planning layer.
 
 Tasks:
 
-- Create or rename the final manifest crate as `sifr_stdlib_manifest` or
-  `sifr_sysroot_manifest`.
+- Create or rename the final manifest crate as `sifr_stdlib_manifest`.
 - Move source inventory, private declaration inventory, import suggestions,
   migration-state loading, feature planning, and sysroot validation into the
   manifest layer.
-- Move IPC frame/schema/transport/request tracking/handshake metadata into
-  `sifr_ipc` if shared, or `sifr_runtime::ipc` if runtime-only.
+- Move shared IPC frame/schema/transport/request tracking/handshake metadata
+  into `sifr_ipc`.
 - Remove fallback intrinsic signature tables for any surface already marked
   `migrated` or `closed`.
 - Add deterministic topological stdlib bootstrap ordering.
 - Reject cycles and forward references that would make private declarations
   order-dependent or nondeterministic.
+- Add a standalone bootstrap-ordering guard script.
 - Ensure codegen, driver, LSP traces, build reports, and cache keys consume one
   `SysrootDependencyPlan` rather than recomputing sysroot features.
 
@@ -216,6 +263,7 @@ Validation:
 
 - Focused manifest/sysroot unit tests.
 - Focused driver stdlib bootstrap tests.
+- `python3 scripts/check_stdlib_bootstrap_ordering.py`
 - Generated Cargo snapshot tests.
 - `cargo test -p sifr_driver -- stdlib`
 - `cargo test -p sifr_codegen -- rust_interop_plan`
@@ -259,7 +307,18 @@ Prevent new compiler-native stdlib behavior while migration proceeds.
 Tasks:
 
 - Add structural provenance to `StdlibCode.module_rust_code` producers.
+- Replace the plain string payload with a structural source representation:
+
+  ```rust
+  enum StdlibRustSource {
+      CompiledFromSifr { module: String, source_path: PathBuf, rust: String },
+      HandwrittenExemption { manifest_key: String, rust: String },
+  }
+  ```
+
 - Permit compiled checked stdlib source output.
+- Normalize `CompiledFromSifr.source_path` to the same repo-relative path form
+  used by manifest `declaration_files`.
 - Reject handwritten stdlib Rust literals unless they are manifest-tracked
   temporary exceptions.
 - Guard against new stdlib intrinsic dispatch entries.
@@ -270,6 +329,8 @@ Tasks:
 - Guard against private declaration targets outside approved sysroot crates.
 - Guard against fallback signature registries for `migrated` and `closed`
   surfaces.
+- Guard direct generated `sifr_runtime::*` calls so stdlib behavior cannot enter
+  through runtime glue.
 
 Acceptance:
 
@@ -278,6 +339,8 @@ Acceptance:
   intrinsic dispatch, direct generated dependencies, or fallback registries.
 - The HTTP transport harness is tracked as a temporary exception until it moves
   to verification-owned fixtures.
+- Every `HandwrittenExemption` references a manifest key, and unknown manifest
+  keys are rejected.
 
 Validation:
 
@@ -302,6 +365,9 @@ Tasks:
 - Prove handle nonforgeability, close poisoning, double-close behavior, and
   panic-boundary conversion.
 - Delete migrated file-handle registry, preamble, and signature entries.
+- Split the file-handle and IOError portions out of the mixed
+  IO/logging/random preamble so M4 can delete or tombstone only its migrated
+  slices.
 - Mark the relevant manifest entries `pilot` during implementation and
   `migrated` after deletion evidence lands.
 
@@ -330,6 +396,10 @@ Tasks:
 - Declare filesystem functions and errors in `stdlib/_sifr/fs.sifr`.
 - Route `sifr.os`, `sifr.pathlib`, `sifr.glob`, `sifr.shutil`,
   `sifr.tempfile`, and related wrappers through declarations.
+- Delete the direct `regex` dependency emitted for `sifr.pathlib`; route
+  path-glob regex behavior through `sifr_stdlib` behind the sysroot boundary.
+- Split and delete or tombstone filesystem/path slices from the mixed
+  IO/logging/random preamble.
 - Delete migrated `fs`, `io`, `pathlib`, and related intrinsic entries.
 - Keep only explicitly retained compiler-language or bridge glue.
 
@@ -360,6 +430,11 @@ Tasks:
   behavior into `sifr_stdlib`, using runtime substrate where needed.
 - Move global logging level behavior into `sifr_stdlib` or classify the exact
   runtime observability substrate as `retained-by-design`.
+- Split `_sifr.time` and `_sifr.logging` rows into migrated public behavior and
+  retained-by-design substrate rows if either family keeps compiler/runtime
+  substrate after public wrappers move.
+- Delete or tombstone the remaining logging/random slices from the mixed
+  IO/logging/random preamble after M4 and M5 have removed their slices.
 - Delete `random`, `time`, `logging`, and mixed preamble entries that are no
   longer compiler-owned.
 
@@ -368,7 +443,8 @@ Acceptance:
 - Random/time/logging public behavior routes through checked stdlib source and
   sysroot interop.
 - Runtime-only substrate is narrow and explicitly classified.
-- The mixed IO/logging/random preamble is decomposed or deleted.
+- The remaining random/logging slices of the mixed IO/logging/random preamble
+  are decomposed or deleted after M4 and M5 have already removed their slices.
 
 Validation:
 
@@ -500,8 +576,10 @@ Tasks:
 - Keep HTTP client runtime substrate in `sifr_runtime` only where reusable.
 - Declare HTTP resources, headers, requests, responses, and protocol operations
   in `stdlib/_sifr/http.sifr`.
-- Move `sifr.http_transport` and related harness behavior into
-  verification-owned fixtures.
+- Delete the synthetic `sifr.http_transport` module and its handwritten
+  `HTTP_TRANSPORT_HARNESS_RUST` literal from compiler stdlib output.
+- Rebuild the equivalent HTTP transport probe as a verification-owned Rust
+  fixture that is not exposed via `sifr.*`.
 - Delete HTTP prefix dispatch, registry entries, and preambles after migration.
 - Prove header validation, cookie parsing, HTTP/1, HTTP/2, transport, timeout,
   redirect, body, and error semantics.
@@ -520,17 +598,19 @@ Validation:
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
 
-### M12. Callback and Subscription Pilot
+### M12. Signal Callback and Subscription Pilot
 
-Prove callback-shaped interop before Python and signal closure.
+Prove callback-shaped interop with the signal subscription surface before
+Python closure.
 
 Tasks:
 
-- Add or harden callback/subscription declaration support.
+- Add or harden callback/subscription declaration support for signal
+  subscriptions.
 - Prove callback lifetime, cancellation, thread-safety, panic conversion,
   reentrancy policy, and drop behavior.
 - Update resource and callback certification evidence.
-- Keep pilot evidence separate from Python and signal migration until complete.
+- Keep pilot evidence separate from Python migration until complete.
 
 Acceptance:
 
@@ -578,8 +658,10 @@ compiler-owned.
 
 Tasks:
 
-- Classify task, signal, runtime observability, and test-helper surfaces as
-  migrated, closed, or `retained-by-design`.
+- Reconfirm task, runtime observability, and test-helper surfaces as
+  `retained-by-design` only where they are language, bridge, or harness glue.
+- Classify any remaining signal public-wrapper behavior after M12 as migrated,
+  closed, or `retained-by-design`.
 - Move public stdlib wrapper behavior into `sifr_stdlib`.
 - Keep language task machinery, generated test harness mechanics, exact-int
   conversions, entrypoint wiring, and shared bridge glue compiler-owned.

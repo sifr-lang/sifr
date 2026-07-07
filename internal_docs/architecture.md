@@ -273,7 +273,7 @@ sifr/
     sifr_ir/                (High-level IR data rules, public lowered views, CFG/flow graph data)
     sifr_lowering/          (AST-to-IR lowering, name/type/ownership/async analysis, lowering diagnostics)
     sifr_stdlib_manifest/   (target compiler-host stdlib source inventory, private declaration inventory, feature planning, sysroot validation, and import suggestions; split out from current sifr_stdlib_model)
-    sifr_ipc/               (target shared IPC protocol/frame/schema/request-tracking crate if IPC remains needed by compiler, driver, tooling, and runtime)
+    sifr_ipc/               (target shared IPC protocol/frame/schema/request-tracking crate split out from the current stdlib model)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
     sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)

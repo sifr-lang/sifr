@@ -56,7 +56,7 @@ state. Later implementation stages update the implementation toward the architec
 | --- | --- | --- | --- | --- |
 | Public Sifr stdlib sources | `stdlib/sifr/*.sifr`, validated by `crates/sifr_stdlib_model` and loaded from the resolved source-tree or installed sysroot path | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | complete for source layout; packaging copy remains later | yes |
 | Private stdlib declarations | `stdlib/_sifr/*.sifr` declaration files are loaded from the resolved sysroot; completed stateless/data leaves bind through private Rust interop while retained runtime/resource/callback leaves remain compiler-owned and allowlisted | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context, retained-glue allowlist | mixed |
-| Compiler-side stdlib model | `crates/sifr_stdlib_model` currently owns source inventory, private intrinsic metadata, feature/dependency mapping, IPC metadata, and legacy module suggestions | Split into a manifest/sysroot crate for source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and import suggestions; move IPC protocol/frame/schema/request tracking into `sifr_ipc` or `sifr_runtime::ipc`; delete fallback intrinsic signature tables as families migrate | manifest/model split and intrinsic signature deletion | yes |
+| Compiler-side stdlib model | `crates/sifr_stdlib_model` currently owns source inventory, private intrinsic metadata, feature/dependency mapping, IPC metadata, and legacy module suggestions | Split into `crates/sifr_stdlib_manifest` for source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and import suggestions; move shared IPC protocol/frame/schema/request tracking into `crates/sifr_ipc`; delete fallback intrinsic signature tables as surfaces migrate | manifest/model split and intrinsic signature deletion | yes |
 | Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_model` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` under the resolved development or installed sysroot; generated Cargo and Rust interop probes receive the explicit `ResolvedSysroot` runtime crate path | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asked `sifr_stdlib_model::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from the manifest/sysroot planning layer, consumed by codegen, driver, cache keys, reports, and LSP traces | manifest/model split and dependency planner | yes |
@@ -606,8 +606,7 @@ The current `sifr_stdlib_model` crate is transitional. Its final shape is not a
 compiler-side behavior model for the standard library; it is a manifest and
 sysroot planning layer.
 
-The final manifest layer may be named `sifr_stdlib_manifest` or
-`sifr_sysroot_manifest`. It owns:
+The final manifest layer is `sifr_stdlib_manifest`. It owns:
 
 - stdlib source inventory and module metadata,
 - public `sifr.*` import policy and private `_sifr.*` rejection policy,
@@ -625,9 +624,8 @@ truth for migrated families. A migrated or closed surface must not keep a
 parallel intrinsic signature table in the manifest layer.
 
 IPC schema, frame encoding, transport, request tracking, and handshake metadata
-do not belong in the stdlib manifest. If IPC remains shared by compiler,
-driver, tooling, and runtime, it moves to a small `sifr_ipc` crate. If it is
-runtime-only, it moves under `sifr_runtime::ipc`.
+do not belong in the stdlib manifest. The current IPC modules are shared
+compiler/tooling protocol, so they move to a small `sifr_ipc` crate.
 
 The name `sifr_stdlib` is reserved for the generated-program stdlib
 implementation crate. The compiler manifest speaks in terms of resolved
@@ -709,6 +707,14 @@ requires such behavior. The sysroot vendor config exists for generated
 std-library support, not as a hidden policy override for a user's dependency
 graph.
 
+If Cargo cannot unify a user-owned dependency with a crate version also used by
+Sifr-owned sysroot crates, the diagnostic reports a package dependency conflict
+against the user's package graph and names the sysroot feature that introduced
+the Sifr-owned requirement. Sifr does not silently rewrite the user's
+dependency to match the bundled sysroot version. In stdlib-only generated
+builds, the sysroot vendor set is the sole source for Sifr-owned third-party
+implementation crates.
+
 Generated Cargo must not expose third-party crates that are implementation
 details of Sifr-owned stdlib/runtime behavior. The final state for stdlib use is
 that generated manifests emit only sysroot crates such as `sifr_stdlib` and
@@ -724,20 +730,29 @@ resource-shaped surfaces stay blocked by
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` until their Rust
 interop lifecycle evidence lands.
 
-Every `_sifr.*` family and every compiler-native exception must appear exactly
-once in the retained-glue manifest until the family is closed. Manifest states
-are:
+Every compiler-native stdlib surface must appear exactly once in the
+retained-glue manifest until the surface is closed. The row granularity is a
+leaf or subfamily, not necessarily a whole `_sifr.*` module, because several
+modules contain both migrated and retained leaves. Manifest states are:
 
 | State | Meaning |
 | --- | --- |
 | `retained` | Still compiler-native for now and scheduled for migration or final classification. |
 | `pilot` | The selected pilot implementation is underway and the retained compiler path is still present. |
-| `migrated` | Behavior now routes through checked stdlib source and sysroot Rust interop; compiler-native entries are deleted. |
-| `closed` | The old surface was removed, rejected, or replaced with a different supported API. |
+| `migrated` | Behavior now routes through checked stdlib source and sysroot Rust interop; the row stays as an audit tombstone with evidence after compiler-native entries are deleted. |
+| `closed` | The old surface was removed, rejected, or replaced with a different supported API; the row stays as an audit tombstone with evidence. |
 | `retained-by-design` | Permanently compiler-owned language, bridge, entrypoint, exact-int, test-harness, or runtime substrate glue. |
 
 The manifest is the only exception ledger. Do not add a second registry for
-compiler-native stdlib migration state.
+compiler-native stdlib migration state. Prefix retainers are temporary
+coarse-grained rows. Migrating any intrinsic covered by a prefix must either
+narrow the prefix in the same change or record the retired name in a
+`retired_prefix_intrinsics` field so the prefix cannot keep migrated behavior
+alive.
+
+Resource certification rows are also recorded in this manifest. The resource
+certification gate reads `certification_rows` from the retained-glue manifest
+rather than maintaining a parallel surface-to-matrix table.
 
 Some surfaces are intentionally split while migration is underway. For example,
 `_sifr.collections` set helpers and legacy JSON-string defaultdict helper
@@ -816,12 +831,34 @@ allowlisted retained runtime/resource glue. Completed native stdlib leaves must
 route through private declarations and Rust interop, and the migration closure
 guard fails if those retired intrinsic names reappear in the active dispatcher.
 
+Direct generated calls to `sifr_runtime::*` are permitted only for language,
+bridge, entrypoint, exact-int, test-harness, or retained-by-design runtime
+substrate glue. A codegen path that emits a direct `sifr_runtime::*` call for
+stdlib behavior must instead route through `stdlib/_sifr` declarations and
+`sifr_stdlib`, or it must be listed as a retained-by-design manifest exception.
+
 Generated stdlib Rust has a provenance requirement. `StdlibCode.module_rust_code`
 is valid as a transport for Rust code produced by compiling checked Sifr stdlib
 source. It must not be populated from handwritten Rust string literals except
 for manifest-tracked temporary migration exceptions. The final representation
 should make provenance structural so guards can distinguish compiled stdlib
 output from raw compiler injection.
+
+The structural target is:
+
+```rust
+enum StdlibRustSource {
+    CompiledFromSifr { module: String, source_path: PathBuf, rust: String },
+    HandwrittenExemption { manifest_key: String, rust: String },
+}
+```
+
+`StdlibCode.module_rust_code` should carry `StdlibRustSource` values rather than
+plain strings once provenance hardening lands. Guards then reject any
+`HandwrittenExemption` whose `manifest_key` is absent from the retained-glue
+manifest. `CompiledFromSifr.source_path` is normalized to the same
+repo-relative path form used by manifest `declaration_files`, so the guard can
+cross-check generated stdlib Rust provenance against declaration source.
 
 Runtime/resource/callback surfaces follow the Rust interop certification gate.
 Surfaces still marked future-owned or uncertified in the compatibility matrix

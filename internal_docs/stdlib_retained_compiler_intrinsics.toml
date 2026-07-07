@@ -7,14 +7,19 @@
 # State values:
 # - retained: still compiler-native for now and scheduled for migration or final classification.
 # - pilot: selected pilot implementation is underway while retained compiler glue remains.
-# - migrated: behavior routes through checked stdlib source and sysroot Rust interop.
-# - closed: old surface was removed, rejected, or replaced with a different supported API.
+# - migrated: behavior routes through checked stdlib source and sysroot Rust
+#   interop; row remains as an audit tombstone after compiler-native entries are deleted.
+# - closed: old surface was removed, rejected, or replaced with a different
+#   supported API; row remains as an audit tombstone after compiler-native entries are deleted.
 # - retained-by-design: permanently compiler-owned language, bridge, entrypoint,
 #   exact-int, test-harness, or runtime substrate glue.
+schema_version = 1
 
 [[surface]]
 id = "_sifr.sys"
 state = "retained"
+declaration_files = ["stdlib/_sifr/sys.sifr"]
+certification_rows = ["opaque_resource_matrix"]
 reason = "Process environment, argv, platform constants, and process-exit semantics remain compiler/runtime-owned pending the final retained-glue decision."
 registry_files = ["env.rs", "os.rs", "sys.rs"]
 exact_intrinsics = [
@@ -44,6 +49,8 @@ exact_intrinsics = [
 [[surface]]
 id = "_sifr.fs"
 state = "retained"
+declaration_files = ["stdlib/_sifr/fs.sifr"]
+certification_rows = ["opaque_resource_matrix"]
 reason = "Filesystem paths, open handles, and IOError shaping remain compiler/runtime-owned until file-handle lifecycle certification is complete."
 registry_files = [
   "file_handles.rs",
@@ -104,8 +111,9 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.collections"
-state = "retained"
+id = "_sifr.collections::counter_defaultdict"
+state = "retained-by-design"
+declaration_files = ["stdlib/_sifr/collections.sifr"]
 reason = "Counter/defaultdict semantics and core collection behavior remain language-owned after helper-leaf migration."
 registry_files = [
   "collections.rs",
@@ -124,8 +132,13 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.http"
+id = "_sifr.http::transport_and_header_helpers"
 state = "retained"
+declaration_files = ["stdlib/_sifr/http.sifr"]
+certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
+raw_injections = [
+  { site = "crates/sifr_driver/src/stdlib/bootstrap.rs::HTTP_TRANSPORT_HARNESS_RUST", module = "sifr.http_transport" },
+]
 reason = "HTTP transport, protocol, and handle behavior remains behind runtime/resource certification; header helper shims still route through generated glue."
 registry_files = ["url_http.rs"]
 preamble_files = ["url_http_runtime.rs"]
@@ -137,10 +150,12 @@ exact_intrinsics = [
   "http_validate_header_value",
 ]
 prefix_intrinsics = ["http_", "http1_", "http2_"]
+retired_prefix_intrinsics = []
 
 [[surface]]
-id = "_sifr.encoding"
-state = "retained"
+id = "_sifr.encoding::utf8_bytes_string_glue"
+state = "retained-by-design"
+declaration_files = ["stdlib/_sifr/encoding.sifr"]
 reason = "UTF-8 encode/decode result glue is tied to first-class bytes/string wrapper behavior and shared runtime error shaping."
 registry_files = ["encoding.rs"]
 exact_intrinsics = [
@@ -151,8 +166,9 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.bytes"
-state = "retained"
+id = "_sifr.bytes::first_class_constructors"
+state = "retained-by-design"
+declaration_files = ["stdlib/_sifr/bytes.sifr"]
 reason = "First-class bytes constructors, strict hex parsing/formatting, and method glue remain compiler-language behavior."
 registry_files = ["bytes.rs"]
 exact_intrinsics = [
@@ -165,6 +181,8 @@ exact_intrinsics = [
 [[surface]]
 id = "_sifr.time"
 state = "retained"
+declaration_files = ["stdlib/_sifr/time.sifr"]
+certification_rows = ["async_runtime_reqwest"]
 reason = "Clock, sleep, and struct_time compatibility glue remains runtime-sensitive until async/runtime certification closes."
 registry_files = ["time.rs"]
 exact_intrinsics = [
@@ -185,8 +203,10 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.crypto"
+id = "_sifr.crypto::random"
 state = "retained"
+declaration_files = ["stdlib/_sifr/crypto.sifr"]
+certification_rows = ["opaque_resource_matrix"]
 reason = "Random module state and random distribution helpers remain compiler/runtime-owned until resource/state semantics are certified."
 registry_files = ["random.rs"]
 exact_intrinsics = [
@@ -207,6 +227,8 @@ exact_intrinsics = [
 [[surface]]
 id = "_sifr.process"
 state = "retained"
+declaration_files = ["stdlib/_sifr/process.sifr"]
+certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
 reason = "Process children, pipes, shell execution, async process handles, and timeout behavior remain resource/runtime-owned pending certification."
 registry_files = [
   "process.rs",
@@ -266,6 +288,8 @@ exact_intrinsics = [
 [[surface]]
 id = "_sifr.net"
 state = "retained"
+declaration_files = ["stdlib/_sifr/net.sifr"]
+certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
 reason = "Network handles and split stream lifecycle behavior remain resource/runtime-owned pending certification."
 registry_files = ["net.rs"]
 preamble_files = ["net_runtime.rs"]
@@ -295,14 +319,19 @@ exact_intrinsics = [
 [[surface]]
 id = "_sifr.tls"
 state = "retained"
+declaration_files = ["stdlib/_sifr/tls.sifr"]
+certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
 reason = "TLS configuration, handshakes, stream handles, and certificate state remain resource/runtime-owned pending certification."
 registry_files = ["tls.rs"]
 preamble_files = ["tls_runtime.rs"]
 prefix_intrinsics = ["tls_"]
+retired_prefix_intrinsics = []
 
 [[surface]]
 id = "_sifr.signal"
 state = "retained"
+declaration_files = ["stdlib/_sifr/signal.sifr"]
+certification_rows = ["callback_subscription_matrix"]
 reason = "Signal streams and shutdown coordination remain runtime-sensitive pending callback/resource certification."
 registry_files = ["signal.rs"]
 exact_intrinsics = [
@@ -312,8 +341,9 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.runtime"
-state = "retained"
+id = "_sifr.runtime::observability_glue"
+state = "retained-by-design"
+declaration_files = ["stdlib/_sifr/runtime.sifr"]
 reason = "Runtime diagnostics and observability metadata are retained compiler/runtime glue rather than stdlib leaf behavior."
 registry_files = ["runtime.rs"]
 exact_intrinsics = ["runtime_emit_diagnostic"]
@@ -321,14 +351,22 @@ exact_intrinsics = ["runtime_emit_diagnostic"]
 [[surface]]
 id = "_sifr.python"
 state = "retained"
+declaration_files = ["stdlib/_sifr/python.sifr"]
+certification_rows = [
+  "opaque_resource_matrix",
+  "callbacks_call_scoped",
+  "callback_subscription_matrix",
+]
 reason = "Python object handles, callback adapters, and runtime initialization remain behind Python resource/callback certification."
 registry_files = ["python.rs"]
 exact_intrinsics = ["local_callback", "threadsafe_callback"]
 prefix_intrinsics = ["py_"]
+retired_prefix_intrinsics = []
 
 [[surface]]
-id = "_sifr.task"
-state = "retained"
+id = "_sifr.task::language_runtime_glue"
+state = "retained-by-design"
+declaration_files = ["stdlib/_sifr/task.sifr"]
 reason = "Task, cancellation, offload, join-set, and context propagation semantics are language/runtime glue."
 registry_files = ["task.rs"]
 preamble_files = [
@@ -344,6 +382,8 @@ exact_intrinsics = ["task_current_context"]
 [[surface]]
 id = "_sifr.logging"
 state = "retained"
+declaration_files = ["stdlib/_sifr/logging.sifr"]
+certification_rows = ["callback_subscription_matrix"]
 reason = "Global logging level state remains compiler/runtime glue until final observability ownership is settled."
 registry_files = ["logging.rs"]
 exact_intrinsics = ["get_global_level", "set_global_level"]
