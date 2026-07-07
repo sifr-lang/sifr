@@ -1,9 +1,9 @@
 # Private _sifr.html native declaration module.
 
-@rust(sifr_stdlib.html.html_escape, panic=trusted_no_panic)
+@rust(sifr_stdlib.html.html_escape)
 def html_escape(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.html.html_unescape, panic=trusted_no_panic)
+@rust(sifr_stdlib.html.html_unescape)
 def html_unescape(s: str) -> str:
-    return ""
+    ...

@@ -1,10 +1,10 @@
 # Private _sifr.bytes native declaration module.
 
-@rust(sifr_stdlib.bytes.encode_utf8, panic=trusted_no_panic)
+@rust(sifr_stdlib.bytes.encode_utf8)
 def encode_utf8(s: str) -> bytes:
-    return b""
+    ...
 
 
-@rust(sifr_stdlib.bytes.bytes_to_hex, panic=trusted_no_panic)
+@rust(sifr_stdlib.bytes.bytes_to_hex)
 def bytes_to_hex(bytes: bytes) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...

@@ -2,122 +2,122 @@
 # Random helpers still use compiler intrinsics during the incremental
 # stateless-leaf migration.
 
-@rust(sifr_stdlib.base64.base64_encode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.base64_encode)
 def base64_encode(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.base64.base64_encode_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.base64_encode_bytes)
 def base64_encode_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.base64.base64_decode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.base64_decode)
 def base64_decode(s: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.base64.base64_decode_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.base64_decode_bytes)
 def base64_decode_bytes(data: bytes) -> Result[bytes, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.base64.base64_encode_opts, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.base64_encode_opts)
 def base64_encode_opts(s: str, altchars: str, wrapcol: int) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.base64.base64_decode_opts, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.base64_decode_opts)
 def base64_decode_opts(s: str, altchars: str, validate: bool, ignorechars: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.base64.urlsafe_b64encode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.urlsafe_b64encode)
 def urlsafe_b64encode(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.base64.urlsafe_b64encode_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.urlsafe_b64encode_bytes)
 def urlsafe_b64encode_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.base64.urlsafe_b64decode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.urlsafe_b64decode)
 def urlsafe_b64decode(s: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.base64.urlsafe_b64decode_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.urlsafe_b64decode_bytes)
 def urlsafe_b64decode_bytes(data: bytes) -> Result[bytes, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.base64.b32encode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.b32encode)
 def b32encode(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.base64.b32decode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.b32decode)
 def b32decode(s: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.base64.b32hexencode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.b32hexencode)
 def b32hexencode(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.base64.b32hexdecode, panic=trusted_no_panic)
+@rust(sifr_stdlib.base64.b32hexdecode)
 def b32hexdecode(s: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
-@rust(sifr_stdlib.hash.sha256, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha256)
 def sha256(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.sha256_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha256_bytes)
 def sha256_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.hash.md5, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.md5)
 def md5(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.md5_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.md5_bytes)
 def md5_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.hash.sha1, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha1)
 def sha1(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.sha1_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha1_bytes)
 def sha1_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.hash.sha224, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha224)
 def sha224(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.sha224_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha224_bytes)
 def sha224_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.hash.sha384, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha384)
 def sha384(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.sha384_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha384_bytes)
 def sha384_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.hash.sha512, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha512)
 def sha512(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.sha512_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.sha512_bytes)
 def sha512_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.hash.blake2b, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.blake2b)
 def blake2b(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.blake2b_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.blake2b_bytes)
 def blake2b_bytes(data: bytes) -> bytes:
-    return b""
+    ...
 
-@rust(sifr_stdlib.hash.blake2s, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.blake2s)
 def blake2s(s: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.hash.blake2s_bytes, panic=trusted_no_panic)
+@rust(sifr_stdlib.hash.blake2s_bytes)
 def blake2s_bytes(data: bytes) -> bytes:
-    return b""
+    ...

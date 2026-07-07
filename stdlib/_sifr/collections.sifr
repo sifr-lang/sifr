@@ -1,55 +1,55 @@
 # Private _sifr.collections native declaration module.
 
-@rust(sifr_stdlib.collections.new_set, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.new_set)
 def _new_set_impl() -> list[int]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.collections.set_from_list, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.set_from_list)
 def _set_from_list_impl(own items: list[int]) -> list[int]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.collections.set_add, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.set_add)
 def _set_add_impl(own s: list[int], own item: int) -> list[int]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.collections.set_contains, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.set_contains)
 def _set_contains_impl(s: list[int], item: int) -> bool:
-    return False
+    ...
 
 
-@rust(sifr_stdlib.collections.set_remove, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.set_remove)
 def _set_remove_impl(own s: list[int], own item: int) -> list[int]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.collections.set_len, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.set_len)
 def _set_len_impl(s: list[int]) -> int:
-    return 0
+    ...
 
 
-@rust(sifr_stdlib.collections.set_union, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.set_union)
 def _set_union_impl(own a: list[int], own b: list[int]) -> list[int]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.collections.set_intersection, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.set_intersection)
 def _set_intersection_impl(own a: list[int], own b: list[int]) -> list[int]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.collections.defaultdict_new, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.defaultdict_new)
 def _defaultdict_new_impl(default_value: int) -> str:
-    return ""
+    ...
 
 
-@rust(sifr_stdlib.collections.defaultdict_get, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.defaultdict_get)
 def _defaultdict_get_impl(dd: str, key: str) -> int:
-    return 0
+    ...
 
 
-@rust(sifr_stdlib.collections.defaultdict_set, panic=trusted_no_panic)
+@rust(sifr_stdlib.collections.defaultdict_set)
 def _defaultdict_set_impl(dd: str, key: str, value: int) -> str:
-    return ""
+    ...

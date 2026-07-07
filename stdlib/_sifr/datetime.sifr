@@ -1,17 +1,17 @@
 # Private _sifr.datetime native declaration module.
 
-@rust(sifr_stdlib.time.datetime_now, panic=trusted_no_panic)
+@rust(sifr_stdlib.time.datetime_now)
 def datetime_now() -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.time.datetime_now_struct, panic=trusted_no_panic)
+@rust(sifr_stdlib.time.datetime_now_struct)
 def datetime_now_struct() -> list[int]:
-    return []
+    ...
 
-@rust(sifr_stdlib.time.datetime_format, panic=trusted_no_panic)
+@rust(sifr_stdlib.time.datetime_format)
 def datetime_format(dt: str, fmt: str) -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.time.datetime_from_timestamp, panic=trusted_no_panic)
+@rust(sifr_stdlib.time.datetime_from_timestamp)
 def datetime_from_timestamp(ts: float) -> Result[str, ValueError]:
-    raise ValueError("")
+    ...

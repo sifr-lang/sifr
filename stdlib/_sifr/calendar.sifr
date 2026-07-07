@@ -1,13 +1,13 @@
 # Private _sifr.calendar native declaration module.
 
-@rust(sifr_stdlib.calendar.calendar_isleap, panic=trusted_no_panic)
+@rust(sifr_stdlib.calendar.calendar_isleap)
 def calendar_isleap(year: int) -> bool:
-    return False
+    ...
 
-@rust(sifr_stdlib.calendar.calendar_weekday, panic=trusted_no_panic)
+@rust(sifr_stdlib.calendar.calendar_weekday)
 def calendar_weekday(year: int, month: int, day: int) -> int:
-    return 0
+    ...
 
-@rust(sifr_stdlib.calendar.calendar_monthrange, panic=trusted_no_panic)
+@rust(sifr_stdlib.calendar.calendar_monthrange)
 def calendar_monthrange(year: int, month: int) -> list[int]:
-    return []
+    ...

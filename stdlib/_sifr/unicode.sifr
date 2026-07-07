@@ -1,95 +1,95 @@
 # Private _sifr.unicode native declaration module.
 
-@rust(sifr_stdlib.unicode.data_version, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.data_version)
 def _unicode_data_version_impl() -> str:
-    return ""
+    ...
 
 
-@rust(sifr_stdlib.unicode.normalize, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.normalize)
 def _unicode_normalize_impl(form: str, text: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.is_normalized, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.is_normalized)
 def _unicode_is_normalized_impl(form: str, text: str) -> Result[bool, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.name, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.name)
 def _unicode_name_impl(text: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.lookup, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.lookup)
 def _unicode_lookup_impl(name: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.category, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.category)
 def _unicode_category_impl(text: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.bidirectional, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.bidirectional)
 def _unicode_bidirectional_impl(text: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.combining, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.combining)
 def _unicode_combining_impl(text: str) -> Result[int, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.east_asian_width, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.east_asian_width)
 def _unicode_east_asian_width_impl(text: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.mirrored, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.mirrored)
 def _unicode_mirrored_impl(text: str) -> Result[bool, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.decomposition, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.decomposition)
 def _unicode_decomposition_impl(text: str) -> Result[str, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.decimal, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.decimal)
 def _unicode_decimal_impl(text: str) -> Result[int, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.digit, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.digit)
 def _unicode_digit_impl(text: str) -> Result[int, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.numeric_value, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.numeric_value)
 def _unicode_numeric_value_impl(text: str) -> Result[float, ParseError]:
-    raise ParseError("")
+    ...
 
 
-@rust(sifr_stdlib.unicode.case_fold, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.case_fold)
 def _unicode_case_fold_impl(text: str) -> str:
-    return ""
+    ...
 
 
-@rust(sifr_stdlib.unicode.graphemes, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.graphemes)
 def _unicode_graphemes_impl(text: str) -> list[str]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.unicode.grapheme_indices_flat, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.grapheme_indices_flat)
 def _unicode_grapheme_indices_flat_impl(text: str) -> list[str]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.unicode.words, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.words)
 def _unicode_words_impl(text: str) -> list[str]:
-    return []
+    ...
 
 
-@rust(sifr_stdlib.unicode.word_boundaries_flat, panic=trusted_no_panic)
+@rust(sifr_stdlib.unicode.word_boundaries_flat)
 def _unicode_word_boundaries_flat_impl(text: str) -> list[str]:
-    return []
+    ...

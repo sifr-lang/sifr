@@ -1,5 +1,5 @@
 # Private _sifr.toml native declaration module.
 
-@rust(sifr_stdlib.toml.toml_parse_tokens, panic=trusted_no_panic)
+@rust(sifr_stdlib.toml.toml_parse_tokens)
 def toml_parse_tokens(text: str) -> Result[list[str], ParseError]:
-    raise ParseError("")
+    ...

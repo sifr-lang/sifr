@@ -1,25 +1,25 @@
 # Private _sifr.platform native declaration module.
 
-@rust(sifr_stdlib.platform.platform_system, panic=trusted_no_panic)
+@rust(sifr_stdlib.platform.platform_system)
 def platform_system() -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.platform.platform_arch, panic=trusted_no_panic)
+@rust(sifr_stdlib.platform.platform_arch)
 def platform_arch() -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.platform.platform_node, panic=trusted_no_panic)
+@rust(sifr_stdlib.platform.platform_node)
 def platform_node() -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.platform.platform_release, panic=trusted_no_panic)
+@rust(sifr_stdlib.platform.platform_release)
 def platform_release() -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.platform.platform_version, panic=trusted_no_panic)
+@rust(sifr_stdlib.platform.platform_version)
 def platform_version() -> str:
-    return ""
+    ...
 
-@rust(sifr_stdlib.platform.platform_processor, panic=trusted_no_panic)
+@rust(sifr_stdlib.platform.platform_processor)
 def platform_processor() -> str:
-    return ""
+    ...
