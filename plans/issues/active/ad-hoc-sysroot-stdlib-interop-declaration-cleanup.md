@@ -2,7 +2,7 @@
 
 ## Status
 
-Closeout review in progress.
+Closeout complete in PR #2818.
 
 ## Objective
 
@@ -70,7 +70,7 @@ ordinary Sifr expression body.
 | M2. Effective Sysroot Panic Policy | completed | PR #2814 merged. Effective panic policy implementation and focused tests are complete; Opus M2 pass 1 has no actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_driver -- sysroot_interop`, `cargo test -p sifr_driver -- rust_interop_panic`, `cargo test -p sifr_driver -- rust_interop_tests`, `cargo test -p sifr -- sysroot_interop`, `cargo test -p sifr -- rust_interop_panic`, `python3 scripts/check_hir_maintainability_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
 | M3. Codegen and Plan Hardening | completed | PR #2816 merged. Bodyless direct/package-bridge/`Self` codegen and package bridge Cargo/cache metadata are complete; Opus M3 final pass is satisfied. Validation: `cargo fmt --check`, `cargo test -p sifr_driver rust_interop_tests`, `cargo test -p sifr_codegen rust_interop_direct`, `cargo test -p sifr_driver sysroot_interop`, `cargo test -p sifr_driver rust_interop_panic`, `cargo test -p sifr_driver generated_cargo_toml_includes_package_bridge_dependency_alias`, `python3 scripts/check_hir_maintainability_guardrails.py`, `python3 scripts/check_file_size_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
 | M4. Stdlib Source Migration and Executable Guards | completed | PR #2817 merged. Completed private stdlib `sifr_stdlib.*` declarations now use ellipsis-only stubs without explicit `panic=trusted_no_panic`; the stateless private adapter guard prevents drift. Validation: `cargo fmt --check`, focused stateless private adapter/codegen tests, representative migrated-demo checks, guardrails, and `scripts/run_all_tests.sh --profile create-pr`. |
-| M5. Closeout Validation and Review | in progress | Final closeout PR #2818 opened; create-pr and merge validation passed; phase-level Opus follow-up review pending. |
+| M5. Closeout Validation and Review | completed | Final closeout PR #2818. Create-pr and merge validation passed; Opus pass 2 is satisfied for phase closure. |
 
 ## Affected Inventory
 
@@ -428,7 +428,9 @@ Validation:
 - PR: final closeout PR #2818.
 - Opus review: pass 1 is recorded in
   `plans/reviews/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup-m5-opus-review-pass-1.md`;
-  follow-up review is pending after the pass 1 findings were addressed.
+  pass 2 is recorded in
+  `plans/reviews/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup-m5-opus-review-pass-2.md`
+  and is satisfied for phase closure.
 - Opus pass 1 findings: the reviewer blocked closure until the local lint
   cleanup is committed with PR #2818 and this closeout record calls out the
   lint-driven changes that are not purely mechanical. The requested doc
