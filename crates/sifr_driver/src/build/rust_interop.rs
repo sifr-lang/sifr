@@ -17,7 +17,7 @@ use super::sysroot_interop::{
     is_trusted_sysroot_package, resolved_sysroot_crate_root, sysroot_crate_for_dependency_name,
     SysrootRustInteropTrust,
 };
-use crate::diagnostics::RenderedDiagnostic;
+use crate::diagnostics::{diagnostic_with_code, RenderedDiagnostic};
 use crate::project::ParsedProjectModule;
 use opaque_contract::OpaqueContract;
 use opaque_validation::opaque_probe_obligations;
@@ -179,12 +179,12 @@ impl<'a> RustInteropResolver<'a> {
             return Err(std::mem::take(&mut self.diagnostics));
         }
 
-        let package = self
-            .context
-            .graph
-            .packages
-            .get(&self.context.package_id)
-            .expect("package rust interop context must reference graph package");
+        let Some(package) = self.context.graph.packages.get(&self.context.package_id) else {
+            return Err(vec![diagnostic_with_code(
+                "internal compiler error: package Rust interop context references a missing graph package",
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            )]);
+        };
         generated.interop.rust.resolved_targets = std::mem::take(&mut self.resolved_targets);
         generated.interop.rust.generated_bridge_modules =
             std::mem::take(&mut self.generated_bridge_modules)
@@ -641,6 +641,7 @@ impl<'a> RustInteropResolver<'a> {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn require_trust(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,
@@ -663,7 +664,7 @@ impl<'a> RustInteropResolver<'a> {
             || trusted_entries.iter().any(|entry| entry == required_entry);
         self.trust_requirements.push(RustInteropTrustRequirement {
             canonical_target_path: canonical_target_path.to_string(),
-            kind: kind.clone(),
+            kind,
             trusted,
             required_entry: required_entry.to_string(),
             evidence: evidence.clone(),
@@ -805,6 +806,7 @@ impl<'a> RustInteropResolver<'a> {
             .as_ref()
             .filter(|trust| &trust.package_id == package_id)
     }
+    #[allow(clippy::too_many_arguments)]
     fn push_diagnostic(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,
@@ -837,8 +839,8 @@ impl<'a> RustInteropResolver<'a> {
             &source.source,
             range,
             message_template,
-            &args,
-            &notes,
+            args,
+            notes,
             help,
         ));
     }
@@ -872,8 +874,8 @@ impl<'a> RustInteropResolver<'a> {
             &source.source,
             signature.span,
             message_template,
-            &args,
-            &notes,
+            args,
+            notes,
             None,
         ));
     }

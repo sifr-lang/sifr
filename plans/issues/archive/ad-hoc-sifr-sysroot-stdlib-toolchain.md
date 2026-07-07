@@ -35,6 +35,12 @@ passed `scripts/run_all_tests.sh` on 2026-07-06 with `failures=0`,
 `blocking_failures=0`, and hardening `variants=261`. The run reported only
 non-blocking warm wall-time and batching-skew advisories.
 
+Post-closeout private stdlib declaration syntax cleanup is tracked in
+[`ad-hoc-sysroot-stdlib-interop-declaration-cleanup.md`](../active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup.md).
+That follow-up keeps the M8-M13 sysroot interop boundary intact while making
+completed private `sifr_stdlib.*` declarations use the durable ellipsis-only
+stub form and compiler-owned effective no-panic policy.
+
 ## PR Log
 
 - M0 baseline/inventory: [PR #2741](https://github.com/sifr-lang/sifr/pull/2741) merged.

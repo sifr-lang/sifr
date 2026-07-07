@@ -103,8 +103,7 @@ impl PackagePythonRuntime {
                 links.push(link_name);
             }
         }
-        if links.is_empty()
-            && self.implementation_name.eq_ignore_ascii_case("cpython")
+        if self.implementation_name.eq_ignore_ascii_case("cpython")
             && self.cpython_version_tuple.len() >= 2
         {
             links.push(format!(
@@ -124,6 +123,13 @@ impl PackagePythonRuntime {
 }
 
 fn native_link_name_from_libpython(libpython: &str) -> Option<String> {
+    if let Some((_, suffix)) = libpython.split_once("Python.framework/Versions/") {
+        if let Some((version, _)) = suffix.split_once('/') {
+            if !version.is_empty() {
+                return Some(format!("python{version}"));
+            }
+        }
+    }
     let file_name = std::path::Path::new(libpython).file_name()?.to_str()?;
     let without_prefix = file_name.strip_prefix("lib").unwrap_or(file_name);
     let without_suffix = without_prefix
@@ -330,6 +336,16 @@ mod tests {
     fn trusted_native_link_names_include_selected_libpython() {
         let mut metadata = metadata();
         metadata.set_libpython_for_tests("/opt/python/lib/libpython3.13.dylib");
+
+        assert_eq!(metadata.trusted_native_link_names(), ["python3.13"]);
+    }
+
+    #[test]
+    fn trusted_native_link_names_include_cpython_framework_version() {
+        let mut metadata = metadata();
+        metadata.set_libpython_for_tests(
+            "/opt/homebrew/Frameworks/Python.framework/Versions/3.13/Python",
+        );
 
         assert_eq!(metadata.trusted_native_link_names(), ["python3.13"]);
     }

@@ -4,6 +4,7 @@ use crate::session::Session;
 use lsp_server::{Connection, Message, Notification, RequestId};
 use serde_json::{json, Value};
 use sifr_analysis::WorkspaceTracePhase;
+use std::fmt::Write as _;
 
 pub(crate) fn handle(
     session: &mut Session,
@@ -68,7 +69,7 @@ pub(crate) fn tooling_sysroot_notification(
         diagnostic.attempted_sysroot.display()
     );
     if let Some(asset_path) = &diagnostic.asset_path {
-        message.push_str(&format!("\ninvalid asset: {}", asset_path.display()));
+        let _ = write!(message, "\ninvalid asset: {}", asset_path.display());
     }
     Notification {
         method: "window/showMessage".to_string(),

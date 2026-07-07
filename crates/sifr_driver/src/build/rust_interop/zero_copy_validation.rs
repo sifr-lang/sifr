@@ -31,7 +31,7 @@ struct ViewContract {
     sync: bool,
 }
 
-impl<'a> RustInteropResolver<'a> {
+impl RustInteropResolver<'_> {
     pub(super) fn validate_zero_copy_contracts(
         &mut self,
         declarations: &[sifr_codegen::RustInteropPlanDeclaration],

@@ -178,7 +178,7 @@ fn signature_contract(
             convention: bridge_param_convention(param.convention),
             ty: bridge_type_contract(
                 &param.ty,
-                &module_name,
+                module_name.as_ref(),
                 module_catalogs,
                 catalog,
                 generated_types,
@@ -189,7 +189,7 @@ fn signature_contract(
         .collect::<Vec<_>>();
     let return_type = bridge_type_contract(
         &function.return_type,
-        &module_name,
+        module_name.as_ref(),
         module_catalogs,
         catalog,
         generated_types,
@@ -281,7 +281,7 @@ enum BridgeTypePosition {
 
 fn bridge_type_contract(
     ty: &Type,
-    module_name: &Option<String>,
+    module_name: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
@@ -329,7 +329,6 @@ fn bridge_type_contract(
             catalog,
             generated_types,
             position,
-            false,
         ),
         Type::Dict(key, value) => bridge_dict_type(
             key,
@@ -339,7 +338,6 @@ fn bridge_type_contract(
             catalog,
             generated_types,
             position,
-            false,
         ),
         Type::Union(members) => bridge_union_type(
             members,
@@ -348,7 +346,6 @@ fn bridge_type_contract(
             catalog,
             generated_types,
             position,
-            false,
         ),
         Type::Result(ok, err) => match position {
             BridgeTypePosition::Parameter => unsupported_type(
@@ -378,7 +375,7 @@ fn bridge_type_contract(
                     "Result",
                     ty.display_name(),
                     RustBridgeTypeKind::Result,
-                    [ok_ty, err_ty],
+                    &[ok_ty, err_ty],
                 )
             }
         },
@@ -400,13 +397,13 @@ fn bridge_type_contract(
                     };
                 let is_error = parent_class.as_deref() == Some("Error");
                 generated_types.insert_record(
-                    &declaration_module,
+                    declaration_module.as_ref(),
                     name,
                     fields,
                     is_error,
                     module_catalogs,
                 );
-                let path = generated_bridge_type_path(&declaration_module, name);
+                let path = generated_bridge_type_path(declaration_module.as_ref(), name);
                 RustBridgeTypeContract {
                     sifr_type: ty.display_name(),
                     rust_borrowed_type: Some(path.clone()),
@@ -427,10 +424,10 @@ fn bridge_type_contract(
                     Ok(module_name) => module_name,
                     Err(reason) => return unsupported_type(ty, &reason),
                 };
-            if let Err(reason) = generated_types.insert_enum(&declaration_module, name, variants) {
+            if let Err(reason) = generated_types.insert_enum(declaration_module.as_ref(), name, variants) {
                 return unsupported_type(ty, &reason);
             }
-            let path = generated_bridge_type_path(&declaration_module, name);
+            let path = generated_bridge_type_path(declaration_module.as_ref(), name);
             RustBridgeTypeContract {
                 sifr_type: ty.display_name(),
                 rust_borrowed_type: Some(path.clone()),
@@ -515,12 +512,11 @@ fn simple_type(
 
 fn bridge_list_type(
     inner: &Type,
-    module_name: &Option<String>,
+    module_name: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    _callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     let inner_ty = bridge_type_contract(
         inner,
@@ -550,12 +546,11 @@ fn bridge_list_type(
 fn bridge_dict_type(
     key: &Type,
     value: &Type,
-    module_name: &Option<String>,
+    module_name: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    _callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     if !matches!(key.resolve_alias(), Type::Str) {
         return unsupported_type(
@@ -591,12 +586,11 @@ fn bridge_dict_type(
 
 fn bridge_union_type(
     members: &[Type],
-    module_name: &Option<String>,
+    module_name: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    _callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     if members.len() == 2 {
         let non_none = members
@@ -640,11 +634,11 @@ fn bridge_union_type(
     )
 }
 
-fn combine_generic_type<const N: usize>(
+fn combine_generic_type(
     name: &str,
     sifr_type: String,
     kind: RustBridgeTypeKind,
-    parts: [RustBridgeTypeContract; N],
+    parts: &[RustBridgeTypeContract],
 ) -> RustBridgeTypeContract {
     let unsupported_reason = parts
         .iter()
@@ -750,7 +744,7 @@ fn push_type_contract(out: &mut String, ty: &RustBridgeTypeContract) {
     out.push_str(&ty.sifr_type);
     out.push_str("=>");
     out.push_str(ty.rust_return_type.as_deref().unwrap_or("<unsupported>"));
-    out.push_str(":");
+    out.push(':');
     out.push_str(match ty.kind {
         RustBridgeTypeKind::Bool => "bool",
         RustBridgeTypeKind::FixedInt => "fixed-int",

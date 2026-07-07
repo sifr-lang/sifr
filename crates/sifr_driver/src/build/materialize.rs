@@ -41,7 +41,7 @@ pub(super) fn materialize_binary_project_with_report(
         &project_path,
         project_name,
         generated_project,
-        dependency_plan,
+        &dependency_plan,
     )
     .map(|mut report| {
         report.binary_path = cached_binary_path(output_dir, project_name);
@@ -87,7 +87,7 @@ pub(super) fn materialize_cached_binary_project_with_report(
                 &project_root,
                 project_name,
                 generated_project,
-                dependency_plan,
+                &dependency_plan,
             )?;
             pending
                 .commit(&required_refs)
@@ -116,21 +116,21 @@ fn materialize_binary_project_at_path(
     project_path: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
-    dependency_plan: SysrootDependencyPlan,
+    dependency_plan: &SysrootDependencyPlan,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let python_interpreter = generated_project
         .python_runtime
         .as_ref()
         .map(|runtime| runtime.interpreter().to_path_buf());
-    let sysroot = sysroot_report(&dependency_plan);
+    let sysroot = sysroot_report(dependency_plan);
     let validate_native_links = should_validate_native_link_evidence(&generated_project);
-    let trusted_native_links = trusted_native_links(&generated_project, &dependency_plan);
+    let trusted_native_links = trusted_native_links(&generated_project, dependency_plan);
     let materialize_start = std::time::Instant::now();
     materialize_binary_project_files(
         project_path,
         project_name,
         generated_project,
-        &dependency_plan,
+        dependency_plan,
     )?;
     let materialize_elapsed = materialize_start.elapsed();
 
@@ -140,7 +140,7 @@ fn materialize_binary_project_at_path(
         python_interpreter.as_deref(),
         validate_native_links,
         &trusted_native_links,
-        &dependency_plan,
+        dependency_plan,
     )?;
     let cargo_elapsed = cargo_start.elapsed();
 

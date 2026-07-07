@@ -9,6 +9,7 @@ use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -155,21 +156,21 @@ fn probe_cargo_toml(
         dependency_features,
     ));
     if dependency_name != "sifr_runtime" {
-        cargo_toml.push_str(&format!(
-            "sifr_runtime = {{ path = {sysroot_runtime_crate:?} }}\n"
-        ));
+        let path = toml_quote_path(sysroot_runtime_crate);
+        let _ = writeln!(cargo_toml, "sifr_runtime = {{ path = {path} }}");
     }
     cargo_toml
 }
 
 fn dependency_line(dependency_name: &str, backend_root: &Path, features: &[String]) -> String {
+    let backend_root = toml_quote_path(backend_root);
     let default_features = if dependency_name == "sifr_stdlib" {
         ", default-features = false"
     } else {
         ""
     };
     if features.is_empty() {
-        return format!("{dependency_name} = {{ path = {backend_root:?}{default_features} }}\n");
+        return format!("{dependency_name} = {{ path = {backend_root}{default_features} }}\n");
     }
     let features = features
         .iter()
@@ -177,8 +178,12 @@ fn dependency_line(dependency_name: &str, backend_root: &Path, features: &[Strin
         .collect::<Vec<_>>()
         .join(", ");
     format!(
-        "{dependency_name} = {{ path = {backend_root:?}{default_features}, features = [{features}] }}\n"
+        "{dependency_name} = {{ path = {backend_root}{default_features}, features = [{features}] }}\n"
     )
+}
+
+fn toml_quote_path(path: &Path) -> String {
+    toml_quote_string(&path.display().to_string())
 }
 
 fn dependency_features(

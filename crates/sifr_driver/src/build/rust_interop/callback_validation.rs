@@ -31,7 +31,7 @@ struct CallbackContract {
     shutdown: CallbackShutdown,
 }
 
-impl<'a> RustInteropResolver<'a> {
+impl RustInteropResolver<'_> {
     pub(super) fn validate_callback_contracts(
         &mut self,
         declarations: &[sifr_codegen::RustInteropPlanDeclaration],

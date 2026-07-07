@@ -4,7 +4,7 @@ use crate::build::rust_interop_probe::AsyncThreadAffinity;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropEffect, RustInteropValue};
 
-impl<'a> RustInteropResolver<'a> {
+impl RustInteropResolver<'_> {
     pub(super) fn collect_async_contracts(
         &mut self,
         declarations: &[sifr_codegen::RustInteropPlanDeclaration],

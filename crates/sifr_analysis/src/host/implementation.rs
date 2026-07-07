@@ -659,7 +659,7 @@ impl AnalysisHost {
                 source: analysis.metadata().source_revision,
             };
             self.symbol_index = Some(SymbolIndex::build(query_revision, &graph, analysis.value()));
-            self.refresh_stdlib_symbol_bucket()?;
+            self.refresh_stdlib_symbol_bucket();
         }
         self.symbol_index.as_ref().ok_or_else(|| {
             AnalysisError::new(
@@ -685,7 +685,7 @@ impl AnalysisHost {
         if let Some(index) = self.symbol_index.as_mut() {
             index.refresh_modules(query_revision, &graph, analysis.value(), dirty_modules);
         }
-        self.refresh_stdlib_symbol_bucket()?;
+        self.refresh_stdlib_symbol_bucket();
         Ok(())
     }
 

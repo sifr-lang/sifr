@@ -451,7 +451,7 @@ fn validate_module_files<'a>(
         };
         actual.insert(format!("{prefix}.{stem}"));
     }
-    for module in expected.difference(&actual) {
+    if let Some(module) = expected.difference(&actual).next() {
         return Err(StdlibSourceInventoryError::new(
             format!("missing stdlib source module {module}"),
             Some(module_path(root, module, prefix)),

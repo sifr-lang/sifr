@@ -141,7 +141,7 @@ pub(super) fn first_generated_bridge_import(source_root: &Path) -> Option<PathBu
                 pending.push(path);
                 continue;
             }
-            if !path.extension().is_some_and(|extension| extension == "rs") {
+            if path.extension().is_none_or(|extension| extension != "rs") {
                 continue;
             }
             let Ok(source) = fs::read_to_string(&path) else {
@@ -182,7 +182,7 @@ fn rust_namespace_tokens(source: &str) -> Vec<RustToken> {
     let mut chars = source.chars().peekable();
     while let Some(ch) = chars.next() {
         match ch {
-            'r' if matches!(chars.peek(), Some('"') | Some('#')) => {
+            'r' if matches!(chars.peek(), Some('"' | '#')) => {
                 if !skip_raw_string(&mut chars) {
                     tokens.push(RustToken::Ident("r".to_string()));
                 }

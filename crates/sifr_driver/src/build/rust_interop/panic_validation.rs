@@ -5,7 +5,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::RustInteropDecoratorKind;
 use sifr_package::SifrPackageMetadata;
 
-impl<'a> RustInteropResolver<'a> {
+impl RustInteropResolver<'_> {
     pub(super) fn validate_panic_declaration(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,

@@ -41,7 +41,9 @@ pub use api::{
 };
 pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
 pub use python_runtime::PackagePythonRuntime;
-pub use report::{BuildCompilationMode, BuildReport, BuildStageReport, BuildSysrootReport};
+pub use report::{
+    BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
+};
 
 pub(crate) use cargo_manifest::generate_dependency_cargo_toml_for_cache_key;
 pub(crate) use cargo_manifest::{sysroot_cargo_config_args, try_generate_sysroot_dependency_plan};

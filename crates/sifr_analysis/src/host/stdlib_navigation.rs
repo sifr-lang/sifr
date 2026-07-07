@@ -8,13 +8,12 @@ use sifr_frontend::{parse_source, FileId, SourceFileView, SourceOrigin};
 use sifr_python_ast::{Expr, Stmt};
 
 impl AnalysisHost {
-    pub(super) fn refresh_stdlib_symbol_bucket(&mut self) -> Result<(), AnalysisError> {
+    pub(super) fn refresh_stdlib_symbol_bucket(&mut self) {
         let revision = self.current_revision;
         let symbols = self.stdlib_symbols_from_source_map();
         if let Some(index) = self.symbol_index.as_mut() {
             index.replace_stdlib_symbols(revision, symbols);
         }
-        Ok(())
     }
 
     pub(super) fn stdlib_import_location_for_token(
@@ -213,8 +212,7 @@ fn stdlib_import_target(
         let trimmed = line.trim_start();
         let import_start = trimmed.strip_prefix("from ")?;
         let (module_name, imported) = import_start.split_once(" import ")?;
-        if !module_name.starts_with("sifr.")
-            && !(allow_private && module_name.starts_with("_sifr."))
+        if !(module_name.starts_with("sifr.") || allow_private && module_name.starts_with("_sifr."))
         {
             return None;
         }

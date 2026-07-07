@@ -3,7 +3,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDeclaration, RustInteropDecoratorKind};
 use std::collections::HashMap;
 
-impl<'a> RustInteropResolver<'a> {
+impl RustInteropResolver<'_> {
     pub(super) fn validate_opaque_declaration(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,

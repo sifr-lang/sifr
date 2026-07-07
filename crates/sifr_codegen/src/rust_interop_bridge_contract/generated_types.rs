@@ -18,13 +18,13 @@ impl GeneratedTypeCollector {
 
     pub(super) fn insert_record(
         &mut self,
-        module_name: &Option<String>,
+        module_name: Option<&String>,
         name: &str,
         fields: &[(String, Type)],
         is_error: bool,
         module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     ) {
-        let key = (module_name.clone(), name.to_string());
+        let key = (module_name.cloned(), name.to_string());
         if self.entries.contains_key(&key) || self.in_progress.contains(&key) {
             return;
         }
@@ -42,7 +42,7 @@ impl GeneratedTypeCollector {
         self.entries.insert(
             key,
             RustGeneratedBridgeType {
-                module_name: module_name.clone(),
+                module_name: module_name.cloned(),
                 name: format!("{name}Bridge"),
                 rust_type_path: generated_bridge_type_path(module_name, name),
                 kind: if is_error {
@@ -58,11 +58,11 @@ impl GeneratedTypeCollector {
 
     pub(super) fn insert_enum(
         &mut self,
-        module_name: &Option<String>,
+        module_name: Option<&String>,
         name: &str,
         variants: &[(String, Option<i64>)],
     ) -> Result<(), String> {
-        let key = (module_name.clone(), name.to_string());
+        let key = (module_name.cloned(), name.to_string());
         if self.entries.contains_key(&key) {
             return Ok(());
         }
@@ -86,7 +86,7 @@ impl GeneratedTypeCollector {
         self.entries.insert(
             key,
             RustGeneratedBridgeType {
-                module_name: module_name.clone(),
+                module_name: module_name.cloned(),
                 name: format!("{name}Bridge"),
                 rust_type_path: generated_bridge_type_path(module_name, name),
                 kind: RustGeneratedBridgeTypeKind::ClosedEnum,
@@ -100,7 +100,7 @@ impl GeneratedTypeCollector {
     fn generated_field_rust_type(
         &mut self,
         ty: &Type,
-        module_name: &Option<String>,
+        module_name: Option<&String>,
         module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     ) -> String {
         match ty.resolve_alias() {
@@ -129,22 +129,22 @@ impl GeneratedTypeCollector {
             } => {
                 let definition_module =
                     bridge_type_definition_module(name, module_name, module_catalogs, false)
-                        .unwrap_or_else(|_| module_name.clone());
+                        .unwrap_or_else(|_| module_name.cloned());
                 self.insert_record(
-                    &definition_module,
+                    definition_module.as_ref(),
                     name,
                     fields,
                     parent_class.as_deref() == Some("Error"),
                     module_catalogs,
                 );
-                generated_bridge_type_path(&definition_module, name)
+                generated_bridge_type_path(definition_module.as_ref(), name)
             }
             Type::Enum { name, variants } => {
                 let definition_module =
                     bridge_type_definition_module(name, module_name, module_catalogs, true)
-                        .unwrap_or_else(|_| module_name.clone());
-                let _ = self.insert_enum(&definition_module, name, variants);
-                generated_bridge_type_path(&definition_module, name)
+                        .unwrap_or_else(|_| module_name.cloned());
+                let _ = self.insert_enum(definition_module.as_ref(), name, variants);
+                generated_bridge_type_path(definition_module.as_ref(), name)
             }
             Type::Union(members) if members.len() == 2 => {
                 let has_none = members
@@ -168,8 +168,8 @@ impl GeneratedTypeCollector {
     }
 }
 
-pub(super) fn generated_bridge_type_path(module_name: &Option<String>, name: &str) -> String {
-    let module = rust_bridge_module_name(module_name.as_deref());
+pub(super) fn generated_bridge_type_path(module_name: Option<&String>, name: &str) -> String {
+    let module = rust_bridge_module_name(module_name.map(String::as_str));
     format!("crate::__sifr_bridge::{module}::{name}Bridge")
 }
 
@@ -189,15 +189,16 @@ fn rust_bridge_module_name(module_name: Option<&str>) -> String {
 
 pub(super) fn bridge_type_definition_module(
     name: &str,
-    current_module: &Option<String>,
+    current_module: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     is_enum: bool,
 ) -> Result<Option<String>, String> {
+    let current_module_key = current_module.cloned();
     if module_catalogs
-        .get(current_module)
+        .get(&current_module_key)
         .is_some_and(|catalog| catalog_contains_bridge_type(catalog, name, is_enum))
     {
-        return Ok(current_module.clone());
+        return Ok(current_module_key);
     }
 
     let matches = module_catalogs
@@ -208,7 +209,7 @@ pub(super) fn bridge_type_definition_module(
         .collect::<Vec<_>>();
     match matches.as_slice() {
         [module_name] => Ok(module_name.clone()),
-        [] => Ok(current_module.clone()),
+        [] => Ok(current_module_key),
         _ => Err(format!(
             "bridge type `{name}` is ambiguous across Sifr modules; qualify or avoid duplicate exported bridge type names"
         )),
