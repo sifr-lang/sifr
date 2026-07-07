@@ -271,8 +271,8 @@ mod tests {
     use ruff_text_size::{TextRange, TextSize};
     use sifr_codegen::{RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration};
     use sifr_ir::{
-        RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
-        RustInteropEffect, RustTargetPath,
+        RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
+        RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,
     };
     use sifr_stdlib_model::StdlibFeature;
     use sifr_sysroot::{SysrootManifest, SysrootPaths};
@@ -316,9 +316,15 @@ mod tests {
         let root = TempSysroot::new("reject_non_sysroot_root");
         root.write_private(
             "_sifr.crypto",
-            "@rust(native.hash)\ndef hash() -> None:\n    pass\n",
+            "@rust(native.hash, panic=trusted_no_panic)\ndef hash() -> None:\n    pass\n",
         );
-        let stdlib = stdlib_interop(&root, declaration("_sifr.crypto", "hash", "native.hash"));
+        let mut entry = declaration("_sifr.crypto", "hash", "native.hash");
+        entry.declaration.arguments = vec![RustInteropArgument {
+            name: Some("panic".to_string()),
+            value: RustInteropValue::Symbol("trusted_no_panic".to_string()),
+            span: span(),
+        }];
+        let stdlib = stdlib_interop(&root, entry);
 
         let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &stdlib);
         let diagnostics = match apply_package_rust_interop_metadata(generated, context) {

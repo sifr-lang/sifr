@@ -158,6 +158,28 @@ fn package_rust_interop_non_result_requires_explicit_panic_policy() {
 }
 
 #[test]
+fn package_rust_interop_sifr_stdlib_named_root_still_requires_explicit_policy() {
+    let generated = base_project_with_contracts(
+        vec![declaration_entry_with_arguments(
+            "sifr_stdlib.hash.digest",
+            RustInteropDecoratorKind::Function,
+            Vec::new(),
+        )],
+        vec![signature_contract(Vec::new(), string_contract())],
+    );
+    let context = bridge_context(TrustPolicy::default());
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "package-authored sifr_stdlib root still needs policy",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
+    assert!(diagnostics[0].message.contains("non-Result"));
+}
+
+#[test]
 fn package_rust_interop_abort_policy_requires_trust() {
     let generated = base_project_with_contracts(
         vec![declaration_entry_with_arguments(

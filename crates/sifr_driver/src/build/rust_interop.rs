@@ -10,7 +10,9 @@ use super::rust_interop_digest::normalized_path_string;
 use super::rust_interop_probe::{
     execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
 };
-use super::rust_interop_trust::{build_env_trust_entries, panic_policy};
+use super::rust_interop_trust::{
+    build_env_trust_entries, effective_panic_policy, EffectivePanicPolicy,
+};
 use super::sysroot_interop::{
     is_trusted_sysroot_package, resolved_sysroot_crate_root, sysroot_crate_for_dependency_name,
     SysrootRustInteropTrust,
@@ -548,8 +550,12 @@ impl<'a> RustInteropResolver<'a> {
                 is_trusted_sysroot_package(self.context, &package.package_id),
             );
         }
-        match panic_policy(&declaration.declaration).as_deref() {
-            Some("trusted_no_panic") => {
+        match effective_panic_policy(
+            declaration,
+            package,
+            is_trusted_sysroot_package(self.context, &package.package_id),
+        ) {
+            EffectivePanicPolicy::TrustedNoPanic => {
                 self.require_trust(
                     declaration,
                     &trust_target_path,
@@ -560,7 +566,7 @@ impl<'a> RustInteropResolver<'a> {
                     is_trusted_sysroot_package(self.context, &package.package_id),
                 );
             }
-            Some("abort") => {
+            EffectivePanicPolicy::Abort => {
                 self.require_trust(
                     declaration,
                     &trust_target_path,
@@ -571,7 +577,10 @@ impl<'a> RustInteropResolver<'a> {
                     is_trusted_sysroot_package(self.context, &package.package_id),
                 );
             }
-            Some(_) | None => {}
+            EffectivePanicPolicy::None
+            | EffectivePanicPolicy::MapError
+            | EffectivePanicPolicy::Invalid
+            | EffectivePanicPolicy::InvalidSysrootImplicitTarget => {}
         }
     }
 

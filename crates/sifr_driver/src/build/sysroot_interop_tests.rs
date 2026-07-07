@@ -7,7 +7,7 @@ use super::rust_interop::{
 };
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
-use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
+use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot, RustInteropTrustRequirementKind};
 use sifr_package::{
     CargoPackageId, ImportRoot, PackageClassification, PackageSourceMap, PackageSourceRoot,
     RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph, SifrPackageId,
@@ -23,9 +23,8 @@ use std::path::PathBuf;
 
 #[test]
 fn private_stdlib_interop_resolves_sysroot_crate_target() {
-    let interop = private_stdlib_interop(
-        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
-    );
+    let interop =
+        private_stdlib_interop("@rust(sifr_stdlib.m8.noop)\ndef noop() -> None:\n    pass\n");
 
     let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
     let generated =
@@ -42,7 +41,32 @@ fn private_stdlib_interop_resolves_sysroot_crate_target() {
     ));
     assert_eq!(generated.interop.rust.trust_requirements.len(), 1);
     assert!(generated.interop.rust.trust_requirements[0].trusted);
+    assert_eq!(
+        generated.interop.rust.trust_requirements[0].kind,
+        RustInteropTrustRequirementKind::NoPanic
+    );
+    assert_eq!(
+        generated.interop.rust.trust_requirements[0].required_entry,
+        "sifr_stdlib.m8.noop"
+    );
     assert!(generated.interop.rust.cargo_inputs.is_some());
+}
+
+#[test]
+fn private_stdlib_interop_rejects_omitted_policy_for_runtime_target() {
+    let interop =
+        private_stdlib_interop("@rust(sifr_runtime.m8.noop)\ndef noop() -> None:\n    pass\n");
+
+    let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
+    let diagnostics = match apply_package_rust_interop_metadata(generated, context) {
+        Ok(_) => panic!("implicit sysroot no-panic policy must be limited to sifr_stdlib"),
+        Err(diagnostics) => diagnostics,
+    };
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("canonical private `sifr_stdlib.*` targets"));
 }
 
 #[test]
@@ -67,9 +91,8 @@ fn private_stdlib_interop_rejects_non_sysroot_target_root() {
 
 #[test]
 fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
-    let interop = private_stdlib_interop(
-        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
-    );
+    let interop =
+        private_stdlib_interop("@rust(sifr_stdlib.m8.noop)\ndef noop() -> None:\n    pass\n");
     let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
     let generated =
         apply_package_rust_interop_metadata(generated, context).expect("sysroot interop resolves");
@@ -90,6 +113,15 @@ fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
     assert!(plan
         .cache_fingerprint
         .contains("[sysroot-interop-crates]\nsifr_stdlib\n"));
+    let trust = generated
+        .interop
+        .rust
+        .trust_requirements
+        .iter()
+        .find(|requirement| requirement.kind == RustInteropTrustRequirementKind::NoPanic)
+        .expect("implicit sysroot policy records no-panic trust");
+    assert!(trust.trusted);
+    assert_eq!(trust.required_entry, "sifr_stdlib.m8.noop");
 
     let cargo_toml =
         generate_dependency_cargo_toml_for_cache_key("sifr_output", &plan, &generated.interop);
