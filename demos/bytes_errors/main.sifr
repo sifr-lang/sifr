@@ -21,7 +21,7 @@ def main() -> None:
 
     bad_codec: bool = False
     try:
-        codec: str = "latin-1"
+        codec: str = "definitely-not-a-codec"
         _encoded: bytes = "abc".encode(codec)
     except ParseError as e:
         bad_codec = True
