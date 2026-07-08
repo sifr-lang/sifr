@@ -5,6 +5,8 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     let combined_modules = normalize_dependency_set(
         [
             "sifr.platform",
+            "sifr.env",
+            "sifr.sys",
             "sifr.html",
             "_sifr.calendar",
             "sifr.uuid",
@@ -58,6 +60,10 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     assert!(time_toml.contains("sifr_stdlib = { path = "));
     assert!(time_toml.contains("features = [\"time\"]"));
     assert!(!time_toml.contains("chrono = "));
+    let sys_modules = normalize_dependency_set(vec!["sifr.sys".to_string()].into_iter());
+    let sys_toml = generate_cargo_toml(&sys_modules, &required_crates, "sifr_output");
+    assert!(sys_toml.contains("sifr_stdlib = { path = "));
+    assert!(sys_toml.contains("features = [\"sys\"]"));
     let private_crypto_modules =
         normalize_dependency_set(vec!["_sifr.crypto".to_string()].into_iter());
     let private_crypto_toml =
@@ -96,7 +102,7 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     assert!(private_compress_toml.contains("features = [\"gzip\", \"zipfile\"]"));
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
     assert!(combined_toml.contains(
-        "features = [\"html\", \"calendar\", \"platform\", \"uuid\", \"collections\", \"math\", \"hash\", \"base64\", \"bytes\"]"
+        "features = [\"html\", \"calendar\", \"platform\", \"sys\", \"uuid\", \"collections\", \"math\", \"hash\", \"base64\", \"bytes\"]"
     ));
     assert_eq!(combined_toml.matches("sifr_stdlib = ").count(), 1);
 }

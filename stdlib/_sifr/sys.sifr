@@ -1,2 +1,45 @@
 # Private _sifr.sys native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.sys.env_get)
+def env_get(key: str) -> str | None:
+    ...
+
+@rust(sifr_stdlib.sys.env_set)
+def env_set(key: str, value: str) -> None:
+    ...
+
+@rust(sifr_stdlib.sys.env_unset)
+def env_unset(key: str) -> None:
+    ...
+
+@rust(sifr_stdlib.sys.env_keys)
+def env_keys() -> list[str]:
+    ...
+
+@rust(sifr_stdlib.sys.env_values)
+def env_values() -> list[str]:
+    ...
+
+@rust(sifr_stdlib.sys.env_items)
+def env_items() -> list[str]:
+    ...
+
+@rust(sifr_stdlib.sys.get_args)
+def get_args() -> list[str]:
+    ...
+
+@rust(sifr_stdlib.sys.sys_exit)
+def sys_exit(code: int) -> None:
+    ...
+
+@rust(sifr_stdlib.sys.sys_version)
+def sys_version() -> str:
+    ...
+
+@rust(sifr_stdlib.sys.sys_platform)
+def sys_platform() -> str:
+    ...
+
+@rust(sifr_stdlib.sys.sys_maxsize)
+def sys_maxsize() -> int:
+    ...

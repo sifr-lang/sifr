@@ -53,6 +53,12 @@ RETIRED_INTRINSICS = frozenset(
         "defaultdict_new",
         "defaultdict_set",
         "dist",
+        "env_get",
+        "env_items",
+        "env_keys",
+        "env_set",
+        "env_unset",
+        "env_values",
         "encode_utf8",
         "encoding_canonical_label",
         "encoding_decode_incremental_outcome",
@@ -78,6 +84,7 @@ RETIRED_INTRINSICS = frozenset(
         "frexp",
         "fsum",
         "gamma",
+        "get_args",
         "get_global_level",
         "getcwd",
         "gettempdir",
@@ -129,6 +136,12 @@ RETIRED_INTRINSICS = frozenset(
         "modf",
         "nextafter",
         "open_file",
+        "platform_arch",
+        "platform_node",
+        "platform_processor",
+        "platform_release",
+        "platform_system",
+        "platform_version",
         "pow_val",
         "random_choice",
         "random_float",
@@ -175,6 +188,10 @@ RETIRED_INTRINSICS = frozenset(
         "sha512",
         "sha512_bytes",
         "sqrt",
+        "sys_exit",
+        "sys_maxsize",
+        "sys_platform",
+        "sys_version",
         "_gmtime_intrinsic",
         "_localtime_intrinsic",
         "_strptime_intrinsic",
@@ -356,7 +373,7 @@ def _self_test() -> int:
         print("self-test restored ownership registry was not rejected", file=sys.stderr)
         return 1
 
-    if _validate('"env_get" => lower_env_get(args),', False, "clean architecture text"):
+    if _validate('"run_command" => lower_run_command(args),', False, "clean architecture text"):
         print("self-test retained intrinsic seed should pass", file=sys.stderr)
         return 1
 

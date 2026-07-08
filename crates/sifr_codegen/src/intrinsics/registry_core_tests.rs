@@ -223,16 +223,31 @@ pub(crate) fn i18n_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
-pub(crate) fn lowers_env_intrinsics_via_registry() {
-    let get = lower_intrinsic("env_get", &["key".to_string()]).expect("env_get should lower");
-    assert!(render_expr(&get.expr).contains("std::env::var"));
-
-    let set = lower_intrinsic("env_set", &["k".to_string(), "v".to_string()])
-        .expect("env_set should lower");
-    assert!(render_expr(&set.expr).contains("std::env::set_var"));
-
-    let keys = lower_intrinsic("env_keys", &[]).expect("env_keys should lower");
-    assert!(render_expr(&keys.expr).contains("std::env::vars_os()"));
+pub(crate) fn env_and_sys_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in [
+        "env_get",
+        "env_set",
+        "env_unset",
+        "env_keys",
+        "env_values",
+        "env_items",
+        "get_args",
+        "sys_exit",
+        "sys_version",
+        "sys_platform",
+        "sys_maxsize",
+        "platform_system",
+        "platform_arch",
+        "platform_node",
+        "platform_release",
+        "platform_version",
+        "platform_processor",
+    ] {
+        assert!(
+            lower_intrinsic(name, &["value".to_string()]).is_none(),
+            "{name} should lower through private Rust interop declarations"
+        );
+    }
 }
 
 #[test]
@@ -241,12 +256,6 @@ pub(crate) fn lowers_os_intrinsics_via_registry() {
         lower_intrinsic("run_command", &["cmd".to_string()]).expect("run_command should lower");
     assert!(render_expr(&run.expr).contains("std::process::Command::new(\"sh\".to_string())"));
     assert!(render_expr(&run.expr).contains(".arg(\"-c\".to_string())"));
-
-    let args = lower_intrinsic("get_args", &[]).expect("get_args should lower");
-    assert_eq!(
-        render_expr(&args.expr),
-        "std::env::args().collect::<Vec<String>>()"
-    );
 
     let pid = lower_intrinsic("getpid", &[]).expect("getpid should lower");
     assert_eq!(render_expr(&pid.expr), "std::process::id() as i64");

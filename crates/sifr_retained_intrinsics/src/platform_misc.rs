@@ -2,39 +2,6 @@ use super::{result_ty, IntrinsicModule};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
-/// _sifr.platform — Platform information bootstrap signatures.
-pub(super) fn intrinsic_platform() -> IntrinsicModule {
-    let mut functions = HashMap::new();
-    functions.insert(
-        "platform_system".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    functions.insert(
-        "platform_arch".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    functions.insert(
-        "platform_node".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    functions.insert(
-        "platform_release".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    functions.insert(
-        "platform_version".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    functions.insert(
-        "platform_processor".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    IntrinsicModule {
-        functions,
-        constants: HashMap::new(),
-    }
-}
-
 /// _sifr.toml — TOML parsing intrinsics
 pub(super) fn intrinsic_toml() -> IntrinsicModule {
     let mut functions = HashMap::new();

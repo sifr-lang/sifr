@@ -49,6 +49,7 @@ pub enum StdlibFeature {
     Sha1,
     Sha2,
     SifrRuntime,
+    Sys,
     Tokio,
     TokioRustls,
     Toml,
@@ -105,6 +106,7 @@ impl StdlibFeature {
             Self::Sha1 => "sha1",
             Self::Sha2 => "sha2",
             Self::SifrRuntime => "sifr_runtime",
+            Self::Sys => "sys",
             Self::Tokio => "tokio",
             Self::TokioRustls => "tokio-rustls",
             Self::Toml => "toml",
@@ -288,6 +290,7 @@ const SIFR_RUNTIME_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependenc
     package: "sifr_runtime",
     spec: "sifr_runtime",
 }];
+const SYS_DEPS: &[GeneratedCargoDependency] = &[];
 const TOKIO_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "tokio",
     spec: "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
@@ -488,6 +491,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: SIFR_RUNTIME_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Sys,
+        cargo_dependencies: SYS_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::Tokio,
         cargo_dependencies: TOKIO_DEPS,
     },
@@ -579,6 +586,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "sha1" => Some(StdlibFeature::Sha1),
         "sha2" => Some(StdlibFeature::Sha2),
         "sifr_runtime" | "sifr-runtime" => Some(StdlibFeature::SifrRuntime),
+        "sys" => Some(StdlibFeature::Sys),
         "tokio" => Some(StdlibFeature::Tokio),
         "tokio-rustls" | "tokio_rustls" => Some(StdlibFeature::TokioRustls),
         "toml" => Some(StdlibFeature::Toml),
@@ -601,10 +609,12 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
     match module_name {
         "sifr.collections" | "_sifr.collections" => &[],
         "_sifr.fs" => &[StdlibFeature::Fs],
+        "sifr.env" | "sifr.sys" | "_sifr.sys" => &[StdlibFeature::Sys],
         "sifr.time" | "_sifr.time" => &[],
         "sifr.random" | "_sifr.crypto" => &[],
         "sifr.uuid" | "_sifr.uuid" => &[],
         "sifr.re" | "_sifr.regex" => &[],
+        "sifr.os" => &[StdlibFeature::Fs, StdlibFeature::Sys],
         "sifr.pathlib" => &[StdlibFeature::Fs],
         "sifr.hash" | "sifr.hashlib" => &[],
         "sifr.bytes" | "_sifr.bytes" => &[],

@@ -36,6 +36,58 @@ fn platform_private_declarations_codegen_through_sifr_stdlib() {
         .is_some_and(|names| !names.contains("platform_system")));
 }
 
+#[test]
+fn sys_private_declarations_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.sys")
+        .expect("_sifr.sys should generate private Rust code");
+
+    assert_eq!(private_code.module, "_sifr.sys");
+    assert_eq!(private_code.source_path, "stdlib/_sifr/sys.sifr");
+    assert_eq!(
+        private_code.source_sha256,
+        sha256_hex(include_str!("../../../../stdlib/_sifr/sys.sifr"))
+    );
+    for name in [
+        "env_get",
+        "env_set",
+        "env_unset",
+        "env_keys",
+        "env_values",
+        "env_items",
+        "get_args",
+        "sys_exit",
+        "sys_version",
+        "sys_platform",
+        "sys_maxsize",
+    ] {
+        assert!(
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::sys::{name}(")),
+            "{name} should lower through _sifr.sys private Rust interop declarations"
+        );
+    }
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.sys")
+        .is_some_and(|names| !names.contains("env_get") && !names.contains("sys_version")));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.env")
+        .is_some_and(|deps| deps.contains("_sifr.sys")));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.sys")
+        .is_some_and(|deps| deps.contains("_sifr.sys")));
+}
+
 fn sha256_hex(source: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(source.as_bytes());

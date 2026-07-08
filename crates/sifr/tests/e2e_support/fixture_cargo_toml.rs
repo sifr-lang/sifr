@@ -319,6 +319,10 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "sifr.hashlib"
                 | "_sifr.crypto"
                 | "sifr.base64"
+                | "sifr.env"
+                | "sifr.sys"
+                | "sifr.os"
+                | "_sifr.sys"
                 | "sifr.platform"
                 | "_sifr.platform"
         )

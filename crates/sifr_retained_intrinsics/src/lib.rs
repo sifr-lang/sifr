@@ -33,8 +33,7 @@ use io_json::{intrinsic_io, intrinsic_json};
 use math_test::{intrinsic_math, intrinsic_test};
 use net::intrinsic_net;
 use platform_misc::{
-    intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_platform,
-    intrinsic_toml,
+    intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_toml,
 };
 use process::intrinsic_process;
 use python::intrinsic_python;
@@ -89,7 +88,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         // migrate to compiled private declarations.
         "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
-        "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.net" => Some(intrinsic_net()),
         "_sifr.tls" => Some(intrinsic_tls()),
         "_sifr.url" => Some(intrinsic_url()),

@@ -53,6 +53,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.platform", "_sifr.platform"]) {
         features.push("platform");
     }
+    if has_module(&["sifr.env", "sifr.sys", "sifr.os", "_sifr.sys"]) {
+        features.push("sys");
+    }
     if has_module(&["sifr.logging", "_sifr.logging"]) {
         features.push("logging");
     }
@@ -92,7 +95,14 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.encoding", "_sifr.encoding"]) {
         features.push("encoding");
     }
-    if has_module(&["sifr.io", "sifr.pathlib", "sifr.tempfile", "_sifr.fs"]) {
+    if has_module(&[
+        "sifr.io",
+        "sifr.os",
+        "sifr.pathlib",
+        "sifr.shutil",
+        "sifr.tempfile",
+        "_sifr.fs",
+    ]) {
         features.push("fs");
     }
     if has_module(&["sifr.i18n", "_sifr.i18n"]) {

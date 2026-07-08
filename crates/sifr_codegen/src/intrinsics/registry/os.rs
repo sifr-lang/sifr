@@ -167,24 +167,6 @@ pub(crate) fn lower_run_command(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(crate) fn lower_get_args(args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "env".to_string(),
-                "args".to_string(),
-            ])),
-            args: vec![],
-        }),
-        method: "collect::<Vec<String>>".to_string(),
-        args: vec![],
-    })
-}
-
 pub(crate) fn lower_chdir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;

@@ -26,6 +26,7 @@ pub const LEAF_FEATURES: &[&str] = &[
     "process",
     "fs",
     "signals",
+    "sys",
     "runtime-observability",
 ];
 

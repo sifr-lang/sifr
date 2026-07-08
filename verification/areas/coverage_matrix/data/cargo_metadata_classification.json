@@ -153,6 +153,7 @@
         {"name": "random", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "regex", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "signals", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "sys", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "toml", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "url", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "uuid", "profile_assignment": "merge", "classification": "first_party_runtime"},
