@@ -56,7 +56,7 @@ state. Later implementation stages update the implementation toward the architec
 | --- | --- | --- | --- | --- |
 | Public Sifr stdlib sources | `stdlib/sifr/*.sifr`, validated by `crates/sifr_stdlib_manifest` and loaded from the resolved source-tree or installed sysroot path | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | complete for source layout; packaging copy remains later | yes |
 | Private stdlib declarations | `stdlib/_sifr/*.sifr` declaration files are loaded from the resolved sysroot; completed stateless/data leaves bind through private Rust interop while retained runtime/resource/callback leaves remain compiler-owned and allowlisted | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context, retained-glue allowlist | mixed |
-| Compiler-side stdlib manifest | `crates/sifr_stdlib_manifest` owns source inventory, private intrinsic metadata, feature/dependency mapping, and legacy module suggestions; `crates/sifr_ipc` owns shared IPC protocol/frame/schema/request tracking | `crates/sifr_stdlib_manifest` narrows to source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and inventory data queried by diagnostics; suggestion policy/rendering moves to the frontend or diagnostics boundary; fallback intrinsic signature tables are removed as native declarations replace them | manifest/model split and intrinsic signature deletion | yes |
+| Compiler-side stdlib manifest | `crates/sifr_stdlib_manifest` owns source inventory, private declaration metadata, feature/dependency mapping, and sysroot validation; `crates/sifr_stdlib_imports` owns legacy/bare stdlib import suggestion policy; `crates/sifr_retained_intrinsics` owns temporary fallback intrinsic signatures; `crates/sifr_ipc` owns shared IPC protocol/frame/schema/request tracking | `crates/sifr_stdlib_manifest` narrows to source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and inventory data queried by diagnostics; fallback intrinsic signature tables are removed as native declarations replace them | manifest/model split and intrinsic signature deletion | yes |
 | Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_manifest` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` under the resolved development or installed sysroot; generated Cargo and Rust interop probes receive the explicit `ResolvedSysroot` runtime crate path | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asked `sifr_stdlib_manifest::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from the manifest/sysroot planning layer, consumed by codegen, driver, cache keys, reports, and LSP traces | manifest/model split and dependency planner | yes |
@@ -621,8 +621,6 @@ The final manifest layer is `sifr_stdlib_manifest`. It owns:
 - stdlib source inventory and module metadata,
 - public stdlib import policy and source-origin-based private declaration
   import policy,
-- legacy CPython-shaped module inventory data queried by frontend/diagnostics
-  suggestion policy,
 - private declaration module metadata,
 - migration-state loading from
   `internal_docs/stdlib_retained_compiler_intrinsics.toml`,
@@ -630,10 +628,15 @@ The final manifest layer is `sifr_stdlib_manifest`. It owns:
   requirements to generated Cargo sysroot crate features,
 - sysroot inventory validation and deterministic stdlib bootstrap ordering.
 
-It does not own stdlib behavior, Rust implementation policy, fallback
-signatures, or compiler-native dispatch. Declaration source is the signature
-truth for migrated families. A closing surface must not keep a parallel
-intrinsic signature table in the manifest layer.
+It does not own stdlib behavior, Rust implementation policy, import suggestion
+policy, fallback signatures, or compiler-native dispatch. Declaration source is
+the signature truth for migrated families. A closing surface must not keep a
+parallel intrinsic signature table in the manifest layer.
+
+Legacy and bare stdlib import suggestion policy lives in `sifr_stdlib_imports`.
+It may query manifest inventory data, but the manifest does not own rendered
+diagnostic policy. Remaining fallback intrinsic signatures live in
+`sifr_retained_intrinsics` until native declarations replace them.
 
 IPC schema, frame encoding, transport, request tracking, and handshake metadata
 do not belong in the stdlib manifest. They live in the small `sifr_ipc` crate

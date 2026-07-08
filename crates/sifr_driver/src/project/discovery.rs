@@ -468,7 +468,7 @@ pub(super) fn diagnostic_with_source_range_help(
 }
 
 pub(super) fn bare_stdlib_source_diagnostic(
-    stdlib_match: &sifr_stdlib_manifest::BareStdlibMatch,
+    stdlib_match: &sifr_stdlib_imports::BareStdlibMatch,
     imported_names: &str,
     resolver: &ModuleResolver,
     display_path: &str,
@@ -512,7 +512,7 @@ pub(super) fn bare_stdlib_source_diagnostic(
 }
 
 pub(super) fn bare_stdlib_help(
-    stdlib_match: &sifr_stdlib_manifest::BareStdlibMatch,
+    stdlib_match: &sifr_stdlib_imports::BareStdlibMatch,
     imported_names: &str,
 ) -> String {
     let suggestion = if imported_names.is_empty() {
@@ -726,7 +726,7 @@ pub(crate) fn parse_import_closure_source_modules(
                 Err(error) if resolver.has_workspace() => {
                     if dependency.is_absolute_import {
                         if let Some(stdlib_match) =
-                            sifr_stdlib_manifest::is_bare_stdlib_tail(&dependency.module_name)
+                            sifr_stdlib_imports::is_bare_stdlib_tail(&dependency.module_name)
                         {
                             return Err(vec![bare_stdlib_source_diagnostic(
                                 &stdlib_match,

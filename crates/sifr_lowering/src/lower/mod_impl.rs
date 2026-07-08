@@ -275,7 +275,7 @@ pub(in crate::lower) fn lower_module_impl(
                 }
                 // Resolve intrinsic imports for stdlib .sifr files
                 if let Some(intrinsic_module) =
-                    sifr_stdlib_manifest::get_intrinsic_module(&module_name)
+                    sifr_retained_intrinsics::get_intrinsic_module(&module_name)
                 {
                     for name in &names {
                         let local = local_name_for(name);
@@ -313,7 +313,7 @@ pub(in crate::lower) fn lower_module_impl(
                     && !ctx.allow_http_transport_harness_imports
                 {
                     if let Some(legacy_module) =
-                        sifr_stdlib_manifest::unsupported_legacy_stdlib_module(&stdlib_module_key)
+                        sifr_stdlib_imports::unsupported_legacy_stdlib_module(&stdlib_module_key)
                     {
                         import_diagnostics::unsupported_legacy_stdlib_module(
                             &mut ctx,
@@ -541,7 +541,7 @@ pub(in crate::lower) fn lower_module_impl(
             if !has_local_module {
                 if is_absolute_import {
                     if let Some(stdlib_match) =
-                        sifr_stdlib_manifest::is_bare_stdlib_tail(&module_name)
+                        sifr_stdlib_imports::is_bare_stdlib_tail(&module_name)
                     {
                         import_diagnostics::bare_stdlib(
                             &mut ctx,
@@ -718,8 +718,7 @@ pub(in crate::lower) fn lower_module_impl(
         } else if let Stmt::Import(import_stmt) = stmt {
             for alias in &import_stmt.names {
                 let module_name = alias.name.to_string();
-                if let Some(stdlib_match) = sifr_stdlib_manifest::is_bare_stdlib_tail(&module_name)
-                {
+                if let Some(stdlib_match) = sifr_stdlib_imports::is_bare_stdlib_tail(&module_name) {
                     import_diagnostics::bare_stdlib(
                         &mut ctx,
                         &stdlib_match,

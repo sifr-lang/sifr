@@ -197,7 +197,7 @@ fn compile_stdlib_sources_with_sysroot(
                         &import.names,
                     );
                 } else if let Some(intrinsic_mod) =
-                    sifr_stdlib_manifest::get_intrinsic_module(&import.module)
+                    sifr_retained_intrinsics::get_intrinsic_module(&import.module)
                 {
                     for name in &import.names {
                         if let Some(ft) = intrinsic_mod.functions.get(name) {
@@ -545,7 +545,7 @@ fn re_export_intrinsic_fallbacks(
     import_module: &str,
     import_names: &[String],
 ) {
-    let Some(intrinsic_mod) = sifr_stdlib_manifest::get_intrinsic_module(import_module) else {
+    let Some(intrinsic_mod) = sifr_retained_intrinsics::get_intrinsic_module(import_module) else {
         return;
     };
     for name in import_names {
@@ -623,7 +623,7 @@ fn seed_http_transport_harness_aliases(
     stdlib_defs: &mut ExternalDefs,
     stdlib_code: &mut StdlibCode,
 ) {
-    let Some(intrinsic_http) = sifr_stdlib_manifest::get_intrinsic_module("_sifr.http") else {
+    let Some(intrinsic_http) = sifr_retained_intrinsics::get_intrinsic_module("_sifr.http") else {
         return;
     };
 
