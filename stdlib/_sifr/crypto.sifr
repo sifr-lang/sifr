@@ -1,6 +1,40 @@
 # Private _sifr.crypto native declaration module.
-# Random helpers still use compiler intrinsics during the incremental
-# stateless-leaf migration.
+
+@rust(sifr_stdlib.random.random_int)
+def random_int(min: int, max: int) -> int:
+    ...
+
+@rust(sifr_stdlib.random.random_float)
+def random_float() -> float:
+    ...
+
+@rust(sifr_stdlib.random.random_uniform)
+def random_uniform(min: float, max: float) -> float:
+    ...
+
+@rust(sifr_stdlib.random.random_randrange)
+def random_randrange(start: int, stop: int, step: int) -> Result[int, ValueError]:
+    ...
+
+@rust(sifr_stdlib.random.random_gauss)
+def random_gauss(mu: float, sigma: float) -> float:
+    ...
+
+@rust(sifr_stdlib.random.random_module_state_words)
+def random_module_state_words() -> list[int]:
+    ...
+
+@rust(sifr_stdlib.random.random_module_state_index)
+def random_module_state_index() -> int:
+    ...
+
+@rust(sifr_stdlib.random.random_module_state_gauss_next)
+def random_module_state_gauss_next() -> float | None:
+    ...
+
+@rust(sifr_stdlib.random.random_module_set_state)
+def random_module_set_state(words: list[int], index: int, gauss_next: float | None) -> Result[None, ValueError]:
+    ...
 
 @rust(sifr_stdlib.base64.base64_encode)
 def base64_encode(s: str) -> str:

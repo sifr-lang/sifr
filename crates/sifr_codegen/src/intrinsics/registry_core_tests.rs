@@ -569,78 +569,30 @@ pub(crate) fn lowers_time_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_random_intrinsics_via_registry() {
-    let rint =
-        lower_intrinsic("random_int", &["1".to_string(), "9".to_string()]).expect("random_int");
-    assert_eq!(
-        rint.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Rand)
-    );
-    assert!(render_expr(&rint.expr).contains("rand::RngExt::random_range"));
-
-    let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
-    assert_eq!(
-        rfloat.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Rand)
-    );
-    assert!(render_expr(&rfloat.expr).contains("rand::random::<f64>()"));
-
-    let choice = lower_intrinsic("random_choice", &["items".to_string()]).expect("random_choice");
-    assert!(render_expr(&choice.expr).contains("items.len()"));
-
-    let uniform = lower_intrinsic("random_uniform", &["0.0".to_string(), "1.0".to_string()])
-        .expect("random_uniform");
-    assert!(render_expr(&uniform.expr).contains("rand::random::<f64>()"));
-
-    let shuffle = lower_intrinsic("random_shuffle", &["vals".to_string()]).expect("random_shuffle");
-    assert!(render_expr(&shuffle.expr).contains("SliceRandom::shuffle"));
-
-    let sample = lower_intrinsic("random_sample", &["vals".to_string(), "3".to_string()])
-        .expect("random_sample");
-    assert!(render_expr(&sample.expr).contains("IndexedRandom::sample"));
-
-    let randrange = lower_intrinsic(
-        "random_randrange",
-        &["0".to_string(), "10".to_string(), "1".to_string()],
-    )
-    .expect("random_randrange");
-    assert!(render_expr(&randrange.expr).contains("randrange: step must not be zero"));
-
-    let gauss = lower_intrinsic("random_gauss", &["0.0".to_string(), "1.0".to_string()])
-        .expect("random_gauss");
-    assert!(gauss
-        .additional_required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::RandDistr));
-    assert!(render_expr(&gauss.expr).contains("rand_distr"));
-
-    let state_words =
-        lower_intrinsic("random_module_state_words", &[]).expect("random_module_state_words");
-    assert_eq!(state_words.required_feature, None);
-    assert!(render_expr(&state_words.expr).contains("__SIFR_RANDOM_MODULE_STATE"));
-    assert!(render_expr(&state_words.expr).contains(".words"));
-
-    let state_index =
-        lower_intrinsic("random_module_state_index", &[]).expect("random_module_state_index");
-    assert_eq!(state_index.required_feature, None);
-    assert!(render_expr(&state_index.expr).contains(".index"));
-
-    let state_gauss = lower_intrinsic("random_module_state_gauss_next", &[])
-        .expect("random_module_state_gauss_next");
-    assert_eq!(state_gauss.required_feature, None);
-    assert!(render_expr(&state_gauss.expr).contains(".gauss_next"));
-
-    let set_state = lower_intrinsic(
-        "random_module_set_state",
-        &[
-            "words".to_string(),
-            "index".to_string(),
-            "gauss".to_string(),
-        ],
-    )
-    .expect("random_module_set_state");
-    assert_eq!(set_state.required_feature, None);
-    assert!(render_expr(&set_state.expr).contains("length 624"));
-    assert!(render_expr(&set_state.expr).contains("random module state index"));
+pub(crate) fn random_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for (name, args) in [
+        ("random_int", &["1", "9"][..]),
+        ("random_float", &[][..]),
+        ("random_choice", &["items"][..]),
+        ("random_uniform", &["0.0", "1.0"][..]),
+        ("random_shuffle", &["vals"][..]),
+        ("random_sample", &["vals", "3"][..]),
+        ("random_randrange", &["0", "10", "1"][..]),
+        ("random_gauss", &["0.0", "1.0"][..]),
+        ("random_module_state_words", &[][..]),
+        ("random_module_state_index", &[][..]),
+        ("random_module_state_gauss_next", &[][..]),
+        ("random_module_set_state", &["words", "index", "gauss"][..]),
+    ] {
+        let args = args
+            .iter()
+            .map(|arg| (*arg).to_string())
+            .collect::<Vec<_>>();
+        assert!(
+            lower_intrinsic(name, &args).is_none(),
+            "{name} should lower through _sifr.crypto private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

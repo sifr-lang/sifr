@@ -26,7 +26,7 @@ mod unicode_core;
 mod url;
 
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
-use crypto_regex_uuid::{intrinsic_crypto, intrinsic_regex, intrinsic_uuid};
+use crypto_regex_uuid::{intrinsic_regex, intrinsic_uuid};
 use http::intrinsic_http;
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
@@ -84,7 +84,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.unicode" => Some(intrinsic_unicode()),
         "_sifr.i18n" => Some(intrinsic_i18n()),
         "_sifr.time" => Some(intrinsic_time()),
-        "_sifr.crypto" => Some(intrinsic_crypto()),
         "_sifr.regex" => Some(intrinsic_regex()),
         // Retained as a stdlib-lowering bootstrap fallback while these leaves
         // migrate to compiled private declarations.

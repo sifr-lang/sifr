@@ -45,6 +45,16 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     assert!(base64_toml.contains("features = [\"base64\", \"bytes\"]"));
     assert!(base64_toml.contains("base64 = \"0.22.1\""));
     assert!(!base64_toml.contains("bytes = \""));
+    let random_modules = normalize_dependency_set(vec!["sifr.random".to_string()].into_iter());
+    let random_toml = generate_cargo_toml(&random_modules, &required_crates, "sifr_output");
+    assert!(random_toml.contains("sifr_stdlib = { path = "));
+    assert!(random_toml.contains("features = [\"random\"]"));
+    let private_crypto_modules =
+        normalize_dependency_set(vec!["_sifr.crypto".to_string()].into_iter());
+    let private_crypto_toml =
+        generate_cargo_toml(&private_crypto_modules, &required_crates, "sifr_output");
+    assert!(private_crypto_toml.contains("sifr_stdlib = { path = "));
+    assert!(private_crypto_toml.contains("features = [\"random\", \"hash\", \"base64\"]"));
     let bytes_modules = normalize_dependency_set(vec!["sifr.bytes".to_string()].into_iter());
     let bytes_toml = generate_cargo_toml(&bytes_modules, &required_crates, "sifr_output");
     assert!(bytes_toml.contains("sifr_stdlib = { path = "));

@@ -196,29 +196,13 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.crypto::random"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after the migrated random registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/crypto.sifr"]
-certification_rows = ["opaque_resource_matrix"]
-reason = "Random module state and random distribution helpers remain compiler/runtime-owned until resource/state semantics are certified."
-registry_files = ["random.rs"]
-exact_intrinsics = [
-  "random_choice",
-  "random_float",
-  "random_gauss",
-  "random_int",
-  "random_module_set_state",
-  "random_module_state_gauss_next",
-  "random_module_state_index",
-  "random_module_state_words",
-  "random_randrange",
-  "random_sample",
-  "random_shuffle",
-  "random_uniform",
-]
+reason = "Random module state and distribution helpers now route through _sifr.crypto private Rust interop declarations and sifr_stdlib.random; this row remains only to record closure of the former compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.process"
@@ -595,5 +579,5 @@ owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
-reason = "Legacy generated preamble file contains mixed IOError, file-handle, and random module state glue pending final decomposition."
+reason = "Legacy generated preamble file contains mixed IOError and file-handle glue pending final decomposition."
 preamble_files = ["io_logging_random.rs"]

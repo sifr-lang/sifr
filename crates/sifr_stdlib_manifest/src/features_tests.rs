@@ -29,11 +29,23 @@ fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
         vec![
             deps[0].clone(),
             "rand = \"0.10.1\"".to_string(),
-            "rand_distr = \"0.6.0\"".to_string(),
             "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
             "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
         ]
     );
+}
+
+#[test]
+fn random_module_emits_only_sysroot_stdlib_dependency() {
+    let deps =
+        generated_cargo_dependencies(&HashSet::from(["sifr.random".to_string()]), &HashSet::new());
+
+    assert_eq!(deps.len(), 1);
+    assert!(deps[0].starts_with("sifr_stdlib = "));
+    assert!(deps[0].contains("features = [\"random\"]"));
+    assert!(!deps[0].contains("sifr_runtime"));
+    assert!(!deps.iter().any(|dep| dep.starts_with("rand = ")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("rand_distr = ")));
 }
 
 #[test]
