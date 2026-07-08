@@ -1,6 +1,7 @@
 use crate::HirExpr;
 use num_bigint::BigInt;
 use ruff_text_size::Ranged;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, UnaryOp};
 use sifr_type_system::Type;
 
@@ -92,7 +93,12 @@ fn lower_annotated_module_constant_expr(
     if let Some(folded_value) = folded_value {
         return Some(folded_value);
     }
-    is_supported_annotated_module_constant_expr(&hir_value).then_some(hir_value)
+    if is_supported_annotated_module_constant_expr(&hir_value) {
+        Some(hir_value)
+    } else {
+        reject_unsupported_private_declaration_constant(ctx, var_name, value_expr);
+        None
+    }
 }
 
 fn is_supported_annotated_module_constant_expr(value: &HirExpr) -> bool {
@@ -130,6 +136,23 @@ fn is_supported_annotated_module_constant_expr(value: &HirExpr) -> bool {
             .all(is_supported_annotated_module_constant_expr),
         _ => false,
     }
+}
+
+fn reject_unsupported_private_declaration_constant(
+    ctx: &mut LowerCtx,
+    var_name: &str,
+    value_expr: &Expr,
+) {
+    if !ctx.is_sysroot_private_declaration() {
+        return;
+    }
+    ctx.error_with_code_at(
+        DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
+        format!(
+            "unsupported private declaration constant '{var_name}': initializer must be a literal, supported constant expression, or constructor call"
+        ),
+        value_expr.range(),
+    );
 }
 
 fn collect_bare_constant(
@@ -283,15 +306,21 @@ mod tests {
     }
 
     #[test]
-    fn annotated_scalar_module_constant_name_alias_is_not_collected() {
-        let constants = lower_private_declaration_constants("pi: float = 3.0\nalias: float = pi\n");
+    fn private_declaration_scalar_module_constant_alias_is_diagnostic() {
+        let parsed =
+            parse_module("pi: float = 3.0\nalias: float = pi\n").expect("source should parse");
+        let errors = match lower_module_sysroot_private_declaration_with_externals(
+            parsed.suite(),
+            &ExternalDefs::default(),
+        ) {
+            Ok(_) => panic!("unsupported private declaration constant should fail"),
+            Err(errors) => errors,
+        };
 
-        assert!(constants
-            .iter()
-            .any(|(name, ty, _)| name == "pi" && ty == &Type::Float));
-        assert!(
-            constants.iter().all(|(name, _, _)| name != "alias"),
-            "non-integer scalar aliases should not lower to lowercase Rust identifiers"
-        );
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM)
+                && error.message
+                    == "unsupported private declaration constant 'alias': initializer must be a literal, supported constant expression, or constructor call"
+        }));
     }
 }
