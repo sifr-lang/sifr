@@ -889,8 +889,9 @@ resource migration cannot advance a resource-shaped surface ahead of the
 runtime evidence recorded by the Rust interop matrix.
 The stdlib native intrinsic allowlist guard is also part of core validation:
 it freezes every retained compiler intrinsic name, prefix dispatcher, registry
-file, and preamble file until that entry is closing, deleted, or explicitly kept
-as compiler-language glue.
+file, preamble file, retained direct dependency package, and direct
+`sifr_runtime::<root>` generated-code reference until that entry is closing,
+deleted, or explicitly kept as compiler-language glue.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
 compiler-owned sysroot trust policy. A canonical private `_sifr.*` declaration

@@ -37,6 +37,8 @@ ALLOWED_SURFACE_FIELDS = {
     "registry_files",
     "preamble_files",
     "exact_intrinsics",
+    "retained_direct_dependency_packages",
+    "direct_runtime_roots",
 }
 VALID_STATES = {"retained", "pilot", "closing", "retained-by-design"}
 ALLOWED_STATE_TRANSITIONS = {
@@ -128,6 +130,8 @@ def _validate(manifest: dict[str, Any]) -> list[str]:
             "registry_files",
             "preamble_files",
             "exact_intrinsics",
+            "retained_direct_dependency_packages",
+            "direct_runtime_roots",
         ):
             _optional_string_list(failures, surface, key, context)
 
@@ -142,7 +146,13 @@ def _validate(manifest: dict[str, Any]) -> list[str]:
 
         has_owned_surface = any(
             surface.get(key)
-            for key in ("registry_files", "preamble_files", "exact_intrinsics")
+            for key in (
+                "registry_files",
+                "preamble_files",
+                "exact_intrinsics",
+                "retained_direct_dependency_packages",
+                "direct_runtime_roots",
+            )
         )
         if not has_owned_surface:
             failures.append(f"{context}: must own registry_files, preamble_files, or exact_intrinsics")

@@ -330,6 +330,8 @@ certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
 reason = "Network handles and split stream lifecycle behavior remain resource/runtime-owned pending certification."
 registry_files = ["net.rs"]
 preamble_files = ["net_runtime.rs"]
+retained_direct_dependency_packages = ["tokio", "tracing"]
+direct_runtime_roots = ["sifr_runtime::net"]
 exact_intrinsics = [
   "net_connect_tcp",
   "net_listen_tcp",
@@ -365,6 +367,15 @@ certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
 reason = "TLS configuration, handshakes, stream handles, and certificate state remain resource/runtime-owned pending certification."
 registry_files = ["tls.rs"]
 preamble_files = ["tls_runtime.rs"]
+retained_direct_dependency_packages = [
+  "rustls",
+  "rustls-pemfile",
+  "rustls-platform-verifier",
+  "tokio",
+  "tokio-rustls",
+  "tracing",
+]
+direct_runtime_roots = ["sifr_runtime::tls"]
 exact_intrinsics = [
   "tls_accept",
   "tls_client_config_close",
@@ -436,6 +447,7 @@ certification_rows = [
 ]
 reason = "Python object handles, callback adapters, and runtime initialization remain behind Python resource/callback certification."
 registry_files = ["python.rs"]
+direct_runtime_roots = ["sifr_runtime::python"]
 exact_intrinsics = [
   "local_callback",
   "py_arrow_array",
@@ -550,8 +562,54 @@ state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-reason = "Additional feature planning is compiler-owned glue that selects retained runtime/sysroot dependencies for generated projects."
+reason = "Additional feature planning is compiler-owned glue that selects retained runtime/sysroot dependencies for generated projects and freezes the transitional direct dependency package namespace."
 registry_files = ["requirements.rs"]
+retained_direct_dependency_packages = [
+  "bigdecimal",
+  "blake2",
+  "bytes",
+  "chrono",
+  "flate2",
+  "h2",
+  "http",
+  "http-body",
+  "http-body-util",
+  "hyper",
+  "hyper-util",
+  "icu_collator",
+  "icu_datetime",
+  "icu_decimal",
+  "icu_locale",
+  "icu_plurals",
+  "md5",
+  "metrics",
+  "num-bigint",
+  "num-traits",
+  "percent-encoding",
+  "postcard",
+  "rand",
+  "rand_distr",
+  "rayon",
+  "regex",
+  "rust_decimal",
+  "rustls",
+  "rustls-pemfile",
+  "rustls-platform-verifier",
+  "serde",
+  "serde_json",
+  "sha1",
+  "sha2",
+  "tokio",
+  "tokio-rustls",
+  "tower-service",
+  "tracing",
+  "unicode-normalization",
+  "unicode-segmentation",
+  "unicode_names2",
+  "url",
+  "uuid",
+  "zip",
+]
 
 [[surface]]
 id = "shared-language-preamble"
@@ -561,6 +619,10 @@ issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 reason = "Generated Rust type conversion and error wrapper helpers are shared language/runtime glue."
 preamble_files = ["types_and_errors.rs"]
+direct_runtime_roots = [
+  "sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS",
+  "sifr_runtime::interop",
+]
 
 [[surface]]
 id = "mixed-io-logging-random-preamble"
