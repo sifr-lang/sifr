@@ -3187,6 +3187,8 @@ dependencies = [
  "sifr_ir",
  "sifr_lowering",
  "sifr_package",
+ "sifr_retained_intrinsics",
+ "sifr_stdlib_imports",
  "sifr_stdlib_manifest",
  "sifr_syntax",
  "sifr_sysroot",
@@ -3269,7 +3271,8 @@ dependencies = [
  "sifr_diagnostics",
  "sifr_ipc",
  "sifr_ir",
- "sifr_stdlib_manifest",
+ "sifr_retained_intrinsics",
+ "sifr_stdlib_imports",
  "sifr_type_system",
 ]
 
@@ -3299,6 +3302,13 @@ dependencies = [
  "sifr_diagnostics",
  "sifr_frontend",
  "toml",
+]
+
+[[package]]
+name = "sifr_retained_intrinsics"
+version = "0.0.0"
+dependencies = [
+ "sifr_type_system",
 ]
 
 [[package]]
@@ -3386,12 +3396,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_stdlib_imports"
+version = "0.0.0"
+dependencies = [
+ "sifr_stdlib_manifest",
+]
+
+[[package]]
 name = "sifr_stdlib_manifest"
 version = "0.0.0"
 dependencies = [
  "serde_json",
  "sifr_sysroot",
- "sifr_type_system",
 ]
 
 [[package]]

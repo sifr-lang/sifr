@@ -189,7 +189,7 @@ fn package_import_source_diagnostic(
     }
     if dependency.is_absolute_import {
         if let Some(stdlib_match) =
-            sifr_stdlib_manifest::is_bare_stdlib_tail(&dependency.written_module_name)
+            sifr_stdlib_imports::is_bare_stdlib_tail(&dependency.written_module_name)
         {
             return package_bare_stdlib_source_diagnostic(
                 &stdlib_match,
@@ -240,7 +240,7 @@ fn package_import_source_diagnostic(
 }
 
 fn package_bare_stdlib_source_diagnostic(
-    stdlib_match: &sifr_stdlib_manifest::BareStdlibMatch,
+    stdlib_match: &sifr_stdlib_imports::BareStdlibMatch,
     dependency: &PackageImportDependency,
     display_path: &str,
     source: &str,

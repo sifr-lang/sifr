@@ -79,6 +79,12 @@
       ]
     },
     {
+      "name": "sifr_retained_intrinsics",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_retained_intrinsics", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
       "name": "sifr_lint",
       "classification": "first_party_compiler",
       "targets": [{"name": "sifr_lint", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
@@ -171,6 +177,12 @@
         {"name": "sifr_sysroot", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
       ],
+      "features": []
+    },
+    {
+      "name": "sifr_stdlib_imports",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_stdlib_imports", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {

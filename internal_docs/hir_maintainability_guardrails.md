@@ -1,8 +1,9 @@
 # Lowering Maintainability Guardrails
 
 This document defines anti-regrowth guardrails for the producer-side lowering decomposition work.
-The stdlib host rules and intrinsic registry now live in `sifr_stdlib_manifest`; this
-guardrail is limited to lowering implementation boundaries.
+The stdlib manifest, import policy, and retained intrinsic signatures live in
+separate crates; this guardrail is limited to lowering implementation
+boundaries.
 
 ## File Boundaries
 
@@ -37,4 +38,4 @@ Use this checklist for every PR that changes lowering logic.
 - [ ] Unified file-size guardrail passes locally (`python3 scripts/check_file_size_guardrails.py`).
 - [ ] New lowering behavior includes at least one positive-path and one negative-path validation update.
 - [ ] Guardrail script still passes locally (`python3 scripts/check_hir_maintainability_guardrails.py`).
-- [ ] Stdlib signature, source inventory, or generated dependency policy changes stay in `sifr_stdlib_manifest` and pass dependency-direction guardrails.
+- [ ] Stdlib signature, import-policy, source-inventory, or generated dependency policy changes stay in their owner crates and pass dependency-direction guardrails.

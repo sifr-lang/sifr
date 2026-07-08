@@ -1,5 +1,5 @@
 [package]
-name = "sifr_stdlib_manifest"
+name = "sifr_stdlib_imports"
 version = "0.0.0"
 publish = false
 edition = { workspace = true }
@@ -7,10 +7,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
-sifr_sysroot = { workspace = true }
-
-[dev-dependencies]
-serde_json = { workspace = true }
+sifr_stdlib_manifest = { workspace = true }
 
 [lints]
 workspace = true

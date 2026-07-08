@@ -1,6 +1,6 @@
 use ruff_text_size::TextRange;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
-use sifr_stdlib_manifest::{BareStdlibMatch, LegacyStdlibModule};
+use sifr_stdlib_imports::{BareStdlibMatch, LegacyStdlibModule};
 use std::collections::BTreeMap;
 
 use super::LowerCtx;
