@@ -1,7 +1,7 @@
 #![cfg(unix)]
 #![allow(clippy::expect_used)]
 
-use sifr_stdlib_manifest::{
+use sifr_ipc::{
     read_frame, write_frame, IpcConnectionConfig, IpcConnectionState, IpcEnvelope,
     IpcMalformedKind, IpcShutdownMode, IpcTerminationReason, IpcWireSchema,
     IPC_DEFAULT_MAX_FRAME_BYTES,
@@ -39,7 +39,7 @@ impl WorkerProcess {
         let repo_root = manifest_dir
             .parent()
             .and_then(Path::parent)
-            .expect("stdlib model crate lives under crates/sifr_stdlib_manifest");
+            .expect("ipc crate lives under crates/sifr_ipc");
         let target_dir = repo_root
             .join("target")
             .join("ipc_process_pipe_fixture_worker");
@@ -54,7 +54,7 @@ impl WorkerProcess {
                 .arg("--features")
                 .arg("__test_fixture")
                 .arg("--bin")
-                .arg("sifr-stdlib-ipc-pipe-fixture-worker")
+                .arg("sifr-ipc-pipe-fixture-worker")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
@@ -230,10 +230,7 @@ fn unix_child_process_pipes_report_backpressure_full() {
     connection
         .apply_established_frame(&malformed)
         .expect("parent closes on backpressure protocol error");
-    assert_eq!(
-        connection.phase(),
-        sifr_stdlib_manifest::IpcConnectionPhase::Closed
-    );
+    assert_eq!(connection.phase(), sifr_ipc::IpcConnectionPhase::Closed);
 
     worker.finish();
 }
@@ -264,10 +261,7 @@ fn unix_child_process_pipes_report_unsupported_payload() {
     connection
         .apply_established_frame(&unsupported)
         .expect("parent closes on unsupported payload");
-    assert_eq!(
-        connection.phase(),
-        sifr_stdlib_manifest::IpcConnectionPhase::Closed
-    );
+    assert_eq!(connection.phase(), sifr_ipc::IpcConnectionPhase::Closed);
 
     worker.finish();
 }
@@ -298,10 +292,7 @@ fn unix_child_process_pipes_report_malformed_frame() {
     connection
         .apply_established_frame(&malformed)
         .expect("parent closes on protocol error frame");
-    assert_eq!(
-        connection.phase(),
-        sifr_stdlib_manifest::IpcConnectionPhase::Closed
-    );
+    assert_eq!(connection.phase(), sifr_ipc::IpcConnectionPhase::Closed);
 
     let output = worker
         .child

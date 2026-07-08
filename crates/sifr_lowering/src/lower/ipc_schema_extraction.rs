@@ -1,5 +1,5 @@
 use super::ipc_payload_calls;
-use sifr_stdlib_manifest::{IpcSchemaField, IpcSchemaType, IpcSchemaVariant};
+use sifr_ipc::{IpcSchemaField, IpcSchemaType, IpcSchemaVariant};
 use sifr_type_system::Type;
 
 pub(in crate::lower) fn extract_ipc_schema_type(ty: &Type) -> IpcSchemaType {
@@ -107,7 +107,7 @@ fn unsupported_schema_type(ty: &Type) -> IpcSchemaType {
 #[cfg(test)]
 mod tests {
     use super::extract_ipc_schema_type;
-    use sifr_stdlib_manifest::{
+    use sifr_ipc::{
         canonical_schema_descriptor, IpcSchemaDescriptor, IpcSchemaType, IpcWireSchema,
     };
     use sifr_type_system::{FunctionType, Type};
@@ -169,7 +169,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn generated_schema_drives_unix_fixture_worker_bootstrap_and_round_trip() {
-        use sifr_stdlib_manifest::{
+        use sifr_ipc::{
             read_frame, schema_hash_hex_v1, schema_hash_v1, validate_ipc_payload_type, write_frame,
             IpcConnectionConfig, IpcConnectionState, IpcEnvelope, IpcShutdownMode,
             IpcTerminationReason, IPC_DEFAULT_MAX_FRAME_BYTES,
@@ -190,10 +190,7 @@ mod tests {
                     .parent()
                     .and_then(Path::parent)
                     .expect("lowering crate lives under crates/sifr_lowering");
-                let stdlib_manifest = repo_root
-                    .join("crates")
-                    .join("sifr_stdlib_manifest")
-                    .join("Cargo.toml");
+                let ipc_manifest = repo_root.join("crates").join("sifr_ipc").join("Cargo.toml");
                 let target_dir = repo_root
                     .join("target")
                     .join("ipc_generated_worker_boundary_fixture");
@@ -202,13 +199,13 @@ mod tests {
                         .arg("run")
                         .arg("--quiet")
                         .arg("--manifest-path")
-                        .arg(stdlib_manifest)
+                        .arg(ipc_manifest)
                         .arg("--target-dir")
                         .arg(target_dir)
                         .arg("--features")
                         .arg("__test_fixture")
                         .arg("--bin")
-                        .arg("sifr-stdlib-ipc-pipe-fixture-worker")
+                        .arg("sifr-ipc-pipe-fixture-worker")
                         .env("SIFR_IPC_FIXTURE_SCHEMA_NAME", schema_name)
                         .env("SIFR_IPC_FIXTURE_SCHEMA_HASH", schema_hash)
                         .stdin(Stdio::piped())

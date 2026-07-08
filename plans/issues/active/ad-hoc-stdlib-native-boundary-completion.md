@@ -150,8 +150,7 @@ Architecture and planning:
 Compiler manifest, sysroot, and dependency planning:
 
 - `crates/sifr_stdlib_manifest/**`
-- target `crates/sifr_stdlib_manifest/**`
-- target `crates/sifr_ipc/**`
+- `crates/sifr_ipc/**`
 - `crates/sifr_driver/src/stdlib/**`
 - `crates/sifr_driver/src/build/**`
 - `crates/sifr_codegen/src/rust_interop_plan.rs`
@@ -227,8 +226,10 @@ Tasks:
 M0 may land as ordered sub-PRs, but M1 must not start until the whole M0
 milestone is merged:
 
-- M0a: create `sifr_stdlib_manifest` and move inventory/planning/import policy.
-- M0b: create `sifr_ipc` and move shared IPC protocol code.
+- M0a: create `sifr_stdlib_manifest` and move inventory/planning/import policy
+  (merged in PR #2820, merge commit
+  `8f1f44d86e423958857fde63cc1153cdc3990e84`).
+- M0b: create `sifr_ipc` and move shared IPC protocol code (PR #2821).
 - M0c: move import suggestion policy and retained signature builders to their
   final temporary compiler homes.
 - M0d: move the HTTP harness to verification, prove runtime parity, account for
