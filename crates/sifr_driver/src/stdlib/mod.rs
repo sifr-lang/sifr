@@ -1,10 +1,11 @@
 mod bootstrap;
 mod cache;
 mod interop;
-mod intrinsics;
 mod re_exports;
 #[cfg(test)]
 mod stateless_collections_codegen_tests;
+#[cfg(test)]
+mod stateless_math_codegen_tests;
 #[cfg(test)]
 mod stateless_private_adapter_policy_tests;
 #[cfg(test)]

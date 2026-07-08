@@ -5,32 +5,6 @@ impl RustEmitter {
             return crate::RustExpr::Ident(name);
         }
 
-        if self.is_stdlib_constant(&name) {
-            return match name.as_str() {
-                "pi" => crate::RustExpr::Path(vec![
-                    "std".to_string(),
-                    "f64".to_string(),
-                    "consts".to_string(),
-                    "PI".to_string(),
-                ]),
-                "e" => crate::RustExpr::Path(vec![
-                    "std".to_string(),
-                    "f64".to_string(),
-                    "consts".to_string(),
-                    "E".to_string(),
-                ]),
-                "tau" => crate::RustExpr::Path(vec![
-                    "std".to_string(),
-                    "f64".to_string(),
-                    "consts".to_string(),
-                    "TAU".to_string(),
-                ]),
-                "inf" => crate::RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()]),
-                "nan" => crate::RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
-                _ => crate::RustExpr::Ident(name),
-            };
-        }
-
         if let Some((_ty, rust_name)) = self.module_constants.get(&name) {
             if let Some(mapped) = parse_module_constant_expr(rust_name) {
                 return mapped;

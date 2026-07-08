@@ -96,6 +96,7 @@ mod own_mut_param_tests;
 mod own_mut_semantics_tests;
 mod ownership_diagnostics;
 mod parallel_calls;
+mod private_stdlib_imports;
 mod protocol_diagnostics;
 #[cfg(test)]
 mod python_async_tests;

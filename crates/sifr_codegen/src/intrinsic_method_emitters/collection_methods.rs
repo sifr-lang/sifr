@@ -46,12 +46,6 @@ impl RustEmitter {
         expr.ty().clone()
     }
 
-    /// Check if a name is a stdlib constant.
-    pub(crate) fn is_stdlib_constant(&self, name: &str) -> bool {
-        matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
-            && self.intrinsic_functions.contains(name)
-    }
-
     pub(crate) fn try_lower_registry_method_call_expr(
         &mut self,
         object: &HirExpr,

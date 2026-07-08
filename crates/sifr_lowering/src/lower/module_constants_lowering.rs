@@ -79,7 +79,57 @@ fn lower_annotated_module_constant_expr(
     }
 
     let hir_value = lower_expr(value_expr, ctx)?;
-    matches!(hir_value, HirExpr::ConstructorCall { .. }).then_some(hir_value)
+    let error_count_before_initializer = ctx.error_count();
+    let folded_value = fixed_width_fitting::validate_annotated_constant_initializer(
+        ctx,
+        ty,
+        &hir_value,
+        value_expr.range(),
+    );
+    if ctx.error_count() != error_count_before_initializer {
+        return None;
+    }
+    if let Some(folded_value) = folded_value {
+        return Some(folded_value);
+    }
+    is_supported_annotated_module_constant_expr(&hir_value).then_some(hir_value)
+}
+
+fn is_supported_annotated_module_constant_expr(value: &HirExpr) -> bool {
+    match value {
+        HirExpr::IntLiteral(_)
+        | HirExpr::LargeIntLiteral(_)
+        | HirExpr::FloatLiteral(_)
+        | HirExpr::StringLiteral(_)
+        | HirExpr::BoolLiteral(_)
+        | HirExpr::NoneLiteral
+        | HirExpr::ConstructorCall { .. } => true,
+        HirExpr::UnaryOp { op, operand, .. } => {
+            matches!(op.as_str(), "+" | "-" | "not")
+                && is_supported_annotated_module_constant_expr(operand)
+        }
+        HirExpr::BinOp {
+            left, op, right, ..
+        } => {
+            matches!(
+                op.as_str(),
+                "+" | "-" | "*" | "/" | "//" | "%" | "**" | "&" | "|" | "^" | "<<" | ">>"
+            ) && is_supported_annotated_module_constant_expr(left)
+                && is_supported_annotated_module_constant_expr(right)
+        }
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            is_supported_annotated_module_constant_expr(left)
+                && comparators
+                    .iter()
+                    .all(is_supported_annotated_module_constant_expr)
+        }
+        HirExpr::BoolOp { values, .. } => values
+            .iter()
+            .all(is_supported_annotated_module_constant_expr),
+        _ => false,
+    }
 }
 
 fn collect_bare_constant(
@@ -178,4 +228,70 @@ fn negate_module_integer_const_expr(expr: HirExpr) -> Option<HirExpr> {
             ty: Type::Int,
         })
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{lower_module_sysroot_private_declaration_with_externals, ExternalDefs};
+    use sifr_diagnostics::DiagnosticCode;
+    use sifr_python_parser::parse_module;
+
+    fn lower_private_declaration_constants(source: &str) -> Vec<(String, Type, HirExpr)> {
+        let parsed = parse_module(source).expect("source should parse");
+        lower_module_sysroot_private_declaration_with_externals(
+            parsed.suite(),
+            &ExternalDefs::default(),
+        )
+        .expect("private declaration should lower")
+        .module
+        .constants
+    }
+
+    #[test]
+    fn private_declarations_collect_annotated_scalar_module_constants() {
+        let constants = lower_private_declaration_constants(
+            "pi: float = 3.141592653589793\ninf: float = 1.0 / 0.0\nflag: bool = True\n",
+        );
+
+        assert!(constants.iter().any(|(name, ty, value)| name == "pi"
+            && ty == &Type::Float
+            && matches!(value, HirExpr::FloatLiteral(_))));
+        assert!(constants.iter().any(|(name, ty, value)| name == "inf"
+            && ty == &Type::Float
+            && matches!(value, HirExpr::BinOp { .. })));
+        assert!(constants.iter().any(|(name, ty, value)| name == "flag"
+            && ty == &Type::Bool
+            && matches!(value, HirExpr::BoolLiteral(true))));
+    }
+
+    #[test]
+    fn annotated_scalar_module_constant_type_mismatch_is_diagnostic() {
+        let parsed = parse_module("bad: float = \"not float\"\n").expect("source should parse");
+        let errors = match lower_module_sysroot_private_declaration_with_externals(
+            parsed.suite(),
+            &ExternalDefs::default(),
+        ) {
+            Ok(_) => panic!("mismatched constant should fail"),
+            Err(errors) => errors,
+        };
+
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "type mismatch: expected 'float', got 'str'"
+        }));
+    }
+
+    #[test]
+    fn annotated_scalar_module_constant_name_alias_is_not_collected() {
+        let constants = lower_private_declaration_constants("pi: float = 3.0\nalias: float = pi\n");
+
+        assert!(constants
+            .iter()
+            .any(|(name, ty, _)| name == "pi" && ty == &Type::Float));
+        assert!(
+            constants.iter().all(|(name, _, _)| name != "alias"),
+            "non-integer scalar aliases should not lower to lowercase Rust identifiers"
+        );
+    }
 }

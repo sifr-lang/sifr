@@ -278,25 +278,6 @@ fn test_expr_to_string_leaf_rendering() {
 }
 
 #[test]
-fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
-    let mut emitter = RustEmitter::new();
-    emitter.intrinsic_functions.insert("pi".to_string());
-    let expr = HirExpr::BinOp {
-        left: Box::new(HirExpr::Name {
-            name: "pi".to_string(),
-            ty: Type::Float,
-        }),
-        op: "+".to_string(),
-        right: Box::new(HirExpr::FloatLiteral(1.0)),
-        ty: Type::Float,
-    };
-
-    let code = render_strict_lowered_expr(&mut emitter, &expr);
-    assert!(code.contains("std::f64::consts::PI"));
-    assert!(!code.contains("pi +"));
-}
-
-#[test]
 fn test_render_expr_lowering_rewrites_module_constant_ident() {
     let mut emitter = RustEmitter::new();
     emitter
@@ -314,6 +295,28 @@ fn test_render_expr_lowering_rewrites_module_constant_ident() {
 
     let code = render_strict_lowered_expr(&mut emitter, &expr);
     assert!(code.contains("LIMIT +"));
+}
+
+#[test]
+fn test_render_expr_lowering_uses_module_constant_for_stdlib_named_constant() {
+    let mut emitter = RustEmitter::new();
+    emitter.intrinsic_functions.insert("pi".to_string());
+    emitter
+        .module_constants
+        .insert("pi".to_string(), (Type::Float, "PI".to_string()));
+    let expr = HirExpr::BinOp {
+        left: Box::new(HirExpr::Name {
+            name: "pi".to_string(),
+            ty: Type::Float,
+        }),
+        op: "+".to_string(),
+        right: Box::new(HirExpr::FloatLiteral(1.0)),
+        ty: Type::Float,
+    };
+
+    let code = render_strict_lowered_expr(&mut emitter, &expr);
+    assert!(code.contains("PI +"));
+    assert!(!code.contains("std::f64::consts::PI"));
 }
 
 #[test]
@@ -400,11 +403,16 @@ fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let result = generate_rust_with_metadata(&module);
-    assert!(result
-        .rust_source
-        .contains("let x: f64 = std::f64::consts::PI;"));
+    let mut stdlib_code = StdlibCode::default();
+    stdlib_code.module_constants.insert(
+        "sifr.math".to_string(),
+        std::collections::HashMap::from([("pi".to_string(), (Type::Float, "PI".to_string()))]),
+    );
+
+    let result = generate_rust_with_stdlib_for_module(&module, &stdlib_code, None);
+    assert!(result.rust_source.contains("let x: f64 = PI;"));
     assert!(!result.rust_source.contains("let x: f64 = pi;"));
+    assert!(!result.rust_source.contains("std::f64::consts::PI"));
     assert!(result.lowering_stats.stmt_structured >= 1);
 }
 

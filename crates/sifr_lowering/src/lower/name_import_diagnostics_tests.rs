@@ -8,6 +8,7 @@ use crate::{
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_python_parser::parse_module;
+use sifr_type_system::Type;
 
 fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
     let parsed = parse_module(source).expect("parse failed");
@@ -120,6 +121,19 @@ fn forbidden_intrinsic_import_has_import_code() {
 }
 
 #[test]
+fn user_source_cannot_import_compiled_private_constant() {
+    let source = "from _sifr.math import pi\n\ndef main():\n    pass\n";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "cannot import from '_sifr.math' — private sysroot declarations can only be imported by public sysroot stdlib source"
+            && error.code == Some(DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC)
+            && error.primary_range == Some(range_for(source, "from _sifr.math import pi"))
+    }));
+}
+
+#[test]
 fn public_sysroot_stdlib_source_can_import_private_declarations() {
     let source = "from _sifr.io import read_text\n\ndef main():\n    pass\n";
     let parsed = parse_module(source).expect("parse failed");
@@ -132,6 +146,74 @@ fn public_sysroot_stdlib_source_can_import_private_declarations() {
         .imports
         .iter()
         .any(|import| import.module == "_sifr.io" && import.names == ["read_text".to_string()]));
+}
+
+#[test]
+fn public_sysroot_stdlib_source_resolves_compiled_private_constants() {
+    let source = "from _sifr.math import pi\n\ndef main() -> float:\n    return pi\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.constants.insert(
+        "_sifr.math".to_string(),
+        HashMap::from([("pi".to_string(), Type::Float)]),
+    );
+
+    let result = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
+        .expect("public stdlib source should import compiled private constants");
+
+    assert!(result
+        .module
+        .imports
+        .iter()
+        .any(|import| import.module == "_sifr.math" && import.names == ["pi".to_string()]));
+}
+
+#[test]
+fn public_sysroot_stdlib_source_falls_back_per_private_import_name() {
+    let source =
+        "from _sifr.bytes import bytes_to_hex_strict\n\ndef main(data: bytes) -> str:\n    return bytes_to_hex_strict(data)\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.constants.insert(
+        "_sifr.bytes".to_string(),
+        HashMap::from([("__compiled_marker".to_string(), Type::Bool)]),
+    );
+
+    let result = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
+        .expect("public stdlib source should fall back to retained private names");
+
+    assert!(result
+        .module
+        .imports
+        .iter()
+        .any(|import| import.module == "_sifr.bytes"
+            && import.names == ["bytes_to_hex_strict".to_string()]));
+}
+
+#[test]
+fn public_sysroot_stdlib_source_resolves_compiled_private_classes() {
+    let source = "from _sifr.hidden import PrivateThing\n\ndef make() -> PrivateThing:\n    return PrivateThing(1)\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "_sifr.hidden".to_string(),
+        HashMap::from([(
+            "PrivateThing".to_string(),
+            Type::Class {
+                name: "PrivateThing".to_string(),
+                fields: vec![("value".to_string(), Type::Int)],
+                methods: Vec::new(),
+                parent_class: None,
+            },
+        )]),
+    );
+
+    let result = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
+        .expect("public stdlib source should import compiled private classes");
+
+    assert!(result.module.imports.iter().any(|import| {
+        import.module == "_sifr.hidden" && import.names == ["PrivateThing".to_string()]
+    }));
 }
 
 #[test]
