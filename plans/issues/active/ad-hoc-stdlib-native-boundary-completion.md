@@ -229,7 +229,8 @@ milestone is merged:
 - M0a: create `sifr_stdlib_manifest` and move inventory/planning/import policy
   (merged in PR #2820, merge commit
   `8f1f44d86e423958857fde63cc1153cdc3990e84`).
-- M0b: create `sifr_ipc` and move shared IPC protocol code (PR #2821).
+- M0b: create `sifr_ipc` and move shared IPC protocol code (merged in PR
+  #2821, merge commit `f82cc646f64a69f8e6c10ed552e34a81e5b2d203`).
 - M0c: move import suggestion policy and retained signature builders to their
   final temporary compiler homes.
 - M0d: move the HTTP harness to verification, prove runtime parity, account for
