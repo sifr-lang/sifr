@@ -411,6 +411,46 @@ class FileHandle:\n\
     }
 
     #[test]
+    fn sysroot_private_interop_rejects_self_method_without_opaque_class() {
+        let root = TempSysroot::new("self_method_without_opaque");
+        root.write_private(
+            "_sifr.io",
+            "class FileHandle:\n\
+\n\
+    @rust(Self.close, panic=trusted_no_panic)\n\
+    def close(self) -> None:\n\
+        ...\n",
+        );
+        let stdlib = stdlib_interop(
+            &root,
+            method_declaration(
+                "_sifr.io",
+                "FileHandle",
+                "close",
+                "Self.close",
+                vec![symbol_argument("panic", "trusted_no_panic")],
+            ),
+        );
+
+        let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &stdlib);
+        let diagnostics = match apply_package_rust_interop_metadata(generated, context) {
+            Ok(_) => panic!("Self root should require an opaque class"),
+            Err(diagnostics) => diagnostics,
+        };
+
+        assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
+        assert!(!diagnostics[0].message.contains("canonical sysroot crate"));
+        assert!(diagnostics[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("@rust.opaque")));
+        assert_eq!(
+            diagnostics[0].spans[0].file.as_deref(),
+            Some(root.private_path("_sifr.io").to_string_lossy().as_ref())
+        );
+    }
+
+    #[test]
     fn sysroot_private_opaque_interop_rejects_non_sysroot_rust_type() {
         let root = TempSysroot::new("opaque_reject_non_sysroot_type");
         root.write_private(
