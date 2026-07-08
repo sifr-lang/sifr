@@ -596,6 +596,36 @@ fn random_helpers_and_module_state_round_trip_without_panicking() {
     .is_err());
 }
 
+#[cfg(feature = "time")]
+#[test]
+fn time_leaf_formats_parses_and_reports_bounded_clock_values() {
+    let before = sifr_stdlib::time::time_now();
+    let after = sifr_stdlib::time::perf_counter();
+    assert!(before.is_finite());
+    assert!(after.is_finite());
+    assert!(after + 5.0 >= before);
+    assert_eq!(
+        sifr_stdlib::time::time_format(0.0, "%Y-%m-%d %H:%M:%S"),
+        "1970-01-01 00:00:00"
+    );
+    assert_eq!(sifr_stdlib::time::gmtime(0.0), "1970-01-01T00:00:00");
+    assert!(sifr_stdlib::time::localtime(0.0).len() >= 19);
+    assert_eq!(
+        sifr_stdlib::time::strptime("2024-02-29 01:02:03", "%Y-%m-%d %H:%M:%S")
+            .expect("valid leap day"),
+        "2024-02-29T01:02:03"
+    );
+    let parts = sifr_stdlib::time::time_strptime("2024-02-29 01:02:03", "%Y-%m-%d %H:%M:%S")
+        .expect("valid struct-time parts")
+        .into_iter()
+        .map(|part| part.to_i64_saturating())
+        .collect::<Vec<_>>();
+    assert_eq!(parts, vec![2024, 2, 29, 1, 2, 3, 3, 60]);
+    assert_eq!(sifr_stdlib::time::time_gmtime().len(), 8);
+    assert_eq!(sifr_stdlib::time::time_localtime().len(), 8);
+    assert_eq!(sifr_stdlib::time::feature_name(), "time");
+}
+
 #[cfg(all(
     feature = "base64",
     feature = "calendar",
@@ -612,6 +642,7 @@ fn random_helpers_and_module_state_round_trip_without_panicking() {
     feature = "random",
     feature = "regex",
     feature = "signals",
+    feature = "time",
     feature = "tls",
     feature = "toml",
     feature = "url",
@@ -636,6 +667,7 @@ fn marker_modules_report_leaf_names() {
         sifr_stdlib::random::feature_name(),
         sifr_stdlib::regex::feature_name(),
         sifr_stdlib::signals::feature_name(),
+        sifr_stdlib::time::feature_name(),
         sifr_stdlib::tls::feature_name(),
         sifr_stdlib::toml::feature_name(),
         sifr_stdlib::url::feature_name(),

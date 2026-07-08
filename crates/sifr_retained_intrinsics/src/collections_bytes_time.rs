@@ -276,61 +276,16 @@ pub(super) fn intrinsic_bytes() -> IntrinsicModule {
 pub(super) fn intrinsic_time() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // time_now() -> float (epoch seconds)
-    functions.insert(
-        "time_now".to_string(),
-        FunctionType::all_borrow(vec![], Type::Float),
-    );
-
     // sleep(seconds: float) -> None
     functions.insert(
         "sleep".to_string(),
         FunctionType::all_borrow(vec![("seconds".to_string(), Type::Float)], Type::None),
     );
 
-    // time_format(epoch: float, fmt: str) -> str
-    functions.insert(
-        "time_format".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("epoch".to_string(), Type::Float),
-                ("fmt".to_string(), Type::Str),
-            ],
-            Type::Str,
-        ),
-    );
-
-    // perf_counter() -> float (high-resolution monotonic clock for benchmarking)
-    functions.insert(
-        "perf_counter".to_string(),
-        FunctionType::all_borrow(vec![], Type::Float),
-    );
-
     // monotonic() -> float (guaranteed non-decreasing clock for timeouts)
     functions.insert(
         "monotonic".to_string(),
         FunctionType::all_borrow(vec![], Type::Float),
-    );
-
-    // strptime(s: str, fmt: str) -> Result[str, ValueError] (parse time string, return ISO datetime)
-    functions.insert(
-        "strptime".to_string(),
-        FunctionType::all_borrow(
-            vec![("s".to_string(), Type::Str), ("fmt".to_string(), Type::Str)],
-            result_ty(Type::Str, "ValueError"),
-        ),
-    );
-
-    // gmtime(epoch: float) -> str (UTC time as ISO string)
-    functions.insert(
-        "gmtime".to_string(),
-        FunctionType::all_borrow(vec![("epoch".to_string(), Type::Float)], Type::Str),
-    );
-
-    // localtime(epoch: float) -> str (local time as ISO string)
-    functions.insert(
-        "localtime".to_string(),
-        FunctionType::all_borrow(vec![("epoch".to_string(), Type::Float)], Type::Str),
     );
 
     IntrinsicModule {

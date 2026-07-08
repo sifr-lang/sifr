@@ -175,23 +175,11 @@ evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
 declaration_files = ["stdlib/_sifr/time.sifr"]
 certification_rows = ["async_runtime_reqwest"]
-reason = "Clock, sleep, and struct_time compatibility glue remains runtime-sensitive until async/runtime certification closes."
+reason = "Sleep and monotonic clock semantics remain runtime-sensitive until async/runtime certification closes."
 registry_files = ["time.rs"]
 exact_intrinsics = [
-  "_gmtime_intrinsic",
-  "_localtime_intrinsic",
-  "_strptime_intrinsic",
-  "gmtime",
-  "localtime",
   "monotonic",
-  "perf_counter",
   "sleep",
-  "strptime",
-  "time_format",
-  "time_gmtime",
-  "time_localtime",
-  "time_now",
-  "time_strptime",
 ]
 
 [[surface]]

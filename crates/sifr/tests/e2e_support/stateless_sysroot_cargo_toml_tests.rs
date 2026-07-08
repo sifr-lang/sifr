@@ -49,6 +49,15 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     let random_toml = generate_cargo_toml(&random_modules, &required_crates, "sifr_output");
     assert!(random_toml.contains("sifr_stdlib = { path = "));
     assert!(random_toml.contains("features = [\"random\"]"));
+    let logging_modules = normalize_dependency_set(vec!["sifr.logging".to_string()].into_iter());
+    let logging_toml = generate_cargo_toml(&logging_modules, &required_crates, "sifr_output");
+    assert!(logging_toml.contains("sifr_stdlib = { path = "));
+    assert!(logging_toml.contains("features = [\"logging\"]"));
+    let time_modules = normalize_dependency_set(vec!["sifr.time".to_string()].into_iter());
+    let time_toml = generate_cargo_toml(&time_modules, &required_crates, "sifr_output");
+    assert!(time_toml.contains("sifr_stdlib = { path = "));
+    assert!(time_toml.contains("features = [\"time\"]"));
+    assert!(!time_toml.contains("chrono = "));
     let private_crypto_modules =
         normalize_dependency_set(vec!["_sifr.crypto".to_string()].into_iter());
     let private_crypto_toml =

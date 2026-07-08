@@ -16,6 +16,8 @@ mod stateless_math_codegen_tests;
 mod stateless_private_adapter_policy_tests;
 #[cfg(test)]
 mod stateless_private_codegen_tests;
+#[cfg(test)]
+mod stateless_time_codegen_tests;
 mod tooling;
 mod types;
 

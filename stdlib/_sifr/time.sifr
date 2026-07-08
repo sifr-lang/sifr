@@ -1,2 +1,49 @@
 # Private _sifr.time native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.time.time_now)
+def time_now() -> float:
+    ...
+
+@rust(sifr_stdlib.time.time_format)
+def time_format(epoch: float, fmt: str) -> str:
+    ...
+
+@rust(sifr_stdlib.time.perf_counter)
+def perf_counter() -> float:
+    ...
+
+@rust(sifr_stdlib.time.strptime)
+def strptime(s: str, fmt: str) -> Result[str, ValueError]:
+    ...
+
+@rust(sifr_stdlib.time.strptime)
+def _strptime_intrinsic(s: str, fmt: str) -> Result[str, ValueError]:
+    ...
+
+@rust(sifr_stdlib.time.gmtime)
+def gmtime(epoch: float) -> str:
+    ...
+
+@rust(sifr_stdlib.time.gmtime)
+def _gmtime_intrinsic(epoch: float) -> str:
+    ...
+
+@rust(sifr_stdlib.time.localtime)
+def localtime(epoch: float) -> str:
+    ...
+
+@rust(sifr_stdlib.time.localtime)
+def _localtime_intrinsic(epoch: float) -> str:
+    ...
+
+@rust(sifr_stdlib.time.time_strptime)
+def time_strptime(s: str, fmt: str) -> Result[list[int], ValueError]:
+    ...
+
+@rust(sifr_stdlib.time.time_gmtime)
+def time_gmtime() -> list[int]:
+    ...
+
+@rust(sifr_stdlib.time.time_localtime)
+def time_localtime() -> list[int]:
+    ...

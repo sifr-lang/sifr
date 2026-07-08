@@ -1,8 +1,6 @@
 # sifr.time — Time operations
 from _sifr.time import time_now, sleep, time_format, perf_counter, monotonic
-from _sifr.time import strptime as _strptime_intrinsic
-from _sifr.time import gmtime as _gmtime_intrinsic
-from _sifr.time import localtime as _localtime_intrinsic
+from _sifr.time import _strptime_intrinsic, _gmtime_intrinsic, _localtime_intrinsic
 
 # Stable timezone constants (no timezone mutation surface in this implementation).
 TIMEZONE: int = 0
