@@ -236,8 +236,9 @@ milestone is merged:
   `c0828de536d9fe178a0f573389fcccbd6d62635e`).
 - M0d: move the HTTP harness to verification, prove runtime parity, account for
   retired codegen/bootstrap-path coverage, and delete raw stdlib module
-  injection (PR #2825; local `create-pr` validation passed with no advisories;
-  reviewer pass 2 READY).
+  injection (merged in PR #2825, merge commit
+  `5e05898410d0c69c18f7a44a98dccd341f05a3ea`; local `create-pr`
+  validation passed with no advisories; reviewer pass 2 READY).
 - M0e: update architecture docs and implement source-origin privacy.
 
 Acceptance:
