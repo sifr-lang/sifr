@@ -601,7 +601,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
     match module_name {
         "sifr.collections" | "_sifr.collections" => &[],
         "_sifr.fs" => &[StdlibFeature::Fs],
-        "sifr.time" | "_sifr.time" => &[StdlibFeature::Chrono],
+        "sifr.time" | "_sifr.time" => &[],
         "sifr.random" | "_sifr.crypto" => &[],
         "sifr.uuid" | "_sifr.uuid" => &[],
         "sifr.re" | "_sifr.regex" => &[],

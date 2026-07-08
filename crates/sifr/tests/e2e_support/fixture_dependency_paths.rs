@@ -53,6 +53,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.platform", "_sifr.platform"]) {
         features.push("platform");
     }
+    if has_module(&["sifr.logging", "_sifr.logging"]) {
+        features.push("logging");
+    }
     if has_module(&["sifr.uuid", "_sifr.uuid"]) {
         features.push("uuid");
     }
@@ -98,7 +101,7 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.unicode", "_sifr.unicode"]) {
         features.push("unicode");
     }
-    if has_module(&["sifr.datetime", "_sifr.datetime"]) {
+    if has_module(&["sifr.time", "_sifr.time", "sifr.datetime", "_sifr.datetime"]) {
         features.push("time");
     }
     if has_module(&["sifr.gzip", "_sifr.compress"]) {

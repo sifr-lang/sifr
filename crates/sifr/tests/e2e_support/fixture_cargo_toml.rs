@@ -33,9 +33,7 @@ pub(crate) fn generate_cargo_toml(
     for module_name in stdlib_modules {
         match module_name.as_str() {
             "sifr.collections" | "_sifr.collections" => {}
-            "sifr.time" | "_sifr.time" => {
-                deps.insert("chrono = \"0.4.44\"".to_string());
-            }
+            "sifr.time" | "_sifr.time" => {}
             "sifr.random" | "_sifr.crypto" => {
                 deps.insert("rand = \"0.10.1\"".to_string());
                 deps.insert("rand_distr = \"0.6.0\"".to_string());
@@ -281,6 +279,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.html"
                 | "sifr.calendar"
                 | "_sifr.calendar"
+                | "sifr.logging"
+                | "_sifr.logging"
                 | "sifr.uuid"
                 | "_sifr.uuid"
                 | "sifr.collections"
@@ -303,6 +303,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.i18n"
                 | "sifr.unicode"
                 | "_sifr.unicode"
+                | "sifr.time"
+                | "_sifr.time"
                 | "sifr.datetime"
                 | "_sifr.datetime"
                 | "sifr.bytes"

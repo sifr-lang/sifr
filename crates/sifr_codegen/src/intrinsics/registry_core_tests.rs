@@ -495,77 +495,39 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
 
 #[test]
 pub(crate) fn lowers_time_intrinsics_via_registry() {
-    let now = lower_intrinsic("time_now", &[]).expect("time_now");
-    assert!(render_expr(&now.expr).contains("SystemTime::now()"));
-
     let sleep = lower_intrinsic("sleep", &["0.1".to_string()]).expect("sleep");
     assert!(render_expr(&sleep.expr).contains("is_finite()"));
     assert!(render_expr(&sleep.expr).contains("Duration::from_nanos"));
 
-    let fmt = lower_intrinsic("time_format", &["secs".to_string(), "mask".to_string()])
-        .expect("time_format");
-    assert_eq!(
-        fmt.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&fmt.expr).contains("DateTime::from_timestamp"));
-
-    let perf = lower_intrinsic("perf_counter", &[]).expect("perf_counter");
-    assert!(render_expr(&perf.expr).contains("SystemTime::now()"));
-
     let mono = lower_intrinsic("monotonic", &[]).expect("monotonic");
     assert!(render_expr(&mono.expr).contains("SystemTime::now()"));
+}
 
-    let parse = lower_intrinsic("strptime", &["s".to_string(), "f".to_string()]).expect("strptime");
-    assert_eq!(
-        parse.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&parse.expr).contains("NaiveDateTime::parse_from_str"));
-
-    let gmt = lower_intrinsic("gmtime", &["ts".to_string()]).expect("gmtime");
-    assert_eq!(
-        gmt.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&gmt.expr).contains("chrono::DateTime::<chrono::Utc>::from_timestamp"));
-
-    let local = lower_intrinsic("localtime", &["ts".to_string()]).expect("localtime");
-    assert_eq!(
-        local.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&local.expr).contains("with_timezone(&chrono::Local)"));
-
-    let parse_alias = lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
-        .expect("_strptime_intrinsic");
-    assert_eq!(
-        parse_alias.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
-
-    let parsed_parts = lower_intrinsic("time_strptime", &["s".to_string(), "f".to_string()])
-        .expect("time_strptime");
-    assert_eq!(
-        parsed_parts.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&parsed_parts.expr).contains("Result<Vec<i64>, ValueError>"));
-
-    let gmtime_parts = lower_intrinsic("time_gmtime", &[]).expect("time_gmtime");
-    assert_eq!(
-        gmtime_parts.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&gmtime_parts.expr).contains("Utc::now().naive_utc()"));
-
-    let localtime_parts = lower_intrinsic("time_localtime", &[]).expect("time_localtime");
-    assert_eq!(
-        localtime_parts.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Chrono)
-    );
-    assert!(render_expr(&localtime_parts.expr).contains("Local::now().naive_local()"));
+#[test]
+pub(crate) fn time_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for (name, args) in [
+        ("time_now", &[][..]),
+        ("time_format", &["secs", "mask"][..]),
+        ("perf_counter", &[][..]),
+        ("strptime", &["s", "f"][..]),
+        ("gmtime", &["ts"][..]),
+        ("localtime", &["ts"][..]),
+        ("_strptime_intrinsic", &["s", "f"][..]),
+        ("_gmtime_intrinsic", &["ts"][..]),
+        ("_localtime_intrinsic", &["ts"][..]),
+        ("time_strptime", &["s", "f"][..]),
+        ("time_gmtime", &[][..]),
+        ("time_localtime", &[][..]),
+    ] {
+        let args = args
+            .iter()
+            .map(|arg| (*arg).to_string())
+            .collect::<Vec<_>>();
+        assert!(
+            lower_intrinsic(name, &args).is_none(),
+            "{name} should lower through _sifr.time private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

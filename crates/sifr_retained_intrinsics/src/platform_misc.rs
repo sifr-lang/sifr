@@ -92,24 +92,6 @@ pub(super) fn intrinsic_datetime() -> IntrinsicModule {
             result_ty(Type::Str, "ValueError"),
         ),
     );
-    // time_strptime(s: str, fmt: str) -> list[int] ([year, month, day, hour, minute, second, weekday, yearday])
-    functions.insert(
-        "time_strptime".to_string(),
-        FunctionType::all_borrow(
-            vec![("s".to_string(), Type::Str), ("fmt".to_string(), Type::Str)],
-            result_ty(Type::List(Box::new(Type::Int)), "ValueError"),
-        ),
-    );
-    // time_gmtime() -> list[int] ([year, month, day, hour, minute, second, weekday, yearday])
-    functions.insert(
-        "time_gmtime".to_string(),
-        FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Int))),
-    );
-    // time_localtime() -> list[int] ([year, month, day, hour, minute, second, weekday, yearday])
-    functions.insert(
-        "time_localtime".to_string(),
-        FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Int))),
-    );
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
