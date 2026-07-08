@@ -23,3 +23,93 @@ def read_lines(path: str) -> Result[list[str], IOError]:
 @rust(sifr_stdlib.fs.append_text)
 def append_text(path: str, content: str) -> Result[None, IOError]:
     ...
+
+
+@rust(sifr_stdlib.fs.getcwd)
+def getcwd() -> Result[str, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.listdir)
+def listdir(path: str) -> Result[list[str], IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.mkdir)
+def mkdir(path: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.rmdir)
+def rmdir(path: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.remove_file)
+def remove_file(path: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.rename)
+def rename(src: str, dst: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.is_file)
+def is_file(path: str) -> bool:
+    ...
+
+
+@rust(sifr_stdlib.fs.is_dir)
+def is_dir(path: str) -> bool:
+    ...
+
+
+@rust(sifr_stdlib.fs.copy_file)
+def copy_file(src: str, dst: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.walk_dir)
+def walk_dir(path: str) -> Result[list[str], IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.rmdir_all)
+def rmdir_all(path: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.gettempdir)
+def gettempdir() -> str:
+    ...
+
+
+@rust(sifr_stdlib.fs.makedirs)
+def makedirs(path: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.touch)
+def touch(path: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.resolve_path)
+def resolve_path(path: str) -> Result[str, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.iterdir)
+def iterdir(path: str) -> Result[list[str], IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.glob_pattern)
+def glob_pattern(dir: str, pattern: str) -> Result[list[str], IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.rglob_pattern)
+def rglob_pattern(dir: str, pattern: str) -> Result[list[str], IOError]:
+    ...

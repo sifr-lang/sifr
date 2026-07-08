@@ -26,6 +26,7 @@ use crate::stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
     SharedPreludeProcessAsyncNeeds,
 };
+use crate::stdlib_import_signatures::register_imported_stdlib_signature;
 use crate::StdlibRustSource;
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
@@ -232,9 +233,7 @@ pub fn generate_rust_with_stdlib_for_module(
         }
         if let Some(sig_map) = stdlib_code.func_signatures.get(&import.module) {
             for name in &import.names {
-                if let Some(sig) = sig_map.get(name) {
-                    emitter.func_signatures.insert(name.clone(), sig.clone());
-                }
+                register_imported_stdlib_signature(&mut emitter, stdlib_code, import, name);
                 // Also load class method signatures (ClassName::method entries)
                 let prefix = format!("{name}::");
                 for (key, sig) in sig_map {
@@ -250,6 +249,10 @@ pub fn generate_rust_with_stdlib_for_module(
                 if key.contains("::") && !emitter.func_signatures.contains_key(key) {
                     emitter.func_signatures.insert(key.clone(), sig.clone());
                 }
+            }
+        } else {
+            for name in &import.names {
+                register_imported_stdlib_signature(&mut emitter, stdlib_code, import, name);
             }
         }
         if let Some(class_fields) = stdlib_code.module_class_fields.get(&import.module) {

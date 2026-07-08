@@ -354,6 +354,70 @@ fn fs_leaf_reads_writes_appends_and_lists_lines() {
 }
 
 #[cfg(feature = "fs")]
+#[test]
+fn fs_leaf_path_directory_and_glob_ops_match_public_wrappers() {
+    let root = unique_fs_test_dir("fs_leaf_path_directory_and_glob_ops_match_public_wrappers");
+    let root_text = root.to_string_lossy().to_string();
+    let nested = root.join("nested");
+    let nested_text = nested.to_string_lossy().to_string();
+    let file = nested.join("alpha.txt");
+    let file_text = file.to_string_lossy().to_string();
+    let hidden = nested.join(".hidden.txt");
+    let hidden_text = hidden.to_string_lossy().to_string();
+    let copied = root.join("copy.txt");
+    let copied_text = copied.to_string_lossy().to_string();
+    let moved = root.join("moved.txt");
+    let moved_text = moved.to_string_lossy().to_string();
+    let empty = root.join("empty");
+    let empty_text = empty.to_string_lossy().to_string();
+
+    sifr_stdlib::fs::mkdir(&nested_text).expect("mkdir should create nested directories");
+    sifr_stdlib::fs::makedirs(&empty_text).expect("makedirs should create directories");
+    assert!(sifr_stdlib::fs::is_dir(&nested_text));
+    sifr_stdlib::fs::rmdir(&empty_text).expect("rmdir should remove empty directory");
+    assert!(!sifr_stdlib::fs::exists(&empty_text));
+    sifr_stdlib::fs::touch(&file_text).expect("touch should create file");
+    sifr_stdlib::fs::write_text(&file_text, "alpha").expect("write_text should write file");
+    sifr_stdlib::fs::write_text(&hidden_text, "hidden").expect("write_text should write hidden");
+    assert!(sifr_stdlib::fs::is_file(&file_text));
+    assert_eq!(
+        sifr_stdlib::fs::resolve_path(&file_text).expect("resolve_path should canonicalize"),
+        std::fs::canonicalize(&file)
+            .expect("test path should canonicalize")
+            .to_string_lossy()
+            .to_string()
+    );
+
+    let listdir = sifr_stdlib::fs::listdir(&root_text).expect("listdir should read root");
+    assert!(listdir.contains(&"nested".to_string()));
+    let iterdir = sifr_stdlib::fs::iterdir(&root_text).expect("iterdir should read root");
+    assert!(iterdir.iter().any(|entry| entry.ends_with("nested")));
+    let glob = sifr_stdlib::fs::glob_pattern(&nested_text, "*.txt").expect("glob should match");
+    assert_eq!(glob, vec![file_text.clone()]);
+    let hidden_glob =
+        sifr_stdlib::fs::glob_pattern(&nested_text, ".*.txt").expect("hidden glob should match");
+    assert_eq!(hidden_glob, vec![hidden_text.clone()]);
+    let rglob = sifr_stdlib::fs::rglob_pattern(&root_text, "*.txt").expect("rglob should match");
+    assert!(rglob.contains(&file_text));
+    assert!(!rglob.contains(&hidden_text));
+    let walk = sifr_stdlib::fs::walk_dir(&root_text).expect("walk_dir should traverse");
+    assert!(walk.contains(&file_text));
+
+    sifr_stdlib::fs::copy_file(&file_text, &copied_text).expect("copy_file should copy");
+    assert_eq!(
+        sifr_stdlib::fs::read_text(&copied_text).expect("copied file should be readable"),
+        "alpha"
+    );
+    sifr_stdlib::fs::rename(&copied_text, &moved_text).expect("rename should move file");
+    assert!(!sifr_stdlib::fs::exists(&copied_text));
+    assert!(sifr_stdlib::fs::exists(&moved_text));
+    sifr_stdlib::fs::remove_file(&moved_text).expect("remove_file should remove file");
+    sifr_stdlib::fs::rmdir_all(&root_text).expect("rmdir_all should remove tree");
+    assert!(!sifr_stdlib::fs::exists(&root_text));
+    assert!(!sifr_stdlib::fs::gettempdir().is_empty());
+}
+
+#[cfg(feature = "fs")]
 fn unique_fs_test_dir(name: &str) -> std::path::PathBuf {
     let nonce = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

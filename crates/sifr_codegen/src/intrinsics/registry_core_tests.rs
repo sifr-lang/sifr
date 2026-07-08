@@ -309,18 +309,6 @@ pub(crate) fn lowers_signal_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_io_intrinsics_via_registry() {
-    let gettempdir = lower_intrinsic("gettempdir", &[]).expect("gettempdir lowers");
-    assert_eq!(
-        render_expr(&gettempdir.expr),
-        "std::env::temp_dir().display().to_string()"
-    );
-
-    let walk = lower_intrinsic("walk_dir", &["root".to_string()]).expect("walk_dir lowers");
-    assert!(render_expr(&walk.expr).contains("__stack.pop()"));
-}
-
-#[test]
 pub(crate) fn fs_text_intrinsics_are_owned_by_compiled_stdlib_declarations() {
     for name in [
         "read_text",
@@ -337,33 +325,36 @@ pub(crate) fn fs_text_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
-pub(crate) fn lowers_pathlib_intrinsics_via_registry() {
-    let touch = lower_intrinsic("touch", &["p".to_string()]).expect("touch lowers");
-    assert!(render_expr(&touch.expr).contains("OpenOptions::new().create(true)"));
-
-    let resolve = lower_intrinsic("resolve_path", &["p".to_string()]).expect("resolve_path lowers");
-    assert!(render_expr(&resolve.expr).contains("std::fs::canonicalize"));
-
-    let iterdir = lower_intrinsic("iterdir", &["p".to_string()]).expect("iterdir lowers");
-    assert!(render_expr(&iterdir.expr).contains("std::fs::read_dir"));
-
-    let glob = lower_intrinsic("glob_pattern", &["dir".to_string(), "pat".to_string()])
-        .expect("glob_pattern lowers");
-    assert_eq!(
-        glob.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Regex)
-    );
-    assert!(render_expr(&glob.expr).contains("regex::Regex::new"));
-    assert!(render_expr(&glob.expr).contains("__re.is_match(&__name)"));
-
-    let rglob = lower_intrinsic("rglob_pattern", &["dir".to_string(), "pat".to_string()])
-        .expect("rglob_pattern lowers");
-    assert_eq!(
-        rglob.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Regex)
-    );
-    assert!(render_expr(&rglob.expr).contains("__stack.pop()"));
-    assert!(render_expr(&rglob.expr).contains("__re.is_match(&__name)"));
+pub(crate) fn fs_path_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for (name, args) in [
+        ("getcwd", &[][..]),
+        ("listdir", &["path"][..]),
+        ("mkdir", &["path"][..]),
+        ("rmdir", &["path"][..]),
+        ("remove_file", &["path"][..]),
+        ("rename", &["src", "dst"][..]),
+        ("is_file", &["path"][..]),
+        ("is_dir", &["path"][..]),
+        ("copy_file", &["src", "dst"][..]),
+        ("walk_dir", &["path"][..]),
+        ("rmdir_all", &["path"][..]),
+        ("gettempdir", &[][..]),
+        ("makedirs", &["path"][..]),
+        ("touch", &["path"][..]),
+        ("resolve_path", &["path"][..]),
+        ("iterdir", &["path"][..]),
+        ("glob_pattern", &["dir", "pattern"][..]),
+        ("rglob_pattern", &["dir", "pattern"][..]),
+    ] {
+        let args = args
+            .iter()
+            .map(|arg| (*arg).to_string())
+            .collect::<Vec<_>>();
+        assert!(
+            lower_intrinsic(name, &args).is_none(),
+            "{name} should lower through _sifr.fs private Rust interop declarations"
+        );
+    }
 }
 
 #[test]
