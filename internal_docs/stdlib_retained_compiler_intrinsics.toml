@@ -567,5 +567,5 @@ owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
-reason = "Legacy generated preamble file contains mixed IOError and file-handle glue pending final decomposition."
-preamble_files = ["io_logging_random.rs"]
+reason = "Historical retained row for the legacy mixed preamble; the remaining generated preamble file now contains only IOError and file-handle glue pending final decomposition because logging and random behavior have migrated to sifr_stdlib."
+preamble_files = ["io_file_handles.rs"]
