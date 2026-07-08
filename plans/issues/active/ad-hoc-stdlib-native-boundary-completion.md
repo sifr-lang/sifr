@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned.
+In progress.
 
 ## Objective
 
@@ -94,7 +94,7 @@ merged, and documented before the next milestone starts.
 | M2. Declaration Infrastructure and Provenance | merged | PR #2839 · sha=d920e16; PR #2841 · sha=4e5621d; PR #2843 · sha=631b1d8; PR #2845 · sha=217e04d; PR #2847 · sha=d75a54e; PR #2849 · sha=dd1fc69 |
 | M3. File and Filesystem Migration | merged | PR #2851 · sha=12b64b4; PR #2852 · sha=72a62f1; PR #2853 · sha=84b0419; PR #2855 · sha=4372f13; PR #2858 · sha=f08fc98 |
 | M4. Random, Time, and Logging | merged | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing; PR #2864 · sha=9d901ad · manifest: `_sifr.time` exact retained leaves narrowed to `sleep`/`monotonic`; PR #2866 · sha=c241b20 · manifest: mixed preamble now IO/file-handle only |
-| M5. Simple Sys and Environment | planned |  |
+| M5. Simple Sys and Environment | in progress | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers |
 | M6. Async Resource Pilot | planned |  |
 | M7. Process Family | planned |  |
 | M8. Network and TLS Families | planned |  |
@@ -655,6 +655,20 @@ Tasks:
 - Decide and document whether `sys_exit` is public stdlib behavior or
   language/runtime termination glue.
 - Delete migrated environment and sys intrinsic entries.
+
+M5 may land as ordered sub-PRs because `_sifr.sys` mixes simple env/sys leaves
+with later process/OS helper slices:
+
+- M5a: migrate environment get/set/unset/items/keys/values, `get_args`,
+  `sys_exit`, `sys_version`, `sys_platform`, and `sys_maxsize` behind
+  `stdlib/_sifr/sys.sifr` declarations and `sifr_stdlib::sys`; classify
+  `sys_exit` as public stdlib termination behavior; remove the migrated
+  compiler registry/fallback entries and stale `_sifr.platform` fallback
+  signatures; narrow the retained manifest to `run_command`, `chdir`, `getpid`,
+  `cpu_count`, `stat_size`, `which`, `disk_usage`, `os_sep`, `os_linesep`, and
+  `os_name` for later slices (merged in PR #2868, merge commit
+  `e21e67a6e58aa75c9ff808cf3380c35e3fb81fb6`; local `create-pr` validation
+  passed with wall-time/cache advisories only; reviewer round 1 READY).
 
 Acceptance:
 
