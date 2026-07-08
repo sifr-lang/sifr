@@ -28,27 +28,26 @@ from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 # Inputs that change generated Rust or its compile environment. Manifest metadata
 # remains part of per-entry selection, not producer cache invalidation.
+PRODUCER_FINGERPRINT_CRATES = (
+    "sifr",
+    "sifr_codegen",
+    "sifr_driver",
+    "sifr_frontend",
+    "sifr_ipc",
+    "sifr_lowering",
+    "sifr_package",
+    "sifr_runtime",
+    "sifr_stdlib_manifest",
+    "sifr_syntax",
+)
 PRODUCER_FINGERPRINT_INPUTS = [
     "Cargo.lock",
     "Cargo.toml",
-    "crates/sifr/Cargo.toml",
-    "crates/sifr/src",
-    "crates/sifr_codegen/Cargo.toml",
-    "crates/sifr_codegen/src",
-    "crates/sifr_driver/Cargo.toml",
-    "crates/sifr_driver/src",
-    "crates/sifr_frontend/Cargo.toml",
-    "crates/sifr_frontend/src",
-    "crates/sifr_lowering/Cargo.toml",
-    "crates/sifr_lowering/src",
-    "crates/sifr_package/Cargo.toml",
-    "crates/sifr_package/src",
-    "crates/sifr_runtime/Cargo.toml",
-    "crates/sifr_runtime/src",
-    "crates/sifr_stdlib_manifest/Cargo.toml",
-    "crates/sifr_stdlib_manifest/src",
-    "crates/sifr_syntax/Cargo.toml",
-    "crates/sifr_syntax/src",
+    *[
+        f"crates/{crate}/{path}"
+        for crate in PRODUCER_FINGERPRINT_CRATES
+        for path in ("Cargo.toml", "src")
+    ],
     "verification/areas/generated_code_quality/generated_code_quality.py",
 ]
 PRODUCER_FINGERPRINT_EXTENSIONS = {".lock", ".py", ".rs", ".sifr", ".toml"}

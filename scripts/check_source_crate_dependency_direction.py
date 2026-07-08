@@ -28,6 +28,7 @@ ALL_SIFR_CRATES = {
     "sifr_format",
     "sifr_frontend",
     "sifr_ir",
+    "sifr_ipc",
     "sifr_lint",
     "sifr_lowering",
     "sifr_lsp",
@@ -47,6 +48,7 @@ IR_FORBIDDEN_DEPENDENCIES = {
     "sifr_codegen",
     "sifr_driver",
     "sifr_frontend",
+    "sifr_ipc",
     "sifr_lint",
     "sifr_lowering",
     "sifr_lsp",
@@ -66,6 +68,7 @@ STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
+    "sifr_ipc",
     "sifr_stdlib_manifest",
 }
 
@@ -76,6 +79,7 @@ GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr_driver",
     "sifr_frontend",
     "sifr_ir",
+    "sifr_ipc",
     "sifr_lint",
     "sifr_lowering",
     "sifr_lsp",
@@ -122,6 +126,11 @@ RULES = (
             IR_FORBIDDEN_DEPENDENCIES | PARSER_CRATES
         ),
         forbidden_source_references=frozenset(IR_FORBIDDEN_DEPENDENCIES | PARSER_CRATES),
+    ),
+    CrateRule(
+        crate="sifr_ipc",
+        allowed_normal_dependencies=frozenset({"postcard", "serde"}),
+        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_ipc"}),
     ),
     CrateRule(
         crate="sifr_stdlib_manifest",
@@ -288,6 +297,7 @@ def seed_valid_repo(root: Path) -> None:
     allowed_deps = {
         "sifr_source": ["ruff_text_size"],
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
+        "sifr_ipc": ["postcard", "serde"],
         "sifr_stdlib": ["sifr_runtime"],
         "sifr_stdlib_manifest": ["sifr_type_system"],
         "sifr_codegen": ["sifr_ir", "sifr_stdlib_manifest"],
@@ -354,6 +364,22 @@ def run_self_test() -> int:
             root / "crates" / "sifr_ir" / "src" / "lib.rs"
         ).write_text("use sifr_lowering::LoweringResult;\n", encoding="utf-8"),
         "sifr_ir: crates/sifr_ir/src/lib.rs references sifr_lowering",
+        failures,
+    )
+    assert_self_test_case(
+        "sifr_ipc compiler dependency",
+        lambda root: write_manifest(
+            root / "crates" / "sifr_ipc", "sifr_ipc", ["sifr_stdlib_manifest"]
+        ),
+        "sifr_ipc: unexpected normal dependency",
+        failures,
+    )
+    assert_self_test_case(
+        "sifr_ipc source reference",
+        lambda root: (
+            root / "crates" / "sifr_ipc" / "src" / "lib.rs"
+        ).write_text("pub fn leak() { sifr_stdlib_manifest::STDLIB_FEATURE_SPECS; }\n", encoding="utf-8"),
+        "sifr_ipc: crates/sifr_ipc/src/lib.rs references sifr_stdlib_manifest",
         failures,
     )
     assert_self_test_case(

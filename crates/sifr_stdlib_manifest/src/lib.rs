@@ -2,9 +2,9 @@
 //!
 //! Owns the source inventory, private declaration inventory, generated-project
 //! dependency planning, and sysroot validation data used by the compiler.
-//! Retained intrinsic signatures and IPC protocol helpers are still exported
-//! here as transitional split state; follow-on boundary work moves those
-//! responsibilities to their final compiler-retained-glue and IPC crates.
+//! Retained intrinsic signatures are still exported here as transitional split
+//! state; follow-on boundary work moves those responsibilities to their final
+//! compiler-retained-glue boundary.
 //! Legacy stdlib import suggestion data is also hosted here until the frontend
 //! or diagnostics boundary owns the rendered suggestion policy.
 
@@ -19,12 +19,6 @@ mod features_tests;
 mod http;
 mod i18n_core;
 mod io_json;
-mod ipc_connection;
-mod ipc_frame;
-mod ipc_payload;
-mod ipc_request_tracker;
-mod ipc_schema;
-mod ipc_transport;
 mod math_test;
 mod net;
 mod platform_misc;
@@ -52,22 +46,6 @@ pub use features::{
 use http::intrinsic_http;
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
-pub use ipc_connection::{
-    negotiate_protocol_version, schema_ranges_overlap, schemas_match_exact, IpcConnectionConfig,
-    IpcConnectionError, IpcConnectionPhase, IpcConnectionState, IpcHandshakeDecision,
-};
-pub use ipc_frame::{
-    decode_frame, encode_frame, IpcEnvelope, IpcFrameError, IpcMalformedKind, IpcRejectReason,
-    IpcShutdownMode, IpcTerminationReason, IpcWireFrameKind, IpcWireSchema, IpcWorkerState,
-    IPC_DEFAULT_MAX_FRAME_BYTES, IPC_LENGTH_PREFIX_BYTES,
-};
-pub use ipc_payload::{validate_ipc_payload_type, IpcPayloadEligibilityError};
-pub use ipc_request_tracker::{IpcRequestTracker, IpcRequestTrackerError, IpcRequestTrackerState};
-pub use ipc_schema::{
-    canonical_schema_descriptor, fnv1a_128, schema_hash_hex_v1, schema_hash_v1,
-    IpcSchemaDescriptor, IpcSchemaField, IpcSchemaType, IpcSchemaVariant,
-};
-pub use ipc_transport::{read_frame, write_frame, IpcTransportError};
 use math_test::{intrinsic_math, intrinsic_test};
 use net::intrinsic_net;
 use platform_misc::{

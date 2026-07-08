@@ -3224,6 +3224,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_ipc"
+version = "0.0.0"
+dependencies = [
+ "postcard",
+ "serde",
+]
+
+[[package]]
 name = "sifr_ir"
 version = "0.0.0"
 dependencies = [
@@ -3259,6 +3267,7 @@ dependencies = [
  "rust_decimal",
  "serde_json",
  "sifr_diagnostics",
+ "sifr_ipc",
  "sifr_ir",
  "sifr_stdlib_manifest",
  "sifr_type_system",
@@ -3380,8 +3389,6 @@ dependencies = [
 name = "sifr_stdlib_manifest"
 version = "0.0.0"
 dependencies = [
- "postcard",
- "serde",
  "serde_json",
  "sifr_sysroot",
  "sifr_type_system",
