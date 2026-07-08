@@ -17,10 +17,12 @@ REGISTRY_DISPATCH_PATH = (
     REPO_ROOT / "crates" / "sifr_codegen" / "src" / "intrinsics" / "registry.rs"
 )
 PREAMBLE_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "preamble"
+RETAINED_INTRINSICS_LIB_PATH = REPO_ROOT / "crates" / "sifr_retained_intrinsics" / "src" / "lib.rs"
 
 EXACT_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 LOWERER_MATCH_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
+RETAINED_SIGNATURE_MODULE_RE = re.compile(r'"(_sifr\.[A-Za-z0-9_]+)"\s*=>\s*Some\(')
 EXPECTED_PREFIX_DISPATCHERS = {"http_", "py_", "tls_"}
 PREFIX_DISPATCH_LOWERERS = (
     REGISTRY_ROOT / "tls.rs",
@@ -47,7 +49,8 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
         "stdlib native intrinsic allowlist guard: PASS "
         f"(exact_intrinsics={len(observed['exact_intrinsics'])}, "
         f"registry_files={len(observed['registry_files'])}, "
-        f"preamble_files={len(observed['preamble_files'])})"
+        f"preamble_files={len(observed['preamble_files'])}, "
+        f"fallback_signature_modules={len(observed['fallback_signature_modules'])})"
     )
     return 0
 
@@ -70,6 +73,11 @@ def _observed_surface() -> dict[str, set[str]]:
             path.relative_to(PREAMBLE_ROOT).as_posix()
             for path in PREAMBLE_ROOT.rglob("*.rs")
         },
+        "fallback_signature_modules": set(
+            RETAINED_SIGNATURE_MODULE_RE.findall(
+                RETAINED_INTRINSICS_LIB_PATH.read_text(encoding="utf-8")
+            )
+        ),
     }
 
 
@@ -123,6 +131,17 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         if not has_items:
             failures.append(f"{surface_id}: allowlist entry has no retained files or intrinsics")
 
+        if surface.get("state") == "closing":
+            fallback_modules = sorted(
+                _surface_private_modules(surface) & observed["fallback_signature_modules"]
+            )
+            if fallback_modules:
+                failures.append(
+                    f"{surface_id}: closing rows must remove fallback signature modules "
+                    "before deletion: "
+                    + ", ".join(fallback_modules)
+                )
+
     prefix_dispatchers = observed.get("prefix_dispatchers", set())
     unexpected_prefixes = sorted(prefix_dispatchers - EXPECTED_PREFIX_DISPATCHERS)
     stale_prefixes = sorted(EXPECTED_PREFIX_DISPATCHERS - prefix_dispatchers)
@@ -143,6 +162,26 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         _compare_sets(failures, key, observed_values, allowed[key])
 
     return failures
+
+
+def _surface_private_modules(surface: dict[str, Any]) -> set[str]:
+    modules: set[str] = set()
+    surface_id = surface.get("id")
+    if isinstance(surface_id, str) and surface_id.startswith("_sifr."):
+        modules.add(surface_id.split("::", 1)[0])
+
+    declaration_files = surface.get("declaration_files", [])
+    if not isinstance(declaration_files, list):
+        return modules
+    for declaration_file in declaration_files:
+        if not isinstance(declaration_file, str):
+            continue
+        prefix = "stdlib/_sifr/"
+        suffix = ".sifr"
+        if declaration_file.startswith(prefix) and declaration_file.endswith(suffix):
+            module_stem = declaration_file.removeprefix(prefix).removesuffix(suffix)
+            modules.add("_sifr." + module_stem.replace("/", "."))
+    return modules
 
 
 def _required_text(
@@ -198,12 +237,15 @@ def _self_test() -> int:
         "prefix_dispatchers": EXPECTED_PREFIX_DISPATCHERS,
         "registry_files": {"alpha.rs"},
         "preamble_files": {"runtime.rs"},
+        "fallback_signature_modules": {"_sifr.alpha"},
     }
     allowlist = {
         "surface": [
             {
-                "id": "test-retained-glue",
+                "id": "_sifr.alpha",
+                "state": "retained",
                 "reason": "language-owned test fixture",
+                "declaration_files": ["stdlib/_sifr/alpha.sifr"],
                 "exact_intrinsics": ["alpha"],
                 "registry_files": ["alpha.rs"],
                 "preamble_files": ["runtime.rs"],
@@ -263,6 +305,26 @@ def _self_test() -> int:
         for failure in _validate(observed, missing_reason)
     ):
         print("self-test missing reason was not rejected", file=sys.stderr)
+        return 1
+
+    closing_with_signature = json.loads(json.dumps(allowlist))
+    closing_with_signature["surface"][0]["state"] = "closing"
+    if not any(
+        "closing rows must remove fallback signature modules" in failure
+        for failure in _validate(observed, closing_with_signature)
+    ):
+        print("self-test closing fallback signature module was not rejected", file=sys.stderr)
+        return 1
+
+    closing_without_signature_observed = json.loads(
+        json.dumps({key: sorted(value) for key, value in observed.items()})
+    )
+    closing_without_signature_observed["fallback_signature_modules"] = []
+    closing_without_signature_observed = {
+        key: set(value) for key, value in closing_without_signature_observed.items()
+    }
+    if _validate(closing_without_signature_observed, closing_with_signature):
+        print("self-test closing row without fallback signature module failed", file=sys.stderr)
         return 1
 
     print("stdlib native intrinsic allowlist guard self-test: PASS")
