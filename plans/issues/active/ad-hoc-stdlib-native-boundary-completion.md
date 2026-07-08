@@ -93,7 +93,7 @@ merged, and documented before the next milestone starts.
 | M1. Manifest Schema and Normal-Path Guards | merged | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817; PR #2833 · sha=af66be2; PR #2835 · sha=7683ff6; PR #2837 · sha=91cae31 |
 | M2. Declaration Infrastructure and Provenance | merged | PR #2839 · sha=d920e16; PR #2841 · sha=4e5621d; PR #2843 · sha=631b1d8; PR #2845 · sha=217e04d; PR #2847 · sha=d75a54e; PR #2849 · sha=dd1fc69 |
 | M3. File and Filesystem Migration | merged | PR #2851 · sha=12b64b4; PR #2852 · sha=72a62f1; PR #2853 · sha=84b0419; PR #2855 · sha=4372f13; PR #2858 · sha=f08fc98 |
-| M4. Random, Time, and Logging | in progress | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing |
+| M4. Random, Time, and Logging | in progress | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing |
 | M5. Simple Sys and Environment | planned |  |
 | M6. Async Resource Pilot | planned |  |
 | M7. Process Family | planned |  |
