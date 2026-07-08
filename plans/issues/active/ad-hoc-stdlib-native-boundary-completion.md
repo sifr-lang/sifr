@@ -515,6 +515,14 @@ Tasks:
   `file_write`, close, byte operations, and related methods.
 - Move path, directory, glob, temporary directory, file copy, delete, rename,
   walk, metadata, and text helpers into `sifr_stdlib`.
+  - M3c migrates the remaining non-handle path/directory/file-operation leaves
+    (`getcwd`, `listdir`, `mkdir`, `rmdir`, `remove_file`, `rename`,
+    `is_file`, `is_dir`, `copy_file`, `walk_dir`, `rmdir_all`, `gettempdir`,
+    `makedirs`, `touch`, `resolve_path`, `iterdir`, `glob_pattern`, and
+    `rglob_pattern`) behind `_sifr.fs` private Rust interop declarations,
+    removes their compiler registry/signature entries, and moves
+    `sifr.pathlib` generated Cargo planning from `regex` to `fs` in PR
+    #2855.
 - Declare filesystem functions and errors in `stdlib/_sifr/fs.sifr`.
 - Route `sifr.os`, `sifr.pathlib`, `sifr.glob`, `sifr.shutil`,
   `sifr.tempfile`, and related wrappers through declarations.

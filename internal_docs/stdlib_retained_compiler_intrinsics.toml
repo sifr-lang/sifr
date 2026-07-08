@@ -61,15 +61,12 @@ certification_rows = ["opaque_resource_core"]
 reason = "Filesystem paths, open handles, and IOError shaping remain compiler/runtime-owned until file-handle lifecycle certification is complete."
 registry_files = [
   "file_handles.rs",
-  "io.rs",
   "open_text_handles.rs",
-  "pathlib.rs",
 ]
 preamble_files = ["io_bytes_methods.rs"]
 exact_intrinsics = [
   "builtin_open",
   "builtin_open_text",
-  "copy_file",
   "file_close",
   "file_read",
   "file_read_bytes",
@@ -77,24 +74,7 @@ exact_intrinsics = [
   "file_readlines",
   "file_write",
   "file_write_bytes",
-  "getcwd",
-  "gettempdir",
-  "glob_pattern",
-  "is_dir",
-  "is_file",
-  "iterdir",
-  "listdir",
-  "makedirs",
-  "mkdir",
   "open_file",
-  "remove_file",
-  "rename",
-  "resolve_path",
-  "rglob_pattern",
-  "rmdir",
-  "rmdir_all",
-  "touch",
-  "walk_dir",
 ]
 
 [[surface]]

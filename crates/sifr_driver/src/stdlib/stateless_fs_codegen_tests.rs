@@ -2,7 +2,7 @@ use super::compile_stdlib_uncached;
 use sha2::{Digest, Sha256};
 
 #[test]
-fn fs_text_private_declarations_codegen_through_sifr_stdlib() {
+fn fs_private_declarations_codegen_through_sifr_stdlib() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
     let private_code = compiled
         .code
@@ -22,6 +22,24 @@ fn fs_text_private_declarations_codegen_through_sifr_stdlib() {
         "exists",
         "read_lines",
         "append_text",
+        "getcwd",
+        "listdir",
+        "mkdir",
+        "rmdir",
+        "remove_file",
+        "rename",
+        "is_file",
+        "is_dir",
+        "copy_file",
+        "walk_dir",
+        "rmdir_all",
+        "gettempdir",
+        "makedirs",
+        "touch",
+        "resolve_path",
+        "iterdir",
+        "glob_pattern",
+        "rglob_pattern",
     ] {
         assert!(
             private_code

@@ -185,6 +185,7 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
             &["python"][..],
             &["json", "regex", "http"][..],
         ),
+        ("sifr.pathlib", &["fs"][..], &["json", "regex", "http"][..]),
         (
             "sifr.math",
             &["math"][..],
@@ -257,6 +258,7 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("_sifr.collections", &["collections"][..]),
         ("sifr.re", &["regex"][..]),
         ("_sifr.regex", &["regex"][..]),
+        ("sifr.pathlib", &["fs"][..]),
         ("sifr.url", &["url"][..]),
         ("_sifr.url", &["url"][..]),
         ("sifr.tomllib", &["toml"][..]),

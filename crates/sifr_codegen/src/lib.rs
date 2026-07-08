@@ -102,6 +102,7 @@ pub use rust_interop_plan::{
 mod rust_ir;
 pub use rust_ir::*;
 mod stdlib_filter;
+mod stdlib_import_signatures;
 mod stdlib_rust_source;
 pub use stdlib_rust_source::StdlibRustSource;
 mod stmt_support_emitter;

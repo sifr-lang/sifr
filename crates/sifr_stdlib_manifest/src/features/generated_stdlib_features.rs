@@ -25,7 +25,7 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
     match module_name {
         "sifr.json" | "_sifr.json" => &["json"],
         "sifr.collections" | "_sifr.collections" => &["collections"],
-        "sifr.re" | "_sifr.regex" | "sifr.pathlib" => &["regex"],
+        "sifr.re" | "_sifr.regex" => &["regex"],
         "sifr.uuid" | "_sifr.uuid" => &["uuid"],
         "sifr.hash" => &["hash"],
         "sifr.hashlib" => &["bytes", "hash"],
@@ -47,7 +47,9 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.http" | "_sifr.http" => &["http"],
         "sifr.python" | "sifr.python_core" | "_sifr.python" => &["python"],
         "sifr.process" => &["process"],
-        "sifr.io" | "sifr.os" | "sifr.shutil" | "sifr.tempfile" | "_sifr.fs" => &["fs"],
+        "sifr.io" | "sifr.os" | "sifr.pathlib" | "sifr.shutil" | "sifr.tempfile" | "_sifr.fs" => {
+            &["fs"]
+        }
         "sifr.signal" | "_sifr.signal" => &["signals"],
         "sifr.runtime" | "_sifr.runtime" => &["runtime-observability"],
         "sifr.random" => &["random"],

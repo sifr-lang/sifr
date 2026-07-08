@@ -3,12 +3,10 @@ mod collections;
 mod encoding;
 mod env;
 mod file_handles;
-mod io;
 mod logging;
 mod net;
 mod open_text_handles;
 mod os;
-mod pathlib;
 mod process;
 mod process_async;
 mod process_child_lifecycle;
@@ -59,30 +57,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "os_sep" => (os::lower_os_sep(args), None),
         "os_linesep" => (os::lower_os_linesep(args), None),
         "os_name" => (os::lower_os_name(args), None),
-        "touch" => (pathlib::lower_touch(args), None),
-        "resolve_path" => (pathlib::lower_resolve_path(args), None),
-        "iterdir" => (pathlib::lower_iterdir(args), None),
-        "glob_pattern" => (
-            pathlib::lower_glob_pattern(args),
-            Some(StdlibFeature::Regex),
-        ),
-        "rglob_pattern" => (
-            pathlib::lower_rglob_pattern(args),
-            Some(StdlibFeature::Regex),
-        ),
-        "getcwd" => (io::lower_getcwd(args), None),
-        "listdir" => (io::lower_listdir(args), None),
-        "mkdir" => (io::lower_mkdir(args), None),
-        "rmdir" => (io::lower_rmdir(args), None),
-        "remove_file" => (io::lower_remove_file(args), None),
-        "rename" => (io::lower_rename(args), None),
-        "is_file" => (io::lower_is_file(args), None),
-        "is_dir" => (io::lower_is_dir(args), None),
-        "copy_file" => (io::lower_copy_file(args), None),
-        "walk_dir" => (io::lower_walk_dir(args), None),
-        "rmdir_all" => (io::lower_rmdir_all(args), None),
-        "gettempdir" => (io::lower_gettempdir(args), None),
-        "makedirs" => (io::lower_makedirs(args), None),
         "builtin_open" => (file_handles::lower_builtin_open(args), None),
         "builtin_open_text" => (open_text_handles::lower_builtin_open_text(args), None),
         "open_file" => (file_handles::lower_open_file(args), None),

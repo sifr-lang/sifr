@@ -57,3 +57,70 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::Fs));
 }
+
+#[test]
+fn public_stdlib_reexport_uses_transitive_private_signature_for_call_borrowing() {
+    let main_module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "path".to_string(),
+                    ty: Type::Str,
+                    value: HirExpr::StringLiteral("/tmp/sifr-codegen-remove-file".to_string()),
+                    is_mutable: false,
+                },
+                HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "remove_file".to_string(),
+                        args: vec![HirExpr::Name {
+                            name: "path".to_string(),
+                            ty: Type::Str,
+                        }],
+                        ty: Type::Result(Box::new(Type::None), Box::new(Type::Any)),
+                    },
+                },
+            ],
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            rust_interop: Vec::new(),
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.os".to_string(),
+            names: vec!["remove_file".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let mut stdlib_code = StdlibCode::default();
+    stdlib_code.transitive_deps.insert(
+        "sifr.os".to_string(),
+        HashSet::from(["_sifr.fs".to_string()]),
+    );
+    stdlib_code.func_signatures.insert(
+        "_sifr.fs".to_string(),
+        std::collections::HashMap::from([(
+            "remove_file".to_string(),
+            (
+                vec![(Type::Str, ParamConvention::borrow())],
+                Type::Result(Box::new(Type::None), Box::new(Type::Any)),
+            ),
+        )]),
+    );
+
+    let generated = generate_rust_with_stdlib_for_module(&main_module, &stdlib_code, None);
+
+    assert!(
+        generated.rust_source.contains("remove_file(&path);"),
+        "public stdlib reexports should borrow according to transitive private signatures:\n{}",
+        generated.rust_source
+    );
+}
