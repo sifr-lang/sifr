@@ -341,6 +341,102 @@ mod tests {
     }
 
     #[test]
+    fn sysroot_private_opaque_interop_resolves_self_close_method() {
+        let root = TempSysroot::new("opaque_self_close");
+        root.write_private(
+            "_sifr.io",
+            "@rust.opaque(type=sifr_stdlib.io.FileHandle, close=close)\n\
+class FileHandle:\n\
+\n\
+    @rust(Self.close, panic=trusted_no_panic)\n\
+    def close(self) -> None:\n\
+        ...\n",
+        );
+        root.write_stdlib_crate("pub mod io { pub struct FileHandle; pub fn close() {} }\n");
+        let stdlib = stdlib_interop_many(
+            &root,
+            vec![
+                opaque_class_declaration(
+                    "_sifr.io",
+                    "FileHandle",
+                    "sifr_stdlib.io.FileHandle",
+                    vec![symbol_argument("close", "close")],
+                ),
+                method_declaration(
+                    "_sifr.io",
+                    "FileHandle",
+                    "close",
+                    "Self.close",
+                    vec![symbol_argument("panic", "trusted_no_panic")],
+                ),
+            ],
+        );
+
+        let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &stdlib);
+        let resolved = apply_package_rust_interop_metadata(generated, context)
+            .expect("opaque sysroot interop should resolve");
+
+        assert!(resolved
+            .interop
+            .rust
+            .resolved_targets
+            .iter()
+            .any(|target| target.written_path == "sifr_stdlib.io.FileHandle"
+                && matches!(
+                    &target.root,
+                    RustInteropResolvedRoot::SysrootCrate {
+                        dependency_name,
+                        sysroot_root,
+                        ..
+                    } if dependency_name == "sifr_stdlib"
+                        && sysroot_root == &root.path.display().to_string()
+                )));
+        assert!(resolved
+            .interop
+            .rust
+            .resolved_targets
+            .iter()
+            .any(|target| target.written_path == "Self.close"
+                && matches!(
+                    &target.root,
+                    RustInteropResolvedRoot::SelfMethod { class_name }
+                        if class_name == "FileHandle"
+                )));
+        assert!(resolved
+            .interop
+            .rust
+            .trust_requirements
+            .iter()
+            .any(|requirement| requirement.required_entry == "Self.close" && requirement.trusted));
+    }
+
+    #[test]
+    fn sysroot_private_opaque_interop_rejects_non_sysroot_rust_type() {
+        let root = TempSysroot::new("opaque_reject_non_sysroot_type");
+        root.write_private(
+            "_sifr.io",
+            "@rust.opaque(type=native.io.FileHandle)\nclass FileHandle:\n    ...\n",
+        );
+        let stdlib = stdlib_interop(
+            &root,
+            opaque_class_declaration("_sifr.io", "FileHandle", "native.io.FileHandle", Vec::new()),
+        );
+
+        let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &stdlib);
+        let diagnostics = match apply_package_rust_interop_metadata(generated, context) {
+            Ok(_) => panic!("opaque rust type root should be canonical"),
+            Err(diagnostics) => diagnostics,
+        };
+
+        assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
+        assert!(diagnostics[0].message.contains("canonical sysroot crate"));
+        assert_eq!(
+            diagnostics[0].spans[0].file.as_deref(),
+            Some(root.private_path("_sifr.io").to_string_lossy().as_ref())
+        );
+    }
+
+    #[test]
     fn sysroot_interop_cache_changes_with_private_declaration_source() {
         let root = TempSysroot::new("cache_private_source");
         root.write_private(
@@ -391,7 +487,16 @@ mod tests {
         root: &TempSysroot,
         declaration: RustInteropPlanDeclaration,
     ) -> StdlibRustInterop {
-        let module = declaration
+        stdlib_interop_many(root, vec![declaration])
+    }
+
+    fn stdlib_interop_many(
+        root: &TempSysroot,
+        declarations: Vec<RustInteropPlanDeclaration>,
+    ) -> StdlibRustInterop {
+        let module = declarations
+            .first()
+            .expect("test should provide declarations")
             .module_name
             .clone()
             .expect("test declaration should be named");
@@ -399,7 +504,7 @@ mod tests {
         StdlibRustInterop {
             plan: InteropBuildPlan {
                 rust: RustInteropPlan {
-                    declarations: vec![declaration],
+                    declarations,
                     ..RustInteropPlan::default()
                 },
             },
@@ -435,6 +540,79 @@ mod tests {
                 effect: RustInteropEffect::Sync,
                 abi_requirements: RustInteropAbiRequirements::default(),
             },
+        }
+    }
+
+    fn opaque_class_declaration(
+        module_name: &str,
+        class_name: &str,
+        rust_type: &str,
+        mut arguments: Vec<RustInteropArgument>,
+    ) -> RustInteropPlanDeclaration {
+        arguments.insert(0, target_argument("type", rust_type));
+        RustInteropPlanDeclaration {
+            module_name: Some(module_name.to_string()),
+            owner: RustInteropOwner::Class {
+                name: class_name.to_string(),
+            },
+            declaration: RustInteropDeclaration {
+                kind: RustInteropDecoratorKind::Opaque,
+                target: None,
+                arguments,
+                span: span(),
+                effect: RustInteropEffect::Sync,
+                abi_requirements: RustInteropAbiRequirements {
+                    opaque_handle: true,
+                    ..RustInteropAbiRequirements::default()
+                },
+            },
+        }
+    }
+
+    fn method_declaration(
+        module_name: &str,
+        class_name: &str,
+        method_name: &str,
+        target: &str,
+        arguments: Vec<RustInteropArgument>,
+    ) -> RustInteropPlanDeclaration {
+        RustInteropPlanDeclaration {
+            module_name: Some(module_name.to_string()),
+            owner: RustInteropOwner::Method {
+                class_name: class_name.to_string(),
+                name: method_name.to_string(),
+            },
+            declaration: RustInteropDeclaration {
+                kind: RustInteropDecoratorKind::Function,
+                target: Some(target_path(target)),
+                arguments,
+                span: span(),
+                effect: RustInteropEffect::Sync,
+                abi_requirements: RustInteropAbiRequirements::default(),
+            },
+        }
+    }
+
+    fn target_argument(name: &str, target: &str) -> RustInteropArgument {
+        RustInteropArgument {
+            name: Some(name.to_string()),
+            value: RustInteropValue::TargetPath(target_path(target)),
+            span: span(),
+        }
+    }
+
+    fn symbol_argument(name: &str, symbol: &str) -> RustInteropArgument {
+        RustInteropArgument {
+            name: Some(name.to_string()),
+            value: RustInteropValue::Symbol(symbol.to_string()),
+            span: span(),
+        }
+    }
+
+    fn target_path(target: &str) -> RustTargetPath {
+        RustTargetPath {
+            segments: target.split('.').map(str::to_string).collect(),
+            span: span(),
         }
     }
 
