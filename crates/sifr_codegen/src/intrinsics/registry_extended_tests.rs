@@ -235,25 +235,6 @@ pub(crate) fn datetime_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
-pub(crate) fn lowers_sys_intrinsics_via_registry() {
-    let exit = lower_intrinsic("sys_exit", &["code".to_string()]).expect("sys_exit");
-    assert!(render_expr(&exit.expr).contains("std::process::exit("));
-    assert!(render_expr(&exit.expr).contains("as i32"));
-
-    let version = lower_intrinsic("sys_version", &[]).expect("sys_version");
-    assert_eq!(render_expr(&version.expr), "\"sifr 0.1.0\".to_string()");
-
-    let platform = lower_intrinsic("sys_platform", &[]).expect("sys_platform");
-    assert_eq!(
-        render_expr(&platform.expr),
-        "std::env::consts::OS.to_string()"
-    );
-
-    let maxsize = lower_intrinsic("sys_maxsize", &[]).expect("sys_maxsize");
-    assert_eq!(render_expr(&maxsize.expr), "i64::MAX");
-}
-
-#[test]
 pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
     let output_timeout = lower_intrinsic(
         "process_output_timeout",

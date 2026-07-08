@@ -2,54 +2,9 @@ use super::{result_ty, IntrinsicModule};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
-/// _sifr.sys — Combined system intrinsics (env + os)
+/// _sifr.sys — retained process-command helper.
 pub(super) fn intrinsic_sys() -> IntrinsicModule {
     let mut functions = HashMap::new();
-
-    // env_get(key: str) -> str | None
-    functions.insert(
-        "env_get".to_string(),
-        FunctionType::all_borrow(
-            vec![("key".to_string(), Type::Str)],
-            Type::Union(vec![Type::Str, Type::None]),
-        ),
-    );
-
-    // env_set(key: str, value: str) -> None
-    functions.insert(
-        "env_set".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("key".to_string(), Type::Str),
-                ("value".to_string(), Type::Str),
-            ],
-            Type::None,
-        ),
-    );
-
-    // env_unset(key: str) -> None
-    functions.insert(
-        "env_unset".to_string(),
-        FunctionType::all_borrow(vec![("key".to_string(), Type::Str)], Type::None),
-    );
-
-    // env_keys() -> list[str]
-    functions.insert(
-        "env_keys".to_string(),
-        FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))),
-    );
-
-    // env_values() -> list[str]
-    functions.insert(
-        "env_values".to_string(),
-        FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))),
-    );
-
-    // env_items() -> list[str]  (formatted as "key=value")
-    functions.insert(
-        "env_items".to_string(),
-        FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))),
-    );
 
     // run_command(cmd: str) -> Result[str, IOError]
     functions.insert(
@@ -58,36 +13,6 @@ pub(super) fn intrinsic_sys() -> IntrinsicModule {
             vec![("cmd".to_string(), Type::Str)],
             result_ty(Type::Str, "IOError"),
         ),
-    );
-
-    // get_args() -> list[str]
-    functions.insert(
-        "get_args".to_string(),
-        FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))),
-    );
-
-    // sys_exit(code: int) -> None (terminates the process)
-    functions.insert(
-        "sys_exit".to_string(),
-        FunctionType::all_borrow(vec![("code".to_string(), Type::Int)], Type::None),
-    );
-
-    // sys_version() -> str (Sifr version string)
-    functions.insert(
-        "sys_version".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-
-    // sys_platform() -> str (platform identifier: "linux", "macos", "windows")
-    functions.insert(
-        "sys_platform".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-
-    // sys_maxsize() -> int (maximum int size)
-    functions.insert(
-        "sys_maxsize".to_string(),
-        FunctionType::all_borrow(vec![], Type::Int),
     );
 
     IntrinsicModule {

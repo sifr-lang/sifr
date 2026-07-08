@@ -33,6 +33,7 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.bytes" | "_sifr.bytes" => &["bytes"],
         "sifr.html" | "_sifr.html" => &["html"],
         "sifr.calendar" | "_sifr.calendar" => &["calendar"],
+        "sifr.env" | "sifr.sys" | "_sifr.sys" => &["sys"],
         "sifr.platform" | "_sifr.platform" => &["platform"],
         "sifr.logging" | "_sifr.logging" => &["logging"],
         "sifr.math" | "_sifr.math" => &["math"],
@@ -48,9 +49,8 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.http" | "_sifr.http" => &["http"],
         "sifr.python" | "sifr.python_core" | "_sifr.python" => &["python"],
         "sifr.process" => &["process"],
-        "sifr.io" | "sifr.os" | "sifr.pathlib" | "sifr.shutil" | "sifr.tempfile" | "_sifr.fs" => {
-            &["fs"]
-        }
+        "sifr.os" => &["fs", "sys"],
+        "sifr.io" | "sifr.pathlib" | "sifr.shutil" | "sifr.tempfile" | "_sifr.fs" => &["fs"],
         "sifr.signal" | "_sifr.signal" => &["signals"],
         "sifr.runtime" | "_sifr.runtime" => &["runtime-observability"],
         "sifr.random" => &["random"],
@@ -89,6 +89,7 @@ fn features_for_requirement(feature: StdlibFeature) -> &'static [&'static str] {
         | StdlibFeature::RustlsPlatformVerifier
         | StdlibFeature::TokioRustls => &["tls"],
         StdlibFeature::SerdeJson => &["json"],
+        StdlibFeature::Sys => &["sys"],
         StdlibFeature::Toml => &["toml"],
         StdlibFeature::Tracing | StdlibFeature::Metrics => &["runtime-observability"],
         StdlibFeature::UnicodeNames

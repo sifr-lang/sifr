@@ -107,7 +107,7 @@ fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
-                    func: "env_get".to_string(),
+                    func: "which".to_string(),
                     args: vec![HirExpr::MethodCall {
                         object: Box::new(HirExpr::StringLiteral("PATH".to_string())),
                         method: "lower".to_string(),
@@ -125,8 +125,8 @@ fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
         }],
         classes: vec![],
         imports: vec![HirImport {
-            module: "sifr.env".to_string(),
-            names: vec!["env_get".to_string()],
+            module: "sifr.os".to_string(),
+            names: vec!["which".to_string()],
             aliases: vec![],
         }],
         constants: vec![],
@@ -144,7 +144,7 @@ fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
         "typed method call argument should lower through registry"
     );
     assert!(
-        !generated.rust_source.contains("env_get("),
-        "env_get should not be emitted as unresolved function call"
+        !generated.rust_source.contains("which("),
+        "which should not be emitted as unresolved function call"
     );
 }

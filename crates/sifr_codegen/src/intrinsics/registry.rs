@@ -1,7 +1,6 @@
 mod bytes;
 mod collections;
 mod encoding;
-mod env;
 mod file_handles;
 mod net;
 mod open_text_handles;
@@ -14,7 +13,6 @@ mod python;
 mod requirements;
 mod runtime;
 mod signal;
-mod sys;
 mod task;
 mod test;
 mod time;
@@ -38,14 +36,7 @@ pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIn
 
 pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
     let (expr, required_feature) = match name {
-        "env_get" => (env::lower_env_get(args), None),
-        "env_set" => (env::lower_env_set(args), None),
-        "env_unset" => (env::lower_env_unset(args), None),
-        "env_keys" => (env::lower_env_keys(args), None),
-        "env_values" => (env::lower_env_values(args), None),
-        "env_items" => (env::lower_env_items(args), None),
         "run_command" => (os::lower_run_command(args), None),
-        "get_args" => (os::lower_get_args(args), None),
         "chdir" => (os::lower_chdir(args), None),
         "getpid" => (os::lower_getpid(args), None),
         "cpu_count" => (os::lower_cpu_count(args), None),
@@ -138,10 +129,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
         "sleep" => (time::lower_sleep(args), None),
         "monotonic" => (time::lower_monotonic(args), None),
-        "sys_exit" => (sys::lower_sys_exit(args), None),
-        "sys_version" => (sys::lower_sys_version(args), None),
-        "sys_platform" => (sys::lower_sys_platform(args), None),
-        "sys_maxsize" => (sys::lower_sys_maxsize(args), None),
         "process_run" => (process::lower_process_run(args), None),
         "process_spawn" => (process_child_lifecycle::lower_process_spawn(args), None),
         "process_kill" => (process_child_lifecycle::lower_process_kill(args), None),
