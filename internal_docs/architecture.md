@@ -152,7 +152,7 @@ Sifr is Python-syntax and CPython-behavior-informed, but it is not Python-source
 
 | Import root | Owner | Resolution |
 | --- | --- | --- |
-| `_sifr.*` | Sysroot-private stdlib declaration source | Available only to sysroot stdlib implementation files; user/package imports are rejected. |
+| `_sifr.*` | Sysroot-private stdlib declaration source | Naming convention for modules loaded with `SysrootPrivateDeclaration` origin. Importability is source-origin based: only `SysrootPublicStdlib` sources may import private declarations. |
 | `sifr.*` | Sifr standard library | Resolved from the active sysroot public stdlib source inventory; never package-manager resolution. |
 | top-level | User code and third-party packages | Workspace/package resolution. |
 

@@ -463,9 +463,9 @@ foundational runtime primitives and shared substrates:
   must call directly.
 
 Generated code may depend on `sifr_runtime` directly when language glue needs
-runtime primitives. Public stdlib wrappers should prefer `sifr_stdlib` where a
-native operation is part of the standard library surface rather than language
-runtime glue.
+runtime primitives. Public stdlib wrappers must route through `sifr_stdlib`
+where a native operation is part of the standard library surface rather than
+language runtime glue.
 
 ### `sifr_stdlib`
 
@@ -609,7 +609,8 @@ sysroot planning layer.
 The final manifest layer is `sifr_stdlib_manifest`. It owns:
 
 - stdlib source inventory and module metadata,
-- public `sifr.*` import policy and private `_sifr.*` rejection policy,
+- public stdlib import policy and source-origin-based private declaration
+  import policy,
 - legacy CPython-shaped module suggestions,
 - private declaration module metadata,
 - migration-state loading from
@@ -620,8 +621,8 @@ The final manifest layer is `sifr_stdlib_manifest`. It owns:
 
 It does not own stdlib behavior, Rust implementation policy, fallback
 signatures, or compiler-native dispatch. Declaration source is the signature
-truth for migrated families. A migrated or closed surface must not keep a
-parallel intrinsic signature table in the manifest layer.
+truth for migrated families. A closing surface must not keep a parallel
+intrinsic signature table in the manifest layer.
 
 IPC schema, frame encoding, transport, request tracking, and handshake metadata
 do not belong in the stdlib manifest. The current IPC modules are shared
@@ -664,8 +665,10 @@ Private declaration modules live under:
 <sysroot>/lib/sifr/stdlib/_sifr/*.sifr
 ```
 
-Only sysroot stdlib modules may import `_sifr.*`. User code importing `_sifr.*`
-is rejected. Private declaration modules declare native stdlib operations using
+Only sources loaded with `SysrootPublicStdlib` origin may import modules loaded
+with `SysrootPrivateDeclaration` origin. `_sifr.*` is the naming convention and
+on-disk layout for those private declaration modules, not the semantic trust
+boundary. Private declaration modules declare native stdlib operations using
 Rust interop annotations such as direct functions, opaque handles, async
 functions, view/zero-copy contracts, and callback policies.
 
@@ -678,7 +681,8 @@ calls, callback policy, views, and error conversion.
 Stdlib-private rules are limited to:
 
 - declarations live under `stdlib/_sifr/`,
-- only sysroot stdlib sources can import `_sifr.*`,
+- only `SysrootPublicStdlib` sources can import `SysrootPrivateDeclaration`
+  modules,
 - targets resolve only to canonical crates under the resolved sysroot,
 - user packages cannot shadow private declarations or sysroot crate targets,
 - diagnostics point to private declarations only in internal/developer
@@ -739,16 +743,14 @@ modules contain both migrated and retained leaves. Manifest states are:
 | --- | --- |
 | `retained` | Still compiler-native for now and scheduled for migration or final classification. |
 | `pilot` | The selected pilot implementation is underway and the retained compiler path is still present. |
-| `migrated` | Behavior now routes through checked stdlib source and sysroot Rust interop; the row stays as an audit tombstone with evidence after compiler-native entries are deleted. |
-| `closed` | The old surface was removed, rejected, or replaced with a different supported API; the row stays as an audit tombstone with evidence. |
+| `closing` | Temporary closeout state while deletion or replacement evidence lands; the row is removed once guards prove the old compiler-native surface cannot reappear. |
 | `retained-by-design` | Permanently compiler-owned language, bridge, entrypoint, exact-int, test-harness, or runtime substrate glue. |
 
 The manifest is the only exception ledger. Do not add a second registry for
-compiler-native stdlib migration state. Prefix retainers are temporary
-coarse-grained rows. Migrating any intrinsic covered by a prefix must either
-narrow the prefix in the same change or record the retired name in a
-`retired_prefix_intrinsics` field so the prefix cannot keep migrated behavior
-alive.
+compiler-native stdlib migration state. Prefix retainers are transitional
+compatibility with the current dispatcher shape only; the first schema-hardening
+milestone exact-enumerates those dispatchers and deletes prefix concepts from
+the manifest schema.
 
 Resource certification rows are also recorded in this manifest. The resource
 certification gate reads `certification_rows` from the retained-glue manifest
@@ -839,26 +841,25 @@ stdlib behavior must instead route through `stdlib/_sifr` declarations and
 
 Generated stdlib Rust has a provenance requirement. `StdlibCode.module_rust_code`
 is valid as a transport for Rust code produced by compiling checked Sifr stdlib
-source. It must not be populated from handwritten Rust string literals except
-for manifest-tracked temporary migration exceptions. The final representation
-should make provenance structural so guards can distinguish compiled stdlib
-output from raw compiler injection.
+source. It must not be populated from handwritten Rust string literals. The
+temporary HTTP transport harness is removed before provenance hardening lands,
+so the final provenance model does not contain a handwritten-exemption concept.
 
 The structural target is:
 
 ```rust
-enum StdlibRustSource {
-    CompiledFromSifr { module: String, source_path: PathBuf, rust: String },
-    HandwrittenExemption { manifest_key: String, rust: String },
+struct StdlibRustSource {
+    module: String,
+    source_path: PathBuf,
+    rust: String,
 }
 ```
 
 `StdlibCode.module_rust_code` should carry `StdlibRustSource` values rather than
-plain strings once provenance hardening lands. Guards then reject any
-`HandwrittenExemption` whose `manifest_key` is absent from the retained-glue
-manifest. `CompiledFromSifr.source_path` is normalized to the same
-repo-relative path form used by manifest `declaration_files`, so the guard can
-cross-check generated stdlib Rust provenance against declaration source.
+plain strings once provenance hardening lands. `source_path` is normalized to
+the same repo-relative path form used by manifest `declaration_files`, so the
+guard can cross-check generated stdlib Rust provenance against declaration
+source. Compiled checked stdlib source is the only valid producer.
 
 Runtime/resource/callback surfaces follow the Rust interop certification gate.
 Surfaces still marked future-owned or uncertified in the compatibility matrix
@@ -868,8 +869,8 @@ resource migration cannot advance a resource-shaped surface ahead of the
 runtime evidence recorded by the Rust interop matrix.
 The stdlib native intrinsic allowlist guard is also part of core validation:
 it freezes every retained compiler intrinsic name, prefix dispatcher, registry
-file, and preamble file until that entry is migrated, deleted, or explicitly
-kept as compiler-language glue.
+file, and preamble file until that entry is closing, deleted, or explicitly kept
+as compiler-language glue.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
 compiler-owned sysroot trust policy. A canonical private `_sifr.*` declaration

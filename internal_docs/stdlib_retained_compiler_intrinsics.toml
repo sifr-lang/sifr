@@ -7,12 +7,15 @@
 # State values:
 # - retained: still compiler-native for now and scheduled for migration or final classification.
 # - pilot: selected pilot implementation is underway while retained compiler glue remains.
-# - migrated: behavior routes through checked stdlib source and sysroot Rust
-#   interop; row remains as an audit tombstone after compiler-native entries are deleted.
-# - closed: old surface was removed, rejected, or replaced with a different
-#   supported API; row remains as an audit tombstone after compiler-native entries are deleted.
+# - closing: temporary state while deletion or replacement evidence lands; row
+#   is removed after guards prove the old compiler-native surface cannot reappear.
 # - retained-by-design: permanently compiler-owned language, bridge, entrypoint,
 #   exact-int, test-harness, or runtime substrate glue.
+#
+# `prefix_intrinsics` is a temporary compatibility field for the current
+# prefix-shaped dispatcher. The stdlib native boundary completion phase
+# exact-enumerates those dispatchers and removes this field from the final
+# manifest schema.
 schema_version = 1
 
 [[surface]]
@@ -136,9 +139,6 @@ id = "_sifr.http::transport_and_header_helpers"
 state = "retained"
 declaration_files = ["stdlib/_sifr/http.sifr"]
 certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
-raw_injections = [
-  { site = "crates/sifr_driver/src/stdlib/bootstrap.rs::HTTP_TRANSPORT_HARNESS_RUST", module = "sifr.http_transport" },
-]
 reason = "HTTP transport, protocol, and handle behavior remains behind runtime/resource certification; header helper shims still route through generated glue."
 registry_files = ["url_http.rs"]
 preamble_files = ["url_http_runtime.rs"]
@@ -150,7 +150,6 @@ exact_intrinsics = [
   "http_validate_header_value",
 ]
 prefix_intrinsics = ["http_", "http1_", "http2_"]
-retired_prefix_intrinsics = []
 
 [[surface]]
 id = "_sifr.encoding::utf8_bytes_string_glue"
@@ -325,7 +324,6 @@ reason = "TLS configuration, handshakes, stream handles, and certificate state r
 registry_files = ["tls.rs"]
 preamble_files = ["tls_runtime.rs"]
 prefix_intrinsics = ["tls_"]
-retired_prefix_intrinsics = []
 
 [[surface]]
 id = "_sifr.signal"
@@ -361,7 +359,6 @@ reason = "Python object handles, callback adapters, and runtime initialization r
 registry_files = ["python.rs"]
 exact_intrinsics = ["local_callback", "threadsafe_callback"]
 prefix_intrinsics = ["py_"]
-retired_prefix_intrinsics = []
 
 [[surface]]
 id = "_sifr.task::language_runtime_glue"
