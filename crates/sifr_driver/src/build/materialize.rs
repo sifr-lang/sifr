@@ -10,7 +10,7 @@ use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_stdlib_manifest::{CargoVendorMode, StdlibFeature, SysrootCrate, SysrootDependencyPlan};
+use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate, SysrootDependencyPlan};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -156,11 +156,7 @@ fn materialize_binary_project_at_path(
 }
 
 fn sysroot_report(dependency_plan: &SysrootDependencyPlan) -> BuildSysrootReport {
-    BuildSysrootReport::new(
-        dependency_plan.sysroot_root.clone(),
-        dependency_plan.toolchain_id.clone(),
-        dependency_plan.sysroot_content_sha256.clone(),
-    )
+    BuildSysrootReport::from_dependency_plan(dependency_plan)
 }
 
 fn materialize_binary_project_files(
@@ -421,8 +417,6 @@ fn binary_project_cache_key(
     generated_project: &GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
 ) -> String {
-    let stdlib_modules = sorted_lines(&generated_project.used_stdlib_modules);
-    let required_features = sorted_feature_lines(&generated_project.required_features);
     let support_modules = generated_project
         .support_modules
         .iter()
@@ -430,7 +424,7 @@ fn binary_project_cache_key(
         .collect::<Vec<_>>()
         .join("\n===\n");
     format!(
-        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[stdlib]\n{}\n[crates]\n{}\n[interop]\n{}\n[cache-key-fragment]\n{}\n[sysroot-dependency-plan]\n{}",
+        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[sysroot-dependency-inputs]\n{}[interop]\n{}\n[cache-key-fragment]\n{}\n[sysroot-dependency-plan]\n{}",
         generate_dependency_cargo_toml_for_cache_key(
             project_name,
             dependency_plan,
@@ -438,28 +432,11 @@ fn binary_project_cache_key(
         ),
         generated_project.main_rs,
         support_modules,
-        stdlib_modules.join("\n"),
-        required_features.join("\n"),
+        dependency_plan.dependency_input_fingerprint(),
         generated_project.interop.cache_key_fragment(),
         generated_project.cache_key_fragment.as_deref().unwrap_or(""),
         dependency_plan.cache_fingerprint
     )
-}
-
-fn sorted_lines(values: &std::collections::HashSet<String>) -> Vec<String> {
-    let mut ordered: BTreeSet<&str> = BTreeSet::new();
-    for value in values {
-        ordered.insert(value.as_str());
-    }
-    ordered.into_iter().map(str::to_string).collect()
-}
-
-fn sorted_feature_lines(values: &std::collections::HashSet<StdlibFeature>) -> Vec<String> {
-    let mut ordered: BTreeSet<&str> = BTreeSet::new();
-    for value in values {
-        ordered.insert(value.id());
-    }
-    ordered.into_iter().map(str::to_string).collect()
 }
 
 #[cfg(test)]
@@ -479,7 +456,7 @@ mod tests {
         RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
         RustInteropEffect, RustTargetPath,
     };
-    use sifr_stdlib_manifest::{CargoVendorMode, SysrootDependencyPlan};
+    use sifr_stdlib_manifest::{CargoVendorMode, StdlibFeature, SysrootDependencyPlan};
     use std::collections::{BTreeMap, BTreeSet, HashSet};
 
     #[test]
@@ -546,6 +523,20 @@ mod tests {
             binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-a")),
             binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-b"))
         );
+    }
+
+    #[test]
+    fn binary_project_cache_key_uses_sysroot_dependency_plan_inputs() {
+        let base = base_project();
+        let mut dependency_plan = test_dependency_plan("fingerprint-a");
+        dependency_plan.stdlib_modules = BTreeSet::from(["sifr.json".to_string()]);
+        dependency_plan.required_features = BTreeSet::from([StdlibFeature::SerdeJson]);
+
+        let cache_key = binary_project_cache_key("sifr_output", &base, &dependency_plan);
+
+        assert!(cache_key.contains(
+            "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"
+        ));
     }
 
     #[test]
@@ -673,6 +664,8 @@ mod tests {
 
     fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
         SysrootDependencyPlan {
+            stdlib_modules: BTreeSet::new(),
+            required_features: BTreeSet::new(),
             sysroot_root: "/sysroot".into(),
             toolchain_id: "0.1.0-test-aarch64-test".to_string(),
             sysroot_content_sha256: "0".repeat(64),

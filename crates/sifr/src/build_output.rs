@@ -138,16 +138,16 @@ mod tests {
     use sifr_driver::{
         BuildCompilationMode, BuildReportInput, BuildStageReport, BuildSysrootReport,
     };
+    use sifr_stdlib_manifest::{
+        CargoVendorMode, StdlibFeature, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
+    };
+    use std::collections::BTreeSet;
 
     fn report(cache_hit: bool) -> BuildReport {
         BuildReport::new(BuildReportInput {
             entrypoint_path: Path::new("demo main.sifr").to_path_buf(),
             mode: BuildCompilationMode::Project,
-            sysroot: BuildSysrootReport::new(
-                Path::new("/opt/sifr").to_path_buf(),
-                "0.1.0-test-x86_64-test",
-                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-            ),
+            sysroot: BuildSysrootReport::from_dependency_plan(&sysroot_dependency_plan()),
             binary_path: Path::new("./sifr_output/target/release/sifr_output").to_path_buf(),
             total_elapsed: Duration::from_millis(54),
             stages: vec![
@@ -164,6 +164,27 @@ mod tests {
             frontend_diagnostics: Vec::new(),
             cache_hit,
         })
+    }
+
+    fn sysroot_dependency_plan() -> SysrootDependencyPlan {
+        SysrootDependencyPlan {
+            stdlib_modules: BTreeSet::from(["sifr.json".to_string()]),
+            required_features: BTreeSet::from([StdlibFeature::SerdeJson]),
+            sysroot_root: Path::new("/opt/sifr").to_path_buf(),
+            toolchain_id: "0.1.0-test-x86_64-test".to_string(),
+            sysroot_content_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".to_string(),
+            cargo_config: Path::new("/opt/sifr/.cargo/config.toml").to_path_buf(),
+            vendor_dir: Path::new("/opt/sifr/vendor").to_path_buf(),
+            crates: vec![SysrootCrateDependency {
+                krate: SysrootCrate::SifrStdlib,
+                path: Path::new("/opt/sifr/crates/sifr_stdlib").to_path_buf(),
+                features: BTreeSet::from(["json".to_string()]),
+            }],
+            retained_direct_dependencies: Vec::new(),
+            cargo_vendor_mode: CargoVendorMode::SysrootOnly,
+            cache_fingerprint: "fingerprint-a".to_string(),
+        }
     }
 
     #[test]
@@ -221,5 +242,16 @@ mod tests {
         );
 
         assert!(rendered.starts_with("Finished release build in 54 ms (cached)\n"));
+    }
+
+    #[test]
+    fn build_sysroot_report_carries_dependency_plan_identity() {
+        let report = report(false);
+
+        assert_eq!(
+            report.sysroot().dependency_inputs(),
+            "[stdlib]\nsifr.json\n[features]\nserde_json\n"
+        );
+        assert_eq!(report.sysroot().dependency_fingerprint(), "fingerprint-a");
     }
 }

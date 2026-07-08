@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use crate::diagnostics::RenderedDiagnostic;
+use sifr_stdlib_manifest::SysrootDependencyPlan;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BuildCompilationMode {
@@ -48,18 +49,18 @@ pub struct BuildSysrootReport {
     root: PathBuf,
     toolchain_id: String,
     content_sha256: String,
+    dependency_inputs: String,
+    dependency_fingerprint: String,
 }
 
 impl BuildSysrootReport {
-    pub fn new(
-        root: PathBuf,
-        toolchain_id: impl Into<String>,
-        content_sha256: impl Into<String>,
-    ) -> Self {
+    pub fn from_dependency_plan(dependency_plan: &SysrootDependencyPlan) -> Self {
         Self {
-            root,
-            toolchain_id: toolchain_id.into(),
-            content_sha256: content_sha256.into(),
+            root: dependency_plan.sysroot_root.clone(),
+            toolchain_id: dependency_plan.toolchain_id.clone(),
+            content_sha256: dependency_plan.sysroot_content_sha256.clone(),
+            dependency_inputs: dependency_plan.dependency_input_fingerprint(),
+            dependency_fingerprint: dependency_plan.cache_fingerprint.clone(),
         }
     }
 
@@ -73,6 +74,14 @@ impl BuildSysrootReport {
 
     pub fn content_sha256(&self) -> &str {
         &self.content_sha256
+    }
+
+    pub fn dependency_inputs(&self) -> &str {
+        &self.dependency_inputs
+    }
+
+    pub fn dependency_fingerprint(&self) -> &str {
+        &self.dependency_fingerprint
     }
 }
 

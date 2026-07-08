@@ -454,6 +454,8 @@ serde_json = { version = "1.0.149", features = ["preserve_order"] }
         vendor_dir: PathBuf,
     ) -> SysrootDependencyPlan {
         SysrootDependencyPlan {
+            stdlib_modules: BTreeSet::new(),
+            required_features: BTreeSet::new(),
             sysroot_root: PathBuf::from("/opt/sifr"),
             toolchain_id: "0.0.0-test-x86_64-test".to_string(),
             sysroot_content_sha256: "content".to_string(),

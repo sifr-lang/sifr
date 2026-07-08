@@ -348,6 +348,12 @@ M1 may land as ordered sub-PRs:
   in PR #2835, merge commit `7683ff65f1517b42639d8834f73a71d98eae1a16`;
   local `create-pr` validation passed in 168.61s with no advisories; reviewer
   pass 2 READY).
+- M1e: route sysroot dependency input identity through
+  `SysrootDependencyPlan` for binary cache keys, test-runner cache keys, and
+  build sysroot reports, so downstream consumers do not re-sort raw codegen
+  stdlib module and native feature sets (implementation PR pending; focused
+  local validation passed; local `create-pr` validation passed in 536.17s
+  with advisory: warm wall-time budget exceeded; reviewer pass 2 READY).
 
 Acceptance:
 

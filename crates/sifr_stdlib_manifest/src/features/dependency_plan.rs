@@ -87,6 +87,8 @@ impl SysrootCrateDependency {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SysrootDependencyPlan {
+    pub stdlib_modules: BTreeSet<String>,
+    pub required_features: BTreeSet<StdlibFeature>,
     pub sysroot_root: PathBuf,
     pub toolchain_id: String,
     pub sysroot_content_sha256: String,
@@ -106,6 +108,21 @@ impl SysrootDependencyPlan {
             .map(SysrootCrateDependency::cargo_line)
             .chain(self.retained_direct_dependencies.iter().cloned())
             .collect()
+    }
+
+    #[must_use]
+    pub fn dependency_input_fingerprint(&self) -> String {
+        let mut fingerprint = String::from("[stdlib]\n");
+        for module in &self.stdlib_modules {
+            fingerprint.push_str(module);
+            fingerprint.push('\n');
+        }
+        fingerprint.push_str("[features]\n");
+        for feature in &self.required_features {
+            fingerprint.push_str(feature.id());
+            fingerprint.push('\n');
+        }
+        fingerprint
     }
 }
 
@@ -130,6 +147,8 @@ pub fn sysroot_dependency_plan_with_sysroot(
     sysroot: &ResolvedSysroot,
     cargo_vendor_mode: CargoVendorMode,
 ) -> SysrootDependencyPlan {
+    let stdlib_module_inputs = stdlib_modules.iter().cloned().collect::<BTreeSet<_>>();
+    let required_feature_inputs = required_features.iter().copied().collect::<BTreeSet<_>>();
     let runtime_features = RuntimeFeatures::from_requirements(stdlib_modules, required_features);
     let stdlib_features = planned_sifr_stdlib_features(stdlib_modules, required_features)
         .into_iter()
@@ -148,6 +167,8 @@ pub fn sysroot_dependency_plan_with_sysroot(
         cache_fingerprint(sysroot, &crates, &direct_dependencies, cargo_vendor_mode);
 
     SysrootDependencyPlan {
+        stdlib_modules: stdlib_module_inputs,
+        required_features: required_feature_inputs,
         sysroot_root: sysroot.root.clone(),
         toolchain_id: sysroot.toolchain_id(),
         sysroot_content_sha256: sysroot.manifest.sysroot_content_sha256.clone(),
