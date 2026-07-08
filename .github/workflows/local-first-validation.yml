@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       # Advisory until legacy workspace lint debt is burned down by a dedicated cleanup.
@@ -39,6 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v5
@@ -53,6 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v5
@@ -68,6 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v5
