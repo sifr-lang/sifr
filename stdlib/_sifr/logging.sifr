@@ -1,2 +1,10 @@
 # Private _sifr.logging native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.logging.set_global_level)
+def set_global_level(level: int) -> None:
+    ...
+
+
+@rust(sifr_stdlib.logging.get_global_level)
+def get_global_level() -> int:
+    ...

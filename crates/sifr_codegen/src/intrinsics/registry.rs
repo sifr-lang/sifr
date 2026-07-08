@@ -3,7 +3,6 @@ mod collections;
 mod encoding;
 mod env;
 mod file_handles;
-mod logging;
 mod net;
 mod open_text_handles;
 mod os;
@@ -392,8 +391,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),
         ),
-        "set_global_level" => (logging::lower_set_global_level(args), None),
-        "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,
     };
 

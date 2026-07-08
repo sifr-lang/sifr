@@ -337,35 +337,6 @@ pub fn build_file_handle_struct_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_logging_items() -> Vec<RustItem> {
-    vec![RustItem::Static {
-        name: "__SIFR_GLOBAL_LOG_LEVEL".to_string(),
-        visibility: Visibility::Private,
-        ty: RustType::Named("std::sync::LazyLock<std::sync::Mutex<i64>>".to_string()),
-        value: RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "sync".to_string(),
-                "LazyLock".to_string(),
-                "new".to_string(),
-            ])),
-            args: vec![RustExpr::Closure {
-                params: vec![],
-                body: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "std".to_string(),
-                        "sync".to_string(),
-                        "Mutex".to_string(),
-                        "new".to_string(),
-                    ])),
-                    args: vec![RustExpr::Literal(crate::RustLiteral::Int(20))],
-                }),
-                is_move: false,
-            }],
-        },
-    }]
-}
-
 pub fn build_random_module_state_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {

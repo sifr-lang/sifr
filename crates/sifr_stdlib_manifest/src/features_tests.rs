@@ -97,6 +97,20 @@ fn unicode_module_emits_only_sysroot_stdlib_dependency() {
 }
 
 #[test]
+fn logging_module_emits_only_sysroot_stdlib_dependency() {
+    let deps = generated_cargo_dependencies(
+        &HashSet::from(["sifr.logging".to_string(), "_sifr.logging".to_string()]),
+        &HashSet::new(),
+    );
+
+    assert_eq!(deps.len(), 1);
+    assert!(deps[0].starts_with("sifr_stdlib = "));
+    assert!(deps[0].contains("default-features = false"));
+    assert!(deps[0].contains("features = [\"logging\"]"));
+    assert!(!deps[0].starts_with("sifr_runtime = "));
+}
+
+#[test]
 fn unicode_intrinsic_features_enable_runtime_unicode_feature() {
     let deps = generated_cargo_dependencies(
         &HashSet::new(),

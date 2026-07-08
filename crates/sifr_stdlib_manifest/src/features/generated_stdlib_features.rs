@@ -34,6 +34,7 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.html" | "_sifr.html" => &["html"],
         "sifr.calendar" | "_sifr.calendar" => &["calendar"],
         "sifr.platform" | "_sifr.platform" => &["platform"],
+        "sifr.logging" | "_sifr.logging" => &["logging"],
         "sifr.math" | "_sifr.math" => &["math"],
         "sifr.tomllib" | "_sifr.toml" => &["toml"],
         "sifr.url" | "_sifr.url" => &["url"],

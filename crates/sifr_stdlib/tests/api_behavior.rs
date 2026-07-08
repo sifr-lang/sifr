@@ -536,6 +536,28 @@ fn runtime_observability_emits_diagnostic_without_subscriber() {
     );
 }
 
+#[cfg(feature = "logging")]
+#[test]
+fn logging_global_level_round_trips_without_panicking() {
+    use sifr_runtime::interop::SifrIntBridge;
+
+    let original = sifr_stdlib::logging::get_global_level();
+
+    sifr_stdlib::logging::set_global_level(SifrIntBridge::from(10));
+    assert_eq!(
+        sifr_stdlib::logging::get_global_level().to_i64_saturating(),
+        10
+    );
+
+    sifr_stdlib::logging::set_global_level(SifrIntBridge::from(40));
+    assert_eq!(
+        sifr_stdlib::logging::get_global_level().to_i64_saturating(),
+        40
+    );
+
+    sifr_stdlib::logging::set_global_level(original);
+}
+
 #[cfg(all(
     feature = "base64",
     feature = "calendar",

@@ -9,6 +9,7 @@ pub const LEAF_FEATURES: &[&str] = &[
     "calendar",
     "encoding",
     "platform",
+    "logging",
     "math",
     "toml",
     "url",

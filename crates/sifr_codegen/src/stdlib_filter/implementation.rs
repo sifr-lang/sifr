@@ -468,7 +468,6 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
                 || item_static.ident == "__SIFR_PROCESS_ASYNC_PIPE_READERS"
                 || item_static.ident == "__SIFR_PROCESS_ASYNC_PIPE_WRITERS"
                 || item_static.ident == "__SIFR_NEXT_PROCESS_ASYNC_CHILD_ID"
-                || item_static.ident == "__SIFR_GLOBAL_LOG_LEVEL"
         }
         Item::Fn(item_fn) => {
             item_fn.sig.ident == "__sifr_next_file_handle_id"
