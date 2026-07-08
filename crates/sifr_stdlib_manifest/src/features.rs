@@ -18,6 +18,7 @@ pub enum StdlibFeature {
     Cookie,
     EncodingRs,
     Flate2,
+    Fs,
     H2,
     Http,
     HttpBody,
@@ -73,6 +74,7 @@ impl StdlibFeature {
             Self::Cookie => "cookie",
             Self::EncodingRs => "encoding_rs",
             Self::Flate2 => "flate2",
+            Self::Fs => "fs",
             Self::H2 => "h2",
             Self::Http => "http",
             Self::HttpBody => "http-body",
@@ -155,6 +157,7 @@ const FLATE2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "flate2",
     spec: "flate2 = \"1.1.9\"",
 }];
+const FS_DEPS: &[GeneratedCargoDependency] = &[];
 const H2_DEPS: &[GeneratedCargoDependency] = &[GeneratedCargoDependency {
     package: "h2",
     spec: "h2 = \"0.4.14\"",
@@ -361,6 +364,10 @@ pub const STDLIB_FEATURE_SPECS: &[StdlibFeatureSpec] = &[
         cargo_dependencies: FLATE2_DEPS,
     },
     StdlibFeatureSpec {
+        feature: StdlibFeature::Fs,
+        cargo_dependencies: FS_DEPS,
+    },
+    StdlibFeatureSpec {
         feature: StdlibFeature::H2,
         cargo_dependencies: H2_DEPS,
     },
@@ -537,6 +544,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "cookie" => Some(StdlibFeature::Cookie),
         "encoding_rs" | "encoding-rs" => Some(StdlibFeature::EncodingRs),
         "flate2" => Some(StdlibFeature::Flate2),
+        "fs" => Some(StdlibFeature::Fs),
         "h2" => Some(StdlibFeature::H2),
         "http" => Some(StdlibFeature::Http),
         "http-body" | "http_body" => Some(StdlibFeature::HttpBody),
@@ -592,6 +600,7 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
 pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature] {
     match module_name {
         "sifr.collections" | "_sifr.collections" => &[],
+        "_sifr.fs" => &[StdlibFeature::Fs],
         "sifr.time" | "_sifr.time" => &[StdlibFeature::Chrono],
         "sifr.random" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],
         "_sifr.crypto" => &[StdlibFeature::Rand, StdlibFeature::RandDistr],

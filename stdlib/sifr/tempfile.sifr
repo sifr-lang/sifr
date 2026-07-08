@@ -1,7 +1,15 @@
 # sifr.tempfile — Temporary file and directory creation (wraps _sifr.fs + _sifr.crypto)
 # Operations return Result[T, IOError] for safe error handling.
-from _sifr.fs import mkdir, write_text, gettempdir, exists, remove_file, rmdir_all
+from _sifr.fs import mkdir, write_text as _write_text_impl, gettempdir, exists as _exists_impl, remove_file, rmdir_all
 from _sifr.crypto import random_int
+
+
+def write_text(path: str, content: str) -> Result[None, IOError]:
+    return _write_text_impl(path, content)
+
+
+def exists(path: str) -> bool:
+    return _exists_impl(path)
 
 
 def _random_suffix() -> str:

@@ -1,4 +1,4 @@
-use super::{result_ty, IntrinsicModule};
+use super::IntrinsicModule;
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
@@ -42,46 +42,8 @@ fn json_limit_error_ty() -> Type {
 
 /// _sifr.io — File I/O intrinsics
 pub(super) fn intrinsic_io() -> IntrinsicModule {
-    let mut functions = HashMap::new();
-
-    // read_text(path: str) -> Result[str, IOError]
-    functions.insert(
-        "read_text".to_string(),
-        FunctionType::all_borrow(
-            vec![("path".to_string(), Type::Str)],
-            result_ty(Type::Str, "IOError"),
-        ),
-    );
-
-    // write_text(path: str, content: str) -> Result[None, IOError]
-    functions.insert(
-        "write_text".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("path".to_string(), Type::Str),
-                ("content".to_string(), Type::Str),
-            ],
-            result_ty(Type::None, "IOError"),
-        ),
-    );
-
-    // exists(path: str) -> bool  (infallible — just checks existence)
-    functions.insert(
-        "exists".to_string(),
-        FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool),
-    );
-
-    // read_lines(path: str) -> Result[list[str], IOError]
-    functions.insert(
-        "read_lines".to_string(),
-        FunctionType::all_borrow(
-            vec![("path".to_string(), Type::Str)],
-            result_ty(Type::List(Box::new(Type::Str)), "IOError"),
-        ),
-    );
-
     IntrinsicModule {
-        functions,
+        functions: HashMap::new(),
         constants: HashMap::new(),
     }
 }

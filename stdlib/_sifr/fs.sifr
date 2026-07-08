@@ -1,2 +1,25 @@
 # Private _sifr.fs native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+@rust(sifr_stdlib.fs.read_text)
+def read_text(path: str) -> Result[str, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.write_text)
+def write_text(path: str, content: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.exists)
+def exists(path: str) -> bool:
+    ...
+
+
+@rust(sifr_stdlib.fs.read_lines)
+def read_lines(path: str) -> Result[list[str], IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.append_text)
+def append_text(path: str, content: str) -> Result[None, IOError]:
+    ...

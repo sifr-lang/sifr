@@ -67,11 +67,9 @@ registry_files = [
 ]
 preamble_files = ["io_bytes_methods.rs"]
 exact_intrinsics = [
-  "append_text",
   "builtin_open",
   "builtin_open_text",
   "copy_file",
-  "exists",
   "file_close",
   "file_read",
   "file_read_bytes",
@@ -89,8 +87,6 @@ exact_intrinsics = [
   "makedirs",
   "mkdir",
   "open_file",
-  "read_lines",
-  "read_text",
   "remove_file",
   "rename",
   "resolve_path",
@@ -99,7 +95,6 @@ exact_intrinsics = [
   "rmdir_all",
   "touch",
   "walk_dir",
-  "write_text",
 ]
 
 [[surface]]

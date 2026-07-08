@@ -1,7 +1,11 @@
 # sifr.io — File and stream I/O surfaces
 # Provides open(), open_binary(), file handle classes, and in-memory stream wrappers.
 from _sifr.fs import open_file, file_read, file_write, file_readline, file_readlines, file_close, file_read_bytes, file_write_bytes
-from _sifr.fs import read_text, write_text, exists, read_lines, append_text
+from _sifr.fs import read_text as _read_text_impl
+from _sifr.fs import write_text as _write_text_impl
+from _sifr.fs import exists as _exists_impl
+from _sifr.fs import read_lines as _read_lines_impl
+from _sifr.fs import append_text as _append_text_impl
 from sifr.encoding import (
     Encoding,
     DecodeError,
@@ -30,6 +34,26 @@ def _negative_seek_error(offset: int) -> str:
 
 def _unsupported_seek_tell_error() -> str:
     return "seek/tell is unsupported for this stream"
+
+
+def read_text(path: str) -> Result[str, IOError]:
+    return _read_text_impl(path)
+
+
+def write_text(path: str, content: str) -> Result[None, IOError]:
+    return _write_text_impl(path, content)
+
+
+def exists(path: str) -> bool:
+    return _exists_impl(path)
+
+
+def read_lines(path: str) -> Result[list[str], IOError]:
+    return _read_lines_impl(path)
+
+
+def append_text(path: str, content: str) -> Result[None, IOError]:
+    return _append_text_impl(path, content)
 
 
 def _mode_is_readable(mode: str) -> bool:

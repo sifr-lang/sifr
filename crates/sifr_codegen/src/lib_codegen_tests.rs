@@ -2,6 +2,7 @@ use crate::{
     generate_project_with_deps_and_crates, generate_rust, generate_rust_multi,
     generate_rust_multi_with_metadata, generate_rust_test, generate_rust_with_metadata,
     generate_rust_with_stdlib_for_module, RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
+    StdlibRustSource,
 };
 use sifr_ir::{
     HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFunction, HirImport, HirMatchArm,
@@ -27,6 +28,8 @@ mod classes_and_basics_codegen_tests;
 mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod iterators_and_generators_codegen_tests;
+#[cfg(test)]
+mod multi_module_stdlib_feature_tests;
 #[cfg(test)]
 mod performance_codegen_tests;
 #[cfg(test)]

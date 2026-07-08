@@ -323,6 +323,49 @@ fn base64_leaf_matches_rfc_vectors_and_error_paths() {
     assert_eq!(sifr_stdlib::base64::feature_name(), "base64");
 }
 
+#[cfg(feature = "fs")]
+#[test]
+fn fs_leaf_reads_writes_appends_and_lists_lines() {
+    let root = unique_fs_test_dir("fs_leaf_reads_writes_appends_and_lists_lines");
+    std::fs::create_dir_all(&root).expect("test directory should be created");
+    let path = root.join("sample.txt");
+    let path = path.to_string_lossy().to_string();
+
+    assert!(!sifr_stdlib::fs::exists(&path));
+    sifr_stdlib::fs::write_text(&path, "alpha\nbeta").expect("write_text should write content");
+    assert!(sifr_stdlib::fs::exists(&path));
+    assert_eq!(
+        sifr_stdlib::fs::read_text(&path).expect("read_text should read content"),
+        "alpha\nbeta"
+    );
+    assert_eq!(
+        sifr_stdlib::fs::read_lines(&path).expect("read_lines should split lines"),
+        vec!["alpha".to_string(), "beta".to_string()]
+    );
+
+    sifr_stdlib::fs::append_text(&path, "\ngamma").expect("append_text should append content");
+    assert_eq!(
+        sifr_stdlib::fs::read_lines(&path).expect("read_lines should include appended line"),
+        vec!["alpha".to_string(), "beta".to_string(), "gamma".to_string()]
+    );
+    assert_eq!(sifr_stdlib::fs::feature_name(), "fs");
+
+    std::fs::remove_dir_all(root).expect("test directory should be removed");
+}
+
+#[cfg(feature = "fs")]
+fn unique_fs_test_dir(name: &str) -> std::path::PathBuf {
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("system clock should be after unix epoch")
+        .as_nanos();
+    std::env::temp_dir().join(format!(
+        "sifr_stdlib_{name}_{}_{}",
+        std::process::id(),
+        nonce
+    ))
+}
+
 #[cfg(feature = "regex")]
 #[test]
 fn regex_leaf_matches_public_re_helpers() {

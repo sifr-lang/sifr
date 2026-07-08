@@ -100,54 +100,6 @@ pub(super) fn intrinsic_sys() -> IntrinsicModule {
 pub(super) fn intrinsic_fs() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // read_text(path: str) -> Result[str, IOError]
-    functions.insert(
-        "read_text".to_string(),
-        FunctionType::all_borrow(
-            vec![("path".to_string(), Type::Str)],
-            result_ty(Type::Str, "IOError"),
-        ),
-    );
-
-    // write_text(path: str, content: str) -> Result[None, IOError]
-    functions.insert(
-        "write_text".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("path".to_string(), Type::Str),
-                ("content".to_string(), Type::Str),
-            ],
-            result_ty(Type::None, "IOError"),
-        ),
-    );
-
-    // exists(path: str) -> bool  (infallible)
-    functions.insert(
-        "exists".to_string(),
-        FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool),
-    );
-
-    // read_lines(path: str) -> Result[list[str], IOError]
-    functions.insert(
-        "read_lines".to_string(),
-        FunctionType::all_borrow(
-            vec![("path".to_string(), Type::Str)],
-            result_ty(Type::List(Box::new(Type::Str)), "IOError"),
-        ),
-    );
-
-    // append_text(path: str, content: str) -> Result[None, IOError]
-    functions.insert(
-        "append_text".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("path".to_string(), Type::Str),
-                ("content".to_string(), Type::Str),
-            ],
-            result_ty(Type::None, "IOError"),
-        ),
-    );
-
     // getcwd() -> Result[str, IOError]
     functions.insert(
         "getcwd".to_string(),

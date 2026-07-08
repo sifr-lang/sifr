@@ -86,6 +86,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.encoding", "_sifr.encoding"]) {
         features.push("encoding");
     }
+    if has_module(&["sifr.io", "sifr.pathlib", "sifr.tempfile", "_sifr.fs"]) {
+        features.push("fs");
+    }
     if has_module(&["sifr.i18n", "_sifr.i18n"]) {
         features.push("i18n");
     }
