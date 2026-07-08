@@ -281,7 +281,10 @@ impl<'a> RustInteropResolver<'a> {
             return;
         };
         let sysroot_trust = self.sysroot_trust_for_package(package_id).cloned();
-        if sysroot_trust.is_some() && sysroot_crate_for_dependency_name(root).is_none() {
+        if sysroot_trust.is_some()
+            && root != "Self"
+            && sysroot_crate_for_dependency_name(root).is_none()
+        {
             self.push_diagnostic(
                     declaration,
                     path.span,
