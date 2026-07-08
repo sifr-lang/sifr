@@ -427,8 +427,7 @@ mod tests {
     use super::*;
     use crate::{
         build_error_type_items, build_file_handle_infra_items, build_file_handle_struct_items,
-        build_io_error_items, build_random_module_state_items, render_items,
-        sifr_type_to_rust_type, Type,
+        build_io_error_items, render_items, sifr_type_to_rust_type, Type,
     };
 
     fn count_raw_in_type(ty: &RustType) -> usize {
@@ -699,21 +698,10 @@ mod tests {
     }
 
     #[test]
-    fn random_module_state_items_render_core_symbols() {
-        let items = build_random_module_state_items();
-        let rendered = render_items(&items);
-        assert!(rendered.contains("struct __SifrRandomModuleState"));
-        assert!(rendered.contains("static __SIFR_RANDOM_MODULE_STATE"));
-        assert!(rendered.contains("LazyLock"));
-        assert!(rendered.contains("Mutex"));
-    }
-
-    #[test]
     fn preamble_structural_count_is_zero() {
         let mut all = build_io_error_items();
         all.extend(build_file_handle_infra_items());
         all.extend(build_file_handle_struct_items());
-        all.extend(build_random_module_state_items());
         let total_structural_violations: usize = all.iter().map(count_raw_in_item).sum();
         assert_eq!(total_structural_violations, 0);
     }

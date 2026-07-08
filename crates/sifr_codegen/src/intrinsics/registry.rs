@@ -11,7 +11,6 @@ mod process_async;
 mod process_child_lifecycle;
 mod process_pipes;
 mod python;
-mod random;
 mod requirements;
 mod runtime;
 mod signal;
@@ -160,29 +159,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             time::lower_time_localtime_parts(args),
             Some(StdlibFeature::Chrono),
         ),
-        "random_int" => (random::lower_random_int(args), Some(StdlibFeature::Rand)),
-        "random_float" => (random::lower_random_float(args), Some(StdlibFeature::Rand)),
-        "random_choice" => (random::lower_random_choice(args), Some(StdlibFeature::Rand)),
-        "random_uniform" => (
-            random::lower_random_uniform(args),
-            Some(StdlibFeature::Rand),
-        ),
-        "random_shuffle" => (
-            random::lower_random_shuffle(args),
-            Some(StdlibFeature::Rand),
-        ),
-        "random_sample" => (random::lower_random_sample(args), Some(StdlibFeature::Rand)),
-        "random_randrange" => (
-            random::lower_random_randrange(args),
-            Some(StdlibFeature::Rand),
-        ),
-        "random_gauss" => (random::lower_random_gauss(args), Some(StdlibFeature::Rand)),
-        "random_module_state_words" => (random::lower_random_module_state_words(args), None),
-        "random_module_state_index" => (random::lower_random_module_state_index(args), None),
-        "random_module_state_gauss_next" => {
-            (random::lower_random_module_state_gauss_next(args), None)
-        }
-        "random_module_set_state" => (random::lower_random_module_set_state(args), None),
         "sys_exit" => (sys::lower_sys_exit(args), None),
         "sys_version" => (sys::lower_sys_version(args), None),
         "sys_platform" => (sys::lower_sys_platform(args), None),

@@ -30,17 +30,6 @@ impl RustEmitter {
                         .map(str::to_string),
                 );
         }
-        if matches!(
-            func,
-            "random_module_state_words"
-                | "random_module_state_index"
-                | "random_module_state_gauss_next"
-                | "random_module_set_state"
-        ) {
-            self.runtime_needs
-                .require(crate::RuntimeNeed::RandomModuleState);
-        }
-
         if let Some(feature) = lowered.required_feature {
             self.intrinsic_registry_features.insert(feature);
         }

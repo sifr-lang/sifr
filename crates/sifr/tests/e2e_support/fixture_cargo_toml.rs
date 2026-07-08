@@ -310,6 +310,7 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "sifr.gzip"
                 | "sifr.zipfile"
                 | "_sifr.compress"
+                | "sifr.random"
                 | "sifr.url"
                 | "_sifr.url"
                 | "sifr.hash"

@@ -8,8 +8,6 @@ const HTTP_HEADER_REQUIRED_FEATURES: &[StdlibFeature] = &[StdlibFeature::Http];
 
 pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeature] {
     match name {
-        // random_gauss uses rand_distr::Normal in addition to rand::rng.
-        "random_gauss" => &[StdlibFeature::RandDistr],
         "str_encode_utf8_result"
         | "str_encode_utf8_result_with_encoding"
         | "decode_utf8"

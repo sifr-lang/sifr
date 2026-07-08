@@ -558,6 +558,44 @@ fn logging_global_level_round_trips_without_panicking() {
     sifr_stdlib::logging::set_global_level(original);
 }
 
+#[cfg(feature = "random")]
+#[test]
+fn random_helpers_and_module_state_round_trip_without_panicking() {
+    use sifr_runtime::interop::SifrIntBridge;
+
+    let random_value = sifr_stdlib::random::random_float();
+    assert!((0.0..1.0).contains(&random_value));
+    let random_int =
+        sifr_stdlib::random::random_int(SifrIntBridge::from(2), SifrIntBridge::from(4))
+            .to_i64_saturating();
+    assert!((2..=4).contains(&random_int));
+    assert!(sifr_stdlib::random::random_randrange(
+        SifrIntBridge::from(0),
+        SifrIntBridge::from(10),
+        SifrIntBridge::from(0),
+    )
+    .is_err());
+
+    let words = (0..624).map(SifrIntBridge::from).collect::<Vec<_>>();
+    sifr_stdlib::random::random_module_set_state(&words, SifrIntBridge::from(17), Some(1.25))
+        .expect("state should store");
+    assert_eq!(sifr_stdlib::random::random_module_state_words(), words);
+    assert_eq!(
+        sifr_stdlib::random::random_module_state_index().to_i64_saturating(),
+        17
+    );
+    assert_eq!(
+        sifr_stdlib::random::random_module_state_gauss_next(),
+        Some(1.25)
+    );
+    assert!(sifr_stdlib::random::random_module_set_state(
+        &[SifrIntBridge::from(1)],
+        SifrIntBridge::from(0),
+        None,
+    )
+    .is_err());
+}
+
 #[cfg(all(
     feature = "base64",
     feature = "calendar",
@@ -571,6 +609,7 @@ fn logging_global_level_round_trips_without_panicking() {
     feature = "platform",
     feature = "process",
     feature = "python",
+    feature = "random",
     feature = "regex",
     feature = "signals",
     feature = "tls",
@@ -594,6 +633,7 @@ fn marker_modules_report_leaf_names() {
         sifr_stdlib::platform::feature_name(),
         sifr_stdlib::process::feature_name(),
         sifr_stdlib::python::feature_name(),
+        sifr_stdlib::random::feature_name(),
         sifr_stdlib::regex::feature_name(),
         sifr_stdlib::signals::feature_name(),
         sifr_stdlib::tls::feature_name(),

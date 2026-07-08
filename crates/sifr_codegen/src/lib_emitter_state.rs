@@ -156,7 +156,6 @@ pub(crate) struct RuntimeNeeds {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum RuntimeNeed {
     FileHandles,
-    RandomModuleState,
     BigInt,
 }
 
@@ -171,10 +170,6 @@ impl RuntimeNeeds {
 
     pub(crate) fn file_handles(&self) -> bool {
         self.contains(RuntimeNeed::FileHandles)
-    }
-
-    pub(crate) fn random_module_state(&self) -> bool {
-        self.contains(RuntimeNeed::RandomModuleState)
     }
 
     pub(crate) fn bigint(&self) -> bool {

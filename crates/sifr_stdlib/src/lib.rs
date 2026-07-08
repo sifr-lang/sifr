@@ -42,6 +42,8 @@ pub mod platform;
 pub mod process;
 #[cfg(feature = "python")]
 pub mod python;
+#[cfg(feature = "random")]
+pub mod random;
 #[cfg(feature = "regex")]
 pub mod regex;
 #[cfg(feature = "runtime-observability")]

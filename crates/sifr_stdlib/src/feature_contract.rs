@@ -11,6 +11,7 @@ pub const LEAF_FEATURES: &[&str] = &[
     "platform",
     "logging",
     "math",
+    "random",
     "toml",
     "url",
     "gzip",
