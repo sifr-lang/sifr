@@ -89,7 +89,7 @@ merged, and documented before the next milestone starts.
 
 | Milestone | Status | Evidence |
 | --- | --- | --- |
-| M0. Model Split and Raw-Injection Removal | planned |  |
+| M0. Model Split and Raw-Injection Removal | merged | PR #2820 · sha=8f1f44d; PR #2821 · sha=f82cc64; PR #2823 · sha=c0828de; PR #2825 · sha=5e05898; PR #2827 · sha=45b36d1 |
 | M1. Manifest Schema and Normal-Path Guards | planned |  |
 | M2. Declaration Infrastructure and Provenance | planned |  |
 | M3. File and Filesystem Migration | planned |  |
@@ -239,7 +239,10 @@ milestone is merged:
   injection (merged in PR #2825, merge commit
   `5e05898410d0c69c18f7a44a98dccd341f05a3ea`; local `create-pr`
   validation passed with no advisories; reviewer pass 2 READY).
-- M0e: update architecture docs and implement source-origin privacy (PR #2827).
+- M0e: update architecture docs and implement source-origin privacy (merged in
+  PR #2827, merge commit `45b36d1cb603351d2497c175c06cbb768d372932`;
+  local `create-pr` validation passed with no advisories; reviewer pass 2
+  READY).
 
 Acceptance:
 
