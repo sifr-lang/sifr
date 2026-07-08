@@ -327,7 +327,10 @@ M1 may land as ordered sub-PRs:
 
 - M1a: harden retained-glue manifest schema, remove manifest prefix concepts,
   exact-enumerate current prefix-dispatched retained surfaces, and route
-  certification gating through manifest `certification_rows` (PR #2829).
+  certification gating through manifest `certification_rows` (merged in PR
+  #2829, merge commit `d2b97bb796908e787202ed123b9ea889e8c7e2c3`;
+  local `create-pr` validation passed with no advisories; reviewer pass 2
+  READY).
 
 Acceptance:
 
