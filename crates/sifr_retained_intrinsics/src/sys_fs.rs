@@ -34,33 +34,12 @@ pub(super) fn intrinsic_fs() -> IntrinsicModule {
         ),
     );
 
-    // getpid() -> int
-    functions.insert(
-        "getpid".to_string(),
-        FunctionType::all_borrow(vec![], Type::Int),
-    );
-
-    // cpu_count() -> int
-    functions.insert(
-        "cpu_count".to_string(),
-        FunctionType::all_borrow(vec![], Type::Int),
-    );
-
     // stat_size(path: str) -> Result[int, IOError] (file size in bytes)
     functions.insert(
         "stat_size".to_string(),
         FunctionType::all_borrow(
             vec![("path".to_string(), Type::Str)],
             result_ty(Type::Int, "IOError"),
-        ),
-    );
-
-    // which(name: str) -> str | None (find executable in PATH)
-    functions.insert(
-        "which".to_string(),
-        FunctionType::all_borrow(
-            vec![("name".to_string(), Type::Str)],
-            Type::Union(vec![Type::Str, Type::None]),
         ),
     );
 
@@ -71,20 +50,6 @@ pub(super) fn intrinsic_fs() -> IntrinsicModule {
             vec![("path".to_string(), Type::Str)],
             Type::List(Box::new(Type::Int)),
         ),
-    );
-
-    // os.sep, os.linesep, os.name as zero-arg functions in _sifr.fs
-    functions.insert(
-        "os_sep".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    functions.insert(
-        "os_linesep".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
-    );
-    functions.insert(
-        "os_name".to_string(),
-        FunctionType::all_borrow(vec![], Type::Str),
     );
 
     IntrinsicModule {

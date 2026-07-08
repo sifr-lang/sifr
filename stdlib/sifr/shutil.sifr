@@ -1,6 +1,7 @@
-# sifr.shutil — High-level file operations (wraps _sifr.fs)
+# sifr.shutil — High-level file operations.
 # All operations return Result[None, IOError] for safe error handling.
-from _sifr.fs import copy_file, rename, rmdir_all, which, disk_usage
+from _sifr.fs import copy_file, rename, rmdir_all, disk_usage
+from _sifr.sys import which
 
 def copy(src: str, dst: str) -> Result[None, IOError]:
     return copy_file(src, dst)

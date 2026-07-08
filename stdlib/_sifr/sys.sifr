@@ -43,3 +43,27 @@ def sys_platform() -> str:
 @rust(sifr_stdlib.sys.sys_maxsize)
 def sys_maxsize() -> int:
     ...
+
+@rust(sifr_stdlib.sys.getpid)
+def getpid() -> int:
+    ...
+
+@rust(sifr_stdlib.sys.cpu_count)
+def cpu_count() -> int:
+    ...
+
+@rust(sifr_stdlib.sys.which)
+def which(name: str) -> str | None:
+    ...
+
+@rust(sifr_stdlib.sys.os_sep)
+def os_sep() -> str:
+    ...
+
+@rust(sifr_stdlib.sys.os_linesep)
+def os_linesep() -> str:
+    ...
+
+@rust(sifr_stdlib.sys.os_name)
+def os_name() -> str:
+    ...

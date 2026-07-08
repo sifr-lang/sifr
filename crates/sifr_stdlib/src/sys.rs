@@ -72,6 +72,51 @@ pub fn sys_maxsize() -> SifrIntBridge {
     SifrIntBridge::from(i64::MAX)
 }
 
+#[must_use]
+pub fn getpid() -> SifrIntBridge {
+    SifrIntBridge::from(i64::from(std::process::id()))
+}
+
+#[must_use]
+pub fn cpu_count() -> SifrIntBridge {
+    let count = std::thread::available_parallelism().map_or(1_i64, |parallelism| {
+        i64::try_from(parallelism.get()).unwrap_or(i64::MAX)
+    });
+    SifrIntBridge::from(count)
+}
+
+#[must_use]
+pub fn which(name: &str) -> Option<String> {
+    let paths = std::env::var_os("PATH")?;
+    std::env::split_paths(&paths)
+        .map(|dir| dir.join(name))
+        .find(|path| path.is_file())
+        .map(|path| path.to_string_lossy().to_string())
+}
+
+#[must_use]
+pub fn os_sep() -> String {
+    std::path::MAIN_SEPARATOR.to_string()
+}
+
+#[must_use]
+pub fn os_linesep() -> String {
+    if cfg!(target_os = "windows") {
+        "\r\n".to_string()
+    } else {
+        "\n".to_string()
+    }
+}
+
+#[must_use]
+pub fn os_name() -> String {
+    if cfg!(target_os = "windows") {
+        "nt".to_string()
+    } else {
+        "posix".to_string()
+    }
+}
+
 fn is_valid_env_key(key: &str) -> bool {
     !key.is_empty() && !key.contains('=') && !key.as_bytes().contains(&0)
 }
@@ -79,8 +124,8 @@ fn is_valid_env_key(key: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        env_get, env_items, env_keys, env_set, env_unset, env_values, get_args, sys_maxsize,
-        sys_platform, sys_version,
+        cpu_count, env_get, env_items, env_keys, env_set, env_unset, env_values, get_args, getpid,
+        os_linesep, os_name, os_sep, sys_maxsize, sys_platform, sys_version, which,
     };
 
     #[test]
@@ -111,5 +156,11 @@ mod tests {
         assert_eq!(sys_version(), "sifr 0.1.0");
         assert!(!sys_platform().is_empty());
         assert_eq!(sys_maxsize().to_i64_saturating(), i64::MAX);
+        assert!(getpid().to_i64_saturating() > 0);
+        assert!(cpu_count().to_i64_saturating() >= 1);
+        assert!(!os_sep().is_empty());
+        assert!(!os_linesep().is_empty());
+        assert!(!os_name().is_empty());
+        assert_eq!(which("__sifr_missing_tool_for_sys_test__"), None);
     }
 }

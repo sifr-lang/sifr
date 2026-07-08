@@ -53,7 +53,13 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.platform", "_sifr.platform"]) {
         features.push("platform");
     }
-    if has_module(&["sifr.env", "sifr.sys", "sifr.os", "_sifr.sys"]) {
+    if has_module(&[
+        "sifr.env",
+        "sifr.sys",
+        "sifr.os",
+        "sifr.shutil",
+        "_sifr.sys",
+    ]) {
         features.push("sys");
     }
     if has_module(&["sifr.logging", "_sifr.logging"]) {
