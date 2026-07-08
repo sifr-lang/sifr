@@ -4,7 +4,8 @@ use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::re_exports::{re_export_stdlib_imports, ReExportMaps};
 use crate::stdlib::types::StdlibCompiled;
-use sifr_codegen::StdlibCode;
+use sha2::{Digest, Sha256};
+use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
     lower_module_sysroot_private_declaration_with_externals,
@@ -17,6 +18,7 @@ use sifr_syntax::parse_module_raw;
 use sifr_sysroot::ResolvedSysroot;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
+use std::path::Path;
 
 pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
@@ -39,12 +41,12 @@ pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDi
             DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
         )]
     })?;
-    compile_stdlib_sources_with_sysroot(&sources, Some(sysroot))
+    compile_stdlib_sources_with_sysroot(&sources, sysroot)
 }
 
 fn compile_stdlib_sources_with_sysroot(
     sources: &[LoadedStdlibSource],
-    sysroot: Option<ResolvedSysroot>,
+    sysroot: ResolvedSysroot,
 ) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
@@ -322,9 +324,15 @@ fn compile_stdlib_sources_with_sysroot(
                 diagnostic.message = format!("[stdlib:{module_name}] {}", diagnostic.message);
                 vec![diagnostic]
             })?;
+            let rust_source = stdlib_rust_source(
+                module_name,
+                stdlib_source,
+                &sysroot,
+                codegen_result.rust_source,
+            )?;
             stdlib_code
                 .module_rust_code
-                .insert(module_name.to_string(), codegen_result.rust_source);
+                .insert(module_name.to_string(), rust_source);
             if !codegen_result.constant_mappings.is_empty() {
                 stdlib_code
                     .module_constants
@@ -476,8 +484,55 @@ fn compile_stdlib_sources_with_sysroot(
     Ok(StdlibCompiled {
         defs: stdlib_defs,
         code: stdlib_code,
-        interop: build_stdlib_rust_interop(sysroot, &private_interop_modules),
+        interop: build_stdlib_rust_interop(Some(sysroot), &private_interop_modules),
     })
+}
+
+fn stdlib_rust_source(
+    module_name: &str,
+    source: &LoadedStdlibSource,
+    sysroot: &ResolvedSysroot,
+    rust: String,
+) -> Result<StdlibRustSource, Vec<RenderedDiagnostic>> {
+    Ok(StdlibRustSource {
+        module: module_name.to_string(),
+        source_path: canonical_stdlib_source_path(source, sysroot)?,
+        source_sha256: source_sha256(&source.source),
+        rust,
+    })
+}
+
+fn canonical_stdlib_source_path(
+    source: &LoadedStdlibSource,
+    sysroot: &ResolvedSysroot,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    let relative = source
+        .path
+        .strip_prefix(&sysroot.paths.stdlib_root)
+        .map_err(|_| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                format!(
+                    "stdlib source path {} is outside resolved stdlib root {}",
+                    source.path.display(),
+                    sysroot.paths.stdlib_root.display()
+                ),
+                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        });
+    relative.map(|path| format!("stdlib/{}", normalized_path_string(path)))
+}
+
+fn source_sha256(source: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(source.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+fn normalized_path_string(path: &Path) -> String {
+    path.components()
+        .map(|component| component.as_os_str().to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("/")
 }
 
 fn lower_stdlib_source(

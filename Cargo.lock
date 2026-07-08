@@ -3182,6 +3182,7 @@ dependencies = [
  "ruff_text_size",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "sifr_codegen",
  "sifr_diagnostics",
  "sifr_frontend",
