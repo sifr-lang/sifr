@@ -90,7 +90,7 @@ merged, and documented before the next milestone starts.
 | Milestone | Status | Evidence |
 | --- | --- | --- |
 | M0. Model Split and Raw-Injection Removal | merged | PR #2820 · sha=8f1f44d; PR #2821 · sha=f82cc64; PR #2823 · sha=c0828de; PR #2825 · sha=5e05898; PR #2827 · sha=45b36d1 |
-| M1. Manifest Schema and Normal-Path Guards | in progress | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817 |
+| M1. Manifest Schema and Normal-Path Guards | in progress | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817; PR #2833 · sha=af66be2 |
 | M2. Declaration Infrastructure and Provenance | planned |  |
 | M3. File and Filesystem Migration | planned |  |
 | M4. Random, Time, and Logging | planned |  |
@@ -336,6 +336,12 @@ M1 may land as ordered sub-PRs:
   ordering guard into local validation (merged in PR #2831, merge commit
   `05cb817a6713980299e3b522e64ef581290bc7be`; local `create-pr` validation
   passed in 180.50s with no advisories; reviewer pass 2 READY).
+- M1c: validate retained manifest lifecycle transitions against `main`, require
+  PR-linked closure records for deleted `closing` rows, reject non-design new
+  rows and active closure records, and make local-first CI fetch enough history
+  for base-ref validation (merged in PR #2833, merge commit
+  `af66be20a3ac484fd0fe89ee8d6f5a69992ea0a8`; local `create-pr`
+  validation passed in 176.77s with no advisories; reviewer pass 4 READY).
 
 Acceptance:
 
