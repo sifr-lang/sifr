@@ -1,0 +1,18 @@
+# fixture: opaque_resource_core
+# evidence: negative/stdlib_handle_double_close_poisoned_access
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-HANDLE-0001
+@rust.opaque(type=sifr_stdlib.fs.FileHandle, send=False, sync=False, clone=none, close=close)
+class StdlibFileHandle:
+    @rust(sifr_stdlib.fs.file_close, panic=trusted_no_panic)
+    def close(self) -> None: ...
+
+    @rust(Self.read_text, panic=trusted_no_panic)
+    def read_text(self) -> str: ...
+
+def verify_stdlib_handle_double_close_poisoned_access(handle: StdlibFileHandle) -> None:
+    handle.close()
+    _ = handle.read_text()
+    return None

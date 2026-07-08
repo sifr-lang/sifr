@@ -21,6 +21,8 @@ MATRIX_PATH = (
 MANIFEST_PATH = REPO_ROOT / "internal_docs" / "stdlib_retained_compiler_intrinsics.toml"
 CERTIFICATION_ISSUE = "plans/issues/active/rust-interop-runtime-ecosystem-certification.md"
 FUTURE_OWNED = "future-owned-by-separate-phase"
+SUPPORTED = "supported"
+SUPPORTED_STDLIB_CORE_ROWS = frozenset({"opaque_resource_core"})
 
 
 def main() -> int:
@@ -59,11 +61,14 @@ def _validate(matrix: dict[str, Any], manifest: dict[str, Any]) -> list[str]:
                 continue
 
             category = str(row.get("category", ""))
+            if _is_supported_stdlib_core(row_id, row):
+                continue
             if category != FUTURE_OWNED:
                 failures.append(
                     f"{surface_id}: {row_id} is {category or '<missing category>'}; "
-                    "update this gate when resource certification lands"
+                    "supported stdlib resource rows must be explicitly allowed core rows with passing evidence"
                 )
+                continue
             future_owner = row.get("future_owner")
             if future_owner != CERTIFICATION_ISSUE:
                 failures.append(
@@ -77,6 +82,23 @@ def _validate(matrix: dict[str, Any], manifest: dict[str, Any]) -> list[str]:
             "update this guard when resource certification lands"
         )
     return failures
+
+
+def _is_supported_stdlib_core(row_id: str, row: dict[str, Any]) -> bool:
+    return (
+        row_id in SUPPORTED_STDLIB_CORE_ROWS
+        and row.get("category") == SUPPORTED
+        and _evidence_status(row, "positive_evidence") == "passing"
+        and _evidence_status(row, "negative_evidence") == "passing"
+        and "future_owner" not in row
+    )
+
+
+def _evidence_status(row: dict[str, Any], key: str) -> str:
+    evidence = row.get(key)
+    if not isinstance(evidence, dict):
+        return ""
+    return str(evidence.get("status", ""))
 
 
 def _surface_certification_rows(
@@ -138,7 +160,7 @@ def _rows_by_id(failures: list[str], matrix: dict[str, Any]) -> dict[str, dict[s
 
 def _self_test() -> int:
     surface_rows = {
-        "_sifr.example": ("opaque_resource_matrix",),
+        "_sifr.example": ("opaque_resource_core", "opaque_resource_matrix"),
         "_sifr.example_async": ("async_runtime_reqwest", "callback_subscription_matrix"),
     }
     base_manifest = {
@@ -149,8 +171,27 @@ def _self_test() -> int:
     }
     base_matrix = {
         "rows": [
-            {"id": row_id, "category": FUTURE_OWNED, "future_owner": CERTIFICATION_ISSUE}
-            for row_id in sorted({row for rows in surface_rows.values() for row in rows})
+            {
+                "id": "opaque_resource_core",
+                "category": SUPPORTED,
+                "positive_evidence": {"status": "passing"},
+                "negative_evidence": {"status": "passing"},
+            },
+            {
+                "id": "opaque_resource_matrix",
+                "category": FUTURE_OWNED,
+                "future_owner": CERTIFICATION_ISSUE,
+            },
+            {
+                "id": "async_runtime_reqwest",
+                "category": FUTURE_OWNED,
+                "future_owner": CERTIFICATION_ISSUE,
+            },
+            {
+                "id": "callback_subscription_matrix",
+                "category": FUTURE_OWNED,
+                "future_owner": CERTIFICATION_ISSUE,
+            },
         ]
     }
 
@@ -158,17 +199,29 @@ def _self_test() -> int:
         print("self-test seed should pass", file=sys.stderr)
         return 1
 
-    certified_matrix = json.loads(json.dumps(base_matrix))
-    certified_matrix["rows"][0]["category"] = "supported"
+    failing_core_matrix = json.loads(json.dumps(base_matrix))
+    failing_core_matrix["rows"][0]["positive_evidence"]["status"] = "failing"
     if not any(
-        "update this gate when resource certification lands" in failure
+        "supported stdlib resource rows must be explicitly allowed core rows with passing evidence"
+        in failure
+        for failure in _validate(failing_core_matrix, base_manifest)
+    ):
+        print("self-test failing supported core evidence was not rejected", file=sys.stderr)
+        return 1
+
+    certified_matrix = json.loads(json.dumps(base_matrix))
+    certified_matrix["rows"][1]["category"] = SUPPORTED
+    certified_matrix["rows"][1].pop("future_owner", None)
+    if not any(
+        "supported stdlib resource rows must be explicitly allowed core rows with passing evidence"
+        in failure
         for failure in _validate(certified_matrix, base_manifest)
     ):
         print("self-test supported resource row was not rejected", file=sys.stderr)
         return 1
 
     wrong_owner_matrix = json.loads(json.dumps(base_matrix))
-    wrong_owner_matrix["rows"][0]["future_owner"] = "plans/issues/active/other.md"
+    wrong_owner_matrix["rows"][1]["future_owner"] = "plans/issues/active/other.md"
     if not any(
         "future_owner must remain" in failure
         for failure in _validate(wrong_owner_matrix, base_manifest)
@@ -179,6 +232,7 @@ def _self_test() -> int:
     completed_matrix = json.loads(json.dumps(base_matrix))
     for row in completed_matrix["rows"]:
         row["category"] = "supported"
+        row.pop("future_owner", None)
     if not any(
         "expected at least one runtime/resource compatibility row" in failure
         for failure in _validate(completed_matrix, base_manifest)

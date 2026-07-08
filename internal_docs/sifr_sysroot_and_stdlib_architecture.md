@@ -142,7 +142,7 @@ only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 Rust interop runtime certification is not fully complete for resource-shaped
 surfaces. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 14 supported rows, 5 bridge-supported rows, 1
+currently has 15 supported rows, 5 bridge-supported rows, 1
 unsupported-by-design row, and 11 rows owned by separate certification work. The
 separately owned rows are `bridge_type_matrix`, `opaque_resource_matrix`,
 `panic_boundary_wrapper_emission`, `async_runtime_reqwest`,
@@ -886,7 +886,11 @@ Surfaces still marked future-owned or uncertified in the compatibility matrix
 must not be claimed as stable stdlib interop support.
 The sysroot stdlib resource certification gate is part of core validation so
 resource migration cannot advance a resource-shaped surface ahead of the
-runtime evidence recorded by the Rust interop matrix.
+runtime evidence recorded by the Rust interop matrix. The narrow
+`opaque_resource_core` row covers only the stdlib-owned
+`sifr_runtime::interop::Handle<T>` lifecycle primitive; the broad
+`opaque_resource_matrix` row for package ecosystem resources remains
+future-owned by separate certification work.
 The stdlib native intrinsic allowlist guard is also part of core validation:
 it freezes every retained compiler intrinsic name, prefix dispatcher, registry
 file, preamble file, retained direct dependency package, and direct

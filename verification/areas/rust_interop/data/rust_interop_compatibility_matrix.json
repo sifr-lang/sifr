@@ -119,6 +119,18 @@
       "notes": "Opaque handle contracts are supported for declared Send, Sync, Copy, close, and borrow policies."
     },
     {
+      "id": "opaque_resource_core",
+      "fixture": "opaque_resource_core",
+      "category": "supported",
+      "tier": 2,
+      "capability": "stdlib-owned opaque resource lifecycle core",
+      "execution_kind": "runtime-observed",
+      "required_crates": [],
+      "positive_evidence": {"id": "stdlib_handle_close_poison_lifecycle", "status": "passing"},
+      "negative_evidence": {"id": "stdlib_handle_double_close_poisoned_access", "status": "passing"},
+      "notes": "Stdlib-owned resource migrations may use the shared handle substrate for close poisoning, double-close stability, and panic-boundary poisoning; ecosystem resources remain future-owned by opaque_resource_matrix."
+    },
+    {
       "id": "opaque_resource_matrix",
       "fixture": "opaque_resource_matrix",
       "category": "future-owned-by-separate-phase",

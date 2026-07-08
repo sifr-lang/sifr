@@ -40,6 +40,7 @@ REQUIRED_FIXTURES = {
     "local_bridge_blake3",
     "native_build_script",
     "opaque_handle_tokenizer",
+    "opaque_resource_core",
     "opaque_resource_matrix",
     "panic_abort_profile",
     "panic_boundary",

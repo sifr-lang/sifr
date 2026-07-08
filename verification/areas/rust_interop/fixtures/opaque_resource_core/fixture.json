@@ -1,0 +1,25 @@
+{
+  "capability": "stdlib-owned opaque resource lifecycle core",
+  "diagnostic_family": "SIFR-RUST-HANDLE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
+      "expected_result": "diagnostic",
+      "id": "stdlib_handle_double_close_poisoned_access",
+      "path": "negative/stdlib_handle_double_close_poisoned_access.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "stdlib_handle_close_poison_lifecycle",
+      "path": "positive/stdlib_handle_close_poison_lifecycle.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "opaque_resource_core",
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}
