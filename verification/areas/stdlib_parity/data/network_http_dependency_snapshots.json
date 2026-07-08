@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "closed-audited",
-  "source": "generated_cargo_dependencies output validated by crates/sifr_stdlib_model/tests/network_http_dependency_snapshots.rs",
+  "source": "generated_cargo_dependencies output validated by crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs",
   "ring5_dev_test_demo_crates": [
     "tokio-test",
     "proptest",

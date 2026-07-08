@@ -1,5 +1,5 @@
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
-use sifr_stdlib_model::{
+use sifr_stdlib_manifest::{
     try_sysroot_dependency_plan, CargoVendorMode, StdlibFeature, SysrootCrate,
     SysrootCrateDependency, SysrootDependencyPlan,
 };
@@ -278,7 +278,7 @@ mod tests {
         RustGeneratedBridgeTypeKind, RustInteropOwner, RustInteropResolvedRoot,
         RustInteropResolvedTarget,
     };
-    use sifr_stdlib_model::{SysrootCrate, SysrootCrateDependency};
+    use sifr_stdlib_manifest::{SysrootCrate, SysrootCrateDependency};
     use std::path::PathBuf;
 
     #[test]

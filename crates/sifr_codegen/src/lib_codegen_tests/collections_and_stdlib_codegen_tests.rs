@@ -590,7 +590,7 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
 #[test]
 fn test_generate_project_emits_sifr_runtime_path_dependency_when_required() {
     let module = empty_module();
-    let required_features = HashSet::from([sifr_stdlib_model::StdlibFeature::SifrRuntime]);
+    let required_features = HashSet::from([sifr_stdlib_manifest::StdlibFeature::SifrRuntime]);
     let (cargo_toml, _main_rs) = generate_project_with_deps_and_crates(
         &module,
         "sifr_output",
@@ -619,7 +619,7 @@ fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
     assert!(result.rust_source.contains("async fn main()"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -645,7 +645,7 @@ fn test_async_result_main_entrypoint_keeps_result_return() {
     assert!(result.rust_source.contains("Ok(())"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -666,7 +666,7 @@ fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
         .contains("std::time::Duration::from_secs_f64"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -688,7 +688,7 @@ fn test_task_sleep_requires_tokio_without_async_main() {
         .contains("#[tokio::main(flavor = \"current_thread\")]"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -715,7 +715,7 @@ fn test_task_scope_context_materializes_runtime_container() {
         .contains("scope.__sifr_join_all().await;"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -744,7 +744,7 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
         .contains("if let Err(__sifr_scope_failure) = scope.__sifr_join_all().await"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -775,7 +775,7 @@ fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
         .contains("__sifr_spawn_blocking_infallible(compute_value);"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -803,7 +803,7 @@ fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() {
         .contains("__sifr_spawn_blocking_infallible(compute_value);"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]

@@ -733,10 +733,10 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
     assert!(result.used_stdlib_modules.contains("sifr.math"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::NumBigint));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::NumBigint));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::NumTraits));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::NumTraits));
 }
 
 #[test]

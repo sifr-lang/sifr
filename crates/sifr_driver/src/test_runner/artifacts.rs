@@ -4,8 +4,8 @@ use crate::build::{
 use crate::project::top_level_module_declarations;
 use sifr_codegen::InteropBuildPlan;
 #[cfg(test)]
-use sifr_stdlib_model::try_sysroot_dependency_plan;
-use sifr_stdlib_model::{CargoVendorMode, StdlibFeature, SysrootDependencyPlan};
+use sifr_stdlib_manifest::try_sysroot_dependency_plan;
+use sifr_stdlib_manifest::{CargoVendorMode, StdlibFeature, SysrootDependencyPlan};
 use sifr_sysroot::SysrootError;
 use std::collections::HashSet;
 

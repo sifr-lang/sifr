@@ -1,6 +1,6 @@
 //! Rust-native standard library crate used by generated Sifr programs.
 //!
-//! The compiler-side metadata model lives in `sifr_stdlib_model`. This crate is
+//! The compiler-side metadata model lives in `sifr_stdlib_manifest`. This crate is
 //! the generated-program dependency boundary. Public modules are gated by
 //! narrow additive features and use `default-features = false` by default.
 

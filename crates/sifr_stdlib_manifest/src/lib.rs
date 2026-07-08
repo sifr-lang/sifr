@@ -1,8 +1,12 @@
-//! Sifr Intrinsic Type Registry
+//! Compiler-side stdlib manifest and sysroot planning.
 //!
-//! Defines type signatures for all `_sifr.*` intrinsic modules.
-//! These are compiler-provided primitives that map directly to Rust code.
-//! User-facing stdlib modules live in `stdlib/sifr/*.sifr` files.
+//! Owns the source inventory, private declaration inventory, generated-project
+//! dependency planning, and sysroot validation data used by the compiler.
+//! Retained intrinsic signatures and IPC protocol helpers are still exported
+//! here as transitional split state; follow-on boundary work moves those
+//! responsibilities to their final compiler-retained-glue and IPC crates.
+//! Legacy stdlib import suggestion data is also hosted here until the frontend
+//! or diagnostics boundary owns the rendered suggestion policy.
 
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;

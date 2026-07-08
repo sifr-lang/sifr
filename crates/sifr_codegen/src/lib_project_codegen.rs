@@ -3,7 +3,7 @@ use super::{
     publicize_generated_module_source, HashMap, HashSet, HirModule, MultiModuleCodegenResult,
     Renderer, RustFile, RustItem, StdlibCode,
 };
-use sifr_stdlib_model::{try_generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
 pub(super) fn render_local_module_imports(module: &HirModule) -> String {
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {

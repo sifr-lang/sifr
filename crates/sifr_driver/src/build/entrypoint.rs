@@ -28,7 +28,7 @@ use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
 use sifr_ir::LoweringResult;
 use sifr_lowering::LoweringOptions;
 use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
-use sifr_stdlib_model::CargoVendorMode;
+use sifr_stdlib_manifest::CargoVendorMode;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -607,7 +607,7 @@ impl RootedEntrypointPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sifr_stdlib_model::StdlibFeature;
+    use sifr_stdlib_manifest::StdlibFeature;
 
     fn mktemp_dir(name: &str) -> PathBuf {
         let unique = format!(

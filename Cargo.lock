@@ -3156,7 +3156,7 @@ dependencies = [
  "sifr_diagnostics",
  "sifr_ir",
  "sifr_lowering",
- "sifr_stdlib_model",
+ "sifr_stdlib_manifest",
  "sifr_type_system",
  "syn 2.0.117",
 ]
@@ -3187,7 +3187,7 @@ dependencies = [
  "sifr_ir",
  "sifr_lowering",
  "sifr_package",
- "sifr_stdlib_model",
+ "sifr_stdlib_manifest",
  "sifr_syntax",
  "sifr_sysroot",
  "sifr_type_system",
@@ -3260,7 +3260,7 @@ dependencies = [
  "serde_json",
  "sifr_diagnostics",
  "sifr_ir",
- "sifr_stdlib_model",
+ "sifr_stdlib_manifest",
  "sifr_type_system",
 ]
 
@@ -3377,7 +3377,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sifr_stdlib_model"
+name = "sifr_stdlib_manifest"
 version = "0.0.0"
 dependencies = [
  "postcard",

@@ -1,5 +1,5 @@
 [package]
-name = "sifr_stdlib_model"
+name = "sifr_stdlib_manifest"
 version = "0.0.0"
 publish = false
 edition = { workspace = true }

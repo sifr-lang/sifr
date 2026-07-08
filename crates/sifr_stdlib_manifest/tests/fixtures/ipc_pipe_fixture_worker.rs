@@ -1,4 +1,4 @@
-use sifr_stdlib_model::{
+use sifr_stdlib_manifest::{
     read_frame, write_frame, IpcConnectionConfig, IpcConnectionError, IpcConnectionState,
     IpcEnvelope, IpcHandshakeDecision, IpcMalformedKind, IpcRequestTrackerError, IpcShutdownMode,
     IpcTerminationReason, IpcWireSchema, IPC_DEFAULT_MAX_FRAME_BYTES,

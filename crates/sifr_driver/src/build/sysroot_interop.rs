@@ -7,7 +7,7 @@ use sifr_package::{
     PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph,
     SifrPackageId, SifrPackageMetadata, SifrPackageName, TrustPolicy,
 };
-use sifr_stdlib_model::SysrootCrate;
+use sifr_stdlib_manifest::SysrootCrate;
 use sifr_sysroot::{ResolvedSysroot, COMPILER_SIFR_VERSION};
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
@@ -274,7 +274,7 @@ mod tests {
         RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
         RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,
     };
-    use sifr_stdlib_model::StdlibFeature;
+    use sifr_stdlib_manifest::StdlibFeature;
     use sifr_sysroot::{SysrootManifest, SysrootPaths};
     use std::collections::HashSet;
     use std::fs;

@@ -26,7 +26,7 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
         .contains("if let Err(__sifr_scope_failure) = group.__sifr_join_all().await"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -54,7 +54,7 @@ fn test_task_gather_lowers_to_private_gather_helper() {
         .contains("let result: __SifrTaskResult<Vec<i64>, std::convert::Infallible>"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
         .contains("let result: __SifrTaskResult<i64, ValueError>"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -151,7 +151,7 @@ fn test_task_race_lowers_to_private_race_helper() {
         .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn test_task_select_lowers_to_private_select_helper() {
     ));
     assert!(result
         .required_features
-        .contains(&sifr_stdlib_model::StdlibFeature::Tokio));
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
 
 #[test]

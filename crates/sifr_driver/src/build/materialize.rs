@@ -10,7 +10,7 @@ use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_stdlib_model::{CargoVendorMode, StdlibFeature, SysrootCrate, SysrootDependencyPlan};
+use sifr_stdlib_manifest::{CargoVendorMode, StdlibFeature, SysrootCrate, SysrootDependencyPlan};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -479,7 +479,7 @@ mod tests {
         RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
         RustInteropEffect, RustTargetPath,
     };
-    use sifr_stdlib_model::{CargoVendorMode, SysrootDependencyPlan};
+    use sifr_stdlib_manifest::{CargoVendorMode, SysrootDependencyPlan};
     use std::collections::{BTreeMap, BTreeSet, HashSet};
 
     #[test]
@@ -646,8 +646,8 @@ mod tests {
         let mut dependency_plan = test_dependency_plan("fingerprint-a");
         dependency_plan
             .crates
-            .push(sifr_stdlib_model::SysrootCrateDependency {
-                krate: sifr_stdlib_model::SysrootCrate::SifrStdlib,
+            .push(sifr_stdlib_manifest::SysrootCrateDependency {
+                krate: sifr_stdlib_manifest::SysrootCrate::SifrStdlib,
                 path: "/sysroot/crates/sifr_stdlib".into(),
                 features: BTreeSet::from(["http".to_string()]),
             });

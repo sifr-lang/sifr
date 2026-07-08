@@ -1,7 +1,7 @@
 use crate::diagnostics::diagnostic_with_code;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_frontend::{SourceOrigin, SourcePath, SourceText, WorkspaceAuxiliarySource};
-use sifr_stdlib_model::{load_stdlib_tooling_sources_from_sysroot, LoadedStdlibSourceKind};
+use sifr_stdlib_manifest::{load_stdlib_tooling_sources_from_sysroot, LoadedStdlibSourceKind};
 use std::path::PathBuf;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

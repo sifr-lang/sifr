@@ -1,6 +1,6 @@
 use crate::stdlib::types::{StdlibRustInterop, StdlibRustInteropModuleSource};
 use sifr_ir::{HirClass, HirModule};
-use sifr_stdlib_model::{LoadedStdlibSource, LoadedStdlibSourceKind};
+use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
 use sifr_sysroot::ResolvedSysroot;
 use std::collections::HashMap;
 

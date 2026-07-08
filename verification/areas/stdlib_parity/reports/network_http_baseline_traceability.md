@@ -13,7 +13,7 @@ Capability: `network/HTTP baseline`
 | Supported-host baseline rows | `verification/areas/runtime_platform/supported_host_matrix.md` |
 | Cross-capability golden fixtures | `verification/areas/runtime_platform/golden/unsupported_cpython_network_imports.sifr`, `unsupported_cpython_tls_imports.sifr`, `unsupported_cpython_url_imports.sifr`, `unsupported_cpython_http_imports.sifr`, `unsupported_cpython_readiness_imports.sifr`, and manifest entries |
 | Multi-core serving capability | `network-http-serving-scale-capability record` (`network-http-serving-scale-capability`) |
-| Unsupported CPython-shaped diagnostics | `crates/sifr_stdlib_model/src/lib.rs`, network/HTTP baseline capability e2e fail fixtures under `crates/sifr/tests/e2e/fail/` |
+| Unsupported CPython-shaped diagnostics | `crates/sifr_stdlib_manifest/src/lib.rs`, network/HTTP baseline capability e2e fail fixtures under `crates/sifr/tests/e2e/fail/` |
 
 ## Network/HTTP Baseline Readiness Gate
 

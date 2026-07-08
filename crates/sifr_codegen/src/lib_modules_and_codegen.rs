@@ -27,7 +27,7 @@ use crate::stdlib_filter::{
     SharedPreludeProcessAsyncNeeds,
 };
 use sifr_ir::HirModule;
-use sifr_stdlib_model::StdlibFeature;
+use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;

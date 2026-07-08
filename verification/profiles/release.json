@@ -48,7 +48,7 @@
       {"id": "sifr_analysis", "package": "sifr_analysis", "command": ["test", "-p", "sifr_analysis"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_lsp", "package": "sifr_lsp", "command": ["test", "-p", "sifr_lsp"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_package", "package": "sifr_package", "command": ["test", "-p", "sifr_package"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_stdlib_model", "package": "sifr_stdlib_model", "command": ["test", "-p", "sifr_stdlib_model"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
+      {"id": "sifr_stdlib_manifest", "package": "sifr_stdlib_manifest", "command": ["test", "-p", "sifr_stdlib_manifest"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_stdlib", "package": "sifr_stdlib", "command": ["test", "-p", "sifr_stdlib"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_stdlib_feature_api", "package": "sifr_stdlib", "command": ["test", "-p", "sifr_stdlib", "--no-default-features", "--features", "json,unicode,i18n,http"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
       {"id": "sifr_runtime", "package": "sifr_runtime", "command": ["test", "-p", "sifr_runtime"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},

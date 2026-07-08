@@ -26,7 +26,7 @@ mod tls;
 mod url_http;
 
 use crate::RustExpr;
-use sifr_stdlib_model::StdlibFeature;
+use sifr_stdlib_manifest::StdlibFeature;
 
 pub(crate) use requirements::additional_required_features;
 
