@@ -1,0 +1,3 @@
+READY.
+
+The typed `Ok::<FileHandle, IOError>(...)` / `Ok::<TextFileHandle, IOError>(...)` turbofish is the correct fix for the `From<_>`-ambiguity when the caller catches a broad `Error` — it pins the `Result` error type at the construction site so inference can't wander. No new issues introduced: the closures already `?`-propagate `IOError` from `open_file`, so the annotation matches the actual error type, and the outer `Try` around the closure call preserves the same propagation contract as before. The dead-code removal of the old `SifrFileHandle`-based lowerers and the test updates (asserting those names no longer lower + new `sifr_stdlib::fs::open_file` / `NativeFileHandle` assertions) are consistent with the migration.

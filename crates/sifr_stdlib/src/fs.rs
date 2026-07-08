@@ -1,8 +1,24 @@
 use std::{
-    fs::{self, DirEntry, OpenOptions},
-    io::Write as _,
+    collections::HashMap,
+    fs::{self, DirEntry, File, OpenOptions},
+    io::{BufRead as _, BufReader, BufWriter, Read as _, Write as _},
     path::{Path, PathBuf},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        LazyLock, Mutex, MutexGuard,
+    },
 };
+
+enum FileHandleEntry {
+    TextRead(BufReader<File>),
+    TextWrite(BufWriter<File>),
+    BinaryRead(BufReader<File>),
+    BinaryWrite(BufWriter<File>),
+}
+
+static FILE_HANDLES: LazyLock<Mutex<HashMap<String, FileHandleEntry>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+static NEXT_FILE_HANDLE_ID: AtomicU64 = AtomicU64::new(1);
 
 #[must_use]
 pub const fn feature_name() -> &'static str {
@@ -29,6 +45,79 @@ pub fn read_lines(path: &str) -> Result<Vec<String>, std::io::Error> {
 pub fn append_text(path: &str, content: &str) -> Result<(), std::io::Error> {
     let mut file = OpenOptions::new().append(true).create(true).open(path)?;
     file.write_all(content.as_bytes())
+}
+
+pub fn open_file(path: &str, mode: &str) -> Result<String, std::io::Error> {
+    let handle_id = next_handle_id();
+    let handle = match mode {
+        "r" | "rt" => FileHandleEntry::TextRead(BufReader::new(File::open(path)?)),
+        "w" | "wt" => FileHandleEntry::TextWrite(BufWriter::new(File::create(path)?)),
+        "a" | "at" => FileHandleEntry::TextWrite(BufWriter::new(append_file(path)?)),
+        "rb" => FileHandleEntry::BinaryRead(BufReader::new(File::open(path)?)),
+        "wb" => FileHandleEntry::BinaryWrite(BufWriter::new(File::create(path)?)),
+        "ab" => FileHandleEntry::BinaryWrite(BufWriter::new(append_file(path)?)),
+        _ => {
+            return Err(std::io::Error::other(format!("invalid mode: {mode}")));
+        }
+    };
+    file_handles().insert(handle_id.clone(), handle);
+    Ok(handle_id)
+}
+
+pub fn file_read(handle: &str) -> Result<String, std::io::Error> {
+    with_text_reader(handle, |reader| {
+        let mut text = String::new();
+        reader.read_to_string(&mut text)?;
+        Ok(text)
+    })
+}
+
+pub fn file_write(handle: &str, data: &str) -> Result<(), std::io::Error> {
+    with_text_writer(handle, |writer| writer.write_all(data.as_bytes()))
+}
+
+pub fn file_readline(handle: &str) -> Result<Option<String>, std::io::Error> {
+    with_text_reader(handle, |reader| {
+        let mut line = String::new();
+        let read = reader.read_line(&mut line)?;
+        if read == 0 {
+            return Ok(None);
+        }
+        trim_trailing_crlf(&mut line);
+        Ok(Some(line))
+    })
+}
+
+pub fn file_readlines(handle: &str) -> Result<Vec<String>, std::io::Error> {
+    with_text_reader(handle, |reader| {
+        let mut lines = Vec::new();
+        loop {
+            let mut line = String::new();
+            let read = reader.read_line(&mut line)?;
+            if read == 0 {
+                break;
+            }
+            trim_trailing_crlf(&mut line);
+            lines.push(line);
+        }
+        Ok(lines)
+    })
+}
+
+pub fn file_close(handle: &str) {
+    file_handles().remove(handle);
+}
+
+pub fn file_read_bytes(handle: &str) -> Result<Vec<u8>, std::io::Error> {
+    with_binary_reader(handle, |reader| {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes)?;
+        Ok(bytes)
+    })
+}
+
+pub fn file_write_bytes(handle: &str, data: &[u8]) -> Result<(), std::io::Error> {
+    with_binary_writer(handle, |writer| writer.write_all(data))
 }
 
 pub fn getcwd() -> Result<String, std::io::Error> {
@@ -200,4 +289,73 @@ fn wildcard_match(pattern: &str, value: &str) -> bool {
         p += 1;
     }
     p == pattern.len()
+}
+
+fn append_file(path: &str) -> Result<File, std::io::Error> {
+    OpenOptions::new().append(true).create(true).open(path)
+}
+
+fn next_handle_id() -> String {
+    NEXT_FILE_HANDLE_ID
+        .fetch_add(1, Ordering::SeqCst)
+        .to_string()
+}
+
+fn file_handles() -> MutexGuard<'static, HashMap<String, FileHandleEntry>> {
+    FILE_HANDLES
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+fn with_text_reader<T>(
+    handle: &str,
+    read: impl FnOnce(&mut BufReader<File>) -> Result<T, std::io::Error>,
+) -> Result<T, std::io::Error> {
+    let mut handles = file_handles();
+    match handles.get_mut(handle) {
+        Some(FileHandleEntry::TextRead(reader)) => read(reader),
+        _ => Err(std::io::Error::other("file not open for reading")),
+    }
+}
+
+fn with_text_writer<T>(
+    handle: &str,
+    write: impl FnOnce(&mut BufWriter<File>) -> Result<T, std::io::Error>,
+) -> Result<T, std::io::Error> {
+    let mut handles = file_handles();
+    match handles.get_mut(handle) {
+        Some(FileHandleEntry::TextWrite(writer)) => write(writer),
+        _ => Err(std::io::Error::other("file not open for writing")),
+    }
+}
+
+fn with_binary_reader<T>(
+    handle: &str,
+    read: impl FnOnce(&mut BufReader<File>) -> Result<T, std::io::Error>,
+) -> Result<T, std::io::Error> {
+    let mut handles = file_handles();
+    match handles.get_mut(handle) {
+        Some(FileHandleEntry::BinaryRead(reader)) => read(reader),
+        _ => Err(std::io::Error::other("file not open for binary reading")),
+    }
+}
+
+fn with_binary_writer<T>(
+    handle: &str,
+    write: impl FnOnce(&mut BufWriter<File>) -> Result<T, std::io::Error>,
+) -> Result<T, std::io::Error> {
+    let mut handles = file_handles();
+    match handles.get_mut(handle) {
+        Some(FileHandleEntry::BinaryWrite(writer)) => write(writer),
+        _ => Err(std::io::Error::other("file not open for binary writing")),
+    }
+}
+
+fn trim_trailing_crlf(line: &mut String) {
+    if line.ends_with('\n') {
+        line.pop();
+        if line.ends_with('\r') {
+            line.pop();
+        }
+    }
 }

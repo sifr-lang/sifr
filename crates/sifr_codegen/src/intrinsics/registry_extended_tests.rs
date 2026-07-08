@@ -443,25 +443,27 @@ pub(crate) fn lowers_extended_math_intrinsics_via_registry() {
 
 #[test]
 pub(crate) fn lowers_file_handle_and_logging_intrinsics_via_registry() {
-    let open =
-        lower_intrinsic("open_file", &["path".to_string(), "mode".to_string()]).expect("open_file");
-    assert!(render_expr(&open.expr).contains("__SIFR_FILE_HANDLES"));
-    assert!(render_expr(&open.expr).contains("__sifr_next_file_handle_id()"));
-
-    let read = lower_intrinsic("file_read", &["hid".to_string()]).expect("file_read");
-    assert!(render_expr(&read.expr).contains("TextRead"));
-
-    let write = lower_intrinsic("file_write", &["hid".to_string(), "text".to_string()])
-        .expect("file_write");
-    assert!(render_expr(&write.expr).contains("TextWrite"));
-
-    let close = lower_intrinsic("file_close", &["hid".to_string()]).expect("file_close");
-    assert!(render_expr(&close.expr).contains("__SIFR_FILE_HANDLES"));
+    for name in [
+        "open_file",
+        "file_read",
+        "file_write",
+        "file_readline",
+        "file_readlines",
+        "file_close",
+        "file_read_bytes",
+        "file_write_bytes",
+    ] {
+        assert!(
+            lower_intrinsic(name, &["hid".to_string(), "payload".to_string()]).is_none(),
+            "{name} should lower through _sifr.fs private Rust interop declarations"
+        );
+    }
 
     let builtin_open = lower_intrinsic("builtin_open", &["path".to_string(), "mode".to_string()])
         .expect("builtin_open");
     assert!(render_expr(&builtin_open.expr).contains("FileHandle"));
-    assert!(render_expr(&builtin_open.expr).contains("__sifr_next_file_handle_id()"));
+    assert!(render_expr(&builtin_open.expr).contains("sifr_stdlib::fs::open_file"));
+    assert!(render_expr(&builtin_open.expr).contains("NativeFileHandle"));
 
     let set_level =
         lower_intrinsic("set_global_level", &["n".to_string()]).expect("set_global_level");
@@ -474,14 +476,14 @@ pub(crate) fn lowers_file_handle_and_logging_intrinsics_via_registry() {
 #[test]
 pub(crate) fn lower_intrinsic_accepts_ir_inputs() {
     let ir = super::lower_intrinsic(
-        "file_write",
+        "builtin_open",
         &[
-            RustExpr::Ident("hid".to_string()),
-            RustExpr::Ident("text".to_string()),
+            RustExpr::Ident("path".to_string()),
+            RustExpr::Ident("mode".to_string()),
         ],
     )
-    .expect("ir file_write");
+    .expect("ir builtin_open");
 
-    assert!(render_expr(&ir.expr).contains("TextWrite"));
+    assert!(render_expr(&ir.expr).contains("sifr_stdlib::fs::open_file"));
     assert_eq!(ir.required_feature, None);
 }

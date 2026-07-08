@@ -12,23 +12,12 @@ impl RustEmitter {
         func: &str,
         lowered: &intrinsics::LoweredIntrinsic,
     ) {
-        if matches!(
-            func,
-            "builtin_open"
-                | "builtin_open_text"
-                | "open_file"
-                | "file_read"
-                | "file_write"
-                | "file_readline"
-                | "file_readlines"
-                | "file_close"
-                | "file_read_bytes"
-                | "file_write_bytes"
-        ) {
-            self.runtime_needs.require(crate::RuntimeNeed::FileHandles);
-        }
         if func == "builtin_open" {
-            self.used_stdlib_modules.insert("io".to_string());
+            self.used_stdlib_modules.insert("sifr.io".to_string());
+            self.imported_stdlib_names
+                .entry("sifr.io".to_string())
+                .or_default()
+                .insert("FileHandle".to_string());
         }
         if func == "builtin_open_text" {
             self.used_stdlib_modules.insert("sifr.io".to_string());
@@ -390,7 +379,7 @@ mod tests {
 
         emitter.apply_intrinsic_registry_side_effects("builtin_open_text", &lowered);
 
-        assert!(emitter.runtime_needs.file_handles());
+        assert!(!emitter.runtime_needs.file_handles());
         assert!(emitter.used_stdlib_modules.contains("sifr.io"));
         let io_roots = emitter
             .imported_stdlib_names
