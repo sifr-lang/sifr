@@ -19,7 +19,14 @@ REGISTRY_DISPATCH_PATH = (
 PREAMBLE_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "preamble"
 
 EXACT_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
+LOWERER_MATCH_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
+EXPECTED_PREFIX_DISPATCHERS = {"http_", "py_", "tls_"}
+PREFIX_DISPATCH_LOWERERS = (
+    REGISTRY_ROOT / "tls.rs",
+    REGISTRY_ROOT / "url_http.rs",
+    REGISTRY_ROOT / "python.rs",
+)
 
 
 def main() -> int:
@@ -39,7 +46,6 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
     print(
         "stdlib native intrinsic allowlist guard: PASS "
         f"(exact_intrinsics={len(observed['exact_intrinsics'])}, "
-        f"prefix_intrinsics={len(observed['prefix_intrinsics'])}, "
         f"registry_files={len(observed['registry_files'])}, "
         f"preamble_files={len(observed['preamble_files'])})"
     )
@@ -48,9 +54,14 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
 
 def _observed_surface() -> dict[str, set[str]]:
     registry_text = REGISTRY_DISPATCH_PATH.read_text(encoding="utf-8")
+    exact_intrinsics = set(EXACT_INTRINSIC_RE.findall(registry_text))
+    for lowerer_path in PREFIX_DISPATCH_LOWERERS:
+        exact_intrinsics.update(
+            LOWERER_MATCH_INTRINSIC_RE.findall(lowerer_path.read_text(encoding="utf-8"))
+        )
     return {
-        "exact_intrinsics": set(EXACT_INTRINSIC_RE.findall(registry_text)),
-        "prefix_intrinsics": set(PREFIX_INTRINSIC_RE.findall(registry_text)),
+        "exact_intrinsics": exact_intrinsics,
+        "prefix_dispatchers": set(PREFIX_INTRINSIC_RE.findall(registry_text)),
         "registry_files": {
             path.relative_to(REGISTRY_ROOT).as_posix()
             for path in REGISTRY_ROOT.rglob("*.rs")
@@ -66,7 +77,6 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
     failures: list[str] = []
     allowed = {
         "exact_intrinsics": set[str](),
-        "prefix_intrinsics": set[str](),
         "registry_files": set[str](),
         "preamble_files": set[str](),
     }
@@ -113,7 +123,23 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         if not has_items:
             failures.append(f"{surface_id}: allowlist entry has no retained files or intrinsics")
 
+    prefix_dispatchers = observed.get("prefix_dispatchers", set())
+    unexpected_prefixes = sorted(prefix_dispatchers - EXPECTED_PREFIX_DISPATCHERS)
+    stale_prefixes = sorted(EXPECTED_PREFIX_DISPATCHERS - prefix_dispatchers)
+    if unexpected_prefixes:
+        failures.append(
+            "registry.rs contains untracked prefix dispatchers: "
+            + ", ".join(unexpected_prefixes)
+        )
+    if stale_prefixes:
+        failures.append(
+            "expected prefix dispatchers are missing from registry.rs: "
+            + ", ".join(stale_prefixes)
+        )
+
     for key, observed_values in observed.items():
+        if key not in allowed:
+            continue
         _compare_sets(failures, key, observed_values, allowed[key])
 
     return failures
@@ -169,7 +195,7 @@ def _compare_sets(
 def _self_test() -> int:
     observed = {
         "exact_intrinsics": {"alpha"},
-        "prefix_intrinsics": {"beta_"},
+        "prefix_dispatchers": EXPECTED_PREFIX_DISPATCHERS,
         "registry_files": {"alpha.rs"},
         "preamble_files": {"runtime.rs"},
     }
@@ -179,7 +205,6 @@ def _self_test() -> int:
                 "id": "test-retained-glue",
                 "reason": "language-owned test fixture",
                 "exact_intrinsics": ["alpha"],
-                "prefix_intrinsics": ["beta_"],
                 "registry_files": ["alpha.rs"],
                 "preamble_files": ["runtime.rs"],
             }
@@ -199,12 +224,12 @@ def _self_test() -> int:
         return 1
 
     stale = json.loads(json.dumps(allowlist))
-    stale["surface"][0]["prefix_intrinsics"].append("stale_")
+    stale["surface"][0]["registry_files"].append("stale.rs")
     if not any(
-        "prefix_intrinsics has stale allowlist entries: stale_" in failure
+        "registry_files has stale allowlist entries: stale.rs" in failure
         for failure in _validate(observed, stale)
     ):
-        print("self-test stale prefix intrinsic was not rejected", file=sys.stderr)
+        print("self-test stale registry file was not rejected", file=sys.stderr)
         return 1
 
     duplicate = json.loads(json.dumps(allowlist))
@@ -217,6 +242,18 @@ def _self_test() -> int:
     )
     if not any("is duplicated" in failure for failure in _validate(observed, duplicate)):
         print("self-test duplicate allowlist entry was not rejected", file=sys.stderr)
+        return 1
+
+    new_prefix_observed = json.loads(
+        json.dumps({key: sorted(value) for key, value in observed.items()})
+    )
+    new_prefix_observed["prefix_dispatchers"].append("s3_")
+    new_prefix_observed = {key: set(value) for key, value in new_prefix_observed.items()}
+    if not any(
+        "untracked prefix dispatchers: s3_" in failure
+        for failure in _validate(new_prefix_observed, allowlist)
+    ):
+        print("self-test untracked prefix dispatcher was not rejected", file=sys.stderr)
         return 1
 
     missing_reason = json.loads(json.dumps(allowlist))

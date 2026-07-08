@@ -58,6 +58,13 @@
       "report": "stdout"
     },
     {
+      "name": "stdlib-manifest-schema",
+      "entrypoint": "scripts/check_stdlib_manifest_schema.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
       "name": "stdlib-migration-closure",
       "entrypoint": "scripts/check_stdlib_migration_closure.py",
       "args": [],
