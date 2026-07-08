@@ -53,7 +53,7 @@
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
 - Embedded CPython interop is production-grade complete as a separate lane from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation. Package metadata records Python environment selection, declared import roots, and Python trust roots; the package layer resolves a single selected environment and validates canonical CPython probe JSON before runtime embedding consumes it. Runtime lifecycle, GIL/refcount ownership, blocking/offload, callbacks, resources, and zero-copy rules are documented in [`python_interop_architecture.md`](./python_interop_architecture.md), with verification under [`verification/areas/python_interop/`](../verification/areas/python_interop/).
 - Rust interop is designed as declaration-level Cargo integration, not a runtime `dlopen` layer or Rust ABI FFI surface. Rust-backed Sifr packages expose normal Sifr declarations annotated with `@rust(...)`, direct Cargo bindings are allowed only for checked bridge-compatible signatures, and package-local/shared bridge crates own adaptation. The source of truth is [`rust_interop_architecture.md`](./rust_interop_architecture.md).
-- The sysroot and stdlib toolchain migration is tracked in [`sifr_sysroot_and_stdlib_architecture.md`](./sifr_sysroot_and_stdlib_architecture.md). The baseline inventory keeps the current embedded `lib/sifr` and compiler-side `crates/sifr_stdlib_model` ownership explicit; `crates/sifr_stdlib` is now the generated-program stdlib crate foundation while later implementation stages move release builds to a versioned `lib/sifr` sysroot and migrate native stdlib surfaces through private `_sifr` declarations and Rust interop. The broad native-surface migration registry has been deleted; retained compiler-native glue is now tracked by `stdlib_retained_compiler_intrinsics.toml`, and resource-sensitive surfaces are blocked by the Rust interop resource certification gate until executable lifecycle evidence lands.
+- The sysroot and stdlib toolchain migration is tracked in [`sifr_sysroot_and_stdlib_architecture.md`](./sifr_sysroot_and_stdlib_architecture.md). The final stdlib boundary is checked Sifr source plus trusted sysroot Rust interop: public APIs live in `stdlib/sifr`, sysroot-private declaration source lives in `stdlib/_sifr`, stdlib behavior lives in `crates/sifr_stdlib`, and reusable runtime substrate lives in `crates/sifr_runtime`. The compiler may emit language scaffolding, Rust interop bridge glue, panic wrappers, exact-int conversions, entrypoint machinery, and runtime call glue; it must not implement stdlib behavior through intrinsic dispatch, pasted preambles, or handwritten Rust literals. Existing compiler-native stdlib glue survives only as exhaustive, migration-state-tracked exceptions in `stdlib_retained_compiler_intrinsics.toml`.
 
 ## Vision
 
@@ -152,8 +152,8 @@ Sifr is Python-syntax and CPython-behavior-informed, but it is not Python-source
 
 | Import root | Owner | Resolution |
 | --- | --- | --- |
-| `_sifr.*` | Compiler intrinsics | Embedded only; never filesystem or package-manager resolution. |
-| `sifr.*` | Sifr standard library | Embedded `sifr_stdlib_model::STDLIB_SOURCES`; never filesystem or package-manager resolution. |
+| `_sifr.*` | Sysroot-private stdlib declaration source | Naming convention for modules loaded with `SysrootPrivateDeclaration` origin. Importability is source-origin based: only `SysrootPublicStdlib` sources may import private declarations. |
+| `sifr.*` | Sifr standard library | Resolved from the active sysroot public stdlib source inventory; never package-manager resolution. |
 | top-level | User code and third-party packages | Workspace/package resolution. |
 
 Bare CPython stdlib roots such as `math`, `json`, `os`, `heapq`, and `collections` are not aliases for `sifr.*`. A real top-level user or package module named `math`, `json`, or similar wins normal resolution. If no real top-level module resolves and the written import root matches an embedded Sifr stdlib module tail, the compiler emits `SIFR-IMPORT-0008` with a suggestion to use `sifr.*`.
@@ -272,7 +272,8 @@ sifr/
     sifr_diagnostics/       (canonical diagnostic codes, source-map spans, model, render schema, and sink)
     sifr_ir/                (High-level IR data rules, public lowered views, CFG/flow graph data)
     sifr_lowering/          (AST-to-IR lowering, name/type/ownership/async analysis, lowering diagnostics)
-    sifr_stdlib_model/      (compiler-host stdlib source inventory, intrinsic signatures, generated dependency feature specs)
+    sifr_stdlib_manifest/   (target compiler-host stdlib source inventory, private declaration inventory, feature planning, sysroot validation, and import suggestions; split out from current sifr_stdlib_model)
+    sifr_ipc/               (target shared IPC protocol/frame/schema/request-tracking crate split out from the current stdlib model)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
     sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
