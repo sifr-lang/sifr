@@ -266,14 +266,14 @@ pub(in crate::lower) fn lower_module_impl(
                 continue;
             }
 
-            // Block user imports of _sifr.* (internal intrinsics)
-            // Stdlib .sifr files are allowed to import from _sifr.*
+            // Private stdlib declaration imports are source-origin gated.
+            // `_sifr.*` is the canonical private sysroot namespace, not the trust boundary.
             if is_absolute_import && module_name.starts_with("_sifr.") {
-                if !ctx.allow_intrinsic_imports {
+                if !ctx.can_import_private_stdlib_declarations() {
                     import_diagnostics::forbidden_intrinsic(&mut ctx, &module_name, import_range);
                     continue;
                 }
-                // Resolve intrinsic imports for stdlib .sifr files
+                // Resolve private declarations for public sysroot stdlib sources.
                 if let Some(intrinsic_module) =
                     sifr_retained_intrinsics::get_intrinsic_module(&module_name)
                 {

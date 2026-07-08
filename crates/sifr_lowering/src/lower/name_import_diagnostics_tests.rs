@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use crate::{lower_module, lower_module_with_externals, ExternalDefs, HirDiagnostic};
+use crate::{
+    lower_module, lower_module_sysroot_private_declaration_with_externals,
+    lower_module_sysroot_public_stdlib_with_externals, lower_module_with_externals, ExternalDefs,
+    HirDiagnostic,
+};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_python_parser::parse_module;
@@ -109,7 +113,42 @@ fn forbidden_intrinsic_import_has_import_code() {
 
     assert!(errors.iter().any(|error| {
         error.message
-            == "cannot import from '_sifr.io' — _sifr.* modules are internal compiler intrinsics"
+            == "cannot import from '_sifr.io' — private sysroot declarations can only be imported by public sysroot stdlib source"
+            && error.code == Some(DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC)
+            && error.primary_range == Some(range_for(source, "from _sifr.io import read_text"))
+    }));
+}
+
+#[test]
+fn public_sysroot_stdlib_source_can_import_private_declarations() {
+    let source = "from _sifr.io import read_text\n\ndef main():\n    pass\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let result =
+        lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &ExternalDefs::default())
+            .expect("public stdlib source should import private declarations");
+
+    assert!(result
+        .module
+        .imports
+        .iter()
+        .any(|import| import.module == "_sifr.io" && import.names == ["read_text".to_string()]));
+}
+
+#[test]
+fn private_sysroot_declaration_source_cannot_import_private_declarations() {
+    let source = "from _sifr.io import read_text\n\ndef main():\n    pass\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let errors = match lower_module_sysroot_private_declaration_with_externals(
+        parsed.suite(),
+        &ExternalDefs::default(),
+    ) {
+        Ok(_) => panic!("expected lowering error"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "cannot import from '_sifr.io' — private sysroot declarations can only be imported by public sysroot stdlib source"
             && error.code == Some(DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC)
             && error.primary_range == Some(range_for(source, "from _sifr.io import read_text"))
     }));

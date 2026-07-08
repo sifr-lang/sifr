@@ -66,7 +66,7 @@ pub(in crate::lower) fn lower_return(
                 ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, val.range());
             }
         }
-        if !ctx.allow_intrinsic_imports {
+        if !ctx.is_stdlib_lowering() {
             if let Some(label) = sync_guard_type_label(&expr_ty) {
                 ownership_diagnostics::sync_guard_return_escape(ctx, label, val.range());
             }

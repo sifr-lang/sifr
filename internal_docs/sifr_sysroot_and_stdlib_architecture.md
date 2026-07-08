@@ -682,9 +682,12 @@ Private declaration modules live under:
 Only sources loaded with `SysrootPublicStdlib` origin may import modules loaded
 with `SysrootPrivateDeclaration` origin. `_sifr.*` is the naming convention and
 on-disk layout for those private declaration modules, not the semantic trust
-boundary. Private declaration modules declare native stdlib operations using
-Rust interop annotations such as direct functions, opaque handles, async
-functions, view/zero-copy contracts, and callback policies.
+boundary. Private declaration sources keep stdlib-only lowering behavior for
+native declaration syntax, but they do not receive private-import capability and
+cannot import other `_sifr.*` modules. Private declaration modules declare native
+stdlib operations using Rust interop annotations such as direct functions,
+opaque handles, async functions, view/zero-copy contracts, and callback
+policies.
 
 Private declarations are source files rather than Rust tables so editor tooling
 and compiler behavior share the same signature source. They are ordinary Rust

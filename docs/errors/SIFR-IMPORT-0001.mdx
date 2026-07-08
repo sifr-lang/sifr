@@ -1,14 +1,14 @@
 ---
-title: "SIFR-IMPORT-0001: Forbidden intrinsic import"
+title: "SIFR-IMPORT-0001: Forbidden private sysroot declaration import"
 sidebarTitle: "SIFR-IMPORT-0001"
-description: "Forbidden intrinsic import"
+description: "Forbidden private sysroot declaration import"
 ---
 
-`SIFR-IMPORT-0001` belongs to the **Imports and module resolution** diagnostic family. It means: forbidden intrinsic import.
+`SIFR-IMPORT-0001` belongs to the **Imports and module resolution** diagnostic family. It means: forbidden private sysroot declaration import.
 
 ## Why It Happens
 
-The module graph cannot be resolved safely. Use explicit `sifr.*` imports for standard-library modules, avoid private imports, and remove ambiguous or cyclic import paths.
+User source attempted to import a private sysroot declaration. Private `_sifr.*` modules are only importable by public `sifr.*` sysroot stdlib source; `_sifr.*` is the layout convention, while source origin is the trust boundary.
 
 <Info>
 Use `sifr --explain SIFR-IMPORT-0001` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
@@ -17,17 +17,17 @@ Use `sifr --explain SIFR-IMPORT-0001` locally to see the renderer's exact messag
 ## Erroneous Code
 
 ```python
-from math import sqrt
+from _sifr.io import read_text
 ```
 
 ## How To Fix It
 
-Use Sifr's explicit module namespace and import concrete symbols with `from sifr.<module> import <name>`.
+Import the public stdlib wrapper instead of the private declaration.
 
 ## Fixed Code
 
 ```python
-from sifr.math import sqrt
+from sifr.io import read_text
 ```
 
 ## Details

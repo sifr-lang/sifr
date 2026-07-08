@@ -90,8 +90,8 @@ pub(in crate::lower) struct LowerCtx {
     /// Global `TypeVar(...)` declaration bounds/constraints by declared type variable name.
     /// Constraints are encoded with `TYPEVAR_CONSTRAINT_PREFIX`.
     pub(in crate::lower) declared_type_var_bounds: HashMap<String, Vec<String>>,
-    /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
-    pub(in crate::lower) allow_intrinsic_imports: bool,
+    /// Origin of the source currently being lowered.
+    pub(in crate::lower) source_origin: LoweringSourceOrigin,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
     pub(in crate::lower) borrowed_params: std::collections::HashSet<String>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
@@ -164,7 +164,7 @@ impl LowerCtx {
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),
             declared_type_var_bounds: HashMap::new(),
-            allow_intrinsic_imports: false,
+            source_origin: LoweringSourceOrigin::User,
             borrowed_params: std::collections::HashSet::new(),
             class_declared_type_params: HashMap::new(),
             current_module_name: None,
@@ -195,7 +195,11 @@ impl LowerCtx {
     }
 
     pub(in crate::lower) fn is_stdlib_lowering(&self) -> bool {
-        self.allow_intrinsic_imports
+        self.source_origin.is_sysroot_source()
+    }
+
+    pub(in crate::lower) fn can_import_private_stdlib_declarations(&self) -> bool {
+        self.source_origin.can_import_private_stdlib_declarations()
     }
 
     #[must_use]
@@ -329,6 +333,27 @@ pub struct PythonTrustPolicy {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LoweringOptions {
     pub python_trust_policy: Option<PythonTrustPolicy>,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum LoweringSourceOrigin {
+    #[default]
+    User,
+    SysrootPublicStdlib,
+    SysrootPrivateDeclaration,
+}
+
+impl LoweringSourceOrigin {
+    const fn is_sysroot_source(self) -> bool {
+        matches!(
+            self,
+            Self::SysrootPublicStdlib | Self::SysrootPrivateDeclaration
+        )
+    }
+
+    const fn can_import_private_stdlib_declarations(self) -> bool {
+        matches!(self, Self::SysrootPublicStdlib)
+    }
 }
 /// Substitute type variables in a type with concrete types.
 pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
@@ -472,19 +497,32 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
 pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     lower_module_with_externals(stmts, &ExternalDefs::default())
 }
-/// Lower a stdlib .sifr module. Allows _sifr.* intrinsic imports.
-pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<HirDiagnostic>> {
+/// Lower a public sysroot stdlib module.
+pub fn lower_module_sysroot_public_stdlib(
+    stmts: &[Stmt],
+) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     let mut ctx = LowerCtx::new();
-    ctx.allow_intrinsic_imports = true;
+    ctx.source_origin = LoweringSourceOrigin::SysrootPublicStdlib;
     lower_module_impl(stmts, &ExternalDefs::default(), ctx)
 }
-/// Lower a stdlib .sifr module with external definitions (for inter-stdlib deps).
-pub fn lower_module_stdlib_with_externals(
+
+/// Lower a public sysroot stdlib module with external definitions.
+pub fn lower_module_sysroot_public_stdlib_with_externals(
     stmts: &[Stmt],
     externals: &ExternalDefs,
 ) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     let mut ctx = LowerCtx::new();
-    ctx.allow_intrinsic_imports = true;
+    ctx.source_origin = LoweringSourceOrigin::SysrootPublicStdlib;
+    lower_module_impl(stmts, externals, ctx)
+}
+
+/// Lower a private sysroot stdlib declaration module with external definitions.
+pub fn lower_module_sysroot_private_declaration_with_externals(
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+) -> Result<LoweringResult, Vec<HirDiagnostic>> {
+    let mut ctx = LowerCtx::new();
+    ctx.source_origin = LoweringSourceOrigin::SysrootPrivateDeclaration;
     lower_module_impl(stmts, externals, ctx)
 }
 /// Lower a parsed module AST into a typed HIR module, with external module definitions.

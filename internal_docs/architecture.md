@@ -156,6 +156,13 @@ Sifr is Python-syntax and CPython-behavior-informed, but it is not Python-source
 | `sifr.*` | Sifr standard library | Resolved from the active sysroot public stdlib source inventory; never package-manager resolution. |
 | top-level | User code and third-party packages | Workspace/package resolution. |
 
+The stdlib manifest loader classifies sysroot sources as either
+`SysrootPublicStdlib` or `SysrootPrivateDeclaration`; the driver passes that
+origin into HIR lowering. Lowering derives private declaration importability
+from the source origin, not from whether an import path starts with `_sifr.*`.
+The `_sifr.*` prefix remains the on-disk/private namespace convention and the
+diagnostic target for rejected imports, but it is not a trust signal by itself.
+
 Bare CPython stdlib roots such as `math`, `json`, `os`, `heapq`, and `collections` are not aliases for `sifr.*`. A real top-level user or package module named `math`, `json`, or similar wins normal resolution. If no real top-level module resolves and the written import root matches an embedded Sifr stdlib module tail, the compiler emits `SIFR-IMPORT-0008` with a suggestion to use `sifr.*`.
 
 Examples:
