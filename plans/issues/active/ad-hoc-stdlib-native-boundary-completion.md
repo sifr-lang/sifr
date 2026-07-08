@@ -92,7 +92,7 @@ merged, and documented before the next milestone starts.
 | M0. Model Split and Raw-Injection Removal | merged | PR #2820 · sha=8f1f44d; PR #2821 · sha=f82cc64; PR #2823 · sha=c0828de; PR #2825 · sha=5e05898; PR #2827 · sha=45b36d1 |
 | M1. Manifest Schema and Normal-Path Guards | merged | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817; PR #2833 · sha=af66be2; PR #2835 · sha=7683ff6; PR #2837 · sha=91cae31 |
 | M2. Declaration Infrastructure and Provenance | merged | PR #2839 · sha=d920e16; PR #2841 · sha=4e5621d; PR #2843 · sha=631b1d8; PR #2845 · sha=217e04d; PR #2847 · sha=d75a54e; PR #2849 · sha=dd1fc69 |
-| M3. File and Filesystem Migration | in progress |  |
+| M3. File and Filesystem Migration | in progress | PR #2851 · sha=12b64b4 |
 | M4. Random, Time, and Logging | planned |  |
 | M5. Simple Sys and Environment | planned |  |
 | M6. Async Resource Pilot | planned |  |
@@ -500,7 +500,8 @@ Tasks:
   `sifr_runtime`.
   - M3a certifies the existing `sifr_runtime::interop::Handle<T>` lifecycle
     core through the new `opaque_resource_core` compatibility row while leaving
-    ecosystem resource certification future-owned.
+    ecosystem resource certification future-owned in PR #2851 (merge sha
+    `12b64b4f8965157c56dd42f00ebee7a875dd39d5`).
 - Implement file behavior and Sifr-facing errors in `crates/sifr_stdlib`.
 - Declare `FileHandle` and related operations in `stdlib/_sifr`.
 - Route public `sifr.io` wrappers through private declarations.
