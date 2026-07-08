@@ -66,6 +66,11 @@ merged, and documented before the next milestone starts.
   bridge, entrypoint, exact-int, test-harness, or retained-by-design runtime
   substrate glue. Stdlib behavior routes through `stdlib/_sifr` declarations
   and `sifr_stdlib`.
+- This phase takes ownership of the stdlib-blocking Rust interop certification
+  rows it consumes. The separate certification issue remains owner for unrelated
+  ecosystem crate certification, but rows used to unblock stdlib migration are
+  handed off by updating the compatibility matrix `future_owner`, milestone
+  evidence, and issue docs in the milestone that claims them.
 - No backward-compatibility shims, fallback paths, duplicate registries, or
   compatibility aliases are introduced. Unsupported or removed surfaces receive
   diagnostics instead of hidden fallback behavior.
@@ -101,6 +106,28 @@ merged, and documented before the next milestone starts.
 
 Evidence cells use this format after each milestone lands:
 `PR #<n> · sha=<hex7> · manifest: <id old_state -> new_state>`.
+
+## Certification Row Handoff
+
+The current Rust interop certification follow-up owns several
+`future-owned-by-separate-phase` rows that are also migration blockers for this
+phase. To avoid circular ownership, the milestone that first needs a row also
+takes responsibility for landing executable evidence and the matrix status
+change:
+
+| Row | Stdlib milestone owner | Scope transferred from the certification issue |
+| --- | --- | --- |
+| `opaque_resource_matrix` | M3 | Opaque resource nonforgeability, close/aclose lifecycle, alias rejection, and panic-boundary conversion for stdlib resource handles. |
+| `async_runtime_reqwest` | M6 | Async declaration/runtime behavior needed by stdlib async calls and resources, including hidden-blocking rejection and cancellation/drop evidence. |
+| `callback_subscription_matrix` | M10 | Subscription callback lifetime, cancellation, shutdown, thread-safety, reentrancy, and drop behavior needed by signal-style stdlib resources. |
+| `callbacks_call_scoped` | M11 | Call-scoped callback lifetime evidence needed by Python adapter stdlib behavior. |
+
+Any milestone that claims one of these rows must update
+`plans/issues/active/rust-interop-runtime-ecosystem-certification.md` and
+`verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json` in
+the same PR. The separate certification issue continues to own backend,
+database, messaging, CLI, native-link, proc-macro, and package-ecosystem rows
+that are not direct stdlib migration blockers.
 
 ## Affected Inventory
 
@@ -146,7 +173,9 @@ Runtime and stdlib crates:
 Validation and guardrails:
 
 - `scripts/check_stdlib_native_intrinsic_allowlist.py`
-- `scripts/check_stdlib_migration_closure.py`
+- `scripts/check_stdlib_migration_closure.py` until M13 folds any still-useful
+  checks into the observed-surface allowlist guard and deletes the retired-name
+  tombstone registry.
 - target `scripts/check_stdlib_manifest_schema.py`
 - target `scripts/check_stdlib_bootstrap_ordering.py`
 - `scripts/check_sysroot_stdlib_resource_certification_gate.py`
@@ -177,8 +206,9 @@ Tasks:
   second migration manifest; it shrinks to retained-by-design language glue or
   disappears by M13.
 - Rebuild the HTTP transport probe as a verification-owned Rust fixture that is
-  not exposed via `sifr.*`, prove equivalent coverage, then delete the
-  synthetic `sifr.http_transport` module and its handwritten
+  not exposed via `sifr.*`, prove equivalent runtime coverage, account for the
+  retired Sifr codegen/bootstrap-path coverage, then delete the synthetic
+  `sifr.http_transport` module and its handwritten
   `HTTP_TRANSPORT_HARNESS_RUST` literal from compiler stdlib output in the same
   milestone.
 - Update architecture docs with the final stdlib/compiler/runtime boundary and
@@ -194,8 +224,9 @@ milestone is merged:
 - M0b: create `sifr_ipc` and move shared IPC protocol code.
 - M0c: move import suggestion policy and retained signature builders to their
   final temporary compiler homes.
-- M0d: move the HTTP harness to verification, prove parity, and delete raw
-  stdlib module injection.
+- M0d: move the HTTP harness to verification, prove runtime parity, account for
+  retired codegen/bootstrap-path coverage, and delete raw stdlib module
+  injection.
 - M0e: update architecture docs and implement source-origin privacy.
 
 Acceptance:
@@ -212,8 +243,9 @@ Acceptance:
 - No handwritten Rust stdlib module injection remains in `StdlibCode`.
 - HTTP transport verification exists as a verification-owned fixture, not as a
   synthetic `sifr.*` module.
-- HTTP transport coverage parity is proven before the synthetic module and raw
-  Rust literal are deleted.
+- HTTP transport runtime coverage parity is proven, and the retired
+  codegen/bootstrap-path coverage is explicitly closed, before the synthetic
+  module and raw Rust literal are deleted.
 - `_sifr.*` privacy is documented and implemented as source-origin policy, not a
   bespoke import-prefix trust rule.
 
@@ -253,8 +285,13 @@ Tasks:
   allowed-field set.
 - Add validation that every manifest entry has a valid state and every observed
   compiler-native stdlib exception is owned exactly once.
-- Add validation that manifest state transitions are monotonic by comparing the
-  current manifest with `main`.
+- Add validation that manifest state transitions are explicit by comparing the
+  current manifest with `main`. Allowed transitions are:
+  `retained -> pilot`, `retained -> closing`,
+  `retained -> retained-by-design`, `pilot -> closing`,
+  `pilot -> retained-by-design`, and `closing -> deleted`.
+  Adding a new `retained` row after M1 is rejected unless the row is
+  `retained-by-design` language/runtime glue introduced by the same PR.
 - Add validation for row deletion: a removed `closing` row must have deletion
   evidence in the milestone evidence table or an explicit PR-linked closeout
   record, so row deletion cannot hide an unclosed compiler-native surface.
@@ -290,7 +327,8 @@ Validation:
 
 - `python3 scripts/check_stdlib_manifest_schema.py`
 - `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`
-- `python3 scripts/check_stdlib_migration_closure.py --self-test`
+- `python3 scripts/check_stdlib_migration_closure.py --self-test` as a
+  transitional guard until its useful checks fold into the allowlist guard.
 - `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`
 - Focused driver stdlib bootstrap tests.
 - `python3 scripts/check_stdlib_bootstrap_ordering.py`
@@ -341,6 +379,19 @@ Tasks:
 - Guard against fallback signature registries for `closing` surfaces.
 - Guard direct generated `sifr_runtime::*` calls so stdlib behavior cannot enter
   through runtime glue.
+
+M2 may land as ordered sub-PRs, but M3 must not start until the whole M2
+milestone is merged:
+
+- M2a: constants, module-level values, methods, constructors, errors, and
+  diagnostics for unsupported declaration forms.
+- M2b: opaque resources, value classes, nonforgeability, close/aclose lifecycle
+  metadata, and user-forgery negative tests.
+- M2c: structural `StdlibRustSource` provenance with canonical
+  sysroot-relative paths, source digests, and raw-string rejection.
+- M2d: permanent side-channel guards for new dispatch entries, preambles,
+  direct dependencies, fallback registries, private target escapes, and direct
+  stdlib-behavior `sifr_runtime::*` calls.
 
 Acceptance:
 
@@ -410,6 +461,8 @@ Validation:
 - Focused fs/path tests.
 - Representative stdlib demos.
 - Generated Cargo feature snapshots.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Resource certification gate.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
@@ -423,8 +476,11 @@ Tasks:
 
 - Move random module state, distributions, sampling, shuffling, and seeding
   behavior into `sifr_stdlib`.
-- Move clock, formatting, parsing, sleeping, and struct-time compatibility
-  behavior into `sifr_stdlib`, using runtime substrate where needed.
+- Move wall-clock, formatting, parsing, and struct-time compatibility behavior
+  that does not depend on async runtime certification into `sifr_stdlib`.
+- Split `_sifr.time` so async/runtime-sensitive leaves such as `sleep` and
+  `monotonic` remain retained until M6 proves the async declaration/runtime
+  model.
 - Move global logging level behavior into `sifr_stdlib` or classify the exact
   runtime observability substrate as `retained-by-design`.
 - Split `_sifr.time` and `_sifr.logging` rows into migrated public behavior and
@@ -438,7 +494,9 @@ Tasks:
 Acceptance:
 
 - Random/time/logging public behavior routes through checked stdlib source and
-  sysroot interop.
+  sysroot interop for the leaves not blocked on async/runtime certification.
+- `sleep` and `monotonic` remain explicitly retained or split out until M6
+  closes their async/runtime evidence.
 - Runtime-only substrate is narrow and explicitly classified.
 - The remaining random/logging slices of the mixed IO/logging/random preamble
   are decomposed or deleted after M3 has already removed file/filesystem slices.
@@ -446,8 +504,11 @@ Acceptance:
 Validation:
 
 - Deterministic random tests.
-- Clock/sleep tests with bounded timing assertions.
+- Clock and struct-time tests with bounded timing assertions for the migrated
+  sync leaves.
 - Logging state tests.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
 
@@ -476,6 +537,8 @@ Validation:
 
 - Focused sys/env tests.
 - Generated Cargo feature snapshots.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
 
@@ -486,8 +549,12 @@ Prove async resource declarations before migrating async-heavy families.
 Tasks:
 
 - Add or harden async resource declaration support.
+- Add or harden basic async function declaration support needed by
+  async-sensitive stdlib leaves.
 - Prove cancellation, poisoning, join/drop semantics, blocking boundaries, and
   panic conversion for an intentionally small async resource.
+- Migrate the async/runtime-sensitive `_sifr.time` leaves retained from M4,
+  including `sleep` and `monotonic`, only after async runtime evidence lands.
 - Update Rust interop certification evidence with executable lifecycle tests.
 - Keep the pilot isolated from process, network, TLS, and HTTP migration until
   evidence lands.
@@ -497,10 +564,15 @@ Acceptance:
 - Async resources have a checked declaration and lifecycle model.
 - Cancellation and drop behavior is deterministic and documented.
 - Resource certification can distinguish sync and async resource evidence.
+- `sleep` and `monotonic` no longer require compiler-native stdlib dispatch
+  once their async/runtime evidence lands.
 
 Validation:
 
 - Focused async resource tests.
+- Clock/sleep tests with bounded timing assertions.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Rust interop certification gate.
 - `scripts/run_all_tests.sh --profile create-pr`
 
@@ -529,6 +601,8 @@ Validation:
 
 - Focused process lifecycle tests.
 - Async process tests.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Resource certification gate.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
@@ -559,6 +633,8 @@ Validation:
 
 - Focused loopback network tests.
 - TLS fixture tests.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Resource certification gate.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
@@ -588,6 +664,8 @@ Validation:
 - Focused HTTP tests.
 - Verification-owned transport fixtures.
 - Generated Cargo dependency snapshots.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
 
@@ -614,6 +692,8 @@ Acceptance:
 Validation:
 
 - Focused callback lifecycle tests.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Rust interop callback certification gate.
 - `scripts/run_all_tests.sh --profile create-pr`
 
@@ -641,6 +721,8 @@ Validation:
 
 - Python interop certification tests.
 - Callback/resource gates.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
 
@@ -673,6 +755,8 @@ Validation:
 
 - Focused task/signal/runtime observability tests.
 - Test harness tests.
+- Generated-project cold/warm build-time evidence for representative `sifr run`
+  cases using the existing validation profile budget reports.
 - Retained-glue and migration closure guards.
 - `scripts/run_all_tests.sh --profile create-pr`
 
@@ -689,6 +773,9 @@ Tasks:
 - Delete direct generated third-party dependency paths for stdlib behavior.
 - Ensure every remaining manifest entry is `retained-by-design`; no `retained`,
   `pilot`, or `closing` rows remain.
+- Fold any still-useful `scripts/check_stdlib_migration_closure.py` checks into
+  the observed-surface allowlist guard and delete the retired-name tombstone
+  registry.
 - Convert temporary migration guards into permanent no-regression guards.
 - Update architecture, roadmap, phases, and issue docs with final status and
   merged PR links.
@@ -711,7 +798,6 @@ Validation:
 - `python3 scripts/check_hir_maintainability_guardrails.py`
 - `python3 scripts/check_file_size_guardrails.py`
 - `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`
-- `python3 scripts/check_stdlib_migration_closure.py`
 - `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`
 - `scripts/run_all_tests.sh --profile create-pr`
 - `scripts/run_all_tests.sh`

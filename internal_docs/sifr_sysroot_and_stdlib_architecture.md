@@ -56,7 +56,7 @@ state. Later implementation stages update the implementation toward the architec
 | --- | --- | --- | --- | --- |
 | Public Sifr stdlib sources | `stdlib/sifr/*.sifr`, validated by `crates/sifr_stdlib_model` and loaded from the resolved source-tree or installed sysroot path | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | complete for source layout; packaging copy remains later | yes |
 | Private stdlib declarations | `stdlib/_sifr/*.sifr` declaration files are loaded from the resolved sysroot; completed stateless/data leaves bind through private Rust interop while retained runtime/resource/callback leaves remain compiler-owned and allowlisted | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context, retained-glue allowlist | mixed |
-| Compiler-side stdlib model | `crates/sifr_stdlib_model` currently owns source inventory, private intrinsic metadata, feature/dependency mapping, IPC metadata, and legacy module suggestions | Split into `crates/sifr_stdlib_manifest` for source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and import suggestions; move shared IPC protocol/frame/schema/request tracking into `crates/sifr_ipc`; delete fallback intrinsic signature tables as surfaces migrate | manifest/model split and intrinsic signature deletion | yes |
+| Compiler-side stdlib model | `crates/sifr_stdlib_model` currently owns source inventory, private intrinsic metadata, feature/dependency mapping, IPC metadata, and legacy module suggestions | Split into `crates/sifr_stdlib_manifest` for source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and inventory data queried by diagnostics; move suggestion policy/rendering to the frontend or diagnostics boundary; move shared IPC protocol/frame/schema/request tracking into `crates/sifr_ipc`; delete fallback intrinsic signature tables as surfaces migrate | manifest/model split and intrinsic signature deletion | yes |
 | Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_model` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` under the resolved development or installed sysroot; generated Cargo and Rust interop probes receive the explicit `ResolvedSysroot` runtime crate path | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asked `sifr_stdlib_model::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from the manifest/sysroot planning layer, consumed by codegen, driver, cache keys, reports, and LSP traces | manifest/model split and dependency planner | yes |
@@ -115,9 +115,11 @@ data, while user/package dependencies remain package-owned Cargo inputs.
 Current generated code and preamble call into `sifr_runtime::*` from these
 families. This table groups retained call sites by migration concern; active
 compiler-owned stdlib glue is frozen by
-`internal_docs/stdlib_retained_compiler_intrinsics.toml`, and migrated native
-leaves are protected from reappearing in the dispatcher by
-`scripts/check_stdlib_migration_closure.py`.
+`internal_docs/stdlib_retained_compiler_intrinsics.toml`. The final guard
+protects migrated native leaves by requiring every observed dispatcher,
+registry, and preamble surface to be manifest-owned; the transitional
+retired-name closure script is folded into that allowlist guard and deleted at
+final closure.
 
 | Call-site family | Current call sites | Final owner |
 | --- | --- | --- |
@@ -192,9 +194,15 @@ Rust interop runtime certification gate until their lifecycle behavior is
 executable evidence, not just adapter code.
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` enforces this
 boundary during validation by pinning each resource-sensitive stdlib surface to
-its required Rust interop compatibility matrix rows. Those rows must remain
-`future-owned-by-separate-phase` and owned by the runtime ecosystem
-certification issue until that separate work updates the gate deliberately.
+its required Rust interop compatibility matrix rows. Rows that directly block
+stdlib migration are handed off to the stdlib native boundary phase milestone
+that first consumes them: `opaque_resource_matrix` in the file/resource pilot,
+`async_runtime_reqwest` in the async runtime pilot,
+`callback_subscription_matrix` in the signal subscription pilot, and
+`callbacks_call_scoped` in the Python adapter migration. The separate runtime
+ecosystem certification issue continues to own rows for backend, database,
+messaging, CLI, native-link, proc-macro, and package-ecosystem certification
+that are not direct stdlib migration blockers.
 
 Retained compiler-native stdlib glue is guarded separately by
 `internal_docs/stdlib_retained_compiler_intrinsics.toml` and
@@ -611,7 +619,8 @@ The final manifest layer is `sifr_stdlib_manifest`. It owns:
 - stdlib source inventory and module metadata,
 - public stdlib import policy and source-origin-based private declaration
   import policy,
-- legacy CPython-shaped module suggestions,
+- legacy CPython-shaped module inventory data queried by frontend/diagnostics
+  suggestion policy,
 - private declaration module metadata,
 - migration-state loading from
   `internal_docs/stdlib_retained_compiler_intrinsics.toml`,

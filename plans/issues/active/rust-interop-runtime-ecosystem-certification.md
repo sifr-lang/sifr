@@ -28,6 +28,23 @@ unsupported-by-design decision before any stable release claims that surface.
 - Proc-macro/build-script certification for `serde_derive` and `prost-build`.
 - Locked, offline, and frozen Cargo certification.
 
+## Handoff to Stdlib Native Boundary Completion
+
+The stdlib native boundary completion phase takes ownership of the
+stdlib-blocking certification rows it consumes:
+
+- `opaque_resource_matrix` when the file/resource migration lands.
+- `async_runtime_reqwest` when the async runtime pilot lands.
+- `callback_subscription_matrix` when the signal subscription pilot lands.
+- `callbacks_call_scoped` when the Python adapter migration lands.
+
+When one of those milestones starts, its PR updates the compatibility matrix
+`future_owner`, executable evidence, and milestone evidence table in
+`plans/issues/active/ad-hoc-stdlib-native-boundary-completion.md`. This issue
+continues to own backend, database, messaging, CLI, native-link, proc-macro,
+locked/offline Cargo, and package-ecosystem certification rows that are not
+direct stdlib migration blockers.
+
 ## Required Evidence
 
 Each row must land with:
