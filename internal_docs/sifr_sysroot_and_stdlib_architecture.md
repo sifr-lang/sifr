@@ -850,16 +850,19 @@ The structural target is:
 ```rust
 struct StdlibRustSource {
     module: String,
-    source_path: PathBuf,
+    source_path: SysrootRelativePath,
+    source_sha256: String,
     rust: String,
 }
 ```
 
 `StdlibCode.module_rust_code` should carry `StdlibRustSource` values rather than
-plain strings once provenance hardening lands. `source_path` is normalized to
-the same repo-relative path form used by manifest `declaration_files`, so the
-guard can cross-check generated stdlib Rust provenance against declaration
-source. Compiled checked stdlib source is the only valid producer.
+plain strings once provenance hardening lands. `source_path` is normalized to a
+canonical sysroot-relative path form used by manifest `declaration_files`, and
+`source_sha256` is computed from the checked source content that produced the
+Rust payload. The guard cross-checks generated stdlib Rust provenance against
+declaration source and digest evidence. Compiled checked stdlib source is the
+only valid producer.
 
 Runtime/resource/callback surfaces follow the Rust interop certification gate.
 Surfaces still marked future-owned or uncertified in the compatibility matrix

@@ -169,18 +169,34 @@ Tasks:
 - Move shared IPC frame/schema/transport/request tracking/handshake metadata
   into `sifr_ipc`.
 - Move legacy CPython-shaped import suggestion policy out of the manifest crate
-  into the frontend or diagnostics boundary.
+  into the frontend or diagnostics boundary. That boundary may query manifest
+  inventory data, but it owns the suggestion policy and rendered diagnostics.
 - Move remaining retained intrinsic signature builders out of the manifest
-  crate and into the compiler codegen boundary that consumes them.
-- Delete the synthetic `sifr.http_transport` module and its handwritten
-  `HTTP_TRANSPORT_HARNESS_RUST` literal from compiler stdlib output.
-- Rebuild the equivalent HTTP transport probe as a verification-owned Rust
-  fixture that is not exposed via `sifr.*`.
+  crate and into a temporary compiler-retained-glue boundary consumed by
+  lowering, driver bootstrap, and codegen as needed. This boundary is not a
+  second migration manifest; it shrinks to retained-by-design language glue or
+  disappears by M13.
+- Rebuild the HTTP transport probe as a verification-owned Rust fixture that is
+  not exposed via `sifr.*`, prove equivalent coverage, then delete the
+  synthetic `sifr.http_transport` module and its handwritten
+  `HTTP_TRANSPORT_HARNESS_RUST` literal from compiler stdlib output in the same
+  milestone.
 - Update architecture docs with the final stdlib/compiler/runtime boundary and
   the source-origin privacy rule.
 - Remove temporary `sifr.http_transport` prose from
   `internal_docs/network_http_architecture.md` after the verification-owned
   fixture replaces it.
+
+M0 may land as ordered sub-PRs, but M1 must not start until the whole M0
+milestone is merged:
+
+- M0a: create `sifr_stdlib_manifest` and move inventory/planning/import policy.
+- M0b: create `sifr_ipc` and move shared IPC protocol code.
+- M0c: move import suggestion policy and retained signature builders to their
+  final temporary compiler homes.
+- M0d: move the HTTP harness to verification, prove parity, and delete raw
+  stdlib module injection.
+- M0e: update architecture docs and implement source-origin privacy.
 
 Acceptance:
 
@@ -190,11 +206,14 @@ Acceptance:
 - `sifr_ipc` owns shared IPC protocol/frame/schema/request-tracking code.
 - Legacy CPython-shaped import suggestion policy lives outside the stdlib
   manifest crate.
-- Remaining retained intrinsic signatures live at the codegen boundary that
-  consumes them, not in the manifest crate.
+- Remaining retained intrinsic signatures live in a temporary
+  compiler-retained-glue boundary that can be consumed by lowering, driver
+  bootstrap, and codegen without making lowering depend on codegen.
 - No handwritten Rust stdlib module injection remains in `StdlibCode`.
 - HTTP transport verification exists as a verification-owned fixture, not as a
   synthetic `sifr.*` module.
+- HTTP transport coverage parity is proven before the synthetic module and raw
+  Rust literal are deleted.
 - `_sifr.*` privacy is documented and implemented as source-origin policy, not a
   bespoke import-prefix trust rule.
 
@@ -213,9 +232,10 @@ Make the normal path strong enough that transitional special cases cannot grow.
 
 Tasks:
 
-- Extend the retained-glue manifest schema with migration states, owner or
-  issue fields, evidence links, registry entries, preamble entries,
-  declaration files, and certification rows.
+- Extend the retained-glue manifest schema with migration states, owner fields,
+  issue fields, removal criteria for every non-`retained-by-design` row,
+  evidence links, registry entries, preamble entries, declaration files, and
+  certification rows.
 - Do not add raw-injection fields; handwritten stdlib Rust injection was removed
   in M0.
 - Exact-enumerate current prefix dispatchers and delete `prefix_intrinsics` from
@@ -235,6 +255,9 @@ Tasks:
   compiler-native stdlib exception is owned exactly once.
 - Add validation that manifest state transitions are monotonic by comparing the
   current manifest with `main`.
+- Add validation for row deletion: a removed `closing` row must have deletion
+  evidence in the milestone evidence table or an explicit PR-linked closeout
+  record, so row deletion cannot hide an unclosed compiler-native surface.
 - Migrate `scripts/check_sysroot_stdlib_resource_certification_gate.py` to read
   `certification_rows` from the manifest and delete its hardcoded
   surface-to-matrix table. Each manifest row carries its own certification rows;
@@ -298,14 +321,16 @@ Tasks:
   ```rust
   struct StdlibRustSource {
       module: String,
-      source_path: PathBuf,
+      source_path: SysrootRelativePath,
+      source_sha256: String,
       rust: String,
   }
   ```
 
 - Permit compiled checked stdlib source output.
-- Normalize `StdlibRustSource.source_path` to the same repo-relative path form
-  used by manifest `declaration_files`.
+- Normalize `StdlibRustSource.source_path` to a canonical sysroot-relative path
+  form used by manifest `declaration_files`, and compute `source_sha256` from
+  the checked source content that produced the Rust payload.
 - Reject handwritten stdlib Rust literals outright.
 - Guard against new stdlib intrinsic dispatch entries.
 - Guard against new stdlib implementation preambles.
@@ -322,12 +347,15 @@ Acceptance:
 - Functions, constants, methods, errors, opaque resources, and value classes can
   be represented in checked declaration source.
 - Private declaration files can express the shape needed by upcoming pilots.
+- A private declaration can define an opaque type that user code cannot forge.
+- A private declaration can attach close/aclose/lifecycle metadata without
+  compiler-specific per-surface behavior.
 - Migrated constants do not require compiler intrinsic Rust expressions.
 - The compiler can still emit language and bridge glue.
 - New stdlib behavior cannot enter through codegen strings, preambles,
   intrinsic dispatch, direct generated dependencies, or fallback registries.
 - `StdlibCode.module_rust_code` has one producer kind: compiled checked Sifr
-  source.
+  source with canonical sysroot-relative path and source digest provenance.
 
 Validation:
 
