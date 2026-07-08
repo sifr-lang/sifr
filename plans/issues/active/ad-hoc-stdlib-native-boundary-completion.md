@@ -93,7 +93,7 @@ merged, and documented before the next milestone starts.
 | M1. Manifest Schema and Normal-Path Guards | merged | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817; PR #2833 · sha=af66be2; PR #2835 · sha=7683ff6; PR #2837 · sha=91cae31 |
 | M2. Declaration Infrastructure and Provenance | merged | PR #2839 · sha=d920e16; PR #2841 · sha=4e5621d; PR #2843 · sha=631b1d8; PR #2845 · sha=217e04d; PR #2847 · sha=d75a54e; PR #2849 · sha=dd1fc69 |
 | M3. File and Filesystem Migration | merged | PR #2851 · sha=12b64b4; PR #2852 · sha=72a62f1; PR #2853 · sha=84b0419; PR #2855 · sha=4372f13; PR #2858 · sha=f08fc98 |
-| M4. Random, Time, and Logging | in progress | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing; PR #2864 · sha=9d901ad · manifest: `_sifr.time` exact retained leaves narrowed to `sleep`/`monotonic` |
+| M4. Random, Time, and Logging | merged | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing; PR #2864 · sha=9d901ad · manifest: `_sifr.time` exact retained leaves narrowed to `sleep`/`monotonic`; PR #2866 · sha=c241b20 · manifest: mixed preamble now IO/file-handle only |
 | M5. Simple Sys and Environment | planned |  |
 | M6. Async Resource Pilot | planned |  |
 | M7. Process Family | planned |  |
@@ -613,6 +613,12 @@ M4 may land as ordered sub-PRs:
   through `sifr_stdlib(time)` instead of direct `chrono` in PR #2864 (merge sha
   `9d901ad460026b4f70b4281873544f7d6a8cac28`; local `create-pr` validation
   passed with a warm wall-time advisory only; reviewer round 1 READY).
+- M4d renames the remaining legacy mixed IO/logging/random preamble to
+  `io_file_handles.rs`, updates the historical retained manifest row to point
+  at the remaining IO/file-handle-only preamble, and records that the logging
+  and random slices have migrated out in PR #2866 (merge sha
+  `c241b20233dd46082a7194c5d46e54818fdf28dd`; local `create-pr` validation
+  passed with wall-time/cache advisories only; reviewer round 1 READY).
 
 Acceptance:
 
