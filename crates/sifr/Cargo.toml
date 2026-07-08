@@ -29,6 +29,7 @@ serde_json = { workspace = true }
 [dev-dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+sifr_stdlib_manifest = { workspace = true }
 
 [lints]
 workspace = true

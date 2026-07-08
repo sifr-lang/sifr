@@ -308,12 +308,24 @@ fn planned_sysroot_stdlib_features_include_codegen_requirements_without_umbrella
 fn sysroot_dependency_plan_captures_identity_features_and_vendor_mode() {
     let plan = try_sysroot_dependency_plan(
         &HashSet::from(["sifr.json".to_string()]),
-        &HashSet::new(),
+        &HashSet::from([StdlibFeature::SerdeJson]),
         CargoVendorMode::SysrootOnly,
     )
     .expect("source-tree sysroot should resolve");
 
     assert_eq!(plan.cargo_vendor_mode, CargoVendorMode::SysrootOnly);
+    assert_eq!(
+        plan.stdlib_modules,
+        ["sifr.json".to_string()].into_iter().collect()
+    );
+    assert_eq!(
+        plan.required_features,
+        [StdlibFeature::SerdeJson].into_iter().collect()
+    );
+    assert_eq!(
+        plan.dependency_input_fingerprint(),
+        "[stdlib]\nsifr.json\n[features]\nserde_json\n"
+    );
     assert_eq!(plan.sysroot_content_sha256.len(), 64);
     assert!(plan.cargo_config.ends_with(".cargo/config.toml"));
     assert!(plan.vendor_dir.ends_with("vendor"));

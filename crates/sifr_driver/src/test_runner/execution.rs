@@ -6,6 +6,7 @@ use crate::build::{
 use crate::diagnostics::{write_stderr, write_stderr_line, RenderedDiagnostic};
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_stdlib_manifest::SysrootDependencyPlan;
 use std::path::Path;
 
 pub(crate) struct TestRunnerExecutionOutcome {
@@ -35,7 +36,7 @@ pub(crate) fn execute_test_runner_project(
         generated_project,
         &cargo_plan.cargo_toml,
         &test_lib,
-        &cargo_plan.dependency_plan.cache_fingerprint,
+        &cargo_plan.dependency_plan,
     );
     let required_paths = [
         Path::new("Cargo.toml"),
@@ -170,7 +171,7 @@ fn test_runner_cache_key(
     generated_project: &GeneratedTestRunnerProject,
     cargo_toml: &str,
     test_lib: &str,
-    dependency_plan_fingerprint: &str,
+    dependency_plan: &SysrootDependencyPlan,
 ) -> String {
     let mut support_modules: Vec<(&str, &str)> = generated_project
         .support_rust_files
@@ -183,22 +184,62 @@ fn test_runner_cache_key(
         .map(|(name, code)| format!("{name}\n{code}"))
         .collect::<Vec<_>>()
         .join("\n===\n");
-    let mut stdlib_modules: Vec<&str> = generated_project
-        .all_stdlib_modules
-        .iter()
-        .map(String::as_str)
-        .collect();
-    stdlib_modules.sort_unstable();
-    let mut required_features: Vec<&str> = generated_project
-        .all_required_features
-        .iter()
-        .map(|feature| feature.id())
-        .collect();
-    required_features.sort_unstable();
     format!(
-        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[stdlib]\n{}\n[crates]\n{}\n[sysroot-dependency-plan]\n{dependency_plan_fingerprint}",
+        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}",
         generated_project.cache_scope.display(),
-        stdlib_modules.join("\n"),
-        required_features.join("\n")
+        dependency_plan.dependency_input_fingerprint(),
+        dependency_plan.cache_fingerprint
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::test_runner_cache_key;
+    use crate::test_runner::orchestrator::GeneratedTestRunnerProject;
+    use sifr_stdlib_manifest::{
+        CargoVendorMode, StdlibFeature, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
+    };
+    use std::collections::{BTreeSet, HashMap, HashSet};
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_runner_cache_key_uses_sysroot_dependency_plan_inputs() {
+        let generated_project = GeneratedTestRunnerProject {
+            cache_scope: PathBuf::from("/tmp/sifr-tests"),
+            support_module_names: Vec::new(),
+            support_rust_files: HashMap::new(),
+            all_rust_code: "#[test]\nfn test_case() {}\n".to_string(),
+            all_stdlib_modules: HashSet::from(["sifr.json".to_string()]),
+            all_required_features: HashSet::from([StdlibFeature::SerdeJson]),
+        };
+        let dependency_plan = SysrootDependencyPlan {
+            stdlib_modules: BTreeSet::from(["sifr.json".to_string()]),
+            required_features: BTreeSet::from([StdlibFeature::SerdeJson]),
+            sysroot_root: "/sysroot".into(),
+            toolchain_id: "0.1.0-test-aarch64-test".to_string(),
+            sysroot_content_sha256: "0".repeat(64),
+            cargo_config: "/sysroot/.cargo/config.toml".into(),
+            vendor_dir: "/sysroot/vendor".into(),
+            crates: vec![SysrootCrateDependency {
+                krate: SysrootCrate::SifrStdlib,
+                path: "/sysroot/crates/sifr_stdlib".into(),
+                features: BTreeSet::from(["json".to_string()]),
+            }],
+            retained_direct_dependencies: Vec::new(),
+            cargo_vendor_mode: CargoVendorMode::SysrootOnly,
+            cache_fingerprint: "fingerprint-a".to_string(),
+        };
+
+        let cache_key = test_runner_cache_key(
+            &generated_project,
+            "[package]\nname = \"sifr_tests\"\n",
+            "#[test]\nfn test_case() {}\n",
+            &dependency_plan,
+        );
+
+        assert!(cache_key.contains(
+            "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"
+        ));
+        assert!(cache_key.contains("[sysroot-dependency-plan]\nfingerprint-a"));
+    }
 }
