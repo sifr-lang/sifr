@@ -91,7 +91,7 @@ merged, and documented before the next milestone starts.
 | --- | --- | --- |
 | M0. Model Split and Raw-Injection Removal | merged | PR #2820 · sha=8f1f44d; PR #2821 · sha=f82cc64; PR #2823 · sha=c0828de; PR #2825 · sha=5e05898; PR #2827 · sha=45b36d1 |
 | M1. Manifest Schema and Normal-Path Guards | merged | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817; PR #2833 · sha=af66be2; PR #2835 · sha=7683ff6; PR #2837 · sha=91cae31 |
-| M2. Declaration Infrastructure and Provenance | in progress | PR #2839 · sha=d920e16; PR #2841 · sha=4e5621d; PR #2843 · sha=631b1d8; PR #2845 · sha=217e04d; PR #2847 · sha=d75a54e |
+| M2. Declaration Infrastructure and Provenance | merged | PR #2839 · sha=d920e16; PR #2841 · sha=4e5621d; PR #2843 · sha=631b1d8; PR #2845 · sha=217e04d; PR #2847 · sha=d75a54e; PR #2849 · sha=dd1fc69 |
 | M3. File and Filesystem Migration | planned |  |
 | M4. Random, Time, and Logging | planned |  |
 | M5. Simple Sys and Environment | planned |  |
@@ -458,6 +458,11 @@ milestone is merged:
 - M2d: permanent side-channel guards for new dispatch entries, preambles,
   direct dependencies, fallback registries, private target escapes, and direct
   stdlib-behavior `sifr_runtime::*` calls.
+  - Retained-glue guardrails now freeze retained direct dependency package
+    names and direct `sifr_runtime::<root>` generated-code references alongside
+    exact intrinsics, registry files, preamble files, prefix dispatchers, and
+    closing fallback signature modules in PR #2849 (merge sha
+    `dd1fc69c6b1ccc355577cefa5e11424c7276e9ed`).
 
 Acceptance:
 
