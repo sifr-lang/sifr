@@ -30,20 +30,32 @@ unsupported-by-design decision before any stable release claims that surface.
 
 ## Handoff to Stdlib Native Boundary Completion
 
-The stdlib native boundary completion phase takes ownership of the
-stdlib-blocking certification rows it consumes:
+The stdlib native boundary completion phase takes ownership only of the narrow
+stdlib-blocking certification mechanics it proves. It must split broad matrix
+rows rather than reassigning ecosystem rows wholesale:
 
-- `opaque_resource_matrix` when the file/resource migration lands.
-- `async_runtime_reqwest` when the async runtime pilot lands.
-- `callback_subscription_matrix` when the signal subscription pilot lands.
-- `callbacks_call_scoped` when the Python adapter migration lands.
+- `opaque_resource_matrix` splits into stdlib-owned `opaque_resource_core` and
+  certification-owned `opaque_resource_ecosystem`.
+- `async_runtime_reqwest` splits into stdlib-owned `async_runtime_core` and the
+  certification-owned `async_runtime_reqwest` ecosystem loopback row.
+- `callback_subscription_matrix` splits into stdlib-owned
+  `callback_subscription_core` and certification-owned
+  `callback_subscription_ecosystem`.
+- `callbacks_call_scoped` may split into stdlib-owned
+  `callbacks_call_scoped_core` if the Python adapter migration proves only the
+  core callback lifetime mechanics.
+- `panic_boundary_wrapper_emission` remains certification-owned unless a stdlib
+  milestone needs generated panic-wrapper evidence; in that case the milestone
+  creates a narrow `panic_boundary_stdlib_core` row and leaves package wrapper
+  emission and mapper-panic fallback evidence here.
 
-When one of those milestones starts, its PR updates the compatibility matrix
-`future_owner`, executable evidence, and milestone evidence table in
+When one of those milestones starts, its PR updates the compatibility matrix,
+executable evidence, and milestone evidence table in
 `plans/issues/active/ad-hoc-stdlib-native-boundary-completion.md`. This issue
-continues to own backend, database, messaging, CLI, native-link, proc-macro,
-locked/offline Cargo, and package-ecosystem certification rows that are not
-direct stdlib migration blockers.
+continues to own the ecosystem portions of split rows plus backend, database,
+messaging, CLI, native-link, proc-macro, locked/offline Cargo, and
+package-ecosystem certification rows that are not direct stdlib migration
+blockers.
 
 ## Required Evidence
 

@@ -194,15 +194,17 @@ Rust interop runtime certification gate until their lifecycle behavior is
 executable evidence, not just adapter code.
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` enforces this
 boundary during validation by pinning each resource-sensitive stdlib surface to
-its required Rust interop compatibility matrix rows. Rows that directly block
-stdlib migration are handed off to the stdlib native boundary phase milestone
-that first consumes them: `opaque_resource_matrix` in the file/resource pilot,
-`async_runtime_reqwest` in the async runtime pilot,
-`callback_subscription_matrix` in the signal subscription pilot, and
-`callbacks_call_scoped` in the Python adapter migration. The separate runtime
-ecosystem certification issue continues to own rows for backend, database,
-messaging, CLI, native-link, proc-macro, and package-ecosystem certification
-that are not direct stdlib migration blockers.
+its required Rust interop compatibility matrix rows. Broad ecosystem rows are
+not handed off wholesale. The stdlib native boundary phase splits and owns only
+the narrow stdlib-blocking core rows it proves, such as
+`opaque_resource_core`, `async_runtime_core`, `callback_subscription_core`, and
+possibly `callbacks_call_scoped_core`. The ecosystem portions, such as
+`opaque_resource_ecosystem`, `async_runtime_reqwest`, and
+`callback_subscription_ecosystem`, remain with the separate runtime ecosystem
+certification issue. `panic_boundary_wrapper_emission` also remains package
+interop certification unless a stdlib milestone needs generated panic-wrapper
+evidence; trusted sysroot declarations may instead keep panic handling as
+stdlib-owned poisoning or error-conversion evidence.
 
 Retained compiler-native stdlib glue is guarded separately by
 `internal_docs/stdlib_retained_compiler_intrinsics.toml` and

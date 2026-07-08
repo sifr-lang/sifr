@@ -109,20 +109,27 @@ Evidence cells use this format after each milestone lands:
 
 ## Certification Row Handoff
 
-The current Rust interop certification follow-up owns several
+The current Rust interop certification follow-up owns several broad
 `future-owned-by-separate-phase` rows that are also migration blockers for this
-phase. To avoid circular ownership, the milestone that first needs a row also
-takes responsibility for landing executable evidence and the matrix status
-change:
+phase. This phase must not reassign those rows wholesale because several rows
+also cover ecosystem crates that stdlib migration does not prove. Instead, the
+claiming milestone splits the broad row into a narrow stdlib-blocking core row
+and an ecosystem row that remains with the certification issue:
 
-| Row | Stdlib milestone owner | Scope transferred from the certification issue |
+| Current broad row | Stdlib milestone split row | Ecosystem row remains with certification issue |
 | --- | --- | --- |
-| `opaque_resource_matrix` | M3 | Opaque resource nonforgeability, close/aclose lifecycle, alias rejection, and panic-boundary conversion for stdlib resource handles. |
-| `async_runtime_reqwest` | M6 | Async declaration/runtime behavior needed by stdlib async calls and resources, including hidden-blocking rejection and cancellation/drop evidence. |
-| `callback_subscription_matrix` | M10 | Subscription callback lifetime, cancellation, shutdown, thread-safety, reentrancy, and drop behavior needed by signal-style stdlib resources. |
-| `callbacks_call_scoped` | M11 | Call-scoped callback lifetime evidence needed by Python adapter stdlib behavior. |
+| `opaque_resource_matrix` | M3 creates `opaque_resource_core` for opaque resource nonforgeability, close/aclose lifecycle, alias rejection, poisoning, and panic-boundary conversion for stdlib resource handles. | `opaque_resource_ecosystem` keeps `reqwest`, `rusqlite`, `tokio-postgres`, and `redis` handle evidence. |
+| `async_runtime_reqwest` | M6 creates `async_runtime_core` for async declaration/runtime behavior needed by stdlib async calls and resources, including hidden-blocking rejection, cancellation, drop, and the retained `_sifr.time` leaves. | `async_runtime_reqwest` keeps `tokio`/`reqwest` loopback behavior evidence. |
+| `callback_subscription_matrix` | M10 creates `callback_subscription_core` for signal-style subscription lifetime, cancellation, shutdown, thread-safety, reentrancy, and drop behavior. | `callback_subscription_ecosystem` keeps `tokio-tungstenite`, Redis pub/sub, and `notify` evidence. |
+| `callbacks_call_scoped` | M11 creates or claims a narrow `callbacks_call_scoped_core` row for call-scoped callback lifetime evidence needed by Python adapter stdlib behavior. | Any package/ecosystem callback row remains with the certification issue if broader evidence is needed. |
+| `panic_boundary_wrapper_emission` | M3 creates `panic_boundary_stdlib_core` only if stdlib private interop needs generated panic wrappers for resource migration. | `panic_boundary_wrapper_emission` keeps package Rust interop wrapper-emission and mapper-panic fallback evidence. |
 
-Any milestone that claims one of these rows must update
+If trusted sysroot declarations make generated panic wrappers unnecessary for a
+stdlib migration, the claiming milestone must state that explicitly in its
+evidence and keep panic handling as stdlib-owned poisoning or error conversion
+evidence instead of flipping `panic_boundary_wrapper_emission`.
+
+Any milestone that splits or claims one of these rows must update
 `plans/issues/active/rust-interop-runtime-ecosystem-certification.md` and
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json` in
 the same PR. The separate certification issue continues to own backend,
