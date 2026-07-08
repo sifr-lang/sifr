@@ -522,7 +522,7 @@ Tasks:
     `rglob_pattern`) behind `_sifr.fs` private Rust interop declarations,
     removes their compiler registry/signature entries, and moves
     `sifr.pathlib` generated Cargo planning from `regex` to `fs` in PR
-    #2855.
+    #2855 (merge sha `4372f13dabe06ad55ad2c75b586619df0008b038`).
 - Declare filesystem functions and errors in `stdlib/_sifr/fs.sifr`.
 - Route `sifr.os`, `sifr.pathlib`, `sifr.glob`, `sifr.shutil`,
   `sifr.tempfile`, and related wrappers through declarations.
