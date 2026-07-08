@@ -5,6 +5,8 @@ mod re_exports;
 #[cfg(test)]
 mod stateless_collections_codegen_tests;
 #[cfg(test)]
+mod stateless_fs_codegen_tests;
+#[cfg(test)]
 mod stateless_math_codegen_tests;
 #[cfg(test)]
 mod stateless_private_adapter_policy_tests;

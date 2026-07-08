@@ -47,7 +47,7 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.http" | "_sifr.http" => &["http"],
         "sifr.python" | "sifr.python_core" | "_sifr.python" => &["python"],
         "sifr.process" => &["process"],
-        "sifr.io" | "sifr.os" | "sifr.shutil" | "sifr.tempfile" => &["fs"],
+        "sifr.io" | "sifr.os" | "sifr.shutil" | "sifr.tempfile" | "_sifr.fs" => &["fs"],
         "sifr.signal" | "_sifr.signal" => &["signals"],
         "sifr.runtime" | "_sifr.runtime" => &["runtime-observability"],
         "sifr.random" => &["random"],
@@ -65,6 +65,7 @@ fn features_for_requirement(feature: StdlibFeature) -> &'static [&'static str] {
             &["hash"]
         }
         StdlibFeature::Flate2 => &["gzip"],
+        StdlibFeature::Fs => &["fs"],
         StdlibFeature::Http
         | StdlibFeature::HttpBody
         | StdlibFeature::HttpBodyUtil

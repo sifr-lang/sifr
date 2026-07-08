@@ -409,6 +409,9 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("sifr_runtime::") || rust_source.contains("use sifr_runtime") {
         crates.insert("sifr_runtime".to_string());
     }
+    if rust_source.contains("sifr_stdlib::fs::") {
+        modules.insert("_sifr.fs".to_string());
+    }
     if rust_source.contains("regex::") {
         crates.insert("regex".to_string());
     }

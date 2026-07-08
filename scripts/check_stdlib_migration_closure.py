@@ -24,6 +24,7 @@ DISPATCH_PATTERN_RE = re.compile(
 RETIRED_INTRINSICS = frozenset(
     {
         "atan2",
+        "append_text",
         "b32decode",
         "b32encode",
         "b32hexdecode",
@@ -62,6 +63,7 @@ RETIRED_INTRINSICS = frozenset(
         "encoding_encode_outcome",
         "encoding_encode_recoveries",
         "encoding_is_supported",
+        "exists",
         "erf",
         "erfc",
         "floor",
@@ -109,6 +111,8 @@ RETIRED_INTRINSICS = frozenset(
         "modf",
         "nextafter",
         "pow_val",
+        "read_lines",
+        "read_text",
         "regex_match",
         "regex_search",
         "regex_split",
@@ -172,6 +176,7 @@ RETIRED_INTRINSICS = frozenset(
         "uuid3_text",
         "uuid4",
         "uuid5_text",
+        "write_text",
         "zip_add_file",
         "zip_add_file_bytes",
         "zip_create",

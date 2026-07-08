@@ -8,7 +8,7 @@ use crate::{
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_python_parser::parse_module;
-use sifr_type_system::Type;
+use sifr_type_system::{FunctionType, Type};
 
 fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
     let parsed = parse_module(source).expect("parse failed");
@@ -135,17 +135,27 @@ fn user_source_cannot_import_compiled_private_constant() {
 
 #[test]
 fn public_sysroot_stdlib_source_can_import_private_declarations() {
-    let source = "from _sifr.io import read_text\n\ndef main():\n    pass\n";
+    let source = "from _sifr.fs import read_text\n\ndef main():\n    pass\n";
     let parsed = parse_module(source).expect("parse failed");
-    let result =
-        lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &ExternalDefs::default())
-            .expect("public stdlib source should import private declarations");
+    let mut externals = ExternalDefs::default();
+    externals.functions.insert(
+        "_sifr.fs".to_string(),
+        HashMap::from([(
+            "read_text".to_string(),
+            FunctionType::all_borrow(
+                vec![("path".to_string(), Type::Str)],
+                Type::Result(Box::new(Type::Str), Box::new(Type::Any)),
+            ),
+        )]),
+    );
+    let result = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
+        .expect("public stdlib source should import private declarations");
 
     assert!(result
         .module
         .imports
         .iter()
-        .any(|import| import.module == "_sifr.io" && import.names == ["read_text".to_string()]));
+        .any(|import| import.module == "_sifr.fs" && import.names == ["read_text".to_string()]));
 }
 
 #[test]

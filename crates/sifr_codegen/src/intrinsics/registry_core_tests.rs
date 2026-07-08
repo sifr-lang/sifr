@@ -310,28 +310,30 @@ pub(crate) fn lowers_signal_intrinsics_via_registry() {
 
 #[test]
 pub(crate) fn lowers_io_intrinsics_via_registry() {
-    let read = lower_intrinsic("read_text", &["path".to_string()]).expect("read_text lowers");
-    assert!(render_expr(&read.expr).contains("std::fs::read_to_string"));
-
-    let write = lower_intrinsic("write_text", &["p".to_string(), "c".to_string()])
-        .expect("write_text lowers");
-    assert!(render_expr(&write.expr).contains("std::fs::write"));
-
-    let exists = lower_intrinsic("exists", &["p".to_string()]).expect("exists lowers");
-    assert!(render_expr(&exists.expr).contains("Path::new"));
-
     let gettempdir = lower_intrinsic("gettempdir", &[]).expect("gettempdir lowers");
     assert_eq!(
         render_expr(&gettempdir.expr),
         "std::env::temp_dir().display().to_string()"
     );
 
-    let append = lower_intrinsic("append_text", &["p".to_string(), "c".to_string()])
-        .expect("append_text lowers");
-    assert!(render_expr(&append.expr).contains("OpenOptions::new().append(true)"));
-
     let walk = lower_intrinsic("walk_dir", &["root".to_string()]).expect("walk_dir lowers");
     assert!(render_expr(&walk.expr).contains("__stack.pop()"));
+}
+
+#[test]
+pub(crate) fn fs_text_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in [
+        "read_text",
+        "write_text",
+        "exists",
+        "read_lines",
+        "append_text",
+    ] {
+        assert!(
+            lower_intrinsic(name, &["path".to_string(), "content".to_string()]).is_none(),
+            "{name} should lower through _sifr.fs private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

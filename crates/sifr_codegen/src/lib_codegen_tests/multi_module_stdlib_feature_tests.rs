@@ -1,0 +1,59 @@
+use super::*;
+
+#[test]
+fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_source() {
+    let main_module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "read_text".to_string(),
+                    args: vec![HirExpr::StringLiteral("fixture.txt".to_string())],
+                    ty: Type::Result(Box::new(Type::Str), Box::new(Type::Any)),
+                },
+            }],
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            rust_interop: Vec::new(),
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.io".to_string(),
+            names: vec!["read_text".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let mut stdlib_code = StdlibCode::default();
+    stdlib_code.transitive_deps.insert(
+        "sifr.io".to_string(),
+        HashSet::from(["_sifr.fs".to_string()]),
+    );
+    stdlib_code.module_rust_code.insert(
+        "_sifr.fs".to_string(),
+        StdlibRustSource {
+            module: "_sifr.fs".to_string(),
+            source_path: "stdlib/_sifr/fs.sifr".to_string(),
+            source_sha256: "test".to_string(),
+            rust: "fn read_text(path: &String) -> Result<String, IOError> {\n    sifr_stdlib::fs::read_text(path).map_err(|err| IOError { message: err.to_string(), kind: err.to_string() })\n}\n".to_string(),
+        },
+    );
+
+    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
+
+    assert!(result
+        .rust_files
+        .get("main")
+        .expect("main module should be generated")
+        .contains("sifr_stdlib::fs::read_text"));
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib_manifest::StdlibFeature::Fs));
+}

@@ -132,9 +132,9 @@ mod tests {
 
     #[test]
     fn known_intrinsic_module_has_signatures() {
-        let module = get_intrinsic_module("_sifr.io").expect("_sifr.io should be registered");
+        let module = get_intrinsic_module("_sifr.fs").expect("_sifr.fs should be registered");
 
-        assert!(module.functions.contains_key("read_text"));
+        assert!(module.functions.contains_key("getcwd"));
         assert!(module.constants.is_empty());
     }
 

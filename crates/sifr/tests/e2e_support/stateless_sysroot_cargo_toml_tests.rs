@@ -65,6 +65,10 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
     assert!(zip_toml.contains("sifr_stdlib = { path = "));
     assert!(zip_toml.contains("features = [\"zipfile\"]"));
     assert!(!zip_toml.contains("zip = "));
+    let fs_modules = normalize_dependency_set(vec!["_sifr.fs".to_string()].into_iter());
+    let fs_toml = generate_cargo_toml(&fs_modules, &required_crates, "sifr_output");
+    assert!(fs_toml.contains("sifr_stdlib = { path = "));
+    assert!(fs_toml.contains("features = [\"fs\"]"));
     let private_compress_modules =
         normalize_dependency_set(vec!["_sifr.compress".to_string()].into_iter());
     let private_compress_toml =

@@ -69,7 +69,6 @@ impl PackagePythonRuntime {
                 allowed_import_roots: self.allowed_import_roots.clone(),
                 trusted_import_roots: self.trusted_import_roots.clone(),
             }),
-            ..LoweringOptions::default()
         }
     }
 

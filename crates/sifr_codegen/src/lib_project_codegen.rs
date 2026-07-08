@@ -67,6 +67,9 @@ pub fn generate_rust_multi_with_metadata(
         if module_public {
             rust_source = publicize_generated_module_source(&rust_source);
         }
+        if rust_source.contains("sifr_stdlib::fs::") {
+            required_features.insert(StdlibFeature::Fs);
+        }
 
         files.insert((*module_name).to_string(), rust_source);
         used_stdlib_modules.extend(codegen_result.used_stdlib_modules);

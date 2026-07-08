@@ -265,6 +265,7 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("_sifr.encoding", &["encoding"][..]),
         ("sifr.unicode", &["unicode"][..]),
         ("_sifr.unicode", &["unicode"][..]),
+        ("_sifr.fs", &["fs"][..]),
     ] {
         let deps =
             generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());
