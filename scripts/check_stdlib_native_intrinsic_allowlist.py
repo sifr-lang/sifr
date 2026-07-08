@@ -18,11 +18,15 @@ REGISTRY_DISPATCH_PATH = (
 )
 PREAMBLE_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "preamble"
 RETAINED_INTRINSICS_LIB_PATH = REPO_ROOT / "crates" / "sifr_retained_intrinsics" / "src" / "lib.rs"
+FEATURES_RS_PATH = REPO_ROOT / "crates" / "sifr_stdlib_manifest" / "src" / "features.rs"
+CODEGEN_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src"
 
 EXACT_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 LOWERER_MATCH_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
 RETAINED_SIGNATURE_MODULE_RE = re.compile(r'"(_sifr\.[A-Za-z0-9_]+)"\s*=>\s*Some\(')
+GENERATED_DEPENDENCY_PACKAGE_RE = re.compile(r'package:\s*"([^"]+)"')
+DIRECT_RUNTIME_ROOT_RE = re.compile(r"\bsifr_runtime::([A-Za-z_][A-Za-z0-9_]*)")
 EXPECTED_PREFIX_DISPATCHERS = {"http_", "py_", "tls_"}
 PREFIX_DISPATCH_LOWERERS = (
     REGISTRY_ROOT / "tls.rs",
@@ -50,7 +54,10 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
         f"(exact_intrinsics={len(observed['exact_intrinsics'])}, "
         f"registry_files={len(observed['registry_files'])}, "
         f"preamble_files={len(observed['preamble_files'])}, "
-        f"fallback_signature_modules={len(observed['fallback_signature_modules'])})"
+        f"fallback_signature_modules={len(observed['fallback_signature_modules'])}, "
+        "retained_direct_dependency_packages="
+        f"{len(observed['retained_direct_dependency_packages'])}, "
+        f"direct_runtime_roots={len(observed['direct_runtime_roots'])})"
     )
     return 0
 
@@ -78,6 +85,14 @@ def _observed_surface() -> dict[str, set[str]]:
                 RETAINED_INTRINSICS_LIB_PATH.read_text(encoding="utf-8")
             )
         ),
+        "retained_direct_dependency_packages": {
+            package
+            for package in GENERATED_DEPENDENCY_PACKAGE_RE.findall(
+                FEATURES_RS_PATH.read_text(encoding="utf-8")
+            )
+            if package != "sifr_runtime"
+        },
+        "direct_runtime_roots": _direct_runtime_roots(),
     }
 
 
@@ -87,8 +102,11 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         "exact_intrinsics": set[str](),
         "registry_files": set[str](),
         "preamble_files": set[str](),
+        "retained_direct_dependency_packages": set[str](),
+        "direct_runtime_roots": set[str](),
     }
     owners: dict[tuple[str, str], str] = {}
+    unique_owner_keys = {"exact_intrinsics", "registry_files", "preamble_files", "direct_runtime_roots"}
 
     surfaces = allowlist.get("surface", [])
     if not isinstance(surfaces, list) or not surfaces:
@@ -118,11 +136,12 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
                 owner_key = (key, value)
                 previous_owner = owners.get(owner_key)
                 if previous_owner is not None:
-                    failures.append(
-                        f"{key} entry {value!r} is duplicated by {surface_id} "
-                        f"and {previous_owner}"
-                    )
-                    continue
+                    if key in unique_owner_keys:
+                        failures.append(
+                            f"{key} entry {value!r} is duplicated by {surface_id} "
+                            f"and {previous_owner}"
+                        )
+                        continue
                 owners[owner_key] = surface_id
                 allowed[key].add(value)
 
@@ -162,6 +181,24 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         _compare_sets(failures, key, observed_values, allowed[key])
 
     return failures
+
+
+def _direct_runtime_roots() -> set[str]:
+    roots: set[str] = set()
+    for path in CODEGEN_ROOT.rglob("*.rs"):
+        relative = path.relative_to(CODEGEN_ROOT).as_posix()
+        if _is_test_source(relative):
+            continue
+        text = path.read_text(encoding="utf-8")
+        roots.update(
+            f"sifr_runtime::{root}" for root in DIRECT_RUNTIME_ROOT_RE.findall(text)
+        )
+    return roots
+
+
+def _is_test_source(relative_path: str) -> bool:
+    name = relative_path.rsplit("/", 1)[-1]
+    return name.endswith("_tests.rs") or "/tests/" in f"/{relative_path}/"
 
 
 def _surface_private_modules(surface: dict[str, Any]) -> set[str]:
@@ -238,6 +275,8 @@ def _self_test() -> int:
         "registry_files": {"alpha.rs"},
         "preamble_files": {"runtime.rs"},
         "fallback_signature_modules": {"_sifr.alpha"},
+        "retained_direct_dependency_packages": {"alpha-dep"},
+        "direct_runtime_roots": {"sifr_runtime::alpha"},
     }
     allowlist = {
         "surface": [
@@ -249,6 +288,8 @@ def _self_test() -> int:
                 "exact_intrinsics": ["alpha"],
                 "registry_files": ["alpha.rs"],
                 "preamble_files": ["runtime.rs"],
+                "retained_direct_dependency_packages": ["alpha-dep"],
+                "direct_runtime_roots": ["sifr_runtime::alpha"],
             }
         ]
     }
@@ -272,6 +313,24 @@ def _self_test() -> int:
         for failure in _validate(observed, stale)
     ):
         print("self-test stale registry file was not rejected", file=sys.stderr)
+        return 1
+
+    missing_dependency = json.loads(json.dumps(allowlist))
+    missing_dependency["surface"][0]["retained_direct_dependency_packages"] = []
+    if not any(
+        "retained_direct_dependency_packages missing allowlist entries: alpha-dep" in failure
+        for failure in _validate(observed, missing_dependency)
+    ):
+        print("self-test missing retained direct dependency was not rejected", file=sys.stderr)
+        return 1
+
+    missing_runtime_root = json.loads(json.dumps(allowlist))
+    missing_runtime_root["surface"][0]["direct_runtime_roots"] = []
+    if not any(
+        "direct_runtime_roots missing allowlist entries: sifr_runtime::alpha" in failure
+        for failure in _validate(observed, missing_runtime_root)
+    ):
+        print("self-test missing direct runtime root was not rejected", file=sys.stderr)
         return 1
 
     duplicate = json.loads(json.dumps(allowlist))
