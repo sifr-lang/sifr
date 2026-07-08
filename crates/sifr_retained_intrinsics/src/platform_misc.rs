@@ -253,25 +253,3 @@ pub(super) fn intrinsic_compress() -> IntrinsicModule {
         constants: HashMap::new(),
     }
 }
-
-/// _sifr.logging — Logging intrinsics for global state management
-pub(super) fn intrinsic_logging() -> IntrinsicModule {
-    let mut functions = HashMap::new();
-
-    // set_global_level(level: int) -> None
-    functions.insert(
-        "set_global_level".to_string(),
-        FunctionType::all_borrow(vec![("level".to_string(), Type::Int)], Type::None),
-    );
-
-    // get_global_level() -> int
-    functions.insert(
-        "get_global_level".to_string(),
-        FunctionType::all_borrow(vec![], Type::Int),
-    );
-
-    IntrinsicModule {
-        functions,
-        constants: HashMap::new(),
-    }
-}

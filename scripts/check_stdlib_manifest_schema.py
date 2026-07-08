@@ -154,8 +154,13 @@ def _validate(manifest: dict[str, Any]) -> list[str]:
                 "direct_runtime_roots",
             )
         )
-        if not has_owned_surface:
-            failures.append(f"{context}: must own registry_files, preamble_files, or exact_intrinsics")
+        has_closing_evidence = state == "closing" and any(
+            surface.get(key) for key in ("declaration_files", "certification_rows")
+        )
+        if not has_owned_surface and not has_closing_evidence:
+            failures.append(
+                f"{context}: must own retained compiler glue or closing evidence"
+            )
 
     return failures
 
@@ -385,6 +390,25 @@ def _self_test() -> int:
     bad_state["surface"][0]["state"] = "done"
     if not any("state must be one of" in failure for failure in _validate(bad_state)):
         print("self-test bad state was not rejected", file=sys.stderr)
+        return 1
+
+    closing_metadata_only = json.loads(json.dumps(manifest))
+    closing_metadata_only["surface"][0]["state"] = "closing"
+    closing_metadata_only["surface"][0].pop("registry_files")
+    closing_metadata_only["surface"][0]["declaration_files"] = [
+        "stdlib/_sifr/example.sifr"
+    ]
+    if _validate(closing_metadata_only):
+        print("self-test closing metadata-only row failed", file=sys.stderr)
+        return 1
+
+    retained_metadata_only = json.loads(json.dumps(closing_metadata_only))
+    retained_metadata_only["surface"][0]["state"] = "retained"
+    if not any(
+        "must own retained compiler glue or closing evidence" in failure
+        for failure in _validate(retained_metadata_only)
+    ):
+        print("self-test retained metadata-only row was not rejected", file=sys.stderr)
         return 1
 
     base_manifest = json.loads(json.dumps(manifest))

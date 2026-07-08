@@ -1,0 +1,8 @@
+READY, with one low-severity cleanup finding.
+
+- Compiler intrinsic dispatch, retained signature table (`_sifr.logging` in `sifr_retained_intrinsics`), preamble builder (`build_logging_items`), and `LoggingState` runtime need are all removed; `needs_logging`/`needs_mutex` and the extended registry test are updated consistently.
+- `stdlib/_sifr/logging.sifr` gains `@rust(sifr_stdlib.logging.{set,get}_global_level)` declarations; `sifr_stdlib::logging` implements the state as `LazyLock<Mutex<i64>>` with `PoisonError::into_inner` recovery and `SifrIntBridge`/`to_i64_saturating` at the boundary.
+- Manifest transition `_sifr.logging` `retained → closing` (allowed transition) with `declaration_files` evidence and no compiler-owned surface; schema guard gains a metadata-only-closing self-test, allowlist guard gains a matching self-test, and closure guard adds `set_global_level`/`get_global_level` to `RETIRED_INTRINSICS`.
+- Generated Cargo emits only `sifr_stdlib = ... features = ["logging"]` for `sifr.logging`/`_sifr.logging` (verified by `logging_module_emits_only_sysroot_stdlib_dependency`), and the driver codegen test confirms `_sifr.logging` rust routes through `sifr_stdlib::logging::{set,get}_global_level` with no residual `set_global_level`/`get_global_level` intrinsic names.
+
+One finding: `is_shared_prelude_item` in `crates/sifr_codegen/src/stdlib_filter/implementation.rs:471` still allowlists `__SIFR_GLOBAL_LOG_LEVEL` even though nothing emits that static anymore, and no current guard scans that file. Low severity/dead code, but worth deleting in this milestone so future re-emissions don't silently pass the filter.

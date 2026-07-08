@@ -512,16 +512,13 @@ exact_intrinsics = ["task_current_context"]
 
 [[surface]]
 id = "_sifr.logging"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after the migrated logging registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/logging.sifr"]
-certification_rows = ["callback_subscription_matrix"]
-reason = "Global logging level state remains compiler/runtime glue until final observability ownership is settled."
-registry_files = ["logging.rs"]
-exact_intrinsics = ["get_global_level", "set_global_level"]
+reason = "Global logging level behavior now routes through _sifr.logging private Rust interop declarations and sifr_stdlib.logging; this row remains only to record closure of the former compiler intrinsic names."
 
 [[surface]]
 id = "generated-feature-planning-glue"
@@ -598,5 +595,5 @@ owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
-reason = "Legacy generated preamble file contains mixed IOError, file-handle, logging, and random module state glue pending final decomposition."
+reason = "Legacy generated preamble file contains mixed IOError, file-handle, and random module state glue pending final decomposition."
 preamble_files = ["io_logging_random.rs"]

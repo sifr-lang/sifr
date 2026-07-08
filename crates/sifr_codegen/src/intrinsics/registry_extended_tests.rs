@@ -442,7 +442,7 @@ pub(crate) fn lowers_extended_math_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_file_handle_and_logging_intrinsics_via_registry() {
+pub(crate) fn lowers_file_handle_builtin_bridge_and_migrated_intrinsics() {
     for name in [
         "open_file",
         "file_read",
@@ -452,10 +452,12 @@ pub(crate) fn lowers_file_handle_and_logging_intrinsics_via_registry() {
         "file_close",
         "file_read_bytes",
         "file_write_bytes",
+        "set_global_level",
+        "get_global_level",
     ] {
         assert!(
             lower_intrinsic(name, &["hid".to_string(), "payload".to_string()]).is_none(),
-            "{name} should lower through _sifr.fs private Rust interop declarations"
+            "{name} should lower through private Rust interop declarations"
         );
     }
 
@@ -464,13 +466,6 @@ pub(crate) fn lowers_file_handle_and_logging_intrinsics_via_registry() {
     assert!(render_expr(&builtin_open.expr).contains("FileHandle"));
     assert!(render_expr(&builtin_open.expr).contains("sifr_stdlib::fs::open_file"));
     assert!(render_expr(&builtin_open.expr).contains("NativeFileHandle"));
-
-    let set_level =
-        lower_intrinsic("set_global_level", &["n".to_string()]).expect("set_global_level");
-    assert!(render_expr(&set_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
-
-    let get_level = lower_intrinsic("get_global_level", &[]).expect("get_global_level");
-    assert!(render_expr(&get_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
 }
 
 #[test]

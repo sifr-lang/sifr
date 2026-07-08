@@ -30,9 +30,6 @@ impl RustEmitter {
                         .map(str::to_string),
                 );
         }
-        if matches!(func, "set_global_level" | "get_global_level") {
-            self.runtime_needs.require(crate::RuntimeNeed::LoggingState);
-        }
         if matches!(
             func,
             "random_module_state_words"

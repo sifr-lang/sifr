@@ -145,12 +145,13 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
                 owners[owner_key] = surface_id
                 allowed[key].add(value)
 
+        state = surface.get("state")
         if has_items and not reason:
             failures.append(f"{surface_id}: reason is required for retained compiler-native glue")
-        if not has_items:
+        if not has_items and state != "closing":
             failures.append(f"{surface_id}: allowlist entry has no retained files or intrinsics")
 
-        if surface.get("state") == "closing":
+        if state == "closing":
             fallback_modules = sorted(
                 _surface_private_modules(surface) & observed["fallback_signature_modules"]
             )
@@ -384,6 +385,33 @@ def _self_test() -> int:
     }
     if _validate(closing_without_signature_observed, closing_with_signature):
         print("self-test closing row without fallback signature module failed", file=sys.stderr)
+        return 1
+
+    closing_without_observed_items = json.loads(json.dumps(closing_with_signature))
+    for key in (
+        "exact_intrinsics",
+        "registry_files",
+        "preamble_files",
+        "retained_direct_dependency_packages",
+        "direct_runtime_roots",
+    ):
+        closing_without_observed_items["surface"][0].pop(key, None)
+    closing_without_observed_items["surface"][0]["declaration_files"] = [
+        "stdlib/_sifr/alpha.sifr"
+    ]
+    observed_without_surface = {
+        key: set(value) for key, value in closing_without_signature_observed.items()
+    }
+    for key in (
+        "exact_intrinsics",
+        "registry_files",
+        "preamble_files",
+        "retained_direct_dependency_packages",
+        "direct_runtime_roots",
+    ):
+        observed_without_surface[key] = set()
+    if _validate(observed_without_surface, closing_without_observed_items):
+        print("self-test closing metadata-only row failed", file=sys.stderr)
         return 1
 
     print("stdlib native intrinsic allowlist guard self-test: PASS")
