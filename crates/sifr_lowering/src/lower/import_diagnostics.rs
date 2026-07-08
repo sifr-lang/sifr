@@ -8,7 +8,9 @@ use super::LowerCtx;
 pub(in crate::lower) fn forbidden_intrinsic(ctx: &mut LowerCtx, module: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC,
-        format!("cannot import from '{module}' — _sifr.* modules are internal compiler intrinsics"),
+        format!(
+            "cannot import from '{module}' — private sysroot declarations can only be imported by public sysroot stdlib source"
+        ),
         range,
     );
 }

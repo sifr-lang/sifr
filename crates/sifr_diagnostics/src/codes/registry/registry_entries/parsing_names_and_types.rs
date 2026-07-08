@@ -161,10 +161,10 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
             "SIFR-IMPORT-0001",
             "IMPORT",
-            "Forbidden intrinsic import.",
+            "Forbidden private sysroot declaration import.",
             Severity::Error,
             "crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr",
-            "cannot import from '{module}' — _sifr.* modules are internal compiler intrinsics",
+            "cannot import from '{module}' — private sysroot declarations can only be imported by public sysroot stdlib source",
             "sifr_lowering::lower",
             [arg!("module")],
             ["module"]

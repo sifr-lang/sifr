@@ -294,7 +294,7 @@ These entries are the proposed active registry population for `diagnostic regist
 | `SIFR-NAME-0002` | undefined function/callable | `sifr_lowering::lower` call lowering | `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` |
 | `SIFR-NAME-0003` | unknown type or generic type name | type annotation lowering | `crates/sifr/tests/e2e/fail/generic_class_missing_type_arg.sifr` |
 | `SIFR-NAME-0004` | module/member does not exist | import/member lookup | `crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr` |
-| `SIFR-IMPORT-0001` | forbidden `_sifr.*` intrinsic import | import lowering | `crates/sifr/tests/e2e/fail/import_intrinsic.sifr` |
+| `SIFR-IMPORT-0001` | forbidden private sysroot declaration import | import lowering | `crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr` |
 | `SIFR-IMPORT-0002` | unknown source module/import target | import lowering/project discovery | `crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr` |
 | `SIFR-TYPE-0002` | expected/actual type mismatch | type checking / assignment/call helpers | `crates/sifr/tests/e2e/fail/type_comparison_mismatch.sifr`, `crates/sifr/tests/e2e/fail/type_mismatch.sifr`, `crates/sifr/tests/e2e/fail/union_type_mismatch.sifr` |
 | `SIFR-TYPE-0003` | if/conditional branch type mismatch | `if_expression` lowering | `crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr` |

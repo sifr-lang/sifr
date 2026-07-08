@@ -204,7 +204,7 @@ fn private_stdlib_interop(source: &str) -> StdlibRustInterop {
     let parsed = sifr_syntax::parse_module_raw(source, Some("/opt/sifr/stdlib/_sifr/m8.sifr"))
         .expect("private declaration parses");
     assert!(parsed.has_valid_syntax());
-    let lowered = sifr_lowering::lower_module_stdlib_with_externals(
+    let lowered = sifr_lowering::lower_module_sysroot_private_declaration_with_externals(
         parsed.suite(),
         &sifr_lowering::ExternalDefs::default(),
     )
@@ -229,7 +229,7 @@ fn user_interop(module_name: &str, source: &str) -> InteropBuildPlan {
     let parsed = sifr_syntax::parse_module_raw(source, Some("/ws/app/sifr/app.sifr"))
         .expect("user declaration parses");
     assert!(parsed.has_valid_syntax());
-    let lowered = sifr_lowering::lower_module_stdlib_with_externals(
+    let lowered = sifr_lowering::lower_module_sysroot_private_declaration_with_externals(
         parsed.suite(),
         &sifr_lowering::ExternalDefs::default(),
     )

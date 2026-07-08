@@ -7,7 +7,10 @@ use crate::stdlib::re_exports::{re_export_stdlib_imports, ReExportMaps};
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_lowering::{lower_module_stdlib_with_externals, ExternalDefs, HirFunction, HirParam};
+use sifr_lowering::{
+    lower_module_sysroot_private_declaration_with_externals,
+    lower_module_sysroot_public_stdlib_with_externals, ExternalDefs, HirFunction, HirParam,
+};
 use sifr_stdlib_manifest::{
     load_stdlib_tooling_sources_from_sysroot, LoadedStdlibSource, LoadedStdlibSourceKind,
 };
@@ -84,7 +87,7 @@ fn compile_stdlib_sources_with_sysroot(
                     .collect());
             }
         };
-        let result = match lower_module_stdlib_with_externals(parsed.suite(), &stdlib_defs) {
+        let result = match lower_stdlib_source(stdlib_source, parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
             Err(errors) => {
                 let diagnostics: Vec<RenderedDiagnostic> = errors
@@ -489,6 +492,21 @@ fn compile_stdlib_sources_with_sysroot(
         code: stdlib_code,
         interop: build_stdlib_rust_interop(sysroot, &private_interop_modules),
     })
+}
+
+fn lower_stdlib_source(
+    source: &LoadedStdlibSource,
+    suite: &[sifr_python_ast::Stmt],
+    stdlib_defs: &ExternalDefs,
+) -> Result<sifr_ir::LoweringResult, Vec<sifr_ir::HirDiagnostic>> {
+    match source.kind {
+        LoadedStdlibSourceKind::Public => {
+            lower_module_sysroot_public_stdlib_with_externals(suite, stdlib_defs)
+        }
+        LoadedStdlibSourceKind::PrivateDeclaration => {
+            lower_module_sysroot_private_declaration_with_externals(suite, stdlib_defs)
+        }
+    }
 }
 
 fn function_type_from_params(params: &[HirParam], return_type: &Type) -> FunctionType {

@@ -71,7 +71,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-NAME-0004`](SIFR-NAME-0004.md) | Error | Missing module or class member. |
 | [`SIFR-NAME-0005`](SIFR-NAME-0005.md) | Error | Duplicate function definition in a module. |
 | [`SIFR-NAME-0006`](SIFR-NAME-0006.md) | Error | Variable declaration lacks a required initializer. |
-| [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.md) | Error | Forbidden intrinsic import. |
+| [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.md) | Error | Forbidden private sysroot declaration import. |
 | [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md) | Error | Unknown source module import target. |
 | [`SIFR-IMPORT-0003`](SIFR-IMPORT-0003.md) | Error | Unsupported import statement form. |
 | [`SIFR-IMPORT-0004`](SIFR-IMPORT-0004.md) | Error | Private module member import. |

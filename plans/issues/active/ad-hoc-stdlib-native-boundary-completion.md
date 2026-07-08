@@ -239,7 +239,7 @@ milestone is merged:
   injection (merged in PR #2825, merge commit
   `5e05898410d0c69c18f7a44a98dccd341f05a3ea`; local `create-pr`
   validation passed with no advisories; reviewer pass 2 READY).
-- M0e: update architecture docs and implement source-origin privacy.
+- M0e: update architecture docs and implement source-origin privacy (PR #2827).
 
 Acceptance:
 
