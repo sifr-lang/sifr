@@ -135,11 +135,11 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.http::transport_and_header_helpers"
+id = "_sifr.http::header_helpers"
 state = "retained"
 declaration_files = ["stdlib/_sifr/http.sifr"]
 certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
-reason = "HTTP transport, protocol, and handle behavior remains behind runtime/resource certification; header helper shims still route through generated glue."
+reason = "HTTP protocol and header helper shims still route through generated glue while the HTTP stdlib migration is pending."
 registry_files = ["url_http.rs"]
 preamble_files = ["url_http_runtime.rs"]
 exact_intrinsics = [
@@ -149,7 +149,7 @@ exact_intrinsics = [
   "http_validate_header_name",
   "http_validate_header_value",
 ]
-prefix_intrinsics = ["http_", "http1_", "http2_"]
+prefix_intrinsics = ["http_"]
 
 [[surface]]
 id = "_sifr.encoding::utf8_bytes_string_glue"

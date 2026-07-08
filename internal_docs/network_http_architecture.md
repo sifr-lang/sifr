@@ -5,7 +5,7 @@ The production network/HTTP substrate is split by ownership boundary:
 - `sifr.net` provides async TCP listeners, streams, owned split halves, write-side half-close, DNS lookup, typed `NetError`, and no public raw descriptor or selector API.
 - `sifr.tls` wraps the TCP substrate with Rustls-backed client/server configs, ALPN, SNI, mTLS fixture coverage, `close_notify`, owned split halves, and typed `TlsError`.
 - `sifr.url` owns URL, query, percent, authority, redaction, and IDNA guard behavior. Unicode/IDNA behavior remains blocked until the text/i18n provider accepts the Unicode version and normalization policy.
-- `sifr.http` owns protocol values and body streams. Process runtime transport is implemented in the runtime through Hyper/H2. The current synthetic `sifr.http_transport` harness is a temporary verification bridge; the stdlib native boundary completion phase moves equivalent coverage into a verification-owned Rust fixture, proves parity, and then deletes the synthetic module.
+- `sifr.http` owns protocol values and body streams. Process runtime transport is implemented in the runtime through Hyper/H2 and is covered by the verification-owned `http_transport_loopback_fixture`; no synthetic `sifr.*` transport module is exposed or driver-seeded.
 
 ## Runtime Boundary
 

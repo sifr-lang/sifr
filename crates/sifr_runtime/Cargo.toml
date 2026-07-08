@@ -69,5 +69,10 @@ http = [
     "dep:tower-service",
 ]
 
+[[test]]
+name = "http_transport_loopback_fixture"
+path = "../../verification/areas/runtime_platform/fixtures/http_transport_loopback.rs"
+required-features = ["http"]
+
 [lints]
 workspace = true

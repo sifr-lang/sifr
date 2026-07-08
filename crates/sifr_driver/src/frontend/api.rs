@@ -1,7 +1,4 @@
-use crate::build::{
-    compile_single_file_entrypoint_with_metadata,
-    compile_single_file_entrypoint_with_metadata_and_options, compile_single_file_frontend,
-};
+use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_file_frontend};
 use crate::diagnostics::{
     CompileResult, CompileResultFull, GeneratedSourceMapFile, RenderedDiagnostic,
 };
@@ -9,7 +6,6 @@ use crate::stdlib::StdlibCompiled;
 use sifr_frontend::{
     reveal_type_diagnostics, warning_diagnostics, FrontendSourceContext, SourceOrigin,
 };
-use sifr_lowering::LoweringOptions;
 use sifr_lowering::LoweringResult;
 use sifr_python_ast::Stmt;
 
@@ -54,26 +50,6 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
         Ok(result) => result,
         Err(errors) => return CompileResultFull::Errors { errors },
     };
-
-    CompileResultFull::Success {
-        generated_source_map: generated_source_map_files(&codegen_result.rust_source),
-        rust_source: codegen_result.rust_source,
-        used_stdlib_modules: codegen_result.used_stdlib_modules,
-        required_features: codegen_result.required_features,
-        lowering_stats: codegen_result.lowering_stats,
-    }
-}
-
-pub fn compile_with_metadata_allowing_http_transport_harness(source: &str) -> CompileResultFull {
-    let options = LoweringOptions {
-        allow_http_transport_harness_imports: true,
-        ..LoweringOptions::default()
-    };
-    let codegen_result =
-        match compile_single_file_entrypoint_with_metadata_and_options(source, options) {
-            Ok(result) => result,
-            Err(errors) => return CompileResultFull::Errors { errors },
-        };
 
     CompileResultFull::Success {
         generated_source_map: generated_source_map_files(&codegen_result.rust_source),

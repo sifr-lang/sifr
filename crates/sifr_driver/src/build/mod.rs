@@ -51,8 +51,7 @@ pub(crate) use entrypoint::{
     build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
     check_single_file_entrypoint, compile_single_file_entrypoint_with_metadata,
-    compile_single_file_entrypoint_with_metadata_and_options, compile_single_file_frontend,
-    emit_project_entrypoint, resolve_package_project_entrypoint_plan,
+    compile_single_file_frontend, emit_project_entrypoint, resolve_package_project_entrypoint_plan,
     resolve_project_entrypoint_plan, RootedEntrypoint,
 };
 pub(crate) use workspace::{

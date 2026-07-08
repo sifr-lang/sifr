@@ -69,28 +69,6 @@ pub(crate) fn generate_cargo_toml(
             "sifr.http" | "_sifr.http" => {
                 deps.insert(HTTP_DEP.to_string());
             }
-            "sifr.http_transport" => {
-                deps.insert(BYTES_DEP.to_string());
-                deps.insert(H2_DEP.to_string());
-                deps.insert(HTTP_DEP.to_string());
-                deps.insert(HTTP_BODY_DEP.to_string());
-                deps.insert(HTTP_BODY_UTIL_DEP.to_string());
-                deps.insert(HYPER_DEP.to_string());
-                deps.insert(HYPER_UTIL_DEP.to_string());
-                deps.insert("rustls = \"=0.23.35\"".to_string());
-                deps.insert("rustls-pemfile = \"2.2.0\"".to_string());
-                deps.insert(
-                    "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }"
-                        .to_string(),
-                );
-                deps.insert(sifr_runtime_dependency_spec_with_features(&[
-                    "net", "tls", "http",
-                ]));
-                deps.insert(tokio_dependency_spec());
-                deps.insert("tokio-rustls = \"0.26.4\"".to_string());
-                deps.insert(TOWER_SERVICE_DEP.to_string());
-                deps.insert(TRACING_DEP.to_string());
-            }
             "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {}
             "_bigint" => {
                 deps.insert("num-bigint = \"0.4.6\"".to_string());

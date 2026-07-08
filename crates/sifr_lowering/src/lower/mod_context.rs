@@ -92,8 +92,6 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) declared_type_var_bounds: HashMap<String, Vec<String>>,
     /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
     pub(in crate::lower) allow_intrinsic_imports: bool,
-    /// Whether the internal HTTP transport harness may be imported by e2e fixtures.
-    pub(in crate::lower) allow_http_transport_harness_imports: bool,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
     pub(in crate::lower) borrowed_params: std::collections::HashSet<String>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
@@ -167,7 +165,6 @@ impl LowerCtx {
             type_param_bounds: HashMap::new(),
             declared_type_var_bounds: HashMap::new(),
             allow_intrinsic_imports: false,
-            allow_http_transport_harness_imports: false,
             borrowed_params: std::collections::HashSet::new(),
             class_declared_type_params: HashMap::new(),
             current_module_name: None,
@@ -203,7 +200,6 @@ impl LowerCtx {
 
     #[must_use]
     pub(in crate::lower) fn with_options(mut self, options: LoweringOptions) -> Self {
-        self.allow_http_transport_harness_imports = options.allow_http_transport_harness_imports;
         self.python_trust_policy = options.python_trust_policy;
         self
     }
@@ -332,7 +328,6 @@ pub struct PythonTrustPolicy {
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LoweringOptions {
-    pub allow_http_transport_harness_imports: bool,
     pub python_trust_policy: Option<PythonTrustPolicy>,
 }
 /// Substitute type variables in a type with concrete types.

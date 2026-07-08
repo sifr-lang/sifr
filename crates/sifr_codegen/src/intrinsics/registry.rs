@@ -406,10 +406,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             url_http::lower_http_intrinsic(name, args),
             Some(StdlibFeature::Http),
         ),
-        name if name.starts_with("http1_") || name.starts_with("http2_") => (
-            url_http::lower_http_intrinsic(name, args),
-            Some(StdlibFeature::Hyper),
-        ),
         "signal_ctrl_c" => (
             signal::lower_signal_ctrl_c(args),
             Some(StdlibFeature::Tokio),

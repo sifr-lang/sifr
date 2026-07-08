@@ -1,16 +1,7 @@
 use super::*;
 
-const HTTP_TRANSPORT_HARNESS_DIRECTIVE: &str = "# sifr-e2e-allow-http-transport-harness";
-
 fn compile_source_for_e2e(source: &str) -> sifr_driver::CompileResultFull {
-    if !source
-        .lines()
-        .any(|line| line.trim() == HTTP_TRANSPORT_HARNESS_DIRECTIVE)
-    {
-        return sifr_driver::compile_with_metadata(source);
-    }
-
-    sifr_driver::compile_with_metadata_allowing_http_transport_harness(source)
+    sifr_driver::compile_with_metadata(source)
 }
 
 pub(crate) fn failure_matches_expectation(

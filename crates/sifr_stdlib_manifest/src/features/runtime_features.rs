@@ -17,7 +17,7 @@ impl RuntimeFeatures {
         required_features: &HashSet<StdlibFeature>,
     ) -> Self {
         Self {
-            http: needs_sifr_runtime_http(stdlib_modules, required_features),
+            http: needs_sifr_runtime_http(required_features),
             i18n: needs_sifr_runtime_i18n(required_features),
             net: needs_sifr_runtime_net(stdlib_modules),
             python: needs_sifr_runtime_python(stdlib_modules, required_features),
@@ -54,14 +54,8 @@ impl RuntimeFeatures {
     }
 }
 
-fn needs_sifr_runtime_http(
-    stdlib_modules: &HashSet<String>,
-    required_features: &HashSet<StdlibFeature>,
-) -> bool {
-    stdlib_modules
-        .iter()
-        .any(|module| module.as_str() == "sifr.http_transport")
-        || required_features.contains(&StdlibFeature::Hyper)
+fn needs_sifr_runtime_http(required_features: &HashSet<StdlibFeature>) -> bool {
+    required_features.contains(&StdlibFeature::Hyper)
         || required_features.contains(&StdlibFeature::HyperUtil)
         || required_features.contains(&StdlibFeature::H2)
         || required_features.contains(&StdlibFeature::HttpBody)

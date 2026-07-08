@@ -57,7 +57,7 @@ Text-heavy behavior remains provider-gated:
 
 ## HTTP Transport Boundary
 
-This substrate validates HTTP/1.1 and HTTP/2 transport through an internal e2e harness. `sifr.http_transport` is test-only and ordinary user imports fail with `SIFR-IMPORT-0009`. Public server routing, middleware, request extractors, JSON/form helpers, cookies, redirects, retries, auth, proxies, compression, WebSockets, CONNECT, and HTTP/3 are intentionally outside this substrate.
+This substrate validates HTTP/1.1 and HTTP/2 transport through verification-owned Rust fixture `verification/areas/runtime_platform/fixtures/http_transport_loopback.rs`. `sifr.http_transport` is not a public module and ordinary user imports fail with `SIFR-IMPORT-0009`. Public server routing, middleware, request extractors, JSON/form helpers, cookies, redirects, retries, auth, proxies, compression, WebSockets, CONNECT, and HTTP/3 are intentionally outside this substrate.
 
 Representative runnable examples:
 
@@ -65,4 +65,4 @@ Representative runnable examples:
 - `demos/network_tls_loopback/main.sifr`
 - `demos/network_http_substrate/main.sifr`
 
-Deterministic HTTP transport loopback coverage lives in e2e fixtures because it uses the private harness: `network_http_http1_loopback`, `network_http_http2_loopback`, and `network_http_https_h2_loopback`.
+Deterministic HTTP transport loopback coverage lives outside Sifr source in `http_transport_loopback_fixture`; the public Sifr demo covers checked `sifr.http` protocol values and body helpers.
