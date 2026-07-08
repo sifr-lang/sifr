@@ -198,6 +198,13 @@ impl LowerCtx {
         self.source_origin.is_sysroot_source()
     }
 
+    pub(in crate::lower) fn is_sysroot_private_declaration(&self) -> bool {
+        matches!(
+            self.source_origin,
+            LoweringSourceOrigin::SysrootPrivateDeclaration
+        )
+    }
+
     pub(in crate::lower) fn can_import_private_stdlib_declarations(&self) -> bool {
         self.source_origin.can_import_private_stdlib_declarations()
     }
