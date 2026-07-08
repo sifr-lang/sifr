@@ -222,6 +222,11 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
             &["json", "regex", "http", "platform"][..],
         ),
         (
+            "sifr.shutil",
+            &["fs", "sys"][..],
+            &["json", "regex", "http", "platform"][..],
+        ),
+        (
             "sifr.python",
             &["python"][..],
             &["json", "regex", "http"][..],
@@ -289,6 +294,7 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("sifr.sys", &["sys"][..]),
         ("_sifr.sys", &["sys"][..]),
         ("sifr.os", &["fs", "sys"][..]),
+        ("sifr.shutil", &["fs", "sys"][..]),
         ("sifr.calendar", &["calendar"][..]),
         ("_sifr.calendar", &["calendar"][..]),
         ("sifr.uuid", &["uuid"][..]),

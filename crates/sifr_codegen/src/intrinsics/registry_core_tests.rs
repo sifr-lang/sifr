@@ -236,6 +236,12 @@ pub(crate) fn env_and_sys_intrinsics_are_owned_by_compiled_stdlib_declarations()
         "sys_version",
         "sys_platform",
         "sys_maxsize",
+        "getpid",
+        "cpu_count",
+        "which",
+        "os_sep",
+        "os_linesep",
+        "os_name",
         "platform_system",
         "platform_arch",
         "platform_node",
@@ -257,30 +263,9 @@ pub(crate) fn lowers_os_intrinsics_via_registry() {
     assert!(render_expr(&run.expr).contains("std::process::Command::new(\"sh\".to_string())"));
     assert!(render_expr(&run.expr).contains(".arg(\"-c\".to_string())"));
 
-    let pid = lower_intrinsic("getpid", &[]).expect("getpid should lower");
-    assert_eq!(render_expr(&pid.expr), "std::process::id() as i64");
-
-    let cpus = lower_intrinsic("cpu_count", &[]).expect("cpu_count should lower");
-    assert!(render_expr(&cpus.expr).contains("available_parallelism"));
-
-    let which = lower_intrinsic("which", &["tool".to_string()]).expect("which should lower");
-    assert!(render_expr(&which.expr).contains("std::env::var(\"PATH\".to_string())"));
-
     let disk = lower_intrinsic("disk_usage", &["path".to_string()]).expect("disk_usage lowers");
     assert!(render_expr(&disk.expr).contains("std::process::Command::new(\"df\".to_string())"));
     assert!(render_expr(&disk.expr).contains("split_whitespace().collect::<Vec<&str>>()"));
-
-    let sep = lower_intrinsic("os_sep", &[]).expect("os_sep lowers");
-    assert_eq!(
-        render_expr(&sep.expr),
-        "std::path::MAIN_SEPARATOR.to_string()"
-    );
-
-    let linesep = lower_intrinsic("os_linesep", &[]).expect("os_linesep lowers");
-    assert!(render_expr(&linesep.expr).contains("cfg!(target_os = \"windows\")"));
-
-    let name = lower_intrinsic("os_name", &[]).expect("os_name lowers");
-    assert!(render_expr(&name.expr).contains("\"posix\".to_string()"));
 }
 
 #[test]

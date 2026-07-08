@@ -111,28 +111,6 @@ fn zero_usage_vec() -> RustExpr {
     RustExpr::Vec(vec![int(0), int(0), int(0)])
 }
 
-fn lower_cfg_windows_string(args: &[RustExpr], windows: &str, other: &str) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::If {
-        cond: Box::new(RustExpr::MacroCall {
-            name: "cfg".to_string(),
-            args: vec![RustExpr::Ident("target_os = \"windows\"".to_string())],
-        }),
-        then_expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(windows.to_string()))),
-            method: "to_string".to_string(),
-            args: vec![],
-        }),
-        else_expr: Some(Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(other.to_string()))),
-            method: "to_string".to_string(),
-            args: vec![],
-        })),
-    })
-}
-
 pub(crate) fn lower_run_command(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -185,67 +163,6 @@ pub(crate) fn lower_chdir(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(crate) fn lower_getpid(args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::Cast {
-        expr: Box::new(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "process".to_string(),
-                "id".to_string(),
-            ])),
-            args: vec![],
-        }),
-        ty: RustType::I64,
-    })
-}
-
-pub(crate) fn lower_cpu_count(args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: "__n".to_string(),
-            ty: None,
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec![
-                            "std".to_string(),
-                            "thread".to_string(),
-                            "available_parallelism".to_string(),
-                        ])),
-                        args: vec![],
-                    }),
-                    method: "map".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![RustParam::Named {
-                            name: "n".to_string(),
-                            ty: RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("n".to_string())),
-                            method: "get".to_string(),
-                            args: vec![],
-                        }),
-                        is_move: false,
-                    }],
-                }),
-                method: "unwrap_or".to_string(),
-                args: vec![RustExpr::Literal(RustLiteral::Int(1))],
-            },
-        }],
-        expr: Some(Box::new(RustExpr::Cast {
-            expr: Box::new(RustExpr::Ident("__n".to_string())),
-            ty: RustType::I64,
-        })),
-    })
-}
-
 pub(crate) fn lower_stat_size(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -279,96 +196,6 @@ pub(crate) fn lower_stat_size(args: &[RustExpr]) -> Option<RustExpr> {
         }),
         method: "map_err".to_string(),
         args: vec![RustExpr::Ident("__io_err".to_string())],
-    })
-}
-
-pub(crate) fn lower_which(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "std".to_string(),
-                    "env".to_string(),
-                    "var".to_string(),
-                ])),
-                args: vec![string("PATH")],
-            }),
-            method: "ok".to_string(),
-            args: vec![],
-        }),
-        method: "and_then".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![RustParam::Named {
-                name: "__path".to_string(),
-                ty: RustType::Named("_".to_string()),
-            }],
-            body: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__path".to_string())),
-                            method: "split".to_string(),
-                            args: vec![RustExpr::Literal(RustLiteral::Char(':'))],
-                        }),
-                        method: "map".to_string(),
-                        args: vec![RustExpr::Closure {
-                            params: vec![RustParam::Named {
-                                name: "d".to_string(),
-                                ty: RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::FnCall {
-                                    func: Box::new(RustExpr::Path(vec![
-                                        "std".to_string(),
-                                        "path".to_string(),
-                                        "Path".to_string(),
-                                        "new".to_string(),
-                                    ])),
-                                    args: vec![RustExpr::Ident("d".to_string())],
-                                }),
-                                method: "join".to_string(),
-                                args: vec![ref_arg(args, 0)],
-                            }),
-                            is_move: false,
-                        }],
-                    }),
-                    method: "find".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![RustParam::Named {
-                            name: "p".to_string(),
-                            ty: RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("p".to_string())),
-                            method: "is_file".to_string(),
-                            args: vec![],
-                        }),
-                        is_move: false,
-                    }],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "p".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("p".to_string())),
-                            method: "to_string_lossy".to_string(),
-                            args: vec![],
-                        }),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    }),
-                    is_move: false,
-                }],
-            }),
-            is_move: false,
-        }],
     })
 }
 
@@ -571,27 +398,4 @@ pub(crate) fn lower_disk_usage(args: &[RustExpr]) -> Option<RustExpr> {
             else_expr: Some(Box::new(zero_usage_vec())),
         })),
     })
-}
-
-pub(crate) fn lower_os_sep(args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Path(vec![
-            "std".to_string(),
-            "path".to_string(),
-            "MAIN_SEPARATOR".to_string(),
-        ])),
-        method: "to_string".to_string(),
-        args: vec![],
-    })
-}
-
-pub(crate) fn lower_os_linesep(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_cfg_windows_string(args, "\r\n", "\n")
-}
-
-pub(crate) fn lower_os_name(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_cfg_windows_string(args, "nt", "posix")
 }

@@ -295,6 +295,7 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.toml"
                 | "sifr.io"
                 | "sifr.pathlib"
+                | "sifr.shutil"
                 | "sifr.tempfile"
                 | "_sifr.fs"
                 | "sifr.encoding"

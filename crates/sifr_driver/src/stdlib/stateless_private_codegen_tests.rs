@@ -63,6 +63,12 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
         "sys_version",
         "sys_platform",
         "sys_maxsize",
+        "getpid",
+        "cpu_count",
+        "which",
+        "os_sep",
+        "os_linesep",
+        "os_name",
     ] {
         assert!(
             private_code
@@ -75,7 +81,10 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
         .code
         .intrinsic_names
         .get("_sifr.sys")
-        .is_some_and(|names| !names.contains("env_get") && !names.contains("sys_version")));
+        .is_some_and(|names| !names.contains("env_get")
+            && !names.contains("sys_version")
+            && !names.contains("which")
+            && !names.contains("os_sep")));
     assert!(compiled
         .code
         .transitive_deps
@@ -85,6 +94,16 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
         .code
         .transitive_deps
         .get("sifr.sys")
+        .is_some_and(|deps| deps.contains("_sifr.sys")));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.os")
+        .is_some_and(|deps| deps.contains("_sifr.sys")));
+    assert!(compiled
+        .code
+        .transitive_deps
+        .get("sifr.shutil")
         .is_some_and(|deps| deps.contains("_sifr.sys")));
 }
 

@@ -23,19 +23,13 @@ evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
 declaration_files = ["stdlib/_sifr/sys.sifr"]
 certification_rows = ["opaque_resource_matrix"]
-reason = "Process-command, directory-change, file-stat, disk-usage, process-id, CPU-count, executable lookup, and OS separator/name helpers remain compiler-native pending later sys/os/process migration slices; environment, argv, sys version/platform/maxsize, sys_exit, and platform module values now route through sifr_stdlib declarations."
+reason = "Process-command, directory-change, file-stat, and disk-usage helpers remain compiler-native in the shared os.rs registry file pending later process/filesystem slices; environment, argv, sys version/platform/maxsize, sys_exit, process-id, CPU-count, executable lookup, OS separator/name helpers, and platform module values now route through sifr_stdlib declarations."
 registry_files = ["os.rs"]
 exact_intrinsics = [
   "chdir",
-  "cpu_count",
   "disk_usage",
-  "getpid",
-  "os_linesep",
-  "os_name",
-  "os_sep",
   "run_command",
   "stat_size",
-  "which",
 ]
 
 [[surface]]
