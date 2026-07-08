@@ -1,4 +1,5 @@
 use super::compile_stdlib_uncached;
+use sha2::{Digest, Sha256};
 
 #[test]
 fn platform_private_declarations_codegen_through_sifr_stdlib() {
@@ -9,7 +10,15 @@ fn platform_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.platform")
         .expect("_sifr.platform should generate private Rust code");
 
-    assert!(private_code.contains("sifr_stdlib::platform::platform_system()"));
+    assert_eq!(private_code.module, "_sifr.platform");
+    assert_eq!(private_code.source_path, "stdlib/_sifr/platform.sifr");
+    assert_eq!(
+        private_code.source_sha256,
+        sha256_hex(include_str!("../../../../stdlib/_sifr/platform.sifr"))
+    );
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::platform::platform_system()"));
     assert!(compiled
         .code
         .intrinsic_names
@@ -27,6 +36,12 @@ fn platform_private_declarations_codegen_through_sifr_stdlib() {
         .is_some_and(|names| !names.contains("platform_system")));
 }
 
+fn sha256_hex(source: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(source.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
 #[test]
 fn html_private_declarations_codegen_through_sifr_stdlib() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
@@ -36,7 +51,9 @@ fn html_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.html")
         .expect("_sifr.html should generate private Rust code");
 
-    assert!(private_code.contains("sifr_stdlib::html::html_escape(s)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::html::html_escape(s)"));
     assert!(compiled
         .code
         .intrinsic_names
@@ -63,10 +80,10 @@ fn calendar_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.calendar")
         .expect("_sifr.calendar should generate private Rust code");
 
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "sifr_stdlib::calendar::calendar_isleap(sifr_runtime::interop::SifrIntBridge::from(year))"
     ));
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "sifr_stdlib::calendar::calendar_monthrange(sifr_runtime::interop::SifrIntBridge::from(year), sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
     ));
     assert!(compiled
@@ -95,9 +112,13 @@ fn uuid_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.uuid")
         .expect("_sifr.uuid should generate private Rust code");
 
-    assert!(private_code.contains("sifr_stdlib::uuid::uuid4()"));
-    assert!(private_code.contains("sifr_stdlib::uuid::uuid3_text(namespace, name)"));
-    assert!(private_code.contains("sifr_stdlib::uuid::uuid5_text(namespace, name)"));
+    assert!(private_code.rust.contains("sifr_stdlib::uuid::uuid4()"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::uuid::uuid3_text(namespace, name)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::uuid::uuid5_text(namespace, name)"));
     assert!(compiled
         .code
         .intrinsic_names
@@ -124,15 +145,31 @@ fn crypto_hash_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.crypto")
         .expect("_sifr.crypto should generate private Rust code");
 
-    assert!(private_code.contains("sifr_stdlib::hash::sha256(s)"));
-    assert!(private_code.contains("sifr_stdlib::hash::sha256_bytes(data)"));
-    assert!(private_code.contains("sifr_stdlib::hash::blake2s_bytes(data)"));
-    assert!(private_code.contains("sifr_stdlib::base64::base64_encode(s)"));
-    assert!(private_code.contains("sifr_stdlib::base64::base64_encode_bytes(data)"));
-    assert!(private_code.contains("sifr_stdlib::base64::urlsafe_b64encode(s)"));
-    assert!(private_code.contains("sifr_stdlib::base64::urlsafe_b64encode_bytes(data)"));
-    assert!(private_code.contains("sifr_stdlib::base64::b32encode(s)"));
-    assert!(private_code.contains("sifr_stdlib::base64::b32hexencode(s)"));
+    assert!(private_code.rust.contains("sifr_stdlib::hash::sha256(s)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::hash::sha256_bytes(data)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::hash::blake2s_bytes(data)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::base64::base64_encode(s)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::base64::base64_encode_bytes(data)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::base64::urlsafe_b64encode(s)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::base64::urlsafe_b64encode_bytes(data)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::base64::b32encode(s)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::base64::b32hexencode(s)"));
     for fallible_name in [
         "base64_decode",
         "base64_decode_bytes",
@@ -144,11 +181,13 @@ fn crypto_hash_private_declarations_codegen_through_sifr_stdlib() {
         "b32hexdecode",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::base64::{fallible_name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::base64::{fallible_name}(")),
             "{fallible_name} should lower through _sifr.crypto private Rust interop declarations"
         );
     }
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -203,9 +242,13 @@ fn bytes_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.bytes")
         .expect("_sifr.bytes should generate private Rust code");
 
-    assert!(private_code.contains("sifr_stdlib::bytes::encode_utf8(s)"));
-    assert!(private_code.contains("sifr_stdlib::bytes::bytes_to_hex(bytes)"));
-    assert!(private_code.contains(
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::bytes::encode_utf8(s)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::bytes::bytes_to_hex(bytes)"));
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -249,14 +292,18 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
         "re_split_flags",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::regex::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::regex::{name}(")),
             "{name} should lower through _sifr.regex private Rust interop declarations"
         );
     }
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| RegexError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() })"
     ));
-    assert!(private_code.contains("sifr_runtime::interop::SifrIntBridge::from(flags)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_runtime::interop::SifrIntBridge::from(flags)"));
     assert!(compiled
         .code
         .intrinsic_names
@@ -303,12 +350,16 @@ fn url_private_declarations_codegen_through_sifr_stdlib() {
         "url_query_build_flat",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::url::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::url::{name}(")),
             "{name} should lower through _sifr.url private Rust interop declarations"
         );
     }
-    assert!(private_code.contains("port.map(sifr_runtime::interop::SifrIntBridge::from)"));
-    assert!(private_code.contains(
+    assert!(private_code
+        .rust
+        .contains("port.map(sifr_runtime::interop::SifrIntBridge::from)"));
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -346,8 +397,10 @@ fn toml_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.toml")
         .expect("_sifr.toml should generate private Rust code");
 
-    assert!(private_code.contains("sifr_stdlib::toml::toml_parse_tokens(text)"));
-    assert!(private_code.contains(
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::toml::toml_parse_tokens(text)"));
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -393,13 +446,15 @@ fn json_private_declarations_codegen_through_sifr_stdlib() {
         "json_dump_tokens_web",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::json::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::json::{name}(")),
             "{name} should lower through _sifr.json private Rust interop declarations"
         );
     }
-    assert!(private_code.contains("JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: __sifr_bridge_error.line() as i64, column: __sifr_bridge_error.column() as i64 }"));
-    assert!(private_code.contains("JsonLimitError { message: __sifr_bridge_error.message().to_string(), limit: __sifr_bridge_error.limit() as i64 }"));
-    assert!(private_code.contains("JsonIntegerRangeError { message: __sifr_bridge_error.message().to_string(), path: __sifr_bridge_error.path().to_string(), profile: __sifr_bridge_error.profile().to_string() }"));
+    assert!(private_code.rust.contains("JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: __sifr_bridge_error.line() as i64, column: __sifr_bridge_error.column() as i64 }"));
+    assert!(private_code.rust.contains("JsonLimitError { message: __sifr_bridge_error.message().to_string(), limit: __sifr_bridge_error.limit() as i64 }"));
+    assert!(private_code.rust.contains("JsonIntegerRangeError { message: __sifr_bridge_error.message().to_string(), path: __sifr_bridge_error.path().to_string(), profile: __sifr_bridge_error.profile().to_string() }"));
     assert!(compiled
         .code
         .intrinsic_names
@@ -462,11 +517,13 @@ fn encoding_private_declarations_codegen_through_sifr_stdlib() {
         "encoding_encode_recoveries",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::encoding::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::encoding::{name}(")),
             "{name} should lower through _sifr.encoding private Rust interop declarations"
         );
     }
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -541,11 +598,13 @@ fn unicode_private_declarations_codegen_through_sifr_stdlib() {
         "word_boundaries_flat",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::unicode::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::unicode::{name}(")),
             "{name} should lower through _sifr.unicode private Rust interop declarations"
         );
     }
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -608,12 +667,16 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
         ("zipfile", "zip_namelist"),
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::{module}::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::{module}::{name}(")),
             "{name} should lower through _sifr.compress private Rust interop declarations"
         );
     }
-    assert!(private_code.contains("sifr_stdlib::gzip::gzip_compress_bytes(data)"));
-    assert!(private_code.contains(
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::gzip::gzip_compress_bytes(data)"));
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| IOError { message: __sifr_bridge_error.to_string(), kind: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -689,11 +752,13 @@ fn datetime_private_declarations_codegen_through_sifr_stdlib() {
         "datetime_from_timestamp",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::time::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::time::{name}(")),
             "{name} should lower through _sifr.datetime private Rust interop declarations"
         );
     }
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ValueError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled
@@ -759,17 +824,19 @@ fn i18n_private_declarations_codegen_through_sifr_stdlib() {
         "i18n_mo_lookup_context_plural",
     ] {
         assert!(
-            private_code.contains(&format!("sifr_stdlib::i18n::{name}(")),
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::i18n::{name}(")),
             "{name} should lower through _sifr.i18n private Rust interop declarations"
         );
     }
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "sifr_stdlib::i18n::i18n_format_datetime(locale, style, sifr_runtime::interop::SifrIntBridge::from(year)"
     ));
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "sifr_stdlib::i18n::i18n_collate(locale, strength, left, right).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
     ));
-    assert!(private_code.contains(
+    assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
     assert!(compiled

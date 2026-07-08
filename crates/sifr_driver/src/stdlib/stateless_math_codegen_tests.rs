@@ -9,18 +9,26 @@ fn math_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.math")
         .expect("_sifr.math should generate private Rust code");
 
-    assert!(private_code.contains("sifr_stdlib::math::sqrt(x)"));
-    assert!(private_code.contains("sifr_stdlib::math::pow_val(x, y)"));
-    assert!(private_code.contains("sifr_stdlib::math::floor(x)"));
-    assert!(private_code.contains("sifr_stdlib::math::frexp(x)"));
-    assert!(private_code.contains("const PI: f64 = 3.141592653589793_f64;"));
-    assert!(private_code.contains("const E: f64 = 2.718281828459045_f64;"));
-    assert!(private_code.contains("const TAU: f64 = 6.283185307179586_f64;"));
-    assert!(private_code.contains("const INF: f64"));
-    assert!(private_code.contains("const NAN: f64"));
-    assert!(!private_code.contains("std::f64::consts::PI"));
-    assert!(!private_code.contains("f64::INFINITY"));
-    assert!(!private_code.contains("f64::NAN"));
+    assert!(private_code.rust.contains("sifr_stdlib::math::sqrt(x)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::math::pow_val(x, y)"));
+    assert!(private_code.rust.contains("sifr_stdlib::math::floor(x)"));
+    assert!(private_code.rust.contains("sifr_stdlib::math::frexp(x)"));
+    assert!(private_code
+        .rust
+        .contains("const PI: f64 = 3.141592653589793_f64;"));
+    assert!(private_code
+        .rust
+        .contains("const E: f64 = 2.718281828459045_f64;"));
+    assert!(private_code
+        .rust
+        .contains("const TAU: f64 = 6.283185307179586_f64;"));
+    assert!(private_code.rust.contains("const INF: f64"));
+    assert!(private_code.rust.contains("const NAN: f64"));
+    assert!(!private_code.rust.contains("std::f64::consts::PI"));
+    assert!(!private_code.rust.contains("f64::INFINITY"));
+    assert!(!private_code.rust.contains("f64::NAN"));
     assert!(compiled
         .code
         .intrinsic_names

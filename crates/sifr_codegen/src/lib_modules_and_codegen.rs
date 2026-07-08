@@ -26,6 +26,7 @@ use crate::stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
     SharedPreludeProcessAsyncNeeds,
 };
+use crate::StdlibRustSource;
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
@@ -100,8 +101,8 @@ pub struct LoweringStats {
 /// Contains per-module Rust code and intrinsic name sets.
 #[derive(Clone, Default)]
 pub struct StdlibCode {
-    /// Map of `module_name` -> compiled Rust source code for pure Sifr functions/constants
-    pub module_rust_code: HashMap<String, String>,
+    /// Map of `module_name` -> compiled Rust source with checked-source provenance.
+    pub module_rust_code: HashMap<String, StdlibRustSource>,
     /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
     pub intrinsic_names: HashMap<String, HashSet<String>>,
     /// Map of `module_name` -> (`constant_name` -> (type, `rust_name`)) for stdlib constants
@@ -328,8 +329,8 @@ pub fn generate_rust_with_stdlib_for_module(
         if emitted_modules.contains(module_name) {
             continue;
         }
-        if let Some(rust_code) = stdlib_code.module_rust_code.get(module_name) {
-            if !rust_code.is_empty() {
+        if let Some(rust_source) = stdlib_code.module_rust_code.get(module_name) {
+            if !rust_source.rust.is_empty() {
                 let mut filtered =
                     if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
                         let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
@@ -339,7 +340,7 @@ pub fn generate_rust_with_stdlib_for_module(
                             .cloned()
                             .collect();
                         if transitive_dependency_modules.contains(module_name) {
-                            rust_code.clone()
+                            rust_source.rust.clone()
                         } else if pure_sifr_imports.is_empty() {
                             String::new()
                         } else {
@@ -351,10 +352,10 @@ pub fn generate_rust_with_stdlib_for_module(
                                     }
                                 }
                             }
-                            filter_stdlib_ir_to_needed(rust_code, &expanded_imports)
+                            filter_stdlib_ir_to_needed(&rust_source.rust, &expanded_imports)
                         }
                     } else {
-                        rust_code.clone()
+                        rust_source.rust.clone()
                     };
                 if module_name == "sifr.sync" && sync_channel_runtime_needed(&filtered) {
                     filtered = replace_sync_channel_runtime_items(&filtered);
