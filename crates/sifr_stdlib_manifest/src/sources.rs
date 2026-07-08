@@ -1,5 +1,5 @@
 use sifr_sysroot::ResolvedSysroot;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::path::{Path, PathBuf};
 
@@ -29,6 +29,12 @@ pub enum LoadedStdlibSourceKind {
 pub struct StdlibSourceInventoryError {
     pub message: String,
     pub path: Option<PathBuf>,
+}
+
+struct BootstrapSource<'a> {
+    module: &'a str,
+    source: &'a str,
+    path: Option<&'a Path>,
 }
 
 impl StdlibSourceInventoryError {
@@ -336,7 +342,7 @@ pub fn load_stdlib_sources_from_sysroot(
     sysroot: &ResolvedSysroot,
 ) -> Result<Vec<LoadedStdlibSource>, StdlibSourceInventoryError> {
     validate_stdlib_source_inventory(sysroot)?;
-    STDLIB_SOURCES
+    let sources = STDLIB_SOURCES
         .iter()
         .map(|source| {
             let path = public_module_path(&sysroot.paths.stdlib_public_sources, source.module);
@@ -353,7 +359,9 @@ pub fn load_stdlib_sources_from_sysroot(
                 kind: LoadedStdlibSourceKind::Public,
             })
         })
-        .collect()
+        .collect::<Result<Vec<_>, _>>()?;
+    validate_loaded_public_stdlib_bootstrap_order(&sources)?;
+    Ok(sources)
 }
 
 pub fn load_stdlib_tooling_sources_from_sysroot(
@@ -376,6 +384,7 @@ pub fn load_stdlib_tooling_sources_from_sysroot(
             kind: LoadedStdlibSourceKind::PrivateDeclaration,
         });
     }
+    validate_loaded_private_stdlib_declarations_are_dependency_free(&sources)?;
     sources.extend(load_stdlib_sources_from_sysroot(sysroot)?);
     Ok(sources)
 }
@@ -391,6 +400,7 @@ pub fn validate_stdlib_source_inventory(
         PRIVATE_STDLIB_MODULES.iter().copied(),
         "private stdlib source",
     )?;
+    validate_static_public_stdlib_bootstrap_order()?;
     validate_module_files(
         &sysroot.paths.stdlib_public_sources,
         STDLIB_SOURCES.iter().map(|source| source.module),
@@ -466,6 +476,104 @@ fn validate_module_files<'a>(
     Ok(())
 }
 
+fn validate_static_public_stdlib_bootstrap_order() -> Result<(), StdlibSourceInventoryError> {
+    validate_public_stdlib_bootstrap_order(STDLIB_SOURCES.iter().map(|source| BootstrapSource {
+        module: source.module,
+        source: source.source,
+        path: None,
+    }))
+}
+
+fn validate_loaded_public_stdlib_bootstrap_order(
+    sources: &[LoadedStdlibSource],
+) -> Result<(), StdlibSourceInventoryError> {
+    validate_public_stdlib_bootstrap_order(sources.iter().map(|source| BootstrapSource {
+        module: &source.module,
+        source: &source.source,
+        path: Some(source.path.as_path()),
+    }))
+}
+
+fn validate_public_stdlib_bootstrap_order<'a>(
+    sources: impl IntoIterator<Item = BootstrapSource<'a>>,
+) -> Result<(), StdlibSourceInventoryError> {
+    let sources = sources.into_iter().collect::<Vec<_>>();
+    let module_indices = sources
+        .iter()
+        .enumerate()
+        .map(|(index, source)| (source.module, index))
+        .collect::<BTreeMap<_, _>>();
+    for (index, source) in sources.iter().enumerate() {
+        for imported_module in stdlib_imports(source.source, "sifr.") {
+            let Some(imported_index) = module_indices.get(imported_module) else {
+                return Err(StdlibSourceInventoryError::new(
+                    format!(
+                        "public stdlib module {} imports unknown stdlib module {imported_module}",
+                        source.module
+                    ),
+                    source.path.map(Path::to_path_buf),
+                ));
+            };
+            if *imported_index > index {
+                return Err(StdlibSourceInventoryError::new(
+                    format!(
+                        "public stdlib module {} imports {imported_module} before it is available in bootstrap order",
+                        source.module
+                    ),
+                    source.path.map(Path::to_path_buf),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_loaded_private_stdlib_declarations_are_dependency_free(
+    sources: &[LoadedStdlibSource],
+) -> Result<(), StdlibSourceInventoryError> {
+    for source in sources {
+        if let Some(imported_module) = stdlib_imports(&source.source, "_sifr.")
+            .into_iter()
+            .chain(stdlib_imports(&source.source, "sifr."))
+            .next()
+        {
+            return Err(StdlibSourceInventoryError::new(
+                format!(
+                    "private stdlib declaration {} imports {imported_module}; private declarations must be dependency-free",
+                    source.module
+                ),
+                Some(source.path.clone()),
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn stdlib_imports<'a>(source: &'a str, prefix: &str) -> BTreeSet<&'a str> {
+    let mut imports = BTreeSet::new();
+    for line in source.lines() {
+        let line = line.split('#').next().unwrap_or("").trim();
+        if let Some(module) = line
+            .strip_prefix("from ")
+            .and_then(|rest| rest.split_once(" import ").map(|(module, _)| module))
+        {
+            if module.starts_with(prefix) {
+                imports.insert(module);
+            }
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("import ") {
+            for item in rest.split(',') {
+                let module = item.split_whitespace().next().unwrap_or("");
+                if module.starts_with(prefix) {
+                    imports.insert(module);
+                }
+            }
+        }
+    }
+    imports
+}
+
 fn public_module_path(root: &Path, module: &str) -> PathBuf {
     module_path(root, module, "sifr")
 }
@@ -485,8 +593,8 @@ fn module_path(root: &Path, module: &str, prefix: &str) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::{
-        load_stdlib_sources_from_sysroot, validate_stdlib_source_inventory, PRIVATE_STDLIB_MODULES,
-        STDLIB_SOURCES,
+        load_stdlib_sources_from_sysroot, load_stdlib_tooling_sources_from_sysroot,
+        validate_stdlib_source_inventory, PRIVATE_STDLIB_MODULES, STDLIB_SOURCES,
     };
     use sifr_sysroot::{ResolvedSysroot, SysrootManifest, SysrootPaths};
     use std::fs;
@@ -592,6 +700,92 @@ mod tests {
             .message
             .contains("stale stdlib source module _sifr.stale"));
         assert_eq!(error.path, Some(root.path.join("stdlib/_sifr/stale.sifr")));
+    }
+
+    #[test]
+    fn load_stdlib_sources_rejects_forward_public_bootstrap_imports() {
+        let root = complete_source_tree("forward_public_import");
+        let sysroot = resolved_sysroot(&root.path);
+        let test_path = root.path.join("stdlib/sifr/test.sifr");
+        fs::write(&test_path, "from sifr.json import JsonValue\n")
+            .expect("write forward import source");
+
+        let error = load_stdlib_sources_from_sysroot(&sysroot)
+            .expect_err("forward public stdlib import should fail");
+
+        assert!(error
+            .message
+            .contains("public stdlib module sifr.test imports sifr.json before it is available"));
+        assert_eq!(error.path, Some(test_path));
+    }
+
+    #[test]
+    fn load_stdlib_sources_rejects_unknown_public_bootstrap_imports() {
+        let root = complete_source_tree("unknown_public_import");
+        let sysroot = resolved_sysroot(&root.path);
+        let test_path = root.path.join("stdlib/sifr/test.sifr");
+        fs::write(&test_path, "from sifr.missing import Missing\n")
+            .expect("write unknown import source");
+
+        let error = load_stdlib_sources_from_sysroot(&sysroot)
+            .expect_err("unknown public stdlib import should fail");
+
+        assert!(error
+            .message
+            .contains("public stdlib module sifr.test imports unknown stdlib module sifr.missing"));
+        assert_eq!(error.path, Some(test_path));
+    }
+
+    #[test]
+    fn load_stdlib_sources_rejects_public_import_cycles() {
+        let root = complete_source_tree("cycle_public_import");
+        let sysroot = resolved_sysroot(&root.path);
+        let bytes_path = root.path.join("stdlib/sifr/bytes.sifr");
+        let encoding_path = root.path.join("stdlib/sifr/encoding.sifr");
+        fs::write(&bytes_path, "from sifr.encoding import Encoding\n")
+            .expect("write forward half of cycle");
+        fs::write(&encoding_path, "from sifr.bytes import Bytes\n")
+            .expect("write backward half of cycle");
+
+        let error = load_stdlib_sources_from_sysroot(&sysroot)
+            .expect_err("public stdlib import cycle should fail");
+
+        assert!(error.message.contains(
+            "public stdlib module sifr.bytes imports sifr.encoding before it is available"
+        ));
+        assert_eq!(error.path, Some(bytes_path));
+    }
+
+    #[test]
+    fn load_stdlib_tooling_sources_rejects_private_declaration_imports() {
+        let root = complete_source_tree("private_declaration_import");
+        let sysroot = resolved_sysroot(&root.path);
+        let bytes_path = root.path.join("stdlib/_sifr/bytes.sifr");
+        fs::write(&bytes_path, "from _sifr.fs import open\n").expect("write private import");
+
+        let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
+            .expect_err("private stdlib declaration import should fail");
+
+        assert!(error
+            .message
+            .contains("private stdlib declaration _sifr.bytes imports _sifr.fs"));
+        assert_eq!(error.path, Some(bytes_path));
+    }
+
+    #[test]
+    fn load_stdlib_tooling_sources_rejects_private_declaration_public_imports() {
+        let root = complete_source_tree("private_declaration_public_import");
+        let sysroot = resolved_sysroot(&root.path);
+        let bytes_path = root.path.join("stdlib/_sifr/bytes.sifr");
+        fs::write(&bytes_path, "from sifr.bytes import Bytes\n").expect("write public import");
+
+        let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
+            .expect_err("private stdlib declaration public import should fail");
+
+        assert!(error
+            .message
+            .contains("private stdlib declaration _sifr.bytes imports sifr.bytes"));
+        assert_eq!(error.path, Some(bytes_path));
     }
 
     fn complete_source_tree(label: &str) -> TempRoot {
