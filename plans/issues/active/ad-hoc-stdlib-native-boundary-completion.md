@@ -232,7 +232,8 @@ milestone is merged:
 - M0b: create `sifr_ipc` and move shared IPC protocol code (merged in PR
   #2821, merge commit `f82cc646f64a69f8e6c10ed552e34a81e5b2d203`).
 - M0c: move import suggestion policy and retained signature builders to their
-  final temporary compiler homes (PR #2823).
+  final temporary compiler homes (merged in PR #2823, merge commit
+  `c0828de536d9fe178a0f573389fcccbd6d62635e`).
 - M0d: move the HTTP harness to verification, prove runtime parity, account for
   retired codegen/bootstrap-path coverage, and delete raw stdlib module
   injection.
