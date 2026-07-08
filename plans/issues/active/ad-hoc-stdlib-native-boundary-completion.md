@@ -90,7 +90,7 @@ merged, and documented before the next milestone starts.
 | Milestone | Status | Evidence |
 | --- | --- | --- |
 | M0. Model Split and Raw-Injection Removal | merged | PR #2820 · sha=8f1f44d; PR #2821 · sha=f82cc64; PR #2823 · sha=c0828de; PR #2825 · sha=5e05898; PR #2827 · sha=45b36d1 |
-| M1. Manifest Schema and Normal-Path Guards | planned |  |
+| M1. Manifest Schema and Normal-Path Guards | in progress | PR #2829 · sha=d2b97bb; PR #2831 open |
 | M2. Declaration Infrastructure and Provenance | planned |  |
 | M3. File and Filesystem Migration | planned |  |
 | M4. Random, Time, and Logging | planned |  |
@@ -331,6 +331,10 @@ M1 may land as ordered sub-PRs:
   #2829, merge commit `d2b97bb796908e787202ed123b9ea889e8c7e2c3`;
   local `create-pr` validation passed with no advisories; reviewer pass 2
   READY).
+- M1b: validate deterministic stdlib bootstrap ordering, reject public forward
+  imports and private declaration dependencies, and wire a standalone bootstrap
+  ordering guard into local validation (open in PR #2831; local `create-pr`
+  validation passed in 180.50s with no advisories; reviewer pass 2 READY).
 
 Acceptance:
 

@@ -65,6 +65,13 @@
       "report": "stdout"
     },
     {
+      "name": "stdlib-bootstrap-ordering",
+      "entrypoint": "scripts/check_stdlib_bootstrap_ordering.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
       "name": "stdlib-migration-closure",
       "entrypoint": "scripts/check_stdlib_migration_closure.py",
       "args": [],

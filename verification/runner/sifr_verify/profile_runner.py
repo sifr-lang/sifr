@@ -357,6 +357,10 @@ class ProfileRunner:
         run_python("scripts/check_stdlib_manifest_schema.py")
         run_python("scripts/check_stdlib_manifest_schema.py", "--self-test")
 
+        print("Running stdlib bootstrap ordering guard")
+        run_python("scripts/check_stdlib_bootstrap_ordering.py")
+        run_python("scripts/check_stdlib_bootstrap_ordering.py", "--self-test")
+
         print("Running stdlib migration closure guard")
         run_python("scripts/check_stdlib_migration_closure.py")
         run_python("scripts/check_stdlib_migration_closure.py", "--self-test")
