@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 pub(super) fn intrinsic_math() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    let mut constants = HashMap::new();
+    let constants = HashMap::new();
 
     // sqrt(x: float) -> float
     functions.insert(
@@ -503,13 +503,6 @@ pub(super) fn intrinsic_math() -> IntrinsicModule {
         "ulp".to_string(),
         FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float),
     );
-
-    // Constants
-    constants.insert("pi".to_string(), Type::Float);
-    constants.insert("e".to_string(), Type::Float);
-    constants.insert("tau".to_string(), Type::Float);
-    constants.insert("inf".to_string(), Type::Float);
-    constants.insert("nan".to_string(), Type::Float);
 
     IntrinsicModule {
         functions,

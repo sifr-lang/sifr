@@ -281,12 +281,7 @@ impl RustEmitter {
                 method,
                 args,
             } => {
-                let receiver = match receiver.as_ref() {
-                    crate::RustExpr::Ident(name) if self.is_stdlib_constant(name) => {
-                        crate::RustExpr::Ident(name.clone())
-                    }
-                    _ => self.rewrite_stdlib_constant_idents_in_expr(*receiver),
-                };
+                let receiver = self.rewrite_stdlib_constant_idents_in_expr(*receiver);
                 let receiver_class = self.rust_expr_class_name(&receiver);
                 let args = args
                     .into_iter()
@@ -402,12 +397,7 @@ impl RustEmitter {
                 }
             }
             crate::RustExpr::Field { expr, field } => {
-                let rewritten_expr = match expr.as_ref() {
-                    crate::RustExpr::Ident(name) if self.is_stdlib_constant(name) => {
-                        crate::RustExpr::Ident(name.clone())
-                    }
-                    _ => self.rewrite_stdlib_constant_idents_in_expr(*expr),
-                };
+                let rewritten_expr = self.rewrite_stdlib_constant_idents_in_expr(*expr);
                 crate::RustExpr::Field {
                     expr: Box::new(rewritten_expr),
                     field,

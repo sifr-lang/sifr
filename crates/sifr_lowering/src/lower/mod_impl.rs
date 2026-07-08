@@ -4,9 +4,9 @@ use super::{
     import_resolution, imported_defaults, imports, integer_literal_diagnostics, lower_class,
     lower_function, module_constants_lowering, module_function_registry, name_diagnostics,
     parse_typevar_bound_expr, parse_typevar_declaration_specs, predeclare_type_aliases,
-    register_builtins, resolve_imports_early, resolve_type_aliases, str, workload_annotations,
-    Expr, ExternalDefs, FunctionType, HirDiagnostic, HirImport, HirModule, LowerCtx, Ranged, Stmt,
-    TextRange, Type,
+    private_stdlib_imports, register_builtins, resolve_imports_early, resolve_type_aliases, str,
+    workload_annotations, Expr, ExternalDefs, FunctionType, HirDiagnostic, HirImport, HirModule,
+    LowerCtx, Ranged, Stmt, TextRange, Type,
 };
 use sifr_ir::LoweringResult;
 /// Internal implementation of module lowering.
@@ -271,6 +271,21 @@ pub(in crate::lower) fn lower_module_impl(
             if is_absolute_import && module_name.starts_with("_sifr.") {
                 if !ctx.can_import_private_stdlib_declarations() {
                     import_diagnostics::forbidden_intrinsic(&mut ctx, &module_name, import_range);
+                    continue;
+                }
+                if private_stdlib_imports::resolve_compiled_private_imports(
+                    &mut ctx,
+                    externals,
+                    &module_name,
+                    &names,
+                    &aliases,
+                    &imported_name_range,
+                ) {
+                    imports.push(HirImport {
+                        module: module_name,
+                        names,
+                        aliases,
+                    });
                     continue;
                 }
                 // Resolve private declarations for public sysroot stdlib sources.

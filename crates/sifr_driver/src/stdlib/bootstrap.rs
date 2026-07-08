@@ -2,7 +2,6 @@ use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
-use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
 use crate::stdlib::re_exports::{re_export_stdlib_imports, ReExportMaps};
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
@@ -106,10 +105,10 @@ fn compile_stdlib_sources_with_sysroot(
                 return Err(diagnostics);
             }
         };
+        let private_declaration = stdlib_source.kind == LoadedStdlibSourceKind::PrivateDeclaration;
         if let Some(module) = pending_private_interop_module(stdlib_source, &result.module) {
             private_interop_modules.push(module);
         }
-        let private_declaration = stdlib_source.kind == LoadedStdlibSourceKind::PrivateDeclaration;
         if private_declaration
             && result.module.functions.is_empty()
             && result.module.constants.is_empty()
@@ -129,7 +128,7 @@ fn compile_stdlib_sources_with_sysroot(
         let mut workload_exports = HashMap::new();
 
         for func in &result.module.functions {
-            if should_export_callable(module_name, &func.name) {
+            if private_declaration || should_export_callable(module_name, &func.name) {
                 fn_exports.insert(
                     func.name.clone(),
                     function_type_from_params(&func.params, &func.return_type),
@@ -151,13 +150,13 @@ fn compile_stdlib_sources_with_sysroot(
             let Some((owner_name, _)) = callable_name.split_once('.') else {
                 continue;
             };
-            if should_export_callable(module_name, owner_name) {
+            if private_declaration || should_export_callable(module_name, owner_name) {
                 workload_exports.insert(callable_name.clone(), label.clone());
             }
         }
 
         for (callable_name, defaults) in &result.function_defaults {
-            if should_export_callable(module_name, callable_name) {
+            if private_declaration || should_export_callable(module_name, callable_name) {
                 default_exports.insert(callable_name.clone(), defaults.clone());
             }
         }
@@ -194,7 +193,6 @@ fn compile_stdlib_sources_with_sysroot(
                         &mut fn_exports,
                         &mut const_exports,
                         &mut intrinsic_names_for_module,
-                        &mut stdlib_code,
                         &import.module,
                         &import.names,
                     );
@@ -211,18 +209,6 @@ fn compile_stdlib_sources_with_sysroot(
                         if let Some(const_ty) = intrinsic_mod.constants.get(name) {
                             const_exports.insert(name.clone(), const_ty.clone());
                             intrinsic_names_for_module.insert(name.clone());
-                            if let Some(rust_expr) =
-                                intrinsic_constant_rust_expr(&import.module, name)
-                            {
-                                stdlib_code
-                                    .module_constants
-                                    .entry(import.module.clone())
-                                    .or_default()
-                                    .insert(
-                                        name.clone(),
-                                        (const_ty.clone(), rust_expr.to_string()),
-                                    );
-                            }
                         }
                     }
                 }
@@ -252,30 +238,30 @@ fn compile_stdlib_sources_with_sysroot(
         }
 
         for (name, ty, _expr) in &result.module.constants {
-            if !name.starts_with('_') {
+            if private_declaration || !name.starts_with('_') {
                 const_exports.insert(name.clone(), ty.clone());
             }
         }
-        fn_exports.retain(|name, _| should_export_callable(module_name, name));
-        default_exports.retain(|name, _| should_export_callable(module_name, name));
-        vararg_exports.retain(|name, _| should_export_callable(module_name, name));
-        workload_exports.retain(|name, _| {
-            let owner_name = name
-                .split_once('.')
-                .map_or(name.as_str(), |(owner, _)| owner);
-            should_export_callable(module_name, owner_name)
-        });
+        if !private_declaration {
+            fn_exports.retain(|name, _| should_export_callable(module_name, name));
+            default_exports.retain(|name, _| should_export_callable(module_name, name));
+            vararg_exports.retain(|name, _| should_export_callable(module_name, name));
+            workload_exports.retain(|name, _| {
+                let owner_name = name
+                    .split_once('.')
+                    .map_or(name.as_str(), |(owner, _)| owner);
+                should_export_callable(module_name, owner_name)
+            });
+        }
         let const_integer_value_exports = collect_public_constant_integer_value_exports(
-            result
-                .module
-                .constants
-                .iter()
-                .filter_map(|(name, _, _)| (!name.starts_with('_')).then_some(name.as_str())),
+            result.module.constants.iter().filter_map(|(name, _, _)| {
+                (private_declaration || !name.starts_with('_')).then_some(name.as_str())
+            }),
             &result.constant_integer_values,
         );
 
         for class in &result.module.classes {
-            if !class.name.starts_with('_') {
+            if private_declaration || !class.name.starts_with('_') {
                 let mut methods: Vec<(String, FunctionType)> = class
                     .methods
                     .iter()
@@ -346,7 +332,7 @@ fn compile_stdlib_sources_with_sysroot(
             }
             let mut sig_map = HashMap::new();
             for func in &result.module.functions {
-                if should_export_callable(module_name, &func.name) {
+                if private_declaration || should_export_callable(module_name, &func.name) {
                     let param_info = signature_params(&func.params, None);
                     sig_map.insert(func.name.clone(), (param_info, func.return_type.clone()));
                 }
@@ -394,7 +380,7 @@ fn compile_stdlib_sources_with_sysroot(
 
             let mut gen_fns = HashSet::new();
             for func in &result.module.functions {
-                if should_export_callable(module_name, &func.name)
+                if (private_declaration || should_export_callable(module_name, &func.name))
                     && sifr_codegen::body_contains_yield(&func.body)
                 {
                     gen_fns.insert(func.name.clone());
@@ -558,7 +544,6 @@ fn re_export_intrinsic_fallbacks(
     fn_exports: &mut HashMap<String, FunctionType>,
     const_exports: &mut HashMap<String, Type>,
     intrinsic_names_for_module: &mut HashSet<String>,
-    stdlib_code: &mut StdlibCode,
     import_module: &str,
     import_names: &[String],
 ) {
@@ -576,13 +561,6 @@ fn re_export_intrinsic_fallbacks(
             if let Some(const_ty) = intrinsic_mod.constants.get(name) {
                 const_exports.insert(name.clone(), const_ty.clone());
                 intrinsic_names_for_module.insert(name.clone());
-                if let Some(rust_expr) = intrinsic_constant_rust_expr(import_module, name) {
-                    stdlib_code
-                        .module_constants
-                        .entry(import_module.to_string())
-                        .or_default()
-                        .insert(name.clone(), (const_ty.clone(), rust_expr.to_string()));
-                }
             }
         }
     }
