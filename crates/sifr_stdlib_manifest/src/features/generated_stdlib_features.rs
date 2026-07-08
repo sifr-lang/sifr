@@ -44,7 +44,7 @@ fn features_for_module(module_name: &str) -> &'static [&'static str] {
         "sifr.i18n" | "_sifr.i18n" => &["i18n"],
         "sifr.net" | "_sifr.net" => &["net"],
         "sifr.tls" | "_sifr.tls" => &["tls"],
-        "sifr.http" | "_sifr.http" | "sifr.http_transport" => &["http"],
+        "sifr.http" | "_sifr.http" => &["http"],
         "sifr.python" | "sifr.python_core" | "_sifr.python" => &["python"],
         "sifr.process" => &["process"],
         "sifr.io" | "sifr.os" | "sifr.shutil" | "sifr.tempfile" => &["fs"],

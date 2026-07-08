@@ -28,8 +28,7 @@ pub use diagnostics::{
     render_package_diagnostic, CompileResult, CompileResultFull, GeneratedSourceMapFile,
 };
 pub use frontend::{
-    check, compile, compile_with_metadata, compile_with_metadata_allowing_http_transport_harness,
-    lower_source, parse_source, type_check_source,
+    check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
 };
 pub use sifr_codegen::LoweringStats;
 pub use stdlib::{

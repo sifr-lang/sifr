@@ -309,21 +309,6 @@ pub(in crate::lower) fn lower_module_impl(
             if is_absolute_import && module_name.starts_with("sifr.") {
                 // Check if there's a pre-compiled stdlib .sifr module in externals
                 let stdlib_module_key = module_name.clone();
-                if stdlib_module_key == "sifr.http_transport"
-                    && !ctx.allow_http_transport_harness_imports
-                {
-                    if let Some(legacy_module) =
-                        sifr_stdlib_imports::unsupported_legacy_stdlib_module(&stdlib_module_key)
-                    {
-                        import_diagnostics::unsupported_legacy_stdlib_module(
-                            &mut ctx,
-                            &legacy_module,
-                            &names.join(", "),
-                            import_range,
-                        );
-                    }
-                    continue;
-                }
                 let has_module = externals.functions.contains_key(&stdlib_module_key)
                     || externals.classes.contains_key(&stdlib_module_key)
                     || externals.constants.contains_key(&stdlib_module_key);
