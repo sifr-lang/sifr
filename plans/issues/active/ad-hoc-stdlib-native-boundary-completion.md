@@ -90,7 +90,7 @@ merged, and documented before the next milestone starts.
 | Milestone | Status | Evidence |
 | --- | --- | --- |
 | M0. Model Split and Raw-Injection Removal | merged | PR #2820 · sha=8f1f44d; PR #2821 · sha=f82cc64; PR #2823 · sha=c0828de; PR #2825 · sha=5e05898; PR #2827 · sha=45b36d1 |
-| M1. Manifest Schema and Normal-Path Guards | in progress | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817; PR #2833 · sha=af66be2; PR #2835 · sha=7683ff6 |
+| M1. Manifest Schema and Normal-Path Guards | merged | PR #2829 · sha=d2b97bb; PR #2831 · sha=05cb817; PR #2833 · sha=af66be2; PR #2835 · sha=7683ff6; PR #2837 · sha=91cae31 |
 | M2. Declaration Infrastructure and Provenance | planned |  |
 | M3. File and Filesystem Migration | planned |  |
 | M4. Random, Time, and Logging | planned |  |
@@ -351,9 +351,10 @@ M1 may land as ordered sub-PRs:
 - M1e: route sysroot dependency input identity through
   `SysrootDependencyPlan` for binary cache keys, test-runner cache keys, and
   build sysroot reports, so downstream consumers do not re-sort raw codegen
-  stdlib module and native feature sets (implementation PR pending; focused
-  local validation passed; local `create-pr` validation passed in 536.17s
-  with advisory: warm wall-time budget exceeded; reviewer pass 2 READY).
+  stdlib module and native feature sets (merged in PR #2837, merge commit
+  `91cae31db2a0b646b92f3fc8deef4b627603ebd0`; focused local validation
+  passed; local `create-pr` validation passed in 536.17s with advisory: warm
+  wall-time budget exceeded; reviewer pass 2 READY).
 
 Acceptance:
 
