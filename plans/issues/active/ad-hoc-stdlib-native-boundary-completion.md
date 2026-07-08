@@ -323,6 +323,12 @@ Tasks:
 - Ensure codegen, driver, LSP traces, build reports, and cache keys consume one
   `SysrootDependencyPlan` rather than recomputing sysroot features.
 
+M1 may land as ordered sub-PRs:
+
+- M1a: harden retained-glue manifest schema, remove manifest prefix concepts,
+  exact-enumerate current prefix-dispatched retained surfaces, and route
+  certification gating through manifest `certification_rows` (PR #2829).
+
 Acceptance:
 
 - A reviewer can identify the owner and migration state for every retained
