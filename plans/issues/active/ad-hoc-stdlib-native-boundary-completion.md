@@ -149,7 +149,7 @@ Architecture and planning:
 
 Compiler manifest, sysroot, and dependency planning:
 
-- `crates/sifr_stdlib_model/**`
+- `crates/sifr_stdlib_manifest/**`
 - target `crates/sifr_stdlib_manifest/**`
 - target `crates/sifr_ipc/**`
 - `crates/sifr_driver/src/stdlib/**`

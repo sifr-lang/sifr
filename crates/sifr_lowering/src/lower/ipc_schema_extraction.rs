@@ -1,5 +1,5 @@
 use super::ipc_payload_calls;
-use sifr_stdlib_model::{IpcSchemaField, IpcSchemaType, IpcSchemaVariant};
+use sifr_stdlib_manifest::{IpcSchemaField, IpcSchemaType, IpcSchemaVariant};
 use sifr_type_system::Type;
 
 pub(in crate::lower) fn extract_ipc_schema_type(ty: &Type) -> IpcSchemaType {
@@ -107,7 +107,7 @@ fn unsupported_schema_type(ty: &Type) -> IpcSchemaType {
 #[cfg(test)]
 mod tests {
     use super::extract_ipc_schema_type;
-    use sifr_stdlib_model::{
+    use sifr_stdlib_manifest::{
         canonical_schema_descriptor, IpcSchemaDescriptor, IpcSchemaType, IpcWireSchema,
     };
     use sifr_type_system::{FunctionType, Type};
@@ -169,7 +169,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn generated_schema_drives_unix_fixture_worker_bootstrap_and_round_trip() {
-        use sifr_stdlib_model::{
+        use sifr_stdlib_manifest::{
             read_frame, schema_hash_hex_v1, schema_hash_v1, validate_ipc_payload_type, write_frame,
             IpcConnectionConfig, IpcConnectionState, IpcEnvelope, IpcShutdownMode,
             IpcTerminationReason, IPC_DEFAULT_MAX_FRAME_BYTES,
@@ -192,7 +192,7 @@ mod tests {
                     .expect("lowering crate lives under crates/sifr_lowering");
                 let stdlib_manifest = repo_root
                     .join("crates")
-                    .join("sifr_stdlib_model")
+                    .join("sifr_stdlib_manifest")
                     .join("Cargo.toml");
                 let target_dir = repo_root
                     .join("target")

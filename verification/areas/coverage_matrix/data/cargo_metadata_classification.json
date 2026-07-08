@@ -162,10 +162,10 @@
       "features": []
     },
     {
-      "name": "sifr_stdlib_model",
+      "name": "sifr_stdlib_manifest",
       "classification": "first_party_compiler",
       "targets": [
-        {"name": "sifr_stdlib_model", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "sifr_stdlib_manifest", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "sifr-stdlib-ipc-pipe-fixture-worker", "kind": "bin", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "concurrency_runtime_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "ipc_process_pipe_fixture", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},

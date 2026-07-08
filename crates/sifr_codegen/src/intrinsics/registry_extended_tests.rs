@@ -21,7 +21,7 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
         .expect("py_import_module should lower");
     assert_eq!(
         imported.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::PythonRuntime)
+        Some(sifr_stdlib_manifest::StdlibFeature::PythonRuntime)
     );
     let rendered = render_expr(&imported.expr);
     assert!(rendered.contains("sifr_runtime::python::import_module"));
@@ -39,7 +39,7 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     .expect("py_call should lower");
     assert_eq!(
         call.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::PythonRuntime)
+        Some(sifr_stdlib_manifest::StdlibFeature::PythonRuntime)
     );
     let call_rendered = render_expr(&call.expr);
     assert!(call_rendered.contains("sifr_runtime::python::call_object"));
@@ -51,7 +51,7 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
         lower_intrinsic("py_from_str", &["value".to_string()]).expect("py_from_str should lower");
     assert_eq!(
         from_str.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::PythonRuntime)
+        Some(sifr_stdlib_manifest::StdlibFeature::PythonRuntime)
     );
     assert!(render_expr(&from_str.expr).contains("sifr_runtime::python::from_str"));
 
@@ -62,7 +62,7 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     .expect("py_to_i32 should lower");
     assert_eq!(
         to_i32.required_feature,
-        Some(sifr_stdlib_model::StdlibFeature::PythonRuntime)
+        Some(sifr_stdlib_manifest::StdlibFeature::PythonRuntime)
     );
     let to_i32_rendered = render_expr(&to_i32.expr);
     assert!(to_i32_rendered.contains("sifr_runtime::python::to_i32"));

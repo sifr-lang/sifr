@@ -35,7 +35,7 @@ ALL_SIFR_CRATES = {
     "sifr_runtime",
     "sifr_source",
     "sifr_stdlib",
-    "sifr_stdlib_model",
+    "sifr_stdlib_manifest",
     "sifr_sysroot",
     "sifr_syntax",
     "sifr_type_system",
@@ -52,7 +52,7 @@ IR_FORBIDDEN_DEPENDENCIES = {
     "sifr_lsp",
     "sifr_package",
     "sifr_stdlib",
-    "sifr_stdlib_model",
+    "sifr_stdlib_manifest",
     "sifr_syntax",
 }
 
@@ -66,7 +66,7 @@ STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
-    "sifr_stdlib_model",
+    "sifr_stdlib_manifest",
 }
 
 GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES = {
@@ -80,7 +80,7 @@ GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
-    "sifr_stdlib_model",
+    "sifr_stdlib_manifest",
     "sifr_syntax",
     "sifr_sysroot",
     "sifr_type_system",
@@ -124,7 +124,7 @@ RULES = (
         forbidden_source_references=frozenset(IR_FORBIDDEN_DEPENDENCIES | PARSER_CRATES),
     ),
     CrateRule(
-        crate="sifr_stdlib_model",
+        crate="sifr_stdlib_manifest",
         forbidden_normal_dependencies=frozenset(
             STDLIB_FORBIDDEN_DEPENDENCIES | PARSER_CRATES | {"sifr_syntax"}
         ),
@@ -244,7 +244,7 @@ def generated_dependency_spec_violations(root: Path) -> list[str]:
     crates_root = root / "crates"
     for path in sorted(crates_root.rglob("*.rs")):
         rel = path.relative_to(root)
-        if rel.parts[:2] == ("crates", "sifr_stdlib_model"):
+        if rel.parts[:2] == ("crates", "sifr_stdlib_manifest"):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         for pattern in GENERATED_DEPENDENCY_SPEC_DEFINITION_PATTERNS:
@@ -289,18 +289,18 @@ def seed_valid_repo(root: Path) -> None:
         "sifr_source": ["ruff_text_size"],
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
         "sifr_stdlib": ["sifr_runtime"],
-        "sifr_stdlib_model": ["sifr_type_system"],
-        "sifr_codegen": ["sifr_ir", "sifr_stdlib_model"],
+        "sifr_stdlib_manifest": ["sifr_type_system"],
+        "sifr_codegen": ["sifr_ir", "sifr_stdlib_manifest"],
         "sifr_lint": ["sifr_frontend", "sifr_ir"],
         "sifr_analysis": ["sifr_frontend", "sifr_lint"],
     }
     for crate in ALL_SIFR_CRATES | {"ruff_text_size"}:
         write_manifest(root / "crates" / crate, crate, allowed_deps.get(crate, []))
-    stdlib_src = root / "crates" / "sifr_stdlib_model" / "src" / "features.rs"
+    stdlib_src = root / "crates" / "sifr_stdlib_manifest" / "src" / "features.rs"
     stdlib_src.write_text("pub struct GeneratedCargoDependency;\n", encoding="utf-8")
     codegen_src = root / "crates" / "sifr_codegen" / "src"
     codegen_src.joinpath("lib.rs").write_text(
-        "pub fn read_specs() { let _ = sifr_stdlib_model::STDLIB_FEATURE_SPECS; }\n",
+        "pub fn read_specs() { let _ = sifr_stdlib_manifest::STDLIB_FEATURE_SPECS; }\n",
         encoding="utf-8",
     )
     codegen_src.joinpath("lib_codegen_tests.rs").write_text(
@@ -357,11 +357,11 @@ def run_self_test() -> int:
         failures,
     )
     assert_self_test_case(
-        "sifr_stdlib_model codegen dependency",
+        "sifr_stdlib_manifest codegen dependency",
         lambda root: write_manifest(
-            root / "crates" / "sifr_stdlib_model", "sifr_stdlib_model", ["sifr_codegen"]
+            root / "crates" / "sifr_stdlib_manifest", "sifr_stdlib_manifest", ["sifr_codegen"]
         ),
-        "sifr_stdlib_model: forbidden normal dependency",
+        "sifr_stdlib_manifest: forbidden normal dependency",
         failures,
     )
     assert_self_test_case(

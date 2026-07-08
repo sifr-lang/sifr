@@ -1,4 +1,4 @@
-use sifr_stdlib_model::{try_generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
 use std::collections::HashSet;
 
 fn normalize_runtime_dependency(dependency: &str) -> String {

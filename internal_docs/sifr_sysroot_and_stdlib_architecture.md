@@ -54,12 +54,12 @@ state. Later implementation stages update the implementation toward the architec
 
 | Surface | Current owner | Final owner | Migration blocker | Can move before runtime certification? |
 | --- | --- | --- | --- | --- |
-| Public Sifr stdlib sources | `stdlib/sifr/*.sifr`, validated by `crates/sifr_stdlib_model` and loaded from the resolved source-tree or installed sysroot path | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | complete for source layout; packaging copy remains later | yes |
+| Public Sifr stdlib sources | `stdlib/sifr/*.sifr`, validated by `crates/sifr_stdlib_manifest` and loaded from the resolved source-tree or installed sysroot path | `stdlib/sifr/*.sifr` copied into `<sysroot>/lib/sifr/stdlib/sifr` and loaded through `ResolvedSysroot` | complete for source layout; packaging copy remains later | yes |
 | Private stdlib declarations | `stdlib/_sifr/*.sifr` declaration files are loaded from the resolved sysroot; completed stateless/data leaves bind through private Rust interop while retained runtime/resource/callback leaves remain compiler-owned and allowlisted | `stdlib/_sifr/*.sifr` declarations copied into `<sysroot>/lib/sifr/stdlib/_sifr` and loaded through the same sysroot source inventory | concrete Rust interop declarations, synthetic stdlib interop context, retained-glue allowlist | mixed |
-| Compiler-side stdlib model | `crates/sifr_stdlib_model` currently owns source inventory, private intrinsic metadata, feature/dependency mapping, IPC metadata, and legacy module suggestions | Split into `crates/sifr_stdlib_manifest` for source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and inventory data queried by diagnostics; move suggestion policy/rendering to the frontend or diagnostics boundary; move shared IPC protocol/frame/schema/request tracking into `crates/sifr_ipc`; delete fallback intrinsic signature tables as surfaces migrate | manifest/model split and intrinsic signature deletion | yes |
-| Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_model` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
+| Compiler-side stdlib manifest | `crates/sifr_stdlib_manifest` currently owns source inventory, private intrinsic metadata, feature/dependency mapping, IPC metadata, and legacy module suggestions | `crates/sifr_stdlib_manifest` narrows to source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and inventory data queried by diagnostics; suggestion policy/rendering moves to the frontend or diagnostics boundary; shared IPC protocol/frame/schema/request tracking moves into `crates/sifr_ipc`; fallback intrinsic signature tables are removed as native declarations replace them | manifest/model split and intrinsic signature deletion | yes |
+| Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_manifest` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` under the resolved development or installed sysroot; generated Cargo and Rust interop probes receive the explicit `ResolvedSysroot` runtime crate path | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
-| Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asked `sifr_stdlib_model::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from the manifest/sysroot planning layer, consumed by codegen, driver, cache keys, reports, and LSP traces | manifest/model split and dependency planner | yes |
+| Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asked `sifr_stdlib_manifest::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from the manifest/sysroot planning layer, consumed by codegen, driver, cache keys, reports, and LSP traces | manifest/model split and dependency planner | yes |
 | Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
 | Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no sysroot contract is validated | Release archive contains `bin/sifr` plus the complete sysroot tree and replaces them atomically | installer and release artifact update | yes |
 | CLI stdlib loading | `sifr_driver::compile_stdlib` resolves `ResolvedSysroot`, validates the public/private stdlib inventory, and compiles physical public stdlib files with source paths | CLI resolves `ResolvedSysroot` and loads physical sysroot stdlib files | complete for public source loading; private declaration lowering remains later | yes |
@@ -202,9 +202,9 @@ possibly `callbacks_call_scoped_core`. The ecosystem portions, such as
 `opaque_resource_ecosystem`, `async_runtime_reqwest`, and
 `callback_subscription_ecosystem`, remain with the separate runtime ecosystem
 certification issue. `panic_boundary_wrapper_emission` also remains package
-interop certification unless a stdlib milestone needs generated panic-wrapper
-evidence; trusted sysroot declarations may instead keep panic handling as
-stdlib-owned poisoning or error-conversion evidence.
+interop certification unless stdlib-native boundary work needs generated
+panic-wrapper evidence; trusted sysroot declarations may instead keep panic
+handling as stdlib-owned poisoning or error-conversion evidence.
 
 Retained compiler-native stdlib glue is guarded separately by
 `internal_docs/stdlib_retained_compiler_intrinsics.toml` and
@@ -612,7 +612,7 @@ does not enable unrelated capability groups.
 
 ### Compiler Manifest and IPC Split
 
-The current `sifr_stdlib_model` crate is transitional. Its final shape is not a
+The current `sifr_stdlib_manifest` crate is transitional. Its final shape is not a
 compiler-side behavior model for the standard library; it is a manifest and
 sysroot planning layer.
 
@@ -754,14 +754,14 @@ modules contain both migrated and retained leaves. Manifest states are:
 | --- | --- |
 | `retained` | Still compiler-native for now and scheduled for migration or final classification. |
 | `pilot` | The selected pilot implementation is underway and the retained compiler path is still present. |
-| `closing` | Temporary closeout state while deletion or replacement evidence lands; the row is removed once guards prove the old compiler-native surface cannot reappear. |
+| `closing` | Retirement state that requires proof the old compiler-native surface cannot reappear before the row leaves the manifest. |
 | `retained-by-design` | Permanently compiler-owned language, bridge, entrypoint, exact-int, test-harness, or runtime substrate glue. |
 
 The manifest is the only exception ledger. Do not add a second registry for
 compiler-native stdlib migration state. Prefix retainers are transitional
-compatibility with the current dispatcher shape only; the first schema-hardening
-milestone exact-enumerates those dispatchers and deletes prefix concepts from
-the manifest schema.
+compatibility with the current dispatcher shape only; schema hardening
+exact-enumerates those dispatchers and deletes prefix concepts from the manifest
+schema.
 
 Resource certification rows are also recorded in this manifest. The resource
 certification gate reads `certification_rows` from the retained-glue manifest

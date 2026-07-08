@@ -1,7 +1,7 @@
 //! Async TLS intrinsic lowerers.
 
 use crate::{RustExpr, RustStmt, RustType};
-use sifr_stdlib_model::StdlibFeature;
+use sifr_stdlib_manifest::StdlibFeature;
 
 pub(crate) const TLS_REQUIRED_FEATURES: &[StdlibFeature] = &[
     StdlibFeature::SifrRuntime,

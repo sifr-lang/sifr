@@ -13,7 +13,7 @@ use sifr_package::{
     RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph, SifrPackageId,
     SifrPackageMetadata, SifrPackageName, TrustPolicy,
 };
-use sifr_stdlib_model::{CargoVendorMode, SysrootCrate};
+use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate};
 use sifr_sysroot::{
     ResolvedSysroot, SysrootManifest, SysrootPaths, COMPILER_SIFR_VERSION,
     SUPPORTED_SYSROOT_SCHEMA_VERSION,

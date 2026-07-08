@@ -400,10 +400,10 @@ fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
 fn test_generate_test_runner_cargo_toml_includes_required_features() {
     let stdlib_modules = HashSet::new();
     let required_features = HashSet::from([
-        sifr_stdlib_model::StdlibFeature::Regex,
-        sifr_stdlib_model::StdlibFeature::Rand,
-        sifr_stdlib_model::StdlibFeature::RandDistr,
-        sifr_stdlib_model::StdlibFeature::SifrRuntime,
+        sifr_stdlib_manifest::StdlibFeature::Regex,
+        sifr_stdlib_manifest::StdlibFeature::Rand,
+        sifr_stdlib_manifest::StdlibFeature::RandDistr,
+        sifr_stdlib_manifest::StdlibFeature::SifrRuntime,
     ]);
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_features);
