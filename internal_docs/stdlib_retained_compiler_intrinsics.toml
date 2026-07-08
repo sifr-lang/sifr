@@ -58,7 +58,7 @@ evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
 declaration_files = ["stdlib/_sifr/fs.sifr"]
 certification_rows = ["opaque_resource_core"]
-reason = "Filesystem paths, open handles, and IOError shaping remain compiler/runtime-owned until file-handle lifecycle certification is complete."
+reason = "Shadowable Python builtin open() lowering remains compiler-owned for call-shape compatibility; file-handle storage and methods now route through sifr_stdlib.fs."
 registry_files = [
   "file_handles.rs",
   "open_text_handles.rs",
@@ -67,14 +67,6 @@ preamble_files = ["io_bytes_methods.rs"]
 exact_intrinsics = [
   "builtin_open",
   "builtin_open_text",
-  "file_close",
-  "file_read",
-  "file_read_bytes",
-  "file_readline",
-  "file_readlines",
-  "file_write",
-  "file_write_bytes",
-  "open_file",
 ]
 
 [[surface]]

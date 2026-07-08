@@ -134,7 +134,8 @@ mod tests {
     fn known_intrinsic_module_has_signatures() {
         let module = get_intrinsic_module("_sifr.fs").expect("_sifr.fs should be registered");
 
-        assert!(module.functions.contains_key("open_file"));
+        assert!(module.functions.contains_key("chdir"));
+        assert!(!module.functions.contains_key("open_file"));
         assert!(module.constants.is_empty());
     }
 

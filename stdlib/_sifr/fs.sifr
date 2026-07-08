@@ -25,6 +25,89 @@ def append_text(path: str, content: str) -> Result[None, IOError]:
     ...
 
 
+class NativeFileHandle:
+    _id: str
+
+    def __init__(self, id: str) -> None:
+        self._id = id
+
+
+@rust(sifr_stdlib.fs.open_file)
+def _open_file(path: str, mode: str) -> Result[str, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_read)
+def _file_read(handle: str) -> Result[str, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_write)
+def _file_write(handle: str, data: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_readline)
+def _file_readline(handle: str) -> Result[str | None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_readlines)
+def _file_readlines(handle: str) -> Result[list[str], IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_close)
+def _file_close(handle: str) -> None:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_read_bytes)
+def _file_read_bytes(handle: str) -> Result[bytes, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_write_bytes)
+def _file_write_bytes(handle: str, data: bytes) -> Result[None, IOError]:
+    ...
+
+
+def open_file(path: str, mode: str) -> Result[NativeFileHandle, IOError]:
+    try:
+        handle_id: str = _open_file(path, mode)
+        return NativeFileHandle(handle_id)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def file_read(handle: NativeFileHandle) -> Result[str, IOError]:
+    return _file_read(handle._id)
+
+
+def file_write(handle: NativeFileHandle, data: str) -> Result[None, IOError]:
+    return _file_write(handle._id, data)
+
+
+def file_readline(handle: NativeFileHandle) -> Result[str | None, IOError]:
+    return _file_readline(handle._id)
+
+
+def file_readlines(handle: NativeFileHandle) -> Result[list[str], IOError]:
+    return _file_readlines(handle._id)
+
+
+def file_close(handle: NativeFileHandle) -> None:
+    _file_close(handle._id)
+
+
+def file_read_bytes(handle: NativeFileHandle) -> Result[bytes, IOError]:
+    return _file_read_bytes(handle._id)
+
+
+def file_write_bytes(handle: NativeFileHandle, data: bytes) -> Result[None, IOError]:
+    return _file_write_bytes(handle._id, data)
+
+
 @rust(sifr_stdlib.fs.getcwd)
 def getcwd() -> Result[str, IOError]:
     ...

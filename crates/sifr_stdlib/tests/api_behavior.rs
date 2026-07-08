@@ -418,6 +418,58 @@ fn fs_leaf_path_directory_and_glob_ops_match_public_wrappers() {
 }
 
 #[cfg(feature = "fs")]
+#[test]
+fn fs_native_file_handles_match_text_and_binary_surfaces() {
+    let root = unique_fs_test_dir("file_handles");
+    let root_text = root.to_string_lossy().to_string();
+    let text_path = root.join("handle.txt");
+    let text_path = text_path.to_string_lossy().to_string();
+    let binary_path = root.join("handle.bin");
+    let binary_path = binary_path.to_string_lossy().to_string();
+
+    sifr_stdlib::fs::mkdir(&root_text).expect("mkdir should create test root");
+
+    let text_writer = sifr_stdlib::fs::open_file(&text_path, "w").expect("text writer should open");
+    sifr_stdlib::fs::file_write(&text_writer, "alpha\nbeta\n").expect("text writer should write");
+    assert!(sifr_stdlib::fs::file_read(&text_writer).is_err());
+    sifr_stdlib::fs::file_close(&text_writer);
+    sifr_stdlib::fs::file_close(&text_writer);
+
+    let text_reader = sifr_stdlib::fs::open_file(&text_path, "r").expect("text reader should open");
+    assert_eq!(
+        sifr_stdlib::fs::file_readline(&text_reader).expect("readline should read"),
+        Some("alpha".to_string())
+    );
+    assert_eq!(
+        sifr_stdlib::fs::file_readlines(&text_reader).expect("readlines should read rest"),
+        vec!["beta".to_string()]
+    );
+    sifr_stdlib::fs::file_close(&text_reader);
+    assert!(sifr_stdlib::fs::file_read(&text_reader).is_err());
+
+    let binary_writer =
+        sifr_stdlib::fs::open_file(&binary_path, "wb").expect("binary writer should open");
+    sifr_stdlib::fs::file_write_bytes(&binary_writer, b"bytes")
+        .expect("binary writer should write");
+    assert!(sifr_stdlib::fs::file_write(&binary_writer, "text").is_err());
+    sifr_stdlib::fs::file_close(&binary_writer);
+
+    let binary_reader =
+        sifr_stdlib::fs::open_file(&binary_path, "rb").expect("binary reader should open");
+    assert_eq!(
+        sifr_stdlib::fs::file_read_bytes(&binary_reader).expect("binary reader should read"),
+        b"bytes".to_vec()
+    );
+    sifr_stdlib::fs::file_close(&binary_reader);
+
+    let invalid = sifr_stdlib::fs::open_file(&binary_path, "q")
+        .expect_err("invalid mode should return an error");
+    assert_eq!(invalid.to_string(), "invalid mode: q");
+
+    sifr_stdlib::fs::rmdir_all(&root_text).expect("rmdir_all should remove test root");
+}
+
+#[cfg(feature = "fs")]
 fn unique_fs_test_dir(name: &str) -> std::path::PathBuf {
     let nonce = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
