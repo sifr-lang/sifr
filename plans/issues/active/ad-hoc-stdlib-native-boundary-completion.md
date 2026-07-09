@@ -100,7 +100,7 @@ merged, and documented before the next milestone starts.
 | M8. Network and TLS Families | merged | PR #2885 · sha=6611dba · M8a TCP/network slice migrated `_sifr.net` through `sifr_stdlib::net`; compiler net registry/preamble/fallback signatures deleted; manifest: `_sifr.net` retained -> closing and certification rows reassigned to `opaque_resource_core`/`async_runtime_core`; focused TCP/TLS regression fixtures and create-PR lane passed locally; Opus review satisfied in round 3. PR #2887 · sha=89ca888 · M8b TLS slice migrated `_sifr.tls` through `sifr_stdlib::tls`; compiler TLS registry/preamble/fallback signatures deleted; manifest: `_sifr.tls` retained -> closing; create-PR lane passed locally; Opus review satisfied in round 3 |
 | M9. HTTP Family | merged | PR #2889 · sha=321fbe5 · M9a HTTP header/method/status/version/cookie helpers migrated through `_sifr.http` and `sifr_stdlib::http`; compiler HTTP registry/preamble/fallback signatures and stale URL/HTTP preamble deleted; module-only HTTP generated dependencies now route through `sifr_stdlib[http]`; create-PR lane passed locally; Opus review satisfied in round 3. M9 closure review satisfied with no blockers; HTTP transport remains verification-owned runtime substrate, while redirect and other client policy behavior belong to the future production HTTP client capability |
 | M10. Signal Callback and Subscription Pilot | merged | PR #2892 · sha=4a5b16c · M10a signal native boundary migrated `_sifr.signal` through private Rust interop and `sifr_stdlib::signals`; retained compiler signal registry/source removed; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 6. PR #2894 · sha=330e277 · certification: `callback_subscription_matrix` split into supported `callback_subscription_core` and future-owned `callback_subscription_ecosystem`; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 1. M10 closeout review satisfied in round 2; `opaque_resource_matrix`, `callback_subscription_core`, and `callback_subscription_ecosystem` references verified live |
-| M11. Python Interop Adapters | planned |  |
+| M11. Python Interop Adapters | in progress | M11a local branch: Python primitive constructors (`py_from_none`, `py_from_bool`, `py_from_int`, `py_from_float`, `py_from_str`, `py_from_bytes`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler-retained constructor registry/signature rows removed; `create-pr` lane passed locally with warm wall-time advisory only |
 | M12. Task, Signal, Runtime Observability, and Test Helpers | planned |  |
 | M13. Final Closure | planned |  |
 
@@ -1011,6 +1011,11 @@ Migrate Python adapter stdlib behavior while preserving Python runtime ownership
 
 Tasks:
 
+- M11a migrates Python primitive object constructors
+  (`py_from_none`, `py_from_bool`, `py_from_int`, `py_from_float`,
+  `py_from_str`, `py_from_bytes`) through `_sifr.python` private declarations
+  and `sifr_stdlib::python`, while leaving the rest of the Python adapter
+  surface retained for later M11 slices.
 - Move Python object wrapper policy and Sifr-facing adapter behavior into
   `sifr_stdlib` where it is public stdlib behavior.
 - Keep CPython initialization, GIL/refcount substrate, thread handoff, and raw

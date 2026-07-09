@@ -29,6 +29,12 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
         }
         Type::Class {
             name,
+            fields,
+            parent_class: _,
+            ..
+        } if name == "PythonError" && python_error_fields(fields) => python_error_expr(name, value),
+        Type::Class {
+            name,
             fields: _,
             parent_class,
             ..
@@ -131,6 +137,50 @@ fn json_integer_range_error_expr(name: &str, value: RustExpr) -> RustExpr {
             ),
         ],
     }
+}
+
+fn python_error_expr(name: &str, value: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: name.to_string(),
+        fields: vec![
+            (
+                "message".to_string(),
+                bridge_error_field_string(value.clone(), "message"),
+            ),
+            (
+                "kind".to_string(),
+                bridge_error_field_string(value.clone(), "kind"),
+            ),
+            (
+                "exception_type".to_string(),
+                bridge_error_field_string(value.clone(), "exception_type"),
+            ),
+            (
+                "traceback".to_string(),
+                bridge_error_field_string(value.clone(), "traceback"),
+            ),
+            (
+                "context".to_string(),
+                bridge_error_field_string(value, "context"),
+            ),
+        ],
+    }
+}
+
+fn python_error_fields(fields: &[(String, Type)]) -> bool {
+    let expected = ["message", "kind", "exception_type", "traceback", "context"];
+    expected.iter().all(|expected_name| {
+        fields
+            .iter()
+            .any(|(name, ty)| name == expected_name && ty.resolve_alias() == &Type::Str)
+    })
+}
+
+fn bridge_error_field_string(value: RustExpr, field: &str) -> RustExpr {
+    to_string_expr(RustExpr::Field {
+        expr: Box::new(value),
+        field: field.to_string(),
+    })
 }
 
 fn bridge_error_method_string(value: RustExpr, method: &str) -> RustExpr {

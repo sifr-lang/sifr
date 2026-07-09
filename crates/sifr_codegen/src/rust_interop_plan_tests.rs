@@ -158,6 +158,62 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
 }
 
 #[test]
+fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
+    let python_error_ty = Type::Class {
+        name: "PythonError".to_string(),
+        fields: python_error_fields(),
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let mut python_error_class = class("PythonError", HirClassKind::Regular, python_error_fields());
+    python_error_class.is_error_type = true;
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "py_from_none".to_string(),
+            params: Vec::new(),
+            return_type: Type::Result(
+                Box::new(Type::Tuple(vec![Type::Int, Type::Int])),
+                Box::new(python_error_ty),
+            ),
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                "sifr_stdlib.python.py_from_none",
+            )],
+            type_params: Vec::new(),
+        }],
+        classes: vec![python_error_class],
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let plan = interop_build_plan_for_named_modules([(Some("_sifr.python"), &module)]);
+    let signature = &plan.rust.bridge_contracts.signatures[0];
+
+    assert_eq!(signature.return_type.kind, RustBridgeTypeKind::Result);
+    assert_eq!(
+        signature.return_type.rust_return_type.as_deref(),
+        Some("Result<(i64, i64), crate::__sifr_bridge::_sifr_python::PythonErrorBridge>")
+    );
+    let python_error_bridge = plan
+        .rust
+        .bridge_contracts
+        .generated_types
+        .iter()
+        .find(|bridge_type| bridge_type.name == "PythonErrorBridge")
+        .expect("PythonError should generate an error bridge type");
+    assert_eq!(
+        python_error_bridge.kind,
+        crate::rust_interop_bridge_contract::RustGeneratedBridgeTypeKind::Error
+    );
+}
+
+#[test]
 fn interop_bridge_callable_params_require_callback_contract() {
     let mut function = HirFunction {
         name: "subscribe".to_string(),
@@ -337,6 +393,16 @@ fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClas
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),
     }
+}
+
+fn python_error_fields() -> Vec<(String, Type)> {
+    vec![
+        ("message".to_string(), Type::Str),
+        ("kind".to_string(), Type::Str),
+        ("exception_type".to_string(), Type::Str),
+        ("traceback".to_string(), Type::Str),
+        ("context".to_string(), Type::Str),
+    ]
 }
 
 fn module_with(functions: Vec<HirFunction>, classes: Vec<HirClass>) -> HirModule {

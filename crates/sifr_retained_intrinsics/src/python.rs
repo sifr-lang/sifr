@@ -270,45 +270,6 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
         ),
     );
     functions.insert(
-        "py_from_none".to_string(),
-        FunctionType::all_borrow(vec![], python_error_result(object_handle())),
-    );
-    functions.insert(
-        "py_from_bool".to_string(),
-        FunctionType::all_borrow(
-            vec![("value".to_string(), Type::Bool)],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_from_int".to_string(),
-        FunctionType::all_borrow(
-            vec![("value".to_string(), Type::Int)],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_from_float".to_string(),
-        FunctionType::all_borrow(
-            vec![("value".to_string(), Type::Float)],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_from_str".to_string(),
-        FunctionType::all_borrow(
-            vec![("value".to_string(), Type::Str)],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_from_bytes".to_string(),
-        FunctionType::all_borrow(
-            vec![("value".to_string(), Type::Bytes)],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
         "py_from_list".to_string(),
         FunctionType::all_borrow(
             vec![("values".to_string(), Type::List(Box::new(object_handle())))],
