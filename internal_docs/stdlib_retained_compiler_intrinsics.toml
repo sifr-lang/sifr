@@ -227,11 +227,7 @@ direct_runtime_roots = ["sifr_runtime::python"]
 exact_intrinsics = [
   "local_callback",
   "py_close_callback",
-  "py_enter_context",
-  "py_exit_context",
-  "py_exit_context_with_error",
   "py_local_callback_echo",
-  "py_run_coroutine_blocking",
   "py_threadsafe_callback_echo",
   "threadsafe_callback",
 ]

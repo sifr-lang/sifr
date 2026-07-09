@@ -321,3 +321,27 @@ def py_dlpack_strides(handle: int, token: int) -> Result[list[int], PythonError]
 
 @rust(sifr_stdlib.python.py_release_dlpack)
 def py_release_dlpack(handle: int, token: int) -> Result[None, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_enter_context)
+def py_enter_context(handle: int, token: int) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_exit_context)
+def py_exit_context(handle: int, token: int) -> Result[None, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_exit_context_with_error)
+def py_exit_context_with_error(
+    handle: int,
+    token: int,
+    kind: str,
+    exception_type: str,
+    message: str,
+    traceback: str,
+    context: str,
+) -> Result[None, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_run_coroutine_blocking)
+def py_run_coroutine_blocking(handle: int, token: int) -> Result[tuple[int, int], PythonError]: ...

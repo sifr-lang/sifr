@@ -17,32 +17,6 @@ pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
 
 #[test]
 pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
-    let coroutine = lower_intrinsic(
-        "py_run_coroutine_blocking",
-        &["object_handle".to_string(), "object_token".to_string()],
-    )
-    .expect("py_run_coroutine_blocking should lower");
-    let coroutine_rendered = render_expr(&coroutine.expr);
-    assert!(coroutine_rendered.contains("sifr_runtime::python::run_coroutine_blocking"));
-    assert!(coroutine_rendered.contains("(object_handle, object_token)"));
-
-    let exit_with_error = lower_intrinsic(
-        "py_exit_context_with_error",
-        &[
-            "object_handle".to_string(),
-            "object_token".to_string(),
-            "kind".to_string(),
-            "exception_type".to_string(),
-            "message".to_string(),
-            "traceback".to_string(),
-            "context".to_string(),
-        ],
-    )
-    .expect("py_exit_context_with_error should lower");
-    let exit_with_error_rendered = render_expr(&exit_with_error.expr);
-    assert!(exit_with_error_rendered.contains("sifr_runtime::python::exit_context_with_error"));
-    assert!(exit_with_error_rendered.contains("(object_handle, object_token)"));
-
     let callback =
         lower_intrinsic("py_threadsafe_callback_echo", &[]).expect("callback should lower");
     let callback_rendered = render_expr(&callback.expr);
@@ -280,6 +254,41 @@ pub(crate) fn python_zero_copy_helpers_are_owned_by_compiled_stdlib_declarations
         )
         .is_none(),
         "py_buffer_u8 must lower through _sifr.python private Rust interop declarations"
+    );
+}
+
+#[test]
+pub(crate) fn python_context_coroutine_helpers_are_owned_by_compiled_stdlib_declarations() {
+    for removed in [
+        "py_enter_context",
+        "py_exit_context",
+        "py_run_coroutine_blocking",
+    ] {
+        assert!(
+            lower_intrinsic(
+                removed,
+                &["object_handle".to_string(), "object_token".to_string()]
+            )
+            .is_none(),
+            "{removed} must lower through _sifr.python private Rust interop declarations"
+        );
+    }
+
+    assert!(
+        lower_intrinsic(
+            "py_exit_context_with_error",
+            &[
+                "object_handle".to_string(),
+                "object_token".to_string(),
+                "kind".to_string(),
+                "exception_type".to_string(),
+                "message".to_string(),
+                "traceback".to_string(),
+                "context".to_string(),
+            ],
+        )
+        .is_none(),
+        "py_exit_context_with_error must lower through _sifr.python private Rust interop declarations"
     );
 }
 
