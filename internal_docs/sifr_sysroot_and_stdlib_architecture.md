@@ -143,11 +143,11 @@ only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 Rust interop runtime certification is not fully complete for resource-shaped
 surfaces. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 15 supported rows, 5 bridge-supported rows, 1
+currently has 17 supported rows, 5 bridge-supported rows, 1
 unsupported-by-design row, and 11 rows owned by separate certification work. The
 separately owned rows are `bridge_type_matrix`, `opaque_resource_matrix`,
 `panic_boundary_wrapper_emission`, `async_runtime_reqwest`,
-`callbacks_call_scoped`, `callback_subscription_matrix`,
+`callbacks_call_scoped`, `callback_subscription_ecosystem`,
 `ecosystem_backend_certification`, `ecosystem_cli_certification`,
 `native_build_script`, `proc_macro_trust`, and `cargo_locked_offline`. Resource
 migrations must not claim stable support for any row that remains separately

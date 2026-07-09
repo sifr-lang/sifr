@@ -1,4 +1,4 @@
-# fixture: callback_subscription_matrix
+# fixture: callback_subscription_ecosystem
 # evidence: positive/subscription_cancel_shutdown
 # evidence-status: planned
 # execution-kind: runtime-observed

@@ -1,0 +1,30 @@
+# fixture: callback_subscription_core
+# evidence: positive/signal_subscription_cancel_shutdown
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: pass
+class SignalSubscriptionError(Error):
+    message: str
+
+class SignalEvent:
+    name: str
+    number: int
+
+@rust.opaque(type=bridge.signals.SignalSubscription, send=True, sync=False, clone=none, close=async_close)
+class SignalSubscription:
+    @rust(bridge.signals.cancel, panic=map_error(bridge.signals.map_panic))
+    async def aclose(own self) -> Result[None, SignalSubscriptionError | RustPanicError]: ...
+
+@rust.callback(backpressure=bounded(16), overflow=error, shutdown=drain)
+@rust(bridge.signals.subscribe_shutdown, panic=map_error(bridge.signals.map_panic))
+def subscribe_signal_shutdown(handler: ThreadsafeCallback[[SignalEvent], Result[None, SignalSubscriptionError]]) -> Result[SignalSubscription, SignalSubscriptionError | RustPanicError]: ...
+
+def record_signal_event(event: SignalEvent) -> Result[None, SignalSubscriptionError]:
+    event_name: str = event.name
+    event_number: int = event.number
+    return None
+
+async def verify_signal_subscription_cancel_shutdown(subscription: SignalSubscription) -> Result[SignalSubscription, SignalSubscriptionError | RustPanicError]:
+    subscribe_result: Result[SignalSubscription, SignalSubscriptionError | RustPanicError] = subscribe_signal_shutdown(record_signal_event)
+    close_result: Result[None, SignalSubscriptionError | RustPanicError] = await subscription.aclose()
+    return subscribe_result

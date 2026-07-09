@@ -22,7 +22,9 @@ MANIFEST_PATH = REPO_ROOT / "internal_docs" / "stdlib_retained_compiler_intrinsi
 CERTIFICATION_ISSUE = "plans/issues/active/rust-interop-runtime-ecosystem-certification.md"
 FUTURE_OWNED = "future-owned-by-separate-phase"
 SUPPORTED = "supported"
-SUPPORTED_STDLIB_CORE_ROWS = frozenset({"async_runtime_core", "opaque_resource_core"})
+SUPPORTED_STDLIB_CORE_ROWS = frozenset(
+    {"async_runtime_core", "callback_subscription_core", "opaque_resource_core"}
+)
 
 
 def main() -> int:
@@ -164,7 +166,8 @@ def _self_test() -> int:
         "_sifr.example_async": (
             "async_runtime_core",
             "async_runtime_reqwest",
-            "callback_subscription_matrix",
+            "callback_subscription_core",
+            "callback_subscription_ecosystem",
         ),
     }
     base_manifest = {
@@ -188,6 +191,12 @@ def _self_test() -> int:
                 "negative_evidence": {"status": "passing"},
             },
             {
+                "id": "callback_subscription_core",
+                "category": SUPPORTED,
+                "positive_evidence": {"status": "passing"},
+                "negative_evidence": {"status": "passing"},
+            },
+            {
                 "id": "opaque_resource_matrix",
                 "category": FUTURE_OWNED,
                 "future_owner": CERTIFICATION_ISSUE,
@@ -198,7 +207,7 @@ def _self_test() -> int:
                 "future_owner": CERTIFICATION_ISSUE,
             },
             {
-                "id": "callback_subscription_matrix",
+                "id": "callback_subscription_ecosystem",
                 "category": FUTURE_OWNED,
                 "future_owner": CERTIFICATION_ISSUE,
             },

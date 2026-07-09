@@ -42,9 +42,12 @@ rows rather than reassigning ecosystem rows wholesale:
   validation, current-thread affinity, cancellation/drop task semantics, panic
   conversion through declared stdlib error surfaces, and hidden-blocking
   rejection. This issue still owns `tokio`/`reqwest` loopback behavior evidence.
-- `callback_subscription_matrix` splits into stdlib-owned
+- `callback_subscription_matrix` splits in M10b into stdlib-owned
   `callback_subscription_core` and certification-owned
-  `callback_subscription_ecosystem`.
+  `callback_subscription_ecosystem`. The core row covers signal-style stdlib
+  subscription callback policy, async-close cancellation, and shutdown
+  contract evidence. This issue still owns runtime-observed ecosystem
+  subscription evidence for `tokio-tungstenite`, Redis pub/sub, and `notify`.
 - `callbacks_call_scoped` may split into stdlib-owned
   `callbacks_call_scoped_core` if the Python adapter migration proves only the
   core callback lifetime mechanics.

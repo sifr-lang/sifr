@@ -1,4 +1,4 @@
-# fixture: callback_subscription_matrix
+# fixture: callback_subscription_ecosystem
 # package-example: redis
 # required-crate: redis
 # execution-kind: runtime-observed

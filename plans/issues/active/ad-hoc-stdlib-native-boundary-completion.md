@@ -120,7 +120,7 @@ and an ecosystem row that remains with the certification issue:
 | --- | --- | --- |
 | `opaque_resource_matrix` | M3 creates `opaque_resource_core` for opaque resource nonforgeability, close/aclose lifecycle, alias rejection, poisoning, and panic-boundary conversion for stdlib resource handles. | `opaque_resource_ecosystem` keeps `reqwest`, `rusqlite`, `tokio-postgres`, and `redis` handle evidence. |
 | `async_runtime_reqwest` | M6 creates `async_runtime_core` for async declaration/runtime behavior needed by stdlib async calls and resources, including hidden-blocking rejection, cancellation, drop, and the retained `_sifr.time` leaves. | `async_runtime_reqwest` keeps `tokio`/`reqwest` loopback behavior evidence. |
-| `callback_subscription_matrix` | M10 creates `callback_subscription_core` for signal-style subscription lifetime, cancellation, shutdown, thread-safety, reentrancy, and drop behavior. | `callback_subscription_ecosystem` keeps `tokio-tungstenite`, Redis pub/sub, and `notify` evidence. |
+| `callback_subscription_matrix` | M10b creates `callback_subscription_core` for signal-style subscription lifetime, cancellation, shutdown, thread-safety, reentrancy, and drop behavior. | `callback_subscription_ecosystem` keeps `tokio-tungstenite`, Redis pub/sub, and `notify` evidence. |
 | `callbacks_call_scoped` | M11 creates or claims a narrow `callbacks_call_scoped_core` row for call-scoped callback lifetime evidence needed by Python adapter stdlib behavior. | Any package/ecosystem callback row remains with the certification issue if broader evidence is needed. |
 | `panic_boundary_wrapper_emission` | M3 creates `panic_boundary_stdlib_core` only if stdlib private interop needs generated panic wrappers for resource migration. | `panic_boundary_wrapper_emission` keeps package Rust interop wrapper-emission and mapper-panic fallback evidence. |
 
@@ -980,6 +980,16 @@ Tasks:
   reentrancy policy, and drop behavior.
 - Update resource and callback certification evidence.
 - Keep pilot evidence separate from Python migration until complete.
+
+M10b scope:
+
+- Split the broad `callback_subscription_matrix` row into supported
+  `callback_subscription_core` evidence for stdlib-owned signal subscription
+  mechanics and future-owned `callback_subscription_ecosystem` evidence for
+  `tokio-tungstenite`, Redis pub/sub, and `notify`.
+- Keep ecosystem crates out of the supported core row.
+- Update the Rust interop matrix, fixture inventory, tier metadata, docs, and
+  certification follow-up issue in the same PR.
 
 Acceptance:
 

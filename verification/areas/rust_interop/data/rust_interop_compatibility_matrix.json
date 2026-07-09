@@ -279,8 +279,20 @@
       "notes": "Thread-safe callback policy declarations are supported at the contract level."
     },
     {
-      "id": "callback_subscription_matrix",
-      "fixture": "callback_subscription_matrix",
+      "id": "callback_subscription_core",
+      "fixture": "callback_subscription_core",
+      "category": "supported",
+      "tier": 2,
+      "capability": "stdlib-owned signal callback subscriptions and shutdown",
+      "execution_kind": "runtime-observed",
+      "required_crates": [],
+      "positive_evidence": {"id": "signal_subscription_cancel_shutdown", "status": "passing"},
+      "negative_evidence": {"id": "invalid_subscription_callback_policy_rejected", "status": "passing"},
+      "notes": "Signal-style stdlib subscriptions have checked callback policy, async-close cancellation, and shutdown contract evidence without claiming ecosystem subscription crates."
+    },
+    {
+      "id": "callback_subscription_ecosystem",
+      "fixture": "callback_subscription_ecosystem",
       "category": "future-owned-by-separate-phase",
       "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
       "tier": 2,
@@ -289,7 +301,7 @@
       "required_crates": ["tokio-tungstenite", "redis", "notify"],
       "positive_evidence": {"id": "subscription_cancel_shutdown", "status": "planned"},
       "negative_evidence": {"id": "invalid_thread_capture_rejected", "status": "planned"},
-      "notes": "Subscription cleanup, shutdown, and cross-thread capture behavior are pending runtime evidence."
+      "notes": "Ecosystem subscription cleanup, shutdown, and cross-thread capture behavior for tokio-tungstenite, Redis pub/sub, and notify remain pending runtime evidence."
     },
     {
       "id": "zero_copy_bytes",

@@ -28,7 +28,7 @@
       "default_features": false
     }
   },
-  "id": "callback_subscription_matrix",
+  "id": "callback_subscription_ecosystem",
   "package_examples": {
     "notify": "examples/notify.sifr",
     "redis": "examples/redis.sifr",
