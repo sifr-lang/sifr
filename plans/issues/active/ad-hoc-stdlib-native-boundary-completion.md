@@ -96,7 +96,7 @@ merged, and documented before the next milestone starts.
 | M4. Random, Time, and Logging | merged | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing; PR #2864 · sha=9d901ad · manifest: `_sifr.time` exact retained leaves narrowed to `sleep`/`monotonic`; PR #2866 · sha=c241b20 · manifest: mixed preamble now IO/file-handle only |
 | M5. Simple Sys and Environment | merged | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers; PR #2870 · sha=03d0126 · manifest: `_sifr.sys` retained set narrowed to `run_command`/`chdir`/`stat_size`/`disk_usage`; closeout review READY |
 | M6. Async Resource Pilot | merged | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic`; PR #2875 · sha=f3ce312 · certification: `async_runtime_core` supported and `_sifr.time` -> `async_runtime_core`; closeout review READY |
-| M7. Process Family | in progress | M7a sync process output ready for PR · reviews READY: `plans/reviews/active/m7a-sync-process-output-opus-round1.md`, `plans/reviews/active/m7a-sync-process-output-opus-round2.md`; local `create-pr` validation passed |
+| M7. Process Family | in progress | PR #2877 · sha=de07b23 · M7a sync process output migrated through `_sifr.process` and `sifr_stdlib::process`; manifest: sync process output leaves removed from compiler registry/retained catalog; reviews READY |
 | M8. Network and TLS Families | planned |  |
 | M9. HTTP Family | planned |  |
 | M10. Signal Callback and Subscription Pilot | planned |  |
@@ -767,8 +767,10 @@ Tasks:
   `_sifr.process` private native declarations backed by `sifr_stdlib::process`;
   remove migrated sync leaves from compiler intrinsic dispatch and the retained
   catalog; keep child handles, pipes, and async process leaves retained for
-  later M7 slices. Local `scripts/run_all_tests.sh --profile create-pr` passed;
-  reviewer rounds 1 and 2 are READY.
+  later M7 slices (merged in PR #2877, merge commit
+  `de07b23969f5244a25bf50efb1092b9bb2cdcb98`; local
+  `scripts/run_all_tests.sh --profile create-pr` passed; reviewer rounds 1 and
+  2 are READY).
 - Implement process behavior and Sifr-facing errors in `sifr_stdlib`.
 - Keep low-level spawn, pipe, timeout, and async substrate in `sifr_runtime`.
 - Declare child handles, pipe handles, async child handles, and operations in
