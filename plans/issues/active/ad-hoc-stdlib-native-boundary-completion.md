@@ -97,7 +97,7 @@ merged, and documented before the next milestone starts.
 | M5. Simple Sys and Environment | merged | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers; PR #2870 · sha=03d0126 · manifest: `_sifr.sys` retained set narrowed to `run_command`/`chdir`/`stat_size`/`disk_usage`; closeout review READY |
 | M6. Async Resource Pilot | merged | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic`; PR #2875 · sha=f3ce312 · certification: `async_runtime_core` supported and `_sifr.time` -> `async_runtime_core`; closeout review READY |
 | M7. Process Family | merged | PR #2877 · sha=de07b23 · M7a sync process output migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2879 · sha=0603eec · M7b sync child/pipe leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2881 · sha=beaf17b · M7c async run/output/shell leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2883 · sha=69fb162 · M7d async child/pipe lifecycle migrated through `_sifr.process` and `sifr_stdlib::process`; manifest: `_sifr.process` retained -> closing |
-| M8. Network and TLS Families | in progress | PR #2885 · sha=6611dba · M8a TCP/network slice migrated `_sifr.net` through `sifr_stdlib::net`; compiler net registry/preamble/fallback signatures deleted; manifest: `_sifr.net` retained -> closing and certification rows reassigned to `opaque_resource_core`/`async_runtime_core`; focused TCP/TLS regression fixtures and create-PR lane passed locally; Opus review satisfied in round 3. M8b TLS slice implemented locally pending PR: `_sifr.tls` routes through `sifr_stdlib::tls`; compiler TLS registry/preamble/fallback signatures deleted; manifest: `_sifr.tls` retained -> closing; create-PR lane passed locally; Opus review satisfied in round 3 |
+| M8. Network and TLS Families | merged | PR #2885 · sha=6611dba · M8a TCP/network slice migrated `_sifr.net` through `sifr_stdlib::net`; compiler net registry/preamble/fallback signatures deleted; manifest: `_sifr.net` retained -> closing and certification rows reassigned to `opaque_resource_core`/`async_runtime_core`; focused TCP/TLS regression fixtures and create-PR lane passed locally; Opus review satisfied in round 3. PR #2887 · sha=89ca888 · M8b TLS slice migrated `_sifr.tls` through `sifr_stdlib::tls`; compiler TLS registry/preamble/fallback signatures deleted; manifest: `_sifr.tls` retained -> closing; create-PR lane passed locally; Opus review satisfied in round 3 |
 | M9. HTTP Family | planned |  |
 | M10. Signal Callback and Subscription Pilot | planned |  |
 | M11. Python Interop Adapters | planned |  |
@@ -869,6 +869,7 @@ M8a TCP/network slice status:
 M8b TLS slice status:
 
 - Branch: `m8b-tls-native-boundary`.
+- Merged: PR #2887 at `89ca888b3`.
 - Implemented TLS config, handshake, stream, split-half, ALPN/protocol, close,
   close-notify, read, write, and flush behavior in `sifr_stdlib::tls`, keeping
   TLS engine/certificate/socket handle tables and low-level substrate in
