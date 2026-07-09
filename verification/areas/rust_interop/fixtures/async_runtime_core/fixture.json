@@ -1,0 +1,26 @@
+{
+  "capability": "stdlib-owned async runtime and async resource lifecycle core",
+  "diagnostic_family": "SIFR-RUST-ASYNC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ASYNC-0001",
+      "expected_result": "diagnostic",
+      "id": "stdlib_async_hidden_blocking_rejected",
+      "path": "negative/stdlib_async_hidden_blocking_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "stdlib_async_resource_lifecycle",
+      "path": "positive/stdlib_async_resource_lifecycle.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "async_runtime_core",
+  "package_examples": {},
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

@@ -405,6 +405,75 @@ fn package_rust_interop_opaque_close_policy_requires_close_method_contract() {
         .contains("requires `close` cleanup method"));
 }
 
+#[test]
+fn package_rust_interop_opaque_async_close_policy_accepts_async_aclose_contract() {
+    let generated = base_project_with_contracts(
+        vec![
+            opaque_class_declaration_entry(vec![
+                target_argument("type", "bridge.resources.Connection"),
+                symbol_argument("close", "async_close"),
+            ]),
+            tokenizer_method_declaration_entry("aclose", RustInteropDecoratorKind::Async),
+        ],
+        Vec::new(),
+    );
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("async aclose should satisfy async_close policy");
+}
+
+#[test]
+fn package_rust_interop_opaque_async_close_policy_requires_async_aclose_contract() {
+    let generated = base_project_with_contracts(
+        vec![
+            opaque_class_declaration_entry(vec![
+                target_argument("type", "bridge.resources.Connection"),
+                symbol_argument("close", "async_close"),
+            ]),
+            tokenizer_method_declaration_entry("aclose", RustInteropDecoratorKind::Function),
+        ],
+        Vec::new(),
+    );
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(generated, Some(context), "sync aclose must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-HANDLE-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("requires `aclose` cleanup method"));
+}
+
+#[test]
+fn package_rust_interop_opaque_async_close_policy_rejects_sync_close_only_contract() {
+    let generated = base_project_with_contracts(
+        vec![
+            opaque_class_declaration_entry(vec![
+                target_argument("type", "bridge.resources.Connection"),
+                symbol_argument("close", "async_close"),
+            ]),
+            tokenizer_method_declaration_entry("close", RustInteropDecoratorKind::Function),
+        ],
+        Vec::new(),
+    );
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "sync close must not satisfy aclose",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-HANDLE-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("requires `aclose` cleanup method"));
+}
+
 pub(super) fn base_project_with_contracts(
     declarations: Vec<RustInteropPlanDeclaration>,
     signatures: Vec<RustBridgeSignatureContract>,
@@ -570,6 +639,33 @@ fn opaque_class_declaration_entry(
                 opaque_handle: true,
                 ..RustInteropAbiRequirements::default()
             },
+        },
+    }
+}
+
+fn tokenizer_method_declaration_entry(
+    name: &str,
+    kind: RustInteropDecoratorKind,
+) -> RustInteropPlanDeclaration {
+    RustInteropPlanDeclaration {
+        module_name: Some("app".to_string()),
+        owner: RustInteropOwner::Method {
+            class_name: "Tokenizer".to_string(),
+            name: name.to_string(),
+        },
+        declaration: RustInteropDeclaration {
+            kind,
+            target: Some(RustTargetPath {
+                segments: ["bridge", "resources", name]
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect(),
+                span: span(),
+            }),
+            arguments: Vec::new(),
+            span: span(),
+            effect: effect_for_kind(kind),
+            abi_requirements: abi_for_kind(kind),
         },
     }
 }

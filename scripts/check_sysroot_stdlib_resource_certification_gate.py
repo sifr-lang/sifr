@@ -22,7 +22,7 @@ MANIFEST_PATH = REPO_ROOT / "internal_docs" / "stdlib_retained_compiler_intrinsi
 CERTIFICATION_ISSUE = "plans/issues/active/rust-interop-runtime-ecosystem-certification.md"
 FUTURE_OWNED = "future-owned-by-separate-phase"
 SUPPORTED = "supported"
-SUPPORTED_STDLIB_CORE_ROWS = frozenset({"opaque_resource_core"})
+SUPPORTED_STDLIB_CORE_ROWS = frozenset({"async_runtime_core", "opaque_resource_core"})
 
 
 def main() -> int:
@@ -161,7 +161,11 @@ def _rows_by_id(failures: list[str], matrix: dict[str, Any]) -> dict[str, dict[s
 def _self_test() -> int:
     surface_rows = {
         "_sifr.example": ("opaque_resource_core", "opaque_resource_matrix"),
-        "_sifr.example_async": ("async_runtime_reqwest", "callback_subscription_matrix"),
+        "_sifr.example_async": (
+            "async_runtime_core",
+            "async_runtime_reqwest",
+            "callback_subscription_matrix",
+        ),
     }
     base_manifest = {
         "surface": [
@@ -173,6 +177,12 @@ def _self_test() -> int:
         "rows": [
             {
                 "id": "opaque_resource_core",
+                "category": SUPPORTED,
+                "positive_evidence": {"status": "passing"},
+                "negative_evidence": {"status": "passing"},
+            },
+            {
+                "id": "async_runtime_core",
                 "category": SUPPORTED,
                 "positive_evidence": {"status": "passing"},
                 "negative_evidence": {"status": "passing"},
@@ -210,8 +220,9 @@ def _self_test() -> int:
         return 1
 
     certified_matrix = json.loads(json.dumps(base_matrix))
-    certified_matrix["rows"][1]["category"] = SUPPORTED
-    certified_matrix["rows"][1].pop("future_owner", None)
+    certified_resource_row = _self_test_row(certified_matrix, "opaque_resource_matrix")
+    certified_resource_row["category"] = SUPPORTED
+    certified_resource_row.pop("future_owner", None)
     if not any(
         "supported stdlib resource rows must be explicitly allowed core rows with passing evidence"
         in failure
@@ -221,7 +232,9 @@ def _self_test() -> int:
         return 1
 
     wrong_owner_matrix = json.loads(json.dumps(base_matrix))
-    wrong_owner_matrix["rows"][1]["future_owner"] = "plans/issues/active/other.md"
+    _self_test_row(wrong_owner_matrix, "opaque_resource_matrix")["future_owner"] = (
+        "plans/issues/active/other.md"
+    )
     if not any(
         "future_owner must remain" in failure
         for failure in _validate(wrong_owner_matrix, base_manifest)
@@ -251,6 +264,13 @@ def _self_test() -> int:
 
     print("sysroot stdlib resource certification gate self-test: PASS")
     return 0
+
+
+def _self_test_row(matrix: dict[str, Any], row_id: str) -> dict[str, Any]:
+    for row in matrix["rows"]:
+        if row["id"] == row_id:
+            return row
+    raise AssertionError(f"missing self-test row {row_id}")
 
 
 if __name__ == "__main__":

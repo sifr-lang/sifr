@@ -456,4 +456,27 @@ mod tests {
 
         assert!(matches!(handle.inner_ref(), Err(HandleStateError::Closed)));
     }
+
+    #[cfg(feature = "net")]
+    #[tokio::test(flavor = "current_thread")]
+    async fn async_handle_close_and_cancel_join_are_deterministic() {
+        async fn close_after_yield(handle: &mut Handle<i64>) {
+            tokio::task::yield_now().await;
+            handle.mark_closed(super::__generated_glue::token());
+        }
+
+        let mut handle = Handle::new(1_i64);
+        close_after_yield(&mut handle).await;
+        handle.mark_closed(super::__generated_glue::token());
+        assert!(matches!(handle.inner_ref(), Err(HandleStateError::Closed)));
+
+        let task = tokio::spawn(async {
+            std::future::pending::<()>().await;
+        });
+        task.abort();
+        let join_error = task
+            .await
+            .expect_err("aborted task should not join successfully");
+        assert!(join_error.is_cancelled());
+    }
 }
