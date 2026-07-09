@@ -48,12 +48,18 @@ ALLOWED_STATE_TRANSITIONS = {
     ("pilot", "closing"),
     ("pilot", "retained-by-design"),
 }
+REQUIRED_SURFACE_STATES = {
+    "_sifr.runtime::observability_glue": "retained-by-design",
+    "_sifr.task::language_runtime_glue": "retained-by-design",
+    "generated-test-glue": "retained-by-design",
+}
 DEFAULT_BASE_REF = "origin/main"
 
 
 def main() -> int:
     manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     failures = _validate(manifest)
+    failures.extend(_validate_required_surface_states(manifest, REQUIRED_SURFACE_STATES))
     base_manifest, base_error = _base_manifest()
     if base_manifest is None:
         base_ref = os.environ.get("SIFR_STDLIB_MANIFEST_BASE_REF", DEFAULT_BASE_REF)
@@ -243,6 +249,26 @@ def _validate_transitions(
             + ", ".join(active_closed)
         )
 
+    return failures
+
+
+def _validate_required_surface_states(
+    manifest: dict[str, Any],
+    required_states: dict[str, str],
+) -> list[str]:
+    failures: list[str] = []
+    current_states = _surface_states(manifest)
+    for surface_id, required_state in sorted(required_states.items()):
+        current_state = current_states.get(surface_id)
+        if current_state is None:
+            failures.append(
+                f"{surface_id}: required retained manifest surface is missing"
+            )
+            continue
+        if current_state != required_state:
+            failures.append(
+                f"{surface_id}: state must remain {required_state}, got {current_state}"
+            )
     return failures
 
 
@@ -594,6 +620,66 @@ def _self_test() -> int:
     ]
     if _validate(pr_url_closure):
         print("self-test PR URL closure record failed", file=sys.stderr)
+        return 1
+
+    required_state_manifest = json.loads(json.dumps(manifest))
+    required_state_manifest["surface"] = [
+        {
+            "id": "_sifr.runtime::observability_glue",
+            "state": "retained-by-design",
+            "owner": "stdlib-native-boundary-completion",
+            "issue": "stdlib-native-boundary-completion",
+            "evidence_links": ["stdlib-native-boundary-completion"],
+            "reason": "test fixture",
+            "registry_files": ["runtime.rs"],
+        },
+        {
+            "id": "_sifr.task::language_runtime_glue",
+            "state": "retained-by-design",
+            "owner": "stdlib-native-boundary-completion",
+            "issue": "stdlib-native-boundary-completion",
+            "evidence_links": ["stdlib-native-boundary-completion"],
+            "reason": "test fixture",
+            "registry_files": ["task.rs"],
+        },
+        {
+            "id": "generated-test-glue",
+            "state": "retained-by-design",
+            "owner": "stdlib-native-boundary-completion",
+            "issue": "stdlib-native-boundary-completion",
+            "evidence_links": ["stdlib-native-boundary-completion"],
+            "reason": "test fixture",
+            "registry_files": ["test.rs"],
+        },
+    ]
+    if _validate_required_surface_states(
+        required_state_manifest, REQUIRED_SURFACE_STATES
+    ):
+        print("self-test required retained-by-design states failed", file=sys.stderr)
+        return 1
+
+    required_state_bad = json.loads(json.dumps(required_state_manifest))
+    required_state_bad["surface"][1]["state"] = "retained"
+    if not any(
+        "_sifr.task::language_runtime_glue: state must remain retained-by-design"
+        in failure
+        for failure in _validate_required_surface_states(
+            required_state_bad, REQUIRED_SURFACE_STATES
+        )
+    ):
+        print("self-test required retained-by-design drift was not rejected", file=sys.stderr)
+        return 1
+
+    required_state_missing = json.loads(json.dumps(required_state_manifest))
+    required_state_missing["surface"] = required_state_missing["surface"][:-1]
+    if not any(
+        "generated-test-glue: required retained manifest surface is missing"
+        in failure
+        for failure in _validate_required_surface_states(
+            required_state_missing, REQUIRED_SURFACE_STATES
+        )
+    ):
+        print("self-test missing required retained-by-design row was not rejected", file=sys.stderr)
         return 1
 
     print("stdlib retained manifest schema self-test: PASS")
