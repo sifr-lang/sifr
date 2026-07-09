@@ -38,12 +38,6 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     assert!(call_rendered.contains("__sifr_python_kwargs"));
     assert!(call_rendered.contains("PythonError"));
 
-    let from_list = lower_intrinsic("py_from_list", &["values".to_string()])
-        .expect("py_from_list should lower");
-    let from_list_rendered = render_expr(&from_list.expr);
-    assert!(from_list_rendered.contains("sifr_runtime::python::from_list"));
-    assert!(from_list_rendered.contains("__sifr_python_value.0"));
-
     let copy_list_u8 = lower_intrinsic(
         "py_copy_list_u8",
         &["object_handle".to_string(), "object_token".to_string()],
@@ -239,6 +233,21 @@ pub(crate) fn python_object_core_is_owned_by_compiled_stdlib_declarations() {
     ] {
         assert!(
             lower_intrinsic(removed, &args).is_none(),
+            "{removed} must lower through _sifr.python private Rust interop declarations"
+        );
+    }
+}
+
+#[test]
+pub(crate) fn python_collection_constructors_are_owned_by_compiled_stdlib_declarations() {
+    for removed in [
+        "py_from_list",
+        "py_from_tuple",
+        "py_from_dict_str",
+        "py_from_record",
+    ] {
+        assert!(
+            lower_intrinsic(removed, &["values".to_string()]).is_none(),
             "{removed} must lower through _sifr.python private Rust interop declarations"
         );
     }

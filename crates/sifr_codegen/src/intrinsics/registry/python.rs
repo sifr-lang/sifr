@@ -27,10 +27,6 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_exit_context" => lower_py_exit_context(args),
         "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
         "py_run_coroutine_blocking" => lower_py_run_coroutine_blocking(args),
-        "py_from_list" => lower_py_from_list(args),
-        "py_from_tuple" => lower_py_from_tuple(args),
-        "py_from_dict_str" => lower_py_from_dict_str(args),
-        "py_from_record" => lower_py_from_record(args),
         "py_copy_list_bool" => lower_handle_conversion(args, "copy_list_bool"),
         "py_copy_list_int" => lower_handle_conversion(args, "copy_list_int"),
         "py_copy_list_i32" => lower_handle_conversion(args, "copy_list_i32"),
@@ -82,52 +78,6 @@ fn lower_handle_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr
     Some(map_python_error(format!(
         "sifr_runtime::python::{function}({})",
         object_expr(&handle, &token)
-    )))
-}
-
-fn object_handles_expr(values: &str) -> String {
-    format!(
-        r#"({values})
-                .iter()
-                .map(|__sifr_python_value| (__sifr_python_value.0, __sifr_python_value.1))
-                .collect::<Vec<(i64, i64)>>()"#
-    )
-}
-
-fn keyed_object_handles_expr(values: &str) -> String {
-    format!(
-        r#"({values})
-                .iter()
-                .map(|__sifr_python_value| (__sifr_python_value.0.as_str(), (__sifr_python_value.1.0, __sifr_python_value.1.1)))
-                .collect::<Vec<(&str, (i64, i64))>>()"#
-    )
-}
-
-fn lower_object_list_constructor(args: &[RustExpr], function: &str) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let values = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        r#"{{
-            let __sifr_python_values = {};
-            sifr_runtime::python::{function}(&__sifr_python_values)
-        }}"#,
-        object_handles_expr(&values)
-    )))
-}
-
-fn lower_keyed_object_constructor(args: &[RustExpr], function: &str) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let values = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        r#"{{
-            let __sifr_python_values = {};
-            sifr_runtime::python::{function}(&__sifr_python_values)
-        }}"#,
-        keyed_object_handles_expr(&values)
     )))
 }
 
@@ -446,22 +396,6 @@ pub(crate) fn lower_py_exit_context_with_error(args: &[RustExpr]) -> Option<Rust
 
 pub(crate) fn lower_py_run_coroutine_blocking(args: &[RustExpr]) -> Option<RustExpr> {
     lower_handle_conversion(args, "run_coroutine_blocking")
-}
-
-pub(crate) fn lower_py_from_list(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_object_list_constructor(args, "from_list")
-}
-
-pub(crate) fn lower_py_from_tuple(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_object_list_constructor(args, "from_tuple")
-}
-
-pub(crate) fn lower_py_from_dict_str(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_keyed_object_constructor(args, "from_dict_str")
-}
-
-pub(crate) fn lower_py_from_record(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_keyed_object_constructor(args, "from_record")
 }
 
 pub(crate) fn lower_py_copy_record_fields(args: &[RustExpr]) -> Option<RustExpr> {

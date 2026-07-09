@@ -248,6 +248,20 @@ def _keyed_handles_from_objects(values: list[tuple[str, Object]]) -> list[tuple[
     return raw_values
 
 
+def _keys_from_keyed_objects(values: list[tuple[str, Object]]) -> list[str]:
+    keys: list[str] = []
+    for value in values:
+        keys.append(value[0])
+    return keys
+
+
+def _handles_from_keyed_objects(values: list[tuple[str, Object]]) -> list[tuple[int, int]]:
+    raw_values: list[tuple[int, int]] = []
+    for value in values:
+        raw_values.append((value[1]._handle, value[1]._token))
+    return raw_values
+
+
 @blocking_io
 def import_module(name: str) -> Result[Object, PythonError]:
     try:
@@ -642,8 +656,9 @@ def from_tuple(own values: list[Object]) -> Result[Object, PythonError]:
 @blocking_io
 def from_dict_str(own values: list[tuple[str, Object]]) -> Result[Object, PythonError]:
     try:
-        raw_values: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(values)
-        raw: tuple[int, int] = py_from_dict_str(raw_values)
+        keys: list[str] = _keys_from_keyed_objects(values)
+        raw_values: list[tuple[int, int]] = _handles_from_keyed_objects(values)
+        raw: tuple[int, int] = py_from_dict_str(keys, raw_values)
         return _object_from_handle(raw)
     except PythonError as e:
         raise e
@@ -652,8 +667,9 @@ def from_dict_str(own values: list[tuple[str, Object]]) -> Result[Object, Python
 @blocking_io
 def from_record(own values: list[tuple[str, Object]]) -> Result[Object, PythonError]:
     try:
-        raw_values: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(values)
-        raw: tuple[int, int] = py_from_record(raw_values)
+        keys: list[str] = _keys_from_keyed_objects(values)
+        raw_values: list[tuple[int, int]] = _handles_from_keyed_objects(values)
+        raw: tuple[int, int] = py_from_record(keys, raw_values)
         return _object_from_handle(raw)
     except PythonError as e:
         raise e

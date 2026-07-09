@@ -223,32 +223,6 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
             python_error_result(object_handle()),
         ),
     );
-    functions.insert(
-        "py_from_list".to_string(),
-        FunctionType::all_borrow(
-            vec![("values".to_string(), Type::List(Box::new(object_handle())))],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_from_tuple".to_string(),
-        FunctionType::all_borrow(
-            vec![("values".to_string(), Type::List(Box::new(object_handle())))],
-            python_error_result(object_handle()),
-        ),
-    );
-    for name in ["py_from_dict_str", "py_from_record"] {
-        functions.insert(
-            name.to_string(),
-            FunctionType::all_borrow(
-                vec![(
-                    "values".to_string(),
-                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_handle()]))),
-                )],
-                python_error_result(object_handle()),
-            ),
-        );
-    }
     for (suffix, value_ty) in [
         ("bool", Type::Bool),
         ("int", Type::Int),
