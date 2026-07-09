@@ -236,36 +236,61 @@ pub(crate) fn datetime_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 
 #[test]
 pub(crate) fn process_sync_timeout_intrinsics_lower_through_private_stdlib() {
-    assert!(
-        lower_intrinsic(
+    for (name, args) in [
+        (
             "process_output_timeout",
             &[
-                "program".to_string(),
-                "args".to_string(),
-                "env".to_string(),
-                "cwd".to_string(),
-                "has_cwd".to_string(),
-                "stdin".to_string(),
-                "has_stdin".to_string(),
-                "timeout".to_string(),
-            ],
-        )
-        .is_none(),
-        "process_output_timeout should lower through _sifr.process private declarations"
-    );
-    assert!(
-        lower_intrinsic(
+                "program",
+                "args",
+                "env",
+                "cwd",
+                "has_cwd",
+                "stdin",
+                "has_stdin",
+                "timeout",
+            ][..],
+        ),
+        (
             "process_shell_output_timeout",
+            &["script", "stdin", "has_stdin", "timeout"][..],
+        ),
+        (
+            "process_spawn",
             &[
-                "script".to_string(),
-                "stdin".to_string(),
-                "has_stdin".to_string(),
-                "timeout".to_string(),
-            ],
-        )
-        .is_none(),
-        "process_shell_output_timeout should lower through _sifr.process private declarations"
-    );
+                "program",
+                "args",
+                "env",
+                "cwd",
+                "has_cwd",
+                "stdin_mode",
+                "stdout_mode",
+                "stderr_mode",
+            ][..],
+        ),
+        ("process_child_stdin", &["handle"][..]),
+        ("process_child_stdout", &["handle"][..]),
+        ("process_child_stderr", &["handle"][..]),
+        ("process_pipe_read_all", &["handle"][..]),
+        ("process_pipe_read", &["handle", "max_bytes"][..]),
+        ("process_pipe_reader_close", &["handle"][..]),
+        ("process_pipe_write_all", &["handle", "data"][..]),
+        ("process_pipe_close", &["handle"][..]),
+        ("process_wait", &["handle"][..]),
+        ("process_kill", &["handle"][..]),
+        ("process_terminate", &["handle"][..]),
+    ] {
+        assert!(
+            lower_intrinsic(
+                name,
+                &args
+                    .iter()
+                    .map(|arg| (*arg).to_string())
+                    .collect::<Vec<_>>()
+            )
+            .is_none(),
+            "{name} should lower through _sifr.process private declarations"
+        );
+    }
 
     let async_shell_timeout = lower_intrinsic(
         "process_async_shell_output_timeout",

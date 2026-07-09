@@ -11,6 +11,15 @@ use std::{
 
 use sifr_runtime::interop::SifrIntBridge;
 
+mod child;
+
+pub use child::{
+    process_child_close, process_child_stderr, process_child_stdin, process_child_stdout,
+    process_kill, process_pipe_close, process_pipe_read, process_pipe_read_all,
+    process_pipe_reader_close, process_pipe_write_all, process_spawn, process_terminate,
+    process_wait,
+};
+
 #[derive(Clone, Debug)]
 struct StoredProcessOutput {
     stdout: Vec<u8>,

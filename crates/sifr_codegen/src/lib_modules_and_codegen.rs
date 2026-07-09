@@ -4,7 +4,7 @@ use super::{
     build_error_into_error_impl, build_error_type_items, build_failure_type_items,
     build_file_handle_infra_items, build_file_handle_struct_items, build_http_runtime_items,
     build_io_error_items, build_join_set_cpu_items, build_join_set_items, build_net_runtime_items,
-    build_process_async_items, build_process_child_items, build_process_status_items,
+    build_process_async_items, build_process_status_items,
     build_task_context_scope_extension_items, build_task_current_context_items,
     build_task_scope_cpu_offload_items, build_task_scope_items, build_task_scope_offload_items,
     build_task_scope_process_items, build_timeout_result_type_items, build_tls_runtime_items,
@@ -308,7 +308,6 @@ pub fn generate_rust_with_stdlib_for_module(
     let mut stdlib_needs_file_handles = false;
     let mut stdlib_needs_process_status = false;
     let mut stdlib_needs_process_async = SharedPreludeProcessAsyncNeeds::default();
-    let mut stdlib_needs_process_children = false;
     let mut stdlib_provides_file_handle_struct = false;
     for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
@@ -391,10 +390,6 @@ pub fn generate_rust_with_stdlib_for_module(
                         prepared.shared_needs.process_async.needs_terminate;
                     stdlib_needs_process_async.needs_handle_wait |=
                         prepared.shared_needs.process_async.needs_handle_wait;
-                    stdlib_needs_process_children |= prepared
-                        .shared_needs
-                        .process_children
-                        .needs_process_children;
                     stdlib_provides_file_handle_struct |= prepared
                         .shared_needs
                         .file_handles
@@ -429,7 +424,6 @@ pub fn generate_rust_with_stdlib_for_module(
         || stdlib_needs_process_async.needs_handle_wait
         || uses_task_scope_process;
     let needs_process_status = stdlib_needs_process_status || needs_process_async;
-    let needs_process_children = stdlib_needs_process_children;
     let stdlib_emits_net_runtime = stdlib_preamble.contains("fn __sifr_net_error");
     let needs_net_runtime = !stdlib_emits_net_runtime
         && (stdlib_preamble.contains("__sifr_net_")
@@ -647,10 +641,6 @@ pub fn generate_rust_with_stdlib_for_module(
     if needs_http_runtime {
         preamble_items.extend(build_http_runtime_items());
     }
-    if needs_process_children {
-        preamble_items.extend(build_process_child_items());
-    }
-
     if uses_task_scope || uses_join_set {
         preamble_items.extend(build_task_scope_items());
         preamble_items.extend(build_task_context_scope_extension_items(
@@ -713,7 +703,6 @@ pub fn generate_rust_with_stdlib_for_module(
     let needs_sifr_int =
         body_import_needs.runtime.needs_sifr_int || stdlib_import_needs.runtime.needs_sifr_int;
     let needs_mutex = needs_file_handles
-        || needs_process_children
         || body_import_needs.runtime.needs_mutex
         || stdlib_import_needs.runtime.needs_mutex;
 

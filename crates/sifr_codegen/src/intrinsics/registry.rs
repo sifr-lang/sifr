@@ -6,8 +6,6 @@ mod net;
 mod open_text_handles;
 mod os;
 mod process_async;
-mod process_child_lifecycle;
-mod process_pipes;
 mod python;
 mod requirements;
 mod runtime;
@@ -119,18 +117,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "process_spawn" => (process_child_lifecycle::lower_process_spawn(args), None),
-        "process_kill" => (process_child_lifecycle::lower_process_kill(args), None),
-        "process_terminate" => (process_child_lifecycle::lower_process_terminate(args), None),
-        "process_wait" => (process_child_lifecycle::lower_process_wait(args), None),
-        "process_child_stdin" => (process_pipes::lower_process_child_stdin(args), None),
-        "process_child_stdout" => (process_pipes::lower_process_child_stdout(args), None),
-        "process_child_stderr" => (process_pipes::lower_process_child_stderr(args), None),
-        "process_pipe_read_all" => (process_pipes::lower_process_pipe_read_all(args), None),
-        "process_pipe_read" => (process_pipes::lower_process_pipe_read(args), None),
-        "process_pipe_reader_close" => (process_pipes::lower_process_pipe_reader_close(args), None),
-        "process_pipe_write_all" => (process_pipes::lower_process_pipe_write_all(args), None),
-        "process_pipe_close" => (process_pipes::lower_process_pipe_close(args), None),
         "process_async_run" => (
             process_async::lower_process_async_run(args),
             Some(StdlibFeature::Tokio),

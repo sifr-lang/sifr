@@ -178,17 +178,12 @@ issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
 declaration_files = ["stdlib/_sifr/process.sifr"]
-certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
-reason = "Process children, pipes, async process handles, and async timeout behavior remain resource/runtime-owned pending certification; synchronous run/output/shell behavior now routes through _sifr.process private declarations and sifr_stdlib.process."
-registry_files = [
-  "process_async.rs",
-  "process_child_lifecycle.rs",
-  "process_pipes.rs",
-]
+certification_rows = ["async_runtime_reqwest"]
+reason = "Async process handles, async pipes, and async timeout behavior remain resource/runtime-owned pending certification; synchronous run/output/shell and child/pipe behavior now routes through _sifr.process private declarations and sifr_stdlib.process."
+registry_files = ["process_async.rs"]
 preamble_files = [
   "process_async_child_runtime.rs",
   "process_async_runtime.rs",
-  "process_child_pipes.rs",
   "process_runtime.rs",
 ]
 exact_intrinsics = [
@@ -211,19 +206,7 @@ exact_intrinsics = [
   "process_async_spawn",
   "process_async_terminate",
   "process_async_wait",
-  "process_child_stderr",
-  "process_child_stdin",
-  "process_child_stdout",
   "process_handle_wait",
-  "process_kill",
-  "process_pipe_close",
-  "process_pipe_read",
-  "process_pipe_read_all",
-  "process_pipe_reader_close",
-  "process_pipe_write_all",
-  "process_spawn",
-  "process_terminate",
-  "process_wait",
 ]
 
 [[surface]]

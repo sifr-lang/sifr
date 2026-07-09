@@ -124,3 +124,72 @@ def process_output_timed_out(handle: str) -> bool:
 @rust(sifr_stdlib.process.process_output_close)
 def process_output_close(handle: str) -> None:
     ...
+
+
+@rust(sifr_stdlib.process.process_spawn)
+def process_spawn(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin_mode: str,
+    stdout_mode: str,
+    stderr_mode: str,
+) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_child_stdin)
+def process_child_stdin(handle: int) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_child_stdout)
+def process_child_stdout(handle: int) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_child_stderr)
+def process_child_stderr(handle: int) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_pipe_read_all)
+def process_pipe_read_all(handle: int) -> Result[bytes, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_pipe_read)
+def process_pipe_read(handle: int, max_bytes: int) -> Result[bytes, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_pipe_reader_close)
+def process_pipe_reader_close(handle: int) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_pipe_write_all)
+def process_pipe_write_all(handle: int, data: bytes) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_pipe_close)
+def process_pipe_close(handle: int) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_wait)
+def process_wait(handle: int) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_kill)
+def process_kill(handle: int) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_terminate)
+def process_terminate(handle: int) -> Result[None, ProcessError]:
+    ...

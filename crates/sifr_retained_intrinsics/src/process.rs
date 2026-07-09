@@ -2,14 +2,6 @@ use super::{result_ty, IntrinsicModule};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
-fn process_status_tuple() -> Type {
-    Type::Tuple(vec![Type::Int, Type::Union(vec![Type::Int, Type::None])])
-}
-
-fn process_status_result() -> Type {
-    result_ty(process_status_tuple(), "ProcessError")
-}
-
 fn process_status_class() -> Type {
     Type::Class {
         name: "Status".to_string(),
@@ -70,108 +62,6 @@ fn process_async_pipe_read_result() -> Type {
 /// _sifr.process — Native process execution intrinsics.
 pub(super) fn intrinsic_process() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    let args_ty = Type::List(Box::new(Type::Str));
-    let env_ty = Type::List(Box::new(Type::Str));
-
-    functions.insert(
-        "process_spawn".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("program".to_string(), Type::Str),
-                ("args".to_string(), args_ty.clone()),
-                ("env".to_string(), env_ty.clone()),
-                ("cwd".to_string(), Type::Str),
-                ("has_cwd".to_string(), Type::Bool),
-                ("stdin_mode".to_string(), Type::Str),
-                ("stdout_mode".to_string(), Type::Str),
-                ("stderr_mode".to_string(), Type::Str),
-            ],
-            result_ty(Type::Int, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_child_stdin".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::Int, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_child_stdout".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::Int, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_child_stderr".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::Int, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_pipe_read_all".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::Bytes, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_pipe_read".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("max_bytes".to_string(), Type::Int),
-            ],
-            result_ty(Type::Bytes, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_pipe_reader_close".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::None, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_pipe_write_all".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("data".to_string(), Type::Bytes),
-            ],
-            result_ty(Type::None, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_pipe_close".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::None, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_wait".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            process_status_result(),
-        ),
-    );
-    functions.insert(
-        "process_kill".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::None, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_terminate".to_string(),
-        FunctionType::all_borrow(
-            vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::None, "ProcessError"),
-        ),
-    );
     functions.insert(
         "process_async_run".to_string(),
         FunctionType::all_borrow(
