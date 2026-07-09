@@ -13,6 +13,8 @@ fn time_private_declarations_codegen_through_sifr_stdlib() {
         ("time_now", "time_now"),
         ("time_format", "time_format"),
         ("perf_counter", "perf_counter"),
+        ("sleep", "sleep"),
+        ("monotonic", "monotonic"),
         ("strptime", "strptime"),
         ("_strptime_intrinsic", "strptime"),
         ("gmtime", "gmtime"),
@@ -39,7 +41,10 @@ fn time_private_declarations_codegen_through_sifr_stdlib() {
         .code
         .intrinsic_names
         .get("_sifr.time")
-        .is_some_and(|names| !names.contains("time_now") && !names.contains("time_format")));
+        .is_some_and(|names| !names.contains("time_now")
+            && !names.contains("time_format")
+            && !names.contains("sleep")
+            && !names.contains("monotonic")));
     assert!(compiled
         .code
         .transitive_deps

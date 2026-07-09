@@ -15,7 +15,6 @@ mod runtime;
 mod signal;
 mod task;
 mod test;
-mod time;
 mod tls;
 mod url_http;
 
@@ -121,8 +120,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "sleep" => (time::lower_sleep(args), None),
-        "monotonic" => (time::lower_monotonic(args), None),
         "process_run" => (process::lower_process_run(args), None),
         "process_spawn" => (process_child_lifecycle::lower_process_spawn(args), None),
         "process_kill" => (process_child_lifecycle::lower_process_kill(args), None),
