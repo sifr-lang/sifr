@@ -223,7 +223,16 @@
       "negative_evidence": {"id": "missing_backpressure_rejected", "status": "passing", "scope": "contract-only"}
     },
     {
-      "id": "callback_subscription_matrix",
+      "id": "callback_subscription_core",
+      "tier": 2,
+      "capability": "stdlib-owned signal callback subscriptions and shutdown",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "signal_subscription_cancel_shutdown", "status": "passing"},
+      "negative_evidence": {"id": "invalid_subscription_callback_policy_rejected", "status": "passing"}
+    },
+    {
+      "id": "callback_subscription_ecosystem",
       "tier": 2,
       "capability": "callback subscriptions and shutdown",
       "required_crates": ["tokio-tungstenite", "redis", "notify"],

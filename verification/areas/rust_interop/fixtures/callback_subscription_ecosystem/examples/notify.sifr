@@ -1,4 +1,4 @@
-# fixture: callback_subscription_matrix
+# fixture: callback_subscription_ecosystem
 # package-example: notify
 # required-crate: notify
 # execution-kind: runtime-observed

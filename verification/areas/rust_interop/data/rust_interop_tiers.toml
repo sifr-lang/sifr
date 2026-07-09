@@ -25,16 +25,19 @@ name = "runtime-safety-and-core-views"
 description = "Opaque handles, panic boundary, async/blocking, callbacks, and zero-copy."
 fixtures = [
   "opaque_handle_tokenizer",
+  "opaque_resource_core",
   "opaque_resource_matrix",
   "close_after_use",
   "panic_boundary",
   "panic_boundary_wrapper_emission",
   "panic_abort_profile",
+  "async_runtime_core",
   "async_runtime_reqwest",
   "async_ecosystem_matrix",
   "callbacks_call_scoped",
   "callbacks_threadsafe",
-  "callback_subscription_matrix",
+  "callback_subscription_core",
+  "callback_subscription_ecosystem",
   "zero_copy_bytes",
   "zero_copy_view_matrix",
 ]

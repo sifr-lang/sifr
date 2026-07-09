@@ -12,5 +12,6 @@ Current passing evidence:
 - `missing_backpressure_rejected`: covered by
   `crates/sifr_driver/src/build/rust_interop_callback_contract_tests.rs::package_rust_interop_rejects_callback_missing_backpressure`.
 
-The runtime-observed subscription, cancellation, shutdown, cross-thread capture,
-and ecosystem callback cases remain in `callback_subscription_matrix`.
+Signal-style stdlib subscriptions are tracked by `callback_subscription_core`.
+Runtime-observed ecosystem subscription, cancellation, shutdown, and
+cross-thread capture cases remain in `callback_subscription_ecosystem`.

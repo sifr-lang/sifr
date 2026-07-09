@@ -194,8 +194,8 @@ issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Delete this closing row after migrated signal registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/signal.sifr"]
-certification_rows = ["callback_subscription_matrix"]
-reason = "Signal public behavior now routes through _sifr.signal private Rust interop declarations and sifr_stdlib.signals; this row remains only to record closure of the former compiler intrinsic names. Broader callback/subscription certification remains future-owned by the compatibility matrix and is not claimed by this signal native-boundary slice."
+certification_rows = ["callback_subscription_core"]
+reason = "Signal public behavior now routes through _sifr.signal private Rust interop declarations and sifr_stdlib.signals; this row remains only to record closure of the former compiler intrinsic names. M10b split and claimed the stdlib-owned callback_subscription_core evidence for signal-style subscriptions while ecosystem subscription crates remain future-owned."
 
 [[surface]]
 id = "_sifr.runtime::observability_glue"
@@ -219,7 +219,7 @@ declaration_files = ["stdlib/_sifr/python.sifr"]
 certification_rows = [
   "opaque_resource_matrix",
   "callbacks_call_scoped",
-  "callback_subscription_matrix",
+  "callback_subscription_ecosystem",
 ]
 reason = "Python object handles, callback adapters, and runtime initialization remain behind Python resource/callback certification."
 registry_files = ["python.rs"]

@@ -1,4 +1,4 @@
-# fixture: callback_subscription_matrix
+# fixture: callback_subscription_ecosystem
 # package-example: tokio-tungstenite
 # required-crate: tokio-tungstenite
 # execution-kind: runtime-observed

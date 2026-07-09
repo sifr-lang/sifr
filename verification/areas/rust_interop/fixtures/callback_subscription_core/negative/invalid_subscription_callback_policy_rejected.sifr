@@ -1,0 +1,22 @@
+# fixture: callback_subscription_core
+# evidence: negative/invalid_subscription_callback_policy_rejected
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-CB-0001
+class SignalEvent:
+    name: str
+    number: int
+
+@rust.callback(backpressure=bounded(16), overflow=error)
+@rust(bridge.signals.subscribe_shutdown, panic=trusted_no_panic)
+def subscribe_without_shutdown(handler: ThreadsafeCallback[[SignalEvent], None]) -> None: ...
+
+def record_signal_event(event: SignalEvent) -> None:
+    event_name: str = event.name
+    event_number: int = event.number
+    return None
+
+def verify_invalid_subscription_callback_policy_rejected() -> None:
+    subscribe_without_shutdown(record_signal_event)
+    return None

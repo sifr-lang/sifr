@@ -815,12 +815,13 @@ all top-level callback parameters on that declaration; per-parameter callback
 policy requires a later extension. Callable parameters without
 `@rust.callback(...)`, nested callback containers, and callback returns remain
 rejected as unsupported bridge types. Runtime-observed call-scoped storage
-rejection, registered subscription handles, cross-thread capture enforcement,
-callback invocation panic mapping, and `tokio-tungstenite`/`redis`/`notify`
-ecosystem certification are future-owned by
+rejection, cross-thread capture enforcement, callback invocation panic mapping,
+and `tokio-tungstenite`/`redis`/`notify` ecosystem certification are
+future-owned by
 [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
-through the `callbacks_call_scoped` and `callback_subscription_matrix`
-compatibility rows.
+through the `callbacks_call_scoped` and `callback_subscription_ecosystem`
+compatibility rows. Signal-style stdlib subscription handles are tracked
+separately by the supported `callback_subscription_core` row.
 
 ## Trust Policy
 
@@ -977,7 +978,8 @@ verification/areas/rust_interop/
     blocking_diagnostics/
     callbacks_call_scoped/
     callbacks_threadsafe/
-    callback_subscription_matrix/ # tokio-tungstenite, redis pub/sub, notify
+    callback_subscription_core/   # signal-style stdlib subscriptions
+    callback_subscription_ecosystem/ # tokio-tungstenite, redis pub/sub, notify
     zero_copy_bytes/
     zero_copy_view_matrix/        # memmap2, bytemuck, zerocopy
     arrow_record_batch/
@@ -1036,7 +1038,7 @@ Ecosystem certification fixtures:
 
 Ecosystem certification for `axum`, `tower-http`, and `sqlx` is limited to canonical-package compilation and probe coverage; product-level web framework workflows remain out of the Rust interop scope.
 
-`tokio` runtime behavior is exercised through `async_runtime_reqwest`, `async_ecosystem_matrix`, `opaque_resource_matrix`, and `callback_subscription_matrix`; do not add a redundant standalone Tokio fixture unless a future runtime contract requires it.
+`tokio` runtime behavior is exercised through `async_runtime_reqwest`, `async_ecosystem_matrix`, `opaque_resource_matrix`, and `callback_subscription_ecosystem`; do not add a redundant standalone Tokio fixture unless a future runtime contract requires it.
 
 Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matrix.json`:
 

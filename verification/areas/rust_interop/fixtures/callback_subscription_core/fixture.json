@@ -1,0 +1,26 @@
+{
+  "capability": "stdlib-owned signal callback subscriptions and shutdown",
+  "diagnostic_family": "SIFR-RUST-CB-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-CB-0001",
+      "expected_result": "diagnostic",
+      "id": "invalid_subscription_callback_policy_rejected",
+      "path": "negative/invalid_subscription_callback_policy_rejected.sifr",
+      "status": "passing"
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "signal_subscription_cancel_shutdown",
+      "path": "positive/signal_subscription_cancel_shutdown.sifr",
+      "status": "passing"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "callback_subscription_core",
+  "package_examples": {},
+  "required_crates": [],
+  "schema_version": 1,
+  "tier": 2
+}

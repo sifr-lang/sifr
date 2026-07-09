@@ -1,4 +1,4 @@
-# fixture: callback_subscription_matrix
+# fixture: callback_subscription_ecosystem
 # evidence: negative/invalid_thread_capture_rejected
 # evidence-status: planned
 # execution-kind: runtime-observed

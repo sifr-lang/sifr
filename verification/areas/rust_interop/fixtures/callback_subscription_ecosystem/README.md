@@ -1,4 +1,4 @@
-# callback_subscription_matrix
+# callback_subscription_ecosystem
 
 This fixture family tracks runtime-observed subscription callbacks for
 `tokio-tungstenite`, Redis pub/sub, and filesystem notification workflows.
@@ -8,6 +8,7 @@ This fixture family tracks runtime-observed subscription callbacks for
 - Negative evidence: `invalid_thread_capture_rejected` remains planned for a
   fixture proving non-send captures and invalid thread-affinity captures cannot
   cross the declared callback boundary.
-- Compatibility category: `future-owned-by-separate-phase`. Contract-level
-  callback policy validation is verified by `callbacks_threadsafe`; runtime
-  subscription certification is not listed as verified support.
+- Compatibility category: `future-owned-by-separate-phase`. Stdlib-owned signal
+  subscription mechanics are verified by `callback_subscription_core`;
+  ecosystem callback subscription certification is not listed as verified
+  support.
