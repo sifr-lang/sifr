@@ -241,13 +241,6 @@ def _handles_from_objects(values: list[Object]) -> list[tuple[int, int]]:
     return raw_values
 
 
-def _keyed_handles_from_objects(values: list[tuple[str, Object]]) -> list[tuple[str, tuple[int, int]]]:
-    raw_values: list[tuple[str, tuple[int, int]]] = []
-    for value in values:
-        raw_values.append((value[0], (value[1]._handle, value[1]._token)))
-    return raw_values
-
-
 def _keys_from_keyed_objects(values: list[tuple[str, Object]]) -> list[str]:
     keys: list[str] = []
     for value in values:
@@ -297,8 +290,15 @@ def call(
 ) -> Result[Object, PythonError]:
     try:
         raw_args: list[tuple[int, int]] = _handles_from_objects(args)
-        raw_kwargs: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(kwargs)
-        raw: tuple[int, int] = py_call(callable_obj._handle, callable_obj._token, raw_args, raw_kwargs)
+        kwargs_keys: list[str] = _keys_from_keyed_objects(kwargs)
+        kwargs_values: list[tuple[int, int]] = _handles_from_keyed_objects(kwargs)
+        raw: tuple[int, int] = py_call(
+            callable_obj._handle,
+            callable_obj._token,
+            raw_args,
+            kwargs_keys,
+            kwargs_values,
+        )
         return _object_from_handle(raw)
     except PythonError as e:
         raise e
@@ -313,8 +313,16 @@ def call_attr(
 ) -> Result[Object, PythonError]:
     try:
         raw_args: list[tuple[int, int]] = _handles_from_objects(args)
-        raw_kwargs: list[tuple[str, tuple[int, int]]] = _keyed_handles_from_objects(kwargs)
-        raw: tuple[int, int] = py_call_attr(obj._handle, obj._token, name, raw_args, raw_kwargs)
+        kwargs_keys: list[str] = _keys_from_keyed_objects(kwargs)
+        kwargs_values: list[tuple[int, int]] = _handles_from_keyed_objects(kwargs)
+        raw: tuple[int, int] = py_call_attr(
+            obj._handle,
+            obj._token,
+            name,
+            raw_args,
+            kwargs_keys,
+            kwargs_values,
+        )
         return _object_from_handle(raw)
     except PythonError as e:
         raise e

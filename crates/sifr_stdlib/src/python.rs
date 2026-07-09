@@ -144,6 +144,37 @@ pub fn py_get_item_str(
     python::get_item_str(object_handle(handle, token), key).map(object_raw)
 }
 
+pub fn py_call(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+    args: &[ObjectRaw],
+    kwargs_keys: &[String],
+    kwargs_values: &[ObjectRaw],
+) -> Result<ObjectRaw, python::PythonError> {
+    let kwargs = keyed_object_handles(
+        kwargs_keys,
+        kwargs_values,
+        "Python call received mismatched keyword key/value counts",
+    )?;
+    python::call_object(object_handle(handle, token), args, &kwargs).map(object_raw)
+}
+
+pub fn py_call_attr(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+    name: &str,
+    args: &[ObjectRaw],
+    kwargs_keys: &[String],
+    kwargs_values: &[ObjectRaw],
+) -> Result<ObjectRaw, python::PythonError> {
+    let kwargs = keyed_object_handles(
+        kwargs_keys,
+        kwargs_values,
+        "Python attribute call received mismatched keyword key/value counts",
+    )?;
+    python::call_attr(object_handle(handle, token), name, args, &kwargs).map(object_raw)
+}
+
 pub fn py_close(handle: SifrIntBridge, token: SifrIntBridge) -> Result<(), python::PythonError> {
     python::close_object(object_handle(handle, token))
 }
@@ -170,7 +201,11 @@ pub fn py_from_dict_str(
     keys: &[String],
     values: &[ObjectRaw],
 ) -> Result<ObjectRaw, python::PythonError> {
-    let keyed = keyed_object_handles(keys, values)?;
+    let keyed = keyed_object_handles(
+        keys,
+        values,
+        "Python keyed object constructor received mismatched key/value counts",
+    )?;
     python::from_dict_str(&keyed).map(object_raw)
 }
 
@@ -178,18 +213,22 @@ pub fn py_from_record(
     keys: &[String],
     values: &[ObjectRaw],
 ) -> Result<ObjectRaw, python::PythonError> {
-    let keyed = keyed_object_handles(keys, values)?;
+    let keyed = keyed_object_handles(
+        keys,
+        values,
+        "Python keyed object constructor received mismatched key/value counts",
+    )?;
     python::from_record(&keyed).map(object_raw)
 }
 
 fn keyed_object_handles<'a>(
     keys: &'a [String],
     values: &[ObjectRaw],
+    mismatch_message: &str,
 ) -> Result<Vec<(&'a str, ObjectRaw)>, python::PythonError> {
     if keys.len() != values.len() {
         return Err(python::PythonError {
-            message: "Python keyed object constructor received mismatched key/value counts"
-                .to_string(),
+            message: mismatch_message.to_string(),
             kind: "invalid_argument".to_string(),
             exception_type: String::new(),
             traceback: String::new(),

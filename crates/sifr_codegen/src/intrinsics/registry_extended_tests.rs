@@ -17,27 +17,6 @@ pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
 
 #[test]
 pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
-    let call = lower_intrinsic(
-        "py_call",
-        &[
-            "callable_handle".to_string(),
-            "callable_token".to_string(),
-            "args".to_string(),
-            "kwargs".to_string(),
-        ],
-    )
-    .expect("py_call should lower");
-    assert_eq!(
-        call.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::PythonRuntime)
-    );
-    let call_rendered = render_expr(&call.expr);
-    assert!(call_rendered.contains("sifr_runtime::python::call_object"));
-    assert!(call_rendered.contains("(callable_handle, callable_token)"));
-    assert!(call_rendered.contains("__sifr_python_args"));
-    assert!(call_rendered.contains("__sifr_python_kwargs"));
-    assert!(call_rendered.contains("PythonError"));
-
     let copy_list_u8 = lower_intrinsic(
         "py_copy_list_u8",
         &["object_handle".to_string(), "object_token".to_string()],
@@ -248,6 +227,38 @@ pub(crate) fn python_collection_constructors_are_owned_by_compiled_stdlib_declar
     ] {
         assert!(
             lower_intrinsic(removed, &["values".to_string()]).is_none(),
+            "{removed} must lower through _sifr.python private Rust interop declarations"
+        );
+    }
+}
+
+#[test]
+pub(crate) fn python_call_helpers_are_owned_by_compiled_stdlib_declarations() {
+    for (removed, args) in [
+        (
+            "py_call",
+            vec![
+                "callable_handle".to_string(),
+                "callable_token".to_string(),
+                "args".to_string(),
+                "kwargs_keys".to_string(),
+                "kwargs_values".to_string(),
+            ],
+        ),
+        (
+            "py_call_attr",
+            vec![
+                "object_handle".to_string(),
+                "object_token".to_string(),
+                "name".to_string(),
+                "args".to_string(),
+                "kwargs_keys".to_string(),
+                "kwargs_values".to_string(),
+            ],
+        ),
+    ] {
+        assert!(
+            lower_intrinsic(removed, &args).is_none(),
             "{removed} must lower through _sifr.python private Rust interop declarations"
         );
     }

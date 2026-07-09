@@ -14,37 +14,6 @@ fn object_handle() -> Type {
 pub(super) fn intrinsic_python() -> IntrinsicModule {
     let mut functions = HashMap::new();
     functions.insert(
-        "py_call".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("token".to_string(), Type::Int),
-                ("args".to_string(), Type::List(Box::new(object_handle()))),
-                (
-                    "kwargs".to_string(),
-                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_handle()]))),
-                ),
-            ],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_call_attr".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("token".to_string(), Type::Int),
-                ("name".to_string(), Type::Str),
-                ("args".to_string(), Type::List(Box::new(object_handle()))),
-                (
-                    "kwargs".to_string(),
-                    Type::List(Box::new(Type::Tuple(vec![Type::Str, object_handle()]))),
-                ),
-            ],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
         "py_buffer_u8".to_string(),
         FunctionType::all_borrow(
             vec![

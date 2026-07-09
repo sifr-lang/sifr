@@ -213,6 +213,37 @@ fn python_collection_constructors_codegen_through_sifr_stdlib() {
     }
 }
 
+#[test]
+fn python_call_helpers_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.python")
+        .expect("_sifr.python should generate private Rust code");
+    for name in ["py_call", "py_call_attr"] {
+        assert!(
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::python::{name}(")),
+            "{name} should lower through _sifr.python private Rust interop declarations"
+        );
+    }
+    assert!(private_code.rust.contains("kwargs_keys"));
+    assert!(private_code.rust.contains("kwargs_values"));
+    let private_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.python")
+        .expect("_sifr.python intrinsic names should be tracked");
+    for name in ["py_call", "py_call_attr"] {
+        assert!(
+            !private_intrinsics.contains(name),
+            "{name} should not remain a compiler-retained _sifr.python intrinsic"
+        );
+    }
+}
+
 fn sha256_hex(source: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(source.as_bytes());

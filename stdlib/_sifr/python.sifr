@@ -123,6 +123,27 @@ def py_get_attr(handle: int, token: int, name: str) -> Result[tuple[int, int], P
 def py_get_item_str(handle: int, token: int, key: str) -> Result[tuple[int, int], PythonError]: ...
 
 
+@rust(sifr_stdlib.python.py_call)
+def py_call(
+    handle: int,
+    token: int,
+    args: list[tuple[int, int]],
+    kwargs_keys: list[str],
+    kwargs_values: list[tuple[int, int]],
+) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_call_attr)
+def py_call_attr(
+    handle: int,
+    token: int,
+    name: str,
+    args: list[tuple[int, int]],
+    kwargs_keys: list[str],
+    kwargs_values: list[tuple[int, int]],
+) -> Result[tuple[int, int], PythonError]: ...
+
+
 @rust(sifr_stdlib.python.py_close)
 def py_close(handle: int, token: int) -> Result[None, PythonError]: ...
 

@@ -2,8 +2,6 @@ use crate::{render_expr, RustExpr};
 
 pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<RustExpr> {
     match name {
-        "py_call" => lower_py_call(args),
-        "py_call_attr" => lower_py_call_attr(args),
         "py_buffer_u8" => lower_py_buffer_u8(args),
         "py_copy_buffer_u8" => lower_py_copy_buffer_u8(args),
         "py_release_buffer" => lower_py_release_buffer(args),
@@ -78,53 +76,6 @@ fn lower_handle_conversion(args: &[RustExpr], function: &str) -> Option<RustExpr
     Some(map_python_error(format!(
         "sifr_runtime::python::{function}({})",
         object_expr(&handle, &token)
-    )))
-}
-
-pub(crate) fn lower_py_call(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 4 {
-        return None;
-    }
-    let handle = render_expr(&args[0]);
-    let token = render_expr(&args[1]);
-    let positional = render_expr(&args[2]);
-    let keyword = render_expr(&args[3]);
-    Some(map_python_error(format!(
-        r#"{{
-            let __sifr_python_args = ({positional})
-                .iter()
-                .map(|__sifr_python_arg| (__sifr_python_arg.0, __sifr_python_arg.1))
-                .collect::<Vec<(i64, i64)>>();
-            let __sifr_python_kwargs = ({keyword})
-                .iter()
-                .map(|__sifr_python_kwarg| (__sifr_python_kwarg.0.as_str(), (__sifr_python_kwarg.1.0, __sifr_python_kwarg.1.1)))
-                .collect::<Vec<(&str, (i64, i64))>>();
-            sifr_runtime::python::call_object(({handle}, {token}), &__sifr_python_args, &__sifr_python_kwargs)
-        }}"#
-    )))
-}
-
-pub(crate) fn lower_py_call_attr(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 5 {
-        return None;
-    }
-    let handle = render_expr(&args[0]);
-    let token = render_expr(&args[1]);
-    let name = render_expr(&args[2]);
-    let positional = render_expr(&args[3]);
-    let keyword = render_expr(&args[4]);
-    Some(map_python_error(format!(
-        r#"{{
-            let __sifr_python_args = ({positional})
-                .iter()
-                .map(|__sifr_python_arg| (__sifr_python_arg.0, __sifr_python_arg.1))
-                .collect::<Vec<(i64, i64)>>();
-            let __sifr_python_kwargs = ({keyword})
-                .iter()
-                .map(|__sifr_python_kwarg| (__sifr_python_kwarg.0.as_str(), (__sifr_python_kwarg.1.0, __sifr_python_kwarg.1.1)))
-                .collect::<Vec<(&str, (i64, i64))>>();
-            sifr_runtime::python::call_attr(({handle}, {token}), ({name}).as_str(), &__sifr_python_args, &__sifr_python_kwargs)
-        }}"#
     )))
 }
 
