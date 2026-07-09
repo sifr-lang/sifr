@@ -64,9 +64,7 @@ pub(crate) fn generate_cargo_toml(
                 deps.insert(URL_DEP.to_string());
                 deps.insert(PERCENT_ENCODING_DEP.to_string());
             }
-            "sifr.http" | "_sifr.http" => {
-                deps.insert(HTTP_DEP.to_string());
-            }
+            "sifr.http" | "_sifr.http" => {}
             "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {}
             "_bigint" => {
                 deps.insert("num-bigint = \"0.4.6\"".to_string());
@@ -332,6 +330,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.net"
                 | "sifr.tls"
                 | "_sifr.tls"
+                | "sifr.http"
+                | "_sifr.http"
         )
     })
 }

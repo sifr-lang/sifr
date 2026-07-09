@@ -135,6 +135,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.tls", "_sifr.tls"]) {
         features.push("tls");
     }
+    if has_module(&["sifr.http", "_sifr.http"]) {
+        features.push("http");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 

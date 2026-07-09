@@ -128,7 +128,8 @@ final closure.
 | Encoding, Unicode, and i18n helpers | `_sifr.encoding`, `_sifr.unicode`, and `_sifr.i18n` private Rust interop declarations backed by `sifr_stdlib` | `sifr_stdlib` text/data implementations with shared primitives retained only when justified |
 | Network handles | `_sifr.net` private Rust interop declarations backed by `sifr_stdlib::net`, with socket substrates in `sifr_runtime::net` | `sifr_stdlib` net resource implementation through certified interop, backed by `sifr_runtime` substrates |
 | TLS handles | `_sifr.tls` private Rust interop declarations backed by `sifr_stdlib::tls`, with TLS/socket substrates in `sifr_runtime::tls` | `sifr_stdlib` TLS resource implementation through certified interop, backed by `sifr_runtime` substrates |
-| HTTP transport | `preamble/url_http_runtime.rs` | `sifr_stdlib` HTTP resource implementation through certified interop, backed by `sifr_runtime` substrates |
+| URL helpers | `_sifr.url` private Rust interop declarations backed by `sifr_stdlib::url` | `sifr_stdlib` URL implementation through certified interop |
+| HTTP header helpers | `_sifr.http` private Rust interop declarations backed by `sifr_stdlib::http` | `sifr_stdlib` HTTP implementation through certified interop, backed by `sifr_runtime` substrates where transport resources require them |
 | Python objects, buffers, callbacks, and contexts | `registry/python.rs` | `sifr_stdlib` Python interop surface through certified object/resource/callback interop, backed by `sifr_runtime` substrates |
 
 The broad native migration registry used during earlier migration work has been

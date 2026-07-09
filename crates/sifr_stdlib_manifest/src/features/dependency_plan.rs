@@ -231,6 +231,9 @@ fn retained_direct_dependencies(
         .collect::<BTreeSet<_>>()
     {
         for feature in features_for_stdlib_module(module_name) {
+            if *feature == StdlibFeature::Http {
+                continue;
+            }
             push_feature_dependencies(&mut deps, &mut packages, *feature, runtime_features);
         }
     }

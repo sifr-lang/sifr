@@ -196,7 +196,7 @@ fn network_http_snapshot_json_matches_generated_dependency_output() {
         snapshot_field_strings(&payload, "url-header-cookie", "required_features"),
         vec![
             "sifr_stdlib/url",
-            "http/std",
+            "sifr_stdlib/http",
             "sifr-owned-cookie-header-validation",
         ]
     );
@@ -347,10 +347,7 @@ fn network_http_http_module_emits_locked_header_dependencies_without_cookie_crat
 
     assert_eq!(
         deps,
-        vec![
-            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\"] }",
-            "http = \"1.4.1\"",
-        ]
+        vec!["sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\"] }",]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.starts_with("url = ")));
@@ -377,10 +374,7 @@ fn network_http_combined_modules_emit_all_locked_url_http_dependencies_without_r
 
     assert_eq!(
         deps,
-        vec![
-            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",
-            "http = \"1.4.1\"",
-        ]
+        vec!["sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.contains("proptest")));
@@ -399,10 +393,7 @@ fn network_http_url_and_http_modules_emit_locked_dependencies() {
 
     assert_eq!(
         deps,
-        vec![
-            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",
-            "http = \"1.4.1\"",
-        ]
+        vec!["sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.contains("proptest")));

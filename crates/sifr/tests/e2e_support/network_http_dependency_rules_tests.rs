@@ -16,7 +16,9 @@ pub(crate) fn test_generate_cargo_toml_http_module_uses_locked_header_specs_with
     let stdlib_modules = normalize_dependency_set(vec!["sifr.http".to_string()].into_iter());
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &BTreeSet::new(), "sifr_output");
 
-    assert!(cargo_toml.contains("http = \"1.4.1\""));
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("\"http\""));
+    assert!(!cargo_toml.contains("http = \"1.4.1\""));
     assert!(!cargo_toml.contains("cookie = "));
     assert!(!cargo_toml.contains("url = "));
     assert!(!cargo_toml.contains("percent-encoding"));
@@ -41,7 +43,7 @@ pub(crate) fn test_generate_cargo_toml_url_http_required_crates_use_locked_specs
 }
 
 #[test]
-pub(crate) fn test_infer_dependencies_recognizes_url_http_runtime_references() {
+pub(crate) fn test_infer_dependencies_recognizes_url_http_raw_crate_references() {
     let rust_source = r#"
         let _url = url::Url::parse("https://example.com").unwrap();
         let _encoded = percent_encoding::percent_encode(
@@ -92,6 +94,24 @@ pub(crate) fn test_infer_dependencies_recognizes_sysroot_tls_references() {
     assert!(cargo_toml.contains("sifr_stdlib = { path = "));
     assert!(cargo_toml.contains("\"tls\""));
     assert!(cargo_toml.contains("sifr_runtime = { path = "));
+}
+
+#[test]
+pub(crate) fn test_infer_dependencies_recognizes_sysroot_http_references() {
+    let rust_source = r#"
+        fn call_http() {
+            let _name = sifr_stdlib::http::http_validate_header_name("content-type");
+        }
+    "#;
+
+    let (stdlib_modules, _inferred_crates) =
+        infer_dependencies(rust_source, &BTreeSet::new(), &BTreeSet::new());
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &BTreeSet::new(), "sifr_output");
+
+    assert!(stdlib_modules.contains("_sifr.http"));
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("\"http\""));
+    assert!(!cargo_toml.contains("http = \"1.4.1\""));
 }
 
 #[test]
