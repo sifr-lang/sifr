@@ -129,3 +129,19 @@ def py_close(handle: int, token: int) -> Result[None, PythonError]: ...
 
 @rust(sifr_stdlib.python.py_resource_diagnostics)
 def py_resource_diagnostics() -> Result[tuple[bool, int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_list)
+def py_from_list(values: list[tuple[int, int]]) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_tuple)
+def py_from_tuple(values: list[tuple[int, int]]) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_dict_str)
+def py_from_dict_str(keys: list[str], values: list[tuple[int, int]]) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_record)
+def py_from_record(keys: list[str], values: list[tuple[int, int]]) -> Result[tuple[int, int], PythonError]: ...

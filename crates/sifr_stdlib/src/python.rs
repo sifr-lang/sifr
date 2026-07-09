@@ -157,3 +157,48 @@ pub fn py_resource_diagnostics() -> Result<(bool, i64, i64), python::PythonError
         )
     })
 }
+
+pub fn py_from_list(values: &[ObjectRaw]) -> Result<ObjectRaw, python::PythonError> {
+    python::from_list(values).map(object_raw)
+}
+
+pub fn py_from_tuple(values: &[ObjectRaw]) -> Result<ObjectRaw, python::PythonError> {
+    python::from_tuple(values).map(object_raw)
+}
+
+pub fn py_from_dict_str(
+    keys: &[String],
+    values: &[ObjectRaw],
+) -> Result<ObjectRaw, python::PythonError> {
+    let keyed = keyed_object_handles(keys, values)?;
+    python::from_dict_str(&keyed).map(object_raw)
+}
+
+pub fn py_from_record(
+    keys: &[String],
+    values: &[ObjectRaw],
+) -> Result<ObjectRaw, python::PythonError> {
+    let keyed = keyed_object_handles(keys, values)?;
+    python::from_record(&keyed).map(object_raw)
+}
+
+fn keyed_object_handles<'a>(
+    keys: &'a [String],
+    values: &[ObjectRaw],
+) -> Result<Vec<(&'a str, ObjectRaw)>, python::PythonError> {
+    if keys.len() != values.len() {
+        return Err(python::PythonError {
+            message: "Python keyed object constructor received mismatched key/value counts"
+                .to_string(),
+            kind: "invalid_argument".to_string(),
+            exception_type: String::new(),
+            traceback: String::new(),
+            context: String::new(),
+        });
+    }
+    Ok(keys
+        .iter()
+        .zip(values.iter().copied())
+        .map(|(key, value)| (key.as_str(), value))
+        .collect())
+}
