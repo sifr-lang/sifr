@@ -190,52 +190,14 @@ reason = "Network public behavior now routes through _sifr.net private Rust inte
 
 [[surface]]
 id = "_sifr.tls"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after migrated TLS registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/tls.sifr"]
-certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
-reason = "TLS configuration, handshakes, stream handles, and certificate state remain resource/runtime-owned pending certification."
-registry_files = ["tls.rs"]
-preamble_files = ["tls_runtime.rs"]
-retained_direct_dependency_packages = [
-  "rustls",
-  "rustls-pemfile",
-  "rustls-platform-verifier",
-  "tokio",
-  "tokio-rustls",
-  "tracing",
-]
-direct_runtime_roots = ["sifr_runtime::tls"]
-exact_intrinsics = [
-  "tls_accept",
-  "tls_client_config_close",
-  "tls_client_config_platform",
-  "tls_client_config_with_roots",
-  "tls_client_config_with_roots_and_client_auth",
-  "tls_connect",
-  "tls_read_half_close",
-  "tls_read_half_read_chunk",
-  "tls_server_config",
-  "tls_server_config_close",
-  "tls_server_config_require_client_auth",
-  "tls_stream_alpn_protocol",
-  "tls_stream_close",
-  "tls_stream_close_notify",
-  "tls_stream_flush",
-  "tls_stream_protocol_version",
-  "tls_stream_read_chunk",
-  "tls_stream_split",
-  "tls_stream_write",
-  "tls_stream_write_all",
-  "tls_write_half_close",
-  "tls_write_half_close_notify",
-  "tls_write_half_flush",
-  "tls_write_half_write",
-  "tls_write_half_write_all",
-]
+certification_rows = ["opaque_resource_core", "async_runtime_core"]
+reason = "TLS public behavior now routes through _sifr.tls private Rust interop declarations and sifr_stdlib.tls while TLS engine, certificate, and stream-handle substrate remain in sifr_runtime::tls; this row remains only to record closure of the former compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.signal"

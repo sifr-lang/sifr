@@ -77,6 +77,24 @@ pub(crate) fn test_infer_dependencies_recognizes_sysroot_net_references() {
 }
 
 #[test]
+pub(crate) fn test_infer_dependencies_recognizes_sysroot_tls_references() {
+    let rust_source = r#"
+        async fn call_tls() {
+            let _stream = sifr_stdlib::tls::tls_connect(1.into(), 2.into(), "localhost", 1.0, true).await;
+        }
+    "#;
+
+    let (stdlib_modules, _inferred_crates) =
+        infer_dependencies(rust_source, &BTreeSet::new(), &BTreeSet::new());
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &BTreeSet::new(), "sifr_output");
+
+    assert!(stdlib_modules.contains("_sifr.tls"));
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("\"tls\""));
+    assert!(cargo_toml.contains("sifr_runtime = { path = "));
+}
+
+#[test]
 pub(crate) fn test_infer_dependencies_recognizes_http_runtime_crate_references() {
     let rust_source = r#"
         let _bytes = bytes::Bytes::new();

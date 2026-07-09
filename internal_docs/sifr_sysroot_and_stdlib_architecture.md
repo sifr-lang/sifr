@@ -126,8 +126,8 @@ final closure.
 | Exact integer/runtime bridge | Entry-point imports, module constants, SifrInt render helpers, Rust interop bridge generated types | Retained compiler-language glue backed by `sifr_runtime` |
 | JSON exact-int/value helpers | `sifr_stdlib` JSON token adapters reached through `_sifr.json` private Rust interop declarations; shared integer policy primitives remain in `sifr_runtime::json` | `sifr_stdlib` JSON implementation with only shared primitives retained in `sifr_runtime` |
 | Encoding, Unicode, and i18n helpers | `_sifr.encoding`, `_sifr.unicode`, and `_sifr.i18n` private Rust interop declarations backed by `sifr_stdlib` | `sifr_stdlib` text/data implementations with shared primitives retained only when justified |
-| Network handles | `preamble/net_runtime.rs` | `sifr_stdlib` net resource implementation through certified interop, backed by `sifr_runtime` substrates |
-| TLS handles | `preamble/tls_runtime.rs` | `sifr_stdlib` TLS resource implementation through certified interop, backed by `sifr_runtime` substrates |
+| Network handles | `_sifr.net` private Rust interop declarations backed by `sifr_stdlib::net`, with socket substrates in `sifr_runtime::net` | `sifr_stdlib` net resource implementation through certified interop, backed by `sifr_runtime` substrates |
+| TLS handles | `_sifr.tls` private Rust interop declarations backed by `sifr_stdlib::tls`, with TLS/socket substrates in `sifr_runtime::tls` | `sifr_stdlib` TLS resource implementation through certified interop, backed by `sifr_runtime` substrates |
 | HTTP transport | `preamble/url_http_runtime.rs` | `sifr_stdlib` HTTP resource implementation through certified interop, backed by `sifr_runtime` substrates |
 | Python objects, buffers, callbacks, and contexts | `registry/python.rs` | `sifr_stdlib` Python interop surface through certified object/resource/callback interop, backed by `sifr_runtime` substrates |
 

@@ -10,7 +10,6 @@ mod runtime;
 mod signal;
 mod task;
 mod test;
-mod tls;
 mod url_http;
 
 use crate::RustExpr;
@@ -115,10 +114,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        name if name.starts_with("tls_") => (
-            tls::lower_tls_intrinsic(name, args),
-            Some(StdlibFeature::Tokio),
-        ),
         name if name.starts_with("http_") => (
             url_http::lower_http_intrinsic(name, args),
             Some(StdlibFeature::Http),

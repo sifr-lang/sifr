@@ -1,5 +1,6 @@
-# sifr.tls — Async TLS substrate over sifr.net TCP streams
+# sifr.tls - Async TLS substrate over sifr.net TCP streams
 from _sifr.tls import (
+    TlsError,
     tls_accept,
     tls_client_config_close,
     tls_client_config_platform,
@@ -29,10 +30,6 @@ from _sifr.tls import (
 from sifr.net import TcpStream
 
 
-class TlsError(Error):
-    message: str
-
-
 class CertificateError(Error):
     message: str
 
@@ -54,13 +51,13 @@ class TlsClientConfig:
         self._closed = True
         return tls_client_config_close(self._handle)
 
-    def connect(
+    async def connect(
         self,
         own mut stream: TcpStream,
         server_name: str,
         timeout: float | None = None,
-    ) -> Awaitable[Result[TlsStream, TlsError]]:
-        return connect_tls(stream, server_name, self, timeout)
+    ) -> Result[TlsStream, TlsError]:
+        return await connect_tls(stream, server_name, self, timeout)
 
 
 class TlsServerConfig:
@@ -77,12 +74,12 @@ class TlsServerConfig:
         self._closed = True
         return tls_server_config_close(self._handle)
 
-    def accept(
+    async def accept(
         self,
         own mut stream: TcpStream,
         timeout: float | None = None,
-    ) -> Awaitable[Result[TlsStream, TlsError]]:
-        return accept_tls(stream, self, timeout)
+    ) -> Result[TlsStream, TlsError]:
+        return await accept_tls(stream, self, timeout)
 
 
 class TlsStream:
@@ -93,28 +90,58 @@ class TlsStream:
         self._handle = handle
         self._closed = False
 
-    def read_chunk(self, max_bytes: int) -> Awaitable[Result[bytes | None, TlsError]]:
-        return tls_stream_read_chunk(self._handle, max_bytes)
+    async def read_chunk(self, max_bytes: int) -> Result[bytes | None, TlsError]:
+        try:
+            return await tls_stream_read_chunk(self._handle, max_bytes)
+        except TlsError as e:
+            raise e
 
-    def write(self, data: bytes) -> Awaitable[Result[int, TlsError]]:
-        return tls_stream_write(self._handle, data)
+    async def write(self, data: bytes) -> Result[int, TlsError]:
+        try:
+            return await tls_stream_write(self._handle, data)
+        except TlsError as e:
+            raise e
 
-    def write_all(self, data: bytes) -> Awaitable[Result[None, TlsError]]:
-        return tls_stream_write_all(self._handle, data)
+    async def write_all(self, data: bytes) -> Result[None, TlsError]:
+        try:
+            return await tls_stream_write_all(self._handle, data)
+        except TlsError as e:
+            raise e
 
-    def flush(self) -> Awaitable[Result[None, TlsError]]:
-        return tls_stream_flush(self._handle)
+    async def flush(self) -> Result[None, TlsError]:
+        try:
+            return await tls_stream_flush(self._handle)
+        except TlsError as e:
+            raise e
 
-    def close_notify(self) -> Awaitable[Result[None, TlsError]]:
-        return tls_stream_close_notify(self._handle)
+    async def close_notify(self) -> Result[None, TlsError]:
+        try:
+            return await tls_stream_close_notify(self._handle)
+        except TlsError as e:
+            raise e
 
-    def close(own self) -> Awaitable[Result[None, TlsError]]:
+    async def close(own self) -> Result[None, TlsError]:
         self._closed = True
-        return tls_stream_close(self._handle)
+        try:
+            return await tls_stream_close(self._handle)
+        except TlsError as e:
+            raise e
 
-    def split(own self) -> tuple[TlsReadHalf, TlsWriteHalf]:
+    def split(own self) -> Result[tuple[TlsReadHalf, TlsWriteHalf], TlsError]:
         self._closed = True
-        return tls_stream_split(self._handle)
+        try:
+            handles: list[int] = tls_stream_split(self._handle)
+            if len(handles) != 2:
+                raise TlsError("TLS stream split returned invalid handles")
+            read: int | None = handles[0]
+            write: int | None = handles[1]
+            if read is None:
+                raise TlsError("TLS stream split returned invalid read handle")
+            if write is None:
+                raise TlsError("TLS stream split returned invalid write handle")
+            return (TlsReadHalf(read), TlsWriteHalf(write))
+        except TlsError as e:
+            raise e
 
     def alpn_protocol(self) -> Result[bytes | None, TlsError]:
         return tls_stream_alpn_protocol(self._handle)
@@ -131,8 +158,11 @@ class TlsReadHalf:
         self._handle = handle
         self._closed = False
 
-    def read_chunk(self, max_bytes: int) -> Awaitable[Result[bytes | None, TlsError]]:
-        return tls_read_half_read_chunk(self._handle, max_bytes)
+    async def read_chunk(self, max_bytes: int) -> Result[bytes | None, TlsError]:
+        try:
+            return await tls_read_half_read_chunk(self._handle, max_bytes)
+        except TlsError as e:
+            raise e
 
     def close(self) -> Result[None, TlsError]:
         if self._closed:
@@ -149,27 +179,46 @@ class TlsWriteHalf:
         self._handle = handle
         self._closed = False
 
-    def write(self, data: bytes) -> Awaitable[Result[int, TlsError]]:
-        return tls_write_half_write(self._handle, data)
+    async def write(self, data: bytes) -> Result[int, TlsError]:
+        try:
+            return await tls_write_half_write(self._handle, data)
+        except TlsError as e:
+            raise e
 
-    def write_all(self, data: bytes) -> Awaitable[Result[None, TlsError]]:
-        return tls_write_half_write_all(self._handle, data)
+    async def write_all(self, data: bytes) -> Result[None, TlsError]:
+        try:
+            return await tls_write_half_write_all(self._handle, data)
+        except TlsError as e:
+            raise e
 
-    def flush(self) -> Awaitable[Result[None, TlsError]]:
-        return tls_write_half_flush(self._handle)
+    async def flush(self) -> Result[None, TlsError]:
+        try:
+            return await tls_write_half_flush(self._handle)
+        except TlsError as e:
+            raise e
 
-    def close_notify(self) -> Awaitable[Result[None, TlsError]]:
-        return tls_write_half_close_notify(self._handle)
+    async def close_notify(self) -> Result[None, TlsError]:
+        try:
+            return await tls_write_half_close_notify(self._handle)
+        except TlsError as e:
+            raise e
 
-    def close(own self) -> Awaitable[Result[None, TlsError]]:
+    async def close(own self) -> Result[None, TlsError]:
         self._closed = True
-        return tls_write_half_close(self._handle)
+        try:
+            return await tls_write_half_close(self._handle)
+        except TlsError as e:
+            raise e
 
 
 def client_config_platform(
     alpn_protocols: list[bytes] = [],
 ) -> Result[TlsClientConfig, TlsError]:
-    return tls_client_config_platform(alpn_protocols)
+    try:
+        handle: int = tls_client_config_platform(alpn_protocols)
+        return TlsClientConfig(handle)
+    except TlsError as e:
+        raise e
 
 
 def client_config_default(
@@ -183,8 +232,8 @@ def client_config_with_roots(
     alpn_protocols: list[bytes] = [],
 ) -> Result[TlsClientConfig, CertificateError]:
     try:
-        config: TlsClientConfig = tls_client_config_with_roots(root_pem, alpn_protocols)
-        return config
+        handle: int = tls_client_config_with_roots(root_pem, alpn_protocols)
+        return TlsClientConfig(handle)
     except TlsError as e:
         raise CertificateError(e.message)
 
@@ -203,10 +252,10 @@ def client_config_with_roots_and_client_auth(
     alpn_protocols: list[bytes] = [],
 ) -> Result[TlsClientConfig, CertificateError]:
     try:
-        config: TlsClientConfig = tls_client_config_with_roots_and_client_auth(
+        handle: int = tls_client_config_with_roots_and_client_auth(
             root_pem, cert_pem, key_pem, alpn_protocols
         )
-        return config
+        return TlsClientConfig(handle)
     except TlsError as e:
         raise CertificateError(e.message)
 
@@ -231,8 +280,8 @@ def server_config(
     alpn_protocols: list[bytes] = [],
 ) -> Result[TlsServerConfig, CertificateError]:
     try:
-        config: TlsServerConfig = tls_server_config(cert_pem, key_pem, alpn_protocols)
-        return config
+        handle: int = tls_server_config(cert_pem, key_pem, alpn_protocols)
+        return TlsServerConfig(handle)
     except TlsError as e:
         raise CertificateError(e.message)
 
@@ -252,32 +301,54 @@ def server_config_require_client_auth(
     alpn_protocols: list[bytes] = [],
 ) -> Result[TlsServerConfig, CertificateError]:
     try:
-        config: TlsServerConfig = tls_server_config_require_client_auth(
+        handle: int = tls_server_config_require_client_auth(
             cert_pem, key_pem, client_ca_pem, alpn_protocols
         )
-        return config
+        return TlsServerConfig(handle)
     except TlsError as e:
         raise CertificateError(e.message)
 
 
-def connect_tls(
+async def connect_tls(
     own mut stream: TcpStream,
     server_name: str,
     config: TlsClientConfig,
     timeout: float | None = None,
-) -> Awaitable[Result[TlsStream, TlsError]]:
+) -> Result[TlsStream, TlsError]:
     stream._closed = True
-    if timeout is None:
-        return tls_connect(config._handle, stream._handle, server_name, 0.0, False)
-    return tls_connect(config._handle, stream._handle, server_name, timeout, True)
+    try:
+        if timeout is None:
+            handle: int = await tls_connect(
+                config._handle,
+                stream._handle,
+                server_name,
+                0.0,
+                False,
+            )
+            return TlsStream(handle)
+        handle: int = await tls_connect(
+            config._handle,
+            stream._handle,
+            server_name,
+            timeout,
+            True,
+        )
+        return TlsStream(handle)
+    except TlsError as e:
+        raise e
 
 
-def accept_tls(
+async def accept_tls(
     own mut stream: TcpStream,
     config: TlsServerConfig,
     timeout: float | None = None,
-) -> Awaitable[Result[TlsStream, TlsError]]:
+) -> Result[TlsStream, TlsError]:
     stream._closed = True
-    if timeout is None:
-        return tls_accept(config._handle, stream._handle, 0.0, False)
-    return tls_accept(config._handle, stream._handle, timeout, True)
+    try:
+        if timeout is None:
+            handle: int = await tls_accept(config._handle, stream._handle, 0.0, False)
+            return TlsStream(handle)
+        handle: int = await tls_accept(config._handle, stream._handle, timeout, True)
+        return TlsStream(handle)
+    except TlsError as e:
+        raise e
