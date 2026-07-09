@@ -21,19 +21,6 @@ fn process_status_class() -> Type {
     }
 }
 
-fn process_output_class() -> Type {
-    Type::Class {
-        name: "Output".to_string(),
-        fields: vec![
-            ("stdout".to_string(), Type::Bytes),
-            ("stderr".to_string(), Type::Bytes),
-            ("status".to_string(), process_status_class()),
-        ],
-        methods: vec![],
-        parent_class: None,
-    }
-}
-
 fn process_async_child_class() -> Type {
     Type::Class {
         name: "AsyncChild".to_string(),
@@ -47,10 +34,6 @@ fn process_status_object_result() -> Type {
     result_ty(process_status_class(), "ProcessError")
 }
 
-fn process_output_object_result() -> Type {
-    result_ty(process_output_class(), "ProcessError")
-}
-
 fn process_async_child_object_result() -> Type {
     result_ty(process_async_child_class(), "ProcessError")
 }
@@ -62,68 +45,6 @@ fn process_async_pipe_read_result() -> Type {
 /// _sifr.process — Native process execution intrinsics.
 pub(super) fn intrinsic_process() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    functions.insert(
-        "process_async_run".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("program".to_string(), Type::Str),
-                ("args".to_string(), Type::List(Box::new(Type::Str))),
-                ("env".to_string(), Type::List(Box::new(Type::Str))),
-                ("cwd".to_string(), Type::Str),
-                ("has_cwd".to_string(), Type::Bool),
-                ("stdin_mode".to_string(), Type::Str),
-            ],
-            Type::Awaitable(Box::new(process_status_object_result())),
-        ),
-    );
-    functions.insert(
-        "process_async_output".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("program".to_string(), Type::Str),
-                ("args".to_string(), Type::List(Box::new(Type::Str))),
-                ("env".to_string(), Type::List(Box::new(Type::Str))),
-                ("cwd".to_string(), Type::Str),
-                ("has_cwd".to_string(), Type::Bool),
-                ("stdin_mode".to_string(), Type::Str),
-                ("stdin".to_string(), Type::Bytes),
-                ("has_stdin".to_string(), Type::Bool),
-            ],
-            Type::Awaitable(Box::new(process_output_object_result())),
-        ),
-    );
-    functions.insert(
-        "process_async_output_timeout".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("program".to_string(), Type::Str),
-                ("args".to_string(), Type::List(Box::new(Type::Str))),
-                ("env".to_string(), Type::List(Box::new(Type::Str))),
-                ("cwd".to_string(), Type::Str),
-                ("has_cwd".to_string(), Type::Bool),
-                ("stdin_mode".to_string(), Type::Str),
-                ("stdin".to_string(), Type::Bytes),
-                ("has_stdin".to_string(), Type::Bool),
-                ("timeout_seconds".to_string(), Type::Float),
-            ],
-            Type::Awaitable(Box::new(process_output_object_result())),
-        ),
-    );
-    functions.insert(
-        "process_async_run_timeout".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("program".to_string(), Type::Str),
-                ("args".to_string(), Type::List(Box::new(Type::Str))),
-                ("env".to_string(), Type::List(Box::new(Type::Str))),
-                ("cwd".to_string(), Type::Str),
-                ("has_cwd".to_string(), Type::Bool),
-                ("stdin_mode".to_string(), Type::Str),
-                ("timeout_seconds".to_string(), Type::Float),
-            ],
-            Type::Awaitable(Box::new(process_status_object_result())),
-        ),
-    );
     functions.insert(
         "process_async_spawn".to_string(),
         FunctionType::all_borrow(
@@ -229,36 +150,6 @@ pub(super) fn intrinsic_process() -> IntrinsicModule {
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
             result_ty(Type::None, "ProcessError"),
-        ),
-    );
-    functions.insert(
-        "process_async_shell_run".to_string(),
-        FunctionType::all_borrow(
-            vec![("script".to_string(), Type::Str)],
-            Type::Awaitable(Box::new(process_status_object_result())),
-        ),
-    );
-    functions.insert(
-        "process_async_shell_output".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("script".to_string(), Type::Str),
-                ("stdin".to_string(), Type::Bytes),
-                ("has_stdin".to_string(), Type::Bool),
-            ],
-            Type::Awaitable(Box::new(process_output_object_result())),
-        ),
-    );
-    functions.insert(
-        "process_async_shell_output_timeout".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("script".to_string(), Type::Str),
-                ("stdin".to_string(), Type::Bytes),
-                ("has_stdin".to_string(), Type::Bool),
-                ("timeout_seconds".to_string(), Type::Float),
-            ],
-            Type::Awaitable(Box::new(process_output_object_result())),
         ),
     );
     IntrinsicModule {

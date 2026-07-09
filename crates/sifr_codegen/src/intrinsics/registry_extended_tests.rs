@@ -278,6 +278,58 @@ pub(crate) fn process_sync_timeout_intrinsics_lower_through_private_stdlib() {
         ("process_wait", &["handle"][..]),
         ("process_kill", &["handle"][..]),
         ("process_terminate", &["handle"][..]),
+        (
+            "process_async_run",
+            &["program", "args", "env", "cwd", "has_cwd", "stdin_mode"][..],
+        ),
+        (
+            "process_async_run_timeout",
+            &[
+                "program",
+                "args",
+                "env",
+                "cwd",
+                "has_cwd",
+                "stdin_mode",
+                "timeout",
+            ][..],
+        ),
+        (
+            "process_async_output",
+            &[
+                "program",
+                "args",
+                "env",
+                "cwd",
+                "has_cwd",
+                "stdin_mode",
+                "stdin",
+                "has_stdin",
+            ][..],
+        ),
+        (
+            "process_async_output_timeout",
+            &[
+                "program",
+                "args",
+                "env",
+                "cwd",
+                "has_cwd",
+                "stdin_mode",
+                "stdin",
+                "has_stdin",
+                "timeout",
+            ][..],
+        ),
+        ("process_async_shell_run", &["script"][..]),
+        (
+            "process_async_shell_output",
+            &["script", "stdin", "has_stdin"][..],
+        ),
+        (
+            "process_async_shell_output_timeout",
+            &["script", "stdin", "has_stdin", "timeout"][..],
+        ),
     ] {
         assert!(
             lower_intrinsic(
@@ -292,23 +344,23 @@ pub(crate) fn process_sync_timeout_intrinsics_lower_through_private_stdlib() {
         );
     }
 
-    let async_shell_timeout = lower_intrinsic(
-        "process_async_shell_output_timeout",
+    let async_spawn = lower_intrinsic(
+        "process_async_spawn",
         &[
-            "script".to_string(),
-            "stdin".to_string(),
+            "program".to_string(),
+            "args".to_string(),
+            "env".to_string(),
+            "cwd".to_string(),
+            "has_cwd".to_string(),
+            "stdin_mode".to_string(),
+            "stdout_mode".to_string(),
+            "stderr_mode".to_string(),
             "has_stdin".to_string(),
-            "timeout".to_string(),
         ],
     )
-    .expect("process_async_shell_output_timeout");
-    let async_shell_rendered = render_expr(&async_shell_timeout.expr);
-    assert!(async_shell_rendered.contains("Box::pin(__sifr_process_async_output_timeout("));
-    assert!(async_shell_rendered.contains("\"sh\".to_string()"));
-    assert!(async_shell_rendered.contains("vec![\"-c\".to_string(), script.clone()]"));
-    assert!(async_shell_rendered.contains("stdin.clone()"));
-    assert!(async_shell_rendered.contains("has_stdin"));
-    assert!(async_shell_rendered.contains("timeout"));
+    .expect("process_async_spawn");
+    let async_spawn_rendered = render_expr(&async_spawn.expr);
+    assert!(async_spawn_rendered.contains("Box::pin(__sifr_process_async_spawn("));
 }
 
 #[test]

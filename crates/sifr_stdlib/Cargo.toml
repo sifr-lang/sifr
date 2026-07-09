@@ -83,7 +83,7 @@ http = [
     "sifr_runtime/http",
 ]
 python = ["dep:sifr_runtime", "sifr_runtime/python"]
-process = ["dep:sifr_runtime"]
+process = ["dep:sifr_runtime", "dep:tokio"]
 fs = []
 html = []
 calendar = ["dep:sifr_runtime"]

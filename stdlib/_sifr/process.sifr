@@ -193,3 +193,81 @@ def process_kill(handle: int) -> Result[None, ProcessError]:
 @rust(sifr_stdlib.process.process_terminate)
 def process_terminate(handle: int) -> Result[None, ProcessError]:
     ...
+
+
+@rust(sifr_stdlib.process.process_async_run)
+async def process_async_run(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin_mode: str,
+) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_run_timeout)
+async def process_async_run_timeout(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin_mode: str,
+    timeout_seconds: float,
+) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_output)
+async def process_async_output(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin_mode: str,
+    stdin: bytes,
+    has_stdin: bool,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_output_timeout)
+async def process_async_output_timeout(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin_mode: str,
+    stdin: bytes,
+    has_stdin: bool,
+    timeout_seconds: float,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_shell_run)
+async def process_async_shell_run(script: str) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_shell_output)
+async def process_async_shell_output(
+    script: str,
+    stdin: bytes,
+    has_stdin: bool,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_shell_output_timeout)
+async def process_async_shell_output_timeout(
+    script: str,
+    stdin: bytes,
+    has_stdin: bool,
+    timeout_seconds: float,
+) -> Result[str, ProcessError]:
+    ...

@@ -32,6 +32,29 @@ fn function_type_from_params_preserves_named_conventions() {
 }
 
 #[test]
+fn function_type_from_hir_exports_async_functions_as_coroutines() {
+    let function = HirFunction {
+        name: "async_status".to_string(),
+        params: vec![sample_param("value", Type::Int, ParamConvention::borrow())],
+        return_type: Type::Result(Box::new(Type::Bool), Box::new(Type::Str)),
+        body: Vec::new(),
+        is_async: true,
+        method_kind: sifr_ir::MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        type_params: Vec::new(),
+    };
+
+    assert_eq!(
+        function_type_from_hir(&function),
+        FunctionType {
+            params: vec![("value".to_string(), Type::Int, ParamConvention::borrow())],
+            return_type: Box::new(Type::Coroutine(Box::new(Type::Bool), Box::new(Type::Str))),
+        }
+    );
+}
+
+#[test]
 fn signature_params_can_override_constructor_conventions() {
     let params = vec![sample_param("self", Type::Str, ParamConvention::borrow())];
 

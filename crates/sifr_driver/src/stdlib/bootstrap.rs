@@ -131,10 +131,7 @@ fn compile_stdlib_sources_with_sysroot(
 
         for func in &result.module.functions {
             if private_declaration || should_export_callable(module_name, &func.name) {
-                fn_exports.insert(
-                    func.name.clone(),
-                    function_type_from_params(&func.params, &func.return_type),
-                );
+                fn_exports.insert(func.name.clone(), function_type_from_hir(func));
                 if module_name == "sifr.python"
                     && matches!(func.name.as_str(), "local_callback" | "threadsafe_callback")
                 {
@@ -555,6 +552,15 @@ fn function_type_from_params(params: &[HirParam], return_type: &Type) -> Functio
         params: named_params(params),
         return_type: Box::new(return_type.clone()),
     }
+}
+
+fn function_type_from_hir(function: &HirFunction) -> FunctionType {
+    let return_type = if function.is_async {
+        coroutine_type_from_surface_return(&function.return_type)
+    } else {
+        function.return_type.clone()
+    };
+    function_type_from_params(&function.params, &return_type)
 }
 
 fn method_type_from_hir(method: &HirFunction) -> FunctionType {
