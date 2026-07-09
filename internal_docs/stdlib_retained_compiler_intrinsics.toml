@@ -14,6 +14,13 @@
 #
 schema_version = 2
 
+[[closed_surface]]
+id = "_sifr.process"
+previous_state = "closing"
+removed_in_pr = "PR #2884"
+evidence_links = ["stdlib-native-boundary-completion"]
+reason = "All _sifr.process compiler-native registry, preamble, and fallback signature glue was migrated through private declarations and sifr_stdlib.process in PR #2883; closure guards prove the retained process surface is absent."
+
 [[surface]]
 id = "_sifr.sys"
 state = "retained"
@@ -169,17 +176,6 @@ evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Delete this closing row after the migrated random registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/crypto.sifr"]
 reason = "Random module state and distribution helpers now route through _sifr.crypto private Rust interop declarations and sifr_stdlib.random; this row remains only to record closure of the former compiler intrinsic names."
-
-[[surface]]
-id = "_sifr.process"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after all migrated process registry, preamble, and fallback signature names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/process.sifr"]
-certification_rows = ["async_runtime_reqwest"]
-reason = "Process run/output/shell, child lifecycle, sync pipes, async child lifecycle, and async pipes now route through _sifr.process private Rust interop declarations and sifr_stdlib.process; this row remains only to record closure of the former compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.net"
