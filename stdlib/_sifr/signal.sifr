@@ -1,2 +1,20 @@
 # Private _sifr.signal native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+
+class SignalError(Error):
+    message: str
+
+
+@rust(sifr_stdlib.signals.signal_ctrl_c)
+async def signal_ctrl_c() -> Result[int, SignalError]:
+    ...
+
+
+@rust(sifr_stdlib.signals.signal_terminate)
+async def signal_terminate() -> Result[int, SignalError]:
+    ...
+
+
+@rust(sifr_stdlib.signals.signal_shutdown)
+async def signal_shutdown() -> Result[int, SignalError]:
+    ...

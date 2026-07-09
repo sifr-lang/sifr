@@ -1,9 +1,5 @@
 # sifr.signal - Structured signal identifiers and shutdown surfaces
-from _sifr.signal import signal_ctrl_c, signal_shutdown, signal_terminate
-
-
-class SignalError(Error):
-    message: str
+from _sifr.signal import SignalError, signal_ctrl_c, signal_shutdown, signal_terminate
 
 
 class Signal:
@@ -34,17 +30,37 @@ SIGINT: Signal = Signal("SIGINT", 2)
 SIGTERM: Signal = Signal("SIGTERM", 15)
 
 
-def ctrl_c() -> Awaitable[Result[Signal, SignalError]]:
-    return signal_ctrl_c()
+def _signal_from_number(number: int) -> Signal:
+    if number == 2:
+        return SIGINT
+    if number == 15:
+        return SIGTERM
+    return Signal("UNKNOWN", number)
 
 
-def terminate() -> Awaitable[Result[Signal, SignalError]]:
-    return signal_terminate()
+async def ctrl_c() -> Result[Signal, SignalError]:
+    try:
+        number: int = await signal_ctrl_c()
+        return _signal_from_number(number)
+    except SignalError as e:
+        raise e
+
+
+async def terminate() -> Result[Signal, SignalError]:
+    try:
+        number: int = await signal_terminate()
+        return _signal_from_number(number)
+    except SignalError as e:
+        raise e
 
 
 class ShutdownStream:
-    def next(self) -> Awaitable[Result[Signal, SignalError]]:
-        return signal_shutdown()
+    async def next(self) -> Result[Signal, SignalError]:
+        try:
+            number: int = await signal_shutdown()
+            return _signal_from_number(number)
+        except SignalError as e:
+            raise e
 
 
 def shutdown_stream() -> ShutdownStream:

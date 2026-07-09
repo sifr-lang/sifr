@@ -14,7 +14,6 @@ mod math_test;
 mod platform_misc;
 mod python;
 mod runtime;
-mod signal;
 mod sys_fs;
 mod task;
 mod text_encoding;
@@ -31,7 +30,6 @@ use platform_misc::{
 };
 use python::intrinsic_python;
 use runtime::intrinsic_runtime;
-use signal::intrinsic_signal;
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
@@ -81,7 +79,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.url" => Some(intrinsic_url()),
         "_sifr.python" => Some(intrinsic_python()),
-        "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),
         "_sifr.task" => Some(intrinsic_task()),
         "_sifr.toml" => Some(intrinsic_toml()),

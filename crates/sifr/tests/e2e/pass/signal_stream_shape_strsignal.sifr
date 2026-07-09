@@ -10,6 +10,18 @@ from sifr.signal import (
 )
 
 
+async def _shape_ctrl_c() -> Result[Signal, SignalError]:
+    return await ctrl_c()
+
+
+async def _shape_terminate() -> Result[Signal, SignalError]:
+    return await terminate()
+
+
+async def _shape_shutdown() -> Result[Signal, SignalError]:
+    return await shutdown_stream().next()
+
+
 def main():
     interrupt: Signal = SIGINT
     interrupt_label: str = strsignal(interrupt)
@@ -19,8 +31,5 @@ def main():
     termination_label: str = strsignal(termination)
     assert termination_label == "SIGTERM"
 
-    # Shape pin only: these futures are intentionally not awaited because
-    # deterministic external signal delivery belongs to a later shutdown-stream harness.
-    _ctrl_c_wait: Awaitable[Result[Signal, SignalError]] = ctrl_c()
-    _terminate_wait: Awaitable[Result[Signal, SignalError]] = terminate()
-    _shutdown_wait: Awaitable[Result[Signal, SignalError]] = shutdown_stream().next()
+    # Shape pin only: these helpers are intentionally not awaited because
+    # deterministic external signal delivery belongs to the shutdown-stream harness.

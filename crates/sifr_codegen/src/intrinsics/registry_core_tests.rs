@@ -269,37 +269,13 @@ pub(crate) fn lowers_os_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_signal_intrinsics_via_registry() {
-    let ctrl_c = lower_intrinsic("signal_ctrl_c", &[]).expect("signal_ctrl_c");
-    assert_eq!(
-        ctrl_c.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Tokio)
-    );
-    let ctrl_c_rendered = render_expr(&ctrl_c.expr);
-    assert!(ctrl_c_rendered.contains("tokio::signal::ctrl_c().await"));
-    assert!(ctrl_c_rendered.contains("SIGINT"));
-
-    let terminate = lower_intrinsic("signal_terminate", &[]).expect("signal_terminate");
-    assert_eq!(
-        terminate.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Tokio)
-    );
-    let terminate_rendered = render_expr(&terminate.expr);
-    assert!(terminate_rendered.contains("#[cfg(unix)]"));
-    assert!(terminate_rendered.contains("#[cfg(not(unix))]"));
-    assert!(terminate_rendered.contains("SignalKind::terminate"));
-    assert!(terminate_rendered.contains("SIGTERM is unsupported"));
-
-    let shutdown = lower_intrinsic("signal_shutdown", &[]).expect("signal_shutdown");
-    assert_eq!(
-        shutdown.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::Tokio)
-    );
-    let shutdown_rendered = render_expr(&shutdown.expr);
-    assert!(shutdown_rendered.contains("#[cfg(unix)]"));
-    assert!(shutdown_rendered.contains("#[cfg(not(unix))]"));
-    assert!(shutdown_rendered.contains("tokio::select!"));
-    assert!(shutdown_rendered.contains("tokio::signal::ctrl_c().await"));
+pub(crate) fn signal_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in ["signal_ctrl_c", "signal_terminate", "signal_shutdown"] {
+        assert!(
+            lower_intrinsic(name, &[]).is_none(),
+            "{name} should lower through _sifr.signal private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

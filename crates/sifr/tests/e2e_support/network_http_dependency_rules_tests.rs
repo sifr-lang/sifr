@@ -115,6 +115,23 @@ pub(crate) fn test_infer_dependencies_recognizes_sysroot_http_references() {
 }
 
 #[test]
+pub(crate) fn test_infer_dependencies_recognizes_sysroot_signal_references() {
+    let rust_source = r#"
+        async fn call_signal() {
+            let _signal = sifr_stdlib::signals::signal_ctrl_c().await;
+        }
+    "#;
+
+    let (stdlib_modules, _inferred_crates) =
+        infer_dependencies(rust_source, &BTreeSet::new(), &BTreeSet::new());
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &BTreeSet::new(), "sifr_output");
+
+    assert!(stdlib_modules.contains("_sifr.signal"));
+    assert!(cargo_toml.contains("sifr_stdlib = { path = "));
+    assert!(cargo_toml.contains("\"signals\""));
+}
+
+#[test]
 pub(crate) fn test_infer_dependencies_recognizes_http_runtime_crate_references() {
     let rust_source = r#"
         let _bytes = bytes::Bytes::new();
