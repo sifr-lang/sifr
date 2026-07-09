@@ -95,7 +95,7 @@ merged, and documented before the next milestone starts.
 | M3. File and Filesystem Migration | merged | PR #2851 · sha=12b64b4; PR #2852 · sha=72a62f1; PR #2853 · sha=84b0419; PR #2855 · sha=4372f13; PR #2858 · sha=f08fc98 |
 | M4. Random, Time, and Logging | merged | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing; PR #2864 · sha=9d901ad · manifest: `_sifr.time` exact retained leaves narrowed to `sleep`/`monotonic`; PR #2866 · sha=c241b20 · manifest: mixed preamble now IO/file-handle only |
 | M5. Simple Sys and Environment | merged | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers; PR #2870 · sha=03d0126 · manifest: `_sifr.sys` retained set narrowed to `run_command`/`chdir`/`stat_size`/`disk_usage`; closeout review READY |
-| M6. Async Resource Pilot | planned |  |
+| M6. Async Resource Pilot | in progress | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic` |
 | M7. Process Family | planned |  |
 | M8. Network and TLS Families | planned |  |
 | M9. HTTP Family | planned |  |
@@ -715,6 +715,18 @@ Tasks:
 - Update Rust interop certification evidence with executable lifecycle tests.
 - Keep the pilot isolated from process, network, TLS, and HTTP migration until
   evidence lands.
+
+M6 may land as ordered sub-PRs because async runtime evidence and retained time
+leaf closure have different blast radii:
+
+- M6a: migrate retained `_sifr.time` leaves `sleep` and `monotonic` behind
+  `stdlib/_sifr/time.sifr` declarations and `sifr_stdlib::time`; implement
+  panic-free duration handling for `sleep` and a process-local `Instant`
+  baseline for `monotonic`; delete the compiler time registry file and fallback
+  signatures; move the retained manifest row to `closing`; keep `task.sleep`
+  async lowering untouched (merged in PR #2873, merge commit
+  `7b5f6345becc6e199b483d6f76539751e0add6b7`; local `create-pr` validation
+  passed with wall-time advisory only; reviewer round 1 READY).
 
 Acceptance:
 
