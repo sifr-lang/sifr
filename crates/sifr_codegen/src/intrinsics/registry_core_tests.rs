@@ -168,6 +168,18 @@ pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades(
 }
 
 #[test]
+pub(crate) fn lowers_task_current_context_as_language_runtime_glue() {
+    let lowered =
+        lower_intrinsic("task_current_context", &[]).expect("task_current_context should lower");
+
+    assert_eq!(
+        lowered.required_feature,
+        Some(sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
+    assert_eq!(render_expr(&lowered.expr), "__sifr_task_current_context()");
+}
+
+#[test]
 pub(crate) fn unicode_intrinsics_are_owned_by_compiled_stdlib_declarations() {
     for name in [
         "unicode_data_version",
