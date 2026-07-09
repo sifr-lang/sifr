@@ -195,6 +195,81 @@ def process_terminate(handle: int) -> Result[None, ProcessError]:
     ...
 
 
+@rust(sifr_stdlib.process.process_async_spawn)
+async def process_async_spawn(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin_mode: str,
+    stdout_mode: str,
+    stderr_mode: str,
+    has_stdin: bool,
+) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_wait)
+async def process_async_wait(handle: int) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_handle_wait)
+async def process_handle_wait(handle: int) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_kill)
+async def process_async_kill(handle: int) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_terminate)
+async def process_async_terminate(handle: int) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_child_stdin)
+def process_async_child_stdin(handle: int) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_child_stdout)
+def process_async_child_stdout(handle: int) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_child_stderr)
+def process_async_child_stderr(handle: int) -> Result[int, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_pipe_read_all)
+async def process_async_pipe_read_all(handle: int) -> Result[bytes, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_pipe_read)
+async def process_async_pipe_read(handle: int, max_bytes: int) -> Result[bytes, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_pipe_reader_close)
+def process_async_pipe_reader_close(handle: int) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_pipe_write_all)
+async def process_async_pipe_write_all(handle: int, data: bytes) -> Result[None, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_async_pipe_close)
+def process_async_pipe_close(handle: int) -> Result[None, ProcessError]:
+    ...
+
+
 @rust(sifr_stdlib.process.process_async_run)
 async def process_async_run(
     program: str,

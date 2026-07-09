@@ -200,16 +200,7 @@ fn scoped_process_body() -> Vec<RustStmt> {
         __cmd.stdout(__sifr_scoped_process_stdio_from_mode(&command.stdout_mode)?);
         __cmd.stderr(__sifr_scoped_process_stdio_from_mode(&command.stderr_mode)?);
         let __child = __cmd.spawn().map_err(|__sifr_process_error| ProcessError { message: __sifr_process_error.to_string() })?;
-        let __handle = __sifr_next_process_async_child_id();
-        let __observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        {
-            let mut __children = __SIFR_PROCESS_ASYNC_CHILDREN.lock().unwrap_or_else(|__err| __err.into_inner());
-            __children.insert(__handle, __child);
-        }
-        {
-            let mut __observed_children = __SIFR_PROCESS_ASYNC_CHILD_OBSERVED.lock().unwrap_or_else(|__err| __err.into_inner());
-            __observed_children.insert(__handle, std::sync::Arc::clone(&__observed));
-        }
+        let (__handle, __observed) = sifr_stdlib::process::process_async_register_scoped_child(__child);
         let (__start_sender, __start_receiver) = tokio::sync::oneshot::channel();
         let (__stop_sender, mut __stop_receiver) = tokio::sync::oneshot::channel();
         let __child_observed = std::sync::Arc::clone(&__observed);
@@ -217,10 +208,7 @@ fn scoped_process_body() -> Vec<RustStmt> {
         let __observer_handle = __handle;
         let __observer = tokio::spawn(async move {
             let _ = __start_receiver.await;
-            let __child = {
-                let mut __children = __SIFR_PROCESS_ASYNC_CHILDREN.lock().unwrap_or_else(|__err| __err.into_inner());
-                __children.remove(&__observer_handle)
-            };
+            let __child = sifr_stdlib::process::process_async_take_child(__observer_handle);
             let __outcome = match __child {
                 Some(mut __child) => {
                     let __wait_result = tokio::select! {
@@ -240,10 +228,7 @@ fn scoped_process_body() -> Vec<RustStmt> {
                 None if __observer_observed.load(std::sync::atomic::Ordering::SeqCst) => __SifrScopeChildOutcome::Ok,
                 None => __SifrScopeChildOutcome::Failed,
             };
-            {
-                let mut __observed_children = __SIFR_PROCESS_ASYNC_CHILD_OBSERVED.lock().unwrap_or_else(|__err| __err.into_inner());
-                __observed_children.remove(&__observer_handle);
-            }
+            sifr_stdlib::process::process_async_remove_observed(__observer_handle);
             __outcome
         });
         let __stop_on_fail_fast: Box<dyn FnOnce() + Send + 'static> = Box::new(move || {

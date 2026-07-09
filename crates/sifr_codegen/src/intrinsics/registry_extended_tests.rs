@@ -330,6 +330,32 @@ pub(crate) fn process_sync_timeout_intrinsics_lower_through_private_stdlib() {
             "process_async_shell_output_timeout",
             &["script", "stdin", "has_stdin", "timeout"][..],
         ),
+        (
+            "process_async_spawn",
+            &[
+                "program",
+                "args",
+                "env",
+                "cwd",
+                "has_cwd",
+                "stdin_mode",
+                "stdout_mode",
+                "stderr_mode",
+                "has_stdin",
+            ][..],
+        ),
+        ("process_async_wait", &["handle"][..]),
+        ("process_handle_wait", &["handle"][..]),
+        ("process_async_kill", &["handle"][..]),
+        ("process_async_terminate", &["handle"][..]),
+        ("process_async_child_stdin", &["handle"][..]),
+        ("process_async_child_stdout", &["handle"][..]),
+        ("process_async_child_stderr", &["handle"][..]),
+        ("process_async_pipe_read_all", &["handle"][..]),
+        ("process_async_pipe_read", &["handle", "max_bytes"][..]),
+        ("process_async_pipe_reader_close", &["handle"][..]),
+        ("process_async_pipe_write_all", &["handle", "data"][..]),
+        ("process_async_pipe_close", &["handle"][..]),
     ] {
         assert!(
             lower_intrinsic(
@@ -343,24 +369,6 @@ pub(crate) fn process_sync_timeout_intrinsics_lower_through_private_stdlib() {
             "{name} should lower through _sifr.process private declarations"
         );
     }
-
-    let async_spawn = lower_intrinsic(
-        "process_async_spawn",
-        &[
-            "program".to_string(),
-            "args".to_string(),
-            "env".to_string(),
-            "cwd".to_string(),
-            "has_cwd".to_string(),
-            "stdin_mode".to_string(),
-            "stdout_mode".to_string(),
-            "stderr_mode".to_string(),
-            "has_stdin".to_string(),
-        ],
-    )
-    .expect("process_async_spawn");
-    let async_spawn_rendered = render_expr(&async_spawn.expr);
-    assert!(async_spawn_rendered.contains("Box::pin(__sifr_process_async_spawn("));
 }
 
 #[test]

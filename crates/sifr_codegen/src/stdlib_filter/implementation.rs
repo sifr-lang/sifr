@@ -25,8 +25,6 @@ struct StdlibIrFile {
 pub(crate) struct SharedPreludeNeeds {
     pub(crate) collections: SharedPreludeCollectionNeeds,
     pub(crate) file_handles: SharedPreludeFileHandleNeeds,
-    pub(crate) process_status: SharedPreludeProcessStatusNeeds,
-    pub(crate) process_async: SharedPreludeProcessAsyncNeeds,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -40,21 +38,6 @@ pub(crate) struct SharedPreludeCollectionNeeds {
 pub(crate) struct SharedPreludeFileHandleNeeds {
     pub(crate) needs_file_handles: bool,
     pub(crate) provides_file_handle_struct: bool,
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub(crate) struct SharedPreludeProcessStatusNeeds {
-    pub(crate) needs_process_status: bool,
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub(crate) struct SharedPreludeProcessAsyncNeeds {
-    pub(crate) needs_spawn: bool,
-    pub(crate) needs_spawn_function: bool,
-    pub(crate) needs_wait: bool,
-    pub(crate) needs_kill: bool,
-    pub(crate) needs_terminate: bool,
-    pub(crate) needs_handle_wait: bool,
 }
 
 pub(crate) struct PreparedStdlibModule {
@@ -302,25 +285,6 @@ pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
                 || code.contains("__sifr_next_file_handle_id"),
             provides_file_handle_struct: code.contains("struct FileHandle"),
         },
-        process_status: SharedPreludeProcessStatusNeeds {
-            needs_process_status: code.contains("__sifr_process_exit_signal"),
-        },
-        process_async: SharedPreludeProcessAsyncNeeds {
-            needs_spawn: code.contains("__sifr_process_async_spawn(")
-                || code.contains("__sifr_process_async_child_stdin")
-                || code.contains("__sifr_process_async_child_stdout")
-                || code.contains("__sifr_process_async_child_stderr")
-                || code.contains("__sifr_process_async_pipe_read_all")
-                || code.contains("__sifr_process_async_pipe_read(")
-                || code.contains("__sifr_process_async_pipe_reader_close")
-                || code.contains("__sifr_process_async_pipe_write_all")
-                || code.contains("__sifr_process_async_pipe_close"),
-            needs_spawn_function: code.contains("__sifr_process_async_spawn("),
-            needs_wait: code.contains("__sifr_process_async_wait("),
-            needs_kill: code.contains("__sifr_process_async_kill("),
-            needs_terminate: code.contains("__sifr_process_async_terminate("),
-            needs_handle_wait: code.contains("__sifr_process_handle_wait("),
-        },
     }
 }
 
@@ -342,41 +306,6 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 | "__sifr_next_file_handle_id" => {
                     self.shared_needs.file_handles.needs_file_handles = true;
                 }
-                "__sifr_process_exit_signal" => {
-                    self.shared_needs.process_status.needs_process_status = true;
-                }
-                "__SIFR_PROCESS_ASYNC_CHILDREN"
-                | "__SIFR_PROCESS_ASYNC_CHILD_OBSERVED"
-                | "__SIFR_PROCESS_ASYNC_PIPE_READERS"
-                | "__SIFR_PROCESS_ASYNC_PIPE_WRITERS"
-                | "__SIFR_NEXT_PROCESS_ASYNC_CHILD_ID"
-                | "__sifr_next_process_async_child_id"
-                | "__sifr_process_async_child_stdin"
-                | "__sifr_process_async_child_stdout"
-                | "__sifr_process_async_child_stderr"
-                | "__sifr_process_async_pipe_read_all"
-                | "__sifr_process_async_pipe_read"
-                | "__sifr_process_async_pipe_reader_close"
-                | "__sifr_process_async_pipe_write_all"
-                | "__sifr_process_async_pipe_close" => {
-                    self.shared_needs.process_async.needs_spawn = true;
-                }
-                "__sifr_process_async_spawn" => {
-                    self.shared_needs.process_async.needs_spawn = true;
-                    self.shared_needs.process_async.needs_spawn_function = true;
-                }
-                "__sifr_process_async_wait" => {
-                    self.shared_needs.process_async.needs_wait = true;
-                }
-                "__sifr_process_handle_wait" => {
-                    self.shared_needs.process_async.needs_handle_wait = true;
-                }
-                "__sifr_process_async_kill" => {
-                    self.shared_needs.process_async.needs_kill = true;
-                }
-                "__sifr_process_async_terminate" => {
-                    self.shared_needs.process_async.needs_terminate = true;
-                }
                 _ => {}
             }
         }
@@ -391,30 +320,8 @@ pub(super) fn is_shared_prelude_item(item: &Item) -> bool {
         Item::Static(item_static) => {
             item_static.ident == "__SIFR_FILE_HANDLES"
                 || item_static.ident == "__SIFR_NEXT_FILE_HANDLE_ID"
-                || item_static.ident == "__SIFR_PROCESS_ASYNC_CHILDREN"
-                || item_static.ident == "__SIFR_PROCESS_ASYNC_CHILD_OBSERVED"
-                || item_static.ident == "__SIFR_PROCESS_ASYNC_PIPE_READERS"
-                || item_static.ident == "__SIFR_PROCESS_ASYNC_PIPE_WRITERS"
-                || item_static.ident == "__SIFR_NEXT_PROCESS_ASYNC_CHILD_ID"
         }
-        Item::Fn(item_fn) => {
-            item_fn.sig.ident == "__sifr_next_file_handle_id"
-                || item_fn.sig.ident == "__sifr_process_exit_signal"
-                || item_fn.sig.ident == "__sifr_next_process_async_child_id"
-                || item_fn.sig.ident == "__sifr_process_async_spawn"
-                || item_fn.sig.ident == "__sifr_process_async_child_stdin"
-                || item_fn.sig.ident == "__sifr_process_async_child_stdout"
-                || item_fn.sig.ident == "__sifr_process_async_child_stderr"
-                || item_fn.sig.ident == "__sifr_process_async_pipe_read_all"
-                || item_fn.sig.ident == "__sifr_process_async_pipe_read"
-                || item_fn.sig.ident == "__sifr_process_async_pipe_reader_close"
-                || item_fn.sig.ident == "__sifr_process_async_pipe_write_all"
-                || item_fn.sig.ident == "__sifr_process_async_pipe_close"
-                || item_fn.sig.ident == "__sifr_process_async_wait"
-                || item_fn.sig.ident == "__sifr_process_handle_wait"
-                || item_fn.sig.ident == "__sifr_process_async_kill"
-                || item_fn.sig.ident == "__sifr_process_async_terminate"
-        }
+        Item::Fn(item_fn) => item_fn.sig.ident == "__sifr_next_file_handle_id",
         _ => false,
     }
 }

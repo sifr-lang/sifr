@@ -5,7 +5,6 @@ mod file_handles;
 mod net;
 mod open_text_handles;
 mod os;
-mod process_async;
 mod python;
 mod requirements;
 mod runtime;
@@ -117,58 +116,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "process_async_spawn" => (
-            process_async::lower_process_async_spawn(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_wait" => (
-            process_async::lower_process_async_wait(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_handle_wait" => (
-            process_async::lower_process_handle_wait(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_kill" => (
-            process_async::lower_process_async_kill(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_terminate" => (
-            process_async::lower_process_async_terminate(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_child_stdin" => (
-            process_async::lower_process_async_child_stdin(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_child_stdout" => (
-            process_async::lower_process_async_child_stdout(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_child_stderr" => (
-            process_async::lower_process_async_child_stderr(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_pipe_read_all" => (
-            process_async::lower_process_async_pipe_read_all(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_pipe_read" => (
-            process_async::lower_process_async_pipe_read(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_pipe_reader_close" => (
-            process_async::lower_process_async_pipe_reader_close(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_pipe_write_all" => (
-            process_async::lower_process_async_pipe_write_all(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_pipe_close" => (
-            process_async::lower_process_async_pipe_close(args),
-            Some(StdlibFeature::Tokio),
-        ),
         "net_connect_tcp" => (net::lower_net_connect_tcp(args), Some(StdlibFeature::Tokio)),
         "net_listen_tcp" => (net::lower_net_listen_tcp(args), Some(StdlibFeature::Tokio)),
         "net_lookup_host" => (net::lower_net_lookup_host(args), Some(StdlibFeature::Tokio)),

@@ -96,7 +96,7 @@ merged, and documented before the next milestone starts.
 | M4. Random, Time, and Logging | merged | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing; PR #2864 · sha=9d901ad · manifest: `_sifr.time` exact retained leaves narrowed to `sleep`/`monotonic`; PR #2866 · sha=c241b20 · manifest: mixed preamble now IO/file-handle only |
 | M5. Simple Sys and Environment | merged | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers; PR #2870 · sha=03d0126 · manifest: `_sifr.sys` retained set narrowed to `run_command`/`chdir`/`stat_size`/`disk_usage`; closeout review READY |
 | M6. Async Resource Pilot | merged | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic`; PR #2875 · sha=f3ce312 · certification: `async_runtime_core` supported and `_sifr.time` -> `async_runtime_core`; closeout review READY |
-| M7. Process Family | in progress | PR #2877 · sha=de07b23 · M7a sync process output migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2879 · sha=0603eec · M7b sync child/pipe leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2881 · sha=beaf17b · M7c async run/output/shell leaves migrated through `_sifr.process` and `sifr_stdlib::process` |
+| M7. Process Family | in progress | PR #2877 · sha=de07b23 · M7a sync process output migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2879 · sha=0603eec · M7b sync child/pipe leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2881 · sha=beaf17b · M7c async run/output/shell leaves migrated through `_sifr.process` and `sifr_stdlib::process`; M7d async child/pipe lifecycle migration ready for review |
 | M8. Network and TLS Families | planned |  |
 | M9. HTTP Family | planned |  |
 | M10. Signal Callback and Subscription Pilot | planned |  |
@@ -789,6 +789,16 @@ Tasks:
   merge commit `beaf17b125397911b277b7c9b338854cc3f91351`). Opus reviewer
   round 1 was requested but blocked by repeated local reviewer tool timeouts;
   fallback local review found no blocking findings.
+- M7d: migrate async child lifecycle, async pipe leaves, and
+  `process_handle_wait` through `_sifr.process` private native declarations
+  backed by stdlib-owned async child/pipe tables in `sifr_stdlib::process`;
+  update scoped process runtime glue to register children in that stdlib table;
+  delete the async process registry file, retained process fallback catalog,
+  and process preamble files. Focused stdlib/codegen/driver tests, async
+  child/pipe/scoped E2E fixtures, file-size guardrails, migration closure,
+  allowlist, manifest schema, and sysroot resource certification guards passed;
+  local `scripts/run_all_tests.sh --profile create-pr` passed; reviewer round
+  1 blocked by local reviewer tool timeout.
 - Implement process behavior and Sifr-facing errors in `sifr_stdlib`.
 - Keep low-level spawn, pipe, timeout, and async substrate in `sifr_runtime`.
 - Declare child handles, pipe handles, async child handles, and operations in
