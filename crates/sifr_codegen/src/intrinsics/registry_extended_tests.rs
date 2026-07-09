@@ -17,26 +17,6 @@ pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
 
 #[test]
 pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
-    let copy_list_u8 = lower_intrinsic(
-        "py_copy_list_u8",
-        &["object_handle".to_string(), "object_token".to_string()],
-    )
-    .expect("py_copy_list_u8 should lower");
-    assert!(render_expr(&copy_list_u8.expr).contains("sifr_runtime::python::copy_list_u8"));
-
-    let record_fields = lower_intrinsic(
-        "py_copy_record_fields",
-        &[
-            "object_handle".to_string(),
-            "object_token".to_string(),
-            "fields".to_string(),
-        ],
-    )
-    .expect("py_copy_record_fields should lower");
-    let record_fields_rendered = render_expr(&record_fields.expr);
-    assert!(record_fields_rendered.contains("sifr_runtime::python::copy_record_fields"));
-    assert!(record_fields_rendered.contains("__sifr_python_fields"));
-
     let coroutine = lower_intrinsic(
         "py_run_coroutine_blocking",
         &["object_handle".to_string(), "object_token".to_string()],
@@ -262,6 +242,55 @@ pub(crate) fn python_call_helpers_are_owned_by_compiled_stdlib_declarations() {
             "{removed} must lower through _sifr.python private Rust interop declarations"
         );
     }
+}
+
+#[test]
+pub(crate) fn python_copy_helpers_are_owned_by_compiled_stdlib_declarations() {
+    for removed in [
+        "py_copy_list_bool",
+        "py_copy_list_int",
+        "py_copy_list_i32",
+        "py_copy_list_u8",
+        "py_copy_list_float",
+        "py_copy_list_str",
+        "py_copy_list_bytes",
+        "py_copy_tuple_bool",
+        "py_copy_tuple_int",
+        "py_copy_tuple_i32",
+        "py_copy_tuple_u8",
+        "py_copy_tuple_float",
+        "py_copy_tuple_str",
+        "py_copy_tuple_bytes",
+        "py_copy_dict_str_bool",
+        "py_copy_dict_str_int",
+        "py_copy_dict_str_i32",
+        "py_copy_dict_str_u8",
+        "py_copy_dict_str_float",
+        "py_copy_dict_str_str",
+        "py_copy_dict_str_bytes",
+    ] {
+        assert!(
+            lower_intrinsic(
+                removed,
+                &["object_handle".to_string(), "object_token".to_string()]
+            )
+            .is_none(),
+            "{removed} must lower through _sifr.python private Rust interop declarations"
+        );
+    }
+
+    assert!(
+        lower_intrinsic(
+            "py_copy_record_fields",
+            &[
+                "object_handle".to_string(),
+                "object_token".to_string(),
+                "fields".to_string(),
+            ],
+        )
+        .is_none(),
+        "py_copy_record_fields must lower through _sifr.python private Rust interop declarations"
+    );
 }
 
 #[test]

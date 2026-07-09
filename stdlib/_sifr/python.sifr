@@ -166,3 +166,91 @@ def py_from_dict_str(keys: list[str], values: list[tuple[int, int]]) -> Result[t
 
 @rust(sifr_stdlib.python.py_from_record)
 def py_from_record(keys: list[str], values: list[tuple[int, int]]) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_list_bool)
+def py_copy_list_bool(handle: int, token: int) -> Result[list[bool], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_list_int)
+def py_copy_list_int(handle: int, token: int) -> Result[list[int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_list_i32)
+def py_copy_list_i32(handle: int, token: int) -> Result[list[int32], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_list_u8)
+def py_copy_list_u8(handle: int, token: int) -> Result[list[uint8], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_list_float)
+def py_copy_list_float(handle: int, token: int) -> Result[list[float], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_list_str)
+def py_copy_list_str(handle: int, token: int) -> Result[list[str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_list_bytes)
+def py_copy_list_bytes(handle: int, token: int) -> Result[list[bytes], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_tuple_bool)
+def py_copy_tuple_bool(handle: int, token: int) -> Result[list[bool], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_tuple_int)
+def py_copy_tuple_int(handle: int, token: int) -> Result[list[int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_tuple_i32)
+def py_copy_tuple_i32(handle: int, token: int) -> Result[list[int32], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_tuple_u8)
+def py_copy_tuple_u8(handle: int, token: int) -> Result[list[uint8], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_tuple_float)
+def py_copy_tuple_float(handle: int, token: int) -> Result[list[float], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_tuple_str)
+def py_copy_tuple_str(handle: int, token: int) -> Result[list[str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_tuple_bytes)
+def py_copy_tuple_bytes(handle: int, token: int) -> Result[list[bytes], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_dict_str_bool)
+def py_copy_dict_str_bool(handle: int, token: int) -> Result[dict[str, bool], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_dict_str_int)
+def py_copy_dict_str_int(handle: int, token: int) -> Result[dict[str, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_dict_str_i32)
+def py_copy_dict_str_i32(handle: int, token: int) -> Result[dict[str, int32], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_dict_str_u8)
+def py_copy_dict_str_u8(handle: int, token: int) -> Result[dict[str, uint8], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_dict_str_float)
+def py_copy_dict_str_float(handle: int, token: int) -> Result[dict[str, float], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_dict_str_str)
+def py_copy_dict_str_str(handle: int, token: int) -> Result[dict[str, str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_dict_str_bytes)
+def py_copy_dict_str_bytes(handle: int, token: int) -> Result[dict[str, bytes], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_record_fields)
+def py_copy_record_fields(handle: int, token: int, fields: list[str]) -> Result[list[tuple[int, int]], PythonError]: ...

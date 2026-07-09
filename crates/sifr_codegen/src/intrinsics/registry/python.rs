@@ -25,28 +25,6 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_exit_context" => lower_py_exit_context(args),
         "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
         "py_run_coroutine_blocking" => lower_py_run_coroutine_blocking(args),
-        "py_copy_list_bool" => lower_handle_conversion(args, "copy_list_bool"),
-        "py_copy_list_int" => lower_handle_conversion(args, "copy_list_int"),
-        "py_copy_list_i32" => lower_handle_conversion(args, "copy_list_i32"),
-        "py_copy_list_u8" => lower_handle_conversion(args, "copy_list_u8"),
-        "py_copy_list_float" => lower_handle_conversion(args, "copy_list_float"),
-        "py_copy_list_str" => lower_handle_conversion(args, "copy_list_str"),
-        "py_copy_list_bytes" => lower_handle_conversion(args, "copy_list_bytes"),
-        "py_copy_tuple_bool" => lower_handle_conversion(args, "copy_tuple_bool"),
-        "py_copy_tuple_int" => lower_handle_conversion(args, "copy_tuple_int"),
-        "py_copy_tuple_i32" => lower_handle_conversion(args, "copy_tuple_i32"),
-        "py_copy_tuple_u8" => lower_handle_conversion(args, "copy_tuple_u8"),
-        "py_copy_tuple_float" => lower_handle_conversion(args, "copy_tuple_float"),
-        "py_copy_tuple_str" => lower_handle_conversion(args, "copy_tuple_str"),
-        "py_copy_tuple_bytes" => lower_handle_conversion(args, "copy_tuple_bytes"),
-        "py_copy_dict_str_bool" => lower_handle_conversion(args, "copy_dict_str_bool"),
-        "py_copy_dict_str_int" => lower_handle_conversion(args, "copy_dict_str_int"),
-        "py_copy_dict_str_i32" => lower_handle_conversion(args, "copy_dict_str_i32"),
-        "py_copy_dict_str_u8" => lower_handle_conversion(args, "copy_dict_str_u8"),
-        "py_copy_dict_str_float" => lower_handle_conversion(args, "copy_dict_str_float"),
-        "py_copy_dict_str_str" => lower_handle_conversion(args, "copy_dict_str_str"),
-        "py_copy_dict_str_bytes" => lower_handle_conversion(args, "copy_dict_str_bytes"),
-        "py_copy_record_fields" => lower_py_copy_record_fields(args),
         _ => None,
     }
 }
@@ -347,22 +325,4 @@ pub(crate) fn lower_py_exit_context_with_error(args: &[RustExpr]) -> Option<Rust
 
 pub(crate) fn lower_py_run_coroutine_blocking(args: &[RustExpr]) -> Option<RustExpr> {
     lower_handle_conversion(args, "run_coroutine_blocking")
-}
-
-pub(crate) fn lower_py_copy_record_fields(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 3 {
-        return None;
-    }
-    let handle = render_expr(&args[0]);
-    let token = render_expr(&args[1]);
-    let fields = render_expr(&args[2]);
-    Some(map_python_error(format!(
-        r#"{{
-            let __sifr_python_fields = ({fields})
-                .iter()
-                .map(|__sifr_python_field| __sifr_python_field.as_str())
-                .collect::<Vec<&str>>();
-            sifr_runtime::python::copy_record_fields(({handle}, {token}), &__sifr_python_fields)
-        }}"#
-    )))
 }

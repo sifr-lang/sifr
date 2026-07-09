@@ -3,7 +3,11 @@ pub const fn feature_name() -> &'static str {
     "python"
 }
 
-use sifr_runtime::{interop::SifrIntBridge, python};
+use sifr_runtime::{
+    interop::{IndexMap, SifrIntBridge},
+    python,
+};
+use std::collections::HashMap;
 
 type ObjectRaw = (i64, i64);
 
@@ -13,6 +17,35 @@ const fn object_raw(raw: (i64, i64)) -> ObjectRaw {
 
 fn object_handle(handle: SifrIntBridge, token: SifrIntBridge) -> ObjectRaw {
     (handle.to_i64_saturating(), token.to_i64_saturating())
+}
+
+macro_rules! copy_sequence_helpers {
+    ($list_name:ident, $tuple_name:ident, $runtime_list:ident, $runtime_tuple:ident, $output:ty, $map:expr) => {
+        pub fn $list_name(
+            handle: SifrIntBridge,
+            token: SifrIntBridge,
+        ) -> Result<Vec<$output>, python::PythonError> {
+            python::$runtime_list(object_handle(handle, token)).map($map)
+        }
+
+        pub fn $tuple_name(
+            handle: SifrIntBridge,
+            token: SifrIntBridge,
+        ) -> Result<Vec<$output>, python::PythonError> {
+            python::$runtime_tuple(object_handle(handle, token)).map($map)
+        }
+    };
+}
+
+macro_rules! copy_dict_helper {
+    ($name:ident, $runtime_name:ident, $output:ty, $map:expr) => {
+        pub fn $name(
+            handle: SifrIntBridge,
+            token: SifrIntBridge,
+        ) -> Result<IndexMap<String, $output>, python::PythonError> {
+            python::$runtime_name(object_handle(handle, token)).map($map)
+        }
+    };
 }
 
 pub fn py_from_none() -> Result<ObjectRaw, python::PythonError> {
@@ -219,6 +252,135 @@ pub fn py_from_record(
         "Python keyed object constructor received mismatched key/value counts",
     )?;
     python::from_record(&keyed).map(object_raw)
+}
+
+copy_sequence_helpers!(
+    py_copy_list_bool,
+    py_copy_tuple_bool,
+    copy_list_bool,
+    copy_tuple_bool,
+    bool,
+    |values| values
+);
+copy_sequence_helpers!(
+    py_copy_list_int,
+    py_copy_tuple_int,
+    copy_list_int,
+    copy_tuple_int,
+    SifrIntBridge,
+    int_vec_to_bridge
+);
+copy_sequence_helpers!(
+    py_copy_list_i32,
+    py_copy_tuple_i32,
+    copy_list_i32,
+    copy_tuple_i32,
+    i32,
+    |values| values
+);
+copy_sequence_helpers!(
+    py_copy_list_u8,
+    py_copy_tuple_u8,
+    copy_list_u8,
+    copy_tuple_u8,
+    u8,
+    |values| values
+);
+copy_sequence_helpers!(
+    py_copy_list_float,
+    py_copy_tuple_float,
+    copy_list_float,
+    copy_tuple_float,
+    f64,
+    |values| values
+);
+copy_sequence_helpers!(
+    py_copy_list_str,
+    py_copy_tuple_str,
+    copy_list_str,
+    copy_tuple_str,
+    String,
+    |values| values
+);
+copy_sequence_helpers!(
+    py_copy_list_bytes,
+    py_copy_tuple_bytes,
+    copy_list_bytes,
+    copy_tuple_bytes,
+    Vec<u8>,
+    |values| values
+);
+
+copy_dict_helper!(
+    py_copy_dict_str_bool,
+    copy_dict_str_bool,
+    bool,
+    index_map_from_hash
+);
+copy_dict_helper!(
+    py_copy_dict_str_int,
+    copy_dict_str_int,
+    SifrIntBridge,
+    int_dict_to_bridge
+);
+copy_dict_helper!(
+    py_copy_dict_str_i32,
+    copy_dict_str_i32,
+    i32,
+    index_map_from_hash
+);
+copy_dict_helper!(
+    py_copy_dict_str_u8,
+    copy_dict_str_u8,
+    u8,
+    index_map_from_hash
+);
+copy_dict_helper!(
+    py_copy_dict_str_float,
+    copy_dict_str_float,
+    f64,
+    index_map_from_hash
+);
+copy_dict_helper!(
+    py_copy_dict_str_str,
+    copy_dict_str_str,
+    String,
+    index_map_from_hash
+);
+copy_dict_helper!(
+    py_copy_dict_str_bytes,
+    copy_dict_str_bytes,
+    Vec<u8>,
+    index_map_from_hash
+);
+
+pub fn py_copy_record_fields(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+    fields: &[String],
+) -> Result<Vec<ObjectRaw>, python::PythonError> {
+    let field_refs = fields.iter().map(String::as_str).collect::<Vec<_>>();
+    python::copy_record_fields(object_handle(handle, token), &field_refs).map(|values| {
+        values
+            .into_iter()
+            .map(|(_field, object)| object_raw(object))
+            .collect()
+    })
+}
+
+fn int_vec_to_bridge(values: Vec<i64>) -> Vec<SifrIntBridge> {
+    values.into_iter().map(SifrIntBridge::from).collect()
+}
+
+fn int_dict_to_bridge(values: HashMap<String, i64>) -> IndexMap<String, SifrIntBridge> {
+    values
+        .into_iter()
+        .map(|(key, value)| (key, SifrIntBridge::from(value)))
+        .collect()
+}
+
+fn index_map_from_hash<T>(values: HashMap<String, T>) -> IndexMap<String, T> {
+    values.into_iter().collect()
 }
 
 fn keyed_object_handles<'a>(
