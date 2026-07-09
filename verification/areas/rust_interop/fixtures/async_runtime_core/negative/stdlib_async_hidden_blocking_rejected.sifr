@@ -1,0 +1,22 @@
+# fixture: async_runtime_core
+# evidence: negative/stdlib_async_hidden_blocking_rejected
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-ASYNC-0001
+class AsyncResourceError(Error):
+    message: str
+
+@rust.opaque(type=sifr_stdlib.async_core.Resource, send=True, sync=False, clone=none, close=async_close)
+class AsyncResource:
+    @rust(Self.aclose, panic=trusted_no_panic)
+    def aclose(self) -> None: ...
+
+@blocking_io
+@rust(sifr_stdlib.async_core.hidden_blocking_wait, panic=trusted_no_panic)
+async def hidden_blocking_wait(resource: AsyncResource) -> None: ...
+
+async def verify_stdlib_async_hidden_blocking_rejected(resource: AsyncResource) -> None:
+    resource.aclose()
+    waited: None = await hidden_blocking_wait(resource)
+    return waited

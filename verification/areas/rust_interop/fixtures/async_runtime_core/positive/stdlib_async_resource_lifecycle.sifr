@@ -1,0 +1,20 @@
+# fixture: async_runtime_core
+# evidence: positive/stdlib_async_resource_lifecycle
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: pass
+class AsyncResourceError(Error):
+    message: str
+
+@rust.opaque(type=sifr_stdlib.async_core.Resource, send=True, sync=False, clone=none, close=async_close, thread_affinity=tokio_current_thread)
+class AsyncResource:
+    @rust(Self.aclose, panic=map_error(sifr_stdlib.async_core.map_panic))
+    async def aclose(self) -> Result[None, AsyncResourceError | RustPanicError]: ...
+
+    @rust(Self.observe, panic=map_error(sifr_stdlib.async_core.map_panic))
+    async def observe(self) -> Result[int, AsyncResourceError | RustPanicError]: ...
+
+async def verify_stdlib_async_resource_lifecycle(resource: AsyncResource) -> Result[int, AsyncResourceError | RustPanicError]:
+    observed: Result[int, AsyncResourceError | RustPanicError] = await resource.observe()
+    closed: Result[None, AsyncResourceError | RustPanicError] = await resource.aclose()
+    return observed

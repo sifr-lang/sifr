@@ -22,6 +22,7 @@ REQUIRED_FIXTURES = {
     "advanced_data_matrix",
     "arrow_record_batch",
     "async_ecosystem_matrix",
+    "async_runtime_core",
     "async_runtime_reqwest",
     "blocking_diagnostics",
     "bridge_type_matrix",

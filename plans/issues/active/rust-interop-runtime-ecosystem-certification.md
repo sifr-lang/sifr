@@ -36,8 +36,12 @@ rows rather than reassigning ecosystem rows wholesale:
 
 - `opaque_resource_matrix` splits into stdlib-owned `opaque_resource_core` and
   certification-owned `opaque_resource_ecosystem`.
-- `async_runtime_reqwest` splits into stdlib-owned `async_runtime_core` and the
-  certification-owned `async_runtime_reqwest` ecosystem loopback row.
+- `async_runtime_reqwest` split in M6 into stdlib-owned `async_runtime_core`
+  and the certification-owned `async_runtime_reqwest` ecosystem loopback row.
+  The core row covers async declaration contracts, async-close lifecycle
+  validation, current-thread affinity, cancellation/drop task semantics, panic
+  conversion through declared stdlib error surfaces, and hidden-blocking
+  rejection. This issue still owns `tokio`/`reqwest` loopback behavior evidence.
 - `callback_subscription_matrix` splits into stdlib-owned
   `callback_subscription_core` and certification-owned
   `callback_subscription_ecosystem`.

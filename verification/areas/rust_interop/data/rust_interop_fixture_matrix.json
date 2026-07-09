@@ -177,6 +177,15 @@
       "negative_evidence": {"id": "hidden_block_on_rejected", "status": "planned"}
     },
     {
+      "id": "async_runtime_core",
+      "tier": 2,
+      "capability": "stdlib-owned async runtime and async resource lifecycle core",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "stdlib_async_resource_lifecycle", "status": "passing"},
+      "negative_evidence": {"id": "stdlib_async_hidden_blocking_rejected", "status": "passing"}
+    },
+    {
       "id": "async_ecosystem_matrix",
       "tier": 2,
       "capability": "async ecosystem signature probing",

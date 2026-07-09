@@ -218,6 +218,18 @@
       "notes": "Async contract validation is implemented, but loopback reqwest runtime behavior is pending."
     },
     {
+      "id": "async_runtime_core",
+      "fixture": "async_runtime_core",
+      "category": "supported",
+      "tier": 2,
+      "capability": "stdlib-owned async runtime and async resource lifecycle core",
+      "execution_kind": "runtime-observed",
+      "required_crates": [],
+      "positive_evidence": {"id": "stdlib_async_resource_lifecycle", "status": "passing"},
+      "negative_evidence": {"id": "stdlib_async_hidden_blocking_rejected", "status": "passing"},
+      "notes": "Stdlib-owned async resources may use async declarations, async-close lifecycle contracts, current-thread affinity, and hidden-blocking rejection; runtime task cancellation/drop coverage is kept in executable Rust tests, and reqwest loopback runtime evidence remains future-owned."
+    },
+    {
       "id": "async_ecosystem_matrix",
       "fixture": "async_ecosystem_matrix",
       "category": "supported",

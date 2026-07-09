@@ -157,8 +157,8 @@ issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 removal_criteria = ["Delete this closing row after migrated time registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/time.sifr"]
-certification_rows = ["async_runtime_reqwest"]
-reason = "Sleep and monotonic now route through _sifr.time private Rust interop declarations and sifr_stdlib.time; this row remains only to record closure of the former compiler intrinsic names."
+certification_rows = ["async_runtime_core"]
+reason = "Sleep and monotonic now route through _sifr.time private Rust interop declarations and sifr_stdlib.time using the stdlib-owned async runtime core evidence; this row remains only to record closure of the former compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.crypto::random"
