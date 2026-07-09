@@ -14,7 +14,6 @@ mod io_json;
 mod math_test;
 mod net;
 mod platform_misc;
-mod process;
 mod python;
 mod runtime;
 mod signal;
@@ -35,7 +34,6 @@ use net::intrinsic_net;
 use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_toml,
 };
-use process::intrinsic_process;
 use python::intrinsic_python;
 use runtime::intrinsic_runtime;
 use signal::intrinsic_signal;
@@ -91,7 +89,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.tls" => Some(intrinsic_tls()),
         "_sifr.url" => Some(intrinsic_url()),
         "_sifr.http" => Some(intrinsic_http()),
-        "_sifr.process" => Some(intrinsic_process()),
         "_sifr.python" => Some(intrinsic_python()),
         "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),

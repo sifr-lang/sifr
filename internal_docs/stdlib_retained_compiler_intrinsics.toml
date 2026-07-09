@@ -172,35 +172,14 @@ reason = "Random module state and distribution helpers now route through _sifr.c
 
 [[surface]]
 id = "_sifr.process"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after all migrated process registry, preamble, and fallback signature names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/process.sifr"]
 certification_rows = ["async_runtime_reqwest"]
-reason = "Async process child handles and async pipes remain resource/runtime-owned pending certification; synchronous process behavior and async run/output/shell behavior now route through _sifr.process private declarations and sifr_stdlib.process."
-registry_files = ["process_async.rs"]
-preamble_files = [
-  "process_async_child_runtime.rs",
-  "process_async_runtime.rs",
-  "process_runtime.rs",
-]
-exact_intrinsics = [
-  "process_async_child_stderr",
-  "process_async_child_stdin",
-  "process_async_child_stdout",
-  "process_async_kill",
-  "process_async_pipe_close",
-  "process_async_pipe_read",
-  "process_async_pipe_read_all",
-  "process_async_pipe_reader_close",
-  "process_async_pipe_write_all",
-  "process_async_spawn",
-  "process_async_terminate",
-  "process_async_wait",
-  "process_handle_wait",
-]
+reason = "Process run/output/shell, child lifecycle, sync pipes, async child lifecycle, and async pipes now route through _sifr.process private Rust interop declarations and sifr_stdlib.process; this row remains only to record closure of the former compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.net"

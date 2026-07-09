@@ -209,14 +209,24 @@ class AsyncChild:
     def __init__(self, handle: int):
         self._handle = handle
 
-    def kill(self) -> Awaitable[Result[None, ProcessError]]:
-        return process_async_kill(self._handle)
+    async def kill(self) -> Result[None, ProcessError]:
+        try:
+            return await process_async_kill(self._handle)
+        except ProcessError as e:
+            raise e
 
-    def terminate(self) -> Awaitable[Result[None, ProcessError]]:
-        return process_async_terminate(self._handle)
+    async def terminate(self) -> Result[None, ProcessError]:
+        try:
+            return await process_async_terminate(self._handle)
+        except ProcessError as e:
+            raise e
 
-    def wait(self) -> Awaitable[Result[Status, ProcessError]]:
-        return process_async_wait(self._handle)
+    async def wait(self) -> Result[Status, ProcessError]:
+        try:
+            parts: list[int] = await process_async_wait(self._handle)
+            return _status_from_parts(parts)
+        except ProcessError as e:
+            raise e
 
     def stdout(self) -> Result[AsyncPipeReader, ProcessError]:
         try:
@@ -246,14 +256,24 @@ class ProcessHandle:
     def __init__(self, handle: int):
         self._handle = handle
 
-    def kill(self) -> Awaitable[Result[None, ProcessError]]:
-        return process_async_kill(self._handle)
+    async def kill(self) -> Result[None, ProcessError]:
+        try:
+            return await process_async_kill(self._handle)
+        except ProcessError as e:
+            raise e
 
-    def terminate(self) -> Awaitable[Result[None, ProcessError]]:
-        return process_async_terminate(self._handle)
+    async def terminate(self) -> Result[None, ProcessError]:
+        try:
+            return await process_async_terminate(self._handle)
+        except ProcessError as e:
+            raise e
 
-    def wait(self) -> Awaitable[Result[Status, ProcessError]]:
-        return process_handle_wait(self._handle)
+    async def wait(self) -> Result[Status, ProcessError]:
+        try:
+            parts: list[int] = await process_handle_wait(self._handle)
+            return _status_from_parts(parts)
+        except ProcessError as e:
+            raise e
 
     def stdout(self) -> Result[AsyncPipeReader, ProcessError]:
         try:
@@ -283,11 +303,17 @@ class AsyncPipeReader:
     def __init__(self, handle: int):
         self._handle = handle
 
-    def read_all(self) -> Awaitable[Result[bytes, ProcessError]]:
-        return process_async_pipe_read_all(self._handle)
+    async def read_all(self) -> Result[bytes, ProcessError]:
+        try:
+            return await process_async_pipe_read_all(self._handle)
+        except ProcessError as e:
+            raise e
 
-    def read(self, max_bytes: int) -> Awaitable[Result[bytes, ProcessError]]:
-        return process_async_pipe_read(self._handle, max_bytes)
+    async def read(self, max_bytes: int) -> Result[bytes, ProcessError]:
+        try:
+            return await process_async_pipe_read(self._handle, max_bytes)
+        except ProcessError as e:
+            raise e
 
     def close(self) -> Result[None, ProcessError]:
         return process_async_pipe_reader_close(self._handle)
@@ -299,8 +325,11 @@ class AsyncPipeWriter:
     def __init__(self, handle: int):
         self._handle = handle
 
-    def write_all(self, data: bytes) -> Awaitable[Result[None, ProcessError]]:
-        return process_async_pipe_write_all(self._handle, data)
+    async def write_all(self, data: bytes) -> Result[None, ProcessError]:
+        try:
+            return await process_async_pipe_write_all(self._handle, data)
+        except ProcessError as e:
+            raise e
 
     def close(self) -> Result[None, ProcessError]:
         return process_async_pipe_close(self._handle)
@@ -586,30 +615,44 @@ async def async_run_timeout(own command: Command, seconds: float) -> Result[Stat
         raise e
 
 
-def async_spawn(own command: Command) -> Awaitable[Result[AsyncChild, ProcessError]]:
-    return process_async_spawn(
-        command.program,
-        command.arguments,
-        command.env_vars,
-        command.working_dir,
-        command.has_working_dir,
-        command.stdin_mode,
-        command.stdout_mode,
-        command.stderr_mode,
-        command.has_stdin_data,
-    )
+async def async_spawn(own command: Command) -> Result[AsyncChild, ProcessError]:
+    try:
+        handle: int = await process_async_spawn(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_mode,
+            command.stdout_mode,
+            command.stderr_mode,
+            command.has_stdin_data,
+        )
+        return AsyncChild(handle)
+    except ProcessError as e:
+        raise e
 
 
-def async_wait(own child: AsyncChild) -> Awaitable[Result[Status, ProcessError]]:
-    return process_async_wait(child._handle)
+async def async_wait(own child: AsyncChild) -> Result[Status, ProcessError]:
+    try:
+        parts: list[int] = await process_async_wait(child._handle)
+        return _status_from_parts(parts)
+    except ProcessError as e:
+        raise e
 
 
-def async_kill(child: AsyncChild) -> Awaitable[Result[None, ProcessError]]:
-    return process_async_kill(child._handle)
+async def async_kill(child: AsyncChild) -> Result[None, ProcessError]:
+    try:
+        return await process_async_kill(child._handle)
+    except ProcessError as e:
+        raise e
 
 
-def async_terminate(child: AsyncChild) -> Awaitable[Result[None, ProcessError]]:
-    return process_async_terminate(child._handle)
+async def async_terminate(child: AsyncChild) -> Result[None, ProcessError]:
+    try:
+        return await process_async_terminate(child._handle)
+    except ProcessError as e:
+        raise e
 
 
 async def async_output(own command: Command) -> Result[Output, ProcessError]:

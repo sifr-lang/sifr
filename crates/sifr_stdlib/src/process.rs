@@ -11,9 +11,17 @@ use std::{
 
 use sifr_runtime::interop::SifrIntBridge;
 
+mod async_child;
 mod async_ops;
 mod child;
 
+pub use async_child::{
+    process_async_child_stderr, process_async_child_stdin, process_async_child_stdout,
+    process_async_kill, process_async_pipe_close, process_async_pipe_read,
+    process_async_pipe_read_all, process_async_pipe_reader_close, process_async_pipe_write_all,
+    process_async_register_scoped_child, process_async_remove_observed, process_async_spawn,
+    process_async_take_child, process_async_terminate, process_async_wait, process_handle_wait,
+};
 pub use async_ops::{
     process_async_output, process_async_output_timeout, process_async_run,
     process_async_run_timeout, process_async_shell_output, process_async_shell_output_timeout,
