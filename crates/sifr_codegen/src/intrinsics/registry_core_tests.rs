@@ -180,6 +180,11 @@ pub(crate) fn lowers_task_current_context_as_language_runtime_glue() {
 }
 
 #[test]
+pub(crate) fn task_current_context_intrinsic_rejects_wrong_arity() {
+    assert!(lower_intrinsic("task_current_context", &["unexpected".to_string()]).is_none());
+}
+
+#[test]
 pub(crate) fn unicode_intrinsics_are_owned_by_compiled_stdlib_declarations() {
     for name in [
         "unicode_data_version",
