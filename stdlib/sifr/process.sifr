@@ -382,12 +382,15 @@ def _status_from_exit(exit_status: tuple[int, int | None]) -> Status:
 
 
 def _status_from_parts(parts: list[int], timed_out: bool = False) -> Status:
+    observed_timed_out: bool = timed_out
+    if len(parts) > 3 and parts[3] != 0:
+        observed_timed_out = True
     if len(parts) < 3:
-        return _status_from_fields(-1, None, timed_out)
+        return _status_from_fields(-1, None, observed_timed_out)
     signal: int | None = None
     if parts[2] != 0:
         signal = parts[1]
-    return _status_from_fields(parts[0], signal, timed_out)
+    return _status_from_fields(parts[0], signal, observed_timed_out)
 
 
 def _status_from_fields(code: int, signal: int | None, timed_out: bool) -> Status:
@@ -552,27 +555,35 @@ def output_text(command: Command, encoding: str = "utf-8") -> Result[TextOutput,
         raise e
 
 
-def async_run(own command: Command) -> Awaitable[Result[Status, ProcessError]]:
-    return process_async_run(
-        command.program,
-        command.arguments,
-        command.env_vars,
-        command.working_dir,
-        command.has_working_dir,
-        command.stdin_mode,
-    )
+async def async_run(own command: Command) -> Result[Status, ProcessError]:
+    try:
+        parts: list[int] = await process_async_run(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_mode,
+        )
+        return _status_from_parts(parts)
+    except ProcessError as e:
+        raise e
 
 
-def async_run_timeout(own command: Command, seconds: float) -> Awaitable[Result[Status, ProcessError]]:
-    return process_async_run_timeout(
-        command.program,
-        command.arguments,
-        command.env_vars,
-        command.working_dir,
-        command.has_working_dir,
-        command.stdin_mode,
-        seconds,
-    )
+async def async_run_timeout(own command: Command, seconds: float) -> Result[Status, ProcessError]:
+    try:
+        parts: list[int] = await process_async_run_timeout(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_mode,
+            seconds,
+        )
+        return _status_from_parts(parts)
+    except ProcessError as e:
+        raise e
 
 
 def async_spawn(own command: Command) -> Awaitable[Result[AsyncChild, ProcessError]]:
@@ -601,51 +612,97 @@ def async_terminate(child: AsyncChild) -> Awaitable[Result[None, ProcessError]]:
     return process_async_terminate(child._handle)
 
 
-def async_output(own command: Command) -> Awaitable[Result[Output, ProcessError]]:
-    return process_async_output(
-        command.program,
-        command.arguments,
-        command.env_vars,
-        command.working_dir,
-        command.has_working_dir,
-        command.stdin_mode,
-        command.stdin_data,
-        command.has_stdin_data,
-    )
+async def async_output(own command: Command) -> Result[Output, ProcessError]:
+    try:
+        handle: str = await process_async_output(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_mode,
+            command.stdin_data,
+            command.has_stdin_data,
+        )
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
+    except ProcessError as e:
+        raise e
 
 
-def async_output_timeout(own command: Command, seconds: float) -> Awaitable[Result[Output, ProcessError]]:
-    return process_async_output_timeout(
-        command.program,
-        command.arguments,
-        command.env_vars,
-        command.working_dir,
-        command.has_working_dir,
-        command.stdin_mode,
-        command.stdin_data,
-        command.has_stdin_data,
-        seconds,
-    )
+async def async_output_timeout(own command: Command, seconds: float) -> Result[Output, ProcessError]:
+    try:
+        handle: str = await process_async_output_timeout(
+            command.program,
+            command.arguments,
+            command.env_vars,
+            command.working_dir,
+            command.has_working_dir,
+            command.stdin_mode,
+            command.stdin_data,
+            command.has_stdin_data,
+            seconds,
+        )
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
+    except ProcessError as e:
+        raise e
 
 
-def async_run_shell(script: str) -> Awaitable[Result[Status, ProcessError]]:
-    return process_async_shell_run(script)
+async def async_run_shell(script: str) -> Result[Status, ProcessError]:
+    try:
+        parts: list[int] = await process_async_shell_run(script)
+        return _status_from_parts(parts)
+    except ProcessError as e:
+        raise e
 
 
-def async_output_shell(script: str, stdin: bytes | None = None) -> Awaitable[Result[Output, ProcessError]]:
-    if stdin is None:
-        return process_async_shell_output(script, b"", False)
-    return process_async_shell_output(script, stdin, True)
+async def async_output_shell(script: str, stdin: bytes | None = None) -> Result[Output, ProcessError]:
+    try:
+        if stdin is None:
+            handle: str = await process_async_shell_output(script, b"", False)
+            stdout: bytes = process_output_stdout(handle)
+            stderr: bytes = process_output_stderr(handle)
+            status: Status = _status_from_output_handle(handle)
+            process_output_close(handle)
+            return Output(stdout, stderr, status)
+        handle: str = await process_async_shell_output(script, stdin, True)
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
+    except ProcessError as e:
+        raise e
 
 
-def async_output_shell_timeout(
+async def async_output_shell_timeout(
     script: str,
     seconds: float,
     stdin: bytes | None = None,
-) -> Awaitable[Result[Output, ProcessError]]:
-    if stdin is None:
-        return process_async_shell_output_timeout(script, b"", False, seconds)
-    return process_async_shell_output_timeout(script, stdin, True, seconds)
+) -> Result[Output, ProcessError]:
+    try:
+        if stdin is None:
+            handle: str = await process_async_shell_output_timeout(script, b"", False, seconds)
+            stdout: bytes = process_output_stdout(handle)
+            stderr: bytes = process_output_stderr(handle)
+            status: Status = _status_from_output_handle(handle)
+            process_output_close(handle)
+            return Output(stdout, stderr, status)
+        handle: str = await process_async_shell_output_timeout(script, stdin, True, seconds)
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
+    except ProcessError as e:
+        raise e
 
 
 @blocking_io

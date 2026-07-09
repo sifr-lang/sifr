@@ -30,6 +30,13 @@ fn process_sync_private_declarations_codegen_through_sifr_stdlib() {
         "process_wait",
         "process_kill",
         "process_terminate",
+        "process_async_run",
+        "process_async_run_timeout",
+        "process_async_output",
+        "process_async_output_timeout",
+        "process_async_shell_run",
+        "process_async_shell_output",
+        "process_async_shell_output_timeout",
     ] {
         assert!(
             private_code.rust.contains(&format!("fn {name}(")),
@@ -72,6 +79,13 @@ fn process_sync_private_declarations_codegen_through_sifr_stdlib() {
         "process_wait",
         "process_kill",
         "process_terminate",
+        "process_async_run",
+        "process_async_run_timeout",
+        "process_async_output",
+        "process_async_output_timeout",
+        "process_async_shell_run",
+        "process_async_shell_output",
+        "process_async_shell_output_timeout",
     ] {
         assert!(
             !private_intrinsics.contains(name),

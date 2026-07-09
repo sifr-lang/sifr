@@ -11,8 +11,14 @@ use std::{
 
 use sifr_runtime::interop::SifrIntBridge;
 
+mod async_ops;
 mod child;
 
+pub use async_ops::{
+    process_async_output, process_async_output_timeout, process_async_run,
+    process_async_run_timeout, process_async_shell_output, process_async_shell_output_timeout,
+    process_async_shell_run,
+};
 pub use child::{
     process_child_close, process_child_stderr, process_child_stdin, process_child_stdout,
     process_kill, process_pipe_close, process_pipe_read, process_pipe_read_all,
@@ -278,13 +284,31 @@ fn store_output_parts(
     stdout_text: Option<String>,
     stderr_text: Option<String>,
 ) -> Result<String, io::Error> {
-    let id = next_output_id();
-    let stored = StoredProcessOutput {
-        stdout: output.stdout,
-        stderr: output.stderr,
+    store_output_components(
+        output.stdout,
+        output.stderr,
+        output.status,
+        timed_out,
         stdout_text,
         stderr_text,
-        status: status_tuple(output.status),
+    )
+}
+
+pub(super) fn store_output_components(
+    stdout: Vec<u8>,
+    stderr: Vec<u8>,
+    status: ExitStatus,
+    timed_out: bool,
+    stdout_text: Option<String>,
+    stderr_text: Option<String>,
+) -> Result<String, io::Error> {
+    let id = next_output_id();
+    let stored = StoredProcessOutput {
+        stdout,
+        stderr,
+        stdout_text,
+        stderr_text,
+        status: status_tuple(status),
         timed_out,
     };
     process_outputs().insert(id.clone(), stored);
@@ -319,12 +343,21 @@ fn decode_text(data: &[u8], encoding: &str) -> Result<String, io::Error> {
     sifr_runtime::encoding::decode_text(data, encoding, "strict").map_err(io::Error::other)
 }
 
-fn status_tuple(status: ExitStatus) -> Vec<SifrIntBridge> {
+pub(super) fn status_tuple(status: ExitStatus) -> Vec<SifrIntBridge> {
     let signal = exit_signal(&status);
     vec![
         SifrIntBridge::from(i64::from(status.code().unwrap_or(-1))),
         SifrIntBridge::from(signal.unwrap_or(0)),
         SifrIntBridge::from(i64::from(signal.is_some())),
+    ]
+}
+
+pub(super) fn timeout_status_tuple() -> Vec<SifrIntBridge> {
+    vec![
+        SifrIntBridge::from(-1),
+        SifrIntBridge::from(0),
+        SifrIntBridge::from(0),
+        SifrIntBridge::from(1),
     ]
 }
 

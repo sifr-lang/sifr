@@ -370,14 +370,6 @@ pub fn generate_rust_with_stdlib_for_module(
                         prepared.shared_needs.file_handles.needs_file_handles;
                     stdlib_needs_process_status |=
                         prepared.shared_needs.process_status.needs_process_status;
-                    stdlib_needs_process_async.needs_run |=
-                        prepared.shared_needs.process_async.needs_run;
-                    stdlib_needs_process_async.needs_run_timeout |=
-                        prepared.shared_needs.process_async.needs_run_timeout;
-                    stdlib_needs_process_async.needs_output |=
-                        prepared.shared_needs.process_async.needs_output;
-                    stdlib_needs_process_async.needs_output_timeout |=
-                        prepared.shared_needs.process_async.needs_output_timeout;
                     stdlib_needs_process_async.needs_spawn |=
                         prepared.shared_needs.process_async.needs_spawn;
                     stdlib_needs_process_async.needs_spawn_function |=
@@ -413,11 +405,7 @@ pub fn generate_rust_with_stdlib_for_module(
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
     let uses_task_scope_process = module_uses_task_scope_process(module);
     let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
-    let needs_process_async = stdlib_needs_process_async.needs_run
-        || stdlib_needs_process_async.needs_run_timeout
-        || stdlib_needs_process_async.needs_output
-        || stdlib_needs_process_async.needs_output_timeout
-        || stdlib_needs_process_async.needs_spawn
+    let needs_process_async = stdlib_needs_process_async.needs_spawn
         || stdlib_needs_process_async.needs_wait
         || stdlib_needs_process_async.needs_kill
         || stdlib_needs_process_async.needs_terminate

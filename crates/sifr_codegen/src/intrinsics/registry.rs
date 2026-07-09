@@ -117,22 +117,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "process_async_run" => (
-            process_async::lower_process_async_run(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_run_timeout" => (
-            process_async::lower_process_async_run_timeout(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_output" => (
-            process_async::lower_process_async_output(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_output_timeout" => (
-            process_async::lower_process_async_output_timeout(args),
-            Some(StdlibFeature::Tokio),
-        ),
         "process_async_spawn" => (
             process_async::lower_process_async_spawn(args),
             Some(StdlibFeature::Tokio),
@@ -183,18 +167,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         ),
         "process_async_pipe_close" => (
             process_async::lower_process_async_pipe_close(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_shell_run" => (
-            process_async::lower_process_async_shell_run(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_shell_output" => (
-            process_async::lower_process_async_shell_output(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "process_async_shell_output_timeout" => (
-            process_async::lower_process_async_shell_output_timeout(args),
             Some(StdlibFeature::Tokio),
         ),
         "net_connect_tcp" => (net::lower_net_connect_tcp(args), Some(StdlibFeature::Tokio)),
