@@ -546,6 +546,46 @@ pub fn py_release_dlpack(
     remove_result
 }
 
+pub fn py_enter_context(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<ObjectRaw, python::PythonError> {
+    python::enter_context(object_handle(handle, token)).map(object_raw)
+}
+
+pub fn py_exit_context(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<(), python::PythonError> {
+    python::exit_context(object_handle(handle, token))
+}
+
+pub fn py_exit_context_with_error(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+    kind: &str,
+    exception_type: &str,
+    message: &str,
+    traceback: &str,
+    context: &str,
+) -> Result<(), python::PythonError> {
+    python::exit_context_with_error(
+        object_handle(handle, token),
+        kind,
+        exception_type,
+        message,
+        traceback,
+        context,
+    )
+}
+
+pub fn py_run_coroutine_blocking(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<ObjectRaw, python::PythonError> {
+    python::run_coroutine_blocking(object_handle(handle, token)).map(object_raw)
+}
+
 fn buffer_raw(metadata: python::PythonBufferMetadata) -> BufferRaw {
     (
         metadata.handle,
