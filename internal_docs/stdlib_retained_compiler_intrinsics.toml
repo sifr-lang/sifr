@@ -188,20 +188,14 @@ reason = "TLS public behavior now routes through _sifr.tls private Rust interop 
 
 [[surface]]
 id = "_sifr.signal"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after migrated signal registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/signal.sifr"]
 certification_rows = ["callback_subscription_matrix"]
-reason = "Signal streams and shutdown coordination remain runtime-sensitive pending callback/resource certification."
-registry_files = ["signal.rs"]
-exact_intrinsics = [
-  "signal_ctrl_c",
-  "signal_shutdown",
-  "signal_terminate",
-]
+reason = "Signal public behavior now routes through _sifr.signal private Rust interop declarations and sifr_stdlib.signals; this row remains only to record closure of the former compiler intrinsic names. Broader callback/subscription certification remains future-owned by the compatibility matrix and is not claimed by this signal native-boundary slice."
 
 [[surface]]
 id = "_sifr.runtime::observability_glue"

@@ -7,7 +7,6 @@ mod os;
 mod python;
 mod requirements;
 mod runtime;
-mod signal;
 mod task;
 mod test;
 
@@ -93,18 +92,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "signal_ctrl_c" => (
-            signal::lower_signal_ctrl_c(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "signal_terminate" => (
-            signal::lower_signal_terminate(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "signal_shutdown" => (
-            signal::lower_signal_shutdown(args),
-            Some(StdlibFeature::Tokio),
-        ),
         "runtime_emit_diagnostic" => (runtime::lower_runtime_emit_diagnostic(args), None),
         name if name.starts_with("py_") => (
             python::lower_python_intrinsic(name, args),

@@ -76,7 +76,7 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
 fn is_message_error_alias(name: &str) -> bool {
     matches!(
         name,
-        "ProcessError" | "NetError" | "TlsError" | "HeaderError" | "HttpError"
+        "ProcessError" | "NetError" | "TlsError" | "HeaderError" | "HttpError" | "SignalError"
     )
 }
 
