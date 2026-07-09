@@ -21,7 +21,11 @@ pub(crate) fn rust_interop_function_body(func: &HirFunction) -> Option<Vec<RustS
     }
     let call = RustExpr::FnCall {
         func: Box::new(RustExpr::Path(rust_function_path(target))),
-        args: func.params.iter().map(direct_rust_arg_expr).collect(),
+        args: func
+            .params
+            .iter()
+            .map(|param| direct_rust_arg_expr(param, target))
+            .collect(),
     };
     let value = if direct_rust_function_is_async(func, declaration) {
         RustExpr::Await(Box::new(call))
@@ -45,9 +49,11 @@ fn direct_rust_function_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
     rust_interop_function_body(func)
 }
 
-fn direct_rust_arg_expr(param: &HirParam) -> RustExpr {
+fn direct_rust_arg_expr(param: &HirParam, target: &RustTargetPath) -> RustExpr {
     let value = RustExpr::Ident(param.name.clone());
-    if param.ty == Type::Int {
+    if is_python_callback_constructor_target(target) && is_python_raw_callback_type(&param.ty) {
+        python_raw_callback_adapter_expr(&param.name)
+    } else if param.ty == Type::Int {
         RustExpr::FnCall {
             func: Box::new(sifr_int_bridge_path("from")),
             args: vec![value],
@@ -109,6 +115,54 @@ fn is_optional_int(ty: &Type) -> bool {
             .any(|member| member.resolve_alias() == &Type::Int)
 }
 
+fn is_python_callback_constructor_target(target: &RustTargetPath) -> bool {
+    matches!(
+        target.segments.as_slice(),
+        [root, module, function]
+            if root == "sifr_stdlib"
+                && module == "python"
+                && matches!(function.as_str(), "py_local_callback" | "py_threadsafe_callback")
+    )
+}
+
+fn is_python_raw_callback_type(ty: &Type) -> bool {
+    let Type::Callable(params, _, ret) = ty.resolve_alias() else {
+        return false;
+    };
+    matches!(
+        params.as_slice(),
+        [Type::Tuple(items)] if matches!(items.as_slice(), [Type::Int, Type::Int])
+    ) && matches!(
+        ret.resolve_alias(),
+        Type::Result(ok, err)
+            if matches!(
+                ok.resolve_alias(),
+                Type::Tuple(items) if matches!(items.as_slice(), [Type::Int, Type::Int])
+            ) && matches!(err.resolve_alias(), Type::Class { name, .. } if name == "PythonError")
+    )
+}
+
+fn python_raw_callback_adapter_expr(handler: &str) -> RustExpr {
+    RustExpr::Ident(format!(
+        r#"move |__sifr_callback_arg| {{
+            let __sifr_callback_raw = (__sifr_callback_arg.0, __sifr_callback_arg.1);
+            match {handler}(__sifr_callback_raw) {{
+                Ok(__sifr_callback_result) => Ok((
+                    __sifr_callback_result.0,
+                    __sifr_callback_result.1,
+                )),
+                Err(__sifr_callback_error) => Err(sifr_stdlib::python::PythonError {{
+                    message: __sifr_callback_error.message,
+                    kind: __sifr_callback_error.kind,
+                    exception_type: __sifr_callback_error.exception_type,
+                    traceback: __sifr_callback_error.traceback,
+                    context: __sifr_callback_error.context,
+                }}),
+            }}
+        }}"#
+    ))
+}
+
 fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
     match return_type.resolve_alias() {
         Type::Int => bridge_int_to_i64_expr(value),
@@ -129,7 +183,11 @@ pub(crate) fn rust_interop_method_body(func: &HirFunction) -> Option<Vec<RustStm
     } else {
         RustExpr::FnCall {
             func: Box::new(RustExpr::Path(rust_function_path(target))),
-            args: func.params.iter().map(direct_rust_arg_expr).collect(),
+            args: func
+                .params
+                .iter()
+                .map(|param| direct_rust_arg_expr(param, target))
+                .collect(),
         }
     };
     let value = if direct_rust_function_is_async(func, declaration) {
@@ -152,7 +210,11 @@ fn self_method_call(
             field: "_handle".to_string(),
         }),
         method,
-        args: func.params.iter().map(direct_rust_arg_expr).collect(),
+        args: func
+            .params
+            .iter()
+            .map(|param| direct_rust_arg_expr(param, target))
+            .collect(),
     })
 }
 

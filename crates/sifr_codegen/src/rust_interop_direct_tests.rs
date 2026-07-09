@@ -159,6 +159,72 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
     );
 }
 
+#[test]
+fn rust_interop_function_body_adapts_python_raw_callback_parameter() {
+    let python_error = Type::Class {
+        name: "PythonError".to_string(),
+        fields: vec![
+            ("message".to_string(), Type::Str),
+            ("kind".to_string(), Type::Str),
+            ("exception_type".to_string(), Type::Str),
+            ("traceback".to_string(), Type::Str),
+            ("context".to_string(), Type::Str),
+        ],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let raw_object = Type::Tuple(vec![Type::Int, Type::Int]);
+    let func = HirFunction {
+        name: "py_local_callback".to_string(),
+        params: vec![HirParam {
+            name: "handler".to_string(),
+            ty: Type::Callable(
+                vec![raw_object.clone()],
+                vec![ParamConvention::borrow()],
+                Box::new(Type::Result(
+                    Box::new(raw_object),
+                    Box::new(python_error.clone()),
+                )),
+            ),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::borrow(),
+        }],
+        return_type: Type::Result(
+            Box::new(Type::Tuple(vec![
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::Int,
+                Type::Str,
+            ])),
+            Box::new(python_error),
+        ),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![declaration(
+            RustInteropDecoratorKind::Function,
+            &["sifr_stdlib", "python", "py_local_callback"],
+        )],
+        type_params: Vec::new(),
+    };
+
+    let body =
+        rust_interop_function_body(&func).expect("Python callback interop should lower to a body");
+    let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+        panic!("Python callback interop should lower to a return expression");
+    };
+    let rendered = render_expr(expr);
+
+    assert!(rendered.contains("sifr_stdlib::python::py_local_callback(move |__sifr_callback_arg|"));
+    assert!(rendered.contains("handler(__sifr_callback_raw)"));
+    assert!(rendered.contains("__sifr_callback_result.0"));
+    assert!(rendered.contains("sifr_stdlib::python::PythonError"));
+    assert!(rendered.contains("PythonError { message: __sifr_bridge_error.message.to_string()"));
+}
+
 fn zip_error_class() -> HirClass {
     HirClass {
         name: "ZipError".to_string(),

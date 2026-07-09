@@ -12,7 +12,6 @@ mod i18n_core;
 mod io_json;
 mod math_test;
 mod platform_misc;
-mod python;
 mod runtime;
 mod sys_fs;
 mod task;
@@ -28,7 +27,6 @@ use math_test::{intrinsic_math, intrinsic_test};
 use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_toml,
 };
-use python::intrinsic_python;
 use runtime::intrinsic_runtime;
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use task::intrinsic_task;
@@ -78,7 +76,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.url" => Some(intrinsic_url()),
-        "_sifr.python" => Some(intrinsic_python()),
         "_sifr.runtime" => Some(intrinsic_runtime()),
         "_sifr.task" => Some(intrinsic_task()),
         "_sifr.toml" => Some(intrinsic_toml()),

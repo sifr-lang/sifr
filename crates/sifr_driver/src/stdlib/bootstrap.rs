@@ -132,11 +132,6 @@ fn compile_stdlib_sources_with_sysroot(
         for func in &result.module.functions {
             if private_declaration || should_export_callable(module_name, &func.name) {
                 fn_exports.insert(func.name.clone(), function_type_from_hir(func));
-                if module_name == "sifr.python"
-                    && matches!(func.name.as_str(), "local_callback" | "threadsafe_callback")
-                {
-                    intrinsic_names_for_module.insert(func.name.clone());
-                }
                 if let Some(vararg_index) = result.function_varargs.get(&func.name) {
                     vararg_exports.insert(func.name.clone(), *vararg_index);
                 }

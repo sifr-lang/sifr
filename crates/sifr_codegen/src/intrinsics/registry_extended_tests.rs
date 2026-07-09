@@ -17,25 +17,18 @@ pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
 
 #[test]
 pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
-    let callback =
-        lower_intrinsic("py_threadsafe_callback_echo", &[]).expect("callback should lower");
-    let callback_rendered = render_expr(&callback.expr);
-    assert!(callback_rendered.contains("sifr_runtime::python::threadsafe_callback_echo"));
-    assert!(callback_rendered.contains("__sifr_python_callback.object_handle"));
-
-    let registered_callback = lower_intrinsic("local_callback", &["handle_python".to_string()])
-        .expect("local_callback should lower");
-    let registered_rendered = render_expr(&registered_callback.expr);
-    assert!(registered_rendered.contains("sifr_runtime::python::local_callback"));
-    assert!(registered_rendered.contains("handle_python(&__sifr_callback_object)"));
-    assert!(registered_rendered.contains("LocalCallback::new"));
-
-    let close_callback = lower_intrinsic(
+    for name in [
+        "local_callback",
+        "threadsafe_callback",
+        "py_local_callback_echo",
+        "py_threadsafe_callback_echo",
         "py_close_callback",
-        &["callback_handle".to_string(), "callback_token".to_string()],
-    )
-    .expect("py_close_callback should lower");
-    assert!(render_expr(&close_callback.expr).contains("sifr_runtime::python::close_callback"));
+    ] {
+        assert!(
+            lower_intrinsic(name, &["handler".to_string()]).is_none(),
+            "{name} must lower through source-declared stdlib Rust interop, not Python intrinsics"
+        );
+    }
 }
 
 #[test]
