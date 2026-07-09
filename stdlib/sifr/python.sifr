@@ -3,8 +3,12 @@ from typing import Callable
 
 from _sifr.python import (
     py_arrow_array,
+    py_arrow_capsule_names,
     py_arrow_schema,
     py_arrow_stream,
+    py_buffer_shape,
+    py_buffer_strides,
+    py_buffer_suboffsets,
     py_call,
     py_call_attr,
     py_buffer_u8,
@@ -33,6 +37,8 @@ from _sifr.python import (
     py_copy_tuple_str,
     py_copy_tuple_u8,
     py_dlpack_tensor,
+    py_dlpack_shape,
+    py_dlpack_strides,
     py_enter_context,
     py_exit_context,
     py_exit_context_with_error,
@@ -179,7 +185,7 @@ def _object_ref(obj: Object) -> Object:
     return _object_from_handle((obj._handle, obj._token))
 
 
-def _buffer_from_raw(own raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str]) -> BufferView:
+def _buffer_from_raw(own raw: tuple[int, int, int, int, bool, int, bool, bool, str]) -> Result[BufferView, PythonError]:
     view: BufferView = BufferView()
     view._handle = raw[0]
     view._token = raw[1]
@@ -187,28 +193,28 @@ def _buffer_from_raw(own raw: tuple[int, int, int, int, bool, int, list[int], li
     view.item_size = raw[3]
     view.readonly = raw[4]
     view.dimensions = raw[5]
-    view.shape = raw[6]
-    view.strides = raw[7]
-    view.suboffsets = raw[8]
-    view.c_contiguous = raw[9]
-    view.f_contiguous = raw[10]
-    view.format = raw[11]
+    view.shape = py_buffer_shape(raw[0], raw[1])
+    view.strides = py_buffer_strides(raw[0], raw[1])
+    view.suboffsets = py_buffer_suboffsets(raw[0], raw[1])
+    view.c_contiguous = raw[6]
+    view.f_contiguous = raw[7]
+    view.format = raw[8]
     return view
 
 
-def _arrow_from_raw(own raw: tuple[int, int, str, list[str], str, str, bool]) -> ArrowCapsule:
+def _arrow_from_raw(own raw: tuple[int, int, str, str, str, bool]) -> Result[ArrowCapsule, PythonError]:
     capsule: ArrowCapsule = ArrowCapsule()
     capsule._handle = raw[0]
     capsule._token = raw[1]
     capsule.kind = raw[2]
-    capsule.capsule_names = raw[3]
-    capsule.producer_module = raw[4]
-    capsule.producer_type = raw[5]
-    capsule.copy_possible = raw[6]
+    capsule.capsule_names = py_arrow_capsule_names(raw[0], raw[1])
+    capsule.producer_module = raw[3]
+    capsule.producer_type = raw[4]
+    capsule.copy_possible = raw[5]
     return capsule
 
 
-def _dlpack_from_raw(own raw: tuple[int, int, int, int, int, str, int, int, int, list[int], list[int], int, bool, bool]) -> DlpackTensor:
+def _dlpack_from_raw(own raw: tuple[int, int, int, int, int, str, int, int, int, int, bool, bool]) -> Result[DlpackTensor, PythonError]:
     tensor: DlpackTensor = DlpackTensor()
     tensor._handle = raw[0]
     tensor._token = raw[1]
@@ -219,11 +225,11 @@ def _dlpack_from_raw(own raw: tuple[int, int, int, int, int, str, int, int, int,
     tensor.device_type = raw[6]
     tensor.device_id = raw[7]
     tensor.dimensions = raw[8]
-    tensor.shape = raw[9]
-    tensor.strides = raw[10]
-    tensor.byte_offset = raw[11]
-    tensor.has_deleter = raw[12]
-    tensor.stream_sync_required = raw[13]
+    tensor.shape = py_dlpack_shape(raw[0], raw[1])
+    tensor.strides = py_dlpack_strides(raw[0], raw[1])
+    tensor.byte_offset = raw[9]
+    tensor.has_deleter = raw[10]
+    tensor.stream_sync_required = raw[11]
     return tensor
 
 
@@ -339,7 +345,7 @@ def close(own obj: Object) -> Result[None, PythonError]:
 @blocking_io
 def zero_copy_as_u8(obj: Object) -> Result[BufferView, PythonError]:
     try:
-        raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str] = py_buffer_u8(
+        raw: tuple[int, int, int, int, bool, int, bool, bool, str] = py_buffer_u8(
             obj._handle,
             obj._token,
             False,
@@ -352,7 +358,7 @@ def zero_copy_as_u8(obj: Object) -> Result[BufferView, PythonError]:
 @blocking_io
 def zero_copy_as_writable_u8(obj: Object) -> Result[BufferView, PythonError]:
     try:
-        raw: tuple[int, int, int, int, bool, int, list[int], list[int], list[int], bool, bool, str] = py_buffer_u8(
+        raw: tuple[int, int, int, int, bool, int, bool, bool, str] = py_buffer_u8(
             obj._handle,
             obj._token,
             True,
@@ -375,7 +381,7 @@ def release_buffer(own view: BufferView) -> Result[None, PythonError]:
 @blocking_io
 def export_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, list[str], str, str, bool] = py_arrow_array(obj._handle, obj._token)
+        raw: tuple[int, int, str, str, str, bool] = py_arrow_array(obj._handle, obj._token)
         return _arrow_from_raw(raw)
     except PythonError as e:
         raise e
@@ -384,7 +390,7 @@ def export_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def export_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, list[str], str, str, bool] = py_arrow_stream(obj._handle, obj._token)
+        raw: tuple[int, int, str, str, str, bool] = py_arrow_stream(obj._handle, obj._token)
         return _arrow_from_raw(raw)
     except PythonError as e:
         raise e
@@ -393,7 +399,7 @@ def export_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def export_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, list[str], str, str, bool] = py_arrow_schema(obj._handle, obj._token)
+        raw: tuple[int, int, str, str, str, bool] = py_arrow_schema(obj._handle, obj._token)
         return _arrow_from_raw(raw)
     except PythonError as e:
         raise e
@@ -407,8 +413,8 @@ def release_arrow(own capsule: ArrowCapsule) -> Result[None, PythonError]:
 @blocking_io
 def zero_copy_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, list[str], str, str, bool] = py_arrow_array(obj._handle, obj._token)
-        if raw[6]:
+        raw: tuple[int, int, str, str, str, bool] = py_arrow_array(obj._handle, obj._token)
+        if raw[5]:
             released: None = py_release_arrow(raw[0], raw[1])
             raise PythonError(
                 "Arrow array exporter may copy; zero-copy was not proven",
@@ -425,8 +431,8 @@ def zero_copy_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def zero_copy_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, list[str], str, str, bool] = py_arrow_stream(obj._handle, obj._token)
-        if raw[6]:
+        raw: tuple[int, int, str, str, str, bool] = py_arrow_stream(obj._handle, obj._token)
+        if raw[5]:
             released: None = py_release_arrow(raw[0], raw[1])
             raise PythonError(
                 "Arrow stream exporter may copy; zero-copy was not proven",
@@ -443,8 +449,8 @@ def zero_copy_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def zero_copy_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, list[str], str, str, bool] = py_arrow_schema(obj._handle, obj._token)
-        if raw[6]:
+        raw: tuple[int, int, str, str, str, bool] = py_arrow_schema(obj._handle, obj._token)
+        if raw[5]:
             released: None = py_release_arrow(raw[0], raw[1])
             raise PythonError(
                 "Arrow schema exporter may copy; zero-copy was not proven",
@@ -461,7 +467,7 @@ def zero_copy_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def zero_copy_dlpack_tensor(obj: Object) -> Result[DlpackTensor, PythonError]:
     try:
-        raw: tuple[int, int, int, int, int, str, int, int, int, list[int], list[int], int, bool, bool] = py_dlpack_tensor(
+        raw: tuple[int, int, int, int, int, str, int, int, int, int, bool, bool] = py_dlpack_tensor(
             obj._handle,
             obj._token,
         )

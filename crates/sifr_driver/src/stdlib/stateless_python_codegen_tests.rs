@@ -319,6 +319,67 @@ fn python_copy_helpers_codegen_through_sifr_stdlib() {
     }
 }
 
+#[test]
+fn python_zero_copy_helpers_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.python")
+        .expect("_sifr.python should generate private Rust code");
+    for name in [
+        "py_buffer_u8",
+        "py_buffer_shape",
+        "py_buffer_strides",
+        "py_buffer_suboffsets",
+        "py_copy_buffer_u8",
+        "py_release_buffer",
+        "py_arrow_array",
+        "py_arrow_capsule_names",
+        "py_arrow_stream",
+        "py_arrow_schema",
+        "py_release_arrow",
+        "py_dlpack_tensor",
+        "py_dlpack_shape",
+        "py_dlpack_strides",
+        "py_release_dlpack",
+    ] {
+        assert!(
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::python::{name}(")),
+            "{name} should lower through _sifr.python private Rust interop declarations"
+        );
+    }
+    let private_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.python")
+        .expect("_sifr.python intrinsic names should be tracked");
+    for name in [
+        "py_buffer_u8",
+        "py_buffer_shape",
+        "py_buffer_strides",
+        "py_buffer_suboffsets",
+        "py_copy_buffer_u8",
+        "py_release_buffer",
+        "py_arrow_array",
+        "py_arrow_capsule_names",
+        "py_arrow_stream",
+        "py_arrow_schema",
+        "py_release_arrow",
+        "py_dlpack_tensor",
+        "py_dlpack_shape",
+        "py_dlpack_strides",
+        "py_release_dlpack",
+    ] {
+        assert!(
+            !private_intrinsics.contains(name),
+            "{name} should not remain a compiler-retained _sifr.python intrinsic"
+        );
+    }
+}
+
 fn sha256_hex(source: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(source.as_bytes());
