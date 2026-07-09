@@ -8,8 +8,50 @@ use sifr_runtime::{
     python,
 };
 use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
 
 type ObjectRaw = (i64, i64);
+type BufferRaw = (i64, i64, i64, i64, bool, i64, bool, bool, String);
+type ArrowRaw = (i64, i64, String, String, String, bool);
+type DlpackRaw = (
+    i64,
+    i64,
+    i64,
+    i64,
+    i64,
+    String,
+    i64,
+    i64,
+    i64,
+    i64,
+    bool,
+    bool,
+);
+
+static BUFFER_METADATA: LazyLock<Mutex<HashMap<ObjectRaw, BufferMetadata>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+static ARROW_METADATA: LazyLock<Mutex<HashMap<ObjectRaw, ArrowMetadata>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+static DLPACK_METADATA: LazyLock<Mutex<HashMap<ObjectRaw, DlpackMetadata>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+#[derive(Clone)]
+struct BufferMetadata {
+    shape: Vec<i64>,
+    strides: Vec<i64>,
+    suboffsets: Vec<i64>,
+}
+
+#[derive(Clone)]
+struct ArrowMetadata {
+    capsule_names: Vec<String>,
+}
+
+#[derive(Clone)]
+struct DlpackMetadata {
+    shape: Vec<i64>,
+    strides: Vec<i64>,
+}
 
 const fn object_raw(raw: (i64, i64)) -> ObjectRaw {
     raw
@@ -366,6 +408,296 @@ pub fn py_copy_record_fields(
             .map(|(_field, object)| object_raw(object))
             .collect()
     })
+}
+
+pub fn py_buffer_u8(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+    require_writable: bool,
+) -> Result<BufferRaw, python::PythonError> {
+    let metadata = python::buffer_u8(object_handle(handle, token), require_writable)?;
+    let key = (metadata.handle, metadata.token);
+    cache_buffer_metadata(key, &metadata)?;
+    Ok(buffer_raw(metadata))
+}
+
+pub fn py_buffer_shape(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<Vec<SifrIntBridge>, python::PythonError> {
+    buffer_metadata(object_handle(handle, token)).map(|metadata| int_vec_to_bridge(metadata.shape))
+}
+
+pub fn py_buffer_strides(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<Vec<SifrIntBridge>, python::PythonError> {
+    buffer_metadata(object_handle(handle, token))
+        .map(|metadata| int_vec_to_bridge(metadata.strides))
+}
+
+pub fn py_buffer_suboffsets(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<Vec<SifrIntBridge>, python::PythonError> {
+    buffer_metadata(object_handle(handle, token))
+        .map(|metadata| int_vec_to_bridge(metadata.suboffsets))
+}
+
+pub fn py_copy_buffer_u8(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<Vec<u8>, python::PythonError> {
+    python::copy_buffer_u8(object_handle(handle, token))
+}
+
+pub fn py_release_buffer(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<(), python::PythonError> {
+    let key = object_handle(handle, token);
+    let release_result = python::release_buffer(key);
+    let remove_result = remove_buffer_metadata(key);
+    release_result?;
+    remove_result
+}
+
+pub fn py_arrow_array(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<ArrowRaw, python::PythonError> {
+    let metadata = python::arrow_array(object_handle(handle, token))?;
+    let key = (metadata.handle, metadata.token);
+    cache_arrow_metadata(key, &metadata)?;
+    Ok(arrow_raw(metadata))
+}
+
+pub fn py_arrow_stream(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<ArrowRaw, python::PythonError> {
+    let metadata = python::arrow_stream(object_handle(handle, token))?;
+    let key = (metadata.handle, metadata.token);
+    cache_arrow_metadata(key, &metadata)?;
+    Ok(arrow_raw(metadata))
+}
+
+pub fn py_arrow_schema(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<ArrowRaw, python::PythonError> {
+    let metadata = python::arrow_schema(object_handle(handle, token))?;
+    let key = (metadata.handle, metadata.token);
+    cache_arrow_metadata(key, &metadata)?;
+    Ok(arrow_raw(metadata))
+}
+
+pub fn py_arrow_capsule_names(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<Vec<String>, python::PythonError> {
+    arrow_metadata(object_handle(handle, token)).map(|metadata| metadata.capsule_names)
+}
+
+pub fn py_release_arrow(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<(), python::PythonError> {
+    let key = object_handle(handle, token);
+    let release_result = python::release_arrow(key);
+    let remove_result = remove_arrow_metadata(key);
+    release_result?;
+    remove_result
+}
+
+pub fn py_dlpack_tensor(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<DlpackRaw, python::PythonError> {
+    let metadata = python::dlpack_tensor(object_handle(handle, token))?;
+    let key = (metadata.handle, metadata.token);
+    cache_dlpack_metadata(key, &metadata)?;
+    Ok(dlpack_raw(metadata))
+}
+
+pub fn py_dlpack_shape(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<Vec<SifrIntBridge>, python::PythonError> {
+    dlpack_metadata(object_handle(handle, token)).map(|metadata| int_vec_to_bridge(metadata.shape))
+}
+
+pub fn py_dlpack_strides(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<Vec<SifrIntBridge>, python::PythonError> {
+    dlpack_metadata(object_handle(handle, token))
+        .map(|metadata| int_vec_to_bridge(metadata.strides))
+}
+
+pub fn py_release_dlpack(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<(), python::PythonError> {
+    let key = object_handle(handle, token);
+    let release_result = python::release_dlpack(key);
+    let remove_result = remove_dlpack_metadata(key);
+    release_result?;
+    remove_result
+}
+
+fn buffer_raw(metadata: python::PythonBufferMetadata) -> BufferRaw {
+    (
+        metadata.handle,
+        metadata.token,
+        metadata.len_bytes,
+        metadata.item_size,
+        metadata.readonly,
+        metadata.dimensions,
+        metadata.c_contiguous,
+        metadata.f_contiguous,
+        metadata.format,
+    )
+}
+
+fn arrow_raw(metadata: python::PythonArrowCapsuleMetadata) -> ArrowRaw {
+    (
+        metadata.handle,
+        metadata.token,
+        metadata.kind,
+        metadata.producer_module,
+        metadata.producer_type,
+        metadata.copy_possible,
+    )
+}
+
+fn dlpack_raw(metadata: python::PythonDlpackTensorMetadata) -> DlpackRaw {
+    (
+        metadata.handle,
+        metadata.token,
+        metadata.dtype_code,
+        metadata.dtype_bits,
+        metadata.dtype_lanes,
+        metadata.dtype,
+        metadata.device_type,
+        metadata.device_id,
+        metadata.dimensions,
+        metadata.byte_offset,
+        metadata.has_deleter,
+        metadata.stream_sync_required,
+    )
+}
+
+fn cache_buffer_metadata(
+    key: ObjectRaw,
+    metadata: &python::PythonBufferMetadata,
+) -> Result<(), python::PythonError> {
+    let mut cache = BUFFER_METADATA
+        .lock()
+        .map_err(|_| metadata_error("buffer metadata cache lock was poisoned", key))?;
+    cache.insert(
+        key,
+        BufferMetadata {
+            shape: metadata.shape.clone(),
+            strides: metadata.strides.clone(),
+            suboffsets: metadata.suboffsets.clone(),
+        },
+    );
+    Ok(())
+}
+
+fn buffer_metadata(key: ObjectRaw) -> Result<BufferMetadata, python::PythonError> {
+    BUFFER_METADATA
+        .lock()
+        .map_err(|_| metadata_error("buffer metadata cache lock was poisoned", key))?
+        .get(&key)
+        .cloned()
+        .ok_or_else(|| metadata_error("buffer metadata was not found for handle", key))
+}
+
+fn remove_buffer_metadata(key: ObjectRaw) -> Result<(), python::PythonError> {
+    BUFFER_METADATA
+        .lock()
+        .map_err(|_| metadata_error("buffer metadata cache lock was poisoned", key))?
+        .remove(&key);
+    Ok(())
+}
+
+fn cache_arrow_metadata(
+    key: ObjectRaw,
+    metadata: &python::PythonArrowCapsuleMetadata,
+) -> Result<(), python::PythonError> {
+    let mut cache = ARROW_METADATA
+        .lock()
+        .map_err(|_| metadata_error("arrow metadata cache lock was poisoned", key))?;
+    cache.insert(
+        key,
+        ArrowMetadata {
+            capsule_names: metadata.capsule_names.clone(),
+        },
+    );
+    Ok(())
+}
+
+fn arrow_metadata(key: ObjectRaw) -> Result<ArrowMetadata, python::PythonError> {
+    ARROW_METADATA
+        .lock()
+        .map_err(|_| metadata_error("arrow metadata cache lock was poisoned", key))?
+        .get(&key)
+        .cloned()
+        .ok_or_else(|| metadata_error("arrow metadata was not found for handle", key))
+}
+
+fn remove_arrow_metadata(key: ObjectRaw) -> Result<(), python::PythonError> {
+    ARROW_METADATA
+        .lock()
+        .map_err(|_| metadata_error("arrow metadata cache lock was poisoned", key))?
+        .remove(&key);
+    Ok(())
+}
+
+fn cache_dlpack_metadata(
+    key: ObjectRaw,
+    metadata: &python::PythonDlpackTensorMetadata,
+) -> Result<(), python::PythonError> {
+    let mut cache = DLPACK_METADATA
+        .lock()
+        .map_err(|_| metadata_error("DLPack metadata cache lock was poisoned", key))?;
+    cache.insert(
+        key,
+        DlpackMetadata {
+            shape: metadata.shape.clone(),
+            strides: metadata.strides.clone(),
+        },
+    );
+    Ok(())
+}
+
+fn dlpack_metadata(key: ObjectRaw) -> Result<DlpackMetadata, python::PythonError> {
+    DLPACK_METADATA
+        .lock()
+        .map_err(|_| metadata_error("DLPack metadata cache lock was poisoned", key))?
+        .get(&key)
+        .cloned()
+        .ok_or_else(|| metadata_error("DLPack metadata was not found for handle", key))
+}
+
+fn remove_dlpack_metadata(key: ObjectRaw) -> Result<(), python::PythonError> {
+    DLPACK_METADATA
+        .lock()
+        .map_err(|_| metadata_error("DLPack metadata cache lock was poisoned", key))?
+        .remove(&key);
+    Ok(())
+}
+
+fn metadata_error(message: &str, key: ObjectRaw) -> python::PythonError {
+    python::PythonError {
+        message: message.to_string(),
+        kind: "resource".to_string(),
+        exception_type: String::new(),
+        traceback: String::new(),
+        context: format!("python metadata handle={}", key.0),
+    }
 }
 
 fn int_vec_to_bridge(values: Vec<i64>) -> Vec<SifrIntBridge> {

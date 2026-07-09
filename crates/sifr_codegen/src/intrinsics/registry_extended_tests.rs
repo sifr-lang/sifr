@@ -43,58 +43,6 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     assert!(exit_with_error_rendered.contains("sifr_runtime::python::exit_context_with_error"));
     assert!(exit_with_error_rendered.contains("(object_handle, object_token)"));
 
-    let buffer = lower_intrinsic(
-        "py_buffer_u8",
-        &[
-            "object_handle".to_string(),
-            "object_token".to_string(),
-            "false".to_string(),
-        ],
-    )
-    .expect("py_buffer_u8 should lower");
-    let buffer_rendered = render_expr(&buffer.expr);
-    assert!(buffer_rendered.contains("sifr_runtime::python::buffer_u8"));
-    assert!(buffer_rendered.contains("__sifr_python_buffer.shape"));
-
-    let release = lower_intrinsic(
-        "py_release_buffer",
-        &["buffer_handle".to_string(), "buffer_token".to_string()],
-    )
-    .expect("py_release_buffer should lower");
-    assert!(render_expr(&release.expr).contains("sifr_runtime::python::release_buffer"));
-
-    let arrow = lower_intrinsic(
-        "py_arrow_stream",
-        &["object_handle".to_string(), "object_token".to_string()],
-    )
-    .expect("py_arrow_stream should lower");
-    let arrow_rendered = render_expr(&arrow.expr);
-    assert!(arrow_rendered.contains("sifr_runtime::python::arrow_stream"));
-    assert!(arrow_rendered.contains("__sifr_python_arrow.copy_possible"));
-
-    let release_arrow = lower_intrinsic(
-        "py_release_arrow",
-        &["arrow_handle".to_string(), "arrow_token".to_string()],
-    )
-    .expect("py_release_arrow should lower");
-    assert!(render_expr(&release_arrow.expr).contains("sifr_runtime::python::release_arrow"));
-
-    let dlpack = lower_intrinsic(
-        "py_dlpack_tensor",
-        &["object_handle".to_string(), "object_token".to_string()],
-    )
-    .expect("py_dlpack_tensor should lower");
-    let dlpack_rendered = render_expr(&dlpack.expr);
-    assert!(dlpack_rendered.contains("sifr_runtime::python::dlpack_tensor"));
-    assert!(dlpack_rendered.contains("__sifr_python_dlpack.dtype"));
-
-    let release_dlpack = lower_intrinsic(
-        "py_release_dlpack",
-        &["dlpack_handle".to_string(), "dlpack_token".to_string()],
-    )
-    .expect("py_release_dlpack should lower");
-    assert!(render_expr(&release_dlpack.expr).contains("sifr_runtime::python::release_dlpack"));
-
     let callback =
         lower_intrinsic("py_threadsafe_callback_echo", &[]).expect("callback should lower");
     let callback_rendered = render_expr(&callback.expr);
@@ -290,6 +238,48 @@ pub(crate) fn python_copy_helpers_are_owned_by_compiled_stdlib_declarations() {
         )
         .is_none(),
         "py_copy_record_fields must lower through _sifr.python private Rust interop declarations"
+    );
+}
+
+#[test]
+pub(crate) fn python_zero_copy_helpers_are_owned_by_compiled_stdlib_declarations() {
+    for removed in [
+        "py_copy_buffer_u8",
+        "py_release_buffer",
+        "py_buffer_shape",
+        "py_buffer_strides",
+        "py_buffer_suboffsets",
+        "py_arrow_array",
+        "py_arrow_stream",
+        "py_arrow_schema",
+        "py_arrow_capsule_names",
+        "py_release_arrow",
+        "py_dlpack_tensor",
+        "py_dlpack_shape",
+        "py_dlpack_strides",
+        "py_release_dlpack",
+    ] {
+        assert!(
+            lower_intrinsic(
+                removed,
+                &["object_handle".to_string(), "object_token".to_string()]
+            )
+            .is_none(),
+            "{removed} must lower through _sifr.python private Rust interop declarations"
+        );
+    }
+
+    assert!(
+        lower_intrinsic(
+            "py_buffer_u8",
+            &[
+                "object_handle".to_string(),
+                "object_token".to_string(),
+                "false".to_string(),
+            ],
+        )
+        .is_none(),
+        "py_buffer_u8 must lower through _sifr.python private Rust interop declarations"
     );
 }
 

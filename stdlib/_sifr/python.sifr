@@ -254,3 +254,70 @@ def py_copy_dict_str_bytes(handle: int, token: int) -> Result[dict[str, bytes], 
 
 @rust(sifr_stdlib.python.py_copy_record_fields)
 def py_copy_record_fields(handle: int, token: int, fields: list[str]) -> Result[list[tuple[int, int]], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_buffer_u8)
+def py_buffer_u8(
+    handle: int,
+    token: int,
+    require_writable: bool,
+) -> Result[tuple[int, int, int, int, bool, int, bool, bool, str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_buffer_shape)
+def py_buffer_shape(handle: int, token: int) -> Result[list[int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_buffer_strides)
+def py_buffer_strides(handle: int, token: int) -> Result[list[int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_buffer_suboffsets)
+def py_buffer_suboffsets(handle: int, token: int) -> Result[list[int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_copy_buffer_u8)
+def py_copy_buffer_u8(handle: int, token: int) -> Result[bytes, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_release_buffer)
+def py_release_buffer(handle: int, token: int) -> Result[None, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_arrow_array)
+def py_arrow_array(handle: int, token: int) -> Result[tuple[int, int, str, str, str, bool], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_arrow_stream)
+def py_arrow_stream(handle: int, token: int) -> Result[tuple[int, int, str, str, str, bool], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_arrow_schema)
+def py_arrow_schema(handle: int, token: int) -> Result[tuple[int, int, str, str, str, bool], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_arrow_capsule_names)
+def py_arrow_capsule_names(handle: int, token: int) -> Result[list[str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_release_arrow)
+def py_release_arrow(handle: int, token: int) -> Result[None, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_dlpack_tensor)
+def py_dlpack_tensor(
+    handle: int,
+    token: int,
+) -> Result[tuple[int, int, int, int, int, str, int, int, int, int, bool, bool], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_dlpack_shape)
+def py_dlpack_shape(handle: int, token: int) -> Result[list[int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_dlpack_strides)
+def py_dlpack_strides(handle: int, token: int) -> Result[list[int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_release_dlpack)
+def py_release_dlpack(handle: int, token: int) -> Result[None, PythonError]: ...
