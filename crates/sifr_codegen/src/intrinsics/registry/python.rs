@@ -36,22 +36,6 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_from_tuple" => lower_py_from_tuple(args),
         "py_from_dict_str" => lower_py_from_dict_str(args),
         "py_from_record" => lower_py_from_record(args),
-        "py_to_none" => lower_py_to_none(args),
-        "py_to_bool" => lower_py_to_bool(args),
-        "py_to_int" => lower_py_to_int(args),
-        "py_to_i8" => lower_py_to_i8(args),
-        "py_to_i16" => lower_py_to_i16(args),
-        "py_to_i32" => lower_py_to_i32(args),
-        "py_to_i64" => lower_py_to_i64(args),
-        "py_to_u8" => lower_py_to_u8(args),
-        "py_to_u16" => lower_py_to_u16(args),
-        "py_to_u32" => lower_py_to_u32(args),
-        "py_to_u64" => lower_py_to_u64(args),
-        "py_to_isize" => lower_py_to_isize(args),
-        "py_to_usize" => lower_py_to_usize(args),
-        "py_to_float" => lower_py_to_float(args),
-        "py_to_str" => lower_py_to_str(args),
-        "py_to_bytes" => lower_py_to_bytes(args),
         "py_copy_list_bool" => lower_handle_conversion(args, "copy_list_bool"),
         "py_copy_list_int" => lower_handle_conversion(args, "copy_list_int"),
         "py_copy_list_i32" => lower_handle_conversion(args, "copy_list_i32"),
@@ -544,70 +528,6 @@ pub(crate) fn lower_py_from_dict_str(args: &[RustExpr]) -> Option<RustExpr> {
 
 pub(crate) fn lower_py_from_record(args: &[RustExpr]) -> Option<RustExpr> {
     lower_keyed_object_constructor(args, "from_record")
-}
-
-pub(crate) fn lower_py_to_none(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_none")
-}
-
-pub(crate) fn lower_py_to_bool(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_bool")
-}
-
-pub(crate) fn lower_py_to_int(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_int")
-}
-
-pub(crate) fn lower_py_to_i8(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_i8")
-}
-
-pub(crate) fn lower_py_to_i16(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_i16")
-}
-
-pub(crate) fn lower_py_to_i32(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_i32")
-}
-
-pub(crate) fn lower_py_to_i64(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_i64")
-}
-
-pub(crate) fn lower_py_to_u8(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_u8")
-}
-
-pub(crate) fn lower_py_to_u16(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_u16")
-}
-
-pub(crate) fn lower_py_to_u32(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_u32")
-}
-
-pub(crate) fn lower_py_to_u64(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_u64")
-}
-
-pub(crate) fn lower_py_to_isize(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_isize")
-}
-
-pub(crate) fn lower_py_to_usize(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_usize")
-}
-
-pub(crate) fn lower_py_to_float(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_float")
-}
-
-pub(crate) fn lower_py_to_str(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_str")
-}
-
-pub(crate) fn lower_py_to_bytes(args: &[RustExpr]) -> Option<RustExpr> {
-    lower_handle_conversion(args, "to_bytes")
 }
 
 pub(crate) fn lower_py_copy_record_fields(args: &[RustExpr]) -> Option<RustExpr> {

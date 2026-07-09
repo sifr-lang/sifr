@@ -45,3 +45,67 @@ def py_from_str(value: str) -> Result[tuple[int, int], PythonError]: ...
 
 @rust(sifr_stdlib.python.py_from_bytes)
 def py_from_bytes(value: bytes) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_none)
+def py_to_none(handle: int, token: int) -> Result[None, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_bool)
+def py_to_bool(handle: int, token: int) -> Result[bool, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_int)
+def py_to_int(handle: int, token: int) -> Result[int, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_i8)
+def py_to_i8(handle: int, token: int) -> Result[int8, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_i16)
+def py_to_i16(handle: int, token: int) -> Result[int16, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_i32)
+def py_to_i32(handle: int, token: int) -> Result[int32, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_i64)
+def py_to_i64(handle: int, token: int) -> Result[int64, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_u8)
+def py_to_u8(handle: int, token: int) -> Result[uint8, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_u16)
+def py_to_u16(handle: int, token: int) -> Result[uint16, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_u32)
+def py_to_u32(handle: int, token: int) -> Result[uint32, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_u64)
+def py_to_u64(handle: int, token: int) -> Result[uint64, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_isize)
+def py_to_isize(handle: int, token: int) -> Result[isize, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_usize)
+def py_to_usize(handle: int, token: int) -> Result[usize, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_float)
+def py_to_float(handle: int, token: int) -> Result[float, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_str)
+def py_to_str(handle: int, token: int) -> Result[str, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_to_bytes)
+def py_to_bytes(handle: int, token: int) -> Result[bytes, PythonError]: ...
