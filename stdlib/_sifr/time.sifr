@@ -12,6 +12,14 @@ def time_format(epoch: float, fmt: str) -> str:
 def perf_counter() -> float:
     ...
 
+@rust(sifr_stdlib.time.sleep)
+def sleep(seconds: float) -> None:
+    ...
+
+@rust(sifr_stdlib.time.monotonic)
+def monotonic() -> float:
+    ...
+
 @rust(sifr_stdlib.time.strptime)
 def strptime(s: str, fmt: str) -> Result[str, ValueError]:
     ...

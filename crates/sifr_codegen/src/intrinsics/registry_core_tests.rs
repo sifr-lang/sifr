@@ -488,21 +488,13 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_time_intrinsics_via_registry() {
-    let sleep = lower_intrinsic("sleep", &["0.1".to_string()]).expect("sleep");
-    assert!(render_expr(&sleep.expr).contains("is_finite()"));
-    assert!(render_expr(&sleep.expr).contains("Duration::from_nanos"));
-
-    let mono = lower_intrinsic("monotonic", &[]).expect("monotonic");
-    assert!(render_expr(&mono.expr).contains("SystemTime::now()"));
-}
-
-#[test]
 pub(crate) fn time_intrinsics_are_owned_by_compiled_stdlib_declarations() {
     for (name, args) in [
         ("time_now", &[][..]),
         ("time_format", &["secs", "mask"][..]),
         ("perf_counter", &[][..]),
+        ("sleep", &["secs"][..]),
+        ("monotonic", &[][..]),
         ("strptime", &["s", "f"][..]),
         ("gmtime", &["ts"][..]),
         ("localtime", &["ts"][..]),

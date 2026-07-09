@@ -271,25 +271,3 @@ pub(super) fn intrinsic_bytes() -> IntrinsicModule {
         constants: HashMap::new(),
     }
 }
-
-/// _sifr.time — Time intrinsics
-pub(super) fn intrinsic_time() -> IntrinsicModule {
-    let mut functions = HashMap::new();
-
-    // sleep(seconds: float) -> None
-    functions.insert(
-        "sleep".to_string(),
-        FunctionType::all_borrow(vec![("seconds".to_string(), Type::Float)], Type::None),
-    );
-
-    // monotonic() -> float (guaranteed non-decreasing clock for timeouts)
-    functions.insert(
-        "monotonic".to_string(),
-        FunctionType::all_borrow(vec![], Type::Float),
-    );
-
-    IntrinsicModule {
-        functions,
-        constants: HashMap::new(),
-    }
-}
