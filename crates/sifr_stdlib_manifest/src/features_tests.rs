@@ -49,6 +49,22 @@ fn random_module_emits_only_sysroot_stdlib_dependency() {
 }
 
 #[test]
+fn process_private_module_emits_process_stdlib_feature() {
+    for module in ["sifr.process", "_sifr.process"] {
+        let deps =
+            generated_cargo_dependencies(&HashSet::from([module.to_string()]), &HashSet::new());
+
+        assert_eq!(deps.len(), 1, "{module} should only need sifr_stdlib");
+        assert!(deps[0].starts_with("sifr_stdlib = "), "{module}");
+        assert!(deps[0].contains("default-features = false"), "{module}");
+        assert!(
+            deps[0].contains("features = [\"process\"]"),
+            "{module} should enable the process stdlib feature"
+        );
+    }
+}
+
+#[test]
 fn unknown_modules_and_empty_features_do_not_emit_dependencies() {
     let stdlib_modules = HashSet::from(["sifr.not_real".to_string()]);
     let required_features = HashSet::new();

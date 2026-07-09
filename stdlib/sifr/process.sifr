@@ -1,5 +1,6 @@
 # sifr.process — Native process execution and status surfaces
 from _sifr.process import (
+    ProcessError,
     process_run,
     process_spawn,
     process_kill,
@@ -40,11 +41,14 @@ from _sifr.process import (
     process_shell_output,
     process_shell_output_text,
     process_shell_output_timeout,
+    process_output_stdout,
+    process_output_stderr,
+    process_output_stdout_text,
+    process_output_stderr_text,
+    process_output_status,
+    process_output_timed_out,
+    process_output_close,
 )
-
-
-class ProcessError(Error):
-    message: str
 
 
 class Stdio:
@@ -374,23 +378,39 @@ def _status(code: int) -> Status:
 
 
 def _status_from_exit(exit_status: tuple[int, int | None]) -> Status:
-    code: int = exit_status[0]
-    if exit_status[1] is not None:
+    return _status_from_fields(exit_status[0], exit_status[1], False)
+
+
+def _status_from_parts(parts: list[int], timed_out: bool = False) -> Status:
+    if len(parts) < 3:
+        return _status_from_fields(-1, None, timed_out)
+    signal: int | None = None
+    if parts[2] != 0:
+        signal = parts[1]
+    return _status_from_fields(parts[0], signal, timed_out)
+
+
+def _status_from_fields(code: int, signal: int | None, timed_out: bool) -> Status:
+    if timed_out:
+        timeout_status: Status = Status(code, "timeout")
+        timeout_status.success = False
+        timeout_status.timed_out = True
+        return timeout_status
+    if signal is not None:
         status: Status = Status(code, "signal")
         status.success = False
-        status.signal = exit_status[1]
+        observed_signal: int | None = signal
+        status.signal = observed_signal
         return status
     return _status(code)
 
 
-def _status_from(exit_status: tuple[int, int | None], timed_out: bool) -> Status:
-    code: int = exit_status[0]
-    if timed_out:
-        status: Status = Status(code, "timeout")
-        status.success = False
-        status.timed_out = True
-        return status
-    return _status_from_exit(exit_status)
+def _status_from_output_handle(handle: str) -> Result[Status, ProcessError]:
+    try:
+        parts: list[int] = process_output_status(handle)
+        return _status_from_parts(parts, process_output_timed_out(handle))
+    except ProcessError as e:
+        raise e
 
 
 @blocking_io
@@ -435,14 +455,14 @@ def wait(child: Child) -> Result[Status, ProcessError]:
 @blocking_io
 def run(command: Command) -> Result[Status, ProcessError]:
     try:
-        exit_status: tuple[int, int | None] = process_run(
+        parts: list[int] = process_run(
             command.program,
             command.arguments,
             command.env_vars,
             command.working_dir,
             command.has_working_dir,
         )
-        return _status_from_exit(exit_status)
+        return _status_from_parts(parts)
     except ProcessError as e:
         raise e
 
@@ -450,7 +470,7 @@ def run(command: Command) -> Result[Status, ProcessError]:
 @blocking_io
 def run_timeout(command: Command, seconds: float) -> Result[Status, ProcessError]:
     try:
-        raw: tuple[bytes, bytes, tuple[int, int | None], bool] = process_output_timeout(
+        handle: str = process_output_timeout(
             command.program,
             command.arguments,
             command.env_vars,
@@ -460,7 +480,9 @@ def run_timeout(command: Command, seconds: float) -> Result[Status, ProcessError
             command.has_stdin_data,
             seconds,
         )
-        return _status_from(raw[2], raw[3])
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return status
     except ProcessError as e:
         raise e
 
@@ -468,7 +490,7 @@ def run_timeout(command: Command, seconds: float) -> Result[Status, ProcessError
 @blocking_io
 def output(command: Command) -> Result[Output, ProcessError]:
     try:
-        raw: tuple[bytes, bytes, tuple[int, int | None]] = process_output(
+        handle: str = process_output(
             command.program,
             command.arguments,
             command.env_vars,
@@ -477,7 +499,11 @@ def output(command: Command) -> Result[Output, ProcessError]:
             command.stdin_data,
             command.has_stdin_data,
         )
-        return Output(raw[0], raw[1], _status_from_exit(raw[2]))
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
     except ProcessError as e:
         raise e
 
@@ -485,7 +511,7 @@ def output(command: Command) -> Result[Output, ProcessError]:
 @blocking_io
 def output_timeout(command: Command, seconds: float) -> Result[Output, ProcessError]:
     try:
-        raw: tuple[bytes, bytes, tuple[int, int | None], bool] = process_output_timeout(
+        handle: str = process_output_timeout(
             command.program,
             command.arguments,
             command.env_vars,
@@ -495,7 +521,11 @@ def output_timeout(command: Command, seconds: float) -> Result[Output, ProcessEr
             command.has_stdin_data,
             seconds,
         )
-        return Output(raw[0], raw[1], _status_from(raw[2], raw[3]))
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
     except ProcessError as e:
         raise e
 
@@ -503,7 +533,7 @@ def output_timeout(command: Command, seconds: float) -> Result[Output, ProcessEr
 @blocking_io
 def output_text(command: Command, encoding: str = "utf-8") -> Result[TextOutput, ProcessError]:
     try:
-        raw: tuple[str, str, tuple[int, int | None]] = process_output_text(
+        handle: str = process_output_text(
             command.program,
             command.arguments,
             command.env_vars,
@@ -513,7 +543,11 @@ def output_text(command: Command, encoding: str = "utf-8") -> Result[TextOutput,
             command.has_stdin_data,
             encoding,
         )
-        return TextOutput(raw[0], raw[1], _status_from_exit(raw[2]), encoding)
+        stdout: str = process_output_stdout_text(handle)
+        stderr: str = process_output_stderr_text(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return TextOutput(stdout, stderr, status, encoding)
     except ProcessError as e:
         raise e
 
@@ -618,8 +652,8 @@ def async_output_shell_timeout(
 @shell_exec
 def run_shell(script: str) -> Result[Status, ProcessError]:
     try:
-        exit_status: tuple[int, int | None] = process_shell_run(script)
-        return _status_from_exit(exit_status)
+        parts: list[int] = process_shell_run(script)
+        return _status_from_parts(parts)
     except ProcessError as e:
         raise e
 
@@ -629,10 +663,18 @@ def run_shell(script: str) -> Result[Status, ProcessError]:
 def output_shell(script: str, stdin: bytes | None = None) -> Result[Output, ProcessError]:
     try:
         if stdin is None:
-            raw: tuple[bytes, bytes, tuple[int, int | None]] = process_shell_output(script, b"", False)
-            return Output(raw[0], raw[1], _status_from_exit(raw[2]))
-        raw: tuple[bytes, bytes, tuple[int, int | None]] = process_shell_output(script, stdin, True)
-        return Output(raw[0], raw[1], _status_from_exit(raw[2]))
+            handle: str = process_shell_output(script, b"", False)
+            stdout: bytes = process_output_stdout(handle)
+            stderr: bytes = process_output_stderr(handle)
+            status: Status = _status_from_output_handle(handle)
+            process_output_close(handle)
+            return Output(stdout, stderr, status)
+        handle: str = process_shell_output(script, stdin, True)
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
     except ProcessError as e:
         raise e
 
@@ -646,20 +688,28 @@ def output_shell_timeout(
 ) -> Result[Output, ProcessError]:
     try:
         if stdin is None:
-            raw: tuple[bytes, bytes, tuple[int, int | None], bool] = process_shell_output_timeout(
+            handle: str = process_shell_output_timeout(
                 script,
                 b"",
                 False,
                 seconds,
             )
-            return Output(raw[0], raw[1], _status_from(raw[2], raw[3]))
-        raw: tuple[bytes, bytes, tuple[int, int | None], bool] = process_shell_output_timeout(
+            stdout: bytes = process_output_stdout(handle)
+            stderr: bytes = process_output_stderr(handle)
+            status: Status = _status_from_output_handle(handle)
+            process_output_close(handle)
+            return Output(stdout, stderr, status)
+        handle: str = process_shell_output_timeout(
             script,
             stdin,
             True,
             seconds,
         )
-        return Output(raw[0], raw[1], _status_from(raw[2], raw[3]))
+        stdout: bytes = process_output_stdout(handle)
+        stderr: bytes = process_output_stderr(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return Output(stdout, stderr, status)
     except ProcessError as e:
         raise e
 
@@ -673,9 +723,17 @@ def output_shell_text(
 ) -> Result[TextOutput, ProcessError]:
     try:
         if stdin is None:
-            raw: tuple[str, str, tuple[int, int | None]] = process_shell_output_text(script, b"", False, encoding)
-            return TextOutput(raw[0], raw[1], _status_from_exit(raw[2]), encoding)
-        raw: tuple[str, str, tuple[int, int | None]] = process_shell_output_text(script, stdin, True, encoding)
-        return TextOutput(raw[0], raw[1], _status_from_exit(raw[2]), encoding)
+            handle: str = process_shell_output_text(script, b"", False, encoding)
+            stdout: str = process_output_stdout_text(handle)
+            stderr: str = process_output_stderr_text(handle)
+            status: Status = _status_from_output_handle(handle)
+            process_output_close(handle)
+            return TextOutput(stdout, stderr, status, encoding)
+        handle: str = process_shell_output_text(script, stdin, True, encoding)
+        stdout: str = process_output_stdout_text(handle)
+        stderr: str = process_output_stderr_text(handle)
+        status: Status = _status_from_output_handle(handle)
+        process_output_close(handle)
+        return TextOutput(stdout, stderr, status, encoding)
     except ProcessError as e:
         raise e

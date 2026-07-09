@@ -235,51 +235,37 @@ pub(crate) fn datetime_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
-pub(crate) fn lowers_process_timeout_intrinsics_via_registry() {
-    let output_timeout = lower_intrinsic(
-        "process_output_timeout",
-        &[
-            "program".to_string(),
-            "args".to_string(),
-            "env".to_string(),
-            "cwd".to_string(),
-            "has_cwd".to_string(),
-            "stdin".to_string(),
-            "has_stdin".to_string(),
-            "timeout".to_string(),
-        ],
-    )
-    .expect("process_output_timeout");
-    let rendered = render_expr(&output_timeout.expr);
-    assert!(rendered.contains("std::process::Command::new(&program)"));
-    assert!(rendered.contains("__timeout_seconds.is_finite()"));
-    assert!(rendered.contains("std::time::Instant::now()"));
-    assert!(rendered.contains("std::time::Duration::try_from_secs_f64(__timeout_seconds)"));
-    assert!(rendered.contains(".checked_add("));
-    assert!(rendered.contains("process timeout is too large for this host clock"));
-    assert!(rendered.contains("CommandExt::process_group(&mut __cmd, 0)"));
-    assert!(rendered.contains("__child.try_wait()"));
-    assert!(rendered.contains("__child.kill()"));
-    assert!(rendered.contains(".arg(\"-TERM\")"));
-    assert!(rendered.contains(".arg(\"-KILL\")"));
-    assert!(rendered.contains("__output.stdout"));
-    assert!(rendered.contains("__output.stderr"));
-    assert!(rendered.contains("__timed_out"));
-
-    let shell_timeout = lower_intrinsic(
-        "process_shell_output_timeout",
-        &[
-            "script".to_string(),
-            "stdin".to_string(),
-            "has_stdin".to_string(),
-            "timeout".to_string(),
-        ],
-    )
-    .expect("process_shell_output_timeout");
-    let shell_rendered = render_expr(&shell_timeout.expr);
-    assert!(shell_rendered.contains("std::process::Command::new(\"sh\".to_string())"));
-    assert!(shell_rendered.contains("__cmd.arg(\"-c\".to_string())"));
-    assert!(shell_rendered.contains("__child.kill()"));
+pub(crate) fn process_sync_timeout_intrinsics_lower_through_private_stdlib() {
+    assert!(
+        lower_intrinsic(
+            "process_output_timeout",
+            &[
+                "program".to_string(),
+                "args".to_string(),
+                "env".to_string(),
+                "cwd".to_string(),
+                "has_cwd".to_string(),
+                "stdin".to_string(),
+                "has_stdin".to_string(),
+                "timeout".to_string(),
+            ],
+        )
+        .is_none(),
+        "process_output_timeout should lower through _sifr.process private declarations"
+    );
+    assert!(
+        lower_intrinsic(
+            "process_shell_output_timeout",
+            &[
+                "script".to_string(),
+                "stdin".to_string(),
+                "has_stdin".to_string(),
+                "timeout".to_string(),
+            ],
+        )
+        .is_none(),
+        "process_shell_output_timeout should lower through _sifr.process private declarations"
+    );
 
     let async_shell_timeout = lower_intrinsic(
         "process_async_shell_output_timeout",

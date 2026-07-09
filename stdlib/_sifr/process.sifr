@@ -1,2 +1,126 @@
 # Private _sifr.process native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+
+class ProcessError(Error):
+    message: str
+
+
+@rust(sifr_stdlib.process.process_run)
+def process_run(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output)
+def process_output(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin: bytes,
+    has_stdin: bool,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_text)
+def process_output_text(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin: bytes,
+    has_stdin: bool,
+    encoding: str,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_timeout)
+def process_output_timeout(
+    program: str,
+    args: list[str],
+    env: list[str],
+    cwd: str,
+    has_cwd: bool,
+    stdin: bytes,
+    has_stdin: bool,
+    timeout: float,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_shell_run)
+def process_shell_run(script: str) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_shell_output)
+def process_shell_output(
+    script: str,
+    stdin: bytes,
+    has_stdin: bool,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_shell_output_text)
+def process_shell_output_text(
+    script: str,
+    stdin: bytes,
+    has_stdin: bool,
+    encoding: str,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_shell_output_timeout)
+def process_shell_output_timeout(
+    script: str,
+    stdin: bytes,
+    has_stdin: bool,
+    timeout: float,
+) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_stdout)
+def process_output_stdout(handle: str) -> Result[bytes, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_stderr)
+def process_output_stderr(handle: str) -> Result[bytes, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_stdout_text)
+def process_output_stdout_text(handle: str) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_stderr_text)
+def process_output_stderr_text(handle: str) -> Result[str, ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_status)
+def process_output_status(handle: str) -> Result[list[int], ProcessError]:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_timed_out)
+def process_output_timed_out(handle: str) -> bool:
+    ...
+
+
+@rust(sifr_stdlib.process.process_output_close)
+def process_output_close(handle: str) -> None:
+    ...

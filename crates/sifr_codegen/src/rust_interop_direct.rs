@@ -202,7 +202,24 @@ fn bridge_result_expr(value: RustExpr, ok_type: &Type, err_type: &Type) -> RustE
 }
 
 fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
+    if matches!(err_type, Type::Alias { name, .. } if name == "ProcessError") {
+        return RustExpr::StructInit {
+            name: "ProcessError".to_string(),
+            fields: vec![("message".to_string(), to_string_expr(value))],
+        };
+    }
     match err_type.resolve_alias() {
+        Type::Class {
+            name,
+            fields,
+            parent_class: _,
+            ..
+        } if name == "ProcessError" && message_error_fields(fields).is_some() => {
+            RustExpr::StructInit {
+                name: name.clone(),
+                fields: vec![("message".to_string(), to_string_expr(value))],
+            }
+        }
         Type::Class {
             name,
             fields: _,
