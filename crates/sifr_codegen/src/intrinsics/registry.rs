@@ -5,7 +5,6 @@ mod file_handles;
 mod net;
 mod open_text_handles;
 mod os;
-mod process;
 mod process_async;
 mod process_child_lifecycle;
 mod process_pipes;
@@ -120,7 +119,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "process_run" => (process::lower_process_run(args), None),
         "process_spawn" => (process_child_lifecycle::lower_process_spawn(args), None),
         "process_kill" => (process_child_lifecycle::lower_process_kill(args), None),
         "process_terminate" => (process_child_lifecycle::lower_process_terminate(args), None),
@@ -133,9 +131,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "process_pipe_reader_close" => (process_pipes::lower_process_pipe_reader_close(args), None),
         "process_pipe_write_all" => (process_pipes::lower_process_pipe_write_all(args), None),
         "process_pipe_close" => (process_pipes::lower_process_pipe_close(args), None),
-        "process_output" => (process::lower_process_output(args), None),
-        "process_output_text" => (process::lower_process_output_text(args), None),
-        "process_output_timeout" => (process::lower_process_output_timeout(args), None),
         "process_async_run" => (
             process_async::lower_process_async_run(args),
             Some(StdlibFeature::Tokio),
@@ -216,10 +211,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             process_async::lower_process_async_shell_output_timeout(args),
             Some(StdlibFeature::Tokio),
         ),
-        "process_shell_run" => (process::lower_process_shell_run(args), None),
-        "process_shell_output" => (process::lower_process_shell_output(args), None),
-        "process_shell_output_text" => (process::lower_process_shell_output_text(args), None),
-        "process_shell_output_timeout" => (process::lower_process_shell_output_timeout(args), None),
         "net_connect_tcp" => (net::lower_net_connect_tcp(args), Some(StdlibFeature::Tokio)),
         "net_listen_tcp" => (net::lower_net_listen_tcp(args), Some(StdlibFeature::Tokio)),
         "net_lookup_host" => (net::lower_net_lookup_host(args), Some(StdlibFeature::Tokio)),

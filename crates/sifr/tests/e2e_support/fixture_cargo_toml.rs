@@ -326,6 +326,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.sys"
                 | "sifr.platform"
                 | "_sifr.platform"
+                | "sifr.process"
+                | "_sifr.process"
         )
     })
 }

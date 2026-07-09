@@ -100,6 +100,16 @@ pub(crate) fn test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_f
         generate_cargo_toml(&private_compress_modules, &required_crates, "sifr_output");
     assert!(private_compress_toml.contains("sifr_stdlib = { path = "));
     assert!(private_compress_toml.contains("features = [\"gzip\", \"zipfile\"]"));
+    let process_modules = normalize_dependency_set(vec!["sifr.process".to_string()].into_iter());
+    let process_toml = generate_cargo_toml(&process_modules, &required_crates, "sifr_output");
+    assert!(process_toml.contains("sifr_stdlib = { path = "));
+    assert!(process_toml.contains("features = [\"process\"]"));
+    let private_process_modules =
+        normalize_dependency_set(vec!["_sifr.process".to_string()].into_iter());
+    let private_process_toml =
+        generate_cargo_toml(&private_process_modules, &required_crates, "sifr_output");
+    assert!(private_process_toml.contains("sifr_stdlib = { path = "));
+    assert!(private_process_toml.contains("features = [\"process\"]"));
     let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
     assert!(combined_toml.contains(
         "features = [\"html\", \"calendar\", \"platform\", \"sys\", \"uuid\", \"collections\", \"math\", \"hash\", \"base64\", \"bytes\"]"

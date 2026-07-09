@@ -126,6 +126,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.zipfile", "_sifr.compress"]) {
         features.push("zipfile");
     }
+    if has_module(&["sifr.process", "_sifr.process"]) {
+        features.push("process");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 

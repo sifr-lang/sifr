@@ -11,9 +11,7 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         "str_encode_utf8_result"
         | "str_encode_utf8_result_with_encoding"
         | "decode_utf8"
-        | "decode_utf8_with_encoding"
-        | "process_output_text"
-        | "process_shell_output_text" => &[StdlibFeature::EncodingRs],
+        | "decode_utf8_with_encoding" => &[StdlibFeature::EncodingRs],
         "runtime_emit_diagnostic" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
         "http_validate_method" | "http_validate_status" | "http_validate_version" => {
             HTTP_PRIMITIVE_REQUIRED_FEATURES
