@@ -1,2 +1,164 @@
 # Private _sifr.tls native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+
+class TlsError(Error):
+    message: str
+
+
+@rust(sifr_stdlib.tls.tls_client_config_platform)
+def tls_client_config_platform(alpn_protocols: list[bytes]) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_client_config_with_roots)
+def tls_client_config_with_roots(
+    root_pem: bytes,
+    alpn_protocols: list[bytes],
+) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_client_config_with_roots_and_client_auth)
+def tls_client_config_with_roots_and_client_auth(
+    root_pem: bytes,
+    cert_pem: bytes,
+    key_pem: bytes,
+    alpn_protocols: list[bytes],
+) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_server_config)
+def tls_server_config(
+    cert_pem: bytes,
+    key_pem: bytes,
+    alpn_protocols: list[bytes],
+) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_server_config_require_client_auth)
+def tls_server_config_require_client_auth(
+    cert_pem: bytes,
+    key_pem: bytes,
+    client_ca_pem: bytes,
+    alpn_protocols: list[bytes],
+) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_client_config_close)
+def tls_client_config_close(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_server_config_close)
+def tls_server_config_close(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_connect)
+async def tls_connect(
+    config_handle: int,
+    tcp_handle: int,
+    server_name: str,
+    timeout_seconds: float,
+    has_timeout: bool,
+) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_accept)
+async def tls_accept(
+    config_handle: int,
+    tcp_handle: int,
+    timeout_seconds: float,
+    has_timeout: bool,
+) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_read_chunk)
+async def tls_stream_read_chunk(
+    handle: int,
+    max_bytes: int,
+) -> Result[bytes | None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_write)
+async def tls_stream_write(handle: int, data: bytes) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_write_all)
+async def tls_stream_write_all(handle: int, data: bytes) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_flush)
+async def tls_stream_flush(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_close_notify)
+async def tls_stream_close_notify(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_close)
+async def tls_stream_close(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_split)
+def tls_stream_split(handle: int) -> Result[list[int], TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_alpn_protocol)
+def tls_stream_alpn_protocol(handle: int) -> Result[bytes | None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_stream_protocol_version)
+def tls_stream_protocol_version(handle: int) -> Result[str | None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_read_half_read_chunk)
+async def tls_read_half_read_chunk(
+    handle: int,
+    max_bytes: int,
+) -> Result[bytes | None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_read_half_close)
+def tls_read_half_close(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_write_half_write)
+async def tls_write_half_write(handle: int, data: bytes) -> Result[int, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_write_half_write_all)
+async def tls_write_half_write_all(handle: int, data: bytes) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_write_half_flush)
+async def tls_write_half_flush(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_write_half_close_notify)
+async def tls_write_half_close_notify(handle: int) -> Result[None, TlsError]:
+    ...
+
+
+@rust(sifr_stdlib.tls.tls_write_half_close)
+async def tls_write_half_close(handle: int) -> Result[None, TlsError]:
+    ...

@@ -418,11 +418,11 @@ pub async fn tls_stream_close(handle: i64) -> Result<(), String> {
     result
 }
 
-pub fn tls_stream_split(handle: i64) -> (i64, i64) {
+pub fn tls_stream_split(handle: i64) -> Result<(i64, i64), String> {
     let read_handle = next_handle_infallible();
     let write_handle = next_handle_infallible();
     let Some(stream) = lock(&STREAMS).remove(&handle) else {
-        return (read_handle, write_handle);
+        return Err(format!("TLS stream handle is closed or unknown: {handle}"));
     };
     let was_close_notified = lock(&CLOSE_NOTIFIED).remove(&handle);
     let (read_half, write_half) = tokio::io::split(stream);
@@ -431,7 +431,7 @@ pub fn tls_stream_split(handle: i64) -> (i64, i64) {
     if was_close_notified {
         lock(&CLOSE_NOTIFIED).insert(write_handle);
     }
-    (read_handle, write_handle)
+    Ok((read_handle, write_handle))
 }
 
 pub fn tls_stream_alpn_protocol(handle: i64) -> Result<Option<Vec<u8>>, String> {
@@ -686,7 +686,7 @@ mod tests {
             Some(b"ping".to_vec())
         );
 
-        let (server_read, server_write) = tls_stream_split(server_tls);
+        let (server_read, server_write) = tls_stream_split(server_tls).unwrap();
         tls_write_half_write_all(server_write, b"pong".to_vec())
             .await
             .unwrap();
@@ -706,6 +706,12 @@ mod tests {
         tls_stream_close(client_tls).await.unwrap();
         close_client_config(client_config).unwrap();
         close_server_config(server_config).unwrap();
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn tls_stream_split_rejects_unknown_handle() {
+        let error = tls_stream_split(-1).unwrap_err();
+        assert!(error.contains("TLS stream handle is closed or unknown: -1"));
     }
 
     #[tokio::test(flavor = "current_thread")]

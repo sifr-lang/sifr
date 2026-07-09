@@ -97,7 +97,7 @@ merged, and documented before the next milestone starts.
 | M5. Simple Sys and Environment | merged | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers; PR #2870 · sha=03d0126 · manifest: `_sifr.sys` retained set narrowed to `run_command`/`chdir`/`stat_size`/`disk_usage`; closeout review READY |
 | M6. Async Resource Pilot | merged | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic`; PR #2875 · sha=f3ce312 · certification: `async_runtime_core` supported and `_sifr.time` -> `async_runtime_core`; closeout review READY |
 | M7. Process Family | merged | PR #2877 · sha=de07b23 · M7a sync process output migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2879 · sha=0603eec · M7b sync child/pipe leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2881 · sha=beaf17b · M7c async run/output/shell leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2883 · sha=69fb162 · M7d async child/pipe lifecycle migrated through `_sifr.process` and `sifr_stdlib::process`; manifest: `_sifr.process` retained -> closing |
-| M8. Network and TLS Families | in progress | PR #2885 · sha=6611dba · M8a TCP/network slice migrated `_sifr.net` through `sifr_stdlib::net`; compiler net registry/preamble/fallback signatures deleted; manifest: `_sifr.net` retained -> closing and certification rows reassigned to `opaque_resource_core`/`async_runtime_core`; focused TCP/TLS regression fixtures and create-PR lane passed locally; Opus review satisfied in round 3 |
+| M8. Network and TLS Families | in progress | PR #2885 · sha=6611dba · M8a TCP/network slice migrated `_sifr.net` through `sifr_stdlib::net`; compiler net registry/preamble/fallback signatures deleted; manifest: `_sifr.net` retained -> closing and certification rows reassigned to `opaque_resource_core`/`async_runtime_core`; focused TCP/TLS regression fixtures and create-PR lane passed locally; Opus review satisfied in round 3. M8b TLS slice implemented locally pending PR: `_sifr.tls` routes through `sifr_stdlib::tls`; compiler TLS registry/preamble/fallback signatures deleted; manifest: `_sifr.tls` retained -> closing; create-PR lane passed locally; Opus review satisfied in round 3 |
 | M9. HTTP Family | planned |  |
 | M10. Signal Callback and Subscription Pilot | planned |  |
 | M11. Python Interop Adapters | planned |  |
@@ -865,6 +865,47 @@ M8a TCP/network slice status:
   with 129 e2e pass fixtures and 0 failures; report
   `target/validation_lane_reports/create-pr.latest.json`; advisory only:
   warm wall-time budget exceeded.
+
+M8b TLS slice status:
+
+- Branch: `m8b-tls-native-boundary`.
+- Implemented TLS config, handshake, stream, split-half, ALPN/protocol, close,
+  close-notify, read, write, and flush behavior in `sifr_stdlib::tls`, keeping
+  TLS engine/certificate/socket handle tables and low-level substrate in
+  `sifr_runtime::tls`.
+- Declared private `_sifr.tls` Rust interop functions returning raw handles or
+  simple values plus `TlsError`; public `sifr.tls` wrappers now construct
+  `TlsClientConfig`, `TlsServerConfig`, `TlsStream`, `TlsReadHalf`, and
+  `TlsWriteHalf` in Sifr source.
+- Deleted compiler-owned TLS registry, TLS preamble, and retained fallback
+  signature entries.
+- Made `sifr_runtime::tls::tls_stream_split` fallible so unknown/closed stream
+  handles return `TlsError` instead of minting phantom split-half handles.
+- Updated generated Cargo dependency inference for generated
+  `sifr_stdlib::tls::` references and stdlib `tls` feature selection.
+- Manifest evidence: `_sifr.tls` moved from `retained` to `closing`, stale
+  registry/preamble/runtime-root allowlist entries were removed, and
+  certification rows now point at the stdlib-owned `opaque_resource_core` and
+  `async_runtime_core` rows.
+- Local focused evidence before review: `cargo test -p sifr_runtime --features
+  tls tls_stream_split_rejects_unknown_handle -- --nocapture`; `cargo test -p
+  sifr_stdlib --features tls -- --nocapture`; `cargo test -p sifr
+  network_http_dependency_rules -- --nocapture`; `cargo test -p
+  sifr_retained_intrinsics -- --nocapture`; `cargo test -p sifr
+  test_generate_cargo_toml -- --nocapture`; `python3
+  scripts/check_stdlib_migration_closure.py`; `python3
+  scripts/check_stdlib_native_intrinsic_allowlist.py`; `cargo run -q -p sifr --
+  run demos/network_tls_loopback/main.sifr`; `cargo run -q -p sifr -- run
+  crates/sifr/tests/e2e/pass/network_http_tls_loopback_split.sifr`; emit check
+  verified generated Rust calls `sifr_stdlib::tls::*` and contains no
+  `__sifr_tls_*` preamble helpers.
+- Review evidence: Opus rounds 1, 2, and 3 report no blocking findings and
+  round 3 verdict is `satisfied` in
+  `plans/reviews/active/m8b-tls-native-boundary-opus-round3.md`.
+- Local create-PR gate: `scripts/run_all_tests.sh --profile create-pr` passed
+  after final doc updates with 129 e2e pass fixtures and 0 failures; report
+  `target/validation_lane_reports/create-pr.latest.json`; advisory only:
+  warm wall-time budget/cache-hit target.
 
 Tasks:
 

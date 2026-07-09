@@ -19,7 +19,6 @@ mod signal;
 mod sys_fs;
 mod task;
 mod text_encoding;
-mod tls;
 mod unicode_core;
 mod url;
 
@@ -38,7 +37,6 @@ use signal::intrinsic_signal;
 use sys_fs::{intrinsic_fs, intrinsic_sys};
 use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
-use tls::intrinsic_tls;
 use unicode_core::intrinsic_unicode;
 use url::intrinsic_url;
 
@@ -83,7 +81,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         // migrate to compiled private declarations.
         "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
-        "_sifr.tls" => Some(intrinsic_tls()),
         "_sifr.url" => Some(intrinsic_url()),
         "_sifr.http" => Some(intrinsic_http()),
         "_sifr.python" => Some(intrinsic_python()),

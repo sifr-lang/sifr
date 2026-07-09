@@ -132,6 +132,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.net", "_sifr.net"]) {
         features.push("net");
     }
+    if has_module(&["sifr.tls", "_sifr.tls"]) {
+        features.push("tls");
+    }
     sifr_stdlib_dependency_spec_with_features(&features)
 }
 

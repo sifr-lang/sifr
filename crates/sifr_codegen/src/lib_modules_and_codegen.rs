@@ -6,8 +6,8 @@ use super::{
     build_io_error_items, build_join_set_cpu_items, build_join_set_items,
     build_task_context_scope_extension_items, build_task_current_context_items,
     build_task_scope_cpu_offload_items, build_task_scope_items, build_task_scope_offload_items,
-    build_task_scope_process_items, build_timeout_result_type_items, build_tls_runtime_items,
-    build_url_runtime_items, build_worker_panic_hook_items, module_uses_async_exit_cause_type,
+    build_task_scope_process_items, build_timeout_result_type_items, build_url_runtime_items,
+    build_worker_panic_hook_items, module_uses_async_exit_cause_type,
     module_uses_async_generator_type, module_uses_cancellation_error_type,
     module_uses_failure_type, module_uses_join_set, module_uses_join_set_spawn_cpu,
     module_uses_spawn_cpu, module_uses_task_scope, module_uses_task_scope_offload,
@@ -387,13 +387,6 @@ pub fn generate_rust_with_stdlib_for_module(
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
     let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
     let uses_task_scope_process = module_uses_task_scope_process(module);
-    let stdlib_emits_tls_runtime = stdlib_preamble.contains("fn __sifr_tls_error");
-    let needs_tls_runtime = !stdlib_emits_tls_runtime
-        && (stdlib_preamble.contains("__sifr_tls_")
-            || emitter
-                .intrinsic_functions
-                .iter()
-                .any(|function| function.starts_with("tls_")));
     let stdlib_emits_url_runtime = stdlib_preamble.contains("fn __sifr_url_error");
     let needs_url_runtime = !stdlib_emits_url_runtime
         && (stdlib_preamble.contains("__sifr_url_")
@@ -571,9 +564,6 @@ pub fn generate_rust_with_stdlib_for_module(
         if !stdlib_provides_file_handle_struct && !user_defined_file_handle_struct {
             preamble_items.extend(build_file_handle_struct_items());
         }
-    }
-    if needs_tls_runtime {
-        preamble_items.extend(build_tls_runtime_items());
     }
     if needs_url_runtime {
         preamble_items.extend(build_url_runtime_items());
