@@ -177,6 +177,8 @@ RETIRED_INTRINSICS = frozenset(
         "platform_system",
         "platform_version",
         "pow_val",
+        "py_call",
+        "py_call_attr",
         "py_from_bool",
         "py_from_bytes",
         "py_from_float",

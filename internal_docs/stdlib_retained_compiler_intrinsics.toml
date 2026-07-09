@@ -230,8 +230,6 @@ exact_intrinsics = [
   "py_arrow_schema",
   "py_arrow_stream",
   "py_buffer_u8",
-  "py_call",
-  "py_call_attr",
   "py_close_callback",
   "py_copy_buffer_u8",
   "py_copy_dict_str_bool",
