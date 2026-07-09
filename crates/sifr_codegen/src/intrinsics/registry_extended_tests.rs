@@ -17,16 +17,6 @@ pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
 
 #[test]
 pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
-    let imported = lower_intrinsic("py_import_module", &["module".to_string()])
-        .expect("py_import_module should lower");
-    assert_eq!(
-        imported.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::PythonRuntime)
-    );
-    let rendered = render_expr(&imported.expr);
-    assert!(rendered.contains("sifr_runtime::python::import_module"));
-    assert!(rendered.contains("PythonError"));
-
     let call = lower_intrinsic(
         "py_call",
         &[
@@ -46,6 +36,7 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     assert!(call_rendered.contains("(callable_handle, callable_token)"));
     assert!(call_rendered.contains("__sifr_python_args"));
     assert!(call_rendered.contains("__sifr_python_kwargs"));
+    assert!(call_rendered.contains("PythonError"));
 
     let from_list = lower_intrinsic("py_from_list", &["values".to_string()])
         .expect("py_from_list should lower");
@@ -81,10 +72,6 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     let coroutine_rendered = render_expr(&coroutine.expr);
     assert!(coroutine_rendered.contains("sifr_runtime::python::run_coroutine_blocking"));
     assert!(coroutine_rendered.contains("(object_handle, object_token)"));
-
-    let diagnostics = lower_intrinsic("py_resource_diagnostics", &[])
-        .expect("py_resource_diagnostics should lower");
-    assert!(render_expr(&diagnostics.expr).contains("sifr_runtime::python::resource_diagnostics"));
 
     let exit_with_error = lower_intrinsic(
         "py_exit_context_with_error",
@@ -219,6 +206,39 @@ pub(crate) fn python_primitive_extractors_are_owned_by_compiled_stdlib_declarati
                 &["object_handle".to_string(), "object_token".to_string()]
             )
             .is_none(),
+            "{removed} must lower through _sifr.python private Rust interop declarations"
+        );
+    }
+}
+
+#[test]
+pub(crate) fn python_object_core_is_owned_by_compiled_stdlib_declarations() {
+    for (removed, args) in [
+        ("py_import_module", vec!["name".to_string()]),
+        (
+            "py_get_attr",
+            vec![
+                "object_handle".to_string(),
+                "object_token".to_string(),
+                "name".to_string(),
+            ],
+        ),
+        (
+            "py_get_item_str",
+            vec![
+                "object_handle".to_string(),
+                "object_token".to_string(),
+                "key".to_string(),
+            ],
+        ),
+        (
+            "py_close",
+            vec!["object_handle".to_string(), "object_token".to_string()],
+        ),
+        ("py_resource_diagnostics", vec![]),
+    ] {
+        assert!(
+            lower_intrinsic(removed, &args).is_none(),
             "{removed} must lower through _sifr.python private Rust interop declarations"
         );
     }

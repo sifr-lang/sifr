@@ -14,35 +14,6 @@ fn object_handle() -> Type {
 pub(super) fn intrinsic_python() -> IntrinsicModule {
     let mut functions = HashMap::new();
     functions.insert(
-        "py_import_module".to_string(),
-        FunctionType::all_borrow(
-            vec![("name".to_string(), Type::Str)],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_get_attr".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("token".to_string(), Type::Int),
-                ("name".to_string(), Type::Str),
-            ],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_get_item_str".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("token".to_string(), Type::Int),
-                ("key".to_string(), Type::Str),
-            ],
-            python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
         "py_call".to_string(),
         FunctionType::all_borrow(
             vec![
@@ -71,16 +42,6 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
                 ),
             ],
             python_error_result(object_handle()),
-        ),
-    );
-    functions.insert(
-        "py_close".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("token".to_string(), Type::Int),
-            ],
-            python_error_result(Type::None),
         ),
     );
     functions.insert(
@@ -250,13 +211,6 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
                 ("context".to_string(), Type::Str),
             ],
             python_error_result(Type::None),
-        ),
-    );
-    functions.insert(
-        "py_resource_diagnostics".to_string(),
-        FunctionType::all_borrow(
-            vec![],
-            python_error_result(Type::Tuple(vec![Type::Bool, Type::Int, Type::Int])),
         ),
     );
     functions.insert(

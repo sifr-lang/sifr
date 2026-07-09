@@ -123,3 +123,37 @@ pub fn py_to_bytes(
 ) -> Result<Vec<u8>, python::PythonError> {
     python::to_bytes(object_handle(handle, token))
 }
+
+pub fn py_import_module(name: &str) -> Result<ObjectRaw, python::PythonError> {
+    python::import_module(name).map(object_raw)
+}
+
+pub fn py_get_attr(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+    name: &str,
+) -> Result<ObjectRaw, python::PythonError> {
+    python::get_attr(object_handle(handle, token), name).map(object_raw)
+}
+
+pub fn py_get_item_str(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+    key: &str,
+) -> Result<ObjectRaw, python::PythonError> {
+    python::get_item_str(object_handle(handle, token), key).map(object_raw)
+}
+
+pub fn py_close(handle: SifrIntBridge, token: SifrIntBridge) -> Result<(), python::PythonError> {
+    python::close_object(object_handle(handle, token))
+}
+
+pub fn py_resource_diagnostics() -> Result<(bool, i64, i64), python::PythonError> {
+    python::resource_diagnostics().map(|diagnostics| {
+        (
+            diagnostics.initialized,
+            diagnostics.live_objects,
+            diagnostics.leaked_objects,
+        )
+    })
+}
