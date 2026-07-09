@@ -244,6 +244,81 @@ fn python_call_helpers_codegen_through_sifr_stdlib() {
     }
 }
 
+#[test]
+fn python_copy_helpers_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.python")
+        .expect("_sifr.python should generate private Rust code");
+    for name in [
+        "py_copy_list_bool",
+        "py_copy_list_int",
+        "py_copy_list_i32",
+        "py_copy_list_u8",
+        "py_copy_list_float",
+        "py_copy_list_str",
+        "py_copy_list_bytes",
+        "py_copy_tuple_bool",
+        "py_copy_tuple_int",
+        "py_copy_tuple_i32",
+        "py_copy_tuple_u8",
+        "py_copy_tuple_float",
+        "py_copy_tuple_str",
+        "py_copy_tuple_bytes",
+        "py_copy_dict_str_bool",
+        "py_copy_dict_str_int",
+        "py_copy_dict_str_i32",
+        "py_copy_dict_str_u8",
+        "py_copy_dict_str_float",
+        "py_copy_dict_str_str",
+        "py_copy_dict_str_bytes",
+        "py_copy_record_fields",
+    ] {
+        assert!(
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::python::{name}(")),
+            "{name} should lower through _sifr.python private Rust interop declarations"
+        );
+    }
+    let private_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.python")
+        .expect("_sifr.python intrinsic names should be tracked");
+    for name in [
+        "py_copy_list_bool",
+        "py_copy_list_int",
+        "py_copy_list_i32",
+        "py_copy_list_u8",
+        "py_copy_list_float",
+        "py_copy_list_str",
+        "py_copy_list_bytes",
+        "py_copy_tuple_bool",
+        "py_copy_tuple_int",
+        "py_copy_tuple_i32",
+        "py_copy_tuple_u8",
+        "py_copy_tuple_float",
+        "py_copy_tuple_str",
+        "py_copy_tuple_bytes",
+        "py_copy_dict_str_bool",
+        "py_copy_dict_str_int",
+        "py_copy_dict_str_i32",
+        "py_copy_dict_str_u8",
+        "py_copy_dict_str_float",
+        "py_copy_dict_str_str",
+        "py_copy_dict_str_bytes",
+        "py_copy_record_fields",
+    ] {
+        assert!(
+            !private_intrinsics.contains(name),
+            "{name} should not remain a compiler-retained _sifr.python intrinsic"
+        );
+    }
+}
+
 fn sha256_hex(source: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(source.as_bytes());

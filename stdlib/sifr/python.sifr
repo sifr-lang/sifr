@@ -227,10 +227,13 @@ def _dlpack_from_raw(own raw: tuple[int, int, int, int, int, str, int, int, int,
     return tensor
 
 
-def _record_fields_from_handles(own raw_values: list[tuple[str, tuple[int, int]]]) -> list[tuple[str, Object]]:
+def _record_fields_from_handles(keys: list[str], raw_values: list[tuple[int, int]]) -> list[tuple[str, Object]]:
     values: list[tuple[str, Object]] = []
-    for raw in raw_values:
-        values.append((raw[0], _object_from_handle(raw[1])))
+    index: int = 0
+    while index < len(keys) and index < len(raw_values):
+        key: str = keys[index]
+        values.append((key, _object_from_handle(raw_values[index])))
+        index += 1
     return values
 
 
@@ -871,8 +874,8 @@ def copy_dict_str_bytes(obj: Object) -> Result[dict[str, bytes], PythonError]:
 @blocking_io
 def copy_record_fields(obj: Object, fields: list[str]) -> Result[list[tuple[str, Object]], PythonError]:
     try:
-        raw: list[tuple[str, tuple[int, int]]] = py_copy_record_fields(obj._handle, obj._token, fields)
-        return _record_fields_from_handles(raw)
+        raw: list[tuple[int, int]] = py_copy_record_fields(obj._handle, obj._token, fields)
+        return _record_fields_from_handles(fields, raw)
     except PythonError as e:
         raise e
 

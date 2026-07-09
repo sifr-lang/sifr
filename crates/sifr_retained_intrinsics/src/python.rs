@@ -1,5 +1,5 @@
 use super::{result_ty, IntrinsicModule};
-use sifr_type_system::{FixedIntType, FunctionType, Type};
+use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
 fn python_error_result(ok: Type) -> Type {
@@ -190,55 +190,6 @@ pub(super) fn intrinsic_python() -> IntrinsicModule {
                 ("token".to_string(), Type::Int),
             ],
             python_error_result(object_handle()),
-        ),
-    );
-    for (suffix, value_ty) in [
-        ("bool", Type::Bool),
-        ("int", Type::Int),
-        ("i32", Type::FixedInt(FixedIntType::I32)),
-        ("u8", Type::FixedInt(FixedIntType::U8)),
-        ("float", Type::Float),
-        ("str", Type::Str),
-        ("bytes", Type::Bytes),
-    ] {
-        let handle_params = vec![
-            ("handle".to_string(), Type::Int),
-            ("token".to_string(), Type::Int),
-        ];
-        functions.insert(
-            format!("py_copy_list_{suffix}"),
-            FunctionType::all_borrow(
-                handle_params.clone(),
-                python_error_result(Type::List(Box::new(value_ty.clone()))),
-            ),
-        );
-        functions.insert(
-            format!("py_copy_tuple_{suffix}"),
-            FunctionType::all_borrow(
-                handle_params.clone(),
-                python_error_result(Type::List(Box::new(value_ty.clone()))),
-            ),
-        );
-        functions.insert(
-            format!("py_copy_dict_str_{suffix}"),
-            FunctionType::all_borrow(
-                handle_params,
-                python_error_result(Type::Dict(Box::new(Type::Str), Box::new(value_ty))),
-            ),
-        );
-    }
-    functions.insert(
-        "py_copy_record_fields".to_string(),
-        FunctionType::all_borrow(
-            vec![
-                ("handle".to_string(), Type::Int),
-                ("token".to_string(), Type::Int),
-                ("fields".to_string(), Type::List(Box::new(Type::Str))),
-            ],
-            python_error_result(Type::List(Box::new(Type::Tuple(vec![
-                Type::Str,
-                object_handle(),
-            ])))),
         ),
     );
     IntrinsicModule {
