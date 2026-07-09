@@ -109,3 +109,23 @@ def py_to_str(handle: int, token: int) -> Result[str, PythonError]: ...
 
 @rust(sifr_stdlib.python.py_to_bytes)
 def py_to_bytes(handle: int, token: int) -> Result[bytes, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_import_module)
+def py_import_module(name: str) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_get_attr)
+def py_get_attr(handle: int, token: int, name: str) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_get_item_str)
+def py_get_item_str(handle: int, token: int, key: str) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_close)
+def py_close(handle: int, token: int) -> Result[None, PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_resource_diagnostics)
+def py_resource_diagnostics() -> Result[tuple[bool, int, int], PythonError]: ...

@@ -2,12 +2,8 @@ use crate::{render_expr, RustExpr};
 
 pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<RustExpr> {
     match name {
-        "py_import_module" => lower_py_import_module(args),
-        "py_get_attr" => lower_py_get_attr(args),
-        "py_get_item_str" => lower_py_get_item_str(args),
         "py_call" => lower_py_call(args),
         "py_call_attr" => lower_py_call_attr(args),
-        "py_close" => lower_py_close(args),
         "py_buffer_u8" => lower_py_buffer_u8(args),
         "py_copy_buffer_u8" => lower_py_copy_buffer_u8(args),
         "py_release_buffer" => lower_py_release_buffer(args),
@@ -30,7 +26,6 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_enter_context" => lower_py_enter_context(args),
         "py_exit_context" => lower_py_exit_context(args),
         "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
-        "py_resource_diagnostics" => lower_py_resource_diagnostics(args),
         "py_run_coroutine_blocking" => lower_py_run_coroutine_blocking(args),
         "py_from_list" => lower_py_from_list(args),
         "py_from_tuple" => lower_py_from_tuple(args),
@@ -136,40 +131,6 @@ fn lower_keyed_object_constructor(args: &[RustExpr], function: &str) -> Option<R
     )))
 }
 
-pub(crate) fn lower_py_import_module(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let name = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::import_module(({name}).as_str())"
-    )))
-}
-
-pub(crate) fn lower_py_get_attr(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 3 {
-        return None;
-    }
-    let handle = render_expr(&args[0]);
-    let token = render_expr(&args[1]);
-    let name = render_expr(&args[2]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::get_attr(({handle}, {token}), ({name}).as_str())"
-    )))
-}
-
-pub(crate) fn lower_py_get_item_str(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 3 {
-        return None;
-    }
-    let handle = render_expr(&args[0]);
-    let token = render_expr(&args[1]);
-    let key = render_expr(&args[2]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::get_item_str(({handle}, {token}), ({key}).as_str())"
-    )))
-}
-
 pub(crate) fn lower_py_call(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 4 {
         return None;
@@ -214,17 +175,6 @@ pub(crate) fn lower_py_call_attr(args: &[RustExpr]) -> Option<RustExpr> {
                 .collect::<Vec<(&str, (i64, i64))>>();
             sifr_runtime::python::call_attr(({handle}, {token}), ({name}).as_str(), &__sifr_python_args, &__sifr_python_kwargs)
         }}"#
-    )))
-}
-
-pub(crate) fn lower_py_close(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 2 {
-        return None;
-    }
-    let handle = render_expr(&args[0]);
-    let token = render_expr(&args[1]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::close_object(({handle}, {token}))"
     )))
 }
 
@@ -492,22 +442,6 @@ pub(crate) fn lower_py_exit_context_with_error(args: &[RustExpr]) -> Option<Rust
             ({context}).as_str(),
         )"#
     )))
-}
-
-pub(crate) fn lower_py_resource_diagnostics(args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(map_python_error(
-        r#"sifr_runtime::python::resource_diagnostics().map(|__sifr_python_diagnostics| {
-            (
-                __sifr_python_diagnostics.initialized,
-                __sifr_python_diagnostics.live_objects,
-                __sifr_python_diagnostics.leaked_objects,
-            )
-        })"#
-        .to_string(),
-    ))
 }
 
 pub(crate) fn lower_py_run_coroutine_blocking(args: &[RustExpr]) -> Option<RustExpr> {

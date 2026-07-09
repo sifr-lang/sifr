@@ -128,6 +128,52 @@ fn python_primitive_extractors_codegen_through_sifr_stdlib() {
     }
 }
 
+#[test]
+fn python_object_core_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.python")
+        .expect("_sifr.python should generate private Rust code");
+    for name in [
+        "py_import_module",
+        "py_get_attr",
+        "py_get_item_str",
+        "py_close",
+        "py_resource_diagnostics",
+    ] {
+        assert!(
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::python::{name}(")),
+            "{name} should lower through _sifr.python private Rust interop declarations"
+        );
+    }
+    assert!(private_code.rust.contains("SifrIntBridge::from(handle)"));
+    assert!(private_code.rust.contains("SifrIntBridge::from(token)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::python::py_get_attr("));
+    let private_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.python")
+        .expect("_sifr.python intrinsic names should be tracked");
+    for name in [
+        "py_import_module",
+        "py_get_attr",
+        "py_get_item_str",
+        "py_close",
+        "py_resource_diagnostics",
+    ] {
+        assert!(
+            !private_intrinsics.contains(name),
+            "{name} should not remain a compiler-retained _sifr.python intrinsic"
+        );
+    }
+}
+
 fn sha256_hex(source: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(source.as_bytes());
