@@ -713,7 +713,7 @@ pub fn generate_rust_with_stdlib_for_module(
         source
     };
 
-    let needs_python_runtime = rust_source.contains("sifr_runtime::python::");
+    let needs_python_runtime = rust_source.contains("sifr_stdlib::python::");
     let needs_sifr_stdlib_fs = rust_source.contains("sifr_stdlib::fs::");
 
     // Add transitive dependencies from stdlib modules

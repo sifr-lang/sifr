@@ -1,9 +1,13 @@
 # sifr.python_core - shared embedded CPython public wrapper types
 
+from typing import Callable
+
 from _sifr.python import (
     PythonError,
     py_close_callback,
+    py_local_callback,
     py_local_callback_echo,
+    py_threadsafe_callback,
     py_threadsafe_callback_echo,
 )
 
@@ -64,7 +68,7 @@ def _local_callback_from_raw(raw: tuple[int, int, int, int, str]) -> LocalCallba
     callback._handle = raw[0]
     callback._token = raw[1]
     callback.callable = _object_from_handle((raw[2], raw[3]))
-    callback.kind = "local"
+    callback.kind = raw[4]
     return callback
 
 
@@ -73,8 +77,38 @@ def _threadsafe_callback_from_raw(raw: tuple[int, int, int, int, str]) -> Thread
     callback._handle = raw[0]
     callback._token = raw[1]
     callback.callable = _object_from_handle((raw[2], raw[3]))
-    callback.kind = "threadsafe"
+    callback.kind = raw[4]
     return callback
+
+
+def _call_object_callback(
+    handler: Callable[[Object], Result[Object, PythonError]],
+    raw: tuple[int, int],
+) -> Result[tuple[int, int], PythonError]:
+    try:
+        arg: Object = _object_from_handle(raw)
+        result: Object = handler(arg)
+        return (result._handle, result._token)
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def local_callback(handler: Callable[[Object], Result[Object, PythonError]]) -> Result[LocalCallback, PythonError]:
+    try:
+        raw: tuple[int, int, int, int, str] = py_local_callback(lambda raw: _call_object_callback(handler, raw))
+        return _local_callback_from_raw(raw)
+    except PythonError as e:
+        raise e
+
+
+@blocking_io
+def threadsafe_callback(handler: Callable[[Object], Result[Object, PythonError]]) -> Result[ThreadsafeCallback, PythonError]:
+    try:
+        raw: tuple[int, int, int, int, str] = py_threadsafe_callback(lambda raw: _call_object_callback(handler, raw))
+        return _threadsafe_callback_from_raw(raw)
+    except PythonError as e:
+        raise e
 
 
 @blocking_io

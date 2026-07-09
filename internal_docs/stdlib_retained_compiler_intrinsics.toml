@@ -210,27 +210,18 @@ exact_intrinsics = ["runtime_emit_diagnostic"]
 
 [[surface]]
 id = "_sifr.python"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after M11i proves all Python callback compiler-native registry and fallback signature entries are absent."]
 declaration_files = ["stdlib/_sifr/python.sifr"]
 certification_rows = [
   "opaque_resource_matrix",
   "callbacks_call_scoped",
   "callback_subscription_ecosystem",
 ]
-reason = "Python object handles, callback adapters, and runtime initialization remain behind Python resource/callback certification."
-registry_files = ["python.rs"]
-direct_runtime_roots = ["sifr_runtime::python"]
-exact_intrinsics = [
-  "local_callback",
-  "py_close_callback",
-  "py_local_callback_echo",
-  "py_threadsafe_callback_echo",
-  "threadsafe_callback",
-]
+reason = "Python adapter behavior now routes through _sifr.python private Rust interop declarations and sifr_stdlib.python; this row remains only to record closure of the former callback compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.task::language_runtime_glue"

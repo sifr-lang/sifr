@@ -328,6 +328,9 @@ fn signature_probe_source(
     signature: &RustBridgeSignatureContract,
     rust_path: &str,
 ) -> String {
+    if is_python_raw_callback_probe(rust_path) {
+        return python_raw_callback_probe_source(signature, rust_path);
+    }
     let params = signature
         .params
         .iter()
@@ -373,6 +376,34 @@ fn signature_probe_source(
         out.push_str(rust_path);
         out.push_str("); }\n");
     }
+    out
+}
+
+fn is_python_raw_callback_probe(rust_path: &str) -> bool {
+    // Trusted sysroot Python callback constructors are generic over an actual
+    // raw-object closure; the normal callback probe uses the package interop
+    // marker type and cannot satisfy that bound.
+    matches!(
+        rust_path,
+        "sifr_stdlib::python::py_local_callback" | "sifr_stdlib::python::py_threadsafe_callback"
+    )
+}
+
+fn python_raw_callback_probe_source(
+    signature: &RustBridgeSignatureContract,
+    rust_path: &str,
+) -> String {
+    let mut out = String::new();
+    out.push_str("#![allow(dead_code)]\n");
+    out.push_str(&generated_bridge_type_stubs(signature));
+    out.push_str(
+        "fn __sifr_sample_python_callback(\n    _arg: (i64, i64),\n) -> Result<(i64, i64), sifr_stdlib::python::PythonError> {\n    unreachable!()\n}\n",
+    );
+    out.push_str("fn __sifr_probe() {\n    let _: ");
+    out.push_str("Result<(i64, i64, i64, i64, String), sifr_stdlib::python::PythonError>");
+    out.push_str(" = ");
+    out.push_str(rust_path);
+    out.push_str("(__sifr_sample_python_callback);\n}\n");
     out
 }
 
@@ -608,7 +639,8 @@ mod tests {
     use super::{
         artifact_cache_root, cargo_vendor_args, dependency_features, generated_bridge_type_stubs,
         normalize_cargo_target_dir, probe_cargo_target_dir_with_env, probe_cargo_toml,
-        signature_return_probe_type, RUST_BRIDGE_PROBE_TARGET_DIR,
+        python_raw_callback_probe_source, signature_return_probe_type,
+        RUST_BRIDGE_PROBE_TARGET_DIR,
     };
     use ruff_text_size::TextRange;
     use sifr_codegen::{
@@ -656,6 +688,35 @@ mod tests {
         assert!(manifest.contains(
             "sifr_stdlib = { path = \"/opt/sifr/crates/sifr_stdlib\", default-features = false, features = [\"platform\"] }"
         ));
+    }
+
+    #[test]
+    fn python_raw_callback_probe_uses_concrete_stdlib_error_type() {
+        let signature = RustBridgeSignatureContract {
+            canonical_target_path: "_sifr.python.py_local_callback".to_string(),
+            module_name: Some("_sifr.python".to_string()),
+            owner: RustInteropOwner::Function {
+                name: "py_local_callback".to_string(),
+            },
+            params: Vec::new(),
+            return_type: RustBridgeTypeContract {
+                sifr_type: "Result[tuple[int, int, int, int, str], PythonError]".to_string(),
+                rust_borrowed_type: None,
+                rust_owned_type: None,
+                rust_return_type: Some(
+                    "Result<(i64, i64, i64, i64, String), __SifrBridgeError>".to_string(),
+                ),
+                kind: RustBridgeTypeKind::Result,
+                unsupported_reason: None,
+            },
+            span: TextRange::default(),
+        };
+
+        let source =
+            python_raw_callback_probe_source(&signature, "sifr_stdlib::python::py_local_callback");
+
+        assert!(source.contains("sifr_stdlib::python::PythonError"));
+        assert!(!source.contains("__SifrBridgeError"));
     }
 
     #[test]

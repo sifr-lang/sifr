@@ -27,10 +27,8 @@ PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
 RETAINED_SIGNATURE_MODULE_RE = re.compile(r'"(_sifr\.[A-Za-z0-9_]+)"\s*=>\s*Some\(')
 GENERATED_DEPENDENCY_PACKAGE_RE = re.compile(r'package:\s*"([^"]+)"')
 DIRECT_RUNTIME_ROOT_RE = re.compile(r"\bsifr_runtime::([A-Za-z_][A-Za-z0-9_]*)")
-EXPECTED_PREFIX_DISPATCHERS = {"py_"}
-PREFIX_DISPATCH_LOWERERS = (
-    REGISTRY_ROOT / "python.rs",
-)
+EXPECTED_PREFIX_DISPATCHERS: set[str] = set()
+PREFIX_DISPATCH_LOWERERS: tuple[Path, ...] = ()
 
 
 def main() -> int:

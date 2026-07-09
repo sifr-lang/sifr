@@ -419,6 +419,53 @@ fn python_context_coroutine_helpers_codegen_through_sifr_stdlib() {
     }
 }
 
+#[test]
+fn python_callback_helpers_codegen_through_sifr_stdlib() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let private_code = compiled
+        .code
+        .module_rust_code
+        .get("_sifr.python")
+        .expect("_sifr.python should generate private Rust code");
+    for name in [
+        "py_local_callback",
+        "py_threadsafe_callback",
+        "py_local_callback_echo",
+        "py_threadsafe_callback_echo",
+        "py_close_callback",
+    ] {
+        assert!(
+            private_code
+                .rust
+                .contains(&format!("sifr_stdlib::python::{name}(")),
+            "{name} should lower through _sifr.python private Rust interop declarations"
+        );
+    }
+    assert!(private_code.rust.contains("handler(__sifr_callback_raw)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::python::PythonError"));
+    let private_intrinsics = compiled
+        .code
+        .intrinsic_names
+        .get("_sifr.python")
+        .expect("_sifr.python intrinsic names should be tracked");
+    for name in [
+        "local_callback",
+        "threadsafe_callback",
+        "py_local_callback",
+        "py_threadsafe_callback",
+        "py_local_callback_echo",
+        "py_threadsafe_callback_echo",
+        "py_close_callback",
+    ] {
+        assert!(
+            !private_intrinsics.contains(name),
+            "{name} should not remain a compiler-retained _sifr.python intrinsic"
+        );
+    }
+}
+
 fn sha256_hex(source: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(source.as_bytes());

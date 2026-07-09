@@ -4,7 +4,6 @@ mod encoding;
 mod file_handles;
 mod open_text_handles;
 mod os;
-mod python;
 mod requirements;
 mod runtime;
 mod task;
@@ -93,14 +92,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
         "runtime_emit_diagnostic" => (runtime::lower_runtime_emit_diagnostic(args), None),
-        name if name.starts_with("py_") => (
-            python::lower_python_intrinsic(name, args),
-            Some(StdlibFeature::PythonRuntime),
-        ),
-        "local_callback" | "threadsafe_callback" => (
-            python::lower_python_intrinsic(name, args),
-            Some(StdlibFeature::PythonRuntime),
-        ),
         "task_current_context" => (
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),

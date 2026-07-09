@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 type ObjectRaw = (i64, i64);
+type CallbackRaw = (i64, i64, i64, i64, String);
 type BufferRaw = (i64, i64, i64, i64, bool, i64, bool, bool, String);
 type ArrowRaw = (i64, i64, String, String, String, bool);
 type DlpackRaw = (
@@ -34,6 +35,8 @@ static ARROW_METADATA: LazyLock<Mutex<HashMap<ObjectRaw, ArrowMetadata>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 static DLPACK_METADATA: LazyLock<Mutex<HashMap<ObjectRaw, DlpackMetadata>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub type PythonError = python::PythonError;
 
 #[derive(Clone)]
 struct BufferMetadata {
@@ -584,6 +587,45 @@ pub fn py_run_coroutine_blocking(
     token: SifrIntBridge,
 ) -> Result<ObjectRaw, python::PythonError> {
     python::run_coroutine_blocking(object_handle(handle, token)).map(object_raw)
+}
+
+pub fn py_local_callback<F>(callback: F) -> Result<CallbackRaw, python::PythonError>
+where
+    F: Fn(ObjectRaw) -> Result<ObjectRaw, python::PythonError> + Send + Sync + 'static,
+{
+    python::local_callback(callback).map(callback_raw)
+}
+
+pub fn py_threadsafe_callback<F>(callback: F) -> Result<CallbackRaw, python::PythonError>
+where
+    F: Fn(ObjectRaw) -> Result<ObjectRaw, python::PythonError> + Send + Sync + 'static,
+{
+    python::threadsafe_callback(callback).map(callback_raw)
+}
+
+pub fn py_local_callback_echo() -> Result<CallbackRaw, python::PythonError> {
+    python::local_callback_echo().map(callback_raw)
+}
+
+pub fn py_threadsafe_callback_echo() -> Result<CallbackRaw, python::PythonError> {
+    python::threadsafe_callback_echo().map(callback_raw)
+}
+
+pub fn py_close_callback(
+    handle: SifrIntBridge,
+    token: SifrIntBridge,
+) -> Result<(), python::PythonError> {
+    python::close_callback(object_handle(handle, token))
+}
+
+fn callback_raw(metadata: python::PythonCallbackMetadata) -> CallbackRaw {
+    (
+        metadata.handle,
+        metadata.token,
+        metadata.object_handle,
+        metadata.object_token,
+        metadata.kind,
+    )
 }
 
 fn buffer_raw(metadata: python::PythonBufferMetadata) -> BufferRaw {

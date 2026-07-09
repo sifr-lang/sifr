@@ -345,3 +345,29 @@ def py_exit_context_with_error(
 
 @rust(sifr_stdlib.python.py_run_coroutine_blocking)
 def py_run_coroutine_blocking(handle: int, token: int) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust.callback(backpressure=direct, overflow=error, shutdown=detach_forbidden)
+@rust(sifr_stdlib.python.py_local_callback)
+def py_local_callback(
+    handler: Callable[[tuple[int, int]], Result[tuple[int, int], PythonError]],
+) -> Result[tuple[int, int, int, int, str], PythonError]: ...
+
+
+@rust.callback(backpressure=direct, overflow=error, shutdown=drain)
+@rust(sifr_stdlib.python.py_threadsafe_callback)
+def py_threadsafe_callback(
+    handler: Callable[[tuple[int, int]], Result[tuple[int, int], PythonError]],
+) -> Result[tuple[int, int, int, int, str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_local_callback_echo)
+def py_local_callback_echo() -> Result[tuple[int, int, int, int, str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_threadsafe_callback_echo)
+def py_threadsafe_callback_echo() -> Result[tuple[int, int, int, int, str], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_close_callback)
+def py_close_callback(handle: int, token: int) -> Result[None, PythonError]: ...

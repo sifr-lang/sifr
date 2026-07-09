@@ -87,7 +87,9 @@ from sifr.python_core import (
     ThreadsafeCallback,
     close_local_callback,
     close_threadsafe_callback,
+    local_callback,
     local_callback_echo,
+    threadsafe_callback,
     threadsafe_callback_echo,
 )
 
@@ -479,16 +481,6 @@ def zero_copy_dlpack_tensor(obj: Object) -> Result[DlpackTensor, PythonError]:
 @blocking_io
 def release_dlpack(own tensor: DlpackTensor) -> Result[None, PythonError]:
     return py_release_dlpack(tensor._handle, tensor._token)
-
-
-@blocking_io
-def local_callback(handler: Callable[[Object], Result[Object, PythonError]]) -> Result[LocalCallback, PythonError]:
-    raise PythonError("local_callback is lowered by the Sifr compiler")
-
-
-@blocking_io
-def threadsafe_callback(handler: Callable[[Object], Result[Object, PythonError]]) -> Result[ThreadsafeCallback, PythonError]:
-    raise PythonError("threadsafe_callback is lowered by the Sifr compiler")
 
 
 @blocking_io
