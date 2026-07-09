@@ -98,7 +98,7 @@ merged, and documented before the next milestone starts.
 | M6. Async Resource Pilot | merged | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic`; PR #2875 · sha=f3ce312 · certification: `async_runtime_core` supported and `_sifr.time` -> `async_runtime_core`; closeout review READY |
 | M7. Process Family | merged | PR #2877 · sha=de07b23 · M7a sync process output migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2879 · sha=0603eec · M7b sync child/pipe leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2881 · sha=beaf17b · M7c async run/output/shell leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2883 · sha=69fb162 · M7d async child/pipe lifecycle migrated through `_sifr.process` and `sifr_stdlib::process`; manifest: `_sifr.process` retained -> closing |
 | M8. Network and TLS Families | merged | PR #2885 · sha=6611dba · M8a TCP/network slice migrated `_sifr.net` through `sifr_stdlib::net`; compiler net registry/preamble/fallback signatures deleted; manifest: `_sifr.net` retained -> closing and certification rows reassigned to `opaque_resource_core`/`async_runtime_core`; focused TCP/TLS regression fixtures and create-PR lane passed locally; Opus review satisfied in round 3. PR #2887 · sha=89ca888 · M8b TLS slice migrated `_sifr.tls` through `sifr_stdlib::tls`; compiler TLS registry/preamble/fallback signatures deleted; manifest: `_sifr.tls` retained -> closing; create-PR lane passed locally; Opus review satisfied in round 3 |
-| M9. HTTP Family | in progress | PR #2889 · sha=321fbe5 · M9a HTTP header/method/status/version/cookie helpers migrated through `_sifr.http` and `sifr_stdlib::http`; compiler HTTP registry/preamble/fallback signatures and stale URL/HTTP preamble deleted; module-only HTTP generated dependencies now route through `sifr_stdlib[http]`; create-PR lane passed locally; Opus review satisfied in round 3 |
+| M9. HTTP Family | merged | PR #2889 · sha=321fbe5 · M9a HTTP header/method/status/version/cookie helpers migrated through `_sifr.http` and `sifr_stdlib::http`; compiler HTTP registry/preamble/fallback signatures and stale URL/HTTP preamble deleted; module-only HTTP generated dependencies now route through `sifr_stdlib[http]`; create-PR lane passed locally; Opus review satisfied in round 3. M9 closure review satisfied with no blockers; HTTP transport remains verification-owned runtime substrate, while redirect and other client policy behavior belong to the future production HTTP client capability |
 | M10. Signal Callback and Subscription Pilot | planned |  |
 | M11. Python Interop Adapters | planned |  |
 | M12. Task, Signal, Runtime Observability, and Test Helpers | planned |  |
@@ -948,7 +948,8 @@ Tasks:
   in `stdlib/_sifr/http.sifr`.
 - Delete HTTP prefix dispatch, registry entries, and preambles after migration.
 - Prove header validation, cookie parsing, HTTP/1, HTTP/2, transport, timeout,
-  redirect, body, and error semantics.
+  body, and error semantics. Redirect and other client policy semantics are
+  deferred to the future production HTTP client capability.
 
 Acceptance:
 
