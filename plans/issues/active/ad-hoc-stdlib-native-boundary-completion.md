@@ -97,7 +97,7 @@ merged, and documented before the next milestone starts.
 | M5. Simple Sys and Environment | merged | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers; PR #2870 · sha=03d0126 · manifest: `_sifr.sys` retained set narrowed to `run_command`/`chdir`/`stat_size`/`disk_usage`; closeout review READY |
 | M6. Async Resource Pilot | merged | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic`; PR #2875 · sha=f3ce312 · certification: `async_runtime_core` supported and `_sifr.time` -> `async_runtime_core`; closeout review READY |
 | M7. Process Family | merged | PR #2877 · sha=de07b23 · M7a sync process output migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2879 · sha=0603eec · M7b sync child/pipe leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2881 · sha=beaf17b · M7c async run/output/shell leaves migrated through `_sifr.process` and `sifr_stdlib::process`; PR #2883 · sha=69fb162 · M7d async child/pipe lifecycle migrated through `_sifr.process` and `sifr_stdlib::process`; manifest: `_sifr.process` retained -> closing |
-| M8. Network and TLS Families | planned |  |
+| M8. Network and TLS Families | in progress | M8a TCP/network slice: `_sifr.net` declarations now route through `sifr_stdlib::net`; compiler net registry/preamble/fallback signatures deleted; manifest: `_sifr.net` retained -> closing and certification rows reassigned to `opaque_resource_core`/`async_runtime_core`; focused TCP/TLS regression fixtures and create-PR lane passed locally; Opus review satisfied in round 3; PR pending |
 | M9. HTTP Family | planned |  |
 | M10. Signal Callback and Subscription Pilot | planned |  |
 | M11. Python Interop Adapters | planned |  |
@@ -828,6 +828,43 @@ Validation:
 ### M8. Network and TLS Families
 
 Migrate TCP and TLS resources after async/process evidence is in place.
+
+M8a TCP/network slice status:
+
+- Branch: `m8a-net-native-boundary`.
+- Implemented TCP/listener/stream/split-half/resolve behavior in
+  `sifr_stdlib::net`, keeping socket handle tables and low-level TCP substrate
+  in `sifr_runtime::net`.
+- Declared private `_sifr.net` native functions and routed public `sifr.net`
+  wrappers through those declarations.
+- Deleted compiler-owned net registry, net preamble, and retained fallback
+  signature entries.
+- Updated Rust interop direct error mapping so private declaration aliases
+  `NetError` and `TlsError` get message-shaped generated error conversion like
+  `ProcessError`.
+- Manifest evidence: `_sifr.net` moved from `retained` to `closing`, stale
+  registry/preamble/runtime-root allowlist entries were removed, and
+  certification rows now point at the stdlib-owned `opaque_resource_core` and
+  `async_runtime_core` rows instead of the future-owned ecosystem rows.
+- Local evidence before review: `cargo test -p sifr_stdlib --features net net
+  -- --nocapture`; `cargo test -p sifr_codegen rust_interop_direct --
+  --nocapture`; `cargo test -p sifr_retained_intrinsics -- --nocapture`;
+  `cargo run -q -p sifr -- run demos/network_tcp_echo/main.sifr`; `cargo run -q
+  -p sifr -- run crates/sifr/tests/e2e/pass/network_http_tcp_loopback_split.sifr`;
+  `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/network_http_tcp_errors.sifr`;
+  `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/network_http_tcp_cancel_accept.sifr`;
+  `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/network_http_tls_loopback_split.sifr`;
+  `python3 scripts/check_file_size_guardrails.py`;
+  `python3 scripts/check_stdlib_migration_closure.py`;
+  `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`;
+  `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`.
+- Review evidence: Opus round 3 reports no blocking findings and says the
+  current diff is satisfactory to merge in
+  `plans/reviews/active/m8a-net-native-boundary-opus-round3-response.md`.
+- Local create-PR gate: `scripts/run_all_tests.sh --profile create-pr` passed
+  with 129 e2e pass fixtures and 0 failures; report
+  `target/validation_lane_reports/create-pr.latest.json`; advisory only:
+  warm wall-time budget exceeded.
 
 Tasks:
 

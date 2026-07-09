@@ -12,7 +12,6 @@ mod http;
 mod i18n_core;
 mod io_json;
 mod math_test;
-mod net;
 mod platform_misc;
 mod python;
 mod runtime;
@@ -30,7 +29,6 @@ use http::intrinsic_http;
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
 use math_test::{intrinsic_math, intrinsic_test};
-use net::intrinsic_net;
 use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_toml,
 };
@@ -85,7 +83,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         // migrate to compiled private declarations.
         "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
-        "_sifr.net" => Some(intrinsic_net()),
         "_sifr.tls" => Some(intrinsic_tls()),
         "_sifr.url" => Some(intrinsic_url()),
         "_sifr.http" => Some(intrinsic_http()),

@@ -277,6 +277,7 @@ fn restore_stream(handle: i64, stream: TcpStream) {
     lock(&STREAMS).insert(handle, stream);
 }
 
+#[cfg(any(feature = "http", feature = "tls"))]
 pub(crate) fn consume_stream_for_tls(handle: i64) -> Result<TcpStream, String> {
     let stream = take_stream(handle)?;
     lock(&STREAM_ADDRS).remove(&handle);
@@ -373,11 +374,11 @@ pub async fn tcp_stream_close(handle: i64) -> Result<(), String> {
         .ok_or_else(|| format!("TCP stream handle is closed or unknown: {handle}"))
 }
 
-pub fn tcp_stream_split(handle: i64) -> (i64, i64) {
+pub fn tcp_stream_split(handle: i64) -> Result<(i64, i64), String> {
     let read_handle = next_handle_infallible();
     let write_handle = next_handle_infallible();
     let Some(stream) = lock(&STREAMS).remove(&handle) else {
-        return (read_handle, write_handle);
+        return Err(format!("TCP stream handle is closed or unknown: {handle}"));
     };
     lock(&STREAM_ADDRS).remove(&handle);
     let was_shutdown = lock(&WRITE_SHUTDOWN).remove(&handle);
@@ -387,7 +388,7 @@ pub fn tcp_stream_split(handle: i64) -> (i64, i64) {
     if was_shutdown {
         lock(&WRITE_SHUTDOWN).insert(write_handle);
     }
-    (read_handle, write_handle)
+    Ok((read_handle, write_handle))
 }
 
 pub fn tcp_stream_local_addr(handle: i64) -> Result<String, String> {
@@ -498,4 +499,16 @@ pub async fn resolve_host(
         "DNS resolution",
     )
     .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::tcp_stream_split;
+
+    #[test]
+    fn tcp_stream_split_rejects_unknown_handle() {
+        let error = tcp_stream_split(i64::MIN).expect_err("unknown stream handle must fail");
+
+        assert!(error.contains("TCP stream handle is closed or unknown"));
+    }
 }

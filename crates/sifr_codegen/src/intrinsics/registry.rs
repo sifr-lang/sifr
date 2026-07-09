@@ -2,7 +2,6 @@ mod bytes;
 mod collections;
 mod encoding;
 mod file_handles;
-mod net;
 mod open_text_handles;
 mod os;
 mod python;
@@ -116,77 +115,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "net_connect_tcp" => (net::lower_net_connect_tcp(args), Some(StdlibFeature::Tokio)),
-        "net_listen_tcp" => (net::lower_net_listen_tcp(args), Some(StdlibFeature::Tokio)),
-        "net_lookup_host" => (net::lower_net_lookup_host(args), Some(StdlibFeature::Tokio)),
-        "net_listener_accept" => (
-            net::lower_net_listener_accept(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_listener_local_addr" => (
-            net::lower_net_listener_local_addr(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_listener_close" => (
-            net::lower_net_listener_close(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_read_chunk" => (
-            net::lower_net_tcp_stream_read_chunk(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_write" => (
-            net::lower_net_tcp_stream_write(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_write_all" => (
-            net::lower_net_tcp_stream_write_all(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_shutdown_write" => (
-            net::lower_net_tcp_stream_shutdown_write(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_split" => (
-            net::lower_net_tcp_stream_split(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_local_addr" => (
-            net::lower_net_tcp_stream_local_addr(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_peer_addr" => (
-            net::lower_net_tcp_stream_peer_addr(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_stream_close" => (
-            net::lower_net_tcp_stream_close(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_read_half_read_chunk" => (
-            net::lower_net_tcp_read_half_read_chunk(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_read_half_close" => (
-            net::lower_net_tcp_read_half_close(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_write_half_write" => (
-            net::lower_net_tcp_write_half_write(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_write_half_write_all" => (
-            net::lower_net_tcp_write_half_write_all(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_write_half_shutdown_write" => (
-            net::lower_net_tcp_write_half_shutdown_write(args),
-            Some(StdlibFeature::Tokio),
-        ),
-        "net_tcp_write_half_close" => (
-            net::lower_net_tcp_write_half_close(args),
-            Some(StdlibFeature::Tokio),
-        ),
         name if name.starts_with("tls_") => (
             tls::lower_tls_intrinsic(name, args),
             Some(StdlibFeature::Tokio),

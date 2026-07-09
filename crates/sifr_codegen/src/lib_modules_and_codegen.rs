@@ -3,7 +3,7 @@ use super::{
     build_async_generator_type_items, build_cancellation_error_type_items, build_cpu_offload_items,
     build_error_into_error_impl, build_error_type_items, build_failure_type_items,
     build_file_handle_infra_items, build_file_handle_struct_items, build_http_runtime_items,
-    build_io_error_items, build_join_set_cpu_items, build_join_set_items, build_net_runtime_items,
+    build_io_error_items, build_join_set_cpu_items, build_join_set_items,
     build_task_context_scope_extension_items, build_task_current_context_items,
     build_task_scope_cpu_offload_items, build_task_scope_items, build_task_scope_offload_items,
     build_task_scope_process_items, build_timeout_result_type_items, build_tls_runtime_items,
@@ -387,13 +387,6 @@ pub fn generate_rust_with_stdlib_for_module(
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
     let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
     let uses_task_scope_process = module_uses_task_scope_process(module);
-    let stdlib_emits_net_runtime = stdlib_preamble.contains("fn __sifr_net_error");
-    let needs_net_runtime = !stdlib_emits_net_runtime
-        && (stdlib_preamble.contains("__sifr_net_")
-            || emitter
-                .intrinsic_functions
-                .iter()
-                .any(|function| function.starts_with("net_")));
     let stdlib_emits_tls_runtime = stdlib_preamble.contains("fn __sifr_tls_error");
     let needs_tls_runtime = !stdlib_emits_tls_runtime
         && (stdlib_preamble.contains("__sifr_tls_")
@@ -578,9 +571,6 @@ pub fn generate_rust_with_stdlib_for_module(
         if !stdlib_provides_file_handle_struct && !user_defined_file_handle_struct {
             preamble_items.extend(build_file_handle_struct_items());
         }
-    }
-    if needs_net_runtime {
-        preamble_items.extend(build_net_runtime_items());
     }
     if needs_tls_runtime {
         preamble_items.extend(build_tls_runtime_items());
