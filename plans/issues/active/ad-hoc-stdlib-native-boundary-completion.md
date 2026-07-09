@@ -95,7 +95,7 @@ merged, and documented before the next milestone starts.
 | M3. File and Filesystem Migration | merged | PR #2851 · sha=12b64b4; PR #2852 · sha=72a62f1; PR #2853 · sha=84b0419; PR #2855 · sha=4372f13; PR #2858 · sha=f08fc98 |
 | M4. Random, Time, and Logging | merged | PR #2860 · sha=5daa4cc · manifest: `_sifr.logging` retained -> closing; PR #2862 · sha=b0d6a29 · manifest: `_sifr.crypto::random` retained -> closing; PR #2864 · sha=9d901ad · manifest: `_sifr.time` exact retained leaves narrowed to `sleep`/`monotonic`; PR #2866 · sha=c241b20 · manifest: mixed preamble now IO/file-handle only |
 | M5. Simple Sys and Environment | merged | PR #2868 · sha=e21e67a · manifest: `_sifr.sys` retained set narrowed to later-slice process/OS helpers; PR #2870 · sha=03d0126 · manifest: `_sifr.sys` retained set narrowed to `run_command`/`chdir`/`stat_size`/`disk_usage`; closeout review READY |
-| M6. Async Resource Pilot | in progress | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic` |
+| M6. Async Resource Pilot | merged | PR #2873 · sha=7b5f634 · manifest: `_sifr.time` retained -> closing for `sleep`/`monotonic`; PR #2875 · sha=f3ce312 · certification: `async_runtime_core` supported and `_sifr.time` -> `async_runtime_core`; closeout review READY |
 | M7. Process Family | planned |  |
 | M8. Network and TLS Families | planned |  |
 | M9. HTTP Family | planned |  |
@@ -727,6 +727,18 @@ leaf closure have different blast radii:
   async lowering untouched (merged in PR #2873, merge commit
   `7b5f6345becc6e199b483d6f76539751e0add6b7`; local `create-pr` validation
   passed with wall-time advisory only; reviewer round 1 READY).
+- M6b: split stdlib-owned async runtime evidence into supported
+  `async_runtime_core`; add async-close contract accept/reject tests, including
+  sync-close-only rejection for `close=async_close`; add runtime async handle
+  close/double-close and cancelled-join determinism coverage; keep
+  `async_runtime_reqwest` future-owned by the runtime ecosystem issue; repoint
+  `_sifr.time` certification rows to `async_runtime_core` (merged in PR #2875,
+  merge commit `f3ce31225d92113c6f59eed777c22095951e3040`; local
+  `create-pr` validation passed with no advisories; reviewer round 7 READY).
+- M6 closeout: milestone-level review confirmed async declaration/lifecycle
+  evidence, deterministic cancellation/drop documentation, sync-vs-async
+  certification separation, and compiler-native dispatch closure for `sleep`
+  and `monotonic` (reviewer round 1 READY).
 
 Acceptance:
 
