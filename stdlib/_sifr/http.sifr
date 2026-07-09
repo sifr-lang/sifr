@@ -1,2 +1,51 @@
 # Private _sifr.http native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+
+class HeaderError(Error):
+    message: str
+
+
+class HttpError(Error):
+    message: str
+
+
+@rust(sifr_stdlib.http.http_validate_method)
+def http_validate_method(value: str) -> Result[str, HttpError]:
+    ...
+
+
+@rust(sifr_stdlib.http.http_validate_status)
+def http_validate_status(code: int) -> Result[int, HttpError]:
+    ...
+
+
+@rust(sifr_stdlib.http.http_validate_version)
+def http_validate_version(value: str) -> Result[str, HttpError]:
+    ...
+
+
+@rust(sifr_stdlib.http.http_validate_header_name)
+def http_validate_header_name(value: str) -> Result[str, HeaderError]:
+    ...
+
+
+@rust(sifr_stdlib.http.http_validate_header_value)
+def http_validate_header_value(value: str) -> Result[str, HeaderError]:
+    ...
+
+
+@rust(sifr_stdlib.http.http_header_map_from_pairs)
+def http_header_map_from_pairs(
+    pairs: list[str],
+) -> Result[list[str], HeaderError]:
+    ...
+
+
+@rust(sifr_stdlib.http.http_parse_cookie_header)
+def http_parse_cookie_header(value: str) -> Result[list[str], HeaderError]:
+    ...
+
+
+@rust(sifr_stdlib.http.http_build_cookie_header)
+def http_build_cookie_header(cookies: list[str]) -> Result[str, HeaderError]:
+    ...

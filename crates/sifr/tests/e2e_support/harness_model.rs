@@ -418,6 +418,9 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("sifr_stdlib::tls::") {
         modules.insert("_sifr.tls".to_string());
     }
+    if rust_source.contains("sifr_stdlib::http::") {
+        modules.insert("_sifr.http".to_string());
+    }
     if rust_source.contains("regex::") {
         crates.insert("regex".to_string());
     }

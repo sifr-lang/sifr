@@ -14,8 +14,6 @@ mod cpu_offload_runtime;
 pub use cpu_offload_runtime::*;
 mod join_set_runtime;
 pub use join_set_runtime::*;
-mod url_http_runtime;
-pub(crate) use url_http_runtime::*;
 mod parallel_runtime;
 pub(crate) use parallel_runtime::*;
 mod io_file_handles;

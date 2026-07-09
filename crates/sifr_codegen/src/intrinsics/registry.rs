@@ -10,7 +10,6 @@ mod runtime;
 mod signal;
 mod task;
 mod test;
-mod url_http;
 
 use crate::RustExpr;
 use sifr_stdlib_manifest::StdlibFeature;
@@ -74,26 +73,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
             collections::lower_counter_increment(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "http_validate_header_name" => (
-            url_http::lower_http_validate_header_name(args),
-            Some(StdlibFeature::Http),
-        ),
-        "http_validate_header_value" => (
-            url_http::lower_http_validate_header_value(args),
-            Some(StdlibFeature::Http),
-        ),
-        "http_header_map_from_pairs" => (
-            url_http::lower_http_header_map_from_pairs(args),
-            Some(StdlibFeature::Http),
-        ),
-        "http_parse_cookie_header" => (
-            url_http::lower_http_parse_cookie_header(args),
-            Some(StdlibFeature::Http),
-        ),
-        "http_build_cookie_header" => (
-            url_http::lower_http_build_cookie_header(args),
-            Some(StdlibFeature::Http),
-        ),
         "str_encode_utf8_result" => (
             encoding::lower_str_encode_result(args),
             Some(StdlibFeature::SifrRuntime),
@@ -114,10 +93,6 @@ pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        name if name.starts_with("http_") => (
-            url_http::lower_http_intrinsic(name, args),
-            Some(StdlibFeature::Http),
-        ),
         "signal_ctrl_c" => (
             signal::lower_signal_ctrl_c(args),
             Some(StdlibFeature::Tokio),

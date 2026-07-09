@@ -1,5 +1,7 @@
 # sifr.http - HTTP protocol primitives
 from _sifr.http import (
+    HeaderError,
+    HttpError,
     http_build_cookie_header,
     http_header_map_from_pairs,
     http_validate_method,
@@ -9,14 +11,6 @@ from _sifr.http import (
     http_validate_header_name,
     http_validate_header_value,
 )
-
-
-class HeaderError(Error):
-    message: str
-
-
-class HttpError(Error):
-    message: str
 
 
 class ProtocolError(Error):
@@ -154,36 +148,91 @@ class HttpResponse:
         self.body = body
 
 
+def _http_part(parts: list[str], index: int) -> str:
+    value: str | None = parts[index]
+    if value is not None:
+        return value + ""
+    return ""
+
+
+def _pairs_from_flat(flat: list[str]) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    i: int = 0
+    while i < len(flat):
+        pairs.append((_http_part(flat, i), _http_part(flat, i + 1)))
+        i = i + 2
+    return pairs
+
+
+def _flatten_pairs(pairs: list[tuple[str, str]]) -> list[str]:
+    flat: list[str] = []
+    for pair in pairs:
+        flat.append(pair[0])
+        flat.append(pair[1])
+    return flat
+
+
 def method(value: str) -> Result[Method, HttpError]:
-    return http_validate_method(value)
+    try:
+        parsed: str = http_validate_method(value)
+        return Method(parsed)
+    except HttpError as e:
+        raise e
 
 
 def status(code: int) -> Result[Status, HttpError]:
-    return http_validate_status(code)
+    try:
+        parsed: int = http_validate_status(code)
+        return Status(parsed)
+    except HttpError as e:
+        raise e
 
 
 def version(value: str) -> Result[Version, HttpError]:
-    return http_validate_version(value)
+    try:
+        parsed: str = http_validate_version(value)
+        return Version(parsed)
+    except HttpError as e:
+        raise e
 
 
 def header_name(value: str) -> Result[HeaderName, HeaderError]:
-    return http_validate_header_name(value)
+    try:
+        parsed: str = http_validate_header_name(value)
+        return HeaderName(parsed)
+    except HeaderError as e:
+        raise e
 
 
 def header_value(value: str) -> Result[HeaderValue, HeaderError]:
-    return http_validate_header_value(value)
+    try:
+        parsed: str = http_validate_header_value(value)
+        return HeaderValue(parsed)
+    except HeaderError as e:
+        raise e
 
 
 def headers_from_pairs(pairs: list[tuple[str, str]]) -> Result[HeaderMap, HeaderError]:
-    return http_header_map_from_pairs(pairs)
+    try:
+        parsed: list[str] = http_header_map_from_pairs(_flatten_pairs(pairs))
+        entries: list[tuple[HeaderName, HeaderValue]] = []
+        for name, value in _pairs_from_flat(parsed):
+            entries.append((HeaderName(name), HeaderValue(value)))
+        return HeaderMap(entries)
+    except HeaderError as e:
+        raise e
 
 
 def parse_cookie_header(value: str) -> Result[list[tuple[str, str]], HeaderError]:
-    return http_parse_cookie_header(value)
+    try:
+        parsed: list[str] = http_parse_cookie_header(value)
+        return _pairs_from_flat(parsed)
+    except HeaderError as e:
+        raise e
 
 
 def build_cookie_header(pairs: list[tuple[str, str]]) -> Result[str, HeaderError]:
-    return http_build_cookie_header(pairs)
+    return http_build_cookie_header(_flatten_pairs(pairs))
 
 
 def body_from_bytes(own data: bytes) -> BodyStream:

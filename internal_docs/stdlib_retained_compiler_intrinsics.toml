@@ -103,26 +103,13 @@ exact_intrinsics = [
 
 [[surface]]
 id = "_sifr.http::header_helpers"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Closed in M9a: HTTP header, method, status, version, and cookie-header helpers route through _sifr.http Rust interop declarations backed by sifr_stdlib::http."]
 declaration_files = ["stdlib/_sifr/http.sifr"]
-certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
-reason = "HTTP protocol and header helper shims still route through generated glue while the HTTP stdlib migration is pending."
-registry_files = ["url_http.rs"]
-preamble_files = ["url_http_runtime.rs"]
-exact_intrinsics = [
-  "http_build_cookie_header",
-  "http_header_map_from_pairs",
-  "http_parse_cookie_header",
-  "http_validate_header_name",
-  "http_validate_header_value",
-  "http_validate_method",
-  "http_validate_status",
-  "http_validate_version",
-]
+reason = "HTTP helper shims no longer use compiler-native registry dispatch or generated preamble code; the closing row records the former retained surface for final audit traceability."
 
 [[surface]]
 id = "_sifr.encoding::utf8_bytes_string_glue"

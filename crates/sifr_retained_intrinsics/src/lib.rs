@@ -8,7 +8,6 @@ use std::collections::HashMap;
 
 mod collections_bytes_time;
 mod crypto_regex_uuid;
-mod http;
 mod i18n_core;
 mod io_json;
 mod math_test;
@@ -24,7 +23,6 @@ mod url;
 
 use collections_bytes_time::{intrinsic_bytes, intrinsic_collections};
 use crypto_regex_uuid::{intrinsic_regex, intrinsic_uuid};
-use http::intrinsic_http;
 use i18n_core::intrinsic_i18n;
 use io_json::{intrinsic_io, intrinsic_json};
 use math_test::{intrinsic_math, intrinsic_test};
@@ -82,7 +80,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.url" => Some(intrinsic_url()),
-        "_sifr.http" => Some(intrinsic_http()),
         "_sifr.python" => Some(intrinsic_python()),
         "_sifr.signal" => Some(intrinsic_signal()),
         "_sifr.runtime" => Some(intrinsic_runtime()),
