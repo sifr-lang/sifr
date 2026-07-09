@@ -24,7 +24,6 @@ mod parallel_runtime;
 pub(crate) use parallel_runtime::*;
 mod process_async_child_runtime;
 mod process_async_runtime;
-mod process_child_pipes;
 mod process_runtime;
 pub(crate) use process_async_runtime::*;
 pub(crate) use process_runtime::*;

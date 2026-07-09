@@ -173,8 +173,8 @@ class Child:
             raise ProcessError("process child has already been waited")
         self._waited = True
         try:
-            exit_status: tuple[int, int | None] = process_wait(self._handle)
-            return _status_from_exit(exit_status)
+            parts: list[int] = process_wait(self._handle)
+            return _status_from_parts(parts)
         except ProcessError as e:
             raise e
 
@@ -446,8 +446,8 @@ def terminate(child: Child) -> Result[None, ProcessError]:
 @blocking_io
 def wait(child: Child) -> Result[Status, ProcessError]:
     try:
-        exit_status: tuple[int, int | None] = process_wait(child._handle)
-        return _status_from_exit(exit_status)
+        parts: list[int] = process_wait(child._handle)
+        return _status_from_parts(parts)
     except ProcessError as e:
         raise e
 

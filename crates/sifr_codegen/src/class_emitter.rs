@@ -44,36 +44,23 @@ impl RustEmitter {
                         mutable: false,
                         name: "_".to_string(),
                         ty: None,
-                        value: RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident(
-                                        "__SIFR_PROCESS_CHILDREN".to_string(),
-                                    )),
-                                    method: "lock".to_string(),
-                                    args: vec![],
-                                }),
-                                method: "unwrap_or_else".to_string(),
-                                args: vec![RustExpr::Closure {
-                                    params: vec![RustParam::Named {
-                                        name: "__err".to_string(),
-                                        ty: RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident("__err".to_string())),
-                                        method: "into_inner".to_string(),
-                                        args: vec![],
-                                    }),
-                                    is_move: false,
-                                }],
-                            }),
-                            method: "remove".to_string(),
-                            args: vec![RustExpr::Ref {
-                                mutable: false,
-                                expr: Box::new(RustExpr::Field {
+                        value: RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "sifr_stdlib".to_string(),
+                                "process".to_string(),
+                                "process_child_close".to_string(),
+                            ])),
+                            args: vec![RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "sifr_runtime".to_string(),
+                                    "interop".to_string(),
+                                    "SifrIntBridge".to_string(),
+                                    "from".to_string(),
+                                ])),
+                                args: vec![RustExpr::Field {
                                     expr: Box::new(RustExpr::Ident("self".to_string())),
                                     field: "_handle".to_string(),
-                                }),
+                                }],
                             }],
                         },
                     }],

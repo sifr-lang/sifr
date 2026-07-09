@@ -119,7 +119,8 @@ fn process_child_resource_derives_are_module_scoped() {
             .rust_source;
     assert!(process_rust.contains("#[derive(Debug)]\nstruct Child"));
     assert!(process_rust.contains("impl Drop for Child"));
-    assert!(process_rust.contains("__SIFR_PROCESS_CHILDREN"));
+    assert!(process_rust.contains("sifr_stdlib::process::process_child_close"));
+    assert!(!process_rust.contains("__SIFR_PROCESS_CHILDREN"));
     assert!(!process_rust.contains("#[derive(Debug, Clone"));
 }
 
