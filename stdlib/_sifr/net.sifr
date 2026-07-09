@@ -1,2 +1,126 @@
 # Private _sifr.net native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+
+class NetError(Error):
+    message: str
+
+
+@rust(sifr_stdlib.net.net_connect_tcp)
+async def net_connect_tcp(
+    address: str,
+    timeout_seconds: float,
+    has_timeout: bool,
+    local_addr: str,
+    has_local_addr: bool,
+) -> Result[int, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_listen_tcp)
+async def net_listen_tcp(
+    address: str,
+    backlog: int,
+    has_backlog: bool,
+    reuse_addr: bool,
+) -> Result[int, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_listener_accept)
+async def net_listener_accept(handle: int) -> Result[int, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_listener_close)
+def net_listener_close(handle: int) -> Result[None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_listener_local_addr)
+def net_listener_local_addr(handle: int) -> Result[str, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_lookup_host)
+async def net_lookup_host(
+    address: str,
+    timeout_seconds: float,
+    has_timeout: bool,
+) -> Result[list[str], NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_read_half_close)
+def net_tcp_read_half_close(handle: int) -> Result[None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_read_half_read_chunk)
+async def net_tcp_read_half_read_chunk(
+    handle: int,
+    max_bytes: int,
+) -> Result[bytes | None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_close)
+async def net_tcp_stream_close(handle: int) -> Result[None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_local_addr)
+def net_tcp_stream_local_addr(handle: int) -> Result[str, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_peer_addr)
+def net_tcp_stream_peer_addr(handle: int) -> Result[str, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_read_chunk)
+async def net_tcp_stream_read_chunk(
+    handle: int,
+    max_bytes: int,
+) -> Result[bytes | None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_shutdown_write)
+async def net_tcp_stream_shutdown_write(handle: int) -> Result[None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_split)
+def net_tcp_stream_split(handle: int) -> Result[list[int], NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_write)
+async def net_tcp_stream_write(handle: int, data: bytes) -> Result[int, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_stream_write_all)
+async def net_tcp_stream_write_all(handle: int, data: bytes) -> Result[None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_write_half_close)
+def net_tcp_write_half_close(handle: int) -> Result[None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_write_half_shutdown_write)
+async def net_tcp_write_half_shutdown_write(handle: int) -> Result[None, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_write_half_write)
+async def net_tcp_write_half_write(handle: int, data: bytes) -> Result[int, NetError]:
+    ...
+
+
+@rust(sifr_stdlib.net.net_tcp_write_half_write_all)
+async def net_tcp_write_half_write_all(handle: int, data: bytes) -> Result[None, NetError]:
+    ...

@@ -179,40 +179,14 @@ reason = "Random module state and distribution helpers now route through _sifr.c
 
 [[surface]]
 id = "_sifr.net"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after migrated network registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/net.sifr"]
-certification_rows = ["opaque_resource_matrix", "async_runtime_reqwest"]
-reason = "Network handles and split stream lifecycle behavior remain resource/runtime-owned pending certification."
-registry_files = ["net.rs"]
-preamble_files = ["net_runtime.rs"]
-retained_direct_dependency_packages = ["tokio", "tracing"]
-direct_runtime_roots = ["sifr_runtime::net"]
-exact_intrinsics = [
-  "net_connect_tcp",
-  "net_listen_tcp",
-  "net_listener_accept",
-  "net_listener_close",
-  "net_listener_local_addr",
-  "net_lookup_host",
-  "net_tcp_read_half_close",
-  "net_tcp_read_half_read_chunk",
-  "net_tcp_stream_close",
-  "net_tcp_stream_local_addr",
-  "net_tcp_stream_peer_addr",
-  "net_tcp_stream_read_chunk",
-  "net_tcp_stream_shutdown_write",
-  "net_tcp_stream_split",
-  "net_tcp_stream_write",
-  "net_tcp_stream_write_all",
-  "net_tcp_write_half_close",
-  "net_tcp_write_half_shutdown_write",
-  "net_tcp_write_half_write",
-  "net_tcp_write_half_write_all",
-]
+certification_rows = ["opaque_resource_core", "async_runtime_core"]
+reason = "Network public behavior now routes through _sifr.net private Rust interop declarations and sifr_stdlib.net while socket tables and lifecycle substrate remain in sifr_runtime::net; this row remains only to record closure of the former compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.tls"

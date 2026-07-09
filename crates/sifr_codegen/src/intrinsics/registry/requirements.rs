@@ -20,7 +20,6 @@ pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeatur
         | "http_validate_header_value"
         | "http_header_map_from_pairs" => HTTP_PRIMITIVE_REQUIRED_FEATURES,
         "http_parse_cookie_header" | "http_build_cookie_header" => HTTP_HEADER_REQUIRED_FEATURES,
-        name if name.starts_with("net_") => &[StdlibFeature::SifrRuntime],
         name if name.starts_with("tls_") => tls::TLS_REQUIRED_FEATURES,
         name if name.starts_with("http_") => HTTP_HEADER_REQUIRED_FEATURES,
         _ => &[],

@@ -3,6 +3,7 @@ use sifr_ir::{
 };
 use sifr_type_system::Type;
 
+use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 const BRIDGE_ROOT: &str = "bridge";
@@ -201,161 +202,6 @@ fn bridge_result_expr(value: RustExpr, ok_type: &Type, err_type: &Type) -> RustE
     }
 }
 
-fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
-    if matches!(err_type, Type::Alias { name, .. } if name == "ProcessError") {
-        return RustExpr::StructInit {
-            name: "ProcessError".to_string(),
-            fields: vec![("message".to_string(), to_string_expr(value))],
-        };
-    }
-    match err_type.resolve_alias() {
-        Type::Class {
-            name,
-            fields,
-            parent_class: _,
-            ..
-        } if name == "ProcessError" && message_error_fields(fields).is_some() => {
-            RustExpr::StructInit {
-                name: name.clone(),
-                fields: vec![("message".to_string(), to_string_expr(value))],
-            }
-        }
-        Type::Class {
-            name,
-            fields: _,
-            parent_class,
-            ..
-        } if parent_class.as_deref() == Some("Error") && name == "JSONDecodeError" => {
-            json_decode_error_expr(name, value)
-        }
-        Type::Class {
-            name,
-            fields: _,
-            parent_class,
-            ..
-        } if parent_class.as_deref() == Some("Error") && name == "JsonLimitError" => {
-            json_limit_error_expr(name, value)
-        }
-        Type::Class {
-            name,
-            fields: _,
-            parent_class,
-            ..
-        } if parent_class.as_deref() == Some("Error") && name == "JsonIntegerRangeError" => {
-            json_integer_range_error_expr(name, value)
-        }
-        Type::Class {
-            name,
-            fields,
-            parent_class,
-            ..
-        } if parent_class.as_deref() == Some("Error") => {
-            if let Some(error_fields) = message_error_fields(fields) {
-                RustExpr::StructInit {
-                    name: name.clone(),
-                    fields: error_fields
-                        .into_iter()
-                        .map(|field| (field, to_string_expr(value.clone())))
-                        .collect(),
-                }
-            } else {
-                value
-            }
-        }
-        _ => value,
-    }
-}
-
-fn json_decode_error_expr(name: &str, value: RustExpr) -> RustExpr {
-    RustExpr::StructInit {
-        name: name.to_string(),
-        fields: vec![
-            (
-                "message".to_string(),
-                bridge_error_method_string(value.clone(), "message"),
-            ),
-            (
-                "line".to_string(),
-                bridge_error_method_i64(value.clone(), "line"),
-            ),
-            (
-                "column".to_string(),
-                bridge_error_method_i64(value, "column"),
-            ),
-        ],
-    }
-}
-
-fn json_limit_error_expr(name: &str, value: RustExpr) -> RustExpr {
-    RustExpr::StructInit {
-        name: name.to_string(),
-        fields: vec![
-            (
-                "message".to_string(),
-                bridge_error_method_string(value.clone(), "message"),
-            ),
-            ("limit".to_string(), bridge_error_method_i64(value, "limit")),
-        ],
-    }
-}
-
-fn json_integer_range_error_expr(name: &str, value: RustExpr) -> RustExpr {
-    RustExpr::StructInit {
-        name: name.to_string(),
-        fields: vec![
-            (
-                "message".to_string(),
-                bridge_error_method_string(value.clone(), "message"),
-            ),
-            (
-                "path".to_string(),
-                bridge_error_method_string(value.clone(), "path"),
-            ),
-            (
-                "profile".to_string(),
-                bridge_error_method_string(value, "profile"),
-            ),
-        ],
-    }
-}
-
-fn bridge_error_method_string(value: RustExpr, method: &str) -> RustExpr {
-    to_string_expr(RustExpr::MethodCall {
-        receiver: Box::new(value),
-        method: method.to_string(),
-        args: Vec::new(),
-    })
-}
-
-fn bridge_error_method_i64(value: RustExpr, method: &str) -> RustExpr {
-    RustExpr::Cast {
-        expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(value),
-            method: method.to_string(),
-            args: Vec::new(),
-        }),
-        ty: RustType::I64,
-    }
-}
-
-fn message_error_fields(fields: &[(String, Type)]) -> Option<Vec<String>> {
-    let all_fields_are_strings = fields
-        .iter()
-        .all(|(_name, ty)| ty.resolve_alias() == &Type::Str);
-    if !all_fields_are_strings {
-        return None;
-    }
-    let field_names = fields
-        .iter()
-        .map(|(name, _ty)| name.clone())
-        .collect::<Vec<_>>();
-    if field_names.iter().any(|name| name == "message") {
-        Some(field_names)
-    } else {
-        None
-    }
-}
-
 fn bridge_int_to_i64_expr(value: RustExpr) -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(value),
@@ -415,14 +261,6 @@ fn i64_vec_to_bridge_int_vec_expr(value: RustExpr, borrowed: bool) -> RustExpr {
             args: vec![sifr_int_bridge_path("from")],
         }),
         method: "collect::<Vec<_>>".to_string(),
-        args: Vec::new(),
-    }
-}
-
-fn to_string_expr(expr: RustExpr) -> RustExpr {
-    RustExpr::MethodCall {
-        receiver: Box::new(expr),
-        method: "to_string".to_string(),
         args: Vec::new(),
     }
 }
