@@ -1,2 +1,47 @@
 # Private _sifr.python native declaration module.
-# Concrete Rust interop declarations migrate here in later milestones.
+
+
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+    def __init__(
+        self,
+        message: str,
+        kind: str = "",
+        exception_type: str = "",
+        traceback: str = "",
+        context: str = "",
+    ):
+        self.message = message
+        self.kind = kind
+        self.exception_type = exception_type
+        self.traceback = traceback
+        self.context = context
+
+
+@rust(sifr_stdlib.python.py_from_none)
+def py_from_none() -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_bool)
+def py_from_bool(value: bool) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_int)
+def py_from_int(value: int) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_float)
+def py_from_float(value: float) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_str)
+def py_from_str(value: str) -> Result[tuple[int, int], PythonError]: ...
+
+
+@rust(sifr_stdlib.python.py_from_bytes)
+def py_from_bytes(value: bytes) -> Result[tuple[int, int], PythonError]: ...

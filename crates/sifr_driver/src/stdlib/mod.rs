@@ -19,6 +19,8 @@ mod stateless_private_codegen_tests;
 #[cfg(test)]
 mod stateless_process_codegen_tests;
 #[cfg(test)]
+mod stateless_python_codegen_tests;
+#[cfg(test)]
 mod stateless_time_codegen_tests;
 mod tooling;
 mod types;

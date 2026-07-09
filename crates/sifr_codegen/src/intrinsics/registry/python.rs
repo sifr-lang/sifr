@@ -32,12 +32,6 @@ pub(crate) fn lower_python_intrinsic(name: &str, args: &[RustExpr]) -> Option<Ru
         "py_exit_context_with_error" => lower_py_exit_context_with_error(args),
         "py_resource_diagnostics" => lower_py_resource_diagnostics(args),
         "py_run_coroutine_blocking" => lower_py_run_coroutine_blocking(args),
-        "py_from_none" => lower_py_from_none(args),
-        "py_from_bool" => lower_py_from_bool(args),
-        "py_from_int" => lower_py_from_int(args),
-        "py_from_float" => lower_py_from_float(args),
-        "py_from_str" => lower_py_from_str(args),
-        "py_from_bytes" => lower_py_from_bytes(args),
         "py_from_list" => lower_py_from_list(args),
         "py_from_tuple" => lower_py_from_tuple(args),
         "py_from_dict_str" => lower_py_from_dict_str(args),
@@ -534,65 +528,6 @@ pub(crate) fn lower_py_resource_diagnostics(args: &[RustExpr]) -> Option<RustExp
 
 pub(crate) fn lower_py_run_coroutine_blocking(args: &[RustExpr]) -> Option<RustExpr> {
     lower_handle_conversion(args, "run_coroutine_blocking")
-}
-
-pub(crate) fn lower_py_from_none(args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(map_python_error(
-        "sifr_runtime::python::from_none()".to_string(),
-    ))
-}
-
-pub(crate) fn lower_py_from_bool(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let value = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::from_bool({value})"
-    )))
-}
-
-pub(crate) fn lower_py_from_int(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let value = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::from_int({value})"
-    )))
-}
-
-pub(crate) fn lower_py_from_float(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let value = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::from_float({value})"
-    )))
-}
-
-pub(crate) fn lower_py_from_str(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let value = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::from_str(({value}).as_str())"
-    )))
-}
-
-pub(crate) fn lower_py_from_bytes(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    let value = render_expr(&args[0]);
-    Some(map_python_error(format!(
-        "sifr_runtime::python::from_bytes(({value}).as_slice())"
-    )))
 }
 
 pub(crate) fn lower_py_from_list(args: &[RustExpr]) -> Option<RustExpr> {

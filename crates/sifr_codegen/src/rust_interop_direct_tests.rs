@@ -115,6 +115,50 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
     assert!(!generated.contains("return Ok(());"), "{generated}");
 }
 
+#[test]
+fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata() {
+    let python_error = Type::Class {
+        name: "PythonError".to_string(),
+        fields: vec![
+            ("message".to_string(), Type::Str),
+            ("kind".to_string(), Type::Str),
+            ("exception_type".to_string(), Type::Str),
+            ("traceback".to_string(), Type::Str),
+            ("context".to_string(), Type::Str),
+        ],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let func = HirFunction {
+        name: "py_from_none".to_string(),
+        params: Vec::new(),
+        return_type: Type::Result(
+            Box::new(Type::Tuple(vec![Type::Int, Type::Int])),
+            Box::new(python_error),
+        ),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![declaration(
+            RustInteropDecoratorKind::Function,
+            &["sifr_stdlib", "python", "py_from_none"],
+        )],
+        type_params: Vec::new(),
+    };
+
+    let body =
+        rust_interop_function_body(&func).expect("Python primitive interop should lower to a body");
+    let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+        panic!("Python primitive interop should lower to a return expression");
+    };
+
+    assert_eq!(
+        render_expr(expr),
+        "sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string() })"
+    );
+}
+
 fn zip_error_class() -> HirClass {
     HirClass {
         name: "ZipError".to_string(),

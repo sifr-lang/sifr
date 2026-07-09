@@ -59,6 +59,7 @@ pub enum RustBridgeTypeKind {
     List,
     Dict,
     Option,
+    Tuple,
     Result,
     GeneratedRecord,
     GeneratedEnum,
@@ -216,6 +217,7 @@ struct ModuleCatalog {
     functions: BTreeMap<String, ModuleFunction>,
     methods: BTreeMap<(String, String), ModuleFunction>,
     opaque_classes: BTreeSet<String>,
+    error_classes: BTreeSet<String>,
     record_classes: BTreeSet<String>,
     enum_classes: BTreeSet<String>,
 }
@@ -225,6 +227,7 @@ impl ModuleCatalog {
         let mut functions = BTreeMap::new();
         let mut methods = BTreeMap::new();
         let mut opaque_classes = BTreeSet::new();
+        let mut error_classes = BTreeSet::new();
         let mut record_classes = BTreeSet::new();
         let mut enum_classes = BTreeSet::new();
         for function in &module.functions {
@@ -253,6 +256,9 @@ impl ModuleCatalog {
             {
                 record_classes.insert(class.name.clone());
             }
+            if class.is_error_type {
+                error_classes.insert(class.name.clone());
+            }
             for method in &class.methods {
                 methods.insert(
                     (class.name.clone(), method.name.clone()),
@@ -267,6 +273,7 @@ impl ModuleCatalog {
             functions,
             methods,
             opaque_classes,
+            error_classes,
             record_classes,
             enum_classes,
         }
@@ -347,6 +354,7 @@ fn bridge_type_contract(
             generated_types,
             position,
         ),
+        Type::Tuple(items) => bridge_tuple_type(items, ty.display_name()),
         Type::Result(ok, err) => match position {
             BridgeTypePosition::Parameter => unsupported_type(
                 ty,
@@ -395,7 +403,10 @@ fn bridge_type_contract(
                         Ok(module_name) => module_name,
                         Err(reason) => return unsupported_type(ty, &reason),
                     };
-                let is_error = parent_class.as_deref() == Some("Error");
+                let is_error = parent_class.as_deref() == Some("Error")
+                    || module_catalogs
+                        .get(&declaration_module)
+                        .is_some_and(|catalog| catalog.error_classes.contains(name));
                 generated_types.insert_record(
                     declaration_module.as_ref(),
                     name,
@@ -456,7 +467,6 @@ fn bridge_type_contract(
             "callbacks require explicit callback contract support before they are bridge-compatible",
         ),
         Type::Set(_) => unsupported_type(ty, "set[T] is not a supported Rust bridge container"),
-        Type::Tuple(_) => unsupported_type(ty, "tuple[...] is not a supported Rust bridge container"),
         Type::Any | Type::Unknown => {
             unsupported_type(ty, "dynamic Any/Unknown values are not Rust bridge-compatible")
         }
@@ -634,6 +644,51 @@ fn bridge_union_type(
     )
 }
 
+fn bridge_tuple_type(items: &[Type], sifr_type: String) -> RustBridgeTypeContract {
+    let Some(rust_items) = items
+        .iter()
+        .map(tuple_item_rust_type)
+        .collect::<Option<Vec<_>>>()
+    else {
+        return RustBridgeTypeContract {
+            sifr_type,
+            rust_borrowed_type: None,
+            rust_owned_type: None,
+            rust_return_type: None,
+            kind: RustBridgeTypeKind::Unsupported,
+            unsupported_reason: Some(
+                "tuple element type is not Rust bridge-compatible".to_string(),
+            ),
+        };
+    };
+    let rust_type = if rust_items.len() == 1 {
+        format!("({},)", rust_items[0])
+    } else {
+        format!("({})", rust_items.join(", "))
+    };
+    RustBridgeTypeContract {
+        sifr_type,
+        rust_borrowed_type: Some(format!("&{rust_type}")),
+        rust_owned_type: Some(rust_type.clone()),
+        rust_return_type: Some(rust_type),
+        kind: RustBridgeTypeKind::Tuple,
+        unsupported_reason: None,
+    }
+}
+
+fn tuple_item_rust_type(ty: &Type) -> Option<String> {
+    match ty.resolve_alias() {
+        Type::Bool => Some("bool".to_string()),
+        Type::FixedInt(fixed) => Some(fixed.rust_name().to_string()),
+        Type::Int => Some("i64".to_string()),
+        Type::Float => Some("f64".to_string()),
+        Type::Str => Some("String".to_string()),
+        Type::Bytes => Some("Vec<u8>".to_string()),
+        Type::None => Some("()".to_string()),
+        _ => None,
+    }
+}
+
 fn combine_generic_type(
     name: &str,
     sifr_type: String,
@@ -755,6 +810,7 @@ fn push_type_contract(out: &mut String, ty: &RustBridgeTypeContract) {
         RustBridgeTypeKind::List => "list",
         RustBridgeTypeKind::Dict => "dict",
         RustBridgeTypeKind::Option => "option",
+        RustBridgeTypeKind::Tuple => "tuple",
         RustBridgeTypeKind::Result => "result",
         RustBridgeTypeKind::GeneratedRecord => "record",
         RustBridgeTypeKind::GeneratedEnum => "enum",

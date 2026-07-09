@@ -1,32 +1,11 @@
 # sifr.python_core - shared embedded CPython public wrapper types
 
 from _sifr.python import (
+    PythonError,
     py_close_callback,
     py_local_callback_echo,
     py_threadsafe_callback_echo,
 )
-
-class PythonError(Error):
-    message: str
-    kind: str
-    exception_type: str
-    traceback: str
-    context: str
-
-    def __init__(
-        self,
-        message: str,
-        kind: str = "",
-        exception_type: str = "",
-        traceback: str = "",
-        context: str = "",
-    ):
-        self.message = message
-        self.kind = kind
-        self.exception_type = exception_type
-        self.traceback = traceback
-        self.context = context
-
 
 class Object(NonSend):
     _handle: int

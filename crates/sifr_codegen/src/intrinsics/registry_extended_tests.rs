@@ -47,14 +47,6 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     assert!(call_rendered.contains("__sifr_python_args"));
     assert!(call_rendered.contains("__sifr_python_kwargs"));
 
-    let from_str =
-        lower_intrinsic("py_from_str", &["value".to_string()]).expect("py_from_str should lower");
-    assert_eq!(
-        from_str.required_feature,
-        Some(sifr_stdlib_manifest::StdlibFeature::PythonRuntime)
-    );
-    assert!(render_expr(&from_str.expr).contains("sifr_runtime::python::from_str"));
-
     let to_i32 = lower_intrinsic(
         "py_to_i32",
         &["object_handle".to_string(), "object_token".to_string()],
@@ -195,6 +187,23 @@ pub(crate) fn lowers_python_intrinsics_with_runtime_feature_metadata() {
     )
     .expect("py_close_callback should lower");
     assert!(render_expr(&close_callback.expr).contains("sifr_runtime::python::close_callback"));
+}
+
+#[test]
+pub(crate) fn python_primitive_constructors_are_owned_by_compiled_stdlib_declarations() {
+    for removed in [
+        "py_from_none",
+        "py_from_bool",
+        "py_from_int",
+        "py_from_float",
+        "py_from_str",
+        "py_from_bytes",
+    ] {
+        assert!(
+            lower_intrinsic(removed, &["value".to_string()]).is_none(),
+            "{removed} must lower through _sifr.python private Rust interop declarations"
+        );
+    }
 }
 
 #[test]
