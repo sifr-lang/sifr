@@ -153,18 +153,12 @@ pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades(
     )
     .expect("source-tree sysroot dependencies should resolve");
 
-    assert_eq!(deps.len(), 3);
+    assert_eq!(deps.len(), 1);
     assert!(deps[0].starts_with("sifr_stdlib = "));
     assert!(deps[0].contains("default-features = false"));
     assert!(deps[0].contains("features = [\"runtime-observability\"]"));
-    assert_eq!(
-        &deps[1..],
-        [
-            "metrics = \"0.24.6\"".to_string(),
-            "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
-                .to_string()
-        ]
-    );
+    assert!(!deps.iter().any(|dep| dep.starts_with("metrics = ")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("tracing = ")));
 }
 
 #[test]

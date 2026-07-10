@@ -59,9 +59,15 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.fs private Rust interop declarations"
         );
     }
-    assert!(private_code.rust.contains(
-        "map_err(|__sifr_bridge_error| IOError { message: __sifr_bridge_error.to_string(), kind: __sifr_bridge_error.to_string() })"
-    ));
+    assert!(private_code
+        .rust
+        .contains("fn __io_err<E: std::fmt::Display + 'static>"));
+    assert!(private_code
+        .rust
+        .contains(".map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"));
+    assert!(!private_code
+        .rust
+        .contains("kind: __sifr_bridge_error.to_string()"));
     assert!(private_code.rust.contains(
         "sifr_stdlib::fs::stat_size(path).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
     ));

@@ -378,6 +378,29 @@ fn python_zero_copy_helpers_codegen_through_sifr_stdlib() {
             "{name} should not remain a compiler-retained _sifr.python intrinsic"
         );
     }
+    let public_code = compiled
+        .code
+        .module_rust_code
+        .get("sifr.python")
+        .expect("sifr.python should generate public Rust code");
+    let compact_public: String = public_code
+        .rust
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .collect();
+    for call in [
+        "py_buffer_shape(raw.0,raw.1)?",
+        "py_buffer_strides(raw.0,raw.1)?",
+        "py_buffer_suboffsets(raw.0,raw.1)?",
+        "py_arrow_capsule_names(raw.0,raw.1)?",
+        "py_dlpack_shape(raw.0,raw.1)?",
+        "py_dlpack_strides(raw.0,raw.1)?",
+    ] {
+        assert!(
+            compact_public.contains(call),
+            "{call} should propagate metadata accessor errors"
+        );
+    }
 }
 
 #[test]
@@ -445,6 +468,24 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
     assert!(private_code
         .rust
         .contains("sifr_stdlib::python::PythonError"));
+    let compact_private: String = private_code
+        .rust
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .collect();
+    assert!(compact_private
+        .contains("handler:implFn((i64,i64))->Result<(i64,i64),PythonError>+Send+Sync+'static"));
+    let public_core_code = compiled
+        .code
+        .module_rust_code
+        .get("sifr.python_core")
+        .expect("sifr.python_core should generate Rust code");
+    let compact_public: String = public_core_code
+        .rust
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .collect();
+    assert!(compact_public.contains("_call_object_callback(&handler,raw)"));
     let private_intrinsics = compiled
         .code
         .intrinsic_names

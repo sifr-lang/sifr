@@ -315,6 +315,23 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::Lambda { params, body, .. } = expr {
+            let Some(lowered_body) = self.lower_stmt_expr_for_ir(body)? else {
+                return Ok(None);
+            };
+            let lowered_params = params
+                .iter()
+                .map(|param| crate::RustParam::Named {
+                    name: param.name.clone(),
+                    ty: crate::RustType::Named("_".to_string()),
+                })
+                .collect::<Vec<_>>();
+            return Ok(Some(crate::RustExpr::Closure {
+                params: lowered_params,
+                body: Box::new(lowered_body),
+                is_move: false,
+            }));
+        }
         stmt_expr_await_and_registry!(self, expr);
         stmt_expr_constructor!(self, expr);
         stmt_expr_literals_and_calls!(self, expr);

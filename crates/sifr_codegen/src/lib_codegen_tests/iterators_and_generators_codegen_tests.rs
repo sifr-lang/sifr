@@ -226,13 +226,40 @@ fn test_generate_rust_iterator_return_consumes_owned_param_binding() {
 
 #[test]
 fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
-    let rust_code = generate_rust_from_source(
-        "def main():\n    f = open(\"/tmp/sifr_codegen_open.txt\", \"w\", encoding=\"utf-8\")\n",
-    );
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "builtin_open_text".to_string(),
+                    args: vec![
+                        HirExpr::StringLiteral("/tmp/sifr_codegen_open.txt".to_string()),
+                        HirExpr::StringLiteral("w".to_string()),
+                        HirExpr::StringLiteral("utf-8".to_string()),
+                        HirExpr::StringLiteral("strict".to_string()),
+                    ],
+                    ty: Type::Unknown,
+                },
+            }],
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            rust_interop: Vec::new(),
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+    let rust_code = generate_rust_with_metadata(&module).rust_source;
 
-    assert!(rust_code.contains("struct FileHandle"));
+    assert!(rust_code.contains("sifr_stdlib::fs::open_file"));
     assert!(rust_code.contains("TextFileHandle::new("));
-    assert!(rust_code.contains("BinaryFileHandle::new(__handle_id, __mode.to_string())"));
+    assert!(rust_code.contains("BinaryFileHandle::new("));
     assert!(rust_code.contains("Encoding::new(__encoding)"));
     assert!(rust_code.contains("DecodeErrorHandler::new(__errors.clone())"));
     assert!(rust_code.contains("EncodeErrorHandler::new(__errors)"));

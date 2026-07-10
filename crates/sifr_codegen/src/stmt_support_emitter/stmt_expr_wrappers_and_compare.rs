@@ -369,14 +369,27 @@ macro_rules! stmt_expr_wrappers_range_index {
                         "internal codegen invariant violated: string index produced non-optional result type",
                     ));
                 }
-                Type::Tuple(_) => {
+                Type::Tuple(items) => {
                     let HirExpr::IntLiteral(idx) = index.as_ref() else {
                         return Ok(None);
                     };
-                    return Ok(Some(crate::RustExpr::Field {
+                    let Ok(tuple_index) = usize::try_from(*idx) else {
+                        return Ok(None);
+                    };
+                    let Some(element_ty) = items.get(tuple_index) else {
+                        return Ok(None);
+                    };
+                    let field_expr = crate::RustExpr::Field {
                         expr: Box::new(lowered_object),
                         field: idx.to_string(),
-                    }));
+                    };
+                    return Ok(Some(
+                        if crate::helpers::is_copy_type_for_codegen(element_ty) {
+                            field_expr
+                        } else {
+                            crate::RustExpr::Clone(Box::new(field_expr))
+                        },
+                    ));
                 }
                 Type::Class { methods, .. } | Type::Protocol { methods, .. } => {
                     if let Some((_, getitem_ft)) = methods

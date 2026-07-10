@@ -169,6 +169,9 @@ fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
         Type::List(inner) if inner.resolve_alias() == &Type::Int => {
             bridge_int_vec_to_i64_vec_expr(value)
         }
+        Type::Dict(key, item) if key.resolve_alias() == &Type::Str => {
+            bridge_index_map_to_hash_map_expr(value, item)
+        }
         Type::Result(ok, err) => bridge_result_expr(value, ok, err),
         _ => value,
     }
@@ -293,6 +296,38 @@ fn bridge_int_vec_to_i64_vec_expr(value: RustExpr) -> RustExpr {
             }],
         }),
         method: "collect".to_string(),
+        args: Vec::new(),
+    }
+}
+
+fn bridge_index_map_to_hash_map_expr(value: RustExpr, item_type: &Type) -> RustExpr {
+    let iter = RustExpr::MethodCall {
+        receiver: Box::new(value),
+        method: "into_iter".to_string(),
+        args: Vec::new(),
+    };
+    let iter = if item_type.resolve_alias() == &Type::Int {
+        RustExpr::MethodCall {
+            receiver: Box::new(iter),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "(__sifr_bridge_key, __sifr_bridge_value)".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::Tuple(vec![
+                    RustExpr::Ident("__sifr_bridge_key".to_string()),
+                    bridge_int_to_i64_expr(RustExpr::Ident("__sifr_bridge_value".to_string())),
+                ])),
+                is_move: false,
+            }],
+        }
+    } else {
+        iter
+    };
+    RustExpr::MethodCall {
+        receiver: Box::new(iter),
+        method: "collect::<HashMap<_, _>>".to_string(),
         args: Vec::new(),
     }
 }
@@ -633,6 +668,50 @@ mod tests {
         assert_eq!(
             render_expr(&expr),
             "sifr_stdlib::base64::base64_decode(s).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
+        );
+    }
+
+    #[test]
+    fn direct_rust_function_body_maps_io_error_through_kind_helper() {
+        let io_error = Type::Class {
+            name: "IOError".to_string(),
+            fields: vec![
+                ("message".to_string(), Type::Str),
+                ("kind".to_string(), Type::Str),
+            ],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let func = HirFunction {
+            name: "read_text".to_string(),
+            params: vec![HirParam {
+                name: "path".to_string(),
+                ty: Type::Str,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::Result(Box::new(Type::Str), Box::new(io_error)),
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &["sifr_stdlib", "fs", "read_text"],
+            )],
+            type_params: Vec::new(),
+        };
+
+        let body =
+            direct_rust_function_body(&func).expect("direct result interop should lower to a body");
+        let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+            panic!("direct result interop should lower to a return expression");
+        };
+
+        assert_eq!(
+            render_expr(&expr),
+            "sifr_stdlib::fs::read_text(path).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"
         );
     }
 
