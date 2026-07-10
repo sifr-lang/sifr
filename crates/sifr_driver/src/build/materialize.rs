@@ -309,24 +309,11 @@ fn sysroot_trusted_native_links(dependency_plan: &SysrootDependencyPlan) -> BTre
             dependency.krate,
             SysrootCrate::SifrRuntime | SysrootCrate::SifrStdlib
         ) && (dependency.features.contains("tls") || dependency.features.contains("http"))
-    }) || dependency_plan
-        .retained_direct_dependencies
-        .iter()
-        .any(|dependency| matches_tls_dependency_package(dependency));
+    });
     if tls_selected {
         return BTreeSet::from(["aws_lc_0_41_0_crypto".to_string()]);
     }
     BTreeSet::new()
-}
-
-fn matches_tls_dependency_package(dependency: &str) -> bool {
-    let Some((package, _spec)) = dependency.split_once('=') else {
-        return false;
-    };
-    matches!(
-        package.trim(),
-        "rustls" | "tokio-rustls" | "rustls-platform-verifier"
-    )
 }
 
 fn should_validate_native_link_evidence(generated_project: &GeneratedBinaryProject) -> bool {
@@ -442,9 +429,8 @@ fn binary_project_cache_key(
 #[cfg(test)]
 mod tests {
     use super::{
-        binary_project_cache_key, matches_tls_dependency_package,
-        should_validate_native_link_evidence, sysroot_trusted_native_links, trusted_native_links,
-        validate_native_link_evidence,
+        binary_project_cache_key, should_validate_native_link_evidence,
+        sysroot_trusted_native_links, trusted_native_links, validate_native_link_evidence,
     };
     use crate::build::project_codegen::GeneratedBinaryProject;
     use crate::build::python_runtime::PackagePythonRuntime;
@@ -600,10 +586,13 @@ mod tests {
     #[test]
     fn sysroot_tls_native_link_evidence_is_explicitly_trusted() {
         let mut dependency_plan = test_dependency_plan("fingerprint-a");
-        dependency_plan.retained_direct_dependencies = vec![
-            "rustls=\"=0.23.35\"".to_string(),
-            "tokio-rustls = \"0.26.4\"".to_string(),
-        ];
+        dependency_plan
+            .crates
+            .push(sifr_stdlib_manifest::SysrootCrateDependency {
+                krate: sifr_stdlib_manifest::SysrootCrate::SifrStdlib,
+                path: "/sysroot/crates/sifr_stdlib".into(),
+                features: BTreeSet::from(["tls".to_string()]),
+            });
 
         let trusted = sysroot_trusted_native_links(&dependency_plan);
         assert_eq!(
@@ -619,17 +608,6 @@ mod tests {
         let untrusted = br#"{"reason":"build-script-executed","linked_libs":["static=crypto"]}"#;
         validate_native_link_evidence(untrusted, &trusted)
             .expect_err("unrelated native links must still fail");
-    }
-
-    #[test]
-    fn tls_dependency_package_matching_uses_package_name_only() {
-        assert!(matches_tls_dependency_package(
-            " rustls-platform-verifier\t= { version = \"0.7.0\" }"
-        ));
-        assert!(!matches_tls_dependency_package(
-            "not-rustls = { version = \"1.0.0\" }"
-        ));
-        assert!(!matches_tls_dependency_package("rustls"));
     }
 
     #[test]

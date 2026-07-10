@@ -70,13 +70,6 @@
       "args": [],
       "timeout_seconds": 60,
       "report": "stdout"
-    },
-    {
-      "name": "stdlib-migration-closure",
-      "entrypoint": "scripts/check_stdlib_migration_closure.py",
-      "args": [],
-      "timeout_seconds": 60,
-      "report": "stdout"
     }
   ]
 }

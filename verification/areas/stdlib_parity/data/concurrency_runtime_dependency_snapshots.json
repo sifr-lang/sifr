@@ -35,10 +35,7 @@
       ],
       "stdlib_modules": ["sifr.ipc"],
       "required_features": ["ipc"],
-      "dependencies": [
-        "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
-        "serde = { version = \"1.0.228\", features = [\"derive\"] }"
-      ]
+      "dependencies": []
     },
     {
       "id": "parallel-map",
@@ -58,9 +55,7 @@
       "stdlib_modules": ["sifr.runtime"],
       "required_features": [],
       "dependencies": [
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"runtime-observability\"] }",
-        "metrics = \"0.24.6\"",
-        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"runtime-observability\"] }"
       ]
     },
     {

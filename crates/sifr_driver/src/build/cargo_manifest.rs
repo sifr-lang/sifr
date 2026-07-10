@@ -413,7 +413,7 @@ mod tests {
     }
 
     #[test]
-    fn generated_cargo_toml_renders_sysroot_crates_before_retained_deps() {
+    fn generated_cargo_toml_renders_sysroot_crates_before_retained_glue_deps() {
         let mut dependency_plan = test_dependency_plan(
             CargoVendorMode::SysrootOnly,
             PathBuf::from("/opt/sifr/vendor"),

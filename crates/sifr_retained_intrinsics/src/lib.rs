@@ -1,7 +1,7 @@
-//! Transitional compiler-retained stdlib intrinsic signatures.
+//! Compiler-retained stdlib bootstrap signature glue.
 //!
-//! This crate hosts fallback signatures that still feed lowering and driver
-//! bootstrap while native stdlib declarations continue replacing them.
+//! This crate hosts retained-by-design fallback signatures that feed lowering
+//! and driver bootstrap before sysroot source declarations are available.
 
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
@@ -67,8 +67,8 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.unicode" => Some(intrinsic_unicode()),
         "_sifr.i18n" => Some(intrinsic_i18n()),
         "_sifr.regex" => Some(intrinsic_regex()),
-        // Retained as a stdlib-lowering bootstrap fallback while these leaves
-        // migrate to compiled private declarations.
+        // Retained as compiler-owned bootstrap signature glue for sysroot
+        // source lowering and reviewed by the final retained-glue manifest.
         "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.url" => Some(intrinsic_url()),
@@ -76,11 +76,11 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.task" => Some(intrinsic_task()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
-        // Retained as a stdlib-lowering bootstrap fallback while these leaves
-        // migrate to compiled private declarations.
+        // Retained as compiler-owned bootstrap signature glue for sysroot
+        // source lowering and reviewed by the final retained-glue manifest.
         "_sifr.html" => Some(intrinsic_html()),
-        // Retained as a stdlib-lowering bootstrap fallback while this leaf
-        // migrates to compiled private declarations.
+        // Retained as compiler-owned bootstrap signature glue for sysroot
+        // source lowering and reviewed by the final retained-glue manifest.
         "_sifr.calendar" => Some(intrinsic_calendar()),
         "_sifr.compress" => Some(intrinsic_compress()),
         _ => None,

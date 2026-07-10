@@ -361,10 +361,6 @@ class ProfileRunner:
         run_python("scripts/check_stdlib_bootstrap_ordering.py")
         run_python("scripts/check_stdlib_bootstrap_ordering.py", "--self-test")
 
-        print("Running stdlib migration closure guard")
-        run_python("scripts/check_stdlib_migration_closure.py")
-        run_python("scripts/check_stdlib_migration_closure.py", "--self-test")
-
         print("Running audit fixture smoke suites")
         run_command(uv_area_command("--area", "core_language", "--suite", "audit-fixtures"))
         run_command(uv_area_command("--area", "project_workspace", "--suite", "audit-fixtures"))

@@ -28,9 +28,7 @@
       ],
       "production_dependencies": [
         "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"net\"] }",
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"net\"] }",
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
-        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"net\"] }"
       ],
       "must_not_include": [
         "tokio-test",
@@ -55,13 +53,7 @@
       ],
       "production_dependencies": [
         "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"net\", \"tls\"] }",
-        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"tls\"] }",
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
-        "tokio-rustls = \"0.26.4\"",
-        "rustls = \"=0.23.35\"",
-        "rustls-pemfile = \"2.2.0\"",
-        "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
-        "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
+        "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"tls\"] }"
       ],
       "must_not_include": [
         "rcgen",
@@ -105,19 +97,7 @@
       "production_dependencies": [
         "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"http\", \"net\", \"tls\"] }",
         "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"runtime-observability\", \"tls\"] }",
-        "bytes = \"1.11.1\"",
-        "h2 = \"0.4.14\"",
-        "http = \"1.4.1\"",
-        "http-body = \"1.0.1\"",
-        "http-body-util = { version = \"0.1.3\", default-features = false }",
-        "hyper = { version = \"1.10.1\", default-features = false, features = [\"client\", \"http1\", \"http2\", \"server\"] }",
-        "hyper-util = { version = \"0.1.20\", default-features = false, features = [\"tokio\"] }",
-        "rustls = \"=0.23.35\"",
-        "rustls-pemfile = \"2.2.0\"",
-        "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
-        "tokio-rustls = \"0.26.4\"",
-        "tower-service = \"0.3.3\"",
+        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
         "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"
       ],
       "must_not_include": [
