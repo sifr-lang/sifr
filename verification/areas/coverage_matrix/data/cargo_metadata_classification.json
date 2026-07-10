@@ -8,6 +8,7 @@
         {"name": "sifr", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "build_output_behavior", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "e2e", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "runtime_observability_boundary", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "sysroot_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "validation_suites", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "internal"}

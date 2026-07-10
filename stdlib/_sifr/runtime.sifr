@@ -1,2 +1,15 @@
 # Private _sifr.runtime native declaration module.
-# Runtime observability signatures remain retained compiler/runtime glue.
+
+
+class DiagnosticError(Error):
+    message: str
+
+
+@rust(sifr_stdlib.runtime_observability.emit_diagnostic)
+def runtime_emit_diagnostic(
+    level: str,
+    target: str,
+    name: str,
+    message: str,
+) -> Result[None, DiagnosticError]:
+    ...

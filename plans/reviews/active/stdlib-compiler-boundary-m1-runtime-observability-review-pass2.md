@@ -1,0 +1,1 @@
+M1 review Pass 2 verdict: **SATISFIED**. The `DiagnosticError` duplicate declaration cleanup is correct (single declaration in `_sifr.runtime`, imported into `sifr.runtime`, matching the http/net/tls/signal/process pattern), all API/error behavior is preserved via the name-keyed codegen alias map, and every M1 acceptance criterion re-verified. No blockers; ready to merge.

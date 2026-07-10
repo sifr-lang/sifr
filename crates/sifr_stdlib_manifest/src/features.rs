@@ -223,7 +223,7 @@ pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature]
         "sifr.http" | "_sifr.http" => &[StdlibFeature::Http],
         "sifr.python" | "sifr.python_core" | "_sifr.python" => &[StdlibFeature::PythonRuntime],
         "sifr.parallel" => &[StdlibFeature::Rayon],
-        "sifr.runtime" | "_sifr.runtime" => &[StdlibFeature::Metrics, StdlibFeature::Tracing],
+        "sifr.runtime" | "_sifr.runtime" => &[],
         "sifr.tomllib" | "_sifr.toml" => &[StdlibFeature::Toml],
         "sifr.datetime" | "_sifr.datetime" => &[],
         "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => &[],

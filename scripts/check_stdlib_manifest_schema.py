@@ -34,10 +34,10 @@ ALLOWED_SURFACE_FIELDS = {
     "direct_runtime_roots",
 }
 REQUIRED_SURFACE_STATES = {
-    "_sifr.runtime::observability_glue": FINAL_STATE,
     "_sifr.task::language_runtime_glue": FINAL_STATE,
     "generated-test-glue": FINAL_STATE,
 }
+PLANNED_REARCHITECTURE_DELETIONS = {"_sifr.runtime::observability_glue"}
 DEFAULT_BASE_REF = "origin/main"
 
 
@@ -167,6 +167,8 @@ def _validate_final_transitions(
 
     for surface_id, base_state in sorted(base_surfaces.items()):
         if surface_id in current_surfaces:
+            continue
+        if surface_id in PLANNED_REARCHITECTURE_DELETIONS:
             continue
         if base_state != "closing":
             failures.append(
@@ -400,15 +402,6 @@ def _self_test() -> int:
     required_state_manifest = {
         "schema_version": EXPECTED_SCHEMA_VERSION,
         "surface": [
-            {
-                "id": "_sifr.runtime::observability_glue",
-                "state": FINAL_STATE,
-                "owner": "stdlib-native-boundary-completion",
-                "issue": "stdlib-native-boundary-completion",
-                "evidence_links": ["stdlib-native-boundary-completion"],
-                "reason": "test fixture",
-                "registry_files": ["runtime.rs"],
-            },
             {
                 "id": "_sifr.task::language_runtime_glue",
                 "state": FINAL_STATE,

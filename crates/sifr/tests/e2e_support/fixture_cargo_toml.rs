@@ -51,10 +51,7 @@ pub(crate) fn generate_cargo_toml(
             "sifr.parallel" => {
                 deps.insert("rayon = \"1.12.0\"".to_string());
             }
-            "sifr.runtime" | "_sifr.runtime" => {
-                deps.insert("metrics = \"0.24.6\"".to_string());
-                deps.insert(TRACING_DEP.to_string());
-            }
+            "sifr.runtime" | "_sifr.runtime" => {}
             "sifr.ipc" | "_sifr.ipc" => {
                 deps.insert(POSTCARD_DEP.to_string());
                 deps.insert(SERDE_DEP.to_string());
@@ -328,6 +325,8 @@ fn needs_sifr_stdlib_module_dependency(stdlib_modules: &BTreeSet<String>) -> boo
                 | "_sifr.process"
                 | "sifr.signal"
                 | "_sifr.signal"
+                | "sifr.runtime"
+                | "_sifr.runtime"
                 | "sifr.net"
                 | "_sifr.net"
                 | "sifr.tls"

@@ -1,0 +1,25 @@
+# Runtime diagnostics cross the private sifr_stdlib bridge.
+from sifr.runtime import DiagnosticError, INFO, DiagnosticLevel, diagnostic_event, emit_diagnostic
+
+
+def main() -> None:
+    # Supported levels emit tracing plus bounded metrics inside sifr_stdlib.
+    event = diagnostic_event(INFO, "sifr.demo", "accepted", "stdlib boundary")
+    try:
+        _: None = emit_diagnostic(event)
+    except DiagnosticError:
+        assert False
+
+    # Unsupported levels return the checked Sifr error shape without panicking.
+    invalid = diagnostic_event(
+        DiagnosticLevel("verbose"),
+        "sifr.demo",
+        "rejected",
+        "stdlib boundary",
+    )
+    rejected: bool = False
+    try:
+        _: None = emit_diagnostic(invalid)
+    except DiagnosticError as error:
+        rejected = error.message == "unsupported diagnostic level: verbose"
+    assert rejected

@@ -103,49 +103,6 @@ pub(crate) fn encoding_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 }
 
 #[test]
-pub(crate) fn lowers_runtime_diagnostic_intrinsic_with_observability_metadata() {
-    let lowered = lower_intrinsic(
-        "runtime_emit_diagnostic",
-        &[
-            "level".to_string(),
-            "target".to_string(),
-            "name".to_string(),
-            "message".to_string(),
-        ],
-    )
-    .expect("runtime_emit_diagnostic should lower");
-
-    assert_eq!(lowered.required_feature, None);
-    assert!(lowered
-        .additional_required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Metrics));
-    assert!(lowered
-        .additional_required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tracing));
-    let rendered = render_expr(&lowered.expr);
-    assert!(rendered.contains("tracing::event!"));
-    assert!(rendered.contains("metrics::counter!"));
-    assert!(rendered.contains("target: \"sifr.runtime\""));
-    assert!(rendered.contains("diagnostic_target = __sifr_diagnostic_target"));
-    assert!(rendered.contains("\"sifr.runtime.diagnostic.emitted\""));
-    assert!(rendered.contains("\"sifr.runtime.diagnostic.rejected\""));
-    assert!(rendered.contains("\"reason\" => \"unsupported_level\""));
-    assert!(rendered.contains("\"surface\" => \"runtime\""));
-    assert!(rendered.contains("tracing::Level::INFO"));
-    assert!(rendered.contains("DiagnosticError::new"));
-    assert!(rendered.contains("unsupported diagnostic level"));
-}
-
-#[test]
-pub(crate) fn runtime_diagnostic_intrinsic_rejects_wrong_arity() {
-    assert!(lower_intrinsic(
-        "runtime_emit_diagnostic",
-        &["level".to_string(), "target".to_string()],
-    )
-    .is_none());
-}
-
-#[test]
 pub(crate) fn runtime_module_dependency_metadata_includes_observability_facades() {
     let deps = sifr_stdlib_manifest::try_generated_cargo_dependencies(
         &std::collections::HashSet::from(["sifr.runtime".to_string()]),

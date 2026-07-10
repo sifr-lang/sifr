@@ -424,6 +424,9 @@ pub(crate) fn infer_dependencies(
     if rust_source.contains("sifr_stdlib::signals::") {
         modules.insert("_sifr.signal".to_string());
     }
+    if rust_source.contains("sifr_stdlib::runtime_observability::") {
+        modules.insert("_sifr.runtime".to_string());
+    }
     if rust_source.contains("regex::") {
         crates.insert("regex".to_string());
     }

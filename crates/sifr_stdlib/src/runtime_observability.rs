@@ -1,39 +1,61 @@
-pub fn emit_diagnostic(level: tracing::Level, target: &str, name: &str, message: &str) {
+/// Emit a structured runtime diagnostic and its bounded observability metric.
+///
+/// The string-shaped boundary keeps tracing and metrics as private
+/// implementation dependencies of `sifr_stdlib` rather than dependencies of
+/// generated user projects.
+pub fn emit_diagnostic(level: &str, target: &str, name: &str, message: &str) -> Result<(), String> {
     match level {
-        tracing::Level::ERROR => tracing::event!(
+        "error" => tracing::event!(
             target: "sifr.runtime",
             tracing::Level::ERROR,
             diagnostic_target = target,
             diagnostic_name = name,
             diagnostic_message = message
         ),
-        tracing::Level::WARN => tracing::event!(
+        "warn" => tracing::event!(
             target: "sifr.runtime",
             tracing::Level::WARN,
             diagnostic_target = target,
             diagnostic_name = name,
             diagnostic_message = message
         ),
-        tracing::Level::INFO => tracing::event!(
+        "info" => tracing::event!(
             target: "sifr.runtime",
             tracing::Level::INFO,
             diagnostic_target = target,
             diagnostic_name = name,
             diagnostic_message = message
         ),
-        tracing::Level::DEBUG => tracing::event!(
+        "debug" => tracing::event!(
             target: "sifr.runtime",
             tracing::Level::DEBUG,
             diagnostic_target = target,
             diagnostic_name = name,
             diagnostic_message = message
         ),
-        tracing::Level::TRACE => tracing::event!(
+        "trace" => tracing::event!(
             target: "sifr.runtime",
             tracing::Level::TRACE,
             diagnostic_target = target,
             diagnostic_name = name,
             diagnostic_message = message
         ),
+        _ => {
+            metrics::counter!(
+                "sifr.runtime.diagnostic.rejected",
+                "reason" => "unsupported_level",
+                "surface" => "runtime"
+            )
+            .increment(1);
+            return Err(format!("unsupported diagnostic level: {level}"));
+        }
     }
+
+    metrics::counter!(
+        "sifr.runtime.diagnostic.emitted",
+        "level" => level.to_string(),
+        "surface" => "runtime"
+    )
+    .increment(1);
+    Ok(())
 }

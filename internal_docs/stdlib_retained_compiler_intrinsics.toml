@@ -103,17 +103,6 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.runtime::observability_glue"
-state = "retained-by-design"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-declaration_files = ["stdlib/_sifr/runtime.sifr"]
-reason = "Runtime diagnostics and observability metadata are retained compiler/runtime glue rather than stdlib leaf behavior."
-registry_files = ["runtime.rs"]
-exact_intrinsics = ["runtime_emit_diagnostic"]
-
-[[surface]]
 id = "_sifr.task::language_runtime_glue"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
@@ -142,7 +131,6 @@ reason = "Additional feature planning is compiler-owned glue that selects sysroo
 registry_files = ["requirements.rs"]
 retained_direct_dependency_packages = [
   "bigdecimal",
-  "metrics",
   "num-bigint",
   "num-traits",
   "rayon",
@@ -150,7 +138,6 @@ retained_direct_dependency_packages = [
   "serde",
   "serde_json",
   "tokio",
-  "tracing",
 ]
 
 [[surface]]
@@ -173,7 +160,6 @@ fallback_signature_modules = [
   "_sifr.json",
   "_sifr.math",
   "_sifr.regex",
-  "_sifr.runtime",
   "_sifr.task",
   "_sifr.test",
   "_sifr.toml",
