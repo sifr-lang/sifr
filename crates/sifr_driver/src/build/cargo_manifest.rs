@@ -8,12 +8,32 @@ use std::path::Path;
 
 use sifr_sysroot::SysrootError;
 
-pub(crate) fn generate_dependency_cargo_toml_for_cache_key(
+pub fn generate_dependency_cargo_toml(
+    project_name: &str,
+    dependency_plan: &SysrootDependencyPlan,
+) -> String {
+    render_dependency_cargo_toml(project_name, dependency_plan, &InteropBuildPlan::default())
+}
+
+pub(crate) fn generate_dependency_cargo_toml_with_interop(
     project_name: &str,
     dependency_plan: &SysrootDependencyPlan,
     interop: &InteropBuildPlan,
 ) -> String {
     render_dependency_cargo_toml(project_name, dependency_plan, interop)
+}
+
+pub fn try_generate_standalone_dependency_plan(
+    stdlib_modules: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+    interop: &InteropBuildPlan,
+) -> Result<SysrootDependencyPlan, SysrootError> {
+    try_generate_sysroot_dependency_plan(
+        stdlib_modules,
+        required_features,
+        interop,
+        CargoVendorMode::SysrootOnly,
+    )
 }
 
 pub(crate) fn try_generate_sysroot_dependency_plan(
@@ -34,7 +54,7 @@ pub(crate) fn try_generate_sysroot_dependency_plan(
     Ok(plan)
 }
 
-pub(crate) fn sysroot_cargo_config_args(dependency_plan: &SysrootDependencyPlan) -> Vec<String> {
+pub fn sysroot_cargo_config_args(dependency_plan: &SysrootDependencyPlan) -> Vec<String> {
     if dependency_plan.cargo_vendor_mode != CargoVendorMode::SysrootOnly {
         return Vec::new();
     }
@@ -405,7 +425,7 @@ mod tests {
         }];
 
         let cargo_toml =
-            generate_dependency_cargo_toml_for_cache_key("sifr_output", &dependency_plan, &interop);
+            generate_dependency_cargo_toml_with_interop("sifr_output", &dependency_plan, &interop);
 
         assert!(cargo_toml.contains(
             "__sifr_bridge_package_local_blake3_bridge = { package = \"local-blake3-bridge\", path = \"/ws/local_blake3_bridge\" }"
@@ -427,7 +447,7 @@ mod tests {
             "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
         ];
 
-        let cargo_toml = generate_dependency_cargo_toml_for_cache_key(
+        let cargo_toml = generate_dependency_cargo_toml_with_interop(
             "sifr_output",
             &dependency_plan,
             &InteropBuildPlan::default(),

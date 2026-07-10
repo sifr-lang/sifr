@@ -1,4 +1,28 @@
 use super::*;
+
+fn compiled_case_for_test(
+    fixture: FixtureCase,
+    rust_source: &str,
+    required_features: HashSet<StdlibFeature>,
+) -> CompiledCase {
+    let used_stdlib_modules = HashSet::new();
+    let interop = sifr_driver::InteropBuildPlan::default();
+    let dependency_plan = sifr_driver::try_generate_standalone_dependency_plan(
+        &used_stdlib_modules,
+        &required_features,
+        &interop,
+    )
+    .expect("test dependency plan should resolve");
+    CompiledCase {
+        fixture,
+        rust_source: rust_source.to_string(),
+        used_stdlib_modules,
+        required_features,
+        dependency_plan,
+        _compile_duration_ms: 0,
+    }
+}
+
 #[test]
 pub(crate) fn test_failure_matching_consumes_failures_and_honors_columns() {
     let failures = vec![
@@ -379,17 +403,10 @@ pub(crate) fn test_filter_fixtures_by_selection_rejects_unknown_fixture_names() 
 #[test]
 pub(crate) fn test_dependency_fingerprint_and_cache_key_determinism() {
     let fixture = DependencyFingerprint {
-        stdlib_modules: normalize_dependency_set(
-            vec!["a", "b", "a"].into_iter().map(str::to_string),
-        ),
-        required_crates: normalize_dependency_set(
-            vec!["x", "y", "x"].into_iter().map(str::to_string),
-        ),
+        dependency_inputs: "[stdlib]\na\nb\n[features]\nx\ny\n".to_string(),
+        resolved_plan: "plan-a".to_string(),
     };
-    let same = DependencyFingerprint {
-        stdlib_modules: normalize_dependency_set(vec!["b", "a"].into_iter().map(str::to_string)),
-        required_crates: normalize_dependency_set(vec!["y", "x"].into_iter().map(str::to_string)),
-    };
+    let same = fixture.clone();
     assert_eq!(fixture.signature(), same.signature());
     assert_eq!(fixture.hash(), same.hash());
 
@@ -404,13 +421,7 @@ pub(crate) fn test_dependency_fingerprint_and_cache_key_determinism() {
         expected_stdout: None,
         _expected_stderr: Vec::new(),
     };
-    let compiled = CompiledCase {
-        fixture: case.clone(),
-        rust_source: "fn main() {}".to_string(),
-        stdlib_modules: BTreeSet::new(),
-        required_crates: BTreeSet::new(),
-        _compile_duration_ms: 0,
-    };
+    let compiled = compiled_case_for_test(case.clone(), "fn main() {}", HashSet::new());
     let group = build_group_sources(vec![compiled]).unwrap();
     let toolchain = toolchain_info();
     let env_signature = cache_env_signature();
@@ -430,14 +441,11 @@ pub(crate) fn test_batch_group_dispatch_uses_entry_termination_trait() {
         expected_stdout: None,
         _expected_stderr: Vec::new(),
     };
-    let compiled = CompiledCase {
-        fixture: case,
-        rust_source: "#[tokio::main]\nasync fn main() -> Result<(), ValueError> {\n    Ok(())\n}\n"
-            .to_string(),
-        stdlib_modules: BTreeSet::new(),
-        required_crates: BTreeSet::new(),
-        _compile_duration_ms: 0,
-    };
+    let compiled = compiled_case_for_test(
+        case,
+        "#[tokio::main]\nasync fn main() -> Result<(), ValueError> {\n    Ok(())\n}\n",
+        HashSet::from([StdlibFeature::Tokio]),
+    );
     let group = build_group_sources(vec![compiled]).expect("batch group");
 
     assert!(group
@@ -453,133 +461,6 @@ pub(crate) fn test_batch_group_dispatch_uses_entry_termination_trait() {
         .generated_main
         .contains("super::__SifrBatchTermination::__sifr_finish("));
     assert!(!group.generated_main.contains("pub async fn"));
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_required_toml_uses_preserve_order_feature() {
-    let stdlib_modules = BTreeSet::new();
-    let required_crates = normalize_dependency_set(vec!["toml".to_string()].into_iter());
-
-    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_required_sifr_runtime_uses_path_dependency() {
-    let stdlib_modules = BTreeSet::new();
-    let required_crates = normalize_dependency_set(vec!["sifr_runtime".to_string()].into_iter());
-
-    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(cargo_toml.contains("sifr_runtime = { path = "));
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_empty_dependencies_do_not_pull_runtime() {
-    let stdlib_modules = BTreeSet::new();
-    let required_crates = BTreeSet::new();
-
-    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(!cargo_toml.contains("sifr_runtime = "));
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_text_i18n_modules_enable_runtime_features() {
-    let unicode_modules = normalize_dependency_set(vec!["sifr.unicode".to_string()].into_iter());
-    let i18n_modules = normalize_dependency_set(vec!["sifr.i18n".to_string()].into_iter());
-    let combined_modules = normalize_dependency_set(
-        vec![
-            "sifr.encoding".to_string(),
-            "sifr.unicode".to_string(),
-            "sifr.i18n".to_string(),
-        ]
-        .into_iter(),
-    );
-    let required_crates = BTreeSet::new();
-
-    let unicode_toml = generate_cargo_toml(&unicode_modules, &required_crates, "sifr_output");
-    assert!(!unicode_toml.contains("sifr_runtime = { path = "));
-    assert!(unicode_toml.contains("sifr_stdlib = { path = "));
-    assert!(unicode_toml.contains("features = [\"unicode\"]"));
-    assert!(!unicode_toml.contains("unicode-segmentation = \"1.13.3\""));
-
-    let i18n_toml = generate_cargo_toml(&i18n_modules, &required_crates, "sifr_output");
-    assert!(!i18n_toml.contains("sifr_runtime = { path = "));
-    assert!(i18n_toml.contains("sifr_stdlib = { path = "));
-    assert!(i18n_toml.contains("features = [\"i18n\"]"));
-    assert!(!i18n_toml.contains("icu_locale = \"2.2.0\""));
-
-    let combined_toml = generate_cargo_toml(&combined_modules, &required_crates, "sifr_output");
-    assert!(!combined_toml.contains("sifr_runtime = { path = "));
-    assert!(combined_toml.contains("sifr_stdlib = { path = "));
-    assert!(combined_toml.contains("features = [\"encoding\", \"i18n\", \"unicode\"]"));
-    assert!(!combined_toml.contains("encoding_rs = \"0.8.35\""));
-    assert!(!combined_toml.contains("unicode-segmentation = \"1.13.3\""));
-    assert!(!combined_toml.contains("icu_locale = \"2.2.0\""));
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_migrated_url_regex_modules_enable_stdlib_features() {
-    let url_modules = normalize_dependency_set(vec!["sifr.url".to_string()].into_iter());
-    let regex_modules = normalize_dependency_set(vec!["sifr.re".to_string()].into_iter());
-    let private_modules = normalize_dependency_set(
-        vec!["_sifr.url".to_string(), "_sifr.regex".to_string()].into_iter(),
-    );
-    let required_crates = BTreeSet::new();
-
-    let url_toml = generate_cargo_toml(&url_modules, &required_crates, "sifr_output");
-    assert!(url_toml.contains("sifr_stdlib = { path = "));
-    assert!(url_toml.contains("features = [\"url\"]"));
-
-    let regex_toml = generate_cargo_toml(&regex_modules, &required_crates, "sifr_output");
-    assert!(regex_toml.contains("sifr_stdlib = { path = "));
-    assert!(regex_toml.contains("features = [\"regex\"]"));
-
-    let private_toml = generate_cargo_toml(&private_modules, &required_crates, "sifr_output");
-    assert!(private_toml.contains("sifr_stdlib = { path = "));
-    assert!(private_toml.contains("features = [\"regex\", \"url\"]"));
-    assert!(private_toml.matches("sifr_stdlib = ").count() == 1);
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_required_tokio_uses_runtime_features() {
-    let stdlib_modules = BTreeSet::new();
-    let required_crates = normalize_dependency_set(vec!["tokio".to_string()]);
-
-    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(cargo_toml.contains(
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
-    ));
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_runtime_diagnostics_use_sysroot_observability_feature() {
-    let runtime_modules = normalize_dependency_set(vec!["sifr.runtime".to_string()].into_iter());
-    let no_required_crates = BTreeSet::new();
-    let from_module = generate_cargo_toml(&runtime_modules, &no_required_crates, "sifr_output");
-    assert!(from_module.contains("sifr_stdlib = { path = "));
-    assert!(from_module.contains("features = [\"runtime-observability\"]"));
-    assert!(!from_module.contains("\nmetrics = "));
-    assert!(!from_module.contains("\ntracing = "));
-}
-
-#[test]
-pub(crate) fn test_generate_cargo_toml_ipc_uses_locked_postcard_specs() {
-    let ipc_modules = normalize_dependency_set(vec!["sifr.ipc".to_string()].into_iter());
-    let no_required_crates = BTreeSet::new();
-    let from_module = generate_cargo_toml(&ipc_modules, &no_required_crates, "sifr_output");
-    let postcard_spec =
-        "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }";
-    let serde_spec = "serde = { version = \"1.0.228\", features = [\"derive\"] }";
-    assert!(from_module.contains(postcard_spec));
-    assert!(from_module.contains(serde_spec));
-    assert!(!from_module.contains("serde_json = "));
-
-    let no_modules = BTreeSet::new();
-    let required_crates = normalize_dependency_set(vec!["postcard".to_string()]);
-    let from_required_crate = generate_cargo_toml(&no_modules, &required_crates, "sifr_output");
-    assert!(from_required_crate.contains(postcard_spec));
-    assert!(from_required_crate.contains(serde_spec));
-    assert!(!from_required_crate.contains("serde_json = "));
 }
 
 pub(crate) fn sample_cache_entry(
@@ -642,13 +523,7 @@ pub(crate) fn test_cache_entry_invalidation_rules() {
         expected_stdout: None,
         _expected_stderr: Vec::new(),
     };
-    let compiled = CompiledCase {
-        fixture: case.clone(),
-        rust_source: "fn main() {}".to_string(),
-        stdlib_modules: BTreeSet::new(),
-        required_crates: BTreeSet::new(),
-        _compile_duration_ms: 0,
-    };
+    let compiled = compiled_case_for_test(case.clone(), "fn main() {}", HashSet::new());
     let group = build_group_sources(vec![compiled]).expect("cache sample group");
     let toolchain = toolchain_info();
     let env_signature = cache_env_signature();

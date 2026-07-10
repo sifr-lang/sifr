@@ -33,21 +33,23 @@ pub(crate) fn match_compile_failure_expectations(
 
 pub(crate) fn compile_source_with_metadata(
     source: &str,
-) -> Result<(String, HashSet<String>, HashSet<String>), Vec<String>> {
+) -> Result<
+    (
+        String,
+        HashSet<String>,
+        HashSet<StdlibFeature>,
+        sifr_driver::InteropBuildPlan,
+    ),
+    Vec<String>,
+> {
     match compile_source_for_e2e(source) {
         sifr_driver::CompileResultFull::Success {
             rust_source,
             used_stdlib_modules,
             required_features,
+            interop,
             ..
-        } => Ok((
-            rust_source,
-            used_stdlib_modules,
-            required_features
-                .into_iter()
-                .map(|feature| feature.id().to_string())
-                .collect(),
-        )),
+        } => Ok((rust_source, used_stdlib_modules, required_features, interop)),
         sifr_driver::CompileResultFull::Errors { errors } => {
             Err(errors.iter().map(|error| error.message.clone()).collect())
         }
@@ -60,7 +62,8 @@ pub(crate) fn compile_source_with_metadata_and_stats(
     (
         String,
         HashSet<String>,
-        HashSet<String>,
+        HashSet<StdlibFeature>,
+        sifr_driver::InteropBuildPlan,
         sifr_driver::LoweringStats,
     ),
     Vec<String>,
@@ -70,15 +73,14 @@ pub(crate) fn compile_source_with_metadata_and_stats(
             rust_source,
             used_stdlib_modules,
             required_features,
+            interop,
             lowering_stats,
             ..
         } => Ok((
             rust_source,
             used_stdlib_modules,
-            required_features
-                .into_iter()
-                .map(|feature| feature.id().to_string())
-                .collect(),
+            required_features,
+            interop,
             lowering_stats,
         )),
         sifr_driver::CompileResultFull::Errors { errors } => {
@@ -206,23 +208,20 @@ pub(crate) fn build_rust_source_from_module(raw: &str, entry_fn: &str) -> Result
 
 pub(crate) fn compile_fixture(fixture: &FixtureCase) -> Result<CompiledCase, String> {
     let started = Instant::now();
-    let (rust_source, stdlib_modules, required_crates) =
+    let (rust_source, used_stdlib_modules, required_features, interop) =
         compile_source_with_metadata(&fixture.source)
             .map_err(|errors| format!("sifr compilation failed:\n  {}", errors.join("\n  ")))?;
-
-    let stdlib_modules = infer_dependencies(
-        &rust_source,
-        &normalize_dependency_set(stdlib_modules),
-        &BTreeSet::new(),
+    let dependency_plan = sifr_driver::try_generate_standalone_dependency_plan(
+        &used_stdlib_modules,
+        &required_features,
+        &interop,
     )
-    .0;
-
-    let required_crates = infer_dependencies(
-        &rust_source,
-        &BTreeSet::new(),
-        &normalize_dependency_set(required_crates),
-    )
-    .1;
+    .map_err(|error| {
+        format!(
+            "failed to resolve production dependency plan: {}",
+            error.boundary_message()
+        )
+    })?;
 
     if !rust_source.contains("fn main(") {
         return Err("generated Rust has no main function".to_string());
@@ -231,8 +230,9 @@ pub(crate) fn compile_fixture(fixture: &FixtureCase) -> Result<CompiledCase, Str
     Ok(CompiledCase {
         fixture: fixture.clone(),
         rust_source,
-        stdlib_modules,
-        required_crates,
+        used_stdlib_modules,
+        required_features,
+        dependency_plan,
         _compile_duration_ms: started.elapsed().as_millis(),
     })
 }
@@ -250,14 +250,25 @@ pub(crate) fn compile_suite_parallel(
 pub(crate) fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, String> {
     let mut cases = group_cases;
     cases.sort_by(|left, right| left.fixture.name.cmp(&right.fixture.name));
-
-    let fingerprint = cases
-        .first()
-        .map(|case| case.dependency_fingerprint())
-        .unwrap_or_else(|| DependencyFingerprint {
-            stdlib_modules: BTreeSet::new(),
-            required_crates: BTreeSet::new(),
-        });
+    let Some(first_case) = cases.first() else {
+        return Err("cannot build an empty batch group".to_string());
+    };
+    if cases
+        .iter()
+        .any(|case| !case.dependency_plan_matches_metadata())
+    {
+        return Err(
+            "compiled case dependency plan does not match typed compiler metadata".to_string(),
+        );
+    }
+    let fingerprint = first_case.dependency_fingerprint();
+    let dependency_plan = first_case.dependency_plan.clone();
+    if cases
+        .iter()
+        .any(|case| case.dependency_plan != dependency_plan)
+    {
+        return Err("batch group contains non-identical production dependency plans".to_string());
+    }
 
     let mut case_modules = Vec::with_capacity(cases.len());
     let mut generated_modules = String::new();
@@ -290,15 +301,6 @@ pub(crate) fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<Batc
 
         case_modules.push((case.fixture.name.clone(), module_name, wrapper_fn));
     }
-
-    let _union_stdlib = cases
-        .iter()
-        .flat_map(|case| case.stdlib_modules.iter().cloned())
-        .collect::<BTreeSet<_>>();
-    let _union_crates = cases
-        .iter()
-        .flat_map(|case| case.required_crates.iter().cloned())
-        .collect::<BTreeSet<_>>();
 
     let mut generated_main = String::new();
     generated_main.push_str("trait __SifrBatchTermination {\n");
@@ -359,6 +361,7 @@ pub(crate) fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<Batc
     Ok(BatchGroup {
         id,
         fingerprint,
+        dependency_plan,
         cases,
         generated_main: generated_rust,
         generated_rust_hash,

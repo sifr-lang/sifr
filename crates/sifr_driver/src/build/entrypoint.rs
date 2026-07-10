@@ -11,6 +11,7 @@ use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildSt
 use super::rust_interop::{
     apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
 };
+use super::single_file_interop_cache::{resolve_single_file_metadata, CompiledSingleFileMetadata};
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
@@ -146,21 +147,24 @@ pub(crate) fn compile_single_file_frontend(
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata(
     source: &str,
-) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
+) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
     compile_single_file_entrypoint_with_metadata_and_options(source, LoweringOptions::default())
 }
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
     source: &str,
     lowering_options: LoweringOptions,
-) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
+) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
     let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
         source,
         display_path: "main",
         lowering_options,
     })?;
     plan.emit_frontend_diagnostics();
-    plan.into_single_file_codegen_result()
+    let rust_interop_context = plan.rust_interop_context.clone();
+    let stdlib_interop = plan.stdlib.interop.clone();
+    let codegen_result = plan.into_single_file_codegen_result()?;
+    resolve_single_file_metadata(codegen_result, rust_interop_context, &stdlib_interop)
 }
 
 pub(crate) fn check_single_file_entrypoint(
