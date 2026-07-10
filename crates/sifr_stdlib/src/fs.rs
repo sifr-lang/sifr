@@ -3,11 +3,14 @@ use std::{
     fs::{self, DirEntry, File, OpenOptions},
     io::{BufRead as _, BufReader, BufWriter, Read as _, Write as _},
     path::{Path, PathBuf},
+    process::Command,
     sync::{
         atomic::{AtomicU64, Ordering},
         LazyLock, Mutex, MutexGuard,
     },
 };
+
+use sifr_runtime::interop::SifrIntBridge;
 
 enum FileHandleEntry {
     TextRead(BufReader<File>),
@@ -147,6 +150,37 @@ pub fn remove_file(path: &str) -> Result<(), std::io::Error> {
 
 pub fn rename(src: &str, dst: &str) -> Result<(), std::io::Error> {
     fs::rename(src, dst)
+}
+
+pub fn chdir(path: &str) -> Result<(), std::io::Error> {
+    std::env::set_current_dir(path)
+}
+
+pub fn stat_size(path: &str) -> Result<SifrIntBridge, std::io::Error> {
+    fs::metadata(path).map(|metadata| SifrIntBridge::from(saturating_i64(metadata.len())))
+}
+
+#[must_use]
+pub fn disk_usage(path: &str) -> Vec<SifrIntBridge> {
+    if fs::metadata(path).is_err() {
+        return zero_usage();
+    }
+    let Ok(output) = Command::new("df").arg("-k").arg(path).output() else {
+        return zero_usage();
+    };
+    let text = String::from_utf8_lossy(&output.stdout);
+    let Some(line) = text.lines().nth(1) else {
+        return zero_usage();
+    };
+    let parts = line.split_whitespace().collect::<Vec<_>>();
+    if parts.len() < 4 {
+        return zero_usage();
+    }
+    vec![
+        bridge_kib_to_bytes(parts[1]),
+        bridge_kib_to_bytes(parts[2]),
+        bridge_kib_to_bytes(parts[3]),
+    ]
 }
 
 #[must_use]
@@ -357,5 +391,43 @@ fn trim_trailing_crlf(line: &mut String) {
         if line.ends_with('\r') {
             line.pop();
         }
+    }
+}
+
+fn bridge_kib_to_bytes(text: &str) -> SifrIntBridge {
+    SifrIntBridge::from(text.parse::<i64>().unwrap_or(0).saturating_mul(1024))
+}
+
+fn zero_usage() -> Vec<SifrIntBridge> {
+    vec![0_i64.into(), 0_i64.into(), 0_i64.into()]
+}
+
+fn saturating_i64(value: u64) -> i64 {
+    i64::try_from(value).unwrap_or(i64::MAX)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{disk_usage, stat_size, write_text};
+    use std::path::PathBuf;
+
+    #[test]
+    fn migrated_metadata_helpers_use_stdlib_boundary() {
+        let path = temp_path("migrated_metadata_helpers_use_stdlib_boundary");
+        write_text(&path.to_string_lossy(), "sifr").expect("test file should be written");
+
+        assert_eq!(
+            stat_size(&path.to_string_lossy())
+                .expect("metadata should load")
+                .to_i64_saturating(),
+            4
+        );
+        assert_eq!(disk_usage("/definitely/missing/sifr/path").len(), 3);
+
+        std::fs::remove_file(path).expect("test file should be removed");
+    }
+
+    fn temp_path(name: &str) -> PathBuf {
+        std::env::temp_dir().join(format!("sifr_stdlib_fs_{name}_{}", std::process::id()))
     }
 }

@@ -1,4 +1,5 @@
 use sifr_runtime::interop::SifrIntBridge;
+use std::process::Command;
 
 #[must_use]
 pub const fn feature_name() -> &'static str {
@@ -117,6 +118,11 @@ pub fn os_name() -> String {
     }
 }
 
+pub fn run_command(cmd: &str) -> Result<String, std::io::Error> {
+    let output = Command::new("sh").arg("-c").arg(cmd).output()?;
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
 fn is_valid_env_key(key: &str) -> bool {
     !key.is_empty() && !key.contains('=') && !key.as_bytes().contains(&0)
 }
@@ -125,7 +131,7 @@ fn is_valid_env_key(key: &str) -> bool {
 mod tests {
     use super::{
         cpu_count, env_get, env_items, env_keys, env_set, env_unset, env_values, get_args, getpid,
-        os_linesep, os_name, os_sep, sys_maxsize, sys_platform, sys_version, which,
+        os_linesep, os_name, os_sep, run_command, sys_maxsize, sys_platform, sys_version, which,
     };
 
     #[test]
@@ -162,5 +168,13 @@ mod tests {
         assert!(!os_linesep().is_empty());
         assert!(!os_name().is_empty());
         assert_eq!(which("__sifr_missing_tool_for_sys_test__"), None);
+    }
+
+    #[test]
+    fn run_command_captures_trimmed_stdout() {
+        assert_eq!(
+            run_command("printf 'sifr\\n'").expect("command should run"),
+            "sifr"
+        );
     }
 }

@@ -1,5 +1,9 @@
 # Private _sifr.sys native declaration module.
 
+@rust(sifr_stdlib.sys.run_command)
+def run_command(cmd: str) -> Result[str, IOError]:
+    ...
+
 @rust(sifr_stdlib.sys.env_get)
 def env_get(key: str) -> str | None:
     ...

@@ -36,6 +36,9 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
         "rmdir",
         "remove_file",
         "rename",
+        "chdir",
+        "stat_size",
+        "disk_usage",
         "is_file",
         "is_dir",
         "copy_file",
@@ -58,6 +61,12 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
     }
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| IOError { message: __sifr_bridge_error.to_string(), kind: __sifr_bridge_error.to_string() })"
+    ));
+    assert!(private_code.rust.contains(
+        "sifr_stdlib::fs::stat_size(path).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
+    ));
+    assert!(private_code.rust.contains(
+        "sifr_stdlib::fs::disk_usage(path).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
     ));
     assert!(compiled
         .code

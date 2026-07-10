@@ -52,6 +52,7 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
         sha256_hex(include_str!("../../../../stdlib/_sifr/sys.sifr"))
     );
     for name in [
+        "run_command",
         "env_get",
         "env_set",
         "env_unset",
@@ -81,7 +82,8 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
         .code
         .intrinsic_names
         .get("_sifr.sys")
-        .is_some_and(|names| !names.contains("env_get")
+        .is_some_and(|names| !names.contains("run_command")
+            && !names.contains("env_get")
             && !names.contains("sys_version")
             && !names.contains("which")
             && !names.contains("os_sep")));
