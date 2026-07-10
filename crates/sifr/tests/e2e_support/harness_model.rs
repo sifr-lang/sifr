@@ -4,7 +4,7 @@ use sifr_diagnostics::codes::{active_registry_entries, registry_entry, Diagnosti
 
 pub(crate) const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 pub(crate) const E2E_CACHE_MANIFEST: &str = "manifest.json";
-pub(crate) const E2E_CACHE_SCHEMA_VERSION: u32 = 1;
+pub(crate) const E2E_CACHE_SCHEMA_VERSION: u32 = 2;
 pub(crate) const E2E_CACHE_TTL_SECS: u64 = 2 * 60 * 60;
 pub(crate) const E2E_CACHE_ENV_ALLOWLIST: [&str; 6] = [
     "RUSTFLAGS",
@@ -64,21 +64,23 @@ pub(crate) struct CompiledFailure {
 pub(crate) struct CompiledCase {
     pub(crate) fixture: FixtureCase,
     pub(crate) rust_source: String,
-    pub(crate) stdlib_modules: BTreeSet<String>,
-    pub(crate) required_crates: BTreeSet<String>,
+    pub(crate) used_stdlib_modules: HashSet<String>,
+    pub(crate) required_features: HashSet<StdlibFeature>,
+    pub(crate) dependency_plan: SysrootDependencyPlan,
     pub(crate) _compile_duration_ms: u128,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) struct DependencyFingerprint {
-    pub(crate) stdlib_modules: BTreeSet<String>,
-    pub(crate) required_crates: BTreeSet<String>,
+    pub(crate) dependency_inputs: String,
+    pub(crate) resolved_plan: String,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct BatchGroup {
     pub(crate) id: String,
     pub(crate) fingerprint: DependencyFingerprint,
+    pub(crate) dependency_plan: SysrootDependencyPlan,
     pub(crate) cases: Vec<CompiledCase>,
     pub(crate) generated_main: String,
     pub(crate) generated_rust_hash: String,
@@ -310,10 +312,6 @@ pub(crate) fn deterministic_hash(value: &str) -> String {
     format!("{hash:016x}")
 }
 
-pub(crate) fn join_sorted(values: &BTreeSet<String>) -> String {
-    values.iter().cloned().collect::<Vec<_>>().join("|")
-}
-
 /// Collect all `# expect-stdout: <value>` lines into a multi-line expected output.
 pub(crate) fn extract_expect_stdout(source: &str) -> Option<String> {
     let lines: Vec<&str> = source
@@ -347,14 +345,6 @@ pub(crate) fn path_to_name(path: &Path) -> String {
         .and_then(|name| name.to_str())
         .unwrap_or_default()
         .to_string()
-}
-
-pub(crate) fn normalize_dependency_set<I, T>(values: I) -> BTreeSet<String>
-where
-    I: IntoIterator<Item = T>,
-    T: Into<String>,
-{
-    values.into_iter().map(Into::into).collect()
 }
 
 pub(crate) fn sanitize_identifier(value: &str) -> String {
@@ -395,135 +385,11 @@ pub(crate) fn fixture_entry_name(module_name: &str) -> String {
     format!("{module_name}_main")
 }
 
-pub(crate) fn infer_dependencies(
-    rust_source: &str,
-    stdlib_modules: &BTreeSet<String>,
-    required_crates: &BTreeSet<String>,
-) -> (BTreeSet<String>, BTreeSet<String>) {
-    let mut modules = stdlib_modules.clone();
-    let mut crates = required_crates.clone();
-
-    if rust_source.contains("num_bigint::BigInt") || rust_source.contains("use num_bigint") {
-        modules.insert("_bigint".to_string());
-    }
-    if rust_source.contains("sifr_runtime::") || rust_source.contains("use sifr_runtime") {
-        crates.insert("sifr_runtime".to_string());
-    }
-    if rust_source.contains("sifr_stdlib::fs::") {
-        modules.insert("_sifr.fs".to_string());
-    }
-    if rust_source.contains("sifr_stdlib::net::") {
-        modules.insert("_sifr.net".to_string());
-    }
-    if rust_source.contains("sifr_stdlib::tls::") {
-        modules.insert("_sifr.tls".to_string());
-    }
-    if rust_source.contains("sifr_stdlib::http::") {
-        modules.insert("_sifr.http".to_string());
-    }
-    if rust_source.contains("sifr_stdlib::signals::") {
-        modules.insert("_sifr.signal".to_string());
-    }
-    if rust_source.contains("sifr_stdlib::runtime_observability::") {
-        modules.insert("_sifr.runtime".to_string());
-    }
-    if rust_source.contains("regex::") {
-        crates.insert("regex".to_string());
-    }
-    if rust_source.contains("rand::rng") {
-        crates.insert("rand".to_string());
-    }
-    if rust_source.contains("rand_distr::") {
-        crates.insert("rand_distr".to_string());
-    }
-    if rust_source.contains("chrono::") {
-        crates.insert("chrono".to_string());
-    }
-    if rust_source.contains("md5::") {
-        crates.insert("md5".to_string());
-    }
-    if rust_source.contains("uuid::") {
-        crates.insert("uuid".to_string());
-    }
-    if rust_source.contains("toml::") {
-        crates.insert("toml".to_string());
-    }
-    if rust_source.contains("flate2::") {
-        crates.insert("flate2".to_string());
-    }
-    if rust_source.contains("zip::") {
-        crates.insert("zip".to_string());
-    }
-    if rust_source.contains("base64::") {
-        crates.insert("base64".to_string());
-    }
-    if rust_source.contains("sha1::") {
-        crates.insert("sha1".to_string());
-    }
-    if rust_source.contains("sha2::") {
-        crates.insert("sha2".to_string());
-    }
-    if rust_source.contains("blake2::") {
-        crates.insert("blake2".to_string());
-    }
-    if rust_source.contains("rust_decimal::") || rust_source.contains("use rust_decimal") {
-        crates.insert("rust_decimal".to_string());
-    }
-    if rust_source.contains("bigdecimal::") || rust_source.contains("use bigdecimal") {
-        crates.insert("bigdecimal".to_string());
-    }
-    if rust_source.contains("tracing::") || rust_source.contains("use tracing") {
-        crates.insert("tracing".to_string());
-    }
-    if rust_source.contains("metrics::") || rust_source.contains("use metrics") {
-        crates.insert("metrics".to_string());
-    }
-    if rust_source.contains("postcard::") || rust_source.contains("use postcard") {
-        crates.insert("postcard".to_string());
-    }
-    if rust_source.contains("url::") || rust_source.contains("use url") {
-        crates.insert("url".to_string());
-    }
-    if rust_source.contains("percent_encoding::") || rust_source.contains("use percent_encoding") {
-        crates.insert("percent-encoding".to_string());
-    }
-    if rust_source.contains("http::") || rust_source.contains("use http") {
-        crates.insert("http".to_string());
-    }
-    if rust_source.contains("bytes::") || rust_source.contains("use bytes") {
-        crates.insert("bytes".to_string());
-    }
-    if rust_source.contains("h2::") || rust_source.contains("use h2") {
-        crates.insert("h2".to_string());
-    }
-    if rust_source.contains("http_body::") || rust_source.contains("use http_body") {
-        crates.insert("http-body".to_string());
-    }
-    if rust_source.contains("http_body_util::") || rust_source.contains("use http_body_util") {
-        crates.insert("http-body-util".to_string());
-    }
-    if rust_source.contains("hyper::") || rust_source.contains("use hyper") {
-        crates.insert("hyper".to_string());
-    }
-    if rust_source.contains("hyper_util::") || rust_source.contains("use hyper_util") {
-        crates.insert("hyper-util".to_string());
-    }
-    if rust_source.contains("tower_service::") || rust_source.contains("use tower_service") {
-        crates.insert("tower-service".to_string());
-    }
-    if rust_source.contains("cookie::") || rust_source.contains("use cookie") {
-        crates.insert("cookie".to_string());
-    }
-
-    (modules, crates)
-}
-
 impl DependencyFingerprint {
     pub(crate) fn signature(&self) -> String {
         format!(
-            "stdlib={}|crates={}",
-            join_sorted(&self.stdlib_modules),
-            join_sorted(&self.required_crates),
+            "inputs={}|plan={}",
+            self.dependency_inputs, self.resolved_plan,
         )
     }
 
@@ -539,10 +405,25 @@ impl FixtureCase {
 }
 
 impl CompiledCase {
+    pub(crate) fn dependency_plan_matches_metadata(&self) -> bool {
+        self.dependency_plan.stdlib_modules
+            == self
+                .used_stdlib_modules
+                .iter()
+                .cloned()
+                .collect::<BTreeSet<_>>()
+            && self.dependency_plan.required_features
+                == self
+                    .required_features
+                    .iter()
+                    .copied()
+                    .collect::<BTreeSet<_>>()
+    }
+
     pub(crate) fn dependency_fingerprint(&self) -> DependencyFingerprint {
         DependencyFingerprint {
-            stdlib_modules: self.stdlib_modules.clone(),
-            required_crates: self.required_crates.clone(),
+            dependency_inputs: self.dependency_plan.dependency_input_fingerprint(),
+            resolved_plan: self.dependency_plan.cache_fingerprint.clone(),
         }
     }
 }

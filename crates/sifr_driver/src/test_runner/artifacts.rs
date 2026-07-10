@@ -1,5 +1,5 @@
 use crate::build::{
-    generate_dependency_cargo_toml_for_cache_key, try_generate_sysroot_dependency_plan,
+    generate_dependency_cargo_toml_with_interop, try_generate_sysroot_dependency_plan,
 };
 use crate::project::top_level_module_declarations;
 use sifr_codegen::InteropBuildPlan;
@@ -42,7 +42,7 @@ pub(crate) fn generate_test_runner_cargo_toml(
         CargoVendorMode::SysrootOnly,
     )
     .expect("test sysroot dependency plan should resolve");
-    generate_dependency_cargo_toml_for_cache_key(
+    generate_dependency_cargo_toml_with_interop(
         "sifr_tests",
         &dependency_plan,
         &InteropBuildPlan::default(),
@@ -61,7 +61,7 @@ pub(crate) fn try_generate_test_runner_cargo_plan(
         CargoVendorMode::SysrootOnly,
     )?;
     let cargo_toml =
-        generate_dependency_cargo_toml_for_cache_key("sifr_tests", &dependency_plan, &interop);
+        generate_dependency_cargo_toml_with_interop("sifr_tests", &dependency_plan, &interop);
     Ok(TestRunnerCargoPlan {
         cargo_toml,
         dependency_plan,

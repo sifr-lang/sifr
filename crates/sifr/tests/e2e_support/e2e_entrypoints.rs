@@ -49,7 +49,7 @@ pub(crate) fn test_codegen_corpus_subset_parity() {
         };
         let expected_stdout = extract_expect_stdout(&source);
 
-        let (rust_source, stdlib_modules, required_crates) =
+        let (rust_source, stdlib_modules, required_features, interop) =
             match compile_source_with_metadata(&source) {
                 Ok(result) => result,
                 Err(errors) => {
@@ -74,7 +74,8 @@ pub(crate) fn test_codegen_corpus_subset_parity() {
             &rust_source,
             &format!("{case}_single"),
             &stdlib_modules,
-            &required_crates,
+            &required_features,
+            &interop,
         ) {
             Ok(stdout) => stdout,
             Err(err) => {
@@ -143,7 +144,7 @@ pub(crate) fn test_emit_pass_fixtures_do_not_include_unwrap_or_expect() {
             }
         };
 
-        let (rust_source, _, _) = match compile_source_with_metadata(&source) {
+        let (rust_source, _, _, _) = match compile_source_with_metadata(&source) {
             Ok(result) => result,
             Err(errors) => {
                 failures.push(format!(
@@ -208,7 +209,7 @@ pub(crate) fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
             }
         };
 
-        let (rust_source, _, _, stats) = match compile_source_with_metadata_and_stats(&source) {
+        let (rust_source, _, _, _, stats) = match compile_source_with_metadata_and_stats(&source) {
             Ok(result) => result,
             Err(errors) => {
                 failures.push(format!(
@@ -381,7 +382,7 @@ pub(crate) fn test_e2e_runtime_fail() {
         let source = std::fs::read_to_string(&path).unwrap();
         let expected_stderr = extract_expect_stderr(&source);
 
-        let (rust_source, used_stdlib_modules, required_crates) =
+        let (rust_source, used_stdlib_modules, required_features, interop) =
             match compile_source_with_metadata(&source) {
                 Ok(result) => result,
                 Err(errors) => {
@@ -398,7 +399,8 @@ pub(crate) fn test_e2e_runtime_fail() {
             &rust_source,
             &test_name,
             &used_stdlib_modules,
-            &required_crates,
+            &required_features,
+            &interop,
         ) {
             Ok((_stdout, stderr, success)) => {
                 if success {

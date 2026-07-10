@@ -29,6 +29,7 @@ mod rust_interop_tests;
 mod rust_interop_trust;
 #[cfg(test)]
 mod rust_interop_zero_copy_contract_tests;
+mod single_file_interop_cache;
 mod sysroot_interop;
 #[cfg(test)]
 mod sysroot_interop_tests;
@@ -39,14 +40,19 @@ pub use api::{
     build_package_project_report, build_project, build_project_report, build_single_file_report,
     check_package_project, check_project, check_single_file, emit_project,
 };
+pub use cargo_manifest::{
+    generate_dependency_cargo_toml, sysroot_cargo_config_args,
+    try_generate_standalone_dependency_plan,
+};
 pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
 pub use python_runtime::PackagePythonRuntime;
 pub use report::{
     BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
 };
 
-pub(crate) use cargo_manifest::generate_dependency_cargo_toml_for_cache_key;
-pub(crate) use cargo_manifest::{sysroot_cargo_config_args, try_generate_sysroot_dependency_plan};
+pub(crate) use cargo_manifest::{
+    generate_dependency_cargo_toml_with_interop, try_generate_sysroot_dependency_plan,
+};
 pub(crate) use entrypoint::{
     build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,

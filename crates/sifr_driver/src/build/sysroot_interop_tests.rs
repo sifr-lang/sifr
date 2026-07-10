@@ -1,5 +1,5 @@
 use super::cargo_manifest::{
-    generate_dependency_cargo_toml_for_cache_key, try_generate_sysroot_dependency_plan,
+    generate_dependency_cargo_toml_with_interop, try_generate_sysroot_dependency_plan,
 };
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
@@ -124,7 +124,7 @@ fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
     assert_eq!(trust.required_entry, "sifr_stdlib.m8.noop");
 
     let cargo_toml =
-        generate_dependency_cargo_toml_for_cache_key("sifr_output", &plan, &generated.interop);
+        generate_dependency_cargo_toml_with_interop("sifr_output", &plan, &generated.interop);
     assert!(cargo_toml.contains("sifr_stdlib = { path = "));
     assert!(cargo_toml.contains("default-features = false"));
 }

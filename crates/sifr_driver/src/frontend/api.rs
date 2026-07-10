@@ -56,6 +56,7 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
         rust_source: codegen_result.rust_source,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
+        interop: codegen_result.interop,
         lowering_stats: codegen_result.lowering_stats,
     }
 }

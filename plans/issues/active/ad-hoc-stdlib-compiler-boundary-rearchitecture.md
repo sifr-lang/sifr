@@ -8,10 +8,18 @@ this phase owns the final compiler/stdlib boundary architecture and its local
 recertification.
 
 Implementation is in progress. M1 routes runtime diagnostics through the
-private `sifr_stdlib` boundary and has passed focused production-path
-check/emit/build/run coverage plus the create-PR gate. Claude Opus review is
-satisfied after two rounds; [PR #2921](https://github.com/sifr-lang/sifr/pull/2921)
-is open and merge is pending.
+private `sifr_stdlib` boundary and is merged in
+[PR #2921](https://github.com/sifr-lang/sifr/pull/2921) after focused
+production-path check/emit/build/run coverage, the create-PR gate, and two
+satisfied Claude Opus review rounds. M2 is in progress; its checked former-rule
+inventory is recorded in
+[`ad-hoc-stdlib-compiler-boundary-m2-inventory.md`](ad-hoc-stdlib-compiler-boundary-m2-inventory.md).
+The implementation has passed three Claude Opus rounds: pass 1 was satisfied,
+pass 2 found and blocked on the 900-line file-size guard, and pass 3 was
+satisfied after responsibility-based cache extraction. M2 is in the local
+create-PR gate. The gate passed with every blocking lane green, including
+crate tests at 502,431 ms / 600,000 ms and 129/129 selected E2E fixtures at
+406,818 ms / 600,000 ms. M2 is ready for its milestone PR.
 
 ## Why This Phase Exists
 
@@ -532,7 +540,7 @@ scripts/run_all_tests.sh
 - [x] Runtime diagnostics target ownership decided.
 - [x] Typed intrinsic identity and source-declaration model decided.
 - [x] No-fallback target and PR sequence decided.
-- [ ] M1 merged and documented.
+- [x] M1 merged and documented ([PR #2921](https://github.com/sifr-lang/sifr/pull/2921)).
 - [ ] M2 merged and documented.
 - [ ] M3 merged and documented.
 - [ ] M4 merged and documented.

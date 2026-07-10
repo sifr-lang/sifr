@@ -52,17 +52,10 @@ pub(crate) fn build_batch_group(
     }
 
     if build_error.is_none() {
-        let stdlib_union = group
-            .cases
-            .iter()
-            .flat_map(|case| case.stdlib_modules.iter().cloned())
-            .collect::<BTreeSet<_>>();
-        let crate_union = group
-            .cases
-            .iter()
-            .flat_map(|case| case.required_crates.iter().cloned())
-            .collect::<BTreeSet<_>>();
-        let cargo_toml = generate_cargo_toml(&stdlib_union, &crate_union, &group.package_name);
+        let cargo_toml = sifr_driver::generate_dependency_cargo_toml(
+            &group.package_name,
+            &group.dependency_plan,
+        );
         let source_path = group_root.join("src").join("main.rs");
         let cargo_toml_path = group_root.join("Cargo.toml");
 
@@ -73,6 +66,9 @@ pub(crate) fn build_batch_group(
         } else {
             let mut build_command = Command::new("cargo");
             build_command
+                .args(sifr_driver::sysroot_cargo_config_args(
+                    &group.dependency_plan,
+                ))
                 .args(["build", "--quiet", "-j"])
                 .arg(config.cargo_build_jobs.to_string())
                 .current_dir(&group_root);
@@ -338,19 +334,33 @@ pub(crate) fn build_and_run_capture_with_deps(
     rust_source: &str,
     test_name: &str,
     stdlib_modules: &HashSet<String>,
-    required_crates: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+    interop: &sifr_driver::InteropBuildPlan,
 ) -> Result<(String, String, bool), String> {
-    let tmp_dir = env::temp_dir().join("sifr_e2e_tests").join(test_name);
+    let dependency_plan = sifr_driver::try_generate_standalone_dependency_plan(
+        stdlib_modules,
+        required_features,
+        interop,
+    )
+    .map_err(|error| {
+        format!(
+            "failed to resolve production dependency plan: {}",
+            error.boundary_message()
+        )
+    })?;
+    let project_identity = deterministic_hash(&format!(
+        "{}\n{}",
+        dependency_plan.dependency_input_fingerprint(),
+        dependency_plan.cache_fingerprint
+    ));
+    let tmp_dir = env::temp_dir()
+        .join("sifr_e2e_tests")
+        .join(test_name)
+        .join(project_identity);
     let src_dir = tmp_dir.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|err| format!("failed to create dir: {err}"))?;
 
-    let mut modules = normalize_dependency_set(stdlib_modules);
-    let mut crates = normalize_dependency_set(required_crates);
-    let (inferred_modules, inferred_crates) = infer_dependencies(rust_source, &modules, &crates);
-    modules = inferred_modules;
-    crates = inferred_crates;
-
-    let cargo_toml = generate_cargo_toml(&modules, &crates, "sifr_output");
+    let cargo_toml = sifr_driver::generate_dependency_cargo_toml("sifr_output", &dependency_plan);
     std::fs::write(tmp_dir.join("Cargo.toml"), cargo_toml)
         .map_err(|err| format!("failed to write Cargo.toml: {err}"))?;
     std::fs::write(src_dir.join("main.rs"), rust_source)
@@ -358,6 +368,7 @@ pub(crate) fn build_and_run_capture_with_deps(
 
     let mut build_command = Command::new("cargo");
     build_command
+        .args(sifr_driver::sysroot_cargo_config_args(&dependency_plan))
         .args(["build", "--quiet"])
         .current_dir(&tmp_dir);
     build_command.env_remove("CARGO_TARGET_DIR");
@@ -391,9 +402,16 @@ pub(crate) fn build_and_run_with_deps(
     rust_source: &str,
     test_name: &str,
     stdlib_modules: &HashSet<String>,
-    required_crates: &HashSet<String>,
+    required_features: &HashSet<StdlibFeature>,
+    interop: &sifr_driver::InteropBuildPlan,
 ) -> Result<String, String> {
-    match build_and_run_capture_with_deps(rust_source, test_name, stdlib_modules, required_crates) {
+    match build_and_run_capture_with_deps(
+        rust_source,
+        test_name,
+        stdlib_modules,
+        required_features,
+        interop,
+    ) {
         Ok((stdout, stderr, status_ok)) => {
             if status_ok {
                 Ok(stdout)

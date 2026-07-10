@@ -1,5 +1,5 @@
 use super::cargo_manifest::{
-    generate_dependency_cargo_toml_for_cache_key, sysroot_cargo_config_args,
+    generate_dependency_cargo_toml_with_interop, sysroot_cargo_config_args,
     try_generate_sysroot_dependency_plan,
 };
 use super::project_codegen::GeneratedBinaryProject;
@@ -172,7 +172,7 @@ fn materialize_binary_project_files(
         ))]
     })?;
 
-    let cargo_toml = generate_dependency_cargo_toml_for_cache_key(
+    let cargo_toml = generate_dependency_cargo_toml_with_interop(
         project_name,
         dependency_plan,
         &generated_project.interop,
@@ -412,7 +412,7 @@ fn binary_project_cache_key(
         .join("\n===\n");
     format!(
         "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[sysroot-dependency-inputs]\n{}[interop]\n{}\n[cache-key-fragment]\n{}\n[sysroot-dependency-plan]\n{}",
-        generate_dependency_cargo_toml_for_cache_key(
+        generate_dependency_cargo_toml_with_interop(
             project_name,
             dependency_plan,
             &generated_project.interop

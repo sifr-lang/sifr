@@ -1,3 +1,4 @@
+pub(crate) use sifr_stdlib_manifest::{StdlibFeature, SysrootDependencyPlan};
 pub(crate) use std::collections::{BTreeMap, BTreeSet, HashSet};
 pub(crate) use std::env;
 pub(crate) use std::fmt::Write as _;
@@ -9,18 +10,10 @@ pub(crate) use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 mod harness_model;
 pub(crate) use harness_model::*;
-mod fixture_dependency_paths;
-pub(crate) use fixture_dependency_paths::*;
-mod fixture_cargo_toml;
-mod fs_dependency_inference_tests;
-pub(crate) use fixture_cargo_toml::*;
 mod fixture_compilation;
 pub(crate) use fixture_compilation::*;
 mod batch_execution;
 pub(crate) use batch_execution::*;
+mod dependency_plan_authority_tests;
 mod e2e_entrypoints;
 mod harness_behavior_tests;
-mod network_http_dependency_rules_tests;
-mod runtime_observability_dependency_tests;
-mod stateless_sysroot_cargo_toml_tests;
-mod structured_data_cargo_toml_tests;

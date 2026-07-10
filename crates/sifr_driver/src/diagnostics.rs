@@ -21,6 +21,7 @@ pub enum CompileResultFull {
         generated_source_map: Vec<GeneratedSourceMapFile>,
         used_stdlib_modules: HashSet<String>,
         required_features: HashSet<StdlibFeature>,
+        interop: sifr_codegen::InteropBuildPlan,
         lowering_stats: sifr_codegen::LoweringStats,
     },
     Errors {
