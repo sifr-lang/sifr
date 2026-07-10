@@ -109,7 +109,7 @@ data, while user/package dependencies remain package-owned Cargo inputs.
 | --- | --- | --- | --- |
 | `sifr_runtime` | Sifr-owned path dependency selected from the resolved development or installed sysroot and passed explicitly to generated Cargo plus Rust interop probes | Sysroot-owned path dependency under `<sysroot>/crates/sifr_runtime` | Sysroot resolver and `SysrootDependencyPlan` |
 | `base64`, `blake2`, `md5`, `sha1`, `sha2`, `regex`, `toml`, `url`, `uuid`, `zip`, `flate2`, `chrono`, `rand`, `rand_distr`, `rayon`, `rust_decimal`, `bigdecimal`, `num-bigint`, `num-traits`, `percent-encoding` | Sifr-owned implementation details emitted directly into generated project manifests | Vendored third-party inputs of sysroot crates; generated manifests should not expose them after migration | generated-program stdlib crate implementation and vendor/dependency planning |
-| `serde`, `serde_json`, `postcard`, `bytes`, `tokio`, `tokio-rustls`, `rustls`, `rustls-pemfile`, `rustls-platform-verifier`, `http`, `http-body`, `http-body-util`, `hyper`, `hyper-util`, `h2`, `tower-service`, `metrics`, `tracing`, ICU crates | Sifr-owned runtime/stdlib implementation details emitted directly when selected features require them | Vendored third-party inputs of sysroot crates; direct generated dependencies remain only for retained compiler-language glue with an allowlist | generated-program stdlib crate, dependency-plan, fallible-data, and retained-glue decisions |
+| `serde`, `serde_json`, `postcard`, `bytes`, `tokio`, `tokio-rustls`, `rustls`, `rustls-pemfile`, `rustls-platform-verifier`, `http`, `http-body`, `http-body-util`, `hyper`, `hyper-util`, `h2`, `tower-service`, `metrics`, `tracing`, ICU crates | Sifr-owned runtime/stdlib implementation details previously emitted directly when selected features required them | Vendored third-party inputs of sysroot crates; direct generated dependencies remain only for retained compiler-language/runtime glue with an allowlist | generated-program stdlib crate, dependency-plan, fallible-data, and retained-glue decisions |
 | User package dependencies and explicit Rust interop dependencies | Package-owned Cargo graph | Package-owned Cargo graph | None; sysroot vendor policy must not silently replace normal package resolution |
 
 Current generated code and preamble call into `sifr_runtime::*` from these
@@ -631,8 +631,9 @@ The final manifest layer is `sifr_stdlib_manifest`. It owns:
 
 It does not own stdlib behavior, Rust implementation policy, import suggestion
 policy, fallback signatures, or compiler-native dispatch. Declaration source is
-the signature truth for migrated families. A closing surface must not keep a
-parallel intrinsic signature table in the manifest layer.
+the signature truth for migrated stdlib families. Retained compiler-language
+and runtime glue must be listed explicitly in the retained-glue manifest and
+must not recreate stdlib behavior as parallel intrinsic signature tables.
 
 Legacy and bare stdlib import suggestion policy lives in `sifr_stdlib_imports`.
 It may query manifest inventory data, but the manifest does not own rendered
@@ -752,23 +753,16 @@ resource-shaped surfaces stay blocked by
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` until their Rust
 interop lifecycle evidence lands.
 
-Every compiler-native stdlib surface must appear exactly once in the
-retained-glue manifest until the surface is closed. The row granularity is a
+Every remaining compiler-native stdlib-adjacent surface in the final manifest is
+`retained-by-design`: permanently compiler-owned language, bridge, entrypoint,
+exact-int, test-harness, or runtime substrate glue. The row granularity is a
 leaf or subfamily, not necessarily a whole `_sifr.*` module, because several
-modules contain both migrated and retained leaves. Manifest states are:
-
-| State | Meaning |
-| --- | --- |
-| `retained` | Still compiler-native for now and scheduled for migration or final classification. |
-| `pilot` | The selected pilot implementation is underway and the retained compiler path is still present. |
-| `closing` | Retirement state that requires proof the old compiler-native surface cannot reappear before the row leaves the manifest. |
-| `retained-by-design` | Permanently compiler-owned language, bridge, entrypoint, exact-int, test-harness, or runtime substrate glue. |
+modules contain migrated stdlib behavior alongside retained compiler glue.
 
 The manifest is the only exception ledger. Do not add a second registry for
-compiler-native stdlib migration state. Prefix retainers are transitional
-compatibility with the current dispatcher shape only; schema hardening
-exact-enumerates those dispatchers and deletes prefix concepts from the manifest
-schema.
+compiler-native stdlib migration state. The final schema rejects transitional
+states, closed-surface records, removal criteria, and metadata-only rows; every
+row must own concrete retained compiler glue.
 
 Resource certification rows are also recorded in this manifest. The resource
 certification gate reads `certification_rows` from the retained-glue manifest
@@ -893,10 +887,9 @@ runtime evidence recorded by the Rust interop matrix. The narrow
 `opaque_resource_matrix` row for package ecosystem resources remains
 future-owned by separate certification work.
 The stdlib native intrinsic allowlist guard is also part of core validation:
-it freezes every retained compiler intrinsic name, prefix dispatcher, registry
-file, preamble file, retained direct dependency package, and direct
-`sifr_runtime::<root>` generated-code reference until that entry is closing,
-deleted, or explicitly kept as compiler-language glue.
+it freezes every retained compiler intrinsic name, registry file, preamble file,
+retained direct dependency package, and direct `sifr_runtime::<root>`
+generated-code reference to the final retained-by-design manifest.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
 compiler-owned sysroot trust policy. A canonical private `_sifr.*` declaration

@@ -28,7 +28,6 @@ fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
         deps,
         vec![
             deps[0].clone(),
-            "rand = \"0.10.1\"".to_string(),
             "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
             "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
         ]
@@ -73,33 +72,32 @@ fn unknown_modules_and_empty_features_do_not_emit_dependencies() {
 }
 
 #[test]
-fn runtime_and_tokio_features_render_owned_dependency_specs() {
+fn runtime_and_tokio_features_render_retained_glue_dependency_specs() {
     let deps = generated_cargo_dependencies(
         &HashSet::new(),
         &HashSet::from([StdlibFeature::SifrRuntime, StdlibFeature::Tokio]),
     );
 
-    assert!(deps.iter().any(|dep| dep.starts_with("sifr_runtime = ")
-        && dep.contains("default-features = false")
-        && !dep.contains("features = [")));
+    assert_eq!(deps.len(), 2);
+    assert!(
+        deps[0].starts_with("sifr_runtime = ")
+            && deps[0].contains("default-features = false")
+            && !deps[0].contains("features = [")
+    );
     assert!(deps.iter().any(|dep| dep.starts_with("tokio = ")));
 }
 
 #[test]
-fn ipc_feature_renders_locked_postcard_specs_without_json() {
+fn ipc_feature_renders_sysroot_specs_without_json() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.ipc".to_string(), "_sifr.ipc".to_string()]),
         &HashSet::from([StdlibFeature::Ipc]),
     );
 
-    assert_eq!(
-        deps,
-        vec![
-            "postcard = { version = \"1.1.3\", default-features = false, features = [\"use-std\"] }",
-            "serde = { version = \"1.0.228\", features = [\"derive\"] }",
-        ]
-    );
+    assert!(deps.is_empty());
     assert!(!deps.iter().any(|dep| dep.starts_with("serde_json = ")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("serde = ")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("postcard = ")));
     assert_eq!(
         feature_for_codegen_requirement("ipc"),
         Some(StdlibFeature::Ipc)

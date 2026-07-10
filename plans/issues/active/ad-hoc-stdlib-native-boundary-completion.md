@@ -45,13 +45,12 @@ merged, and documented before the next milestone starts.
   in source, not in fallback compiler tables.
 - `internal_docs/stdlib_retained_compiler_intrinsics.toml` is the only
   compiler-native stdlib exception ledger.
-- Every compiler-native stdlib surface appears exactly once in the retained-glue
-  manifest while it is `retained`, `pilot`, or `closing`; only
-  `retained-by-design` rows survive final closure. Row granularity is leaf or
-  subfamily level when a `_sifr.*` module mixes migrated and retained leaves.
-- Manifest states are `retained`, `pilot`, `closing`, and
-  `retained-by-design`. `closing` is temporary; final closure removes those rows
-  after guards prove the old compiler-native surface cannot reappear.
+- Every remaining compiler-native stdlib-adjacent surface appears exactly once
+  in the retained-glue manifest as `retained-by-design`. Row granularity is leaf
+  or subfamily level when a `_sifr.*` module mixes migrated stdlib behavior and
+  retained compiler glue.
+- The final manifest schema rejects transitional states, closure records,
+  removal criteria, and metadata-only rows.
 - The retained-glue manifest is machine-parseable, schema-versioned, and
   rejects unknown fields after M0 installs the schema validator.
 - Generated Cargo for stdlib usage emits only Sifr sysroot crates. Third-party
@@ -102,7 +101,7 @@ merged, and documented before the next milestone starts.
 | M10. Signal Callback and Subscription Pilot | merged | PR #2892 · sha=4a5b16c · M10a signal native boundary migrated `_sifr.signal` through private Rust interop and `sifr_stdlib::signals`; retained compiler signal registry/source removed; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 6. PR #2894 · sha=330e277 · certification: `callback_subscription_matrix` split into supported `callback_subscription_core` and future-owned `callback_subscription_ecosystem`; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 1. M10 closeout review satisfied in round 2; `opaque_resource_matrix`, `callback_subscription_core`, and `callback_subscription_ecosystem` references verified live |
 | M11. Python Interop Adapters | merged | PR #2896 · sha=82c296f · M11a Python primitive constructors (`py_from_none`, `py_from_bool`, `py_from_int`, `py_from_float`, `py_from_str`, `py_from_bytes`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler-retained constructor registry/signature rows removed; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 1. PR #2898 · sha=0ba3d53 · M11b Python primitive extractors (`py_to_none`, `py_to_bool`, `py_to_int`, fixed-width integer extractors, `py_to_float`, `py_to_str`, `py_to_bytes`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler-retained extractor registry/signature rows removed; `create-pr` lane passed locally with warm wall-time/cache advisory only; Opus review satisfied in round 1. PR #2900 · sha=3d76537 · M11c Python object-core leaves (`py_import_module`, `py_get_attr`, `py_get_item_str`, `py_close`, `py_resource_diagnostics`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler-retained object-core registry/signature rows removed; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 1. PR #2902 · sha=740bb13 · M11d Python collection constructors (`py_from_list`, `py_from_tuple`, `py_from_dict_str`, `py_from_record`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler-retained collection constructor registry/signature rows removed; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 1. PR #2904 · sha=4228996 · M11e Python call helpers (`py_call`, `py_call_attr`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; kwargs bridge split into key/value lists; compiler-retained call helper registry/signature rows removed; `create-pr` lane passed locally with warm wall-time advisory only; Opus review satisfied in round 1. PR #2906 · sha=e1ec943f3f · M11f Python copy helpers (`py_copy_list_*`, `py_copy_tuple_*`, `py_copy_dict_str_*`, `py_copy_record_fields`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler-retained copy helper registry/signature rows removed; `create-pr` lane passed locally on warm rerun with wall-time/cache advisories only; Opus review satisfied in round 1. PR #2908 · sha=64ef9d3849 · M11g Python buffer/Arrow/DLPack zero-copy helpers (`py_buffer_u8`, `py_copy_buffer_u8`, `py_release_buffer`, `py_arrow_*`, `py_release_arrow`, `py_dlpack_tensor`, `py_release_dlpack`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; flat bridge metadata accessors preserve list fields without retained compiler lowering; compiler-retained zero-copy registry/signature rows removed; `create-pr` lane passed locally on warm rerun with wall-time advisory only; Opus review satisfied in round 2. PR #2910 · sha=5b05548 · M11h Python context/coroutine helpers (`py_enter_context`, `py_exit_context`, `py_exit_context_with_error`, `py_run_coroutine_blocking`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler-retained context/coroutine registry/signature rows removed; Python retained surface is callback-only; `create-pr` lane passed locally on warm rerun with warm wall-time advisory only after first generated-code-quality cold-cache budget miss; Opus review satisfied in round 1. PR #2912 · sha=0d963d45 · M11i Python callback helpers (`local_callback`, `threadsafe_callback`, `py_local_callback_echo`, `py_threadsafe_callback_echo`, `py_close_callback`) migrated through `_sifr.python` private declarations and `sifr_stdlib::python`; compiler Python registry and `_sifr.python` retained fallback signature module deleted; `_sifr.python` is closing with no retained exact helpers; guards report exact_intrinsics=31, fallback_signature_modules=21, retired_intrinsics=366; `create-pr` lane passed locally on warm rerun after a cold-cache generated-code-quality budget miss; Opus review satisfied in round 2. M11 closeout review satisfied in round 1 |
 | M12. Task, Signal, Runtime Observability, and Test Helpers | merged | PR #2914 · sha=4fe73924 · M12 retained-by-design classification hardened for `_sifr.runtime::observability_glue`, `_sifr.task::language_runtime_glue`, and generated test glue; signal remains closing with `callback_subscription_core` evidence from M10; stale `_sifr.runtime`, `_sifr.task`, and `_sifr.test` private-module comments removed; focused task/runtime/test codegen and retained-manifest guard validation passed locally; Opus closeout review satisfied in round 1 |
-| M13. Final Closure | planned |  |
+| M13. Final Closure | in progress | PR #2916 · sha=6d619e4 · M13a final sys boundary and remaining migratable `_sifr.fs` native leaves moved through sysroot declarations, while builtin-`open` shadowing remains retained-by-design language glue; Opus review satisfied in round 2 |
 
 Evidence cells use this format after each milestone lands:
 `PR #<n> · sha=<hex7> · manifest: <id old_state -> new_state>`.
@@ -179,9 +178,8 @@ Runtime and stdlib crates:
 Validation and guardrails:
 
 - `scripts/check_stdlib_native_intrinsic_allowlist.py`
-- `scripts/check_stdlib_migration_closure.py` until M13 folds any still-useful
-  checks into the observed-surface allowlist guard and deletes the retired-name
-  tombstone registry.
+- retired-name and stale-file closure checks folded into
+  `scripts/check_stdlib_native_intrinsic_allowlist.py`.
 - target `scripts/check_stdlib_manifest_schema.py`
 - target `scripts/check_stdlib_bootstrap_ordering.py`
 - `scripts/check_sysroot_stdlib_resource_certification_gate.py`
@@ -375,8 +373,8 @@ Validation:
 
 - `python3 scripts/check_stdlib_manifest_schema.py`
 - `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`
-- `python3 scripts/check_stdlib_migration_closure.py --self-test` as a
-  transitional guard until its useful checks fold into the allowlist guard.
+- transitional closure self-tests, now folded into
+  `scripts/check_stdlib_native_intrinsic_allowlist.py`.
 - `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`
 - Focused driver stdlib bootstrap tests.
 - `python3 scripts/check_stdlib_bootstrap_ordering.py`
@@ -562,7 +560,7 @@ Validation:
 - Generated-project cold/warm build-time evidence for representative `sifr run`
   cases using the existing validation profile budget reports.
 - Resource certification gate.
-- Retained-glue and migration closure guards.
+- Retained-glue and permanent native-boundary guards.
 - `scripts/run_all_tests.sh --profile create-pr`
 
 ### M4. Random, Time, and Logging
@@ -855,7 +853,8 @@ M8a TCP/network slice status:
   `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/network_http_tcp_cancel_accept.sifr`;
   `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/network_http_tls_loopback_split.sifr`;
   `python3 scripts/check_file_size_guardrails.py`;
-  `python3 scripts/check_stdlib_migration_closure.py`;
+  transitional migration closure guard, now folded into
+  `scripts/check_stdlib_native_intrinsic_allowlist.py`;
   `python3 scripts/check_stdlib_native_intrinsic_allowlist.py`;
   `python3 scripts/check_sysroot_stdlib_resource_certification_gate.py`.
 - Review evidence: Opus round 3 reports no blocking findings and says the
@@ -894,7 +893,8 @@ M8b TLS slice status:
   network_http_dependency_rules -- --nocapture`; `cargo test -p
   sifr_retained_intrinsics -- --nocapture`; `cargo test -p sifr
   test_generate_cargo_toml -- --nocapture`; `python3
-  scripts/check_stdlib_migration_closure.py`; `python3
+  transitional migration closure guard, now folded into
+  `scripts/check_stdlib_native_intrinsic_allowlist.py`; `python3
   scripts/check_stdlib_native_intrinsic_allowlist.py`; `cargo run -q -p sifr --
   run demos/network_tls_loopback/main.sifr`; `cargo run -q -p sifr -- run
   crates/sifr/tests/e2e/pass/network_http_tls_loopback_split.sifr`; emit check
@@ -1086,9 +1086,8 @@ Tasks:
 - Delete direct generated third-party dependency paths for stdlib behavior.
 - Ensure every remaining manifest entry is `retained-by-design`; no `retained`,
   `pilot`, or `closing` rows remain.
-- Fold any still-useful `scripts/check_stdlib_migration_closure.py` checks into
-  the observed-surface allowlist guard and delete the retired-name tombstone
-  registry.
+- Fold retired-name and stale-file closure checks into the observed-surface
+  allowlist guard and delete the retired-name tombstone registry.
 - Convert temporary migration guards into permanent no-regression guards.
 - Update architecture, roadmap, phases, and issue docs with final status and
   merged PR links.

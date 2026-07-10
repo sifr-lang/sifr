@@ -5,9 +5,7 @@ use sifr_sysroot::{resolve_sysroot, ResolvedSysroot, SysrootError};
 
 use super::generated_stdlib_features::planned_sifr_stdlib_features;
 use super::runtime_features::RuntimeFeatures;
-use super::{
-    features_for_stdlib_module, GeneratedCargoDependency, StdlibFeature, STDLIB_FEATURE_SPECS,
-};
+use super::StdlibFeature;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum SysrootCrate {
@@ -154,7 +152,6 @@ pub fn sysroot_dependency_plan_with_sysroot(
         .into_iter()
         .map(str::to_string)
         .collect::<BTreeSet<_>>();
-    let direct_dependencies = retained_direct_dependencies(stdlib_modules, required_features);
     let runtime_required = runtime_features.requires_runtime_crate()
         || required_features.contains(&StdlibFeature::SifrRuntime);
     let crates = sysroot_crate_dependencies(
@@ -163,6 +160,7 @@ pub fn sysroot_dependency_plan_with_sysroot(
         runtime_features,
         &stdlib_features,
     );
+    let direct_dependencies = retained_direct_dependencies(required_features);
     let cache_fingerprint =
         cache_fingerprint(sysroot, &crates, &direct_dependencies, cargo_vendor_mode);
 
@@ -217,74 +215,6 @@ fn sysroot_crate_dependencies(
     crates
 }
 
-fn retained_direct_dependencies(
-    stdlib_modules: &HashSet<String>,
-    required_features: &HashSet<StdlibFeature>,
-) -> Vec<String> {
-    let runtime_features = RuntimeFeatures::from_requirements(stdlib_modules, required_features);
-    let mut deps = Vec::new();
-    let mut packages = BTreeSet::new();
-
-    for module_name in stdlib_modules
-        .iter()
-        .map(String::as_str)
-        .collect::<BTreeSet<_>>()
-    {
-        for feature in features_for_stdlib_module(module_name) {
-            if *feature == StdlibFeature::Http {
-                continue;
-            }
-            push_feature_dependencies(&mut deps, &mut packages, *feature, runtime_features);
-        }
-    }
-
-    for feature in required_features.iter().copied().collect::<BTreeSet<_>>() {
-        push_feature_dependencies(&mut deps, &mut packages, feature, runtime_features);
-    }
-
-    deps
-}
-
-fn push_feature_dependencies(
-    deps: &mut Vec<String>,
-    packages: &mut BTreeSet<&'static str>,
-    feature: StdlibFeature,
-    runtime_features: RuntimeFeatures,
-) {
-    if let Some(spec) = STDLIB_FEATURE_SPECS
-        .iter()
-        .find(|spec| spec.feature == feature)
-    {
-        for dependency in spec.cargo_dependencies {
-            if dependency.package != "sifr_runtime" && packages.insert(dependency.package) {
-                deps.push(render_retained_dependency_spec(
-                    dependency,
-                    runtime_features,
-                ));
-            }
-        }
-    }
-}
-
-fn render_retained_dependency_spec(
-    dependency: &GeneratedCargoDependency,
-    runtime_features: RuntimeFeatures,
-) -> String {
-    if dependency.package == "tokio" {
-        return tokio_dependency_spec(runtime_features);
-    }
-    dependency.spec.to_string()
-}
-
-fn tokio_dependency_spec(runtime_features: RuntimeFeatures) -> String {
-    let features = if runtime_features.net || runtime_features.tls || runtime_features.http {
-        "\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
-    } else {
-        "\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\""
-    };
-    format!("tokio = {{ version = \"1.52.3\", features = [{features}] }}")
-}
-
 fn cache_fingerprint(
     sysroot: &ResolvedSysroot,
     crates: &[SysrootCrateDependency],
@@ -315,6 +245,48 @@ fn cache_fingerprint(
         fingerprint.push('\n');
     }
     fingerprint
+}
+
+fn retained_direct_dependencies(required_features: &HashSet<StdlibFeature>) -> Vec<String> {
+    let mut deps = Vec::new();
+    let mut packages = BTreeSet::new();
+    for feature in required_features.iter().copied().collect::<BTreeSet<_>>() {
+        for dependency in retained_dependency_specs(feature) {
+            let Some((package, _spec)) = dependency.split_once('=') else {
+                continue;
+            };
+            if packages.insert(package.trim()) {
+                deps.push((*dependency).to_string());
+            }
+        }
+    }
+    deps
+}
+
+fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] {
+    match feature {
+        StdlibFeature::BigDecimal => {
+            &["bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }"]
+        }
+        StdlibFeature::Metrics => &["metrics = \"0.24.6\""],
+        StdlibFeature::NumBigint => &["num-bigint = \"0.4.6\""],
+        StdlibFeature::NumTraits => &["num-traits = \"0.2.19\""],
+        StdlibFeature::Rayon => &["rayon = \"1.12.0\""],
+        StdlibFeature::RustDecimal => {
+            &["rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }"]
+        }
+        StdlibFeature::SerdeJson => &[
+            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }",
+            "serde = { version = \"1.0.228\", features = [\"derive\"] }",
+        ],
+        StdlibFeature::Tokio => {
+            &["tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"]
+        }
+        StdlibFeature::Tracing => {
+            &["tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"]
+        }
+        _ => &[],
+    }
 }
 
 fn toml_quote_path(path: &Path) -> String {

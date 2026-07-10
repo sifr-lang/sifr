@@ -2,35 +2,12 @@
 #
 # This file is intentionally explicit. Core validation uses it to prevent new
 # compiler intrinsic or preamble stdlib behavior from appearing without review
-# while the remaining resource/runtime surfaces are certified or reduced.
-#
-# State values:
-# - retained: still compiler-native for now and scheduled for migration or final classification.
-# - pilot: selected pilot implementation is underway while retained compiler glue remains.
-# - closing: temporary state while deletion or replacement evidence lands; row
-#   is removed after guards prove the old compiler-native surface cannot reappear.
-# - retained-by-design: permanently compiler-owned language, bridge, entrypoint,
-#   exact-int, test-harness, or runtime substrate glue.
+# after the stdlib native-boundary migration. Every remaining row is permanent
+# retained-by-design language, bridge, entrypoint, exact-int, test-harness, or
+# runtime substrate glue. Migrated stdlib behavior must route through checked
+# Sifr sysroot source and sifr_stdlib, not compiler intrinsic dispatch.
 #
 schema_version = 2
-
-[[closed_surface]]
-id = "_sifr.process"
-previous_state = "closing"
-removed_in_pr = "PR #2884"
-evidence_links = ["stdlib-native-boundary-completion"]
-reason = "All _sifr.process compiler-native registry, preamble, and fallback signature glue was migrated through private declarations and sifr_stdlib.process in PR #2883; closure guards prove the retained process surface is absent."
-
-[[surface]]
-id = "_sifr.sys"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after migrated sys registry names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/sys.sifr"]
-certification_rows = ["opaque_resource_matrix"]
-reason = "Process-command helper behavior now routes through _sifr.sys private Rust interop declarations and sifr_stdlib.sys; directory-change, file-stat, and disk-usage helpers route through _sifr.fs and sifr_stdlib.fs. This row remains only to record closure of the former shared compiler os.rs registry names."
 
 [[surface]]
 id = "_sifr.fs"
@@ -94,16 +71,6 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.http::header_helpers"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Closed in M9a: HTTP header, method, status, version, and cookie-header helpers route through _sifr.http Rust interop declarations backed by sifr_stdlib::http."]
-declaration_files = ["stdlib/_sifr/http.sifr"]
-reason = "HTTP helper shims no longer use compiler-native registry dispatch or generated preamble code; the closing row records the former retained surface for final audit traceability."
-
-[[surface]]
 id = "_sifr.encoding::utf8_bytes_string_glue"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
@@ -136,60 +103,6 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.time"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after migrated time registry names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/time.sifr"]
-certification_rows = ["async_runtime_core"]
-reason = "Sleep and monotonic now route through _sifr.time private Rust interop declarations and sifr_stdlib.time using the stdlib-owned async runtime core evidence; this row remains only to record closure of the former compiler intrinsic names."
-
-[[surface]]
-id = "_sifr.crypto::random"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after the migrated random registry names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/crypto.sifr"]
-reason = "Random module state and distribution helpers now route through _sifr.crypto private Rust interop declarations and sifr_stdlib.random; this row remains only to record closure of the former compiler intrinsic names."
-
-[[surface]]
-id = "_sifr.net"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after migrated network registry names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/net.sifr"]
-certification_rows = ["opaque_resource_core", "async_runtime_core"]
-reason = "Network public behavior now routes through _sifr.net private Rust interop declarations and sifr_stdlib.net while socket tables and lifecycle substrate remain in sifr_runtime::net; this row remains only to record closure of the former compiler intrinsic names."
-
-[[surface]]
-id = "_sifr.tls"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after migrated TLS registry names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/tls.sifr"]
-certification_rows = ["opaque_resource_core", "async_runtime_core"]
-reason = "TLS public behavior now routes through _sifr.tls private Rust interop declarations and sifr_stdlib.tls while TLS engine, certificate, and stream-handle substrate remain in sifr_runtime::tls; this row remains only to record closure of the former compiler intrinsic names."
-
-[[surface]]
-id = "_sifr.signal"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after migrated signal registry names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/signal.sifr"]
-certification_rows = ["callback_subscription_core"]
-reason = "Signal public behavior now routes through _sifr.signal private Rust interop declarations and sifr_stdlib.signals; this row remains only to record closure of the former compiler intrinsic names. M10b split and claimed the stdlib-owned callback_subscription_core evidence for signal-style subscriptions while ecosystem subscription crates remain future-owned."
-
-[[surface]]
 id = "_sifr.runtime::observability_glue"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
@@ -199,21 +112,6 @@ declaration_files = ["stdlib/_sifr/runtime.sifr"]
 reason = "Runtime diagnostics and observability metadata are retained compiler/runtime glue rather than stdlib leaf behavior."
 registry_files = ["runtime.rs"]
 exact_intrinsics = ["runtime_emit_diagnostic"]
-
-[[surface]]
-id = "_sifr.python"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after M11i proves all Python callback compiler-native registry and fallback signature entries are absent."]
-declaration_files = ["stdlib/_sifr/python.sifr"]
-certification_rows = [
-  "opaque_resource_matrix",
-  "callbacks_call_scoped",
-  "callback_subscription_ecosystem",
-]
-reason = "Python adapter behavior now routes through _sifr.python private Rust interop declarations and sifr_stdlib.python; this row remains only to record closure of the former callback compiler intrinsic names."
 
 [[surface]]
 id = "_sifr.task::language_runtime_glue"
@@ -235,68 +133,53 @@ preamble_files = [
 exact_intrinsics = ["task_current_context"]
 
 [[surface]]
-id = "_sifr.logging"
-state = "closing"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Delete this closing row after the migrated logging registry names are proven absent by closure guards."]
-declaration_files = ["stdlib/_sifr/logging.sifr"]
-reason = "Global logging level behavior now routes through _sifr.logging private Rust interop declarations and sifr_stdlib.logging; this row remains only to record closure of the former compiler intrinsic names."
-
-[[surface]]
 id = "generated-feature-planning-glue"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-reason = "Additional feature planning is compiler-owned glue that selects retained runtime/sysroot dependencies for generated projects and freezes the transitional direct dependency package namespace."
+reason = "Additional feature planning is compiler-owned glue that selects sysroot crate features and the narrow direct third-party dependency set needed by retained compiler-language/runtime glue. Stdlib module selection itself emits only sysroot crates."
 registry_files = ["requirements.rs"]
 retained_direct_dependency_packages = [
   "bigdecimal",
-  "blake2",
-  "bytes",
-  "chrono",
-  "flate2",
-  "h2",
-  "http",
-  "http-body",
-  "http-body-util",
-  "hyper",
-  "hyper-util",
-  "icu_collator",
-  "icu_datetime",
-  "icu_decimal",
-  "icu_locale",
-  "icu_plurals",
-  "md5",
   "metrics",
   "num-bigint",
   "num-traits",
-  "percent-encoding",
-  "postcard",
-  "rand",
-  "rand_distr",
   "rayon",
-  "regex",
   "rust_decimal",
-  "rustls",
-  "rustls-pemfile",
-  "rustls-platform-verifier",
   "serde",
   "serde_json",
-  "sha1",
-  "sha2",
   "tokio",
-  "tokio-rustls",
-  "tower-service",
   "tracing",
-  "unicode-normalization",
-  "unicode-segmentation",
-  "unicode_names2",
-  "url",
-  "uuid",
-  "zip",
+]
+
+[[surface]]
+id = "retained-fallback-signature-glue"
+state = "retained-by-design"
+owner = "stdlib-native-boundary-completion"
+issue = "stdlib-native-boundary-completion"
+evidence_links = ["stdlib-native-boundary-completion"]
+reason = "Fallback signature modules that remain in sifr_retained_intrinsics are compiler-owned bootstrap signature glue for retained language/runtime surfaces and sysroot source lowering; they must not grow without review."
+fallback_signature_modules = [
+  "_sifr.bytes",
+  "_sifr.calendar",
+  "_sifr.collections",
+  "_sifr.compress",
+  "_sifr.datetime",
+  "_sifr.encoding",
+  "_sifr.html",
+  "_sifr.i18n",
+  "_sifr.io",
+  "_sifr.json",
+  "_sifr.math",
+  "_sifr.regex",
+  "_sifr.runtime",
+  "_sifr.task",
+  "_sifr.test",
+  "_sifr.toml",
+  "_sifr.unicode",
+  "_sifr.url",
+  "_sifr.uuid",
 ]
 
 [[surface]]

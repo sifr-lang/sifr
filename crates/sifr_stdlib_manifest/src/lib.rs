@@ -11,9 +11,8 @@ mod sources;
 pub use features::{
     feature_for_codegen_requirement, features_for_stdlib_module, planned_sifr_stdlib_features,
     sysroot_dependency_plan_with_sysroot, try_generated_cargo_dependencies,
-    try_sysroot_dependency_plan, CargoVendorMode, GeneratedCargoDependency, StdlibFeature,
-    StdlibFeatureSpec, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
-    STDLIB_FEATURE_SPECS,
+    try_sysroot_dependency_plan, CargoVendorMode, StdlibFeature, SysrootCrate,
+    SysrootCrateDependency, SysrootDependencyPlan,
 };
 pub use sources::{
     load_stdlib_sources_from_sysroot, load_stdlib_tooling_sources_from_sysroot,

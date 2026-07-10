@@ -265,8 +265,6 @@ fn network_http_net_module_emits_locked_runtime_dependencies() {
         vec![
             "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"net\"] }",
             "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"net\"] }",
-            "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
-            "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }",
         ]
     );
     assert_eq!(
@@ -288,12 +286,6 @@ fn network_http_tls_module_emits_locked_runtime_dependencies() {
         vec![
             "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false, features = [\"net\", \"tls\"] }",
             "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"tls\"] }",
-            "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"net\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
-            "tokio-rustls = \"0.26.4\"",
-            "rustls = \"=0.23.35\"",
-            "rustls-pemfile = \"2.2.0\"",
-            "rustls-platform-verifier = { version = \"0.7.0\", default-features = false }",
-            "tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }",
         ]
     );
     assert!(!deps.iter().any(|dep| dep.contains("rcgen")));
