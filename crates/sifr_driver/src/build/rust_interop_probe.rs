@@ -197,10 +197,14 @@ fn dependency_features(
     let Some(feature) = path.segments.get(1) else {
         return Vec::new();
     };
-    if !crate_feature_exists(backend_root, feature) {
-        return Vec::new();
+    if crate_feature_exists(backend_root, feature) {
+        return vec![feature.clone()];
     }
-    vec![feature.clone()]
+    let cargo_feature = feature.replace('_', "-");
+    crate_feature_exists(backend_root, &cargo_feature)
+        .then_some(cargo_feature)
+        .into_iter()
+        .collect()
 }
 
 /// Return whether `feature` is declared by the probed crate. This deliberately
@@ -736,6 +740,26 @@ mod tests {
         assert_eq!(
             dependency_features("sifr_stdlib", &stdlib_root, &path),
             vec!["platform".to_string()]
+        );
+    }
+
+    #[test]
+    fn sysroot_stdlib_probe_features_normalize_rust_module_separators() {
+        let stdlib_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("driver crate should have crates parent")
+            .join("sifr_stdlib");
+        let path = RustTargetPath {
+            segments: ["sifr_stdlib", "runtime_observability", "emit_diagnostic"]
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+            span: TextRange::default(),
+        };
+
+        assert_eq!(
+            dependency_features("sifr_stdlib", &stdlib_root, &path),
+            vec!["runtime-observability".to_string()]
         );
     }
 

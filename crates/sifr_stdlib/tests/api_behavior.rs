@@ -528,11 +528,21 @@ fn regex_leaf_matches_public_re_helpers() {
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {
-    sifr_stdlib::runtime_observability::emit_diagnostic(
-        tracing::Level::INFO,
+    assert!(sifr_stdlib::runtime_observability::emit_diagnostic(
+        "info",
         "test-target",
         "test-diagnostic",
-        "test message",
+        "test message"
+    )
+    .is_ok());
+    assert_eq!(
+        sifr_stdlib::runtime_observability::emit_diagnostic(
+            "verbose",
+            "test-target",
+            "test-diagnostic",
+            "test message"
+        ),
+        Err("unsupported diagnostic level: verbose".to_string())
     );
 }
 

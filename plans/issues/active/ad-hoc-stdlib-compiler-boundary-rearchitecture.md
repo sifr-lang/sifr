@@ -7,6 +7,11 @@ native-boundary migration. The prior implementation remains historical input;
 this phase owns the final compiler/stdlib boundary architecture and its local
 recertification.
 
+Implementation is in progress. M1 routes runtime diagnostics through the
+private `sifr_stdlib` boundary and has passed focused production-path
+check/emit/build/run coverage plus the create-PR gate. Claude Opus review is
+satisfied after two rounds; merge is pending.
+
 ## Why This Phase Exists
 
 The sysroot and private Rust bridge migration is real, but the final closeout

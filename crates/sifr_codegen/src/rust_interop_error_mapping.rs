@@ -96,7 +96,13 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
 fn is_message_error_alias(name: &str) -> bool {
     matches!(
         name,
-        "ProcessError" | "NetError" | "TlsError" | "HeaderError" | "HttpError" | "SignalError"
+        "DiagnosticError"
+            | "ProcessError"
+            | "NetError"
+            | "TlsError"
+            | "HeaderError"
+            | "HttpError"
+            | "SignalError"
     )
 }
 
@@ -247,5 +253,32 @@ fn to_string_expr(expr: RustExpr) -> RustExpr {
         receiver: Box::new(expr),
         method: "to_string".to_string(),
         args: Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::bridge_error_expr;
+    use crate::{render_expr, RustExpr};
+    use sifr_type_system::Type;
+
+    #[test]
+    fn runtime_diagnostic_string_errors_map_to_the_declared_error() {
+        let diagnostic_error = Type::Class {
+            name: "DiagnosticError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+
+        let mapped = bridge_error_expr(
+            RustExpr::Ident("__sifr_bridge_error".to_string()),
+            &diagnostic_error,
+        );
+
+        assert_eq!(
+            render_expr(&mapped),
+            "DiagnosticError { message: __sifr_bridge_error.to_string() }"
+        );
     }
 }

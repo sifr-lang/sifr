@@ -268,7 +268,6 @@ fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] 
         StdlibFeature::BigDecimal => {
             &["bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }"]
         }
-        StdlibFeature::Metrics => &["metrics = \"0.24.6\""],
         StdlibFeature::NumBigint => &["num-bigint = \"0.4.6\""],
         StdlibFeature::NumTraits => &["num-traits = \"0.2.19\""],
         StdlibFeature::Rayon => &["rayon = \"1.12.0\""],
@@ -281,9 +280,6 @@ fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] 
         ],
         StdlibFeature::Tokio => {
             &["tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"]
-        }
-        StdlibFeature::Tracing => {
-            &["tracing = { version = \"0.1.44\", default-features = false, features = [\"std\"] }"]
         }
         _ => &[],
     }

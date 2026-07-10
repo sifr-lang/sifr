@@ -132,6 +132,9 @@ pub(crate) fn sifr_stdlib_dependency_spec_for_modules(stdlib_modules: &BTreeSet<
     if has_module(&["sifr.signal", "_sifr.signal"]) {
         features.push("signals");
     }
+    if has_module(&["sifr.runtime", "_sifr.runtime"]) {
+        features.push("runtime-observability");
+    }
     if has_module(&["sifr.net", "_sifr.net"]) {
         features.push("net");
     }

@@ -1,9 +1,5 @@
 # sifr.runtime - Structured runtime diagnostics and observability values
-from _sifr.runtime import runtime_emit_diagnostic
-
-
-class DiagnosticError(Error):
-    message: str
+from _sifr.runtime import DiagnosticError, runtime_emit_diagnostic
 
 
 class DiagnosticLevel:
