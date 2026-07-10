@@ -2,10 +2,14 @@
 
 ## Status
 
-Completed. Final closure landed in PR #2918 (merge sha `b531e8ca`);
-all retained compiler entries are now explicit `retained-by-design` language,
-bridge, entrypoint, exact-int, test-harness, or runtime substrate glue, with
-final native-boundary validation fixes merged.
+Implementation merged through PR #2918 (merge sha `b531e8ca`), but closeout
+certification is reopened. A post-closeout audit reproduced a standalone
+runtime-diagnostics build failure and confirmed validation masking, duplicate
+fallback signatures, dead Counter intrinsics, raw-name intrinsic dispatch, and
+bypassed source/Rust implementations. The decided corrective sequence is
+tracked in
+[`ad-hoc-stdlib-compiler-boundary-rearchitecture.md`](ad-hoc-stdlib-compiler-boundary-rearchitecture.md).
+The new phase owns the replacement architecture and its final certification.
 
 ## Objective
 

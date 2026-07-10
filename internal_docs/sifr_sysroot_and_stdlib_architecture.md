@@ -1,5 +1,17 @@
 # Sifr Sysroot and Stdlib Architecture
 
+## Compiler and Stdlib Boundary Invariants
+
+- stdlib behavior uses checked source, private `@rust` declarations, and
+  `sifr_stdlib`;
+- retained compiler callables use sysroot-only source declarations and typed HIR
+  intrinsic identity;
+- primitive language operations are synthesized as typed HIR intrinsics;
+- ordinary calls are never dispatched by name;
+- declaration source is the only callable signature truth;
+- `sifr_retained_intrinsics` and all fallback-resolution paths are deleted; and
+- validation consumes the same `SysrootDependencyPlan` as production builds.
+
 Status: target architecture for the Sifr toolchain, stdlib, runtime, and
 distribution model.
 

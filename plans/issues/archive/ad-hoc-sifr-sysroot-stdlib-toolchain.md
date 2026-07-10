@@ -5,6 +5,12 @@
 Phase closeout is complete and merged in
 [PR #2810](https://github.com/sifr-lang/sifr/pull/2810).
 
+The sysroot layout, packaging, resolver, CLI/LSP source authority, and installed
+toolchain work remain complete. Post-closeout review of the later stdlib native
+boundary found residual compiler/fallback and validation defects; its
+certification is reopened separately in
+[`ad-hoc-stdlib-compiler-boundary-rearchitecture.md`](../active/ad-hoc-stdlib-compiler-boundary-rearchitecture.md).
+
 ## Implementation Status
 
 | Milestone | Status | Evidence |
