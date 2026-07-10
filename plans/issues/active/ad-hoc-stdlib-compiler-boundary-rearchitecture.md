@@ -10,7 +10,8 @@ recertification.
 Implementation is in progress. M1 routes runtime diagnostics through the
 private `sifr_stdlib` boundary and has passed focused production-path
 check/emit/build/run coverage plus the create-PR gate. Claude Opus review is
-satisfied after two rounds; merge is pending.
+satisfied after two rounds; [PR #2921](https://github.com/sifr-lang/sifr/pull/2921)
+is open and merge is pending.
 
 ## Why This Phase Exists
 
