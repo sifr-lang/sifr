@@ -35,6 +35,20 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
         } if name == "PythonError" && python_error_fields(fields) => python_error_expr(name, value),
         Type::Class {
             name,
+            fields,
+            parent_class,
+            ..
+        } if name == "IOError"
+            && parent_class.as_deref() == Some("Error")
+            && io_error_fields(fields) =>
+        {
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident("__io_err".to_string())),
+                args: vec![value],
+            }
+        }
+        Type::Class {
+            name,
             fields: _,
             parent_class,
             ..
@@ -170,6 +184,14 @@ fn python_error_expr(name: &str, value: RustExpr) -> RustExpr {
 fn python_error_fields(fields: &[(String, Type)]) -> bool {
     let expected = ["message", "kind", "exception_type", "traceback", "context"];
     expected.iter().all(|expected_name| {
+        fields
+            .iter()
+            .any(|(name, ty)| name == expected_name && ty.resolve_alias() == &Type::Str)
+    })
+}
+
+fn io_error_fields(fields: &[(String, Type)]) -> bool {
+    ["message", "kind"].iter().all(|expected_name| {
         fields
             .iter()
             .any(|(name, ty)| name == expected_name && ty.resolve_alias() == &Type::Str)

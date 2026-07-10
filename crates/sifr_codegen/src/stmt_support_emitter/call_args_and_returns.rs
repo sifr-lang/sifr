@@ -145,7 +145,10 @@ impl RustEmitter {
             let needs_shared_borrow = expects_shared_ref_type
                 || (convention.is_shared_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                        || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
+                        || matches!(
+                            resolved_param,
+                            Type::TypeVar(_) | Type::Any | Type::Callable(..)
+                        )));
             let needs_mut_borrow = expects_mut_ref_type
                 || (convention.is_mut_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
@@ -285,12 +288,17 @@ impl RustEmitter {
                 let Ok(idx) = usize::try_from(*raw_idx) else {
                     return Ok(None);
                 };
-                if idx >= elements.len() {
+                let Some(element_ty) = elements.get(idx) else {
                     return Ok(None);
-                }
-                crate::RustExpr::Field {
+                };
+                let field_expr = crate::RustExpr::Field {
                     expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
                     field: idx.to_string(),
+                };
+                if crate::helpers::is_copy_type_for_codegen(element_ty) {
+                    field_expr
+                } else {
+                    crate::RustExpr::Clone(Box::new(field_expr))
                 }
             }
             Type::List(element_ty) => {

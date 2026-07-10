@@ -776,7 +776,10 @@ impl RustEmitter {
         convention: ParamConvention,
     ) -> RustType {
         let base = self.rust_ir_type_with_generics(ty);
-        if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
+        if convention.is_borrowed()
+            && (ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                || matches!(ty.resolve_alias(), Type::Callable(..)))
+        {
             RustType::Ref {
                 mutable: convention.is_mut_borrow(),
                 inner: Box::new(base),
@@ -786,12 +789,37 @@ impl RustEmitter {
         }
     }
 
+    pub(crate) fn lower_python_callback_param_type(
+        &self,
+        ty: &Type,
+        convention: ParamConvention,
+    ) -> RustType {
+        let Type::Callable(..) = ty.resolve_alias() else {
+            return self.lower_function_param_type(ty, convention);
+        };
+        let base = self.rust_type_with_generics(ty);
+        let bounded = format!("{base} + Send + Sync + 'static");
+        if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
+            RustType::Ref {
+                mutable: convention.is_mut_borrow(),
+                inner: Box::new(RustType::Named(bounded)),
+            }
+        } else {
+            RustType::Named(bounded)
+        }
+    }
+
     pub(crate) fn lower_module_function_param_type(
         &self,
         func_name: &str,
         param_idx: usize,
         param: &HirParam,
     ) -> RustType {
+        if matches!(func_name, "py_local_callback" | "py_threadsafe_callback")
+            && matches!(param.ty.resolve_alias(), Type::Callable(..))
+        {
+            return self.lower_python_callback_param_type(&param.ty, param.convention);
+        }
         if self.function_param_lowers_to_sifr_int(func_name, param_idx)
             && matches!(
                 crate::resolve_alias_type_for_plain_call(&param.ty),

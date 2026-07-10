@@ -190,7 +190,10 @@ impl RustEmitter {
             let requires_shared_borrow = expects_shared_ref_type
                 || (convention.is_shared_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                        || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
+                        || matches!(
+                            resolved_param,
+                            Type::TypeVar(_) | Type::Any | Type::Callable(..)
+                        )));
             let requires_mut_borrow = expects_mut_ref_type
                 || (convention.is_mut_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
@@ -218,6 +221,16 @@ impl RustEmitter {
             {
                 lowered_arg = crate::RustExpr::Ref {
                     mutable: true,
+                    expr: Box::new(lowered_arg),
+                };
+            }
+
+            if func == "_call_object_callback"
+                && idx == 0
+                && !matches!(lowered_arg, crate::RustExpr::Ref { .. })
+            {
+                lowered_arg = crate::RustExpr::Ref {
+                    mutable: false,
                     expr: Box::new(lowered_arg),
                 };
             }

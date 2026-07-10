@@ -195,9 +195,15 @@ def _buffer_from_raw(own raw: tuple[int, int, int, int, bool, int, bool, bool, s
     view.item_size = raw[3]
     view.readonly = raw[4]
     view.dimensions = raw[5]
-    view.shape = py_buffer_shape(raw[0], raw[1])
-    view.strides = py_buffer_strides(raw[0], raw[1])
-    view.suboffsets = py_buffer_suboffsets(raw[0], raw[1])
+    try:
+        shape: list[int] = py_buffer_shape(raw[0], raw[1])
+        strides: list[int] = py_buffer_strides(raw[0], raw[1])
+        suboffsets: list[int] = py_buffer_suboffsets(raw[0], raw[1])
+        view.shape = shape
+        view.strides = strides
+        view.suboffsets = suboffsets
+    except PythonError as e:
+        raise e
     view.c_contiguous = raw[6]
     view.f_contiguous = raw[7]
     view.format = raw[8]
@@ -209,7 +215,11 @@ def _arrow_from_raw(own raw: tuple[int, int, str, str, str, bool]) -> Result[Arr
     capsule._handle = raw[0]
     capsule._token = raw[1]
     capsule.kind = raw[2]
-    capsule.capsule_names = py_arrow_capsule_names(raw[0], raw[1])
+    try:
+        capsule_names: list[str] = py_arrow_capsule_names(raw[0], raw[1])
+        capsule.capsule_names = capsule_names
+    except PythonError as e:
+        raise e
     capsule.producer_module = raw[3]
     capsule.producer_type = raw[4]
     capsule.copy_possible = raw[5]
@@ -227,8 +237,13 @@ def _dlpack_from_raw(own raw: tuple[int, int, int, int, int, str, int, int, int,
     tensor.device_type = raw[6]
     tensor.device_id = raw[7]
     tensor.dimensions = raw[8]
-    tensor.shape = py_dlpack_shape(raw[0], raw[1])
-    tensor.strides = py_dlpack_strides(raw[0], raw[1])
+    try:
+        shape: list[int] = py_dlpack_shape(raw[0], raw[1])
+        strides: list[int] = py_dlpack_strides(raw[0], raw[1])
+        tensor.shape = shape
+        tensor.strides = strides
+    except PythonError as e:
+        raise e
     tensor.byte_offset = raw[9]
     tensor.has_deleter = raw[10]
     tensor.stream_sync_required = raw[11]
@@ -803,31 +818,25 @@ def copy_list_bytes(obj: Object) -> Result[list[bytes], PythonError]:
 def copy_tuple_bool(obj: Object) -> Result[list[bool], PythonError]:
     return py_copy_tuple_bool(obj._handle, obj._token)
 
-
 @blocking_io
 def copy_tuple_int(obj: Object) -> Result[list[int], PythonError]:
     return py_copy_tuple_int(obj._handle, obj._token)
-
 
 @blocking_io
 def copy_tuple_i32(obj: Object) -> Result[list[int32], PythonError]:
     return py_copy_tuple_i32(obj._handle, obj._token)
 
-
 @blocking_io
 def copy_tuple_u8(obj: Object) -> Result[list[uint8], PythonError]:
     return py_copy_tuple_u8(obj._handle, obj._token)
-
 
 @blocking_io
 def copy_tuple_float(obj: Object) -> Result[list[float], PythonError]:
     return py_copy_tuple_float(obj._handle, obj._token)
 
-
 @blocking_io
 def copy_tuple_str(obj: Object) -> Result[list[str], PythonError]:
     return py_copy_tuple_str(obj._handle, obj._token)
-
 
 @blocking_io
 def copy_tuple_bytes(obj: Object) -> Result[list[bytes], PythonError]:

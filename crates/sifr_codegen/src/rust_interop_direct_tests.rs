@@ -225,6 +225,65 @@ fn rust_interop_function_body_adapts_python_raw_callback_parameter() {
     assert!(rendered.contains("PythonError { message: __sifr_bridge_error.message.to_string()"));
 }
 
+#[test]
+fn rust_interop_function_body_converts_python_int_dict_return() {
+    let python_error = Type::Class {
+        name: "PythonError".to_string(),
+        fields: vec![
+            ("message".to_string(), Type::Str),
+            ("kind".to_string(), Type::Str),
+            ("exception_type".to_string(), Type::Str),
+            ("traceback".to_string(), Type::Str),
+            ("context".to_string(), Type::Str),
+        ],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let func = HirFunction {
+        name: "py_copy_dict_str_int".to_string(),
+        params: vec![
+            HirParam {
+                name: "handle".to_string(),
+                ty: Type::Int,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            },
+            HirParam {
+                name: "token".to_string(),
+                ty: Type::Int,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            },
+        ],
+        return_type: Type::Result(
+            Box::new(Type::Dict(Box::new(Type::Str), Box::new(Type::Int))),
+            Box::new(python_error),
+        ),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![declaration(
+            RustInteropDecoratorKind::Function,
+            &["sifr_stdlib", "python", "py_copy_dict_str_int"],
+        )],
+        type_params: Vec::new(),
+    };
+
+    let body =
+        rust_interop_function_body(&func).expect("Python dict copy interop should lower to a body");
+    let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+        panic!("Python dict copy interop should lower to a return expression");
+    };
+    let rendered = render_expr(expr);
+
+    assert!(rendered.contains("py_copy_dict_str_int"));
+    assert!(rendered.contains("__sifr_bridge_value.to_i64_saturating()"));
+    assert!(rendered.contains("collect::<HashMap<_, _>>()"));
+}
+
 fn zip_error_class() -> HirClass {
     HirClass {
         name: "ZipError".to_string(),

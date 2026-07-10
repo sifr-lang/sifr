@@ -1,5 +1,28 @@
 use super::*;
 
+fn counter_total_expr() -> HirExpr {
+    HirExpr::Call {
+        func: "counter_total".to_string(),
+        args: vec![HirExpr::Call {
+            func: "counter_from_list".to_string(),
+            args: vec![HirExpr::ListLiteral {
+                elements: vec![HirExpr::StringLiteral("a".to_string())],
+                ty: Type::List(Box::new(Type::Str)),
+            }],
+            ty: Type::Str,
+        }],
+        ty: Type::Int,
+    }
+}
+
+fn collections_counter_import() -> HirImport {
+    HirImport {
+        module: "sifr.collections".to_string(),
+        names: vec!["counter_total".to_string(), "counter_from_list".to_string()],
+        aliases: vec![],
+    }
+}
+
 #[test]
 fn test_structured_expr_path_handles_plain_signature_call_expression() {
     let module = HirModule {
@@ -230,17 +253,13 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
             body: vec![
                 HirStmt::Let {
                     name: "x".to_string(),
-                    ty: Type::Float,
-                    value: HirExpr::FloatLiteral(0.0),
+                    ty: Type::Int,
+                    value: HirExpr::IntLiteral(0),
                     is_mutable: true,
                 },
                 HirStmt::Assign {
                     name: "x".to_string(),
-                    value: HirExpr::Call {
-                        func: "getpid".to_string(),
-                        args: vec![],
-                        ty: Type::Int,
-                    },
+                    value: counter_total_expr(),
                 },
             ],
             is_async: false,
@@ -250,20 +269,15 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.os".to_string(),
-            names: vec!["getpid".to_string()],
-            aliases: vec![],
-        }],
+        imports: vec![collections_counter_import()],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated
-        .rust_source
-        .contains("x = std::process::id() as i64;"));
+    assert!(generated.rust_source.contains("x ="));
+    assert!(generated.rust_source.contains(".values().sum::<i64>()"));
     assert!(
         generated.lowering_stats.stmt_structured >= 2,
         "let + assign should be emitted through structured stmt path"
@@ -280,11 +294,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             body: vec![HirStmt::Let {
                 name: "x".to_string(),
                 ty: Type::Int,
-                value: HirExpr::Call {
-                    func: "getpid".to_string(),
-                    args: vec![],
-                    ty: Type::Int,
-                },
+                value: counter_total_expr(),
                 is_mutable: false,
             }],
             is_async: false,
@@ -294,20 +304,15 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.os".to_string(),
-            names: vec!["getpid".to_string()],
-            aliases: vec![],
-        }],
+        imports: vec![collections_counter_import()],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated
-        .rust_source
-        .contains("let x: i64 = std::process::id() as i64;"));
+    assert!(generated.rust_source.contains("let x: i64 ="));
+    assert!(generated.rust_source.contains(".values().sum::<i64>()"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed let should be emitted through structured stmt path"
@@ -322,11 +327,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
             params: vec![],
             return_type: Type::Int,
             body: vec![HirStmt::Return {
-                value: Some(HirExpr::Call {
-                    func: "getpid".to_string(),
-                    args: vec![],
-                    ty: Type::Int,
-                }),
+                value: Some(counter_total_expr()),
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
@@ -335,18 +336,14 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.os".to_string(),
-            names: vec!["getpid".to_string()],
-            aliases: vec![],
-        }],
+        imports: vec![collections_counter_import()],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("std::process::id() as i64"));
+    assert!(generated.rust_source.contains(".values().sum::<i64>()"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt path"
@@ -454,6 +451,51 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "non-optional string index return should stay on the structured stmt path"
+    );
+}
+
+#[test]
+fn test_structured_tuple_index_field_assign_clones_non_copy_element() {
+    let stmt = HirStmt::FieldAssign {
+        object: "callback".to_string(),
+        field: "kind".to_string(),
+        field_ty: Type::Str,
+        value: HirExpr::Index {
+            object: Box::new(HirExpr::Name {
+                name: "raw".to_string(),
+                ty: Type::Tuple(vec![Type::Int, Type::Str]),
+            }),
+            index: Box::new(HirExpr::IntLiteral(1)),
+            ty: Type::Str,
+        },
+    };
+    let mut emitter = RustEmitter::new();
+
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+    let Some(RustStmt::Assign { target, value }) = captured.first() else {
+        panic!("expected structured tuple-index field assignment");
+    };
+    assert!(matches!(
+        target,
+        RustExpr::Field { expr, field }
+            if matches!(expr.as_ref(), RustExpr::Ident(object) if object == "callback")
+                && field == "kind"
+    ));
+    assert!(
+        matches!(
+            value,
+            RustExpr::Clone(inner)
+                if matches!(
+                    inner.as_ref(),
+                    RustExpr::Field { expr, field }
+                        if matches!(
+                            expr.as_ref(),
+                            RustExpr::Paren(inner)
+                                if matches!(inner.as_ref(), RustExpr::Ident(object) if object == "raw")
+                        ) && field == "1"
+                )
+        ),
+        "expected cloned tuple field, got {value:?}"
     );
 }
 

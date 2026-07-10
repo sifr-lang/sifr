@@ -1,7 +1,7 @@
 use super::{
-    body_contains_yield, collect_mutated_vars_with_sigs, collect_reassigned_vars, HirFunction,
-    HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt,
-    RustType, Type, Visibility,
+    body_contains_yield, collect_mutated_vars_with_sigs, collect_reassigned_vars,
+    python_callback_bounds::python_callback_bound_param_names, HirFunction, HirStmt, OwnershipKind,
+    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Type, Visibility,
 };
 use crate::rust_interop_direct::rust_interop_function_body;
 impl RustEmitter {
@@ -301,12 +301,17 @@ impl RustEmitter {
             Self::lower_mutable_param_shadows(&func.params, &reassigned_vars);
         self.apply_mutable_param_shadowing(&mutable_param_shadows);
 
+        let callback_bound_params = python_callback_bound_param_names(func);
         let params = func
             .params
             .iter()
             .enumerate()
             .map(|(param_idx, param)| {
-                let rust_ty = self.lower_module_function_param_type(&func.name, param_idx, param);
+                let rust_ty = if callback_bound_params.contains(&param.name) {
+                    self.lower_python_callback_param_type(&param.ty, param.convention)
+                } else {
+                    self.lower_module_function_param_type(&func.name, param_idx, param)
+                };
                 if param.convention.is_owned() && param.convention.is_mutable() {
                     RustParam::NamedMut {
                         name: param.name.clone(),

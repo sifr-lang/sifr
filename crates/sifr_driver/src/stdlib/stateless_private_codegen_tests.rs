@@ -652,9 +652,15 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code
         .rust
         .contains("sifr_stdlib::gzip::gzip_compress_bytes(data)"));
-    assert!(private_code.rust.contains(
-        "map_err(|__sifr_bridge_error| IOError { message: __sifr_bridge_error.to_string(), kind: __sifr_bridge_error.to_string() })"
-    ));
+    assert!(private_code
+        .rust
+        .contains("fn __io_err<E: std::fmt::Display + 'static>"));
+    assert!(private_code
+        .rust
+        .contains(".map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"));
+    assert!(!private_code
+        .rust
+        .contains("kind: __sifr_bridge_error.to_string()"));
     assert!(compiled
         .code
         .intrinsic_names

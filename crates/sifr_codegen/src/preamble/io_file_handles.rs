@@ -3,6 +3,7 @@ use super::{
     file_handle_write_bytes_method, RustExpr, RustItem, RustMatchArm, RustParam, RustStmt,
     RustType, Visibility,
 };
+use crate::RustTypeParam;
 pub fn build_io_error_items() -> Vec<RustItem> {
     let mut items = build_error_type_items(
         "IOError",
@@ -16,10 +17,13 @@ pub fn build_io_error_items() -> Vec<RustItem> {
     items.push(RustItem::Fn {
         name: "__io_err".to_string(),
         visibility: Visibility::Private,
-        type_params: vec![],
+        type_params: vec![RustTypeParam {
+            name: "E".to_string(),
+            bounds: vec!["std::fmt::Display".to_string(), "'static".to_string()],
+        }],
         params: vec![RustParam::Named {
             name: "e".to_string(),
-            ty: RustType::Named("std::io::Error".to_string()),
+            ty: RustType::Named("E".to_string()),
         }],
         ret: Some(RustType::Named("IOError".to_string())),
         body: vec![
@@ -37,66 +41,23 @@ pub fn build_io_error_items() -> Vec<RustItem> {
                 mutable: false,
                 name: "kind".to_string(),
                 ty: None,
-                value: RustExpr::If {
-                    cond: Box::new(RustExpr::BinOp {
-                        left: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("e".to_string())),
-                            method: "kind".to_string(),
-                            args: vec![],
-                        }),
-                        op: "==".to_string(),
-                        right: Box::new(RustExpr::Path(vec![
-                            "std".to_string(),
-                            "io".to_string(),
-                            "ErrorKind".to_string(),
-                            "NotFound".to_string(),
-                        ])),
-                    }),
-                    then_expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
-                        "FileNotFound".to_string(),
-                    ))),
-                    else_expr: Some(Box::new(RustExpr::If {
-                        cond: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("e".to_string())),
-                                method: "kind".to_string(),
-                                args: vec![],
-                            }),
-                            op: "==".to_string(),
-                            right: Box::new(RustExpr::Path(vec![
-                                "std".to_string(),
-                                "io".to_string(),
-                                "ErrorKind".to_string(),
-                                "PermissionDenied".to_string(),
-                            ])),
-                        }),
-                        then_expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
-                            "PermissionDenied".to_string(),
-                        ))),
-                        else_expr: Some(Box::new(RustExpr::If {
-                            cond: Box::new(RustExpr::BinOp {
-                                left: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident("e".to_string())),
-                                    method: "kind".to_string(),
-                                    args: vec![],
-                                }),
-                                op: "==".to_string(),
-                                right: Box::new(RustExpr::Path(vec![
-                                    "std".to_string(),
-                                    "io".to_string(),
-                                    "ErrorKind".to_string(),
-                                    "AlreadyExists".to_string(),
-                                ])),
-                            }),
-                            then_expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
-                                "FileExists".to_string(),
-                            ))),
-                            else_expr: Some(Box::new(RustExpr::Literal(crate::RustLiteral::Str(
-                                "Other".to_string(),
-                            )))),
-                        })),
-                    })),
-                },
+                value: RustExpr::Ident(
+                    r#"{
+        let __sifr_io_kind = (&e as &dyn std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+            Some(std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+            _ => "Other".to_string(),
+        }
+    }"#
+                    .to_string(),
+                ),
             },
             RustStmt::Return(Some(RustExpr::StructInit {
                 name: "IOError".to_string(),

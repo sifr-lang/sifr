@@ -5,7 +5,8 @@ use sifr_type_system::Type;
 
 #[macro_use]
 mod expr_call_and_literal_helpers;
-pub(crate) use expr_call_and_literal_helpers::{
+mod expr_call_metadata;
+pub(crate) use expr_call_metadata::{
     call_expr_parts, canonical_constructor_class_name, canonical_plain_call_name_for_ir,
     should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
     unwrap_compiler_verified_nonempty_pop_result_for_ir,
