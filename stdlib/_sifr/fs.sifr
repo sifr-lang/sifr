@@ -138,6 +138,21 @@ def rename(src: str, dst: str) -> Result[None, IOError]:
     ...
 
 
+@rust(sifr_stdlib.fs.chdir)
+def chdir(path: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.stat_size)
+def stat_size(path: str) -> Result[int, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.disk_usage)
+def disk_usage(path: str) -> list[int]:
+    ...
+
+
 @rust(sifr_stdlib.fs.is_file)
 def is_file(path: str) -> bool:
     ...

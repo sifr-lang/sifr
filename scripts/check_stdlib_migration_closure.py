@@ -44,6 +44,7 @@ RETIRED_INTRINSICS = frozenset(
         "calendar_monthrange",
         "calendar_weekday",
         "ceil",
+        "chdir",
         "cpu_count",
         "copy_file",
         "datetime_format",
@@ -53,6 +54,7 @@ RETIRED_INTRINSICS = frozenset(
         "defaultdict_get",
         "defaultdict_new",
         "defaultdict_set",
+        "disk_usage",
         "dist",
         "env_get",
         "env_items",
@@ -276,6 +278,7 @@ RETIRED_INTRINSICS = frozenset(
         "rmdir",
         "rmdir_all",
         "round_val",
+        "run_command",
         "set_add",
         "set_contains",
         "set_from_list",
@@ -299,6 +302,7 @@ RETIRED_INTRINSICS = frozenset(
         "sha512_bytes",
         "sleep",
         "sqrt",
+        "stat_size",
         "sys_exit",
         "sys_maxsize",
         "sys_platform",
@@ -510,7 +514,7 @@ def _self_test() -> int:
         print("self-test restored ownership registry was not rejected", file=sys.stderr)
         return 1
 
-    if _validate('"run_command" => lower_run_command(args),', False, "clean architecture text"):
+    if _validate('"builtin_open" => lower_builtin_open(args),', False, "clean architecture text"):
         print("self-test retained intrinsic seed should pass", file=sys.stderr)
         return 1
 

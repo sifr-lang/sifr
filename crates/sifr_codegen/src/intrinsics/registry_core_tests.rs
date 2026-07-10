@@ -274,15 +274,13 @@ pub(crate) fn env_and_sys_intrinsics_are_owned_by_compiled_stdlib_declarations()
 }
 
 #[test]
-pub(crate) fn lowers_os_intrinsics_via_registry() {
-    let run =
-        lower_intrinsic("run_command", &["cmd".to_string()]).expect("run_command should lower");
-    assert!(render_expr(&run.expr).contains("std::process::Command::new(\"sh\".to_string())"));
-    assert!(render_expr(&run.expr).contains(".arg(\"-c\".to_string())"));
-
-    let disk = lower_intrinsic("disk_usage", &["path".to_string()]).expect("disk_usage lowers");
-    assert!(render_expr(&disk.expr).contains("std::process::Command::new(\"df\".to_string())"));
-    assert!(render_expr(&disk.expr).contains("split_whitespace().collect::<Vec<&str>>()"));
+pub(crate) fn os_intrinsics_are_owned_by_compiled_stdlib_declarations() {
+    for name in ["run_command", "chdir", "stat_size", "disk_usage"] {
+        assert!(
+            lower_intrinsic(name, &["value".to_string()]).is_none(),
+            "{name} should lower through private Rust interop declarations"
+        );
+    }
 }
 
 #[test]

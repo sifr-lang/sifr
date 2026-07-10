@@ -13,7 +13,6 @@ mod io_json;
 mod math_test;
 mod platform_misc;
 mod runtime;
-mod sys_fs;
 mod task;
 mod text_encoding;
 mod unicode_core;
@@ -28,7 +27,6 @@ use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_toml,
 };
 use runtime::intrinsic_runtime;
-use sys_fs::{intrinsic_fs, intrinsic_sys};
 use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
 use unicode_core::intrinsic_unicode;
@@ -62,8 +60,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
     match module_name {
         "_sifr.io" => Some(intrinsic_io()),
         "_sifr.json" => Some(intrinsic_json()),
-        "_sifr.sys" => Some(intrinsic_sys()),
-        "_sifr.fs" => Some(intrinsic_fs()),
         "_sifr.test" => Some(intrinsic_test()),
         "_sifr.collections" => Some(intrinsic_collections()),
         "_sifr.bytes" => Some(intrinsic_bytes()),
@@ -109,9 +105,9 @@ mod tests {
 
     #[test]
     fn known_intrinsic_module_has_signatures() {
-        let module = get_intrinsic_module("_sifr.fs").expect("_sifr.fs should be registered");
+        let module = get_intrinsic_module("_sifr.json").expect("_sifr.json should be registered");
 
-        assert!(module.functions.contains_key("chdir"));
+        assert!(module.functions.contains_key("json_load_tokens"));
         assert!(!module.functions.contains_key("open_file"));
         assert!(module.constants.is_empty());
     }
@@ -130,18 +126,10 @@ mod tests {
     }
 
     #[test]
-    fn legacy_subprocess_intrinsics_are_not_registered() {
-        let sys = get_intrinsic_module("_sifr.sys").expect("_sifr.sys should exist");
-
-        for removed in [
-            "subprocess_run",
-            "subprocess_run_with_input",
-            "subprocess_run_structured",
-        ] {
-            assert!(
-                !sys.functions.contains_key(removed),
-                "{removed} must stay removed; use _sifr.process intrinsics instead"
-            );
-        }
+    fn legacy_sys_fallback_module_is_not_registered() {
+        assert!(
+            get_intrinsic_module("_sifr.sys").is_none(),
+            "_sifr.sys fallback signatures must stay removed; use source declarations"
+        );
     }
 }

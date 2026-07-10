@@ -23,32 +23,24 @@ reason = "All _sifr.process compiler-native registry, preamble, and fallback sig
 
 [[surface]]
 id = "_sifr.sys"
-state = "retained"
+state = "closing"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
+removal_criteria = ["Delete this closing row after migrated sys registry names are proven absent by closure guards."]
 declaration_files = ["stdlib/_sifr/sys.sifr"]
 certification_rows = ["opaque_resource_matrix"]
-reason = "Process-command, directory-change, file-stat, and disk-usage helpers remain compiler-native in the shared os.rs registry file pending later process/filesystem slices; environment, argv, sys version/platform/maxsize, sys_exit, process-id, CPU-count, executable lookup, OS separator/name helpers, and platform module values now route through sifr_stdlib declarations."
-registry_files = ["os.rs"]
-exact_intrinsics = [
-  "chdir",
-  "disk_usage",
-  "run_command",
-  "stat_size",
-]
+reason = "Process-command helper behavior now routes through _sifr.sys private Rust interop declarations and sifr_stdlib.sys; directory-change, file-stat, and disk-usage helpers route through _sifr.fs and sifr_stdlib.fs. This row remains only to record closure of the former shared compiler os.rs registry names."
 
 [[surface]]
 id = "_sifr.fs"
-state = "retained"
+state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
 declaration_files = ["stdlib/_sifr/fs.sifr"]
 certification_rows = ["opaque_resource_core"]
-reason = "Shadowable Python builtin open() lowering remains compiler-owned for call-shape compatibility; file-handle storage and methods now route through sifr_stdlib.fs."
+reason = "Shadowable Python-compatible builtin open() and explicit text-open lowering remain compiler-owned bridge glue for call-shape compatibility and generated handle wrapper construction; file-handle operations and filesystem behavior route through sifr_stdlib.fs."
 registry_files = [
   "file_handles.rs",
   "open_text_handles.rs",
@@ -322,10 +314,9 @@ direct_runtime_roots = [
 
 [[surface]]
 id = "mixed-io-logging-random-preamble"
-state = "retained"
+state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-removal_criteria = ["Migrate or classify this retained compiler-native entry before final audit."]
-reason = "Historical retained row for the legacy mixed preamble; the remaining generated preamble file now contains only IOError and file-handle glue pending final decomposition because logging and random behavior have migrated to sifr_stdlib."
+reason = "Historical mixed preamble now contains only retained-by-design IOError and generated file-handle bridge glue used by builtin open; logging and random behavior have migrated to sifr_stdlib."
 preamble_files = ["io_file_handles.rs"]

@@ -3,7 +3,6 @@ mod collections;
 mod encoding;
 mod file_handles;
 mod open_text_handles;
-mod os;
 mod requirements;
 mod runtime;
 mod task;
@@ -26,10 +25,6 @@ pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIn
 
 pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
     let (expr, required_feature) = match name {
-        "run_command" => (os::lower_run_command(args), None),
-        "chdir" => (os::lower_chdir(args), None),
-        "stat_size" => (os::lower_stat_size(args), None),
-        "disk_usage" => (os::lower_disk_usage(args), None),
         "builtin_open" => (file_handles::lower_builtin_open(args), None),
         "builtin_open_text" => (open_text_handles::lower_builtin_open_text(args), None),
         "assert_eq" => (test::lower_assert_eq(args), None),
