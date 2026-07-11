@@ -187,13 +187,10 @@ fn toml_quote_path(path: &Path) -> String {
 }
 
 fn dependency_features(
-    dependency_name: &str,
+    _dependency_name: &str,
     backend_root: &Path,
     path: &RustTargetPath,
 ) -> Vec<String> {
-    if dependency_name != "sifr_stdlib" {
-        return Vec::new();
-    }
     let Some(feature) = path.segments.get(1) else {
         return Vec::new();
     };
@@ -401,10 +398,14 @@ fn python_raw_callback_probe_source(
     out.push_str("#![allow(dead_code)]\n");
     out.push_str(&generated_bridge_type_stubs(signature));
     out.push_str(
-        "fn __sifr_sample_python_callback(\n    _arg: (i64, i64),\n) -> Result<(i64, i64), sifr_stdlib::python::PythonError> {\n    unreachable!()\n}\n",
+        "type __SifrPythonObject = sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>;\nfn __sifr_sample_python_callback(\n    _arg: __SifrPythonObject,\n) -> Result<__SifrPythonObject, sifr_stdlib::python::PythonError> {\n    unreachable!()\n}\n",
     );
     out.push_str("fn __sifr_probe() {\n    let _: ");
-    out.push_str("Result<(i64, i64, i64, i64, String), sifr_stdlib::python::PythonError>");
+    out.push_str(
+        &signature_return_probe_type(&signature.return_type)
+            .ty
+            .replace("__SifrBridgeError", "sifr_stdlib::python::PythonError"),
+    );
     out.push_str(" = ");
     out.push_str(rust_path);
     out.push_str("(__sifr_sample_python_callback);\n}\n");

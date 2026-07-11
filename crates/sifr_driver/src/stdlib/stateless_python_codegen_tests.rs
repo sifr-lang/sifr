@@ -76,7 +76,9 @@ fn python_primitive_extractors_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
-    assert!(private_code.rust.contains("SifrIntBridge::from(handle)"));
+    assert!(private_code
+        .rust
+        .contains("sifr_stdlib::python::py_to_int(object)"));
     assert!(private_code
         .rust
         .contains("__sifr_bridge_ok.to_i64_saturating()"));
@@ -104,11 +106,11 @@ fn python_object_core_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
-    assert!(private_code.rust.contains("SifrIntBridge::from(handle)"));
-    assert!(private_code.rust.contains("SifrIntBridge::from(token)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::python::py_get_attr("));
+        .contains("sifr_stdlib::python::py_get_attr(object, name)"));
+    assert!(!private_code.rust.contains("SifrIntBridge::from(handle)"));
+    assert!(!private_code.rust.contains("SifrIntBridge::from(token)"));
 }
 
 #[test]
@@ -238,12 +240,12 @@ fn python_zero_copy_helpers_codegen_through_sifr_stdlib() {
         .filter(|ch| !ch.is_whitespace())
         .collect();
     for call in [
-        "py_buffer_shape(raw.0,raw.1)?",
-        "py_buffer_strides(raw.0,raw.1)?",
-        "py_buffer_suboffsets(raw.0,raw.1)?",
-        "py_arrow_capsule_names(raw.0,raw.1)?",
-        "py_dlpack_shape(raw.0,raw.1)?",
-        "py_dlpack_strides(raw.0,raw.1)?",
+        "py_buffer_shape(&raw.0)?",
+        "py_buffer_strides(&raw.0)?",
+        "py_buffer_suboffsets(&raw.0)?",
+        "py_arrow_capsule_names(&raw.0)?",
+        "py_dlpack_shape(&raw.0)?",
+        "py_dlpack_strides(&raw.0)?",
     ] {
         assert!(
             compact_public.contains(call),
@@ -297,7 +299,7 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
-    assert!(private_code.rust.contains("handler(__sifr_callback_raw)"));
+    assert!(private_code.rust.contains("handler(&__sifr_callback_arg)"));
     assert!(private_code
         .rust
         .contains("sifr_stdlib::python::PythonError"));
@@ -307,7 +309,8 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
         .filter(|ch| !ch.is_whitespace())
         .collect();
     assert!(compact_private
-        .contains("handler:implFn((i64,i64))->Result<(i64,i64),PythonError>+Send+Sync+'static"));
+        .contains("handler:implFn(&Object)->Result<Object,PythonError>+Send+Sync+'static"));
+    assert!(!compact_private.contains("(i64,i64)"));
     let public_core_code = compiled
         .code
         .module_rust_code
@@ -318,7 +321,8 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
         .chars()
         .filter(|ch| !ch.is_whitespace())
         .collect();
-    assert!(compact_public.contains("_call_object_callback(&handler,raw)"));
+    assert!(compact_public.contains("py_local_callback(handler)?"));
+    assert!(!compact_public.contains("_call_object_callback"));
 }
 
 fn sha256_hex(source: &str) -> String {

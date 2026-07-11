@@ -56,6 +56,7 @@ from _sifr.python import (
     py_get_item_str,
     py_import_module,
     py_resource_diagnostics,
+    ResourceIdentity,
     py_release_arrow,
     py_release_buffer,
     py_release_dlpack,
@@ -96,8 +97,7 @@ from sifr.python_core import (
 
 
 class BufferView(NonSend):
-    _handle: int
-    _token: int
+    _identity: ResourceIdentity
     length: int
     item_size: int
     readonly: bool
@@ -109,43 +109,18 @@ class BufferView(NonSend):
     f_contiguous: bool
     format: str
 
-    def __init__(self):
-        self._handle = -1
-        self._token = 0
-        self.length = 0
-        self.item_size = 0
-        self.readonly = True
-        self.dimensions = 0
-        self.shape = []
-        self.strides = []
-        self.suboffsets = []
-        self.c_contiguous = False
-        self.f_contiguous = False
-        self.format = ""
-
 
 class ArrowCapsule(NonSend):
-    _handle: int
-    _token: int
+    _identity: ResourceIdentity
     kind: str
     capsule_names: list[str]
     producer_module: str
     producer_type: str
     copy_possible: bool
 
-    def __init__(self):
-        self._handle = -1
-        self._token = 0
-        self.kind = ""
-        self.capsule_names = []
-        self.producer_module = ""
-        self.producer_type = ""
-        self.copy_possible = True
-
 
 class DlpackTensor(NonSend):
-    _handle: int
-    _token: int
+    _identity: ResourceIdentity
     dtype_code: int
     dtype_bits: int
     dtype_lanes: int
@@ -159,112 +134,31 @@ class DlpackTensor(NonSend):
     has_deleter: bool
     stream_sync_required: bool
 
-    def __init__(self):
-        self._handle = -1
-        self._token = 0
-        self.dtype_code = 0
-        self.dtype_bits = 0
-        self.dtype_lanes = 0
-        self.dtype = ""
-        self.device_type = 0
-        self.device_id = 0
-        self.dimensions = 0
-        self.shape = []
-        self.strides = []
-        self.byte_offset = 0
-        self.has_deleter = False
-        self.stream_sync_required = True
 
-
-def _object_from_handle(raw: tuple[int, int]) -> Object:
-    obj: Object = Object()
-    obj._handle = raw[0]
-    obj._token = raw[1]
-    return obj
-
-
-def _object_ref(obj: Object) -> Object:
-    return _object_from_handle((obj._handle, obj._token))
-
-
-def _buffer_from_raw(own raw: tuple[int, int, int, int, bool, int, bool, bool, str]) -> Result[BufferView, PythonError]:
-    view: BufferView = BufferView()
-    view._handle = raw[0]
-    view._token = raw[1]
-    view.length = raw[2]
-    view.item_size = raw[3]
-    view.readonly = raw[4]
-    view.dimensions = raw[5]
+def _buffer_from_raw(own raw: tuple[ResourceIdentity, int, int, bool, int, bool, bool, str]) -> Result[BufferView, PythonError]:
     try:
-        shape: list[int] = py_buffer_shape(raw[0], raw[1])
-        strides: list[int] = py_buffer_strides(raw[0], raw[1])
-        suboffsets: list[int] = py_buffer_suboffsets(raw[0], raw[1])
-        view.shape = shape
-        view.strides = strides
-        view.suboffsets = suboffsets
+        shape: list[int] = py_buffer_shape(raw[0])
+        strides: list[int] = py_buffer_strides(raw[0])
+        suboffsets: list[int] = py_buffer_suboffsets(raw[0])
+        return BufferView(raw[0], raw[1], raw[2], raw[3], raw[4], shape, strides, suboffsets, raw[5], raw[6], raw[7])
     except PythonError as e:
         raise e
-    view.c_contiguous = raw[6]
-    view.f_contiguous = raw[7]
-    view.format = raw[8]
-    return view
 
-
-def _arrow_from_raw(own raw: tuple[int, int, str, str, str, bool]) -> Result[ArrowCapsule, PythonError]:
-    capsule: ArrowCapsule = ArrowCapsule()
-    capsule._handle = raw[0]
-    capsule._token = raw[1]
-    capsule.kind = raw[2]
+def _arrow_from_raw(own raw: tuple[ResourceIdentity, str, str, str, bool]) -> Result[ArrowCapsule, PythonError]:
     try:
-        capsule_names: list[str] = py_arrow_capsule_names(raw[0], raw[1])
-        capsule.capsule_names = capsule_names
+        capsule_names: list[str] = py_arrow_capsule_names(raw[0])
+        return ArrowCapsule(raw[0], raw[1], capsule_names, raw[2], raw[3], raw[4])
     except PythonError as e:
         raise e
-    capsule.producer_module = raw[3]
-    capsule.producer_type = raw[4]
-    capsule.copy_possible = raw[5]
-    return capsule
 
 
-def _dlpack_from_raw(own raw: tuple[int, int, int, int, int, str, int, int, int, int, bool, bool]) -> Result[DlpackTensor, PythonError]:
-    tensor: DlpackTensor = DlpackTensor()
-    tensor._handle = raw[0]
-    tensor._token = raw[1]
-    tensor.dtype_code = raw[2]
-    tensor.dtype_bits = raw[3]
-    tensor.dtype_lanes = raw[4]
-    tensor.dtype = raw[5]
-    tensor.device_type = raw[6]
-    tensor.device_id = raw[7]
-    tensor.dimensions = raw[8]
+def _dlpack_from_raw(own raw: tuple[ResourceIdentity, int, int, int, str, int, int, int, int, bool, bool]) -> Result[DlpackTensor, PythonError]:
     try:
-        shape: list[int] = py_dlpack_shape(raw[0], raw[1])
-        strides: list[int] = py_dlpack_strides(raw[0], raw[1])
-        tensor.shape = shape
-        tensor.strides = strides
+        shape: list[int] = py_dlpack_shape(raw[0])
+        strides: list[int] = py_dlpack_strides(raw[0])
+        return DlpackTensor(raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7], shape, strides, raw[8], raw[9], raw[10])
     except PythonError as e:
         raise e
-    tensor.byte_offset = raw[9]
-    tensor.has_deleter = raw[10]
-    tensor.stream_sync_required = raw[11]
-    return tensor
-
-
-def _record_fields_from_handles(keys: list[str], raw_values: list[tuple[int, int]]) -> list[tuple[str, Object]]:
-    values: list[tuple[str, Object]] = []
-    index: int = 0
-    while index < len(keys) and index < len(raw_values):
-        key: str = keys[index]
-        values.append((key, _object_from_handle(raw_values[index])))
-        index += 1
-    return values
-
-
-def _handles_from_objects(values: list[Object]) -> list[tuple[int, int]]:
-    raw_values: list[tuple[int, int]] = []
-    for value in values:
-        raw_values.append((value._handle, value._token))
-    return raw_values
 
 
 def _keys_from_keyed_objects(values: list[tuple[str, Object]]) -> list[str]:
@@ -274,18 +168,18 @@ def _keys_from_keyed_objects(values: list[tuple[str, Object]]) -> list[str]:
     return keys
 
 
-def _handles_from_keyed_objects(values: list[tuple[str, Object]]) -> list[tuple[int, int]]:
-    raw_values: list[tuple[int, int]] = []
+def _objects_from_keyed_objects(values: list[tuple[str, Object]]) -> list[Object]:
+    objects: list[Object] = []
     for value in values:
-        raw_values.append((value[1]._handle, value[1]._token))
-    return raw_values
+        objects.append(value[1])
+    return objects
 
 
 @blocking_io
 def import_module(name: str) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_import_module(name)
-        return _object_from_handle(raw)
+        raw: Object = py_import_module(name)
+        return raw
     except PythonError as e:
         raise e
 
@@ -293,8 +187,8 @@ def import_module(name: str) -> Result[Object, PythonError]:
 @blocking_io
 def get_attr(obj: Object, name: str) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_get_attr(obj._handle, obj._token, name)
-        return _object_from_handle(raw)
+        raw: Object = py_get_attr(obj, name)
+        return raw
     except PythonError as e:
         raise e
 
@@ -302,8 +196,8 @@ def get_attr(obj: Object, name: str) -> Result[Object, PythonError]:
 @blocking_io
 def get_item(obj: Object, key: str) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_get_item_str(obj._handle, obj._token, key)
-        return _object_from_handle(raw)
+        raw: Object = py_get_item_str(obj, key)
+        return raw
     except PythonError as e:
         raise e
 
@@ -311,21 +205,19 @@ def get_item(obj: Object, key: str) -> Result[Object, PythonError]:
 @blocking_io
 def call(
     callable_obj: Object,
-    args: list[Object],
-    kwargs: list[tuple[str, Object]],
+    own args: list[Object],
+    own kwargs: list[tuple[str, Object]],
 ) -> Result[Object, PythonError]:
     try:
-        raw_args: list[tuple[int, int]] = _handles_from_objects(args)
         kwargs_keys: list[str] = _keys_from_keyed_objects(kwargs)
-        kwargs_values: list[tuple[int, int]] = _handles_from_keyed_objects(kwargs)
-        raw: tuple[int, int] = py_call(
-            callable_obj._handle,
-            callable_obj._token,
-            raw_args,
+        kwargs_values: list[Object] = _objects_from_keyed_objects(kwargs)
+        raw: Object = py_call(
+            callable_obj,
+            args,
             kwargs_keys,
             kwargs_values,
         )
-        return _object_from_handle(raw)
+        return raw
     except PythonError as e:
         raise e
 
@@ -334,37 +226,34 @@ def call(
 def call_attr(
     obj: Object,
     name: str,
-    args: list[Object],
-    kwargs: list[tuple[str, Object]],
+    own args: list[Object],
+    own kwargs: list[tuple[str, Object]],
 ) -> Result[Object, PythonError]:
     try:
-        raw_args: list[tuple[int, int]] = _handles_from_objects(args)
         kwargs_keys: list[str] = _keys_from_keyed_objects(kwargs)
-        kwargs_values: list[tuple[int, int]] = _handles_from_keyed_objects(kwargs)
-        raw: tuple[int, int] = py_call_attr(
-            obj._handle,
-            obj._token,
+        kwargs_values: list[Object] = _objects_from_keyed_objects(kwargs)
+        raw: Object = py_call_attr(
+            obj,
             name,
-            raw_args,
+            args,
             kwargs_keys,
             kwargs_values,
         )
-        return _object_from_handle(raw)
+        return raw
     except PythonError as e:
         raise e
 
 
 @blocking_io
 def close(own obj: Object) -> Result[None, PythonError]:
-    return py_close(obj._handle, obj._token)
+    return py_close(obj)
 
 
 @blocking_io
 def zero_copy_as_u8(obj: Object) -> Result[BufferView, PythonError]:
     try:
-        raw: tuple[int, int, int, int, bool, int, bool, bool, str] = py_buffer_u8(
-            obj._handle,
-            obj._token,
+        raw: tuple[ResourceIdentity, int, int, bool, int, bool, bool, str] = py_buffer_u8(
+            obj,
             False,
         )
         return _buffer_from_raw(raw)
@@ -375,9 +264,8 @@ def zero_copy_as_u8(obj: Object) -> Result[BufferView, PythonError]:
 @blocking_io
 def zero_copy_as_writable_u8(obj: Object) -> Result[BufferView, PythonError]:
     try:
-        raw: tuple[int, int, int, int, bool, int, bool, bool, str] = py_buffer_u8(
-            obj._handle,
-            obj._token,
+        raw: tuple[ResourceIdentity, int, int, bool, int, bool, bool, str] = py_buffer_u8(
+            obj,
             True,
         )
         return _buffer_from_raw(raw)
@@ -387,18 +275,18 @@ def zero_copy_as_writable_u8(obj: Object) -> Result[BufferView, PythonError]:
 
 @blocking_io
 def copy_buffer_bytes(view: BufferView) -> Result[bytes, PythonError]:
-    return py_copy_buffer_u8(view._handle, view._token)
+    return py_copy_buffer_u8(view._identity)
 
 
 @blocking_io
 def release_buffer(own view: BufferView) -> Result[None, PythonError]:
-    return py_release_buffer(view._handle, view._token)
+    return py_release_buffer(view._identity)
 
 
 @blocking_io
 def export_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, str, str, bool] = py_arrow_array(obj._handle, obj._token)
+        raw: tuple[ResourceIdentity, str, str, str, bool] = py_arrow_array(obj)
         return _arrow_from_raw(raw)
     except PythonError as e:
         raise e
@@ -407,7 +295,7 @@ def export_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def export_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, str, str, bool] = py_arrow_stream(obj._handle, obj._token)
+        raw: tuple[ResourceIdentity, str, str, str, bool] = py_arrow_stream(obj)
         return _arrow_from_raw(raw)
     except PythonError as e:
         raise e
@@ -416,7 +304,7 @@ def export_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def export_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, str, str, bool] = py_arrow_schema(obj._handle, obj._token)
+        raw: tuple[ResourceIdentity, str, str, str, bool] = py_arrow_schema(obj)
         return _arrow_from_raw(raw)
     except PythonError as e:
         raise e
@@ -424,15 +312,15 @@ def export_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
 
 @blocking_io
 def release_arrow(own capsule: ArrowCapsule) -> Result[None, PythonError]:
-    return py_release_arrow(capsule._handle, capsule._token)
+    return py_release_arrow(capsule._identity)
 
 
 @blocking_io
 def zero_copy_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, str, str, bool] = py_arrow_array(obj._handle, obj._token)
-        if raw[5]:
-            released: None = py_release_arrow(raw[0], raw[1])
+        raw: tuple[ResourceIdentity, str, str, str, bool] = py_arrow_array(obj)
+        if raw[4]:
+            released: None = py_release_arrow(raw[0])
             raise PythonError(
                 "Arrow array exporter may copy; zero-copy was not proven",
                 "zero-copy",
@@ -448,9 +336,9 @@ def zero_copy_arrow_array(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def zero_copy_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, str, str, bool] = py_arrow_stream(obj._handle, obj._token)
-        if raw[5]:
-            released: None = py_release_arrow(raw[0], raw[1])
+        raw: tuple[ResourceIdentity, str, str, str, bool] = py_arrow_stream(obj)
+        if raw[4]:
+            released: None = py_release_arrow(raw[0])
             raise PythonError(
                 "Arrow stream exporter may copy; zero-copy was not proven",
                 "zero-copy",
@@ -466,9 +354,9 @@ def zero_copy_arrow_stream(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def zero_copy_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
     try:
-        raw: tuple[int, int, str, str, str, bool] = py_arrow_schema(obj._handle, obj._token)
-        if raw[5]:
-            released: None = py_release_arrow(raw[0], raw[1])
+        raw: tuple[ResourceIdentity, str, str, str, bool] = py_arrow_schema(obj)
+        if raw[4]:
+            released: None = py_release_arrow(raw[0])
             raise PythonError(
                 "Arrow schema exporter may copy; zero-copy was not proven",
                 "zero-copy",
@@ -484,9 +372,8 @@ def zero_copy_arrow_schema(obj: Object) -> Result[ArrowCapsule, PythonError]:
 @blocking_io
 def zero_copy_dlpack_tensor(obj: Object) -> Result[DlpackTensor, PythonError]:
     try:
-        raw: tuple[int, int, int, int, int, str, int, int, int, int, bool, bool] = py_dlpack_tensor(
-            obj._handle,
-            obj._token,
+        raw: tuple[ResourceIdentity, int, int, int, str, int, int, int, int, bool, bool] = py_dlpack_tensor(
+            obj,
         )
         return _dlpack_from_raw(raw)
     except PythonError as e:
@@ -495,7 +382,7 @@ def zero_copy_dlpack_tensor(obj: Object) -> Result[DlpackTensor, PythonError]:
 
 @blocking_io
 def release_dlpack(own tensor: DlpackTensor) -> Result[None, PythonError]:
-    return py_release_dlpack(tensor._handle, tensor._token)
+    return py_release_dlpack(tensor._identity)
 
 
 @blocking_io
@@ -512,21 +399,20 @@ def copy_as_bytes(obj: Object) -> Result[bytes, PythonError]:
 @blocking_io
 def enter_context(obj: Object) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_enter_context(obj._handle, obj._token)
-        return _object_from_handle(raw)
+        raw: Object = py_enter_context(obj)
+        return raw
     except PythonError as e:
         raise e
 
 
 @blocking_io
 def exit_context(obj: Object) -> Result[None, PythonError]:
-    return py_exit_context(obj._handle, obj._token)
+    return py_exit_context(obj)
 
 
 def _exit_context_with_error(obj: Object, error: PythonError) -> Result[None, PythonError]:
     return py_exit_context_with_error(
-        obj._handle,
-        obj._token,
+        obj,
         error.kind,
         error.exception_type,
         error.message,
@@ -550,7 +436,7 @@ def with_context(
 
 def _with_entered_context(
     obj: Object,
-    entered: Object,
+    own entered: Object,
     body: Callable[[Object], None],
 ) -> Result[None, PythonError]:
     body_completed: bool = False
@@ -561,7 +447,7 @@ def _with_entered_context(
     error_traceback: str = ""
     error_context: str = ""
     try:
-        body_entered: Object = _object_ref(entered)
+        body_entered: Object = entered
         body_result: None = body(body_entered)
         body_completed = True
         exited: None = exit_context(obj)
@@ -588,12 +474,6 @@ def _with_entered_context(
                 exit_result: None = _exit_context_with_error(obj, body_error)
             except PythonError as e:
                 cleanup_context: str = e.context
-        try:
-            closed: None = close(entered)
-        except PythonError as e:
-            cleanup_context: str = e.context
-
-
 @blocking_io
 def resource_diagnostics() -> Result[ResourceDiagnostics, PythonError]:
     try:
@@ -606,8 +486,8 @@ def resource_diagnostics() -> Result[ResourceDiagnostics, PythonError]:
 @blocking_io
 def from_none() -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_from_none()
-        return _object_from_handle(raw)
+        raw: Object = py_from_none()
+        return raw
     except PythonError as e:
         raise e
 
@@ -615,8 +495,8 @@ def from_none() -> Result[Object, PythonError]:
 @blocking_io
 def from_bool(value: bool) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_from_bool(value)
-        return _object_from_handle(raw)
+        raw: Object = py_from_bool(value)
+        return raw
     except PythonError as e:
         raise e
 
@@ -624,8 +504,8 @@ def from_bool(value: bool) -> Result[Object, PythonError]:
 @blocking_io
 def from_int(value: int) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_from_int(value)
-        return _object_from_handle(raw)
+        raw: Object = py_from_int(value)
+        return raw
     except PythonError as e:
         raise e
 
@@ -633,8 +513,8 @@ def from_int(value: int) -> Result[Object, PythonError]:
 @blocking_io
 def from_float(value: float) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_from_float(value)
-        return _object_from_handle(raw)
+        raw: Object = py_from_float(value)
+        return raw
     except PythonError as e:
         raise e
 
@@ -642,8 +522,8 @@ def from_float(value: float) -> Result[Object, PythonError]:
 @blocking_io
 def from_str(value: str) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_from_str(value)
-        return _object_from_handle(raw)
+        raw: Object = py_from_str(value)
+        return raw
     except PythonError as e:
         raise e
 
@@ -651,8 +531,8 @@ def from_str(value: str) -> Result[Object, PythonError]:
 @blocking_io
 def from_bytes(value: bytes) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_from_bytes(value)
-        return _object_from_handle(raw)
+        raw: Object = py_from_bytes(value)
+        return raw
     except PythonError as e:
         raise e
 
@@ -660,9 +540,9 @@ def from_bytes(value: bytes) -> Result[Object, PythonError]:
 @blocking_io
 def from_list(own values: list[Object]) -> Result[Object, PythonError]:
     try:
-        raw_values: list[tuple[int, int]] = _handles_from_objects(values)
-        raw: tuple[int, int] = py_from_list(raw_values)
-        return _object_from_handle(raw)
+        raw_values: list[Object] = values
+        raw: Object = py_from_list(raw_values)
+        return raw
     except PythonError as e:
         raise e
 
@@ -670,9 +550,9 @@ def from_list(own values: list[Object]) -> Result[Object, PythonError]:
 @blocking_io
 def from_tuple(own values: list[Object]) -> Result[Object, PythonError]:
     try:
-        raw_values: list[tuple[int, int]] = _handles_from_objects(values)
-        raw: tuple[int, int] = py_from_tuple(raw_values)
-        return _object_from_handle(raw)
+        raw_values: list[Object] = values
+        raw: Object = py_from_tuple(raw_values)
+        return raw
     except PythonError as e:
         raise e
 
@@ -681,9 +561,9 @@ def from_tuple(own values: list[Object]) -> Result[Object, PythonError]:
 def from_dict_str(own values: list[tuple[str, Object]]) -> Result[Object, PythonError]:
     try:
         keys: list[str] = _keys_from_keyed_objects(values)
-        raw_values: list[tuple[int, int]] = _handles_from_keyed_objects(values)
-        raw: tuple[int, int] = py_from_dict_str(keys, raw_values)
-        return _object_from_handle(raw)
+        raw_values: list[Object] = _objects_from_keyed_objects(values)
+        raw: Object = py_from_dict_str(keys, raw_values)
+        return raw
     except PythonError as e:
         raise e
 
@@ -692,197 +572,202 @@ def from_dict_str(own values: list[tuple[str, Object]]) -> Result[Object, Python
 def from_record(own values: list[tuple[str, Object]]) -> Result[Object, PythonError]:
     try:
         keys: list[str] = _keys_from_keyed_objects(values)
-        raw_values: list[tuple[int, int]] = _handles_from_keyed_objects(values)
-        raw: tuple[int, int] = py_from_record(keys, raw_values)
-        return _object_from_handle(raw)
+        raw_values: list[Object] = _objects_from_keyed_objects(values)
+        raw: Object = py_from_record(keys, raw_values)
+        return raw
     except PythonError as e:
         raise e
 
 
 @blocking_io
 def to_none(obj: Object) -> Result[None, PythonError]:
-    return py_to_none(obj._handle, obj._token)
+    return py_to_none(obj)
 
 
 @blocking_io
 def to_bool(obj: Object) -> Result[bool, PythonError]:
-    return py_to_bool(obj._handle, obj._token)
+    return py_to_bool(obj)
 
 
 @blocking_io
 def to_int(obj: Object) -> Result[int, PythonError]:
-    return py_to_int(obj._handle, obj._token)
+    return py_to_int(obj)
 
 
 @blocking_io
 def to_i8(obj: Object) -> Result[int8, PythonError]:
-    return py_to_i8(obj._handle, obj._token)
+    return py_to_i8(obj)
 
 
 @blocking_io
 def to_i16(obj: Object) -> Result[int16, PythonError]:
-    return py_to_i16(obj._handle, obj._token)
+    return py_to_i16(obj)
 
 
 @blocking_io
 def to_i32(obj: Object) -> Result[int32, PythonError]:
-    return py_to_i32(obj._handle, obj._token)
+    return py_to_i32(obj)
 
 
 @blocking_io
 def to_i64(obj: Object) -> Result[int64, PythonError]:
-    return py_to_i64(obj._handle, obj._token)
+    return py_to_i64(obj)
 
 
 @blocking_io
 def to_u8(obj: Object) -> Result[uint8, PythonError]:
-    return py_to_u8(obj._handle, obj._token)
+    return py_to_u8(obj)
 
 
 @blocking_io
 def to_u16(obj: Object) -> Result[uint16, PythonError]:
-    return py_to_u16(obj._handle, obj._token)
+    return py_to_u16(obj)
 
 
 @blocking_io
 def to_u32(obj: Object) -> Result[uint32, PythonError]:
-    return py_to_u32(obj._handle, obj._token)
+    return py_to_u32(obj)
 
 
 @blocking_io
 def to_u64(obj: Object) -> Result[uint64, PythonError]:
-    return py_to_u64(obj._handle, obj._token)
+    return py_to_u64(obj)
 
 
 @blocking_io
 def to_isize(obj: Object) -> Result[isize, PythonError]:
-    return py_to_isize(obj._handle, obj._token)
+    return py_to_isize(obj)
 
 
 @blocking_io
 def to_usize(obj: Object) -> Result[usize, PythonError]:
-    return py_to_usize(obj._handle, obj._token)
+    return py_to_usize(obj)
 
 
 @blocking_io
 def to_float(obj: Object) -> Result[float, PythonError]:
-    return py_to_float(obj._handle, obj._token)
+    return py_to_float(obj)
 
 
 @blocking_io
 def to_str(obj: Object) -> Result[str, PythonError]:
-    return py_to_str(obj._handle, obj._token)
+    return py_to_str(obj)
 
 
 @blocking_io
 def to_bytes(obj: Object) -> Result[bytes, PythonError]:
-    return py_to_bytes(obj._handle, obj._token)
+    return py_to_bytes(obj)
 
 
 @blocking_io
 def copy_list_bool(obj: Object) -> Result[list[bool], PythonError]:
-    return py_copy_list_bool(obj._handle, obj._token)
+    return py_copy_list_bool(obj)
 
 
 @blocking_io
 def copy_list_int(obj: Object) -> Result[list[int], PythonError]:
-    return py_copy_list_int(obj._handle, obj._token)
+    return py_copy_list_int(obj)
 
 
 @blocking_io
 def copy_list_i32(obj: Object) -> Result[list[int32], PythonError]:
-    return py_copy_list_i32(obj._handle, obj._token)
+    return py_copy_list_i32(obj)
 
 
 @blocking_io
 def copy_list_u8(obj: Object) -> Result[list[uint8], PythonError]:
-    return py_copy_list_u8(obj._handle, obj._token)
+    return py_copy_list_u8(obj)
 
 
 @blocking_io
 def copy_list_float(obj: Object) -> Result[list[float], PythonError]:
-    return py_copy_list_float(obj._handle, obj._token)
+    return py_copy_list_float(obj)
 
 
 @blocking_io
 def copy_list_str(obj: Object) -> Result[list[str], PythonError]:
-    return py_copy_list_str(obj._handle, obj._token)
+    return py_copy_list_str(obj)
 
 
 @blocking_io
 def copy_list_bytes(obj: Object) -> Result[list[bytes], PythonError]:
-    return py_copy_list_bytes(obj._handle, obj._token)
+    return py_copy_list_bytes(obj)
 
 
 @blocking_io
 def copy_tuple_bool(obj: Object) -> Result[list[bool], PythonError]:
-    return py_copy_tuple_bool(obj._handle, obj._token)
+    return py_copy_tuple_bool(obj)
 
 @blocking_io
 def copy_tuple_int(obj: Object) -> Result[list[int], PythonError]:
-    return py_copy_tuple_int(obj._handle, obj._token)
+    return py_copy_tuple_int(obj)
 
 @blocking_io
 def copy_tuple_i32(obj: Object) -> Result[list[int32], PythonError]:
-    return py_copy_tuple_i32(obj._handle, obj._token)
+    return py_copy_tuple_i32(obj)
 
 @blocking_io
 def copy_tuple_u8(obj: Object) -> Result[list[uint8], PythonError]:
-    return py_copy_tuple_u8(obj._handle, obj._token)
+    return py_copy_tuple_u8(obj)
 
 @blocking_io
 def copy_tuple_float(obj: Object) -> Result[list[float], PythonError]:
-    return py_copy_tuple_float(obj._handle, obj._token)
+    return py_copy_tuple_float(obj)
 
 @blocking_io
 def copy_tuple_str(obj: Object) -> Result[list[str], PythonError]:
-    return py_copy_tuple_str(obj._handle, obj._token)
+    return py_copy_tuple_str(obj)
 
 @blocking_io
 def copy_tuple_bytes(obj: Object) -> Result[list[bytes], PythonError]:
-    return py_copy_tuple_bytes(obj._handle, obj._token)
+    return py_copy_tuple_bytes(obj)
 
 
 @blocking_io
 def copy_dict_str_bool(obj: Object) -> Result[dict[str, bool], PythonError]:
-    return py_copy_dict_str_bool(obj._handle, obj._token)
+    return py_copy_dict_str_bool(obj)
 
 
 @blocking_io
 def copy_dict_str_int(obj: Object) -> Result[dict[str, int], PythonError]:
-    return py_copy_dict_str_int(obj._handle, obj._token)
+    return py_copy_dict_str_int(obj)
 
 
 @blocking_io
 def copy_dict_str_i32(obj: Object) -> Result[dict[str, int32], PythonError]:
-    return py_copy_dict_str_i32(obj._handle, obj._token)
+    return py_copy_dict_str_i32(obj)
 
 
 @blocking_io
 def copy_dict_str_u8(obj: Object) -> Result[dict[str, uint8], PythonError]:
-    return py_copy_dict_str_u8(obj._handle, obj._token)
+    return py_copy_dict_str_u8(obj)
 
 
 @blocking_io
 def copy_dict_str_float(obj: Object) -> Result[dict[str, float], PythonError]:
-    return py_copy_dict_str_float(obj._handle, obj._token)
+    return py_copy_dict_str_float(obj)
 
 
 @blocking_io
 def copy_dict_str_str(obj: Object) -> Result[dict[str, str], PythonError]:
-    return py_copy_dict_str_str(obj._handle, obj._token)
+    return py_copy_dict_str_str(obj)
 
 
 @blocking_io
 def copy_dict_str_bytes(obj: Object) -> Result[dict[str, bytes], PythonError]:
-    return py_copy_dict_str_bytes(obj._handle, obj._token)
+    return py_copy_dict_str_bytes(obj)
 
 
 @blocking_io
 def copy_record_fields(obj: Object, fields: list[str]) -> Result[list[tuple[str, Object]], PythonError]:
     try:
-        raw: list[tuple[int, int]] = py_copy_record_fields(obj._handle, obj._token, fields)
-        return _record_fields_from_handles(fields, raw)
+        raw: list[Object] = py_copy_record_fields(obj, fields)
+        values: list[tuple[str, Object]] = []
+        index: int = 0
+        while index < len(fields) and index < len(raw):
+            values.append((fields[index], raw[index]))
+            index += 1
+        return values
     except PythonError as e:
         raise e
 
@@ -890,7 +775,7 @@ def copy_record_fields(obj: Object, fields: list[str]) -> Result[list[tuple[str,
 @blocking_io
 def run_coroutine_blocking(coro: Object) -> Result[Object, PythonError]:
     try:
-        raw: tuple[int, int] = py_run_coroutine_blocking(coro._handle, coro._token)
-        return _object_from_handle(raw)
+        raw: Object = py_run_coroutine_blocking(coro)
+        return raw
     except PythonError as e:
         raise e

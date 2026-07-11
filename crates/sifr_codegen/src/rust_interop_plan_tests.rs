@@ -216,6 +216,64 @@ fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
 }
 
 #[test]
+fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
+    let object_ty = Type::Class {
+        name: "Object".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+    let mut object_class = class("Object", HirClassKind::Regular, Vec::new());
+    object_class.parent_class = Some("NonSend".to_string());
+    object_class.rust_interop = vec![opaque_declaration("sifr_runtime.python.ForeignObject")];
+    let declarations = module_with(Vec::new(), vec![object_class]);
+    let consumer = module_with(
+        vec![HirFunction {
+            name: "identity".to_string(),
+            params: vec![HirParam {
+                name: "value".to_string(),
+                ty: object_ty.clone(),
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: object_ty,
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                "bridge.python.identity",
+            )],
+            compiler_intrinsic: None,
+            type_params: Vec::new(),
+        }],
+        Vec::new(),
+    );
+
+    let plan = interop_build_plan_for_named_modules([
+        (Some("sifr.python_core"), &declarations),
+        (Some("sifr.python"), &consumer),
+    ]);
+    let signature = &plan.rust.bridge_contracts.signatures[0];
+
+    assert_eq!(
+        signature.params[0].ty.kind,
+        RustBridgeTypeKind::OpaqueHandle
+    );
+    assert_eq!(
+        signature.params[0].ty.rust_borrowed_type.as_deref(),
+        Some("&sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>")
+    );
+    assert_eq!(
+        signature.return_type.rust_return_type.as_deref(),
+        Some("sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>")
+    );
+    assert!(plan.rust.bridge_contracts.generated_types.is_empty());
+}
+
+#[test]
 fn interop_bridge_callable_params_require_callback_contract() {
     let mut function = HirFunction {
         name: "subscribe".to_string(),
@@ -433,6 +491,27 @@ fn declaration(kind: RustInteropDecoratorKind, target: &str) -> RustInteropDecla
         span: Default::default(),
         effect: RustInteropEffect::Sync,
         abi_requirements: RustInteropAbiRequirements::default(),
+    }
+}
+
+fn opaque_declaration(target: &str) -> RustInteropDeclaration {
+    RustInteropDeclaration {
+        kind: RustInteropDecoratorKind::Opaque,
+        target: None,
+        arguments: vec![RustInteropArgument {
+            name: Some("type".to_string()),
+            value: RustInteropValue::TargetPath(RustTargetPath {
+                segments: target.split('.').map(str::to_string).collect(),
+                span: Default::default(),
+            }),
+            span: Default::default(),
+        }],
+        span: Default::default(),
+        effect: RustInteropEffect::Sync,
+        abi_requirements: RustInteropAbiRequirements {
+            opaque_handle: true,
+            ..RustInteropAbiRequirements::default()
+        },
     }
 }
 

@@ -51,8 +51,8 @@ fn direct_rust_function_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
 
 fn direct_rust_arg_expr(param: &HirParam, target: &RustTargetPath) -> RustExpr {
     let value = RustExpr::Ident(param.name.clone());
-    if is_python_callback_constructor_target(target) && is_python_raw_callback_type(&param.ty) {
-        python_raw_callback_adapter_expr(&param.name)
+    if is_python_callback_constructor_target(target) && is_python_object_callback_type(&param.ty) {
+        python_object_callback_adapter_expr(&param.name)
     } else if param.ty == Type::Int {
         RustExpr::FnCall {
             func: Box::new(sifr_int_bridge_path("from")),
@@ -125,32 +125,24 @@ fn is_python_callback_constructor_target(target: &RustTargetPath) -> bool {
     )
 }
 
-fn is_python_raw_callback_type(ty: &Type) -> bool {
+fn is_python_object_callback_type(ty: &Type) -> bool {
     let Type::Callable(params, _, ret) = ty.resolve_alias() else {
         return false;
     };
-    matches!(
-        params.as_slice(),
-        [Type::Tuple(items)] if matches!(items.as_slice(), [Type::Int, Type::Int])
-    ) && matches!(
-        ret.resolve_alias(),
-        Type::Result(ok, err)
-            if matches!(
-                ok.resolve_alias(),
-                Type::Tuple(items) if matches!(items.as_slice(), [Type::Int, Type::Int])
-            ) && matches!(err.resolve_alias(), Type::Class { name, .. } if name == "PythonError")
-    )
+    matches!(params.as_slice(), [Type::Class { name, .. }] if name == "Object")
+        && matches!(
+            ret.resolve_alias(),
+            Type::Result(ok, err)
+                if matches!(ok.resolve_alias(), Type::Class { name, .. } if name == "Object")
+                    && matches!(err.resolve_alias(), Type::Class { name, .. } if name == "PythonError")
+        )
 }
 
-fn python_raw_callback_adapter_expr(handler: &str) -> RustExpr {
+fn python_object_callback_adapter_expr(handler: &str) -> RustExpr {
     RustExpr::Ident(format!(
         r#"move |__sifr_callback_arg| {{
-            let __sifr_callback_raw = (__sifr_callback_arg.0, __sifr_callback_arg.1);
-            match {handler}(__sifr_callback_raw) {{
-                Ok(__sifr_callback_result) => Ok((
-                    __sifr_callback_result.0,
-                    __sifr_callback_result.1,
-                )),
+            match {handler}(&__sifr_callback_arg) {{
+                Ok(__sifr_callback_result) => Ok(__sifr_callback_result),
                 Err(__sifr_callback_error) => Err(sifr_stdlib::python::PythonError {{
                     message: __sifr_callback_error.message,
                     kind: __sifr_callback_error.kind,

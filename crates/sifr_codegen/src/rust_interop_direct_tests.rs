@@ -3,8 +3,8 @@ use crate::{generate_rust_with_metadata, render_expr, RustStmt};
 use ruff_text_size::TextRange;
 use sifr_ir::{
     HirClass, HirClassKind, HirFunction, HirModule, HirParam, MethodKind,
-    RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
-    RustInteropEffect, RustTargetPath,
+    RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
+    RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,
 };
 use sifr_type_system::{FixedIntType, ParamConvention, Type};
 use std::collections::HashMap;
@@ -119,6 +119,51 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
 }
 
 #[test]
+fn emitted_opaque_class_is_a_sealed_runtime_handle_alias() {
+    let mut object = zip_error_class();
+    object.name = "Object".to_string();
+    object.fields.clear();
+    object.is_error_type = false;
+    object.parent_class = Some("NonSend".to_string());
+    object.rust_interop = vec![RustInteropDeclaration {
+        kind: RustInteropDecoratorKind::Opaque,
+        target: None,
+        arguments: vec![RustInteropArgument {
+            name: Some("type".to_string()),
+            value: RustInteropValue::TargetPath(RustTargetPath {
+                segments: ["sifr_runtime", "python", "ForeignObject"]
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect(),
+                span: TextRange::default(),
+            }),
+            span: TextRange::default(),
+        }],
+        span: TextRange::default(),
+        effect: RustInteropEffect::Sync,
+        abi_requirements: RustInteropAbiRequirements {
+            opaque_handle: true,
+            ..RustInteropAbiRequirements::default()
+        },
+    }];
+    let module = HirModule {
+        functions: Vec::new(),
+        classes: vec![object],
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: HashMap::new(),
+        type_param_bounds: HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module).rust_source;
+
+    assert!(generated.contains(
+        "type Object = sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>;"
+    ));
+    assert!(!generated.contains("struct Object"));
+}
+
+#[test]
 fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata() {
     let python_error = Type::Class {
         name: "PythonError".to_string(),
@@ -164,7 +209,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
 }
 
 #[test]
-fn rust_interop_function_body_adapts_python_raw_callback_parameter() {
+fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
     let python_error = Type::Class {
         name: "PythonError".to_string(),
         fields: vec![
@@ -177,16 +222,21 @@ fn rust_interop_function_body_adapts_python_raw_callback_parameter() {
         methods: Vec::new(),
         parent_class: None,
     };
-    let raw_object = Type::Tuple(vec![Type::Int, Type::Int]);
+    let object = Type::Class {
+        name: "Object".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
     let func = HirFunction {
         name: "py_local_callback".to_string(),
         params: vec![HirParam {
             name: "handler".to_string(),
             ty: Type::Callable(
-                vec![raw_object.clone()],
+                vec![object.clone()],
                 vec![ParamConvention::borrow()],
                 Box::new(Type::Result(
-                    Box::new(raw_object),
+                    Box::new(object),
                     Box::new(python_error.clone()),
                 )),
             ),
@@ -224,8 +274,9 @@ fn rust_interop_function_body_adapts_python_raw_callback_parameter() {
     let rendered = render_expr(expr);
 
     assert!(rendered.contains("sifr_stdlib::python::py_local_callback(move |__sifr_callback_arg|"));
-    assert!(rendered.contains("handler(__sifr_callback_raw)"));
-    assert!(rendered.contains("__sifr_callback_result.0"));
+    assert!(rendered.contains("handler(&__sifr_callback_arg)"));
+    assert!(rendered.contains("Ok(__sifr_callback_result)"));
+    assert!(!rendered.contains("__sifr_callback_arg.0"));
     assert!(rendered.contains("sifr_stdlib::python::PythonError"));
     assert!(rendered.contains("PythonError { message: __sifr_bridge_error.message.to_string()"));
 }

@@ -6,8 +6,10 @@ In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 is implemented and
-locally validated in [PR #2930](https://github.com/sifr-lang/sifr/pull/2930);
-later milestones are not yet implemented.
+locally validated in [PR #2930](https://github.com/sifr-lang/sifr/pull/2930).
+M1 is implemented and locally validated in
+[PR #2932](https://github.com/sifr-lang/sifr/pull/2932); later milestones are
+not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -131,7 +133,7 @@ objects, alternate semantics, or a compatibility implementation.
 Implementation progress:
 
 - [x] M0 complete contract lock and evidence model — [PR #2930](https://github.com/sifr-lang/sifr/pull/2930)
-- [ ] M1 sealed runtime identity and cleanup
+- [x] M1 sealed runtime identity and cleanup — [PR #2932](https://github.com/sifr-lang/sifr/pull/2932)
 - [ ] M2 environment and trust authority cutover
 - [ ] M3 synchronous declaration core and complete call shapes
 - [ ] M4 recursive conversion and opaque lifecycle

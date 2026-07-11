@@ -261,23 +261,23 @@ object-shaped input rather than a plain dict.
 Ordinary Python reference release is a runtime/compiler responsibility, not a
 user-facing resource operation.
 
-The declaration layer uses a sealed compiler-owned Python handle. It is a
-generated Rust value containing private Python object-store identity and state;
-Sifr source cannot inspect or construct its handle/token fields. Package
+The declaration layer uses a sealed compiler-owned Python handle. Its generated
+Rust representation contains a private reference-counted `ForeignObject`
+identity; Sifr source cannot inspect or construct the payload. Package
 `@python.opaque` classes and the raw `sifr.python.Object` type lower to this one
-runtime representation with different declared surfaces. The current
-structural `_handle`/`_token` fields are removed when the raw API migrates; no
-second public token representation remains.
+runtime representation with different declared surfaces. The raw API has no
+structural `_handle`/`_token` fields and no second public token representation.
 
-Dropping a handle first detaches its object-store entry while the store lock is
-held, then releases the lock before any Python decref can run arbitrary Python
-code. If the current thread is attached to CPython, the owned reference is
-released immediately. Otherwise it is transferred without decref into a
-runtime-owned pending-release queue. Every runtime attach drains that queue
-while holding the GIL, and generated program epilogue performs a final drain
-before resource diagnostics. Queue insertion, lock recovery, and drain paths
-must return diagnostics or conservatively retain a reference; they must never
-panic in user-triggerable paths.
+Dropping the final identity releases its owned Python reference without an
+object-store lookup or lock. If the current thread is attached to CPython, the
+reference is released immediately. Otherwise it is transferred without decref
+into a runtime-owned pending-release queue. Every runtime attach drains that
+queue while holding the GIL, and generated program epilogue performs a final
+drain before resource diagnostics. Protocol stores remove affine entries and
+release their locks before any buffer release, capsule destructor, DLPack
+deleter, callback shutdown, or other Python code can run. Queue insertion, lock
+recovery, and drain paths must return diagnostics or conservatively retain a
+reference; they must never panic in user-triggerable paths.
 
 Normal shutdown does not call `Py_FinalizeEx`, so pending references are never
 decref'd after interpreter teardown. Abrupt process termination may bypass the

@@ -2,6 +2,7 @@ use super::{
     ModuleCatalog, RustGeneratedBridgeField, RustGeneratedBridgeType, RustGeneratedBridgeTypeKind,
     RustGeneratedBridgeVariant,
 };
+use sifr_ir::{HirClass, RustInteropDecoratorKind, RustInteropValue};
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -221,6 +222,46 @@ fn catalog_contains_bridge_type(catalog: &ModuleCatalog, name: &str, is_enum: bo
         catalog.enum_classes.contains(name)
     } else {
         catalog.record_classes.contains(name)
+    }
+}
+
+pub(super) fn opaque_rust_type_path(class: &HirClass) -> Option<String> {
+    class
+        .rust_interop
+        .iter()
+        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)?
+        .arguments
+        .iter()
+        .find(|argument| argument.name.as_deref() == Some("type"))
+        .and_then(|argument| match &argument.value {
+            RustInteropValue::TargetPath(path) => Some(path.dotted()),
+            _ => None,
+        })
+}
+
+pub(super) fn opaque_type_definition(
+    name: &str,
+    current_module: Option<&String>,
+    module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
+) -> Result<Option<String>, String> {
+    let current_key = current_module.cloned();
+    if let Some(target) = module_catalogs
+        .get(&current_key)
+        .and_then(|catalog| catalog.opaque_classes.get(name))
+    {
+        return Ok(Some(target.clone()));
+    }
+    let matches = module_catalogs
+        .values()
+        .filter_map(|catalog| catalog.opaque_classes.get(name))
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    match matches.len() {
+        0 => Ok(None),
+        1 => Ok(matches.into_iter().next()),
+        _ => Err(format!(
+            "opaque bridge type `{name}` is ambiguous across Sifr modules"
+        )),
     }
 }
 

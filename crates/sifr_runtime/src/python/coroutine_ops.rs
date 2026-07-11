@@ -2,7 +2,7 @@ use super::object_ops::{clone_handle, store_object};
 use super::{ObjectHandle, PythonError};
 use pyo3::types::PyAnyMethods;
 
-pub fn run_coroutine_blocking(coroutine: ObjectHandle) -> Result<ObjectHandle, PythonError> {
+pub fn run_coroutine_blocking(coroutine: &ObjectHandle) -> Result<ObjectHandle, PythonError> {
     super::attach(|py| {
         let coroutine = clone_handle(py, coroutine)?;
         let asyncio = py
@@ -32,16 +32,16 @@ mod tests {
         initialize_runtime(test_config("run-coroutine")).expect("init should succeed");
 
         let asyncio = import_module("asyncio").expect("asyncio module should import");
-        let sleep = get_attr(asyncio, "sleep").expect("sleep should resolve");
+        let sleep = get_attr(&asyncio, "sleep").expect("sleep should resolve");
         let delay = from_float(0.0).expect("delay should store");
         let expected = from_int(41).expect("result should store");
-        let coroutine = call_object(sleep, &[delay], &[("result", expected)])
+        let coroutine = call_object(&sleep, &[delay.clone()], &[("result", expected.clone())])
             .expect("sleep coroutine should be created");
         close_object(delay).expect("delay should close after coroutine creation");
         close_object(expected).expect("expected value should close after coroutine creation");
-        let value = run_coroutine_blocking(coroutine).expect("coroutine should complete");
+        let value = run_coroutine_blocking(&coroutine).expect("coroutine should complete");
 
-        assert_eq!(to_int(value).expect("coroutine result should convert"), 41);
+        assert_eq!(to_int(&value).expect("coroutine result should convert"), 41);
 
         for handle in [asyncio, sleep, coroutine, value] {
             close_object(handle).expect("object should close");

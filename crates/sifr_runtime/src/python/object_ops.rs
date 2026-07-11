@@ -4,28 +4,21 @@ use pyo3::types::{PyBytes, PyDict, PyList, PyTuple};
 use pyo3::IntoPyObjectExt;
 use std::collections::HashMap;
 use std::fmt;
-use std::hash::BuildHasher;
-use std::sync::{LazyLock, Mutex, MutexGuard};
 
-static OBJECT_STORE: LazyLock<Mutex<ObjectStore>> =
-    LazyLock::new(|| Mutex::new(ObjectStore::default()));
-static TOKEN_HASHER: LazyLock<std::collections::hash_map::RandomState> =
-    LazyLock::new(std::collections::hash_map::RandomState::new);
-
-pub type ObjectHandle = (i64, i64);
+pub type ObjectHandle = ForeignObject;
 
 macro_rules! typed_container_conversions {
     ($($list:ident, $tuple:ident, $dict:ident => $ty:ty, $expected:literal);+ $(;)?) => {
         $(
-            pub fn $list(object: ObjectHandle) -> Result<Vec<$ty>, PythonError> {
+            pub fn $list(object: &ObjectHandle) -> Result<Vec<$ty>, PythonError> {
                 copy_list(object, $expected, stringify!($list))
             }
 
-            pub fn $tuple(object: ObjectHandle) -> Result<Vec<$ty>, PythonError> {
+            pub fn $tuple(object: &ObjectHandle) -> Result<Vec<$ty>, PythonError> {
                 copy_tuple(object, $expected, stringify!($tuple))
             }
 
-            pub fn $dict(object: ObjectHandle) -> Result<HashMap<String, $ty>, PythonError> {
+            pub fn $dict(object: &ObjectHandle) -> Result<HashMap<String, $ty>, PythonError> {
                 copy_dict_str(object, $expected, stringify!($dict))
             }
         )+
@@ -62,11 +55,11 @@ impl PythonError {
         }
     }
 
-    fn closed(handle: i64) -> Self {
+    fn closed() -> Self {
         Self {
             kind: "resource".to_string(),
             exception_type: "SifrPythonClosedObject".to_string(),
-            message: format!("Python object handle {handle} is closed"),
+            message: "Python object identity is closed".to_string(),
             traceback: String::new(),
             context: "object handle lookup".to_string(),
         }
@@ -109,18 +102,6 @@ impl fmt::Display for PythonError {
 
 impl std::error::Error for PythonError {}
 
-#[derive(Default)]
-struct ObjectStore {
-    next_handle: i64,
-    next_nonce: u64,
-    objects: HashMap<i64, ObjectEntry>,
-}
-
-struct ObjectEntry {
-    token: i64,
-    object: ForeignObject,
-}
-
 pub fn import_module(name: &str) -> Result<ObjectHandle, PythonError> {
     validate_import_policy(name)?;
     super::attach(|py| {
@@ -131,7 +112,7 @@ pub fn import_module(name: &str) -> Result<ObjectHandle, PythonError> {
     .map_err(PythonError::runtime)?
 }
 
-pub fn get_attr(object: ObjectHandle, name: &str) -> Result<ObjectHandle, PythonError> {
+pub fn get_attr(object: &ObjectHandle, name: &str) -> Result<ObjectHandle, PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         object
@@ -143,7 +124,7 @@ pub fn get_attr(object: ObjectHandle, name: &str) -> Result<ObjectHandle, Python
     .map_err(PythonError::runtime)?
 }
 
-pub fn get_item_str(object: ObjectHandle, key: &str) -> Result<ObjectHandle, PythonError> {
+pub fn get_item_str(object: &ObjectHandle, key: &str) -> Result<ObjectHandle, PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         object
@@ -156,7 +137,7 @@ pub fn get_item_str(object: ObjectHandle, key: &str) -> Result<ObjectHandle, Pyt
 }
 
 pub fn call_object(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     args: &[ObjectHandle],
     kwargs: &[(&str, ObjectHandle)],
 ) -> Result<ObjectHandle, PythonError> {
@@ -164,13 +145,13 @@ pub fn call_object(
         let callable = clone_handle(py, object)?;
         let tuple_args = args
             .iter()
-            .map(|arg| clone_handle(py, *arg))
+            .map(|arg| clone_handle(py, arg))
             .collect::<Result<Vec<_>, _>>()?;
         let tuple = PyTuple::new(py, tuple_args.iter())
             .map_err(|error| PythonError::from_pyerr(py, error, "conversion", "call args"))?;
         let kw_dict = PyDict::new(py);
         for (key, value_handle) in kwargs {
-            let value = clone_handle(py, *value_handle)?;
+            let value = clone_handle(py, value_handle)?;
             kw_dict
                 .set_item(*key, value.bind(py))
                 .map_err(|error| PythonError::from_pyerr(py, error, "conversion", *key))?;
@@ -186,21 +167,16 @@ pub fn call_object(
 }
 
 pub fn call_attr(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     name: &str,
     args: &[ObjectHandle],
     kwargs: &[(&str, ObjectHandle)],
 ) -> Result<ObjectHandle, PythonError> {
     let callable = get_attr(object, name)?;
-    let result = call_object(callable, args, kwargs);
-    let close_result = close_object(callable);
-    match (result, close_result) {
-        (Ok(value), Ok(())) => Ok(value),
-        (Ok(_), Err(error)) | (Err(error), _) => Err(error),
-    }
+    call_object(&callable, args, kwargs)
 }
 
-pub fn enter_context(object: ObjectHandle) -> Result<ObjectHandle, PythonError> {
+pub fn enter_context(object: &ObjectHandle) -> Result<ObjectHandle, PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         object
@@ -212,7 +188,7 @@ pub fn enter_context(object: ObjectHandle) -> Result<ObjectHandle, PythonError> 
     .map_err(PythonError::runtime)?
 }
 
-pub fn exit_context(object: ObjectHandle) -> Result<(), PythonError> {
+pub fn exit_context(object: &ObjectHandle) -> Result<(), PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         object
@@ -224,20 +200,8 @@ pub fn exit_context(object: ObjectHandle) -> Result<(), PythonError> {
     .map_err(PythonError::runtime)?
 }
 
-pub fn close_object((handle, token): ObjectHandle) -> Result<(), PythonError> {
-    let entry = {
-        let mut store = object_store()?;
-        if store
-            .objects
-            .get(&handle)
-            .is_some_and(|entry| entry.token == token)
-        {
-            store.objects.remove(&handle)
-        } else {
-            return Err(PythonError::closed(handle));
-        }
-    };
-    super::attach(|_py| drop(entry)).map_err(PythonError::runtime)?;
+pub fn close_object(object: ObjectHandle) -> Result<(), PythonError> {
+    super::attach(|_py| drop(object)).map_err(PythonError::runtime)?;
     Ok(())
 }
 
@@ -294,7 +258,7 @@ pub fn from_record(values: &[(&str, ObjectHandle)]) -> Result<ObjectHandle, Pyth
     store_dict(values, "from_record")
 }
 
-pub fn to_none(object: ObjectHandle) -> Result<(), PythonError> {
+pub fn to_none(object: &ObjectHandle) -> Result<(), PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         if object.bind(py).is_none() {
@@ -306,63 +270,63 @@ pub fn to_none(object: ObjectHandle) -> Result<(), PythonError> {
     .map_err(PythonError::runtime)?
 }
 
-pub fn to_bool(object: ObjectHandle) -> Result<bool, PythonError> {
+pub fn to_bool(object: &ObjectHandle) -> Result<bool, PythonError> {
     extract_handle(object, "bool", "to_bool")
 }
 
-pub fn to_int(object: ObjectHandle) -> Result<i64, PythonError> {
+pub fn to_int(object: &ObjectHandle) -> Result<i64, PythonError> {
     extract_handle(object, "int", "to_int")
 }
 
-pub fn to_i8(object: ObjectHandle) -> Result<i8, PythonError> {
+pub fn to_i8(object: &ObjectHandle) -> Result<i8, PythonError> {
     extract_handle(object, "int8", "to_i8")
 }
 
-pub fn to_i16(object: ObjectHandle) -> Result<i16, PythonError> {
+pub fn to_i16(object: &ObjectHandle) -> Result<i16, PythonError> {
     extract_handle(object, "int16", "to_i16")
 }
 
-pub fn to_i32(object: ObjectHandle) -> Result<i32, PythonError> {
+pub fn to_i32(object: &ObjectHandle) -> Result<i32, PythonError> {
     extract_handle(object, "int32", "to_i32")
 }
 
-pub fn to_i64(object: ObjectHandle) -> Result<i64, PythonError> {
+pub fn to_i64(object: &ObjectHandle) -> Result<i64, PythonError> {
     extract_handle(object, "int64", "to_i64")
 }
 
-pub fn to_u8(object: ObjectHandle) -> Result<u8, PythonError> {
+pub fn to_u8(object: &ObjectHandle) -> Result<u8, PythonError> {
     extract_handle(object, "uint8", "to_u8")
 }
 
-pub fn to_u16(object: ObjectHandle) -> Result<u16, PythonError> {
+pub fn to_u16(object: &ObjectHandle) -> Result<u16, PythonError> {
     extract_handle(object, "uint16", "to_u16")
 }
 
-pub fn to_u32(object: ObjectHandle) -> Result<u32, PythonError> {
+pub fn to_u32(object: &ObjectHandle) -> Result<u32, PythonError> {
     extract_handle(object, "uint32", "to_u32")
 }
 
-pub fn to_u64(object: ObjectHandle) -> Result<u64, PythonError> {
+pub fn to_u64(object: &ObjectHandle) -> Result<u64, PythonError> {
     extract_handle(object, "uint64", "to_u64")
 }
 
-pub fn to_isize(object: ObjectHandle) -> Result<isize, PythonError> {
+pub fn to_isize(object: &ObjectHandle) -> Result<isize, PythonError> {
     extract_handle(object, "isize", "to_isize")
 }
 
-pub fn to_usize(object: ObjectHandle) -> Result<usize, PythonError> {
+pub fn to_usize(object: &ObjectHandle) -> Result<usize, PythonError> {
     extract_handle(object, "usize", "to_usize")
 }
 
-pub fn to_float(object: ObjectHandle) -> Result<f64, PythonError> {
+pub fn to_float(object: &ObjectHandle) -> Result<f64, PythonError> {
     extract_handle(object, "float", "to_float")
 }
 
-pub fn to_str(object: ObjectHandle) -> Result<String, PythonError> {
+pub fn to_str(object: &ObjectHandle) -> Result<String, PythonError> {
     extract_handle(object, "str", "to_str")
 }
 
-pub fn to_bytes(object: ObjectHandle) -> Result<Vec<u8>, PythonError> {
+pub fn to_bytes(object: &ObjectHandle) -> Result<Vec<u8>, PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         object
@@ -383,20 +347,20 @@ typed_container_conversions! {
     copy_list_str, copy_tuple_str, copy_dict_str_str => String, "str"
 }
 
-pub fn copy_list_bytes(object: ObjectHandle) -> Result<Vec<Vec<u8>>, PythonError> {
+pub fn copy_list_bytes(object: &ObjectHandle) -> Result<Vec<Vec<u8>>, PythonError> {
     copy_list_exact_bytes(object, "copy_list_bytes")
 }
 
-pub fn copy_tuple_bytes(object: ObjectHandle) -> Result<Vec<Vec<u8>>, PythonError> {
+pub fn copy_tuple_bytes(object: &ObjectHandle) -> Result<Vec<Vec<u8>>, PythonError> {
     copy_tuple_exact_bytes(object, "copy_tuple_bytes")
 }
 
-pub fn copy_dict_str_bytes(object: ObjectHandle) -> Result<HashMap<String, Vec<u8>>, PythonError> {
+pub fn copy_dict_str_bytes(object: &ObjectHandle) -> Result<HashMap<String, Vec<u8>>, PythonError> {
     copy_dict_str_exact_bytes(object, "copy_dict_str_bytes")
 }
 
 pub fn copy_record_fields(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     fields: &[&str],
 ) -> Result<Vec<(String, ObjectHandle)>, PythonError> {
     super::attach(|py| {
@@ -457,46 +421,15 @@ fn contains_root(roots: &[String], root: &str) -> bool {
 }
 
 pub(super) fn store_object(object: Py<PyAny>) -> Result<ObjectHandle, PythonError> {
-    let object = ForeignObject::new(object).map_err(PythonError::runtime)?;
-    let mut store = object_store()?;
-    let (handle, token) = reserve_handle(&mut store)?;
-    store.objects.insert(handle, ObjectEntry { token, object });
-    Ok((handle, token))
+    ForeignObject::new(object).map_err(PythonError::runtime)
 }
 
 fn store_objects(objects: Vec<Py<PyAny>>) -> Result<Vec<ObjectHandle>, PythonError> {
-    let objects = objects
+    objects
         .into_iter()
         .map(ForeignObject::new)
         .collect::<Result<Vec<_>, _>>()
-        .map_err(PythonError::runtime)?;
-    let mut handles = Vec::with_capacity(objects.len());
-    let mut entries = Vec::with_capacity(objects.len());
-    let mut store = object_store()?;
-    for object in objects {
-        let (handle, token) = reserve_handle(&mut store)?;
-        handles.push((handle, token));
-        entries.push((handle, ObjectEntry { token, object }));
-    }
-    store.objects.extend(entries);
-    Ok(handles)
-}
-
-fn reserve_handle(store: &mut ObjectStore) -> Result<ObjectHandle, PythonError> {
-    store.next_handle = store.next_handle.checked_add(1).ok_or_else(|| {
-        PythonError::runtime(PythonRuntimeError::PythonOperationFailed(
-            "Python object handle space exhausted".to_string(),
-        ))
-    })?;
-    store.next_nonce = store.next_nonce.checked_add(1).ok_or_else(|| {
-        PythonError::runtime(PythonRuntimeError::PythonOperationFailed(
-            "Python object token space exhausted".to_string(),
-        ))
-    })?;
-    Ok((
-        store.next_handle,
-        token_for(store.next_handle, store.next_nonce),
-    ))
+        .map_err(PythonError::runtime)
 }
 
 fn store_primitive<T>(value: T, context: &'static str) -> Result<ObjectHandle, PythonError>
@@ -519,7 +452,7 @@ fn store_dict(
     super::attach(|py| {
         let dict = PyDict::new(py);
         for (key, value_handle) in values {
-            let value = clone_handle(py, *value_handle)?;
+            let value = clone_handle(py, value_handle)?;
             dict.set_item(*key, value.bind(py))
                 .map_err(|error| PythonError::from_pyerr(py, error, "conversion", *key))?;
         }
@@ -535,7 +468,7 @@ fn store_dict(
 }
 
 fn extract_handle<T>(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     expected: &'static str,
     context: &'static str,
 ) -> Result<T, PythonError>
@@ -570,7 +503,7 @@ where
 }
 
 fn copy_list<T>(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     expected: &'static str,
     context: &'static str,
 ) -> Result<Vec<T>, PythonError>
@@ -598,7 +531,7 @@ where
 }
 
 fn copy_tuple<T>(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     expected: &'static str,
     context: &'static str,
 ) -> Result<Vec<T>, PythonError>
@@ -626,7 +559,7 @@ where
 }
 
 fn copy_dict_str<T>(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     expected: &'static str,
     context: &'static str,
 ) -> Result<HashMap<String, T>, PythonError>
@@ -651,7 +584,7 @@ where
 }
 
 fn copy_list_exact_bytes(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     context: &'static str,
 ) -> Result<Vec<Vec<u8>>, PythonError> {
     super::attach(|py| {
@@ -670,7 +603,7 @@ fn copy_list_exact_bytes(
 }
 
 fn copy_tuple_exact_bytes(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     context: &'static str,
 ) -> Result<Vec<Vec<u8>>, PythonError> {
     super::attach(|py| {
@@ -689,7 +622,7 @@ fn copy_tuple_exact_bytes(
 }
 
 fn copy_dict_str_exact_bytes(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     context: &'static str,
 ) -> Result<HashMap<String, Vec<u8>>, PythonError> {
     super::attach(|py| {
@@ -729,36 +662,17 @@ fn conversion_error(message: impl Into<String>, context: impl Into<String>) -> P
 fn clone_handles(py: Python<'_>, values: &[ObjectHandle]) -> Result<Vec<Py<PyAny>>, PythonError> {
     values
         .iter()
-        .map(|value| clone_handle(py, *value))
+        .map(|value| clone_handle(py, value))
         .collect::<Result<Vec<_>, _>>()
 }
 
 pub(super) fn clone_handle(
     py: Python<'_>,
-    (handle, token): ObjectHandle,
+    object: &ObjectHandle,
 ) -> Result<Py<PyAny>, PythonError> {
-    object_store()?
-        .objects
-        .get(&handle)
-        .filter(|entry| entry.token == token)
-        .ok_or_else(|| PythonError::closed(handle))?
-        .object
-        .clone_ref(py)
-        .map_err(PythonError::runtime)
-}
-
-fn token_for(handle: i64, nonce: u64) -> i64 {
-    let hash = TOKEN_HASHER.hash_one((handle, nonce));
-    i64::from_ne_bytes(hash.to_ne_bytes())
-}
-
-fn object_store() -> Result<MutexGuard<'static, ObjectStore>, PythonError> {
-    OBJECT_STORE.lock().map_err(|_| PythonError {
-        kind: "runtime".to_string(),
-        exception_type: "SifrPythonRuntimeError".to_string(),
-        message: "Python object store is unavailable".to_string(),
-        traceback: String::new(),
-        context: "object store".to_string(),
+    object.clone_ref(py).map_err(|error| match error {
+        PythonRuntimeError::PythonOperationFailed(_) => PythonError::closed(),
+        other => PythonError::runtime(other),
     })
 }
 
@@ -777,6 +691,5 @@ fn format_traceback(py: Python<'_>, error: &PyErr) -> String {
 
 #[cfg(test)]
 pub(super) fn reset_object_store_for_tests() {
-    let mut store = object_store().expect("object store should be available");
-    *store = ObjectStore::default();
+    // Foreign identities are owned directly; test cleanup happens through Drop.
 }

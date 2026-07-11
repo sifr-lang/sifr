@@ -17,12 +17,15 @@ mod foreign_object;
 mod object_ops;
 #[cfg(test)]
 mod object_ops_tests;
+mod resource_identity;
 mod resource_ops;
 pub use arrow_ops::{
-    arrow_array, arrow_schema, arrow_stream, release_arrow, ArrowHandle, PythonArrowCapsuleMetadata,
+    arrow_array, arrow_capsule_names, arrow_schema, arrow_stream, release_arrow, ArrowHandle,
+    PythonArrowCapsuleMetadata,
 };
 pub use buffer_ops::{
-    buffer_u8, copy_buffer_u8, release_buffer, BufferHandle, PythonBufferMetadata,
+    buffer_shape, buffer_strides, buffer_suboffsets, buffer_u8, copy_buffer_u8, release_buffer,
+    BufferHandle, PythonBufferMetadata,
 };
 use call_depth::{enter_python_call, python_call_depth};
 pub use callback_ops::{
@@ -31,7 +34,10 @@ pub use callback_ops::{
 };
 use config_verify::verify_interpreter_config;
 pub use coroutine_ops::run_coroutine_blocking;
-pub use dlpack_ops::{dlpack_tensor, release_dlpack, DlpackHandle, PythonDlpackTensorMetadata};
+pub use dlpack_ops::{
+    dlpack_shape, dlpack_strides, dlpack_tensor, release_dlpack, DlpackHandle,
+    PythonDlpackTensorMetadata,
+};
 pub use foreign_object::ForeignObject;
 pub use object_ops::{
     call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
@@ -44,6 +50,7 @@ pub use object_ops::{
     to_i16, to_i32, to_i64, to_i8, to_int, to_isize, to_none, to_str, to_u16, to_u32, to_u64,
     to_u8, to_usize, ObjectHandle, PythonError,
 };
+pub use resource_identity::PythonResourceIdentity;
 pub use resource_ops::{exit_context_with_error, resource_diagnostics, PythonResourceDiagnostics};
 
 static RUNTIME_STATE: Mutex<RuntimeState> = Mutex::new(RuntimeState::new());
@@ -758,11 +765,11 @@ mod tests {
         initialize_runtime(test_config("ops")).expect("init should succeed");
 
         let builtins = import_module("builtins").expect("builtins import should succeed");
-        let dict = get_attr(builtins, "dict").expect("dict attr should succeed");
+        let dict = get_attr(&builtins, "dict").expect("dict attr should succeed");
         let math = import_module("math").expect("math import should succeed");
-        let kwargs_dict =
-            call_object(dict, &[], &[("module", math)]).expect("kwargs call should succeed");
-        let item = get_item_str(kwargs_dict, "module").expect("item access should succeed");
+        let kwargs_dict = call_object(&dict, &[], &[("module", math.clone())])
+            .expect("kwargs call should succeed");
+        let item = get_item_str(&kwargs_dict, "module").expect("item access should succeed");
         close_object(item).expect("item close should succeed");
         close_object(kwargs_dict).expect("dict close should succeed");
         close_object(math).expect("math close should succeed");
@@ -770,10 +777,10 @@ mod tests {
 
         let contextlib = import_module("contextlib").expect("contextlib import should succeed");
         let nullcontext =
-            get_attr(contextlib, "nullcontext").expect("nullcontext attr should succeed");
-        let manager = call_object(nullcontext, &[], &[]).expect("nullcontext call should succeed");
-        let entered = enter_context(manager).expect("context enter should succeed");
-        exit_context(manager).expect("context exit should succeed");
+            get_attr(&contextlib, "nullcontext").expect("nullcontext attr should succeed");
+        let manager = call_object(&nullcontext, &[], &[]).expect("nullcontext call should succeed");
+        let entered = enter_context(&manager).expect("context enter should succeed");
+        exit_context(&manager).expect("context exit should succeed");
         close_object(entered).expect("entered context close should succeed");
         close_object(manager).expect("context manager close should succeed");
         close_object(nullcontext).expect("nullcontext close should succeed");
@@ -826,29 +833,15 @@ mod tests {
     }
 
     #[test]
-    fn closed_object_handles_return_resource_errors() {
-        let _guard = test_guard();
-        reset_runtime_state_for_tests();
-        initialize_runtime(test_config("closed")).expect("init should succeed");
-        let math = import_module("math").expect("math import should succeed");
-        close_object(math).expect("close should succeed");
-
-        let error = get_attr(math, "pi").expect_err("closed object should fail");
-
-        assert_eq!(error.kind, "resource");
-        assert!(error.message.contains("closed"));
-    }
-
-    #[test]
     fn failed_record_field_copy_does_not_leak_partial_handles() {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
         initialize_runtime(test_config("record-field-leak")).expect("init should succeed");
         let value = from_int(42).expect("field value should be stored");
-        let record = from_record(&[("value", value)]).expect("record should be stored");
+        let record = from_record(&[("value", value.clone())]).expect("record should be stored");
         let before = shutdown_diagnostics().expect("diagnostics should be available");
 
-        let error = copy_record_fields(record, &["value", "missing"])
+        let error = copy_record_fields(&record, &["value", "missing"])
             .expect_err("missing field should fail");
 
         assert_eq!(error.kind, "conversion");
@@ -867,14 +860,14 @@ mod tests {
         initialize_runtime(test_config("operation-failures")).expect("init should succeed");
         let math = import_module("math").expect("math import should succeed");
 
-        let attr_error = get_attr(math, "does_not_exist")
+        let attr_error = get_attr(&math, "does_not_exist")
             .expect_err("missing attribute should fail as PythonError");
         assert_eq!(attr_error.kind, "attribute");
         assert_eq!(attr_error.exception_type, "AttributeError");
 
         let builtins = import_module("builtins").expect("builtins import should succeed");
-        let len = get_attr(builtins, "len").expect("len attr should succeed");
-        let call_error = call_object(len, &[], &[]).expect_err("wrong arg count should fail");
+        let len = get_attr(&builtins, "len").expect("len attr should succeed");
+        let call_error = call_object(&len, &[], &[]).expect_err("wrong arg count should fail");
         assert_eq!(call_error.kind, "call");
         assert_eq!(call_error.exception_type, "TypeError");
 
