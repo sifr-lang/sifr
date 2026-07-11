@@ -23,7 +23,7 @@ adapter while preserving generic source `Counter[T]`, typed language-owned
   those bodies reach primitive typed intrinsic HIR.
 - [x] Run generic Counter, typed defaultdict, bytes-wrapper, codegen, bootstrap,
   manifest, allowlist, file-size, and authoritative create-PR validation.
-- [ ] Run Claude Opus review rounds until `SATISFIED`, merge the M4 PR, and
+- [x] Run Claude Opus review rounds until `SATISFIED`, merge the M4 PR, and
   update the phase record.
 
 ## Deletion inventory

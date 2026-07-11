@@ -28,6 +28,13 @@ passed with crate tests at 130,922 ms / 600,000 ms, runtime-platform suites at
 59,782 ms / 120,000 ms, and 129/129 selected E2E fixtures at
 402,726 ms / 600,000 ms. Three Claude Opus review rounds were satisfied; the
 final round verified the local-shadowing correction raised during round 2.
+M4 deletes the dead JSON Counter and serialized defaultdict bridge residue and
+is merged in [PR #2924](https://github.com/sifr-lang/sifr/pull/2924). Its
+create-PR gate passed with crate tests at 126,439 ms / 600,000 ms,
+runtime-platform suites at 58,139 ms / 120,000 ms, and 130/130 selected E2E
+fixtures at 31,402 ms / 600,000 ms. Two Claude Opus review rounds were
+satisfied; the final round confirmed restored nested structured-intrinsic
+coverage with retained IDs.
 
 ## Why This Phase Exists
 
@@ -551,7 +558,7 @@ scripts/run_all_tests.sh
 - [x] M1 merged and documented ([PR #2921](https://github.com/sifr-lang/sifr/pull/2921)).
 - [x] M2 merged and documented ([PR #2922](https://github.com/sifr-lang/sifr/pull/2922)).
 - [x] M3 merged and documented ([PR #2923](https://github.com/sifr-lang/sifr/pull/2923)).
-- [ ] M4 merged and documented.
+- [x] M4 merged and documented ([PR #2924](https://github.com/sifr-lang/sifr/pull/2924)).
 - [ ] M5 merged and documented.
 - [ ] M6 merged and documented.
 - [ ] Full local merge gate passes on final `main`.
