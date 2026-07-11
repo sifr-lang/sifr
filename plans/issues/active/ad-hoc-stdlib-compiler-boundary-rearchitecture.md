@@ -47,8 +47,8 @@ at 163,565 ms / 600,000 ms, runtime-platform suites at
 383,025 ms / 600,000 ms. Two Claude Opus review rounds ended `SATISFIED`; the
 complete second review reported no findings.
 
-M6 implementation is published in
-[PR #2927](https://github.com/sifr-lang/sifr/pull/2927) and has completed local
+M6 is merged in [PR #2927](https://github.com/sifr-lang/sifr/pull/2927) at
+`7b40f6936` and has completed local
 recertification. The permanent
 guards classify `403` public native adapters as `399` active private-declaration
 targets plus four documented compiler substrates; compare all retained source,
@@ -57,8 +57,8 @@ exactly; and reject the required negative restorations. The installed and
 source-tree boundary fixture passes with identical behavior and the reviewed
 `sifr_stdlib[bytes]` generated dependency plan. The create-PR gate passes, and
 two Claude Opus milestone review rounds ended `SATISFIED`; the second reported
-no blockers or optional cleanups. PR merge, the final merge gate, and the
-phase-wide closeout review remain.
+no blockers or optional cleanups. The final merge gate and phase-wide closeout
+review remain.
 
 ## Why This Phase Exists
 
@@ -584,5 +584,5 @@ scripts/run_all_tests.sh
 - [x] M3 merged and documented ([PR #2923](https://github.com/sifr-lang/sifr/pull/2923)).
 - [x] M4 merged and documented ([PR #2924](https://github.com/sifr-lang/sifr/pull/2924)).
 - [x] M5 merged and documented ([PR #2925](https://github.com/sifr-lang/sifr/pull/2925)).
-- [ ] M6 merged and documented.
+- [x] M6 merged and documented ([PR #2927](https://github.com/sifr-lang/sifr/pull/2927)).
 - [ ] Full local merge gate passes on final `main`.

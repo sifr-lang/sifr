@@ -2,14 +2,17 @@
 
 ## Status
 
-Implementation merged through PR #2918 (merge sha `b531e8ca`), but closeout
-certification is reopened. A post-closeout audit reproduced a standalone
-runtime-diagnostics build failure and confirmed validation masking, duplicate
+The corrective implementation is merged through
+[PR #2927](https://github.com/sifr-lang/sifr/pull/2927), and final phase closure
+validation is active. The post-closeout audit that reopened certification found
+a standalone runtime-diagnostics build failure, validation masking, duplicate
 fallback signatures, dead Counter intrinsics, raw-name intrinsic dispatch, and
-bypassed source/Rust implementations. The decided corrective sequence is
-tracked in
+bypassed source/Rust implementations. Those defects and their replacement
+architecture are tracked in
 [`ad-hoc-stdlib-compiler-boundary-rearchitecture.md`](ad-hoc-stdlib-compiler-boundary-rearchitecture.md).
-The new phase owns the replacement architecture and its final certification.
+The replacement phase has merged all six milestones; its phase-wide review and
+full merge gate are the only remaining closure steps before this issue returns
+to completed status.
 
 ## Objective
 

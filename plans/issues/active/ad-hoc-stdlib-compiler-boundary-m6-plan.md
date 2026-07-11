@@ -26,14 +26,17 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   retained callable use, missing private source declarations, and orphan
   retained dependency packages.
 - [x] Update durable architecture, roadmap, dependency snapshots, and
-  snapshots, and traceability reports for the final boundary.
+  traceability reports for the final boundary.
 - [x] Certify representative retained-intrinsic and migrated-bridge programs
   against both source-tree and installed sysroots, including dependency-plan
   equivalence.
 - [x] Run focused guards/tests, the authoritative create-PR gate, and Claude
   Opus review rounds until `SATISFIED`.
-- [ ] Open, review, and merge the M6 PR; then run the full merge gate on final
-  `main` and complete the phase-wide review/closure record.
+- [x] Open, review, and merge M6 as
+  [PR #2927](https://github.com/sifr-lang/sifr/pull/2927) at merge commit
+  `7b40f6936`.
+- [ ] Run the full merge gate on the final tree and complete the phase-wide
+  review/closure record.
 
 ## Validation evidence
 
@@ -59,8 +62,7 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   E2E fixtures at `32,483 ms / 600,000 ms`. The initial run exposed a cold LSP
   preview-cache timeout; the exact cache was warmed through the normal compiler
   metadata path, the standalone smoke passed, and the complete gate rerun was
-  green. Review rounds, PR merge, final merge gate, and phase-wide closeout
-  review remain pending.
+  green. The final merge gate and phase-wide closeout review remain pending.
 - Claude Opus M6 review round 1 reported no blocking findings and ended
   `SATISFIED`. Its soft blind spots were nevertheless hardened: public
   unsafe/extern functions are now inventoried, structured compiler consumers
