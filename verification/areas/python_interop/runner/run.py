@@ -10,6 +10,10 @@ if __package__ in {None, ""}:
 
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
+from declaration_capabilities import (
+    load_and_validate_capabilities,
+    run_declaration_capability_self_tests,
+)
 from env import discover_paths
 from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
@@ -205,6 +209,7 @@ def main(argv: list[str] | None = None) -> int:
     matrices = load_matrices(paths.packages_root)
     validate_matrix_entries(matrices)
     validate_certification_policy(matrices)
+    declaration_capabilities = load_and_validate_capabilities(paths.area_root, paths.repo_root)
     validate_fixtures(paths.fixtures_root)
     validate_fixture_files(paths.fixtures_root)
 
@@ -234,6 +239,18 @@ def main(argv: list[str] | None = None) -> int:
         "packages": sorted({entry.name for entry in selected}),
         "matrix_files": list(MATRIX_FILES),
         "matrix_entries": len(matrices),
+        "declaration_capabilities": {
+            "file": "declaration_capabilities.json",
+            "rows": len(declaration_capabilities["capabilities"]),
+            "active": sum(
+                row["implementation_status"] == "active"
+                for row in declaration_capabilities["capabilities"]
+            ),
+            "reserved": sum(
+                row["implementation_status"] == "reserved"
+                for row in declaration_capabilities["capabilities"]
+            ),
+        },
         "fixture_directories": list(REQUIRED_FIXTURES),
         "fixture_files": list(REQUIRED_FIXTURE_FILES),
         "source_fixtures": list(REQUIRED_SOURCE_FIXTURES),
@@ -357,6 +374,8 @@ def run_self_tests(area_root: Path) -> None:
     entries = load_matrices(area_root / "packages")
     validate_matrix_entries(entries)
     validate_certification_policy(entries)
+    repo_root = area_root.parents[2]
+    run_declaration_capability_self_tests(area_root, repo_root)
     validate_fixture_files(area_root / "fixtures")
     run_env_probe(area_root)
     try:

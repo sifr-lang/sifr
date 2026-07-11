@@ -444,6 +444,16 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-PYRES-0000",
     },
     DiagnosticFamily {
+        name: "PYASYNC",
+        summary: "Embedded Python loop ownership, awaitable, cancellation, and async-cleanup diagnostics.",
+        reserved_base: "SIFR-PYASYNC-0000",
+    },
+    DiagnosticFamily {
+        name: "PYCTX",
+        summary: "Embedded Python context entry, exit, suppression, and cause-mapping diagnostics.",
+        reserved_base: "SIFR-PYCTX-0000",
+    },
+    DiagnosticFamily {
         name: "PYZC",
         summary:
             "Embedded Python zero-copy buffer, Arrow, DLPack, and array-interface diagnostics.",

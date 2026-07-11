@@ -27,6 +27,16 @@ evidence and validates checked-in positive probe fixtures plus concrete negative
 probe/selection cases. The runner must never invoke `uv sync` or install
 packages implicitly.
 
+`declaration_capabilities.json` is the separate declaration/protocol capability
+ledger. Its `target_state` classifies the intended contract as
+`declaration-supported`, `bridge-supported`, `dynamic-only`, or
+`unsupported-by-design`; it does not claim implementation. Current availability
+is recorded independently as `reserved` or `active`, and a reserved row cannot
+claim passing evidence. Each row names its durable activation owner and the status of
+positive, negative, cleanup, cancellation, and live evidence. The scaffold and
+self-test suites reject missing ownership, unsupported states, duplicate rows,
+or a supported claim without the evidence required by that row.
+
 Live dependency examples are intentionally opt-in. The `python-interop-live`
 profile uses selected-areas-only execution and runs both:
 

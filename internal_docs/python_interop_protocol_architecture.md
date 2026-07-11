@@ -4,7 +4,7 @@
 
 This document is part of the proposed declaration-first Python interop contract.
 It defines the complete end state for Python coroutine, context-manager,
-callback, buffer, Arrow, and DLPack integration. Ordered milestones implement
+callback, buffer, Arrow, and DLPack integration. Ordered changes activate
 this one contract without publishing reduced substitutes.
 
 The common rules in
