@@ -27,7 +27,7 @@ deterministic bootstrap diagnostic.
 - [x] Run affected checks/tests, native fixtures, all guards, workspace Clippy,
   file-size checks, and the authoritative create-PR gate.
 - [x] Run Claude Opus review rounds until `SATISFIED`.
-- [ ] Merge the M5 PR and update the phase record with its link.
+- [x] Merge the M5 PR and update the phase record with its link.
 
 ## Deletion inventory
 
