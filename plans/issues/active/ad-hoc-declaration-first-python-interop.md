@@ -1,532 +1,743 @@
-# Ad Hoc Phase: Declaration-First Python Interop
+# Ad Hoc Phase: Complete Declaration-First Python Interop
 
 ## Status
 
-Proposed. Architecture and milestone planning are complete. Opus pass 3
-approved the revised design; a final Fable High review found two sentence-scale
-contract ambiguities, both resolved here. No declaration syntax or
-implementation described here is currently supported.
+Proposed. The phase defines one complete end-state architecture and an ordered
+implementation sequence. Opus High pass 5 approves the complete design with no
+actionable findings. Nothing described here is currently implemented.
+Milestones sequence delivery; they do not create reduced language versions,
+temporary public contracts, dual authorities, or alternate lowering paths.
+
+The durable contracts are:
+
+- [`internal_docs/python_interop_declaration_architecture.md`](../../../internal_docs/python_interop_declaration_architecture.md)
+- [`internal_docs/python_interop_protocol_architecture.md`](../../../internal_docs/python_interop_protocol_architecture.md)
 
 ## Objective
 
-Add a declaration-first package-authoring layer over Sifr's existing embedded
-Python runtime so package consumers call ordinary typed Sifr APIs instead of
-manually operating `py.Object` handles.
+Make existing Python libraries feel like ordinary typed Sifr packages. Package
+authors declare direct targets or hermetic Python bridges once; consumers use
+normal typed functions, opaque classes, async functions, context managers,
+callbacks, and affine data resources without manipulating Python handles.
 
-The phase must preserve the implemented environment, trust, error, blocking,
-sendability, callback, resource, and zero-copy contracts. It solves the root
-ergonomic problem through checked declarations, compiler-owned object
-lifetimes, and package-local Python bridges rather than weakening the boundary
-or adding Python source compatibility.
+The complete design preserves Sifr's static error, ownership, blocking,
+sendability, cancellation, trust, and no-panic guarantees. It also gives Python
+protocols first-class contracts rather than routing unfinished cases through
+raw objects.
 
-The durable proposed contract lives in
-[`internal_docs/python_interop_declaration_architecture.md`](../../../internal_docs/python_interop_declaration_architecture.md).
+## End-State Decisions
 
-## Core Decisions
-
-- `@python(...)` declarations are the normal package-authoring surface.
-- `sifr.python` remains an explicit dynamic escape hatch.
-- Decorator targets are structured dotted paths with `import-root`, `bridge`,
-  and `Self` resolution; string targets are rejected.
-- The Sifr declaration signature is authoritative for argument and return
-  conversion. Decorators do not repeat conversion types.
-- Declaration bodies are ellipsis-only stubs.
-- Typed Python objects use sealed compiler-owned opaque handles and automatic
-  reference release.
-- Ordinary reference drop is distinct from semantic `close`, `aclose`,
-  context-manager exit, buffer release, capsule release, and callback shutdown.
-- APIs that do not map directly use hermetic package-local Python bridge modules
-  under `src/python_bridges/`.
-- Static targets and bridge imports infer package import requirements; root
-  execution and native-extension trust remain explicit.
-- Initial Python declarations have an implicit `blocking_io` effect. There is
-  no hidden offload or event loop.
-- `.pyi`, `py.typed`, and runtime introspection assist declaration generation
-  but never override checked-in Sifr binding contracts.
-- Compatibility claims require executable positive and negative evidence.
+- `@python(...)` is the synchronous declaration boundary;
+  `@python.coroutine(...)` is the genuine coroutine boundary.
+- The Sifr signature is the sole conversion type contract. Decorators carry
+  only target and protocol facts that types cannot express.
+- Decorator targets are structured dotted paths in a dedicated Python target
+  namespace. String targets are invalid.
+- Declaration bodies are ellipsis-only.
+- All Python identity uses one sealed compiler-owned non-send handle. The
+  grammar has no configurable `send=` policy.
+- Ordinary references release automatically. Semantic close, async close,
+  context exit, callback shutdown, buffer release, Arrow release, and DLPack
+  consumption keep distinct affine contracts.
+- Python construction is exposed through fallible top-level or static factory
+  functions; ordinary Sifr construction never hides a `Result`.
+- `python.omit` in a declaration default distinguishes omitted arguments from
+  explicitly supplied `None` without leaking a wrapper type to consumers.
+- Typed positional variadics, typed kwargs, and explicit closed-record kwargs
+  expansion are supported and checked.
+- Package-local Python bridges under `src/python_bridges/` are hermetic embedded
+  package inputs with static import inventory.
+- Synchronous declarations are `blocking_io`. Async declarations use one
+  application-owned asyncio loop thread with structured bidirectional
+  cancellation and deterministic shutdown.
+- Callback declarations state lifetime, owner, dispatch, concurrency, and
+  shutdown. No callback may escape without a deterministic owner.
+- Buffer, Arrow, and DLPack declarations return affine typed resources and never
+  copy. Copied values use ordinary copied return types.
+- Static declarations and bridge imports infer Python requirements. The root
+  application alone authorizes execution and native extensions.
+- `[python].allow-imports` is removed atomically. There is no period with two
+  requirement authorities.
+- Checked-in declarations are authoritative. Stubs and introspection generate
+  reviewable scaffolds but never introduce `Any`, bare `object`, or `py.Object`
+  automatically.
+- `sifr.python` remains the intentional dynamic API over the same sealed handles
+  and affine resources, not a generated-declaration degradation path.
+- Capability claims require executable positive, negative, cleanup, and
+  compiled-binary evidence.
 
 ## Non-Goals
 
-- Python source compatibility or dynamic dot access as the primary API.
-- Sifr `Any`, silent `Object` fallback, or implicit deep conversion.
-- Automatic environment installation, synchronization, or trust mutation.
-- Whole-library automatic wrapper generation.
-- Fallible class-constructor syntax in this phase; initial bindings use factory
-  functions returning `Result`.
-- Hidden async scheduling or coroutine/event-loop integration.
-- A general decorator converter pipeline.
-- Replacing existing explicit Arrow, DLPack, buffer, callback, or resource
-  ownership rules.
+- Python source compatibility or arbitrary dynamic attribute syntax in normal
+  Sifr code.
+- A Sifr `Any` type, untyped declaration generation, or implicit conversion to
+  `py.Object`.
+- Automatic Python installation, `uv sync`, environment mutation, or trust
+  mutation.
+- Whole-library binding generation without symbol selection and review.
+- Decorator-level converter pipelines or repeated type metadata.
+- Hidden offload, ambient event-loop reuse, per-call event loops, or nested
+  `asyncio.run`.
+- Silent copying, device changes, ownership transfer, callback escape, or
+  resource abandonment.
+- Static proof of arbitrary Python implementation bodies.
 
 ## Scope
 
-Compiler and package surfaces expected to change during implementation:
+Expected implementation surfaces:
 
-- `crates/sifr_ir/src/` for Python interop declaration metadata;
-- `crates/sifr_lowering/src/lower/` for decorator and ownership checking;
-- `crates/sifr_codegen/src/` for typed Python wrapper generation;
-- `crates/sifr_driver/src/build/` for Python target probes and build plans;
-- `crates/sifr_package/src/python/` for inferred requirements, environment,
-  trust, and binding package metadata;
-- `crates/sifr_runtime/src/python/` for sealed owned handles and generated
-  conversion support;
-- `crates/sifr_diagnostics/` for active declaration diagnostic families;
-- `stdlib/sifr/python*.sifr` for the raw escape hatch over the same ownership
-  representation;
-- `verification/areas/python_interop/` for executable compatibility evidence;
-- CLI/LSP surfaces for `sifr python check`, `doctor`, and symbol-selective
-  binding generation after the declaration grammar stabilizes.
+- `crates/sifr_ir/src/` for declaration, protocol, ownership, callback, and
+  async metadata;
+- `crates/sifr_lowering/src/lower/` for decorator validation, call-shape
+  lowering, non-send checks, affine resources, context protocols, and effects;
+- `crates/sifr_codegen/src/` for generated sync/async wrappers, callback
+  trampolines, context adapters, and protocol transfers;
+- `crates/sifr_driver/src/build/` for environment/target probes and generated
+  application plans;
+- `crates/sifr_package/src/python/` for inferred requirements, uv discovery,
+  trust authority, bridge inventories, and cache identity;
+- `crates/sifr_runtime/src/python/` for sealed handles, release queues, the
+  asyncio loop, callbacks, contexts, buffers, Arrow, and DLPack;
+- `crates/sifr_diagnostics/` for active declaration and protocol diagnostics;
+- `stdlib/sifr/python*.sifr` for the typed raw API over the same representations;
+- `verification/areas/python_interop/` for deterministic and live executable
+  evidence;
+- CLI and LSP surfaces for check, doctor, binding generation, completion,
+  navigation, and drift reporting.
+
+## Delivery Rule
+
+Internal substrate may land before its public syntax, but no PR may expose a
+temporary public grammar or a second runtime representation. Each milestone
+ends with one production path for the behavior it activates. When a milestone
+replaces an existing authority or representation, it updates every consumer,
+fixture, diagnostic, and document in the same merge unit.
 
 ## Milestones
 
-### M0. Contract Lock And Verification Scaffold
+### M0. Complete Contract Lock And Evidence Model
 
 Tasks:
 
-- Review and accept the declaration-first architecture document.
-- Define the supported/future/unsupported compatibility categories.
-- Add a machine-readable declaration capability matrix separate from broad
+- Accept both architecture documents as the complete target contract.
+- Define capability states: declaration-supported, bridge-supported,
+  dynamic-only, and unsupported-by-design.
+- Add a machine-readable declaration/protocol capability matrix separate from
   package inventory.
-- Inventory the existing runnable Python examples and classify which assertions
-  prove runtime execution versus source or matrix presence only.
-- Reserve `SIFR-PYIMP-0001`, `SIFR-PYCALL-0001`, `SIFR-PYCONV-0001`,
-  `SIFR-PYRES-0001`, `SIFR-PYZC-0001`, and `SIFR-PYCB-0001` with the meanings
-  defined by the architecture.
-- Reserve `SIFR-PYTRUST-0005` for a required static import root not authorized
-  by the root application, without repurposing existing diagnostic meaning.
-- Add stale-draft checks rejecting deprecated prototype syntax such as string
-  targets and decorator-level `returns=` converter declarations.
-- Lock bridge-version-1 argument passing: regular parameters become positional
-  Python arguments, Sifr keyword-only parameters become named Python kwargs,
-  defaults are passed explicitly, and variadics/kwargs expansion are rejected.
-- Lock the absence of omitted-argument semantics: `Option[T]` maps `None` to
-  Python `None`, while omission-sensitive targets require a local bridge.
-- Lock the manifest compatibility sequence before implementation: inferred
-  requirements coexist with current allow/trust validation until a later
-  atomic removal milestone.
+- Assign positive, negative, cleanup, cancellation, and live evidence owners to
+  every decorator and protocol state transition.
+- Lock the complete decorator grammar, policy atoms, target namespace, and
+  ellipsis-only body rule.
+- Lock positional, keyword-only, `python.omit`, typed `*args`, typed `**kwargs`,
+  and explicit record-expansion semantics.
+- Lock diagnostic families `PYIMP`, `PYCALL`, `PYCONV`, `PYRES`, `PYASYNC`,
+  `PYCTX`, `PYCB`, and `PYZC`, including stable first codes.
+- Lock the single manifest/trust authority and atomic removal of
+  `[python].allow-imports`.
+- Add stale-design checks rejecting string targets, `send=`, repeated converter
+  types, hidden copy policies, and reduced-version terminology.
 
 Acceptance:
 
-- Reviewers can distinguish implemented raw interop from proposed declaration
-  syntax without reading compiler code.
-- Every planned capability has a positive and negative evidence owner.
-- The matrix cannot label inventory-only evidence as declaration support.
-- Current raw behavior and future declaration behavior are not conflated.
+- Every public syntax form maps to one HIR/runtime contract.
+- Every protocol has an explicit ownership and shutdown state machine.
+- No capability is labeled supported from package inventory alone.
+- No document describes a smaller language version or an undecided protocol.
 
-Documentation-only validation:
+Documentation validation:
 
-- Markdown link and heading review.
-- `git diff --check`.
-- Targeted `rg` checks for rejected syntax and contradictory implemented-status
-  claims.
+- Markdown link and heading checks.
+- `git diff --check` and file-size guardrails.
+- Targeted terminology and rejected-syntax sweeps.
 
-### M1. Declaration IR, Direct Calls, And Owned References
-
-Implement this milestone as an ordered internal PR sequence: first the sealed
-handle and pending-release queue, then declaration parsing/IR and target probes,
-then generated wrappers with effect, requirement, and trust inference. Each PR
-must preserve one handle model and leave its added behavior independently
-verifiable.
+### M1. Sealed Runtime Identity And Cleanup
 
 Tasks:
 
-- Parse `@python(path)` into structured declaration metadata with source spans.
-- Accept ellipsis only as the complete body of eligible Python declarations.
-- Resolve static import roots and reject string or dynamic decorator targets.
-- Add a `PythonInteropPlan` to generated project metadata.
-- Add one compiler-recognized sealed Python foreign-handle kind with no
-  Sifr-visible token fields.
-- Migrate raw `sifr.python.Object` and generated declaration values to the same
-  runtime handle representation; do not retain a second public token model.
-- Implement detach-before-decref, attached immediate release, the runtime-owned
-  pending-release queue, attach-time draining, and generated epilogue draining.
-- Generate direct scalar function/factory wrappers from Sifr signatures.
-- Lower regular arguments positionally and keyword-only arguments as kwargs;
-  reject `*args`, `**kwargs`, and implicit record expansion.
-- Map Python exceptions and conversion failures into structured `PythonError`.
-- Infer the `blocking_io` effect and enforce async call-site offload rules.
-- Infer import requirements and validate explicit root trust.
+- Add one compiler-recognized sealed Python foreign-handle representation.
+- Move raw `sifr.python.Object`, declared opaque objects, callbacks, and protocol
+  resources onto sealed private runtime identities; remove public token fields.
+- Implement detach-before-decref, attached immediate release, a runtime-owned
+  pending-release queue, attach-time draining, and final epilogue draining.
+- Ensure no object-store lock is held while decref, destructor, callback, or
+  other Python code can execute.
 
 Acceptance:
 
-- A direct scalar binding can be checked, built, and run without raw
-  `py.Object` operations.
-- Ordinary returned Python values cannot leak through success, Python failure,
-  conversion failure, or early return.
-- Unsupported types and targets fail as Sifr diagnostics before Rust build.
-- Direct calls from async code remain rejected unless explicitly offloaded.
-- A drop cannot hold the object-store lock while Python decref or `__del__`
-  code runs.
+- There is one opaque identity model for raw and declared Python state.
+- Ordinary object cleanup is automatic on every control-flow exit.
+- Drops cannot run Python while holding a Sifr resource-store lock.
 
 Validation:
 
-- Lowering and codegen unit tests for accepted and rejected decorator forms.
-- Runtime ownership tests with outstanding-reference assertions.
-- Success, Python failure, conversion failure, early return, detached-thread
-  drop, and reentrant-callback drop fixtures.
-- Library-only check fixtures proving a valid declaration records a deferred
-  probe without selecting an environment, followed by final-application build
-  fixtures that resolve the probe or surface its failure.
-- Executable pure-Python and native-extension fixtures.
-- Focused create-PR validation for the touched compiler/runtime packages.
+- Runtime ownership tests for success, failure, early return, detached-thread
+  drop, reentrant destructor, and callback reentrancy.
+- Repository sweep proving public handle/token fields are gone.
 
-### M2. Opaque Classes, Methods, Attributes, And Items
-
-Tasks:
-
-- Implement `@python.opaque` with type target metadata, `close=drop | close`, and
-  the required `send=False` policy. Reject reserved `close=async_close` and
-  unsupported `send=True` with `SIFR-PYRES-0001` in bridge version 1.
-- Implement `Self` method target resolution.
-- Implement fallible `@python.attr` descriptor/property access.
-- Implement fallible `@python.item` access.
-- Enforce borrow/move/use-after-close rules for opaque handles.
-- Keep initial construction as explicit factory functions returning `Result`.
-- Require factory results to pass `isinstance` against the declared opaque
-  Python type, accepting subclasses.
-- Record probe results as verified or runtime-checked; reject only targets
-  proved absent/incompatible and never claim static proof for an uninspectable
-  instance attribute.
-- Activate targeted `PYCALL`, `PYCONV`, and `PYRES` diagnostics.
-
-Acceptance:
-
-- A Python-backed object can expose typed methods, attributes, and item access
-  without exposing structural handle fields.
-- Attribute descriptors that raise return `PythonError`.
-- Automatic drop and semantic close are distinct and independently verified.
-- Non-send opaque objects cannot cross Sifr task/thread boundaries.
-
-Validation:
-
-- Positive and negative opaque lifecycle fixtures.
-- Descriptor/property failure fixtures.
-- Method receiver, moved value, double close, and use-after-close tests.
-- Positive consuming `close(own self)` and rejected `close=async_close` fixtures.
-- Rejected `send=True` fixture proving the policy cannot be accepted as a no-op.
-- A fixture that creates an opaque object, fails mid-flow, and proves ordinary
-  reference count returns to zero.
-- Runnable biip/schwifty or equivalent object-shaped example.
-
-### M3. Typed Containers And Records
-
-Depends on M1's sealed handle representation.
-
-Tasks:
-
-- Add recursively checked list, tuple, `dict[str, T]`, option, and closed-record
-  conversion from authoritative Sifr signatures.
-- Preserve the canonical record mapping: Sifr records construct Python dicts;
-  Python record extraction requires every declared field, tries attribute
-  access before string-key access, and ignores extra fields.
-- Reject implicit zero-copy, unsupported keys, `Any`, unconstrained generics,
-  iterators, generators, and uncontracted callables.
-
-Acceptance:
-
-- Missing record fields and nested conversion failures report exact boundary
-  paths; extra Python fields are ignored deliberately.
-- Container/record returns are checked copies and never claim zero-copy.
-- Unsupported shapes require a future explicit bridge or remain dynamic-only.
-
-Validation:
-
-- Direct conversion matrices with positive and negative execution.
-- Nested overflow/type/path failure fixtures.
-- Record attribute, item fallback, missing-field, and extra-field fixtures.
-- An omission-sensitive target fixture proving explicit `None` is not treated as
-  an omitted Python argument and a local bridge can represent the omission.
-- Zero-reference-leak assertions for partial conversion failure.
-
-### M4. Hermetic Package-Local Python Bridges
-
-Depends on M1's sealed handle representation and M3's typed conversion
-contract.
-
-Tasks:
-
-- Resolve `bridge.*` to package-owned source under `src/python_bridges/`.
-- Derive the runtime namespace
-  `__sifr_bridge__.p_<resolved_package_key>.<module_path>`.
-- Add `sifr_runtime::python::bridge_loader`, installed before user `main`, as a
-  first-position `MetaPathFinder`/loader over an embedded UTF-8 source table.
-- Reject reserved-namespace collisions in `sys.modules` and prohibit
-  filesystem/`sys.path` fallback for reserved modules.
-- Syntax-check and statically inventory ordinary bridge imports; reject dynamic
-  import calls in bridge version 1.
-- Infer bridge import requirements without inferring execution or native trust.
-- Include bridge source, package identity, distribution versions, interpreter
-  ABI, and binding contracts in cache fingerprints.
-- Include bridge sources and inventory in Sifr package archives and embed the
-  resolved graph's bridge table into generated binaries.
-
-Acceptance:
-
-- Two packages may own the same `bridge.identifiers` source path without a
-  runtime module collision.
-- Bridge deployment does not depend on the source checkout, a writable temp
-  directory, or ambient `sys.path` ordering.
-- A dependency bridge cannot authorize its own Python or native imports.
-- Dynamic bridge imports fail during declaration checking rather than escaping
-  static requirement inventory.
-
-Validation:
-
-- Loader ordering, namespace collision, sibling module, and traceback filename
-  tests.
-- Multi-package same-module-name fixture.
-- Package archive/install/run fixture proving embedded bridge resolution.
-- Cache invalidation tests for source, package, distribution, ABI, and contract
-  drift.
-- Static and rejected dynamic import fixtures.
-
-### M5. Ecosystem Example Migration
-
-Tasks:
-
-- Migrate the declarable call, factory, method, attribute, item, container, and
-  record surfaces in the runnable biip/schwifty, dataframe, ML, web, database,
-  cloud, crypto, and Redis examples to direct declarations or package-local
-  bridges.
-- Keep an intentionally small general raw-object example proving the escape
-  hatch. Arrow, DLPack, buffer, context-manager, and callback exchange points in
-  dataframe, ML, and broker examples also intentionally remain raw
-  `sifr.python` usage until M11.
-- Assert zero outstanding ordinary Python references after success and each
-  exercised failure path.
-- Update capability evidence without promoting inventory-only package rows.
-
-Acceptance:
-
-- Package consumers use no raw handles for the declarable surfaces migrated in
-  this milestone; the explicitly deferred advanced-protocol exchange points are
-  excluded until M11.
-- The merge profile executes all migrated offline examples.
-- Compatibility categories match actual positive and negative evidence.
-
-Validation:
-
-- Migrated dataframe, ML, and library example suites.
-- Negative version/shape/conversion cases for each supported declaration kind.
-- Outstanding-reference assertions in every migrated executable.
-
-### M6. Environment Discovery And Manifest Authority Migration
+### M2. Environment And Trust Authority Cutover
 
 Tasks:
 
 - Add uv-compatible project, lock, environment, and interpreter discovery with
-  explicit non-standard-layout overrides.
-- Establish real project/lock consistency checking instead of readability-only
-  metadata checks.
-- Keep `[python].requires-imports` for underivable raw/dynamic library needs and
-  merge it with compiler-derived declaration/bridge requirements.
-- Make `[trust].python` and `[trust].python-native` root-owned authorizations;
-  dependency packages cannot self-authorize.
-- Remove `[python].allow-imports` atomically from parsing, public/internal docs,
-  generated manifests, examples, and every verification fixture.
-- Retire `SIFR-PYTRUST-0002` with its old meaning and activate
-  `SIFR-PYTRUST-0005` for a required root not authorized by the root.
-- Rebase `SIFR-PYTRUST-0003` from its removed allowlist wording to native trust
-  for a root that is not a required import root.
-- Preserve root-only wildcard trust for local control and dependency wildcard
-  rejection.
+  explicit non-standard-layout overrides and real lock/project consistency.
+- Add the single canonical requirement set with per-root provenance and the
+  contribution interface used by declarations and bridge imports; retain
+  `[python].requires-imports` only for underivable raw/dynamic library imports.
+- Normalize duplicate manual and derived roots without override precedence.
+- Remove `[python].allow-imports` atomically from parsing, docs, manifests,
+  examples, diagnostics, and verification generation.
+- Retire old `SIFR-PYTRUST-0002`, activate `SIFR-PYTRUST-0005` for an
+  unauthorized required root, and rebase `SIFR-PYTRUST-0003` on native trust for
+  a root that is not required.
+- Keep `[trust].python` and `[trust].python-native` root-owned and distinct.
 
 Acceptance:
 
-- A normal uv project needs no repeated default `.venv`, interpreter, project,
-  or lock paths.
-- No dependency requirement grants execution or native-extension trust.
-- No stale docs, fixtures, or diagnostics retain the removed source allowlist.
-- Sifr never installs, syncs, or mutates trust during check/build/run.
+- There is one canonical requirement authority with visible provenance.
+- Dependencies can publish requirements but cannot authorize execution or
+  native extensions.
+- Sifr never installs, synchronizes, or mutates the Python environment.
 
 Validation:
 
-- uv default, override, workspace, missing environment, and stale-lock fixtures.
-- Root/dependency trust authority positive and negative tests.
-- Manifest stale-draft sweep and diagnostic registry/docs regeneration.
-- Migration of all Python interop runner-generated manifests.
+- uv default, override, workspace, missing-environment, and stale-lock fixtures.
+- Root/dependency trust authority and native-trust negative tests.
+- Duplicate-root provenance and diagnostic tests.
+- Repository sweep proving the old allowlist is gone.
 
-### M7. Read-Only Check And Doctor Workflow
+### M3. Synchronous Declaration Core And Complete Call Shapes
+
+Depends on M1 sealed identity and M2 environment/trust authority.
 
 Tasks:
 
-- Add `sifr python check` for environment, lock, trust, declaration, bridge,
-  probe-confidence, and target validation.
-- Add `sifr python doctor` with patch-like suggestions for missing environment,
-  requirement, execution-trust, and native-trust entries.
-- Reuse the same package/driver plan as normal `sifr check`; do not create a
-  second validator.
-- Keep both commands read-only and deterministic.
+- Parse all synchronous declaration decorators into structured metadata with
+  source spans and dedicated target-path resolution.
+- Accept ellipsis only as the complete body of eligible declarations.
+- Add `PythonInteropDeclaration` HIR and `PythonInteropPlan` build metadata.
+- Synthesize interop effects: `blocking_io` for synchronous declarations and
+  the async interop effect for coroutine declarations, without bare-name
+  annotations or a new suspension-summary variant.
+- Generate scalar and opaque sync function/factory wrappers.
+- Implement regular positional, keyword-only, explicit defaults,
+  `python.omit`, typed positional variadics, typed kwargs, and explicit closed
+  record expansion.
+- Add parser/HIR productions for call-site `**record` with retained closed-field
+  metadata; do not treat it as an existing dictionary-spread feature.
+- Validate inspectable target arity, positional-only rules, keyword names, and
+  duplicates; require inspectability for record kwargs expansion and mark other
+  genuinely uninspectable targets runtime-checked.
+- Infer `blocking_io`, requirements, trust, probe inputs, and cache identity.
+- Map Python exceptions and conversion failures into structured `PythonError`.
 
 Acceptance:
 
-- Check results match normal build/check diagnostics for the same package.
-- Doctor explains root authority and never applies a patch or runs uv.
-- Runtime-checked targets are visible without being falsely reported verified.
+- Consumers call typed Python-backed functions without raw-object operations.
+- Omission and explicit `None` are observably distinct.
+- Every supported typed call shape has exactly one lowering.
+- Unsupported heterogeneous or data-dependent shapes require an explicit bridge
+  and never become dynamic declarations.
+- Sync declarations cannot be called directly from async code without explicit
+  Sifr offload.
 
 Validation:
 
-- CLI integration tests and deterministic doctor goldens.
-- Cross-command diagnostic parity fixtures.
-- Library-only deferred-probe output and final-application probe-resolution
-  fixtures.
-- Explicit environment/trust non-mutation checks.
+- Parser/lowering/codegen matrices for every accepted and rejected call shape.
+- Inspectable and uninspectable pure-Python/C-extension targets.
+- Library-only deferred target probes and final-application resolution.
+- Real pure-Python and native-extension compiled examples.
+- Outstanding-reference assertions for every wrapper failure point.
 
-### M8. Symbol-Selective Binding Generation
+### M4. Recursive Conversion And Opaque Lifecycle
+
+Depends on M1 sealed identity and M3 declaration HIR/wrappers.
 
 Tasks:
 
-- Add symbol-selective `sifr python bind` scaffold generation from user
-  overrides, stub-only packages, `py.typed` packages, approved fallback stubs,
-  and safe runtime introspection in that precedence order.
-- Reject or emit explicit unresolved markers for `Any`, bare `object`,
-  `Callable[..., Any]`, unsupported overloads/generics, dynamic attributes, and
-  uninspectable unsupported shapes.
-- Record SOABI, distribution version, source-kind precedence, and consumed stub
-  hashes as the binding-source fingerprint.
-- Add `sifr python bind --check` as a read-only fingerprint drift check.
-- Never silently generate `py.Object` as a fallback.
+- Implement recursively checked scalars, options, lists, tuples,
+  `dict[str, T]`, closed records, and nested boundary paths.
+- Preserve the canonical record mapping: Sifr records construct Python dicts;
+  extraction requires every field, tries attributes before string-key items,
+  and ignores extras.
+- Implement `@python.opaque(type=..., cleanup=drop | close | async_close |
+  context | async_context)` without a send policy.
+- Implement `Self` methods, fallible attributes, and item access.
+- Enforce factory `isinstance`, borrow/move/poison/use-after-close rules, and
+  consuming synchronous semantic close.
+- Implement the general linear must-use obligation side table and scope/function
+  exit checks for `cleanup=close | async_close | context | async_context`,
+  including transfer through moves, returns, aggregates, and control-flow joins.
+
+Acceptance:
+
+- Opaque Python objects expose typed APIs with no structural handle fields.
+- Nested conversion failures identify the exact boundary path and release every
+  partially constructed value.
+- Automatic drop and semantic close are distinct and exact once.
+- Python identity remains non-send without package configuration.
+
+Validation:
+
+- Full conversion matrix including overflow, missing fields, extras,
+  attribute-then-item lookup, and partial failure cleanup.
+- Descriptor/property errors, wrong factory type, moved value, double close,
+  poison, and use-after-close fixtures.
+- Negative fixture rejecting abandonment of `cleanup=close` and positive
+  fixtures transferring the obligation by return/aggregate ownership.
+- Runnable biip/schwifty object examples.
+
+### M5. Synchronous Python Context Managers
+
+Depends on M4 opaque lifecycle and conversion.
+
+Tasks:
+
+- Implement sync context enter/exit, structured `python.ExitCause`, Python
+  exception replay capabilities, `SifrBoundaryError`, the normative decision
+  table, dedicated Python-context lowering, and secondary cleanup evidence.
+- Keep native Sifr `with` on its existing argless drop-style protocol.
+- Retain the manager as hidden owner and make opaque entered values
+  context-scoped borrows that cannot escape, move, or close independently.
+
+Acceptance:
+
+- Context exit is distinct from automatic drop and runs exactly once.
+- Python context lowering honors suppression only for originating Python
+  exceptions; ordinary Sifr errors cannot be suppressed by Python truthiness.
+- Original Python exception triples replay through nested managers and release
+  exactly once.
+
+Validation:
+
+- Context normal/error/early-return/suppression/exit-failure matrices.
+- Type-sensitive original-exception replay, nested replay lifetime, ordinary
+  Sifr error non-suppression, and replay-token release fixtures.
+- Runnable sync database transaction example.
+- Negative fixture rejecting a `cleanup=context` value that is never entered.
+
+### M6. Hermetic Package-Local Python Bridges
+
+Depends on M1 sealed identities and M4 conversion.
+
+Tasks:
+
+- Resolve `bridge.*` under package-owned `src/python_bridges/` source.
+- Embed bridge source tables under
+  `__sifr_bridge__.p_<resolved_package_key>.<module_path>`.
+- Install a first-position `MetaPathFinder`/loader before user code.
+- Reject reserved-namespace `sys.modules` collisions and all filesystem or
+  `sys.path` resolution for reserved names.
+- Rewrite same-package bridge imports under the package namespace.
+- Inventory ordinary static imports and reject dynamic import calls in package
+  bridges.
+- Include source, package identity, distribution versions, interpreter ABI,
+  protocol contract, and typing inputs in cache fingerprints.
+- Include bridge source/inventory in archives and embed only the resolved graph
+  in generated binaries.
+
+Acceptance:
+
+- Bridges are reproducible package implementation, not ambient Python files.
+- Two packages may own the same bridge module path without collision.
+- A dependency bridge cannot authorize its own third-party imports.
+- Deployment does not depend on a source checkout, writable temp directory, or
+  ambient path ordering.
+
+Validation:
+
+- Loader ordering, collision, sibling import, traceback, and cache tests.
+- Multi-package same-name bridge fixture.
+- Archive/install/run fixture with no source checkout.
+- Static import inventory and rejected dynamic import fixtures.
+
+### M7. Owned Asyncio Runtime And Async Declarations
+
+Depends on M1 sealed identity, M3 declaration effects, and M4 opaque lifecycle.
+
+Tasks:
+
+- Add one generated-application-owned asyncio loop on a dedicated OS thread.
+- Start it after CPython/bridge initialization and stop it after registered async
+  cleanup and callback shutdown.
+- Implement `@python.coroutine(path)` on `async def` for functions, factories, and
+  methods using the same conversion and target contracts.
+- Convert inputs, invoke, await, and convert outputs on the loop thread.
+- Implement structured bidirectional cancellation, terminal-state waiting,
+  `CancelledError` mapping, and cancellation suppression behavior.
+- Route coroutine ellipsis declarations through the interop `Bodyless` stub path
+  so they skip normal body lowering and the `NoSuspend` fake-async gate while
+  retaining the async interop effect.
+- Route the raw coroutine API through the owned loop and remove per-call
+  `asyncio.run`.
+- Permit owned opaque results without granting Sifr sendability.
+- Implement consuming `cleanup=async_close` and poison-on-cleanup-failure.
+
+Acceptance:
+
+- Python coroutines never block a Sifr executor thread.
+- There is one loop per generated application, never one per call.
+- Sifr cancellation does not complete before Python `finally` cleanup.
+- Runtime shutdown leaves no live asyncio task or loop thread.
+- Sync and async declaration kinds cannot silently substitute for each other.
+
+Validation:
+
+- Async success, Python failure, conversion failure, cancellation-before-start,
+  cancellation-in-flight, cancellation suppression, and shutdown matrices.
+- Async close success/failure/poison/use-after-close fixtures.
+- Negative fixture rejecting abandonment of `cleanup=async_close`.
+- Concurrent coroutine target tests proving one loop identity.
+- Compiled httpx-style async client example.
+
+### M8. Async Context Managers
+
+Depends on M5 context semantics and M7 loop ownership.
+
+Tasks:
+
+- Implement `@python.context.aenter` and `.aexit` on async declarations.
+- Classify the concrete async body outcome directly into `python.ExitCause`
+  before native cause erasure, replay original `PythonError` triples, and create
+  `SifrBoundaryError` for Sifr causes. Native `AsyncExitCause` is not the Python
+  classification source.
+- Honor suppression only for originating Python exceptions and attach ignored
+  truthy decisions or cleanup failures as evidence for unsuppressible causes.
+- Mask body cancellation while async exit reaches a terminal state, then resume
+  cancellation unless a higher-priority cleanup error wins.
+- Integrate async context resources with opaque async close and shutdown order.
+
+Acceptance:
+
+- `async with` executes enter and exit on the owned Python loop.
+- Exit occurs exactly once for normal return, Sifr error, Python error, early
+  return, and cancellation.
+- Cancellation cannot abandon async cleanup.
+
+Validation:
+
+- Async context normal/suppression/error/cancellation/exit-failure matrix.
+- Truthy-exit tests proving timeout, cancellation, runtime fault, and ordinary
+  Sifr errors remain unsuppressed.
+- Negative fixture rejecting a `cleanup=async_context` value never entered by
+  `async with`.
+- Nested sync/async context ordering and secondary-error fixtures.
+- Compiled async database/session example.
+
+### M9. Typed Callback Lifetimes And Dispatch
+
+Depends on M4 opaque owners and M7 owned asyncio loop.
+
+Tasks:
+
+- Implement `@python.callback` parameter metadata for `lifetime=call | result |
+  Self`, `dispatch=current | foreign | asyncio`, and required concurrency.
+- Generate checked callable argument/result conversion and `SifrCallbackError`
+  propagation.
+- Enforce current-thread non-escaping callbacks and non-send capture rules.
+- Implement foreign-thread `Send + Sync` trampolines, serial and parallel
+  dispatch, reentrancy rejection, and forbidden Python opaque arguments.
+- Implement asyncio-dispatched `AsyncCallable` with bidirectional cancellation.
+- Require serial/parallel concurrency for foreign and asyncio dispatch; reject
+  serial reentrancy before lock or await.
+- Aggregate retained callback trampolines into returned or receiver owners.
+- Implement open/closing/closed state, unregister-first shutdown, new-entry
+  rejection, active-call draining, capture release, and runtime shutdown.
+- Reject owner close from within an accepted invocation statically where visible
+  and through a runtime reentrancy guard otherwise.
+
+Acceptance:
+
+- No callback can outlive its declared owner.
+- Foreign callbacks cannot smuggle non-send Python identity across threads.
+- Serial reentrancy fails deterministically instead of deadlocking.
+- Owner close drains accepted invocations and rejects later calls.
+- Async callbacks block neither executor while awaiting completion.
+
+Validation:
+
+- Current, foreign serial, foreign parallel, and asyncio callback matrices.
+- Capture/sendability, wrong argument/result, handler error, Python error,
+  reentrancy, concurrent close, callback-after-close, and shutdown fixtures.
+- Compiled CFFI, Kafka, and Pub/Sub callback examples.
+
+### M10. Typed Buffer Protocol
+
+Depends on M1 sealed affine resources and M4 conversion.
+
+Tasks:
+
+- Add affine non-send `python.Buffer[T]` with compiler-private identity.
+- Implement `@python.buffer(target, access=read | write, layout=any |
+  c_contiguous | f_contiguous)`.
+- Validate format, item size, dimensions, shape, strides, suboffsets,
+  writability, and layout before return.
+- Retain exporter ownership and enforce slice/view lifetimes.
+- Require exclusive Sifr borrow for writable buffers.
+- Implement exact-once automatic and explicit early `PyBuffer_Release`.
+- Expose checked runtime metadata and typed bounded element/slice accessors.
+
+Acceptance:
+
+- A buffer view cannot outlive its exporter or be released while borrowed.
+- Writable access cannot alias through Sifr.
+- Buffer declarations never copy.
+- Every acquired buffer releases exactly once on all exits.
+
+Validation:
+
+- Format/layout/writability positive and negative matrices.
+- Borrow/move/release/use-after-release checks.
+- Pointer identity and exact release counters.
+- Compiled NumPy-compatible buffer example.
+
+### M11. Arrow C Data Interface
+
+Depends on M1 sealed affine resources and M4 conversion.
+
+Tasks:
+
+- Add affine `python.ArrowArray`, `ArrowSchema`, `ArrowStream`,
+  `ArrowDeviceArray`, and `ArrowDeviceStream` resources, with array resources
+  owning their required schema/data pair.
+- Implement `@python.arrow(target)` with return-kind derivation.
+- Validate exact capsule names, non-null payloads, release callbacks, device
+  metadata, producer identity, and paired schema/data consistency.
+- Require executable no-copy certification tied to the exact producer and
+  distribution fingerprint; reject uncertain producers and schema requests.
+- Add the package-authored `sifr python certify arrow` fixture/artifact workflow
+  and read-only certification recheck.
+- Implement owned argument transfer, consumed-state detection, failure cleanup,
+  and exact-once release.
+
+Acceptance:
+
+- Arrow declarations have no copy switch and never certify uncertain copying.
+- Ownership transfers once and remains moved even if a consumer later fails.
+- Unconsumed resources release exactly once.
+
+Validation:
+
+- Array/schema/stream acquisition and transfer matrices.
+- Wrong name, null payload, missing releaser, producer-copy, partial-consumption,
+  double-consumption, and use-after-move fixtures.
+- Pointer/release evidence with pandas, PyArrow, and Polars compiled examples.
+
+### M12. DLPack One-Shot Tensor Transfer
+
+Depends on M1 sealed affine resources and M4 conversion.
+
+Tasks:
+
+- Add affine `python.DlpackTensor[T]`.
+- Implement `python.DlpackStream`, `@python.dlpack.stream`, and
+  `@python.dlpack(target, device=..., stream=none | parameter(name))` with no
+  cross-device request.
+- Add `parameter(name)` as a decorator-argument parser/HIR production resolving
+  only to a same-declaration keyword-only `python.DlpackStream` parameter.
+- Require `device=any` to use that stream parameter and validate its family/id
+  against the producer-reported device at runtime before acquisition.
+- Pass `copy=False` and supported `max_version`; validate legacy/versioned
+  capsule names, copied flags, dtype, lanes, device, dimensions, shape, strides,
+  byte offset, deleter state, and synchronization contract.
+- Accept legacy capsule names only from producers that accept the complete
+  versioned call signature; never retry an old signature without `copy` or
+  `max_version`.
+- Implement `used_dltensor` marking, one-shot owned transfer, committed moves on
+  post-consumption failure, and exact-once deleter cleanup before consumption.
+- Rename the producer capsule to its used sentinel at Sifr acquisition before
+  assuming deleter responsibility, then create a fresh consumer capsule for any
+  later owned transfer.
+- Keep copied tensor conversion as an ordinary copied declaration or bridge.
+
+Acceptance:
+
+- DLPack declarations never copy or change device.
+- A tensor is consumed at most once and cannot be used after move.
+- Stream synchronization is explicit and validated.
+- Every unconsumed tensor invokes its deleter exactly once.
+
+Validation:
+
+- CPU/CUDA, dtype, shape, stride, stream, and device matrices.
+- `device=any` matching and mismatched runtime stream-device fixtures.
+- Wrong capsule, copied flag, null/non-null deleter, double consume,
+  failure-before-consume, failure-after-consume, and shutdown fixtures.
+- Pointer/deleter evidence with PyTorch and TensorFlow compiled examples.
+
+### M13. Read-Only Check And Doctor
+
+Depends on the completed compiler/runtime protocol plans from M2 through M12.
+
+Tasks:
+
+- Add read-only `sifr python check` using the same package/driver plan as normal
+  check/build for environment, lock, trust, target, protocol, and probe status.
+- Add read-only `sifr python doctor` with patch-like suggestions that never
+  mutate manifests, trust, or environments.
+
+Acceptance:
+
+- Both commands agree with compiler/build results for the same snapshot.
+- Neither command writes, installs, trusts, or runs environment synchronization.
+
+Validation:
+
+- CLI parity, deterministic doctor goldens, and non-mutation checks.
+- Library-only deferred-probe and final-application resolution fixtures.
+
+### M14. Binding And Certification Authoring
+
+Depends on M11/M12 certification contracts and M13 shared check plan.
+
+Tasks:
+
+- Add symbol-selective `sifr python bind` from explicit user overrides,
+  selected stub packages, `py.typed` packages, configured external stubs, and
+  safe introspection in recorded precedence.
+- Stop or emit an explicit unresolved marker for `Any`, bare `object`, unknown
+  overloads, unsupported generics, uncontracted callables, or dynamic fields.
+- Record SOABI, distribution version, source precedence, and consumed typing
+  hashes; implement read-only `bind --check` drift reporting.
+- Add `sifr python certify` authoring and `certify --check` for reproducible
+  package-owned protocol evidence and fingerprint drift.
 
 Acceptance:
 
 - Generated declarations are reviewable checked-in Sifr source.
-- Unsupported type information cannot produce a falsely typed binding.
-- `--check` detects source/version/stub drift without rewriting files.
+- No authoring tool silently generates an untyped boundary.
+- Certification reruns within-run assertions rather than comparing addresses.
 
 Validation:
 
-- Stub-only, `py.typed`, partial-stub, C-extension, overload, `Any`, bare
-  `object`, and callable fixtures.
-- Golden generated declarations and fingerprint drift tests.
-- Read-only `--check` verification.
+- Stub-only, `py.typed`, C-extension, overload, unresolved, and drift fixtures.
+- Arrow/DLPack certification artifact creation and read-only recheck fixtures.
 
-### M9. LSP Binding Authoring Support
+### M15. LSP Declaration Authoring
+
+Depends on M13/M14 compiler and authoring queries.
 
 Tasks:
 
-- Add completion for decorator kinds, resolved target paths, and policy values.
-- Add navigation from a Sifr declaration to local bridge source and available
-  Python typing source.
-- Surface declaration diagnostics and verified/runtime-checked probe status.
-- Reuse compiler/package query results rather than invoking Python from editor
-  request handlers ad hoc.
+- Add LSP completion, navigation, diagnostics, verified/runtime-checked status,
+  protocol policy help, and cache invalidation from compiler queries.
 
 Acceptance:
 
-- Editor results agree with `sifr python check` for the same package snapshot.
-- Completion never offers unsupported fallback types as certified bindings.
+- LSP results agree with compiler/check results for the same package snapshot.
+- Completion never offers an untyped or unsupported declaration as certified.
 
 Validation:
 
-- LSP completion, navigation, diagnostic, cache-invalidation, and cancellation
-  fixtures.
+- LSP completion/navigation/diagnostic/cancellation and cache-drift tests.
 
-### M10. Advanced Protocol Declaration Designs
+### M16. Raw API Ergonomics On Shared Ownership
+
+Depends on M1 shared identity, M7 owned loop, and M10-M12 affine resources.
 
 Tasks:
 
-- Specify declaration metadata for context managers, local/threadsafe
-  callbacks, buffers, Arrow capsules, and DLPack tensors independently.
-- Preserve existing lifetime, release, one-shot consumption, backpressure,
-  shutdown, dtype/device/shape, and no-copy-fallback contracts.
-- Reserve syntax only after each positive and negative ownership model is
-  accepted.
-- Keep Python coroutine/event-loop integration future unless a separate design
-  proves cancellation, affinity, and returned-object sendability.
+- Improve raw `sifr.python` with sealed automatic ownership, typed generic
+  conversion, method-style operations, and typed kwargs over the same runtime.
 
 Acceptance:
 
-- Each proposed protocol decorator has an unambiguous ownership state machine,
-  error mapping, diagnostic family, and verification owner.
-- No protocol is implemented merely as closeout plumbing.
+- Raw ergonomics improve without a second ownership or conversion model.
+- Raw coroutine execution uses the owned loop and no per-call event loop remains.
 
 Validation:
 
-- Documentation review and state-machine walkthroughs.
-- Positive/negative fixture plans tied to compatibility rows.
+- Raw/declaration representation and cleanup equivalence tests.
+- Typed raw conversion/call/kwargs and coroutine-path tests.
 
-### M11. Advanced Protocol Integration And Closeout
+### M17. Ecosystem Migration And Certification
+
+Depends on all preceding declaration, protocol, tooling, and raw-runtime
+milestones.
 
 Tasks:
 
-- Implement only the accepted M10 protocol declarations and migrate their
-  existing raw examples without weakening behavior.
-- Keep raw API conveniences over the same sealed handle and conversion model;
-  optional scope helpers must not introduce fallback ownership semantics.
-- Update public docs so declaration-first use is primary and raw handles are
-  documented as intentional advanced/dynamic interop.
-- Require compiled Sifr execution for Redis and Postgres round trips, Kafka
-  publish/consume, direct SQS send/receive, and SNS-to-SQS delivery; distinguish
-  any intentionally client-driven evidence explicitly.
-- Run final architecture and implementation review rounds until no actionable
-  blockers remain.
-- Update phase status, roadmap, compatibility documentation, and merged PR
-  evidence.
+- Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
+  crypto, Redis, callback, context, and async examples to declarations or
+  hermetic bridges.
+- Keep one intentionally small raw-object example documenting the dynamic API;
+  ordinary examples contain no raw handles or raw protocol plumbing.
+- Require actual compiled Sifr binaries for Redis and Postgres round trips,
+  Kafka publish/consume, direct SQS send/receive, SNS-to-SQS delivery, async
+  HTTP, callback, Arrow, and DLPack certification.
+- Replace the existing Python-client live lane rather than counting its results
+  as compiled-Sifr evidence. Docker/network hosts own service cases, CPU hosts
+  own CPU Arrow and CPU DLPack certification, and labeled CUDA runners own Arrow
+  device-interface and CUDA DLPack certification; unsupported hosts report
+  structured skips and cannot promote those capability rows.
+- Assert zero outstanding ordinary objects, async tasks, contexts, callbacks,
+  buffers, Arrow resources, and DLPack tensors after every success and failure
+  path.
+- Update public/internal docs, architecture status, roadmap, capability matrix,
+  phase status, and merged PR evidence.
+- Run final architecture and implementation review until no actionable finding
+  remains.
 
 Acceptance:
 
-- Supported advanced protocols retain explicit copy, ownership, release,
-  callback, and shutdown semantics.
-- Public examples are declaration-first unless demonstrating raw interop.
-- Named live cases invoke actual compiled Sifr binaries.
-- Support statements match executable evidence and review has no blockers.
+- Declaration-first APIs are the normal documented Python interop experience.
+- Every protocol preserves its stated ownership, cancellation, copy, release,
+  and shutdown semantics in executable evidence.
+- Capability categories match actual evidence.
+- Named live cases execute compiled Sifr rather than Python-client substitutes.
+- Review has no unresolved actionable findings.
 
 Validation:
 
-- Focused protocol positive/negative suites.
-- Named compiled-Sifr live service/callback cases.
-- Documentation and diagnostic link validation.
-- Authoritative create-PR and merge profiles before implementation closeout.
+- Complete deterministic positive/negative/cleanup/cancellation suites.
+- Named compiled-Sifr live service, callback, async, and zero-copy cases.
+- Documentation, diagnostics, link, and stale-design sweeps.
+- Authoritative create-PR and merge profiles.
 
 ## Verification Policy
 
-- Create-PR must run at least one real pure-Python declaration example and one
-  native-extension declaration example after M1.
-- Merge must run the migrated offline dataframe, ML, and library examples.
-- Live service evidence must distinguish actual compiled Sifr execution from
-  Python-client execution or source-presence checks.
-- Every supported declaration capability requires a passing negative fixture
-  for its primary failure mode.
-- Matrix-only package inventory remains useful discovery evidence but cannot
-  certify declaration behavior.
-- Outstanding-reference diagnostics must be asserted after success and every
-  failure path that creates Python values.
+- A supported capability needs a positive executable, its primary negative
+  executable, and every relevant cleanup/cancellation transition.
+- Real pure-Python and native-extension declarations run from M3 onward.
+- Zero-copy certification requires observable pointer identity or equivalent
+  protocol evidence plus exact release/deleter counters.
+- Callback certification covers every dispatch/concurrency mode and owner
+  shutdown with work in flight.
+- Async certification proves one loop identity, terminal cancellation cleanup,
+  and no live tasks at shutdown.
+- Live evidence distinguishes compiled Sifr execution from Python-client or
+  package-presence evidence.
+- Inventory remains discovery evidence and cannot certify a capability.
+- Every executable that creates Python state asserts zero outstanding resources.
 
 ## Review Checklist
 
-- [ ] Current raw interop and proposed declaration syntax are clearly separated.
+- [ ] The architecture defines one complete language, not a reduced release.
 - [ ] The Sifr signature is the only conversion type declaration.
-- [ ] String targets and converter pipelines are rejected.
-- [ ] Fixed positional/keyword-only argument mapping is explicit; variadics and
-      kwargs expansion are rejected in bridge version 1.
-- [ ] Verified and runtime-checked target probe outcomes are distinguished.
-- [ ] Automatic reference drop is distinct from semantic resource close.
-- [ ] Raw `Object` and typed opaque values use one sealed runtime handle model.
-- [ ] Local bridges are hermetic package inputs.
-- [ ] The reserved bridge namespace and embedded loader prevent package and
-      `sys.path` collisions.
-- [ ] Imports are inferred and trust remains explicit.
-- [ ] `allow-imports` removal retires its old diagnostic meaning and migrates
-      parsing, docs, generated manifests, and fixtures atomically.
-- [ ] No build/check path installs or syncs Python packages.
-- [ ] Blocking behavior is explicit and no event loop is hidden.
-- [ ] Stub generation never silently introduces `Object` or `Any`.
-- [ ] Compatibility claims require executable positive and negative evidence.
-- [ ] Raw API improvements use the same ownership and conversion contract.
+- [ ] Targets are structured paths in a dedicated namespace.
+- [ ] Omission, defaults, positional arguments, kwargs, and variadics are exact.
+- [ ] All Python identity uses one sealed non-send runtime handle.
+- [ ] Automatic reference drop is distinct from semantic resource operations.
+- [ ] Sync context suppression and cleanup-error precedence are explicit.
+- [ ] One owned asyncio loop has bidirectional cancellation and terminal cleanup.
+- [ ] Async close and async context exit cannot be abandoned by cancellation.
+- [ ] Callback lifetime, owner, dispatch, concurrency, and shutdown are explicit.
+- [ ] Buffer borrow/access/layout and exact release are explicit.
+- [ ] Arrow and DLPack are affine, one-path, and never copy.
+- [ ] Bridges are hermetic embedded package inputs with static imports.
+- [ ] There is one requirement/trust authority and no allowlist coexistence.
+- [ ] Check, doctor, binding generation, and LSP reuse compiler plans.
+- [ ] No tool or compiler path creates an untyped boundary automatically.
+- [ ] Capability claims require executable negative and cleanup evidence.
+- [ ] Named live cases invoke compiled Sifr binaries.
 
 ## Planning Review Evidence
 
-- Opus pass 1: approve with changes; identified bridge registration, decorator
-  probing, release lifecycle, record mapping, manifest authority, target-root
-  resolution, and milestone sizing gaps.
-- Opus pass 2: independently confirmed those gaps and added argument passing,
-  sealed raw-object migration, diagnostic, and protocol-design sequencing
-  requirements.
-- Opus pass 3: approved with no blocking findings after the architecture and
-  phase revisions; final prose refinements are incorporated in this document.
-- Fable High final review: requested two sentence-scale consistency changes for
-  M5 protocol deferral and v1 `close=async_close`; both blockers and its
-  non-blocking ambiguity findings are incorporated in this document.
+Earlier reviews shaped the declaration-first direction and identified bridge
+loading, sealed handles, release queues, record mapping, target probes,
+requirement authority, argument passing, diagnostics, and milestone sequencing.
+Their artifacts remain useful historical evidence, but any reduced-version or
+compatibility-period recommendation in them is superseded by the complete
+architecture in this phase.
 
 Review artifacts:
 
@@ -534,11 +745,41 @@ Review artifacts:
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-2.md`
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-3.md`
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-fable-review-final.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-1.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-2.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-3.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-4.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-5.md`
+
+Complete-architecture Opus High pass 1 requested changes. It found undefined
+Python exit-cause/suppression semantics, live-exception replay, Arrow evidence
+authoring, async effect sealing, record-expansion ambiguity, DLPack stream
+provenance, raw async-path duplication, callback concurrency, requirement
+provenance, and milestone-sizing gaps. The architecture and phase now resolve
+all of those findings directly rather than removing or postponing capabilities.
+Complete-architecture pass 2 confirmed every pass-1 finding resolved and found
+one async-context replay contradiction plus pointer-assertion, replay-sendability,
+grammar-ownership, DLPack-capsule, and milestone-sizing refinements. Dedicated
+Python async-context lowering now classifies the concrete body outcome directly,
+and all refinements are incorporated.
+Complete-architecture pass 3 confirmed those corrections and found a final
+front-end issue: three surface spellings used Python hard keywords. The grammar
+now uses `@python.coroutine`, `lifetime=result`, and
+`stream=parameter(name)`. The pass also prompted explicit general must-use
+analysis, the existing interop bodyless-stub mechanism, complete CPU/CUDA
+evidence ownership, dependency annotations, old-signature DLPack rejection, and
+callback-close reentrancy guards.
+Complete-architecture pass 4 found no blockers and approved with two
+non-blocking refinements. `device=any` now has an explicit runtime-validated
+stream rule, and the async interop effect/`Bodyless` rule explicitly covers
+coroutines, async contexts, and asyncio-dispatched callback handlers.
+Complete-architecture pass 5 rechecked those refinements and the complete
+constraint set, found no actionable issue, and approved the design.
 
 ## Exit Gate
 
-The phase is complete only when all milestones are merged, public and internal
-documentation describe the implemented contract rather than the proposal,
-compatibility claims match executable evidence, local authoritative validation
-passes, review has no unresolved actionable findings, and the phase record
-links every merged PR.
+The phase is complete only when every milestone is merged, current architecture
+and public docs describe the implemented end state, every capability claim has
+matching executable evidence, all resource diagnostics are clean, authoritative
+local validation passes, review has no unresolved actionable finding, and this
+record links every merged PR.

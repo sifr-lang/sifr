@@ -37,12 +37,12 @@ should use the same package-author/consumer split.
 ## Non-Goals
 
 - Python source compatibility or an implicit `from python import ...` mode.
-- A Sifr `Any` type or silent fallback from unsupported types to `py.Object`.
+- A Sifr `Any` type or silent degradation from unsupported types to `py.Object`.
 - Automatic installation, `uv sync`, environment mutation, or inferred trust.
 - Whole-package automatic binding generation.
 - Decorator-level input/output converter pipelines.
-- Hidden blocking offload, a hidden Python event loop, or implicit coroutine
-  execution.
+- Hidden blocking offload, ambient event-loop reuse, per-call event loops, or
+  implicit conversion between synchronous and asynchronous declarations.
 - Silent copying for buffers, Arrow, DLPack, arrays, dataframes, or tensors.
 - Static proof that arbitrary Python implementation code matches its hints.
 
@@ -97,7 +97,7 @@ Opaque declarations represent Python identity without exposing Python object
 layout as a Sifr class.
 
 ```sifr
-@python.opaque(type=schwifty.BIC, close=drop, send=False)
+@python.opaque(type=schwifty.BIC, cleanup=drop)
 class Bic:
     @python.attr(Self.country_code)
     def country_code(self) -> Result[str, PythonError]: ...
@@ -110,10 +110,8 @@ class Bic:
 def bic(text: str) -> Result[Bic, PythonError]: ...
 ```
 
-Initial binding versions use fallible top-level factory functions rather than
-making ordinary class construction implicitly return `Result`. A separate
-language-level decision is required before Sifr gains fallible constructor
-syntax.
+Fallible top-level or static factory functions represent Python construction.
+Ordinary Sifr class construction never gains a hidden `Result` channel.
 
 When a function returns a declared opaque Python class, the generated wrapper
 checks that the returned Python value is an instance of the class named by the
@@ -124,21 +122,28 @@ probe diagnostic; an uninspectable or runtime-only mismatch is a
 Python attribute access remains fallible even when it resembles a field:
 descriptors and properties may execute arbitrary Python and raise exceptions.
 
-### Minimal Decorator Grammar
+### Decorator Grammar
 
-The initial declaration grammar contains only semantics that cannot be derived
+The declaration grammar contains only semantics that cannot be derived
 from the Sifr signature:
 
-- `@python(path)` for a function, factory, or method target;
-- `@python.opaque(type=path, close=..., send=...)` for Python identity;
+- `@python(path)` for a synchronous function, factory, or method target;
+- `@python.coroutine(path)` for a Python awaitable target exposed as `async def`;
+- `@python.opaque(type=path, cleanup=...)` for Python identity and semantic
+  cleanup;
 - `@python.attr(path)` for fallible attribute or property access;
-- `@python.item` for fallible `__getitem__` access.
+- `@python.item` for fallible `__getitem__` access;
+- `@python.context.enter`, `.exit`, `.aenter`, and `.aexit` for Python context
+  protocols;
+- `@python.callback(...)` for callback lifetime, dispatch, concurrency, and
+  ownership that cannot be inferred from `Callable` types;
+- `@python.buffer`, `.arrow`, and `.dlpack` for explicit affine protocol
+  resources.
 
-Decorator policy values such as `close=drop`, `close=close`, and
-`close=async_close` are closed literal atoms consumed by Python interop
-lowering. They are not resolved as ordinary Sifr names. Bridge version 1 accepts
-`close=drop` and `close=close`; `close=async_close` is reserved but rejected with
-`SIFR-PYRES-0001` until a future async declaration contract activates it.
+Decorator policy values such as `cleanup=drop`, `cleanup=close`,
+`cleanup=async_close`, `cleanup=context`, and `cleanup=async_context` are closed
+literal atoms consumed by Python interop lowering. They are not resolved as
+ordinary Sifr names.
 
 Allowed target roots are:
 
@@ -146,16 +151,16 @@ Allowed target roots are:
 - `bridge`, resolving to package-local Python bridge modules;
 - `Self`, resolving against the enclosing opaque Python type.
 
-Later bridge versions may add callback, context, async, and advanced-data
-metadata only after their ownership contract is independently specified and
-verified.
+The complete async, context, callback, buffer, Arrow, and DLPack contracts are
+defined in
+[`python_interop_protocol_architecture.md`](./python_interop_protocol_architecture.md).
 
 `@python.item` is valid only on an opaque method with one key parameter after
 the receiver. It maps that parameter to `receiver[key]`; the key and return
 types come only from the Sifr signature.
 
 ```sifr
-@python.opaque(type=collections.UserDict, close=drop, send=False)
+@python.opaque(type=collections.UserDict, cleanup=drop)
 class StringMap:
     @python.item
     def get(self, key: str) -> Result[str, PythonError]: ...
@@ -172,34 +177,46 @@ The Python opaque grammar intentionally omits Rust-specific `clone`, `borrow`,
 and `sync` policies. Python values preserve object identity and shared Python
 semantics; the main interpreter and GIL serialize Python interaction, generated
 calls borrow the sealed handle, values do not gain an implicit structural clone
-operation, and all initial opaque values are non-send. Additional thread or
-clone behavior requires a separately verified contract.
-`@python.opaque` keeps `send=` explicit as package-facing documentation, but
-bridge version 1 accepts only `send=False`; `send=True` is rejected with
-`SIFR-PYRES-0001` rather than treated as a no-op.
+operation, and all opaque values are non-send. The grammar has no `send=` knob:
+non-send is an invariant of Python identity, not package policy.
 
 ## Argument Passing
 
-Initial declarations support fixed regular and keyword-only parameters:
+Declarations support Python's statically typed call shapes:
 
 - regular parameters before `*` are passed positionally to Python, making them
   compatible with Python positional-only and positional-or-keyword targets;
 - Sifr keyword-only parameters after `*` are passed as Python kwargs using the
   declared parameter name;
-- Sifr default values are evaluated by normal Sifr call semantics and the
-  resulting value is passed explicitly to Python;
-- `*args`, `**kwargs`, record expansion, and implicit kwargs dictionaries are
-  rejected in bridge version 1.
+- Sifr default values are evaluated by normal Sifr call semantics and passed
+  explicitly to Python;
+- the compiler-known declaration default `python.omit` means that an omitted
+  Sifr argument is not sent to Python, while explicitly supplied `None` remains
+  Python `None`;
+- typed `*args: T` expands a homogeneous Sifr sequence into positional Python
+  arguments;
+- typed `**kwargs: T` expands a `dict[str, T]` into named Python arguments after
+  rejecting duplicate names;
+- a closed record may be expanded as kwargs only through explicit `**record`
+  syntax; this form requires an inspectable target so every field name can be
+  checked, and is rejected with `SIFR-PYCALL-*` otherwise.
 
-Bridge version 1 has no omitted-argument semantics. `Option[T]` maps `None` to
-Python `None`, never to omission. A target that distinguishes an omitted
-argument from an explicitly passed value, including `None`, requires a
-package-local bridge with a fixed boundary.
+`**record` is a new call-site grammar production added by this work, not
+ordinary dictionary expansion inferred by a wrapper. Its HIR retains the closed
+record type, source span, and statically known field set.
+
+`python.omit` is valid only as a default in a Python declaration and is not a
+runtime value or member of the parameter type. Call lowering preserves whether
+the caller supplied that argument. This keeps omission distinct from every
+ordinary value without introducing an `Omittable[T]` wrapper into consumer APIs.
+Lowering records a compile-time provided-argument bitset; no runtime sentinel is
+passed to Python. Conditional data-driven omission uses explicit typed kwargs or
+a package bridge rather than attempting to store `python.omit` in a variable.
 
 An inspectable target probe validates arity and keyword-only names. When a
 target is not introspectable, the declaration remains runtime-checked and
-Python argument errors return `PythonError`. APIs requiring variadic or dynamic
-kwargs use a package-local bridge with a fixed signature.
+Python argument errors return `PythonError`. Heterogeneous or data-dependent
+call shapes use a package-local bridge that publishes a stable typed boundary.
 
 ## Conversion Contract
 
@@ -207,7 +224,7 @@ Generated wrappers lower declarations to the existing checked Python runtime
 operations. Every conversion can fail and every failure returns
 `PythonError`; Python exceptions never unwind through Sifr.
 
-The initial direct conversion surface is intentionally small:
+The direct conversion surface is intentionally closed and recursively typed:
 
 | Sifr type | Sifr to Python | Python to Sifr |
 | --- | --- | --- |
@@ -216,16 +233,18 @@ The initial direct conversion surface is intentionally small:
 | `list[T]`, `tuple[...]`, `dict[str, T]` | Owned Python container construction. | Checked owned copy of every element or entry. |
 | closed record | Plain Python dict keyed by declared field name. | For each required field, attribute lookup first, then string-key item lookup; extra Python fields are ignored. |
 | declared opaque Python class | Borrowed handle passed to Python. | Owned sealed handle after an `isinstance` check. |
+| `Callable` / `AsyncCallable` | Generated callable only under an explicit callback declaration. | Not inferred from an arbitrary Python callable. |
+| `python.Buffer[T]`, Arrow resource types, `python.DlpackTensor[T]` | Affine protocol transfer under the protocol declaration. | Affine protocol acquisition and validation. |
 | `py.Object` | Explicit dynamic handle. | Explicit dynamic handle with no additional type claim. |
 
 Unsupported unions, unconstrained generics, iterators, generators, arbitrary
 mapping keys, callables without a callback contract, and Python `Any` are
-rejected at declaration checking. A package-local bridge may reshape them into
-a supported boundary.
+rejected at declaration checking. A package-local bridge is the explicit typed
+adapter for a Python surface that cannot itself form a stable Sifr contract.
 
 Typed container or record returns imply checked copying. Zero-copy behavior is
-never inferred from the return type and continues to require a dedicated
-ownership declaration.
+never inferred from an ordinary return type and requires the dedicated buffer,
+Arrow, or DLPack declaration and affine resource type.
 
 This record rule deliberately preserves the current `py_from_record` and
 `py_copy_record_fields` behavior. Package authors use an explicit local bridge
@@ -261,30 +280,36 @@ epilogue but cannot expose a Sifr panic or use-after-free. Reentrant drops from
 callbacks follow the same detach-before-decref rule. Cleanup runs on normal
 return, error propagation, and early exit.
 
-Cleanup policies have distinct meanings:
+Cleanup policies have distinct meanings. The complete normative state machines
+are in
+[`python_interop_protocol_architecture.md`](./python_interop_protocol_architecture.md);
+this list is the declaration summary:
 
-- `close=drop`: automatic reference release only;
-- `close=close`: ownership checking requires a declared consuming semantic
+- `cleanup=drop`: automatic reference release only;
+- `cleanup=close`: ownership checking requires a declared consuming semantic
   `close` operation;
-- `close=async_close`: reserved and rejected with `SIFR-PYRES-0001` in bridge
-  version 1; a future async declaration contract must define the consuming
-  `aclose` operation before activating it;
+- `cleanup=async_close`: ownership checking requires a declared consuming
+  `@python.coroutine` semantic `aclose` operation;
+- `cleanup=context`: ownership checking requires a consuming synchronous
+  context exit;
+- `cleanup=async_context`: ownership checking requires a consuming asynchronous
+  context exit;
 - protocol resources such as buffers, Arrow capsules, DLPack tensors, and
   callback subscriptions retain their exact release/cancel/shutdown contract.
 
 For example, a synchronous semantic close is an explicitly consuming method:
 
 ```sifr
-@python.opaque(type=redis.Redis, close=close, send=False)
+@python.opaque(type=redis.Redis, cleanup=close)
 class RedisClient:
     @python(Self.close)
     def close(own self) -> Result[None, PythonError]: ...
 ```
 
-A lexical `py.scope` may later be offered as convenience for the raw dynamic
-API, but it must be sugar over the same owned handle representation. It must not
-create a second escaping/detaching ownership model or treat all resource kinds
-as interchangeable.
+The raw dynamic API uses the same automatic ordinary drop and affine protocol
+resources. It has no generic scope cleanup stack because semantic close, async
+close, context exit, callback shutdown, and one-shot transfer are distinct
+operations that must retain their individual ownership rules.
 
 ## Package-Local Python Bridges
 
@@ -363,8 +388,9 @@ digests, package identity, imported distribution versions, interpreter ABI,
 and the binding contract participate in cache identity.
 
 Bridge source is parsed for ordinary static `import` and `from ... import ...`
-requirements. Bridge version 1 rejects dynamic import calls in bridge source;
-highly dynamic loading remains a root-application raw-interop use case. This is
+requirements. Dynamic import calls are rejected in package bridges because they
+cannot participate in hermetic requirement inventory. Root-application raw
+interop remains the explicit surface for truly data-dependent imports. This is
 an authoring restriction on bridge modules, not a claim that Sifr sandboxes
 trusted third-party Python packages after import.
 
@@ -389,24 +415,27 @@ import roots automatically. Dependency packages publish those requirements;
 the root application explicitly authorizes execution and native extensions.
 Trust is never inferred from source use.
 
-Manifest authority after migration is explicit:
+Manifest authority has one model:
 
-| Current key | Declaration-first contract |
+| Key | Declaration-first contract |
 | --- | --- |
-| `[python].allow-imports` | Removed after a compatibility migration; static source and bridge requirements are already visible, while root trust gates execution. |
 | `[python].requires-imports` | Retained for raw/dynamic library requirements that cannot be derived; declaration and bridge roots contribute equivalent generated package metadata. |
 | `[trust].python` | Retained as root-owned authorization to execute required import roots. Dependency packages cannot authorize themselves. |
 | `[trust].python-native` | Retained as separate root-owned native-extension authorization and never inferred from requirements. |
 
-During compatibility milestones, inferred declaration roots satisfy the source
-requirement but continue through the existing allow/trust diagnostics. The
-removal milestone updates parsing, public/internal docs, generated manifests,
-and all fixtures atomically. `SIFR-PYTRUST-0002` is retired with its
-allowed-but-untrusted meaning; `SIFR-PYTRUST-0005` covers a required static root
-not authorized by the root application. `SIFR-PYTRUST-0003` is rebased from its
-removed allowlist wording to diagnose native trust for a root that is not a
-required import root. Root-only wildcard trust for local control remains, while
+`[python].allow-imports` does not exist in this model. The implementation removes
+it atomically from parsing, docs, manifests, diagnostics, and fixtures rather
+than operating dual authorities. `SIFR-PYTRUST-0002` is retired with its old
+meaning; `SIFR-PYTRUST-0005` covers a required static root not authorized by the
+root application. `SIFR-PYTRUST-0003` diagnoses native trust for a root that is
+not required. Root-only wildcard trust for local control remains, while
 dependency wildcards remain rejected.
+
+Derived declaration/bridge roots and manual raw/dynamic
+`[python].requires-imports` entries are normalized into one canonical import-root
+set with provenance. Duplicate roots collapse; manual metadata cannot override,
+remove, or weaken a derived requirement. Trust and native-trust checks run once
+against the canonical set, while diagnostics report every contributing source.
 
 Raw dynamic imports remain bounded by explicit root trust, and non-literal
 dynamic imports retain an explicit unsafe annotation plus runtime trust
@@ -418,18 +447,24 @@ them silently.
 
 ## Blocking And Async
 
-Every declaration produced by an initial Python interop decorator has the
-`blocking_io` effect automatically, including function/method calls, attribute
-access, and item access. The effect is part of declaration metadata and need not
-be repeated as `blocking=True`. Async Sifr code must use the existing explicit
-blocking offload mechanism, and non-send Python values may not cross the task
-boundary.
+Every synchronous Python declaration has the `blocking_io` effect automatically,
+including function/method calls, attribute access, item access, context methods,
+and protocol acquisition. The effect is declaration metadata and is not
+repeated as `blocking=True`. Async Sifr code must explicitly offload synchronous
+declarations, and non-send Python values may not cross that task boundary.
 
-This architecture does not generate hidden offload or run a hidden event loop.
-There are no `@python.async` declarations in bridge version 1. A future
-`@python.async` contract requires a separate design for event-loop
-ownership, cancellation, thread affinity, callback entry, and returned object
-sendability.
+`@python.coroutine`, async context methods, and asyncio-dispatched callbacks use
+the single application-owned Python event-loop thread defined in
+[`python_interop_protocol_architecture.md`](./python_interop_protocol_architecture.md).
+They are genuinely asynchronous and do not block or offload a synchronous
+declaration behind the user's back.
+
+A sync-only opaque Python object cannot be captured into or returned from
+`task.spawn_blocking`, because it is non-send. Async code that must use such an
+API places the object's entire construction, use, semantic cleanup, and
+conversion inside one blocking closure and returns only sendable Sifr values.
+Libraries with genuine coroutine APIs should expose `@python.coroutine`
+declarations instead.
 
 ## Stub-Assisted Authoring
 
@@ -437,8 +472,7 @@ Checked-in Sifr declarations are the binding contract. Python `.pyi` files,
 `py.typed` inline annotations, and runtime introspection are authoring inputs,
 not proof that runtime values satisfy the hints.
 
-An eventual symbol-selective command may generate reviewable declaration
-scaffolds:
+The symbol-selective command generates reviewable declaration scaffolds:
 
 ```bash
 sifr python bind redis --symbols Redis
@@ -446,8 +480,9 @@ sifr python bind pandas --symbols DataFrame,concat
 sifr python bind --check
 ```
 
-Resolution follows the Python typing specification: user overrides, stub-only
-packages, `py.typed` packages, then approved fallback stubs. Runtime
+Resolution follows an explicit source order recorded in the binding: user
+overrides, selected stub-only packages, `py.typed` packages, then an explicitly
+configured external stub distribution. Runtime
 introspection may confirm target existence and callable shape where available,
 but it cannot be required because C extension callables may expose no
 signature.
@@ -471,6 +506,7 @@ Lowering records `PythonInteropDeclaration` metadata beside normal HIR:
 - authoritative Sifr function or class signature;
 - effect classification;
 - conversion and opaque ownership requirements derived from types;
+- async-loop, context, callback, and affine protocol requirements;
 - environment, trust, and probe requirements;
 - bridge source and binding contract digests.
 
@@ -502,9 +538,12 @@ failure is statically provable:
   module targets;
 - `SIFR-PYCALL-*`: invalid callable, method, attribute, item, or argument shape;
 - `SIFR-PYCONV-*`: unsupported declaration types or conversion contracts;
-- `SIFR-PYRES-*`: invalid opaque close policy or resource ownership;
-- `SIFR-PYZC-*`: invalid view/ownership declarations and copy fallback;
-- `SIFR-PYCB-*`: invalid callback lifetime, capture, threading, or shutdown.
+- `SIFR-PYRES-*`: invalid opaque cleanup policy or resource ownership;
+- `SIFR-PYZC-*`: invalid view/ownership declarations and hidden copying;
+- `SIFR-PYCB-*`: invalid callback lifetime, capture, threading, or shutdown;
+- `SIFR-PYASYNC-*`: invalid loop, awaitable, cancellation, or async cleanup
+  contract;
+- `SIFR-PYCTX-*`: invalid context enter/exit, suppression, or cause mapping.
 
 Dynamic Python exceptions, values that violate declared output conversion, and
 runtime resource failures remain structured `PythonError` results.
@@ -517,38 +556,43 @@ M0 reserves the first declaration codes with stable meanings:
 | `SIFR-PYCALL-0001` | Unsupported or definitively incompatible callable/attribute/item shape. |
 | `SIFR-PYCONV-0001` | Unsupported Sifr/Python declaration conversion type. |
 | `SIFR-PYRES-0001` | Invalid opaque close or ownership policy. |
-| `SIFR-PYZC-0001` | Invalid advanced-data ownership or copy-fallback declaration. |
+| `SIFR-PYZC-0001` | Invalid advanced-data ownership or hidden-copy declaration. |
 | `SIFR-PYCB-0001` | Invalid callback lifetime, threading, or shutdown declaration. |
+| `SIFR-PYASYNC-0001` | Invalid Python awaitable, cancellation, or loop-ownership declaration. |
+| `SIFR-PYCTX-0001` | Invalid Python context-manager entry, exit, or suppression declaration. |
 
 ## Verification Contract
 
-The Python interop compatibility matrix distinguishes:
+The Python interop capability matrix distinguishes:
 
 - `supported`;
 - `supported-through-bridge`;
 - `dynamic-only`;
-- `unsupported-by-design`;
-- `future`.
+- `unsupported-by-design`.
 
 No row is supported merely because a package appears in an inventory matrix.
 Supported capability rows require executable positive and negative evidence.
 The declaration layer must cover at least:
 
 - direct functions, factories, methods, attributes, and item access;
-- positional-only, keyword-only, default, and unsupported variadic shapes;
+- positional-only, keyword-only, explicit/default omission, typed variadic, and
+  typed kwargs shapes;
 - scalar, container, record, opaque, and failing output conversion;
 - automatic release on success, conversion failure, Python exception, and
   early return;
 - semantic close/context behavior and use-after-close rejection;
 - non-send enforcement and explicit blocking offload;
 - import, bridge, native trust, environment, version, and stub drift;
-- callbacks and advanced-data protocols before those decorators are supported.
+- sync/async context managers, Python coroutines, every callback dispatch mode,
+  buffers, Arrow, and DLPack ownership.
 
 Create-PR verification includes a small real pure-Python binding and a native
-extension binding. Merge verification migrates the declarable surfaces of the
-existing runnable ecosystem examples and asserts zero outstanding ordinary
-Python references. Arrow, DLPack, buffer, context-manager, and callback exchange
-points intentionally retain raw `sifr.python` usage until their M10 designs and
-M11 implementations exist. Representative service and callback certification
-invokes an actual compiled Sifr binary rather than treating Python-client
-execution plus Sifr source presence as equivalent runtime evidence.
+extension binding. Merge verification migrates every surface of the existing
+runnable ecosystem examples and asserts zero outstanding ordinary Python and
+protocol resources. The existing live lane is replaced: representative async,
+service, zero-copy, and callback certification invokes actual compiled Sifr
+binaries rather than treating Python-client execution plus Sifr source presence
+as equivalent runtime evidence. Docker/network runners own service cases,
+ordinary CPU runners own CPU Arrow and CPU DLPack evidence, and labeled CUDA
+runners own Arrow device-interface and CUDA DLPack rows; a host without the
+required resource cannot promote that row to supported.

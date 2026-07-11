@@ -127,4 +127,8 @@ Active compiler diagnostics:
 - `SIFR-PYENV-0001..0011`: malformed config, multiple venvs, missing root env, probe failure, unsupported implementation, prefix mismatch, missing site-packages, missing declared import, native-load failure, free-threaded CPython, and stale project metadata.
 - `SIFR-PYTRUST-0001..0004`: dependency wildcard rejection, allowed-but-untrusted imports, native trust without allow-list, and dynamic import without explicit trust annotation.
 
-Reserved families `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, and `SIFR-PYCB` remain allocated for future compiler-emitted diagnostics if runtime Python error values later need promotion to compiler diagnostics.
+Reserved families `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`,
+`SIFR-PYZC`, and `SIFR-PYCB` remain allocated for declaration compiler
+diagnostics. The complete declaration proposal additionally reserves
+`SIFR-PYASYNC` and `SIFR-PYCTX`; those families become active only with their
+documented declaration contracts and are not descriptions of current behavior.
