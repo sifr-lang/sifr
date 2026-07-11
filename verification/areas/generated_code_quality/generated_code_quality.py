@@ -30,7 +30,7 @@ from sifr_binary import resolve_sifr_binary  # noqa: E402
 # remains part of per-entry selection, not producer cache invalidation.
 PRODUCER_FINGERPRINT_CRATES = (
     "sifr", "sifr_codegen", "sifr_driver", "sifr_frontend", "sifr_ipc",
-    "sifr_lowering", "sifr_package", "sifr_retained_intrinsics", "sifr_runtime",
+    "sifr_lowering", "sifr_package", "sifr_runtime",
     "sifr_stdlib_imports", "sifr_stdlib_manifest", "sifr_syntax",
 )
 PRODUCER_FINGERPRINT_INPUTS = [

@@ -1,7 +1,7 @@
 use super::*;
+
 #[test]
 fn test_mut_on_mutating_method_call() {
-    // Variable with .push() call should have `mut`
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -204,7 +204,6 @@ fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
 
 #[test]
 fn test_empty_print() {
-    // print() should emit println!() not println!("{}", "")
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -822,9 +821,11 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
+    let stdlib_code = trait_impl_fixture_stdlib_code();
+
     let result = generate_rust_multi_with_metadata(
         &[("main", &main_module), ("helper", &helper_module)],
-        &StdlibCode::default(),
+        &stdlib_code,
     );
 
     let helper_rs = result

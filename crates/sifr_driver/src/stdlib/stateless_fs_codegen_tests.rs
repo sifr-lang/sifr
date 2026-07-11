@@ -76,40 +76,9 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.fs")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.io")
         .is_some_and(|deps| deps.contains("_sifr.fs")));
-
-    let public_intrinsics = compiled
-        .code
-        .intrinsic_names
-        .get("sifr.io")
-        .expect("sifr.io intrinsic names should be tracked");
-    for name in [
-        "read_text",
-        "write_text",
-        "exists",
-        "read_lines",
-        "append_text",
-        "open_file",
-        "file_read",
-        "file_write",
-        "file_readline",
-        "file_readlines",
-        "file_close",
-        "file_read_bytes",
-        "file_write_bytes",
-    ] {
-        assert!(
-            !public_intrinsics.contains(name),
-            "{name} should not remain a public sifr.io compiler intrinsic"
-        );
-    }
 }
 
 fn sha256_hex(source: &str) -> String {

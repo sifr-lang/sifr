@@ -31,26 +31,9 @@ fn math_private_declarations_codegen_through_sifr_stdlib() {
     assert!(!private_code.rust.contains("f64::NAN"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.math")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.math")
         .is_some_and(|deps| deps.contains("_sifr.math")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.math")
-        .is_some_and(|names| !names.contains("sqrt")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.math")
-        .is_some_and(|names| ["pi", "e", "tau", "inf", "nan"]
-            .iter()
-            .all(|name| !names.contains(*name))));
     let private_constant_mappings = compiled
         .code
         .module_constants

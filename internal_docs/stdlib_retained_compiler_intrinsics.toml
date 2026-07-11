@@ -125,33 +125,6 @@ retained_direct_dependency_packages = [
 ]
 
 [[surface]]
-id = "retained-fallback-signature-glue"
-state = "retained-by-design"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-reason = "Fallback signature modules that remain in sifr_retained_intrinsics are compiler-owned bootstrap signature glue for retained language/runtime surfaces and sysroot source lowering; they must not grow without review."
-fallback_signature_modules = [
-  "_sifr.bytes",
-  "_sifr.calendar",
-  "_sifr.collections",
-  "_sifr.compress",
-  "_sifr.datetime",
-  "_sifr.encoding",
-  "_sifr.html",
-  "_sifr.i18n",
-  "_sifr.io",
-  "_sifr.json",
-  "_sifr.math",
-  "_sifr.regex",
-  "_sifr.test",
-  "_sifr.toml",
-  "_sifr.unicode",
-  "_sifr.url",
-  "_sifr.uuid",
-]
-
-[[surface]]
 id = "shared-language-preamble"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"

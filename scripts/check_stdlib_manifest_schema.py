@@ -28,7 +28,6 @@ ALLOWED_SURFACE_FIELDS = {
     "reason",
     "registry_files",
     "preamble_files",
-    "fallback_signature_modules",
     "exact_intrinsics",
     "retained_direct_dependency_packages",
     "direct_runtime_roots",
@@ -41,6 +40,7 @@ PLANNED_REARCHITECTURE_DELETIONS = {
     "_sifr.runtime::observability_glue",
     "_sifr.bytes::first_class_constructors",
     "_sifr.collections::counter_defaultdict",
+    "retained-fallback-signature-glue",
 }
 DEFAULT_BASE_REF = "origin/main"
 
@@ -119,7 +119,6 @@ def _validate(manifest: dict[str, Any]) -> list[str]:
             "certification_rows",
             "registry_files",
             "preamble_files",
-            "fallback_signature_modules",
             "exact_intrinsics",
             "retained_direct_dependency_packages",
             "direct_runtime_roots",
@@ -131,7 +130,6 @@ def _validate(manifest: dict[str, Any]) -> list[str]:
             for key in (
                 "registry_files",
                 "preamble_files",
-                "fallback_signature_modules",
                 "exact_intrinsics",
                 "retained_direct_dependency_packages",
                 "direct_runtime_roots",

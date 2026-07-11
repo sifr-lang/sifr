@@ -7,7 +7,6 @@ members = [
     "crates/sifr_stdlib",
     "crates/sifr_type_system",
     "crates/sifr_ipc",
-    "crates/sifr_retained_intrinsics",
     "crates/sifr_stdlib_imports",
     "crates/sifr_stdlib_manifest",
     "crates/sifr_ir",
@@ -58,7 +57,6 @@ sifr_runtime = { path = "crates/sifr_runtime" }
 sifr_stdlib = { path = "crates/sifr_stdlib" }
 sifr_type_system = { path = "crates/sifr_type_system" }
 sifr_ipc = { path = "crates/sifr_ipc" }
-sifr_retained_intrinsics = { path = "crates/sifr_retained_intrinsics" }
 sifr_stdlib_imports = { path = "crates/sifr_stdlib_imports" }
 sifr_stdlib_manifest = { path = "crates/sifr_stdlib_manifest" }
 sifr_ir = { path = "crates/sifr_ir" }

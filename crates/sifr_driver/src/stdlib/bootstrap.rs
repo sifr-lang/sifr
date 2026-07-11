@@ -119,7 +119,6 @@ fn compile_stdlib_sources_with_sysroot(
             continue;
         }
 
-        let mut intrinsic_names_for_module = HashSet::new();
         let mut transitive_deps_for_module = HashSet::new();
 
         let mut fn_exports = HashMap::new();
@@ -168,6 +167,10 @@ fn compile_stdlib_sources_with_sysroot(
                     .get(&import.module)
                     .is_some_and(|exports| !exports.is_empty())
                     || stdlib_defs
+                        .classes
+                        .get(&import.module)
+                        .is_some_and(|exports| !exports.is_empty())
+                    || stdlib_defs
                         .constants
                         .get(&import.module)
                         .is_some_and(|exports| !exports.is_empty());
@@ -188,28 +191,6 @@ fn compile_stdlib_sources_with_sysroot(
                         &import.module,
                         &import.names,
                     );
-                    re_export_intrinsic_fallbacks(
-                        &mut fn_exports,
-                        &mut const_exports,
-                        &mut intrinsic_names_for_module,
-                        &import.module,
-                        &import.names,
-                    );
-                } else if let Some(intrinsic_mod) =
-                    sifr_retained_intrinsics::get_intrinsic_module(&import.module)
-                {
-                    for name in &import.names {
-                        if let Some(ft) = intrinsic_mod.functions.get(name) {
-                            if !fn_exports.contains_key(name) {
-                                fn_exports.insert(name.clone(), ft.clone());
-                                intrinsic_names_for_module.insert(name.clone());
-                            }
-                        }
-                        if let Some(const_ty) = intrinsic_mod.constants.get(name) {
-                            const_exports.insert(name.clone(), const_ty.clone());
-                            intrinsic_names_for_module.insert(name.clone());
-                        }
-                    }
                 }
             } else if import.module.starts_with("sifr.") {
                 transitive_deps_for_module.insert(import.module.clone());
@@ -296,7 +277,6 @@ fn compile_stdlib_sources_with_sysroot(
         if has_pure_sifr_code {
             let codegen_stdlib = StdlibCode {
                 module_rust_code: HashMap::new(),
-                intrinsic_names: stdlib_code.intrinsic_names.clone(),
                 module_constants: stdlib_code.module_constants.clone(),
                 func_signatures: stdlib_code.func_signatures.clone(),
                 transitive_deps: stdlib_code.transitive_deps.clone(),
@@ -421,9 +401,6 @@ fn compile_stdlib_sources_with_sysroot(
                 .insert(module_name.to_string(), class_fields);
         }
 
-        stdlib_code
-            .intrinsic_names
-            .insert(module_name.to_string(), intrinsic_names_for_module);
         if !transitive_deps_for_module.is_empty() {
             stdlib_code
                 .transitive_deps
@@ -606,32 +583,6 @@ fn signature_params(
             )
         })
         .collect()
-}
-
-fn re_export_intrinsic_fallbacks(
-    fn_exports: &mut HashMap<String, FunctionType>,
-    const_exports: &mut HashMap<String, Type>,
-    intrinsic_names_for_module: &mut HashSet<String>,
-    import_module: &str,
-    import_names: &[String],
-) {
-    let Some(intrinsic_mod) = sifr_retained_intrinsics::get_intrinsic_module(import_module) else {
-        return;
-    };
-    for name in import_names {
-        if !fn_exports.contains_key(name) {
-            if let Some(ft) = intrinsic_mod.functions.get(name) {
-                fn_exports.insert(name.clone(), ft.clone());
-                intrinsic_names_for_module.insert(name.clone());
-            }
-        }
-        if !const_exports.contains_key(name) {
-            if let Some(const_ty) = intrinsic_mod.constants.get(name) {
-                const_exports.insert(name.clone(), const_ty.clone());
-                intrinsic_names_for_module.insert(name.clone());
-            }
-        }
-    }
 }
 
 fn collect_public_constant_integer_value_exports<'a, T: Clone>(

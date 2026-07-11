@@ -295,32 +295,6 @@ pub(in crate::lower) fn lower_module_impl(
                     });
                     continue;
                 }
-                // Resolve private declarations for public sysroot stdlib sources.
-                if let Some(intrinsic_module) =
-                    sifr_retained_intrinsics::get_intrinsic_module(&module_name)
-                {
-                    for name in &names {
-                        let local = local_name_for(name);
-                        if let Some(ft) = intrinsic_module.functions.get(name) {
-                            ctx.functions.insert(local, ft.clone());
-                        } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
-                            ctx.scope.define(local, const_ty.clone());
-                        } else {
-                            name_diagnostics::missing_member(
-                                &mut ctx,
-                                &module_name,
-                                name,
-                                imported_name_range(name),
-                            );
-                        }
-                    }
-                    imports.push(HirImport {
-                        module: module_name,
-                        names,
-                        aliases,
-                    });
-                    continue;
-                }
                 import_diagnostics::unknown_import_target(&mut ctx, &module_name, import_range);
                 continue;
             }

@@ -32,32 +32,9 @@ fn collections_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(".to_i64_saturating()"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.collections")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.collections")
         .is_some_and(|deps| deps.contains("_sifr.collections")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.collections")
-        .is_some_and(|names| {
-            [
-                "new_set",
-                "set_from_list",
-                "set_add",
-                "set_contains",
-                "set_remove",
-                "set_len",
-                "set_union",
-                "set_intersection",
-            ]
-            .into_iter()
-            .all(|name| !names.contains(name))
-        }));
     let exports = compiled
         .defs
         .functions

@@ -24,31 +24,6 @@ impl RustEmitter {
             for name in &import.names {
                 names_set.insert(name.clone());
             }
-
-            // Only register names as intrinsic if they are known intrinsic re-exports.
-            // Pure Sifr functions/constants should go through the normal codegen path.
-            let intrinsic_set = self.stdlib_intrinsic_names.get(&import.module);
-            if let Some(iset) = intrinsic_set {
-                // Only register names that are intrinsic re-exports.
-                for name in &import.names {
-                    if iset.contains(name) {
-                        self.intrinsic_functions.insert(name.clone());
-                    }
-                }
-                for (name, alias) in &import.aliases {
-                    if iset.contains(name) {
-                        self.intrinsic_functions.insert(alias.clone());
-                    }
-                }
-            } else {
-                // No intrinsic info available for this import set; treat all as intrinsic.
-                for name in &import.names {
-                    self.intrinsic_functions.insert(name.clone());
-                }
-                for (_, alias) in &import.aliases {
-                    self.intrinsic_functions.insert(alias.clone());
-                }
-            }
         }
     }
 

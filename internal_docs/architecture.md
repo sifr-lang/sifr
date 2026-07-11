@@ -281,7 +281,6 @@ sifr/
     sifr_lowering/          (AST-to-IR lowering, name/type/ownership/async analysis, lowering diagnostics)
     sifr_stdlib_manifest/   (compiler-host stdlib source inventory, private declaration inventory, feature planning, and sysroot validation)
     sifr_stdlib_imports/    (legacy and bare stdlib import suggestion policy over manifest inventory)
-    sifr_retained_intrinsics/ (temporary compiler-retained stdlib intrinsic signatures)
     sifr_ipc/               (shared IPC protocol/frame/schema/request-tracking crate)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)

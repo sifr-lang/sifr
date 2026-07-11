@@ -71,9 +71,6 @@ pub struct RustEmitter {
     /// Used to avoid double-borrowing: when a &mut param is passed to another &mut param,
     /// we must NOT emit `&mut name` (it's already &mut T); just pass `name` directly.
     pub(crate) mut_borrowed_params: HashSet<String>,
-    /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
-    /// Used to distinguish intrinsic function calls from pure Sifr function calls
-    pub(crate) stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
     /// Set of function names that are generators (contain yield statements)
     /// Used to emit .`collect()` when assigning generator results to list[T]
     pub(crate) generator_functions: HashSet<String>,
@@ -215,7 +212,6 @@ impl RustEmitter {
             generic_class_templates: HashMap::new(),
             borrowed_params: HashSet::new(),
             mut_borrowed_params: HashSet::new(),
-            stdlib_intrinsic_names: HashMap::new(),
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
             pending_self_field_clone_suppression: 0,
