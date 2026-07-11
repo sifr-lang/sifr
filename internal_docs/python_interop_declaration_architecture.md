@@ -71,8 +71,9 @@ from sifr.python import PythonError
 def sqrt(value: float) -> Result[float, PythonError]: ...
 ```
 
-The declared parameter and return types are authoritative. The decorator does
-not repeat them through `returns=`, `copy=`, or per-argument converter fields.
+The declared parameter and return types are authoritative. The Sifr signature
+is the only conversion type contract. The decorator does not repeat types
+through `returns=`, `copy=`, or per-argument converter fields.
 This prevents decorator metadata and Sifr types from drifting apart.
 Ellipsis is public Python interop declaration syntax, not a general Sifr
 function body form.
@@ -552,7 +553,7 @@ failure is statically provable:
 Dynamic Python exceptions, values that violate declared output conversion, and
 runtime resource failures remain structured `PythonError` results.
 
-M0 reserves the first declaration codes with stable meanings:
+The declaration contract reserves the first diagnostic codes with stable meanings:
 
 | Code | Meaning |
 | --- | --- |
@@ -560,6 +561,7 @@ M0 reserves the first declaration codes with stable meanings:
 | `SIFR-PYCALL-0001` | Unsupported or definitively incompatible callable/attribute/item shape. |
 | `SIFR-PYCONV-0001` | Unsupported Sifr/Python declaration conversion type. |
 | `SIFR-PYRES-0001` | Invalid opaque close or ownership policy. |
+| `SIFR-PYRES-0002` | Recognized declaration-first syntax whose sole production lowering is not active yet. |
 | `SIFR-PYZC-0001` | Invalid advanced-data ownership or hidden-copy declaration. |
 | `SIFR-PYCB-0001` | Invalid callback lifetime, threading, or shutdown declaration. |
 | `SIFR-PYASYNC-0001` | Invalid Python awaitable, cancellation, or loop-ownership declaration. |
@@ -567,15 +569,19 @@ M0 reserves the first declaration codes with stable meanings:
 
 ## Verification Contract
 
-The Python interop capability matrix distinguishes:
+The Python interop capability matrix classifies the target contract separately
+from current implementation status. Target states are:
 
-- `supported`;
-- `supported-through-bridge`;
+- `declaration-supported`;
+- `bridge-supported`;
 - `dynamic-only`;
 - `unsupported-by-design`.
 
-No row is supported merely because a package appears in an inventory matrix.
-Supported capability rows require executable positive and negative evidence.
+Implementation status is independently `reserved` or `active`. A reserved row
+is architectural intent and cannot claim passing evidence. No row is active
+merely because a package appears in an inventory matrix. Active capability rows
+require all executable positive, negative, cleanup, cancellation, and live
+evidence marked as required by that row.
 The declaration layer must cover at least:
 
 - direct functions, factories, methods, attributes, and item access;

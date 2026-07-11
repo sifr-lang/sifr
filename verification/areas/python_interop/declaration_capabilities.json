@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "description": "Target capability classification and evidence ownership for declaration-first Python interop. A target state is architectural intent; only active rows with passing required evidence are implemented claims.",
+  "capabilities": [
+    {
+      "id": "sync-declaration",
+      "surface": "@python(path)",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "sync-declarations",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "sync wrapper matrix"},
+        {"kind": "negative", "status": "planned", "owner": "target and call-shape diagnostics"},
+        {"kind": "cleanup", "status": "planned", "owner": "wrapper failure reference assertions"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "synchronous boundary"},
+        {"kind": "live", "status": "planned", "owner": "pure-Python and native-extension binaries"}
+      ]
+    },
+    {
+      "id": "complete-call-shapes",
+      "surface": "positional, keyword-only, omit, variadics, kwargs, and closed-record expansion",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "sync-declarations",
+      "required_evidence": ["positive", "negative", "cleanup"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "parser/lowering/codegen call-shape matrix"},
+        {"kind": "negative", "status": "planned", "owner": "duplicate and incompatible-shape fixtures"},
+        {"kind": "cleanup", "status": "planned", "owner": "partial argument-conversion cleanup"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "synchronous call shapes"},
+        {"kind": "live", "status": "not-applicable", "owner": "covered by sync-declaration live evidence"}
+      ]
+    },
+    {
+      "id": "opaque-lifecycle",
+      "surface": "@python.opaque, @python.attr, and @python.item",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "opaque-lifecycle",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "opaque method/attribute/item matrix"},
+        {"kind": "negative", "status": "planned", "owner": "moved/closed/poison diagnostics"},
+        {"kind": "cleanup", "status": "planned", "owner": "exact-once drop and close fixtures"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "owned async close runtime"},
+        {"kind": "live", "status": "planned", "owner": "biip and schwifty binaries"}
+      ]
+    },
+    {
+      "id": "sync-context",
+      "surface": "@python.context.enter and @python.context.exit",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "sync-context",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "context outcome and suppression matrix"},
+        {"kind": "negative", "status": "planned", "owner": "escape and incompatible entered-value fixtures"},
+        {"kind": "cleanup", "status": "planned", "owner": "replay-token and exact-once exit fixtures"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "synchronous context boundary"},
+        {"kind": "live", "status": "planned", "owner": "database transaction binary"}
+      ]
+    },
+    {
+      "id": "package-bridge",
+      "surface": "bridge.* target namespace",
+      "target_state": "bridge-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "package-bridge",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "loader, sibling import, and archive fixtures"},
+        {"kind": "negative", "status": "planned", "owner": "collision and dynamic-import rejection"},
+        {"kind": "cleanup", "status": "planned", "owner": "failed-loader state cleanup"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "bridge loading is synchronous initialization"},
+        {"kind": "live", "status": "planned", "owner": "installed package run without source checkout"}
+      ]
+    },
+    {
+      "id": "coroutine-declaration",
+      "surface": "@python.coroutine(path)",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "async-runtime",
+      "required_evidence": ["positive", "negative", "cleanup", "cancellation", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "async declaration matrix"},
+        {"kind": "negative", "status": "planned", "owner": "sync/async kind mismatch fixtures"},
+        {"kind": "cleanup", "status": "planned", "owner": "loop, task, and async-close shutdown fixtures"},
+        {"kind": "cancellation", "status": "planned", "owner": "bidirectional cancellation matrix"},
+        {"kind": "live", "status": "planned", "owner": "compiled httpx-style client"}
+      ]
+    },
+    {
+      "id": "async-context",
+      "surface": "@python.context.aenter and @python.context.aexit",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "async-context",
+      "required_evidence": ["positive", "negative", "cleanup", "cancellation", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "async context outcome matrix"},
+        {"kind": "negative", "status": "planned", "owner": "escape and unsuppressible-cause fixtures"},
+        {"kind": "cleanup", "status": "planned", "owner": "exact-once async exit fixtures"},
+        {"kind": "cancellation", "status": "planned", "owner": "masked cleanup and resume matrix"},
+        {"kind": "live", "status": "planned", "owner": "compiled async database session"}
+      ]
+    },
+    {
+      "id": "callback-current",
+      "surface": "@python.callback(..., dispatch=current)",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "callback-runtime",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "current-thread callback matrix"},
+        {"kind": "negative", "status": "planned", "owner": "escape and conversion fixtures"},
+        {"kind": "cleanup", "status": "planned", "owner": "call/result/Self owner shutdown"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "current-thread callable is synchronous"},
+        {"kind": "live", "status": "planned", "owner": "compiled CFFI callback example"}
+      ]
+    },
+    {
+      "id": "callback-foreign",
+      "surface": "@python.callback(..., dispatch=foreign)",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "callback-runtime",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "foreign serial/parallel matrix"},
+        {"kind": "negative", "status": "planned", "owner": "capture, argument, and reentrancy fixtures"},
+        {"kind": "cleanup", "status": "planned", "owner": "unregister/drain/release shutdown"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "foreign callback is synchronous"},
+        {"kind": "live", "status": "planned", "owner": "compiled Kafka callback example"}
+      ]
+    },
+    {
+      "id": "callback-asyncio",
+      "surface": "@python.callback(..., dispatch=asyncio)",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "callback-runtime",
+      "required_evidence": ["positive", "negative", "cleanup", "cancellation", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "AsyncCallable dispatch matrix"},
+        {"kind": "negative", "status": "planned", "owner": "async result and reentrancy fixtures"},
+        {"kind": "cleanup", "status": "planned", "owner": "asyncio callback owner shutdown"},
+        {"kind": "cancellation", "status": "planned", "owner": "bidirectional callback cancellation"},
+        {"kind": "live", "status": "planned", "owner": "compiled Pub/Sub callback example"}
+      ]
+    },
+    {
+      "id": "buffer-protocol",
+      "surface": "@python.buffer",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "buffer-protocol",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "format/layout/access matrix"},
+        {"kind": "negative", "status": "planned", "owner": "borrow, move, and metadata failures"},
+        {"kind": "cleanup", "status": "planned", "owner": "exact PyBuffer_Release counters"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "buffer acquisition is synchronous"},
+        {"kind": "live", "status": "planned", "owner": "compiled NumPy buffer example"}
+      ]
+    },
+    {
+      "id": "arrow-c-data",
+      "surface": "@python.arrow",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "arrow-c-data",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "array/schema/stream transfer matrix"},
+        {"kind": "negative", "status": "planned", "owner": "capsule, copy, and consumption failures"},
+        {"kind": "cleanup", "status": "planned", "owner": "exact release and partial-consumption counters"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "Arrow transfer is synchronous"},
+        {"kind": "live", "status": "planned", "owner": "pandas, PyArrow, and Polars binaries"}
+      ]
+    },
+    {
+      "id": "dlpack-transfer",
+      "surface": "@python.dlpack and @python.dlpack.stream",
+      "target_state": "declaration-supported",
+      "implementation_status": "reserved",
+      "activation_owner": "dlpack-transfer",
+      "required_evidence": ["positive", "negative", "cleanup", "live"],
+      "evidence": [
+        {"kind": "positive", "status": "planned", "owner": "dtype/device/stream transfer matrix"},
+        {"kind": "negative", "status": "planned", "owner": "capsule, copy, device, and double-consume failures"},
+        {"kind": "cleanup", "status": "planned", "owner": "exact deleter and failure-transition counters"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "DLPack transfer is synchronous"},
+        {"kind": "live", "status": "planned", "owner": "PyTorch and TensorFlow binaries"}
+      ]
+    },
+    {
+      "id": "raw-dynamic-object",
+      "surface": "sifr.python.Object",
+      "target_state": "dynamic-only",
+      "implementation_status": "active",
+      "activation_owner": "raw-api",
+      "required_evidence": ["positive", "negative", "cleanup"],
+      "evidence": [
+        {"kind": "positive", "status": "passing", "owner": "existing embedded interop raw-object suites"},
+        {"kind": "negative", "status": "passing", "owner": "existing conversion and resource diagnostics"},
+        {"kind": "cleanup", "status": "passing", "owner": "existing outstanding-object assertions"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "raw coroutine integration owner"},
+        {"kind": "live", "status": "not-applicable", "owner": "inventory is not used as live certification"}
+      ]
+    },
+    {
+      "id": "arbitrary-dynamic-attributes",
+      "surface": "ordinary Sifr dynamic attribute syntax",
+      "target_state": "unsupported-by-design",
+      "implementation_status": "active",
+      "activation_owner": "static-language",
+      "required_evidence": ["negative"],
+      "evidence": [
+        {"kind": "positive", "status": "not-applicable", "owner": "unsupported by design"},
+        {"kind": "negative", "status": "passing", "owner": "existing static member resolution diagnostics"},
+        {"kind": "cleanup", "status": "not-applicable", "owner": "no value is constructed"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "no execution occurs"},
+        {"kind": "live", "status": "not-applicable", "owner": "unsupported by design"}
+      ]
+    },
+    {
+      "id": "untyped-generation",
+      "surface": "Any, bare object, or implicit py.Object generated boundaries",
+      "target_state": "unsupported-by-design",
+      "implementation_status": "active",
+      "activation_owner": "binding-authoring",
+      "required_evidence": ["negative"],
+      "evidence": [
+        {"kind": "positive", "status": "not-applicable", "owner": "unsupported by design"},
+        {"kind": "negative", "status": "passing", "owner": "declaration contract and existing no-Any type system"},
+        {"kind": "cleanup", "status": "not-applicable", "owner": "no value is generated"},
+        {"kind": "cancellation", "status": "not-applicable", "owner": "no execution occurs"},
+        {"kind": "live", "status": "not-applicable", "owner": "unsupported by design"}
+      ]
+    }
+  ]
+}
