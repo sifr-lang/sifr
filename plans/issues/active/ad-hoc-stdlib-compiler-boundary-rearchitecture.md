@@ -36,7 +36,7 @@ fixtures at 31,402 ms / 600,000 ms. Two Claude Opus review rounds were
 satisfied; the final round confirmed restored nested structured-intrinsic
 coverage with retained IDs.
 M5 deletes the fallback-signature crate and every missing-declaration recovery
-path in [PR #2925](https://github.com/sifr-lang/sifr/pull/2925). Compiled
+path and is merged in [PR #2925](https://github.com/sifr-lang/sifr/pull/2925). Compiled
 private declarations and typed HIR are now the sole signature authority, with
 permanent guards rejecting restoration of the crate, APIs, placeholders,
 configuration, or manifest schema. The create-PR gate passed with crate tests
@@ -568,6 +568,6 @@ scripts/run_all_tests.sh
 - [x] M2 merged and documented ([PR #2922](https://github.com/sifr-lang/sifr/pull/2922)).
 - [x] M3 merged and documented ([PR #2923](https://github.com/sifr-lang/sifr/pull/2923)).
 - [x] M4 merged and documented ([PR #2924](https://github.com/sifr-lang/sifr/pull/2924)).
-- [ ] M5 merged and documented.
+- [x] M5 merged and documented ([PR #2925](https://github.com/sifr-lang/sifr/pull/2925)).
 - [ ] M6 merged and documented.
 - [ ] Full local merge gate passes on final `main`.
