@@ -13,7 +13,7 @@ fn generated_cargo_dependencies(
 }
 
 #[test]
-fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
+fn stdlib_module_dependencies_use_only_sysroot_crates_for_json_and_collections() {
     let stdlib_modules = HashSet::from([
         "sifr.collections".to_string(),
         "_sifr.collections".to_string(),
@@ -24,14 +24,10 @@ fn stdlib_module_dependencies_are_deterministic_and_deduplicated() {
     let deps = generated_cargo_dependencies(&stdlib_modules, &required_features);
     assert!(deps[0].contains("features = [\"collections\", \"json\", \"random\"]"));
 
-    assert_eq!(
-        deps,
-        vec![
-            deps[0].clone(),
-            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
-            "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
-        ]
-    );
+    assert_eq!(deps.len(), 1);
+    assert!(deps[0].starts_with("sifr_stdlib = "));
+    assert!(!deps.iter().any(|dep| dep.starts_with("serde_json = ")));
+    assert!(!deps.iter().any(|dep| dep.starts_with("serde = ")));
 }
 
 #[test]

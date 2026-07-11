@@ -1,0 +1,46 @@
+from sifr.bytes import bytes_from_hex, bytes_from_ints, bytes_with_size
+from sifr.collections import Counter, defaultdict, from_list
+
+
+def main() -> None:
+    counter: Counter[str] = from_list(["a", "b", "a", "c", "a"])
+    assert counter.get("a") == 3
+    assert counter.total() == 5
+    assert counter.most_common(1) == [("a", 3)]
+
+    counts = defaultdict(int)
+    counts["steps"] += 2
+    counts["steps"] += 3
+    assert counts["steps"] == 5
+    assert counts["missing"] == 0
+
+    groups = defaultdict(list)
+    groups["hot"].append("a")
+    assert groups["hot"] == ["a"]
+    assert len(groups["cold"]) == 0
+
+    seen = defaultdict(set)
+    seen[1].add("x")
+    assert "x" in seen[1]
+    assert len(seen[2]) == 0
+
+    try:
+        parsed: bytes = bytes_from_hex("41 42")
+        assert len(parsed) == 2
+    except ParseError as error:
+        _ = error.message
+        assert False
+
+    try:
+        values: bytes = bytes_from_ints([0, 127, 255])
+        assert len(values) == 3
+    except ValueError as error:
+        _ = error.message
+        assert False
+
+    try:
+        sized: bytes = bytes_with_size(4)
+        assert len(sized) == 4
+    except ValueError as error:
+        _ = error.message
+        assert False

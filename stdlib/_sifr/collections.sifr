@@ -38,18 +38,3 @@ def _set_union_impl(own a: list[int], own b: list[int]) -> list[int]:
 @rust(sifr_stdlib.collections.set_intersection)
 def _set_intersection_impl(own a: list[int], own b: list[int]) -> list[int]:
     ...
-
-
-@rust(sifr_stdlib.collections.defaultdict_new)
-def _defaultdict_new_impl(default_value: int) -> str:
-    ...
-
-
-@rust(sifr_stdlib.collections.defaultdict_get)
-def _defaultdict_get_impl(dd: str, key: str) -> int:
-    ...
-
-
-@rust(sifr_stdlib.collections.defaultdict_set)
-def _defaultdict_set_impl(dd: str, key: str, value: int) -> str:
-    ...

@@ -11,6 +11,9 @@ use crate::RustExpr;
 use sifr_ir::CompilerIntrinsicId;
 use sifr_stdlib_manifest::StdlibFeature;
 
+pub(crate) use collections::{
+    is_collection_defaultdict_storage_alias, is_defaultdict_storage_alias,
+};
 pub(crate) use requirements::additional_required_features;
 
 pub(crate) struct LoweredIntrinsic {
@@ -33,38 +36,6 @@ pub(crate) fn lower_intrinsic(
         CompilerIntrinsicId::TestAssertAlmostEqual => (test::lower_assert_almost_eq(args), None),
         CompilerIntrinsicId::TestAssertGreaterThan => (test::lower_assert_gt(args), None),
         CompilerIntrinsicId::TestAssertLessThan => (test::lower_assert_lt(args), None),
-        CompilerIntrinsicId::CounterFromList => (
-            collections::lower_counter_from_list(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        CompilerIntrinsicId::CounterGet => (
-            collections::lower_counter_get(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        CompilerIntrinsicId::CounterMostCommon => (
-            collections::lower_counter_most_common(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        CompilerIntrinsicId::CounterTotal => (
-            collections::lower_counter_total(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        CompilerIntrinsicId::CounterValues => (
-            collections::lower_counter_values(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        CompilerIntrinsicId::CounterKeys => (
-            collections::lower_counter_keys(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        CompilerIntrinsicId::CounterItems => (
-            collections::lower_counter_items(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
-        CompilerIntrinsicId::CounterIncrement => (
-            collections::lower_counter_increment(args),
-            Some(StdlibFeature::SerdeJson),
-        ),
         CompilerIntrinsicId::StringEncode => (
             encoding::lower_str_encode_result(args),
             Some(StdlibFeature::SifrRuntime),

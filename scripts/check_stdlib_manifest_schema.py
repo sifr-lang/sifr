@@ -37,7 +37,11 @@ REQUIRED_SURFACE_STATES = {
     "_sifr.task::language_runtime_glue": FINAL_STATE,
     "generated-test-glue": FINAL_STATE,
 }
-PLANNED_REARCHITECTURE_DELETIONS = {"_sifr.runtime::observability_glue"}
+PLANNED_REARCHITECTURE_DELETIONS = {
+    "_sifr.runtime::observability_glue",
+    "_sifr.bytes::first_class_constructors",
+    "_sifr.collections::counter_defaultdict",
+}
 DEFAULT_BASE_REF = "origin/main"
 
 

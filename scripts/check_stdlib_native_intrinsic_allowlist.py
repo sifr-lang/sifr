@@ -46,12 +46,54 @@ STALE_ARCH_PHRASES = (
     "validated against the compiler intrinsic registry; compiler intrinsic metadata remains the current signature owner",
     "old handwritten intrinsic registry is removed or reduced",
 )
+DELETED_COLLECTION_RESIDUES = (
+    "counter_from_list",
+    "counter_get",
+    "counter_increment",
+    "counter_items",
+    "counter_keys",
+    "counter_most_common",
+    "counter_total",
+    "counter_values",
+    "_defaultdict_new_impl",
+    "_defaultdict_get_impl",
+    "_defaultdict_set_impl",
+)
+DELETED_COLLECTION_RESIDUE_ROOTS = (
+    REPO_ROOT / "crates" / "sifr_ir" / "src" / "hir_nodes.rs",
+    REGISTRY_ROOT,
+    REPO_ROOT / "crates" / "sifr_retained_intrinsics" / "src",
+    REPO_ROOT / "crates" / "sifr_stdlib" / "src" / "collections.rs",
+    REPO_ROOT / "stdlib" / "_sifr" / "collections.sifr",
+    REPO_ROOT / "stdlib" / "sifr" / "collections.sifr",
+)
 
 
 def main() -> int:
     observed = _observed_surface()
     allowlist = tomllib.loads(ALLOWLIST_PATH.read_text(encoding="utf-8"))
+    failures = _deleted_collection_residue_failures()
+    if failures:
+        print("stdlib native intrinsic allowlist guard: FAIL")
+        for failure in failures:
+            print(f"- {failure}")
+        return 1
     return _run(observed, allowlist)
+
+
+def _deleted_collection_residue_failures() -> list[str]:
+    failures = []
+    for root in DELETED_COLLECTION_RESIDUE_ROOTS:
+        paths = root.rglob("*.rs") if root.is_dir() else (root,)
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            for residue in DELETED_COLLECTION_RESIDUES:
+                if residue in text:
+                    failures.append(
+                        f"deleted collections residue {residue!r} remains in "
+                        f"{path.relative_to(REPO_ROOT)}"
+                    )
+    return failures
 
 
 def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:

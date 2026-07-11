@@ -1,32 +1,4 @@
 use super::*;
-use sifr_ir::CompilerIntrinsicId;
-
-fn counter_total_expr() -> HirExpr {
-    HirExpr::IntrinsicCall {
-        intrinsic: CompilerIntrinsicId::CounterTotal,
-        args: vec![HirExpr::IntrinsicCall {
-            intrinsic: CompilerIntrinsicId::CounterFromList,
-            args: vec![HirExpr::ListLiteral {
-                elements: vec![HirExpr::StringLiteral("a".to_string())],
-                ty: Type::List(Box::new(Type::Str)),
-            }],
-            ty: Type::Str,
-            call_range: Default::default(),
-            arg_ranges: vec![Default::default()],
-        }],
-        ty: Type::Int,
-        call_range: Default::default(),
-        arg_ranges: vec![Default::default()],
-    }
-}
-
-fn collections_counter_import() -> HirImport {
-    HirImport {
-        module: "sifr.collections".to_string(),
-        names: vec!["counter_total".to_string(), "counter_from_list".to_string()],
-        aliases: vec![],
-    }
-}
 
 #[test]
 fn test_structured_expr_path_handles_plain_signature_call_expression() {
@@ -269,7 +241,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
                 },
                 HirStmt::Assign {
                     name: "x".to_string(),
-                    value: counter_total_expr(),
+                    value: HirExpr::IntLiteral(7),
                 },
             ],
             is_async: false,
@@ -280,7 +252,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![collections_counter_import()],
+        imports: vec![],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
@@ -288,7 +260,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("x ="));
-    assert!(generated.rust_source.contains(".values().sum::<i64>()"));
+    assert!(generated.rust_source.contains("x = 7"));
     assert!(
         generated.lowering_stats.stmt_structured >= 2,
         "let + assign should be emitted through structured stmt path"
@@ -305,7 +277,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             body: vec![HirStmt::Let {
                 name: "x".to_string(),
                 ty: Type::Int,
-                value: counter_total_expr(),
+                value: HirExpr::IntLiteral(7),
                 is_mutable: false,
             }],
             is_async: false,
@@ -316,7 +288,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![collections_counter_import()],
+        imports: vec![],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
@@ -324,7 +296,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("let x: i64 ="));
-    assert!(generated.rust_source.contains(".values().sum::<i64>()"));
+    assert!(generated.rust_source.contains("let x: i64 = 7"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed let should be emitted through structured stmt path"
@@ -339,7 +311,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
             params: vec![],
             return_type: Type::Int,
             body: vec![HirStmt::Return {
-                value: Some(counter_total_expr()),
+                value: Some(HirExpr::IntLiteral(7)),
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
@@ -349,14 +321,15 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![collections_counter_import()],
+        imports: vec![],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains(".values().sum::<i64>()"));
+    assert!(generated.rust_source.contains("fn value() -> i64"));
+    assert!(generated.rust_source.contains("7"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt path"

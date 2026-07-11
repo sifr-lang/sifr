@@ -544,10 +544,7 @@ impl RustEmitter {
             return None;
         };
         let (alias_name, key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
-        if !matches!(
-            alias_name,
-            "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
-        ) {
+        if !crate::intrinsics::is_collection_defaultdict_storage_alias(alias_name) {
             return None;
         }
         let lowered_object = self.try_lower_registry_expr_strict(base_object)?;

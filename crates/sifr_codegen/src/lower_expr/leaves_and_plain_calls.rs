@@ -385,10 +385,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                     if matches!(
                         object.ty(),
                         Type::Alias { name, .. }
-                            if matches!(
-                                name.as_str(),
-                                "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
-                            )
+                            if crate::intrinsics::is_collection_defaultdict_storage_alias(name)
                     )
             ) {
                 return None;

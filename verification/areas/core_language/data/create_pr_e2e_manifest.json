@@ -10,6 +10,7 @@
     "dict_ops",
     "class_basic",
     "class_methods",
+    "collections_boundary_ownership",
     "enum_simple",
     "match_union",
     "match_guard",

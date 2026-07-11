@@ -48,28 +48,14 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.collections::counter_defaultdict"
+id = "sifr.collections::typed_defaultdict_language_semantics"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-declaration_files = ["stdlib/_sifr/collections.sifr"]
-reason = "Counter/defaultdict semantics and core collection behavior remain language-owned after helper-leaf migration."
-registry_files = [
-  "collections.rs",
-  "collections/counter_defaultdict_intrinsics.rs",
-  "collections/set_and_list_intrinsics.rs",
-]
-exact_intrinsics = [
-  "counter_from_list",
-  "counter_get",
-  "counter_increment",
-  "counter_items",
-  "counter_keys",
-  "counter_most_common",
-  "counter_total",
-  "counter_values",
-]
+declaration_files = ["stdlib/sifr/collections.sifr"]
+reason = "Typed defaultdict(int|list|set[, mapping]) construction and mutation are compiler/type-system-owned language semantics. Generic Counter[T] is implemented entirely in checked Sifr source, while the retained registry file owns shared codegen alias classification."
+registry_files = ["collections.rs"]
 
 [[surface]]
 id = "_sifr.encoding::utf8_bytes_string_glue"
@@ -88,13 +74,13 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "_sifr.bytes::first_class_constructors"
+id = "sifr.bytes::primitive_constructors"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 declaration_files = ["stdlib/_sifr/bytes.sifr"]
-reason = "Primitive bytes constructors and method glue remain compiler-language behavior; strict hex formatting routes through the checked _sifr.bytes Rust bridge declaration."
+reason = "Public checked sifr.bytes wrapper bodies route bytes.from_hex, bytes.from_ints, and bytes(size) to primitive compiler-language construction HIR. Strict hex formatting routes separately through the checked _sifr.bytes Rust bridge declaration."
 registry_files = ["bytes.rs"]
 exact_intrinsics = [
   "bytes_from_hex",
@@ -135,8 +121,6 @@ retained_direct_dependency_packages = [
   "num-traits",
   "rayon",
   "rust_decimal",
-  "serde",
-  "serde_json",
   "tokio",
 ]
 

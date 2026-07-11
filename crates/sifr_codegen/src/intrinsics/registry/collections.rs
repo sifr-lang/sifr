@@ -1,8 +1,29 @@
-//! Collections intrinsic lowerers for registry lowering.
+//! Shared classification for language-owned typed defaultdict storage aliases.
 
-use crate::{RustExpr, RustStmt, RustType};
+pub(crate) fn is_defaultdict_storage_alias(name: &str) -> bool {
+    matches!(
+        name,
+        "__sifr_defaultdict_int" | "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
+    )
+}
 
-mod set_and_list_intrinsics;
-pub(super) use set_and_list_intrinsics::*;
-mod counter_defaultdict_intrinsics;
-pub(super) use counter_defaultdict_intrinsics::*;
+pub(crate) fn is_collection_defaultdict_storage_alias(name: &str) -> bool {
+    matches!(name, "__sifr_defaultdict_list" | "__sifr_defaultdict_set")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn typed_defaultdict_alias_classification_excludes_legacy_serialized_helpers() {
+        assert!(is_defaultdict_storage_alias("__sifr_defaultdict_int"));
+        assert!(is_collection_defaultdict_storage_alias(
+            "__sifr_defaultdict_set"
+        ));
+        assert!(!is_collection_defaultdict_storage_alias(
+            "__sifr_defaultdict_int"
+        ));
+        assert!(!is_defaultdict_storage_alias("defaultdict"));
+    }
+}
