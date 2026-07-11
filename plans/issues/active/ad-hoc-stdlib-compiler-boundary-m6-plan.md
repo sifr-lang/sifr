@@ -62,9 +62,13 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   E2E fixtures at `32,483 ms / 600,000 ms`. The initial run exposed a cold LSP
   preview-cache timeout; the exact cache was warmed through the normal compiler
   metadata path, the standalone smoke passed, and the complete gate rerun was
-  green. The final merge gate and phase-wide closeout review remain pending.
+  green. The final merge gate remains pending.
 - Claude Opus M6 review round 1 reported no blocking findings and ended
   `SATISFIED`. Its soft blind spots were nevertheless hardened: public
   unsafe/extern functions are now inventoried, structured compiler consumers
   require an exact Rust IR path, and installed/source probe caches are isolated.
   Round 2 reported no blockers or optional cleanups and also ended `SATISFIED`.
+- Phase-wide closeout review rounds 1-3 independently rechecked the complete
+  M1-M6 diff and all ended `SATISFIED`. Rounds 1-2 identified stale Counter
+  blueprint/evidence prose, which was updated to the final generic source-owned
+  design; round 3 confirmed no remaining finding.
