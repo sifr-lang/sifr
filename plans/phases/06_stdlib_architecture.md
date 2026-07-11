@@ -317,7 +317,7 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
 ### Final Counter Ownership
 
 | Layer | Responsibility |
-| --- | --- | --- |
+| --- | --- |
 | `stdlib/sifr/collections.sifr` | Generic storage, construction, queries, mutation, arithmetic, and ordering policy. |
 | HIR/type system | Generic bounds, dict-key hashability, class export, receiver and operator typing. |
 | Codegen | Normal checked class/dict lowering; no Counter-specific dispatch. |
@@ -334,8 +334,13 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
 
 - `stdlib/sifr/collections.sifr` — generic source-owned `Counter` and
   `from_list`.
-- `crates/sifr/tests/e2e/pass/stdlib_collections_counter.sifr` — basic Counter construction + method calls
-- `crates/sifr/tests/e2e/pass/stdlib_collections_counter_mutate.sifr` — Counter mutation via `increment`
+- `crates/sifr/tests/e2e/pass/generic_counter_int.sifr` and
+  `generic_counter_bigint.sifr` — generic construction, queries, and mutation.
+- `crates/sifr/tests/e2e/pass/generic_counter_custom_class.sifr` — custom
+  hashable key coverage.
+- `crates/sifr/tests/e2e/pass/counter_dict_native.sifr` and
+  `counter_defaultdict_and_argparse.sifr` — native dict and ecosystem-shaped
+  integration coverage.
 - `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr` — wrong argument type to Counter
 - `demos/stdlib_classes/main.sifr` — demo showcasing Counter class usage
 - `scripts/check_stdlib_native_intrinsic_allowlist.py` — permanently rejects
@@ -365,11 +370,14 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
 
 ### Definition of Done (milestone_stdlib_classes)
 
-- `Counter` class defined in `lib/sifr/collections.sifr` with `__init__`, `get`, `most_common`, `total`, `values`, `keys`, `items`, `increment` methods
+- `Counter[T: Hashable]` class defined in `stdlib/sifr/collections.sifr` with
+  checked source-owned construction, query, mutation, and arithmetic methods.
 - `from_list` factory function works
-- 5 new `_sifr.collections` intrinsics implemented and tested
+- No Counter-specific compiler intrinsic, dispatcher, retained-manifest row, or
+  direct dependency remains.
 - User code can `from sifr.collections import Counter` and use it
-- E2E pass tests for construction + methods, and mutation
+- Generic int, exact-int, custom-class, dict-native, and integration E2E pass
+  fixtures cover construction, methods, and mutation.
 - E2E fail test for wrong argument type
 - `cargo test` passes (zero regressions)
 - Parity report updated
