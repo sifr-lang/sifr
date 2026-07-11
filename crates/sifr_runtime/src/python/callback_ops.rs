@@ -14,12 +14,11 @@ static TOKEN_HASHER: LazyLock<std::collections::hash_map::RandomState> =
 
 pub type CallbackHandle = (i64, i64);
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct PythonCallbackMetadata {
     pub handle: i64,
     pub token: i64,
-    pub object_handle: i64,
-    pub object_token: i64,
+    pub object: ObjectHandle,
     pub kind: String,
 }
 
@@ -139,7 +138,7 @@ fn create_callback(
         CallbackEntry {
             token,
             kind,
-            object,
+            object: object.clone(),
             target,
             invocations: 0,
         },
@@ -147,8 +146,7 @@ fn create_callback(
     Ok(PythonCallbackMetadata {
         handle,
         token,
-        object_handle: object.0,
-        object_token: object.1,
+        object,
         kind: kind.label().to_string(),
     })
 }
@@ -204,24 +202,24 @@ fn invoke_sifr_callback(
     } else {
         store_object(args.get_item(0)?.unbind()).map_err(py_runtime_error)?
     };
-    let result_handle = match callback(arg_handle) {
+    let result_handle = match callback(arg_handle.clone()) {
         Ok(result_handle) => result_handle,
         Err(error) => {
             let _ignored = close_object(arg_handle);
             return Err(py_runtime_error(error));
         }
     };
-    let result = match clone_handle(py, result_handle) {
+    let result = match clone_handle(py, &result_handle) {
         Ok(result) => result,
         Err(error) => {
-            if result_handle != arg_handle {
+            if !result_handle.ptr_eq(&arg_handle) {
                 let _ignored = close_object(arg_handle);
             }
             let _ignored = close_object(result_handle);
             return Err(py_runtime_error(error));
         }
     };
-    if result_handle != arg_handle {
+    if !result_handle.ptr_eq(&arg_handle) {
         let _ignored = close_object(arg_handle);
     }
     let _ignored = close_object(result_handle);
@@ -303,16 +301,13 @@ mod tests {
         );
         let arg = from_int(7).expect("arg should store");
         for _ in 0..2 {
-            let result = call_object((callback.object_handle, callback.object_token), &[arg], &[])
+            let result = call_object(&callback.object, &[arg.clone()], &[])
                 .expect("same-stack local callback call should succeed");
-            assert_eq!(to_int(result).expect("result should convert"), 7);
+            assert_eq!(to_int(&result).expect("result should convert"), 7);
             close_object(result).expect("result should close");
         }
         super::super::attach(|py| {
-            let callable = super::super::object_ops::clone_handle(
-                py,
-                (callback.object_handle, callback.object_token),
-            )?;
+            let callable = super::super::object_ops::clone_handle(py, &callback.object)?;
             callable
                 .bind(py)
                 .call1((7_i64,))
@@ -333,33 +328,40 @@ mod tests {
         initialize_runtime(test_config("registered-callback")).expect("init should succeed");
 
         let callback = local_callback(|arg| {
-            let value = to_int(arg)?;
+            let value = to_int(&arg)?;
             close_object(arg)?;
             from_int(value + 1)
         })
         .expect("callback should create");
         let arg = from_int(7).expect("arg should store");
-        let result = call_object((callback.object_handle, callback.object_token), &[arg], &[])
+        let result = call_object(&callback.object, &[arg.clone()], &[])
             .expect("registered callback call should succeed");
-        assert_eq!(to_int(result).expect("result should convert"), 8);
+        assert_eq!(to_int(&result).expect("result should convert"), 8);
         close_object(result).expect("result should close");
         close_object(arg).expect("arg should close");
         close_callback((callback.handle, callback.token)).expect("callback should close");
     }
 
     #[test]
-    fn malformed_callback_result_releases_temporary_argument() {
+    fn callback_error_releases_temporary_argument() {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
-        initialize_runtime(test_config("callback-stale-result")).expect("init should succeed");
-        let stale = from_int(99).expect("stale result should store");
-        close_object(stale).expect("stale result should close");
-        let callback = local_callback(move |_arg| Ok(stale)).expect("callback should create");
+        initialize_runtime(test_config("callback-error-result")).expect("init should succeed");
+        let callback = local_callback(move |_arg| {
+            Err(PythonError {
+                kind: "callback".to_string(),
+                exception_type: "CallbackFailure".to_string(),
+                message: "callback failed".to_string(),
+                traceback: String::new(),
+                context: "test callback".to_string(),
+            })
+        })
+        .expect("callback should create");
         let arg = from_int(7).expect("arg should store");
         let before = resource_diagnostics().expect("diagnostics should be available");
 
-        call_object((callback.object_handle, callback.object_token), &[arg], &[])
-            .expect_err("stale callback result should fail");
+        call_object(&callback.object, &[arg.clone()], &[])
+            .expect_err("callback result should fail");
 
         assert_eq!(
             resource_diagnostics().expect("diagnostics should be available"),
@@ -378,16 +380,13 @@ mod tests {
         let callback = threadsafe_callback_echo().expect("callback should create");
         let arg = from_int(11).expect("arg should store");
         for _ in 0..2 {
-            let result = call_object((callback.object_handle, callback.object_token), &[arg], &[])
+            let result = call_object(&callback.object, &[arg.clone()], &[])
                 .expect("threadsafe callback should repeat");
-            assert_eq!(to_int(result).expect("result should convert"), 11);
+            assert_eq!(to_int(&result).expect("result should convert"), 11);
             close_object(result).expect("result should close");
         }
         super::super::attach(|py| {
-            let callable = super::super::object_ops::clone_handle(
-                py,
-                (callback.object_handle, callback.object_token),
-            )?;
+            let callable = super::super::object_ops::clone_handle(py, &callback.object)?;
             let globals = PyDict::new(py);
             globals
                 .set_item("CALLBACK", callable.bind(py))
@@ -430,9 +429,10 @@ assert result[0] == 19
         assert_eq!(closed.kind, "resource");
         assert_eq!(closed.exception_type, "SifrPythonClosedCallback");
         let arg = from_int(1).expect("arg should store");
-        let after_close = call_object((callback.object_handle, callback.object_token), &[arg], &[])
+        let after_close = call_object(&callback.object, &[arg.clone()], &[])
             .expect_err("calling closed callback object should fail");
-        assert_eq!(after_close.kind, "resource");
+        assert_eq!(after_close.kind, "call");
+        close_object(callback.object).expect("callback object should close");
         close_object(arg).expect("arg should close");
         assert_eq!(
             resource_diagnostics().expect("diagnostics should be available"),
@@ -458,10 +458,7 @@ assert result[0] == 19
         })
         .expect("callback should create");
         let object = super::super::attach(|py| {
-            let callable = super::super::object_ops::clone_handle(
-                py,
-                (callback.object_handle, callback.object_token),
-            )?;
+            let callable = super::super::object_ops::clone_handle(py, &callback.object)?;
             let globals = PyDict::new(py);
             globals
                 .set_item("CALLBACK", callable.bind(py))
@@ -499,6 +496,7 @@ value = ReentrantDestructor()
 
         assert_eq!(invocations.load(Ordering::SeqCst), 1);
         close_callback((callback.handle, callback.token)).expect("callback should close");
+        close_object(callback.object).expect("callback object should close");
         assert_eq!(
             resource_diagnostics().expect("diagnostics should be available"),
             PythonResourceDiagnostics {

@@ -243,6 +243,20 @@ pub struct Handle<T> {
     _not_send_or_sync_by_default: PhantomData<Rc<()>>,
 }
 
+impl<T: Clone> Clone for Handle<T> {
+    fn clone(&self) -> Self {
+        let slot = match &self.slot {
+            HandleSlot::Open(value) => HandleSlot::Open(value.clone()),
+            HandleSlot::Closed => HandleSlot::Closed,
+            HandleSlot::Poisoned(error) => HandleSlot::Poisoned(error.clone()),
+        };
+        Self {
+            slot,
+            _not_send_or_sync_by_default: PhantomData,
+        }
+    }
+}
+
 #[derive(Debug)]
 enum HandleSlot<T> {
     Open(T),
@@ -391,6 +405,20 @@ mod tests {
             poisoned.inner_mut(),
             Err(HandleStateError::Poisoned(_))
         ));
+    }
+
+    #[test]
+    fn cloned_handle_copies_cloneable_identity_without_sharing_handle_state() {
+        let mut original = Handle::new("identity".to_string());
+        let cloned = original.clone();
+
+        original.mark_closed(super::__generated_glue::token());
+
+        assert!(matches!(
+            original.inner_ref(),
+            Err(HandleStateError::Closed)
+        ));
+        assert_eq!(cloned.inner_ref().expect("clone stays open"), "identity");
     }
 
     #[test]

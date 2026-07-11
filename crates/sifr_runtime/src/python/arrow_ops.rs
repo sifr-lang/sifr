@@ -40,6 +40,7 @@ struct ArrowStore {
 struct ArrowEntry {
     token: i64,
     _capsules: TrackedArrowCapsules,
+    capsule_names: Vec<String>,
 }
 
 struct TrackedArrowCapsules {
@@ -53,15 +54,15 @@ impl Drop for TrackedArrowCapsules {
     }
 }
 
-pub fn arrow_array(object: ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+pub fn arrow_array(object: &ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
     acquire_arrow_capsules(object, ArrowKind::Array)
 }
 
-pub fn arrow_stream(object: ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+pub fn arrow_stream(object: &ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
     acquire_arrow_capsules(object, ArrowKind::Stream)
 }
 
-pub fn arrow_schema(object: ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+pub fn arrow_schema(object: &ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
     acquire_arrow_capsules(object, ArrowKind::Schema)
 }
 
@@ -80,6 +81,16 @@ pub fn release_arrow((handle, token): ArrowHandle) -> Result<(), PythonError> {
     };
     super::attach(|_py| drop(entry)).map_err(PythonError::runtime)?;
     Ok(())
+}
+
+pub fn arrow_capsule_names(handle: ArrowHandle) -> Result<Vec<String>, PythonError> {
+    let store = arrow_store()?;
+    store
+        .capsules
+        .get(&handle.0)
+        .filter(|entry| entry.token == handle.1)
+        .map(|entry| entry.capsule_names.clone())
+        .ok_or_else(|| closed_error(handle.0))
 }
 
 #[derive(Clone, Copy)]
@@ -108,7 +119,7 @@ impl ArrowKind {
 }
 
 fn acquire_arrow_capsules(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     kind: ArrowKind,
 ) -> Result<PythonArrowCapsuleMetadata, PythonError> {
     super::attach(|py| {
@@ -225,6 +236,7 @@ fn store_arrow_capsules(
         ArrowEntry {
             token,
             _capsules: TrackedArrowCapsules { capsules },
+            capsule_names: capsule_names.clone(),
         },
     );
     Ok(PythonArrowCapsuleMetadata {
@@ -345,9 +357,9 @@ mod tests {
         initialize_runtime(test_config("arrow-capsules")).expect("init should succeed");
 
         let object = exporter().expect("exporter should be stored");
-        let array = arrow_array(object).expect("array capsules should export");
-        let stream = arrow_stream(object).expect("stream capsule should export");
-        let schema = arrow_schema(object).expect("schema capsule should export");
+        let array = arrow_array(&object).expect("array capsules should export");
+        let stream = arrow_stream(&object).expect("stream capsule should export");
+        let schema = arrow_schema(&object).expect("schema capsule should export");
 
         assert_eq!(array.kind, "array");
         assert_eq!(array.capsule_names, ["arrow_schema", "arrow_array"]);
@@ -376,7 +388,7 @@ mod tests {
         initialize_runtime(test_config("arrow-copy-possible")).expect("init should succeed");
 
         let object = pandas_exporter().expect("exporter should be stored");
-        let stream = arrow_stream(object).expect("stream capsule should export");
+        let stream = arrow_stream(&object).expect("stream capsule should export");
 
         assert!(stream.copy_possible);
         release_arrow((stream.handle, stream.token)).expect("stream should release");
@@ -390,12 +402,12 @@ mod tests {
         initialize_runtime(test_config("arrow-errors")).expect("init should succeed");
 
         let malformed = malformed_exporter().expect("malformed exporter should be stored");
-        let error = arrow_array(malformed).expect_err("wrong capsule names must fail");
+        let error = arrow_array(&malformed).expect_err("wrong capsule names must fail");
         assert_eq!(error.kind, "zero-copy");
         assert_eq!(error.exception_type, "SifrPythonArrowCapsuleError");
 
         let object = exporter().expect("exporter should be stored");
-        let stream = arrow_stream(object).expect("stream capsule should export");
+        let stream = arrow_stream(&object).expect("stream capsule should export");
         release_arrow((stream.handle, stream.token)).expect("stream should release");
         let closed =
             release_arrow((stream.handle, stream.token)).expect_err("second release should fail");
@@ -413,7 +425,7 @@ mod tests {
         initialize_runtime(test_config("arrow-no-destructor")).expect("init should succeed");
 
         let malformed = exporter_without_destructor().expect("exporter should be stored");
-        let error = arrow_schema(malformed).expect_err("missing destructor must fail");
+        let error = arrow_schema(&malformed).expect_err("missing destructor must fail");
 
         assert_eq!(error.kind, "zero-copy");
         assert_eq!(error.exception_type, "SifrPythonArrowCapsuleError");

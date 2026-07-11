@@ -3,7 +3,7 @@ use crate::{
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
     Visibility,
 };
-use sifr_ir::{HirClass, HirFunction, HirModule};
+use sifr_ir::{HirClass, HirFunction, HirModule, RustInteropDecoratorKind, RustInteropValue};
 use sifr_type_system::Type;
 
 impl RustEmitter {
@@ -378,6 +378,16 @@ impl RustEmitter {
             self.emit_newtype(class, inner, module_public);
             return;
         }
+        if let Some(target) = opaque_rust_type_path(class) {
+            self.body_items.push(RustItem::TypeAlias {
+                name: class.name.clone(),
+                ty: RustType::Named(format!(
+                    "sifr_runtime::interop::Handle<{}>",
+                    target.replace('.', "::")
+                )),
+            });
+            return;
+        }
 
         let has_custom_eq = class
             .operator_impls
@@ -391,11 +401,18 @@ impl RustEmitter {
             .fields
             .iter()
             .any(|(_, ty)| matches!(ty, Type::Callable(..)));
+        let has_affine_field = class.fields.iter().any(|(_, ty)| {
+            matches!(
+                ty.resolve_alias(),
+                Type::Class { parent_class, .. }
+                    if parent_class.as_deref() == Some("NonSend")
+            )
+        });
         let has_auto_display =
             !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
         let derives = if self.is_current_process_resource_class(&class.name) {
             vec!["Debug".to_string()]
-        } else if has_callable_field {
+        } else if has_callable_field || has_affine_field {
             Vec::new()
         } else if has_custom_eq {
             vec!["Debug".to_string(), "Clone".to_string()]
@@ -504,4 +521,18 @@ impl RustEmitter {
 
         self.emit_protocol_impls(class, module);
     }
+}
+
+fn opaque_rust_type_path(class: &HirClass) -> Option<String> {
+    class
+        .rust_interop
+        .iter()
+        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)?
+        .arguments
+        .iter()
+        .find(|argument| argument.name.as_deref() == Some("type"))
+        .and_then(|argument| match &argument.value {
+            RustInteropValue::TargetPath(path) => Some(path.dotted()),
+            _ => None,
+        })
 }

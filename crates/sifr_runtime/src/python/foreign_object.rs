@@ -1,6 +1,6 @@
 use super::{update_object_count, PythonRuntimeError};
 use pyo3::{ffi, prelude::*, Py, PyAny};
-use std::sync::{LazyLock, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
 static PENDING_RELEASES: LazyLock<Mutex<Vec<Py<PyAny>>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
@@ -8,32 +8,44 @@ static PENDING_RELEASES: LazyLock<Mutex<Vec<Py<PyAny>>>> = LazyLock::new(|| Mute
 ///
 /// Public Sifr values never expose this payload or a structural token. Generated
 /// glue carries it inside the sealed interop handle representation.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ForeignObject {
-    inner: Option<Py<PyAny>>,
+    inner: Arc<ForeignObjectInner>,
+}
+
+#[derive(Debug)]
+struct ForeignObjectInner {
+    object: Option<Py<PyAny>>,
 }
 
 impl ForeignObject {
     pub(super) fn new(object: Py<PyAny>) -> Result<Self, PythonRuntimeError> {
         update_object_count(1)?;
         Ok(Self {
-            inner: Some(object),
+            inner: Arc::new(ForeignObjectInner {
+                object: Some(object),
+            }),
         })
     }
 
     pub(super) fn clone_ref(&self, py: Python<'_>) -> Result<Py<PyAny>, PythonRuntimeError> {
         self.inner
+            .object
             .as_ref()
             .map(|object| object.clone_ref(py))
             .ok_or(PythonRuntimeError::PythonOperationFailed(
                 "Python object identity is closed".to_string(),
             ))
     }
+
+    pub(super) fn ptr_eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.inner, &other.inner)
+    }
 }
 
-impl Drop for ForeignObject {
+impl Drop for ForeignObjectInner {
     fn drop(&mut self) {
-        let Some(object) = self.inner.take() else {
+        let Some(object) = self.object.take() else {
             return;
         };
         if unsafe { ffi::PyGILState_Check() } != 0 {

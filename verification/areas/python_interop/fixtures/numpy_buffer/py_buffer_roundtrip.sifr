@@ -20,6 +20,6 @@ def main() -> Result[None, PythonError]:
         direct_copy: bytes = copy_as_bytes(obj)
         released: None = release_buffer(view)
         closed: None = close(obj)
-        return None
     except PythonError as e:
         raise e
+    return None

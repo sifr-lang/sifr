@@ -108,7 +108,7 @@ Cancellation is bidirectional and structured:
    and joins the loop thread. It never abandons a live Python task.
 
 An async declaration cannot return a borrowed Python value. Converted Sifr
-values are owned. Declared opaque results enter the same sealed object store as
+values are owned. Declared opaque results enter the same sealed foreign-object identity model as
 sync results and remain non-send at the Sifr level; the runtime's internal
 loop-to-task handoff does not grant user-visible sendability.
 

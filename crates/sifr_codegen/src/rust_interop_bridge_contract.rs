@@ -2,7 +2,8 @@ mod generated_types;
 
 use crate::rust_interop_plan::{RustInteropOwner, RustInteropPlanDeclaration};
 use generated_types::{
-    bridge_type_definition_module, generated_bridge_type_path, GeneratedTypeCollector,
+    bridge_type_definition_module, generated_bridge_type_path, opaque_rust_type_path,
+    opaque_type_definition, GeneratedTypeCollector,
 };
 use sifr_ir::HirModule;
 use sifr_type_system::{ParamConvention, ParamOwnership, Type};
@@ -216,7 +217,7 @@ struct ModuleFunction {
 struct ModuleCatalog {
     functions: BTreeMap<String, ModuleFunction>,
     methods: BTreeMap<(String, String), ModuleFunction>,
-    opaque_classes: BTreeSet<String>,
+    opaque_classes: BTreeMap<String, String>,
     error_classes: BTreeSet<String>,
     record_classes: BTreeSet<String>,
     enum_classes: BTreeSet<String>,
@@ -226,7 +227,7 @@ impl ModuleCatalog {
     fn new(module: &HirModule) -> Self {
         let mut functions = BTreeMap::new();
         let mut methods = BTreeMap::new();
-        let mut opaque_classes = BTreeSet::new();
+        let mut opaque_classes = BTreeMap::new();
         let mut error_classes = BTreeSet::new();
         let mut record_classes = BTreeSet::new();
         let mut enum_classes = BTreeSet::new();
@@ -245,7 +246,9 @@ impl ModuleCatalog {
                 .iter()
                 .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Opaque)
             {
-                opaque_classes.insert(class.name.clone());
+                if let Some(target) = opaque_rust_type_path(class) {
+                    opaque_classes.insert(class.name.clone(), target);
+                }
             }
             if class.is_enum() {
                 enum_classes.insert(class.name.clone());
@@ -354,7 +357,12 @@ fn bridge_type_contract(
             generated_types,
             position,
         ),
-        Type::Tuple(items) => bridge_tuple_type(items, ty.display_name()),
+        Type::Tuple(items) => bridge_tuple_type(
+            items,
+            ty.display_name(),
+            module_name,
+            module_catalogs,
+        ),
         Type::Result(ok, err) => match position {
             BridgeTypePosition::Parameter => unsupported_type(
                 ty,
@@ -393,9 +401,11 @@ fn bridge_type_contract(
             parent_class,
             ..
         } => {
-            let is_opaque = catalog.is_some_and(|catalog| catalog.opaque_classes.contains(name));
-            if is_opaque {
-                opaque_handle_type(name)
+            let opaque_target = opaque_type_definition(name, module_name, module_catalogs);
+            if let Ok(Some(target)) = opaque_target {
+                opaque_handle_type(name, &target)
+            } else if let Err(reason) = opaque_target {
+                unsupported_type(ty, &reason)
             } else {
                 let declaration_module =
                     match bridge_type_definition_module(name, module_name, module_catalogs, false)
@@ -644,10 +654,15 @@ fn bridge_union_type(
     )
 }
 
-fn bridge_tuple_type(items: &[Type], sifr_type: String) -> RustBridgeTypeContract {
+fn bridge_tuple_type(
+    items: &[Type],
+    sifr_type: String,
+    module_name: Option<&String>,
+    module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
+) -> RustBridgeTypeContract {
     let Some(rust_items) = items
         .iter()
-        .map(tuple_item_rust_type)
+        .map(|item| tuple_item_rust_type(item, module_name, module_catalogs))
         .collect::<Option<Vec<_>>>()
     else {
         return RustBridgeTypeContract {
@@ -676,7 +691,11 @@ fn bridge_tuple_type(items: &[Type], sifr_type: String) -> RustBridgeTypeContrac
     }
 }
 
-fn tuple_item_rust_type(ty: &Type) -> Option<String> {
+fn tuple_item_rust_type(
+    ty: &Type,
+    module_name: Option<&String>,
+    module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
+) -> Option<String> {
     match ty.resolve_alias() {
         Type::Bool => Some("bool".to_string()),
         Type::FixedInt(fixed) => Some(fixed.rust_name().to_string()),
@@ -685,6 +704,15 @@ fn tuple_item_rust_type(ty: &Type) -> Option<String> {
         Type::Str => Some("String".to_string()),
         Type::Bytes => Some("Vec<u8>".to_string()),
         Type::None => Some("()".to_string()),
+        Type::Class { name, .. } => opaque_type_definition(name, module_name, module_catalogs)
+            .ok()
+            .flatten()
+            .map(|target| {
+                format!(
+                    "sifr_runtime::interop::Handle<{}>",
+                    target.replace('.', "::")
+                )
+            }),
         _ => None,
     }
 }
@@ -713,8 +741,11 @@ fn combine_generic_type(
     }
 }
 
-fn opaque_handle_type(name: &str) -> RustBridgeTypeContract {
-    let rust_type = format!("sifr_runtime::interop::Handle<{name}>");
+fn opaque_handle_type(name: &str, target: &str) -> RustBridgeTypeContract {
+    let rust_type = format!(
+        "sifr_runtime::interop::Handle<{}>",
+        target.replace('.', "::")
+    );
     RustBridgeTypeContract {
         sifr_type: name.to_string(),
         rust_borrowed_type: Some(format!("&{rust_type}")),

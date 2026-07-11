@@ -39,6 +39,7 @@ struct BufferStore {
 struct BufferEntry {
     token: i64,
     buffer: TrackedBuffer,
+    metadata: PythonBufferMetadata,
 }
 
 struct TrackedBuffer {
@@ -56,7 +57,7 @@ impl Drop for TrackedBuffer {
 }
 
 pub fn buffer_u8(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     require_writable: bool,
 ) -> Result<PythonBufferMetadata, PythonError> {
     super::attach(|py| {
@@ -92,6 +93,18 @@ pub fn copy_buffer_u8(buffer: BufferHandle) -> Result<Vec<u8>, PythonError> {
     .map_err(PythonError::runtime)?
 }
 
+pub fn buffer_shape(buffer: BufferHandle) -> Result<Vec<i64>, PythonError> {
+    buffer_metadata(buffer).map(|metadata| metadata.shape)
+}
+
+pub fn buffer_strides(buffer: BufferHandle) -> Result<Vec<i64>, PythonError> {
+    buffer_metadata(buffer).map(|metadata| metadata.strides)
+}
+
+pub fn buffer_suboffsets(buffer: BufferHandle) -> Result<Vec<i64>, PythonError> {
+    buffer_metadata(buffer).map(|metadata| metadata.suboffsets)
+}
+
 pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> {
     let entry = {
         let mut store = buffer_store()?;
@@ -105,7 +118,7 @@ pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> 
             return Err(closed_error(handle));
         }
     };
-    drop(entry);
+    super::attach(|_py| drop(entry)).map_err(PythonError::runtime)?;
     Ok(())
 }
 
@@ -142,9 +155,15 @@ fn store_buffer(
             buffer: TrackedBuffer {
                 buffer: Some(buffer),
             },
+            metadata: metadata.clone(),
         },
     );
     Ok(metadata)
+}
+
+fn buffer_metadata(buffer: BufferHandle) -> Result<PythonBufferMetadata, PythonError> {
+    let store = buffer_store()?;
+    lookup_buffer(&store, buffer).map(|entry| entry.metadata.clone())
 }
 
 fn lookup_buffer(
@@ -231,6 +250,7 @@ mod tests {
     use crate::python::{
         close_object, from_bytes, from_int, initialize_runtime, reset_runtime_state_for_tests,
         resource_diagnostics, test_config, test_guard, PythonResourceDiagnostics,
+        PythonResourceIdentity,
     };
 
     #[test]
@@ -240,7 +260,7 @@ mod tests {
         initialize_runtime(test_config("buffer-view")).expect("init should succeed");
 
         let object = from_bytes(&[1, 2, 3]).expect("bytes should be stored");
-        let view = buffer_u8(object, false).expect("bytes should expose u8 buffer");
+        let view = buffer_u8(&object, false).expect("bytes should expose u8 buffer");
 
         assert_eq!(view.len_bytes, 3);
         assert_eq!(view.item_size, 1);
@@ -277,7 +297,7 @@ mod tests {
         initialize_runtime(test_config("buffer-double-release")).expect("init should succeed");
 
         let object = from_bytes(&[1]).expect("bytes should be stored");
-        let view = buffer_u8(object, false).expect("bytes should expose u8 buffer");
+        let view = buffer_u8(&object, false).expect("bytes should expose u8 buffer");
         release_buffer((view.handle, view.token)).expect("buffer should release");
         let error = release_buffer((view.handle, view.token)).expect_err("second release fails");
         let copy_error =
@@ -291,17 +311,44 @@ mod tests {
     }
 
     #[test]
+    fn sealed_resource_identity_drop_releases_buffer_and_metadata() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("buffer-identity-drop")).expect("init should succeed");
+
+        let object = from_bytes(&[1, 2]).expect("bytes should be stored");
+        let view = buffer_u8(&object, false).expect("bytes should expose u8 buffer");
+        let key = (view.handle, view.token);
+        let identity = PythonResourceIdentity::buffer(key);
+        assert_eq!(buffer_shape(key).expect("metadata should be live"), vec![2]);
+
+        drop(identity);
+
+        let error = buffer_shape(key).expect_err("metadata drops with the resource");
+        assert_eq!(error.exception_type, "SifrPythonClosedBuffer");
+        close_object(object).expect("object should close");
+        assert_eq!(
+            resource_diagnostics().expect("diagnostics should be available"),
+            PythonResourceDiagnostics {
+                initialized: true,
+                live_objects: 0,
+                leaked_objects: 0,
+            }
+        );
+    }
+
+    #[test]
     fn buffer_rejects_wrong_dtype_and_readonly_writable_request() {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
         initialize_runtime(test_config("buffer-rejects")).expect("init should succeed");
 
         let object = from_bytes(&[1]).expect("bytes should be stored");
-        let writable = buffer_u8(object, true).expect_err("bytes are readonly");
+        let writable = buffer_u8(&object, true).expect_err("bytes are readonly");
         assert_eq!(writable.kind, "zero-copy");
 
         let integer = from_int(1).expect("int should be stored");
-        let unsupported = buffer_u8(integer, false).expect_err("int has no u8 buffer");
+        let unsupported = buffer_u8(&integer, false).expect_err("int has no u8 buffer");
         assert_eq!(unsupported.kind, "zero-copy");
 
         close_object(object).expect("object should close");

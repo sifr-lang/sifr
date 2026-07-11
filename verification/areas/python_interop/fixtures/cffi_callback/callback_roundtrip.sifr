@@ -28,14 +28,14 @@ def main() -> Result[None, PythonError]:
     try:
         local: LocalCallback = local_callback(increment_callback)
         threaded: ThreadsafeCallback = threadsafe_callback(increment_callback)
-        arg: Object = from_int(5)
-        local_result: Object = call(local.callable, [arg], [])
-        threaded_result: Object = call(threaded.callable, [arg], [])
+        local_arg: Object = from_int(5)
+        threaded_arg: Object = from_int(5)
+        local_result: Object = call(local.callable, [local_arg], [])
+        threaded_result: Object = call(threaded.callable, [threaded_arg], [])
         closed_local_result: None = close(local_result)
         closed_threaded_result: None = close(threaded_result)
-        closed_arg: None = close(arg)
         closed_local: None = close_local_callback(local)
         closed_threaded: None = close_threadsafe_callback(threaded)
-        return closed_threaded
     except PythonError as e:
         raise e
+    return None

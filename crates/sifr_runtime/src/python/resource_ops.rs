@@ -32,7 +32,7 @@ pub fn resource_diagnostics() -> Result<PythonResourceDiagnostics, PythonError> 
 }
 
 pub fn exit_context_with_error(
-    object: ObjectHandle,
+    object: &ObjectHandle,
     kind: &str,
     exception_type: &str,
     message: &str,
@@ -91,18 +91,15 @@ mod tests {
     }
 
     #[test]
-    fn double_close_reports_deterministic_resource_error() {
+    fn ordinary_drop_releases_object_identity() {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
-        initialize_runtime(test_config("double-close")).expect("init should succeed");
+        initialize_runtime(test_config("ordinary-drop")).expect("init should succeed");
 
         let value = from_int(1).expect("object should be stored");
-        close_object(value).expect("first close should succeed");
-        let error = close_object(value).expect_err("second close should fail");
-
-        assert_eq!(error.kind, "resource");
-        assert_eq!(error.exception_type, "SifrPythonClosedObject");
-        assert!(error.message.contains("closed"));
+        drop(value);
+        super::super::attach(|_| ()).expect("attach should drain pending releases");
+        assert_eq!(resource_diagnostics().expect("diagnostics").live_objects, 0);
     }
 
     #[test]
@@ -128,10 +125,10 @@ mod tests {
         .map_err(PythonError::runtime)
         .expect("recording context should build")
         .expect("recording context should be stored");
-        let entered = enter_context(manager).expect("context should enter");
+        let entered = enter_context(&manager).expect("context should enter");
 
         exit_context_with_error(
-            manager,
+            &manager,
             "call",
             "SifrBodyError",
             "body failed",
@@ -140,11 +137,11 @@ mod tests {
         )
         .expect("__exit__ should receive Sifr error context");
 
-        let saw_error_attr = get_attr(manager, "saw_error").expect("saw_error should be stored");
-        assert!(to_bool(saw_error_attr).expect("saw_error should be true"));
+        let saw_error_attr = get_attr(&manager, "saw_error").expect("saw_error should be stored");
+        assert!(to_bool(&saw_error_attr).expect("saw_error should be true"));
         let saw_traceback_attr =
-            get_attr(manager, "saw_traceback").expect("saw_traceback should be stored");
-        assert!(!to_bool(saw_traceback_attr).expect("traceback should be None"));
+            get_attr(&manager, "saw_traceback").expect("saw_traceback should be stored");
+        assert!(!to_bool(&saw_traceback_attr).expect("traceback should be None"));
 
         for handle in [entered, saw_error_attr, saw_traceback_attr, manager] {
             close_object(handle).expect("object should close");

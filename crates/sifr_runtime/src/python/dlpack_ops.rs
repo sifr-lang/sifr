@@ -80,6 +80,8 @@ struct DlpackStore {
 struct DlpackEntry {
     token: i64,
     _tensor: TrackedDlpackTensor,
+    shape: Vec<i64>,
+    strides: Vec<i64>,
 }
 
 struct TrackedDlpackTensor {
@@ -103,7 +105,7 @@ impl Drop for TrackedDlpackTensor {
     }
 }
 
-pub fn dlpack_tensor(object: ObjectHandle) -> Result<PythonDlpackTensorMetadata, PythonError> {
+pub fn dlpack_tensor(object: &ObjectHandle) -> Result<PythonDlpackTensorMetadata, PythonError> {
     super::attach(|py| {
         let owner = clone_handle(py, object)?;
         let device = dlpack_device(py, owner.bind(py))?;
@@ -120,21 +122,28 @@ pub fn dlpack_tensor(object: ObjectHandle) -> Result<PythonDlpackTensorMetadata,
 }
 
 pub fn release_dlpack((handle, token): DlpackHandle) -> Result<(), PythonError> {
-    super::attach(|_py| {
+    let entry = {
         let mut store = dlpack_store()?;
         if store
             .tensors
             .get(&handle)
             .is_some_and(|entry| entry.token == token)
         {
-            let entry = store.tensors.remove(&handle);
-            drop(entry);
-            Ok(())
+            store.tensors.remove(&handle)
         } else {
-            Err(closed_error(handle))
+            return Err(closed_error(handle));
         }
-    })
-    .map_err(PythonError::runtime)?
+    };
+    super::attach(|_py| drop(entry)).map_err(PythonError::runtime)?;
+    Ok(())
+}
+
+pub fn dlpack_shape(handle: DlpackHandle) -> Result<Vec<i64>, PythonError> {
+    dlpack_metadata(handle).map(|(shape, _)| shape)
+}
+
+pub fn dlpack_strides(handle: DlpackHandle) -> Result<Vec<i64>, PythonError> {
+    dlpack_metadata(handle).map(|(_, strides)| strides)
 }
 
 fn consume_capsule(
@@ -288,9 +297,21 @@ fn store_tensor(
         DlpackEntry {
             token,
             _tensor: tensor,
+            shape: metadata.shape.clone(),
+            strides: metadata.strides.clone(),
         },
     );
     Ok(metadata)
+}
+
+fn dlpack_metadata(handle: DlpackHandle) -> Result<(Vec<i64>, Vec<i64>), PythonError> {
+    let store = dlpack_store()?;
+    store
+        .tensors
+        .get(&handle.0)
+        .filter(|entry| entry.token == handle.1)
+        .map(|entry| (entry.shape.clone(), entry.strides.clone()))
+        .ok_or_else(|| closed_error(handle.0))
 }
 
 fn validate_capsule_name(
@@ -430,7 +451,7 @@ mod tests {
 
         let object = exporter(DEVICE_CPU, 0, dtype(2, 32, 1), DLTENSOR_NAME)
             .expect("exporter should be stored");
-        let tensor = dlpack_tensor(object).expect("DLPack tensor should export");
+        let tensor = dlpack_tensor(&object).expect("DLPack tensor should export");
 
         assert_eq!(tensor.dtype, "float32");
         assert_eq!(tensor.shape, [2, 3]);
@@ -460,7 +481,7 @@ mod tests {
         initialize_runtime(test_config("dlpack-scalar")).expect("init should succeed");
 
         let object = scalar_exporter().expect("scalar exporter should be stored");
-        let tensor = dlpack_tensor(object).expect("scalar tensor should export");
+        let tensor = dlpack_tensor(&object).expect("scalar tensor should export");
 
         assert_eq!(tensor.dimensions, 0);
         assert!(tensor.shape.is_empty());
@@ -479,8 +500,8 @@ mod tests {
 
         let object = exporter(DEVICE_CPU, 0, dtype(1, 8, 1), DLTENSOR_NAME)
             .expect("exporter should be stored");
-        let tensor = dlpack_tensor(object).expect("first consume should succeed");
-        let consumed = dlpack_tensor(object).expect_err("second consume should fail");
+        let tensor = dlpack_tensor(&object).expect("first consume should succeed");
+        let consumed = dlpack_tensor(&object).expect_err("second consume should fail");
         assert_eq!(consumed.kind, "zero-copy");
         assert!(consumed.message.contains("used_dltensor"));
 
@@ -501,13 +522,13 @@ mod tests {
         let invalid_name = exporter(DEVICE_CPU, 0, dtype(2, 32, 1), USED_DLTENSOR_NAME)
             .expect("invalid-name exporter should be stored");
         let invalid_name_error =
-            dlpack_tensor(invalid_name).expect_err("used capsule should be rejected");
+            dlpack_tensor(&invalid_name).expect_err("used capsule should be rejected");
         assert_eq!(invalid_name_error.exception_type, "SifrPythonDlpackError");
 
         let unsupported_dtype = exporter(DEVICE_CPU, 0, dtype(99, 32, 1), DLTENSOR_NAME)
             .expect("unsupported-dtype exporter should be stored");
         let dtype_error =
-            dlpack_tensor(unsupported_dtype).expect_err("unsupported dtype should fail");
+            dlpack_tensor(&unsupported_dtype).expect_err("unsupported dtype should fail");
         assert_eq!(
             dtype_error.exception_type,
             "SifrPythonDlpackUnsupportedDtype"
@@ -516,7 +537,7 @@ mod tests {
         let unsupported_device = exporter(2, 0, dtype(2, 32, 1), DLTENSOR_NAME)
             .expect("unsupported-device exporter should be stored");
         let device_error =
-            dlpack_tensor(unsupported_device).expect_err("unsupported device should fail");
+            dlpack_tensor(&unsupported_device).expect_err("unsupported device should fail");
         assert_eq!(
             device_error.exception_type,
             "SifrPythonDlpackUnsupportedDevice"

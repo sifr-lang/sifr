@@ -15,6 +15,7 @@ from sifr.python import (
 )
 
 
+@blocking_io
 def main() -> Result[None, PythonError]:
     try:
         list_a: Object = from_int(1)
@@ -36,10 +37,12 @@ def main() -> Result[None, PythonError]:
         record_label: Object = from_str("answer")
         record: Object = from_record([("value", record_value), ("label", record_label)])
         fields: list[tuple[str, Object]] = copy_record_fields(record, ["value"])
-        field_value: int = to_int(fields[0][1])
+        field_value: int = 0
+        for field_name, field_object in fields:
+            converted_field: int = to_int(field_object)
+            field_value = converted_field
 
-        if len(copied_values) == 2 and len(copied_pair) == 2 and copied_mapping["one"] == 1 and field_value == 2:
-            return None
-        return None
+        verified: bool = len(copied_values) == 2 and len(copied_pair) == 2 and len(copied_mapping) == 2 and field_value == 2
     except PythonError as e:
         raise e
+    return None
