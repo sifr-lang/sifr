@@ -1,5 +1,4 @@
 use sifr_runtime::interop::SifrIntBridge;
-use std::collections::HashMap;
 
 #[must_use]
 pub const fn feature_name() -> &'static str {
@@ -71,28 +70,6 @@ pub fn set_intersection(left: Vec<SifrIntBridge>, right: Vec<SifrIntBridge>) -> 
             .filter(|item| right.contains(item))
             .collect(),
     )
-}
-
-#[must_use]
-pub fn defaultdict_new(default_value: SifrIntBridge) -> String {
-    format!("{{\"__default__\":{}}}", default_value.to_i64_saturating())
-}
-
-#[must_use]
-pub fn defaultdict_get(dd: &str, key: &str) -> SifrIntBridge {
-    let data: HashMap<String, i64> = serde_json::from_str(dd).unwrap_or_default();
-    let default = data.get("__default__").copied().unwrap_or(0);
-    SifrIntBridge::from(data.get(key).copied().unwrap_or(default))
-}
-
-#[must_use]
-pub fn defaultdict_set(dd: &str, key: &str, value: SifrIntBridge) -> String {
-    let mut data: HashMap<String, serde_json::Value> = serde_json::from_str(dd).unwrap_or_default();
-    data.insert(
-        key.to_string(),
-        serde_json::json!(value.to_i64_saturating()),
-    );
-    serde_json::to_string(&data).unwrap_or_default()
 }
 
 fn int_vec_to_bridge(values: Vec<i64>) -> Vec<SifrIntBridge> {
@@ -170,18 +147,6 @@ mod tests {
                 int_vec_to_bridge(vec![2, 4])
             )),
             vec![2, 2]
-        );
-    }
-
-    #[test]
-    fn defaultdict_helpers_preserve_default_json_behavior() {
-        let dd = defaultdict_new(SifrIntBridge::from(7));
-        assert_eq!(defaultdict_get(&dd, "missing").to_i64_saturating(), 7);
-        let updated = defaultdict_set(&dd, "hits", SifrIntBridge::from(3));
-        assert_eq!(defaultdict_get(&updated, "hits").to_i64_saturating(), 3);
-        assert_eq!(
-            defaultdict_get("not json", "missing").to_i64_saturating(),
-            0
         );
     }
 }

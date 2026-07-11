@@ -133,15 +133,6 @@ pub enum CompilerIntrinsicId {
     BytesDecode,
     BytesDecodeWithEncoding,
     TaskCurrentContext,
-    // Temporary typed IDs for the legacy Counter registry pending its deletion.
-    CounterFromList,
-    CounterGet,
-    CounterMostCommon,
-    CounterTotal,
-    CounterValues,
-    CounterKeys,
-    CounterItems,
-    CounterIncrement,
 }
 
 impl CompilerIntrinsicId {
@@ -165,14 +156,6 @@ impl CompilerIntrinsicId {
             Self::BytesDecode => "bytes_decode",
             Self::BytesDecodeWithEncoding => "bytes_decode_with_encoding",
             Self::TaskCurrentContext => "task_current_context",
-            Self::CounterFromList => "counter_from_list",
-            Self::CounterGet => "counter_get",
-            Self::CounterMostCommon => "counter_most_common",
-            Self::CounterTotal => "counter_total",
-            Self::CounterValues => "counter_values",
-            Self::CounterKeys => "counter_keys",
-            Self::CounterItems => "counter_items",
-            Self::CounterIncrement => "counter_increment",
         }
     }
 
@@ -196,14 +179,6 @@ impl CompilerIntrinsicId {
             "bytes_decode" => Self::BytesDecode,
             "bytes_decode_with_encoding" => Self::BytesDecodeWithEncoding,
             "task_current_context" => Self::TaskCurrentContext,
-            "counter_from_list" => Self::CounterFromList,
-            "counter_get" => Self::CounterGet,
-            "counter_most_common" => Self::CounterMostCommon,
-            "counter_total" => Self::CounterTotal,
-            "counter_values" => Self::CounterValues,
-            "counter_keys" => Self::CounterKeys,
-            "counter_items" => Self::CounterItems,
-            "counter_increment" => Self::CounterIncrement,
             _ => return None,
         })
     }

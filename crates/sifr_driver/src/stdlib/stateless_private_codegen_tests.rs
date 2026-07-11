@@ -242,6 +242,34 @@ fn bytes_private_declarations_codegen_through_sifr_stdlib() {
         .transitive_deps
         .get("sifr.hashlib")
         .is_some_and(|deps| deps.contains("_sifr.bytes")));
+
+    let public_code = compiled
+        .code
+        .module_rust_code
+        .get("sifr.bytes")
+        .expect("sifr.bytes should generate checked public wrapper code");
+    for wrapper in ["bytes_from_hex", "bytes_from_ints", "bytes_with_size"] {
+        assert!(
+            public_code.rust.contains(&format!("fn {wrapper}(")),
+            "{wrapper} checked source body should be emitted"
+        );
+    }
+    assert!(public_code
+        .rust
+        .contains("u8::from_str_radix(pair_str, 16)"));
+    assert!(public_code.rust.contains("byte out of range at index"));
+    assert!(public_code
+        .rust
+        .contains("bytes(size) requires a non-negative size"));
+    assert!(compiled
+        .code
+        .intrinsic_names
+        .get("sifr.bytes")
+        .is_some_and(|names| {
+            ["bytes_from_hex", "bytes_from_integers", "bytes_with_size"]
+                .into_iter()
+                .all(|name| !names.contains(name))
+        }));
 }
 
 #[test]

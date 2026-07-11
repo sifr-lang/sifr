@@ -18,9 +18,6 @@ fn collections_private_declarations_codegen_through_sifr_stdlib() {
         "set_len",
         "set_union",
         "set_intersection",
-        "defaultdict_new",
-        "defaultdict_get",
-        "defaultdict_set",
     ] {
         assert!(
             private_code
@@ -32,9 +29,6 @@ fn collections_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code
         .rust
         .contains("sifr_runtime::interop::SifrIntBridge::from(item)"));
-    assert!(private_code
-        .rust
-        .contains("sifr_runtime::interop::SifrIntBridge::from(value)"));
     assert!(private_code.rust.contains(".to_i64_saturating()"));
     assert!(compiled
         .code
@@ -60,9 +54,6 @@ fn collections_private_declarations_codegen_through_sifr_stdlib() {
                 "set_len",
                 "set_union",
                 "set_intersection",
-                "defaultdict_new",
-                "defaultdict_get",
-                "defaultdict_set",
             ]
             .into_iter()
             .all(|name| !names.contains(name))
@@ -81,9 +72,6 @@ fn collections_private_declarations_codegen_through_sifr_stdlib() {
         "set_len",
         "set_union",
         "set_intersection",
-        "defaultdict_new",
-        "defaultdict_get",
-        "defaultdict_set",
     ] {
         assert!(
             exports.contains_key(name),

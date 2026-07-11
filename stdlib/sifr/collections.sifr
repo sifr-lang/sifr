@@ -1,5 +1,5 @@
 # sifr.collections — Extended collection types
-from _sifr.collections import _new_set_impl, _set_from_list_impl, _set_add_impl, _set_contains_impl, _set_remove_impl, _set_len_impl, _set_union_impl, _set_intersection_impl, _defaultdict_new_impl, _defaultdict_get_impl, _defaultdict_set_impl
+from _sifr.collections import _new_set_impl, _set_from_list_impl, _set_add_impl, _set_contains_impl, _set_remove_impl, _set_len_impl, _set_union_impl, _set_intersection_impl
 
 
 def _copy_int_list(items: list[int]) -> list[int]:
@@ -40,17 +40,6 @@ def set_union(a: list[int], b: list[int]) -> list[int]:
 def set_intersection(a: list[int], b: list[int]) -> list[int]:
     return _set_intersection_impl(_copy_int_list(a), _copy_int_list(b))
 
-
-def defaultdict_new(default_value: int) -> str:
-    return _defaultdict_new_impl(default_value)
-
-
-def defaultdict_get(dd: str, key: str) -> int:
-    return _defaultdict_get_impl(dd, key)
-
-
-def defaultdict_set(dd: str, key: str, value: int) -> str:
-    return _defaultdict_set_impl(dd, key, value)
 
 class Counter[T: Hashable]:
     # A multiset (bag) mapping elements to their counts.

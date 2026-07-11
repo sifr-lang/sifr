@@ -779,11 +779,11 @@ Resource certification rows are also recorded in this manifest. The resource
 certification gate reads `certification_rows` from the retained-glue manifest
 rather than maintaining a parallel surface-to-matrix table.
 
-Some surfaces are intentionally split while migration is underway. For example,
-`_sifr.collections` set helpers and legacy JSON-string defaultdict helper
-leaves now use private `@rust(sifr_stdlib.collections.*)` declarations backed
-by `crates/sifr_stdlib`, while Counter behavior, defaultdict language glue, and
-core collection layout remain compiler-owned language semantics.
+Some collection surfaces intentionally have different owners. Generic
+`Counter[T]` executes its checked implementation in `stdlib/sifr/collections.sifr`.
+Typed `defaultdict(int|list|set[, mapping])` construction remains
+compiler/type-system-owned language semantics, while `_sifr.collections` set
+helpers use private `@rust(sifr_stdlib.collections.*)` declarations.
 
 ## Generated Cargo Projects
 

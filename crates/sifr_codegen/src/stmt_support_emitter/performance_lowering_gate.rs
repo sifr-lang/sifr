@@ -157,10 +157,8 @@ fn defaultdict_index_contains_can_borrow(collection: &HirExpr) -> bool {
     };
     matches!(
         object.ty(),
-        Type::Alias { name, .. } if matches!(
-            name.as_str(),
-            "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
-        )
+        Type::Alias { name, .. }
+            if crate::intrinsics::is_collection_defaultdict_storage_alias(name)
     )
 }
 

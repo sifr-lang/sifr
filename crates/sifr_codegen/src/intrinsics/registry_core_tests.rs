@@ -33,14 +33,6 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "assert_almost_eq" => CompilerIntrinsicId::TestAssertAlmostEqual,
         "assert_gt" => CompilerIntrinsicId::TestAssertGreaterThan,
         "assert_lt" => CompilerIntrinsicId::TestAssertLessThan,
-        "counter_from_list" => CompilerIntrinsicId::CounterFromList,
-        "counter_get" => CompilerIntrinsicId::CounterGet,
-        "counter_most_common" => CompilerIntrinsicId::CounterMostCommon,
-        "counter_total" => CompilerIntrinsicId::CounterTotal,
-        "counter_values" => CompilerIntrinsicId::CounterValues,
-        "counter_keys" => CompilerIntrinsicId::CounterKeys,
-        "counter_items" => CompilerIntrinsicId::CounterItems,
-        "counter_increment" => CompilerIntrinsicId::CounterIncrement,
         "str_encode_utf8_result" => CompilerIntrinsicId::StringEncode,
         "str_encode_utf8_result_with_encoding" => CompilerIntrinsicId::StringEncodeWithEncoding,
         "decode_utf8" => CompilerIntrinsicId::BytesDecode,
@@ -341,24 +333,7 @@ pub(crate) fn lowers_test_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn lowers_collections_counter_intrinsics_via_registry() {
-    let from_list =
-        lower_intrinsic("counter_from_list", &["vals".to_string()]).expect("counter_from_list");
-    assert!(render_expr(&from_list.expr).contains("HashMap::<String, i64>"));
-    assert!(render_expr(&from_list.expr).contains("let __items = vals;"));
-
-    let get = lower_intrinsic("counter_get", &["data".to_string(), "k".to_string()])
-        .expect("counter_get");
-    assert!(render_expr(&get.expr).contains("serde_json::from_str"));
-    assert!(render_expr(&get.expr).contains("let __counter_json = data;"));
-    assert!(!render_expr(&get.expr).contains("from_str(&(data))"));
-
-    let incr = lower_intrinsic("counter_increment", &["data".to_string(), "k".to_string()])
-        .expect("counter_increment");
-    assert!(render_expr(&incr.expr).contains("or_insert(0) += 1"));
-    assert!(render_expr(&incr.expr).contains("let __key = k;"));
-    assert!(render_expr(&incr.expr).contains("__key.to_string()"));
-
+pub(crate) fn collections_bridge_helpers_are_not_intrinsics() {
     for retired in [
         "new_set",
         "set_from_list",
@@ -368,9 +343,6 @@ pub(crate) fn lowers_collections_counter_intrinsics_via_registry() {
         "set_len",
         "set_union",
         "set_intersection",
-        "defaultdict_new",
-        "defaultdict_get",
-        "defaultdict_set",
     ] {
         assert!(
             lower_intrinsic(retired, &["value".to_string()]).is_none(),

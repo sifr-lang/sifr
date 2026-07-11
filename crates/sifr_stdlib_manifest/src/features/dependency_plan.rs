@@ -274,10 +274,6 @@ fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] 
         StdlibFeature::RustDecimal => {
             &["rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }"]
         }
-        StdlibFeature::SerdeJson => &[
-            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }",
-            "serde = { version = \"1.0.228\", features = [\"derive\"] }",
-        ],
         StdlibFeature::Tokio => {
             &["tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"]
         }

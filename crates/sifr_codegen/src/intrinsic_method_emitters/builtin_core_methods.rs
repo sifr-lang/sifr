@@ -78,9 +78,7 @@ impl RustEmitter {
         result_ty: Option<&Type>,
     ) -> Option<crate::RustExpr> {
         match func {
-            "__sifr_defaultdict_int" | "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
-                if args.is_empty() =>
-            {
+            name if crate::intrinsics::is_defaultdict_storage_alias(name) && args.is_empty() => {
                 Some(crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
                         "HashMap".to_string(),
@@ -89,9 +87,7 @@ impl RustEmitter {
                     args: vec![],
                 })
             }
-            "__sifr_defaultdict_int" | "__sifr_defaultdict_list" | "__sifr_defaultdict_set"
-                if args.len() == 1 =>
-            {
+            name if crate::intrinsics::is_defaultdict_storage_alias(name) && args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
