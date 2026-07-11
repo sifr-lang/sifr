@@ -2,6 +2,11 @@
 
 This note records the production contract implemented by the embedded CPython interop phase. It complements the public guide in `docs/python-interop.mdx` and the verification surface in `verification/areas/python_interop/`.
 
+The proposed declaration-first package-authoring layer is specified separately
+in [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md).
+That document is a future contract, not a description of currently implemented
+syntax or behavior.
+
 ## Ownership Boundary
 
 Python interop is a separate lane from Sifr's Rust-backed packages and raw C ABI interop. The final root application owns one uv-created CPython virtual environment. Sifr verifies and consumes that environment; it never installs packages, runs `uv sync`, or searches host-global Python as a fallback.
@@ -10,7 +15,8 @@ Library packages may declare `[python].requires-imports`, but only the root appl
 
 ## Environment Probe
 
-The package layer resolves the package graph, validates Python trust policy, and builds a `PythonEnvironmentRequest` containing:
+The package layer resolves the package graph, validates Python trust policy,
+and builds a `PythonEnvironmentProbeRequest` containing:
 
 - root-selected venv and interpreter;
 - declared Python imports from root allow-list and dependency requirements;
@@ -122,4 +128,8 @@ Active compiler diagnostics:
 - `SIFR-PYENV-0001..0011`: malformed config, multiple venvs, missing root env, probe failure, unsupported implementation, prefix mismatch, missing site-packages, missing declared import, native-load failure, free-threaded CPython, and stale project metadata.
 - `SIFR-PYTRUST-0001..0004`: dependency wildcard rejection, allowed-but-untrusted imports, native trust without allow-list, and dynamic import without explicit trust annotation.
 
-Reserved families `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, and `SIFR-PYCB` remain allocated for future compiler-emitted diagnostics if runtime Python error values later need promotion to compiler diagnostics.
+Reserved families `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`,
+`SIFR-PYZC`, and `SIFR-PYCB` remain allocated for declaration compiler
+diagnostics. The complete declaration proposal additionally reserves
+`SIFR-PYASYNC` and `SIFR-PYCTX`; those families become active only with their
+documented declaration contracts and are not descriptions of current behavior.
