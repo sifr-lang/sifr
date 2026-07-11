@@ -35,6 +35,15 @@ runtime-platform suites at 58,139 ms / 120,000 ms, and 130/130 selected E2E
 fixtures at 31,402 ms / 600,000 ms. Two Claude Opus review rounds were
 satisfied; the final round confirmed restored nested structured-intrinsic
 coverage with retained IDs.
+M5 deletes the fallback-signature crate and every missing-declaration recovery
+path in [PR #2925](https://github.com/sifr-lang/sifr/pull/2925). Compiled
+private declarations and typed HIR are now the sole signature authority, with
+permanent guards rejecting restoration of the crate, APIs, placeholders,
+configuration, or manifest schema. The create-PR gate passed with crate tests
+at 163,565 ms / 600,000 ms, runtime-platform suites at
+56,958 ms / 120,000 ms, and 130/130 selected E2E fixtures at
+383,025 ms / 600,000 ms. Two Claude Opus review rounds ended `SATISFIED`; the
+complete second review reported no findings.
 
 ## Why This Phase Exists
 

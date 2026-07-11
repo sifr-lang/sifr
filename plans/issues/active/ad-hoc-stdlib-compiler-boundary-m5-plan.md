@@ -63,3 +63,4 @@ deterministic bootstrap diagnostic.
   omitted findings it referenced, round 2 repeated the full review with a
   complete acceptance-by-acceptance record, reported no findings, and ended
   `SATISFIED`.
+- Implementation PR: [#2925](https://github.com/sifr-lang/sifr/pull/2925).
