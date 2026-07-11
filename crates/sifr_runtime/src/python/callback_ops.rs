@@ -211,7 +211,16 @@ fn invoke_sifr_callback(
             return Err(py_runtime_error(error));
         }
     };
-    let result = clone_handle(py, result_handle).map_err(py_runtime_error)?;
+    let result = match clone_handle(py, result_handle) {
+        Ok(result) => result,
+        Err(error) => {
+            if result_handle != arg_handle {
+                let _ignored = close_object(arg_handle);
+            }
+            let _ignored = close_object(result_handle);
+            return Err(py_runtime_error(error));
+        }
+    };
     if result_handle != arg_handle {
         let _ignored = close_object(arg_handle);
     }
@@ -272,6 +281,10 @@ mod tests {
         call_object, close_object, from_int, initialize_runtime, reset_runtime_state_for_tests,
         resource_diagnostics, test_config, test_guard, to_int, PythonResourceDiagnostics,
     };
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    };
 
     #[test]
     fn local_callback_allows_same_stack_reentry_and_rejects_escape() {
@@ -330,6 +343,28 @@ mod tests {
             .expect("registered callback call should succeed");
         assert_eq!(to_int(result).expect("result should convert"), 8);
         close_object(result).expect("result should close");
+        close_object(arg).expect("arg should close");
+        close_callback((callback.handle, callback.token)).expect("callback should close");
+    }
+
+    #[test]
+    fn malformed_callback_result_releases_temporary_argument() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("callback-stale-result")).expect("init should succeed");
+        let stale = from_int(99).expect("stale result should store");
+        close_object(stale).expect("stale result should close");
+        let callback = local_callback(move |_arg| Ok(stale)).expect("callback should create");
+        let arg = from_int(7).expect("arg should store");
+        let before = resource_diagnostics().expect("diagnostics should be available");
+
+        call_object((callback.object_handle, callback.object_token), &[arg], &[])
+            .expect_err("stale callback result should fail");
+
+        assert_eq!(
+            resource_diagnostics().expect("diagnostics should be available"),
+            before
+        );
         close_object(arg).expect("arg should close");
         close_callback((callback.handle, callback.token)).expect("callback should close");
     }
@@ -399,6 +434,71 @@ assert result[0] == 19
             .expect_err("calling closed callback object should fail");
         assert_eq!(after_close.kind, "resource");
         close_object(arg).expect("arg should close");
+        assert_eq!(
+            resource_diagnostics().expect("diagnostics should be available"),
+            PythonResourceDiagnostics {
+                initialized: true,
+                live_objects: 0,
+                leaked_objects: 0,
+            }
+        );
+    }
+
+    #[test]
+    fn object_destructor_can_reenter_callback_and_object_stores() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("destructor-reentry")).expect("init should succeed");
+        let invocations = Arc::new(AtomicUsize::new(0));
+        let invocation_counter = Arc::clone(&invocations);
+        let callback = threadsafe_callback(move |arg| {
+            invocation_counter.fetch_add(1, Ordering::SeqCst);
+            close_object(arg)?;
+            super::super::from_none()
+        })
+        .expect("callback should create");
+        let object = super::super::attach(|py| {
+            let callable = super::super::object_ops::clone_handle(
+                py,
+                (callback.object_handle, callback.object_token),
+            )?;
+            let globals = PyDict::new(py);
+            globals
+                .set_item("CALLBACK", callable.bind(py))
+                .map_err(|error| PythonError::from_pyerr(py, error, "callback", "destructor"))?;
+            py.run(
+                cr#"
+class ReentrantDestructor:
+    def __del__(self):
+        CALLBACK(1)
+value = ReentrantDestructor()
+"#,
+                Some(&globals),
+                None,
+            )
+            .map_err(|error| PythonError::from_pyerr(py, error, "callback", "destructor"))?;
+            let value = globals
+                .get_item("value")
+                .map_err(|error| PythonError::from_pyerr(py, error, "callback", "destructor"))?
+                .ok_or_else(|| {
+                    PythonError::runtime(PythonRuntimeError::PythonOperationFailed(
+                        "destructor fixture did not create a value".to_string(),
+                    ))
+                })?;
+            let object = super::super::object_ops::store_object(value.unbind())?;
+            globals
+                .del_item("value")
+                .map_err(|error| PythonError::from_pyerr(py, error, "callback", "destructor"))?;
+            Ok(object)
+        })
+        .map_err(PythonError::runtime)
+        .and_then(|result| result)
+        .expect("destructor object should be stored");
+
+        close_object(object).expect("destructor object should close");
+
+        assert_eq!(invocations.load(Ordering::SeqCst), 1);
+        close_callback((callback.handle, callback.token)).expect("callback should close");
         assert_eq!(
             resource_diagnostics().expect("diagnostics should be available"),
             PythonResourceDiagnostics {
