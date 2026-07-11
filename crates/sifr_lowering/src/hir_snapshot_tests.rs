@@ -456,6 +456,14 @@ fn project_expr(expr: &HirExpr) -> Value {
             "func": func,
             "args": args.iter().map(project_expr).collect::<Vec<_>>(),
         }),
+        HirExpr::IntrinsicCall {
+            intrinsic, args, ..
+        } => json!({
+            "kind": "IntrinsicCall",
+            "ty": expr_type_name(expr),
+            "intrinsic": intrinsic.declaration_name(),
+            "args": args.iter().map(project_expr).collect::<Vec<_>>(),
+        }),
         HirExpr::Await { value, .. } => json!({
             "kind": "Await",
             "ty": expr_type_name(expr),

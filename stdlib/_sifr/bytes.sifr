@@ -8,3 +8,8 @@ def encode_utf8(s: str) -> bytes:
 @rust(sifr_stdlib.bytes.bytes_to_hex)
 def bytes_to_hex(bytes: bytes) -> Result[str, ParseError]:
     ...
+
+
+@rust(sifr_stdlib.bytes.bytes_to_hex_strict)
+def bytes_to_hex_strict(bytes: bytes) -> str:
+    ...

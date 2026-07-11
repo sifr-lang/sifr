@@ -81,7 +81,6 @@ pub const PRIVATE_STDLIB_MODULES: &[&str] = &[
     "_sifr.runtime",
     "_sifr.signal",
     "_sifr.sys",
-    "_sifr.task",
     "_sifr.test",
     "_sifr.time",
     "_sifr.tls",

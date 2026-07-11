@@ -441,6 +441,7 @@ pub(super) fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), Codegen
         }
         HirExpr::BoolOp { values, .. }
         | HirExpr::Call { args: values, .. }
+        | HirExpr::IntrinsicCall { args: values, .. }
         | HirExpr::IteratorCall { args: values, .. }
         | HirExpr::ListLiteral {
             elements: values, ..

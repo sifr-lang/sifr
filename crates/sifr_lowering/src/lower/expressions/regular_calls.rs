@@ -498,8 +498,20 @@ pub(super) fn lower_regular_call(
         return_type
     };
 
+    if let Some(intrinsic) = ctx.compiler_intrinsics.get(&func_name).copied() {
+        let intrinsic_arg_ranges = arg_ranges
+            .iter()
+            .map(|range| range.unwrap_or_else(|| call.range()))
+            .collect();
+        Some(HirExpr::IntrinsicCall {
+            intrinsic,
+            args,
+            ty: call_type,
+            call_range: call.range(),
+            arg_ranges: intrinsic_arg_ranges,
+        })
     // If this is a class constructor call, emit ConstructorCall
-    if ctx.class_types.contains_key(&func_name) {
+    } else if ctx.class_types.contains_key(&func_name) {
         Some(HirExpr::ConstructorCall {
             class_name: func_name,
             args,

@@ -1,6 +1,7 @@
 //! HIR node definitions -- typed versions of AST nodes.
 
 use crate::RustInteropDeclaration;
+use ruff_text_size::TextRange;
 use sifr_type_system::{ParamConvention, Type};
 
 /// A complete HIR module (the top-level compilation unit).
@@ -102,8 +103,110 @@ pub struct HirFunction {
     pub decorators: Vec<String>,
     /// Structured Rust interop declarations attached to this function.
     pub rust_interop: Vec<RustInteropDeclaration>,
+    /// Compiler-owned callable identity declared by canonical sysroot source.
+    pub compiler_intrinsic: Option<CompilerIntrinsicId>,
     /// Generic type parameters (e.g., `["T", "K", "V"]` for generic functions)
     pub type_params: Vec<String>,
+}
+
+/// Typed identity for compiler-owned operations.
+///
+/// Callable identity is carried separately from `FunctionType`: signatures
+/// remain ordinary type metadata while this enum controls the only path into
+/// compiler intrinsic code generation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CompilerIntrinsicId {
+    TestAssertEqual,
+    TestAssertNotEqual,
+    TestAssertTrue,
+    TestAssertFalse,
+    TestAssertAlmostEqual,
+    TestAssertGreaterThan,
+    TestAssertLessThan,
+    OpenBinary,
+    OpenText,
+    BytesFromHex,
+    BytesWithSize,
+    BytesFromIntegers,
+    StringEncode,
+    StringEncodeWithEncoding,
+    BytesDecode,
+    BytesDecodeWithEncoding,
+    TaskCurrentContext,
+    // Temporary typed IDs for the legacy Counter registry pending its deletion.
+    CounterFromList,
+    CounterGet,
+    CounterMostCommon,
+    CounterTotal,
+    CounterValues,
+    CounterKeys,
+    CounterItems,
+    CounterIncrement,
+}
+
+impl CompilerIntrinsicId {
+    #[must_use]
+    pub const fn declaration_name(self) -> &'static str {
+        match self {
+            Self::TestAssertEqual => "test_assert_equal",
+            Self::TestAssertNotEqual => "test_assert_not_equal",
+            Self::TestAssertTrue => "test_assert_true",
+            Self::TestAssertFalse => "test_assert_false",
+            Self::TestAssertAlmostEqual => "test_assert_almost_equal",
+            Self::TestAssertGreaterThan => "test_assert_greater_than",
+            Self::TestAssertLessThan => "test_assert_less_than",
+            Self::OpenBinary => "open_binary",
+            Self::OpenText => "open_text",
+            Self::BytesFromHex => "bytes_from_hex",
+            Self::BytesWithSize => "bytes_with_size",
+            Self::BytesFromIntegers => "bytes_from_integers",
+            Self::StringEncode => "string_encode",
+            Self::StringEncodeWithEncoding => "string_encode_with_encoding",
+            Self::BytesDecode => "bytes_decode",
+            Self::BytesDecodeWithEncoding => "bytes_decode_with_encoding",
+            Self::TaskCurrentContext => "task_current_context",
+            Self::CounterFromList => "counter_from_list",
+            Self::CounterGet => "counter_get",
+            Self::CounterMostCommon => "counter_most_common",
+            Self::CounterTotal => "counter_total",
+            Self::CounterValues => "counter_values",
+            Self::CounterKeys => "counter_keys",
+            Self::CounterItems => "counter_items",
+            Self::CounterIncrement => "counter_increment",
+        }
+    }
+
+    #[must_use]
+    pub fn from_declaration_name(name: &str) -> Option<Self> {
+        Some(match name {
+            "test_assert_equal" => Self::TestAssertEqual,
+            "test_assert_not_equal" => Self::TestAssertNotEqual,
+            "test_assert_true" => Self::TestAssertTrue,
+            "test_assert_false" => Self::TestAssertFalse,
+            "test_assert_almost_equal" => Self::TestAssertAlmostEqual,
+            "test_assert_greater_than" => Self::TestAssertGreaterThan,
+            "test_assert_less_than" => Self::TestAssertLessThan,
+            "open_binary" => Self::OpenBinary,
+            "open_text" => Self::OpenText,
+            "bytes_from_hex" => Self::BytesFromHex,
+            "bytes_with_size" => Self::BytesWithSize,
+            "bytes_from_integers" => Self::BytesFromIntegers,
+            "string_encode" => Self::StringEncode,
+            "string_encode_with_encoding" => Self::StringEncodeWithEncoding,
+            "bytes_decode" => Self::BytesDecode,
+            "bytes_decode_with_encoding" => Self::BytesDecodeWithEncoding,
+            "task_current_context" => Self::TaskCurrentContext,
+            "counter_from_list" => Self::CounterFromList,
+            "counter_get" => Self::CounterGet,
+            "counter_most_common" => Self::CounterMostCommon,
+            "counter_total" => Self::CounterTotal,
+            "counter_values" => Self::CounterValues,
+            "counter_keys" => Self::CounterKeys,
+            "counter_items" => Self::CounterItems,
+            "counter_increment" => Self::CounterIncrement,
+            _ => return None,
+        })
+    }
 }
 
 /// Async-with forms recognized by the compiler.
@@ -435,6 +538,14 @@ pub enum HirExpr {
         args: Vec<HirExpr>,
         ty: Type,
     },
+    /// Compiler-owned operation selected by typed lowering metadata.
+    IntrinsicCall {
+        intrinsic: CompilerIntrinsicId,
+        args: Vec<HirExpr>,
+        ty: Type,
+        call_range: TextRange,
+        arg_ranges: Vec<TextRange>,
+    },
     /// Await expression. The operand must have an awaitable type.
     Await { value: Box<HirExpr>, ty: Type },
     /// Canonical iterator operation call.
@@ -609,6 +720,7 @@ impl HirExpr {
             | Self::Compare { ty, .. }
             | Self::BoolOp { ty, .. }
             | Self::Call { ty, .. }
+            | Self::IntrinsicCall { ty, .. }
             | Self::Await { ty, .. }
             | Self::IteratorCall { ty, .. }
             | Self::IfExpr { ty, .. }

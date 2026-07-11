@@ -82,6 +82,7 @@ where
             }
         }
         HirExpr::BoolOp { values, .. }
+        | HirExpr::IntrinsicCall { args: values, .. }
         | HirExpr::ListLiteral {
             elements: values, ..
         }

@@ -5,6 +5,7 @@ use super::{
     reject_wrong_positional_count, str, value_error_type, DiagnosticCode, Expr, ExprAttribute,
     ExprCall, HirExpr, IterationCapability, LowerCtx, Ranged, RevealTypeDiagnostic, Type,
 };
+use sifr_ir::CompilerIntrinsicId;
 pub(in crate::lower) fn lower_bytes_type_factory_call(
     attr: &ExprAttribute,
     call: &ExprCall,
@@ -47,10 +48,12 @@ pub(in crate::lower) fn lower_bytes_type_factory_call(
                 );
                 return None;
             }
-            Some(HirExpr::Call {
-                func: "bytes_from_hex".to_string(),
+            Some(HirExpr::IntrinsicCall {
+                intrinsic: CompilerIntrinsicId::BytesFromHex,
                 args: vec![hex_expr],
                 ty: Type::Result(Box::new(Type::Bytes), Box::new(parse_error_type(ctx))),
+                call_range: call.range(),
+                arg_ranges: vec![call.arguments.args[0].range()],
             })
         }
         "from_ints" => {
@@ -81,10 +84,12 @@ pub(in crate::lower) fn lower_bytes_type_factory_call(
                 );
                 return None;
             }
-            Some(HirExpr::Call {
-                func: "bytes_from_ints".to_string(),
+            Some(HirExpr::IntrinsicCall {
+                intrinsic: CompilerIntrinsicId::BytesFromIntegers,
                 args: vec![data_expr],
                 ty: Type::Result(Box::new(Type::Bytes), Box::new(value_error_type(ctx))),
+                call_range: call.range(),
+                arg_ranges: vec![call.arguments.args[0].range()],
             })
         }
         _ => None,

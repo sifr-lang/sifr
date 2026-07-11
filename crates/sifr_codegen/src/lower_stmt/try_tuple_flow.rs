@@ -158,6 +158,7 @@ pub(super) fn expr_has_result_flow(expr: &HirExpr) -> bool {
         } => expr_has_result_flow(left) || comparators.iter().any(expr_has_result_flow),
         HirExpr::BoolOp { values, .. } => values.iter().any(expr_has_result_flow),
         HirExpr::Call { args, .. }
+        | HirExpr::IntrinsicCall { args, .. }
         | HirExpr::IteratorCall { args, .. }
         | HirExpr::MethodCall { args, .. }
         | HirExpr::ConstructorCall { args, .. }

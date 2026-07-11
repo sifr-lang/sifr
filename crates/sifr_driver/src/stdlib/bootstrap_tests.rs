@@ -1,4 +1,5 @@
 use super::*;
+use sifr_lowering::CompilerIntrinsicId;
 
 fn sample_param(name: &str, ty: Type, convention: ParamConvention) -> HirParam {
     HirParam {
@@ -42,6 +43,7 @@ fn function_type_from_hir_exports_async_functions_as_coroutines() {
         method_kind: sifr_ir::MethodKind::Regular,
         decorators: Vec::new(),
         rust_interop: Vec::new(),
+        compiler_intrinsic: None,
         type_params: Vec::new(),
     };
 
@@ -124,4 +126,25 @@ fn python_core_re_exports_preserve_callable_metadata() {
         .and_then(|module_defaults| module_defaults.get("PythonError"))
         .expect("PythonError constructor defaults should be re-exported");
     assert_eq!(defaults.len(), 4);
+}
+
+#[test]
+fn retained_public_declarations_export_typed_compiler_identity() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    assert_eq!(
+        compiled
+            .defs
+            .compiler_intrinsics
+            .get("sifr.test")
+            .and_then(|ids| ids.get("assert_eq")),
+        Some(&CompilerIntrinsicId::TestAssertEqual)
+    );
+    assert_eq!(
+        compiled
+            .defs
+            .compiler_intrinsics
+            .get("sifr.task")
+            .and_then(|ids| ids.get("current_context")),
+        Some(&CompilerIntrinsicId::TaskCurrentContext)
+    );
 }

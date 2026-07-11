@@ -556,6 +556,7 @@ pub(super) fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
                 legacy.contains(&func.as_str()) || args.iter().any(call_uses_legacy_iterator_builtin)
             }
             HirExpr::IteratorCall { args, .. }
+            | HirExpr::IntrinsicCall { args, .. }
             | HirExpr::ListLiteral { elements: args, .. }
             | HirExpr::SetLiteral { elements: args, .. }
             | HirExpr::TupleLiteral { elements: args, .. }

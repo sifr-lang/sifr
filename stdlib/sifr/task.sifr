@@ -1,7 +1,5 @@
 # sifr.task - Structured task context value model
 
-from _sifr.task import task_current_context
-
 
 class Context:
     name: str
@@ -26,5 +24,6 @@ def empty_context() -> Context:
     return Context()
 
 
+@compiler_intrinsic(task_current_context)
 def current_context() -> Context:
-    return task_current_context()
+    ...

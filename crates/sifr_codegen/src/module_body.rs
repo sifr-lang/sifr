@@ -25,6 +25,9 @@ impl RustEmitter {
         test_mode: bool,
     ) {
         for func in &module.functions {
+            if func.compiler_intrinsic.is_some() {
+                continue;
+            }
             self.emit_function(func, module_public, test_mode);
         }
     }

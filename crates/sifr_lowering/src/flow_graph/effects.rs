@@ -280,6 +280,16 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
                 expr_effects(arg, effects);
             }
         }
+        HirExpr::IntrinsicCall {
+            intrinsic, args, ..
+        } => {
+            effects.push(FlowEffect::Call {
+                callee: format!("compiler::{}", intrinsic.declaration_name()),
+            });
+            for arg in args {
+                expr_effects(arg, effects);
+            }
+        }
         HirExpr::MethodCall {
             object,
             method,

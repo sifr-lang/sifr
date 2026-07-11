@@ -22,6 +22,9 @@ mod bytes_methods;
 mod call_argument_ranges;
 mod class_field_inference;
 mod classes;
+mod compiler_intrinsics;
+#[cfg(test)]
+mod compiler_intrinsics_tests;
 mod container_literal_diagnostics;
 mod container_literal_specialization;
 mod control_flow_conditions;

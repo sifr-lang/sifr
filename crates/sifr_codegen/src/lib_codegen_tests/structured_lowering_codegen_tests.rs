@@ -1,17 +1,22 @@
 use super::*;
+use sifr_ir::CompilerIntrinsicId;
 
 fn counter_total_expr() -> HirExpr {
-    HirExpr::Call {
-        func: "counter_total".to_string(),
-        args: vec![HirExpr::Call {
-            func: "counter_from_list".to_string(),
+    HirExpr::IntrinsicCall {
+        intrinsic: CompilerIntrinsicId::CounterTotal,
+        args: vec![HirExpr::IntrinsicCall {
+            intrinsic: CompilerIntrinsicId::CounterFromList,
             args: vec![HirExpr::ListLiteral {
                 elements: vec![HirExpr::StringLiteral("a".to_string())],
                 ty: Type::List(Box::new(Type::Str)),
             }],
             ty: Type::Str,
+            call_range: Default::default(),
+            arg_ranges: vec![Default::default()],
         }],
         ty: Type::Int,
+        call_range: Default::default(),
+        arg_ranges: vec![Default::default()],
     }
 }
 
@@ -42,6 +47,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
             HirFunction {
@@ -59,6 +65,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
         ],
@@ -111,6 +118,7 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -166,6 +174,7 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -223,6 +232,7 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -266,6 +276,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -301,6 +312,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -333,6 +345,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -431,6 +444,7 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],

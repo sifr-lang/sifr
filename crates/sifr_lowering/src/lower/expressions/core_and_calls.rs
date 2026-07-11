@@ -212,6 +212,14 @@ pub(super) fn canonicalize_class_surface_type(ty: &Type) -> Type {
 }
 pub(in crate::lower) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let var_name = name.id.to_string();
+    if ctx.compiler_intrinsics.contains_key(&var_name) {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
+            format!("compiler intrinsic callable '{var_name}' may only be used as a direct call"),
+            name.range(),
+        );
+        return None;
+    }
     if let Some(info) = ctx.scope.lookup(&var_name) {
         let is_moved = info.is_moved;
         let ty = info.effective_type().clone();

@@ -16,6 +16,7 @@ use super::{
     DEFAULTDICT_SET_ALIAS,
 };
 use crate::lower::{parallel_calls, task_join_set_calls, task_scope_offload_calls};
+use sifr_ir::CompilerIntrinsicId;
 pub(in crate::lower) fn lower_method_call(
     attr: &ExprAttribute,
     call: &ExprCall,
@@ -218,30 +219,38 @@ pub(in crate::lower) fn lower_method_call(
     invalidate_collection_flow_facts_for_method(ctx, &object, &object_ty, &method_name);
     if matches!(object_ty.resolve_alias(), Type::Str) && method_name == "encode" {
         let mut intrinsic_args = vec![object];
-        let intrinsic_name = if args.is_empty() {
-            "str_encode_utf8_result"
+        let intrinsic = if args.is_empty() {
+            CompilerIntrinsicId::StringEncode
         } else {
-            "str_encode_utf8_result_with_encoding"
+            CompilerIntrinsicId::StringEncodeWithEncoding
         };
         intrinsic_args.extend(args.iter().cloned());
-        return Some(HirExpr::Call {
-            func: intrinsic_name.to_string(),
+        let mut intrinsic_arg_ranges = vec![attr.value.range()];
+        intrinsic_arg_ranges.extend(method_arg_ranges.iter().copied());
+        return Some(HirExpr::IntrinsicCall {
+            intrinsic,
             args: intrinsic_args,
             ty: return_ty,
+            call_range: call.range(),
+            arg_ranges: intrinsic_arg_ranges,
         });
     }
     if matches!(object_ty.resolve_alias(), Type::Bytes) && method_name == "decode" {
         let mut intrinsic_args = vec![object];
-        let intrinsic_name = if args.is_empty() {
-            "decode_utf8"
+        let intrinsic = if args.is_empty() {
+            CompilerIntrinsicId::BytesDecode
         } else {
-            "decode_utf8_with_encoding"
+            CompilerIntrinsicId::BytesDecodeWithEncoding
         };
         intrinsic_args.extend(args.iter().cloned());
-        return Some(HirExpr::Call {
-            func: intrinsic_name.to_string(),
+        let mut intrinsic_arg_ranges = vec![attr.value.range()];
+        intrinsic_arg_ranges.extend(method_arg_ranges.iter().copied());
+        return Some(HirExpr::IntrinsicCall {
+            intrinsic,
             args: intrinsic_args,
             ty: return_ty,
+            call_range: call.range(),
+            arg_ranges: intrinsic_arg_ranges,
         });
     }
 

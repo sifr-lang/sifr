@@ -68,46 +68,6 @@ fn typed_ok_expr(expr: RustExpr, ok_ty: &str, err_ty: &str) -> RustExpr {
     }
 }
 
-fn bytes_to_hex_expr(arg: RustExpr) -> RustExpr {
-    RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(arg),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::FormatMacro {
-                        name: "format".to_string(),
-                        format_str: "{:02x}".to_string(),
-                        args: vec![RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__byte".to_string(),
-                        )))],
-                    }),
-                    is_move: false,
-                }],
-            }),
-            method: "collect::<Vec<String>>".to_string(),
-            args: vec![],
-        }),
-        method: "join".to_string(),
-        args: vec![RustExpr::Ident("\"\"".to_string())],
-    }
-}
-
-pub(crate) fn lower_bytes_to_hex_strict(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(bytes_to_hex_expr(args[0].clone()))
-}
-
 pub(crate) fn lower_bytes_from_hex(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;

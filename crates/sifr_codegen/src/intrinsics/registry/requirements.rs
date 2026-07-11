@@ -1,11 +1,14 @@
+use sifr_ir::CompilerIntrinsicId;
 use sifr_stdlib_manifest::StdlibFeature;
 
-pub(crate) fn additional_required_features(name: &str) -> &'static [StdlibFeature] {
-    match name {
-        "str_encode_utf8_result"
-        | "str_encode_utf8_result_with_encoding"
-        | "decode_utf8"
-        | "decode_utf8_with_encoding" => &[StdlibFeature::EncodingRs],
+pub(crate) fn additional_required_features(
+    intrinsic: CompilerIntrinsicId,
+) -> &'static [StdlibFeature] {
+    match intrinsic {
+        CompilerIntrinsicId::StringEncode
+        | CompilerIntrinsicId::StringEncodeWithEncoding
+        | CompilerIntrinsicId::BytesDecode
+        | CompilerIntrinsicId::BytesDecodeWithEncoding => &[StdlibFeature::EncodingRs],
         _ => &[],
     }
 }

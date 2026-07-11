@@ -570,12 +570,13 @@ macro_rules! stmt_expr_literals_and_calls {
                 return Ok(Some(lowered_generator));
             }
         }
+        if let HirExpr::IntrinsicCall {
+            intrinsic, args, ..
+        } = $expr
+        {
+            return Ok($emitter.try_lower_registry_intrinsic_call_expr(*intrinsic, args));
+        }
         if let Some((func, args)) = call_expr_parts($expr) {
-            if let Some(lowered_intrinsic) =
-                $emitter.try_lower_registry_intrinsic_call_expr(func, args)
-            {
-                return Ok(Some(lowered_intrinsic));
-            }
             if let Some(lowered_builtin) =
                 $emitter.try_lower_registry_builtin_call_expr(func, args, Some($expr.ty()))
             {

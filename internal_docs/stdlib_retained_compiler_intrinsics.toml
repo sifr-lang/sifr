@@ -24,8 +24,8 @@ registry_files = [
 ]
 preamble_files = ["io_bytes_methods.rs"]
 exact_intrinsics = [
-  "builtin_open",
-  "builtin_open_text",
+  "open_binary",
+  "open_text",
 ]
 
 [[surface]]
@@ -34,16 +34,17 @@ state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-reason = "Sifr test assertions are generated harness glue, not public stdlib-native behavior."
+declaration_files = ["stdlib/sifr/test.sifr"]
+reason = "Seven public Sifr test declarations carry explicit typed compiler identities so assertion expansion retains caller-local values and source ranges without emitting placeholder bodies."
 registry_files = ["test.rs"]
 exact_intrinsics = [
-  "assert_almost_eq",
-  "assert_eq",
-  "assert_false",
-  "assert_gt",
-  "assert_lt",
-  "assert_ne",
-  "assert_true",
+  "test_assert_almost_equal",
+  "test_assert_equal",
+  "test_assert_false",
+  "test_assert_greater_than",
+  "test_assert_less_than",
+  "test_assert_not_equal",
+  "test_assert_true",
 ]
 
 [[surface]]
@@ -80,10 +81,10 @@ declaration_files = ["stdlib/_sifr/encoding.sifr"]
 reason = "UTF-8 encode/decode result glue is tied to first-class bytes/string wrapper behavior and shared runtime error shaping."
 registry_files = ["encoding.rs"]
 exact_intrinsics = [
-  "decode_utf8",
-  "decode_utf8_with_encoding",
-  "str_encode_utf8_result",
-  "str_encode_utf8_result_with_encoding",
+  "bytes_decode",
+  "bytes_decode_with_encoding",
+  "string_encode",
+  "string_encode_with_encoding",
 ]
 
 [[surface]]
@@ -93,12 +94,11 @@ owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 declaration_files = ["stdlib/_sifr/bytes.sifr"]
-reason = "First-class bytes constructors, strict hex parsing/formatting, and method glue remain compiler-language behavior."
+reason = "Primitive bytes constructors and method glue remain compiler-language behavior; strict hex formatting routes through the checked _sifr.bytes Rust bridge declaration."
 registry_files = ["bytes.rs"]
 exact_intrinsics = [
   "bytes_from_hex",
-  "bytes_from_ints",
-  "bytes_to_hex_strict",
+  "bytes_from_integers",
   "bytes_with_size",
 ]
 
@@ -108,8 +108,8 @@ state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-declaration_files = ["stdlib/_sifr/task.sifr"]
-reason = "Task, cancellation, offload, join-set, and context propagation semantics are language/runtime glue."
+declaration_files = ["stdlib/sifr/task.sifr"]
+reason = "The public current_context declaration carries explicit typed compiler identity; task, cancellation, offload, join-set, and context propagation remain language/runtime glue."
 registry_files = ["task.rs"]
 preamble_files = [
   "cpu_offload_runtime.rs",
@@ -160,7 +160,6 @@ fallback_signature_modules = [
   "_sifr.json",
   "_sifr.math",
   "_sifr.regex",
-  "_sifr.task",
   "_sifr.test",
   "_sifr.toml",
   "_sifr.unicode",

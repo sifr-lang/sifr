@@ -12,7 +12,6 @@ mod i18n_core;
 mod io_json;
 mod math_test;
 mod platform_misc;
-mod task;
 mod text_encoding;
 mod unicode_core;
 mod url;
@@ -25,7 +24,6 @@ use math_test::{intrinsic_math, intrinsic_test};
 use platform_misc::{
     intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_toml,
 };
-use task::intrinsic_task;
 use text_encoding::intrinsic_encoding;
 use unicode_core::intrinsic_unicode;
 use url::intrinsic_url;
@@ -70,7 +68,6 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.math" => Some(intrinsic_math()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.url" => Some(intrinsic_url()),
-        "_sifr.task" => Some(intrinsic_task()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
         // Retained as compiler-owned bootstrap signature glue for sysroot

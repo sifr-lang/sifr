@@ -3,6 +3,7 @@ use super::{
     CallLowering, ExprCall, FunctionType, HirExpr, LowerCtx, Ranged, Type,
 };
 use sifr_diagnostics::DiagnosticCode;
+use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::Expr;
 
 fn string_literal_value(expr: &Expr) -> Option<String> {
@@ -239,10 +240,19 @@ pub(super) fn lower_shadowable_builtin_call(
             ctx.class_types
                 .insert("TextFileHandle".to_string(), text_handle_ty.clone());
             ctx.try_block_error_types.insert("IOError".to_string());
-            return Some(CallLowering::Lowered(HirExpr::Call {
-                func: "builtin_open_text".to_string(),
+            return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
+                intrinsic: CompilerIntrinsicId::OpenText,
                 args: vec![path_arg, mode_arg, encoding_arg, errors_arg],
                 ty: text_handle_ty,
+                call_range: call.range(),
+                arg_ranges: call
+                    .arguments
+                    .args
+                    .iter()
+                    .map(Ranged::range)
+                    .chain(std::iter::repeat(call.range()))
+                    .take(4)
+                    .collect(),
             }));
         }
         if !is_binary_open_mode(mode_literal.as_str()) {
@@ -343,10 +353,19 @@ pub(super) fn lower_shadowable_builtin_call(
             .insert("FileHandle".to_string(), file_handle_ty.clone());
         // Register IOError as a possible exception from this call
         ctx.try_block_error_types.insert("IOError".to_string());
-        return Some(CallLowering::Lowered(HirExpr::Call {
-            func: "builtin_open".to_string(),
+        return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
+            intrinsic: CompilerIntrinsicId::OpenBinary,
             args: vec![path_arg, mode_arg],
             ty: file_handle_ty,
+            call_range: call.range(),
+            arg_ranges: call
+                .arguments
+                .args
+                .iter()
+                .map(Ranged::range)
+                .chain(std::iter::repeat(call.range()))
+                .take(2)
+                .collect(),
         }));
     }
 

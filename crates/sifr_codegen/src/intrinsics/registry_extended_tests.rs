@@ -1,5 +1,6 @@
 use super::registry_core_tests::lower_intrinsic;
 use crate::{render_expr, RustExpr};
+use sifr_ir::CompilerIntrinsicId;
 
 #[test]
 pub(crate) fn legacy_subprocess_intrinsics_are_not_lowered() {
@@ -611,7 +612,7 @@ pub(crate) fn lowers_file_handle_builtin_bridge_and_migrated_intrinsics() {
 #[test]
 pub(crate) fn lower_intrinsic_accepts_ir_inputs() {
     let ir = super::lower_intrinsic(
-        "builtin_open",
+        CompilerIntrinsicId::OpenBinary,
         &[
             RustExpr::Ident("path".to_string()),
             RustExpr::Ident("mode".to_string()),

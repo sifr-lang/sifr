@@ -150,7 +150,16 @@ pub(in crate::lower) fn resolve_imports_early(
                 for name in &names {
                     let local = local_name_for(name);
                     if let Some(ft) = module_fns.get(name) {
-                        ctx.functions.entry(local).or_insert_with(|| ft.clone());
+                        ctx.functions
+                            .entry(local.clone())
+                            .or_insert_with(|| ft.clone());
+                        if let Some(intrinsic) = externals
+                            .compiler_intrinsics
+                            .get(&module_key)
+                            .and_then(|module_intrinsics| module_intrinsics.get(name))
+                        {
+                            ctx.compiler_intrinsics.insert(local.clone(), *intrinsic);
+                        }
                         if let Some(module_varargs) = externals.function_varargs.get(&module_key) {
                             import_callable_vararg(
                                 ctx,

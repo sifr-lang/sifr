@@ -1,4 +1,5 @@
 use crate::hir_nodes::HirExpr;
+use sifr_ir::CompilerIntrinsicId;
 use sifr_type_system::{FunctionType, Type};
 
 /// External module definitions that can be imported.
@@ -7,6 +8,9 @@ pub struct ExternalDefs {
     /// Map of `module_name` -> (`function_name` -> `FunctionType`)
     pub functions:
         std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
+    /// Map of `module_name` -> (`function_name` -> typed compiler intrinsic ID).
+    pub compiler_intrinsics:
+        std::collections::HashMap<String, std::collections::HashMap<String, CompilerIntrinsicId>>,
     /// Map of `module_name` -> (`class_name` -> Type)
     pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
     /// Map of `module_name` -> (`class_name` -> `type_param_names`)

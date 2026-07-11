@@ -1,28 +1,24 @@
 # sifr.test — Test assertion functions
 
+@compiler_intrinsic(test_assert_equal)
 def assert_eq[T](actual: T, expected: T) -> None:
-    assert actual == expected
+    ...
 
+@compiler_intrinsic(test_assert_not_equal)
 def assert_ne[T](actual: T, expected: T) -> None:
-    assert actual != expected
+    ...
 
+@compiler_intrinsic(test_assert_true)
 def assert_true(value: bool) -> None:
-    assert value
+    ...
 
+@compiler_intrinsic(test_assert_false)
 def assert_false(value: bool) -> None:
-    assert not value
+    ...
 
+@compiler_intrinsic(test_assert_almost_equal)
 def assert_almost_eq(actual: float, expected: float, tolerance: float) -> None:
-    assert tolerance >= 0.0
-    if actual == expected:
-        return
-    diff: float = actual - expected
-    if diff < 0.0:
-        diff = 0.0 - diff
-    # NaN should never compare as almost-equal.
-    if diff != diff:
-        assert False
-    assert diff <= tolerance
+    ...
 
 def assert_not_almost_eq(actual: float, expected: float, tolerance: float) -> None:
     assert tolerance >= 0.0
@@ -36,14 +32,16 @@ def assert_not_almost_eq(actual: float, expected: float, tolerance: float) -> No
         return
     assert diff > tolerance
 
+@compiler_intrinsic(test_assert_greater_than)
 def assert_gt[T: Comparable](a: T, b: T) -> None:
-    assert a > b
+    ...
 
 def assert_ge[T: Comparable](a: T, b: T) -> None:
     assert a >= b
 
+@compiler_intrinsic(test_assert_less_than)
 def assert_lt[T: Comparable](a: T, b: T) -> None:
-    assert a < b
+    ...
 
 def assert_le[T: Comparable](a: T, b: T) -> None:
     assert a <= b
