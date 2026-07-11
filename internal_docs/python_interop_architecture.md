@@ -15,7 +15,8 @@ Library packages may declare `[python].requires-imports`, but only the root appl
 
 ## Environment Probe
 
-The package layer resolves the package graph, validates Python trust policy, and builds a `PythonEnvironmentRequest` containing:
+The package layer resolves the package graph, validates Python trust policy,
+and builds a `PythonEnvironmentProbeRequest` containing:
 
 - root-selected venv and interpreter;
 - declared Python imports from root allow-list and dependency requirements;

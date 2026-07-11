@@ -248,11 +248,19 @@ context owner retains that object and releases it after exit. Non-opaque entered
 values are converted to ordinary owned Sifr values. This handles Python's common
 `__enter__ -> self` shape without creating two owning handles for one resource.
 
+Declaration checking permits an opaque entered result only when it is the
+manager identity itself or its declared class has `cleanup=drop`. A distinct
+opaque result requiring `close`, `async_close`, `context`, or `async_context`
+cannot be represented as the context-scoped borrow and is rejected with
+`SIFR-PYCTX-*` rather than abandoned by generated cleanup.
+
 `with` selects dedicated Python-context lowering only when the manager type is a
 `@python.opaque(cleanup=context)` declaration. Native Sifr context managers keep
 their existing argless, drop-style `__exit__` protocol and gain no foreign
 suppression behavior. The Python manager is consumed by exit exactly once on
 normal completion, error propagation, return, break, or continue.
+Direct source calls to declared `__exit__` or `__aexit__` are rejected because
+`python.ExitCause` is compiler-constructed and exists only in context lowering.
 
 ### Asynchronous Context Managers
 
@@ -323,12 +331,15 @@ owner.
 Callback parameters use the ordinary declared `Callable` or `AsyncCallable`
 signature. Arguments and results use the same checked conversion contract as
 function declarations. A Sifr handler error becomes a generated
-`SifrCallbackError` Python exception during the callback. For a call-scoped
-callback, the error also enters the enclosing declaration's error channel when
-the Python target propagates it. A retained callback records its first handler
-failure on the owner; later owner operations and semantic shutdown surface that
-failure through their declared error channels, and shutdown diagnostics report
-it if no operation observes it.
+`SifrCallbackError` Python exception during the callback. Every call-scoped
+trampoline records the first handler failure by callback entry sequence across
+current, serial, or parallel dispatch. After the Python target returns, the
+wrapper returns that `HandlerError` even if Python caught `SifrCallbackError`;
+if the target itself raised, `PythonError` is primary and the handler failure is
+secondary evidence. A retained callback records its first handler failure on
+the owner; later owner operations and semantic shutdown surface that failure
+through their declared error channels, and shutdown diagnostics report it if no
+operation observes it.
 
 Sifr union error channels are the ordinary normalized union types implemented by
 the type system. A declaration such as `Result[T, PythonError | HandlerError]`
@@ -385,6 +396,13 @@ Buffer declarations use a typed affine return:
 def bytes_view(self) -> Result[python.Buffer[uint8], PythonError]: ...
 ```
 
+For buffer, Arrow, and DLPack acquisition decorators, `Self` acquires directly
+from the opaque receiver. An import-root or `bridge` target is invoked with the
+declaration's ordinary non-protocol parameters first; the generated wrapper then
+acquires from that returned producer object and owns the temporary producer
+until acquisition or failure cleanup completes. No other target interpretation
+exists.
+
 The element type comes from `python.Buffer[T]`; `access=read | write` and
 `layout=any | c_contiguous | f_contiguous` are protocol facts not expressible in
 the ordinary return type. Acquisition validates format, item size, dimensions,
@@ -413,6 +431,12 @@ Arrow declarations derive capsule kind from their affine return type:
 def arrow_stream(self) -> Result[python.ArrowStream, PythonError]: ...
 ```
 
+Requested schemas are explicit. `schema=omitted` calls the protocol without a
+requested schema. `schema=parameter(name)` requires a same-declaration
+keyword-only borrowed `python.ArrowSchema` parameter and passes that capsule to
+`__arrow_c_array__` or `__arrow_c_stream__`; certification binds the exact
+schema/producer contract. No implicit schema request exists.
+
 The permitted return types are `python.ArrowArray` (owning the required schema
 and array capsule pair), `python.ArrowSchema`, `python.ArrowStream`,
 `python.ArrowDeviceArray` (owning schema plus device-array capsules), and
@@ -424,16 +448,16 @@ The Arrow PyCapsule protocol does not itself prove that a producer avoided
 allocation or representation conversion. Therefore an `@python.arrow`
 declaration is accepted only when the exact producer target and distribution
 fingerprint has executable zero-copy certification recorded in the binding
-evidence. A requested schema is omitted unless that certification also proves
-the request is representation-preserving. Without this evidence the author may
+evidence. A requested schema is accepted only when certification proves the
+request is representation-preserving. Without this evidence the author may
 declare an ordinary copied value or dynamic object, but cannot claim an Arrow
 zero-copy resource. There is no policy that silently accepts uncertain copying.
 
 Certification is package-authored, not a compiler allowlist. The package checks
 in a fixture plus `src/python_certifications/<name>.json`, keyed by the fully
 qualified Sifr declaration. The artifact records the Python target, protocol
-kind, distribution name/version and locked artifact hash, SOABI, requested
-schema policy, fixture/source digest, compiler certification version, within-run
+kind, distribution name/version and locked artifact hash, SOABI, schema mode and
+schema-contract digest, fixture/source digest, compiler certification version, within-run
 producer/consumer pointer-identity assertion results, and exact release counts.
 It never records absolute addresses, which are unstable across processes. The
 artifact participates in the binding contract digest and package archive.
@@ -530,10 +554,11 @@ responsibility. Passing the resulting affine value as an owned argument requires
 the new consumer capsule to be renamed from `dltensor` to `used_dltensor` (or the
 corresponding versioned names) and permanently moves the Sifr value. If a Python
 call fails after consuming the capsule, the move
-remains committed. If it fails before consumption, generated cleanup invokes a
-non-null producer deleter exactly once. A spec-valid null deleter is recorded as
-no-op release rather than invented ownership. Drop of an unconsumed tensor
-follows the same rule.
+remains committed. If it fails before consumption, generated cleanup first
+renames the unconsumed consumer capsule to the used sentinel so its destructor
+becomes a no-op, then invokes a non-null producer deleter exactly once. A
+spec-valid null deleter is recorded as no-op release rather than invented
+ownership. Drop of an unconsumed tensor follows the same rule.
 
 No DLPack declaration copies or silently changes device. Explicit copied tensor
 conversion is a separate ordinary declaration or package bridge with a copied

@@ -140,6 +140,10 @@ from the Sifr signature:
 - `@python.buffer`, `.arrow`, and `.dlpack` for explicit affine protocol
   resources.
 
+Attribute/item mutation has no declaration shorthand. Setter surfaces are
+classified dynamic-only or adapted behind a typed package bridge; they are not
+silently inferred from getter declarations.
+
 Decorator policy values such as `cleanup=drop`, `cleanup=close`,
 `cleanup=async_close`, `cleanup=context`, and `cleanup=async_context` are closed
 literal atoms consumed by Python interop lowering. They are not resolved as

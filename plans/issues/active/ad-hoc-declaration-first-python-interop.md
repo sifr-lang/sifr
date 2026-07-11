@@ -3,8 +3,10 @@
 ## Status
 
 Proposed. The phase defines one complete end-state architecture and an ordered
-implementation sequence. Opus High pass 5 approves the complete design with no
-actionable findings. Nothing described here is currently implemented.
+implementation sequence. Opus High pass 5 approved the complete design; a final
+independent Fable High audit found no blockers and its eight non-blocking
+precision refinements are incorporated. Nothing described here is currently
+implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -88,6 +90,8 @@ Expected implementation surfaces:
 
 - `crates/sifr_ir/src/` for declaration, protocol, ownership, callback, and
   async metadata;
+- `crates/sifr_type_system/src/` for compiler-known protocol types,
+  `AsyncCallable`, ownership eligibility, and union/affine rules;
 - `crates/sifr_lowering/src/lower/` for decorator validation, call-shape
   lowering, non-send checks, affine resources, context protocols, and effects;
 - `crates/sifr_codegen/src/` for generated sync/async wrappers, callback
@@ -113,6 +117,14 @@ ends with one production path for the behavior it activates. When a milestone
 replaces an existing authority or representation, it updates every consumer,
 fixture, diagnostic, and document in the same merge unit.
 
+M0 reserves `SIFR-PYRES-0002` for syntax recognized from the complete grammar
+whose sole production lowering has not yet activated in an intermediate merge.
+Activation occurs once: M3 sync calls and call shapes; M4 opaque/method/attr/item
+lifecycle; M5 sync contexts; M6 bridge targets; M7 coroutines and async close;
+M8 async contexts; M9 callbacks; M10 buffers; M11 Arrow; M12 DLPack. Before its
+owner milestone, a form hard-errors with `SIFR-PYRES-0002`; it never uses raw
+objects, alternate semantics, or a compatibility implementation.
+
 ## Milestones
 
 ### M0. Complete Contract Lock And Evidence Model
@@ -132,6 +144,8 @@ Tasks:
   and explicit record-expansion semantics.
 - Lock diagnostic families `PYIMP`, `PYCALL`, `PYCONV`, `PYRES`, `PYASYNC`,
   `PYCTX`, `PYCB`, and `PYZC`, including stable first codes.
+- Reserve `SIFR-PYRES-0002` for recognized but not-yet-activated declarations
+  during the ordered implementation sequence.
 - Lock the single manifest/trust authority and atomic removal of
   `[python].allow-imports`.
 - Add stale-design checks rejecting string targets, `send=`, repeated converter
@@ -312,6 +326,8 @@ Validation:
 - Context normal/error/early-return/suppression/exit-failure matrices.
 - Type-sensitive original-exception replay, nested replay lifetime, ordinary
   Sifr error non-suppression, and replay-token release fixtures.
+- Negative fixture rejecting a distinct opaque entered result whose cleanup is
+  not `drop`.
 - Runnable sync database transaction example.
 - Negative fixture rejecting a `cleanup=context` value that is never entered.
 
@@ -420,6 +436,8 @@ Validation:
   Sifr errors remain unsuppressed.
 - Negative fixture rejecting a `cleanup=async_context` value never entered by
   `async with`.
+- Negative fixture rejecting a distinct async entered opaque result whose
+  cleanup is not `drop`.
 - Nested sync/async context ordering and secondary-error fixtures.
 - Compiled async database/session example.
 
@@ -437,6 +455,8 @@ Tasks:
 - Implement foreign-thread `Send + Sync` trampolines, serial and parallel
   dispatch, reentrancy rejection, and forbidden Python opaque arguments.
 - Implement asyncio-dispatched `AsyncCallable` with bidirectional cancellation.
+- Add net-new `AsyncCallable[[...], R]` annotation/type-system support parallel
+  to `Callable`; do not treat `Type::AsyncFunction` as already equivalent.
 - Require serial/parallel concurrency for foreign and asyncio dispatch; reject
   serial reentrancy before lock or await.
 - Aggregate retained callback trampolines into returned or receiver owners.
@@ -458,6 +478,8 @@ Validation:
 - Current, foreign serial, foreign parallel, and asyncio callback matrices.
 - Capture/sendability, wrong argument/result, handler error, Python error,
   reentrancy, concurrent close, callback-after-close, and shutdown fixtures.
+- Call-scoped concurrent first-failure, swallowed-callback-error, and
+  Python-error-plus-secondary-handler-error fixtures.
 - Compiled CFFI, Kafka, and Pub/Sub callback examples.
 
 ### M10. Typed Buffer Protocol
@@ -469,6 +491,8 @@ Tasks:
 - Add affine non-send `python.Buffer[T]` with compiler-private identity.
 - Implement `@python.buffer(target, access=read | write, layout=any |
   c_contiguous | f_contiguous)`.
+- Implement receiver acquisition for `Self` and call-then-acquire for import-root
+  or bridge producer targets.
 - Validate format, item size, dimensions, shape, strides, suboffsets,
   writability, and layout before return.
 - Retain exporter ownership and enforce slice/view lifetimes.
@@ -486,6 +510,7 @@ Acceptance:
 Validation:
 
 - Format/layout/writability positive and negative matrices.
+- `Self`, import-root producer, and bridge producer acquisition fixtures.
 - Borrow/move/release/use-after-release checks.
 - Pointer identity and exact release counters.
 - Compiled NumPy-compatible buffer example.
@@ -500,12 +525,17 @@ Tasks:
   `ArrowDeviceArray`, and `ArrowDeviceStream` resources, with array resources
   owning their required schema/data pair.
 - Implement `@python.arrow(target)` with return-kind derivation.
+- Implement receiver acquisition for `Self` and call-then-acquire for import-root
+  or bridge producer targets.
+- Implement `schema=omitted | parameter(name)` and validate the latter as a
+  same-declaration keyword-only borrowed `python.ArrowSchema` parameter.
 - Validate exact capsule names, non-null payloads, release callbacks, device
   metadata, producer identity, and paired schema/data consistency.
 - Require executable no-copy certification tied to the exact producer and
   distribution fingerprint; reject uncertain producers and schema requests.
 - Add the package-authored `sifr python certify arrow` fixture/artifact workflow
-  and read-only certification recheck.
+  and read-only certification recheck, bootstrapping the `sifr python` command
+  group.
 - Implement owned argument transfer, consumed-state detection, failure cleanup,
   and exact-once release.
 
@@ -518,8 +548,10 @@ Acceptance:
 Validation:
 
 - Array/schema/stream acquisition and transfer matrices.
+- `Self`, import-root producer, and bridge producer acquisition fixtures.
 - Wrong name, null payload, missing releaser, producer-copy, partial-consumption,
   double-consumption, and use-after-move fixtures.
+- Requested-schema omitted/parameter shape, certification, and mismatch fixtures.
 - Pointer/release evidence with pandas, PyArrow, and Polars compiled examples.
 
 ### M12. DLPack One-Shot Tensor Transfer
@@ -532,6 +564,8 @@ Tasks:
 - Implement `python.DlpackStream`, `@python.dlpack.stream`, and
   `@python.dlpack(target, device=..., stream=none | parameter(name))` with no
   cross-device request.
+- Implement receiver acquisition for `Self` and call-then-acquire for import-root
+  or bridge producer targets.
 - Add `parameter(name)` as a decorator-argument parser/HIR production resolving
   only to a same-declaration keyword-only `python.DlpackStream` parameter.
 - Require `device=any` to use that stream parameter and validate its family/id
@@ -547,6 +581,8 @@ Tasks:
 - Rename the producer capsule to its used sentinel at Sifr acquisition before
   assuming deleter responsibility, then create a fresh consumer capsule for any
   later owned transfer.
+- On failure before consumer acquisition, rename that fresh capsule to its used
+  sentinel before invoking the deleter exactly once.
 - Keep copied tensor conversion as an ordinary copied declaration or bridge.
 
 Acceptance:
@@ -559,6 +595,7 @@ Acceptance:
 Validation:
 
 - CPU/CUDA, dtype, shape, stride, stream, and device matrices.
+- `Self`, import-root producer, and bridge producer acquisition fixtures.
 - `device=any` matching and mismatched runtime stream-device fixtures.
 - Wrong capsule, copied flag, null/non-null deleter, double consume,
   failure-before-consume, failure-after-consume, and shutdown fixtures.
@@ -598,8 +635,8 @@ Tasks:
   overloads, unsupported generics, uncontracted callables, or dynamic fields.
 - Record SOABI, distribution version, source precedence, and consumed typing
   hashes; implement read-only `bind --check` drift reporting.
-- Add `sifr python certify` authoring and `certify --check` for reproducible
-  package-owned protocol evidence and fingerprint drift.
+- Extend the `sifr python certify` surface bootstrapped by M11's Arrow workflow
+  to the general protocol-evidence and fingerprint-drift contract.
 
 Acceptance:
 
@@ -750,6 +787,7 @@ Review artifacts:
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-3.md`
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-4.md`
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-5.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-fable-high-final.md`
 
 Complete-architecture Opus High pass 1 requested changes. It found undefined
 Python exit-cause/suppression semantics, live-exception replay, Arrow evidence
@@ -775,6 +813,13 @@ stream rule, and the async interop effect/`Bodyless` rule explicitly covers
 coroutines, async contexts, and asyncio-dispatched callback handlers.
 Complete-architecture pass 5 rechecked those refinements and the complete
 constraint set, found no actionable issue, and approved the design.
+The final independent Fable High audit re-grounded the design against the
+repository and protocol specifications, found no blocker, and approved with
+eight non-blocking precision refinements. Those refinements now close DLPack
+failed-transfer cleanup, entered-object cleanup eligibility, non-`Self`
+acquisition, `AsyncCallable` ownership, Arrow requested schemas, call-scoped
+callback error precedence, certification milestone ownership, and staged
+activation diagnostics.
 
 ## Exit Gate
 
