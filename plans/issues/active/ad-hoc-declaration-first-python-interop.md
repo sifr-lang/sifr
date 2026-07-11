@@ -2,9 +2,10 @@
 
 ## Status
 
-Proposed. Architecture and milestone planning are complete and Opus review pass
-3 has no blocking findings. No declaration syntax or implementation described
-here is currently supported.
+Proposed. Architecture and milestone planning are complete. Opus pass 3
+approved the revised design; a final Fable High review found two sentence-scale
+contract ambiguities, both resolved here. No declaration syntax or
+implementation described here is currently supported.
 
 ## Objective
 
@@ -98,6 +99,8 @@ Tasks:
 - Lock bridge-version-1 argument passing: regular parameters become positional
   Python arguments, Sifr keyword-only parameters become named Python kwargs,
   defaults are passed explicitly, and variadics/kwargs expansion are rejected.
+- Lock the absence of omitted-argument semantics: `Option[T]` maps `None` to
+  Python `None`, while omission-sensitive targets require a local bridge.
 - Lock the manifest compatibility sequence before implementation: inferred
   requirements coexist with current allow/trust validation until a later
   atomic removal milestone.
@@ -118,6 +121,12 @@ Documentation-only validation:
   claims.
 
 ### M1. Declaration IR, Direct Calls, And Owned References
+
+Implement this milestone as an ordered internal PR sequence: first the sealed
+handle and pending-release queue, then declaration parsing/IR and target probes,
+then generated wrappers with effect, requirement, and trust inference. Each PR
+must preserve one handle model and leave its added behavior independently
+verifiable.
 
 Tasks:
 
@@ -155,6 +164,9 @@ Validation:
 - Runtime ownership tests with outstanding-reference assertions.
 - Success, Python failure, conversion failure, early return, detached-thread
   drop, and reentrant-callback drop fixtures.
+- Library-only check fixtures proving a valid declaration records a deferred
+  probe without selecting an environment, followed by final-application build
+  fixtures that resolve the probe or surface its failure.
 - Executable pure-Python and native-extension fixtures.
 - Focused create-PR validation for the touched compiler/runtime packages.
 
@@ -162,7 +174,9 @@ Validation:
 
 Tasks:
 
-- Implement `@python.opaque` with `close`, `send`, and type target metadata.
+- Implement `@python.opaque` with type target metadata, `close=drop | close`, and
+  the required `send=False` policy. Reject reserved `close=async_close` and
+  unsupported `send=True` with `SIFR-PYRES-0001` in bridge version 1.
 - Implement `Self` method target resolution.
 - Implement fallible `@python.attr` descriptor/property access.
 - Implement fallible `@python.item` access.
@@ -188,6 +202,8 @@ Validation:
 - Positive and negative opaque lifecycle fixtures.
 - Descriptor/property failure fixtures.
 - Method receiver, moved value, double close, and use-after-close tests.
+- Positive consuming `close(own self)` and rejected `close=async_close` fixtures.
+- Rejected `send=True` fixture proving the policy cannot be accepted as a no-op.
 - A fixture that creates an opaque object, fails mid-flow, and proves ordinary
   reference count returns to zero.
 - Runnable biip/schwifty or equivalent object-shaped example.
@@ -218,6 +234,8 @@ Validation:
 - Direct conversion matrices with positive and negative execution.
 - Nested overflow/type/path failure fixtures.
 - Record attribute, item fallback, missing-field, and extra-field fixtures.
+- An omission-sensitive target fixture proving explicit `None` is not treated as
+  an omitted Python argument and a local bridge can represent the omission.
 - Zero-reference-leak assertions for partial conversion failure.
 
 ### M4. Hermetic Package-Local Python Bridges
@@ -266,16 +284,23 @@ Validation:
 
 Tasks:
 
-- Migrate runnable biip/schwifty, dataframe, ML, web, database, cloud, crypto,
-  and Redis examples to direct declarations or package-local bridges.
-- Keep an intentionally small raw-object example proving the escape hatch.
+- Migrate the declarable call, factory, method, attribute, item, container, and
+  record surfaces in the runnable biip/schwifty, dataframe, ML, web, database,
+  cloud, crypto, and Redis examples to direct declarations or package-local
+  bridges.
+- Keep an intentionally small general raw-object example proving the escape
+  hatch. Arrow, DLPack, buffer, context-manager, and callback exchange points in
+  dataframe, ML, and broker examples also intentionally remain raw
+  `sifr.python` usage until M11.
 - Assert zero outstanding ordinary Python references after success and each
   exercised failure path.
 - Update capability evidence without promoting inventory-only package rows.
 
 Acceptance:
 
-- Package consumers use no raw handles for migrated binding surfaces.
+- Package consumers use no raw handles for the declarable surfaces migrated in
+  this milestone; the explicitly deferred advanced-protocol exchange points are
+  excluded until M11.
 - The merge profile executes all migrated offline examples.
 - Compatibility categories match actual positive and negative evidence.
 
@@ -301,6 +326,8 @@ Tasks:
   generated manifests, examples, and every verification fixture.
 - Retire `SIFR-PYTRUST-0002` with its old meaning and activate
   `SIFR-PYTRUST-0005` for a required root not authorized by the root.
+- Rebase `SIFR-PYTRUST-0003` from its removed allowlist wording to native trust
+  for a root that is not a required import root.
 - Preserve root-only wildcard trust for local control and dependency wildcard
   rejection.
 
@@ -341,6 +368,8 @@ Validation:
 
 - CLI integration tests and deterministic doctor goldens.
 - Cross-command diagnostic parity fixtures.
+- Library-only deferred-probe output and final-application probe-resolution
+  fixtures.
 - Explicit environment/trust non-mutation checks.
 
 ### M8. Symbol-Selective Binding Generation
@@ -495,12 +524,16 @@ Validation:
   requirements.
 - Opus pass 3: approved with no blocking findings after the architecture and
   phase revisions; final prose refinements are incorporated in this document.
+- Fable High final review: requested two sentence-scale consistency changes for
+  M5 protocol deferral and v1 `close=async_close`; both blockers and its
+  non-blocking ambiguity findings are incorporated in this document.
 
 Review artifacts:
 
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-1.md`
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-2.md`
 - `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-fable-review-final.md`
 
 ## Exit Gate
 

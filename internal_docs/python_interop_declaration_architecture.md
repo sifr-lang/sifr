@@ -85,6 +85,12 @@ A library-only check without a selected application environment validates the
 declaration and records a deferred target probe rather than selecting an
 environment on the library's behalf.
 
+Decorator target paths use a dedicated Python interop target namespace; they do
+not resolve through ordinary Sifr imports or local bindings. The reserved roots
+`bridge` and `Self` always retain their meanings even if a Python distribution
+uses one of those names. Such a distribution must be reached through a
+package-local bridge with a non-reserved Sifr target.
+
 ### Opaque Python Types
 
 Opaque declarations represent Python identity without exposing Python object
@@ -130,7 +136,9 @@ from the Sifr signature:
 
 Decorator policy values such as `close=drop`, `close=close`, and
 `close=async_close` are closed literal atoms consumed by Python interop
-lowering. They are not resolved as ordinary Sifr names.
+lowering. They are not resolved as ordinary Sifr names. Bridge version 1 accepts
+`close=drop` and `close=close`; `close=async_close` is reserved but rejected with
+`SIFR-PYRES-0001` until a future async declaration contract activates it.
 
 Allowed target roots are:
 
@@ -166,6 +174,9 @@ semantics; the main interpreter and GIL serialize Python interaction, generated
 calls borrow the sealed handle, values do not gain an implicit structural clone
 operation, and all initial opaque values are non-send. Additional thread or
 clone behavior requires a separately verified contract.
+`@python.opaque` keeps `send=` explicit as package-facing documentation, but
+bridge version 1 accepts only `send=False`; `send=True` is rejected with
+`SIFR-PYRES-0001` rather than treated as a no-op.
 
 ## Argument Passing
 
@@ -179,6 +190,11 @@ Initial declarations support fixed regular and keyword-only parameters:
   resulting value is passed explicitly to Python;
 - `*args`, `**kwargs`, record expansion, and implicit kwargs dictionaries are
   rejected in bridge version 1.
+
+Bridge version 1 has no omitted-argument semantics. `Option[T]` maps `None` to
+Python `None`, never to omission. A target that distinguishes an omitted
+argument from an explicitly passed value, including `None`, requires a
+package-local bridge with a fixed boundary.
 
 An inspectable target probe validates arity and keyword-only names. When a
 target is not introspectable, the declaration remains runtime-checked and
@@ -250,10 +266,20 @@ Cleanup policies have distinct meanings:
 - `close=drop`: automatic reference release only;
 - `close=close`: ownership checking requires a declared consuming semantic
   `close` operation;
-- `close=async_close`: ownership checking requires a declared consuming
-  semantic `aclose` operation;
+- `close=async_close`: reserved and rejected with `SIFR-PYRES-0001` in bridge
+  version 1; a future async declaration contract must define the consuming
+  `aclose` operation before activating it;
 - protocol resources such as buffers, Arrow capsules, DLPack tensors, and
   callback subscriptions retain their exact release/cancel/shutdown contract.
+
+For example, a synchronous semantic close is an explicitly consuming method:
+
+```sifr
+@python.opaque(type=redis.Redis, close=close, send=False)
+class RedisClient:
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+```
 
 A lexical `py.scope` may later be offered as convenience for the raw dynamic
 API, but it must be sugar over the same owned handle representation. It must not
@@ -307,6 +333,12 @@ Bridge modules are package inputs, not ambient `sys.path` files. Sifr must:
 Python bridge code remains dynamic implementation code. Sifr validates the
 declared boundary and runtime conversions; it does not claim to statically
 prove the bridge body.
+
+Executing a dependency's bridge module is authorized by the root application's
+decision to include that Sifr package, just as package-local Rust bridge code is
+package implementation. This authority covers the bridge module itself, not its
+third-party Python imports or native extensions; those still require the root's
+explicit `[trust].python` and `[trust].python-native` authorization.
 
 ### Bridge Module Registration
 
@@ -371,8 +403,10 @@ requirement but continue through the existing allow/trust diagnostics. The
 removal milestone updates parsing, public/internal docs, generated manifests,
 and all fixtures atomically. `SIFR-PYTRUST-0002` is retired with its
 allowed-but-untrusted meaning; `SIFR-PYTRUST-0005` covers a required static root
-not authorized by the root application. Root-only wildcard trust for local
-control remains, while dependency wildcards remain rejected.
+not authorized by the root application. `SIFR-PYTRUST-0003` is rebased from its
+removed allowlist wording to diagnose native trust for a root that is not a
+required import root. Root-only wildcard trust for local control remains, while
+dependency wildcards remain rejected.
 
 Raw dynamic imports remain bounded by explicit root trust, and non-literal
 dynamic imports retain an explicit unsafe annotation plus runtime trust
@@ -384,10 +418,12 @@ them silently.
 
 ## Blocking And Async
 
-Every initial `@python` call has the `blocking_io` effect automatically. The
-effect is part of declaration metadata and need not be repeated as
-`blocking=True`. Async Sifr code must use the existing explicit blocking
-offload mechanism, and non-send Python values may not cross the task boundary.
+Every declaration produced by an initial Python interop decorator has the
+`blocking_io` effect automatically, including function/method calls, attribute
+access, and item access. The effect is part of declaration metadata and need not
+be repeated as `blocking=True`. Async Sifr code must use the existing explicit
+blocking offload mechanism, and non-send Python values may not cross the task
+boundary.
 
 This architecture does not generate hidden offload or run a hidden event loop.
 There are no `@python.async` declarations in bridge version 1. A future
@@ -509,8 +545,10 @@ The declaration layer must cover at least:
 - callbacks and advanced-data protocols before those decorators are supported.
 
 Create-PR verification includes a small real pure-Python binding and a native
-extension binding. Merge verification migrates the existing runnable ecosystem
-examples to declaration-first calls and asserts zero outstanding ordinary
-Python references. Representative service and callback certification invokes
-an actual compiled Sifr binary rather than treating Python-client execution plus
-Sifr source presence as equivalent runtime evidence.
+extension binding. Merge verification migrates the declarable surfaces of the
+existing runnable ecosystem examples and asserts zero outstanding ordinary
+Python references. Arrow, DLPack, buffer, context-manager, and callback exchange
+points intentionally retain raw `sifr.python` usage until their M10 designs and
+M11 implementations exist. Representative service and callback certification
+invokes an actual compiled Sifr binary rather than treating Python-client
+execution plus Sifr source presence as equivalent runtime evidence.
