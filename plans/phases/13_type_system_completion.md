@@ -530,7 +530,7 @@ Note: `dropwhile`, `takewhile`, and `filterfalse` change from threshold-based to
 | `class Counter` with `counts: dict[str, int]` | `class Counter[T]` with `counts: dict[T, int]` |
 | `from_list(items: list[str]) -> Counter` | `def from_list[T](items: list[T]) -> Counter[T]` |
 | All methods operate on `str` keys | All methods operate on `T` keys (requires `T: Hashable`) |
-| `counter_add` / `counter_sub` standalone functions | `__add__` / `__sub__` operator overloads on `Counter[T]` |
+| Standalone addition/subtraction helpers | `__add__` / `__sub__` source methods on `Counter[T]` (completed) |
 
 The `Counter[T]` class requires `T` to be `Hashable` (since it's used as a dict key). The compiler enforces this via the generic bounds system from milestone_generics_v2.
 

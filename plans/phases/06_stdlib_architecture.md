@@ -282,58 +282,46 @@ status: completed
 
 ### Why `Counter` as the Proof-of-Concept
 
-1. **Existing intrinsics:** `_sifr.collections` already has `counter_from_list`, `counter_get`, `counter_most_common` — the Rust backing code exists
-2. **No `Callable`-as-struct-field needed:** Counter stores only `str` (JSON-encoded HashMap), avoiding the `impl Fn` vs `Box<dyn Fn>` blocker
-3. **Full pipeline exercise:** class in `.sifr` → HIR lowering → `ExternalDefs.classes` export → user import → codegen with `pub struct` + `pub fn new()` + methods
-4. **Both receiver types:** `&self` (read: `get`, `total`, `most_common`) and `&mut self` (mutate: `increment`)
-5. **Well-known API:** CPython's `Counter` is familiar and easily testable
+1. **Source-owned behavior:** `Counter[T: Hashable]` stores a checked
+   `dict[T, int]`; it has no compiler intrinsic or JSON-serialized backing.
+2. **Full pipeline exercise:** class in `.sifr` → HIR lowering →
+   `ExternalDefs.classes` export → user import → normal class codegen.
+3. **Both receiver types:** read methods and mutating methods exercise the
+   complete stdlib class receiver path.
+4. **Well-known API:** CPython's `Counter` is familiar and easily testable.
 
 ### Counter Class API
 
-```python
-class Counter:
-    data: str  # JSON-encoded dict[str, int]
+```sifr
+class Counter[T: Hashable]:
+    counts: dict[T, int]
 
-    def __init__(self, data: str):
-        self.data = data
+    def __init__(self, source: dict[T, int] | None = None,
+                 iterable: list[T] | None = None) -> None:
+        # Checked Sifr source constructs and updates counts.
+        ...
 
-    def get(self, key: str) -> int:
-        return counter_get(self.data, key)
+    def get(self, key: T, default: int = 0) -> int:
+        ...
 
-    def most_common(self, n: int) -> str:
-        return counter_most_common(self.data, n)
+    def increment(self, key: T) -> None:
+        ...
 
-    def total(self) -> int:
-        return counter_total(self.data)
+    def most_common(self, n: int | None = None) -> list[tuple[T, int]]:
+        ...
 
-    def values(self) -> list[int]:
-        return counter_values(self.data)
-
-    def keys(self) -> list[str]:
-        return counter_keys(self.data)
-
-    def items(self) -> str:
-        return counter_items(self.data)
-
-    def increment(self, key: str) -> None:
-        self.data = counter_increment(self.data, key)
-
-# Factory function (matches CPython's Counter(iterable) pattern)
-def from_list(items: list[str]) -> Counter:
-    return Counter(counter_from_list(items))
+def from_list[T: Hashable](items: list[T]) -> Counter[T]:
+    ...
 ```
 
-### New `_sifr.collections` Intrinsics
+### Final Counter Ownership
 
-| Intrinsic | Signature | Rust Implementation |
+| Layer | Responsibility |
 | --- | --- | --- |
-| `counter_total` | `(counter: str) -> int` | Parse JSON HashMap, sum values |
-| `counter_values` | `(counter: str) -> list[int]` | Parse JSON HashMap, return values as Vec |
-| `counter_keys` | `(counter: str) -> list[str]` | Parse JSON HashMap, return keys as Vec |
-| `counter_items` | `(counter: str) -> str` | Parse JSON HashMap, return JSON array of `[key, count]` pairs |
-| `counter_increment` | `(counter: str, key: str) -> str` | Parse JSON HashMap, increment key, re-encode |
-
-Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `counter_most_common`.
+| `stdlib/sifr/collections.sifr` | Generic storage, construction, queries, mutation, arithmetic, and ordering policy. |
+| HIR/type system | Generic bounds, dict-key hashability, class export, receiver and operator typing. |
+| Codegen | Normal checked class/dict lowering; no Counter-specific dispatch. |
+| Retained manifest | No Counter row or dependency feature. |
 
 ### Pipeline Verification Points
 
@@ -342,16 +330,16 @@ Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `count
 3. **User import:** `from sifr.collections import Counter` resolves via `externals.classes` lookup, registers constructor
 4. **Codegen:** `pub struct Counter`, `pub fn new(...)`, methods emitted with correct `&self`/`&mut self`
 
-### Files to Change
+### Final Implementation and Evidence
 
-- `crates/sifr_stdlib` — add 5 new intrinsic signatures to the collections intrinsic registry
-- `crates/sifr_codegen/src/lib.rs` — add codegen for 5 new `_sifr.collections` intrinsics
-- `lib/sifr/collections.sifr` — add `Counter` class + `from_list` factory function
+- `stdlib/sifr/collections.sifr` — generic source-owned `Counter` and
+  `from_list`.
 - `crates/sifr/tests/e2e/pass/stdlib_collections_counter.sifr` — basic Counter construction + method calls
 - `crates/sifr/tests/e2e/pass/stdlib_collections_counter_mutate.sifr` — Counter mutation via `increment`
 - `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr` — wrong argument type to Counter
 - `demos/stdlib_classes/main.sifr` — demo showcasing Counter class usage
-- `verification/areas/stdlib_parity/reports/` — update metrics
+- `scripts/check_stdlib_native_intrinsic_allowlist.py` — permanently rejects
+  restoration of the removed Counter compiler path.
 
 ### Risk Assessment
 
@@ -360,7 +348,7 @@ Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `count
 | Class export pipeline has untested edge cases | Medium | High | This milestone specifically exercises and validates this path |
 | Method receiver inference wrong for stdlib classes | Low | Medium | Already proven in user-defined class E2E tests |
 | `pub_mode` doesn't apply correctly to class methods | Low | High | Codegen already handles `pub_mode` for struct, impl, and methods |
-| JSON-encoded HashMap is a performance bottleneck | Low | Low | Acceptable for PoC; future milestones can switch to native dict type |
+| Generic dict operations regress | Low | Medium | Counter E2E and type-system coverage exercises construction, mutation, queries, and arithmetic. |
 
 ### What This Unblocks
 
