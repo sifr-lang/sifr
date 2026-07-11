@@ -7,7 +7,7 @@ from sifr.base64 import base64_encode, base64_decode
 from sifr.env import env_get
 
 def main():
-    # sifr.io wraps _sifr.fs/_sifr.io intrinsics
+    # sifr.io wraps _sifr.fs/_sifr.fs intrinsics
     result: bool = exists("/nonexistent_path_12345")
     assert str(result) == 'false'
 

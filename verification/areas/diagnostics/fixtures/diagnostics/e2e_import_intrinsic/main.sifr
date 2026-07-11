@@ -1,6 +1,6 @@
 # expect-error[col=1]: SIFR-IMPORT-0001
 # Importing from _sifr.* should be blocked for user code
-from _sifr.io import read_text
+from _sifr.fs import read_text
 
 def main():
     pass

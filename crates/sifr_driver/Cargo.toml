@@ -12,7 +12,6 @@ sifr_diagnostics = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_lowering = { workspace = true }
 sifr_ir = { workspace = true }
-sifr_retained_intrinsics = { workspace = true }
 sifr_stdlib_imports = { workspace = true }
 sifr_stdlib_manifest = { workspace = true }
 sifr_frontend = { workspace = true }

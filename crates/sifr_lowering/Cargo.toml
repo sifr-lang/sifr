@@ -12,7 +12,6 @@ sifr_ir = { workspace = true }
 sifr_ipc = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_python_parser = { workspace = true }
-sifr_retained_intrinsics = { workspace = true }
 sifr_stdlib_imports = { workspace = true }
 sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }

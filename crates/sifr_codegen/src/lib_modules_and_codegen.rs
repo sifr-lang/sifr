@@ -96,13 +96,11 @@ pub struct LoweringStats {
 }
 
 /// Compiled stdlib information for codegen.
-/// Contains per-module Rust code and intrinsic name sets.
+/// Contains per-module checked Rust code and callable metadata.
 #[derive(Clone, Default)]
 pub struct StdlibCode {
     /// Map of `module_name` -> compiled Rust source with checked-source provenance.
     pub module_rust_code: HashMap<String, StdlibRustSource>,
-    /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
-    pub intrinsic_names: HashMap<String, HashSet<String>>,
     /// Map of `module_name` -> (`constant_name` -> (type, `rust_name`)) for stdlib constants
     /// This allows user code to reference stdlib constants with the correct Rust names.
     pub module_constants: HashMap<String, HashMap<String, (Type, String)>>,
@@ -203,9 +201,6 @@ pub fn generate_rust_with_stdlib_for_module(
     module_name: Option<&str>,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
-    emitter
-        .stdlib_intrinsic_names
-        .clone_from(&stdlib_code.intrinsic_names);
     // Register stdlib generic classes so user code skips explicit type annotations
     emitter
         .generic_classes
@@ -330,12 +325,7 @@ pub fn generate_rust_with_stdlib_for_module(
             if !rust_source.rust.is_empty() {
                 let mut filtered =
                     if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
-                        let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
-                        let pure_sifr_imports: HashSet<String> = imported_names
-                            .iter()
-                            .filter(|name| !intrinsic_set.is_some_and(|iset| iset.contains(*name)))
-                            .cloned()
-                            .collect();
+                        let pure_sifr_imports = imported_names.clone();
                         if transitive_dependency_modules.contains(module_name) {
                             rust_source.rust.clone()
                         } else if pure_sifr_imports.is_empty() {

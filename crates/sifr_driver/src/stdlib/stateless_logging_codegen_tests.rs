@@ -27,21 +27,9 @@ fn logging_private_declarations_codegen_through_sifr_stdlib() {
         .contains("sifr_runtime::interop::SifrIntBridge::from(level)"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.logging")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.logging")
         .is_some_and(|deps| deps.contains("_sifr.logging")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.logging")
-        .is_some_and(|names| {
-            !names.contains("set_global_level") && !names.contains("get_global_level")
-        }));
 }
 
 fn sha256_hex(source: &str) -> String {

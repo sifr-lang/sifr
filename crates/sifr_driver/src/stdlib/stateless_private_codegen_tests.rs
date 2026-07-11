@@ -21,19 +21,9 @@ fn platform_private_declarations_codegen_through_sifr_stdlib() {
         .contains("sifr_stdlib::platform::platform_system()"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.platform")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.platform")
         .is_some_and(|deps| deps.contains("_sifr.platform")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.platform")
-        .is_some_and(|names| !names.contains("platform_system")));
 }
 
 #[test]
@@ -80,15 +70,6 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
     }
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.sys")
-        .is_some_and(|names| !names.contains("run_command")
-            && !names.contains("env_get")
-            && !names.contains("sys_version")
-            && !names.contains("which")
-            && !names.contains("os_sep")));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.env")
         .is_some_and(|deps| deps.contains("_sifr.sys")));
@@ -129,19 +110,9 @@ fn html_private_declarations_codegen_through_sifr_stdlib() {
         .contains("sifr_stdlib::html::html_escape(s)"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.html")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.html")
         .is_some_and(|deps| deps.contains("_sifr.html")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.html")
-        .is_some_and(|names| !names.contains("html_escape")));
 }
 
 #[test]
@@ -161,19 +132,9 @@ fn calendar_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.calendar")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.calendar")
         .is_some_and(|deps| deps.contains("_sifr.calendar")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.calendar")
-        .is_some_and(|names| !names.contains("calendar_isleap")));
 }
 
 #[test]
@@ -194,19 +155,9 @@ fn uuid_private_declarations_codegen_through_sifr_stdlib() {
         .contains("sifr_stdlib::uuid::uuid5_text(namespace, name)"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.uuid")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.uuid")
         .is_some_and(|deps| deps.contains("_sifr.uuid")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.uuid")
-        .is_some_and(|names| !names.contains("uuid4")));
 }
 
 #[test]
@@ -229,11 +180,6 @@ fn bytes_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.bytes")
-        .is_some_and(|names| !names.contains("encode_utf8") && !names.contains("bytes_to_hex")));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.bytes")
         .is_some_and(|deps| deps.contains("_sifr.bytes")));
@@ -248,12 +194,6 @@ fn bytes_private_declarations_codegen_through_sifr_stdlib() {
         .module_rust_code
         .get("sifr.bytes")
         .expect("sifr.bytes should generate checked public wrapper code");
-    for wrapper in ["bytes_from_hex", "bytes_from_ints", "bytes_with_size"] {
-        assert!(
-            public_code.rust.contains(&format!("fn {wrapper}(")),
-            "{wrapper} checked source body should be emitted"
-        );
-    }
     assert!(public_code
         .rust
         .contains("u8::from_str_radix(pair_str, 16)"));
@@ -261,15 +201,6 @@ fn bytes_private_declarations_codegen_through_sifr_stdlib() {
     assert!(public_code
         .rust
         .contains("bytes(size) requires a non-negative size"));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.bytes")
-        .is_some_and(|names| {
-            ["bytes_from_hex", "bytes_from_integers", "bytes_with_size"]
-                .into_iter()
-                .all(|name| !names.contains(name))
-        }));
 }
 
 #[test]
@@ -310,19 +241,9 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
         .contains("sifr_runtime::interop::SifrIntBridge::from(flags)"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.regex")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.re")
         .is_some_and(|deps| deps.contains("_sifr.regex")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.re")
-        .is_some_and(std::collections::HashSet::is_empty));
     let exports = compiled
         .defs
         .functions
@@ -368,19 +289,9 @@ fn url_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.url")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.url")
         .is_some_and(|deps| deps.contains("_sifr.url")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.url")
-        .is_some_and(std::collections::HashSet::is_empty));
     let exports = compiled
         .defs
         .functions
@@ -409,19 +320,9 @@ fn toml_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.toml")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.tomllib")
         .is_some_and(|deps| deps.contains("_sifr.toml")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.tomllib")
-        .is_some_and(std::collections::HashSet::is_empty));
     let exports = compiled
         .defs
         .functions
@@ -461,33 +362,9 @@ fn json_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains("JsonIntegerRangeError { message: __sifr_bridge_error.message().to_string(), path: __sifr_bridge_error.path().to_string(), profile: __sifr_bridge_error.profile().to_string() }"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.json")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.json")
         .is_some_and(|deps| deps.contains("_sifr.json")));
-    let public_intrinsics = compiled
-        .code
-        .intrinsic_names
-        .get("sifr.json")
-        .expect("sifr.json intrinsic names should be tracked");
-    for name in [
-        "json_loads",
-        "json_validate_integer_digit_limits",
-        "json_dumps",
-        "json_dumps_value",
-        "json_dumps_value_exact",
-        "json_dumps_value_web",
-        "json_dumps_value_string_ints",
-    ] {
-        assert!(
-            !public_intrinsics.contains(name),
-            "{name} should not remain a public sifr.json compiler intrinsic"
-        );
-    }
     let exports = compiled
         .defs
         .functions
@@ -532,34 +409,9 @@ fn encoding_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.encoding")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.encoding")
         .is_some_and(|deps| deps.contains("_sifr.encoding")));
-    let public_intrinsics = compiled
-        .code
-        .intrinsic_names
-        .get("sifr.encoding")
-        .expect("sifr.encoding intrinsic names should be tracked");
-    for name in [
-        "encoding_decode_text",
-        "encoding_decode_recoveries",
-        "encoding_decode_outcome",
-        "encoding_decode_incremental_outcome",
-        "encoding_decode_incremental_pending",
-        "encoding_encode_bytes",
-        "encoding_encode_recoveries",
-        "encoding_encode_outcome",
-    ] {
-        assert!(
-            !public_intrinsics.contains(name),
-            "{name} should not remain a public sifr.encoding compiler intrinsic"
-        );
-    }
     let exports = compiled
         .defs
         .functions
@@ -613,32 +465,9 @@ fn unicode_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.unicode")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.unicode")
         .is_some_and(|deps| deps.contains("_sifr.unicode")));
-    let public_intrinsics = compiled
-        .code
-        .intrinsic_names
-        .get("sifr.unicode")
-        .expect("sifr.unicode intrinsic names should be tracked");
-    for name in [
-        "unicode_normalize",
-        "unicode_is_normalized",
-        "unicode_name",
-        "unicode_lookup",
-        "unicode_case_fold",
-        "unicode_graphemes",
-    ] {
-        assert!(
-            !public_intrinsics.contains(name),
-            "{name} should not remain a public sifr.unicode compiler intrinsic"
-        );
-    }
     let exports = compiled
         .defs
         .functions
@@ -691,11 +520,6 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
         .contains("kind: __sifr_bridge_error.to_string()"));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.compress")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.gzip")
         .is_some_and(|deps| deps.contains("_sifr.compress")));
@@ -704,29 +528,6 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
         .transitive_deps
         .get("sifr.zipfile")
         .is_some_and(|deps| deps.contains("_sifr.compress")));
-
-    for module in ["sifr.gzip", "sifr.zipfile"] {
-        let public_intrinsics = compiled
-            .code
-            .intrinsic_names
-            .get(module)
-            .expect("public compression intrinsic names should be tracked");
-        for name in [
-            "gzip_compress",
-            "gzip_decompress",
-            "zip_create",
-            "zip_add_file",
-            "zip_add_file_bytes",
-            "zip_read_file",
-            "zip_read_file_bytes",
-            "zip_namelist",
-        ] {
-            assert!(
-                !public_intrinsics.contains(name),
-                "{name} should not remain a public {module} compiler intrinsic"
-            );
-        }
-    }
 
     let gzip_exports = compiled
         .defs
@@ -773,31 +574,9 @@ fn datetime_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.datetime")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.datetime")
         .is_some_and(|deps| deps.contains("_sifr.datetime")));
-
-    let public_intrinsics = compiled
-        .code
-        .intrinsic_names
-        .get("sifr.datetime")
-        .expect("sifr.datetime intrinsic names should be tracked");
-    for name in [
-        "datetime_now",
-        "datetime_now_struct",
-        "datetime_format",
-        "datetime_from_timestamp",
-    ] {
-        assert!(
-            !public_intrinsics.contains(name),
-            "{name} should not remain a public sifr.datetime compiler intrinsic"
-        );
-    }
     let exports = compiled
         .defs
         .functions
@@ -851,31 +630,9 @@ fn i18n_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.i18n")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.i18n")
         .is_some_and(|deps| deps.contains("_sifr.i18n")));
-    let public_intrinsics = compiled
-        .code
-        .intrinsic_names
-        .get("sifr.i18n")
-        .expect("sifr.i18n intrinsic names should be tracked");
-    for name in [
-        "i18n_locale_canonicalize",
-        "i18n_format_number",
-        "i18n_format_datetime",
-        "i18n_plural_category",
-        "i18n_mo_lookup_context_plural",
-    ] {
-        assert!(
-            !public_intrinsics.contains(name),
-            "{name} should not remain a public sifr.i18n compiler intrinsic"
-        );
-    }
     let exports = compiled
         .defs
         .functions

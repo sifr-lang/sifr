@@ -19,7 +19,6 @@ pub(in crate::lower) fn resolve_compiled_private_imports(
         if resolve_function(ctx, externals, module_name, name, &local)
             || resolve_class(ctx, externals, module_name, name, &local)
             || resolve_constant(ctx, externals, module_name, name, &local)
-            || resolve_retained_fallback(ctx, module_name, name, &local)
         {
             continue;
         }
@@ -216,24 +215,4 @@ fn resolve_constant(
             .insert(local.to_string(), value.clone());
     }
     true
-}
-
-fn resolve_retained_fallback(
-    ctx: &mut LowerCtx,
-    module_name: &str,
-    name: &str,
-    local: &str,
-) -> bool {
-    let Some(intrinsic_module) = sifr_retained_intrinsics::get_intrinsic_module(module_name) else {
-        return false;
-    };
-    if let Some(ft) = intrinsic_module.functions.get(name) {
-        ctx.functions.insert(local.to_string(), ft.clone());
-        return true;
-    }
-    if let Some(const_ty) = intrinsic_module.constants.get(name) {
-        ctx.scope.define(local.to_string(), const_ty.clone());
-        return true;
-    }
-    false
 }

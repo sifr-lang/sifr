@@ -109,14 +109,14 @@ fn unsupported_legacy_stdlib_module_has_import_code_and_replacement_args() {
 
 #[test]
 fn forbidden_intrinsic_import_has_import_code() {
-    let source = "from _sifr.io import read_text\n\ndef main():\n    pass\n";
+    let source = "from _sifr.fs import read_text\n\ndef main():\n    pass\n";
     let errors = lower_errors(source);
 
     assert!(errors.iter().any(|error| {
         error.message
-            == "cannot import from '_sifr.io' — private sysroot declarations can only be imported by public sysroot stdlib source"
+            == "cannot import from '_sifr.fs' — private sysroot declarations can only be imported by public sysroot stdlib source"
             && error.code == Some(DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC)
-            && error.primary_range == Some(range_for(source, "from _sifr.io import read_text"))
+            && error.primary_range == Some(range_for(source, "from _sifr.fs import read_text"))
     }));
 }
 
@@ -179,7 +179,7 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_constants() {
 }
 
 #[test]
-fn public_sysroot_stdlib_source_falls_back_per_private_import_name() {
+fn public_sysroot_stdlib_source_rejects_uncompiled_private_import_name() {
     let source =
         "from _sifr.bytes import bytes_to_hex_strict\n\ndef main(data: bytes) -> str:\n    return bytes_to_hex_strict(data)\n";
     let parsed = parse_module(source).expect("parse failed");
@@ -189,15 +189,17 @@ fn public_sysroot_stdlib_source_falls_back_per_private_import_name() {
         HashMap::from([("__compiled_marker".to_string(), Type::Bool)]),
     );
 
-    let result = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
-        .expect("public stdlib source should fall back to retained private names");
+    let errors = match lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
+    {
+        Ok(_) => panic!("public stdlib source must not synthesize missing private names"),
+        Err(errors) => errors,
+    };
 
-    assert!(result
-        .module
-        .imports
-        .iter()
-        .any(|import| import.module == "_sifr.bytes"
-            && import.names == ["bytes_to_hex_strict".to_string()]));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::NAME_MISSING_MODULE_MEMBER)
+            && error.message == "module '_sifr.bytes' has no member 'bytes_to_hex_strict'"
+            && error.primary_range == Some(range_for(source, "bytes_to_hex_strict"))
+    }));
 }
 
 #[test]
@@ -228,7 +230,7 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_classes() {
 
 #[test]
 fn private_sysroot_declaration_source_cannot_import_private_declarations() {
-    let source = "from _sifr.io import read_text\n\ndef main():\n    pass\n";
+    let source = "from _sifr.fs import read_text\n\ndef main():\n    pass\n";
     let parsed = parse_module(source).expect("parse failed");
     let errors = match lower_module_sysroot_private_declaration_with_externals(
         parsed.suite(),
@@ -240,9 +242,9 @@ fn private_sysroot_declaration_source_cannot_import_private_declarations() {
 
     assert!(errors.iter().any(|error| {
         error.message
-            == "cannot import from '_sifr.io' — private sysroot declarations can only be imported by public sysroot stdlib source"
+            == "cannot import from '_sifr.fs' — private sysroot declarations can only be imported by public sysroot stdlib source"
             && error.code == Some(DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC)
-            && error.primary_range == Some(range_for(source, "from _sifr.io import read_text"))
+            && error.primary_range == Some(range_for(source, "from _sifr.fs import read_text"))
     }));
 }
 

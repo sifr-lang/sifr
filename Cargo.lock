@@ -3189,7 +3189,6 @@ dependencies = [
  "sifr_ir",
  "sifr_lowering",
  "sifr_package",
- "sifr_retained_intrinsics",
  "sifr_stdlib_imports",
  "sifr_stdlib_manifest",
  "sifr_syntax",
@@ -3273,7 +3272,6 @@ dependencies = [
  "sifr_diagnostics",
  "sifr_ipc",
  "sifr_ir",
- "sifr_retained_intrinsics",
  "sifr_stdlib_imports",
  "sifr_type_system",
 ]
@@ -3304,13 +3302,6 @@ dependencies = [
  "sifr_diagnostics",
  "sifr_frontend",
  "toml",
-]
-
-[[package]]
-name = "sifr_retained_intrinsics"
-version = "0.0.0"
-dependencies = [
- "sifr_type_system",
 ]
 
 [[package]]

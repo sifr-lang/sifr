@@ -36,15 +36,6 @@ fn time_private_declarations_codegen_through_sifr_stdlib() {
             "{decl_name} should lower through _sifr.time private Rust interop declarations"
         );
     }
-
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("_sifr.time")
-        .is_some_and(|names| !names.contains("time_now")
-            && !names.contains("time_format")
-            && !names.contains("sleep")
-            && !names.contains("monotonic")));
     assert!(compiled
         .code
         .transitive_deps

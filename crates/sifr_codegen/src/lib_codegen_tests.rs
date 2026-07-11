@@ -13,6 +13,31 @@ use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
+fn trait_impl_fixture_stdlib_code() -> StdlibCode {
+    let mut code = StdlibCode::default();
+    code.module_rust_code.insert(
+        "sifr.tomllib".to_string(),
+        StdlibRustSource {
+            module: "sifr.tomllib".to_string(),
+            source_path: "stdlib/sifr/tomllib.sifr".to_string(),
+            source_sha256: "fixture".to_string(),
+            rust: r#"
+struct TOMLDecodeError { message: String }
+impl std::fmt::Display for TOMLDecodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+fn loads(_text: String) -> Result<String, TOMLDecodeError> {
+    Err(TOMLDecodeError { message: "fixture".to_string() })
+}
+"#
+            .to_string(),
+        },
+    );
+    code
+}
+
 #[cfg(test)]
 mod async_control_codegen_tests;
 pub(crate) use async_control_codegen_tests::{

@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import tempfile
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -18,7 +19,6 @@ REGISTRY_DISPATCH_PATH = (
 )
 HIR_NODES_PATH = REPO_ROOT / "crates" / "sifr_ir" / "src" / "hir_nodes.rs"
 PREAMBLE_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "preamble"
-RETAINED_INTRINSICS_LIB_PATH = REPO_ROOT / "crates" / "sifr_retained_intrinsics" / "src" / "lib.rs"
 CODEGEN_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src"
 DEPENDENCY_PLAN_RS_PATH = (
     REPO_ROOT
@@ -36,7 +36,6 @@ TYPED_INTRINSIC_NAME_RE = re.compile(
 )
 LOWERER_MATCH_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
-RETAINED_SIGNATURE_MODULE_RE = re.compile(r'"(_sifr\.[A-Za-z0-9_]+)"\s*=>\s*Some\(')
 GENERATED_DEPENDENCY_PACKAGE_RE = re.compile(r'"([A-Za-z0-9_-]+)\s+=')
 DIRECT_RUNTIME_ROOT_RE = re.compile(r"\bsifr_runtime::([A-Za-z_][A-Za-z0-9_]*)")
 EXPECTED_PREFIX_DISPATCHERS: set[str] = set()
@@ -62,17 +61,52 @@ DELETED_COLLECTION_RESIDUES = (
 DELETED_COLLECTION_RESIDUE_ROOTS = (
     REPO_ROOT / "crates" / "sifr_ir" / "src" / "hir_nodes.rs",
     REGISTRY_ROOT,
-    REPO_ROOT / "crates" / "sifr_retained_intrinsics" / "src",
     REPO_ROOT / "crates" / "sifr_stdlib" / "src" / "collections.rs",
     REPO_ROOT / "stdlib" / "_sifr" / "collections.sifr",
     REPO_ROOT / "stdlib" / "sifr" / "collections.sifr",
 )
+DELETED_FALLBACK_PATHS = (
+    REPO_ROOT / "crates" / "sifr_retained_intrinsics",
+    REPO_ROOT / "stdlib" / "_sifr" / "io.sifr",
+    REPO_ROOT / "stdlib" / "_sifr" / "test.sifr",
+)
+DELETED_FALLBACK_TOKENS = (
+    "sifr_retained_intrinsics",
+    "fallback_signature_modules",
+    "resolve_retained_fallback",
+    "re_export_intrinsic_fallbacks",
+    "get_intrinsic_module",
+)
+DELETED_FALLBACK_SCAN_ROOTS = (
+    REPO_ROOT / "Cargo.toml",
+    REPO_ROOT / "Cargo.lock",
+    REPO_ROOT / "crates",
+    REPO_ROOT / "internal_docs" / "stdlib_retained_compiler_intrinsics.toml",
+    REPO_ROOT / "internal_docs" / "architecture.md",
+    ARCH_DOC_PATH,
+    REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py",
+    REPO_ROOT / "scripts" / "check_stdlib_manifest_schema.py",
+    REPO_ROOT / "verification" / "profiles",
+    REPO_ROOT
+    / "verification"
+    / "areas"
+    / "coverage_matrix"
+    / "data"
+    / "cargo_metadata_classification.json",
+    REPO_ROOT
+    / "verification"
+    / "areas"
+    / "generated_code_quality"
+    / "generated_code_quality.py",
+)
+FALLBACK_SCAN_SUFFIXES = {".json", ".lock", ".py", ".rs", ".toml"}
 
 
 def main() -> int:
     observed = _observed_surface()
     allowlist = tomllib.loads(ALLOWLIST_PATH.read_text(encoding="utf-8"))
     failures = _deleted_collection_residue_failures()
+    failures.extend(_deleted_fallback_architecture_failures())
     if failures:
         print("stdlib native intrinsic allowlist guard: FAIL")
         for failure in failures:
@@ -96,6 +130,38 @@ def _deleted_collection_residue_failures() -> list[str]:
     return failures
 
 
+def _deleted_fallback_architecture_failures(
+    deleted_paths: tuple[Path, ...] = DELETED_FALLBACK_PATHS,
+    scan_roots: tuple[Path, ...] = DELETED_FALLBACK_SCAN_ROOTS,
+) -> list[str]:
+    failures = []
+    for path in deleted_paths:
+        if path.exists():
+            failures.append(
+                f"deleted fallback architecture path remains: {path.relative_to(REPO_ROOT)}"
+            )
+    for root in scan_roots:
+        paths = root.rglob("*") if root.is_dir() else (root,)
+        for path in paths:
+            if (
+                not path.is_file()
+                or path.is_symlink()
+                or path.suffix not in FALLBACK_SCAN_SUFFIXES
+            ):
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            for token in DELETED_FALLBACK_TOKENS:
+                if token in text:
+                    failures.append(
+                        f"deleted fallback architecture token {token!r} remains in "
+                        f"{path.relative_to(REPO_ROOT)}"
+                    )
+    return failures
+
+
 def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
     failures = _validate(observed, allowlist)
     if failures:
@@ -109,7 +175,6 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
         f"(exact_intrinsics={len(observed['exact_intrinsics'])}, "
         f"registry_files={len(observed['registry_files'])}, "
         f"preamble_files={len(observed['preamble_files'])}, "
-        f"fallback_signature_modules={len(observed['fallback_signature_modules'])}, "
         "retained_direct_dependency_packages="
         f"{len(observed['retained_direct_dependency_packages'])}, "
         f"direct_runtime_roots={len(observed['direct_runtime_roots'])})"
@@ -137,11 +202,6 @@ def _observed_surface() -> dict[str, set[str]]:
             path.relative_to(PREAMBLE_ROOT).as_posix()
             for path in PREAMBLE_ROOT.rglob("*.rs")
         },
-        "fallback_signature_modules": set(
-            RETAINED_SIGNATURE_MODULE_RE.findall(
-                RETAINED_INTRINSICS_LIB_PATH.read_text(encoding="utf-8")
-            )
-        ),
         "retained_direct_dependency_packages": {
             package
             for package in GENERATED_DEPENDENCY_PACKAGE_RE.findall(
@@ -164,7 +224,6 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         "exact_intrinsics": set[str](),
         "registry_files": set[str](),
         "preamble_files": set[str](),
-        "fallback_signature_modules": set[str](),
         "retained_direct_dependency_packages": set[str](),
         "direct_runtime_roots": set[str](),
     }
@@ -173,7 +232,6 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         "exact_intrinsics",
         "registry_files",
         "preamble_files",
-        "fallback_signature_modules",
         "direct_runtime_roots",
     }
 
@@ -337,7 +395,6 @@ def _self_test() -> int:
         "prefix_dispatchers": EXPECTED_PREFIX_DISPATCHERS,
         "registry_files": {"alpha.rs"},
         "preamble_files": {"runtime.rs"},
-        "fallback_signature_modules": {"_sifr.alpha"},
         "retained_direct_dependency_packages": {"alpha-dep"},
         "direct_runtime_roots": {"sifr_runtime::alpha"},
     }
@@ -351,7 +408,6 @@ def _self_test() -> int:
                 "exact_intrinsics": ["alpha"],
                 "registry_files": ["alpha.rs"],
                 "preamble_files": ["runtime.rs"],
-                "fallback_signature_modules": ["_sifr.alpha"],
                 "retained_direct_dependency_packages": ["alpha-dep"],
                 "direct_runtime_roots": ["sifr_runtime::alpha"],
             }
@@ -395,15 +451,6 @@ def _self_test() -> int:
         for failure in _validate(observed, missing_runtime_root)
     ):
         print("self-test missing direct runtime root was not rejected", file=sys.stderr)
-        return 1
-
-    missing_fallback_module = json.loads(json.dumps(allowlist))
-    missing_fallback_module["surface"][0]["fallback_signature_modules"] = []
-    if not any(
-        "fallback_signature_modules missing allowlist entries: _sifr.alpha" in failure
-        for failure in _validate(observed, missing_fallback_module)
-    ):
-        print("self-test missing fallback signature module was not rejected", file=sys.stderr)
         return 1
 
     duplicate = json.loads(json.dumps(allowlist))
@@ -453,7 +500,6 @@ def _self_test() -> int:
         "exact_intrinsics",
         "registry_files",
         "preamble_files",
-        "fallback_signature_modules",
         "retained_direct_dependency_packages",
         "direct_runtime_roots",
     ):
@@ -468,7 +514,6 @@ def _self_test() -> int:
         "exact_intrinsics",
         "registry_files",
         "preamble_files",
-        "fallback_signature_modules",
         "retained_direct_dependency_packages",
         "direct_runtime_roots",
     ):
@@ -492,6 +537,24 @@ def _self_test() -> int:
         "internal_docs/stdlib_native_surface_ownership.toml must remain deleted"
     ]:
         print("self-test restored ownership registry was not rejected", file=sys.stderr)
+        return 1
+
+    self_test_root = REPO_ROOT / "target"
+    self_test_root.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=self_test_root) as tmp:
+        fixture_root = Path(tmp)
+        restored_path = fixture_root / "deleted-crate"
+        restored_path.mkdir()
+        token_path = fixture_root / "Cargo.toml"
+        token_path.write_text("resolve_retained_fallback = true\n", encoding="utf-8")
+        fallback_failures = _deleted_fallback_architecture_failures(
+            (restored_path,), (token_path,)
+        )
+    if not any("deleted fallback architecture path remains" in failure for failure in fallback_failures):
+        print("self-test restored fallback path was not rejected", file=sys.stderr)
+        return 1
+    if not any("resolve_retained_fallback" in failure for failure in fallback_failures):
+        print("self-test restored fallback token was not rejected", file=sys.stderr)
         return 1
 
     print("stdlib native intrinsic allowlist guard self-test: PASS")

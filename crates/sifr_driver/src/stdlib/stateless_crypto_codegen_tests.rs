@@ -58,11 +58,6 @@ fn crypto_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(compiled
         .code
-        .intrinsic_names
-        .get("_sifr.crypto")
-        .is_some_and(std::collections::HashSet::is_empty));
-    assert!(compiled
-        .code
         .transitive_deps
         .get("sifr.hashlib")
         .is_some_and(|deps| deps.contains("_sifr.crypto")));
@@ -76,11 +71,4 @@ fn crypto_private_declarations_codegen_through_sifr_stdlib() {
         .transitive_deps
         .get("sifr.base64")
         .is_some_and(|deps| deps.contains("_sifr.crypto")));
-    assert!(compiled
-        .code
-        .intrinsic_names
-        .get("sifr.random")
-        .is_some_and(|names| {
-            !names.contains("random_int") && !names.contains("random_module_state_words")
-        }));
 }

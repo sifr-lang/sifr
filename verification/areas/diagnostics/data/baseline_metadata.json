@@ -1667,7 +1667,7 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:5943afe62a358e7a36f55eff6879f2bef3623b83e400e723166bd42af7b380c0",
+      "source_hash": "sha256:e6b2fa80a06300c94b3e8ba98256ed4fa42d3542530f60733cec0ef674089882",
       "suite": "baselines"
     },
     {

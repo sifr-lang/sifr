@@ -33,7 +33,6 @@ ALL_SIFR_CRATES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
-    "sifr_retained_intrinsics",
     "sifr_runtime",
     "sifr_source",
     "sifr_stdlib",
@@ -55,7 +54,6 @@ IR_FORBIDDEN_DEPENDENCIES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
-    "sifr_retained_intrinsics",
     "sifr_stdlib",
     "sifr_stdlib_imports",
     "sifr_stdlib_manifest",
@@ -73,7 +71,6 @@ STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr_lsp",
     "sifr_package",
     "sifr_ipc",
-    "sifr_retained_intrinsics",
     "sifr_stdlib_imports",
     "sifr_stdlib_manifest",
 }
@@ -90,7 +87,6 @@ GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr_lowering",
     "sifr_lsp",
     "sifr_package",
-    "sifr_retained_intrinsics",
     "sifr_stdlib_imports",
     "sifr_stdlib_manifest",
     "sifr_syntax",
@@ -139,13 +135,6 @@ RULES = (
         crate="sifr_ipc",
         allowed_normal_dependencies=frozenset({"postcard", "serde"}),
         forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_ipc"}),
-    ),
-    CrateRule(
-        crate="sifr_retained_intrinsics",
-        allowed_normal_dependencies=frozenset({"sifr_type_system"}),
-        forbidden_source_references=frozenset(
-            ALL_SIFR_CRATES - {"sifr_retained_intrinsics", "sifr_type_system"}
-        ),
     ),
     CrateRule(
         crate="sifr_stdlib_imports",
@@ -320,7 +309,6 @@ def seed_valid_repo(root: Path) -> None:
         "sifr_source": ["ruff_text_size"],
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
         "sifr_ipc": ["postcard", "serde"],
-        "sifr_retained_intrinsics": ["sifr_type_system"],
         "sifr_stdlib": ["sifr_runtime"],
         "sifr_stdlib_imports": ["sifr_stdlib_manifest"],
         "sifr_codegen": ["sifr_ir", "sifr_stdlib_manifest"],
@@ -403,24 +391,6 @@ def run_self_test() -> int:
             root / "crates" / "sifr_ipc" / "src" / "lib.rs"
         ).write_text("pub fn leak() { sifr_stdlib_manifest::STDLIB_FEATURE_SPECS; }\n", encoding="utf-8"),
         "sifr_ipc: crates/sifr_ipc/src/lib.rs references sifr_stdlib_manifest",
-        failures,
-    )
-    assert_self_test_case(
-        "sifr_retained_intrinsics compiler dependency",
-        lambda root: write_manifest(
-            root / "crates" / "sifr_retained_intrinsics",
-            "sifr_retained_intrinsics",
-            ["sifr_stdlib_manifest"],
-        ),
-        "sifr_retained_intrinsics: unexpected normal dependency",
-        failures,
-    )
-    assert_self_test_case(
-        "sifr_retained_intrinsics source reference",
-        lambda root: (
-            root / "crates" / "sifr_retained_intrinsics" / "src" / "lib.rs"
-        ).write_text("pub fn leak() { sifr_stdlib_manifest::STDLIB_FEATURE_SPECS; }\n", encoding="utf-8"),
-        "sifr_retained_intrinsics: crates/sifr_retained_intrinsics/src/lib.rs references sifr_stdlib_manifest",
         failures,
     )
     assert_self_test_case(
