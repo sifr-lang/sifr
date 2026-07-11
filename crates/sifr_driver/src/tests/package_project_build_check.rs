@@ -296,6 +296,51 @@ def main():\n    assert parse_json() == 1\n    assert decode_json() == 2\n",
 }
 
 #[test]
+fn package_source_cannot_declare_compiler_intrinsics() {
+    let dir = mktemp_dir("package_compiler_intrinsic_rejected");
+    let mut app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    app.aliases.push(TestAlias {
+        alias: "demo_library".to_string(),
+        dependency: "sifr-demo-library".to_string(),
+        import: "demo_library".to_string(),
+    });
+    let library = production_package(
+        &dir,
+        "sifr-demo-library",
+        "sifr-demo-library",
+        "demo_library",
+    );
+    write_manifest_dependency_alias(&app, "sifr-demo-library", "demo_library");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from demo_library import forbidden\n\ndef main() -> None:\n    forbidden(True)\n",
+    );
+    write_package_source(
+        &library,
+        "__init__.sifr",
+        "@compiler_intrinsic(test_assert_true)\ndef forbidden(value: bool) -> None:\n    ...\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &library],
+        &[package_edge(&app, "sifr-demo-library", &library)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(errors.iter().any(|error| {
+        error.code == DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM.code()
+            && error
+                .message
+                .contains("reserved for canonical public sysroot declarations")
+    }));
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_cached_package_project_materializes_namespace_roots() {
     let dir = mktemp_dir("package_namespace_build");

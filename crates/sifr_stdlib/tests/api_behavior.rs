@@ -5,15 +5,6 @@ fn crate_identity_is_generated_program_stdlib() {
     assert!(sifr_stdlib::feature_contract::leaf_features().contains(&"http"));
 }
 
-#[cfg(feature = "json")]
-#[test]
-fn json_wrapper_shapes_digit_limit_errors() {
-    assert_eq!(sifr_stdlib::json::default_integer_digit_limit(), 4_096);
-    let error = sifr_stdlib::json::validate_integer_digit_limit("{\"n\": 1234}", 3)
-        .expect_err("digit limit should reject a four-digit integer");
-    assert!(error.contains("exceeding limit 3"));
-}
-
 #[cfg(feature = "unicode")]
 #[test]
 fn unicode_wrapper_normalizes_text() {
@@ -26,9 +17,10 @@ fn unicode_wrapper_normalizes_text() {
 #[cfg(feature = "i18n")]
 #[test]
 fn i18n_wrapper_canonicalizes_locale() {
-    let locale = sifr_stdlib::i18n::canonicalize_locale("EN-us").expect("canonical locale");
+    let locale = sifr_stdlib::i18n::i18n_locale_canonicalize("EN-us").expect("canonical locale");
     assert_eq!(locale, "en-US");
-    let formatted = sifr_stdlib::i18n::format_number("en-US", "12345.5").expect("formatted number");
+    let formatted =
+        sifr_stdlib::i18n::i18n_format_number("en-US", "12345.5").expect("formatted number");
     assert!(formatted.contains("12"));
 }
 
@@ -117,7 +109,6 @@ fn url_leaf_matches_public_url_helpers() {
         Some(SifrIntBridge::from(70_000)),
     )
     .is_err());
-    assert_eq!(sifr_stdlib::url::feature_name(), "url");
 }
 
 #[cfg(feature = "html")]
@@ -131,7 +122,6 @@ fn html_leaf_escapes_and_unescapes_common_entities() {
         sifr_stdlib::html::html_unescape("&lt;b&gt;safe &amp; sound&lt;/b&gt;"),
         "<b>safe & sound</b>"
     );
-    assert_eq!(sifr_stdlib::html::feature_name(), "html");
 }
 
 #[cfg(feature = "platform")]
@@ -141,7 +131,6 @@ fn platform_leaf_returns_non_empty_host_strings() {
     assert!(!sifr_stdlib::platform::platform_arch().is_empty());
     assert!(!sifr_stdlib::platform::platform_node().is_empty());
     assert!(!sifr_stdlib::platform::platform_processor().is_empty());
-    assert_eq!(sifr_stdlib::platform::feature_name(), "platform");
 }
 
 #[cfg(feature = "calendar")]
@@ -175,7 +164,6 @@ fn calendar_leaf_matches_gregorian_helpers() {
         .to_i64_saturating();
     assert!((0..=6).contains(&min_weekday));
     assert!((0..=6).contains(&max_weekday));
-    assert_eq!(sifr_stdlib::calendar::feature_name(), "calendar");
 }
 
 #[cfg(feature = "uuid")]
@@ -200,7 +188,6 @@ fn uuid_leaf_matches_public_uuid_helpers() {
         sifr_stdlib::uuid::uuid3_text("not-a-uuid", "python.org"),
         "0421fac3-a9c6-3ea3-aee8-8f20aff3f278"
     );
-    assert_eq!(sifr_stdlib::uuid::feature_name(), "uuid");
 }
 
 #[cfg(feature = "math")]
@@ -237,7 +224,6 @@ fn math_leaf_matches_public_math_helpers() {
         sifr_stdlib::math::isqrt(SifrIntBridge::from(10)),
         SifrIntBridge::from(3)
     );
-    assert_eq!(sifr_stdlib::math::feature_name(), "math");
 }
 
 #[cfg(feature = "hash")]
@@ -260,7 +246,6 @@ fn hash_leaf_matches_known_digest_vectors() {
     assert_eq!(sifr_stdlib::hash::sha512_bytes(b"abc").len(), 64);
     assert_eq!(sifr_stdlib::hash::blake2b_bytes(b"abc").len(), 64);
     assert_eq!(sifr_stdlib::hash::blake2s_bytes(b"abc").len(), 32);
-    assert_eq!(sifr_stdlib::hash::feature_name(), "hash");
 }
 
 #[cfg(feature = "base64")]
@@ -320,7 +305,6 @@ fn base64_leaf_matches_rfc_vectors_and_error_paths() {
         "foo"
     );
     assert!(sifr_stdlib::base64::b32decode("@").is_err());
-    assert_eq!(sifr_stdlib::base64::feature_name(), "base64");
 }
 
 #[cfg(feature = "fs")]
@@ -348,7 +332,6 @@ fn fs_leaf_reads_writes_appends_and_lists_lines() {
         sifr_stdlib::fs::read_lines(&path).expect("read_lines should include appended line"),
         vec!["alpha".to_string(), "beta".to_string(), "gamma".to_string()]
     );
-    assert_eq!(sifr_stdlib::fs::feature_name(), "fs");
 
     std::fs::remove_dir_all(root).expect("test directory should be removed");
 }
@@ -522,7 +505,6 @@ fn regex_leaf_matches_public_re_helpers() {
             .expect("ignorecase")
     );
     assert!(sifr_stdlib::regex::re_match("(", "abc").is_err());
-    assert_eq!(sifr_stdlib::regex::feature_name(), "regex");
 }
 
 #[cfg(feature = "runtime-observability")]
@@ -633,58 +615,4 @@ fn time_leaf_formats_parses_and_reports_bounded_clock_values() {
     assert_eq!(parts, vec![2024, 2, 29, 1, 2, 3, 3, 60]);
     assert_eq!(sifr_stdlib::time::time_gmtime().len(), 8);
     assert_eq!(sifr_stdlib::time::time_localtime().len(), 8);
-    assert_eq!(sifr_stdlib::time::feature_name(), "time");
-}
-
-#[cfg(all(
-    feature = "base64",
-    feature = "calendar",
-    feature = "encoding",
-    feature = "fs",
-    feature = "gzip",
-    feature = "hash",
-    feature = "html",
-    feature = "math",
-    feature = "net",
-    feature = "platform",
-    feature = "process",
-    feature = "python",
-    feature = "random",
-    feature = "regex",
-    feature = "signals",
-    feature = "time",
-    feature = "tls",
-    feature = "toml",
-    feature = "url",
-    feature = "uuid",
-    feature = "zipfile"
-))]
-#[test]
-fn marker_modules_report_leaf_names() {
-    let markers = [
-        sifr_stdlib::base64::feature_name(),
-        sifr_stdlib::calendar::feature_name(),
-        sifr_stdlib::encoding::feature_name(),
-        sifr_stdlib::fs::feature_name(),
-        sifr_stdlib::gzip::feature_name(),
-        sifr_stdlib::hash::feature_name(),
-        sifr_stdlib::html::feature_name(),
-        sifr_stdlib::math::feature_name(),
-        sifr_stdlib::net::feature_name(),
-        sifr_stdlib::platform::feature_name(),
-        sifr_stdlib::process::feature_name(),
-        sifr_stdlib::python::feature_name(),
-        sifr_stdlib::random::feature_name(),
-        sifr_stdlib::regex::feature_name(),
-        sifr_stdlib::signals::feature_name(),
-        sifr_stdlib::time::feature_name(),
-        sifr_stdlib::tls::feature_name(),
-        sifr_stdlib::toml::feature_name(),
-        sifr_stdlib::url::feature_name(),
-        sifr_stdlib::uuid::feature_name(),
-        sifr_stdlib::zipfile::feature_name(),
-    ];
-    for marker in markers {
-        assert!(sifr_stdlib::feature_contract::leaf_features().contains(&marker));
-    }
 }

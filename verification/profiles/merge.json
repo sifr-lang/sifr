@@ -219,7 +219,8 @@
     {
       "area": "sysroot_release",
       "suites": [
-        "host-installed-smoke"
+        "host-installed-smoke",
+        "boundary-equivalence"
       ],
       "resource_classes": [
         "default-local",

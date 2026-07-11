@@ -2,11 +2,6 @@ use sifr_runtime::interop::SifrIntBridge;
 use std::process::Command;
 
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "sys"
-}
-
-#[must_use]
 pub fn env_get(key: &str) -> Option<String> {
     if !is_valid_env_key(key) {
         return None;

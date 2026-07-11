@@ -77,15 +77,6 @@ pub fn json_dump_tokens_web(tokens: &[String]) -> Result<String, JsonIntegerRang
     dump_tokens_with_profile(tokens, JsonIntegerProfile::Web)
 }
 
-pub fn validate_integer_digit_limit(input: &str, limit: usize) -> Result<(), String> {
-    validate_json_integer_digit_limits(input, limit).map_err(|error| error.to_string())
-}
-
-#[must_use]
-pub const fn default_integer_digit_limit() -> usize {
-    DEFAULT_JSON_INTEGER_DIGIT_LIMIT
-}
-
 fn json_decode_error(error: serde_json::Error) -> JsonDecodeBridgeError {
     JsonDecodeBridgeError::new(error.to_string(), error.line(), error.column())
 }

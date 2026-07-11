@@ -1,8 +1,3 @@
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "python"
-}
-
 use sifr_runtime::{
     interop::{IndexMap, SifrIntBridge},
     python,

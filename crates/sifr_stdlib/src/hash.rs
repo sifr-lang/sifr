@@ -1,9 +1,4 @@
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "hash"
-}
-
-#[must_use]
 pub fn sha256(s: &str) -> String {
     hex_digest(sha256_bytes(s.as_bytes()))
 }

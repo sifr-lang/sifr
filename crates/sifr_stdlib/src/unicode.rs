@@ -68,7 +68,7 @@ pub fn graphemes(text: &str) -> Vec<String> {
 }
 
 #[must_use]
-pub fn grapheme_indices(text: &str) -> Vec<(i64, String)> {
+fn grapheme_indices(text: &str) -> Vec<(i64, String)> {
     sifr_runtime::unicode::grapheme_indices(text)
 }
 
@@ -86,7 +86,7 @@ pub fn words(text: &str) -> Vec<String> {
 }
 
 #[must_use]
-pub fn word_boundaries(text: &str) -> Vec<(i64, i64, String)> {
+fn word_boundaries(text: &str) -> Vec<(i64, i64, String)> {
     sifr_runtime::unicode::word_boundaries(text)
 }
 

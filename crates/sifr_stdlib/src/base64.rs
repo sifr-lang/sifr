@@ -2,11 +2,6 @@ use base64::{engine::general_purpose, Engine as _};
 use sifr_runtime::interop::SifrIntBridge;
 use std::collections::HashSet;
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "base64"
-}
-
 pub fn base64_encode(input: &str) -> String {
     general_purpose::STANDARD.encode(input.as_bytes())
 }

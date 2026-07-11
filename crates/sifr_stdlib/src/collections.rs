@@ -1,11 +1,6 @@
 use sifr_runtime::interop::SifrIntBridge;
 
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "collections"
-}
-
-#[must_use]
 pub fn new_set() -> Vec<SifrIntBridge> {
     Vec::new()
 }

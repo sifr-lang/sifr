@@ -1,10 +1,5 @@
 use sifr_runtime::interop::SifrIntBridge;
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "math"
-}
-
 macro_rules! unary_float {
     ($name:ident, $method:ident) => {
         #[must_use]

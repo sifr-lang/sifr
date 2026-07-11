@@ -1,9 +1,4 @@
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "bytes"
-}
-
-#[must_use]
 pub fn encode_utf8(s: &str) -> Vec<u8> {
     s.as_bytes().to_vec()
 }

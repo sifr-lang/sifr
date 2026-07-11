@@ -2,11 +2,6 @@ use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use zip_8_6::{write::SimpleFileOptions, ZipArchive, ZipWriter};
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "zipfile"
-}
-
 pub fn zip_create(path: &str) -> Result<(), std::io::Error> {
     let file = File::create(path)?;
     ZipWriter::new(file).finish().map_err(zip_error)?;

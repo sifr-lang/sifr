@@ -1,8 +1,3 @@
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "regex"
-}
-
 use sifr_runtime::interop::SifrIntBridge;
 
 pub fn re_match(pattern: &str, text: &str) -> Result<bool, regex::Error> {

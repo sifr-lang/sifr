@@ -23,11 +23,6 @@ static FILE_HANDLES: LazyLock<Mutex<HashMap<String, FileHandleEntry>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 static NEXT_FILE_HANDLE_ID: AtomicU64 = AtomicU64::new(1);
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "fs"
-}
-
 pub fn read_text(path: &str) -> Result<String, std::io::Error> {
     fs::read_to_string(path)
 }

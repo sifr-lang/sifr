@@ -1,11 +1,6 @@
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use std::io::{Read, Write};
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "gzip"
-}
-
 pub fn gzip_compress_bytes(data: &str) -> Vec<u8> {
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
     // GzEncoder<Vec<u8>> has no external IO sink; preserve the historical

@@ -10,11 +10,6 @@ fn bridge_i64(value: &SifrIntBridge, name: &str) -> Result<i64, String> {
         .map_err(|error| format!("{name} must fit in i64: {error}"))
 }
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "tls"
-}
-
 pub fn tls_client_config_platform(alpn_protocols: &[Vec<u8>]) -> Result<SifrIntBridge, String> {
     sifr_runtime::tls::client_config_platform(alpn_protocols.to_vec()).map(Into::into)
 }

@@ -11,6 +11,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -19,6 +20,15 @@ AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 HEAVY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_heavy_release_smoke.sifr"
 COMPILE_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_compile_release_smoke.sifr"
+BOUNDARY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_boundary_recertification.sifr"
+BOUNDARY_DEPENDENCY_SNAPSHOT_PATH = (
+    REPO_ROOT
+    / "verification"
+    / "areas"
+    / "stdlib_parity"
+    / "data"
+    / "stdlib_compiler_boundary_dependency_snapshot.json"
+)
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "sysroot-release-results.json"
 ACTUAL_ROOT = REPO_ROOT / "target" / "verification" / "actual" / "sysroot_release"
 RELEASE_VERSION = "0.1.0-beta.1300"
@@ -92,7 +102,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def select_suites(requested: set[str]) -> list[str]:
-    available = {"host-installed-smoke", "host-installed-stdlib-heavy", "path-leakage-self-test"}
+    available = {
+        "boundary-equivalence",
+        "host-installed-smoke",
+        "host-installed-stdlib-heavy",
+        "path-leakage-self-test",
+    }
     if requested:
         missing = sorted(requested.difference(available))
         if missing:
@@ -105,6 +120,8 @@ def run_suite(suite: str) -> dict[str, Any]:
     started = time.perf_counter()
     if suite == "path-leakage-self-test":
         status, mismatches = run_path_leakage_self_test()
+    elif suite == "boundary-equivalence":
+        status, mismatches = run_boundary_equivalence()
     elif suite == "host-installed-stdlib-heavy":
         status, mismatches = run_host_installed_stdlib_heavy()
     else:
@@ -152,6 +169,100 @@ def run_path_leakage_self_test() -> tuple[int, list[str]]:
         env=base_env(),
     )
     return result.returncode, [] if result.returncode == 0 else [result.summary()]
+
+
+def run_boundary_equivalence() -> tuple[int, list[str]]:
+    try:
+        host = host_triple()
+        archive_path = archive_for_host(host)
+        source_sifr = build_source_sifr()
+        with tempfile.TemporaryDirectory(prefix="sifr-boundary-cert.") as temp:
+            temp_root = Path(temp)
+            install_root = temp_root / "install"
+            work_root = temp_root / "outside-repo"
+            installed_output = temp_root / "installed-output"
+            source_output = temp_root / "source-output"
+            extract_archive(archive_path, install_root)
+            work_root.mkdir()
+            fixture = work_root / BOUNDARY_FIXTURE_PATH.name
+            fixture.write_text(BOUNDARY_FIXTURE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+            installed_sifr = install_root / "bin" / "sifr"
+
+            for label, compiler, output, extra in (
+                ("installed", installed_sifr, installed_output, []),
+                ("source-tree", source_sifr, source_output, ["--sysroot", str(REPO_ROOT)]),
+            ):
+                env = installed_env(temp_root)
+                probe_cache = temp_root / "probe-cache" / label
+                probe_cache.mkdir(parents=True)
+                env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache)
+                run_checked(
+                    [str(compiler), *extra, "build", str(fixture), "-o", str(output), "--quiet"],
+                    cwd=work_root,
+                    env=env,
+                    label=f"{label} boundary build",
+                    timeout=1200,
+                )
+                binary = output / "sifr_output" / "target" / "release" / "sifr_output"
+                result = run_checked(
+                    [str(binary)], cwd=work_root, env=env, label=f"{label} boundary run"
+                )
+                if "stdlib boundary recertification: pass" not in result.stdout:
+                    return 1, [f"{label} boundary fixture did not execute successfully"]
+
+            installed_shape = cargo_dependency_shape(
+                installed_output / "sifr_output" / "Cargo.toml"
+            )
+            source_shape = cargo_dependency_shape(source_output / "sifr_output" / "Cargo.toml")
+            if installed_shape != source_shape:
+                return 1, [
+                    "source-tree and installed dependency plans differ: "
+                    f"source={source_shape!r} installed={installed_shape!r}"
+                ]
+            snapshot = json.loads(
+                BOUNDARY_DEPENDENCY_SNAPSHOT_PATH.read_text(encoding="utf-8")
+            )
+            expected_shape = snapshot.get("dependency_shape")
+            if source_shape != expected_shape:
+                return 1, [
+                    "boundary dependency plan differs from the reviewed snapshot: "
+                    f"observed={source_shape!r} expected={expected_shape!r}"
+                ]
+    except CertificationError as error:
+        return 1, [str(error)]
+    return 0, []
+
+
+def build_source_sifr() -> Path:
+    target = REPO_ROOT / "target" / "sysroot_release" / "source-cargo-target"
+    env = base_env()
+    env["CARGO_TARGET_DIR"] = str(target)
+    run_checked(
+        ["cargo", "build", "-p", "sifr"],
+        cwd=REPO_ROOT,
+        env=env,
+        label="build source-tree compiler",
+        timeout=900,
+    )
+    binary = target / "debug" / "sifr"
+    if not binary.is_file():
+        raise CertificationError(f"source-tree compiler was not produced: {binary}")
+    return binary
+
+
+def cargo_dependency_shape(manifest_path: Path) -> dict[str, Any]:
+    manifest = tomllib.loads(manifest_path.read_text(encoding="utf-8"))
+    dependencies = manifest.get("dependencies", {})
+    shape: dict[str, Any] = {}
+    for package, spec in sorted(dependencies.items()):
+        if not isinstance(spec, dict):
+            shape[package] = spec
+            continue
+        normalized = {key: value for key, value in spec.items() if key != "path"}
+        if "path" in spec:
+            normalized["sysroot-crate"] = Path(str(spec["path"])).name
+        shape[package] = normalized
+    return shape
 
 
 def run_host_installed_smoke() -> tuple[int, list[str]]:

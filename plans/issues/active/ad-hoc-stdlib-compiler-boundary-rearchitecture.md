@@ -36,7 +36,9 @@ fixtures at 31,402 ms / 600,000 ms. Two Claude Opus review rounds were
 satisfied; the final round confirmed restored nested structured-intrinsic
 coverage with retained IDs.
 M5 deletes the fallback-signature crate and every missing-declaration recovery
-path and is merged in [PR #2925](https://github.com/sifr-lang/sifr/pull/2925). Compiled
+path and is merged in [PR #2925](https://github.com/sifr-lang/sifr/pull/2925),
+with its closure record merged in
+[PR #2926](https://github.com/sifr-lang/sifr/pull/2926). Compiled
 private declarations and typed HIR are now the sole signature authority, with
 permanent guards rejecting restoration of the crate, APIs, placeholders,
 configuration, or manifest schema. The create-PR gate passed with crate tests
@@ -44,6 +46,19 @@ at 163,565 ms / 600,000 ms, runtime-platform suites at
 56,958 ms / 120,000 ms, and 130/130 selected E2E fixtures at
 383,025 ms / 600,000 ms. Two Claude Opus review rounds ended `SATISFIED`; the
 complete second review reported no findings.
+
+M6 implementation is published in
+[PR #2927](https://github.com/sifr-lang/sifr/pull/2927) and has completed local
+recertification. The permanent
+guards classify `403` public native adapters as `399` active private-declaration
+targets plus four documented compiler substrates; compare all retained source,
+HIR, dispatch, lowering, codegen, and dependency-feature representations
+exactly; and reject the required negative restorations. The installed and
+source-tree boundary fixture passes with identical behavior and the reviewed
+`sifr_stdlib[bytes]` generated dependency plan. The create-PR gate passes, and
+two Claude Opus milestone review rounds ended `SATISFIED`; the second reported
+no blockers or optional cleanups. PR merge, the final merge gate, and the
+phase-wide closeout review remain.
 
 ## Why This Phase Exists
 

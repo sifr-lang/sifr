@@ -353,6 +353,10 @@ class ProfileRunner:
         run_python("scripts/check_stdlib_native_intrinsic_allowlist.py")
         run_python("scripts/check_stdlib_native_intrinsic_allowlist.py", "--self-test")
 
+        print("Running stdlib native adapter reachability guard")
+        run_python("scripts/check_stdlib_native_adapter_reachability.py")
+        run_python("scripts/check_stdlib_native_adapter_reachability.py", "--self-test")
+
         print("Running stdlib retained manifest schema guard")
         run_python("scripts/check_stdlib_manifest_schema.py")
         run_python("scripts/check_stdlib_manifest_schema.py", "--self-test")

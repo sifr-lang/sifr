@@ -1,0 +1,25 @@
+# Public callable adapters in sifr_stdlib that are intentionally consumed by
+# compiler-generated Rust rather than by a private stdlib @rust declaration.
+# Every other statically declared public callable must be an active @rust target.
+
+schema_version = 1
+
+[[substrate]]
+adapter = "process.process_child_close"
+reason = "Generated resource Drop glue closes process-child handles even when user code does not call an explicit close declaration."
+consumer_files = ["crates/sifr_codegen/src/class_emitter.rs"]
+
+[[substrate]]
+adapter = "process.process_async_register_scoped_child"
+reason = "Generated task-scope glue registers an async child with compiler-owned observation state."
+consumer_files = ["crates/sifr_codegen/src/preamble/task_scope_offload_runtime.rs"]
+
+[[substrate]]
+adapter = "process.process_async_take_child"
+reason = "Generated task-scope glue takes ownership of a registered async child before awaiting it."
+consumer_files = ["crates/sifr_codegen/src/preamble/task_scope_offload_runtime.rs"]
+
+[[substrate]]
+adapter = "process.process_async_remove_observed"
+reason = "Generated task-scope cleanup removes completed child-observation state."
+consumer_files = ["crates/sifr_codegen/src/preamble/task_scope_offload_runtime.rs"]

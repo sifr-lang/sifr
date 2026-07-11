@@ -1,9 +1,4 @@
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "platform"
-}
-
-#[must_use]
 pub fn platform_system() -> String {
     if cfg!(target_os = "windows") {
         "Windows".to_string()

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "fixture": "verification/areas/sysroot_release/fixtures/stdlib_boundary_recertification.sifr",
+  "dependency_shape": {
+    "sifr_runtime": {
+      "default-features": false,
+      "sysroot-crate": "sifr_runtime"
+    },
+    "sifr_stdlib": {
+      "default-features": false,
+      "features": [
+        "bytes"
+      ],
+      "sysroot-crate": "sifr_stdlib"
+    }
+  }
+}

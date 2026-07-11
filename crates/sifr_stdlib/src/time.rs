@@ -9,11 +9,6 @@ use sifr_runtime::interop::SifrIntBridge;
 static MONOTONIC_START: LazyLock<Instant> = LazyLock::new(Instant::now);
 
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "time"
-}
-
-#[must_use]
 pub fn time_now() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

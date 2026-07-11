@@ -1,10 +1,5 @@
 use sifr_runtime::interop::SifrIntBridge;
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "i18n"
-}
-
 pub fn i18n_locale_canonicalize(locale: &str) -> Result<String, String> {
     sifr_runtime::i18n::canonicalize_locale(locale)
 }
@@ -107,21 +102,12 @@ pub fn i18n_mo_lookup_context_plural(
     )
 }
 
-pub fn canonicalize_locale(locale: &str) -> Result<String, String> {
-    i18n_locale_canonicalize(locale)
-}
-
-pub fn format_number(locale: &str, value: &str) -> Result<String, String> {
-    i18n_format_number(locale, value)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn i18n_adapter_delegates_locale_and_formatting_surface() {
-        assert_eq!(feature_name(), "i18n");
         assert_eq!(i18n_locale_canonicalize("EN-us").unwrap(), "en-US");
         assert_eq!(i18n_locale_maximize("zh-CN").unwrap(), "zh-Hans-CN");
         assert_eq!(i18n_locale_minimize("zh-Hans-CN").unwrap(), "zh");

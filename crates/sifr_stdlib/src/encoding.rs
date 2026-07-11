@@ -1,11 +1,6 @@
 //! Text encoding adapters for generated Sifr programs.
 
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "encoding"
-}
-
-#[must_use]
 pub fn encoding_is_supported(label: &str) -> bool {
     sifr_runtime::encoding::is_supported_encoding(label)
 }
@@ -87,7 +82,6 @@ mod tests {
 
     #[test]
     fn encoding_adapter_delegates_text_codec_behavior() {
-        assert_eq!(feature_name(), "encoding");
         assert!(encoding_is_supported("utf_8"));
         assert_eq!(encoding_canonical_label("cp1252").unwrap(), "windows-1252");
 

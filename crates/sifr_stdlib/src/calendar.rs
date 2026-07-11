@@ -1,11 +1,6 @@
 use sifr_runtime::interop::SifrIntBridge;
 
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "calendar"
-}
-
-#[must_use]
 pub fn calendar_isleap(year: SifrIntBridge) -> bool {
     let year = year.to_i64_saturating();
     is_leap_year_i64(year)
