@@ -1,8 +1,3 @@
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "toml"
-}
-
 const TOML_MAX_BYTES: usize = 1024 * 1024;
 const TOML_MAX_DEPTH: usize = 128;
 const TOML_MAX_TOKENS: usize = 100_000;

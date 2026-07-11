@@ -624,9 +624,8 @@ does not enable unrelated capability groups.
 
 ### Compiler Manifest and IPC Split
 
-The current `sifr_stdlib_manifest` crate is transitional. Its final shape is not a
-compiler-side behavior model for the standard library; it is a manifest and
-sysroot planning layer.
+`sifr_stdlib_manifest` is the final manifest and sysroot-planning layer, not a
+compiler-side behavior model for the standard library.
 
 The final manifest layer is `sifr_stdlib_manifest`. It owns:
 
@@ -650,6 +649,13 @@ Legacy and bare stdlib import suggestion policy lives in `sifr_stdlib_imports`.
 It may query manifest inventory data, but the manifest does not own rendered
 diagnostic policy. Private declaration source and typed HIR are the sole
 signature authority; compiler-side fallback signature tables no longer exist.
+
+The retained-glue manifest records exact compiler ownership: source-declared
+intrinsic identities, typed-HIR/dispatch identities, lowering files, codegen
+files, registry files, preamble files, and retained direct dependency features.
+The native-intrinsic guard compares every representation exactly and rejects
+missing or extra ownership, including a dependency feature without a live
+typed-intrinsic codegen requirement.
 
 IPC schema, frame encoding, transport, request tracking, and handshake metadata
 do not belong in the stdlib manifest. They live in the small `sifr_ipc` crate
@@ -856,6 +862,14 @@ allowlisted retained runtime/resource glue. Completed native stdlib leaves must
 route through private declarations and Rust interop, and the migration closure
 guard fails if those retired intrinsic names reappear in the active dispatcher.
 
+Every statically declared public callable adapter in `sifr_stdlib` is either an
+active `@rust(sifr_stdlib.*)` target or one of the four compiler-consumed
+cross-module process substrates in
+`internal_docs/stdlib_native_adapter_reachability.toml`. The reachability guard
+rejects unowned public adapters, stale substrate rows, and missing compiler
+consumers. Test-only feature markers and internal validation helpers are
+private; they are not part of the generated-program adapter surface.
+
 Direct generated calls to `sifr_runtime::*` are permitted only for language,
 bridge, entrypoint, exact-int, test-harness, or retained-by-design runtime
 substrate glue. A codegen path that emits a direct `sifr_runtime::*` call for
@@ -879,8 +893,8 @@ struct StdlibRustSource {
 }
 ```
 
-`StdlibCode.module_rust_code` should carry `StdlibRustSource` values rather than
-plain strings once provenance hardening lands. `source_path` is normalized to a
+`StdlibCode.module_rust_code` carries `StdlibRustSource` values rather than
+plain strings. `source_path` is normalized to a
 canonical sysroot-relative path form used by manifest `declaration_files`, and
 `source_sha256` is computed from the checked source content that produced the
 Rust payload. The guard cross-checks generated stdlib Rust provenance against
@@ -898,9 +912,16 @@ runtime evidence recorded by the Rust interop matrix. The narrow
 `opaque_resource_matrix` row for package ecosystem resources remains
 future-owned by separate certification work.
 The stdlib native intrinsic allowlist guard is also part of core validation:
-it freezes every retained compiler intrinsic name, registry file, preamble file,
-retained direct dependency package, and direct `sifr_runtime::<root>`
-generated-code reference to the final retained-by-design manifest.
+it freezes every retained compiler intrinsic identity and its source,
+lowering, dispatch, registry, preamble, codegen, dependency-feature, and direct
+`sifr_runtime::<root>` ownership to the final retained-by-design manifest.
+
+Release certification compiles and runs the same representative program with
+the source-tree compiler/sysroot and an extracted installed sysroot. The
+program crosses retained typed intrinsics and migrated private Rust bridges;
+the certification requires identical behavior and normalized generated Cargo
+dependency plans, with the latter checked against the reviewed boundary
+snapshot.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
 compiler-owned sysroot trust policy. A canonical private `_sifr.*` declaration

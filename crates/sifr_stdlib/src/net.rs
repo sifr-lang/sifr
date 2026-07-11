@@ -10,11 +10,6 @@ fn bridge_i64(value: &SifrIntBridge, name: &str) -> Result<i64, String> {
         .map_err(|error| format!("{name} must fit in i64: {error}"))
 }
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "net"
-}
-
 pub fn net_connect_tcp(
     address: &str,
     timeout_seconds: f64,

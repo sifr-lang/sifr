@@ -1,8 +1,3 @@
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "url"
-}
-
 use sifr_runtime::interop::SifrIntBridge;
 
 const URL_MAX_BYTES: usize = 64 * 1024;

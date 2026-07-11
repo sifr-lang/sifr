@@ -22,6 +22,9 @@ registry_files = [
   "file_handles.rs",
   "open_text_handles.rs",
 ]
+lowering_files = [
+  "crates/sifr_lowering/src/lower/expressions/call_shadowable_builtins.rs",
+]
 preamble_files = ["io_bytes_methods.rs"]
 exact_intrinsics = [
   "open_binary",
@@ -37,6 +40,15 @@ evidence_links = ["stdlib-native-boundary-completion"]
 declaration_files = ["stdlib/sifr/test.sifr"]
 reason = "Seven public Sifr test declarations carry explicit typed compiler identities so assertion expansion retains caller-local values and source ranges without emitting placeholder bodies."
 registry_files = ["test.rs"]
+source_declared_intrinsics = [
+  "test_assert_almost_equal",
+  "test_assert_equal",
+  "test_assert_false",
+  "test_assert_greater_than",
+  "test_assert_less_than",
+  "test_assert_not_equal",
+  "test_assert_true",
+]
 exact_intrinsics = [
   "test_assert_almost_equal",
   "test_assert_equal",
@@ -66,6 +78,12 @@ evidence_links = ["stdlib-native-boundary-completion"]
 declaration_files = ["stdlib/_sifr/encoding.sifr"]
 reason = "UTF-8 encode/decode result glue is tied to first-class bytes/string wrapper behavior and shared runtime error shaping."
 registry_files = ["encoding.rs"]
+lowering_files = [
+  "crates/sifr_lowering/src/lower/expressions/methods_lambdas_and_comprehensions.rs",
+]
+codegen_files = [
+  "crates/sifr_codegen/src/intrinsics/registry/requirements.rs",
+]
 exact_intrinsics = [
   "bytes_decode",
   "bytes_decode_with_encoding",
@@ -82,6 +100,10 @@ evidence_links = ["stdlib-native-boundary-completion"]
 declaration_files = ["stdlib/_sifr/bytes.sifr"]
 reason = "Public checked sifr.bytes wrapper bodies route bytes.from_hex, bytes.from_ints, and bytes(size) to primitive compiler-language construction HIR. Strict hex formatting routes separately through the checked _sifr.bytes Rust bridge declaration."
 registry_files = ["bytes.rs"]
+lowering_files = [
+  "crates/sifr_lowering/src/lower/builtin_calls/bytes_len_range.rs",
+  "crates/sifr_lowering/src/lower/builtin_calls/constructors.rs",
+]
 exact_intrinsics = [
   "bytes_from_hex",
   "bytes_from_integers",
@@ -106,6 +128,26 @@ preamble_files = [
   "task_scope_offload_runtime.rs",
 ]
 exact_intrinsics = ["task_current_context"]
+source_declared_intrinsics = ["task_current_context"]
+
+[[surface]]
+id = "typed-intrinsic-dispatch-core"
+state = "retained-by-design"
+owner = "stdlib-native-boundary-completion"
+issue = "stdlib-native-boundary-completion"
+evidence_links = ["stdlib-native-boundary-completion"]
+reason = "Typed compiler identity transport and dispatch are shared language glue; these files may carry CompilerIntrinsicId but may not infer identity from callable names."
+lowering_files = [
+  "crates/sifr_lowering/src/lower/compiler_intrinsics.rs",
+  "crates/sifr_lowering/src/lower/external_defs.rs",
+  "crates/sifr_lowering/src/lower/imported_defaults.rs",
+  "crates/sifr_lowering/src/lower/mod_context.rs",
+]
+codegen_files = [
+  "crates/sifr_codegen/src/intrinsic_method_emitters/builtin_core_methods.rs",
+  "crates/sifr_codegen/src/intrinsic_method_emitters/literal_and_intrinsic_exprs.rs",
+  "crates/sifr_codegen/src/intrinsics/registry.rs",
+]
 
 [[surface]]
 id = "generated-feature-planning-glue"
@@ -122,6 +164,14 @@ retained_direct_dependency_packages = [
   "rayon",
   "rust_decimal",
   "tokio",
+]
+retained_direct_dependency_features = [
+  "bigdecimal=bigdecimal",
+  "num-bigint=num-bigint",
+  "num-traits=num-traits",
+  "rayon=rayon",
+  "rust_decimal=rust_decimal",
+  "tokio=tokio",
 ]
 
 [[surface]]

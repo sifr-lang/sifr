@@ -28,8 +28,12 @@ ALLOWED_SURFACE_FIELDS = {
     "reason",
     "registry_files",
     "preamble_files",
+    "lowering_files",
+    "codegen_files",
+    "source_declared_intrinsics",
     "exact_intrinsics",
     "retained_direct_dependency_packages",
+    "retained_direct_dependency_features",
     "direct_runtime_roots",
 }
 REQUIRED_SURFACE_STATES = {
@@ -119,8 +123,12 @@ def _validate(manifest: dict[str, Any]) -> list[str]:
             "certification_rows",
             "registry_files",
             "preamble_files",
+            "lowering_files",
+            "codegen_files",
+            "source_declared_intrinsics",
             "exact_intrinsics",
             "retained_direct_dependency_packages",
+            "retained_direct_dependency_features",
             "direct_runtime_roots",
         ):
             _optional_string_list(failures, surface, key, context)
@@ -130,8 +138,12 @@ def _validate(manifest: dict[str, Any]) -> list[str]:
             for key in (
                 "registry_files",
                 "preamble_files",
+                "lowering_files",
+                "codegen_files",
+                "source_declared_intrinsics",
                 "exact_intrinsics",
                 "retained_direct_dependency_packages",
+                "retained_direct_dependency_features",
                 "direct_runtime_roots",
             )
         )

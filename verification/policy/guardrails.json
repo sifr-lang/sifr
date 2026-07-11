@@ -58,6 +58,13 @@
       "report": "stdout"
     },
     {
+      "name": "stdlib-native-adapter-reachability",
+      "entrypoint": "scripts/check_stdlib_native_adapter_reachability.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
       "name": "stdlib-manifest-schema",
       "entrypoint": "scripts/check_stdlib_manifest_schema.py",
       "args": [],

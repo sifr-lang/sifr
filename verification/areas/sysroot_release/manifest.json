@@ -38,6 +38,26 @@
   ],
   "suites": [
     {
+      "name": "boundary-equivalence",
+      "kind": "adapter",
+      "resource_classes": [
+        "default-local",
+        "platform-specific",
+        "long-running"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 2400,
+      "cases": [
+        {
+          "id": "source-installed-boundary-equivalence",
+          "entry": "verification/areas/sysroot_release/runner.py",
+          "command": "sysroot-release-boundary-equivalence",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "host-installed-smoke",
       "kind": "adapter",
       "resource_classes": [

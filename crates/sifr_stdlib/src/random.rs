@@ -9,11 +9,6 @@ use sifr_runtime::interop::SifrIntBridge;
 static RANDOM_MODULE_STATE: LazyLock<Mutex<RandomModuleState>> =
     LazyLock::new(|| Mutex::new(RandomModuleState::default()));
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "random"
-}
-
 #[derive(Clone)]
 struct RandomModuleState {
     words: Vec<SifrIntBridge>,

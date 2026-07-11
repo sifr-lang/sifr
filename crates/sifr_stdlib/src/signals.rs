@@ -4,11 +4,6 @@ use sifr_runtime::interop::SifrIntBridge;
 
 type SignalFuture = Pin<Box<dyn Future<Output = Result<SifrIntBridge, String>> + Send>>;
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "signals"
-}
-
 pub fn signal_ctrl_c() -> SignalFuture {
     Box::pin(async move {
         tokio::signal::ctrl_c()

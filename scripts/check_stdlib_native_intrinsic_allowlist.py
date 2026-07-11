@@ -18,8 +18,11 @@ REGISTRY_DISPATCH_PATH = (
     REPO_ROOT / "crates" / "sifr_codegen" / "src" / "intrinsics" / "registry.rs"
 )
 HIR_NODES_PATH = REPO_ROOT / "crates" / "sifr_ir" / "src" / "hir_nodes.rs"
+LOWERING_ROOT = REPO_ROOT / "crates" / "sifr_lowering" / "src"
 PREAMBLE_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "preamble"
 CODEGEN_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src"
+STDLIB_SOURCE_ROOT = REPO_ROOT / "stdlib"
+STDLIB_FEATURES_PATH = REPO_ROOT / "crates" / "sifr_stdlib_manifest" / "src" / "features.rs"
 DEPENDENCY_PLAN_RS_PATH = (
     REPO_ROOT
     / "crates"
@@ -31,9 +34,19 @@ DEPENDENCY_PLAN_RS_PATH = (
 DELETED_OWNERSHIP_REGISTRY = REPO_ROOT / "internal_docs" / "stdlib_native_surface_ownership.toml"
 ARCH_DOC_PATH = REPO_ROOT / "internal_docs" / "sifr_sysroot_and_stdlib_architecture.md"
 
-TYPED_INTRINSIC_NAME_RE = re.compile(
-    r'Self::[A-Za-z0-9_]+\s*=>\s*"([A-Za-z0-9_]+)"'
+TYPED_INTRINSIC_PAIR_RE = re.compile(
+    r'Self::([A-Za-z0-9_]+)\s*=>\s*"([A-Za-z0-9_]+)"'
 )
+DISPATCH_INTRINSIC_VARIANT_RE = re.compile(r"CompilerIntrinsicId::([A-Za-z0-9_]+)\s*=>")
+SOURCE_INTRINSIC_RE = re.compile(r"@compiler_intrinsic\(([A-Za-z0-9_]+)\)")
+STDLIB_FEATURE_PAIR_RE = re.compile(
+    r'Self::([A-Za-z0-9_]+)\s*=>\s*"([A-Za-z0-9_-]+)"'
+)
+DEPENDENCY_FEATURE_RE = re.compile(
+    r'StdlibFeature::([A-Za-z0-9_]+)\s*=>\s*(?:\{\s*)?&\["([A-Za-z0-9_-]+)\s+=',
+    re.DOTALL,
+)
+CODEGEN_FEATURE_RE = re.compile(r"StdlibFeature::([A-Za-z0-9_]+)")
 LOWERER_MATCH_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
 GENERATED_DEPENDENCY_PACKAGE_RE = re.compile(r'"([A-Za-z0-9_-]+)\s+=')
@@ -175,6 +188,8 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
         f"(exact_intrinsics={len(observed['exact_intrinsics'])}, "
         f"registry_files={len(observed['registry_files'])}, "
         f"preamble_files={len(observed['preamble_files'])}, "
+        f"lowering_files={len(observed['lowering_files'])}, "
+        f"codegen_files={len(observed['codegen_files'])}, "
         "retained_direct_dependency_packages="
         f"{len(observed['retained_direct_dependency_packages'])}, "
         f"direct_runtime_roots={len(observed['direct_runtime_roots'])})"
@@ -184,15 +199,27 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
 
 def _observed_surface() -> dict[str, set[str]]:
     registry_text = REGISTRY_DISPATCH_PATH.read_text(encoding="utf-8")
-    exact_intrinsics = set(
-        TYPED_INTRINSIC_NAME_RE.findall(HIR_NODES_PATH.read_text(encoding="utf-8"))
+    typed_pairs = dict(
+        TYPED_INTRINSIC_PAIR_RE.findall(HIR_NODES_PATH.read_text(encoding="utf-8"))
     )
+    exact_intrinsics = set(typed_pairs.values())
     for lowerer_path in PREFIX_DISPATCH_LOWERERS:
         exact_intrinsics.update(
             LOWERER_MATCH_INTRINSIC_RE.findall(lowerer_path.read_text(encoding="utf-8"))
         )
     return {
         "exact_intrinsics": exact_intrinsics,
+        "dispatch_intrinsics": {
+            typed_pairs[variant]
+            for variant in DISPATCH_INTRINSIC_VARIANT_RE.findall(registry_text)
+            if variant in typed_pairs
+        },
+        "unmapped_dispatch_variants": {
+            variant
+            for variant in DISPATCH_INTRINSIC_VARIANT_RE.findall(registry_text)
+            if variant not in typed_pairs
+        },
+        "source_declared_intrinsics": _source_declared_intrinsics(),
         "prefix_dispatchers": set(PREFIX_INTRINSIC_RE.findall(registry_text)),
         "registry_files": {
             path.relative_to(REGISTRY_ROOT).as_posix()
@@ -202,13 +229,66 @@ def _observed_surface() -> dict[str, set[str]]:
             path.relative_to(PREAMBLE_ROOT).as_posix()
             for path in PREAMBLE_ROOT.rglob("*.rs")
         },
+        "lowering_files": _compiler_intrinsic_files(LOWERING_ROOT),
+        "codegen_files": _compiler_intrinsic_files(CODEGEN_ROOT),
         "retained_direct_dependency_packages": {
             package
             for package in GENERATED_DEPENDENCY_PACKAGE_RE.findall(
                 _non_test_dependency_plan_text()
             )
         },
+        "retained_direct_dependency_features": _retained_dependency_feature_mappings(),
+        "orphan_retained_dependency_features": _orphan_retained_dependency_features(),
         "direct_runtime_roots": _direct_runtime_roots(),
+    }
+
+
+def _source_declared_intrinsics() -> set[str]:
+    declared: set[str] = set()
+    for path in STDLIB_SOURCE_ROOT.rglob("*.sifr"):
+        declared.update(SOURCE_INTRINSIC_RE.findall(path.read_text(encoding="utf-8")))
+    return declared
+
+
+def _compiler_intrinsic_files(root: Path) -> set[str]:
+    files = set()
+    for path in root.rglob("*.rs"):
+        relative = path.relative_to(root).as_posix()
+        if _is_test_source(relative):
+            continue
+        if "CompilerIntrinsicId" in path.read_text(encoding="utf-8"):
+            files.add(path.relative_to(REPO_ROOT).as_posix())
+    return files
+
+
+def _feature_variant_ids() -> dict[str, str]:
+    return dict(STDLIB_FEATURE_PAIR_RE.findall(STDLIB_FEATURES_PATH.read_text(encoding="utf-8")))
+
+
+def _retained_dependency_pairs() -> set[tuple[str, str]]:
+    return set(DEPENDENCY_FEATURE_RE.findall(_non_test_dependency_plan_text()))
+
+
+def _retained_dependency_feature_mappings() -> set[str]:
+    feature_ids = _feature_variant_ids()
+    return {
+        f"{package}={feature_ids[variant]}"
+        for variant, package in _retained_dependency_pairs()
+        if variant in feature_ids
+    }
+
+
+def _orphan_retained_dependency_features() -> set[str]:
+    live_variants: set[str] = set()
+    for path in CODEGEN_ROOT.rglob("*.rs"):
+        relative = path.relative_to(CODEGEN_ROOT).as_posix()
+        if _is_test_source(relative):
+            continue
+        live_variants.update(CODEGEN_FEATURE_RE.findall(path.read_text(encoding="utf-8")))
+    return {
+        variant
+        for variant, _package in _retained_dependency_pairs()
+        if variant not in live_variants
     }
 
 
@@ -222,16 +302,24 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
     failures: list[str] = []
     allowed = {
         "exact_intrinsics": set[str](),
+        "source_declared_intrinsics": set[str](),
         "registry_files": set[str](),
         "preamble_files": set[str](),
+        "lowering_files": set[str](),
+        "codegen_files": set[str](),
         "retained_direct_dependency_packages": set[str](),
+        "retained_direct_dependency_features": set[str](),
         "direct_runtime_roots": set[str](),
     }
     owners: dict[tuple[str, str], str] = {}
     unique_owner_keys = {
         "exact_intrinsics",
+        "source_declared_intrinsics",
         "registry_files",
         "preamble_files",
+        "lowering_files",
+        "codegen_files",
+        "retained_direct_dependency_features",
         "direct_runtime_roots",
     }
 
@@ -299,6 +387,29 @@ def _validate(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> list[
         failures.append(
             "expected prefix dispatchers are missing from registry.rs: "
             + ", ".join(stale_prefixes)
+        )
+
+    _compare_sets(
+        failures,
+        "typed dispatch intrinsics",
+        observed.get("dispatch_intrinsics", set()),
+        observed.get("exact_intrinsics", set()),
+    )
+    unmapped_dispatch_variants = sorted(
+        observed.get("unmapped_dispatch_variants", set())
+    )
+    if unmapped_dispatch_variants:
+        failures.append(
+            "dispatch variants missing typed declaration names: "
+            + ", ".join(unmapped_dispatch_variants)
+        )
+    orphan_dependency_features = sorted(
+        observed.get("orphan_retained_dependency_features", set())
+    )
+    if orphan_dependency_features:
+        failures.append(
+            "retained direct dependency features without live codegen requirements: "
+            + ", ".join(orphan_dependency_features)
         )
 
     for key, observed_values in observed.items():
@@ -392,10 +503,17 @@ def _compare_sets(
 def _self_test() -> int:
     observed = {
         "exact_intrinsics": {"alpha"},
+        "dispatch_intrinsics": {"alpha"},
+        "unmapped_dispatch_variants": set(),
+        "source_declared_intrinsics": {"alpha"},
         "prefix_dispatchers": EXPECTED_PREFIX_DISPATCHERS,
         "registry_files": {"alpha.rs"},
         "preamble_files": {"runtime.rs"},
+        "lowering_files": {"crates/sifr_lowering/src/alpha.rs"},
+        "codegen_files": {"crates/sifr_codegen/src/alpha.rs"},
         "retained_direct_dependency_packages": {"alpha-dep"},
+        "retained_direct_dependency_features": {"alpha-dep=alpha-feature"},
+        "orphan_retained_dependency_features": set(),
         "direct_runtime_roots": {"sifr_runtime::alpha"},
     }
     allowlist = {
@@ -406,9 +524,13 @@ def _self_test() -> int:
                 "reason": "language-owned test fixture",
                 "declaration_files": ["stdlib/_sifr/alpha.sifr"],
                 "exact_intrinsics": ["alpha"],
+                "source_declared_intrinsics": ["alpha"],
                 "registry_files": ["alpha.rs"],
                 "preamble_files": ["runtime.rs"],
+                "lowering_files": ["crates/sifr_lowering/src/alpha.rs"],
+                "codegen_files": ["crates/sifr_codegen/src/alpha.rs"],
                 "retained_direct_dependency_packages": ["alpha-dep"],
+                "retained_direct_dependency_features": ["alpha-dep=alpha-feature"],
                 "direct_runtime_roots": ["sifr_runtime::alpha"],
             }
         ]
@@ -435,6 +557,42 @@ def _self_test() -> int:
         print("self-test stale registry file was not rejected", file=sys.stderr)
         return 1
 
+    missing_source_declaration = json.loads(json.dumps(allowlist))
+    missing_source_declaration["surface"][0]["source_declared_intrinsics"] = []
+    if not any(
+        "source_declared_intrinsics missing allowlist entries: alpha" in failure
+        for failure in _validate(observed, missing_source_declaration)
+    ):
+        print("self-test missing source intrinsic declaration was not rejected", file=sys.stderr)
+        return 1
+
+    missing_lowering_owner = json.loads(json.dumps(allowlist))
+    missing_lowering_owner["surface"][0]["lowering_files"] = []
+    if not any(
+        "lowering_files missing allowlist entries" in failure
+        for failure in _validate(observed, missing_lowering_owner)
+    ):
+        print("self-test missing lowering ownership was not rejected", file=sys.stderr)
+        return 1
+
+    missing_codegen_owner = json.loads(json.dumps(allowlist))
+    missing_codegen_owner["surface"][0]["codegen_files"] = []
+    if not any(
+        "codegen_files missing allowlist entries" in failure
+        for failure in _validate(observed, missing_codegen_owner)
+    ):
+        print("self-test missing codegen ownership was not rejected", file=sys.stderr)
+        return 1
+
+    missing_dispatch = {key: set(value) for key, value in observed.items()}
+    missing_dispatch["dispatch_intrinsics"] = set()
+    if not any(
+        "typed dispatch intrinsics has stale allowlist entries: alpha" in failure
+        for failure in _validate(missing_dispatch, allowlist)
+    ):
+        print("self-test missing typed dispatch implementation was not rejected", file=sys.stderr)
+        return 1
+
     missing_dependency = json.loads(json.dumps(allowlist))
     missing_dependency["surface"][0]["retained_direct_dependency_packages"] = []
     if not any(
@@ -442,6 +600,15 @@ def _self_test() -> int:
         for failure in _validate(observed, missing_dependency)
     ):
         print("self-test missing retained direct dependency was not rejected", file=sys.stderr)
+        return 1
+
+    orphan_dependency = {key: set(value) for key, value in observed.items()}
+    orphan_dependency["orphan_retained_dependency_features"] = {"AlphaFeature"}
+    if not any(
+        "without live codegen requirements: AlphaFeature" in failure
+        for failure in _validate(orphan_dependency, allowlist)
+    ):
+        print("self-test orphan retained dependency feature was not rejected", file=sys.stderr)
         return 1
 
     missing_runtime_root = json.loads(json.dumps(allowlist))
@@ -498,9 +665,13 @@ def _self_test() -> int:
     design_without_observed_items = json.loads(json.dumps(allowlist))
     for key in (
         "exact_intrinsics",
+        "source_declared_intrinsics",
         "registry_files",
         "preamble_files",
+        "lowering_files",
+        "codegen_files",
         "retained_direct_dependency_packages",
+        "retained_direct_dependency_features",
         "direct_runtime_roots",
     ):
         design_without_observed_items["surface"][0].pop(key, None)
@@ -512,9 +683,13 @@ def _self_test() -> int:
     }
     for key in (
         "exact_intrinsics",
+        "source_declared_intrinsics",
         "registry_files",
         "preamble_files",
+        "lowering_files",
+        "codegen_files",
         "retained_direct_dependency_packages",
+        "retained_direct_dependency_features",
         "direct_runtime_roots",
     ):
         observed_without_surface[key] = set()
@@ -545,17 +720,21 @@ def _self_test() -> int:
         fixture_root = Path(tmp)
         restored_path = fixture_root / "deleted-crate"
         restored_path.mkdir()
-        token_path = fixture_root / "Cargo.toml"
-        token_path.write_text("resolve_retained_fallback = true\n", encoding="utf-8")
+        token_paths = []
+        for index, token in enumerate(DELETED_FALLBACK_TOKENS):
+            token_path = fixture_root / f"deleted-{index}.toml"
+            token_path.write_text(f"value = {token!r}\n", encoding="utf-8")
+            token_paths.append(token_path)
         fallback_failures = _deleted_fallback_architecture_failures(
-            (restored_path,), (token_path,)
+            (restored_path,), tuple(token_paths)
         )
     if not any("deleted fallback architecture path remains" in failure for failure in fallback_failures):
         print("self-test restored fallback path was not rejected", file=sys.stderr)
         return 1
-    if not any("resolve_retained_fallback" in failure for failure in fallback_failures):
-        print("self-test restored fallback token was not rejected", file=sys.stderr)
-        return 1
+    for token in DELETED_FALLBACK_TOKENS:
+        if not any(token in failure for failure in fallback_failures):
+            print(f"self-test restored fallback token {token!r} was not rejected", file=sys.stderr)
+            return 1
 
     print("stdlib native intrinsic allowlist guard self-test: PASS")
     return 0

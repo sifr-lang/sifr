@@ -1,9 +1,4 @@
 #[must_use]
-pub const fn feature_name() -> &'static str {
-    "uuid"
-}
-
-#[must_use]
 pub fn uuid4() -> String {
     uuid::Uuid::new_v4().hyphenated().to_string()
 }

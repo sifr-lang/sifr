@@ -48,11 +48,6 @@ static PROCESS_OUTPUTS: LazyLock<Mutex<HashMap<String, StoredProcessOutput>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 static NEXT_PROCESS_OUTPUT_ID: AtomicU64 = AtomicU64::new(1);
 
-#[must_use]
-pub const fn feature_name() -> &'static str {
-    "process"
-}
-
 pub fn process_run(
     program: &str,
     args: &[String],
