@@ -1,6 +1,6 @@
 #![allow(unsafe_code)]
 
-use pyo3::{ffi, prelude::*, Py, PyAny};
+use pyo3::{ffi, prelude::*};
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::mem::MaybeUninit;
@@ -13,7 +13,10 @@ mod callback_ops;
 mod config_verify;
 mod coroutine_ops;
 mod dlpack_ops;
+mod foreign_object;
 mod object_ops;
+#[cfg(test)]
+mod object_ops_tests;
 mod resource_ops;
 pub use arrow_ops::{
     arrow_array, arrow_schema, arrow_stream, release_arrow, ArrowHandle, PythonArrowCapsuleMetadata,
@@ -29,6 +32,7 @@ pub use callback_ops::{
 use config_verify::verify_interpreter_config;
 pub use coroutine_ops::run_coroutine_blocking;
 pub use dlpack_ops::{dlpack_tensor, release_dlpack, DlpackHandle, PythonDlpackTensorMetadata};
+pub use foreign_object::ForeignObject;
 pub use object_ops::{
     call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
     copy_dict_str_float, copy_dict_str_i32, copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8,
@@ -67,6 +71,17 @@ pub struct PythonRuntimeConfig {
 pub enum PythonRuntimeInitStatus {
     Initialized,
     AlreadyInitialized,
+}
+
+#[derive(Debug)]
+pub struct PythonRuntimeGuard {
+    _private: (),
+}
+
+impl Drop for PythonRuntimeGuard {
+    fn drop(&mut self) {
+        let _ignored = Python::try_attach(foreign_object::drain_pending_releases);
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -140,50 +155,6 @@ impl fmt::Display for PythonRuntimeError {
 
 impl std::error::Error for PythonRuntimeError {}
 
-#[derive(Debug)]
-pub struct Object {
-    inner: Option<Py<PyAny>>,
-}
-
-impl Object {
-    pub fn new(object: Py<PyAny>) -> Result<Self, PythonRuntimeError> {
-        update_object_count(1)?;
-        Ok(Self {
-            inner: Some(object),
-        })
-    }
-
-    fn clone_ref(&self, py: Python<'_>) -> Result<Py<PyAny>, PythonRuntimeError> {
-        self.inner
-            .as_ref()
-            .map(|object| object.clone_ref(py))
-            .ok_or(PythonRuntimeError::PythonOperationFailed(
-                "Python object handle is closed".to_string(),
-            ))
-    }
-}
-
-impl Drop for Object {
-    fn drop(&mut self) {
-        let Some(object) = self.inner.take() else {
-            return;
-        };
-        let mut pending = Some(object);
-        if Python::try_attach(|_py| {
-            drop(pending.take());
-        })
-        .is_some()
-        {
-            let _ignored = update_object_count(-1);
-            return;
-        }
-        if let Some(leaked) = pending.take() {
-            std::mem::forget(leaked);
-        }
-        let _ignored = record_leaked_object();
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct RuntimeState {
     config: Option<PythonRuntimeConfig>,
@@ -226,12 +197,21 @@ pub fn initialize_runtime(
     Ok(PythonRuntimeInitStatus::Initialized)
 }
 
+pub fn runtime_guard() -> Result<PythonRuntimeGuard, PythonRuntimeError> {
+    ensure_initialized()?;
+    Ok(PythonRuntimeGuard { _private: () })
+}
+
 pub fn attach<F, R>(f: F) -> Result<R, PythonRuntimeError>
 where
     F: for<'py> FnOnce(Python<'py>) -> R,
 {
     ensure_initialized()?;
-    Python::try_attach(f).ok_or(PythonRuntimeError::NotInitialized)
+    Python::try_attach(|py| {
+        foreign_object::drain_pending_releases(py);
+        f(py)
+    })
+    .ok_or(PythonRuntimeError::NotInitialized)
 }
 
 pub fn detach<F, R>(py: Python<'_>, f: F) -> R
@@ -252,6 +232,7 @@ pub fn shutdown_diagnostics() -> Result<PythonRuntimeDiagnostics, PythonRuntimeE
 }
 
 pub fn validate_shutdown() -> Result<(), PythonRuntimeError> {
+    attach(foreign_object::drain_pending_releases)?;
     let diagnostics = shutdown_diagnostics()?;
     if diagnostics.live_objects == 0 && diagnostics.leaked_objects == 0 {
         return Ok(());
@@ -502,13 +483,6 @@ pub(super) fn update_object_count(delta: isize) -> Result<(), PythonRuntimeError
     Ok(())
 }
 
-pub(super) fn record_leaked_object() -> Result<(), PythonRuntimeError> {
-    let mut state = runtime_state()?;
-    state.live_objects = state.live_objects.saturating_sub(1);
-    state.leaked_objects = state.leaked_objects.saturating_add(1);
-    Ok(())
-}
-
 fn py_error(error: &PyErr) -> PythonRuntimeError {
     PythonRuntimeError::PythonOperationFailed(error.to_string())
 }
@@ -517,6 +491,7 @@ fn py_error(error: &PyErr) -> PythonRuntimeError {
 fn reset_runtime_state_for_tests() {
     let mut state = runtime_state().expect("runtime state should be available");
     *state = RuntimeState::new();
+    foreign_object::reset_pending_releases_for_tests();
     object_ops::reset_object_store_for_tests();
 }
 
@@ -669,11 +644,11 @@ mod tests {
     }
 
     #[test]
-    fn owned_object_tracking_is_released_through_gil_bound_drop() {
+    fn owned_object_tracking_is_released_on_next_attach() {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
         initialize_runtime(test_config("object")).expect("init should succeed");
-        let object = attach(|py| Object::new(py.None())).expect("attach should succeed");
+        let object = attach(|py| ForeignObject::new(py.None())).expect("attach should succeed");
         assert!(object.is_ok());
         assert_eq!(
             shutdown_diagnostics().expect("diagnostics should be available"),
@@ -685,7 +660,67 @@ mod tests {
         );
 
         drop(object);
+        attach(|_py| ()).expect("attach should drain the dropped object");
 
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            PythonRuntimeDiagnostics {
+                initialized: true,
+                live_objects: 0,
+                leaked_objects: 0,
+            }
+        );
+    }
+
+    #[test]
+    fn detached_thread_drop_is_drained_on_next_attach() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("detached-drop")).expect("init should succeed");
+        let object = attach(|py| ForeignObject::new(py.None())).expect("attach should succeed");
+        let object = object.expect("object should be created");
+
+        std::thread::spawn(move || drop(object))
+            .join()
+            .expect("detached drop thread should finish");
+
+        assert_eq!(foreign_object::pending_release_count(), 1);
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            PythonRuntimeDiagnostics {
+                initialized: true,
+                live_objects: 1,
+                leaked_objects: 0,
+            }
+        );
+        attach(|_py| ()).expect("attach should drain pending releases");
+        assert_eq!(foreign_object::pending_release_count(), 0);
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            PythonRuntimeDiagnostics {
+                initialized: true,
+                live_objects: 0,
+                leaked_objects: 0,
+            }
+        );
+    }
+
+    #[test]
+    fn runtime_guard_drains_pending_releases_at_epilogue() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("epilogue-drop")).expect("init should succeed");
+        let runtime_guard = runtime_guard().expect("runtime guard should be available");
+        let object = attach(|py| ForeignObject::new(py.None())).expect("attach should succeed");
+        let object = object.expect("object should be created");
+        std::thread::spawn(move || drop(object))
+            .join()
+            .expect("detached drop thread should finish");
+        assert_eq!(foreign_object::pending_release_count(), 1);
+
+        drop(runtime_guard);
+
+        assert_eq!(foreign_object::pending_release_count(), 0);
         assert_eq!(
             shutdown_diagnostics().expect("diagnostics should be available"),
             PythonRuntimeDiagnostics {
@@ -701,7 +736,7 @@ mod tests {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
         initialize_runtime(test_config("shutdown")).expect("init should succeed");
-        let object = attach(|py| Object::new(py.None())).expect("attach should succeed");
+        let object = attach(|py| ForeignObject::new(py.None())).expect("attach should succeed");
         assert!(object.is_ok());
 
         let error = validate_shutdown().expect_err("live object should block shutdown");

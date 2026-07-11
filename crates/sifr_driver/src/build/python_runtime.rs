@@ -165,8 +165,9 @@ pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> 
     }}
 }}
 
-fn __sifr_initialize_python_runtime() -> Result<(), sifr_runtime::python::PythonRuntimeError> {{
-    sifr_runtime::python::initialize_runtime(__sifr_python_runtime_config()).map(|_| ())
+fn __sifr_initialize_python_runtime() -> Result<sifr_runtime::python::PythonRuntimeGuard, sifr_runtime::python::PythonRuntimeError> {{
+    sifr_runtime::python::initialize_runtime(__sifr_python_runtime_config())?;
+    sifr_runtime::python::runtime_guard()
 }}
 
 "#,
@@ -198,7 +199,7 @@ pub(super) fn inject_python_runtime_bootstrap(
     let mut with_bootstrap = render_python_runtime_prelude(metadata);
     with_bootstrap.push_str(&main_rs[..insert_at]);
     with_bootstrap.push_str(
-        "\n    if let Err(__sifr_python_runtime_error) = __sifr_initialize_python_runtime() {\n        eprintln!(\"Sifr Python runtime initialization failed: {}\", __sifr_python_runtime_error);\n        std::process::exit(1);\n    }\n",
+        "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(__sifr_python_runtime_error) => {\n            eprintln!(\"Sifr Python runtime initialization failed: {}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }\n    };\n",
     );
     with_bootstrap.push_str(&main_rs[insert_at..]);
     Ok(with_bootstrap)
@@ -364,7 +365,9 @@ mod tests {
             inject_python_runtime_bootstrap(&main_rs, &metadata()).expect("main should be patched");
 
         assert!(rendered.starts_with("fn __sifr_python_runtime_config()"));
-        assert!(rendered.contains("fn main() {\n    if let Err(__sifr_python_runtime_error)"));
+        assert!(rendered.contains(
+            "fn main() {\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime()"
+        ));
         assert!(rendered.contains("println!(\"ok\")"));
     }
 
@@ -378,7 +381,7 @@ mod tests {
             inject_python_runtime_bootstrap(&main_rs, &metadata()).expect("main should be patched");
 
         assert!(rendered.contains(
-            "fn main() -> Result<(), PythonError> {\n    if let Err(__sifr_python_runtime_error)"
+            "fn main() -> Result<(), PythonError> {\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime()"
         ));
         assert!(rendered.contains("run_example()?"));
     }
@@ -393,7 +396,7 @@ mod tests {
             inject_python_runtime_bootstrap(&main_rs, &metadata()).expect("main should be patched");
 
         assert!(rendered.contains(
-            "async fn main() -> Result<(), Error> {\n    if let Err(__sifr_python_runtime_error)"
+            "async fn main() -> Result<(), Error> {\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime()"
         ));
         assert!(rendered.contains("run().await"));
     }
