@@ -2,14 +2,20 @@
 
 ## Status
 
-Implementation merged through PR #2918 (merge sha `b531e8ca`), but closeout
-certification is reopened. A post-closeout audit reproduced a standalone
-runtime-diagnostics build failure and confirmed validation masking, duplicate
+Completed and recertified on 2026-07-11. The corrective implementation is
+merged through [PR #2927](https://github.com/sifr-lang/sifr/pull/2927), with
+the final closure recorded in
+[PR #2928](https://github.com/sifr-lang/sifr/pull/2928). The post-closeout audit
+that reopened certification found
+a standalone runtime-diagnostics build failure, validation masking, duplicate
 fallback signatures, dead Counter intrinsics, raw-name intrinsic dispatch, and
-bypassed source/Rust implementations. The decided corrective sequence is
-tracked in
+bypassed source/Rust implementations. Those defects and their replacement
+architecture are tracked in
 [`ad-hoc-stdlib-compiler-boundary-rearchitecture.md`](ad-hoc-stdlib-compiler-boundary-rearchitecture.md).
-The new phase owns the replacement architecture and its final certification.
+The replacement phase merged all six milestones, completed six satisfied
+phase-wide/corrective review rounds, and passed the authoritative full merge
+gate with unchanged performance budgets, source/installed equivalence,
+`650/650` E2E fixtures, and all `261` hardening variants.
 
 ## Objective
 

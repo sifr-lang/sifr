@@ -2,12 +2,11 @@
 
 ## Status
 
-Research complete and implementation-ready. This is a new phase following the
-native-boundary migration. The prior implementation remains historical input;
-this phase owns the final compiler/stdlib boundary architecture and its local
-recertification.
+Completed and audited on 2026-07-11. This phase followed the native-boundary
+migration and now owns the final compiler/stdlib boundary architecture and its
+local recertification.
 
-Implementation is in progress. M1 routes runtime diagnostics through the
+Implementation completed across six reviewed milestones. M1 routes runtime diagnostics through the
 private `sifr_stdlib` boundary and is merged in
 [PR #2921](https://github.com/sifr-lang/sifr/pull/2921) after focused
 production-path check/emit/build/run coverage, the create-PR gate, and two
@@ -47,8 +46,8 @@ at 163,565 ms / 600,000 ms, runtime-platform suites at
 383,025 ms / 600,000 ms. Two Claude Opus review rounds ended `SATISFIED`; the
 complete second review reported no findings.
 
-M6 implementation is published in
-[PR #2927](https://github.com/sifr-lang/sifr/pull/2927) and has completed local
+M6 is merged in [PR #2927](https://github.com/sifr-lang/sifr/pull/2927) at
+`7b40f6936` and has completed local
 recertification. The permanent
 guards classify `403` public native adapters as `399` active private-declaration
 targets plus four documented compiler substrates; compare all retained source,
@@ -57,8 +56,15 @@ exactly; and reject the required negative restorations. The installed and
 source-tree boundary fixture passes with identical behavior and the reviewed
 `sifr_stdlib[bytes]` generated dependency plan. The create-PR gate passes, and
 two Claude Opus milestone review rounds ended `SATISFIED`; the second reported
-no blockers or optional cleanups. PR merge, the final merge gate, and the
-phase-wide closeout review remain.
+no blockers or optional cleanups. Three phase-wide implementation closeout
+review rounds also ended `SATISFIED`; the third reported no remaining issue.
+Two additional corrective closeout reviews ended `SATISFIED` after the final
+gate exposed debug bootstrap performance and a stale installed-smoke timeout.
+The sixth and final phase-wide audit also ended `SATISFIED` with no blockers.
+The authoritative `scripts/run_all_tests.sh` merge gate passes on the closure
+tree with unchanged performance budgets, installed/source boundary
+equivalence, `650/650` E2E pass fixtures, and `261` hardening variants with zero
+failures.
 
 ## Why This Phase Exists
 
@@ -569,6 +575,44 @@ scripts/run_all_tests.sh
   `SATISFIED`; confirmed the final re-export, `_sifr.io`, and milestone-label
   refinements introduced no new issue.
 
+## Implementation Closeout Review Record
+
+- [Round 1](../../reviews/active/stdlib-compiler-boundary-phase-closeout-review-round1.md):
+  `SATISFIED`; independently confirmed every M1-M6 acceptance criterion and
+  executable invariant, then identified stale historical Counter blueprint
+  prose for cleanup.
+- [Round 2](../../reviews/active/stdlib-compiler-boundary-phase-closeout-review-round2.md):
+  `SATISFIED`; confirmed the source-owned Counter correction and identified
+  cosmetic table/evidence-name drift.
+- [Round 3](../../reviews/active/stdlib-compiler-boundary-phase-closeout-review-round3.md):
+  `SATISFIED`; confirmed the corrected evidence and reported no remaining
+  implementation or closure finding.
+- [Round 4](../../reviews/active/ad-hoc-stdlib-compiler-boundary-phase-closeout-round4-performance-corrective.md):
+  `SATISFIED`; approved targeted dev-profile optimization for
+  `sifr_lowering` and `sifr_type_system`, preserving debug assertions and
+  overflow checks while restoring robust unchanged-budget headroom for the
+  source-owned stdlib bootstrap.
+- [Round 5](../../reviews/active/ad-hoc-stdlib-compiler-boundary-phase-closeout-round5-sysroot-timeout.md):
+  `SATISFIED`; confirmed the installed-smoke `emit` timeout correction is
+  bounded, targeted, and consistent with the existing cold boundary/heavy
+  certification policy.
+- [Round 6](../../reviews/active/ad-hoc-stdlib-compiler-boundary-phase-closeout-round6-final.md):
+  `SATISFIED`; independently reran the permanent adapter, intrinsic, and
+  manifest exactness guards, audited the complete phase delta and both
+  post-gate corrections, and reported no blocker.
+
+## Final Merge-Gate Evidence
+
+- `scripts/run_all_tests.sh`: pass (`3,416.62 s` wall time; cold-cache
+  wall-time/skew advisories only, no blocking failures).
+- Representative performance subset: pass with unchanged baselines, budgets,
+  samples, and waiver policy.
+- Sysroot release certification: pass; boundary equivalence `375,729 ms` and
+  host-installed smoke `160,109 ms`, including LSP and both path-leakage scans.
+- Crate tests: pass, including `613` lowering tests, `92` type-system tests,
+  `745` codegen tests, `331` driver tests, and generated-build integrations.
+- E2E pass suite: `650/650` passed; hardening: `261` variants, zero failures.
+
 ## Closeout Checklist
 
 - [x] Standalone regression reproduced.
@@ -584,5 +628,6 @@ scripts/run_all_tests.sh
 - [x] M3 merged and documented ([PR #2923](https://github.com/sifr-lang/sifr/pull/2923)).
 - [x] M4 merged and documented ([PR #2924](https://github.com/sifr-lang/sifr/pull/2924)).
 - [x] M5 merged and documented ([PR #2925](https://github.com/sifr-lang/sifr/pull/2925)).
-- [ ] M6 merged and documented.
-- [ ] Full local merge gate passes on final `main`.
+- [x] M6 merged and documented ([PR #2927](https://github.com/sifr-lang/sifr/pull/2927)).
+- [x] Full local merge gate passes on the final merge-candidate tree; the
+  identical merged `main` tree is revalidated after closure PR #2928 lands.
