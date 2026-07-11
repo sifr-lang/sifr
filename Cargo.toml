@@ -194,3 +194,7 @@ opt-level = 3
 opt-level = 3
 [profile.dev.package.ruff_python_parser]
 opt-level = 1
+[profile.dev.package.sifr_lowering]
+opt-level = 1
+[profile.dev.package.sifr_type_system]
+opt-level = 1

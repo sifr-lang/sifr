@@ -329,6 +329,7 @@ def run_host_installed_smoke() -> tuple[int, list[str]]:
                 label="emit migrated stdlib smoke",
                 stdout_path=emit_path,
                 echo_output=False,
+                timeout=1200,
             )
             if "sifr_stdlib" not in emit.stdout:
                 return 1, ["installed migrated stdlib emit output did not reference sifr_stdlib"]

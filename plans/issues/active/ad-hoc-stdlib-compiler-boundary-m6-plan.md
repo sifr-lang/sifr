@@ -35,7 +35,7 @@ and installed sysroots must certify equivalent behavior and dependency plans.
 - [x] Open, review, and merge M6 as
   [PR #2927](https://github.com/sifr-lang/sifr/pull/2927) at merge commit
   `7b40f6936`.
-- [ ] Run the full merge gate on the final tree and complete the phase-wide
+- [x] Run the full merge gate on the final tree and complete the phase-wide
   review/closure record.
 
 ## Validation evidence
@@ -62,7 +62,15 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   E2E fixtures at `32,483 ms / 600,000 ms`. The initial run exposed a cold LSP
   preview-cache timeout; the exact cache was warmed through the normal compiler
   metadata path, the standalone smoke passed, and the complete gate rerun was
-  green. The final merge gate remains pending.
+  green.
+- The authoritative full merge gate passes in `3,416.62 s`. Representative
+  performance checks pass with unchanged budgets; source/installed boundary
+  equivalence passes in `375,729 ms`; host-installed smoke passes in
+  `160,109 ms`; E2E passes `650/650`; and hardening passes all `261` variants.
+  The gate exposed and drove two targeted closure corrections: dev-profile
+  optimization of source-stdlib lowering/type-system bootstrap work and a
+  bounded `1200 s` cold installed-smoke timeout consistent with the existing
+  heavy boundary certification policy.
 - Claude Opus M6 review round 1 reported no blocking findings and ended
   `SATISFIED`. Its soft blind spots were nevertheless hardened: public
   unsafe/extern functions are now inventoried, structured compiler consumers
@@ -72,3 +80,10 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   M1-M6 diff and all ended `SATISFIED`. Rounds 1-2 identified stale Counter
   blueprint/evidence prose, which was updated to the final generic source-owned
   design; round 3 confirmed no remaining finding.
+- Corrective closeout rounds 4-5 both ended `SATISFIED`. Round 4 approved the
+  targeted bootstrap performance correction without any budget or safety
+  relaxation. Round 5 approved the bounded cold installed-smoke timeout and
+  confirmed that it does not weaken any behavioral or path-leakage assertion.
+- Final phase-wide closeout round 6 independently reran the permanent
+  exactness guards, audited the complete M1-M6 delta and both post-gate
+  corrections, reported no blockers, and ended `SATISFIED`.
