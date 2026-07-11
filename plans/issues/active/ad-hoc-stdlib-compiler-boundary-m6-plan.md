@@ -51,7 +51,9 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   guards pass.
 - Installed/source-tree boundary equivalence passes: both binaries report
   `stdlib boundary recertification: pass` and both normalized generated plans
-  match the reviewed `sifr_stdlib[bytes]` dependency snapshot.
+  match the reviewed `sifr_stdlib[bytes]` dependency snapshot. A post-review
+  rerun also passes with separate fresh bridge-probe caches for the installed
+  and source-tree paths (`645,113 ms`).
 - Authoritative create-PR gate passes with crate tests at `153,367 ms /
   600,000 ms`, runtime-platform at `58,133 ms / 120,000 ms`, and `130/130`
   E2E fixtures at `32,483 ms / 600,000 ms`. The initial run exposed a cold LSP
@@ -59,3 +61,8 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   metadata path, the standalone smoke passed, and the complete gate rerun was
   green. Review rounds, PR merge, final merge gate, and phase-wide closeout
   review remain pending.
+- Claude Opus M6 review round 1 reported no blocking findings and ended
+  `SATISFIED`. Its soft blind spots were nevertheless hardened: public
+  unsafe/extern functions are now inventoried, structured compiler consumers
+  require an exact Rust IR path, and installed/source probe caches are isolated.
+  Round 2 confirmation remains pending.

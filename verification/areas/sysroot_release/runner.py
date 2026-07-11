@@ -186,13 +186,16 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
             work_root.mkdir()
             fixture = work_root / BOUNDARY_FIXTURE_PATH.name
             fixture.write_text(BOUNDARY_FIXTURE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
-            env = installed_env(temp_root)
             installed_sifr = install_root / "bin" / "sifr"
 
             for label, compiler, output, extra in (
                 ("installed", installed_sifr, installed_output, []),
                 ("source-tree", source_sifr, source_output, ["--sysroot", str(REPO_ROOT)]),
             ):
+                env = installed_env(temp_root)
+                probe_cache = temp_root / "probe-cache" / label
+                probe_cache.mkdir(parents=True)
+                env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache)
                 run_checked(
                     [str(compiler), *extra, "build", str(fixture), "-o", str(output), "--quiet"],
                     cwd=work_root,

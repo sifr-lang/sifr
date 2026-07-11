@@ -15,7 +15,8 @@ STDLIB_SIFR_ROOT = REPO_ROOT / "stdlib"
 INVENTORY_PATH = REPO_ROOT / "internal_docs" / "stdlib_native_adapter_reachability.toml"
 
 PUBLIC_FN_RE = re.compile(
-    r"(?m)^pub\s+(?:const\s+)?(?:async\s+)?fn\s+([A-Za-z_][A-Za-z0-9_]*)"
+    r'(?m)^pub\s+(?:(?:const|async|unsafe)\s+|extern(?:\s+"[^"\n]+")?\s+)*'
+    r"fn\s+([A-Za-z_][A-Za-z0-9_]*)"
 )
 RUST_TARGET_RE = re.compile(
     r"@rust(?:\.[A-Za-z_]+)?\(\s*sifr_stdlib\.([A-Za-z0-9_.]+)"
@@ -117,11 +118,17 @@ def _validate(
                 except (FileNotFoundError, IsADirectoryError):
                     failures.append(f"{adapter}: missing consumer file {consumer_file}")
                     continue
-                structured_segments = all(
-                    f'"{segment}".to_string()' in consumer_text
+                structured_segments = r"\s*,\s*".join(
+                    re.escape(f'"{segment}".to_string()')
                     for segment in ("sifr_stdlib", *adapter.split("."))
                 )
-                if reference not in consumer_text and not structured_segments:
+                structured_path = re.search(
+                    r"RustExpr::Path\(vec!\[\s*"
+                    + structured_segments
+                    + r"\s*,?\s*\]\)",
+                    consumer_text,
+                )
+                if reference not in consumer_text and structured_path is None:
                     failures.append(
                         f"{adapter}: {consumer_file} does not contain {reference}"
                     )
@@ -162,6 +169,21 @@ def _required_string_list(
 
 
 def _self_test() -> int:
+    qualifier_fixture = "\n".join(
+        (
+            "pub unsafe fn unsafe_adapter() {}",
+            'pub extern "C" fn c_adapter() {}',
+            'pub unsafe extern "C" fn unsafe_c_adapter() {}',
+        )
+    )
+    if set(PUBLIC_FN_RE.findall(qualifier_fixture)) != {
+        "unsafe_adapter",
+        "c_adapter",
+        "unsafe_c_adapter",
+    }:
+        print("self-test public Rust function qualifiers were not recognized", file=sys.stderr)
+        return 1
+
     inventory = {
         "schema_version": 1,
         "substrate": [
@@ -195,6 +217,15 @@ def _self_test() -> int:
     consumer_failures = _validate(public, targets, inventory, missing_consumer)
     if not any("does not contain" in failure for failure in consumer_failures):
         print("self-test missing substrate consumer was not rejected", file=sys.stderr)
+        return 1
+
+    scattered_segments = lambda _relative: (
+        '"sifr_stdlib".to_string(); "alpha".to_string(); '
+        '"substrate".to_string()'
+    )
+    scattered_failures = _validate(public, targets, inventory, scattered_segments)
+    if not any("does not contain" in failure for failure in scattered_failures):
+        print("self-test scattered path segments were not rejected", file=sys.stderr)
         return 1
 
     print("stdlib native adapter reachability self-test: PASS")
