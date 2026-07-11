@@ -1,17 +1,22 @@
 use super::*;
+use sifr_ir::CompilerIntrinsicId;
 
 fn counter_total_expr() -> HirExpr {
-    HirExpr::Call {
-        func: "counter_total".to_string(),
-        args: vec![HirExpr::Call {
-            func: "counter_from_list".to_string(),
+    HirExpr::IntrinsicCall {
+        intrinsic: CompilerIntrinsicId::CounterTotal,
+        args: vec![HirExpr::IntrinsicCall {
+            intrinsic: CompilerIntrinsicId::CounterFromList,
             args: vec![HirExpr::ListLiteral {
                 elements: vec![HirExpr::StringLiteral("a".to_string())],
                 ty: Type::List(Box::new(Type::Str)),
             }],
             ty: Type::Str,
+            call_range: Default::default(),
+            arg_ranges: vec![Default::default()],
         }],
         ty: Type::Int,
+        call_range: Default::default(),
+        arg_ranges: vec![Default::default()],
     }
 }
 
@@ -29,6 +34,7 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -62,26 +68,31 @@ fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
             params: vec![],
             return_type: Type::None,
             body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    func: "counter_get".to_string(),
+                expr: HirExpr::IntrinsicCall {
+                    intrinsic: CompilerIntrinsicId::CounterGet,
                     args: vec![
-                        HirExpr::Call {
-                            func: "counter_from_list".to_string(),
+                        HirExpr::IntrinsicCall {
+                            intrinsic: CompilerIntrinsicId::CounterFromList,
                             args: vec![HirExpr::ListLiteral {
                                 elements: vec![HirExpr::StringLiteral("a".to_string())],
                                 ty: list_ty.clone(),
                             }],
                             ty: Type::Str,
+                            call_range: Default::default(),
+                            arg_ranges: vec![Default::default()],
                         },
                         HirExpr::StringLiteral("a".to_string()),
                     ],
                     ty: Type::Int,
+                    call_range: Default::default(),
+                    arg_ranges: vec![Default::default(), Default::default()],
                 },
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -117,16 +128,18 @@ fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
             params: vec![],
             return_type: Type::None,
             body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    func: "counter_get".to_string(),
+                expr: HirExpr::IntrinsicCall {
+                    intrinsic: CompilerIntrinsicId::CounterGet,
                     args: vec![
-                        HirExpr::Call {
-                            func: "counter_from_list".to_string(),
+                        HirExpr::IntrinsicCall {
+                            intrinsic: CompilerIntrinsicId::CounterFromList,
                             args: vec![HirExpr::ListLiteral {
                                 elements: vec![HirExpr::StringLiteral("path".to_string())],
                                 ty: Type::List(Box::new(Type::Str)),
                             }],
                             ty: Type::Str,
+                            call_range: Default::default(),
+                            arg_ranges: vec![Default::default()],
                         },
                         HirExpr::MethodCall {
                             object: Box::new(HirExpr::StringLiteral("PATH".to_string())),
@@ -136,12 +149,15 @@ fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
                         },
                     ],
                     ty: Type::Int,
+                    call_range: Default::default(),
+                    arg_ranges: vec![Default::default(), Default::default()],
                 },
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],

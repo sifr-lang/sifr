@@ -1,0 +1,32 @@
+from sifr.test import assert_eq as verify_equal
+from sifr.task import current_context as active_context
+
+
+def assert_eq(left: int, right: int) -> int:
+    return left + right
+
+
+def nested_collision() -> int:
+    def bytes_from_hex(value: int) -> int:
+        return value + 1
+
+    return bytes_from_hex(6)
+
+
+class Collision:
+    def task_current_context(self, value: int) -> int:
+        return value * 2
+
+
+def main() -> None:
+    local_result: int = assert_eq(2, 3)
+    nested_result: int = nested_collision()
+    value = Collision()
+    method_result: int = value.task_current_context(4)
+    verify_equal(local_result, 5)
+    verify_equal(nested_result, 7)
+    verify_equal(method_result, 8)
+    verify_equal(str(active_context()), "Context")
+
+
+main()

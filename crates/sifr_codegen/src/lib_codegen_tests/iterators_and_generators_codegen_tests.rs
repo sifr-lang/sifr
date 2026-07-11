@@ -1,4 +1,5 @@
 use super::*;
+use sifr_ir::CompilerIntrinsicId;
 #[test]
 fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
     let list_ty = Type::List(Box::new(Type::Int));
@@ -32,6 +33,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
             HirFunction {
@@ -52,6 +54,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
         ],
@@ -95,6 +98,7 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
             HirFunction {
@@ -125,6 +129,7 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
         ],
@@ -232,8 +237,8 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
             params: vec![],
             return_type: Type::None,
             body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    func: "builtin_open_text".to_string(),
+                expr: HirExpr::IntrinsicCall {
+                    intrinsic: CompilerIntrinsicId::OpenText,
                     args: vec![
                         HirExpr::StringLiteral("/tmp/sifr_codegen_open.txt".to_string()),
                         HirExpr::StringLiteral("w".to_string()),
@@ -241,12 +246,15 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
                         HirExpr::StringLiteral("strict".to_string()),
                     ],
                     ty: Type::Unknown,
+                    call_range: Default::default(),
+                    arg_ranges: vec![Default::default(); 4],
                 },
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -358,6 +366,7 @@ fn test_generate_rust_test_uses_explicit_test_mode_context() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
             HirFunction {
@@ -369,6 +378,7 @@ fn test_generate_rust_test_uses_explicit_test_mode_context() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
             HirFunction {
@@ -380,6 +390,7 @@ fn test_generate_rust_test_uses_explicit_test_mode_context() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
         ],
@@ -424,6 +435,7 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
             HirFunction {
@@ -446,6 +458,7 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             },
         ],
@@ -490,6 +503,7 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -570,6 +584,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop: Vec::new(),
+                    compiler_intrinsic: None,
                     type_params: vec![],
                 },
                 HirFunction {
@@ -594,6 +609,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop: Vec::new(),
+                    compiler_intrinsic: None,
                     type_params: vec![],
                 },
                 HirFunction {
@@ -636,6 +652,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop: Vec::new(),
+                    compiler_intrinsic: None,
                     type_params: vec![],
                 },
             ],
@@ -687,6 +704,7 @@ fn test_codegen_structured_lowering_applies_to_simple_stmt() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -743,6 +761,7 @@ fn test_structured_aug_assign_uses_string_and_list_methods() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -772,6 +791,7 @@ fn test_stmt_path_handles_nested_function() {
         method_kind: MethodKind::Regular,
         decorators: vec![],
         rust_interop: Vec::new(),
+        compiler_intrinsic: None,
         type_params: vec![],
     };
 
@@ -794,6 +814,7 @@ fn test_stmt_path_handles_nested_function() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -862,6 +883,7 @@ fn test_expr_path_handles_call_expression() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],

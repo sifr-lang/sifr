@@ -8,6 +8,7 @@ mod task;
 mod test;
 
 use crate::RustExpr;
+use sifr_ir::CompilerIntrinsicId;
 use sifr_stdlib_manifest::StdlibFeature;
 
 pub(crate) use requirements::additional_required_features;
@@ -18,83 +19,80 @@ pub(crate) struct LoweredIntrinsic {
     pub(crate) additional_required_features: &'static [StdlibFeature],
 }
 
-pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
-    lower_intrinsic_rendered(name, args)
-}
-
-pub(crate) fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
-    let (expr, required_feature) = match name {
-        "builtin_open" => (file_handles::lower_builtin_open(args), None),
-        "builtin_open_text" => (open_text_handles::lower_builtin_open_text(args), None),
-        "assert_eq" => (test::lower_assert_eq(args), None),
-        "assert_ne" => (test::lower_assert_ne(args), None),
-        "assert_true" => (test::lower_assert_true(args), None),
-        "assert_false" => (test::lower_assert_false(args), None),
-        "assert_almost_eq" => (test::lower_assert_almost_eq(args), None),
-        "assert_gt" => (test::lower_assert_gt(args), None),
-        "assert_lt" => (test::lower_assert_lt(args), None),
-        "counter_from_list" => (
+pub(crate) fn lower_intrinsic(
+    intrinsic: CompilerIntrinsicId,
+    args: &[RustExpr],
+) -> Option<LoweredIntrinsic> {
+    let (expr, required_feature) = match intrinsic {
+        CompilerIntrinsicId::OpenBinary => (file_handles::lower_builtin_open(args), None),
+        CompilerIntrinsicId::OpenText => (open_text_handles::lower_builtin_open_text(args), None),
+        CompilerIntrinsicId::TestAssertEqual => (test::lower_assert_eq(args), None),
+        CompilerIntrinsicId::TestAssertNotEqual => (test::lower_assert_ne(args), None),
+        CompilerIntrinsicId::TestAssertTrue => (test::lower_assert_true(args), None),
+        CompilerIntrinsicId::TestAssertFalse => (test::lower_assert_false(args), None),
+        CompilerIntrinsicId::TestAssertAlmostEqual => (test::lower_assert_almost_eq(args), None),
+        CompilerIntrinsicId::TestAssertGreaterThan => (test::lower_assert_gt(args), None),
+        CompilerIntrinsicId::TestAssertLessThan => (test::lower_assert_lt(args), None),
+        CompilerIntrinsicId::CounterFromList => (
             collections::lower_counter_from_list(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "counter_get" => (
+        CompilerIntrinsicId::CounterGet => (
             collections::lower_counter_get(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "counter_most_common" => (
+        CompilerIntrinsicId::CounterMostCommon => (
             collections::lower_counter_most_common(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "counter_total" => (
+        CompilerIntrinsicId::CounterTotal => (
             collections::lower_counter_total(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "counter_values" => (
+        CompilerIntrinsicId::CounterValues => (
             collections::lower_counter_values(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "counter_keys" => (
+        CompilerIntrinsicId::CounterKeys => (
             collections::lower_counter_keys(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "counter_items" => (
+        CompilerIntrinsicId::CounterItems => (
             collections::lower_counter_items(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "counter_increment" => (
+        CompilerIntrinsicId::CounterIncrement => (
             collections::lower_counter_increment(args),
             Some(StdlibFeature::SerdeJson),
         ),
-        "str_encode_utf8_result" => (
+        CompilerIntrinsicId::StringEncode => (
             encoding::lower_str_encode_result(args),
             Some(StdlibFeature::SifrRuntime),
         ),
-        "str_encode_utf8_result_with_encoding" => (
+        CompilerIntrinsicId::StringEncodeWithEncoding => (
             encoding::lower_str_encode_result(args),
             Some(StdlibFeature::SifrRuntime),
         ),
-        "decode_utf8" => (
+        CompilerIntrinsicId::BytesDecode => (
             encoding::lower_bytes_decode_result(args),
             Some(StdlibFeature::SifrRuntime),
         ),
-        "decode_utf8_with_encoding" => (
+        CompilerIntrinsicId::BytesDecodeWithEncoding => (
             encoding::lower_bytes_decode_result(args),
             Some(StdlibFeature::SifrRuntime),
         ),
-        "bytes_to_hex_strict" => (bytes::lower_bytes_to_hex_strict(args), None),
-        "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
-        "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
-        "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
-        "task_current_context" => (
+        CompilerIntrinsicId::BytesFromHex => (bytes::lower_bytes_from_hex(args), None),
+        CompilerIntrinsicId::BytesWithSize => (bytes::lower_bytes_with_size(args), None),
+        CompilerIntrinsicId::BytesFromIntegers => (bytes::lower_bytes_from_ints(args), None),
+        CompilerIntrinsicId::TaskCurrentContext => (
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),
         ),
-        _ => return None,
     };
 
     Some(LoweredIntrinsic {
         expr: expr?,
         required_feature,
-        additional_required_features: additional_required_features(name),
+        additional_required_features: additional_required_features(intrinsic),
     })
 }

@@ -2,6 +2,7 @@ use super::str;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::{Expr, ExprCall, Number};
 use sifr_type_system::{make_union, Type};
 
@@ -756,10 +757,12 @@ pub(in crate::lower) fn lower_bytes_constructor_call(
         );
         return None;
     }
-    Some(HirExpr::Call {
-        func: "bytes_with_size".to_string(),
+    Some(HirExpr::IntrinsicCall {
+        intrinsic: CompilerIntrinsicId::BytesWithSize,
         args: vec![size],
         ty: Type::Result(Box::new(Type::Bytes), Box::new(value_error_type(ctx))),
+        call_range: call.range(),
+        arg_ranges: vec![call.arguments.args[0].range()],
     })
 }
 

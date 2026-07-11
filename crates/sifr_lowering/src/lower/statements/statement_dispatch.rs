@@ -766,6 +766,7 @@ pub(in crate::lower) fn lower_stmt(
                     method_kind: MethodKind::Regular,
                     decorators,
                     rust_interop,
+                    compiler_intrinsic: None,
                     type_params: Vec::new(),
                 },
             })

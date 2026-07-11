@@ -6,20 +6,30 @@ use super::{
     registry_iterable_to_vec_expr_with_hint, registry_nested_zip_field_expr,
     registry_zip_iter_expr, HirExpr, RustEmitter, RustExpr, Type,
 };
+use sifr_ir::CompilerIntrinsicId;
 impl RustEmitter {
     pub(crate) fn apply_intrinsic_registry_side_effects(
         &mut self,
-        func: &str,
+        intrinsic: CompilerIntrinsicId,
         lowered: &intrinsics::LoweredIntrinsic,
     ) {
-        if func == "builtin_open" {
+        self.intrinsic_functions
+            .insert(intrinsic.declaration_name().to_string());
+        if intrinsic == CompilerIntrinsicId::TaskCurrentContext {
+            self.used_stdlib_modules.insert("sifr.task".to_string());
+            self.imported_stdlib_names
+                .entry("sifr.task".to_string())
+                .or_default()
+                .insert("Context".to_string());
+        }
+        if intrinsic == CompilerIntrinsicId::OpenBinary {
             self.used_stdlib_modules.insert("sifr.io".to_string());
             self.imported_stdlib_names
                 .entry("sifr.io".to_string())
                 .or_default()
                 .insert("FileHandle".to_string());
         }
-        if func == "builtin_open_text" {
+        if intrinsic == CompilerIntrinsicId::OpenText {
             self.used_stdlib_modules.insert("sifr.io".to_string());
             self.imported_stdlib_names
                 .entry("sifr.io".to_string())
@@ -363,7 +373,7 @@ mod tests {
             additional_required_features: &[],
         };
 
-        emitter.apply_intrinsic_registry_side_effects("builtin_open_text", &lowered);
+        emitter.apply_intrinsic_registry_side_effects(CompilerIntrinsicId::OpenText, &lowered);
 
         assert!(!emitter.runtime_needs.file_handles());
         assert!(emitter.used_stdlib_modules.contains("sifr.io"));

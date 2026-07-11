@@ -26,9 +26,6 @@ impl RustEmitter {
             }
             HirExpr::IteratorCall { op, args, .. } => {
                 let func = registry_iterator_op_func_name(op);
-                if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {
-                    return Some(lowered);
-                }
                 if let Some(lowered) =
                     self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
                 {
@@ -43,10 +40,10 @@ impl RustEmitter {
                     args: self.try_lower_registry_exprs_strict(args)?,
                 })
             }
+            HirExpr::IntrinsicCall {
+                intrinsic, args, ..
+            } => self.try_lower_registry_intrinsic_call_expr(*intrinsic, args),
             HirExpr::Call { func, args, .. } => {
-                if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {
-                    return Some(lowered);
-                }
                 if let Some(lowered) =
                     self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
                 {

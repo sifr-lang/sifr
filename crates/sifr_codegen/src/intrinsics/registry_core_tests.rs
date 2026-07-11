@@ -1,5 +1,6 @@
 use super::*;
 use crate::{render_expr, RustExpr};
+use sifr_ir::CompilerIntrinsicId;
 
 pub(crate) fn parse_test_arg(rendered: &str) -> RustExpr {
     if let Ok(v) = rendered.parse::<i64>() {
@@ -22,12 +23,40 @@ pub(crate) fn parse_test_arg(rendered: &str) -> RustExpr {
 }
 
 pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<LoweredIntrinsic> {
+    let intrinsic = match name {
+        "builtin_open" => CompilerIntrinsicId::OpenBinary,
+        "builtin_open_text" => CompilerIntrinsicId::OpenText,
+        "assert_eq" => CompilerIntrinsicId::TestAssertEqual,
+        "assert_ne" => CompilerIntrinsicId::TestAssertNotEqual,
+        "assert_true" => CompilerIntrinsicId::TestAssertTrue,
+        "assert_false" => CompilerIntrinsicId::TestAssertFalse,
+        "assert_almost_eq" => CompilerIntrinsicId::TestAssertAlmostEqual,
+        "assert_gt" => CompilerIntrinsicId::TestAssertGreaterThan,
+        "assert_lt" => CompilerIntrinsicId::TestAssertLessThan,
+        "counter_from_list" => CompilerIntrinsicId::CounterFromList,
+        "counter_get" => CompilerIntrinsicId::CounterGet,
+        "counter_most_common" => CompilerIntrinsicId::CounterMostCommon,
+        "counter_total" => CompilerIntrinsicId::CounterTotal,
+        "counter_values" => CompilerIntrinsicId::CounterValues,
+        "counter_keys" => CompilerIntrinsicId::CounterKeys,
+        "counter_items" => CompilerIntrinsicId::CounterItems,
+        "counter_increment" => CompilerIntrinsicId::CounterIncrement,
+        "str_encode_utf8_result" => CompilerIntrinsicId::StringEncode,
+        "str_encode_utf8_result_with_encoding" => CompilerIntrinsicId::StringEncodeWithEncoding,
+        "decode_utf8" => CompilerIntrinsicId::BytesDecode,
+        "decode_utf8_with_encoding" => CompilerIntrinsicId::BytesDecodeWithEncoding,
+        "bytes_from_hex" => CompilerIntrinsicId::BytesFromHex,
+        "bytes_with_size" => CompilerIntrinsicId::BytesWithSize,
+        "bytes_from_ints" => CompilerIntrinsicId::BytesFromIntegers,
+        "task_current_context" => CompilerIntrinsicId::TaskCurrentContext,
+        _ => return None,
+    };
     let args = rendered_args
         .iter()
         .cloned()
         .map(|arg| parse_test_arg(&arg))
         .collect::<Vec<_>>();
-    super::lower_intrinsic(name, &args)
+    super::lower_intrinsic(intrinsic, &args)
 }
 
 #[test]
@@ -417,10 +446,7 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
     assert!(from_ints_rendered.contains("byte out of range at index"));
     assert!(from_ints_rendered.contains("Ok::<Vec<u8>, ValueError>"));
 
-    let to_hex_strict =
-        lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()]).expect("bytes_to_hex_strict");
-    assert!(render_expr(&to_hex_strict.expr).contains("{:02x}"));
-    assert!(!render_expr(&to_hex_strict.expr).contains("Ok"));
+    assert!(lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()]).is_none());
 
     let from_hex = lower_intrinsic("bytes_from_hex", &["hex".to_string()]).expect("bytes_from_hex");
     let from_hex_rendered = render_expr(&from_hex.expr);

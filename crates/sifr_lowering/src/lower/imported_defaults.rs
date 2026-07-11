@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::hir_nodes::HirExpr;
+use sifr_ir::CompilerIntrinsicId;
 
 use super::workload_annotations::WorkloadKind;
 use super::LowerCtx;
@@ -14,6 +15,18 @@ pub(in crate::lower) fn import_callable_defaults(
     if let Some(defaults) = module_defaults.get(external_name) {
         ctx.function_defaults
             .insert(local_name.to_string(), defaults.clone());
+    }
+}
+
+pub(in crate::lower) fn import_callable_compiler_intrinsic(
+    ctx: &mut LowerCtx,
+    module_intrinsics: &HashMap<String, CompilerIntrinsicId>,
+    external_name: &str,
+    local_name: &str,
+) {
+    if let Some(intrinsic) = module_intrinsics.get(external_name) {
+        ctx.compiler_intrinsics
+            .insert(local_name.to_string(), *intrinsic);
     }
 }
 

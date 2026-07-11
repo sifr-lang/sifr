@@ -33,6 +33,7 @@ fn test_mut_on_mutating_method_call() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -43,10 +44,7 @@ fn test_mut_on_mutating_method_call() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(
-        rust_code.contains("let mut items"),
-        "should emit `let mut items` for variable with .push()"
-    );
+    assert!(rust_code.contains("let mut items"));
 }
 
 #[test]
@@ -142,6 +140,7 @@ fn test_class_to_string_method_does_not_emit_generated_allow() {
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: vec![],
             }],
             is_hashable: false,
@@ -222,6 +221,7 @@ fn test_empty_print() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -356,6 +356,7 @@ fn test_structured_stmt_path_rewrites_module_constant_name() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -391,6 +392,7 @@ fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -469,6 +471,7 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -495,6 +498,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -516,6 +520,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![HirClass {
@@ -580,6 +585,7 @@ fn test_generate_rust_multi_publicizes_non_main_reexports() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -613,6 +619,7 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -642,6 +649,7 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -683,6 +691,7 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -712,6 +721,7 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -766,6 +776,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -797,6 +808,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],
@@ -870,6 +882,7 @@ fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: vec![],
         }],
         classes: vec![],

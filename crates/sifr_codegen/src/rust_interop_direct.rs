@@ -431,6 +431,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["crc32fast", "hash"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -466,6 +467,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "collections", "set_from_list"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -501,6 +503,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "collections", "set_len"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -536,6 +539,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "calendar", "calendar_weekday"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -580,6 +584,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "url", "url_build_parts"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -615,6 +620,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "calendar", "calendar_monthrange"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -656,6 +662,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "base64", "base64_decode"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -700,6 +707,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "fs", "read_text"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -744,6 +752,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "regex", "re_match"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -792,6 +801,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "json", "json_load_tokens"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 
@@ -821,6 +831,7 @@ mod tests {
                 RustInteropDecoratorKind::Function,
                 &["bridge", "hash", "digest"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
         assert_eq!(direct_rust_function_body(&func), None);
@@ -843,6 +854,7 @@ mod tests {
                 RustInteropDecoratorKind::Async,
                 &["remote", "fetch_ready"],
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         };
 

@@ -1,0 +1,26 @@
+# Source-declared compiler callables keep typed identity through aliases.
+from sifr.hashlib import sha224
+from sifr.task import current_context as context_now
+from sifr.test import assert_eq as verify_equal
+
+
+# An ordinary callable with a former intrinsic name remains ordinary source.
+def assert_eq(left: int, right: int) -> int:
+    return left + right
+
+
+def main() -> None:
+    verify_equal(assert_eq(20, 22), 42)
+    verify_equal(str(context_now()), "Context")
+
+    # These operations become typed HIR directly; their spelling is not dispatch.
+    try:
+        payload: bytes = bytes.from_hex("53 69 66 72")
+        text: str = payload.decode("utf-8")
+        verify_equal(text, "Sifr")
+    except ParseError:
+        assert False
+
+    # hashlib formatting reaches the published _sifr.bytes Rust bridge.
+    verify_equal(len(sha224("typed boundary")), 56)
+    print("typed compiler boundary: ok")

@@ -348,7 +348,9 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
                 collect_expr(value, &format!("{path}/value[{index}]"), facts);
             }
         }
-        HirExpr::IteratorCall { args, .. } | HirExpr::SuperCall { args, .. } => {
+        HirExpr::IteratorCall { args, .. }
+        | HirExpr::IntrinsicCall { args, .. }
+        | HirExpr::SuperCall { args, .. } => {
             for (index, arg) in args.iter().enumerate() {
                 collect_expr(arg, &format!("{path}/arg[{index}]"), facts);
             }
@@ -525,6 +527,7 @@ fn expr_kind(expr: &HirExpr) -> &'static str {
         HirExpr::Compare { .. } => "Compare",
         HirExpr::BoolOp { .. } => "BoolOp",
         HirExpr::Call { .. } => "Call",
+        HirExpr::IntrinsicCall { .. } => "IntrinsicCall",
         HirExpr::Await { .. } => "Await",
         HirExpr::IteratorCall { .. } => "IteratorCall",
         HirExpr::IfExpr { .. } => "IfExpr",

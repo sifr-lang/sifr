@@ -105,7 +105,6 @@ implementation imports under `stdlib/sifr`.
 | `_sifr.runtime` | `runtime.sifr` |
 | `_sifr.signal` | `signal.sifr` |
 | `_sifr.sys` | `env.sifr`, `os.sifr`, `sys.sifr` |
-| `_sifr.task` | `task.sifr` |
 | `_sifr.time` | `datetime.sifr`, `random.sifr`, `time.sifr`, `timeit.sifr` |
 | `_sifr.tls` | `tls.sifr` |
 | `_sifr.toml` | `tomllib.sifr` |

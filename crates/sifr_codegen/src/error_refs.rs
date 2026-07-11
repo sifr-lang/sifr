@@ -342,7 +342,7 @@ fn collect_expr_error_refs(
                 collect_expr_error_refs(arg, referenced, builtin_error_classes);
             }
         }
-        HirExpr::IteratorCall { args, .. } => {
+        HirExpr::IntrinsicCall { args, .. } | HirExpr::IteratorCall { args, .. } => {
             for arg in args {
                 collect_expr_error_refs(arg, referenced, builtin_error_classes);
             }
@@ -589,6 +589,7 @@ mod tests {
             method_kind: MethodKind::Regular,
             decorators: Vec::new(),
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         });
 
@@ -625,6 +626,7 @@ mod tests {
                 method_kind: MethodKind::Regular,
                 decorators: Vec::new(),
                 rust_interop: Vec::new(),
+                compiler_intrinsic: None,
                 type_params: Vec::new(),
             }],
             is_hashable: false,
@@ -698,6 +700,7 @@ mod tests {
             method_kind: MethodKind::Regular,
             decorators: Vec::new(),
             rust_interop: Vec::new(),
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         });
 

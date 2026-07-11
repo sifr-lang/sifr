@@ -8,11 +8,11 @@ use super::{
     LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
     StmtFunctionDef, Type,
 };
-use crate::lower::diagnostics::has_decorator;
 use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
 };
+use crate::lower::{compiler_intrinsics, diagnostics::has_decorator};
 pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
@@ -538,11 +538,25 @@ pub(in crate::lower) fn lower_function(
         has_decorator(func, "cpu_heavy"),
         effective_is_async,
     );
-    let stub_body = classify_rust_interop_stub_body(
-        &func.body,
-        has_rust_interop_decorator_syntax(&func.decorator_list),
-        ctx,
-    );
+    let compiler_intrinsic = ctx.compiler_intrinsics.get(func.name.as_str()).copied();
+    let has_compiler_intrinsic_syntax =
+        compiler_intrinsics::has_decorator_syntax(&func.decorator_list);
+    let stub_body = if has_compiler_intrinsic_syntax {
+        if !rust_interop.is_empty() {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
+                "@compiler_intrinsic and Rust interop decorators cannot be combined".to_string(),
+                func.name.range(),
+            );
+        }
+        compiler_intrinsics::classify_stub_body(func, compiler_intrinsic, ctx)
+    } else {
+        classify_rust_interop_stub_body(
+            &func.body,
+            has_rust_interop_decorator_syntax(&func.decorator_list),
+            ctx,
+        )
+    };
 
     let is_async_generator = !stub_body.skips_normal_body_lowering()
         && effective_is_async
@@ -725,6 +739,7 @@ pub(in crate::lower) fn lower_function(
         method_kind: MethodKind::Regular,
         decorators,
         rust_interop,
+        compiler_intrinsic,
         type_params,
     })
 }

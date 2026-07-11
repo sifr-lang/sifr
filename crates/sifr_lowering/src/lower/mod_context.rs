@@ -14,7 +14,7 @@ use ruff_text_size::TextRange;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
-use sifr_ir::{FlowEffect, LoweringResult};
+use sifr_ir::{CompilerIntrinsicId, FlowEffect, LoweringResult};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -23,6 +23,8 @@ use workload_annotations::WorkloadKind;
 pub(in crate::lower) struct LowerCtx {
     /// Function signatures (name -> type)
     pub(in crate::lower) functions: HashMap<String, FunctionType>,
+    /// Resolved local callable name -> typed compiler intrinsic identity.
+    pub(in crate::lower) compiler_intrinsics: HashMap<String, CompilerIntrinsicId>,
     pub(in crate::lower) async_functions: std::collections::HashSet<String>,
     pub(in crate::lower) async_generator_functions: std::collections::HashSet<String>,
     pub(in crate::lower) async_suspension_summaries: HashMap<String, AsyncSuspensionSummary>,
@@ -130,6 +132,7 @@ impl LowerCtx {
     pub(in crate::lower) fn new() -> Self {
         Self {
             functions: HashMap::new(),
+            compiler_intrinsics: HashMap::new(),
             async_functions: std::collections::HashSet::new(),
             async_generator_functions: std::collections::HashSet::new(),
             async_suspension_summaries: HashMap::new(),

@@ -1,12 +1,12 @@
 use super::{
     async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
-    collect_type_vars, extract_function_type, function_body_contains_yield, import_diagnostics,
-    import_resolution, imported_defaults, imports, integer_literal_diagnostics, lower_class,
-    lower_function, module_constants_lowering, module_function_registry, name_diagnostics,
-    parse_typevar_bound_expr, parse_typevar_declaration_specs, predeclare_type_aliases,
-    private_stdlib_imports, register_builtins, resolve_imports_early, resolve_type_aliases, str,
-    workload_annotations, Expr, ExternalDefs, FunctionType, HirDiagnostic, HirImport, HirModule,
-    LowerCtx, Ranged, Stmt, TextRange, Type,
+    collect_type_vars, compiler_intrinsics, extract_function_type, function_body_contains_yield,
+    import_diagnostics, import_resolution, imported_defaults, imports, integer_literal_diagnostics,
+    lower_class, lower_function, module_constants_lowering, module_function_registry,
+    name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
+    predeclare_type_aliases, private_stdlib_imports, register_builtins, resolve_imports_early,
+    resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs, FunctionType,
+    HirDiagnostic, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
 };
 use sifr_ir::LoweringResult;
 /// Internal implementation of module lowering.
@@ -84,6 +84,7 @@ pub(in crate::lower) fn lower_module_impl(
         }
     }
     let mut function_name_registry = module_function_registry::ModuleFunctionRegistry::default();
+    let mut module_compiler_intrinsics = Vec::new();
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
             let function_name = func.name.to_string();
@@ -93,6 +94,12 @@ pub(in crate::lower) fn lower_module_impl(
                 &mut ctx,
             ) {
                 continue;
+            }
+            compiler_intrinsics::register_declaration(func, &mut ctx);
+            if compiler_intrinsics::has_decorator_syntax(&func.decorator_list) {
+                if let Some(intrinsic) = ctx.compiler_intrinsics.get(&function_name).copied() {
+                    module_compiler_intrinsics.push((function_name.clone(), intrinsic));
+                }
             }
             // PEP 695: register inline type params (def f[T](...)) as type variables
             let mut pep695_type_vars = Vec::new();
@@ -355,6 +362,16 @@ pub(in crate::lower) fn lower_module_impl(
                             if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
                                 if let Some(ft) = module_fns.get(name) {
                                     ctx.functions.insert(local.clone(), ft.clone());
+                                    if let Some(module_intrinsics) =
+                                        externals.compiler_intrinsics.get(&stdlib_module_key)
+                                    {
+                                        imported_defaults::import_callable_compiler_intrinsic(
+                                            &mut ctx,
+                                            module_intrinsics,
+                                            name,
+                                            &local,
+                                        );
+                                    }
                                     if let Some(module_defaults) =
                                         externals.function_defaults.get(&stdlib_module_key)
                                     {
@@ -575,6 +592,16 @@ pub(in crate::lower) fn lower_module_impl(
                 if let Some(module_fns) = externals.functions.get(&module_name) {
                     if let Some(ft) = module_fns.get(name) {
                         ctx.functions.insert(local.clone(), ft.clone());
+                        if let Some(module_intrinsics) =
+                            externals.compiler_intrinsics.get(&module_name)
+                        {
+                            imported_defaults::import_callable_compiler_intrinsic(
+                                &mut ctx,
+                                module_intrinsics,
+                                name,
+                                &local,
+                            );
+                        }
                         if let Some(module_defaults) = externals.function_defaults.get(&module_name)
                         {
                             imported_defaults::import_callable_defaults(
@@ -736,6 +763,16 @@ pub(in crate::lower) fn lower_module_impl(
             }
         }
     }
+    // The early import pass makes imported callable metadata available to signatures, while the
+    // full import pass above records the final import list. Module function declarations shadow
+    // those imported bindings for lowering purposes, so discard any imported intrinsic identity
+    // that was reintroduced under a locally declared name and then restore canonical declarations.
+    for stmt in stmts {
+        if let Stmt::FunctionDef(func) = stmt {
+            ctx.compiler_intrinsics.remove(func.name.as_str());
+        }
+    }
+    ctx.compiler_intrinsics.extend(module_compiler_intrinsics);
     let constants = module_constants_lowering::collect_module_constants(stmts, &mut ctx);
     // Second pass: lower function bodies and class method bodies
     let mut functions = Vec::new();

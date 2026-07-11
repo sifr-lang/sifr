@@ -1,4 +1,5 @@
 use super::{intrinsics, HirExpr, RustEmitter};
+use sifr_ir::CompilerIntrinsicId;
 
 impl RustEmitter {
     pub(crate) fn try_lower_registry_dict_literal_expr(
@@ -79,7 +80,7 @@ impl RustEmitter {
 
     pub(crate) fn try_lower_registry_intrinsic_call_expr(
         &mut self,
-        func: &str,
+        intrinsic: CompilerIntrinsicId,
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
         let mut ir_args = if let Some(lowered_args) = self.try_lower_registry_exprs_strict(args) {
@@ -93,8 +94,12 @@ impl RustEmitter {
             lowered_args
         };
         if matches!(
-            func,
-            "assert_eq" | "assert_ne" | "assert_gt" | "assert_lt" | "assert_almost_eq"
+            intrinsic,
+            CompilerIntrinsicId::TestAssertEqual
+                | CompilerIntrinsicId::TestAssertNotEqual
+                | CompilerIntrinsicId::TestAssertGreaterThan
+                | CompilerIntrinsicId::TestAssertLessThan
+                | CompilerIntrinsicId::TestAssertAlmostEqual
         ) {
             for (idx, arg) in args.iter().enumerate() {
                 let HirExpr::Name { name, ty } = arg else {
@@ -112,8 +117,8 @@ impl RustEmitter {
                 }
             }
         }
-        let lowered = intrinsics::lower_intrinsic(func, &ir_args)?;
-        self.apply_intrinsic_registry_side_effects(func, &lowered);
+        let lowered = intrinsics::lower_intrinsic(intrinsic, &ir_args)?;
+        self.apply_intrinsic_registry_side_effects(intrinsic, &lowered);
         Some(lowered.expr)
     }
 }

@@ -10,7 +10,7 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
                 if is_message_error_alias(name) && message_error_fields(fields).is_some()
         ) {
             return RustExpr::StructInit {
-                name: name.to_string(),
+                name: name.clone(),
                 fields: vec![("message".to_string(), to_string_expr(value))],
             };
         }

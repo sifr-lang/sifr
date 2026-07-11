@@ -13,8 +13,9 @@ pub fn bytes_to_hex(bytes: &[u8]) -> Result<String, String> {
     Ok(bytes_to_hex_strict(bytes))
 }
 
+/// Format bytes as lowercase hexadecimal for the infallible private stdlib bridge.
 #[must_use]
-fn bytes_to_hex_strict(bytes: &[u8]) -> String {
+pub fn bytes_to_hex_strict(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut out = String::with_capacity(bytes.len() * 2);
     for byte in bytes {

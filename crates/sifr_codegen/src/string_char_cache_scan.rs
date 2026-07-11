@@ -65,6 +65,7 @@ pub(crate) fn collect_string_cache_uses(expr: &HirExpr, used: &mut HashSet<Strin
         }
         HirExpr::BoolOp { values, .. }
         | HirExpr::Call { args: values, .. }
+        | HirExpr::IntrinsicCall { args: values, .. }
         | HirExpr::IteratorCall { args: values, .. }
         | HirExpr::ListLiteral {
             elements: values, ..

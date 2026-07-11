@@ -16,6 +16,7 @@ REGISTRY_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "intrinsics" / "
 REGISTRY_DISPATCH_PATH = (
     REPO_ROOT / "crates" / "sifr_codegen" / "src" / "intrinsics" / "registry.rs"
 )
+HIR_NODES_PATH = REPO_ROOT / "crates" / "sifr_ir" / "src" / "hir_nodes.rs"
 PREAMBLE_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "preamble"
 RETAINED_INTRINSICS_LIB_PATH = REPO_ROOT / "crates" / "sifr_retained_intrinsics" / "src" / "lib.rs"
 CODEGEN_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src"
@@ -30,7 +31,9 @@ DEPENDENCY_PLAN_RS_PATH = (
 DELETED_OWNERSHIP_REGISTRY = REPO_ROOT / "internal_docs" / "stdlib_native_surface_ownership.toml"
 ARCH_DOC_PATH = REPO_ROOT / "internal_docs" / "sifr_sysroot_and_stdlib_architecture.md"
 
-EXACT_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
+TYPED_INTRINSIC_NAME_RE = re.compile(
+    r'Self::[A-Za-z0-9_]+\s*=>\s*"([A-Za-z0-9_]+)"'
+)
 LOWERER_MATCH_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
 RETAINED_SIGNATURE_MODULE_RE = re.compile(r'"(_sifr\.[A-Za-z0-9_]+)"\s*=>\s*Some\(')
@@ -74,7 +77,9 @@ def _run(observed: dict[str, set[str]], allowlist: dict[str, Any]) -> int:
 
 def _observed_surface() -> dict[str, set[str]]:
     registry_text = REGISTRY_DISPATCH_PATH.read_text(encoding="utf-8")
-    exact_intrinsics = set(EXACT_INTRINSIC_RE.findall(registry_text))
+    exact_intrinsics = set(
+        TYPED_INTRINSIC_NAME_RE.findall(HIR_NODES_PATH.read_text(encoding="utf-8"))
+    )
     for lowerer_path in PREFIX_DISPATCH_LOWERERS:
         exact_intrinsics.update(
             LOWERER_MATCH_INTRINSIC_RE.findall(lowerer_path.read_text(encoding="utf-8"))

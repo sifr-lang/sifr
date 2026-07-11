@@ -123,6 +123,7 @@ fn compile_stdlib_sources_with_sysroot(
         let mut transitive_deps_for_module = HashSet::new();
 
         let mut fn_exports = HashMap::new();
+        let mut compiler_intrinsic_exports = HashMap::new();
         let mut class_exports = HashMap::new();
         let mut class_type_param_exports = HashMap::new();
         let mut default_exports = HashMap::new();
@@ -132,6 +133,9 @@ fn compile_stdlib_sources_with_sysroot(
         for func in &result.module.functions {
             if private_declaration || should_export_callable(module_name, &func.name) {
                 fn_exports.insert(func.name.clone(), function_type_from_hir(func));
+                if let Some(intrinsic) = func.compiler_intrinsic {
+                    compiler_intrinsic_exports.insert(func.name.clone(), intrinsic);
+                }
                 if let Some(vararg_index) = result.function_varargs.get(&func.name) {
                     vararg_exports.insert(func.name.clone(), *vararg_index);
                 }
@@ -170,6 +174,7 @@ fn compile_stdlib_sources_with_sysroot(
                 if has_compiled_exports {
                     let mut exports = ReExportMaps {
                         functions: &mut fn_exports,
+                        compiler_intrinsics: &mut compiler_intrinsic_exports,
                         classes: &mut class_exports,
                         class_type_params: &mut class_type_param_exports,
                         defaults: &mut default_exports,
@@ -211,6 +216,7 @@ fn compile_stdlib_sources_with_sysroot(
                 if module_name == "sifr.python" && import.module == "sifr.python_core" {
                     let mut exports = ReExportMaps {
                         functions: &mut fn_exports,
+                        compiler_intrinsics: &mut compiler_intrinsic_exports,
                         classes: &mut class_exports,
                         class_type_params: &mut class_type_param_exports,
                         defaults: &mut default_exports,
@@ -238,6 +244,7 @@ fn compile_stdlib_sources_with_sysroot(
         }
         if !private_declaration {
             fn_exports.retain(|name, _| should_export_callable(module_name, name));
+            compiler_intrinsic_exports.retain(|name, _| should_export_callable(module_name, name));
             default_exports.retain(|name, _| should_export_callable(module_name, name));
             vararg_exports.retain(|name, _| should_export_callable(module_name, name));
             workload_exports.retain(|name, _| {
@@ -426,6 +433,11 @@ fn compile_stdlib_sources_with_sysroot(
         stdlib_defs
             .functions
             .insert(module_name.to_string(), fn_exports);
+        if !compiler_intrinsic_exports.is_empty() {
+            stdlib_defs
+                .compiler_intrinsics
+                .insert(module_name.to_string(), compiler_intrinsic_exports);
+        }
         stdlib_defs
             .classes
             .insert(module_name.to_string(), class_exports);

@@ -62,6 +62,9 @@ fn import_function_metadata(
     name: &str,
     local: &str,
 ) {
+    if let Some(module_intrinsics) = externals.compiler_intrinsics.get(module_name) {
+        imported_defaults::import_callable_compiler_intrinsic(ctx, module_intrinsics, name, local);
+    }
     if let Some(module_defaults) = externals.function_defaults.get(module_name) {
         imported_defaults::import_callable_defaults(ctx, module_defaults, name, local);
     }

@@ -239,6 +239,9 @@ fn hir_expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
         HirExpr::IteratorCall { args, .. } => args
             .iter()
             .any(|arg| hir_expr_calls_function(arg, func_name)),
+        HirExpr::IntrinsicCall { args, .. } => args
+            .iter()
+            .any(|arg| hir_expr_calls_function(arg, func_name)),
         HirExpr::MethodCall { object, args, .. } => {
             hir_expr_calls_function(object, func_name)
                 || args.iter().any(|arg| hir_expr_calls_function(arg, func_name))

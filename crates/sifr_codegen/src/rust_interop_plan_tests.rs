@@ -124,6 +124,7 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
                 RustInteropDecoratorKind::Function,
                 "bridge.hash.digest",
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         }],
         classes: Vec::new(),
@@ -183,6 +184,7 @@ fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
                 RustInteropDecoratorKind::Function,
                 "sifr_stdlib.python.py_from_none",
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         }],
         classes: vec![python_error_class],
@@ -237,6 +239,7 @@ fn interop_bridge_callable_params_require_callback_contract() {
             RustInteropDecoratorKind::Function,
             "bridge.events.subscribe",
         )],
+        compiler_intrinsic: None,
         type_params: Vec::new(),
     };
     let module_without_callback = module_with(vec![function.clone()], Vec::new());
@@ -295,6 +298,7 @@ fn interop_bridge_generated_field_paths_use_declaring_module() {
                 RustInteropDecoratorKind::Function,
                 "bridge.tokens.wrap",
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         }],
         vec![class("Wrapper", HirClassKind::Regular, Vec::new())],
@@ -344,6 +348,7 @@ fn interop_bridge_rejects_enum_discriminants_outside_repr_u32() {
                 RustInteropDecoratorKind::Function,
                 "bridge.status.current",
             )],
+            compiler_intrinsic: None,
             type_params: Vec::new(),
         }],
         vec![class("Status", HirClassKind::Enum, Vec::new())],
@@ -373,6 +378,7 @@ fn function_with_declaration(
         method_kind: MethodKind::Regular,
         decorators: Vec::new(),
         rust_interop: vec![declaration(kind, target)],
+        compiler_intrinsic: None,
         type_params: Vec::new(),
     }
 }
