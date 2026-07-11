@@ -2,6 +2,11 @@
 
 This note records the production contract implemented by the embedded CPython interop phase. It complements the public guide in `docs/python-interop.mdx` and the verification surface in `verification/areas/python_interop/`.
 
+The proposed declaration-first package-authoring layer is specified separately
+in [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md).
+That document is a future contract, not a description of currently implemented
+syntax or behavior.
+
 ## Ownership Boundary
 
 Python interop is a separate lane from Sifr's Rust-backed packages and raw C ABI interop. The final root application owns one uv-created CPython virtual environment. Sifr verifies and consumes that environment; it never installs packages, runs `uv sync`, or searches host-global Python as a fallback.
