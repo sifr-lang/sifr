@@ -21,7 +21,13 @@ pass 2 found and blocked on the 900-line file-size guard, and pass 3 was
 satisfied after responsibility-based cache extraction. The M2 create-PR gate
 passed with every blocking lane green, including
 crate tests at 502,431 ms / 600,000 ms and 129/129 selected E2E fixtures at
-406,818 ms / 600,000 ms. M3 is in progress.
+406,818 ms / 600,000 ms. M3 introduces typed compiler-intrinsic identity and
+source-declared retained callables and is merged in
+[PR #2923](https://github.com/sifr-lang/sifr/pull/2923). Its create-PR gate
+passed with crate tests at 130,922 ms / 600,000 ms, runtime-platform suites at
+59,782 ms / 120,000 ms, and 129/129 selected E2E fixtures at
+402,726 ms / 600,000 ms. Three Claude Opus review rounds were satisfied; the
+final round verified the local-shadowing correction raised during round 2.
 
 ## Why This Phase Exists
 
@@ -544,7 +550,7 @@ scripts/run_all_tests.sh
 - [x] No-fallback target and PR sequence decided.
 - [x] M1 merged and documented ([PR #2921](https://github.com/sifr-lang/sifr/pull/2921)).
 - [x] M2 merged and documented ([PR #2922](https://github.com/sifr-lang/sifr/pull/2922)).
-- [ ] M3 merged and documented.
+- [x] M3 merged and documented ([PR #2923](https://github.com/sifr-lang/sifr/pull/2923)).
 - [ ] M4 merged and documented.
 - [ ] M5 merged and documented.
 - [ ] M6 merged and documented.

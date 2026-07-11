@@ -29,7 +29,7 @@ preserving the 17 intentionally retained compiler operations and migrating
   primitive-construction, and former-name collision regressions.
 - [x] Run focused check/emit/build/run coverage, guardrails, and the create-PR
   gate.
-- [ ] Run Claude Opus review rounds until `SATISFIED`, merge the M3 PR, and
+- [x] Run Claude Opus review rounds until `SATISFIED`, merge the M3 PR, and
   update the phase record.
 
 ## Typed ID inventory
