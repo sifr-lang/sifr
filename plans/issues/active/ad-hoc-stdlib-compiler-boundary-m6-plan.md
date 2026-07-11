@@ -30,7 +30,7 @@ and installed sysroots must certify equivalent behavior and dependency plans.
 - [x] Certify representative retained-intrinsic and migrated-bridge programs
   against both source-tree and installed sysroots, including dependency-plan
   equivalence.
-- [ ] Run focused guards/tests, the authoritative create-PR gate, and Claude
+- [x] Run focused guards/tests, the authoritative create-PR gate, and Claude
   Opus review rounds until `SATISFIED`.
 - [ ] Open, review, and merge the M6 PR; then run the full merge gate on final
   `main` and complete the phase-wide review/closure record.
@@ -65,4 +65,4 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   `SATISFIED`. Its soft blind spots were nevertheless hardened: public
   unsafe/extern functions are now inventoried, structured compiler consumers
   require an exact Rust IR path, and installed/source probe caches are isolated.
-  Round 2 confirmation remains pending.
+  Round 2 reported no blockers or optional cleanups and also ended `SATISFIED`.
