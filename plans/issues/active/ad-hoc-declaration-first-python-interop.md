@@ -398,7 +398,7 @@ Implementation waves:
   - Carry isolated bridge identities and inventories through the selected
     package graph into driver/codegen planning without yet activating public
     `bridge.*` declarations.
-- [ ] Atomic loader, embedding, and declaration activation:
+- [x] Atomic loader, embedding, and declaration activation — [PR #2949](https://github.com/sifr-lang/sifr/pull/2949):
   - Generate embedded source tables with synthetic package entries and stable
     virtual filenames of the form
     `<__sifr_bridge__.p_<resolved_package_key>.<module_path>>`; propagate each
