@@ -167,10 +167,23 @@ pub(super) fn package_compiler_context(
     let Some(package_id) = current_session_package_id(session, &context.graph) else {
         return Ok(None);
     };
-    let derived_python_requirements = declaration_python_requirements(
+    let mut derived_python_requirements = declaration_python_requirements(
         &context.source_map,
         entry_file.map(|file| (file, &package_id)),
     );
+    let bridge_graph = match sifr_package::resolve_python_bridge_graph(&context.graph, &package_id)
+    {
+        Ok(graph) => graph,
+        Err(errors) => {
+            let diagnostics = errors
+                .into_iter()
+                .map(package_diagnostic)
+                .collect::<Vec<_>>();
+            render_diagnostics(&diagnostics, diagnostic_format);
+            return Err(EXIT_USER_DIAGNOSTIC);
+        }
+    };
+    derived_python_requirements.extend(bridge_graph.requirements);
     let python_runtime = package_python_runtime(
         &context.graph,
         &package_id,

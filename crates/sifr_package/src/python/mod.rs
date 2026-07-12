@@ -1,4 +1,5 @@
 mod bridge_inventory;
+mod bridge_resolution;
 mod environment;
 mod probe_validation;
 mod requirements;
@@ -12,6 +13,11 @@ pub use bridge_inventory::{
 };
 pub(crate) use bridge_inventory::{
     python_bridge_projection_diagnostics, repair_python_bridge_inventory,
+};
+pub use bridge_resolution::{
+    resolve_python_bridge_graph, resolved_python_bridge_package_key,
+    resolved_python_bridge_runtime_package, ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport,
+    ResolvedPythonBridgeModule, ResolvedPythonBridgePackage, PYTHON_BRIDGE_RUNTIME_ROOT,
 };
 pub use environment::{
     probe_python_environment, resolve_python_environment,
@@ -28,6 +34,8 @@ pub use requirements::{
 mod bridge_inventory_symlink_tests;
 #[cfg(test)]
 mod bridge_inventory_tests;
+#[cfg(test)]
+mod bridge_resolution_tests;
 #[cfg(test)]
 mod cache_tests;
 #[cfg(test)]

@@ -378,6 +378,25 @@ is a valid-identifier encoding of the resolved Sifr package identity. The Sifr
 source root `bridge.identifiers` is rewritten to that package-specific runtime
 name, so two packages may both own `bridge.identifiers` without collision.
 
+`resolved_package_key` is the full lowercase SHA-256 digest of the
+domain-separated byte sequence `sifr-python-bridge-package-v1\0` followed by
+the canonical resolved `SifrPackageId`. The `p_` prefix makes the runtime
+segment a valid Python identifier independently of the digest's first digit;
+using the full digest preserves collision resistance without checkout-local
+paths or truncation. Resolution walks only the root package and its normal
+selected Sifr dependency scopes, so dev-only and otherwise unselected packages
+do not contribute bridge identities or requirements.
+
+Before loader activation, package resolution already carries a deterministic
+bridge plan into driver/codegen metadata. Each plan entry records the isolated
+runtime package, inventory/source digests, runtime module names, resolved
+same-package import names, and external roots. External roots contribute
+`PythonRequirementKind::BridgeImport` provenance to the canonical requirement
+set and remain subject to the root application's `SIFR-PYTRUST-0005`
+authorization. This planning representation does not activate public
+`bridge.*` declarations; lowering remains gated until the embedded loader and
+target rewrite land atomically.
+
 Generated runtime metadata contains an embedded UTF-8 source table keyed by
 the full runtime module name, including synthetic package entries and stable
 virtual filenames for tracebacks. Before user `main` or any bridge import,

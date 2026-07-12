@@ -88,7 +88,8 @@ mod python_interop_plan;
 #[cfg(test)]
 mod python_interop_plan_tests;
 pub use python_interop_plan::{
-    PythonInteropPlan, PythonInteropPlanDeclaration, PythonTargetProbe, PythonTargetProbeStatus,
+    PythonBridgeImportPlan, PythonBridgeModulePlan, PythonBridgePackagePlan, PythonInteropPlan,
+    PythonInteropPlanDeclaration, PythonTargetProbe, PythonTargetProbeStatus,
 };
 mod render;
 pub use render::*;
