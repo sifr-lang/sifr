@@ -262,6 +262,7 @@ impl RustEmitter {
             self.sifr_int_result_function_returns.borrow().clone();
         let saved_current_sifr_int_return = self.current_sifr_int_return.get();
         let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
+        let saved_python_context_counter = self.python_context_counter;
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -272,6 +273,7 @@ impl RustEmitter {
         self.string_char_cache_vars.clear();
         self.hoistable_static_dict_locals = self.collect_hoistable_static_dict_locals(func);
         self.none_widened_local_bindings.clear();
+        self.python_context_counter = 0;
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.sifr_int_result_local_bindings.borrow_mut().clear();
@@ -413,6 +415,7 @@ impl RustEmitter {
         self.string_char_cache_vars = saved_string_char_cache_vars;
         self.hoistable_static_dict_locals = saved_hoistable_static_dict_locals;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
+        self.python_context_counter = saved_python_context_counter;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;

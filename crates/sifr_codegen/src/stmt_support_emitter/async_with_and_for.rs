@@ -8,6 +8,12 @@ impl RustEmitter {
         items: &[sifr_ir::HirWithItem],
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        if items
+            .iter()
+            .any(|item| matches!(item.kind, sifr_ir::HirWithItemKind::Python { .. }))
+        {
+            return self.try_lower_python_context_with_for_ir(items, body);
+        }
         let mut lowered_items = Vec::with_capacity(items.len());
         for item in items {
             let (has_cm, value) = match &item.kind {
@@ -15,9 +21,7 @@ impl RustEmitter {
                     has_context_manager_protocol,
                 } => (*has_context_manager_protocol, &item.context),
                 sifr_ir::HirWithItemKind::Python { .. } => {
-                    return Err(crate::CodegenError::new(
-                        "Python context HIR requires dedicated context code generation",
-                    ));
+                    unreachable!("Python context items are delegated before native with lowering")
                 }
             };
             let var = &item.target;

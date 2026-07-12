@@ -117,6 +117,15 @@ pub fn record_context_cleanup_evidence(primary_cause: &str, secondary: &PythonEr
     });
 }
 
+pub fn record_context_ignored_suppression(primary_cause: &str) {
+    cleanup_evidence().push(ContextCleanupEvidence {
+        primary_cause: primary_cause.to_string(),
+        exception_type: "SifrBoundaryError".to_string(),
+        message: "Python context suppression was ignored for a non-Python Sifr cause".to_string(),
+        context: "context exit decision".to_string(),
+    });
+}
+
 pub fn take_context_cleanup_evidence() -> Vec<ContextCleanupEvidence> {
     std::mem::take(&mut *cleanup_evidence())
 }

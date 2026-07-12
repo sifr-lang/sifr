@@ -56,6 +56,13 @@ LIBRARY_EXAMPLE_CASES = {
         import_roots=("alembic", "psycopg", "sqlalchemy"),
         native_roots=("psycopg", "sqlalchemy"),
     ),
+    "sqlite-context": ExampleCase(
+        case_id="sqlite-context",
+        relative_source="sqlite_context/context_codegen_smoke.sifr",
+        stdout_marker="sifr-python-interop:sqlite-context:total=48",
+        import_roots=("sqlite3",),
+        native_roots=("sqlite3",),
+    ),
 }
 
 

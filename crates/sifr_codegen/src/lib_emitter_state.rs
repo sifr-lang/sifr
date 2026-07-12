@@ -93,6 +93,10 @@ pub struct RustEmitter {
     pub(crate) try_closure_option_wrap: Vec<bool>,
     /// Per-try closure target error type for `?` adaptation.
     pub(crate) try_closure_error_type: Vec<String>,
+    /// Resolved error type for Python context cause classification in each try closure.
+    pub(crate) try_closure_error_type_info: Vec<Option<Type>>,
+    /// Monotonic suffix for compiler-generated Python context locals.
+    pub(crate) python_context_counter: usize,
     /// Map from variable name -> Callable parameter (type, convention) list.
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
@@ -223,6 +227,8 @@ impl RustEmitter {
             try_closure_depth: 0,
             try_closure_option_wrap: Vec::new(),
             try_closure_error_type: Vec::new(),
+            try_closure_error_type_info: Vec::new(),
+            python_context_counter: 0,
             callable_var_conventions: HashMap::new(),
             local_binding_types: HashMap::new(),
             string_char_cache_vars: HashMap::new(),

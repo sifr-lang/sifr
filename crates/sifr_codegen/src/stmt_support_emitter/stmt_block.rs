@@ -9,22 +9,9 @@ impl RustEmitter {
         &mut self,
         stmts: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
-        let scope_ctx = self.stmt_block_scope_context();
-
         let mut lowered_block = Vec::new();
         for (stmt_index, stmt) in stmts.iter().enumerate() {
-            let maybe_simple_lowered =
-                if self.try_closure_depth == 0 && self.active_timeout_durations.is_empty() {
-                    crate::try_lower_simple_stmt_with_scope_result_and_bindings(
-                        stmt,
-                        &self.mutated_vars,
-                        &self.borrowed_params,
-                        &self.local_binding_types,
-                        &scope_ctx,
-                    )?
-                } else {
-                    None
-                };
+            let maybe_simple_lowered = self.try_lower_simple_block_stmt_for_ir(stmt)?;
 
             let should_bypass_simple_lowering = self.should_bypass_simple_block_lowering(stmt);
             let maybe_simple_lowered = if should_bypass_simple_lowering {
@@ -799,7 +786,11 @@ impl RustEmitter {
                 } else {
                     self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
                 };
-                let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                self.loop_else_stack.push(false);
+                let lowered_body_result = self.try_lower_stmt_block_for_ir(body)?;
+                let popped = self.loop_else_stack.pop();
+                debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+                let Some(mut lowered_body) = lowered_body_result else {
                     if let Some(previous) = previous_target_cache {
                         self.string_char_cache_vars.insert(target.clone(), previous);
                     } else {
@@ -882,6 +873,8 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 (lowered_try_finally, true)
+            } else if let Some(lowered) = self.lower_loop_control_stmt_for_ir(stmt) {
+                (vec![lowered], true)
             } else {
                 return Ok(None);
             };

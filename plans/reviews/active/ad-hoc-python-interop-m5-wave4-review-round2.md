@@ -1,0 +1,3 @@
+Summary: round-1 findings are all resolved and the semantic behavior of the wave (left-to-right enter / right-to-left exit, exit-once, replay suppression for Python causes, non-suppressible ordinary/timeout/cancellation/runtime, cleanup precedence, break/continue/return rewriting through LetElse and match, per-function counter isolation, hidden replay through the generated `PythonError`) checks out; the sqlite fixture end-to-end compiles and prints the expected `total=48` marker. The blockers are two clippy pedantic errors introduced in the new `python_context.rs` and a file-size guardrail violation in `stmt_block.rs`. Fix these and the wave is ready.
+
+VERDICT: CHANGES_REQUESTED

@@ -473,6 +473,22 @@ fn collect_string_loop_target_use_stmt(
 }
 
 impl RustEmitter {
+    pub(crate) fn try_lower_simple_block_stmt_for_ir(
+        &self,
+        stmt: &HirStmt,
+    ) -> Result<Option<Vec<crate::RustStmt>>, crate::CodegenError> {
+        if self.try_closure_depth > 0 || !self.active_timeout_durations.is_empty() {
+            return Ok(None);
+        }
+        crate::try_lower_simple_stmt_with_scope_result_and_bindings(
+            stmt,
+            &self.mutated_vars,
+            &self.borrowed_params,
+            &self.local_binding_types,
+            &self.stmt_block_scope_context(),
+        )
+    }
+
     pub(crate) fn try_lower_stmt_block_for_ir(
         &mut self,
         stmts: &[HirStmt],

@@ -1,0 +1,97 @@
+from sifr.python import ExitCause, ExitDecision, PythonError
+
+
+@python.opaque(type=sqlite3.Connection, cleanup=context)
+class Connection:
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[Connection, PythonError]: ...
+
+    @python.context.exit(Self.__exit__)
+    def __exit__(own self, cause: ExitCause) -> Result[ExitDecision, PythonError]: ...
+
+    @python.attr(Self.total_changes)
+    def total_changes(self) -> Result[int, PythonError]: ...
+
+
+@python(sqlite3.connect)
+def connect(database: str) -> Result[Connection, PythonError]: ...
+
+
+def use_transaction() -> Result[int, PythonError]:
+    try:
+        with connect(":memory:") as connection:
+            changes: int = connection.total_changes()
+            print(changes)
+        return 0
+    except PythonError as error:
+        raise error
+
+
+def return_from_transaction() -> Result[int, PythonError]:
+    try:
+        with connect(":memory:") as connection:
+            changes: int = connection.total_changes()
+            return changes + 7
+    except PythonError as error:
+        raise error
+
+
+def break_from_transaction() -> Result[int, PythonError]:
+    try:
+        while True:
+            with connect(":memory:") as connection:
+                changes: int = connection.total_changes()
+                print(changes)
+                break
+        return 11
+    except PythonError as error:
+        raise error
+
+
+def continue_from_transaction() -> Result[int, PythonError]:
+    count: int = 0
+    try:
+        while count < 1:
+            count += 1
+            with connect(":memory:") as connection:
+                changes: int = connection.total_changes()
+                print(changes)
+                continue
+        return 13
+    except PythonError as error:
+        raise error
+
+
+def no_return_transaction() -> None:
+    try:
+        with connect(":memory:") as connection:
+            changes: int = connection.total_changes()
+            print(changes)
+    except PythonError as error:
+        print(error.message)
+
+
+def let_else_return(maybe: int | None) -> Result[int, PythonError]:
+    try:
+        with connect(":memory:") as connection:
+            changes: int = connection.total_changes()
+            print(changes)
+            if maybe is None:
+                return 17
+        return 19
+    except PythonError as error:
+        raise error
+
+
+def main() -> None:
+    try:
+        no_return_transaction()
+        value: int = use_transaction()
+        returned: int = return_from_transaction()
+        broken: int = break_from_transaction()
+        continued: int = continue_from_transaction()
+        narrowed: int = let_else_return(None)
+        total: int = value + returned + broken + continued + narrowed
+        print(f"sifr-python-interop:sqlite-context:total={total}")
+    except PythonError as error:
+        print(error.message)

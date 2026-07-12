@@ -181,7 +181,14 @@ fn python_error_expr(name: &str, value: RustExpr) -> RustExpr {
             ),
             (
                 "context".to_string(),
-                bridge_error_field_string(value, "context"),
+                bridge_error_field_string(value.clone(), "context"),
+            ),
+            (
+                "__sifr_python_error".to_string(),
+                RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                    args: vec![value],
+                },
             ),
         ],
     }

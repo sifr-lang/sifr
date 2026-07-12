@@ -208,7 +208,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
 
     assert_eq!(
         render_expr(expr),
-        "sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string() })"
+        "sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) })"
     );
 }
 

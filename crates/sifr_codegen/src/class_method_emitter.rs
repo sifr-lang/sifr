@@ -4,7 +4,8 @@ use crate::{
     hir_analysis::traversal::{self, TraversalConfig},
     python_interop_direct::python_interop_method_body,
     rust_interop_direct::rust_interop_method_body,
-    RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
+    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
+    Visibility,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
@@ -436,6 +437,13 @@ impl RustEmitter {
                 ));
             }
 
+            if class.name == "PythonError" {
+                fields.push((
+                    "__sifr_python_error".to_string(),
+                    RustExpr::Literal(RustLiteral::None),
+                ));
+            }
+
             body.push(RustStmt::Return(Some(RustExpr::StructInit {
                 name: "Self".to_string(),
                 fields,
@@ -555,6 +563,13 @@ impl RustEmitter {
             fields.push((field_name.clone(), value));
         }
 
+        if class.name == "PythonError" {
+            fields.push((
+                "__sifr_python_error".to_string(),
+                RustExpr::Literal(RustLiteral::None),
+            ));
+        }
+
         body.push(RustStmt::Return(Some(RustExpr::StructInit {
             name: "Self".to_string(),
             fields,
@@ -574,6 +589,7 @@ impl RustEmitter {
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
+        let saved_python_context_counter = self.python_context_counter;
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
@@ -587,6 +603,7 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
+        self.python_context_counter = 0;
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.sifr_int_result_local_bindings.borrow_mut().clear();
@@ -712,6 +729,7 @@ impl RustEmitter {
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
+        self.python_context_counter = saved_python_context_counter;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;
