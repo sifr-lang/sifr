@@ -387,7 +387,7 @@ Implementation waves:
   - Require every bridge source plus its generated inventory manifest in
     package archives. Keep `bridge.*` declarations gated by
     `SIFR-PYRES-0002` throughout this substrate wave.
-- [ ] Resolved identity, rewrite, and authority planning:
+- [x] Resolved identity, rewrite, and authority planning — [PR #2947](https://github.com/sifr-lang/sifr/pull/2947):
   - Define and test a deterministic, valid-Python-identifier, collision-resistant
     encoding of resolved Sifr package identity for
     `__sifr_bridge__.p_<resolved_package_key>`.
