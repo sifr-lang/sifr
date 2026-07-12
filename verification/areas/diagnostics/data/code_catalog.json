@@ -2283,7 +2283,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::missing_python_environment_selection_reports_pyenv_0003",
+      "representative_fixture": "crates/sifr_package/src/python/tests.rs::missing_uv_environment_selection_reports_pyenv_0003",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

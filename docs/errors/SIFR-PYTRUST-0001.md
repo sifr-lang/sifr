@@ -11,6 +11,6 @@ Dependency package declares a wildcard Python trust root.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `Python wildcard import root is rejected` |
-| Representative fixture | `crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_rejects_wildcard_roots` |
+| Representative fixture | `crates/sifr_package/src/python/trust_policy_tests.rs::dependency_python_requirement_wildcard_is_rejected` |
 | Declared args | `cargo_package_id (json-only)` |
 | Dedupe args | `cargo_package_id` |
