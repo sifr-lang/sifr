@@ -39,6 +39,7 @@ mod nested_subscript_assignment;
 mod nested_subscript_assignment_helpers;
 pub(crate) mod performance_lowering_gate;
 mod print_calls;
+mod python_context;
 mod result_type_helpers;
 mod statement_output;
 mod stmt_block;

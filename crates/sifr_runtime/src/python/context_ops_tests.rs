@@ -214,4 +214,16 @@ fn assert_no_live_objects() {
             leaked_objects: 0,
         }
     );
+
+    record_context_ignored_suppression("DeadlineExceeded");
+    assert_eq!(
+        take_context_cleanup_evidence(),
+        vec![ContextCleanupEvidence {
+            primary_cause: "DeadlineExceeded".to_string(),
+            exception_type: "SifrBoundaryError".to_string(),
+            message: "Python context suppression was ignored for a non-Python Sifr cause"
+                .to_string(),
+            context: "context exit decision".to_string(),
+        }]
+    );
 }

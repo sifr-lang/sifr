@@ -2,6 +2,7 @@ use super::{ForeignObject, PythonRuntimeError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAnyMethods, PyDict};
 use std::fmt;
+use std::hash::{Hash, Hasher};
 
 #[derive(Clone, Debug)]
 pub(crate) struct PythonExceptionReplay {
@@ -153,6 +154,16 @@ impl PartialEq for PythonError {
 }
 
 impl Eq for PythonError {}
+
+impl Hash for PythonError {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.kind.hash(state);
+        self.exception_type.hash(state);
+        self.message.hash(state);
+        self.traceback.hash(state);
+        self.context.hash(state);
+    }
+}
 
 impl fmt::Display for PythonError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -43,8 +43,9 @@ pub use callback_ops::{
 use config_verify::verify_interpreter_config;
 pub use context_ops::{
     attach_secondary_python_error, context_exit_normal, context_exit_python_error,
-    context_exit_sifr_cause, record_context_cleanup_evidence, take_context_cleanup_evidence,
-    ContextCleanupEvidence, PythonExitDecision, SifrExitCause, SifrExitCauseKind,
+    context_exit_sifr_cause, record_context_cleanup_evidence, record_context_ignored_suppression,
+    take_context_cleanup_evidence, ContextCleanupEvidence, PythonExitDecision, SifrExitCause,
+    SifrExitCauseKind,
 };
 pub use coroutine_ops::run_coroutine_blocking;
 pub use dlpack_ops::{

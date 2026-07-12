@@ -182,6 +182,19 @@ impl RustEmitter {
             };
             fields.push((name, ty));
         }
+        if class.name == "PythonError" {
+            let name = if module_public {
+                "pub __sifr_python_error".to_string()
+            } else {
+                "__sifr_python_error".to_string()
+            };
+            fields.push((
+                name,
+                RustType::Option(Box::new(RustType::Named(
+                    "sifr_runtime::python::PythonError".to_string(),
+                ))),
+            ));
+        }
         fields
     }
 
@@ -213,11 +226,17 @@ impl RustEmitter {
                 }
             })
             .collect::<Vec<_>>();
-        let fields = class
+        let mut fields = class
             .fields
             .iter()
             .map(|(field_name, _)| (field_name.clone(), RustExpr::Ident(field_name.clone())))
             .collect::<Vec<_>>();
+        if class.name == "PythonError" {
+            fields.push((
+                "__sifr_python_error".to_string(),
+                RustExpr::Literal(RustLiteral::None),
+            ));
+        }
         RustItem::Fn {
             name: "new".to_string(),
             visibility: Self::class_visibility(module_public),
@@ -461,6 +480,17 @@ impl RustEmitter {
             impl_items.push(self.lower_default_constructor_item(class, module_public));
         }
         for method in &class.methods {
+            if method.python_interop.first().is_some_and(|declaration| {
+                matches!(
+                    declaration.kind,
+                    sifr_ir::PythonInteropDecoratorKind::ContextEnter
+                        | sifr_ir::PythonInteropDecoratorKind::ContextExit
+                        | sifr_ir::PythonInteropDecoratorKind::ContextAsyncEnter
+                        | sifr_ir::PythonInteropDecoratorKind::ContextAsyncExit
+                )
+            }) {
+                continue;
+            }
             impl_items.push(self.lower_class_method_item(method, class, module_public));
         }
         self.current_class_name = saved_class_name;

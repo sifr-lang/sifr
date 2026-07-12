@@ -3,6 +3,23 @@ use super::{
     RustEmitter, RustExpr, RustStmt, Type,
 };
 impl RustEmitter {
+    pub(crate) fn lower_loop_control_stmt_for_ir(&self, stmt: &HirStmt) -> Option<RustStmt> {
+        match stmt {
+            HirStmt::Break if self.loop_else_stack.last().copied().unwrap_or(false) => {
+                Some(RustStmt::Block(vec![
+                    RustStmt::Assign {
+                        target: RustExpr::Ident("_broke".to_string()),
+                        value: RustExpr::Literal(crate::RustLiteral::Bool(true)),
+                    },
+                    RustStmt::Break,
+                ]))
+            }
+            HirStmt::Break => Some(RustStmt::Break),
+            HirStmt::Continue => Some(RustStmt::Continue),
+            _ => None,
+        }
+    }
+
     pub(crate) fn try_lower_structured_while_stmt(
         &mut self,
         stmt: &HirStmt,
@@ -225,12 +242,18 @@ impl RustEmitter {
                 self.try_closure_option_wrap.push(!direct_return_capture);
             }
             self.try_closure_error_type.push(err_ty.clone());
+            self.try_closure_error_type_info.push(
+                handlers
+                    .first()
+                    .and_then(|handler| handler.error_resolved_type.clone()),
+            );
             let lowered = self.try_lower_stmt_block_for_ir(body)?;
             if capture_returns {
                 self.try_closure_depth -= 1;
                 self.try_closure_option_wrap.pop();
             }
             self.try_closure_error_type.pop();
+            self.try_closure_error_type_info.pop();
             let Some(lowered) = lowered else {
                 return Ok(None);
             };
@@ -407,12 +430,20 @@ impl RustEmitter {
                 self.try_closure_option_wrap.push(!direct_return_capture);
             }
             self.try_closure_error_type.push(err_ty.clone());
+            self.try_closure_error_type_info
+                .push(self.current_return_type.as_ref().and_then(|return_type| {
+                    match return_type.resolve_alias() {
+                        Type::Result(_, error_type) => Some(error_type.as_ref().clone()),
+                        _ => None,
+                    }
+                }));
             let lowered = self.try_lower_stmt_block_for_ir(body)?;
             if capture_returns {
                 self.try_closure_depth -= 1;
                 self.try_closure_option_wrap.pop();
             }
             self.try_closure_error_type.pop();
+            self.try_closure_error_type_info.pop();
             let Some(lowered) = lowered else {
                 return Ok(None);
             };

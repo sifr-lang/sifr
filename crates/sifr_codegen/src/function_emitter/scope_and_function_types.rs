@@ -515,6 +515,7 @@ impl RustEmitter {
             self.sifr_int_result_local_bindings.borrow().clone();
         let saved_current_sifr_int_return = self.current_sifr_int_return.get();
         let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
+        let saved_python_context_counter = self.python_context_counter;
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name)
             || nested_function_mutates_capture(func, &nested_mutated_vars);
 
@@ -524,6 +525,7 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.local_binding_types.clear();
         self.none_widened_local_bindings.clear();
+        self.python_context_counter = 0;
         if is_recursive {
             self.string_char_cache_vars.clear();
             self.string_char_cache_required_names.clear();
@@ -590,6 +592,7 @@ impl RustEmitter {
             .clone_from(&saved_callable_var_conventions);
         self.local_binding_types = saved_local_binding_types;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
+        self.python_context_counter = saved_python_context_counter;
         self.string_char_cache_vars = saved_string_char_cache_vars;
         self.string_char_cache_required_names = saved_string_char_cache_required_names;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;

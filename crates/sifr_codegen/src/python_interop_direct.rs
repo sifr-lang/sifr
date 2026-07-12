@@ -798,7 +798,7 @@ fn is_python_object(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "Object")
 }
 
-fn runtime_call(function: &str, args: Vec<RustExpr>) -> RustExpr {
+pub(crate) fn runtime_call(function: &str, args: Vec<RustExpr>) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
             "sifr_runtime".to_string(),
@@ -818,7 +818,7 @@ fn mapped_let(name: &str, value: RustExpr, error_type: &Type) -> RustStmt {
     }
 }
 
-fn mapped_try(value: RustExpr, error_type: &Type) -> RustExpr {
+pub(crate) fn mapped_try(value: RustExpr, error_type: &Type) -> RustExpr {
     let error_name = "__sifr_python_error";
     RustExpr::Try(Box::new(RustExpr::MethodCall {
         receiver: Box::new(value),
