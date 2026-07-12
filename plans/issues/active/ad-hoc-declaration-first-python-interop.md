@@ -338,7 +338,8 @@ Implementation waves:
   [PR #2937](https://github.com/sifr-lang/sifr/pull/2937)
 - [x] Dedicated Python-context HIR and scoped entered-borrow ownership —
   [PR #2938](https://github.com/sifr-lang/sifr/pull/2938)
-- [ ] Closure/outcome codegen and the normative exit decision table
+- [x] Closure/outcome codegen and the normative exit decision table —
+  [PR #2940](https://github.com/sifr-lang/sifr/pull/2940)
 - [ ] Complete evidence matrices, transaction demo, and milestone closure
 
 Tasks:
