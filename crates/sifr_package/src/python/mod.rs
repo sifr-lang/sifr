@@ -24,6 +24,8 @@ pub use requirements::{
     PythonRequirementContribution, PythonRequirementKind,
 };
 
+#[cfg(all(test, unix))]
+mod bridge_inventory_symlink_tests;
 #[cfg(test)]
 mod bridge_inventory_tests;
 #[cfg(test)]

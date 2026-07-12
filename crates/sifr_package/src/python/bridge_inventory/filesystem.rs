@@ -39,6 +39,26 @@ pub(super) fn discover_source_paths(
     diagnostics: &mut Vec<PackageDiagnostic>,
 ) -> BTreeSet<PathBuf> {
     let mut paths = BTreeSet::new();
+    match fs::symlink_metadata(root) {
+        Ok(metadata) if metadata.file_type().is_symlink() => {
+            diagnostics.push(PackageDiagnostic::invalid_python_bridge_source(
+                cargo_package_id,
+                root,
+                "symbolic links are not allowed in bridge source roots",
+            ));
+            return paths;
+        }
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return paths,
+        Err(error) => {
+            diagnostics.push(PackageDiagnostic::invalid_python_bridge_source(
+                cargo_package_id,
+                root,
+                format!("could not inspect bridge source root: {error}"),
+            ));
+            return paths;
+        }
+    }
     collect_python_paths(root, &mut paths, diagnostics, Some(cargo_package_id));
     paths
 }

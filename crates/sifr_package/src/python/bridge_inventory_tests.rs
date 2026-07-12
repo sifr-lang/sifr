@@ -159,26 +159,6 @@ fn invalid_module_paths_duplicates_and_relative_escape_are_distinct() {
         .any(|diagnostic| diagnostic.message.contains("from .. import outside")));
 }
 
-#[cfg(unix)]
-#[test]
-fn symbolic_link_bridge_source_is_rejected() {
-    use std::os::unix::fs::symlink;
-
-    let fixture = BridgeFixture::new("symlink");
-    fixture.write_at("outside.py", "VALUE = 1\n");
-    symlink(
-        fixture.root.join("outside.py"),
-        fixture.root.join("src/python_bridges/linked.py"),
-    )
-    .expect("create symlink");
-
-    let diagnostics = discover_python_bridge_inventory(&fixture.package)
-        .expect_err("bridge source symlinks must fail");
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("symbolic links")));
-}
-
 #[test]
 fn non_utf8_bridge_source_has_an_encoding_diagnostic() {
     let fixture = BridgeFixture::new("non_utf8");
@@ -364,13 +344,13 @@ fn package_validation_rejects_missing_and_stale_generated_inventory() {
     assert!(stale.message.contains("is stale"));
 }
 
-struct BridgeFixture {
-    root: PathBuf,
-    package: crate::graph::derive::SifrPackageMetadata,
+pub(super) struct BridgeFixture {
+    pub(super) root: PathBuf,
+    pub(super) package: crate::graph::derive::SifrPackageMetadata,
 }
 
 impl BridgeFixture {
-    fn new(label: &str) -> Self {
+    pub(super) fn new(label: &str) -> Self {
         let sequence = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
         let root = std::env::temp_dir().join(format!(
             "sifr_python_bridge_inventory_{}_{}_{}",
@@ -393,7 +373,7 @@ impl BridgeFixture {
         self.write_at(&format!("src/python_bridges/{relative}"), source);
     }
 
-    fn write_at(&self, relative: &str, source: &str) {
+    pub(super) fn write_at(&self, relative: &str, source: &str) {
         self.write_bytes_at(relative, source.as_bytes());
     }
 
