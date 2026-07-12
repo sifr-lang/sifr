@@ -11,6 +11,37 @@ pub struct PythonInteropPlan {
     pub declarations: Vec<PythonInteropPlanDeclaration>,
     pub required_import_roots: Vec<String>,
     pub target_probes: Vec<PythonTargetProbe>,
+    pub bridge_packages: Vec<PythonBridgePackagePlan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PythonBridgePackagePlan {
+    pub package_id: String,
+    pub resolved_package_key: String,
+    pub runtime_package: String,
+    pub inventory_digest: String,
+    pub modules: Vec<PythonBridgeModulePlan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PythonBridgeModulePlan {
+    pub module: String,
+    pub runtime_module: String,
+    pub source_path: String,
+    pub source_digest: String,
+    pub is_package: bool,
+    pub imports: Vec<PythonBridgeImportPlan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PythonBridgeImportPlan {
+    SamePackage {
+        module: String,
+        runtime_module: String,
+    },
+    ThirdParty {
+        root: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -200,5 +231,55 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
             PythonTargetProbeStatus::RuntimeChecked => "runtime-checked",
         });
         out.push('\n');
+    }
+    out.push_str("python.bridge_packages=");
+    out.push_str(&plan.bridge_packages.len().to_string());
+    out.push('\n');
+    for package in &plan.bridge_packages {
+        out.push_str("python.bridge_package=");
+        out.push_str(&package.package_id);
+        out.push(':');
+        out.push_str(&package.resolved_package_key);
+        out.push(':');
+        out.push_str(&package.runtime_package);
+        out.push(':');
+        out.push_str(&package.inventory_digest);
+        out.push('\n');
+        for module in &package.modules {
+            out.push_str("python.bridge_module=");
+            out.push_str(&module.module);
+            out.push(':');
+            out.push_str(&module.runtime_module);
+            out.push(':');
+            out.push_str(&module.source_path);
+            out.push(':');
+            out.push_str(&module.source_digest);
+            out.push(':');
+            out.push_str(if module.is_package {
+                "package"
+            } else {
+                "module"
+            });
+            out.push('\n');
+            for import in &module.imports {
+                out.push_str("python.bridge_import=");
+                match import {
+                    PythonBridgeImportPlan::SamePackage {
+                        module,
+                        runtime_module,
+                    } => {
+                        out.push_str("same-package:");
+                        out.push_str(module);
+                        out.push(':');
+                        out.push_str(runtime_module);
+                    }
+                    PythonBridgeImportPlan::ThirdParty { root } => {
+                        out.push_str("third-party:");
+                        out.push_str(root);
+                    }
+                }
+                out.push('\n');
+            }
+        }
     }
 }

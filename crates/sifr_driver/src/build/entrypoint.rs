@@ -6,6 +6,7 @@ use super::project_codegen::{
     apply_package_runtime_metadata, generated_project_binary_project,
     generated_single_file_binary_project, GeneratedBinaryProject,
 };
+use super::python_bridges::apply_package_python_bridge_metadata;
 use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
 use super::rust_interop::{
@@ -101,6 +102,7 @@ pub(crate) struct RootedEntrypointPlan {
     stdlib: StdlibCompiled,
     project_lowering: ProjectLowering,
     python_runtime: Option<PackagePythonRuntime>,
+    python_bridges: Option<sifr_package::ResolvedPythonBridgeGraph>,
     rust_interop_context: Option<PackageRustInteropContext>,
 }
 
@@ -352,7 +354,7 @@ impl RootedEntrypointPlan {
         stages: &mut Vec<BuildStageReport>,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
         let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
-        let (shape, project_lowering, python_runtime, rust_interop_context) = match entrypoint {
+        let resolved = match entrypoint {
             RootedEntrypoint::SingleFile {
                 source,
                 display_path,
@@ -376,6 +378,7 @@ impl RootedEntrypointPlan {
                 (
                     RootedEntrypointShape::SingleFile,
                     project_lowering,
+                    None,
                     None,
                     None,
                 )
@@ -418,9 +421,25 @@ impl RootedEntrypointPlan {
                     measure_stage(stages, module_analysis_label(module_count), || {
                         collect_project_hir_source_modules(&parsed_modules, stdlib.defs.clone())
                     })?;
-                (RootedEntrypointShape::Project, project_lowering, None, None)
+                (
+                    RootedEntrypointShape::Project,
+                    project_lowering,
+                    None,
+                    None,
+                    None,
+                )
             }
             RootedEntrypoint::PackageProject { entrypoint } => {
+                let python_bridges = sifr_package::resolve_python_bridge_graph(
+                    &entrypoint.graph,
+                    &entrypoint.package_id,
+                )
+                .map_err(|errors| {
+                    errors
+                        .into_iter()
+                        .map(crate::diagnostics::render_package_diagnostic)
+                        .collect::<Vec<_>>()
+                })?;
                 let parse_start = Instant::now();
                 let mut package_project = parse_package_import_closure_source_project(
                     &entrypoint.graph,
@@ -490,10 +509,13 @@ impl RootedEntrypointPlan {
                     RootedEntrypointShape::Project,
                     project_lowering,
                     entrypoint.python_runtime.clone(),
+                    Some(python_bridges),
                     Some(rust_interop_context),
                 )
             }
         };
+        let (shape, project_lowering, python_runtime, python_bridges, rust_interop_context) =
+            resolved;
 
         let mode = entrypoint.build_mode();
         let entrypoint_path = entrypoint.display_path();
@@ -503,6 +525,7 @@ impl RootedEntrypointPlan {
                 stdlib,
                 project_lowering,
                 python_runtime,
+                python_bridges,
                 rust_interop_context,
             },
             mode,
@@ -591,6 +614,7 @@ impl RootedEntrypointPlan {
         self,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
         let python_runtime = self.python_runtime.clone();
+        let python_bridges = self.python_bridges.clone();
         let rust_interop_context = self.rust_interop_context.clone();
         let stdlib_interop = self.stdlib.interop.clone();
         let generated = match self.shape {
@@ -605,6 +629,7 @@ impl RootedEntrypointPlan {
         let (generated, rust_interop_context) =
             attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
         let generated = apply_package_rust_interop_metadata(generated, rust_interop_context)?;
+        let generated = apply_package_python_bridge_metadata(generated, python_bridges.as_ref());
         let generated = super::python_interop::apply_python_interop_metadata(
             generated,
             python_runtime.as_ref(),

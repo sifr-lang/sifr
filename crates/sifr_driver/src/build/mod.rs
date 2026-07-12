@@ -3,6 +3,7 @@ mod cargo_manifest;
 mod entrypoint;
 mod materialize;
 mod project_codegen;
+mod python_bridges;
 mod python_interop;
 mod python_runtime;
 mod report;
