@@ -334,7 +334,8 @@ Implementation waves:
 
 - [x] Declaration types, diagnostics, strict protocol validation, and
   context-only obligations — [PR #2936](https://github.com/sifr-lang/sifr/pull/2936)
-- [ ] Exception replay, boundary errors, exit APIs, and secondary evidence
+- [x] Exception replay, boundary errors, exit APIs, and secondary evidence —
+  [PR #2937](https://github.com/sifr-lang/sifr/pull/2937)
 - [ ] Dedicated Python-context HIR and scoped entered-borrow ownership
 - [ ] Closure/outcome codegen and the normative exit decision table
 - [ ] Complete evidence matrices, transaction demo, and milestone closure
