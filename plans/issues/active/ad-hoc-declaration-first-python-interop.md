@@ -138,7 +138,7 @@ Implementation progress:
 - [x] M1 sealed runtime identity and cleanup — [PR #2932](https://github.com/sifr-lang/sifr/pull/2932)
 - [x] M2 environment and trust authority cutover — [PR #2933](https://github.com/sifr-lang/sifr/pull/2933)
 - [x] M3 synchronous declaration core and complete call shapes — [PR #2934](https://github.com/sifr-lang/sifr/pull/2934)
-- [ ] M4 recursive conversion and opaque lifecycle
+- [x] M4 recursive conversion and opaque lifecycle — [PR #2935](https://github.com/sifr-lang/sifr/pull/2935)
 - [ ] M5 synchronous Python context managers
 - [ ] M6 hermetic package-local Python bridges
 - [ ] M7 owned asyncio runtime and async declarations
