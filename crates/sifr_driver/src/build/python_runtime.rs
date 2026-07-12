@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{LoweringOptions, PythonTrustPolicy};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -20,6 +21,16 @@ pub struct PackagePythonRuntime {
     native_import_roots: Vec<String>,
     trusted_native_roots: Vec<String>,
     libpython: Option<String>,
+    bridge_sources: Vec<EmbeddedPythonBridgeSource>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) struct EmbeddedPythonBridgeSource {
+    pub module: String,
+    pub source: String,
+    pub filename: String,
+    pub is_package: bool,
+    pub package_prefix: String,
 }
 
 impl PackagePythonRuntime {
@@ -49,6 +60,7 @@ impl PackagePythonRuntime {
             native_import_roots: detected_native_import_roots(probe),
             trusted_native_roots,
             libpython: probe.libpython.clone(),
+            bridge_sources: Vec::new(),
         }
     }
 
@@ -69,6 +81,7 @@ impl PackagePythonRuntime {
                 required_import_roots: self.required_import_roots.clone(),
                 trusted_import_roots: self.trusted_import_roots.clone(),
             }),
+            ..LoweringOptions::default()
         }
     }
 
@@ -91,6 +104,7 @@ impl PackagePythonRuntime {
             native_import_roots: Vec::new(),
             trusted_native_roots: Vec::new(),
             libpython: None,
+            bridge_sources: Vec::new(),
         }
     }
 
@@ -118,6 +132,10 @@ impl PackagePythonRuntime {
     #[cfg(test)]
     pub(super) fn set_libpython_for_tests(&mut self, libpython: &str) {
         self.libpython = Some(libpython.to_string());
+    }
+
+    pub(super) fn set_bridge_sources(&mut self, sources: Vec<EmbeddedPythonBridgeSource>) {
+        self.bridge_sources = sources;
     }
 }
 
@@ -162,6 +180,7 @@ pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> 
         trusted_import_roots: vec![{trusted_import_roots}],
         native_import_roots: vec![{native_import_roots}],
         trusted_native_roots: vec![{trusted_native_roots}],
+        bridge_sources: vec![{bridge_sources}],
     }}
 }}
 
@@ -186,6 +205,7 @@ fn __sifr_initialize_python_runtime() -> Result<sifr_runtime::python::PythonRunt
         trusted_import_roots = render_string_vec(&metadata.trusted_import_roots),
         native_import_roots = render_string_vec(&metadata.native_import_roots),
         trusted_native_roots = render_string_vec(&metadata.trusted_native_roots),
+        bridge_sources = render_bridge_sources(&metadata.bridge_sources),
     )
 }
 
@@ -198,9 +218,10 @@ pub(super) fn inject_python_runtime_bootstrap(
     })?;
     let mut with_bootstrap = render_python_runtime_prelude(metadata);
     with_bootstrap.push_str(&main_rs[..insert_at]);
-    with_bootstrap.push_str(
-        "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(__sifr_python_runtime_error) => {\n            eprintln!(\"Sifr Python runtime initialization failed: {}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }\n    };\n",
-    );
+    with_bootstrap.push_str(&format!(
+        "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {{\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(sifr_runtime::python::PythonRuntimeError::ReservedBridgeCollision {{ module }}) => {{\n            eprintln!(\"{collision_code}: reserved Python bridge namespace collision at '{{}}'\", module);\n            std::process::exit(1);\n        }}\n        Err(__sifr_python_runtime_error) => {{\n            eprintln!(\"Sifr Python runtime initialization failed: {{}}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }}\n    }};\n",
+        collision_code = DiagnosticCode::PYIMP_RESERVED_BRIDGE_COLLISION.code(),
+    ));
     with_bootstrap.push_str(&main_rs[insert_at..]);
     Ok(with_bootstrap)
 }
@@ -231,6 +252,23 @@ fn render_string_vec(values: &[String]) -> String {
     values
         .iter()
         .map(|value| format!("{}.to_string()", rust_string_literal(value)))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn render_bridge_sources(values: &[EmbeddedPythonBridgeSource]) -> String {
+    values
+        .iter()
+        .map(|value| {
+            format!(
+                "sifr_runtime::python::PythonBridgeSource {{ module: {}.to_string(), source: {}.to_string(), filename: {}.to_string(), is_package: {}, package_prefix: {}.to_string() }}",
+                rust_string_literal(&value.module),
+                rust_string_literal(&value.source),
+                rust_string_literal(&value.filename),
+                value.is_package,
+                rust_string_literal(&value.package_prefix),
+            )
+        })
         .collect::<Vec<_>>()
         .join(", ")
 }
@@ -369,6 +407,7 @@ mod tests {
         assert!(rendered.contains(
             "fn main() {\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime()"
         ));
+        assert!(rendered.contains("SIFR-PYIMP-0003: reserved Python bridge namespace collision"));
         assert!(rendered.contains("println!(\"ok\")"));
     }
 

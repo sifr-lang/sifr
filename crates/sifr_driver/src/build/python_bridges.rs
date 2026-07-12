@@ -1,9 +1,12 @@
 use super::project_codegen::GeneratedBinaryProject;
+use super::python_runtime::{EmbeddedPythonBridgeSource, PackagePythonRuntime};
 use sifr_codegen::{PythonBridgeImportPlan, PythonBridgeModulePlan, PythonBridgePackagePlan};
+use sifr_lowering::{LoweringOptions, PythonBridgeTargetAuthority};
 use sifr_package::{
     ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport, ResolvedPythonBridgeModule,
     ResolvedPythonBridgePackage,
 };
+use std::collections::{BTreeMap, HashMap};
 
 pub(super) fn apply_package_python_bridge_metadata(
     mut generated: GeneratedBinaryProject,
@@ -41,6 +44,7 @@ fn module_plan(module: &ResolvedPythonBridgeModule) -> PythonBridgeModulePlan {
         runtime_module: module.runtime_module.clone(),
         source_path: module.source_path.clone(),
         source_digest: module.source_digest.clone(),
+        source: module.source.clone(),
         is_package: module.is_package,
         imports: module
             .imports
@@ -59,6 +63,100 @@ fn module_plan(module: &ResolvedPythonBridgeModule) -> PythonBridgeModulePlan {
             })
             .collect(),
     }
+}
+
+pub(super) fn bridge_authorities_by_module(
+    module_packages: &HashMap<String, sifr_package::SifrPackageId>,
+    bridges: &ResolvedPythonBridgeGraph,
+) -> BTreeMap<String, PythonBridgeTargetAuthority> {
+    let packages = bridges
+        .packages
+        .iter()
+        .map(|package| (&package.package_id, package))
+        .collect::<HashMap<_, _>>();
+    module_packages
+        .iter()
+        .filter_map(|(module, package_id)| {
+            packages.get(package_id).map(|package| {
+                (
+                    module.clone(),
+                    PythonBridgeTargetAuthority {
+                        runtime_package: package.runtime_package.clone(),
+                        modules: package
+                            .modules
+                            .iter()
+                            .map(|module| module.module.clone())
+                            .collect(),
+                    },
+                )
+            })
+        })
+        .collect()
+}
+
+pub(super) fn package_bridge_lowering_options(
+    runtime: Option<&PackagePythonRuntime>,
+    module_packages: &HashMap<String, sifr_package::SifrPackageId>,
+    bridges: &ResolvedPythonBridgeGraph,
+) -> LoweringOptions {
+    let mut options = runtime.map_or_else(
+        LoweringOptions::default,
+        PackagePythonRuntime::lowering_options,
+    );
+    options.python_bridge_authorities = bridge_authorities_by_module(module_packages, bridges);
+    options
+}
+
+pub(super) fn embedded_bridge_sources(
+    packages: &[PythonBridgePackagePlan],
+) -> Vec<EmbeddedPythonBridgeSource> {
+    let mut sources = BTreeMap::new();
+    if !packages.is_empty() {
+        insert_synthetic_package(&mut sources, "__sifr_bridge__", "__sifr_bridge__");
+    }
+    for package in packages {
+        insert_synthetic_package(
+            &mut sources,
+            &package.runtime_package,
+            &package.runtime_package,
+        );
+        for module in &package.modules {
+            let mut prefix = package.runtime_package.clone();
+            let components = module.module.split('.').collect::<Vec<_>>();
+            for component in components.iter().take(components.len().saturating_sub(1)) {
+                prefix.push('.');
+                prefix.push_str(component);
+                insert_synthetic_package(&mut sources, &prefix, &package.runtime_package);
+            }
+            sources.insert(
+                module.runtime_module.clone(),
+                EmbeddedPythonBridgeSource {
+                    module: module.runtime_module.clone(),
+                    source: module.source.clone(),
+                    filename: format!("<{}>", module.runtime_module),
+                    is_package: module.is_package,
+                    package_prefix: package.runtime_package.clone(),
+                },
+            );
+        }
+    }
+    sources.into_values().collect()
+}
+
+fn insert_synthetic_package(
+    sources: &mut BTreeMap<String, EmbeddedPythonBridgeSource>,
+    module: &str,
+    package_prefix: &str,
+) {
+    sources
+        .entry(module.to_string())
+        .or_insert_with(|| EmbeddedPythonBridgeSource {
+            module: module.to_string(),
+            source: String::new(),
+            filename: format!("<{module}>"),
+            is_package: true,
+            package_prefix: package_prefix.to_string(),
+        });
 }
 
 #[cfg(test)]
@@ -94,6 +192,7 @@ mod tests {
                 runtime_module: "__sifr_bridge__.p_abc123.adapter".to_string(),
                 source_path: "src/python_bridges/adapter.py".to_string(),
                 source_digest: "source-a".to_string(),
+                source: "def value():\n    return 1\n".to_string(),
                 is_package: false,
                 imports: vec![ResolvedPythonBridgeImport::ThirdParty {
                     root: "requests".to_string(),
@@ -123,5 +222,10 @@ mod tests {
             .cache_key_fragment()
             .contains("inventory-a"));
         assert!(generated.interop.cache_key_fragment().contains("source-a"));
+        let sources = embedded_bridge_sources(&generated.interop.python.bridge_packages);
+        assert_eq!(sources[0].module, "__sifr_bridge__");
+        assert_eq!(sources[1].module, "__sifr_bridge__.p_abc123");
+        assert_eq!(sources[2].filename, "<__sifr_bridge__.p_abc123.adapter>");
+        assert_eq!(sources[2].source, "def value():\n    return 1\n");
     }
 }

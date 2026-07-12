@@ -6,6 +6,7 @@ use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata};
 use sha2::{Digest as _, Sha256};
 use std::collections::BTreeSet;
+use std::fs;
 
 pub const PYTHON_BRIDGE_RUNTIME_ROOT: &str = "__sifr_bridge__";
 
@@ -30,6 +31,7 @@ pub struct ResolvedPythonBridgeModule {
     pub runtime_module: String,
     pub source_path: String,
     pub source_digest: String,
+    pub source: String,
     pub is_package: bool,
     pub imports: Vec<ResolvedPythonBridgeImport>,
 }
@@ -119,7 +121,28 @@ fn resolve_package(
     let modules = inventory
         .modules
         .iter()
-        .map(|module| {
+        .filter_map(|module| {
+            let source_path = package.package_root.join(&module.source_path);
+            let source = match fs::read_to_string(&source_path) {
+                Ok(source) => source,
+                Err(error) => {
+                    diagnostics.push(PackageDiagnostic::invalid_python_bridge_source(
+                        &package.cargo_package_id,
+                        &source_path,
+                        format!("could not read inventoried bridge source: {error}"),
+                    ));
+                    return None;
+                }
+            };
+            let source_digest = format!("{:x}", Sha256::digest(source.as_bytes()));
+            if source_digest != module.source_digest {
+                diagnostics.push(PackageDiagnostic::invalid_python_bridge_source(
+                    &package.cargo_package_id,
+                    &source_path,
+                    "bridge source changed while its inventory was being resolved",
+                ));
+                return None;
+            }
             let imports = module
                 .imports
                 .iter()
@@ -154,14 +177,15 @@ fn resolve_package(
                     }
                 })
                 .collect();
-            ResolvedPythonBridgeModule {
+            Some(ResolvedPythonBridgeModule {
                 module: module.module.clone(),
                 runtime_module: format!("{runtime_package}.{}", module.module),
                 source_path: module.source_path.clone(),
                 source_digest: module.source_digest.clone(),
+                source,
                 is_package: module.is_package,
                 imports,
-            }
+            })
         })
         .collect();
     if !diagnostics.is_empty() {

@@ -210,6 +210,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["cargo_package_id", "bridge_path", "reason"]
     ),
     active_entry!(
+        "SIFR-PYIMP-0003",
+        "PYIMP",
+        "The reserved embedded Python bridge namespace was already populated.",
+        Severity::Error,
+        "crates/sifr_runtime/src/python/bridge_loader.rs::loader_is_hermetic_rewrites_imports_and_restores_first_position",
+        "reserved Python bridge namespace collision at '{module}'",
+        "sifr_runtime::python::bridge_loader",
+        [arg!("module")],
+        ["module"]
+    ),
+    active_entry!(
         "SIFR-PYCALL-0001",
         "PYCALL",
         "A Python declaration or call shape is unsupported or incompatible.",

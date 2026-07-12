@@ -27,6 +27,10 @@ macro_rules! typed_container_conversions {
 pub fn import_module(name: &str) -> Result<ObjectHandle, PythonError> {
     validate_import_policy(name)?;
     super::attach(|py| {
+        if is_reserved_bridge_name(name) {
+            super::bridge_loader::ensure_first(py)
+                .map_err(|error| PythonError::from_pyerr(py, error, "import", name))?;
+        }
         py.import(name)
             .map_err(|error| PythonError::from_pyerr(py, error, "import", name))
             .and_then(|module| store_object(module.unbind().into()))
@@ -47,6 +51,11 @@ pub fn resolve_target(segments: &[String]) -> Result<ObjectHandle, PythonError> 
     }
     validate_import_policy(&segments[0])?;
     super::attach(|py| {
+        if is_reserved_bridge_name(&segments[0]) {
+            super::bridge_loader::ensure_first(py).map_err(|error| {
+                PythonError::from_pyerr(py, error, "import", segments.join("."))
+            })?;
+        }
         let mut last_error = None;
         for split in (1..segments.len()).rev() {
             let module_name = segments[..split].join(".");
@@ -492,6 +501,9 @@ fn validate_import_policy(name: &str) -> Result<(), PythonError> {
         .next()
         .filter(|part| !part.is_empty())
         .ok_or_else(|| PythonError::trust("Python import name is empty", "import root"))?;
+    if root == "__sifr_bridge__" {
+        return Ok(());
+    }
     let config = runtime_config().map_err(PythonError::runtime)?;
     if !contains_root(&config.required_import_roots, root) {
         return Err(PythonError::trust(
@@ -514,6 +526,10 @@ fn validate_import_policy(name: &str) -> Result<(), PythonError> {
         ));
     }
     Ok(())
+}
+
+fn is_reserved_bridge_name(name: &str) -> bool {
+    name == "__sifr_bridge__" || name.starts_with("__sifr_bridge__.")
 }
 
 fn contains_root(roots: &[String], root: &str) -> bool {

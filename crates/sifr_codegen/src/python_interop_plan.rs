@@ -29,6 +29,7 @@ pub struct PythonBridgeModulePlan {
     pub runtime_module: String,
     pub source_path: String,
     pub source_digest: String,
+    pub source: String,
     pub is_package: bool,
     pub imports: Vec<PythonBridgeImportPlan>,
 }

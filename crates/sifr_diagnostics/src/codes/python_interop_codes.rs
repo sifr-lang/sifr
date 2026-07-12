@@ -16,6 +16,7 @@ impl DiagnosticCode {
 
     pub const PYIMP_INVALID_TARGET: Self = Self::new("SIFR-PYIMP-0001", Severity::Error);
     pub const PYIMP_INVALID_BRIDGE_SOURCE: Self = Self::new("SIFR-PYIMP-0002", Severity::Error);
+    pub const PYIMP_RESERVED_BRIDGE_COLLISION: Self = Self::new("SIFR-PYIMP-0003", Severity::Error);
     pub const PYCALL_INVALID_SHAPE: Self = Self::new("SIFR-PYCALL-0001", Severity::Error);
     pub const PYCONV_UNSUPPORTED_DECLARATION_TYPE: Self =
         Self::new("SIFR-PYCONV-0001", Severity::Error);

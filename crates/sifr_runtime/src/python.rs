@@ -7,6 +7,7 @@ use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
 mod arrow_ops;
+mod bridge_loader;
 mod buffer_ops;
 mod call_depth;
 mod callback_ops;
@@ -31,6 +32,7 @@ pub use arrow_ops::{
     arrow_array, arrow_capsule_names, arrow_schema, arrow_stream, release_arrow, ArrowHandle,
     PythonArrowCapsuleMetadata,
 };
+pub use bridge_loader::PythonBridgeSource;
 pub use buffer_ops::{
     buffer_shape, buffer_strides, buffer_suboffsets, buffer_u8, copy_buffer_u8, release_buffer,
     BufferHandle, PythonBufferMetadata,
@@ -93,6 +95,7 @@ pub struct PythonRuntimeConfig {
     pub trusted_import_roots: Vec<String>,
     pub native_import_roots: Vec<String>,
     pub trusted_native_roots: Vec<String>,
+    pub bridge_sources: Vec<PythonBridgeSource>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -136,6 +139,9 @@ pub enum PythonRuntimeError {
         actual: String,
     },
     PythonOperationFailed(String),
+    ReservedBridgeCollision {
+        module: String,
+    },
     OutstandingResources {
         live_objects: usize,
         leaked_objects: usize,
@@ -169,6 +175,10 @@ impl fmt::Display for PythonRuntimeError {
             Self::PythonOperationFailed(message) => {
                 write!(f, "Python runtime operation failed: {message}")
             }
+            Self::ReservedBridgeCollision { module } => write!(
+                f,
+                "reserved Python bridge namespace collision at '{module}'"
+            ),
             Self::OutstandingResources {
                 live_objects,
                 leaked_objects,
@@ -221,6 +231,8 @@ pub fn initialize_runtime(
     state.config = Some(config.clone());
     initialize_cpython_with_config(&config)?;
     configure_interpreter(&config)?;
+    Python::try_attach(|py| bridge_loader::install(py, &config.bridge_sources))
+        .ok_or(PythonRuntimeError::NotInitialized)??;
     Python::try_attach(context_ops::register_boundary_error)
         .ok_or(PythonRuntimeError::NotInitialized)??;
     state.initialized = true;
@@ -519,6 +531,7 @@ fn py_error(error: &PyErr) -> PythonRuntimeError {
 
 #[cfg(test)]
 fn reset_runtime_state_for_tests() {
+    let _ignored = Python::try_attach(bridge_loader::reset_for_tests);
     let mut state = runtime_state().expect("runtime state should be available");
     *state = RuntimeState::new();
     foreign_object::reset_pending_releases_for_tests();
