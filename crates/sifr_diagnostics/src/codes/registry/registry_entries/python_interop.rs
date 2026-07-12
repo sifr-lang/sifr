@@ -195,6 +195,21 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["reason"]
     ),
     active_entry!(
+        "SIFR-PYIMP-0002",
+        "PYIMP",
+        "A package-local Python bridge source or import inventory is invalid.",
+        Severity::Error,
+        "crates/sifr_package/src/python/bridge_inventory_tests.rs::invalid_python_bridge_source_reports_pyimp_0002",
+        "invalid package-local Python bridge: {reason}",
+        "sifr_package::python",
+        [
+            arg!("reason"),
+            json_arg!("cargo_package_id"),
+            json_arg!("bridge_path")
+        ],
+        ["cargo_package_id", "bridge_path", "reason"]
+    ),
+    active_entry!(
         "SIFR-PYCALL-0001",
         "PYCALL",
         "A Python declaration or call shape is unsupported or incompatible.",

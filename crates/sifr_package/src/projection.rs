@@ -2,6 +2,10 @@ use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::SifrManifest;
 use crate::projection_bridge;
+use crate::python::{
+    python_bridge_projection_diagnostics, repair_python_bridge_inventory,
+    required_python_bridge_archive_entries,
+};
 use crate::source::layout::canonical_pure_marker_source;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -109,6 +113,13 @@ pub fn repair_projection(package_root: &Path, check: bool) -> ProjectionRepair {
         let bridge_repair =
             projection_bridge::repair(package_root, &manifest, &projection_cargo_id(package_root));
         wrote_files.extend(bridge_repair.wrote_files);
+        if let Ok(Some(path)) = repair_python_bridge_inventory(
+            package_root,
+            &manifest,
+            &projection_cargo_id(package_root),
+        ) {
+            wrote_files.push(path);
+        }
     }
     if !package_root.join("src/lib.rs").exists()
         && fs::create_dir_all(package_root.join("src")).is_ok()
@@ -219,6 +230,17 @@ fn projection_diagnostics(package_root: &Path) -> Vec<PackageDiagnostic> {
             ));
         }
     }
+    if !required_python_bridge_archive_entries(package_root).is_empty() {
+        for required in ["src/**/*.py", "src/python_bridges/__sifr_inventory__.json"] {
+            if !cargo_source.contains(required) {
+                diagnostics.push(PackageDiagnostic::projection_include_drift(
+                    &projection_cargo_id(package_root),
+                    cargo_toml.clone(),
+                    required,
+                ));
+            }
+        }
+    }
     if !package_root.join("src/lib.rs").exists() && !manifest.declares_rust_backend() {
         diagnostics.push(PackageDiagnostic::projection_pure_marker_missing(
             &projection_cargo_id(package_root),
@@ -226,6 +248,11 @@ fn projection_diagnostics(package_root: &Path) -> Vec<PackageDiagnostic> {
         ));
     }
     diagnostics.extend(projection_bridge::diagnostics(
+        package_root,
+        &manifest,
+        &projection_cargo_id(package_root),
+    ));
+    diagnostics.extend(python_bridge_projection_diagnostics(
         package_root,
         &manifest,
         &projection_cargo_id(package_root),
@@ -263,6 +290,8 @@ fn default_cargo_include_entries() -> Vec<String> {
         "Cargo.lock".to_string(),
         "sifr.toml".to_string(),
         "src/**/*.sifr".to_string(),
+        "src/**/*.py".to_string(),
+        "src/python_bridges/__sifr_inventory__.json".to_string(),
         "src/lib.rs".to_string(),
         "README.md".to_string(),
         "LICENSE".to_string(),

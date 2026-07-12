@@ -3297,10 +3297,13 @@ dependencies = [
 name = "sifr_package"
 version = "0.0.0"
 dependencies = [
+ "ruff_python_ast",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "sifr_diagnostics",
  "sifr_frontend",
+ "sifr_syntax",
  "toml",
 ]
 

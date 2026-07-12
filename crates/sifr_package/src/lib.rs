@@ -71,10 +71,12 @@ pub use crate::projection::{
     ProjectionCheck, ProjectionRepair,
 };
 pub use crate::python::{
-    probe_python_environment, resolve_python_environment,
-    resolve_python_environment_with_requirements, validate_python_environment_probe,
-    PythonEnvironmentProbe, PythonEnvironmentProbeRequest, PythonRequirementContribution,
-    PythonRequirementKind, ResolvedPythonEnvironment,
+    discover_python_bridge_inventory, probe_python_environment, resolve_python_environment,
+    resolve_python_environment_with_requirements, validate_python_bridge_inventory_manifest,
+    validate_python_environment_probe, write_python_bridge_inventory, PythonBridgeImport,
+    PythonBridgeInventory, PythonBridgeModule, PythonEnvironmentProbe,
+    PythonEnvironmentProbeRequest, PythonRequirementContribution, PythonRequirementKind,
+    ResolvedPythonEnvironment, PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 

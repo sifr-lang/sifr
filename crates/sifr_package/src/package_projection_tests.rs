@@ -30,6 +30,40 @@ fn init_lib_creates_canonical_src_layout_and_cargo_projection() {
 }
 
 #[test]
+fn projection_repair_generates_canonical_python_bridge_inventory() {
+    let temp = TestWorkspace::new("python_bridge_inventory_projection");
+    let package = temp.root.join("demo_json");
+    init_package(&InitPackageOptions {
+        target_dir: package.clone(),
+        sifr_name: "demo_json".to_string(),
+        kind: InitPackageKind::Lib,
+        force: false,
+    })
+    .expect("init succeeds");
+    fs::create_dir_all(package.join("src/python_bridges")).expect("create bridge root");
+    fs::write(
+        package.join("src/python_bridges/adapter.py"),
+        "import json\nVALUE = 1\n",
+    )
+    .expect("write bridge");
+
+    let check = check_projection(&package);
+    assert!(check.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == DiagnosticCode::PYIMP_INVALID_BRIDGE_SOURCE
+            && diagnostic.message.contains("missing or unreadable")
+    }));
+
+    let repair = repair_projection(&package, false);
+    let inventory = package.join("src/python_bridges/__sifr_inventory__.json");
+    assert!(repair.wrote_files.contains(&inventory));
+    assert!(inventory.is_file());
+    assert!(repair.diagnostics.is_empty());
+    let cargo = fs::read_to_string(package.join("Cargo.toml")).expect("Cargo.toml exists");
+    assert!(cargo.contains("src/**/*.py"));
+    assert!(cargo.contains("src/python_bridges/__sifr_inventory__.json"));
+}
+
+#[test]
 fn cargo_projection_init_bin_creates_main_target_without_manifest_bin_table() {
     let temp = TestWorkspace::new("init_bin_projection");
     let package = temp.root.join("demo_app");

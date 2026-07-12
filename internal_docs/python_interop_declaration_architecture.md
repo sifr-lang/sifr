@@ -404,6 +404,15 @@ the same `__sifr_bridge__.p_<resolved_package_key>` prefix and resolved from the
 embedded source table. They do not become third-party requirements and never
 fall back to ambient Python module resolution.
 
+The package-side inventory substrate discovers only
+`src/python_bridges/**/*.py`, parses every source, classifies static external
+and same-package imports, rejects dynamic import calls and misplaced or invalid
+sources with `SIFR-PYIMP-0002`, and emits a deterministic
+`__sifr_inventory__.json` required in package archives. Source and inventory
+digests are stable build inputs. The public `bridge.*` declaration target stays
+hard-reserved until resolved identities, target rewriting, embedded source
+tables, and the reserved loader activate atomically.
+
 ## Environment And Trust
 
 The final application continues to own one uv-created CPython environment.

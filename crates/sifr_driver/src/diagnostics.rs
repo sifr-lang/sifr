@@ -117,6 +117,14 @@ fn add_package_origin_args(rendered: &mut RenderedDiagnostic, origin: &PackageDi
             insert_arg(rendered, "cargo_package_id", &cargo_package_id.0);
             insert_arg(rendered, "marker_path", path.display().to_string());
         }
+        PackageDiagnosticOrigin::PythonBridgeSource {
+            cargo_package_id,
+            path,
+        } => {
+            insert_arg(rendered, "origin_kind", "python_bridge_source");
+            insert_arg(rendered, "cargo_package_id", &cargo_package_id.0);
+            insert_arg(rendered, "bridge_path", path.display().to_string());
+        }
         PackageDiagnosticOrigin::PackageGraph { cargo_package_id } => {
             insert_arg(rendered, "origin_kind", "package_graph");
             insert_arg(rendered, "cargo_package_id", &cargo_package_id.0);

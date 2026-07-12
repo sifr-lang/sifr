@@ -5,6 +5,26 @@ use std::path::Path;
 
 impl PackageDiagnostic {
     #[must_use]
+    pub fn invalid_python_bridge_source(
+        cargo_package_id: &CargoPackageId,
+        path: &Path,
+        reason: impl Into<String>,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::PYIMP_INVALID_BRIDGE_SOURCE,
+            message: format!("invalid package-local Python bridge: {}", reason.into()),
+            origin: Box::new(PackageDiagnosticOrigin::PythonBridgeSource {
+                cargo_package_id: cargo_package_id.clone(),
+                path: path.to_path_buf(),
+            }),
+            help: Some(
+                "keep bridge modules under src/python_bridges, use static imports, and remove dynamic import calls"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
     pub fn python_environment_config(
         cargo_package_id: &CargoPackageId,
         manifest_path: &Path,
