@@ -376,7 +376,7 @@ Depends on M1 sealed identities and M4 conversion.
 
 Implementation waves:
 
-- [ ] Package bridge source and inventory substrate:
+- [x] Package bridge source and inventory substrate — [PR #2945](https://github.com/sifr-lang/sifr/pull/2945):
   - Discover only package-root `src/python_bridges/**/*.py`, independent of
     custom Sifr source roots; reject misplaced bridge roots, invalid module
     paths, duplicate modules, invalid Python syntax, and dynamic import calls as
