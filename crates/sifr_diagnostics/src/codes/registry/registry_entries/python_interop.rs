@@ -183,4 +183,48 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         [arg!("import_root")],
         ["import_root"]
     ),
+    active_entry!(
+        "SIFR-PYIMP-0001",
+        "PYIMP",
+        "A declaration-first Python target path is invalid or unresolved.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_interop_tests.rs::invalid_python_target_reports_pyimp_0001",
+        "invalid Python declaration target: {reason}",
+        "sifr_lowering",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-PYCALL-0001",
+        "PYCALL",
+        "A Python declaration or call shape is unsupported or incompatible.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_interop_tests.rs::invalid_python_declaration_shape_reports_pycall_0001",
+        "invalid Python declaration call shape: {reason}",
+        "sifr_lowering",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-PYCONV-0001",
+        "PYCONV",
+        "A Sifr type has no active declaration-first Python conversion.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_interop_tests.rs::unsupported_python_conversion_reports_pyconv_0001",
+        "unsupported Python declaration conversion type: {reason}",
+        "sifr_lowering",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-PYRES-0002",
+        "PYRES",
+        "Recognized declaration-first syntax has no active production lowering yet.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_interop_tests.rs::later_python_decorator_is_a_hard_error",
+        "Python declaration lowering is not active yet: {reason}",
+        "sifr_lowering",
+        [arg!("reason")],
+        ["reason"]
+    ),
 ];

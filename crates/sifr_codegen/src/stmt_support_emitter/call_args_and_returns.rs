@@ -22,6 +22,17 @@ impl RustEmitter {
             .zip(lowered_args.into_iter())
             .enumerate()
         {
+            if matches!(
+                hir_arg,
+                HirExpr::Call { func, .. }
+                    if matches!(
+                        func.as_str(),
+                        "__sifr_python_present_argument" | "__sifr_python_omitted_argument"
+                    )
+            ) {
+                adapted.push(lowered_arg);
+                continue;
+            }
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
             let effective_arg_ty = if let HirExpr::Name { name, ty } = hir_arg {
                 if self.none_widened_local_bindings.contains(name) {

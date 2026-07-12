@@ -334,7 +334,7 @@ fn collect_expr_error_refs(
     collect_type_error_refs(expr.ty(), referenced, builtin_error_classes);
 
     match expr {
-        HirExpr::Call { func, args, .. } => {
+        HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
             if builtin_error_classes.contains(&func.as_str()) {
                 referenced.insert(func.clone());
             }
@@ -589,6 +589,7 @@ mod tests {
             method_kind: MethodKind::Regular,
             decorators: Vec::new(),
             rust_interop: Vec::new(),
+            python_interop: Vec::new(),
             compiler_intrinsic: None,
             type_params: Vec::new(),
         });
@@ -626,6 +627,7 @@ mod tests {
                 method_kind: MethodKind::Regular,
                 decorators: Vec::new(),
                 rust_interop: Vec::new(),
+                python_interop: Vec::new(),
                 compiler_intrinsic: None,
                 type_params: Vec::new(),
             }],
@@ -700,6 +702,7 @@ mod tests {
             method_kind: MethodKind::Regular,
             decorators: Vec::new(),
             rust_interop: Vec::new(),
+            python_interop: Vec::new(),
             compiler_intrinsic: None,
             type_params: Vec::new(),
         });

@@ -1,10 +1,10 @@
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_ir::{PythonParameterKind, PythonRecordExpansion};
 use sifr_python_ast::ExprCall;
 use sifr_type_system::{make_union, FunctionType, Type};
 
-use super::builtin_calls::{callable_builtin_dict_output_type, callable_builtin_element_type};
 use super::expressions::lower_expr;
 use super::LowerCtx;
 
@@ -230,6 +230,219 @@ pub(in crate::lower) fn lower_function_call_args(
     }
 
     Some(resolved)
+}
+
+pub(in crate::lower) struct LoweredPythonCallArgs {
+    pub args: Vec<HirExpr>,
+    pub record_expansions: Vec<PythonRecordExpansion>,
+}
+
+pub(in crate::lower) fn lower_python_function_call_args(
+    call: &ExprCall,
+    callable_name: &str,
+    ft: &FunctionType,
+    defaults: Option<&[(usize, HirExpr)]>,
+    shapes: &[PythonParameterKind],
+    ctx: &mut LowerCtx,
+) -> Option<LoweredPythonCallArgs> {
+    let vararg_index = shapes
+        .iter()
+        .position(|kind| *kind == PythonParameterKind::PositionalVariadic);
+    let kwarg_index = shapes
+        .iter()
+        .position(|kind| *kind == PythonParameterKind::KeywordVariadic);
+    let positional = lower_positional_args(call, ctx)?;
+    let positional_limit = shapes
+        .iter()
+        .position(|kind| *kind != PythonParameterKind::Positional)
+        .unwrap_or(shapes.len());
+    if vararg_index.is_none() && positional.len() > positional_limit {
+        return unexpected_keyword_error(
+            callable_name,
+            "positional argument after keyword-only boundary",
+            ctx,
+            call.arguments.args[positional_limit].range(),
+        );
+    }
+
+    let mut resolved = vec![None; ft.params.len()];
+    let fixed_positional_count = positional.len().min(positional_limit);
+    for (index, value) in positional.iter().take(fixed_positional_count).enumerate() {
+        resolved[index] = Some(value.clone());
+    }
+    if let Some(index) = vararg_index {
+        let elements = positional
+            .iter()
+            .skip(positional_limit)
+            .cloned()
+            .collect::<Vec<_>>();
+        let element_ty = match ft.params.get(index).map(|(_, ty, _)| ty.resolve_alias()) {
+            Some(Type::List(element)) => (**element).clone(),
+            _ => Type::Any,
+        };
+        resolved[index] = Some(HirExpr::ListLiteral {
+            elements,
+            ty: Type::List(Box::new(element_ty)),
+        });
+    }
+
+    let mut dynamic_keywords = Vec::new();
+    let mut unpacked = None;
+    for keyword in &call.arguments.keywords {
+        let Some(name) = keyword.arg.as_ref() else {
+            if unpacked.is_some() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYCALL_INVALID_SHAPE,
+                    format!("invalid Python declaration call shape: {callable_name}() accepts only one `**` expansion"),
+                    keyword.range(),
+                );
+                return None;
+            }
+            unpacked = Some((lower_expr(&keyword.value, ctx)?, keyword.range()));
+            continue;
+        };
+        let name_text = name.as_str();
+        if let Some(index) = ft
+            .params
+            .iter()
+            .position(|(parameter, _, _)| parameter == name_text)
+        {
+            if matches!(
+                shapes.get(index),
+                Some(
+                    PythonParameterKind::PositionalVariadic | PythonParameterKind::KeywordVariadic
+                )
+            ) {
+                return unexpected_keyword_error(callable_name, name_text, ctx, name.range());
+            }
+            if resolved[index].is_some() {
+                return duplicate_argument_error(callable_name, name_text, ctx, name.range());
+            }
+            resolved[index] = Some(lower_expr(&keyword.value, ctx)?);
+        } else if kwarg_index.is_some() {
+            dynamic_keywords.push((name.to_string(), lower_expr(&keyword.value, ctx)?));
+        } else {
+            return unexpected_keyword_error(callable_name, name_text, ctx, name.range());
+        }
+    }
+
+    if let Some(index) = kwarg_index {
+        if !dynamic_keywords.is_empty() && unpacked.is_some() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYCALL_INVALID_SHAPE,
+                format!("invalid Python declaration call shape: {callable_name}() cannot mix named variadic keywords with `**kwargs`"),
+                unpacked.as_ref().map_or(call.func.range(), |(_, range)| *range),
+            );
+            return None;
+        }
+        if let Some((value, range)) = unpacked.take() {
+            let expected = &ft.params[index].1;
+            if !value.ty().is_assignable_to(expected) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYCALL_INVALID_SHAPE,
+                    format!("invalid Python declaration call shape: `**kwargs` for {callable_name}() must be `{}`", expected.display_name()),
+                    range,
+                );
+                return None;
+            }
+            resolved[index] = Some(value);
+        } else {
+            let value_ty = match ft.params[index].1.resolve_alias() {
+                Type::Dict(_, value) => (**value).clone(),
+                _ => Type::Any,
+            };
+            resolved[index] = Some(HirExpr::DictLiteral {
+                keys: dynamic_keywords
+                    .iter()
+                    .map(|(name, _)| HirExpr::StringLiteral(name.clone()))
+                    .collect(),
+                values: dynamic_keywords
+                    .into_iter()
+                    .map(|(_, value)| value)
+                    .collect(),
+                ty: Type::Dict(Box::new(Type::Str), Box::new(value_ty)),
+            });
+        }
+    }
+    let mut record_expansions = Vec::new();
+    if kwarg_index.is_none() {
+        if let Some((record, range)) = unpacked {
+            let Type::Class { fields, .. } = record.ty().resolve_alias() else {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYCALL_INVALID_SHAPE,
+                    format!("invalid Python declaration call shape: `**record` for {callable_name}() requires a closed record"),
+                    range,
+                );
+                return None;
+            };
+            let fields = fields.clone();
+            let field_names = fields
+                .iter()
+                .map(|(name, _)| name.clone())
+                .collect::<Vec<_>>();
+            for (field, field_type) in fields {
+                let Some(index) = ft
+                    .params
+                    .iter()
+                    .position(|(parameter, _, _)| parameter == &field)
+                else {
+                    return unexpected_keyword_error(callable_name, &field, ctx, range);
+                };
+                if matches!(
+                    shapes.get(index),
+                    Some(
+                        PythonParameterKind::PositionalVariadic
+                            | PythonParameterKind::KeywordVariadic
+                    )
+                ) {
+                    return unexpected_keyword_error(callable_name, &field, ctx, range);
+                }
+                if resolved[index].is_some() {
+                    return duplicate_argument_error(callable_name, &field, ctx, range);
+                }
+                resolved[index] = Some(HirExpr::FieldAccess {
+                    object: Box::new(record.clone()),
+                    field,
+                    ty: field_type,
+                });
+            }
+            record_expansions.push(PythonRecordExpansion {
+                span: range,
+                fields: field_names,
+            });
+        }
+    }
+
+    for index in 0..resolved.len() {
+        if resolved[index].is_some() {
+            continue;
+        }
+        if let Some(default) = default_arg_expr(defaults, index) {
+            resolved[index] = Some(default.clone());
+        } else if Some(index) == vararg_index {
+            resolved[index] = Some(HirExpr::ListLiteral {
+                elements: Vec::new(),
+                ty: ft.params[index].1.clone(),
+            });
+        } else if Some(index) == kwarg_index {
+            resolved[index] = Some(HirExpr::DictLiteral {
+                keys: Vec::new(),
+                values: Vec::new(),
+                ty: ft.params[index].1.clone(),
+            });
+        } else {
+            return missing_argument_error(
+                callable_name,
+                &ft.params[index].0,
+                ctx,
+                call.func.range(),
+            );
+        }
+    }
+    Some(LoweredPythonCallArgs {
+        args: resolved.into_iter().collect::<Option<Vec<_>>>()?,
+        record_expansions,
+    })
 }
 
 fn lower_vararg_function_call_args(
@@ -611,117 +824,4 @@ fn normalize_string_method_args(
         }
         _ => Some(positional),
     }
-}
-
-pub(in crate::lower) fn validate_list_extend_arg(
-    list_elem_ty: &Type,
-    iterable_ty: &Type,
-    range: TextRange,
-    ctx: &mut LowerCtx,
-) -> bool {
-    let Some(iterable_elem_ty) = callable_builtin_element_type(iterable_ty) else {
-        ctx.error_with_code_at(
-            DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
-            format!(
-                "list.extend() argument must be an iterable with a statically-known element type, got '{}'",
-                iterable_ty.display_name()
-            ),
-            range,
-        );
-        return false;
-    };
-    if !iterable_elem_ty.is_assignable_to(list_elem_ty) {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "list.extend() iterable element type '{}' is not compatible with list element type '{}'",
-                iterable_elem_ty.display_name(),
-                list_elem_ty.display_name()
-            ),
-            range,
-        );
-        return false;
-    }
-    true
-}
-
-pub(in crate::lower) fn validate_dict_update_arg(
-    key_ty: &Type,
-    value_ty: &Type,
-    update_ty: &Type,
-    range: TextRange,
-    ctx: &mut LowerCtx,
-) -> bool {
-    let Some(Type::Dict(update_key_ty, update_value_ty)) =
-        callable_builtin_dict_output_type(update_ty)
-    else {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "dict.update() argument must be a dict or iterable of key/value tuples, got '{}'",
-                update_ty.display_name()
-            ),
-            range,
-        );
-        return false;
-    };
-    let mut valid = true;
-    if !update_key_ty.is_assignable_to(key_ty) {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "dict.update() key type '{}' is not compatible with dict key type '{}'",
-                update_key_ty.display_name(),
-                key_ty.display_name()
-            ),
-            range,
-        );
-        valid = false;
-    }
-    if !update_value_ty.is_assignable_to(value_ty) {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "dict.update() value type '{}' is not compatible with dict value type '{}'",
-                update_value_ty.display_name(),
-                value_ty.display_name()
-            ),
-            range,
-        );
-        valid = false;
-    }
-    valid
-}
-
-pub(in crate::lower) fn validate_set_iterable_arg(
-    set_elem_ty: &Type,
-    iterable_ty: &Type,
-    method: &str,
-    range: TextRange,
-    ctx: &mut LowerCtx,
-) -> bool {
-    let Some(iterable_elem_ty) = callable_builtin_element_type(iterable_ty) else {
-        ctx.error_with_code_at(
-            DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
-            format!(
-                "set.{method}() arguments must be iterables with a statically-known element type, got '{}'",
-                iterable_ty.display_name()
-            ),
-            range,
-        );
-        return false;
-    };
-    if !iterable_elem_ty.is_assignable_to(set_elem_ty) {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "set.{method}() iterable element type '{}' is not compatible with set element type '{}'",
-                iterable_elem_ty.display_name(),
-                set_elem_ty.display_name()
-            ),
-            range,
-        );
-        return false;
-    }
-    true
 }

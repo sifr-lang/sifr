@@ -81,6 +81,15 @@ mod operator_protocol_emitters;
 mod output_helpers;
 mod preamble;
 pub use preamble::*;
+mod python_interop_direct;
+#[cfg(test)]
+mod python_interop_direct_tests;
+mod python_interop_plan;
+#[cfg(test)]
+mod python_interop_plan_tests;
+pub use python_interop_plan::{
+    PythonInteropPlan, PythonInteropPlanDeclaration, PythonTargetProbe, PythonTargetProbeStatus,
+};
 mod render;
 pub use render::*;
 mod rust_interop_bridge_contract;

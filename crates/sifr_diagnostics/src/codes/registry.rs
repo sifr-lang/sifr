@@ -61,25 +61,6 @@ impl DiagnosticCode {
         Self::new("SIFR-ASYNC-0006", Severity::Error);
     pub const ASYNC_DIRECT_SHELL_EXEC_CALL: Self = Self::new("SIFR-ASYNC-0007", Severity::Error);
 
-    pub const PYENV_INVALID_CONFIG: Self = Self::new("SIFR-PYENV-0001", Severity::Error);
-    pub const PYENV_MULTIPLE_SELECTIONS: Self = Self::new("SIFR-PYENV-0002", Severity::Error);
-    pub const PYENV_MISSING_SELECTION: Self = Self::new("SIFR-PYENV-0003", Severity::Error);
-    pub const PYENV_PROBE_FAILED: Self = Self::new("SIFR-PYENV-0004", Severity::Error);
-    pub const PYENV_UNSUPPORTED_INTERPRETER: Self = Self::new("SIFR-PYENV-0005", Severity::Error);
-    pub const PYENV_VENV_PREFIX_MISMATCH: Self = Self::new("SIFR-PYENV-0006", Severity::Error);
-    pub const PYENV_SITE_PACKAGES_MISSING: Self = Self::new("SIFR-PYENV-0007", Severity::Error);
-    pub const PYENV_DECLARED_IMPORT_MISSING: Self = Self::new("SIFR-PYENV-0008", Severity::Error);
-    pub const PYENV_NATIVE_IMPORT_FAILED: Self = Self::new("SIFR-PYENV-0009", Severity::Error);
-    pub const PYENV_FREE_THREADED_UNSUPPORTED: Self = Self::new("SIFR-PYENV-0010", Severity::Error);
-    pub const PYENV_LOCK_OR_PROJECT_STALE: Self = Self::new("SIFR-PYENV-0011", Severity::Error);
-    pub const PYTRUST_WILDCARD_REJECTED: Self = Self::new("SIFR-PYTRUST-0001", Severity::Error);
-    pub const PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED: Self =
-        Self::new("SIFR-PYTRUST-0005", Severity::Error);
-    pub const PYTRUST_UNTRUSTED_NATIVE_IMPORT: Self =
-        Self::new("SIFR-PYTRUST-0003", Severity::Error);
-    pub const PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST: Self =
-        Self::new("SIFR-PYTRUST-0004", Severity::Error);
-
     pub const RUST_CONFIG_MALFORMED_DECORATOR: Self =
         Self::new("SIFR-RUST-CONFIG-0001", Severity::Error);
     pub const RUST_RESOLVE_TARGET_ROOT: Self = Self::new("SIFR-RUST-RESOLVE-0001", Severity::Error);
@@ -296,7 +277,7 @@ impl DiagnosticCode {
     #[cfg(test)]
     pub(crate) const TEST_SOURCE_ERROR: Self = Self::new("SIFR-NAME-9999", Severity::Error);
 
-    const fn new(code: &'static str, declared_severity: Severity) -> Self {
+    pub(super) const fn new(code: &'static str, declared_severity: Severity) -> Self {
         Self {
             code,
             declared_severity,
@@ -712,6 +693,10 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PYENV_NATIVE_IMPORT_FAILED,
     DiagnosticCode::PYENV_FREE_THREADED_UNSUPPORTED,
     DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
+    DiagnosticCode::PYIMP_INVALID_TARGET,
+    DiagnosticCode::PYCALL_INVALID_SHAPE,
+    DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE,
+    DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
     DiagnosticCode::PYTRUST_WILDCARD_REJECTED,
     DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED,
     DiagnosticCode::PYTRUST_UNTRUSTED_NATIVE_IMPORT,

@@ -635,6 +635,7 @@ fn base_project(declarations: Vec<RustInteropPlanDeclaration>) -> GeneratedBinar
                 declarations,
                 ..RustInteropPlan::default()
             },
+            ..InteropBuildPlan::default()
         },
         cache_key_fragment: None,
         python_runtime: None,

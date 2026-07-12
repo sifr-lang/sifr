@@ -1,0 +1,45 @@
+from sifr.python import PythonError
+
+
+class DumpOptions:
+    skipkeys: bool
+    ensure_ascii: bool
+
+    def __init__(self, skipkeys: bool, ensure_ascii: bool):
+        self.skipkeys = skipkeys
+        self.ensure_ascii = ensure_ascii
+
+
+@python(json.dumps)
+def dumps(
+    value: int,
+    *,
+    skipkeys: bool = False,
+    ensure_ascii: bool = True,
+    indent: int | None = python.omit,
+) -> Result[str, PythonError]: ...
+
+
+@python(logging.info)
+def log(
+    message: str,
+    *rest: str,
+    **extra: bool,
+) -> Result[None, PythonError]: ...
+
+
+def main():
+    succeeded: bool = False
+    try:
+        variadic: None = log("interop %s", "works")
+        options: dict[str, bool] = {"stack_info": False}
+        variadic_kwargs: None = log("interop", **options)
+        record = DumpOptions(False, False)
+        omitted: str = dumps(7, **record)
+        explicit_none: str = dumps(7, indent=None)
+        succeeded = omitted == "7" and explicit_none == "7"
+        _ = variadic
+        _ = variadic_kwargs
+    except PythonError as error:
+        print(error.message)
+    assert succeeded

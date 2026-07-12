@@ -1,6 +1,6 @@
 //! HIR node definitions -- typed versions of AST nodes.
 
-use crate::RustInteropDeclaration;
+use crate::{PythonInteropDeclaration, RustInteropDeclaration};
 use ruff_text_size::TextRange;
 use sifr_type_system::{ParamConvention, Type};
 
@@ -103,6 +103,8 @@ pub struct HirFunction {
     pub decorators: Vec<String>,
     /// Structured Rust interop declarations attached to this function.
     pub rust_interop: Vec<RustInteropDeclaration>,
+    /// Structured declaration-first Python interop metadata.
+    pub python_interop: Vec<PythonInteropDeclaration>,
     /// Compiler-owned callable identity declared by canonical sysroot source.
     pub compiler_intrinsic: Option<CompilerIntrinsicId>,
     /// Generic type parameters (e.g., `["T", "K", "V"]` for generic functions)
@@ -513,6 +515,14 @@ pub enum HirExpr {
         args: Vec<HirExpr>,
         ty: Type,
     },
+    /// A typed call to a declaration-first Python wrapper.
+    PythonCall {
+        func: String,
+        args: Vec<HirExpr>,
+        provided_arguments: Vec<bool>,
+        record_expansions: Vec<PythonRecordExpansion>,
+        ty: Type,
+    },
     /// Compiler-owned operation selected by typed lowering metadata.
     IntrinsicCall {
         intrinsic: CompilerIntrinsicId,
@@ -695,6 +705,7 @@ impl HirExpr {
             | Self::Compare { ty, .. }
             | Self::BoolOp { ty, .. }
             | Self::Call { ty, .. }
+            | Self::PythonCall { ty, .. }
             | Self::IntrinsicCall { ty, .. }
             | Self::Await { ty, .. }
             | Self::IteratorCall { ty, .. }
@@ -724,4 +735,11 @@ impl HirExpr {
             | Self::EnumVariant { ty, .. } => ty,
         }
     }
+}
+
+/// Closed-record kwargs metadata retained from explicit `**record` syntax.
+#[derive(Debug, Clone)]
+pub struct PythonRecordExpansion {
+    pub span: TextRange,
+    pub fields: Vec<String>,
 }

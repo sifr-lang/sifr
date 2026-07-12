@@ -52,6 +52,8 @@ mod classes_and_basics_codegen_tests;
 #[cfg(test)]
 mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
+mod control_flow_codegen_tests;
+#[cfg(test)]
 mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
 mod multi_module_stdlib_feature_tests;
@@ -65,3 +67,5 @@ mod recursive_node_codegen_tests;
 mod structured_intrinsic_codegen_tests;
 #[cfg(test)]
 mod structured_lowering_codegen_tests;
+#[cfg(test)]
+mod structured_path_codegen_tests;

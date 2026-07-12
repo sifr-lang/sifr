@@ -3,7 +3,10 @@ use super::{
     python_callback_bounds::python_callback_bound_param_names, HirFunction, HirStmt, OwnershipKind,
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Type, Visibility,
 };
+use crate::python_interop_direct::python_interop_function_body;
+use crate::python_interop_direct::python_omit_parameter_indices;
 use crate::rust_interop_direct::rust_interop_function_body;
+use std::collections::HashSet;
 impl RustEmitter {
     pub(crate) fn lower_generator_function_body(
         &mut self,
@@ -302,6 +305,11 @@ impl RustEmitter {
         self.apply_mutable_param_shadowing(&mutable_param_shadows);
 
         let callback_bound_params = python_callback_bound_param_names(func);
+        let python_omit_params = func
+            .python_interop
+            .first()
+            .map(|declaration| python_omit_parameter_indices(declaration).collect::<HashSet<_>>())
+            .unwrap_or_default();
         let params = func
             .params
             .iter()
@@ -311,6 +319,11 @@ impl RustEmitter {
                     self.lower_python_callback_param_type(&param.ty, param.convention)
                 } else {
                     self.lower_module_function_param_type(&func.name, param_idx, param)
+                };
+                let rust_ty = if python_omit_params.contains(&param_idx) {
+                    RustType::Option(Box::new(rust_ty))
+                } else {
+                    rust_ty
                 };
                 if param.convention.is_owned() && param.convention.is_mutable() {
                     RustParam::NamedMut {
@@ -326,7 +339,8 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
 
-        let interop_body = rust_interop_function_body(func);
+        let interop_body =
+            python_interop_function_body(func).or_else(|| rust_interop_function_body(func));
         let interop_body_supplied = interop_body.is_some();
         let mut lowered_body = if let Some(interop_body) = interop_body {
             interop_body

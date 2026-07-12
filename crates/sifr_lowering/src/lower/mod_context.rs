@@ -83,6 +83,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) error_hierarchy: HashMap<String, Vec<String>>,
     /// Map of function names to the parameter index of their *args (vararg) parameter
     pub(in crate::lower) vararg_functions: HashMap<String, usize>,
+    /// Declaration-first Python parameter kinds, retained for call-shape lowering.
+    pub(in crate::lower) python_call_shapes: HashMap<String, Vec<sifr_ir::PythonParameterKind>>,
     /// Set of registered type variable names (e.g., T, K, V from `TypeVar` declarations)
     pub(in crate::lower) type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
@@ -163,6 +165,7 @@ impl LowerCtx {
             error_types: std::collections::HashSet::new(),
             error_hierarchy: HashMap::new(),
             vararg_functions: HashMap::new(),
+            python_call_shapes: HashMap::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),

@@ -112,6 +112,57 @@ pub fn import_module(name: &str) -> Result<ObjectHandle, PythonError> {
     .map_err(PythonError::runtime)?
 }
 
+pub fn resolve_target(segments: &[String]) -> Result<ObjectHandle, PythonError> {
+    if segments.len() < 2 {
+        return Err(PythonError {
+            kind: "import".to_string(),
+            exception_type: "SifrPythonTargetError".to_string(),
+            message: "Python target must contain a module root and attribute".to_string(),
+            traceback: String::new(),
+            context: "declaration target resolution".to_string(),
+        });
+    }
+    validate_import_policy(&segments[0])?;
+    super::attach(|py| {
+        let mut last_error = None;
+        for split in (1..segments.len()).rev() {
+            let module_name = segments[..split].join(".");
+            let Ok(module) = py.import(&module_name) else {
+                continue;
+            };
+            let mut value = module.into_any();
+            let mut failed = false;
+            for attribute in &segments[split..] {
+                match value.getattr(attribute) {
+                    Ok(next) => value = next,
+                    Err(error) => {
+                        last_error = Some(error);
+                        failed = true;
+                        break;
+                    }
+                }
+            }
+            if !failed {
+                return store_object(value.unbind());
+            }
+        }
+        Err(last_error.map_or_else(
+            || PythonError {
+                kind: "import".to_string(),
+                exception_type: "ModuleNotFoundError".to_string(),
+                message: format!(
+                    "Python target '{}' could not be resolved",
+                    segments.join(".")
+                ),
+                traceback: String::new(),
+                context: "declaration target resolution".to_string(),
+            },
+            |error| PythonError::from_pyerr(py, error, "attribute", segments.join(".")),
+        ))
+    })
+    .map_err(PythonError::runtime)?
+}
+
 pub fn get_attr(object: &ObjectHandle, name: &str) -> Result<ObjectHandle, PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
@@ -155,6 +206,84 @@ pub fn call_object(
             kw_dict
                 .set_item(*key, value.bind(py))
                 .map_err(|error| PythonError::from_pyerr(py, error, "conversion", *key))?;
+        }
+        let _call_depth = super::enter_python_call();
+        callable
+            .bind(py)
+            .call(tuple, Some(&kw_dict))
+            .map_err(|error| PythonError::from_pyerr(py, error, "call", "call object"))
+            .and_then(|value| store_object(value.unbind()))
+    })
+    .map_err(PythonError::runtime)?
+}
+
+/// Call a Python object while borrowing argument identities from generated wrappers.
+///
+/// This keeps opaque arguments sealed: wrappers never clone or expose their
+/// underlying `PyObject`, and the runtime owns the temporary Python references.
+pub fn call_object_borrowed(
+    object: &ObjectHandle,
+    args: &[&ObjectHandle],
+    kwargs: &[(&str, &ObjectHandle)],
+) -> Result<ObjectHandle, PythonError> {
+    super::attach(|py| {
+        let callable = clone_handle(py, object)?;
+        let tuple_args = args
+            .iter()
+            .map(|arg| clone_handle(py, arg))
+            .collect::<Result<Vec<_>, _>>()?;
+        let tuple = PyTuple::new(py, tuple_args.iter())
+            .map_err(|error| PythonError::from_pyerr(py, error, "conversion", "call args"))?;
+        let kw_dict = PyDict::new(py);
+        for (key, value_handle) in kwargs {
+            let value = clone_handle(py, value_handle)?;
+            kw_dict
+                .set_item(*key, value.bind(py))
+                .map_err(|error| PythonError::from_pyerr(py, error, "conversion", *key))?;
+        }
+        let _call_depth = super::enter_python_call();
+        callable
+            .bind(py)
+            .call(tuple, Some(&kw_dict))
+            .map_err(|error| PythonError::from_pyerr(py, error, "call", "call object"))
+            .and_then(|value| store_object(value.unbind()))
+    })
+    .map_err(PythonError::runtime)?
+}
+
+pub fn temporary_argument_handle(object: &ObjectHandle) -> Result<ObjectHandle, PythonError> {
+    super::attach(|py| clone_handle(py, object).and_then(store_object))
+        .map_err(PythonError::runtime)?
+}
+
+pub fn call_object_owned(
+    object: &ObjectHandle,
+    args: &[ObjectHandle],
+    kwargs: &[(String, ObjectHandle)],
+) -> Result<ObjectHandle, PythonError> {
+    let mut names = std::collections::HashSet::with_capacity(kwargs.len());
+    for (name, _) in kwargs {
+        if !names.insert(name.as_str()) {
+            return Err(PythonError {
+                kind: "call".to_string(),
+                exception_type: "TypeError".to_string(),
+                message: format!("multiple values for keyword argument '{name}'"),
+                traceback: String::new(),
+                context: "declaration call arguments".to_string(),
+            });
+        }
+    }
+    super::attach(|py| {
+        let callable = clone_handle(py, object)?;
+        let tuple_args = clone_handles(py, args)?;
+        let tuple = PyTuple::new(py, tuple_args.iter())
+            .map_err(|error| PythonError::from_pyerr(py, error, "conversion", "call args"))?;
+        let kw_dict = PyDict::new(py);
+        for (key, value_handle) in kwargs {
+            let value = clone_handle(py, value_handle)?;
+            kw_dict
+                .set_item(key, value.bind(py))
+                .map_err(|error| PythonError::from_pyerr(py, error, "conversion", key))?;
         }
         let _call_depth = super::enter_python_call();
         callable

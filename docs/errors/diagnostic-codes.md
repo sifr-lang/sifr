@@ -244,6 +244,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYTRUST-0003`](SIFR-PYTRUST-0003.md) | Error | Native Python import root is trusted but not required. |
 | [`SIFR-PYTRUST-0004`](SIFR-PYTRUST-0004.md) | Error | Dynamic Python import requires an explicit trust annotation. |
 | [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.md) | Error | Required Python import root is not authorized by the root application. |
+| [`SIFR-PYIMP-0001`](SIFR-PYIMP-0001.md) | Error | A declaration-first Python target path is invalid or unresolved. |
+| [`SIFR-PYCALL-0001`](SIFR-PYCALL-0001.md) | Error | A Python declaration or call shape is unsupported or incompatible. |
+| [`SIFR-PYCONV-0001`](SIFR-PYCONV-0001.md) | Error | A Sifr type has no active declaration-first Python conversion. |
+| [`SIFR-PYRES-0002`](SIFR-PYRES-0002.md) | Error | Recognized declaration-first syntax has no active production lowering yet. |
 | [`SIFR-RUST-CONFIG-0001`](SIFR-RUST-CONFIG-0001.md) | Error | Rust interop decorator syntax is malformed. |
 | [`SIFR-RUST-RESOLVE-0001`](SIFR-RUST-RESOLVE-0001.md) | Error | Rust interop target root cannot be resolved. |
 | [`SIFR-RUST-TRUST-0001`](SIFR-RUST-TRUST-0001.md) | Error | Rust interop trust declaration is missing. |
@@ -289,11 +293,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-INT-0000` | `INT` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-IO-0000` | `IO` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-ENCODING-0000` | `ENCODING` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYIMP-0001` | `PYIMP` | Reserved for an unresolved or invalid static Python or bridge target. |
-| `SIFR-PYCALL-0001` | `PYCALL` | Reserved for an unsupported or incompatible Python callable, attribute, item, or argument shape. |
-| `SIFR-PYCONV-0001` | `PYCONV` | Reserved for an unsupported Sifr/Python declaration conversion type. |
 | `SIFR-PYRES-0001` | `PYRES` | Reserved for an invalid Python opaque cleanup or ownership policy. |
-| `SIFR-PYRES-0002` | `PYRES` | Reserved for recognized declaration-first syntax whose sole production lowering is not active yet. |
 | `SIFR-PYASYNC-0001` | `PYASYNC` | Reserved for an invalid Python awaitable, cancellation, or loop-ownership declaration. |
 | `SIFR-PYCTX-0001` | `PYCTX` | Reserved for an invalid Python context-manager entry, exit, or suppression declaration. |
 | `SIFR-PYZC-0001` | `PYZC` | Reserved for an invalid advanced-data ownership or hidden-copy declaration. |

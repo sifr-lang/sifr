@@ -10,6 +10,7 @@ pub mod flow_graph;
 pub mod hir_nodes;
 pub mod lowering_outcome;
 pub mod lowering_result;
+pub mod python_interop;
 pub mod rust_interop;
 
 pub use cfg::*;
@@ -18,6 +19,7 @@ pub use flow_graph::*;
 pub use hir_nodes::*;
 pub use lowering_outcome::LoweringOutcome;
 pub use lowering_result::LoweringResult;
+pub use python_interop::*;
 pub use rust_interop::*;
 
 #[cfg(test)]

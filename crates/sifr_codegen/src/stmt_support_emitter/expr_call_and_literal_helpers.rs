@@ -49,6 +49,7 @@ macro_rules! stmt_expr_await_and_registry {
         let skip_leaf_registry_lowering = matches!(
             $expr,
             HirExpr::Call { .. }
+                | HirExpr::PythonCall { .. }
                 | HirExpr::IteratorCall { .. }
                 | HirExpr::ConstructorCall { .. }
                 | HirExpr::MethodCall { .. }

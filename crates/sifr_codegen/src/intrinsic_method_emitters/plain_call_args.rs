@@ -22,6 +22,17 @@ impl RustEmitter {
             let effective_arg_ty = self.effective_registry_expr_ty(arg);
             let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
             let mut lowered_arg = self.try_lower_registry_expr_strict(arg)?;
+            if matches!(
+                arg,
+                HirExpr::Call { func, .. }
+                    if matches!(
+                        func.as_str(),
+                        "__sifr_python_present_argument" | "__sifr_python_omitted_argument"
+                    )
+            ) {
+                lowered_args.push(lowered_arg);
+                continue;
+            }
             let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty }
                 if self.borrowed_params.contains(name)
                     || self.mut_borrowed_params.contains(name)

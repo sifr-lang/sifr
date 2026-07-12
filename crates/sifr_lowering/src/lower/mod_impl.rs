@@ -1,3 +1,4 @@
+use super::python_interop;
 use super::{
     async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
     collect_type_vars, compiler_intrinsics, extract_function_type, function_body_contains_yield,
@@ -6,7 +7,7 @@ use super::{
     name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
     predeclare_type_aliases, private_stdlib_imports, register_builtins, resolve_imports_early,
     resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs, FunctionType,
-    HirDiagnostic, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
+    HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
 };
 use sifr_ir::LoweringResult;
 /// Internal implementation of module lowering.
@@ -166,6 +167,51 @@ pub(in crate::lower) fn lower_module_impl(
             }
 
             collect_function_defaults(&mut ctx, &function_name, func);
+            if python_interop::has_python_interop_decorator_syntax(&func.decorator_list) {
+                ctx.python_call_shapes.insert(
+                    function_name.clone(),
+                    python_interop::python_parameter_kinds(&func.parameters),
+                );
+                let regular_count =
+                    func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
+                let omitted = func
+                    .parameters
+                    .args
+                    .iter()
+                    .enumerate()
+                    .chain(
+                        func.parameters
+                            .kwonlyargs
+                            .iter()
+                            .enumerate()
+                            .map(|(index, parameter)| (regular_count + index, parameter)),
+                    )
+                    .filter(|(_, parameter)| {
+                        parameter
+                            .default
+                            .as_deref()
+                            .is_some_and(python_interop::is_python_omit)
+                    })
+                    .filter_map(|(index, _)| {
+                        ft.params.get(index).map(|(_, ty, _)| {
+                            (
+                                index,
+                                HirExpr::Call {
+                                    func: "__sifr_python_omitted_argument".to_string(),
+                                    args: Vec::new(),
+                                    ty: ty.clone(),
+                                },
+                            )
+                        })
+                    })
+                    .collect::<Vec<_>>();
+                if !omitted.is_empty() {
+                    ctx.function_defaults
+                        .entry(function_name.clone())
+                        .or_default()
+                        .extend(omitted);
+                }
+            }
             if func.is_async && function_body_contains_yield(&func.body) {
                 ctx.async_generator_functions.insert(function_name.clone());
             } else if func.is_async {
@@ -176,6 +222,11 @@ pub(in crate::lower) fn lower_module_impl(
             {
                 ctx.function_workload_annotations
                     .insert(function_name.clone(), workload);
+            } else if python_interop::has_python_interop_decorator_syntax(&func.decorator_list) {
+                ctx.function_workload_annotations.insert(
+                    function_name.clone(),
+                    workload_annotations::WorkloadKind::BlockingIo,
+                );
             }
             ctx.functions.insert(function_name.clone(), ft);
             if func.parameters.vararg.is_some() {
@@ -362,6 +413,17 @@ pub(in crate::lower) fn lower_module_impl(
                                         imported_defaults::import_callable_vararg(
                                             &mut ctx,
                                             module_varargs,
+                                            name,
+                                            &local,
+                                        );
+                                    }
+                                    if let Some(module_shapes) = externals
+                                        .function_python_call_shapes
+                                        .get(&stdlib_module_key)
+                                    {
+                                        imported_defaults::import_python_call_shape(
+                                            &mut ctx,
+                                            module_shapes,
                                             name,
                                             &local,
                                         );
@@ -593,6 +655,16 @@ pub(in crate::lower) fn lower_module_impl(
                                 &local,
                             );
                         }
+                        if let Some(module_shapes) =
+                            externals.function_python_call_shapes.get(&module_name)
+                        {
+                            imported_defaults::import_python_call_shape(
+                                &mut ctx,
+                                module_shapes,
+                                name,
+                                &local,
+                            );
+                        }
                         if let Some(module_workloads) =
                             externals.function_workloads.get(&module_name)
                         {
@@ -785,6 +857,7 @@ pub(in crate::lower) fn lower_module_impl(
             flow_graph,
             function_defaults: ctx.function_defaults.clone(),
             function_varargs: ctx.vararg_functions.clone(),
+            function_python_call_shapes: ctx.python_call_shapes.clone(),
             function_workloads: ctx
                 .function_workload_annotations
                 .iter()

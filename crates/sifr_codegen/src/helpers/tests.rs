@@ -13,6 +13,7 @@ fn mk_function(name: &str, body: Vec<HirStmt>) -> HirFunction {
         method_kind: MethodKind::Regular,
         decorators: vec![],
         rust_interop: Vec::new(),
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: vec![],
     }
@@ -313,6 +314,7 @@ fn body_calls_function_ignores_nested_function_scope() {
         method_kind: MethodKind::Regular,
         decorators: vec![],
         rust_interop: Vec::new(),
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: vec![],
     };
@@ -424,6 +426,7 @@ fn body_contains_return_ignores_nested_function_scope() {
         method_kind: MethodKind::Regular,
         decorators: vec![],
         rust_interop: Vec::new(),
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: vec![],
     };

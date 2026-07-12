@@ -563,6 +563,7 @@ impl RootedEntrypointPlan {
             flow_graph,
             function_defaults: std::collections::HashMap::new(),
             function_varargs: std::collections::HashMap::new(),
+            function_python_call_shapes: std::collections::HashMap::new(),
             function_workloads: std::collections::HashMap::new(),
             constant_integer_values: std::collections::HashMap::new(),
             reveal_types: main_diag.reveal_types,
@@ -604,6 +605,10 @@ impl RootedEntrypointPlan {
         let (generated, rust_interop_context) =
             attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
         let generated = apply_package_rust_interop_metadata(generated, rust_interop_context)?;
+        let generated = super::python_interop::apply_python_interop_metadata(
+            generated,
+            python_runtime.as_ref(),
+        )?;
         apply_package_runtime_metadata(generated, python_runtime)
     }
 }

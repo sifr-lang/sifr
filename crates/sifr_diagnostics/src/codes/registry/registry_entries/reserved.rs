@@ -39,29 +39,9 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-IO-0000", "IO"),
     reserved_family_base("SIFR-ENCODING-0000", "ENCODING"),
     reserved_code(
-            "SIFR-PYIMP-0001",
-            "PYIMP",
-            "Reserved for an unresolved or invalid static Python or bridge target.",
-        ),
-    reserved_code(
-            "SIFR-PYCALL-0001",
-            "PYCALL",
-            "Reserved for an unsupported or incompatible Python callable, attribute, item, or argument shape.",
-        ),
-    reserved_code(
-            "SIFR-PYCONV-0001",
-            "PYCONV",
-            "Reserved for an unsupported Sifr/Python declaration conversion type.",
-        ),
-    reserved_code(
             "SIFR-PYRES-0001",
             "PYRES",
             "Reserved for an invalid Python opaque cleanup or ownership policy.",
-        ),
-    reserved_code(
-            "SIFR-PYRES-0002",
-            "PYRES",
-            "Reserved for recognized declaration-first syntax whose sole production lowering is not active yet.",
         ),
     reserved_code(
             "SIFR-PYASYNC-0001",

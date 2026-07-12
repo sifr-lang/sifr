@@ -20,6 +20,7 @@ mod blocking_executor_calls;
 mod builtin_calls;
 mod bytes_methods;
 mod call_argument_ranges;
+mod call_iterable_validation;
 mod class_field_inference;
 mod classes;
 mod compiler_intrinsics;
@@ -103,6 +104,9 @@ mod private_stdlib_imports;
 mod protocol_diagnostics;
 #[cfg(test)]
 mod python_async_tests;
+mod python_interop;
+#[cfg(test)]
+mod python_interop_tests;
 #[cfg(test)]
 mod python_trust_tests;
 mod result_diagnostics;

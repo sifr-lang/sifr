@@ -48,6 +48,7 @@ pub(in crate::lower) fn lower_class(
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop: Vec::new(),
+                    python_interop: Vec::new(),
                     compiler_intrinsic: None,
                     type_params: Vec::new(),
                 }
@@ -166,6 +167,7 @@ pub(in crate::lower) fn lower_class(
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop,
+                    python_interop: Vec::new(),
                     compiler_intrinsic: None,
                     type_params: Vec::new(),
                 });
@@ -291,6 +293,7 @@ pub(in crate::lower) fn lower_class(
                     method_kind: MethodKind::Regular,
                     decorators: vec![],
                     rust_interop,
+                    python_interop: Vec::new(),
                     compiler_intrinsic: None,
                     type_params: Vec::new(),
                 });
@@ -494,6 +497,7 @@ pub(in crate::lower) fn lower_class(
                 method_kind,
                 decorators: method_decorators,
                 rust_interop,
+                python_interop: Vec::new(),
                 compiler_intrinsic: None,
                 type_params: Vec::new(),
             };

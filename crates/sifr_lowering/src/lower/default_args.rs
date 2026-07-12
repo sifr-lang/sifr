@@ -4,6 +4,8 @@ use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ParameterWithDefault, StmtFunctionDef};
 
+use super::python_interop::{has_python_interop_decorator_syntax, is_python_omit};
+
 pub(in crate::lower) fn collect_function_defaults(
     ctx: &mut LowerCtx,
     function_name: &str,
@@ -30,6 +32,11 @@ fn collect_param_default(
     func: &StmtFunctionDef,
     param: &ParameterWithDefault,
 ) {
+    if has_python_interop_decorator_syntax(&func.decorator_list)
+        && param.default.as_deref().is_some_and(is_python_omit)
+    {
+        return;
+    }
     if let Some(ref default_expr) = param.default {
         if let Some(hir_default) = lower_expr_simple(default_expr) {
             defaults.push((index, hir_default));

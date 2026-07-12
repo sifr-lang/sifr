@@ -272,7 +272,7 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
                 mutable: false,
             });
         }
-        HirExpr::Call { func, args, .. } => {
+        HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
             effects.push(FlowEffect::Call {
                 callee: func.clone(),
             });

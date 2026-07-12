@@ -40,15 +40,16 @@ pub use dlpack_ops::{
 };
 pub use foreign_object::ForeignObject;
 pub use object_ops::{
-    call_attr, call_object, close_object, copy_dict_str_bool, copy_dict_str_bytes,
-    copy_dict_str_float, copy_dict_str_i32, copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8,
-    copy_list_bool, copy_list_bytes, copy_list_float, copy_list_i32, copy_list_int, copy_list_str,
-    copy_list_u8, copy_record_fields, copy_tuple_bool, copy_tuple_bytes, copy_tuple_float,
-    copy_tuple_i32, copy_tuple_int, copy_tuple_str, copy_tuple_u8, enter_context, exit_context,
-    from_bool, from_bytes, from_dict_str, from_float, from_int, from_list, from_none, from_record,
-    from_str, from_tuple, get_attr, get_item_str, import_module, to_bool, to_bytes, to_float,
-    to_i16, to_i32, to_i64, to_i8, to_int, to_isize, to_none, to_str, to_u16, to_u32, to_u64,
-    to_u8, to_usize, ObjectHandle, PythonError,
+    call_attr, call_object, call_object_borrowed, call_object_owned, close_object,
+    copy_dict_str_bool, copy_dict_str_bytes, copy_dict_str_float, copy_dict_str_i32,
+    copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8, copy_list_bool, copy_list_bytes,
+    copy_list_float, copy_list_i32, copy_list_int, copy_list_str, copy_list_u8, copy_record_fields,
+    copy_tuple_bool, copy_tuple_bytes, copy_tuple_float, copy_tuple_i32, copy_tuple_int,
+    copy_tuple_str, copy_tuple_u8, enter_context, exit_context, from_bool, from_bytes,
+    from_dict_str, from_float, from_int, from_list, from_none, from_record, from_str, from_tuple,
+    get_attr, get_item_str, import_module, resolve_target, temporary_argument_handle, to_bool,
+    to_bytes, to_float, to_i16, to_i32, to_i64, to_i8, to_int, to_isize, to_none, to_str, to_u16,
+    to_u32, to_u64, to_u8, to_usize, ObjectHandle, PythonError,
 };
 pub use resource_identity::PythonResourceIdentity;
 pub use resource_ops::{exit_context_with_error, resource_diagnostics, PythonResourceDiagnostics};

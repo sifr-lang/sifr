@@ -482,6 +482,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
+        HirExpr::PythonCall { func, args, .. } => try_lower_simple_call_expr(func, args),
         HirExpr::IteratorCall { op, args, .. } => match op {
             HirIteratorOp::Map => try_lower_simple_map_call_expr(args),
             HirIteratorOp::Filter => try_lower_simple_filter_call_expr(args),
@@ -557,6 +558,18 @@ pub(super) fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
 }
 
 pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> {
+    if func == "__sifr_python_omitted_argument" && args.is_empty() {
+        return Some(RustExpr::Literal(RustLiteral::None));
+    }
+    if func == "__sifr_python_present_argument" {
+        let [value] = args else {
+            return None;
+        };
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![try_lower_leaf_or_name_expr(value)?],
+        });
+    }
     if func == "__sifr_task_sleep" {
         return try_lower_task_sleep_call_expr(args);
     }

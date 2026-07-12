@@ -44,6 +44,7 @@ fn function_type_from_hir_exports_async_functions_as_coroutines() {
         method_kind: sifr_ir::MethodKind::Regular,
         decorators: Vec::new(),
         rust_interop: Vec::new(),
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),
     };

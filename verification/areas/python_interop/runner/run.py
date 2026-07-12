@@ -37,6 +37,7 @@ MATRIX_FILES = (
 )
 
 REQUIRED_FIXTURES = (
+    "declaration_sync",
     "simple_import",
     "primitive_conversion",
     "pydantic_models",
@@ -64,6 +65,7 @@ REQUIRED_FIXTURES = (
 )
 
 REQUIRED_FIXTURE_FILES = (
+    "declaration_sync/sync_declaration_contract.json",
     "simple_import/opaque_object_operations.json",
     "primitive_conversion/primitive_roundtrip.json",
     "async_blocking/async_blocking_contract.json",
@@ -89,6 +91,8 @@ REQUIRED_FIXTURE_FILES = (
 )
 
 REQUIRED_SOURCE_FIXTURES = (
+    "declaration_sync/complete_call_shapes.sifr",
+    "declaration_sync/pure_and_native.sifr",
     "async_blocking/direct_python_call_rejected.sifr",
     "async_blocking/object_crossing_rejected.sifr",
     "async_blocking/offloaded_python_calls.sifr",

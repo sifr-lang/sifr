@@ -319,9 +319,14 @@ pub(super) fn collect_function_defaults(
     ctx: &mut LowerCtx,
 ) -> Vec<(usize, crate::hir_nodes::HirExpr)> {
     let mut defaults = Vec::new();
+    let python_declaration =
+        super::super::python_interop::has_python_interop_decorator_syntax(&func.decorator_list);
 
     for (index, param) in func.parameters.args.iter().enumerate() {
         if let Some(default_expr) = &param.default {
+            if python_declaration && super::super::python_interop::is_python_omit(default_expr) {
+                continue;
+            }
             if let Some(hir_default) = lower_expr_simple(default_expr) {
                 defaults.push((index, hir_default));
             } else {
@@ -340,6 +345,9 @@ pub(super) fn collect_function_defaults(
     let regular_count = func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
     for (index, param) in func.parameters.kwonlyargs.iter().enumerate() {
         if let Some(default_expr) = &param.default {
+            if python_declaration && super::super::python_interop::is_python_omit(default_expr) {
+                continue;
+            }
             if let Some(hir_default) = lower_expr_simple(default_expr) {
                 defaults.push((regular_count + index, hir_default));
             } else {
@@ -665,6 +673,26 @@ pub(in crate::lower) fn extract_function_type(
         };
         let conv = ast_convention_to_param(param.parameter.convention, &ty);
         params.push((name, ty, conv));
+    }
+
+    if let Some(ref kwarg) = func.parameters.kwarg {
+        let name = kwarg.name.to_string();
+        let value_ty = if let Some(ref annotation) = kwarg.annotation {
+            resolve_annotation_expr(annotation, ctx)
+        } else {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISSING_ANNOTATION,
+                format!(
+                    "keyword variadic parameter '{}' in function '{}' is missing a type annotation",
+                    name, func.name
+                ),
+                kwarg.name.range(),
+            );
+            Type::Any
+        };
+        let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(value_ty));
+        let conv = ast_convention_to_param(kwarg.convention, &dict_ty);
+        params.push((name, dict_ty, conv));
     }
 
     let return_type = if let Some(returns) = &func.returns {

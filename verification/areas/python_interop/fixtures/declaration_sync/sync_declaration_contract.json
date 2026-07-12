@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "capability": "sync-declaration",
+  "evidence": {
+    "positive": [
+      "crates/sifr_lowering/src/lower/python_interop_tests.rs",
+      "crates/sifr_codegen/src/python_interop_direct_tests.rs"
+    ],
+    "negative": [
+      "SIFR-PYIMP-0001",
+      "SIFR-PYCALL-0001",
+      "SIFR-PYCONV-0001"
+    ],
+    "cleanup": "python::object_ops_tests::declaration_wrapper_failure_points_release_every_temporary_handle",
+    "live": "pure_and_native.sifr"
+  }
+}

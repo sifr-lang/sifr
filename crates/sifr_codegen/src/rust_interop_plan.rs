@@ -1,3 +1,6 @@
+use crate::python_interop_plan::{
+    push_python_plan_cache_key, python_interop_plan_for_named_modules, PythonInteropPlan,
+};
 use crate::rust_interop_bridge_contract::{
     bridge_contract_plan_for_named_modules, push_bridge_contract_plan, RustBridgeContractPlan,
 };
@@ -8,12 +11,14 @@ use sifr_ir::{
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct InteropBuildPlan {
     pub rust: RustInteropPlan,
+    pub python: PythonInteropPlan,
 }
 
 impl InteropBuildPlan {
     #[must_use]
     pub fn cache_key_fragment(&self) -> String {
         let mut out = String::new();
+        push_python_plan_cache_key(&mut out, &self.python);
         out.push_str("rust.declarations=");
         out.push_str(&self.rust.declarations.len().to_string());
         out.push('\n');
@@ -220,13 +225,14 @@ pub fn interop_build_plan_for_named_modules<'a>(
     modules: impl IntoIterator<Item = (Option<&'a str>, &'a HirModule)>,
 ) -> InteropBuildPlan {
     let module_entries = modules.into_iter().collect::<Vec<_>>();
+    let python = python_interop_plan_for_named_modules(module_entries.iter().copied());
     let mut rust = RustInteropPlan::default();
     for (module_name, module) in &module_entries {
         collect_module_declarations(*module_name, module, &mut rust.declarations);
     }
     rust.bridge_contracts =
         bridge_contract_plan_for_named_modules(module_entries, &rust.declarations);
-    InteropBuildPlan { rust }
+    InteropBuildPlan { rust, python }
 }
 
 fn collect_module_declarations(

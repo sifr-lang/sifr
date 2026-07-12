@@ -78,7 +78,9 @@ pub(crate) fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
 
 pub(crate) fn call_expr_parts(expr: &HirExpr) -> Option<(&str, &[HirExpr])> {
     match expr {
-        HirExpr::Call { func, args, .. } => Some((func.as_str(), args.as_slice())),
+        HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
+            Some((func.as_str(), args.as_slice()))
+        }
         HirExpr::IteratorCall { op, args, .. } => {
             Some((iterator_call_func_name(op), args.as_slice()))
         }

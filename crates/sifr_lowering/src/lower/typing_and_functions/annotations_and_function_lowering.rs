@@ -8,6 +8,10 @@ use super::{
     LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
     StmtFunctionDef, Type,
 };
+use crate::lower::python_interop::{
+    classify_python_interop_stub_body, collect_python_interop_declarations,
+    has_python_interop_decorator_syntax, is_python_omit, validate_python_interop_signature,
+};
 use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
@@ -443,6 +447,7 @@ pub(in crate::lower) fn lower_function(
 ) -> Option<HirFunction> {
     let ft = ctx.functions.get::<str>(func.name.as_ref())?.clone();
     let effective_is_async = func.is_async;
+    let has_python_interop = has_python_interop_decorator_syntax(&func.decorator_list);
 
     ctx.enter_function_scope(collect_declared_nonlocals(&func.body));
 
@@ -461,7 +466,11 @@ pub(in crate::lower) fn lower_function(
         ctx.scope
             .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
 
-        let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+        let default = param_def.default.as_ref().and_then(|d| {
+            (!has_python_interop || !is_python_omit(d))
+                .then(|| lower_expr(d, ctx))
+                .flatten()
+        });
 
         params.push(HirParam {
             name,
@@ -506,12 +515,36 @@ pub(in crate::lower) fn lower_function(
         ctx.scope
             .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
 
-        let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+        let default = param_def.default.as_ref().and_then(|d| {
+            (!has_python_interop || !is_python_omit(d))
+                .then(|| lower_expr(d, ctx))
+                .flatten()
+        });
 
         params.push(HirParam {
             name,
             ty,
             default,
+            keyword_only: true,
+            convention,
+        });
+    }
+
+    if let Some(ref kwarg) = func.parameters.kwarg {
+        let name = kwarg.name.to_string();
+        let index = regular_count + func.parameters.kwonlyargs.len();
+        let ty = ft
+            .params
+            .get(index)
+            .map(|(_, ty, _)| ty.clone())
+            .unwrap_or(Type::Any);
+        let convention = ast_convention_to_param(kwarg.convention, &ty);
+        ctx.scope
+            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+        params.push(HirParam {
+            name,
+            ty,
+            default: None,
             keyword_only: true,
             convention,
         });
@@ -538,31 +571,41 @@ pub(in crate::lower) fn lower_function(
         has_decorator(func, "cpu_heavy"),
         effective_is_async,
     );
+    let python_interop = collect_python_interop_declarations(
+        &func.decorator_list,
+        &func.parameters,
+        effective_is_async,
+        ctx,
+    );
     let compiler_intrinsic = ctx.compiler_intrinsics.get(func.name.as_str()).copied();
     let has_compiler_intrinsic_syntax =
         compiler_intrinsics::has_decorator_syntax(&func.decorator_list);
-    let stub_body = if has_compiler_intrinsic_syntax {
-        if !rust_interop.is_empty() {
+    let skips_normal_body_lowering = if has_compiler_intrinsic_syntax {
+        if !rust_interop.is_empty() || !python_interop.is_empty() {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
-                "@compiler_intrinsic and Rust interop decorators cannot be combined".to_string(),
+                "@compiler_intrinsic and interop decorators cannot be combined".to_string(),
                 func.name.range(),
             );
         }
         compiler_intrinsics::classify_stub_body(func, compiler_intrinsic, ctx)
+            .skips_normal_body_lowering()
+    } else if has_python_interop {
+        classify_python_interop_stub_body(&func.body, true, ctx).skips_normal_body_lowering()
     } else {
         classify_rust_interop_stub_body(
             &func.body,
             has_rust_interop_decorator_syntax(&func.decorator_list),
             ctx,
         )
+        .skips_normal_body_lowering()
     };
 
-    let is_async_generator = !stub_body.skips_normal_body_lowering()
+    let is_async_generator = !skips_normal_body_lowering
         && effective_is_async
         && function_body_contains_yield(&func.body);
     workload_annotations::reject_async_function_annotation(ctx, func, effective_is_async);
-    if !stub_body.skips_normal_body_lowering()
+    if !skips_normal_body_lowering
         && effective_is_async
         && matches!(
             ctx.async_suspension_summaries.get(func.name.as_str()),
@@ -578,7 +621,7 @@ pub(in crate::lower) fn lower_function(
             func.name.range(),
         );
     }
-    if !stub_body.skips_normal_body_lowering() && effective_is_async {
+    if !skips_normal_body_lowering && effective_is_async {
         if is_async_generator {
             if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
                 for param in &params {
@@ -632,7 +675,7 @@ pub(in crate::lower) fn lower_function(
     ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     ctx.current_function_trusts_dynamic_python = has_decorator(func, "trust_python_dynamic");
-    let body = if stub_body.skips_normal_body_lowering() {
+    let body = if skips_normal_body_lowering {
         Vec::new()
     } else {
         lower_stmts(&func.body, &ft, ctx)
@@ -651,7 +694,7 @@ pub(in crate::lower) fn lower_function(
     ctx.exit_function_scope();
 
     let has_yield = !collect_yield_types(&body).is_empty();
-    if !stub_body.skips_normal_body_lowering()
+    if !skips_normal_body_lowering
         && !has_yield
         && requires_exhaustive_return_annotation(func, ft.return_type.as_ref())
     {
@@ -687,7 +730,7 @@ pub(in crate::lower) fn lower_function(
         .returns
         .as_ref()
         .map_or_else(|| func.name.range(), |returns| returns.range());
-    let inferred_return_type = if stub_body.skips_normal_body_lowering() {
+    let inferred_return_type = if skips_normal_body_lowering {
         ft.return_type.as_ref().clone()
     } else {
         infer_function_return_type(
@@ -705,6 +748,7 @@ pub(in crate::lower) fn lower_function(
             },
         )
     };
+    validate_python_interop_signature(&python_interop, &params, &inferred_return_type, ctx);
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)
     let decorators: Vec<String> = func
@@ -739,6 +783,7 @@ pub(in crate::lower) fn lower_function(
         method_kind: MethodKind::Regular,
         decorators,
         rust_interop,
+        python_interop,
         compiler_intrinsic,
         type_params,
     })
