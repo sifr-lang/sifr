@@ -374,6 +374,67 @@ Validation:
 
 Depends on M1 sealed identities and M4 conversion.
 
+Implementation waves:
+
+- [ ] Package bridge source and inventory substrate:
+  - Discover only package-root `src/python_bridges/**/*.py`, independent of
+    custom Sifr source roots; reject misplaced bridge roots, invalid module
+    paths, duplicate modules, invalid Python syntax, and dynamic import calls as
+    `SIFR-PYIMP-0002`.
+  - Build a canonical ordinary `import` / `from ... import ...` inventory,
+    classify same-package bridge edges separately from third-party roots, and
+    compute stable source and inventory digests.
+  - Require every bridge source plus its generated inventory manifest in
+    package archives. Keep `bridge.*` declarations gated by
+    `SIFR-PYRES-0002` throughout this substrate wave.
+- [ ] Resolved identity, rewrite, and authority planning:
+  - Define and test a deterministic, valid-Python-identifier, collision-resistant
+    encoding of resolved Sifr package identity for
+    `__sifr_bridge__.p_<resolved_package_key>`.
+  - Resolve same-package imports to that package prefix, preserve external
+    roots as `PythonRequirementKind::BridgeImport` contributions to the
+    canonical requirement set, and keep dependency requirements subject to
+    root-owned `SIFR-PYTRUST-0005` authorization.
+  - Carry isolated bridge identities and inventories through the selected
+    package graph into driver/codegen planning without yet activating public
+    `bridge.*` declarations.
+- [ ] Atomic loader, embedding, and declaration activation:
+  - Generate embedded source tables with synthetic package entries and stable
+    virtual filenames of the form
+    `<__sifr_bridge__.p_<resolved_package_key>.<module_path>>`; propagate each
+    filename into Python `co_filename`.
+  - Implement the reserved loader in a focused runtime `bridge_loader` module
+    through GIL-bound PyO3 APIs, leaving raw C initialization calls isolated to
+    the existing unsafe boundary. Install it at `sys.meta_path[0]` immediately
+    after CPython configuration and before user `main` or any user import.
+  - Reject pre-existing reserved `sys.modules` entries as
+    `SIFR-PYIMP-0003`, retain the reserved-name claim even after user
+    `sys.meta_path` mutation, and never fall back to filesystem or `sys.path`
+    lookup.
+  - In the same merge unit, rewrite `bridge.*` call targets to their resolved
+    runtime names and lift `SIFR-PYRES-0002`; a distribution literally named
+    `bridge` remains reachable only through a non-reserved declared target.
+- [ ] Deployment graph and cache closure:
+  - Embed every bridge module from every runtime package in the selected target's
+    resolved graph, excluding dev-only and otherwise unselected packages; do
+    not depend on declaration reachability or a source checkout at runtime.
+  - Fingerprint source/inventory digests, resolved package identity, resolved
+    distribution versions, interpreter ABI, the binding contract, and typing
+    inputs in package, driver, and generated-artifact caches.
+  - Prove archive unpack/install/build/run uses only archived bridge inputs and
+    the generated binary uses no writable extraction directory.
+- [ ] Complete bridge evidence and milestone closure:
+  - Cover loader-before-main ordering, first-position and post-mutation reserved
+    resolution, collision rejection, sibling import rewriting, deterministic
+    traceback filenames, cache invalidation, invalid syntax, rejected dynamic
+    imports, misplaced sources, and reserved target ambiguity.
+  - Cover two packages owning the same module path and a dependency bridge whose
+    third-party import is rejected until the root application authorizes it.
+  - Run a compiled biip-backed identifier bridge from an installed archive with
+    no source checkout, and add `demos/m6_demo` as the milestone showcase.
+  - Activate package-bridge capability evidence and update architecture,
+    roadmap, milestone checkboxes, review records, and merged PR links.
+
 Tasks:
 
 - Resolve `bridge.*` under package-owned `src/python_bridges/` source.
@@ -386,7 +447,7 @@ Tasks:
 - Inventory ordinary static imports and reject dynamic import calls in package
   bridges.
 - Include source, package identity, distribution versions, interpreter ABI,
-  protocol contract, and typing inputs in cache fingerprints.
+  binding contract, and typing inputs in cache fingerprints.
 - Include bridge source/inventory in archives and embed only the resolved graph
   in generated binaries.
 
