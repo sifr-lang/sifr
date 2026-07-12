@@ -1,9 +1,8 @@
-use super::{runtime_config, ForeignObject, PythonRuntimeError};
+use super::{runtime_config, ForeignObject, PythonError, PythonRuntimeError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList, PyTuple};
 use pyo3::IntoPyObjectExt;
 use std::collections::HashMap;
-use std::fmt;
 
 pub type ObjectHandle = ForeignObject;
 
@@ -25,83 +24,6 @@ macro_rules! typed_container_conversions {
     };
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PythonError {
-    pub kind: String,
-    pub exception_type: String,
-    pub message: String,
-    pub traceback: String,
-    pub context: String,
-}
-
-impl PythonError {
-    pub(super) fn runtime(error: PythonRuntimeError) -> Self {
-        Self {
-            kind: "runtime".to_string(),
-            exception_type: "SifrPythonRuntimeError".to_string(),
-            message: error.to_string(),
-            traceback: String::new(),
-            context: String::new(),
-        }
-    }
-
-    fn trust(message: impl Into<String>, context: impl Into<String>) -> Self {
-        Self {
-            kind: "trust".to_string(),
-            exception_type: "SIFR-PYTRUST".to_string(),
-            message: message.into(),
-            traceback: String::new(),
-            context: context.into(),
-        }
-    }
-
-    fn closed() -> Self {
-        Self {
-            kind: "resource".to_string(),
-            exception_type: "SifrPythonClosedObject".to_string(),
-            message: "Python object identity is closed".to_string(),
-            traceback: String::new(),
-            context: "object handle lookup".to_string(),
-        }
-    }
-
-    pub(super) fn from_pyerr(
-        py: Python<'_>,
-        error: PyErr,
-        kind: &'static str,
-        context: impl Into<String>,
-    ) -> Self {
-        let exception_type = error
-            .get_type(py)
-            .name()
-            .map_or_else(|_| "PythonError".to_string(), |name| name.to_string());
-        let traceback = format_traceback(py, &error);
-        Self {
-            kind: kind.to_string(),
-            exception_type,
-            message: error.to_string(),
-            traceback,
-            context: context.into(),
-        }
-    }
-}
-
-impl fmt::Display for PythonError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.context.is_empty() {
-            write!(f, "{}: {}", self.exception_type, self.message)
-        } else {
-            write!(
-                f,
-                "{} during {}: {}",
-                self.exception_type, self.context, self.message
-            )
-        }
-    }
-}
-
-impl std::error::Error for PythonError {}
-
 pub fn import_module(name: &str) -> Result<ObjectHandle, PythonError> {
     validate_import_policy(name)?;
     super::attach(|py| {
@@ -120,6 +42,7 @@ pub fn resolve_target(segments: &[String]) -> Result<ObjectHandle, PythonError> 
             message: "Python target must contain a module root and attribute".to_string(),
             traceback: String::new(),
             context: "declaration target resolution".to_string(),
+            replay: None,
         });
     }
     validate_import_policy(&segments[0])?;
@@ -156,6 +79,7 @@ pub fn resolve_target(segments: &[String]) -> Result<ObjectHandle, PythonError> 
                 ),
                 traceback: String::new(),
                 context: "declaration target resolution".to_string(),
+                replay: None,
             },
             |error| PythonError::from_pyerr(py, error, "attribute", segments.join(".")),
         ))
@@ -310,6 +234,7 @@ pub fn call_object_owned(
                 message: format!("multiple values for keyword argument '{name}'"),
                 traceback: String::new(),
                 context: "declaration call arguments".to_string(),
+                replay: None,
             });
         }
     }
@@ -838,6 +763,7 @@ fn conversion_error(message: impl Into<String>, context: impl Into<String>) -> P
         message: message.into(),
         traceback: String::new(),
         context: context.into(),
+        replay: None,
     }
 }
 
@@ -856,19 +782,6 @@ pub(super) fn clone_handle(
         PythonRuntimeError::PythonOperationFailed(_) => PythonError::closed(),
         other => PythonError::runtime(other),
     })
-}
-
-fn format_traceback(py: Python<'_>, error: &PyErr) -> String {
-    py.import("traceback")
-        .and_then(|traceback| {
-            traceback.call_method1(
-                "format_exception",
-                (error.get_type(py), error.value(py), error.traceback(py)),
-            )
-        })
-        .and_then(|formatted| formatted.extract::<Vec<String>>())
-        .map(|parts| parts.join(""))
-        .unwrap_or_default()
 }
 
 #[cfg(test)]

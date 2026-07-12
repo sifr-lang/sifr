@@ -277,7 +277,7 @@ fn dtype_name(dtype: DLDataType) -> Result<String, PythonError> {
         (2, 32) => "float32",
         (2, 64) => "float64",
         (4, 16) => "bfloat16",
-        (6, 1) | (6, 8) => "bool",
+        (6, 1 | 8) => "bool",
         _ => return Err(unsupported_dtype_error(dtype)),
     };
     Ok(name.to_string())
@@ -376,6 +376,7 @@ fn unsupported_device_error(device: DLDevice) -> PythonError {
         ),
         traceback: String::new(),
         context: "DLPack device validation".to_string(),
+        replay: None,
     }
 }
 
@@ -389,6 +390,7 @@ fn unsupported_dtype_error(dtype: DLDataType) -> PythonError {
         ),
         traceback: String::new(),
         context: "DLPack dtype validation".to_string(),
+        replay: None,
     }
 }
 
@@ -399,6 +401,7 @@ fn closed_error(handle: i64) -> PythonError {
         message: format!("Python DLPack tensor handle {handle} is closed"),
         traceback: String::new(),
         context: "DLPack tensor handle lookup".to_string(),
+        replay: None,
     }
 }
 
@@ -409,6 +412,7 @@ fn dlpack_error(message: impl Into<String>) -> PythonError {
         message: message.into(),
         traceback: String::new(),
         context: "DLPack validation".to_string(),
+        replay: None,
     }
 }
 
@@ -419,6 +423,7 @@ fn dlpack_store() -> Result<MutexGuard<'static, DlpackStore>, PythonError> {
         message: "Python DLPack tensor store is unavailable".to_string(),
         traceback: String::new(),
         context: "DLPack tensor store".to_string(),
+        replay: None,
     })
 }
 

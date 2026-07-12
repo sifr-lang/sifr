@@ -178,5 +178,6 @@ fn conversion_error(message: impl Into<String>, context: impl Into<String>) -> P
         message: message.into(),
         traceback: String::new(),
         context: context.into(),
+        replay: None,
     }
 }

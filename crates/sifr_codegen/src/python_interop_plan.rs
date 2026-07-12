@@ -1,6 +1,7 @@
 use sifr_ir::{HirFunction, HirModule, PythonInteropDeclaration};
 use sifr_type_system::Type;
 use std::collections::BTreeSet;
+use std::fmt::Write;
 
 use crate::hir_analysis::traversal::{walk_stmts, TraversalConfig};
 
@@ -162,7 +163,7 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
             out.push_str("python.param=");
             out.push_str(&parameter.name);
             out.push(':');
-            out.push_str(&format!("{:?}", parameter.kind));
+            let _ = write!(out, "{:?}", parameter.kind);
             out.push(':');
             out.push_str(if parameter.omit_when_absent {
                 "omit"

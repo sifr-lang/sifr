@@ -318,6 +318,7 @@ fn closed_error(handle: i64) -> PythonError {
         message: format!("Python Arrow capsule handle {handle} is closed"),
         traceback: String::new(),
         context: "Arrow capsule handle lookup".to_string(),
+        replay: None,
     }
 }
 
@@ -328,6 +329,7 @@ fn arrow_error(message: impl Into<String>) -> PythonError {
         message: message.into(),
         traceback: String::new(),
         context: "Arrow PyCapsule validation".to_string(),
+        replay: None,
     }
 }
 
@@ -338,6 +340,7 @@ fn arrow_store() -> Result<MutexGuard<'static, ArrowStore>, PythonError> {
         message: "Python Arrow capsule store is unavailable".to_string(),
         traceback: String::new(),
         context: "Arrow capsule store".to_string(),
+        replay: None,
     })
 }
 

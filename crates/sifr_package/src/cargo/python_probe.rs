@@ -30,7 +30,7 @@ pub(crate) fn run_uv_lock_check(
         .args(["lock", "--check", "--offline", "--project"])
         .arg(project_root)
         .output()
-        .map_err(|error| uv_lock_check_spawn_error(request, error))?;
+        .map_err(|error| uv_lock_check_spawn_error(request, &error))?;
     if output.status.success() {
         Ok(())
     } else {
@@ -128,7 +128,7 @@ fn stale_metadata_error(
 
 fn uv_lock_check_spawn_error(
     request: &PythonEnvironmentProbeRequest,
-    error: std::io::Error,
+    error: &std::io::Error,
 ) -> PackageDiagnostic {
     if error.kind() == std::io::ErrorKind::NotFound {
         probe_error(
@@ -162,7 +162,7 @@ mod tests {
         };
         let diagnostic = uv_lock_check_spawn_error(
             &request,
-            std::io::Error::new(std::io::ErrorKind::NotFound, "uv missing"),
+            &std::io::Error::new(std::io::ErrorKind::NotFound, "uv missing"),
         );
 
         assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);

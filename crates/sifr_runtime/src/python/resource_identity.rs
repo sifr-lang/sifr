@@ -106,5 +106,6 @@ fn identity_error(message: String) -> PythonError {
         message,
         traceback: String::new(),
         context: "sealed Python resource identity".to_string(),
+        replay: None,
     }
 }

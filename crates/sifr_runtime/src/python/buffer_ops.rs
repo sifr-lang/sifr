@@ -226,6 +226,7 @@ fn closed_error(handle: i64) -> PythonError {
         message: format!("Python buffer handle {handle} is closed"),
         traceback: String::new(),
         context: "buffer handle lookup".to_string(),
+        replay: None,
     }
 }
 
@@ -241,6 +242,7 @@ fn buffer_store() -> Result<MutexGuard<'static, BufferStore>, PythonError> {
         message: "Python buffer store is unavailable".to_string(),
         traceback: String::new(),
         context: "buffer store".to_string(),
+        replay: None,
     })
 }
 
