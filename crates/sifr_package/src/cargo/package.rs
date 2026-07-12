@@ -12,6 +12,10 @@ use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata};
 use crate::imports::source_map::PackageSourceMap;
 use crate::projection_bridge;
+use crate::python::{
+    discover_python_bridge_inventory, required_python_bridge_archive_entries,
+    validate_python_bridge_inventory_manifest,
+};
 use std::collections::BTreeSet;
 use std::path::{Component, Path, PathBuf};
 
@@ -54,6 +58,14 @@ pub fn validate_package_archive(
     }
 
     let required_entries = required_archive_entries(package, source_map);
+    match discover_python_bridge_inventory(package) {
+        Ok(inventory) => {
+            if let Err(error) = validate_python_bridge_inventory_manifest(package, &inventory) {
+                diagnostics.push(error);
+            }
+        }
+        Err(errors) => diagnostics.extend(errors),
+    }
     if !required_entries.iter().any(|entry| {
         entry
             .extension()
@@ -135,6 +147,9 @@ pub fn required_archive_entries(
     required.extend(projection_bridge::required_archive_entries(
         &package.package_root,
         &package.manifest,
+    ));
+    required.extend(required_python_bridge_archive_entries(
+        &package.package_root,
     ));
     required
 }

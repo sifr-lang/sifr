@@ -29,6 +29,8 @@ pub(crate) fn cargo_include_entries(manifest: &SifrManifest) -> Vec<String> {
         "Cargo.lock".to_string(),
         "sifr.toml".to_string(),
         "src/**/*.sifr".to_string(),
+        "src/**/*.py".to_string(),
+        "src/python_bridges/__sifr_inventory__.json".to_string(),
         "src/lib.rs".to_string(),
     ];
     if has_local_bridges(manifest) {

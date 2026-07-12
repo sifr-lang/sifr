@@ -1,9 +1,18 @@
+mod bridge_inventory;
 mod environment;
 mod probe_validation;
 mod requirements;
 mod selection;
 mod trust_policy;
 
+pub use bridge_inventory::{
+    discover_python_bridge_inventory, required_python_bridge_archive_entries,
+    validate_python_bridge_inventory_manifest, write_python_bridge_inventory, PythonBridgeImport,
+    PythonBridgeInventory, PythonBridgeModule, PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT,
+};
+pub(crate) use bridge_inventory::{
+    python_bridge_projection_diagnostics, repair_python_bridge_inventory,
+};
 pub use environment::{
     probe_python_environment, resolve_python_environment,
     resolve_python_environment_with_requirements, PythonEnvironmentProbe,
@@ -15,6 +24,10 @@ pub use requirements::{
     PythonRequirementContribution, PythonRequirementKind,
 };
 
+#[cfg(all(test, unix))]
+mod bridge_inventory_symlink_tests;
+#[cfg(test)]
+mod bridge_inventory_tests;
 #[cfg(test)]
 mod cache_tests;
 #[cfg(test)]

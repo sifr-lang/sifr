@@ -35,6 +35,10 @@ pub enum PackageDiagnosticOrigin {
         cargo_package_id: CargoPackageId,
         path: PathBuf,
     },
+    PythonBridgeSource {
+        cargo_package_id: CargoPackageId,
+        path: PathBuf,
+    },
     PackageGraph {
         cargo_package_id: CargoPackageId,
     },

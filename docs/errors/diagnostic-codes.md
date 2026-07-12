@@ -245,6 +245,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYTRUST-0004`](SIFR-PYTRUST-0004.md) | Error | Dynamic Python import requires an explicit trust annotation. |
 | [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.md) | Error | Required Python import root is not authorized by the root application. |
 | [`SIFR-PYIMP-0001`](SIFR-PYIMP-0001.md) | Error | A declaration-first Python target path is invalid or unresolved. |
+| [`SIFR-PYIMP-0002`](SIFR-PYIMP-0002.md) | Error | A package-local Python bridge source or import inventory is invalid. |
 | [`SIFR-PYCALL-0001`](SIFR-PYCALL-0001.md) | Error | A Python declaration or call shape is unsupported or incompatible. |
 | [`SIFR-PYCONV-0001`](SIFR-PYCONV-0001.md) | Error | A Sifr type has no active declaration-first Python conversion. |
 | [`SIFR-PYRES-0002`](SIFR-PYRES-0002.md) | Error | Recognized declaration-first syntax has no active production lowering yet. |
