@@ -1,5 +1,3 @@
-Now writing the code review.
-
 # M5 Wave 2 Code Review — Runtime Exception Replay, Boundary Errors, Cleanup Evidence
 
 ## Scope
