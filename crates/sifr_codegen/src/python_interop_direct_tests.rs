@@ -60,6 +60,52 @@ fn sync_wrapper_emits_complete_owned_argument_frame() {
     assert!(rendered.contains("sifr_runtime::python::to_int"));
 }
 
+#[test]
+fn omittable_positional_parameters_are_forwarded_by_name_without_shifting() {
+    let mut declaration = declaration();
+    declaration.parameters = vec![
+        shape("a", PythonParameterKind::Positional, false),
+        shape("b", PythonParameterKind::Positional, true),
+        shape("c", PythonParameterKind::Positional, false),
+    ];
+    let function = HirFunction {
+        name: "collect".to_string(),
+        params: vec![
+            param("a", Type::Int, ParamConvention::own()),
+            param("b", Type::Int, ParamConvention::own()),
+            param("c", Type::Int, ParamConvention::own()),
+        ],
+        return_type: Type::Result(
+            Box::new(Type::Int),
+            Box::new(Type::Class {
+                name: "PythonError".to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: Some("Error".to_string()),
+            }),
+        ),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let rendered = render_stmts(&python_interop_function_body(&function).expect("wrapper"));
+    assert!(rendered.contains("__sifr_python_args.push(__sifr_python_arg_0)"));
+    assert!(
+        rendered.contains("(\"b\".to_string(), __sifr_python_arg_1)"),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains("(\"c\".to_string(), __sifr_python_arg_2)"),
+        "{rendered}"
+    );
+}
+
 fn param(name: &str, ty: Type, convention: ParamConvention) -> HirParam {
     HirParam {
         name: name.to_string(),

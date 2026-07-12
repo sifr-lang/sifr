@@ -164,6 +164,7 @@ fn validate_signature(
         .parameters
         .iter()
         .filter(|parameter| parameter.kind == PythonParameterKind::Positional)
+        .take_while(|parameter| !parameter.omit_when_absent)
         .count();
     let target_positional = target
         .iter()
@@ -187,10 +188,21 @@ fn validate_signature(
         ));
     }
 
+    let mut forward_positional_by_name = false;
     for parameter in &declaration.declaration.parameters {
+        if parameter.kind == PythonParameterKind::Positional && parameter.omit_when_absent {
+            forward_positional_by_name = true;
+        }
         match parameter.kind {
-            PythonParameterKind::PositionalVariadic if !has_varargs => {
-                return Some("typed `*args` requires a target `*args` parameter".to_string());
+            PythonParameterKind::PositionalVariadic => {
+                if forward_positional_by_name {
+                    return Some(
+                        "typed `*args` cannot follow an omittable positional parameter".to_string(),
+                    );
+                }
+                if !has_varargs {
+                    return Some("typed `*args` requires a target `*args` parameter".to_string());
+                }
             }
             PythonParameterKind::KeywordVariadic if !has_kwargs => {
                 return Some("typed `**kwargs` requires a target `**kwargs` parameter".to_string());
@@ -222,9 +234,24 @@ fn validate_signature(
                     ));
                 }
             }
-            PythonParameterKind::Positional
-            | PythonParameterKind::PositionalVariadic
-            | PythonParameterKind::KeywordVariadic => {}
+            PythonParameterKind::Positional if forward_positional_by_name => {
+                let matching = target
+                    .iter()
+                    .find(|candidate| candidate.name == parameter.name);
+                if matching.is_none() && !has_kwargs {
+                    return Some(format!(
+                        "omittable positional parameter '{}' is not accepted by name by the target",
+                        parameter.name
+                    ));
+                }
+                if matching.is_some_and(|candidate| candidate.kind == "POSITIONAL_ONLY") {
+                    return Some(format!(
+                        "omittable positional parameter '{}' maps to a positional-only target parameter",
+                        parameter.name
+                    ));
+                }
+            }
+            PythonParameterKind::Positional | PythonParameterKind::KeywordVariadic => {}
         }
     }
 
@@ -337,6 +364,54 @@ mod tests {
             panic!("record expansion must require inspectability");
         };
         assert_eq!(diagnostics[0].code, "SIFR-PYCALL-0001");
+    }
+
+    #[test]
+    fn omittable_positional_parameters_require_keyword_capable_target_parameters() {
+        let mut generated = project("pkg.collect");
+        generated.interop.python.declarations[0]
+            .declaration
+            .parameters = vec![
+            parameter("a", false),
+            parameter("b", true),
+            parameter("c", false),
+        ];
+        let compatible = vec![
+            probe_parameter("a", "POSITIONAL_OR_KEYWORD", false),
+            probe_parameter("b", "POSITIONAL_OR_KEYWORD", true),
+            probe_parameter("c", "POSITIONAL_OR_KEYWORD", true),
+        ];
+        assert!(
+            validate_signature(&generated.interop.python.declarations[0], &compatible).is_none()
+        );
+
+        let positional_only = vec![
+            probe_parameter("a", "POSITIONAL_OR_KEYWORD", false),
+            probe_parameter("b", "POSITIONAL_ONLY", true),
+            probe_parameter("c", "POSITIONAL_OR_KEYWORD", true),
+        ];
+        let reason =
+            validate_signature(&generated.interop.python.declarations[0], &positional_only)
+                .expect("positional-only omission target must be rejected");
+        assert!(reason.contains("positional-only"));
+    }
+
+    fn parameter(name: &str, omit_when_absent: bool) -> sifr_ir::PythonInteropParameter {
+        sifr_ir::PythonInteropParameter {
+            name: name.to_string(),
+            kind: sifr_ir::PythonParameterKind::Positional,
+            has_default: omit_when_absent,
+            omit_when_absent,
+            span: ruff_text_size::TextRange::default(),
+        }
+    }
+
+    fn probe_parameter(name: &str, kind: &str, has_default: bool) -> ProbeParameter {
+        ProbeParameter {
+            name: name.to_string(),
+            kind: kind.to_string(),
+            has_default,
+        }
     }
 
     fn python() -> &'static str {

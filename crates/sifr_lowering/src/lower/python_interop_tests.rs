@@ -121,6 +121,38 @@ async def compute(value: int) -> Result[int, PythonError]: ...
 }
 
 #[test]
+fn bridge_target_is_a_hard_error_while_reserved() {
+    let errors = lower_errors(
+        r"
+class PythonError(Error):
+    message: str
+
+@python(bridge.pkg.compute)
+def compute(value: int) -> Result[int, PythonError]: ...
+",
+    );
+    assert!(errors
+        .iter()
+        .any(|error| { error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION) }));
+}
+
+#[test]
+fn positional_variadics_after_omission_are_rejected() {
+    let errors = lower_errors(
+        r"
+class PythonError(Error):
+    message: str
+
+@python(pkg.compute)
+def compute(value: int = python.omit, *rest: int) -> Result[int, PythonError]: ...
+",
+    );
+    assert!(errors
+        .iter()
+        .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)));
+}
+
+#[test]
 fn python_declaration_rejects_non_stub_body() {
     let errors = lower_errors(
         r"

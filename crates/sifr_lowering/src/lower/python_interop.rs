@@ -153,7 +153,18 @@ pub(in crate::lower) fn validate_python_interop_signature(
             declaration.span,
         );
     }
+    let mut saw_omittable_positional = false;
     for (param, shape) in params.iter().zip(&declaration.parameters) {
+        if shape.kind == PythonParameterKind::Positional && shape.omit_when_absent {
+            saw_omittable_positional = true;
+        }
+        if shape.kind == PythonParameterKind::PositionalVariadic && saw_omittable_positional {
+            invalid_shape(
+                ctx,
+                "typed `*args` cannot follow an omittable positional parameter",
+                shape.span,
+            );
+        }
         let supported = match shape.kind {
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
                 is_direct_type(&param.ty, true)
@@ -218,9 +229,18 @@ fn parse_sync_function(
         return None;
     }
     let target = parse_target_path(&call.arguments.args[0], ctx)?;
+    if target.root() == Some("bridge") {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
+            "Python declaration lowering is not active yet: package-local `bridge` targets are reserved"
+                .to_string(),
+            target.span,
+        );
+        return None;
+    }
     let required_import_root = target
         .root()
-        .filter(|root| !matches!(*root, "bridge" | "Self"))
+        .filter(|root| *root != "Self")
         .map(str::to_string);
     Some(PythonInteropDeclaration {
         kind: PythonInteropDecoratorKind::Function,

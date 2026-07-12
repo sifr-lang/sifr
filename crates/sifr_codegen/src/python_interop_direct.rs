@@ -40,16 +40,27 @@ pub(crate) fn python_interop_function_body(func: &HirFunction) -> Option<Vec<Rus
 
     body.push(vector_let("__sifr_python_args"));
     body.push(vector_let("__sifr_python_kwargs"));
+    let mut forward_positional_by_name = false;
     for (index, (param, shape)) in func.params.iter().zip(&declaration.parameters).enumerate() {
         let handle_name = format!("__sifr_python_arg_{index}");
         if shape.omit_when_absent {
+            if shape.kind == PythonParameterKind::Positional {
+                forward_positional_by_name = true;
+            }
             let value_name = format!("__sifr_python_value_{index}");
             let mut present = vec![mapped_let(
                 &handle_name,
                 input_conversion(&value_name, &param.ty)?,
                 error_type,
             )];
-            present.push(push_for_shape(shape.kind, &shape.name, &handle_name)?);
+            present.push(match shape.kind {
+                PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
+                    push_named_keyword(&shape.name, &handle_name)
+                }
+                PythonParameterKind::PositionalVariadic | PythonParameterKind::KeywordVariadic => {
+                    return None
+                }
+            });
             body.push(RustStmt::IfLet {
                 pattern: format!("Some({value_name})"),
                 expr: RustExpr::Ident(param.name.clone()),
@@ -66,7 +77,13 @@ pub(crate) fn python_interop_function_body(func: &HirFunction) -> Option<Vec<Rus
                     input_conversion(&param.name, &param.ty)?
                 };
                 body.push(mapped_let(&handle_name, conversion, error_type));
-                body.push(push_for_shape(shape.kind, &shape.name, &handle_name)?);
+                body.push(
+                    if shape.kind == PythonParameterKind::Positional && forward_positional_by_name {
+                        push_named_keyword(&shape.name, &handle_name)
+                    } else {
+                        push_for_shape(shape.kind, &shape.name, &handle_name)?
+                    },
+                );
             }
             PythonParameterKind::PositionalVariadic => {
                 let Type::List(element_type) = param.ty.resolve_alias() else {
@@ -340,16 +357,16 @@ fn vector_let(name: &str) -> RustStmt {
 fn push_for_shape(kind: PythonParameterKind, name: &str, handle: &str) -> Option<RustStmt> {
     match kind {
         PythonParameterKind::Positional => Some(push_positional(handle)),
-        PythonParameterKind::KeywordOnly => Some(push_keyword_expr(
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Literal(RustLiteral::Str(name.to_string()))),
-                method: "to_string".to_string(),
-                args: Vec::new(),
-            },
-            handle,
-        )),
+        PythonParameterKind::KeywordOnly => Some(push_named_keyword(name, handle)),
         PythonParameterKind::PositionalVariadic | PythonParameterKind::KeywordVariadic => None,
     }
+}
+
+fn push_named_keyword(name: &str, handle: &str) -> RustStmt {
+    push_keyword_expr(
+        RustExpr::Literal(RustLiteral::Str(name.to_string())),
+        handle,
+    )
 }
 
 fn push_positional(handle: &str) -> RustStmt {

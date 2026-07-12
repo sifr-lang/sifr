@@ -20,6 +20,14 @@ def dumps(
 ) -> Result[str, PythonError]: ...
 
 
+@python(json.dumps)
+def dumps_with_positional_omits(
+    value: int,
+    skipkeys: bool = python.omit,
+    ensure_ascii: bool = python.omit,
+) -> Result[str, PythonError]: ...
+
+
 @python(logging.info)
 def log(
     message: str,
@@ -37,7 +45,12 @@ def main():
         record = DumpOptions(False, False)
         omitted: str = dumps(7, **record)
         explicit_none: str = dumps(7, indent=None)
-        succeeded = omitted == "7" and explicit_none == "7"
+        later_positional_omit: str = dumps_with_positional_omits(7, ensure_ascii=False)
+        succeeded = (
+            omitted == "7"
+            and explicit_none == "7"
+            and later_positional_omit == "7"
+        )
         _ = variadic
         _ = variadic_kwargs
     except PythonError as error:
