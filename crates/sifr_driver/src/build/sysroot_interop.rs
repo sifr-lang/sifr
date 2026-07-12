@@ -547,6 +547,7 @@ class FileHandle:\n\
                     declarations,
                     ..RustInteropPlan::default()
                 },
+                ..InteropBuildPlan::default()
             },
             module_sources: HashMap::from([(
                 module.clone(),

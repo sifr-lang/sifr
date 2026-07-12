@@ -290,6 +290,7 @@ pub fn collect_module_exports(
     let mut const_integer_value_exports = HashMap::new();
     let mut default_exports = HashMap::new();
     let mut vararg_exports = HashMap::new();
+    let mut python_shape_exports = HashMap::new();
     let mut workload_exports = HashMap::new();
 
     for func in &module.functions {
@@ -308,6 +309,9 @@ pub fn collect_module_exports(
             );
             if let Some(vararg_index) = lowering_result.function_varargs.get(&func.name) {
                 vararg_exports.insert(func.name.clone(), *vararg_index);
+            }
+            if let Some(shapes) = lowering_result.function_python_call_shapes.get(&func.name) {
+                python_shape_exports.insert(func.name.clone(), shapes.clone());
             }
             if let Some(label) = lowering_result.function_workloads.get(&func.name) {
                 workload_exports.insert(func.name.clone(), label.clone());
@@ -404,6 +408,13 @@ pub fn collect_module_exports(
                     {
                         vararg_exports.insert(local_name.clone(), *vararg_index);
                     }
+                    if let Some(shapes) = external_defs
+                        .function_python_call_shapes
+                        .get(&import.module)
+                        .and_then(|module_shapes| module_shapes.get(name))
+                    {
+                        python_shape_exports.insert(local_name.clone(), shapes.clone());
+                    }
                     if let Some(label) = external_defs
                         .function_workloads
                         .get(&import.module)
@@ -476,6 +487,11 @@ pub fn collect_module_exports(
         external_defs
             .function_varargs
             .insert(module_name.to_string(), vararg_exports);
+    }
+    if !python_shape_exports.is_empty() {
+        external_defs
+            .function_python_call_shapes
+            .insert(module_name.to_string(), python_shape_exports);
     }
     if !workload_exports.is_empty() {
         external_defs

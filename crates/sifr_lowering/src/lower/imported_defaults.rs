@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::hir_nodes::HirExpr;
 use sifr_ir::CompilerIntrinsicId;
+use sifr_ir::PythonParameterKind;
 
 use super::workload_annotations::WorkloadKind;
 use super::LowerCtx;
@@ -39,6 +40,18 @@ pub(in crate::lower) fn import_callable_vararg(
     if let Some(vararg_index) = module_varargs.get(external_name) {
         ctx.vararg_functions
             .insert(local_name.to_string(), *vararg_index);
+    }
+}
+
+pub(in crate::lower) fn import_python_call_shape(
+    ctx: &mut LowerCtx,
+    module_shapes: &HashMap<String, Vec<PythonParameterKind>>,
+    external_name: &str,
+    local_name: &str,
+) {
+    if let Some(shapes) = module_shapes.get(external_name) {
+        ctx.python_call_shapes
+            .insert(local_name.to_string(), shapes.clone());
     }
 }
 

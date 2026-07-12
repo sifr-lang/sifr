@@ -29,6 +29,7 @@ fn rust_interop_function_body_emits_package_bridge_root() {
             RustInteropDecoratorKind::Function,
             &["bridge", "hash", "digest"],
         )],
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),
     };
@@ -62,6 +63,7 @@ fn rust_interop_method_body_emits_self_handle_call() {
             RustInteropDecoratorKind::Function,
             &["Self", "encode"],
         )],
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),
     };
@@ -102,6 +104,7 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
                 RustInteropDecoratorKind::Function,
                 &["sifr_stdlib", "zip", "zip_close"],
             )],
+            python_interop: Vec::new(),
             compiler_intrinsic: None,
             type_params: Vec::new(),
         }],
@@ -192,6 +195,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
             RustInteropDecoratorKind::Function,
             &["sifr_stdlib", "python", "py_from_none"],
         )],
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),
     };
@@ -262,6 +266,7 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
             RustInteropDecoratorKind::Function,
             &["sifr_stdlib", "python", "py_local_callback"],
         )],
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),
     };
@@ -325,6 +330,7 @@ fn rust_interop_function_body_converts_python_int_dict_return() {
             RustInteropDecoratorKind::Function,
             &["sifr_stdlib", "python", "py_copy_dict_str_int"],
         )],
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),
     };

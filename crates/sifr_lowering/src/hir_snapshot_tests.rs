@@ -456,6 +456,20 @@ fn project_expr(expr: &HirExpr) -> Value {
             "func": func,
             "args": args.iter().map(project_expr).collect::<Vec<_>>(),
         }),
+        HirExpr::PythonCall {
+            func,
+            args,
+            provided_arguments,
+            record_expansions,
+            ..
+        } => json!({
+            "kind": "PythonCall",
+            "ty": expr_type_name(expr),
+            "func": func,
+            "args": args.iter().map(project_expr).collect::<Vec<_>>(),
+            "provided_arguments": provided_arguments,
+            "record_fields": record_expansions.iter().map(|expansion| expansion.fields.clone()).collect::<Vec<_>>(),
+        }),
         HirExpr::IntrinsicCall {
             intrinsic, args, ..
         } => json!({

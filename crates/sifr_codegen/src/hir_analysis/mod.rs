@@ -6,4 +6,4 @@
 //! 3. Consume query APIs from emitters/lowering; do not add local recursive descent.
 
 pub(crate) mod queries;
-pub(super) mod traversal;
+pub(crate) mod traversal;

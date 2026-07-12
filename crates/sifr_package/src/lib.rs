@@ -71,8 +71,10 @@ pub use crate::projection::{
     ProjectionCheck, ProjectionRepair,
 };
 pub use crate::python::{
-    probe_python_environment, resolve_python_environment, validate_python_environment_probe,
-    PythonEnvironmentProbe, PythonEnvironmentProbeRequest, ResolvedPythonEnvironment,
+    probe_python_environment, resolve_python_environment,
+    resolve_python_environment_with_requirements, validate_python_environment_probe,
+    PythonEnvironmentProbe, PythonEnvironmentProbeRequest, PythonRequirementContribution,
+    PythonRequirementKind, ResolvedPythonEnvironment,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 

@@ -18,6 +18,7 @@ use sifr_driver::{
 };
 use sifr_format::config::{effective_format_config, EffectiveFormatConfig, FormatConfigOverrides};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_python_ast::{Expr, Stmt};
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
 use std::hash::{Hash as _, Hasher as _};
@@ -140,7 +141,9 @@ pub(super) fn package_entrypoint_for_file(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> Result<Option<PackageEntrypoint>, i32> {
-    let Some(context) = package_compiler_context(session, lock_mode, diagnostic_format)? else {
+    let Some(context) =
+        package_compiler_context(session, lock_mode, diagnostic_format, Some(file))?
+    else {
         return Ok(None);
     };
     Ok(Some(PackageEntrypoint {
@@ -156,6 +159,7 @@ pub(super) fn package_compiler_context(
     session: &sifr_package::PackageSession,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    entry_file: Option<&Path>,
 ) -> Result<Option<PackageCompilerContext>, i32> {
     let Some(context) = load_package_graph_context(session, lock_mode, diagnostic_format)? else {
         return Ok(None);
@@ -163,7 +167,16 @@ pub(super) fn package_compiler_context(
     let Some(package_id) = current_session_package_id(session, &context.graph) else {
         return Ok(None);
     };
-    let python_runtime = package_python_runtime(&context.graph, &package_id, diagnostic_format)?;
+    let derived_python_requirements = declaration_python_requirements(
+        &context.source_map,
+        entry_file.map(|file| (file, &package_id)),
+    );
+    let python_runtime = package_python_runtime(
+        &context.graph,
+        &package_id,
+        &derived_python_requirements,
+        diagnostic_format,
+    )?;
     Ok(Some(PackageCompilerContext {
         graph: context.graph,
         source_map: context.source_map,
@@ -175,9 +188,12 @@ pub(super) fn package_compiler_context(
 fn package_python_runtime(
     graph: &sifr_package::SifrPackageGraph,
     package_id: &sifr_package::SifrPackageId,
+    derived: &[sifr_package::PythonRequirementContribution],
     diagnostic_format: DiagnosticFormat,
 ) -> Result<Option<sifr_driver::PackagePythonRuntime>, i32> {
-    let resolved = match sifr_package::resolve_python_environment(graph, package_id) {
+    let resolved = match sifr_package::resolve_python_environment_with_requirements(
+        graph, package_id, derived,
+    ) {
         Ok(resolved) => resolved,
         Err(errors) => {
             let diagnostics = errors
@@ -208,6 +224,98 @@ fn package_python_runtime(
         resolved.trusted_imports,
         resolved.trusted_native_imports,
     )))
+}
+
+fn declaration_python_requirements(
+    source_map: &sifr_package::PackageSourceMap,
+    entry_file: Option<(&Path, &sifr_package::SifrPackageId)>,
+) -> Vec<sifr_package::PythonRequirementContribution> {
+    let mut contributions = Vec::new();
+    let mut provider = DiskSourceProvider::new();
+    for module in source_map.modules.values() {
+        let Ok(source) = provider.read_file(&module.file_path) else {
+            continue;
+        };
+        let context = module.file_path.to_string_lossy();
+        let Ok(parsed) = sifr_syntax::parse_module(source.as_str(), Some(&context)) else {
+            continue;
+        };
+        for statement in parsed.suite() {
+            collect_statement_python_requirements(
+                statement,
+                &module.package_id,
+                &module.file_path,
+                &mut contributions,
+            );
+        }
+    }
+    if let Some((file, package_id)) = entry_file {
+        if let Ok(source) = provider.read_file(file) {
+            let context = file.to_string_lossy();
+            if let Ok(parsed) = sifr_syntax::parse_module(source.as_str(), Some(&context)) {
+                for statement in parsed.suite() {
+                    collect_statement_python_requirements(
+                        statement,
+                        package_id,
+                        file,
+                        &mut contributions,
+                    );
+                }
+            }
+        }
+    }
+    contributions.sort();
+    contributions.dedup();
+    contributions
+}
+
+fn collect_statement_python_requirements(
+    statement: &Stmt,
+    package_id: &sifr_package::SifrPackageId,
+    file_path: &Path,
+    out: &mut Vec<sifr_package::PythonRequirementContribution>,
+) {
+    match statement {
+        Stmt::FunctionDef(function) => {
+            for decorator in &function.decorator_list {
+                let Expr::Call(call) = &decorator.expression else {
+                    continue;
+                };
+                if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "python") {
+                    continue;
+                }
+                let Some(target) = call.arguments.args.first() else {
+                    continue;
+                };
+                let Some(root) = dotted_root(target) else {
+                    continue;
+                };
+                if matches!(root.as_str(), "bridge" | "Self") {
+                    continue;
+                }
+                out.push(sifr_package::PythonRequirementContribution {
+                    root,
+                    package_id: package_id.clone(),
+                    kind: sifr_package::PythonRequirementKind::Declaration,
+                    source: file_path.display().to_string(),
+                });
+            }
+        }
+        Stmt::ClassDef(class) => {
+            for nested in &class.body {
+                collect_statement_python_requirements(nested, package_id, file_path, out);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn dotted_root(expression: &Expr) -> Option<String> {
+    match expression {
+        Expr::Name(name) => Some(name.id.to_string()),
+        Expr::Attribute(attribute) => dotted_root(&attribute.value),
+        _ => None,
+    }
 }
 
 pub(super) fn load_package_graph_context(

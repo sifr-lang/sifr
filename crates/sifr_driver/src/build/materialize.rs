@@ -489,6 +489,7 @@ mod tests {
                 }],
                 ..RustInteropPlan::default()
             },
+            ..InteropBuildPlan::default()
         };
 
         assert_ne!(

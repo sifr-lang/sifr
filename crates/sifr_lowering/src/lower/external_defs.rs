@@ -34,6 +34,11 @@ pub struct ExternalDefs {
     /// Map of `module_name` -> (`callable_name` -> vararg parameter index)
     pub function_varargs:
         std::collections::HashMap<String, std::collections::HashMap<String, usize>>,
+    /// Map of `module_name` -> (`callable_name` -> Python declaration parameter kinds)
+    pub function_python_call_shapes: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, Vec<sifr_ir::PythonParameterKind>>,
+    >,
     /// Map of `module_name` -> (`callable_name` -> workload label)
     pub function_workloads:
         std::collections::HashMap<String, std::collections::HashMap<String, String>>,

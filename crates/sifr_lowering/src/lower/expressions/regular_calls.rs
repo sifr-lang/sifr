@@ -2,10 +2,11 @@ use super::{
     call_argument_ranges_by_param, collect_type_vars, coroutine_result_type,
     decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
     is_compatible_with_unresolved_typevars, lower_expr, lower_function_call_args, lower_name,
-    lower_signature_call_args, name_diagnostics, ownership_diagnostics, protocol_diagnostics,
-    refine_constructor_return_type_from_args, substitute_type_vars, tsc, type_param_argument_range,
-    type_satisfies_bound, type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap,
-    HirExpr, LowerCtx, OwnershipKind, ParamConvention, Ranged, Type,
+    lower_python_function_call_args, lower_signature_call_args, name_diagnostics,
+    ownership_diagnostics, protocol_diagnostics, refine_constructor_return_type_from_args,
+    substitute_type_vars, tsc, type_param_argument_range, type_satisfies_bound,
+    type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap, HirExpr, LowerCtx,
+    OwnershipKind, ParamConvention, Ranged, Type,
 };
 use crate::lower::{ipc_payload_calls, parallel_calls};
 pub(super) fn lower_regular_call(
@@ -185,7 +186,20 @@ pub(super) fn lower_regular_call(
     let call_vararg = ctx.vararg_functions.get(&func_name).copied();
 
     // Resolve keyword arguments to positional order
-    let args = if func_name == "print" {
+    let python_call_shapes = ctx.python_call_shapes.get(&func_name).cloned();
+    let mut python_record_expansions = Vec::new();
+    let mut args = if let Some(shapes) = python_call_shapes.as_deref() {
+        let lowered = lower_python_function_call_args(
+            call,
+            &func_name,
+            &ft,
+            call_defaults.as_deref(),
+            shapes,
+            ctx,
+        )?;
+        python_record_expansions = lowered.record_expansions;
+        lowered.args
+    } else if func_name == "print" {
         let mut args = Vec::with_capacity(call.arguments.args.len());
         for arg in &call.arguments.args {
             args.push(lower_expr(arg, ctx)?);
@@ -247,6 +261,33 @@ pub(super) fn lower_regular_call(
             ctx,
         )?
     };
+
+    let mut provided_arguments = vec![true; args.len()];
+    if let Some(defaults) = &call_defaults {
+        for (index, default) in defaults {
+            let HirExpr::Call { func, .. } = default else {
+                continue;
+            };
+            if func != "__sifr_python_omitted_argument" {
+                continue;
+            }
+            let Some(argument) = args.get_mut(*index) else {
+                continue;
+            };
+            if matches!(argument, HirExpr::Call { func, .. } if func == "__sifr_python_omitted_argument")
+            {
+                provided_arguments[*index] = false;
+                continue;
+            }
+            let ty = argument.ty().clone();
+            let value = std::mem::replace(argument, HirExpr::NoneLiteral);
+            *argument = HirExpr::Call {
+                func: "__sifr_python_present_argument".to_string(),
+                args: vec![value],
+                ty,
+            };
+        }
+    }
 
     let arg_ranges = call_argument_ranges_by_param(call, &ft);
     ipc_payload_calls::validate_require_serializable_call(
@@ -515,6 +556,14 @@ pub(super) fn lower_regular_call(
         Some(HirExpr::ConstructorCall {
             class_name: func_name,
             args,
+            ty: call_type,
+        })
+    } else if python_call_shapes.is_some() {
+        Some(HirExpr::PythonCall {
+            func: func_name,
+            args,
+            provided_arguments,
+            record_expansions: python_record_expansions,
             ty: call_type,
         })
     } else {

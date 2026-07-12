@@ -492,6 +492,7 @@ pub(super) fn base_project_with_contracts(
                 },
                 ..RustInteropPlan::default()
             },
+            ..InteropBuildPlan::default()
         },
         cache_key_fragment: None,
         python_runtime: None,

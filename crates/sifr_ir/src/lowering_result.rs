@@ -8,6 +8,7 @@ pub struct LoweringResult {
     pub flow_graph: FlowGraph,
     pub function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     pub function_varargs: HashMap<String, usize>,
+    pub function_python_call_shapes: HashMap<String, Vec<crate::PythonParameterKind>>,
     pub function_workloads: HashMap<String, String>,
     pub constant_integer_values: HashMap<String, BigInt>,
     /// `reveal_type()` diagnostics (informational, printed to stderr)

@@ -317,6 +317,18 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
                 collect_expr(arg, &format!("{path}/arg[{index}]"), facts);
             }
         }
+        HirExpr::PythonCall { func, args, ty, .. } => {
+            facts.calls.push(json!({
+                "kind": "PythonCall",
+                "path": path,
+                "func": func,
+                "ty": type_name(ty),
+                "args": args.iter().map(expr_summary).collect::<Vec<_>>(),
+            }));
+            for (index, arg) in args.iter().enumerate() {
+                collect_expr(arg, &format!("{path}/arg[{index}]"), facts);
+            }
+        }
         HirExpr::BinOp { left, right, .. } => {
             collect_expr(left, &format!("{path}/left"), facts);
             collect_expr(right, &format!("{path}/right"), facts);
@@ -527,6 +539,7 @@ fn expr_kind(expr: &HirExpr) -> &'static str {
         HirExpr::Compare { .. } => "Compare",
         HirExpr::BoolOp { .. } => "BoolOp",
         HirExpr::Call { .. } => "Call",
+        HirExpr::PythonCall { .. } => "PythonCall",
         HirExpr::IntrinsicCall { .. } => "IntrinsicCall",
         HirExpr::Await { .. } => "Await",
         HirExpr::IteratorCall { .. } => "IteratorCall",

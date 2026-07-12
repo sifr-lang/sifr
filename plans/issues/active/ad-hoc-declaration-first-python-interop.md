@@ -137,7 +137,7 @@ Implementation progress:
 - [x] M0 complete contract lock and evidence model — [PR #2930](https://github.com/sifr-lang/sifr/pull/2930)
 - [x] M1 sealed runtime identity and cleanup — [PR #2932](https://github.com/sifr-lang/sifr/pull/2932)
 - [x] M2 environment and trust authority cutover — [PR #2933](https://github.com/sifr-lang/sifr/pull/2933)
-- [ ] M3 synchronous declaration core and complete call shapes
+- [x] M3 synchronous declaration core and complete call shapes — [PR #2934](https://github.com/sifr-lang/sifr/pull/2934)
 - [ ] M4 recursive conversion and opaque lifecycle
 - [ ] M5 synchronous Python context managers
 - [ ] M6 hermetic package-local Python bridges

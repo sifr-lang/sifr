@@ -12,6 +12,7 @@ fn module_with_expr(expr: HirExpr) -> HirModule {
             method_kind: MethodKind::Regular,
             decorators: vec![],
             rust_interop: Vec::new(),
+            python_interop: Vec::new(),
             compiler_intrinsic: None,
             type_params: vec![],
         }],

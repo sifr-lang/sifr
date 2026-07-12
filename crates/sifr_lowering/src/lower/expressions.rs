@@ -9,6 +9,9 @@ use super::builtin_calls::{
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};
+use super::call_iterable_validation::{
+    validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
+};
 use super::classes::is_hashable_type;
 use super::decimal_methods::{
     decimal_conversion_error_type, lower_bigdecimal_constructor_call,
@@ -30,9 +33,8 @@ use super::fixed_width_arithmetic_methods::resolve_fixed_width_method_type;
 use super::generic_constructor_specialization::refine_constructor_return_type_from_args;
 use super::generic_receiver_specialization::refine_generic_class_binding_expr;
 use super::method_call_args::{
-    lower_function_call_args, lower_method_call_args, lower_signature_call_args,
-    resolved_method_arg_ranges, validate_dict_update_arg, validate_list_extend_arg,
-    validate_set_iterable_arg,
+    lower_function_call_args, lower_method_call_args, lower_python_function_call_args,
+    lower_signature_call_args, resolved_method_arg_ranges,
 };
 use super::method_diagnostics::{
     method_count_range, reject_exact_method_arg_count, reject_max_method_arg_count,

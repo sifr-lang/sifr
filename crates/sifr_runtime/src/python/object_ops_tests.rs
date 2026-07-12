@@ -115,3 +115,50 @@ fn explicit_container_copy_conversions_preserve_nested_paths() {
         }
     );
 }
+
+#[test]
+fn declaration_wrapper_failure_points_release_every_temporary_handle() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("declaration-wrapper-cleanup")).expect("init should succeed");
+
+    let dict = resolve_target(&["builtins".to_string(), "dict".to_string()])
+        .expect("dict target should resolve");
+    let one = from_int(1).expect("argument should convert");
+    let duplicate = call_object_owned(
+        &dict,
+        &[],
+        &[
+            ("value".to_string(), one.clone()),
+            ("value".to_string(), one.clone()),
+        ],
+    )
+    .expect_err("duplicate kwargs must fail before the Python call");
+    assert_eq!(duplicate.kind, "call");
+
+    let int = resolve_target(&["builtins".to_string(), "int".to_string()])
+        .expect("int target should resolve");
+    let bad_text = from_str("not-an-int").expect("text should convert");
+    let call_error = call_object_owned(&int, &[bad_text.clone()], &[])
+        .expect_err("Python exception should map to PythonError");
+    assert_eq!(call_error.kind, "call");
+
+    let str_target = resolve_target(&["builtins".to_string(), "str".to_string()])
+        .expect("str target should resolve");
+    let text_result =
+        call_object_owned(&str_target, &[one.clone()], &[]).expect("str call should succeed");
+    let conversion_error = to_int(&text_result).expect_err("output conversion should fail");
+    assert_eq!(conversion_error.kind, "conversion");
+
+    for handle in [dict, one, int, bad_text, str_target, text_result] {
+        close_object(handle).expect("temporary should close");
+    }
+    assert_eq!(
+        shutdown_diagnostics().expect("diagnostics should be available"),
+        PythonRuntimeDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}

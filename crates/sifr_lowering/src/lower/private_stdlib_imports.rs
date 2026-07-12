@@ -70,6 +70,9 @@ fn import_function_metadata(
     if let Some(module_varargs) = externals.function_varargs.get(module_name) {
         imported_defaults::import_callable_vararg(ctx, module_varargs, name, local);
     }
+    if let Some(module_shapes) = externals.function_python_call_shapes.get(module_name) {
+        imported_defaults::import_python_call_shape(ctx, module_shapes, name, local);
+    }
     if let Some(module_workloads) = externals.function_workloads.get(module_name) {
         imported_defaults::import_callable_workload(ctx, module_workloads, name, local);
     }

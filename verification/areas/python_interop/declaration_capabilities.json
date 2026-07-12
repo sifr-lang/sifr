@@ -6,28 +6,28 @@
       "id": "sync-declaration",
       "surface": "@python(path)",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "sync-declarations",
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "sync wrapper matrix"},
-        {"kind": "negative", "status": "planned", "owner": "target and call-shape diagnostics"},
-        {"kind": "cleanup", "status": "planned", "owner": "wrapper failure reference assertions"},
+        {"kind": "positive", "status": "passing", "owner": "lowering and generated wrapper unit matrices"},
+        {"kind": "negative", "status": "passing", "owner": "PYIMP, PYCALL, and PYCONV diagnostic tests"},
+        {"kind": "cleanup", "status": "passing", "owner": "runtime wrapper failure outstanding-reference assertions"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "synchronous boundary"},
-        {"kind": "live", "status": "planned", "owner": "pure-Python and native-extension binaries"}
+        {"kind": "live", "status": "passing", "owner": "declaration_sync/pure_and_native.sifr compiled urllib.parse and math targets"}
       ]
     },
     {
       "id": "complete-call-shapes",
       "surface": "positional, keyword-only, omit, variadics, kwargs, and closed-record expansion",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "sync-declarations",
       "required_evidence": ["positive", "negative", "cleanup"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "parser/lowering/codegen call-shape matrix"},
-        {"kind": "negative", "status": "planned", "owner": "duplicate and incompatible-shape fixtures"},
-        {"kind": "cleanup", "status": "planned", "owner": "partial argument-conversion cleanup"},
+        {"kind": "positive", "status": "passing", "owner": "PythonCall HIR and owned argument-frame matrices"},
+        {"kind": "negative", "status": "passing", "owner": "duplicate, typed kwargs, inspectability, and arity tests"},
+        {"kind": "cleanup", "status": "passing", "owner": "owned argument-frame partial conversion cleanup test"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "synchronous call shapes"},
         {"kind": "live", "status": "not-applicable", "owner": "covered by sync-declaration live evidence"}
       ]

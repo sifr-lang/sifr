@@ -23,6 +23,7 @@ fn regular_int_function(params: Vec<HirParam>, body: Vec<HirStmt>) -> HirFunctio
         method_kind: MethodKind::Regular,
         decorators: vec![],
         rust_interop: Vec::new(),
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: vec![],
     }
@@ -40,6 +41,7 @@ fn helper_returning_name(name: &str) -> HirFunction {
         method_kind: MethodKind::Regular,
         decorators: vec![],
         rust_interop: Vec::new(),
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: vec![],
     }
@@ -66,6 +68,7 @@ fn middle_with_inner_returning_name(name: &str) -> HirFunction {
         method_kind: MethodKind::Regular,
         decorators: vec![],
         rust_interop: Vec::new(),
+        python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: vec![],
     }

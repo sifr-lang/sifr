@@ -1,0 +1,20 @@
+from sifr.python import PythonError
+
+
+@python(urllib.parse.quote)
+def quote(value: str) -> Result[str, PythonError]: ...
+
+
+@python(math.sqrt)
+def sqrt(value: float) -> Result[float, PythonError]: ...
+
+
+def main():
+    succeeded: bool = False
+    try:
+        encoded: str = quote("a b")
+        root: float = sqrt(81.0)
+        succeeded = encoded == "a%20b" and root == 9.0
+    except PythonError as error:
+        print(error.message)
+    assert succeeded
