@@ -330,6 +330,15 @@ Validation:
 
 Depends on M4 opaque lifecycle and conversion.
 
+Implementation waves:
+
+- [x] Declaration types, diagnostics, strict protocol validation, and
+  context-only obligations — [PR #2936](https://github.com/sifr-lang/sifr/pull/2936)
+- [ ] Exception replay, boundary errors, exit APIs, and secondary evidence
+- [ ] Dedicated Python-context HIR and scoped entered-borrow ownership
+- [ ] Closure/outcome codegen and the normative exit decision table
+- [ ] Complete evidence matrices, transaction demo, and milestone closure
+
 Tasks:
 
 - Implement sync context enter/exit, structured `python.ExitCause`, Python
