@@ -127,6 +127,15 @@ fn transfer_return_ownership(expr: &HirExpr, range: TextRange, ctx: &mut LowerCt
     use super::must_use_obligations::MustUseObligationKind;
 
     match expr {
+        HirExpr::Name { name, .. } if ctx.python_context_borrows.contains_key(name) => {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYCTX_INVALID_DECLARATION,
+                format!(
+                    "invalid Python context declaration: entered binding '{name}' is a context-scoped borrow and cannot escape its with block"
+                ),
+                range,
+            );
+        }
         HirExpr::Name { name, ty }
             if ty.ownership() == OwnershipKind::Move
                 && ctx.live_must_use_bindings.contains_key(name) =>

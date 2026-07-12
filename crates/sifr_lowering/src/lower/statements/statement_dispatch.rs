@@ -25,7 +25,11 @@ use super::{
     lower_ann_assign, lower_assign, lower_aug_assign, lower_chained_assign, lower_for, lower_if,
     lower_while, str,
 };
-use crate::hir_nodes::{HirExceptHandler, HirFunction, HirParam, HirStmt, MethodKind};
+use crate::hir_nodes::{
+    HirExceptHandler, HirExpr, HirFunction, HirParam, HirStmt, HirWithItem, HirWithItemKind,
+    MethodKind,
+};
+use crate::lower::python_interop;
 use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
@@ -228,6 +232,17 @@ pub(in crate::lower) fn lower_stmt(
             if let Expr::Yield(yield_expr) = expr_stmt.value.as_ref() {
                 if let Some(ref val) = yield_expr.value {
                     let value = lower_expr(val, ctx)?;
+                    if let Some(borrowed) =
+                        python_interop::python_context_borrow_in_owned_expr(&value, ctx)
+                    {
+                        ctx.error_with_code_at(
+                            DiagnosticCode::PYCTX_INVALID_DECLARATION,
+                            format!(
+                                "invalid Python context declaration: entered binding '{borrowed}' is a context-scoped borrow and cannot escape by yield"
+                            ),
+                            val.range(),
+                        );
+                    }
                     return Some(HirStmt::Yield { value });
                 }
                 statement_diagnostics::unsupported_form(
@@ -238,6 +253,11 @@ pub(in crate::lower) fn lower_stmt(
                 return None;
             }
             let expr = lower_expr(&expr_stmt.value, ctx)?;
+            python_interop::reject_python_context_borrow_discard(
+                &expr,
+                expr_stmt.value.range(),
+                ctx,
+            );
             // #[must_use] enforcement: Result values must not be silently discarded
             let expr_ty = expr.ty();
             if matches!(expr_ty, Type::Result(_, _)) {
@@ -347,8 +367,9 @@ pub(in crate::lower) fn lower_stmt(
             }
             let (items, body) = ctx.with_pushed_scope(|ctx| {
                 let mut items = Vec::new();
+                let mut previous_context_borrows = Vec::new();
                 for item in &with_stmt.items {
-                    let value = lower_expr(&item.context_expr, ctx)?;
+                    let mut value = lower_expr(&item.context_expr, ctx)?;
                     let var_name = if let Some(ref vars) = item.optional_vars {
                         if let Expr::Name(n) = vars.as_ref() {
                             n.id.to_string()
@@ -363,8 +384,69 @@ pub(in crate::lower) fn lower_stmt(
                     } else {
                         format!("_with_val_{}", items.len())
                     };
-                    let val_ty = value.ty().clone();
                     let context_range = item.context_expr.range();
+                    let context_owner = match &value {
+                        HirExpr::Name { name, .. } => Some(name.clone()),
+                        _ => None,
+                    };
+                    let mut python_kind = None;
+                    if let Type::Result(ok_type, error_type) = value.ty().resolve_alias() {
+                        let ok_type = ok_type.as_ref().clone();
+                        let error_type = error_type.as_ref().clone();
+                        if let Some(kind) = python_interop::python_context_item_kind(
+                            &ok_type,
+                            ctx,
+                            context_range,
+                        ) {
+                            if !ctx.in_try_block {
+                                ctx.error_with_code_at(
+                                    DiagnosticCode::PYCTX_INVALID_DECLARATION,
+                                    "invalid Python context declaration: fallible Python context construction requires an enclosing try block"
+                                        .to_string(),
+                                    context_range,
+                                );
+                                return None;
+                            }
+                            if let Type::Class { name, .. } = error_type.resolve_alias() {
+                                ctx.try_block_error_types.insert(name.clone());
+                            }
+                            value = HirExpr::QuestionMark {
+                                expr: Box::new(value),
+                                ty: ok_type,
+                            };
+                            python_kind = Some(kind);
+                        }
+                    }
+                    let val_ty = value.ty().clone();
+                    if let Some(kind) = python_kind.or_else(|| {
+                        python_interop::python_context_item_kind(&val_ty, ctx, context_range)
+                    }) {
+                        let HirWithItemKind::Python {
+                            entered_type,
+                            entered_is_opaque_borrow,
+                            ..
+                        } = &kind
+                        else {
+                            return None;
+                        };
+                        if let Some(name) = context_owner.as_deref() {
+                            ctx.mark_moved_with_flow(name);
+                        }
+                        ctx.scope.define(var_name.clone(), entered_type.clone());
+                        if *entered_is_opaque_borrow {
+                            previous_context_borrows.push((
+                                var_name.clone(),
+                                ctx.python_context_borrows
+                                    .insert(var_name.clone(), context_range),
+                            ));
+                        }
+                        items.push(HirWithItem {
+                            target: var_name,
+                            context: value,
+                            kind,
+                        });
+                        continue;
+                    }
                     // Check if the type implements the ContextManager protocol (__enter__/__exit__)
                     let has_context_manager = if let Type::Class { name, methods, .. } = &val_ty {
                         let has_enter = methods
@@ -418,9 +500,22 @@ pub(in crate::lower) fn lower_stmt(
                         val_ty.clone()
                     };
                     ctx.scope.define(var_name.clone(), bound_ty);
-                    items.push((var_name, value, has_context_manager));
+                    items.push(HirWithItem {
+                        target: var_name,
+                        context: value,
+                        kind: HirWithItemKind::Native {
+                            has_context_manager_protocol: has_context_manager,
+                        },
+                    });
                 }
                 let body = lower_stmts(&with_stmt.body, func_type, ctx);
+                for (name, previous) in previous_context_borrows.into_iter().rev() {
+                    if let Some(range) = previous {
+                        ctx.python_context_borrows.insert(name, range);
+                    } else {
+                        ctx.python_context_borrows.remove(&name);
+                    }
+                }
                 Some((items, body))
             })?;
             Some(HirStmt::With { items, body })

@@ -392,6 +392,18 @@ pub(in crate::lower) fn lower_ann_assign(
         return None;
     };
 
+    if let Some(borrowed) =
+        super::super::python_interop::python_context_borrow_in_owned_expr(&value, ctx)
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYCTX_INVALID_DECLARATION,
+            format!(
+                "invalid Python context declaration: entered binding '{borrowed}' is a context-scoped borrow and cannot be stored outside its context binding"
+            ),
+            initializer_range,
+        );
+    }
+
     // Track move: if RHS is a variable name with Move ownership, mark it as moved.
     // Also check escape analysis: storing a borrowed parameter into a local variable
     // would allow it to outlive the borrow, which is not allowed.
@@ -467,6 +479,11 @@ pub(in crate::lower) fn lower_chained_assign(
     let Some(value) = lower_expr(&assign.value, ctx) else {
         return result;
     };
+    super::super::python_interop::reject_python_context_borrow_storage(
+        &value,
+        assign.value.range(),
+        ctx,
+    );
     let val_ty = value.ty().clone();
 
     // Process targets in reverse order (rightmost gets the value first)

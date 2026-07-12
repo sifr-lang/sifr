@@ -187,7 +187,7 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
         HirStmt::With { items, body } => {
             items
                 .iter()
-                .any(|(_, expr, _)| hir_expr_calls_function(expr, func_name))
+                .any(|item| hir_expr_calls_function(&item.context, func_name))
                 || hir_body_calls_function(body, func_name)
         }
         HirStmt::AsyncWith { kind, body, .. } => {

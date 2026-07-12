@@ -87,8 +87,8 @@ fn collect_python_callback_bound_names_stmt(
             }
         }
         HirStmt::With { items, body } => {
-            for (_, context, _) in items {
-                collect_python_callback_bound_names_expr(context, callable_params, names);
+            for item in items {
+                collect_python_callback_bound_names_expr(&item.context, callable_params, names);
             }
             for nested in body {
                 collect_python_callback_bound_names_stmt(nested, callable_params, names);

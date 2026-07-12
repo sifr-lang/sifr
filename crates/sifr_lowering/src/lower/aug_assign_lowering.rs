@@ -12,6 +12,7 @@ use super::container_literal_specialization::{
 use super::expressions::lower_expr;
 use super::integer_failure_diagnostics::exact_int_augassign_requires_handling;
 use super::name_diagnostics;
+use super::python_interop::lower_python_context_owned_expr;
 use super::statements::resolve_object_field_type;
 use super::subscript_type::resolve_subscript_result_type;
 use super::LowerCtx;
@@ -76,7 +77,7 @@ pub(in crate::lower) fn lower_aug_assign(
             return None;
         }
         let field_name = attr.attr.to_string();
-        let value = lower_expr(&aug.value, ctx)?;
+        let value = lower_python_context_owned_expr(&aug.value, ctx)?;
         let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
         return Some(HirStmt::AttributeAugAssign {
             object: obj_name,
@@ -136,7 +137,7 @@ pub(in crate::lower) fn lower_aug_assign(
             }
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
-            let value = lower_expr(&aug.value, ctx)?;
+            let value = lower_python_context_owned_expr(&aug.value, ctx)?;
             let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
             let outer_elem_ty = resolve_subscript_result_type(
                 inner_sub,
@@ -215,7 +216,7 @@ pub(in crate::lower) fn lower_aug_assign(
             }
             let object_expr = lower_expr(attr.value.as_ref(), ctx)?;
             let index = lower_expr(&sub.slice, ctx)?;
-            let value = lower_expr(&aug.value, ctx)?;
+            let value = lower_python_context_owned_expr(&aug.value, ctx)?;
             let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
 
             let element_ty = resolve_subscript_result_type(sub, &field_ty, &index, index.ty(), ctx);
@@ -275,7 +276,7 @@ pub(in crate::lower) fn lower_aug_assign(
             return None;
         }
         let index = lower_expr(&sub.slice, ctx)?;
-        let value = lower_expr(&aug.value, ctx)?;
+        let value = lower_python_context_owned_expr(&aug.value, ctx)?;
         let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
         let object_ty = validate_subscript_augassign_target(
             ctx,
@@ -308,7 +309,7 @@ pub(in crate::lower) fn lower_aug_assign(
         return None;
     };
 
-    let value = lower_expr(&aug.value, ctx)?;
+    let value = lower_python_context_owned_expr(&aug.value, ctx)?;
     ctx.clear_sequence_pointer(&name);
     ctx.clear_len_alias(&name);
     ctx.scope.clear_const_integer_value(&name);

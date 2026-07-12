@@ -23,6 +23,7 @@ use super::{
 };
 use crate::hir_nodes::HirExpr;
 use crate::lower::parallel_calls;
+use crate::lower::python_interop::reject_python_context_borrow_created_value;
 use crate::lower::task_join_set_calls::{
     lower_task_join_set_constructor, JoinSetConstructorLowering,
 };
@@ -34,7 +35,7 @@ use sifr_python_ast::{
 };
 use sifr_type_system::{make_union, type_check_bool_op, FunctionType, ParamConvention, Type};
 pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    match expr {
+    let lowered = match expr {
         Expr::NumberLiteral(num) => lower_number_literal(num),
         Expr::BytesLiteral(bytes) => Some(lower_bytes_literal(bytes)),
         Expr::StringLiteral(s) => {
@@ -91,7 +92,9 @@ pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<Hi
             );
             None
         }
-    }
+    }?;
+    reject_python_context_borrow_created_value(&lowered, expr.range(), ctx);
+    Some(lowered)
 }
 pub(in crate::lower) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
     match &num.value {

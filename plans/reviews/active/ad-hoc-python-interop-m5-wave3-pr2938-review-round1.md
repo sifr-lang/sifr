@@ -1,0 +1,24 @@
+Based on my review of the actual committed PR #2938, I've examined:
+
+- The full PR diff (`hir_nodes.rs` HIR variant introduction; the central `python_interop/context.rs` machinery; `statement_dispatch.rs` with-item type-directed lowering; `mod_context.rs` for `python_context_borrows` and `mark_moved_with_flow`; `return_lowering.rs`, `tuple_unpack.rs`, `match_lowering.rs`, `patterns_and_assignments.rs`, `control_flow.rs`, `aug_assign_lowering.rs`, `async_for.rs` invariant enforcement; the HIR-consumer migrations across `sifr_lowering` and `sifr_codegen`; new/moved tests).
+- The wave-3 spec in `plans/issues/active/ad-hoc-declaration-first-python-interop.md` and the design review pass 2.
+- All ten review rounds (round1 findings → round10 SATISFIED).
+
+Verification of each round-10 closure against the merged code:
+- **HIR variant + consumer completeness**: `HirWithItem`/`HirWithItemKind` shape lands cleanly; every `HirStmt::With` match site under `sifr_lowering` and `sifr_codegen` was migrated to the new shape (`error_refs.rs`, `python_callback_bounds.rs`, `traversal_impl.rs`, `stmt_block_helpers.rs`, `flow_graph/effects.rs`, `async_with.rs` x2, `nonlocal_support.rs`, `hir_snapshot_tests.rs`, `name_resolution_snapshot_tests.rs`, `candidate_and_validation.rs`, `with_yield_and_match.rs`, `async_with_and_for.rs`, `yield_unpack_with_tests.rs`, `structured_lowering_codegen_tests.rs`).
+- **Scoped borrow ownership**: `python_context_borrows` populated only when `entered_is_opaque_borrow == true` (`statement_dispatch.rs:436-442`) and lexically restored on scope exit (`statement_dispatch.rs:512-518`); native `with` untouched.
+- **Central rejection**: `reject_python_context_borrow_created_value` fires at every `lower_expr` tail (`core_and_calls.rs:96`), covering aggregates, `ConstructorCall`, storing method calls (append/insert/extend/add/update/setdefault), opaque-holding calls/index/field/await, walrus, lambda, comprehensions. Direct-name args to reader calls remain valid.
+- **Hidden-owner consumption**: `context_owner` captured pre–`QuestionMark`-wrap so a Result-typed prebound manager is `mark_moved_with_flow`'d exactly once (`statement_dispatch.rs:388-441`); test `result_typed_prebound_python_manager_is_consumed_by_first_with` guards this.
+- **Return/yield/unpack/aug/annotated/chained/subscript/field/discard/match** escape paths each have a dedicated call site that runs `python_context_borrow_in_owned_expr` on the relevant HIR node with a bespoke wording; the fallible-context-outside-try diagnostic is dedicated PYCTX-0001, not the misleading "context manager missing" message.
+- **Codegen gate**: `HirWithItemKind::Python` in `try_lower_with_stmt_for_ir` returns `CodegenError` (`async_with_and_for.rs:17-21`); the error propagates via `?` from `try_lower_structured_with_stmt` and is turned into a `compile_error!` macro by `emit_stmt` — hard diagnostic, no silent fallthrough to native `With` codegen.
+- **Test coverage split**: `python_interop_tests.rs` (886 lines) retains the HIR-shape / consume / escape-via-return-or-aggregate / alias / discard / match-capture / augmented-assign / owned-parameter / field-or-subscript / lexical-scope / yield / unpack / prebound-Result / comprehension-or-closure / for-iterable / fallible-outside-try suites; the split-out `python_context_expression_tests.rs` (115 lines) hosts the walrus / discard / temporary-call-argument / temporary-method-argument / return-and-condition / collection-method suites — same fixtures, coverage preserved.
+- **File-size guardrails**: `python_interop_tests.rs` 886, `statement_dispatch.rs` 880, `python_interop/context.rs` 644, `hir_nodes.rs` 775 — all under the 900-line cap.
+
+Known non-blocking observations (acknowledged in round10, not correctness escapes):
+- Duplicate `PYCTX-0001` for nested/wrapped shapes (e.g. `sink([[transaction]])` yields three diagnostics; `raise LeakError([transaction], "…")` yields two). Each fires on a distinct HIR node the central rule visits; every escape shape is rejected at least once, and tests use `errors.iter().any(...)`.
+- The `Err(_) => return false` in `try_lower_structured_try_except_stmt` (`loops_try_finally.rs:181`) swallows nested codegen errors, but the outer `emit_stmt` still hits `compile_error!` via the ordinary path when a Python `with` is present — the gate remains hard.
+- Untracked empty stub `plans/reviews/active/ad-hoc-python-interop-m5-wave3-pr2938-review-round1.md` sits outside the PR; not a PR artifact.
+
+No actionable findings. The wave-3 acceptance criteria — retain the manager as hidden owner, make opaque entered values scoped borrows that cannot escape/move/close independently, keep native `with` unchanged, gate Python-context codegen as a hard diagnostic until wave 4 — are satisfied by the committed code.
+
+VERDICT: SATISFIED

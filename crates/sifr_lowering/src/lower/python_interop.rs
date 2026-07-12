@@ -10,7 +10,11 @@ use sifr_type_system::Type;
 
 mod context;
 
-pub(in crate::lower) use context::validate_context_class_methods;
+pub(in crate::lower) use context::{
+    lower_python_context_owned_expr, python_context_borrow_in_owned_expr, python_context_item_kind,
+    reject_python_context_borrow_created_value, reject_python_context_borrow_discard,
+    reject_python_context_borrow_storage, validate_context_class_methods,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::lower) enum PythonInteropStubBody {

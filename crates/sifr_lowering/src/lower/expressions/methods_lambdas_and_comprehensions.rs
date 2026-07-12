@@ -15,6 +15,7 @@ use super::{
     ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
     DEFAULTDICT_SET_ALIAS,
 };
+use crate::lower::python_interop::reject_python_context_borrow_storage;
 use crate::lower::{parallel_calls, task_join_set_calls, task_scope_offload_calls};
 use sifr_ir::CompilerIntrinsicId;
 pub(in crate::lower) fn lower_method_call(
@@ -883,6 +884,7 @@ pub(in crate::lower) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) 
     };
 
     let value = lower_expr(&named.value, ctx)?;
+    reject_python_context_borrow_storage(&value, named.value.range(), ctx);
     let ty = value.ty().clone();
 
     // Define the variable in the current scope

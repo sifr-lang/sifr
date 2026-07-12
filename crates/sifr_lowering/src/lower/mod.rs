@@ -105,6 +105,8 @@ mod private_stdlib_imports;
 mod protocol_diagnostics;
 #[cfg(test)]
 mod python_async_tests;
+#[cfg(test)]
+mod python_context_expression_tests;
 mod python_interop;
 #[cfg(test)]
 mod python_interop_tests;

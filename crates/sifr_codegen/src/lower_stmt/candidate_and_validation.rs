@@ -327,8 +327,8 @@ pub(super) fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), Codegen
             validate_expr_lowering_shape(index)
         }
         HirStmt::With { items, body } => {
-            for (_, context_expr, _) in items {
-                validate_expr_lowering_shape(context_expr)?;
+            for item in items {
+                validate_expr_lowering_shape(&item.context)?;
             }
             validate_stmt_block_lowering_shape(body)
         }

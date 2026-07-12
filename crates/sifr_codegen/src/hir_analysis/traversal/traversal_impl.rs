@@ -580,8 +580,11 @@ where
             }
         }
         HirStmt::With { items, body } => {
-            for (_, expr, _) in items {
-                if matches!(walk_expr_until(expr, on_expr), TraversalControl::Stop) {
+            for item in items {
+                if matches!(
+                    walk_expr_until(&item.context, on_expr),
+                    TraversalControl::Stop
+                ) {
                     return TraversalControl::Stop;
                 }
             }

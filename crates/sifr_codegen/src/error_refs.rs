@@ -282,8 +282,8 @@ fn collect_stmt_error_refs(
                 collect_expr_error_refs(index, referenced, builtin_error_classes);
             }
             HirStmt::With { items, body } => {
-                for (_, expr, _) in items {
-                    collect_expr_error_refs(expr, referenced, builtin_error_classes);
+                for item in items {
+                    collect_expr_error_refs(&item.context, referenced, builtin_error_classes);
                 }
                 collect_stmt_error_refs(body, referenced, builtin_error_classes);
             }

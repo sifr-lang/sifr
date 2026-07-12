@@ -517,9 +517,7 @@ fn stmt_contains_await(stmt: &HirStmt) -> bool {
             expr_contains_await(object) || expr_contains_await(index)
         }
         HirStmt::With { items, body } => {
-            items
-                .iter()
-                .any(|(_, context_expr, _)| expr_contains_await(context_expr))
+            items.iter().any(|item| expr_contains_await(&item.context))
                 || body.iter().any(stmt_contains_await)
         }
         HirStmt::TryExcept { body, handlers, .. } => {
@@ -605,7 +603,7 @@ fn stmt_contains_task_spawn(stmt: &HirStmt) -> bool {
         HirStmt::With { items, body } => {
             items
                 .iter()
-                .any(|(_, context_expr, _)| expr_contains_task_spawn(context_expr))
+                .any(|item| expr_contains_task_spawn(&item.context))
                 || body.iter().any(stmt_contains_task_spawn)
         }
         HirStmt::TryExcept { body, handlers, .. } => {

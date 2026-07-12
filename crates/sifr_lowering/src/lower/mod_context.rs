@@ -107,6 +107,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) source_origin: LoweringSourceOrigin,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
     pub(in crate::lower) borrowed_params: std::collections::HashSet<String>,
+    /// Opaque values borrowed from Python context entry for the current lexical block.
+    pub(in crate::lower) python_context_borrows: HashMap<String, ruff_text_size::TextRange>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
     pub(in crate::lower) class_declared_type_params: HashMap<String, Vec<String>>,
     pub(in crate::lower) current_module_name: Option<String>,
@@ -185,6 +187,7 @@ impl LowerCtx {
             declared_type_var_bounds: HashMap::new(),
             source_origin: LoweringSourceOrigin::User,
             borrowed_params: std::collections::HashSet::new(),
+            python_context_borrows: HashMap::new(),
             class_declared_type_params: HashMap::new(),
             current_module_name: None,
             externals: ExternalDefs::default(),
@@ -378,6 +381,16 @@ impl LowerCtx {
     }
 
     pub(in crate::lower) fn mark_moved_with_flow(&mut self, name: &str) -> bool {
+        if let Some(range) = self.python_context_borrows.get(name).copied() {
+            self.error_with_code_at(
+                DiagnosticCode::PYCTX_INVALID_DECLARATION,
+                format!(
+                    "invalid Python context declaration: entered binding '{name}' is a context-scoped borrow and cannot be moved or closed independently"
+                ),
+                range,
+            );
+            return false;
+        }
         let moved = self.scope.mark_moved(name);
         if moved {
             self.record_flow_effect(FlowEffect::Move {
