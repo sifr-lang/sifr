@@ -8,7 +8,9 @@ a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 is implemented and
 locally validated in [PR #2930](https://github.com/sifr-lang/sifr/pull/2930).
 M1 is implemented and locally validated in
-[PR #2932](https://github.com/sifr-lang/sifr/pull/2932); later milestones are
+[PR #2932](https://github.com/sifr-lang/sifr/pull/2932). M2 is implemented,
+locally validated, and Opus-approved in
+[PR #2933](https://github.com/sifr-lang/sifr/pull/2933); later milestones are
 not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
@@ -134,7 +136,7 @@ Implementation progress:
 
 - [x] M0 complete contract lock and evidence model — [PR #2930](https://github.com/sifr-lang/sifr/pull/2930)
 - [x] M1 sealed runtime identity and cleanup — [PR #2932](https://github.com/sifr-lang/sifr/pull/2932)
-- [ ] M2 environment and trust authority cutover
+- [x] M2 environment and trust authority cutover — [PR #2933](https://github.com/sifr-lang/sifr/pull/2933)
 - [ ] M3 synchronous declaration core and complete call shapes
 - [ ] M4 recursive conversion and opaque lifecycle
 - [ ] M5 synchronous Python context managers
