@@ -28,6 +28,7 @@ fn primitive_conversion_round_trips_and_rejects_fixed_width_overflow() {
     let overflow = to_u8(&too_wide).expect_err("uint8 overflow should fail");
     assert_eq!(overflow.kind, "conversion");
     assert!(overflow.context.contains("uint8"));
+    drop(overflow);
     close_object(too_wide).expect("wide int object should close");
 
     let float = from_float(1.25).expect("float object should be stored");
@@ -79,6 +80,7 @@ fn explicit_container_copy_conversions_preserve_nested_paths() {
     assert_eq!(overflow.kind, "conversion");
     assert!(overflow.context.contains("copy_list_u8[1]"));
     assert!(overflow.context.contains("uint8"));
+    drop(overflow);
 
     let dict = from_dict_str(&[("first", first.clone()), ("second", second.clone())])
         .expect("dict should be stored");
@@ -149,6 +151,9 @@ fn declaration_wrapper_failure_points_release_every_temporary_handle() {
         call_object_owned(&str_target, &[one.clone()], &[]).expect("str call should succeed");
     let conversion_error = to_int(&text_result).expect_err("output conversion should fail");
     assert_eq!(conversion_error.kind, "conversion");
+    drop(duplicate);
+    drop(call_error);
+    drop(conversion_error);
 
     for handle in [dict, one, int, bad_text, str_target, text_result] {
         close_object(handle).expect("temporary should close");
@@ -190,6 +195,8 @@ fn recursive_handles_report_exact_nested_paths_and_required_record_fields() {
     let present = record_field(&record, "present").expect("required field should extract");
     let missing = record_field(&record, "missing").expect_err("missing field should fail");
     assert!(missing.context.contains("missing"));
+    drop(error);
+    drop(missing);
 
     for handle in [bad, inner, outer, outer_item, inner_item, record, present] {
         close_object(handle).expect("object should close");
@@ -218,6 +225,7 @@ fn semantic_close_consumes_identity_and_poison_failure_releases_it() {
     let invalid = from_int(1).expect("invalid receiver should be stored");
     let error = semantic_close(invalid, "close").expect_err("missing close should fail");
     assert_eq!(error.kind, "cleanup");
+    drop(error);
 
     close_object(target).expect("target should close");
     assert_eq!(

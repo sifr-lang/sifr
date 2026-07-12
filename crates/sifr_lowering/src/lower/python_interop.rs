@@ -287,7 +287,7 @@ pub(in crate::lower) fn collect_python_opaque_declaration(
         let Expr::Call(call) = &decorator.expression else {
             continue;
         };
-        if !decorator_path(&call.func).is_some_and(|path| path.as_slice() == ["python", "opaque"]) {
+        if decorator_path(&call.func).is_none_or(|path| path.as_slice() != ["python", "opaque"]) {
             continue;
         }
         if result.is_some() {

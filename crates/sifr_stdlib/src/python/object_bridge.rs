@@ -16,13 +16,13 @@ pub(super) fn take_object(object: PythonObject) -> Result<python::ForeignObject,
 }
 
 fn handle_error(error: HandleStateError) -> PythonError {
-    PythonError {
-        kind: "resource".to_string(),
-        exception_type: "SifrPythonClosedObject".to_string(),
-        message: error.to_string(),
-        traceback: String::new(),
-        context: "sealed Python object identity".to_string(),
-    }
+    PythonError::without_replay(
+        "resource",
+        "SifrPythonClosedObject",
+        error.to_string(),
+        "",
+        "sealed Python object identity",
+    )
 }
 
 fn wrap(result: Result<python::ForeignObject, PythonError>) -> Result<PythonObject, PythonError> {
@@ -298,13 +298,13 @@ fn keyed_objects<'a>(
     values: &'a [python::ForeignObject],
 ) -> Result<Vec<(&'a str, python::ForeignObject)>, PythonError> {
     if keys.len() != values.len() {
-        return Err(PythonError {
-            kind: "conversion".to_string(),
-            exception_type: "SifrPythonArgumentError".to_string(),
-            message: "Python keyword key/value counts differ".to_string(),
-            traceback: String::new(),
-            context: "sealed Python call arguments".to_string(),
-        });
+        return Err(PythonError::without_replay(
+            "conversion",
+            "SifrPythonArgumentError",
+            "Python keyword key/value counts differ",
+            "",
+            "sealed Python call arguments",
+        ));
     }
     Ok(keys
         .iter()

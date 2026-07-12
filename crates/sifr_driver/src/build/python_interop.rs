@@ -105,7 +105,7 @@ pub(super) fn apply_python_interop_metadata(
                         probe.target_path
                     ),
                     DiagnosticCode::PYCALL_INVALID_SHAPE,
-                ))
+                ));
             }
             Ok(output) if !output.inspectable && probe.requires_inspectable_signature => {
                 diagnostics.push(diagnostic_with_code(

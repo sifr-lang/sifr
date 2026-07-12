@@ -259,6 +259,7 @@ fn closed_error(handle: i64) -> PythonError {
         message: format!("Python callback handle {handle} is closed"),
         traceback: String::new(),
         context: "callback handle lookup".to_string(),
+        replay: None,
     }
 }
 
@@ -269,6 +270,7 @@ fn callback_store() -> Result<MutexGuard<'static, CallbackStore>, PythonError> {
         message: "Python callback store is unavailable".to_string(),
         traceback: String::new(),
         context: "callback store".to_string(),
+        replay: None,
     })
 }
 
@@ -354,14 +356,17 @@ mod tests {
                 message: "callback failed".to_string(),
                 traceback: String::new(),
                 context: "test callback".to_string(),
+                replay: None,
             })
         })
         .expect("callback should create");
         let arg = from_int(7).expect("arg should store");
         let before = resource_diagnostics().expect("diagnostics should be available");
 
-        call_object(&callback.object, &[arg.clone()], &[])
+        let error = call_object(&callback.object, &[arg.clone()], &[])
             .expect_err("callback result should fail");
+        drop(error);
+        super::super::attach(|_| ()).expect("attach should drain error replay");
 
         assert_eq!(
             resource_diagnostics().expect("diagnostics should be available"),
@@ -432,6 +437,8 @@ assert result[0] == 19
         let after_close = call_object(&callback.object, &[arg.clone()], &[])
             .expect_err("calling closed callback object should fail");
         assert_eq!(after_close.kind, "call");
+        drop(closed);
+        drop(after_close);
         close_object(callback.object).expect("callback object should close");
         close_object(arg).expect("arg should close");
         assert_eq!(

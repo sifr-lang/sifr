@@ -11,6 +11,9 @@ mod buffer_ops;
 mod call_depth;
 mod callback_ops;
 mod config_verify;
+mod context_ops;
+#[cfg(test)]
+mod context_ops_tests;
 mod coroutine_ops;
 mod dlpack_ops;
 mod foreign_object;
@@ -18,6 +21,9 @@ mod object_ops;
 #[cfg(test)]
 mod object_ops_tests;
 mod opaque_ops;
+mod python_error;
+#[cfg(test)]
+mod python_test_support;
 mod recursive_ops;
 mod resource_identity;
 mod resource_ops;
@@ -35,6 +41,11 @@ pub use callback_ops::{
     threadsafe_callback_echo, CallbackHandle, PythonCallbackMetadata,
 };
 use config_verify::verify_interpreter_config;
+pub use context_ops::{
+    attach_secondary_python_error, context_exit_normal, context_exit_python_error,
+    context_exit_sifr_cause, record_context_cleanup_evidence, take_context_cleanup_evidence,
+    ContextCleanupEvidence, PythonExitDecision, SifrExitCause, SifrExitCauseKind,
+};
 pub use coroutine_ops::run_coroutine_blocking;
 pub use dlpack_ops::{
     dlpack_shape, dlpack_strides, dlpack_tensor, release_dlpack, DlpackHandle,
@@ -51,9 +62,10 @@ pub use object_ops::{
     from_bytes, from_dict_str, from_float, from_int, from_list, from_none, from_record, from_str,
     from_tuple, get_attr, get_item_str, import_module, resolve_target, temporary_argument_handle,
     to_bool, to_bytes, to_float, to_i16, to_i32, to_i64, to_i8, to_int, to_isize, to_none, to_str,
-    to_u16, to_u32, to_u64, to_u8, to_usize, ObjectHandle, PythonError,
+    to_u16, to_u32, to_u64, to_u8, to_usize, ObjectHandle,
 };
 pub use opaque_ops::semantic_close;
+pub use python_error::PythonError;
 pub use recursive_ops::{
     at_path, dict_str_items, from_dict_results, from_list_results, from_record_results,
     from_tuple_results, list_items, object_is_none, record_field, tuple_items,
@@ -208,6 +220,8 @@ pub fn initialize_runtime(
     state.config = Some(config.clone());
     initialize_cpython_with_config(&config)?;
     configure_interpreter(&config)?;
+    Python::try_attach(context_ops::register_boundary_error)
+        .ok_or(PythonRuntimeError::NotInitialized)??;
     state.initialized = true;
     Ok(PythonRuntimeInitStatus::Initialized)
 }
@@ -507,6 +521,7 @@ fn reset_runtime_state_for_tests() {
     let mut state = runtime_state().expect("runtime state should be available");
     *state = RuntimeState::new();
     foreign_object::reset_pending_releases_for_tests();
+    context_ops::reset_context_state_for_tests();
     object_ops::reset_object_store_for_tests();
 }
 
@@ -515,91 +530,17 @@ static TEST_LOCK: Mutex<()> = Mutex::new(());
 
 #[cfg(test)]
 fn test_guard() -> MutexGuard<'static, ()> {
-    TEST_LOCK.lock().expect("test lock should be available")
+    match TEST_LOCK.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    }
 }
 
 #[cfg(test)]
 fn test_config(label: &str) -> PythonRuntimeConfig {
-    let mut config = local_python_config();
+    let mut config = python_test_support::local_python_config();
     config.probe_digest = format!("digest-{label}");
     config
-}
-
-#[cfg(test)]
-fn local_python_config() -> PythonRuntimeConfig {
-    let script = r#"
-import os
-import sys
-print(sys.executable)
-print(sys.prefix)
-print(sys.base_prefix)
-print(".".join(str(part) for part in sys.version_info[:3]))
-print(os.pathsep.join(sys.path))
-"#;
-    let output = std::process::Command::new("python3")
-        .args(["-c", script])
-        .output()
-        .expect("python3 should be available for PyO3 runtime tests");
-    assert!(
-        output.status.success(),
-        "python3 probe should succeed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let stdout = String::from_utf8(output.stdout).expect("python3 probe should emit UTF-8");
-    let mut lines = stdout.lines();
-    let executable = lines
-        .next()
-        .expect("python3 probe should emit executable")
-        .to_string();
-    let sys_prefix = lines
-        .next()
-        .expect("python3 probe should emit sys.prefix")
-        .to_string();
-    let sys_base_prefix = lines
-        .next()
-        .expect("python3 probe should emit sys.base_prefix")
-        .to_string();
-    let version = lines
-        .next()
-        .expect("python3 probe should emit version tuple")
-        .split('.')
-        .map(|part| part.parse::<u64>().expect("version part should be numeric"))
-        .collect::<Vec<_>>();
-    let sys_path = lines
-        .next()
-        .unwrap_or_default()
-        .split(if cfg!(windows) { ';' } else { ':' })
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    PythonRuntimeConfig {
-        venv_root: sys_prefix.clone(),
-        interpreter: executable.clone(),
-        executable,
-        sys_prefix,
-        sys_base_prefix,
-        probe_digest: "digest-test".to_string(),
-        implementation_name: "cpython".to_string(),
-        implementation_version: "test".to_string(),
-        cpython_version_tuple: version,
-        sys_path,
-        site_packages: Vec::new(),
-        required_import_roots: vec![
-            "asyncio".to_string(),
-            "builtins".to_string(),
-            "contextlib".to_string(),
-            "math".to_string(),
-            "sys".to_string(),
-        ],
-        trusted_import_roots: vec![
-            "asyncio".to_string(),
-            "builtins".to_string(),
-            "contextlib".to_string(),
-            "math".to_string(),
-            "sys".to_string(),
-        ],
-        native_import_roots: Vec::new(),
-        trusted_native_roots: Vec::new(),
-    }
 }
 
 #[cfg(test)]

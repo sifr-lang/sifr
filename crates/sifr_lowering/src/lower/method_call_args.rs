@@ -413,19 +413,19 @@ pub(in crate::lower) fn lower_python_function_call_args(
         }
     }
 
-    for index in 0..resolved.len() {
-        if resolved[index].is_some() {
+    for (index, argument) in resolved.iter_mut().enumerate() {
+        if argument.is_some() {
             continue;
         }
         if let Some(default) = default_arg_expr(defaults, index) {
-            resolved[index] = Some(default.clone());
+            *argument = Some(default.clone());
         } else if Some(index) == vararg_index {
-            resolved[index] = Some(HirExpr::ListLiteral {
+            *argument = Some(HirExpr::ListLiteral {
                 elements: Vec::new(),
                 ty: ft.params[index].1.clone(),
             });
         } else if Some(index) == kwarg_index {
-            resolved[index] = Some(HirExpr::DictLiteral {
+            *argument = Some(HirExpr::DictLiteral {
                 keys: Vec::new(),
                 values: Vec::new(),
                 ty: ft.params[index].1.clone(),

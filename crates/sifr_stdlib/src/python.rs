@@ -29,24 +29,28 @@ pub type PythonError = python::PythonError;
 fn resource_value(
     identity: &ResourceIdentity,
 ) -> Result<&python::PythonResourceIdentity, python::PythonError> {
-    identity.inner_ref().map_err(|error| python::PythonError {
-        message: error.to_string(),
-        kind: "resource".to_string(),
-        exception_type: "SifrPythonResourceIdentityError".to_string(),
-        traceback: String::new(),
-        context: "sealed Python resource identity".to_string(),
+    identity.inner_ref().map_err(|error| {
+        python::PythonError::without_replay(
+            "resource",
+            "SifrPythonResourceIdentityError",
+            error.to_string(),
+            "",
+            "sealed Python resource identity",
+        )
     })
 }
 
 fn take_resource(
     identity: ResourceIdentity,
 ) -> Result<python::PythonResourceIdentity, python::PythonError> {
-    identity.into_inner().map_err(|error| python::PythonError {
-        message: error.to_string(),
-        kind: "resource".to_string(),
-        exception_type: "SifrPythonResourceIdentityError".to_string(),
-        traceback: String::new(),
-        context: "sealed Python resource identity".to_string(),
+    identity.into_inner().map_err(|error| {
+        python::PythonError::without_replay(
+            "resource",
+            "SifrPythonResourceIdentityError",
+            error.to_string(),
+            "",
+            "sealed Python resource identity",
+        )
     })
 }
 

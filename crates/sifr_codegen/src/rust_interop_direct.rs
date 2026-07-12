@@ -143,13 +143,13 @@ fn python_object_callback_adapter_expr(handler: &str) -> RustExpr {
         r#"move |__sifr_callback_arg| {{
             match {handler}(&__sifr_callback_arg) {{
                 Ok(__sifr_callback_result) => Ok(__sifr_callback_result),
-                Err(__sifr_callback_error) => Err(sifr_stdlib::python::PythonError {{
-                    message: __sifr_callback_error.message,
-                    kind: __sifr_callback_error.kind,
-                    exception_type: __sifr_callback_error.exception_type,
-                    traceback: __sifr_callback_error.traceback,
-                    context: __sifr_callback_error.context,
-                }}),
+                Err(__sifr_callback_error) => Err(sifr_stdlib::python::PythonError::without_replay(
+                    __sifr_callback_error.kind,
+                    __sifr_callback_error.exception_type,
+                    __sifr_callback_error.message,
+                    __sifr_callback_error.traceback,
+                    __sifr_callback_error.context,
+                )),
             }}
         }}"#
     ))
