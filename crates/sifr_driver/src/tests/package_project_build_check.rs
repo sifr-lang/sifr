@@ -242,6 +242,63 @@ fn package_entrypoint(
     }
 }
 
+fn local_python_runtime(project_root: &Path) -> crate::PackagePythonRuntime {
+    let pyproject = project_root.join("pyproject.toml");
+    let lock = project_root.join("uv.lock");
+    std::fs::write(
+        &pyproject,
+        "[project]\nname = \"sifr-bridge-test\"\nversion = \"0.0.0\"\nrequires-python = \">=3.11\"\n",
+    )
+    .expect("test pyproject should be written");
+    let uv = std::process::Command::new("uv")
+        .args(["lock", "--project"])
+        .arg(project_root)
+        .output()
+        .expect("uv should create the test lock");
+    assert!(
+        uv.status.success(),
+        "uv lock should pass: {}",
+        String::from_utf8_lossy(&uv.stderr)
+    );
+    let venv_root = project_root.join(".venv");
+    let uv = std::process::Command::new("uv")
+        .args(["venv", "--python"])
+        .arg(if cfg!(windows) { "python" } else { "python3" })
+        .arg(&venv_root)
+        .output()
+        .expect("uv should create the test venv");
+    assert!(
+        uv.status.success(),
+        "uv venv should pass: {}",
+        String::from_utf8_lossy(&uv.stderr)
+    );
+    let interpreter = if cfg!(windows) {
+        venv_root.join("Scripts/python.exe")
+    } else {
+        venv_root.join("bin/python")
+    };
+    let request = sifr_package::PythonEnvironmentProbeRequest {
+        venv_root,
+        interpreter,
+        pyproject: Some(pyproject),
+        lock: Some(lock),
+        required_imports: Vec::new(),
+        declared_imports: Vec::new(),
+        native_imports: Vec::new(),
+    };
+    let probe = sifr_package::probe_python_environment(&request)
+        .expect("local CPython environment should probe");
+    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    crate::PackagePythonRuntime::from_probe(
+        &request,
+        &probe,
+        digest,
+        Vec::new(),
+        Vec::new(),
+        Vec::new(),
+    )
+}
+
 #[test]
 fn test_check_package_project_resolves_public_namespace_reexports() {
     let dir = mktemp_dir("package_public_reexports");
@@ -337,6 +394,75 @@ fn package_source_cannot_declare_compiler_intrinsics() {
                 .message
                 .contains("reserved for canonical public sysroot declarations")
     }));
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn package_python_bridge_target_activates_only_for_owning_package() {
+    let dir = mktemp_dir("package_python_bridge_target");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from sifr.python import PythonError\n\n@python(bridge.adapter.value)\ndef value() -> Result[int, PythonError]: ...\n\ndef main():\n    pass\n",
+    );
+    write_package_source(
+        &app,
+        "python_bridges/adapter.py",
+        "def value():\n    return 42\n",
+    );
+    let graph = package_graph(&dir, &[&app], &[]);
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors.is_empty(),
+        "package-owned bridge target should activate: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn built_package_python_bridge_runs_from_embedded_source() {
+    let dir = mktemp_dir("built_package_python_bridge");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from sifr.python import PythonError\n\n@python(bridge.adapter.value)\ndef value() -> Result[int, PythonError]: ...\n\ndef main():\n    succeeded: bool = False\n    try:\n        result: int = value()\n        succeeded = result == 42\n    except PythonError as error:\n        print(error.message)\n    assert succeeded\n    print(\"embedded-bridge-ok\")\n",
+    );
+    write_package_source(&app, "python_bridges/helper.py", "VALUE = 41\n");
+    write_package_source(
+        &app,
+        "python_bridges/adapter.py",
+        "import bridge.helper\n\ndef value():\n    return bridge.helper.VALUE + 1\n",
+    );
+    let graph = package_graph(&dir, &[&app], &[]);
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let mut entrypoint =
+        package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+    entrypoint.python_runtime = Some(local_python_runtime(&dir));
+
+    let artifact = build_cached_package_project(&entrypoint)
+        .expect("package bridge binary should build from embedded source");
+    std::fs::remove_dir_all(app.root.join("src/python_bridges"))
+        .expect("runtime proof should remove bridge checkout sources");
+    let output = std::process::Command::new(artifact.binary_path())
+        .output()
+        .expect("package bridge binary should run");
+
+    assert!(
+        output.status.success(),
+        "binary should pass: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout).trim(),
+        "embedded-bridge-ok"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 

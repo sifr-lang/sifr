@@ -7,6 +7,7 @@ use super::project_codegen::{
     generated_single_file_binary_project, GeneratedBinaryProject,
 };
 use super::python_bridges::apply_package_python_bridge_metadata;
+use super::python_bridges::package_bridge_lowering_options;
 use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
 use super::rust_interop::{
@@ -495,9 +496,10 @@ impl RootedEntrypointPlan {
                 ));
                 let project_lowering =
                     measure_stage(stages, module_analysis_label(module_count), || {
-                        let lowering_options = entrypoint.python_runtime.as_ref().map_or_else(
-                            LoweringOptions::default,
-                            PackagePythonRuntime::lowering_options,
+                        let lowering_options = package_bridge_lowering_options(
+                            entrypoint.python_runtime.as_ref(),
+                            &package_project.module_packages,
+                            &python_bridges,
                         );
                         collect_project_hir_source_modules_with_options(
                             &package_project.parsed_modules,

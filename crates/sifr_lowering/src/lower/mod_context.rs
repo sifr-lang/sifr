@@ -119,6 +119,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) python_import_module_bindings: HashSet<String>,
     pub(in crate::lower) current_function_trusts_dynamic_python: bool,
     pub(in crate::lower) python_trust_policy: Option<PythonTrustPolicy>,
+    pub(in crate::lower) python_bridge_authorities:
+        std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
     /// Nested local function captures observed while lowering the current statement block.
     pub(in crate::lower) nested_function_captures: HashMap<String, Vec<(String, Type)>>,
     pub(in crate::lower) sequence_guards: Vec<SequenceGuard>,
@@ -197,6 +199,7 @@ impl LowerCtx {
             python_import_module_bindings: HashSet::new(),
             current_function_trusts_dynamic_python: false,
             python_trust_policy: None,
+            python_bridge_authorities: std::collections::BTreeMap::new(),
             nested_function_captures: HashMap::new(),
             sequence_guards: Vec::new(),
             len_aliases: Vec::new(),
@@ -279,6 +282,7 @@ impl LowerCtx {
     #[must_use]
     pub(in crate::lower) fn with_options(mut self, options: LoweringOptions) -> Self {
         self.python_trust_policy = options.python_trust_policy;
+        self.python_bridge_authorities = options.python_bridge_authorities;
         self
     }
 
@@ -417,6 +421,13 @@ pub struct PythonTrustPolicy {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LoweringOptions {
     pub python_trust_policy: Option<PythonTrustPolicy>,
+    pub python_bridge_authorities: std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct PythonBridgeTargetAuthority {
+    pub runtime_package: String,
+    pub modules: std::collections::BTreeSet<String>,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

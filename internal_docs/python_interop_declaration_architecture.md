@@ -387,15 +387,17 @@ paths or truncation. Resolution walks only the root package and its normal
 selected Sifr dependency scopes, so dev-only and otherwise unselected packages
 do not contribute bridge identities or requirements.
 
-Before loader activation, package resolution already carries a deterministic
-bridge plan into driver/codegen metadata. Each plan entry records the isolated
+Package resolution carries a deterministic bridge plan into driver/codegen
+metadata. Each plan entry records the isolated
 runtime package, inventory/source digests, runtime module names, resolved
 same-package import names, and external roots. External roots contribute
 `PythonRequirementKind::BridgeImport` provenance to the canonical requirement
 set and remain subject to the root application's `SIFR-PYTRUST-0005`
-authorization. This planning representation does not activate public
-`bridge.*` declarations; lowering remains gated until the embedded loader and
-target rewrite land atomically.
+authorization. Package-aware lowering activates a public `bridge.*` target only
+when the declaration's owning resolved package has an inventoried bridge. It
+replaces the source-level `bridge` segment with that package's full reserved
+runtime prefix before wrapper codegen; bridge targets without package bridge
+authority remain a `SIFR-PYRES-0002` error.
 
 Generated runtime metadata contains an embedded UTF-8 source table keyed by
 the full runtime module name, including synthetic package entries and stable
@@ -403,8 +405,17 @@ virtual filenames for tracebacks. Before user `main` or any bridge import,
 `sifr_runtime::python::bridge_loader` installs a first-position CPython
 `MetaPathFinder`/loader that claims only the reserved namespace and reads from
 that table. Existing `sys.modules` entries in the namespace are rejected as a
-setup diagnostic, and the loader never falls back to filesystem or `sys.path`
-resolution for a reserved name. No temporary extraction directory is used.
+`SIFR-PYIMP-0003` setup failure, and the loader claims unknown reserved names
+instead of falling back to filesystem or `sys.path` resolution. Runtime target
+resolution restores the finder to first position after `sys.meta_path`
+mutation. No temporary extraction directory is used.
+
+Bridge source is parsed into a Python AST under the GIL before compilation.
+Static `bridge.*` imports are rewritten to the owning package prefix while
+relative imports retain normal package semantics. Synthetic namespace package
+entries cover every parent path, and `compile` receives the stable virtual
+filename `<__sifr_bridge__.p_<resolved_package_key>.<module_path>>`, which is
+preserved in `co_filename` and tracebacks.
 
 Sifr package archives include bridge sources and their manifest inventory;
 generated binaries embed only the resolved graph's bridge table. Bridge source
@@ -428,9 +439,9 @@ The package-side inventory substrate discovers only
 and same-package imports, rejects dynamic import calls and misplaced or invalid
 sources with `SIFR-PYIMP-0002`, and emits a deterministic
 `__sifr_inventory__.json` required in package archives. Source and inventory
-digests are stable build inputs. The public `bridge.*` declaration target stays
-hard-reserved until resolved identities, target rewriting, embedded source
-tables, and the reserved loader activate atomically.
+digests are stable build inputs. Public `bridge.*` declarations are active only
+through the resolved package mapping, embedded source table, and reserved
+loader; there is no ambient distribution fallback for that spelling.
 
 ## Environment And Trust
 

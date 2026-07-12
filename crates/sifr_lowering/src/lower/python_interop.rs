@@ -578,19 +578,46 @@ fn parse_sync_function(
         );
         return None;
     }
-    let target = parse_target_path(&call.arguments.args[0], ctx)?;
+    let mut target = parse_target_path(&call.arguments.args[0], ctx)?;
     if target.root() == Some("bridge") {
-        ctx.error_with_code_at(
-            DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
-            "Python declaration lowering is not active yet: package-local `bridge` targets are reserved"
-                .to_string(),
-            target.span,
+        let authority = ctx
+            .current_module_name
+            .as_deref()
+            .and_then(|module| ctx.python_bridge_authorities.get(module))
+            .cloned();
+        let Some(authority) = authority else {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
+                "package-local `bridge` target has no bridge source in its resolved package"
+                    .to_string(),
+                target.span,
+            );
+            return None;
+        };
+        let target_module_resolves = (2..target.segments.len()).any(|end| {
+            authority
+                .modules
+                .contains(&target.segments[1..end].join("."))
+        });
+        if !target_module_resolves {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYIMP_INVALID_TARGET,
+                format!(
+                    "invalid Python declaration target: package-local bridge target '{}' has no inventoried module",
+                    target.dotted()
+                ),
+                target.span,
+            );
+            return None;
+        }
+        target.segments.splice(
+            0..1,
+            authority.runtime_package.split('.').map(str::to_string),
         );
-        return None;
     }
     let required_import_root = target
         .root()
-        .filter(|root| *root != "Self")
+        .filter(|root| !matches!(*root, "Self" | "__sifr_bridge__"))
         .map(str::to_string);
     Some(PythonInteropDeclaration {
         kind: PythonInteropDecoratorKind::Function,

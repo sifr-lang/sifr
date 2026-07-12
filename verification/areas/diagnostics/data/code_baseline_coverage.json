@@ -1561,6 +1561,19 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": null,
+      "code": "SIFR-PYIMP-0003",
+      "deferral": {
+        "issue": "python-bridge-reserved-collision-rendered-fixture",
+        "owner": "compiler/runtime",
+        "reason": "covered by crates/sifr_runtime/src/python/bridge_loader.rs::loader_is_hermetic_rewrites_imports_and_restores_first_position until generated-binary diagnostics cover reserved bridge collisions",
+        "removal_target": "add a generated-binary reserved sys.modules collision baseline fixture"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-PYCALL-0001",
       "deferral": null,

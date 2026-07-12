@@ -64,6 +64,44 @@ fn sync_wrapper_emits_complete_owned_argument_frame() {
 }
 
 #[test]
+fn resolved_bridge_target_emits_reserved_runtime_lookup() {
+    let mut declaration = declaration();
+    declaration.target = Some(PythonTargetPath {
+        segments: vec![
+            "__sifr_bridge__".to_string(),
+            "p_abc123".to_string(),
+            "adapter".to_string(),
+            "value".to_string(),
+        ],
+        span: TextRange::default(),
+    });
+    declaration.parameters.clear();
+    declaration.required_import_root = None;
+    let function = HirFunction {
+        name: "value".to_string(),
+        params: Vec::new(),
+        return_type: Type::Result(Box::new(Type::Int), Box::new(python_error_type())),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&function, &Default::default())
+            .expect("resolved bridge wrapper should lower"),
+    );
+
+    assert!(rendered.contains("\"__sifr_bridge__\""));
+    assert!(rendered.contains("\"p_abc123\""));
+    assert!(rendered.contains("\"adapter\""));
+}
+
+#[test]
 fn omittable_positional_parameters_are_forwarded_by_name_without_shifting() {
     let mut declaration = declaration();
     declaration.parameters = vec![

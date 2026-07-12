@@ -1,3 +1,4 @@
+use super::python_bridges::embedded_bridge_sources;
 use super::python_runtime::{inject_python_runtime_bootstrap, PackagePythonRuntime};
 use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
 use crate::project::{
@@ -102,7 +103,10 @@ pub(super) fn apply_package_runtime_metadata(
     mut generated: GeneratedBinaryProject,
     python_runtime: Option<PackagePythonRuntime>,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
-    if let Some(metadata) = python_runtime {
+    if let Some(mut metadata) = python_runtime {
+        metadata.set_bridge_sources(embedded_bridge_sources(
+            &generated.interop.python.bridge_packages,
+        ));
         generated
             .required_features
             .insert(StdlibFeature::PythonRuntime);

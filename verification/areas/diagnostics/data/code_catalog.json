@@ -2449,6 +2449,22 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-PYIMP-0003",
+      "constant": "PYIMP_RESERVED_BRIDGE_COLLISION",
+      "docs_link": "docs/errors/SIFR-PYIMP-0003.md",
+      "machine_applicable": false,
+      "owner": "compiler/runtime",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_runtime/src/python/bridge_loader.rs::loader_is_hermetic_rewrites_imports_and_restores_first_position",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-PYCALL-0001",
       "constant": "PYCALL_INVALID_SHAPE",
       "docs_link": "docs/errors/SIFR-PYCALL-0001.md",

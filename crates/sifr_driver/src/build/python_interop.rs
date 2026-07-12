@@ -80,6 +80,10 @@ pub(super) fn apply_python_interop_metadata(
 
     let mut diagnostics = Vec::new();
     for probe in &mut generated.interop.python.target_probes {
+        if probe.target_path.starts_with("__sifr_bridge__.") {
+            probe.status = PythonTargetProbeStatus::RuntimeChecked;
+            continue;
+        }
         match execute_probe(runtime, &probe.target_path) {
             Ok(output) if !output.ok => diagnostics.push(diagnostic_with_code(
                 format!(
@@ -364,6 +368,21 @@ mod tests {
         let runtime = PackagePythonRuntime::for_tests(python(), "probe");
         let generated = apply_python_interop_metadata(project("builtins.dir"), Some(&runtime))
             .expect("uninspectable callable should remain runtime checked");
+        assert_eq!(
+            generated.interop.python.target_probes[0].status,
+            PythonTargetProbeStatus::RuntimeChecked
+        );
+    }
+
+    #[test]
+    fn embedded_bridge_target_skips_external_interpreter_probe() {
+        let runtime = PackagePythonRuntime::for_tests("/definitely/missing/python", "probe");
+        let generated = apply_python_interop_metadata(
+            project("__sifr_bridge__.p_abc123.adapter.value"),
+            Some(&runtime),
+        )
+        .expect("embedded bridge target should be runtime checked by the reserved loader");
+
         assert_eq!(
             generated.interop.python.target_probes[0].status,
             PythonTargetProbeStatus::RuntimeChecked
