@@ -1,0 +1,26 @@
+I have enough context to render a verdict.
+
+## Review of PR #2942 — synchronous Python context milestone closure
+
+### Correctness / evidence coverage (blocking check)
+- **Exact-once `__exit__`** — proved by `failing_exit_poison_releases_manager_once_and_retains_cleanup_error` (`crates/sifr_runtime/src/python/context_ops_tests.rs:125`). Pointer accurate.
+- **Normal / return / break / continue / narrowing / Python-error exit** — driven end-to-end by `context_codegen_smoke.sifr` (marker `total=71`, arithmetic checks out: 0 + 7 + 11 + 13 + 17 + 23). Fixture registered under `library-examples/sqlite-context`.
+- **Suppression only for originating Python exception** — new `originating_python_error_can_be_suppressed_and_exit_runs_once` (`context_ops_tests.rs:277`) asserts `exc_type is Marker and exc_value is ORIGINAL and tb is ORIGINAL.__traceback__` and delivery exactly once. Pointer accurate.
+- **Ordinary Sifr error → canonical `SifrBoundaryError` + non-suppressible + recorded** — new `ordinary_sifr_error_truthy_exit_is_ignored_and_recorded` (`context_ops_tests.rs:227`) checks `cause_kind=='ordinary-error'`, `sifr_type=='ValidationError'`, `message=='invalid value'`, `tb is None`, and evidence row `primary_cause=='ordinary-error:ValidationError'`.
+- **Nested exact-triple replay lifetime** — proved by `python_exception_replay_preserves_exact_triple_across_nested_exits` (`context_ops_tests.rs:12`), including pending-release accounting.
+- **Cleanup-primary / secondary precedence** — new `cleanup_failure_keeps_python_primary_replay_for_outer_exit` (`context_ops_tests.rs:326`) shows Python-primary replay reaches the outer manager after inner cleanup failure, with secondary attached.
+- **Never-entered context-only obligation rejection** — new `context_only_obligation_rejects_value_that_is_never_entered` (`python_context_expression_tests.rs:43`) asserts the exact new phrase "must be consumed by \`with\` before function exit" for `MustUseObligationKind::ContextOnly`. Diagnostic differentiation in `annotations_and_function_lowering.rs:829-846` is correct and covers `AsyncContextOnly` and `CloseLike` too.
+- **Negative entered-value ownership cases** — pre-existing `python_context_expression_tests` and `python_interop_tests` still cover escape / walrus / discard / move / aggregate hiding / distinct-close-required cases.
+- **Canonical non-Python cause labels** — `SifrExitCauseKind` covers `OrdinaryError`, `Timeout`, `Cancellation`, `RuntimeFault` with canonical labels; the previous non-canonical `"DeadlineExceeded"` primary cause has been rekeyed to `"timeout:TimeoutError"`.
+- **Capability / evidence docs** — `declaration_capabilities.json` flips `sync-context` to `active` with all four required evidence rows moved to `passing` and owner strings that name real files; `internal_docs/python_interop_protocol_architecture.md` gets a matching implementation-status paragraph; `sync_context_evidence.json` is validated by a new `validate_sync_context_evidence` in `run.py` with an inline missing-cause self-test.
+- **Guardrails** — as reported, local `run_all_tests.sh --profile create-pr` was green (130/130 E2E) and file-size / HIR / taxonomy / `git diff --check` re-passed after the demos placement fix.
+
+No blocking correctness, regression, or evidence-fidelity issues found.
+
+### Non-blocking optional suggestions (do not gate closure)
+1. **Optional: strengthen the outcome-matrix pointer for the "timeout, cancellation, or runtime fault" row.** The row in `sync_context_evidence.json` cites `sifr_codegen::…::cause_classification_uses_canonical_resolved_types`, which only proves that `TimeoutError` / `CancellationError` / a plain class resolve to the right label strings — it does not verify the row's `exit_arguments` (`SifrBoundaryError`, structured cause, `None`) or the `truthy_effect` ("ignored and recorded; original cause remains primary"). Those semantics are, however, proved for the `Timeout` kind by the pre-existing `normal_and_sifr_exit_calls_translate_truthiness_and_boundary_metadata` and, for "ignored and recorded", by the newly rekeyed `ignored_non_python_suppression_is_structured_cleanup_evidence`. Adding those two tests to the row's `evidence` string (and, optionally, a `RuntimeFault`-labeled classification assertion) would tighten the pointer without changing behavior.
+2. **Optional: check the wave-5 and M5 milestone boxes.** `plans/issues/active/ad-hoc-declaration-first-python-interop.md:142` (`- [ ] M5 …`) and `:343` (`- [ ] Complete evidence matrices, transaction demo, and milestone closure`) remain unchecked in this closure PR; round-1 and round-2 already flagged this as workflow tidy-up. Purely docs.
+3. **Optional: move the round-1 and round-2 review records out of `plans/reviews/active/`.** They belong in a completed/history bucket after the closure PR merges.
+4. **Optional: the `demos/m5_demo/README.md` file is a pointer to a fixture rather than a runnable demo directory.** That's a deliberate placement to satisfy the workflow-required `demos/m5_demo` presence, but if any tooling walks `demos/` expecting `.sifr` sources it will find none here; a short symlink or a one-line `main.sifr` re-export could future-proof this.
+
+VERDICT: SATISFIED
