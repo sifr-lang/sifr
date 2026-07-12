@@ -13,19 +13,17 @@ This is not Python source compatibility and it is not a generic `dlopen` layer. 
 The root application owns the Python environment. Sifr verifies and consumes that environment; it does not run `uv sync`, install packages, or fall back to host-global Python.
 
 ```toml
-[python]
-venv = ".venv"
-pyproject = "pyproject.toml"
-lock = "uv.lock"
-interpreter = ".venv/bin/python"
-allow-imports = ["pandas", "pyarrow", "torch", "httpx"]
-
 [trust]
 python = ["pandas", "pyarrow", "torch", "httpx"]
 python-native = ["numpy", "pyarrow", "torch"]
 ```
 
-`interpreter` is optional when the platform-standard interpreter path under `venv` is correct. `pyproject` and `lock` are cache and diagnostic inputs; the live interpreter probe remains the source of truth.
+For a normal uv project, Sifr discovers the nearest ancestor containing both
+`pyproject.toml` and `uv.lock`, then uses its `.venv` and platform-standard
+interpreter. Non-standard layouts can override `venv`, `pyproject`, `lock`, or
+`interpreter` in the root `[python]` table. Sifr runs read-only
+`uv lock --check --offline` validation and probes the live interpreter; it
+never creates, synchronizes, or mutates the environment.
 
 Library packages may declare the import roots they require, but they do not choose the interpreter or virtual environment:
 
@@ -34,7 +32,15 @@ Library packages may declare the import roots they require, but they do not choo
 requires-imports = ["polars"]
 ```
 
-Sifr rejects package graphs that need Python but have no root-selected environment, graphs that select multiple virtual environments, non-CPython interpreters, free-threaded CPython, stale or missing project metadata, missing declared imports, and trusted native roots that fail to load.
+`requires-imports` is only for raw or dynamic library imports whose roots cannot
+be derived from static declarations or package-local bridge imports. Sifr
+normalizes all requirement contributions into one per-root set while retaining
+every source for diagnostics.
+
+Sifr rejects package graphs whose uv environment is missing, dependency
+packages that attempt to select or authorize an environment, non-CPython
+interpreters, free-threaded CPython, stale or missing project metadata, missing
+required imports, and trusted native roots that fail to load.
 
 ## Trust Boundary
 
@@ -42,14 +48,16 @@ Python import roots and native extension roots are separate trust decisions.
 
 | Key | Meaning |
 | --- | --- |
-| `[python].allow-imports` | Roots Sifr source may import or call dynamically after trust checks. |
-| `[python].requires-imports` | Roots a library requires the final app to provide. |
-| `[trust].python` | Roots allowed to execute Python code in process. |
+| `[python].requires-imports` | Underivable raw/dynamic roots a package requires the final app to provide. |
+| `[trust].python` | Root-owned authorization to execute required Python roots. |
 | `[trust].python-native` | Roots allowed to load native Python extension modules in process. |
 
 Native Python extensions can abort the process, create threads, release the GIL, or call back into Python/Sifr. That is the explicit trust boundary exception to Sifr-attributable no-panic guarantees.
 
-Root applications may use wildcard Python trust during local control. Published dependency packages cannot rely on wildcard Python trust roots.
+Root applications may use wildcard Python trust during local control.
+Dependency packages may publish requirements, but cannot select an environment
+or authorize Python or native-extension execution. Native trust for a root that
+is not required is rejected as stale policy.
 
 ## Runtime Semantics
 
@@ -312,7 +320,9 @@ Credentialed or service-backed behavior belongs in the external Python interop g
 Compiler diagnostics use stable URLs and structured JSON fields:
 
 - `SIFR-PYENV-0001..0011`: environment selection, probing, interpreter, ABI, import, native-load, and metadata diagnostics.
-- `SIFR-PYTRUST-0001..0004`: Python trust policy and dynamic import diagnostics.
+- `SIFR-PYTRUST-0001`, `0003..0005`: dependency wildcard rejection,
+  stale native trust, dynamic-import annotation, and unauthorized required-root
+  diagnostics. `SIFR-PYTRUST-0002` is retired.
 - `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, and `SIFR-PYCB`: reserved families for future compiler-emitted diagnostics; current runtime failures in these areas are returned as structured `py.PythonError` values.
 
 Verification lives under `verification/areas/python_interop/`:

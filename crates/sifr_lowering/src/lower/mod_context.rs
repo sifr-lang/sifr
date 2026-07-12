@@ -336,7 +336,7 @@ impl LowerCtx {
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct PythonTrustPolicy {
-    pub allowed_import_roots: Vec<String>,
+    pub required_import_roots: Vec<String>,
     pub trusted_import_roots: Vec<String>,
 }
 

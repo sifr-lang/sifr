@@ -125,9 +125,9 @@ The `PYTRUST` family covers import-root and native-extension trust policy for em
 | Code | Severity | Description |
 |------|----------|-------------|
 | [`SIFR-PYTRUST-0001`](/errors/SIFR-PYTRUST-0001) | Error | Dependency package declares a wildcard Python trust root. |
-| [`SIFR-PYTRUST-0002`](/errors/SIFR-PYTRUST-0002) | Error | Python import root is not trusted by package policy. |
-| [`SIFR-PYTRUST-0003`](/errors/SIFR-PYTRUST-0003) | Error | Native Python import root is trusted without an allow-imports entry. |
+| [`SIFR-PYTRUST-0003`](/errors/SIFR-PYTRUST-0003) | Error | Native Python import root is trusted but not required. |
 | [`SIFR-PYTRUST-0004`](/errors/SIFR-PYTRUST-0004) | Error | Dynamic Python import requires an explicit trust annotation. |
+| [`SIFR-PYTRUST-0005`](/errors/SIFR-PYTRUST-0005) | Error | Required Python import root is not authorized by the root application. |
 
 <Note>
 The `PYIMP`, `PYCALL`, `PYCONV`, `PYRES`, `PYZC`, and `PYCB` families are reserved for future compiler-emitted Python interop diagnostics. Current runtime failures in those areas are returned as structured `PythonError` values.

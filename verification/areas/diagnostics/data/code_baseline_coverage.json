@@ -1552,16 +1552,6 @@
     },
     {
       "baseline_fixture_id": "package_library_diagnostic_rules_cases",
-      "code": "SIFR-PYTRUST-0002",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
-      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PYTRUST-0003",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -1573,6 +1563,16 @@
     {
       "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-PYTRUST-0004",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "package_library_diagnostic_rules_cases",
+      "code": "SIFR-PYTRUST-0005",
       "deferral": null,
       "multi_error_recovery_fixture": null,
       "renderer_formats": [

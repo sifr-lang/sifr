@@ -52,7 +52,6 @@ pub struct PythonConfig {
     pub pyproject: Option<PathBuf>,
     pub lock: Option<PathBuf>,
     pub interpreter: Option<PathBuf>,
-    pub allow_imports: Vec<String>,
     pub requires_imports: Vec<String>,
 }
 

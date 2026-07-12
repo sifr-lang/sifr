@@ -108,7 +108,11 @@ Sifr does not resolve Python dependencies. Python packages are installed by the 
 requires-imports = ["pydantic", "httpx"]
 ```
 
-The root application must select one `[python].venv`, allow the required import roots, and trust the Python and native-extension roots it is willing to execute in process. See [Embedded Python Interop](/python-interop).
+For normal uv layout, Sifr discovers the root project's `pyproject.toml`,
+`uv.lock`, `.venv`, and interpreter. The root application must authorize every
+required import root, and separately authorize native-extension roots it is
+willing to execute in process. Dependencies cannot select or authorize the
+environment. See [Embedded Python Interop](/python-interop).
 
 ## Cross-package imports and public APIs
 

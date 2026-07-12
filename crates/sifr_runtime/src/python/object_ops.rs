@@ -391,9 +391,9 @@ fn validate_import_policy(name: &str) -> Result<(), PythonError> {
         .filter(|part| !part.is_empty())
         .ok_or_else(|| PythonError::trust("Python import name is empty", "import root"))?;
     let config = runtime_config().map_err(PythonError::runtime)?;
-    if !contains_root(&config.allowed_import_roots, root) {
+    if !contains_root(&config.required_import_roots, root) {
         return Err(PythonError::trust(
-            format!("Python import root '{root}' is not listed in [python].allow-imports"),
+            format!("Python import root '{root}' is not in the canonical requirement set"),
             name,
         ));
     }

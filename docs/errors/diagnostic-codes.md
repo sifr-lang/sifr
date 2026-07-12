@@ -241,9 +241,9 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYENV-0010`](SIFR-PYENV-0010.md) | Error | Free-threaded CPython is not supported for embedded interop. |
 | [`SIFR-PYENV-0011`](SIFR-PYENV-0011.md) | Error | Configured Python project or lockfile is missing or stale. |
 | [`SIFR-PYTRUST-0001`](SIFR-PYTRUST-0001.md) | Error | Dependency package declares a wildcard Python trust root. |
-| [`SIFR-PYTRUST-0002`](SIFR-PYTRUST-0002.md) | Error | Python import root is not trusted by package policy. |
-| [`SIFR-PYTRUST-0003`](SIFR-PYTRUST-0003.md) | Error | Native Python import root is trusted without an allow-imports entry. |
+| [`SIFR-PYTRUST-0003`](SIFR-PYTRUST-0003.md) | Error | Native Python import root is trusted but not required. |
 | [`SIFR-PYTRUST-0004`](SIFR-PYTRUST-0004.md) | Error | Dynamic Python import requires an explicit trust annotation. |
+| [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.md) | Error | Required Python import root is not authorized by the root application. |
 | [`SIFR-RUST-CONFIG-0001`](SIFR-RUST-CONFIG-0001.md) | Error | Rust interop decorator syntax is malformed. |
 | [`SIFR-RUST-RESOLVE-0001`](SIFR-RUST-RESOLVE-0001.md) | Error | Rust interop target root cannot be resolved. |
 | [`SIFR-RUST-TRUST-0001`](SIFR-RUST-TRUST-0001.md) | Error | Rust interop trust declaration is missing. |
@@ -274,6 +274,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-PYZC-0000` | `PYZC` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-PYCB-0000` | `PYCB` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-PYTRUST-0000` | `PYTRUST` | Reserved family base; not emitted as a diagnostic. |
+| `SIFR-PYTRUST-0002` | `PYTRUST` | Retired: import requirements and root authorization now use SIFR-PYTRUST-0005. |
 | `SIFR-RUST-CONFIG-0000` | `RUST-CONFIG` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-RUST-RESOLVE-0000` | `RUST-RESOLVE` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-RUST-TRUST-0000` | `RUST-TRUST` | Reserved family base; not emitted as a diagnostic. |

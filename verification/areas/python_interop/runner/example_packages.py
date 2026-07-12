@@ -205,7 +205,9 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
                 "",
                 "[python]",
                 'venv = ".venv"',
-                f"allow-imports = [{roots}]",
+                'pyproject = "pyproject.toml"',
+                'lock = "uv.lock"',
+                f"requires-imports = [{roots}]",
                 "",
                 "[trust]",
                 f"python = [{roots}]",
@@ -223,6 +225,8 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
             "run through `uv run --project verification/areas/python_interop --locked ...`"
         )
     venv_link.symlink_to(area_venv, target_is_directory=True)
+    (package_root / "pyproject.toml").symlink_to(paths.area_root / "pyproject.toml")
+    (package_root / "uv.lock").symlink_to(paths.area_root / "uv.lock")
     return package_root
 
 

@@ -43,8 +43,8 @@
   ],
   "trust_cases": [
     {
-      "name": "static_allowed_and_trusted_import",
-      "allow_imports": ["math"],
+      "name": "static_required_and_root_authorized_import",
+      "requires_imports": ["math"],
       "trust_python": ["math"],
       "expected": "accepted"
     },
@@ -56,28 +56,27 @@
     },
     {
       "name": "dynamic_root_runtime_rejection_after_annotation",
-      "allow_imports": ["math"],
+      "requires_imports": ["math"],
       "trust_python": ["math"],
       "annotation": "trust_python_dynamic",
       "runtime_import": "json",
       "expected_diagnostic": "SIFR-PYTRUST"
     },
     {
-      "name": "dependency_wildcard_rejection",
-      "allow_imports": ["*"],
-      "trust_python": ["*"],
+      "name": "dependency_requirement_wildcard_rejection",
+      "requires_imports": ["*"],
       "package_kind": "dependency",
       "expected_diagnostic": "SIFR-PYTRUST-0001"
     },
     {
       "name": "root_wildcard_allowed",
-      "allow_imports": ["*"],
+      "requires_imports": ["*"],
       "trust_python": ["*"],
       "package_kind": "root",
       "expected": "accepted"
     },
     {
-      "name": "native_root_requires_allow_imports",
+      "name": "native_root_requires_canonical_requirement",
       "trust_python_native": ["numpy"],
       "expected_diagnostic": "SIFR-PYTRUST-0003"
     }

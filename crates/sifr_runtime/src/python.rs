@@ -68,7 +68,7 @@ pub struct PythonRuntimeConfig {
     pub cpython_version_tuple: Vec<u64>,
     pub sys_path: Vec<String>,
     pub site_packages: Vec<String>,
-    pub allowed_import_roots: Vec<String>,
+    pub required_import_roots: Vec<String>,
     pub trusted_import_roots: Vec<String>,
     pub native_import_roots: Vec<String>,
     pub trusted_native_roots: Vec<String>,
@@ -575,7 +575,7 @@ print(os.pathsep.join(sys.path))
         cpython_version_tuple: version,
         sys_path,
         site_packages: Vec::new(),
-        allowed_import_roots: vec![
+        required_import_roots: vec![
             "asyncio".to_string(),
             "builtins".to_string(),
             "contextlib".to_string(),
@@ -803,7 +803,7 @@ mod tests {
         reset_runtime_state_for_tests();
         let mut config = test_config("import-failure");
         config
-            .allowed_import_roots
+            .required_import_roots
             .push("sifr_missing_py3_module".to_string());
         config
             .trusted_import_roots

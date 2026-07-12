@@ -67,14 +67,14 @@ fn static_python_import_literal_uses_package_trust_policy() {
     let errors = lower_errors(
         &source,
         Some(PythonTrustPolicy {
-            allowed_import_roots: vec!["math".to_string()],
+            required_import_roots: vec!["math".to_string()],
             trusted_import_roots: vec!["math".to_string()],
         }),
     );
 
     assert!(errors
         .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT)));
+        .any(|error| error.code == Some(DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED)));
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn static_python_import_literal_without_policy_is_rejected() {
 
     assert!(errors
         .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT)));
+        .any(|error| error.code == Some(DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED)));
 }
 
 #[test]
@@ -97,7 +97,7 @@ fn static_python_import_literal_accepts_root_wildcard_policy() {
         &python_externals(),
         LoweringOptions {
             python_trust_policy: Some(PythonTrustPolicy {
-                allowed_import_roots: vec!["*".to_string()],
+                required_import_roots: vec!["*".to_string()],
                 trusted_import_roots: vec!["*".to_string()],
             }),
             ..LoweringOptions::default()

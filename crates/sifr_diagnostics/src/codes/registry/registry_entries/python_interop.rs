@@ -36,7 +36,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "PYENV",
         "A package graph requires Python but no root environment is selected.",
         Severity::Error,
-        "crates/sifr_package/src/python/tests.rs::missing_python_environment_selection_reports_pyenv_0003",
+        "crates/sifr_package/src/python/tests.rs::missing_uv_environment_selection_reports_pyenv_0003",
         "Python imports are required but no Python environment is selected",
         "sifr_package::python",
         [json_arg!("package_ids"), json_arg!("imports")],
@@ -144,30 +144,19 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "PYTRUST",
         "Dependency package declares a wildcard Python trust root.",
         Severity::Error,
-        "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_rejects_wildcard_roots",
+        "crates/sifr_package/src/python/trust_policy_tests.rs::dependency_python_requirement_wildcard_is_rejected",
         "Python wildcard import root is rejected",
         "sifr_package::python",
         [json_arg!("cargo_package_id")],
         ["cargo_package_id"]
     ),
     active_entry!(
-        "SIFR-PYTRUST-0002",
-        "PYTRUST",
-        "Python import root is not trusted by package policy.",
-        Severity::Error,
-        "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_allowed_roots_to_be_trusted",
-        "Python import root is allowed but not trusted: {import_root}",
-        "sifr_package::python",
-        [arg!("import_root")],
-        ["import_root"]
-    ),
-    active_entry!(
         "SIFR-PYTRUST-0003",
         "PYTRUST",
-        "Native Python import root is trusted without an allow-imports entry.",
+        "Native Python import root is trusted but not required.",
         Severity::Error,
-        "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_native_roots_to_be_allowed",
-        "native Python import root is trusted without an allow-imports entry: {import_root}",
+        "crates/sifr_package/src/python/trust_policy_tests.rs::native_trust_requires_a_canonical_requirement",
+        "native Python import root is trusted but not required: {import_root}",
         "sifr_package::python",
         [arg!("import_root")],
         ["import_root"]
@@ -182,5 +171,16 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "sifr_lowering",
         [],
         []
+    ),
+    active_entry!(
+        "SIFR-PYTRUST-0005",
+        "PYTRUST",
+        "Required Python import root is not authorized by the root application.",
+        Severity::Error,
+        "crates/sifr_package/src/python/trust_policy_tests.rs::required_python_root_must_be_authorized_by_root",
+        "required Python import root is not authorized by the root application: {import_root}",
+        "sifr_package::python",
+        [arg!("import_root")],
+        ["import_root"]
     ),
 ];

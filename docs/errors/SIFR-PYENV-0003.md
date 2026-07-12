@@ -11,6 +11,6 @@ A package graph requires Python but no root environment is selected.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `Python imports are required but no Python environment is selected` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::missing_python_environment_selection_reports_pyenv_0003` |
+| Representative fixture | `crates/sifr_package/src/python/tests.rs::missing_uv_environment_selection_reports_pyenv_0003` |
 | Declared args | `package_ids (json-only)`, `imports (json-only)` |
 | Dedupe args | `package_ids`, `imports` |

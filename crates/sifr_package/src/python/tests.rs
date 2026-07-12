@@ -5,7 +5,9 @@ use super::{
 };
 use crate::manifest::sifr::{PythonConfig, SifrManifest, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;
+use std::fs;
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[test]
 fn invalid_python_manifest_config_reports_pyenv_0001() {
@@ -41,19 +43,76 @@ sifr-version = ">=0.3,<0.4"
 }
 
 #[test]
-fn missing_python_environment_selection_reports_pyenv_0003() {
-    let graph = graph(vec![package(
+fn removed_python_allow_imports_key_is_rejected() {
+    let source = r#"
+[package]
+name = "app"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[python]
+allow-imports = ["numpy"]
+"#;
+    let diagnostic = SifrManifest::parse(&cargo_id("app"), &PathBuf::from("sifr.toml"), source)
+        .expect_err("removed authority must not be ignored");
+
+    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_INVALID_CONFIG);
+    assert!(diagnostic.message.contains("allow-imports"));
+}
+
+#[test]
+fn python_environment_uses_uv_project_defaults_without_repeated_paths() {
+    let project_root = temp_root("default-discovery");
+    fs::create_dir_all(&project_root).expect("create uv project");
+    fs::write(project_root.join("pyproject.toml"), "[project]\n").expect("write project marker");
+    fs::write(project_root.join("uv.lock"), "version = 1\n").expect("write lock marker");
+    let mut app = package(
         "app",
         PythonConfig {
             requires_imports: vec!["numpy".to_string()],
             ..PythonConfig::default()
         },
-        TrustPolicy::default(),
-    )]);
+        TrustPolicy {
+            python: vec!["numpy".to_string()],
+            ..TrustPolicy::default()
+        },
+    );
+    app.package_root.clone_from(&project_root);
+    let graph = graph(vec![app]);
 
     let root = package_id("app");
-    let diagnostics =
-        resolve_python_environment(&graph, &root).expect_err("missing venv must fail");
+    let resolved = resolve_python_environment(&graph, &root)
+        .expect("default discovery should resolve")
+        .expect("Python is required");
+
+    assert_eq!(resolved.venv_root, project_root.join(".venv"));
+    assert_eq!(
+        resolved.pyproject,
+        Some(project_root.join("pyproject.toml"))
+    );
+    assert_eq!(resolved.lock, Some(project_root.join("uv.lock")));
+    assert_eq!(resolved.interpreter, project_root.join(".venv/bin/python"));
+    fs::remove_dir_all(project_root).expect("remove uv project");
+}
+
+#[test]
+fn missing_uv_environment_selection_reports_pyenv_0003() {
+    let mut app = package(
+        "app",
+        PythonConfig {
+            requires_imports: vec!["numpy".to_string()],
+            ..PythonConfig::default()
+        },
+        TrustPolicy {
+            python: vec!["numpy".to_string()],
+            ..TrustPolicy::default()
+        },
+    );
+    app.package_root = temp_root("missing-discovery");
+    let graph = graph(vec![app]);
+
+    let diagnostics = resolve_python_environment(&graph, &package_id("app"))
+        .expect_err("missing uv project must fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, DiagnosticCode::PYENV_MISSING_SELECTION);
@@ -97,7 +156,7 @@ fn python_environment_resolution_deduplicates_declared_roots() {
             "app",
             PythonConfig {
                 venv: Some(PathBuf::from(".venv")),
-                allow_imports: vec!["numpy".to_string(), "pandas".to_string()],
+                requires_imports: vec!["numpy".to_string(), "pandas".to_string()],
                 ..PythonConfig::default()
             },
             TrustPolicy {
@@ -130,7 +189,7 @@ fn python_environment_resolution_deduplicates_declared_roots() {
         ["numpy", "pandas", "pyarrow"].map(str::to_string)
     );
     assert_eq!(
-        resolved.allowed_imports,
+        resolved.required_imports,
         ["numpy", "pandas", "pyarrow"].map(str::to_string)
     );
     assert_eq!(
@@ -146,8 +205,10 @@ fn same_root_python_environment_selection_resolves_once() {
     let graph = graph(vec![package(
         "app",
         PythonConfig {
-            venv: Some(PathBuf::from(".venv")),
-            interpreter: Some(PathBuf::from(".venv/bin/python")),
+            venv: Some(PathBuf::from(".python-env")),
+            interpreter: Some(PathBuf::from(".python-env/custom-python")),
+            pyproject: Some(PathBuf::from("python/pyproject.toml")),
+            lock: Some(PathBuf::from("python/uv.lock")),
             ..PythonConfig::default()
         },
         TrustPolicy::default(),
@@ -159,7 +220,16 @@ fn same_root_python_environment_selection_resolves_once() {
         .expect("environment should be selected");
 
     assert_eq!(resolved.selected_by, root);
-    assert_eq!(resolved.venv_root, PathBuf::from("/ws/app/.venv"));
+    assert_eq!(resolved.venv_root, PathBuf::from("/ws/app/.python-env"));
+    assert_eq!(
+        resolved.interpreter,
+        PathBuf::from("/ws/app/.python-env/custom-python")
+    );
+    assert_eq!(
+        resolved.pyproject,
+        Some(PathBuf::from("/ws/app/python/pyproject.toml"))
+    );
+    assert_eq!(resolved.lock, Some(PathBuf::from("/ws/app/python/uv.lock")));
 }
 
 #[test]
@@ -190,6 +260,17 @@ fn probe_rejects_missing_interpreter_with_pyenv_0004() {
     let diagnostic = probe_python_environment(&request).expect_err("missing interpreter must fail");
 
     assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);
+}
+
+fn temp_root(label: &str) -> PathBuf {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after epoch")
+        .as_nanos();
+    std::env::temp_dir().join(format!(
+        "sifr-python-{label}-{}-{nonce}",
+        std::process::id()
+    ))
 }
 
 #[test]

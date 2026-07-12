@@ -1,24 +1,64 @@
 use crate::diag::PackageDiagnostic;
 use crate::python::PythonEnvironmentProbeRequest;
 use sifr_diagnostics::DiagnosticCode;
+use std::path::Path;
 use std::process::Command;
 
-pub(crate) fn run_python_probe_command(
+pub(crate) fn validate_python_interpreter_exists(
     request: &PythonEnvironmentProbeRequest,
-    declared_imports_json: String,
-    native_imports_json: String,
-) -> Result<Vec<u8>, PackageDiagnostic> {
-    if !request.interpreter.is_file() {
-        return Err(probe_error(
+) -> Result<(), PackageDiagnostic> {
+    if request.interpreter.is_file() {
+        Ok(())
+    } else {
+        Err(probe_error(
             DiagnosticCode::PYENV_PROBE_FAILED,
             request,
             format!(
                 "selected Python interpreter '{}' does not exist",
                 request.interpreter.display()
             ),
-            "create or sync the configured virtual environment before running Sifr",
-        ));
+            "create or sync the uv environment before running Sifr",
+        ))
     }
+}
+
+pub(crate) fn run_uv_lock_check(
+    request: &PythonEnvironmentProbeRequest,
+    project_root: &Path,
+) -> Result<(), PackageDiagnostic> {
+    let output = Command::new("uv")
+        .args(["lock", "--check", "--offline", "--project"])
+        .arg(project_root)
+        .output()
+        .map_err(|error| uv_lock_check_spawn_error(request, error))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(stale_metadata_error(
+            request,
+            format!(
+                "uv reports the project and lock are inconsistent: {}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            ),
+        ))
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn generate_uv_lock_for_test(project_root: &Path) -> Option<std::process::ExitStatus> {
+    Command::new("uv")
+        .args(["lock", "--offline", "--project"])
+        .arg(project_root)
+        .status()
+        .ok()
+}
+
+pub(crate) fn run_python_probe_command(
+    request: &PythonEnvironmentProbeRequest,
+    declared_imports_json: String,
+    native_imports_json: String,
+) -> Result<Vec<u8>, PackageDiagnostic> {
+    validate_python_interpreter_exists(request)?;
 
     let output = Command::new(&request.interpreter)
         .arg("-I")
@@ -72,6 +112,62 @@ fn probe_error(
         message,
         help,
     )
+}
+
+fn stale_metadata_error(
+    request: &PythonEnvironmentProbeRequest,
+    reason: impl Into<String>,
+) -> PackageDiagnostic {
+    probe_error(
+        DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
+        request,
+        format!("Python environment metadata is stale: {}", reason.into()),
+        "run `uv sync` for the configured project; Sifr will not run uv automatically",
+    )
+}
+
+fn uv_lock_check_spawn_error(
+    request: &PythonEnvironmentProbeRequest,
+    error: std::io::Error,
+) -> PackageDiagnostic {
+    if error.kind() == std::io::ErrorKind::NotFound {
+        probe_error(
+            DiagnosticCode::PYENV_PROBE_FAILED,
+            request,
+            "could not execute uv because it is not installed or not available on PATH",
+            "install uv and ensure the `uv` executable is available on PATH",
+        )
+    } else {
+        stale_metadata_error(
+            request,
+            format!("could not execute `uv lock --check --offline`: {error}"),
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_uv_executable_is_a_probe_failure_not_stale_metadata() {
+        let request = PythonEnvironmentProbeRequest {
+            venv_root: "/tmp/venv".into(),
+            interpreter: "/tmp/venv/bin/python".into(),
+            pyproject: None,
+            lock: None,
+            required_imports: Vec::new(),
+            declared_imports: Vec::new(),
+            native_imports: Vec::new(),
+        };
+        let diagnostic = uv_lock_check_spawn_error(
+            &request,
+            std::io::Error::new(std::io::ErrorKind::NotFound, "uv missing"),
+        );
+
+        assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);
+        assert!(diagnostic.message.contains("not installed"));
+    }
 }
 
 const PROBE_SCRIPT: &str = r#"
