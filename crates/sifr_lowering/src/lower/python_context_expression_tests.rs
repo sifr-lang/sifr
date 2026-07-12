@@ -40,6 +40,22 @@ fn has_context_borrow_error(errors: &[HirDiagnostic]) -> bool {
 }
 
 #[test]
+fn context_only_obligation_rejects_value_that_is_never_entered() {
+    let errors = lower_errors(&format!(
+        "{CONTEXT_OPAQUE_PREFIX}\ndef abandon() -> Result[None, PythonError]:\n    try:\n        transaction: Transaction = make_transaction()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error
+                    .message
+                    .contains("must be consumed by `with` before function exit")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
 fn python_context_entered_borrow_cannot_escape_through_walrus() {
     let errors = lower_errors(&format!(
         "{CONTEXT_OPAQUE_PREFIX}\ndef invalid_alias() -> Result[Transaction, PythonError]:\n    try:\n        with make_transaction() as transaction:\n            (alias := transaction)\n            return alias\n    except PythonError as error:\n        raise error\n"

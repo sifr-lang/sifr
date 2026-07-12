@@ -12,6 +12,9 @@ class Connection:
     @python.attr(Self.total_changes)
     def total_changes(self) -> Result[int, PythonError]: ...
 
+    @python.attr(Self.sifr_missing_attr)
+    def missing(self) -> Result[int, PythonError]: ...
+
 
 @python(sqlite3.connect)
 def connect(database: str) -> Result[Connection, PythonError]: ...
@@ -83,6 +86,16 @@ def let_else_return(maybe: int | None) -> Result[int, PythonError]:
         raise error
 
 
+def python_error_transaction() -> Result[int, PythonError]:
+    try:
+        with connect(":memory:") as connection:
+            missing: int = connection.missing()
+        return 0
+    except PythonError as error:
+        print(error.exception_type)
+        return 23
+
+
 def main() -> None:
     try:
         no_return_transaction()
@@ -91,7 +104,8 @@ def main() -> None:
         broken: int = break_from_transaction()
         continued: int = continue_from_transaction()
         narrowed: int = let_else_return(None)
-        total: int = value + returned + broken + continued + narrowed
+        failed: int = python_error_transaction()
+        total: int = value + returned + broken + continued + narrowed + failed
         print(f"sifr-python-interop:sqlite-context:total={total}")
     except PythonError as error:
         print(error.message)

@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "capability": "sync-context",
+  "surface": "@python.context.enter and @python.context.exit",
+  "outcome_matrix": [
+    {
+      "cause": "normal",
+      "exit_arguments": ["None", "None", "None"],
+      "truthy_effect": "ignored",
+      "evidence": "context_codegen_smoke.sifr::use_transaction and no_return_transaction"
+    },
+    {
+      "cause": "return",
+      "exit_arguments": ["None", "None", "None"],
+      "truthy_effect": "return preserved",
+      "evidence": "context_codegen_smoke.sifr::return_from_transaction and let_else_return"
+    },
+    {
+      "cause": "break",
+      "exit_arguments": ["None", "None", "None"],
+      "truthy_effect": "break preserved",
+      "evidence": "context_codegen_smoke.sifr::break_from_transaction"
+    },
+    {
+      "cause": "continue",
+      "exit_arguments": ["None", "None", "None"],
+      "truthy_effect": "continue preserved",
+      "evidence": "context_codegen_smoke.sifr::continue_from_transaction"
+    },
+    {
+      "cause": "originating Python exception",
+      "exit_arguments": ["original type", "original value", "original traceback"],
+      "truthy_effect": "suppresses only that Python error",
+      "evidence": "context_codegen_smoke.sifr::python_error_transaction and sifr_runtime::python::context_ops_tests::originating_python_error_can_be_suppressed_and_exit_runs_once"
+    },
+    {
+      "cause": "ordinary Sifr error",
+      "exit_arguments": ["SifrBoundaryError", "structured public cause", "None"],
+      "truthy_effect": "ignored and recorded",
+      "evidence": "sifr_runtime::python::context_ops_tests::ordinary_sifr_error_truthy_exit_is_ignored_and_recorded"
+    },
+    {
+      "cause": "timeout, cancellation, or runtime fault",
+      "exit_arguments": ["SifrBoundaryError", "classified structured cause", "None"],
+      "truthy_effect": "ignored and recorded; original cause remains primary",
+      "evidence": "sifr_codegen::stmt_support_emitter::python_context_tests::cause_classification_uses_canonical_resolved_types"
+    }
+  ],
+  "cleanup_matrix": [
+    {
+      "case": "normal exit failure",
+      "expected": "cleanup PythonError is primary and manager is poisoned/released once",
+      "evidence": "sifr_runtime::python::context_ops_tests::failing_exit_poison_releases_manager_once_and_retains_cleanup_error"
+    },
+    {
+      "case": "Python primary plus cleanup failure",
+      "expected": "original replay remains primary and cleanup is secondary evidence",
+      "evidence": "sifr_runtime::python::context_ops_tests::cleanup_failure_keeps_python_primary_replay_for_outer_exit"
+    },
+    {
+      "case": "nested Python replay",
+      "expected": "each manager receives the exact triple and the final replay owner releases once",
+      "evidence": "sifr_runtime::python::context_ops_tests::python_exception_replay_preserves_exact_triple_across_nested_exits"
+    }
+  ],
+  "negative_matrix": [
+    {
+      "case": "context obligation abandoned",
+      "diagnostic": "SIFR-OWN-0001",
+      "evidence": "sifr_lowering::lower::python_context_expression_tests::context_only_obligation_rejects_value_that_is_never_entered"
+    },
+    {
+      "case": "entered opaque borrow escapes, moves, closes, aliases, or is discarded",
+      "diagnostic": "SIFR-PYCTX-0001",
+      "evidence": "sifr_lowering::lower::python_context_expression_tests and python_interop_tests"
+    },
+    {
+      "case": "distinct entered opaque result requires non-drop cleanup",
+      "diagnostic": "SIFR-PYCTX-0001",
+      "evidence": "sifr_lowering::lower::python_interop_tests::context_enter_rejects_distinct_close_required_opaque_result and context_enter_rejects_aggregate_hiding_close_required_opaque_result"
+    }
+  ],
+  "live_example": {
+    "source": "sqlite_context/context_codegen_smoke.sifr",
+    "runner": "library-examples/sqlite-context",
+    "stdout_marker": "sifr-python-interop:sqlite-context:total=71"
+  }
+}
