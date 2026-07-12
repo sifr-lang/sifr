@@ -82,6 +82,7 @@ mod min_max_validation;
 mod mod_impl;
 mod module_constants_lowering;
 mod module_function_registry;
+mod must_use_obligations;
 mod mutating_methods;
 mod name_diagnostics;
 #[cfg(test)]

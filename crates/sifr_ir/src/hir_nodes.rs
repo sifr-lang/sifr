@@ -36,6 +36,7 @@ pub enum HirClassKind {
     Regular,
     Protocol,
     Enum,
+    PythonOpaque(PythonInteropDeclaration),
 }
 
 /// A class definition with resolved types.
@@ -77,6 +78,13 @@ impl HirClass {
 
     pub fn is_enum(&self) -> bool {
         matches!(self.kind, HirClassKind::Enum)
+    }
+
+    pub fn python_opaque_declaration(&self) -> Option<&PythonInteropDeclaration> {
+        match &self.kind {
+            HirClassKind::PythonOpaque(declaration) => Some(declaration),
+            HirClassKind::Regular | HirClassKind::Protocol | HirClassKind::Enum => None,
+        }
     }
 }
 

@@ -11,7 +11,7 @@ LIBRARY_EXAMPLE_CASES = {
         case_id="biip-schwifty",
         relative_source="simple_import/biip_schwifty_full_example.sifr",
         stdout_marker="sifr-python-interop:biip-schwifty:gtin=7032069804988:bic=DEUTDEFF",
-        import_roots=("biip", "schwifty"),
+        import_roots=("biip", "builtins", "schwifty"),
         native_roots=(),
     ),
     "pyarrow": ExampleCase(

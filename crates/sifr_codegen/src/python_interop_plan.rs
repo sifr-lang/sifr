@@ -26,6 +26,7 @@ pub struct PythonTargetProbe {
     pub import_root: Option<String>,
     pub target_path: String,
     pub requires_inspectable_signature: bool,
+    pub expects_type: bool,
     pub status: PythonTargetProbeStatus,
 }
 
@@ -51,6 +52,30 @@ pub(crate) fn python_interop_plan_for_named_modules<'a>(
                 &mut plan,
             );
         }
+        for class in &module.classes {
+            let Some(declaration) = class.python_opaque_declaration() else {
+                continue;
+            };
+            if let Some(root) = &declaration.required_import_root {
+                plan.required_import_roots.push(root.clone());
+            }
+            if let Some(target) = &declaration.target {
+                plan.target_probes.push(PythonTargetProbe {
+                    import_root: declaration.required_import_root.clone(),
+                    target_path: target.dotted(),
+                    requires_inspectable_signature: false,
+                    expects_type: true,
+                    status: PythonTargetProbeStatus::Planned,
+                });
+                plan.declarations.push(PythonInteropPlanDeclaration {
+                    module_name: module_name.map(str::to_string),
+                    function_name: class.name.clone(),
+                    declaration: declaration.clone(),
+                    parameter_types: Vec::new(),
+                    return_type: Type::None,
+                });
+            }
+        }
     }
     plan.required_import_roots.sort();
     plan.required_import_roots.dedup();
@@ -74,6 +99,7 @@ fn collect_function(
             import_root: declaration.required_import_root.clone(),
             target_path: target.dotted(),
             requires_inspectable_signature: record_expansion_functions.contains(&function.name),
+            expects_type: false,
             status: PythonTargetProbeStatus::Planned,
         });
         plan.declarations.push(PythonInteropPlanDeclaration {
@@ -159,6 +185,12 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
             "inspectable"
         } else {
             "runtime-checkable"
+        });
+        out.push(':');
+        out.push_str(if probe.expects_type {
+            "type"
+        } else {
+            "callable"
         });
         out.push(':');
         out.push_str(match probe.status {

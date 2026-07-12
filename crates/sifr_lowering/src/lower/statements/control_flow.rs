@@ -20,6 +20,7 @@ use super::{
     NarrowingCondition, Ranged, StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtWhile, TextRange,
     Type,
 };
+use crate::lower::must_use_obligations;
 use crate::lower::task_join_set_calls::record_join_set_terminal_awaitable;
 pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
@@ -255,6 +256,13 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     if name == "_" {
         let value = lower_expr(&assign.value, ctx)?;
         let value_ty = value.ty().clone();
+        if let Some(obligation) = ctx.must_use_obligation_for_type(&value_ty) {
+            ctx.error_with_code_at(
+                DiagnosticCode::OWN_USE_AFTER_MOVE,
+                format!("cannot discard must-use resource `{obligation}`; transfer or close it"),
+                assign.range(),
+            );
+        }
         finish_async_generator_advance_for_expr(ctx, &value);
         return Some(HirStmt::Let {
             name: "_".to_string(),
@@ -333,8 +341,20 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
                 name_range,
             );
         }
+        if let Some(obligation) = ctx.live_must_use_bindings.get(&name).cloned() {
+            if !ctx.scope.is_moved(&name) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::OWN_USE_AFTER_MOVE,
+                    format!(
+                        "cannot reassign must-use binding '{name}' owning {obligation} before closing or transferring it"
+                    ),
+                    name_range,
+                );
+            }
+        }
         // Reset moved state on reassignment
         ctx.reset_moved_with_flow(&name);
+        ctx.record_must_use_binding(&name, &value_ty);
         ctx.task_handle_group_owners.remove(&name);
         ctx.live_join_set_bindings.remove(&name);
         record_join_set_terminal_awaitable(&name, &value, ctx);
@@ -371,6 +391,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             .cloned()
             .unwrap_or_else(|| value_ty.clone());
         ctx.scope.define(name.clone(), binding_ty.clone());
+        ctx.record_must_use_binding(&name, &binding_ty);
         if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
             && value.ty().is_assignable_to(&binding_ty)
         {
@@ -561,6 +582,19 @@ pub(in crate::lower) fn lower_if(
     );
     ctx.restore_sequence_guards(&saved_sequence_guards);
     ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
+
+    let branch_exits = branch_const_integer_states
+        .iter()
+        .map(|(_, exits)| *exits)
+        .collect::<Vec<_>>();
+    must_use_obligations::validate_branch_join(
+        ctx,
+        &branch_moved_states,
+        &branch_exits,
+        &saved_moved,
+        else_body.is_some(),
+        if_stmt.range(),
+    );
 
     for branch_state in &branch_moved_states {
         for (name, was_moved) in branch_state {

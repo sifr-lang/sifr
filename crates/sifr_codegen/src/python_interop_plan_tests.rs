@@ -16,6 +16,8 @@ fn plan_retains_deferred_probe_requirements_record_constraint_and_cache_identity
         }),
         span: TextRange::default(),
         effect: PythonInteropEffect::BlockingIo,
+        cleanup: None,
+        consumes_receiver: false,
         parameters: Vec::new(),
         required_import_root: Some("json".to_string()),
     };
@@ -58,7 +60,7 @@ fn plan_retains_deferred_probe_requirements_record_constraint_and_cache_identity
     let cache_key = plan.cache_key_fragment();
     assert!(cache_key.contains("python.target=json.dumps"));
     assert!(cache_key.contains("python.required_import=json"));
-    assert!(cache_key.contains("python.probe=json.dumps:inspectable:planned"));
+    assert!(cache_key.contains("python.probe=json.dumps:inspectable:callable:planned"));
 }
 
 fn function(

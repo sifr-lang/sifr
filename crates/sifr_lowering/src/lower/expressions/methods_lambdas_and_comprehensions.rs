@@ -254,6 +254,18 @@ pub(in crate::lower) fn lower_method_call(
         });
     }
 
+    if let Type::Class {
+        name: class_name, ..
+    } = object_ty.resolve_alias()
+    {
+        let qualified = format!("{class_name}.{method_name}");
+        if ctx.python_consuming_methods.contains(&qualified) {
+            if let HirExpr::Name { name, .. } = &object {
+                ctx.mark_moved_with_flow(name);
+            }
+        }
+    }
+
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method_name,

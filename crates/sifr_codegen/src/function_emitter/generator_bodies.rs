@@ -339,8 +339,8 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
 
-        let interop_body =
-            python_interop_function_body(func).or_else(|| rust_interop_function_body(func));
+        let interop_body = python_interop_function_body(func, &self.python_opaque_classes)
+            .or_else(|| rust_interop_function_body(func));
         let interop_body_supplied = interop_body.is_some();
         let mut lowered_body = if let Some(interop_body) = interop_body {
             interop_body

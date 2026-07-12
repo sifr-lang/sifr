@@ -195,3 +195,12 @@ issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 reason = "Historical mixed preamble now contains only retained-by-design IOError and generated file-handle bridge glue used by builtin open; logging and random behavior have migrated to sifr_stdlib."
 preamble_files = ["io_file_handles.rs"]
+
+[[surface]]
+id = "declaration-first-python-runtime-glue"
+state = "retained-by-design"
+owner = "python-runtime-boundary"
+issue = "python-runtime-boundary"
+evidence_links = ["declaration-first-python-runtime"]
+reason = "Generated declaration-first Python wrappers are compiler-owned boundary glue that must call the sealed sifr_runtime::python identity, conversion, invocation, and lifecycle substrate directly."
+direct_runtime_roots = ["sifr_runtime::python"]

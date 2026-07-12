@@ -1,6 +1,6 @@
 use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::{PythonInteropEffect, PythonParameterKind};
+use sifr_ir::{HirClassKind, PythonCleanupPolicy, PythonInteropEffect, PythonParameterKind};
 use sifr_python_parser::parse_module;
 
 fn lower_ok(source: &str) -> HirModule {
@@ -96,7 +96,7 @@ class PythonError(Error):
     message: str
 
 @python(pkg.compute)
-def compute(values: list[int]) -> Result[int, PythonError]: ...
+def compute(values: set[int]) -> Result[int, PythonError]: ...
 ",
     );
     assert!(errors
@@ -150,6 +150,160 @@ def compute(value: int = python.omit, *rest: int) -> Result[int, PythonError]: .
     assert!(errors
         .iter()
         .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)));
+}
+
+#[test]
+fn opaque_class_retains_type_and_cleanup_policy() {
+    let module = lower_ok(
+        r"
+@python.opaque(type=pkg.Token, cleanup=drop)
+class Token:
+    pass
+",
+    );
+    let HirClassKind::PythonOpaque(declaration) = &module.classes[0].kind else {
+        panic!("class should be Python opaque");
+    };
+    assert_eq!(declaration.cleanup, Some(PythonCleanupPolicy::Drop));
+    assert_eq!(
+        declaration.target.as_ref().expect("target").dotted(),
+        "pkg.Token"
+    );
+    assert_eq!(declaration.required_import_root.as_deref(), Some("pkg"));
+}
+
+#[test]
+fn opaque_methods_retain_self_attribute_and_item_declarations() {
+    let module = lower_ok(
+        r#"
+class PythonError(Error):
+    message: str
+
+@python.opaque(type=pkg.Token, cleanup=drop)
+class Token:
+    @python.attr(Self.name)
+    def name(self) -> Result[str, PythonError]: ...
+
+    @python.item
+    def get(self, key: str) -> Result[int, PythonError]: ...
+
+    @python(Self.refresh)
+    def refresh(self, force: bool) -> Result[None, PythonError]: ...
+"#,
+    );
+    let methods = &module.classes[1].methods;
+    assert_eq!(methods.len(), 3);
+    assert_eq!(
+        methods[0].python_interop[0].kind,
+        sifr_ir::PythonInteropDecoratorKind::Attribute
+    );
+    assert_eq!(
+        methods[1].python_interop[0].kind,
+        sifr_ir::PythonInteropDecoratorKind::Item
+    );
+    assert_eq!(
+        methods[2].python_interop[0]
+            .target
+            .as_ref()
+            .expect("target")
+            .dotted(),
+        "Self.refresh"
+    );
+}
+
+const CLOSE_OPAQUE_PREFIX: &str = r#"
+class PythonError(Error):
+    message: str
+
+@python.opaque(type=pkg.Client, cleanup=close)
+class Client:
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+@python(pkg.Client)
+def make_client() -> Result[Client, PythonError]: ...
+"#;
+
+#[test]
+fn close_opaque_obligation_is_discharged_by_consuming_close() {
+    lower_ok(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef use_client() -> Result[None, PythonError]:\n    try:\n        client: Client = make_client()\n        _closed: None = client.close()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+}
+
+#[test]
+fn close_opaque_obligation_rejects_abandonment() {
+    let errors = lower_errors(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef abandon_client() -> Result[None, PythonError]:\n    try:\n        client: Client = make_client()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && error.message.contains("must-use binding 'client'")
+    }));
+}
+
+#[test]
+fn close_opaque_obligation_transfers_through_return() {
+    lower_ok(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef forward_client() -> Result[Client, PythonError]:\n    try:\n        client: Client = make_client()\n        return client\n    except PythonError as error:\n        raise error\n"
+    ));
+}
+
+#[test]
+fn close_opaque_obligation_rejects_partial_branch_consumption() {
+    let errors = lower_errors(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef partial(flag: bool) -> Result[None, PythonError]:\n    try:\n        client: Client = make_client()\n        if flag:\n            _closed: None = client.close()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && error
+                .message
+                .contains("only some continuing control-flow branches")
+    }));
+}
+
+#[test]
+fn close_opaque_obligation_transfers_through_owned_aggregate_return() {
+    lower_ok(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef forward_many() -> Result[list[Client], PythonError]:\n    try:\n        client: Client = make_client()\n        return [client]\n    except PythonError as error:\n        raise error\n"
+    ));
+}
+
+#[test]
+fn consuming_close_rejects_double_close_and_use_after_close() {
+    let errors = lower_errors(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef double_close() -> Result[None, PythonError]:\n    try:\n        client: Client = make_client()\n        _first: None = client.close()\n        _second: None = client.close()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE) && error.message.contains("client")
+    }));
+}
+
+#[test]
+fn close_opaque_obligation_rejects_live_reassignment() {
+    let errors = lower_errors(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef replace_client() -> Result[None, PythonError]:\n    try:\n        client: Client = make_client()\n        client = make_client()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && error
+                .message
+                .contains("cannot reassign must-use binding 'client'")
+    }));
+}
+
+#[test]
+fn close_opaque_obligation_transfers_through_comprehension_return() {
+    lower_ok(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\ndef forward_comprehension(own clients: list[Client]) -> list[Client]:\n    return [client for client in clients]\n"
+    ));
+}
+
+#[test]
+fn method_exit_ignores_consumed_obligations_from_popped_nested_scopes() {
+    lower_ok(&format!(
+        "{CLOSE_OPAQUE_PREFIX}\nclass Owner:\n    def use_nested(self) -> Result[None, PythonError]:\n        try:\n            if True:\n                client: Client = make_client()\n                _closed: None = client.close()\n            return None\n        except PythonError as error:\n            raise error\n"
+    ));
 }
 
 #[test]

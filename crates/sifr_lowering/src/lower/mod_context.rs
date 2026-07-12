@@ -34,6 +34,12 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Class type definitions (name -> `Type::Class`)
     pub(in crate::lower) class_types: HashMap<String, Type>,
+    /// Class name -> declaration metadata for sealed Python-backed identities.
+    pub(in crate::lower) python_opaque_classes: HashMap<String, sifr_ir::PythonInteropDeclaration>,
+    /// General affine must-use obligations keyed by their current owning binding.
+    pub(in crate::lower) live_must_use_bindings: HashMap<String, String>,
+    /// Qualified opaque methods whose source receiver is declared `own self`.
+    pub(in crate::lower) python_consuming_methods: HashSet<String>,
     /// Current scope for name resolution
     pub(in crate::lower) scope: Scope,
     /// First non-Never child error type observed for each in-scope `TaskGroup` binding.
@@ -141,6 +147,9 @@ impl LowerCtx {
             function_workload_annotations: HashMap::new(),
             function_defaults: HashMap::new(),
             class_types: HashMap::new(),
+            python_opaque_classes: HashMap::new(),
+            live_must_use_bindings: HashMap::new(),
+            python_consuming_methods: HashSet::new(),
             scope: Scope::new(),
             task_group_error_types: HashMap::new(),
             task_handle_group_owners: HashMap::new(),
@@ -202,6 +211,35 @@ impl LowerCtx {
 
     pub(in crate::lower) fn is_stdlib_lowering(&self) -> bool {
         self.source_origin.is_sysroot_source()
+    }
+
+    pub(in crate::lower) fn must_use_obligation_for_type(&self, ty: &Type) -> Option<String> {
+        match ty.resolve_alias() {
+            Type::Class { name, .. } => self
+                .python_opaque_classes
+                .get(name)
+                .and_then(|declaration| declaration.cleanup)
+                .filter(|cleanup| *cleanup != sifr_ir::PythonCleanupPolicy::Drop)
+                .map(|cleanup| format!("Python opaque {name} ({cleanup:?})")),
+            Type::List(item) => self.must_use_obligation_for_type(item),
+            Type::Tuple(items) | Type::Union(items) => items
+                .iter()
+                .find_map(|item| self.must_use_obligation_for_type(item)),
+            Type::Dict(key, value) => self
+                .must_use_obligation_for_type(key)
+                .or_else(|| self.must_use_obligation_for_type(value)),
+            Type::Result(ok, _) => self.must_use_obligation_for_type(ok),
+            _ => None,
+        }
+    }
+
+    pub(in crate::lower) fn record_must_use_binding(&mut self, name: &str, ty: &Type) {
+        if let Some(obligation) = self.must_use_obligation_for_type(ty) {
+            self.live_must_use_bindings
+                .insert(name.to_string(), obligation);
+        } else {
+            self.live_must_use_bindings.remove(name);
+        }
     }
 
     pub(in crate::lower) fn is_sysroot_private_declaration(&self) -> bool {

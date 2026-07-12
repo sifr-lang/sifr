@@ -64,6 +64,8 @@ pub struct RustEmitter {
     pub(crate) generic_class_params: HashMap<String, Vec<String>>,
     /// Map of generic class name -> original HIR class template.
     pub(crate) generic_class_templates: HashMap<String, sifr_ir::HirClass>,
+    /// Opaque Python class declarations available to direct wrapper lowering.
+    pub(crate) python_opaque_classes: HashMap<String, sifr_ir::PythonInteropDeclaration>,
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
     pub(crate) borrowed_params: HashSet<String>,
@@ -210,6 +212,7 @@ impl RustEmitter {
             generic_classes: HashSet::new(),
             generic_class_params: HashMap::new(),
             generic_class_templates: HashMap::new(),
+            python_opaque_classes: HashMap::new(),
             borrowed_params: HashSet::new(),
             mut_borrowed_params: HashSet::new(),
             generator_functions: HashSet::new(),
