@@ -59,7 +59,7 @@ LIBRARY_EXAMPLE_CASES = {
     "sqlite-context": ExampleCase(
         case_id="sqlite-context",
         relative_source="sqlite_context/context_codegen_smoke.sifr",
-        stdout_marker="sifr-python-interop:sqlite-context:total=48",
+        stdout_marker="sifr-python-interop:sqlite-context:total=71",
         import_roots=("sqlite3",),
         native_roots=("sqlite3",),
     ),

@@ -61,6 +61,7 @@ REQUIRED_FIXTURES = (
     "cffi_callback",
     "cryptography_tls",
     "resource_cleanup",
+    "sqlite_context",
     "env_probe",
 )
 
@@ -88,6 +89,7 @@ REQUIRED_FIXTURE_FILES = (
     "sqlalchemy_psycopg/sqlalchemy_psycopg_contract.json",
     "tensorflow_dlpack/tensorflow_dlpack_contract.json",
     "resource_cleanup/context_manager_cleanup.json",
+    "sqlite_context/sync_context_evidence.json",
 )
 
 REQUIRED_SOURCE_FIXTURES = (
@@ -123,6 +125,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "resource_cleanup/context_manager_failure.sifr",
     "resource_cleanup/context_manager_success.sifr",
     "resource_cleanup/resource_diagnostics.sifr",
+    "sqlite_context/context_codegen_smoke.sifr",
     "redis/redis_live_roundtrip.sifr",
     "sqlalchemy_psycopg/postgres_live_roundtrip.sifr",
     "kafka/kafka_live_roundtrip.sifr",
@@ -327,14 +330,48 @@ def validate_fixture_files(fixtures_root: Path) -> None:
     for name in REQUIRED_FIXTURE_FILES:
         path = fixtures_root / name
         try:
-            json.loads(path.read_text(encoding="utf-8"))
+            payload = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as error:
             raise SystemExit(f"invalid python interop fixture JSON {path}: {error}") from error
+        if name == "sqlite_context/sync_context_evidence.json":
+            validate_sync_context_evidence(payload)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]
     if missing_sources:
         raise SystemExit(f"missing python interop source fixtures: {', '.join(missing_sources)}")
+
+
+def validate_sync_context_evidence(payload: object) -> None:
+    if not isinstance(payload, dict) or payload.get("capability") != "sync-context":
+        raise SystemExit("sync context evidence must identify the sync-context capability")
+    required_causes = {
+        "normal",
+        "return",
+        "break",
+        "continue",
+        "originating Python exception",
+        "ordinary Sifr error",
+        "timeout, cancellation, or runtime fault",
+    }
+    outcomes = payload.get("outcome_matrix")
+    observed_causes = {
+        item.get("cause") for item in outcomes if isinstance(item, dict)
+    } if isinstance(outcomes, list) else set()
+    missing_causes = sorted(required_causes - observed_causes)
+    if missing_causes:
+        raise SystemExit(f"sync context evidence is missing causes: {', '.join(missing_causes)}")
+    for matrix_name, minimum in (("cleanup_matrix", 3), ("negative_matrix", 3)):
+        matrix = payload.get(matrix_name)
+        if not isinstance(matrix, list) or len(matrix) < minimum:
+            raise SystemExit(f"sync context evidence requires at least {minimum} {matrix_name} rows")
+        if any(not isinstance(item, dict) or not item.get("evidence") for item in matrix):
+            raise SystemExit(f"sync context evidence {matrix_name} rows require evidence owners")
+    live = payload.get("live_example")
+    if not isinstance(live, dict) or live.get("stdout_marker") != (
+        "sifr-python-interop:sqlite-context:total=71"
+    ):
+        raise SystemExit("sync context live evidence must lock the SQLite transaction marker")
 
 
 def select_entries(
@@ -381,6 +418,21 @@ def run_self_tests(area_root: Path) -> None:
     repo_root = area_root.parents[2]
     run_declaration_capability_self_tests(area_root, repo_root)
     validate_fixture_files(area_root / "fixtures")
+    evidence = json.loads(
+        (area_root / "fixtures/sqlite_context/sync_context_evidence.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    evidence["outcome_matrix"] = [
+        item for item in evidence["outcome_matrix"] if item["cause"] != "normal"
+    ]
+    try:
+        validate_sync_context_evidence(evidence)
+    except SystemExit as error:
+        if "missing causes: normal" not in str(error):
+            raise
+    else:
+        raise SystemExit("sync context evidence self-test accepted a missing normal outcome")
     run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)

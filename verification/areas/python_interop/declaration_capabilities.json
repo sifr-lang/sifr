@@ -51,15 +51,15 @@
       "id": "sync-context",
       "surface": "@python.context.enter and @python.context.exit",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "sync-context",
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "context outcome and suppression matrix"},
-        {"kind": "negative", "status": "planned", "owner": "escape and incompatible entered-value fixtures"},
-        {"kind": "cleanup", "status": "planned", "owner": "replay-token and exact-once exit fixtures"},
+        {"kind": "positive", "status": "passing", "owner": "sqlite_context/sync_context_evidence.json outcome matrix and sifr_codegen Python context tests"},
+        {"kind": "negative", "status": "passing", "owner": "sifr_lowering python context declaration, obligation, escape, and entered-cleanup tests"},
+        {"kind": "cleanup", "status": "passing", "owner": "sifr_runtime context replay, suppression, secondary-error, release, and exact-once tests"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "synchronous context boundary"},
-        {"kind": "live", "status": "planned", "owner": "database transaction binary"}
+        {"kind": "live", "status": "passing", "owner": "sqlite_context/context_codegen_smoke.sifr registered library example"}
       ]
     },
     {

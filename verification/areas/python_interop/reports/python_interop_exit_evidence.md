@@ -63,6 +63,22 @@ verification/areas/python_interop/run.sh --group cloud --package boto3 --report 
 scripts/run_all_tests.sh --profile python-interop-live
 ```
 
+## Synchronous Context Activation
+
+The declaration-first `@python.context.enter` / `@python.context.exit` surface
+is active. Its normative outcome and cleanup matrix is checked in at
+`fixtures/sqlite_context/sync_context_evidence.json`. Focused runtime tests prove
+type-sensitive original-exception replay, truthy suppression, nested replay
+lifetime, exact-once manager exit, ignored non-Python suppression evidence, and
+Python-primary cleanup-failure precedence. Lowering tests cover context-only
+obligations, never-entered managers, entered-borrow escape/move/close rejection,
+and incompatible distinct opaque entered results.
+
+The registered `sqlite-context` library example is the runnable transaction evidence. It
+compiles and runs normal, no-return, early-return, narrowing, break, continue,
+and Python-error paths and requires the marker
+`sifr-python-interop:sqlite-context:total=71`.
+
 Repository gates:
 
 ```bash

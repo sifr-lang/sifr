@@ -262,6 +262,14 @@ normal completion, error propagation, return, break, or continue.
 Direct source calls to declared `__exit__` or `__aexit__` are rejected because
 `python.ExitCause` is compiler-constructed and exists only in context lowering.
 
+Implementation status: synchronous Python context declarations are active. The
+compiler uses dedicated HIR and closure outcomes for normal fallthrough,
+return, break, continue, and typed errors; runtime exit adapters preserve exact
+Python exception replay and record unsuppressible Sifr-cause cleanup evidence.
+The executable evidence matrix is
+`verification/areas/python_interop/fixtures/sqlite_context/sync_context_evidence.json`,
+with the registered SQLite transaction example providing the live binary gate.
+
 ### Asynchronous Context Managers
 
 Async context managers use the owned Python loop:

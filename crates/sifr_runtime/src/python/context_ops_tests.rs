@@ -205,6 +205,177 @@ fn cleanup_failures_preserve_primary_error_and_record_secondary_evidence() {
     assert!(take_context_cleanup_evidence().is_empty());
 }
 
+#[test]
+fn ignored_non_python_suppression_is_structured_cleanup_evidence() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+
+    record_context_ignored_suppression("timeout:TimeoutError");
+    assert_eq!(
+        take_context_cleanup_evidence(),
+        vec![ContextCleanupEvidence {
+            primary_cause: "timeout:TimeoutError".to_string(),
+            exception_type: "SifrBoundaryError".to_string(),
+            message: "Python context suppression was ignored for a non-Python Sifr cause"
+                .to_string(),
+            context: "context exit decision".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn ordinary_sifr_error_truthy_exit_is_ignored_and_recorded() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("context-ordinary-sifr")).expect("init should succeed");
+
+    let (manager, log) = attach(|py| {
+        let module = PyModule::from_code(
+            py,
+            c"log = []\nclass Manager:\n    def __exit__(self, exc_type, exc_value, tb):\n        log.extend([exc_type.__name__ == 'SifrBoundaryError', exc_value.cause_kind == 'ordinary-error', exc_value.sifr_type == 'ValidationError', exc_value.message == 'invalid value', tb is None])\n        return True\n",
+            c"context_ordinary.py",
+            c"context_ordinary",
+        )
+        .expect("module should build");
+        (
+            store_object(
+                module
+                    .getattr("Manager")
+                    .and_then(|class| class.call0())
+                    .expect("manager")
+                    .unbind(),
+            )
+            .expect("manager should store"),
+            store_object(module.getattr("log").expect("log").unbind())
+                .expect("log should store"),
+        )
+    })
+    .expect("attach should succeed");
+    let cause = SifrExitCause {
+        kind: SifrExitCauseKind::OrdinaryError,
+        sifr_type: "ValidationError".to_string(),
+        message: "invalid value".to_string(),
+    };
+    assert_eq!(
+        context_exit_sifr_cause(manager, &cause).expect("exit should succeed"),
+        PythonExitDecision::Suppress
+    );
+    record_context_ignored_suppression("ordinary-error:ValidationError");
+    assert_eq!(
+        take_context_cleanup_evidence()[0].primary_cause,
+        "ordinary-error:ValidationError"
+    );
+    assert_eq!(
+        copy_list_bool(&log).expect("log should copy"),
+        vec![true, true, true, true, true]
+    );
+    close_object(log).expect("log should close");
+    assert_no_live_objects();
+}
+
+#[test]
+fn originating_python_error_can_be_suppressed_and_exit_runs_once() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("context-suppression")).expect("init should succeed");
+
+    let (manager, log, error) = attach(|py| {
+        let module = PyModule::from_code(
+            py,
+            c"log = []\nclass Marker(Exception):\n    pass\nORIGINAL = Marker('original')\nclass Suppressor:\n    def __exit__(self, exc_type, exc_value, tb):\n        log.append(exc_type is Marker and exc_value is ORIGINAL and tb is ORIGINAL.__traceback__)\n        return True\ndef fail():\n    raise ORIGINAL\n",
+            c"context_suppression.py",
+            c"context_suppression",
+        )
+        .expect("module should build");
+        let error = module
+            .getattr("fail")
+            .and_then(|fail| fail.call0())
+            .expect_err("fail should raise");
+        (
+            store_object(
+                module
+                    .getattr("Suppressor")
+                    .and_then(|class| class.call0())
+                    .expect("manager")
+                    .unbind(),
+            )
+            .expect("manager should store"),
+            store_object(module.getattr("log").expect("log").unbind())
+                .expect("log should store"),
+            PythonError::from_pyerr(py, error, "call", "suppressed context body"),
+        )
+    })
+    .expect("attach should succeed");
+
+    assert_eq!(
+        context_exit_python_error(manager, &error).expect("exit should succeed"),
+        PythonExitDecision::Suppress
+    );
+    assert_eq!(
+        copy_list_bool(&log).expect("log should copy"),
+        vec![true],
+        "the exact originating triple should be delivered exactly once"
+    );
+    drop(error);
+    attach(|_| ()).expect("attach should release replay capability");
+    close_object(log).expect("log should close");
+    assert_no_live_objects();
+}
+
+#[test]
+fn cleanup_failure_keeps_python_primary_replay_for_outer_exit() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("context-secondary-replay")).expect("init should succeed");
+
+    let (failing, outer, log, mut primary) = attach(|py| {
+        let module = PyModule::from_code(
+            py,
+            c"log = []\nclass Marker(Exception):\n    pass\nORIGINAL = Marker('primary')\nclass Failing:\n    def __exit__(self, exc_type, exc_value, tb):\n        raise RuntimeError('cleanup failed')\nclass Outer:\n    def __exit__(self, exc_type, exc_value, tb):\n        log.append(exc_type is Marker and exc_value is ORIGINAL and tb is ORIGINAL.__traceback__)\n        return False\ndef fail():\n    raise ORIGINAL\n",
+            c"context_secondary.py",
+            c"context_secondary",
+        )
+        .expect("module should build");
+        let manager = |name: &str| {
+            store_object(
+                module
+                    .getattr(name)
+                    .and_then(|class| class.call0())
+                    .expect("manager")
+                    .unbind(),
+            )
+            .expect("manager should store")
+        };
+        let error = module
+            .getattr("fail")
+            .and_then(|fail| fail.call0())
+            .expect_err("fail should raise");
+        (
+            manager("Failing"),
+            manager("Outer"),
+            store_object(module.getattr("log").expect("log").unbind())
+                .expect("log should store"),
+            PythonError::from_pyerr(py, error, "call", "nested context body"),
+        )
+    })
+    .expect("attach should succeed");
+
+    let secondary =
+        context_exit_python_error(failing, &primary).expect_err("inner cleanup should fail");
+    attach_secondary_python_error(&mut primary, &secondary);
+    assert!(primary.context.contains("RuntimeError: cleanup failed"));
+    assert_eq!(
+        context_exit_python_error(outer, &primary).expect("outer exit should replay primary"),
+        PythonExitDecision::Propagate
+    );
+    assert_eq!(copy_list_bool(&log).expect("log should copy"), vec![true]);
+    drop(secondary);
+    drop(primary);
+    attach(|_| ()).expect("attach should release replay capabilities");
+    close_object(log).expect("log should close");
+    assert_no_live_objects();
+}
+
 fn assert_no_live_objects() {
     assert_eq!(
         resource_diagnostics().expect("diagnostics should be available"),
@@ -213,17 +384,5 @@ fn assert_no_live_objects() {
             live_objects: 0,
             leaked_objects: 0,
         }
-    );
-
-    record_context_ignored_suppression("DeadlineExceeded");
-    assert_eq!(
-        take_context_cleanup_evidence(),
-        vec![ContextCleanupEvidence {
-            primary_cause: "DeadlineExceeded".to_string(),
-            exception_type: "SifrBoundaryError".to_string(),
-            message: "Python context suppression was ignored for a non-Python Sifr cause"
-                .to_string(),
-            context: "context exit decision".to_string(),
-        }]
     );
 }

@@ -827,11 +827,20 @@ fn reject_live_must_use_bindings_at_function_exit(func: &StmtFunctionDef, ctx: &
         .collect::<Vec<_>>();
     live.sort();
     for (name, obligation) in live {
+        let requirement = match obligation.kind {
+            crate::lower::must_use_obligations::MustUseObligationKind::ContextOnly => {
+                "must be consumed by `with` before function exit"
+            }
+            crate::lower::must_use_obligations::MustUseObligationKind::AsyncContextOnly => {
+                "must be consumed by `async with` before function exit"
+            }
+            crate::lower::must_use_obligations::MustUseObligationKind::CloseLike => {
+                "must be closed or transferred before function exit"
+            }
+        };
         ctx.error_with_code_at(
             DiagnosticCode::OWN_USE_AFTER_MOVE,
-            format!(
-                "must-use binding '{name}' owns {obligation} and must be closed or transferred before function exit"
-            ),
+            format!("must-use binding '{name}' owns {obligation} and {requirement}"),
             func.name.range(),
         );
     }
